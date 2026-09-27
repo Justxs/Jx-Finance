@@ -206,8 +206,10 @@ public sealed class AuditLogTests(ApiFixture fixture) : IntegrationTestBase(fixt
             "range.invalid");
     }
 
-    [Fact]
-    public async Task An_import_and_a_bulk_edit_are_each_one_summarising_row()
+    [Theory]
+    [InlineData("swedbankCsv", "Swedbank CSV into Account ")]
+    [InlineData("camt053", "camt.053 XML into Account ")]
+    public async Task An_import_and_a_bulk_edit_are_each_one_summarising_row(string format, string label)
     {
         var household = await CreateHouseholdAsync();
         var account = await CreateAccountAsync("100.00", householdId: household);
@@ -222,7 +224,7 @@ public sealed class AuditLogTests(ApiFixture fixture) : IntegrationTestBase(fixt
                 description = $"Imported {i}",
             })
             .ToArray();
-        await PostAsync<IdDto>(Client, "/api/import/swedbank/confirm", new { accountId = account, rows });
+        await PostAsync<IdDto>(Client, "/api/import/confirm", new { accountId = account, rows, format });
         var imported = await Client.GetFromJsonAsync<PageDto<IdDto>>($"/api/transactions?accountId={account}", TestContext.Current.CancellationToken);
         var category = await CreateCategoryAsync();
         (await Client.PostAsJsonAsync(
@@ -242,7 +244,7 @@ public sealed class AuditLogTests(ApiFixture fixture) : IntegrationTestBase(fixt
         Assert.Equal("imported", import.Action);
         Assert.Equal(3, import.Count);
         Assert.Equal(account, import.EntityId);
-        Assert.StartsWith("Swedbank CSV into Account ", import.Description);
+        Assert.StartsWith(label, import.Description);
         Assert.EndsWith("3 entries", import.Description);
     }
 

@@ -46,6 +46,8 @@ function row(
     suggestedCategoryId: null,
     suggestedTagIds: [],
     matchedRuleName: null,
+    isReversal: false,
+    suggestedTransferAccountId: null,
     ...flags,
   };
 }
@@ -72,6 +74,8 @@ function transaction(
     reportingAmount: "1.00",
     tagIds: [],
     attachmentCount: 0,
+    unusual: null,
+    unusualDismissed: false,
   };
 }
 

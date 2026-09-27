@@ -21,3 +21,10 @@ export const SwedbankUpload: Story = {
     await expect(await screen.findByText(/statement file|išrašo failas/i)).toBeVisible();
   },
 };
+
+export const XmlStatementUpload: Story = {
+  play: async () => {
+    await userEvent.click(await screen.findByRole("button", { name: /iso 20022/i }));
+    await expect(await screen.findByText(/camt\.053/i)).toBeVisible();
+  },
+};

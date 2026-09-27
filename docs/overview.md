@@ -2,7 +2,7 @@
 
 Jx Finance is a self-hosted multi-currency ledger, reporting in EUR by default, for personal finances and small households. It records income, expenses, transfers, assets and debts; it never connects to a bank or moves money.
 
-The core workflow is quick manual entry or a reviewed Swedbank CSV import, followed by balances, budgets and reports. PostgreSQL stores the data. A React SPA talks to an ASP.NET Core API using same-origin authentication with JWTs carried in HttpOnly cookies.
+The core workflow is quick manual entry or a reviewed bank statement import (Swedbank CSV or camt.053 XML), followed by balances, budgets and reports. PostgreSQL stores the data. A React SPA talks to an ASP.NET Core API using same-origin authentication with JWTs carried in HttpOnly cookies.
 
 The release includes accounts, categories, split transactions, transfers, imports, budgets, savings goals updated by hand or from an account balance, net-worth history, recurring bill reminders, household sharing, reports, CSV/PDF exports and English/Lithuanian UI. See Features for exact boundaries.
 

@@ -2,7 +2,7 @@
 
 # Jx Finance
 
-A self-hosted EUR finance tracker: accounts, transactions and splits, transfers, budgets, goals, recurring bills, household sharing, net worth, reports and Swedbank CSV import. React/TypeScript frontend, ASP.NET Core 10 API and PostgreSQL 16.
+A self-hosted EUR finance tracker: accounts, transactions and splits, transfers, budgets, goals, recurring bills, household sharing, net worth, reports and bank statement import (Swedbank CSV, camt.053 XML). React/TypeScript frontend, ASP.NET Core 10 API and PostgreSQL 16.
 
 ## Local development (Windows)
 

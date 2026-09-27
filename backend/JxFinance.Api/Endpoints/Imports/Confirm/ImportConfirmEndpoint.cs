@@ -9,7 +9,7 @@ public sealed class ImportConfirmEndpoint(IImportService importService)
 {
     public override void Configure()
     {
-        Post(ApiRoutes.Import + "/swedbank/confirm");
+        Post(ApiRoutes.Import + "/confirm");
         Group<ImportsGroup>();
     }
 

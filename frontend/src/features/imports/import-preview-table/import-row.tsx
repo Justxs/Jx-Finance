@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button/button";
 import { Checkbox } from "@/components/ui/checkbox/checkbox";
 import { TableCell, TableRow } from "@/components/ui/table/table";
 import { HintTag, Tag } from "@/components/ui/tag/tag";
+import { useUnusualSentence } from "@/features/transactions/unusual-amount/unusual-amount-badge";
 import { EMPTY_VALUE, useIsoDate, useMoney } from "@/hooks/use-formatters";
 import { namedOptions } from "@/lib/options";
 import { INCOME_TONE } from "@/lib/tone";
@@ -39,6 +40,7 @@ export function ImportRow({
   const money = useMoney();
   const formatDate = useIsoDate();
   const [transferOpen, setTransferOpen] = useState(false);
+  const unusualSentence = useUnusualSentence();
 
   const rowCategories = categories.filter((category) => category.type === row.type);
   const name = row.payee || row.description || EMPTY_VALUE;
@@ -46,7 +48,14 @@ export function ImportRow({
   const showTransfer = transferOpen || row.looksLikeTransfer || Boolean(row.transferAccountId);
   const filledByRule = Boolean(row.ruleName) && !row.transferAccountId;
   const recalled = row.categorySuggested && !row.ruleName && !row.transferAccountId;
-  const hasFlags = row.isDuplicate || row.looksLikeTransfer || filledByRule || recalled;
+  const unusual = !row.isDuplicate && row.unusual ? unusualSentence(row.unusual) : null;
+  const hasFlags =
+    row.isDuplicate ||
+    row.isReversal ||
+    row.looksLikeTransfer ||
+    filledByRule ||
+    recalled ||
+    Boolean(unusual);
 
   const checkbox = (
     <Checkbox
@@ -110,6 +119,7 @@ export function ImportRow({
   const flags = hasFlags ? (
     <div className="flex flex-wrap gap-1">
       {row.isDuplicate ? <Tag>{t("imports.duplicate")}</Tag> : null}
+      {row.isReversal ? <Tag>{t("imports.reversal")}</Tag> : null}
       {filledByRule ? (
         <HintTag tone="accent" hint={t("imports.ruleFilledHint", { rule: row.ruleName ?? "" })}>
           {t("imports.ruleFilled")}
@@ -119,6 +129,7 @@ export function ImportRow({
         <HintTag hint={t("imports.suggestedHint")}>{t("imports.suggested")}</HintTag>
       ) : null}
       {row.looksLikeTransfer ? <Tag tone="accent">{t("imports.looksLikeTransfer")}</Tag> : null}
+      {unusual ? <HintTag hint={unusual}>{t("imports.unusual")}</HintTag> : null}
     </div>
   ) : null;
 

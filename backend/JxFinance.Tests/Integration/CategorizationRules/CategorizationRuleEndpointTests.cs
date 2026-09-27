@@ -440,7 +440,7 @@ public sealed class CategorizationRuleEndpointTests(ApiFixture fixture) : Integr
 
         var confirmed = await PostAsync<ConfirmDto>(
             member,
-            "/api/import/swedbank/confirm",
+            "/api/import/confirm",
             new
             {
                 accountId = account,

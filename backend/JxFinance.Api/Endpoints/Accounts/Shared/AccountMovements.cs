@@ -12,9 +12,10 @@ public static class AccountMovements
     public static Task<List<AccountMovement>> SumAsync(
         AppDbContext db,
         IReadOnlyList<AccountId> ids,
+        DateOnly? until,
         CancellationToken cancellationToken) =>
         db.Transactions
-            .Where(t => ids.Contains(t.AccountId))
+            .Where(t => ids.Contains(t.AccountId) && (until == null || t.Date <= until))
             .Select(t => new
             {
                 t.AccountId,
@@ -22,19 +23,19 @@ public static class AccountMovements
                 Amount = t.Type == FlowType.Income ? t.Amount.Amount : -t.Amount.Amount,
             })
             .Concat(db.Transfers
-                .Where(t => ids.Contains(t.FromAccountId))
+                .Where(t => ids.Contains(t.FromAccountId) && (until == null || t.Date <= until))
                 .Select(t => new { AccountId = t.FromAccountId, t.Amount.Currency, Amount = -t.Amount.Amount }))
             .Concat(db.Transfers
-                .Where(t => ids.Contains(t.ToAccountId))
+                .Where(t => ids.Contains(t.ToAccountId) && (until == null || t.Date <= until))
                 .Select(t => new { AccountId = t.ToAccountId, t.ReceivedAmount.Currency, Amount = t.ReceivedAmount.Amount }))
             .Concat(db.CurrencyConversions
-                .Where(c => ids.Contains(c.AccountId))
+                .Where(c => ids.Contains(c.AccountId) && (until == null || c.Date <= until))
                 .Select(c => new { c.AccountId, c.FromAmount.Currency, Amount = -c.FromAmount.Amount }))
             .Concat(db.CurrencyConversions
-                .Where(c => ids.Contains(c.AccountId))
+                .Where(c => ids.Contains(c.AccountId) && (until == null || c.Date <= until))
                 .Select(c => new { c.AccountId, c.ToAmount.Currency, Amount = c.ToAmount.Amount }))
             .Concat(db.InvestmentTransactions
-                .Where(t => ids.Contains(t.AccountId))
+                .Where(t => ids.Contains(t.AccountId) && (until == null || t.Date <= until))
                 .Select(t => new { t.AccountId, t.CashAmount.Currency, Amount = t.CashAmount.Amount }))
             .GroupBy(m => new { m.AccountId, m.Currency })
             .Select(g => new AccountMovement(g.Key.AccountId, g.Key.Currency, g.Sum(m => m.Amount)))

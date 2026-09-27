@@ -191,7 +191,7 @@ public sealed class TransferUpdateTests(ApiFixture fixture) : IntegrationTestBas
         var bothMatched = await PutAsync(transfer.Id, source, destination, "10.00", "2026-09-01");
         await AssertRejectedAsync(bothMatched, "value.locked");
         var again = await Client.PostAsJsonAsync(
-            "/api/import/swedbank/confirm",
+            "/api/import/confirm",
             new { accountId = source, rows = new[] { new { importRef = "out-1", amount = "10.00", type = "expense", date = "2026-09-01" } } }, TestContext.Current.CancellationToken);
         Assert.Equal(1, (await again.Content.ReadFromJsonAsync<ConfirmDto>(TestContext.Current.CancellationToken))!.SkippedDuplicates);
     }
@@ -248,7 +248,7 @@ public sealed class TransferUpdateTests(ApiFixture fixture) : IntegrationTestBas
         Client.PutAsJsonAsync($"/api/transfers/{id}", new { fromAccountId = from, toAccountId = to, amount, date, description });
 
     private Task<ConfirmDto> ConfirmImportAsync(Guid accountId, object row) =>
-        PostAsync<ConfirmDto>(Client, "/api/import/swedbank/confirm", new { accountId, rows = new[] { row } });
+        PostAsync<ConfirmDto>(Client, "/api/import/confirm", new { accountId, rows = new[] { row } });
 
     private sealed record ConfirmDto(int Imported, int SkippedDuplicates);
 }

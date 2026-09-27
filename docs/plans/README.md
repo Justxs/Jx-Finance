@@ -7,5 +7,8 @@ A plan is written before a feature is built: the outcome, the design, the steps 
 | [Discord notifications](discord-notifications.md) | Implemented 2026-09-26 | [Discord notifications](../features/discord-notifications.md) |
 | [Unusual-amount flags and subscription price rises](unusual-amounts.md) | Implemented 2026-09-26 | [Unusual amounts](../features/unusual-amounts.md) |
 | [Month-end close](month-end-close.md) | Planned 2026-09-25, size M; after the two above | |
+| [Asset value history and depreciation](asset-value-history.md) | Implemented 2026-09-27 | [Net worth](../features/net-worth.md#asset-value-history) |
+| [Debt payments linked to a debt](debt-payments.md) | Implemented 2026-09-27 | [Debt amortization](../features/debt-amortization.md#tracking-payments) |
+| [CAMT.053 statement import](camt053-import.md) | Implemented 2026-09-27 | [Bank statement import](../features/bank-statement-import.md) |
 
 A new plan is a kebab-case file here, starting with `# Plan: <name>` and a `Status:` line, and gets a row in this table. When it ships, change its row and add an "Implemented" line under the plan's title.

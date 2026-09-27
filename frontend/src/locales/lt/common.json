@@ -83,7 +83,7 @@
       "accounts": "Pridėkite sąskaitą",
       "accountsHint": "su pradiniu likučiu.",
       "transactions": "Įrašykite operacijas",
-      "transactionsHint": "ranka arba iš banko CSV.",
+      "transactionsHint": "ranka arba iš banko išrašo.",
       "budgets": "Nustatykite biudžetą",
       "budgetsHint": "kad matytumėte, ar mėnuo eina pagal planą."
     },
@@ -723,8 +723,8 @@
           "hint": "Pajamų ir išlaidų suvestinės bet kuriam laikotarpiui."
         },
         "import": {
-          "name": "CSV importas",
-          "hint": "Banko išrašo įkėlimas."
+          "name": "Išrašų importas",
+          "hint": "Banko išrašų įkėlimas, CSV arba XML."
         },
         "households": {
           "name": "Namų ūkiai",
@@ -1687,8 +1687,8 @@
     }
   },
   "imports": {
-    "file": "CSV failas",
-    "chooseFile": "Spustelėkite ir pasirinkite CSV failą",
+    "file": "Failas",
+    "chooseFile": "Spustelėkite ir pasirinkite failą",
     "preview": "Peržiūra",
     "confirmed": "Importuota {{imported}} operacijų (praleista {{skipped}} dublikatų)",
     "noRows": "Šiame faile nerasta importuojamų eilučių.",
@@ -1707,17 +1707,14 @@
     "matchHelp": "Importuodami kitą sąskaitą, susiekite tą patį pervedimą, kad jis nebūtų įskaitytas du kartus.",
     "selectRow": "Pasirinkti: {{row}}",
     "flags": "Būsena",
-    "pageDescription": "Įkelkite Swedbank išrašą, peržiūrėkite eilutes ir patvirtinkite, kas pateks į apskaitą.",
+    "pageDescription": "Įkelkite banko išrašą, peržiūrėkite eilutes ir patvirtinkite, kas pateks į apskaitą.",
     "fileSection": "Išrašo failas",
     "reviewSection": "Eilučių peržiūra",
-    "fileHint": "Swedbank sąskaitos išrašas, eksportuotas CSV formatu, eurais, iki 5 MB. Niekas neišsaugoma, kol nepatvirtinate peržiūrėtų eilučių.",
-    "fileRequired": "Pirmiausia pasirinkite CSV failą.",
+    "fileRequired": "Pirmiausia pasirinkite išrašo failą.",
     "fileEmpty": "Šis failas tuščias. Eksportuokite išrašą dar kartą ir pasirinkite naują failą.",
-    "fileTooLarge": "Šis failas didesnis nei 5 MB. Eksportuokite trumpesnį laikotarpį.",
-    "errorFormat": "Šis failas neatitinka Swedbank CSV išrašo formato.",
-    "errorFileSize": "Failas turi būti netuščias CSV, ne didesnis nei 5 MB.",
+    "fileTooLarge": "Šis failas viršija leistiną dydį. Eksportuokite trumpesnį laikotarpį.",
+    "errorFileSize": "Failas negali būti tuščias ar didesnis nei nurodyta po failo lauku.",
     "errorGeneric": "Nepavyko įkelti peržiūros. Bandykite dar kartą.",
-    "errorFix": "Eksportuokite sąskaitos išrašą iš Swedbank CSV formatu, sumos eurais, ir įkelkite jo nekeisdami. Peržiūra tikrina stulpelių tvarką, valiutą, debeto ir kredito kryptį, datas, sumas ir nuorodas.",
     "noAccounts": "Importui reikia sąskaitos, kurioje bus įrašomos eilutės.",
     "goToAccounts": "Pridėkite ją puslapyje „Sąskaitos“",
     "allDuplicates": "Visos šio failo eilutės jau importuotos į šią sąskaitą. Naujų įrašų nėra.",
@@ -1764,12 +1761,44 @@
     "chooseProvider": "Pasirinkite, iš kur yra išrašas.",
     "allProviders": "Visi teikėjai",
     "providers": {
-      "swedbankFormat": "EUR sąskaitos išrašas, CSV"
+      "swedbank": "Swedbank",
+      "swedbankFormat": "Sąskaitos išrašas, CSV",
+      "camt053": "Banko išrašas XML (ISO 20022)",
+      "camt053Format": "camt.053 išrašas iš bet kurio jį siūlančio banko"
     },
     "ruleFilled": "Užpildė taisyklė",
     "ruleFilledHint": "Užpildė jūsų taisyklė „{{rule}}“. Pakeiskite, jei netinka.",
     "tagsFor": "Žymos: {{row}}",
-    "chooseTags": "Žymos"
+    "chooseTags": "Žymos",
+    "reversal": "Atšaukimas",
+    "formats": {
+      "swedbankCsv": {
+        "hint": "Swedbank sąskaitos išrašas, eksportuotas CSV formatu, iki 5 MB. Niekas neišsaugoma, kol nepatvirtinate peržiūrėtų eilučių.",
+        "errorFormat": "Šis failas neatitinka Swedbank CSV išrašo formato.",
+        "errorFix": "Eksportuokite sąskaitos išrašą iš Swedbank CSV formatu ir įkelkite jo nekeisdami. Peržiūra tikrina stulpelių tvarką, valiutą, debeto ir kredito kryptį, datas, sumas ir nuorodas."
+      },
+      "camt053": {
+        "hint": "Internetinėje bankininkystėje atsisiųskite sąskaitos išrašą XML / ISO 20022 / camt.053 formatu, iki 20 MB. Niekas neišsaugoma, kol nepatvirtinate peržiūrėtų eilučių.",
+        "errorFormat": "Šis failas nėra camt.053 banko išrašas ISO 20022 XML formatu.",
+        "errorFix": "Atsisiųskite sąskaitos išrašą iš internetinės bankininkystės XML (ISO 20022, camt.053) formatu ir įkelkite jo nekeisdami. Dienos ataskaitos (camt.052) ir pranešimai (camt.054) neskaitomi."
+      }
+    },
+    "statement": {
+      "iban": "Išrašas sąskaitai {{iban}}",
+      "otherIban": "Tai ne pasirinktai sąskaitai įrašytas IBAN.",
+      "switch": "Perjungti į {{account}}",
+      "notBooked_one": "Praleistas {{count}} laukiantis ar informacinis įrašas",
+      "notBooked_few": "Praleisti {{count}} laukiantys ar informaciniai įrašai",
+      "notBooked_many": "Praleista {{count}} laukiančio ar informacinio įrašo",
+      "notBooked_other": "Praleista {{count}} laukiančių ar informacinių įrašų",
+      "unreadable_one": "Nepavyko perskaityti {{count}} įrašo, jis nerodomas",
+      "unreadable_few": "Nepavyko perskaityti {{count}} įrašų, jie nerodomi",
+      "unreadable_many": "Nepavyko perskaityti {{count}} įrašo, jie nerodomi",
+      "unreadable_other": "Nepavyko perskaityti {{count}} įrašų, jie nerodomi",
+      "closing": "Galutinis likutis {{date}}: {{amount}}",
+      "agrees": "Sutampa su apskaita po pasirinktų eilučių ({{ledger}})",
+      "differs": "Apskaita po pasirinktų eilučių: {{ledger}}, skirtumas {{difference}}"
+    }
   },
   "errors": {
     "generic": "Kažkas nepavyko. Bandykite dar kartą.",
@@ -1920,6 +1949,7 @@
     },
     "import": {
       "invalidFile": "Failas tuščias, per didelis arba netinkamo formato.",
+      "noStatementForAccount": "Faile yra tik šių sąskaitų išrašai: {{reason}}. Įrašykite šios sąskaitos IBAN arba pasirinkite sąskaitą, kuriai išrašas priklauso.",
       "transferAlreadyMatched": "Pasirinktas pervedimas jau susietas su kitu šios sąskaitos banko įrašu.",
       "transferMismatch": "Pasirinktas pervedimas neatitinka šios eilutės."
     },

@@ -269,7 +269,7 @@ public sealed class AccountService(
             Apply(account.Id, account.Currency, account.StartingBalance.Amount);
         }
 
-        var moved = await AccountMovements.SumAsync(db, ids, cancellationToken);
+        var moved = await AccountMovements.SumAsync(db, ids, null, cancellationToken);
         moved.ForEach(m => Apply(m.AccountId, m.Currency, m.Amount));
 
         var holdingValues = await holdings.ValueAsync(ids, cancellationToken);

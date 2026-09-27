@@ -71,7 +71,7 @@ export function toPreviewRows(
     return {
       ...row,
       selected: !row.isDuplicate && !row.looksLikeTransfer,
-      transferAccountId: "",
+      transferAccountId: row.suggestedTransferAccountId ?? "",
       existingTransferId: "",
       categoryId,
       categorySuggested: Boolean(categoryId),

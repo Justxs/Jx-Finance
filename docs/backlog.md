@@ -22,7 +22,7 @@ These come from the release checklist and block calling the current release veri
 | Investments | Corporate actions other than splits are only counted (mergers, spin-offs, symbol changes) | M |
 | Investments | Bonds by hand only; options, futures and short positions out of scope | L |
 | Investments | Only Interactive Brokers; no other broker and no generic trade CSV | M |
-| Import | Swedbank format only | M per bank, or one generic column mapper |
+| Import | Swedbank CSV and camt.053 XML only; banks without camt.053 need a CSV format each | M per bank, or one generic column mapper |
 | Import | No credit-card statements | M |
 | Households | Budgets, goals, assets, debts and bills cannot be shared | L |
 | Users | No forced password change after an administrator reset (rejected on 2026-09-19 unless done completely) | M |
@@ -53,7 +53,7 @@ Ordered by how much they would help daily use for the effort.
 ## Suggested order
 
 1. Section 1, because the release is not verified without it.
-2. A generic CSV import, now that categorization rules are in; between them they remove the most manual work.
+2. A generic CSV import, for the banks that offer no camt.053 statement; camt.053 import now covers most EU banks, so this moved behind it.
 3. Cash-flow forecast, now that recurring income and transfers exist to project.
 4. Anything that depends on email, now that email is delivered: a weekly or monthly summary, a budget alert by mail, an invitation flow if public registration is ever wanted.
 

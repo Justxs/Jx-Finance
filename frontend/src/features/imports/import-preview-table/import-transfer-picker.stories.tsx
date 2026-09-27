@@ -30,6 +30,8 @@ const fallbackRow: ImportPreviewRow = {
   suggestedCategoryId: null,
   suggestedTagIds: [],
   matchedRuleName: null,
+  isReversal: false,
+  suggestedTransferAccountId: null,
 };
 
 function toState(

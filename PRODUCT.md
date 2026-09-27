@@ -10,7 +10,7 @@ web
 
 The owner and the few people in their household. They are trusted, invited by an administrator, and already know what the product is for. Nobody arrives cold.
 
-The main situation is a sit-down session at a desktop computer, weekly or monthly: import the Swedbank CSV, review and categorize rows, record anything the bank did not see, then check balances, budgets, upcoming bills and reports. The phone is secondary and is used for the occasional quick entry or lookup.
+The main situation is a sit-down session at a desktop computer, weekly or monthly: import the bank statement (Swedbank CSV or camt.053 XML), review and categorize rows, record anything the bank did not see, then check balances, budgets, upcoming bills and reports. The phone is secondary and is used for the occasional quick entry or lookup.
 
 ## Product Purpose
 
@@ -24,7 +24,7 @@ A private ledger that the household runs itself. Data stays in its own PostgreSQ
 
 ## Operating Context
 
-- Swedbank EUR CSV statements are the main bulk input. Import is a review step: preview, row selection, category choice, transfer matching and duplicate detection.
+- Bank statements are the main bulk input: Swedbank CSV, or camt.053 XML from any bank that offers it. Import is a review step: preview, row selection, category choice, transfer matching and duplicate detection.
 - The installation has one reporting currency, EUR by default. Accounts have a main currency and can hold balances in any of 30 supported currencies; every transaction carries its own currency. Totals, budgets and reports are expressed in the reporting currency using the ECB reference rate on each transaction's date, synced daily when the administrator allows it. Entry accepts comma decimals. Dates and numbers follow the chosen locale.
 - Investments are kept by hand or imported from an Interactive Brokers Flex Query, by file upload or daily through the Flex Web Service when a connection is saved. Cost basis is first-in-first-out; the last price comes from the broker or is set by hand. Holdings count toward the account's value, the dashboard total and net worth.
 - The interface is English and Lithuanian. Lithuanian labels and bank descriptions are long and use diacritics (ą č ę ė į š ų ū ž).
@@ -35,7 +35,7 @@ A private ledger that the household runs itself. Data stays in its own PostgreSQ
 
 ## Capabilities and Constraints
 
-- Routes: dashboard, transactions, accounts (with transfers), categories, budgets, goals, net worth, recurring bills, investments, households, reports, settings (admin: features, reporting currency, exchange-rate sync, installation defaults), users (admin), profile (password, 2FA), login, first-run setup. Bank statement import is not a route: it opens as a dialog from Settings and Profile (provider list, then Swedbank CSV review with bulk selection, bulk category and category recall). Import and investments can be switched off per installation.
+- Routes: dashboard, transactions, accounts (with transfers), categories, budgets, goals, net worth, recurring bills, investments, households, reports, settings (admin: features, reporting currency, exchange-rate sync, installation defaults), users (admin), profile (password, 2FA), login, first-run setup. Bank statement import is not a route: it opens as a dialog from Settings and Profile (provider list, then the statement review with bulk selection, bulk category and category recall). Import and investments can be switched off per installation.
 - Light and dark themes are both first-class.
 - The browser makes no third-party network requests. The Content-Security-Policy allows scripts, fonts and connections from the same origin only; fonts must be bundled. The only outbound traffic comes from the server, and only when an administrator enables it: the daily ECB rate sync, a saved Interactive Brokers Flex connection, and notifications posted to the Discord webhooks members add, once an administrator allows Discord.
 - Out of scope for the product: bank APIs, live investment prices, manual exchange rates, per-user reporting currency, machine-learned categorization, credit-card statements, PWA/offline, scheduled or offsite backups.

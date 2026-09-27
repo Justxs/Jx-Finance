@@ -1,10 +1,7 @@
-using System.Globalization;
-using CsvHelper;
 using FastEndpoints;
 using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Common.ExchangeRates;
-using JxFinance.Common.Formats;
 using JxFinance.Common.References;
 using JxFinance.Common.Settings;
 using JxFinance.Common.Transfers;
@@ -17,10 +14,12 @@ using JxFinance.Domain.Common;
 using JxFinance.Domain.Settings;
 using JxFinance.Domain.Transactions;
 using JxFinance.Domain.Transfers;
+using JxFinance.Endpoints.Accounts.Shared;
 using JxFinance.Endpoints.CategorizationRules.Interfaces;
 using JxFinance.Endpoints.CategorizationRules.Shared;
 using JxFinance.Endpoints.Imports.Confirm;
 using JxFinance.Endpoints.Imports.Interfaces;
+using JxFinance.Endpoints.Imports.Parsing;
 using JxFinance.Endpoints.Imports.Preview;
 using JxFinance.Endpoints.Imports.Shared;
 using JxFinance.Endpoints.Transactions.Mappers;
@@ -40,41 +39,39 @@ public sealed class ImportService(
     IUnusualAmountService unusualAmounts,
     IInstanceSettingsStore settings) : IImportService
 {
-    private const string TransactionRowType = "20";
-
     private static readonly string[] TransferKeywords =
     [
         "transfer", "pervedimas", "grynieji", "cash", "withdrawal", "easy saver", "atsiskaitom", "tarp saskaitu",
     ];
 
-    public async Task<Result<ImportPreviewResponse>> PreviewSwedbankCsvAsync(
+    public async Task<Result<ImportPreviewResponse>> PreviewAsync(
+        StatementFormat format,
         Guid accountId,
         Stream fileStream,
         CancellationToken cancellationToken)
     {
         var typedAccountId = new AccountId(accountId);
-        if (await references.AccountExistsAsync(typedAccountId, cancellationToken) is { } accountError)
+        var accounts = await db.Accounts
+            .Select(a => new { a.Id, a.Iban, a.StartingBalance.Amount, a.StartingBalance.Currency })
+            .ToListAsync(cancellationToken);
+        var account = accounts.Find(a => a.Id == typedAccountId);
+        if (account is null)
         {
-            return accountError;
+            return new DomainError(ErrorCodes.ReferenceNotFound, "Account does not exist.");
         }
 
-        List<ParsedRow> parsedRows;
-        try
+        var parsed = format == StatementFormat.Camt053
+            ? await Camt053Parser.ParseAsync(fileStream, account.Iban, settings.Current.TimeZone, cancellationToken)
+            : SwedbankCsvParser.Parse(fileStream);
+        if (!parsed.TryGetValue(out var statement))
         {
-            parsedRows = ParseCsv(fileStream);
-        }
-        catch (Exception ex) when (ex is CsvHelperException or FormatException or IndexOutOfRangeException or OverflowException)
-        {
-            return new DomainError(
-                ErrorCodes.ImportInvalidFile,
-                "The file doesn't match the expected Swedbank CSV export shape.");
+            return parsed.Error;
         }
 
-        if (parsedRows.Count == 0)
-        {
-            return new ImportPreviewResponse([]);
-        }
+        Guid? OtherAccount(string? iban) =>
+            accounts.Find(a => iban is not null && a.Iban == iban && a.Id != typedAccountId)?.Id.Value;
 
+        var parsedRows = statement.Rows;
         var existingRefSet = await ExistingRefsAsync(typedAccountId, parsedRows.Select(r => r.ImportRef), cancellationToken);
         var suggestions = await SuggestionsAsync(typedAccountId, parsedRows, cancellationToken);
         var unusualVerdicts = await UnusualAsync(typedAccountId, parsedRows, suggestions, cancellationToken);
@@ -88,14 +85,37 @@ public sealed class ImportService(
                 r.Amount,
                 r.Type,
                 !existingRefSet.Add(r.ImportRef),
-                LooksLikeTransfer(r.Payee, r.Description),
+                LooksLikeTransfer(r.Payee, r.Description) || OtherAccount(r.CounterpartyIban) is not null,
                 r.Currency,
                 suggestions[index]?.CategoryId,
                 suggestions[index]?.TagIds ?? [],
-                suggestions[index]?.RuleName))
+                suggestions[index]?.RuleName,
+                r.IsReversal,
+                OtherAccount(r.CounterpartyIban),
+                unusualVerdicts[index].ToResponse()))
             .ToList();
 
-        return new ImportPreviewResponse(rows);
+        var closing = statement.ClosingBalance;
+        decimal? ledger = null;
+        if (closing?.Currency == account.Currency && statement.ClosingDate is { } closingDate)
+        {
+            var moved = await AccountMovements.SumAsync(db, [typedAccountId], closingDate, cancellationToken);
+            ledger = account.Amount + moved.Where(m => m.Currency == account.Currency).Sum(m => m.Amount);
+        }
+
+        var matches = statement.Iban is not null && statement.Iban == account.Iban;
+        return new ImportPreviewResponse(
+            rows,
+            new ImportStatementSummary(
+                statement.Iban,
+                matches,
+                matches ? null : OtherAccount(statement.Iban),
+                statement.NotBooked,
+                statement.Unreadable,
+                statement.ClosingDate,
+                closing?.Amount,
+                closing?.Currency,
+                ledger));
     }
 
     public async Task<Result<ImportConfirmResponse>> ConfirmAsync(
@@ -133,7 +153,7 @@ public sealed class ImportService(
                 AuditAction.Imported,
                 AuditEntityKind.Transaction,
                 TrashLabel.Counted(
-                    $"Swedbank CSV into {target.Name}",
+                    $"{(request.Format == StatementFormat.Camt053 ? "camt.053 XML" : "Swedbank CSV")} into {target.Name}",
                     (totals.Imported, "entry", "entries"),
                     (totals.Skipped, "duplicate skipped", "duplicates skipped")),
                 totals.Imported,
@@ -363,53 +383,6 @@ public sealed class ImportService(
 
     private sealed record ImportTotals(int Imported, int Skipped);
 
-    private static List<ParsedRow> ParseCsv(Stream fileStream)
-    {
-        using var reader = new StreamReader(fileStream);
-        using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
-
-        csv.Read();
-        csv.ReadHeader();
-        string[] expected = ["Sąskaitos Nr.", "", "Data", "Gavėjas", "Paaiškinimai", "Suma", "Valiuta", "D/K", "Įrašo Nr."];
-        if (csv.HeaderRecord is not { Length: >= 9 } headers ||
-            !expected.Select((name, index) => headers[index].Trim() == name).All(matches => matches))
-            throw new FormatException("Unexpected CSV columns.");
-
-        var rows = new List<ParsedRow>();
-        while (csv.Read())
-        {
-            var rowType = csv.GetField(1);
-            if (rowType != TransactionRowType)
-            {
-                continue;
-            }
-
-            var date = DateOnly.ParseExact(csv.GetField(2)!.Trim(), DateFormats.IsoDate, CultureInfo.InvariantCulture);
-            var payee = csv.GetField(3)?.Trim();
-            var description = csv.GetField(4)?.Trim();
-            var amount = decimal.Parse(csv.GetField(5)!.Trim(), NumberStyles.AllowLeadingSign | NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture);
-            var direction = csv.GetField(7)?.Trim();
-            var importRef = csv.GetField(8)!.Trim();
-
-            if (direction is not ("D" or "K") || !CurrencyCode.TryParse(csv.GetField(6), out var currency)
-                || string.IsNullOrWhiteSpace(importRef) || importRef.Length > 64
-                || amount <= 0 || !DecimalRules.FitsMoney(amount) || description?.Length > 500)
-                throw new FormatException("Invalid bank entry.");
-            if (rows.Count >= 10000) throw new FormatException("At most 10000 entries can be imported at once.");
-
-            rows.Add(new ParsedRow(
-                importRef,
-                date,
-                payee,
-                description,
-                amount,
-                direction == "K" ? FlowType.Income : FlowType.Expense,
-                currency));
-        }
-
-        return rows;
-    }
-
     private async Task<IReadOnlyList<RuleSuggestion?>> SuggestionsAsync(
         AccountId accountId,
         IReadOnlyList<ParsedRow> parsedRows,
@@ -427,20 +400,57 @@ public sealed class ImportService(
         return await rules.SuggestAsync(accountId, candidates, cancellationToken);
     }
 
+    private async Task<IReadOnlyList<UnusualVerdict?>> UnusualAsync(
+        AccountId accountId,
+        IReadOnlyList<ParsedRow> parsedRows,
+        IReadOnlyList<RuleSuggestion?> suggestions,
+        CancellationToken cancellationToken)
+    {
+        var verdicts = new UnusualVerdict?[parsedRows.Count];
+        var expenses = parsedRows
+            .Select((row, index) => (Row: row, Index: index))
+            .Where(entry => entry.Row.Type == FlowType.Expense)
+            .ToList();
+        if (!settings.Current.IsEnabled(Feature.UnusualAmounts) || expenses.Count == 0)
+        {
+            return verdicts;
+        }
+
+        if (expenses.Any(entry => entry.Row.Currency != rates.ReportingCurrency))
+        {
+            await rates.PreloadAsync(
+                expenses.Min(entry => entry.Row.Date),
+                expenses.Max(entry => entry.Row.Date),
+                cancellationToken);
+        }
+
+        var candidates = new List<(int Index, UnusualCandidate Candidate)>();
+        foreach (var (row, index) in expenses)
+        {
+            var value = await valuations.ValueAsync(accountId, row.Amount, row.Currency, row.Date, [], cancellationToken);
+            if (!value.TryGetValue(out var valued))
+            {
+                continue;
+            }
+
+            var categoryId = suggestions[index]?.CategoryId is { } suggested ? new CategoryId(suggested) : (CategoryId?)null;
+            candidates.Add((index, new UnusualCandidate(accountId, categoryId, row.Date, valued.ReportingAmount, row.Description)));
+        }
+
+        var evaluated = await unusualAmounts.EvaluateAsync(candidates.Select(c => c.Candidate).ToList(), cancellationToken);
+        for (var position = 0; position < candidates.Count; position++)
+        {
+            verdicts[candidates[position].Index] = evaluated[position];
+        }
+
+        return verdicts;
+    }
+
     private static bool LooksLikeTransfer(string? payee, string? description)
     {
         var text = $"{payee} {description}".ToLowerInvariant();
         return TransferKeywords.Any(text.Contains);
     }
-
-    private sealed record ParsedRow(
-        string ImportRef,
-        DateOnly Date,
-        string? Payee,
-        string? Description,
-        decimal Amount,
-        FlowType Type,
-        Currency Currency);
 
     private async Task<HashSet<string>> ExistingRefsAsync(
         AccountId accountId,

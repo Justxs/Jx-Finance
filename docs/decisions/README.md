@@ -17,7 +17,7 @@ Before changing behaviour that a page here covers, read that page. When you choo
 | [Money and multi-currency](multi-currency.md) | Money | 2 | [Multi-currency](../features/multi-currency.md) |
 | [Transactions, saved filters and templates](transactions.md) | Saved filters and templates | 4 | [Transactions](../features/transactions.md) |
 | [Transfers](transfers.md) | none | 1 | [Transfers](../features/transfers.md) |
-| [Imports](swedbank-csv-import.md) | Imports | 1 | [Swedbank CSV import](../features/swedbank-csv-import.md) |
+| [Imports](swedbank-csv-import.md) | Imports | 5 | [Bank statement import](../features/bank-statement-import.md) |
 | [Budgets](budgets.md) | Budgets | 5 | [Budgets](../features/budgets.md) |
 | [Goals](goals.md) | none | 3 | [Goals](../features/goals.md) |
 | [Recurring entries and subscription detection](recurring-bills.md) | Recurring entries, Subscription detection, Dismissing a suggestion | 4 | [Recurring entries](../features/recurring-bills.md) |

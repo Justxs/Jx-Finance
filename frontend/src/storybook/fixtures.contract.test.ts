@@ -36,7 +36,15 @@ function asCategoryBreakdown(fixture: unknown) {
 }
 
 function asImportPreview(fixture: unknown) {
-  return { rows: fixture };
+  return { ...fixtures.importPreview, rows: fixture };
+}
+
+function asImportStatement(fixture: unknown) {
+  return { ...fixtures.importPreview, statement: fixture };
+}
+
+function asUnusualTransaction(fixture: unknown) {
+  return { ...fixtures.longDescriptionTransaction, unusual: fixture };
 }
 
 function asPortfolio(fixture: unknown) {
@@ -84,6 +92,8 @@ const contracts: Record<string, Contract> = {
   splitTransactionLines: { schema: schemas.TransactionResponse, toResponse: asSplitTransaction },
   splitTransaction: { schema: schemas.TransactionResponse },
   longDescriptionTransaction: { schema: schemas.TransactionResponse },
+  payeeUnusual: { schema: schemas.TransactionResponse, toResponse: asUnusualTransaction },
+  categoryUnusual: { schema: schemas.TransactionResponse, toResponse: asUnusualTransaction },
   uncategorisedTransaction: { schema: schemas.TransactionResponse },
   foreignCurrencyTransactions: { schema: schemas.TransactionsResponse, toResponse: asPage },
   transactions: { schema: schemas.TransactionsResponse, toResponse: asPage },
@@ -113,12 +123,14 @@ const contracts: Record<string, Contract> = {
   unavailableFundedGoal: { schema: schemas.GoalsResponseItem },
   goals: { schema: schemas.GoalsResponse },
   dueSoonBill: { schema: schemas.RecurringBillResponse },
+  priceRiseBill: { schema: schemas.RecurringBillResponse },
   variableBill: { schema: schemas.RecurringBillResponse },
   overdueBill: { schema: schemas.RecurringBillResponse },
   inactiveBill: { schema: schemas.RecurringBillResponse },
   incomeBill: { schema: schemas.RecurringBillResponse },
   transferBill: { schema: schemas.RecurringBillResponse },
   crossCurrencyTransferBill: { schema: schemas.RecurringBillResponse },
+  mortgageBill: { schema: schemas.RecurringBillResponse },
   recurringBills: { schema: schemas.RecurringBillsResponse },
   spotifyCandidate: { schema: schemas.SubscriptionCandidatesResponseItem },
   gymCandidate: { schema: schemas.SubscriptionCandidatesResponseItem },
@@ -130,8 +142,26 @@ const contracts: Record<string, Contract> = {
   expenseDueNotification: { schema: schemas.NotificationsResponseItem },
   incomeDueNotification: { schema: schemas.NotificationsResponseItem },
   transferDueNotification: { schema: schemas.NotificationsResponseItem },
+  unusualAmountNotification: { schema: schemas.NotificationsResponseItem },
+  unusualAmountsNotification: { schema: schemas.NotificationsResponseItem },
+  priceRiseNotification: { schema: schemas.NotificationsResponseItem },
+  monthReadyNotification: { schema: schemas.NotificationsResponseItem },
+  monthCloseYear: { schema: schemas.MonthCloseYearResponse },
+  openMonthReview: { schema: schemas.MonthReviewResponse },
+  clearOpenMonthReview: { schema: schemas.MonthReviewResponse },
+  closedMonthReview: { schema: schemas.MonthReviewResponse },
+  closedChangedMonthReview: { schema: schemas.MonthReviewResponse },
+  currencyChangedMonthReview: { schema: schemas.MonthReviewResponse },
+  notEndedMonthReview: { schema: schemas.MonthReviewResponse },
+  emptyMonthReview: { schema: schemas.MonthReviewResponse },
   notifications: { schema: schemas.NotificationsResponse },
   assets: { schema: schemas.AssetsResponse },
+  fullyDepreciatedAsset: { schema: schemas.AssetsResponse, toResponse: asList },
+  dollarAsset: { schema: schemas.AssetsResponse, toResponse: asList },
+  apartmentValuations: { schema: schemas.AssetValuationsResponse },
+  carValuations: { schema: schemas.AssetValuationsResponse },
+  apartmentValueHistory: { schema: schemas.AssetValueHistoryResponse },
+  carValueHistory: { schema: schemas.AssetValueHistoryResponse },
   debts: { schema: schemas.DebtsResponse },
   zeroRateDebt: { schema: schemas.DebtsResponse, toResponse: asList },
   linearDebt: { schema: schemas.DebtsResponse, toResponse: asList },
@@ -139,6 +169,9 @@ const contracts: Record<string, Contract> = {
   mortgageScheduleWithExtra: { schema: schemas.DebtScheduleResponse },
   zeroRateSchedule: { schema: schemas.DebtScheduleResponse },
   linearSchedule: { schema: schemas.DebtScheduleResponse },
+  trackedMortgage: { schema: schemas.DebtsResponse, toResponse: asList },
+  mortgagePayments: { schema: schemas.DebtPaymentsResponse },
+  linkedPaymentTransaction: { schema: schemas.TransactionResponse },
   netWorth: { schema: schemas.NetWorthResponse },
   emptyNetWorth: { schema: schemas.NetWorthResponse },
   netWorthHistoryItems: { schema: schemas.NetWorthHistoryResponse, toResponse: asItems },
@@ -164,6 +197,10 @@ const contracts: Record<string, Contract> = {
   importPreviewRows: { schema: schemas.ImportPreviewResponse, toResponse: asImportPreview },
   importPreview: { schema: schemas.ImportPreviewResponse },
   importPreviewAllDuplicates: { schema: schemas.ImportPreviewResponse },
+  camtPreviewRows: { schema: schemas.ImportPreviewResponse, toResponse: asImportPreview },
+  camtStatement: { schema: schemas.ImportPreviewResponse, toResponse: asImportStatement },
+  camtPreview: { schema: schemas.ImportPreviewResponse },
+  camtPreviewOtherAccount: { schema: schemas.ImportPreviewResponse },
   backups: { schema: schemas.BackupsResponse },
   backupRestored: { schema: schemas.RestoreBackupResponse },
   twoFactorSetup: { schema: schemas.SetupTwoFactorResponse },
@@ -262,10 +299,14 @@ const notApiResponses = [
   "FIXTURE_MONTH_START",
   "FIXTURE_MONTH_END",
   "FIXTURE_YEAR_START",
+  "MONTH_CLOSE_MONTH",
+  "MONTH_CLOSE_CHANGED_MONTH",
+  "MONTH_CLOSE_RUNNING_MONTH",
   "ids",
   "budgetWindows",
   "ratesPerEuro",
   "transactionsCsv",
+  "camtStatementXml",
   "tinyPng",
   "backupRestorePassword",
   "adminPassword",

@@ -91,14 +91,19 @@ async function created(response: JsonResponse) {
 export async function createAccount(
   request: APIRequestContext,
   name: string,
-  options: { currency?: Currency; startingBalance?: string; type?: AccountType } = {},
+  options: {
+    currency?: Currency;
+    startingBalance?: string;
+    type?: AccountType;
+    iban?: string;
+  } = {},
 ) {
   return created(
     await request.post("/api/accounts", {
       data: {
         name,
         description: null,
-        iban: null,
+        iban: options.iban ?? null,
         type: options.type ?? "checking",
         startingBalance: options.startingBalance ?? "1000.00",
         currency: options.currency ?? "eur",

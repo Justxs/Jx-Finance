@@ -84,3 +84,86 @@ test("a Swedbank statement is imported and one row is matched to an existing tra
   const accounts = await readJson(await page.request.get("/api/accounts"), AccountsResponse);
   expect(accounts.find((account) => account.id === checkingId)?.currentBalance).toBe("1934.23");
 });
+
+function camtEntry(
+  reference: string,
+  amount: string,
+  direction: string,
+  parties: string,
+  text: string,
+  date: string,
+  status = "BOOK",
+) {
+  return `<Ntry><AcctSvcrRef>${reference}</AcctSvcrRef><Amt Ccy="EUR">${amount}</Amt><CdtDbtInd>${direction}</CdtDbtInd><Sts><Cd>${status}</Cd></Sts><BookgDt><Dt>${date}</Dt></BookgDt><NtryDtls><TxDtls><RltdPties>${parties}</RltdPties><RmtInf><Ustrd>${text}</Ustrd></RmtInf></TxDtls></NtryDtls></Ntry>`;
+}
+
+function camtStatement(iban: string, savingsIban: string, reference: string, date: string) {
+  const entries = [
+    camtEntry(
+      `${reference}-A`,
+      "15.77",
+      "DBIT",
+      "<Cdtr><Pty><Nm>LIDL</Nm></Pty></Cdtr>",
+      `PIRKINYS ${reference}`,
+      date,
+    ),
+    camtEntry(
+      `${reference}-B`,
+      "1000.00",
+      "CRDT",
+      "<Dbtr><Pty><Nm>Employer</Nm></Pty></Dbtr>",
+      `Atlyginimas ${reference}`,
+      date,
+    ),
+    camtEntry(
+      `${reference}-C`,
+      "50.00",
+      "DBIT",
+      `<Cdtr><Pty><Nm>Me</Nm></Pty></Cdtr><CdtrAcct><Id><IBAN>${savingsIban}</IBAN></Id></CdtrAcct>`,
+      `Taupymas ${reference}`,
+      date,
+    ),
+    camtEntry(`${reference}-D`, "9.99", "DBIT", "", `Pending ${reference}`, date, "PDNG"),
+  ];
+  return `<?xml version="1.0" encoding="UTF-8"?><Document xmlns="urn:iso:std:iso:20022:tech:xsd:camt.053.001.08"><BkToCstmrStmt><Stmt><Acct><Id><IBAN>${iban}</IBAN></Id></Acct><Bal><Tp><CdOrPrtry><Cd>CLBD</Cd></CdOrPrtry></Tp><Amt Ccy="EUR">1934.23</Amt><CdtDbtInd>CRDT</CdtDbtInd><Dt><Dt>${date}</Dt></Dt></Bal>${entries.join("")}</Stmt></BkToCstmrStmt></Document>`;
+}
+
+test("a camt.053 statement proposes the transfer from the IBAN and agrees with the closing balance", async ({
+  page,
+}) => {
+  const reference = unique("E2ECAMT").replace(" ", "-");
+  const checking = unique("Camt checking");
+  const savings = unique("Camt savings");
+  const date = today();
+  const stamp = Date.now() * 10;
+  const checkingIban = `LT${String(stamp + 1).padStart(18, "0")}`;
+  const savingsIban = `LT${String(stamp + 2).padStart(18, "0")}`;
+  const checkingId = await createAccount(page.request, checking, { iban: checkingIban });
+  await createAccount(page.request, savings, { type: "savings", iban: savingsIban });
+
+  await page.goto("/settings?section=import");
+  await page.getByRole("button", { name: "Import bank statement" }).click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByRole("button", { name: /ISO 20022/ }).click();
+  await choose(page, dialog.getByRole("combobox", { name: "Account" }), checking);
+  await dialog.locator("#import-file").setInputFiles({
+    name: "statement.xml",
+    mimeType: "application/xml",
+    buffer: Buffer.from(camtStatement(checkingIban, savingsIban, reference, date), "utf8"),
+  });
+  await dialog.getByRole("button", { name: "Preview" }).click();
+
+  await expect(dialog.getByText(`Statement for ${checkingIban}`)).toBeVisible();
+  await expect(dialog.getByText("1 pending or informational entry skipped")).toBeVisible();
+  const transferRow = dialog.getByRole("row", { name: new RegExp(`Taupymas ${reference}`) });
+  await expect(transferRow.getByRole("combobox", { name: "Record as" })).toContainText(savings);
+  await expect(transferRow.getByRole("checkbox")).not.toBeChecked();
+
+  await dialog.getByRole("checkbox", { name: "Select all rows" }).check();
+  await expect(dialog.getByText(/Matches the ledger after the selected rows/)).toBeVisible();
+  await dialog.getByRole("button", { name: "Import 3 rows" }).click();
+  await expect(dialog.getByText("Imported 3 rows.")).toBeVisible();
+
+  const accounts = await readJson(await page.request.get("/api/accounts"), AccountsResponse);
+  expect(accounts.find((account) => account.id === checkingId)?.currentBalance).toBe("1934.23");
+});

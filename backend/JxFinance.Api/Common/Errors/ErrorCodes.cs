@@ -60,6 +60,7 @@ public static class ErrorCodes
     public const string HoldingDependentSales = "holding.dependentSales";
     public const string SecurityNotHeld = "security.notHeld";
     public const string ImportInvalidFile = "import.invalidFile";
+    public const string ImportNoStatementForAccount = "import.noStatementForAccount";
     public const string ImportTransferMismatch = "import.transferMismatch";
     public const string ImportTransferAlreadyMatched = "import.transferAlreadyMatched";
     public const string RestoreExpired = "restore.expired";

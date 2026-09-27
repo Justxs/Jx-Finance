@@ -1,4 +1,8 @@
-import type { ImportPreviewResponse, ImportPreviewRow } from "@/api/generated/model";
+import type {
+  ImportPreviewResponse,
+  ImportPreviewRow,
+  ImportStatementSummary,
+} from "@/api/generated/model";
 import { ids } from "./base";
 import { statusProblem } from "./problems";
 
@@ -8,7 +12,7 @@ const noSuggestion = {
   matchedRuleName: null,
 };
 
-export const importPreviewRows: ImportPreviewRow[] = [
+const swedbankRows = [
   {
     importRef: "2026091700000012",
     date: "2026-09-17",
@@ -28,12 +32,13 @@ export const importPreviewRows: ImportPreviewRow[] = [
     date: "2026-09-18",
     payee: "LIDL LIETUVA UAB",
     description: "Pirkinys 18.09.2026 LIDL ZIRMUNU VILNIUS",
-    amount: "38.64",
+    amount: "138.64",
     type: "expense",
     isDuplicate: false,
     looksLikeTransfer: false,
     currency: "eur",
     ...noSuggestion,
+    unusual: { basis: "payee", typicalAmount: "36.20", factor: 3.8, sampleSize: 9 },
   },
   {
     importRef: "2026091800000004",
@@ -124,16 +129,152 @@ export const importPreviewRows: ImportPreviewRow[] = [
     currency: "eur",
     ...noSuggestion,
   },
-];
+] satisfies Omit<ImportPreviewRow, "isReversal" | "suggestedTransferAccountId">[];
 
-export const importPreview: ImportPreviewResponse = { rows: importPreviewRows };
+export const importPreviewRows: ImportPreviewRow[] = swedbankRows.map((row) => ({
+  isReversal: false,
+  suggestedTransferAccountId: null,
+  ...row,
+}));
+
+const csvStatement: ImportStatementSummary = {
+  iban: null,
+  ibanMatchesAccount: false,
+  otherAccountId: null,
+  notBooked: 0,
+  unreadable: 0,
+  closingDate: null,
+  closingBalance: null,
+  closingCurrency: null,
+  ledgerBalanceAtClose: null,
+};
+
+export const importPreview: ImportPreviewResponse = {
+  rows: importPreviewRows,
+  statement: csvStatement,
+};
 
 export const importPreviewAllDuplicates: ImportPreviewResponse = {
   rows: importPreviewRows.map((row) => ({ ...row, isDuplicate: true })),
+  statement: csvStatement,
 };
+
+const camtRow = {
+  ...noSuggestion,
+  isDuplicate: false,
+  looksLikeTransfer: false,
+  isReversal: false,
+  suggestedTransferAccountId: null,
+  currency: "eur",
+} as const;
+
+export const camtPreviewRows: ImportPreviewRow[] = [
+  {
+    ...camtRow,
+    importRef: "2026092800000101/0",
+    date: "2026-09-28",
+    payee: "MAXIMA LT, UAB",
+    description: "Kortelės operacija MAXIMA X-123 VILNIUS",
+    amount: "23.40",
+    type: "expense",
+  },
+  {
+    ...camtRow,
+    importRef: "2026092800000101/1",
+    date: "2026-09-28",
+    payee: "CIRCLE K LIETUVA",
+    description: "Kortelės operacija CIRCLE K ZIRMUNU",
+    amount: "41.10",
+    type: "expense",
+  },
+  {
+    ...camtRow,
+    importRef: "2026092700000044",
+    date: "2026-09-27",
+    payee: "BOLT OPERATIONS OU",
+    description: "Grąžinimas BOLT.EU/O/2609161842",
+    amount: "7.40",
+    type: "income",
+    isReversal: true,
+  },
+  {
+    ...camtRow,
+    importRef: "2026092500000017",
+    date: "2026-09-25",
+    payee: "Rūta Kazlauskienė",
+    description: "Į taupomąją sąskaitą",
+    amount: "300.00",
+    type: "expense",
+    looksLikeTransfer: true,
+    suggestedTransferAccountId: ids.accounts.savings,
+  },
+  {
+    ...camtRow,
+    importRef: "2026092400000003",
+    date: "2026-09-24",
+    payee: "UAB DARBDAVYS",
+    description: "Darbo užmokestis už rugsėjį",
+    amount: "2150.00",
+    type: "income",
+  },
+  {
+    ...camtRow,
+    importRef: "2026092200000009",
+    date: "2026-09-22",
+    payee: "SPOTIFY AB",
+    description: "Spotify Premium",
+    amount: "12.99",
+    type: "expense",
+    isDuplicate: true,
+  },
+];
+
+export const camtStatement: ImportStatementSummary = {
+  iban: "LT127300010123456789",
+  ibanMatchesAccount: true,
+  otherAccountId: null,
+  notBooked: 2,
+  unreadable: 0,
+  closingDate: "2026-09-30",
+  closingBalance: "3273.25",
+  closingCurrency: "eur",
+  ledgerBalanceAtClose: "1480.35",
+};
+
+export const camtPreview: ImportPreviewResponse = {
+  rows: camtPreviewRows,
+  statement: camtStatement,
+};
+
+export const camtPreviewOtherAccount: ImportPreviewResponse = {
+  rows: camtPreviewRows,
+  statement: {
+    ...camtStatement,
+    iban: "LT647044001231465456",
+    ibanMatchesAccount: false,
+    otherAccountId: ids.accounts.savings,
+  },
+};
+
+export const camtStatementXml = `<?xml version="1.0" encoding="UTF-8"?>
+<Document xmlns="urn:iso:std:iso:20022:tech:xsd:camt.053.001.02">
+  <BkToCstmrStmt>
+    <Stmt>
+      <Acct><Id><IBAN>LT127300010123456789</IBAN></Id><Ccy>EUR</Ccy></Acct>
+      <Ntry>
+        <AcctSvcrRef>2026092400000003</AcctSvcrRef>
+        <Amt Ccy="EUR">2150.00</Amt>
+        <CdtDbtInd>CRDT</CdtDbtInd>
+        <Sts>BOOK</Sts>
+        <BookgDt><Dt>2026-09-24</Dt></BookgDt>
+      </Ntry>
+    </Stmt>
+  </BkToCstmrStmt>
+</Document>
+`;
 
 export const importFormatProblem = {
   ...statusProblem(400),
-  instance: "/api/import/swedbank/preview",
+  instance: "/api/import/preview",
   detail: "The file doesn't match the expected Swedbank CSV export shape.",
 };

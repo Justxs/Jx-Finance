@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
-import type { AccountResponse } from "@/api/generated/model";
+import type { AccountResponse, StatementFormat } from "@/api/generated/model";
 import { Section } from "@/components/ui/section/section";
 import { accounts, checkingAccount } from "@/storybook/fixtures";
 import { ImportUploadForm } from "./import-upload-form";
@@ -12,6 +12,7 @@ interface HarnessProps {
   fileError?: string;
   secondary?: boolean;
   disabled?: boolean;
+  format?: StatementFormat;
 }
 
 function UploadFormHarness({
@@ -20,6 +21,7 @@ function UploadFormHarness({
   fileError,
   secondary = false,
   disabled = false,
+  format = "swedbankCsv",
 }: Readonly<HarnessProps>) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [accountId, setAccountId] = useState(accountList[0]?.id ?? "");
@@ -30,6 +32,7 @@ function UploadFormHarness({
         accounts={accountList}
         accountId={accountId}
         onAccountChange={setAccountId}
+        format={format}
         fileInputRef={fileInputRef}
         onPreview={() =>
           toast.message(fileInputRef.current?.files?.[0]?.name ?? "No file selected")
@@ -53,6 +56,8 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
+
+export const XmlStatement: Story = { args: { format: "camt053" } };
 
 export const PreviewPending: Story = { args: { previewPending: true } };
 

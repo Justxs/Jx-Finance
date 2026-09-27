@@ -13,6 +13,7 @@ public sealed class AccountMovementsTests
         await AccountMovements.SumAsync(
             capture.Db,
             [new AccountId(Guid.NewGuid())],
+            null,
             TestContext.Current.CancellationToken);
 
         var sql = capture.OnlyStatement;

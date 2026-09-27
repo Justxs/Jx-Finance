@@ -20,7 +20,7 @@ Every feature the current code implements, one page per feature under `features/
 | 7 | [Transactions, splits, filters, bulk recategorize](transactions.md) | always on | `Transactions` | `transactions` |
 | 8 | [Transfers](transfers.md) | always on | `Transfers` | `accounts` (Transfers section) |
 | 9 | [Multi-currency, conversions, exchange rates](multi-currency.md) | `MultiCurrency` | `Conversions`, `Currencies`, `Infrastructure/ExchangeRates` | `accounts` (Currency conversions section) |
-| 10 | [Swedbank CSV import](swedbank-csv-import.md) | `Import` | `Imports` | `imports` (dialog on Settings and Profile) |
+| 10 | [Bank statement import](bank-statement-import.md) | `Import` | `Imports` | `imports` (dialog on Settings and Profile) |
 | 11 | [Budgets](budgets.md) | `Budgets` | `Budgets` | `budgets` |
 | 12 | [Goals](goals.md) | `Goals` | `Goals` | `goals` |
 | 13 | [Recurring entries](recurring-bills.md) | `RecurringBills` | `RecurringBills` | `recurring-bills` |

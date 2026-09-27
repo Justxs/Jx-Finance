@@ -83,7 +83,7 @@
       "accounts": "Add an account",
       "accountsHint": "with its opening balance.",
       "transactions": "Record transactions",
-      "transactionsHint": "by hand or from a bank CSV.",
+      "transactionsHint": "by hand or from a bank statement.",
       "budgets": "Set a budget",
       "budgetsHint": "to see whether the month is on plan."
     },
@@ -705,8 +705,8 @@
           "hint": "Income and expense summaries over any period."
         },
         "import": {
-          "name": "CSV import",
-          "hint": "Bank statement upload."
+          "name": "Statement import",
+          "hint": "Bank statement upload, CSV or XML."
         },
         "households": {
           "name": "Households",
@@ -1639,8 +1639,8 @@
     }
   },
   "imports": {
-    "file": "CSV file",
-    "chooseFile": "Click to choose a CSV file",
+    "file": "File",
+    "chooseFile": "Click to choose a file",
     "preview": "Preview",
     "confirmed": "Imported {{imported}} transactions ({{skipped}} duplicates skipped)",
     "noRows": "No importable rows found in this file.",
@@ -1659,17 +1659,14 @@
     "matchHelp": "When importing the other account, match the same transfer to avoid counting it twice.",
     "selectRow": "Select: {{row}}",
     "flags": "Status",
-    "pageDescription": "Upload a Swedbank statement, review the rows, then confirm what enters the ledger.",
+    "pageDescription": "Upload a bank statement, review the rows, then confirm what enters the ledger.",
     "fileSection": "Statement file",
     "reviewSection": "Review rows",
-    "fileHint": "Swedbank account statement exported as CSV, in EUR, up to 5 MB. Nothing is saved until you confirm the reviewed rows.",
-    "fileRequired": "Choose a CSV file first.",
+    "fileRequired": "Choose a statement file first.",
     "fileEmpty": "This file is empty. Export the statement again and choose the new file.",
-    "fileTooLarge": "This file is larger than 5 MB. Export a shorter period.",
-    "errorFormat": "This file does not match the Swedbank CSV statement format.",
-    "errorFileSize": "The file must be a non-empty CSV no larger than 5 MB.",
+    "fileTooLarge": "This file is larger than the limit. Export a shorter period.",
+    "errorFileSize": "The file must not be empty or larger than the limit shown under the file field.",
     "errorGeneric": "The preview could not be loaded. Try again.",
-    "errorFix": "Export the account statement from Swedbank as CSV with amounts in EUR and upload it unchanged. The preview checks column order, currency, debit and credit direction, dates, amounts and references.",
     "noAccounts": "An import needs an account to record the rows in.",
     "goToAccounts": "Add one in Accounts",
     "allDuplicates": "Every row in this file has already been imported into this account. There is nothing new to add.",
@@ -1704,12 +1701,40 @@
     "chooseProvider": "Choose where the statement comes from.",
     "allProviders": "All providers",
     "providers": {
-      "swedbankFormat": "EUR account statement, CSV"
+      "swedbank": "Swedbank",
+      "swedbankFormat": "Account statement, CSV",
+      "camt053": "Bank statement XML (ISO 20022)",
+      "camt053Format": "camt.053 statement from any bank that offers it"
     },
     "ruleFilled": "Filled by a rule",
     "ruleFilledHint": "Filled by your rule \"{{rule}}\". Change it if it does not fit.",
     "tagsFor": "Tags: {{row}}",
-    "chooseTags": "Tags"
+    "chooseTags": "Tags",
+    "reversal": "Reversal",
+    "formats": {
+      "swedbankCsv": {
+        "hint": "Swedbank account statement exported as CSV, up to 5 MB. Nothing is saved until you confirm the reviewed rows.",
+        "errorFormat": "This file does not match the Swedbank CSV statement format.",
+        "errorFix": "Export the account statement from Swedbank as CSV and upload it unchanged. The preview checks column order, currency, debit and credit direction, dates, amounts and references."
+      },
+      "camt053": {
+        "hint": "In internet banking, download the account statement as XML / ISO 20022 / camt.053, up to 20 MB. Nothing is saved until you confirm the reviewed rows.",
+        "errorFormat": "This file is not a camt.053 bank statement in ISO 20022 XML.",
+        "errorFix": "Download the account statement from internet banking as XML (ISO 20022, camt.053) and upload it unchanged. Intraday reports (camt.052) and notifications (camt.054) are not read."
+      }
+    },
+    "statement": {
+      "iban": "Statement for {{iban}}",
+      "otherIban": "This is not the IBAN recorded for the chosen account.",
+      "switch": "Switch to {{account}}",
+      "notBooked_one": "{{count}} pending or informational entry skipped",
+      "notBooked_other": "{{count}} pending or informational entries skipped",
+      "unreadable_one": "{{count}} entry could not be read and is not shown",
+      "unreadable_other": "{{count}} entries could not be read and are not shown",
+      "closing": "Closing balance on {{date}}: {{amount}}",
+      "agrees": "Matches the ledger after the selected rows ({{ledger}})",
+      "differs": "Ledger after the selected rows: {{ledger}}, a difference of {{difference}}"
+    }
   },
   "errors": {
     "generic": "Something went wrong. Please try again.",
@@ -1860,6 +1885,7 @@
     },
     "import": {
       "invalidFile": "The file is empty, too large or not in the expected format.",
+      "noStatementForAccount": "The file holds statements only for {{reason}}. Record this account's IBAN, or choose the account the statement belongs to.",
       "transferAlreadyMatched": "The chosen transfer is already matched to another bank entry of this account.",
       "transferMismatch": "The chosen transfer does not match this row."
     },

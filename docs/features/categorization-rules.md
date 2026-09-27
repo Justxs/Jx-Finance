@@ -4,7 +4,7 @@ Back to the [feature walkthrough](README.md). See also [decisions](../decisions/
 
 Backend `CategorizationRules`, page `/categorization-rules`, and the rule parts of `Imports`. A rule reads the description of a transaction and fills in a category, a set of tags, or both. It is the answer to typing "Maistas" next to every MAXIMA line for the fourth month running: describe the line once, and the import preview fills it in before you confirm, or a run fills in the lines that are already in the ledger without one.
 
-A rule never acts on its own. It suggests in the [Swedbank import preview](swedbank-csv-import.md) and it writes to the ledger only when somebody asks for a run and then presses apply.
+A rule never acts on its own. It suggests in the [bank statement import preview](bank-statement-import.md) and it writes to the ledger only when somebody asks for a run and then presses apply.
 
 Rules are behind the `CategorizationRules` feature switch. Unlike [Tags](tags.md), which are an attribute a transaction carries, a rule is a screen and a route of its own, and turning it off takes nothing away from the rows it already filled: their category and their tags are ordinary values on ordinary transactions. The import preview keeps working with the switch off; it simply stops suggesting.
 
@@ -106,7 +106,7 @@ sequenceDiagram
     participant Dlg as ImportSection
     participant Api as ImportService
     participant Rules as CategorizationRuleService
-    Dlg->>Api: POST /api/import/swedbank/preview
+    Dlg->>Api: POST /api/import/preview
     Api->>Api: parse the CSV, flag duplicates and likely transfers
     Api->>Rules: SuggestAsync(account, one candidate per row)
     Rules-->>Api: first matching rule per row, or nothing
@@ -114,7 +114,7 @@ sequenceDiagram
     Dlg->>Dlg: a rule's category beats the older "same description" recall
     Dlg->>Dlg: a duplicate row is left blank, rule or no rule
     Note over Dlg: the user changes any category or tag set
-    Dlg->>Api: POST /api/import/swedbank/confirm with what the user decided
+    Dlg->>Api: POST /api/import/confirm with what the user decided
 ```
 
 Three rules of behaviour matter here.

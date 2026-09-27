@@ -8,11 +8,17 @@ import {
   useImportConfirm,
   useImportPreview,
 } from "@/api/generated";
-import type { AccountResponse, ImportPreviewResponse } from "@/api/generated/model";
+import type {
+  AccountResponse,
+  ImportPreviewResponse,
+  ImportStatementSummary,
+  StatementFormat,
+} from "@/api/generated/model";
 import { Section, SectionTitle } from "@/components/ui/section/section";
 import { useFileField } from "@/hooks/use-file-field";
 import { silent } from "@/lib/mutations";
 import { ImportPreviewTable } from "../import-preview-table/import-preview-table";
+import { ImportStatementBar } from "../import-preview-table/import-statement-bar";
 import {
   importDateRange,
   type PreviewRowState,
@@ -21,9 +27,7 @@ import {
 import { recallParams } from "../import-queries";
 import { ImportPreviewError } from "./import-preview-error";
 import { type ImportResult, ImportResultLine } from "./import-result";
-import { IMPORT_FILE_INPUT_ID, ImportUploadForm } from "./import-upload-form";
-
-const MAX_FILE_BYTES = 5 * 1024 * 1024;
+import { IMPORT_FILE_INPUT_ID, ImportUploadForm, importFormats } from "./import-upload-form";
 
 const uploadProblemKeys = {
   required: "imports.fileRequired",
@@ -33,18 +37,24 @@ const uploadProblemKeys = {
 
 interface Props {
   accounts: AccountResponse[];
+  format: StatementFormat;
   initialAccountId?: string;
 }
 
-export function ImportSection({ accounts, initialAccountId }: Readonly<Props>) {
+export function ImportSection({ accounts, format, initialAccountId }: Readonly<Props>) {
   const { t } = useTranslation();
-  const fileField = useFileField(IMPORT_FILE_INPUT_ID, MAX_FILE_BYTES, uploadProblemKeys);
+  const fileField = useFileField(
+    IMPORT_FILE_INPUT_ID,
+    importFormats[format].maxBytes,
+    uploadProblemKeys,
+  );
 
   const [accountId, setAccountId] = useState(
     accounts.find((account) => account.id === initialAccountId)?.id ?? accounts[0]?.id ?? "",
   );
   const [result, setResult] = useState<ImportResult | null>(null);
   const [rows, setRows] = useState<PreviewRowState[] | null>(null);
+  const [statement, setStatement] = useState<ImportStatementSummary | null>(null);
 
   const categories = useCategoriesSuspense();
   const categoryList = categories.data;
@@ -56,6 +66,7 @@ export function ImportSection({ accounts, initialAccountId }: Readonly<Props>) {
     silent({
       onSuccess: (data: ImportPreviewResponse) => {
         setRows(toPreviewRows(data.rows, history.data.items, categoryList));
+        setStatement(data.statement);
       },
     }),
   );
@@ -85,16 +96,19 @@ export function ImportSection({ accounts, initialAccountId }: Readonly<Props>) {
     previewMutation.reset();
   }
 
-  function handlePreview() {
-    if (!accountId) {
-      return;
-    }
+  function preview(id: string) {
     const file = fileField.take();
-    if (!file) {
+    if (!id || !file) {
       return;
     }
     setResult(null);
-    previewMutation.mutate({ data: { file, accountId } });
+    previewMutation.mutate({ data: { file, accountId: id, format } });
+  }
+
+  function switchAccount(id: string) {
+    setAccountId(id);
+    setRows(null);
+    preview(id);
   }
 
   function updateRow(index: number, patch: Partial<PreviewRowState>) {
@@ -109,6 +123,7 @@ export function ImportSection({ accounts, initialAccountId }: Readonly<Props>) {
     confirmMutation.mutate({
       data: {
         accountId,
+        format,
         rows: selectedRows.map((row) => ({
           importRef: row.importRef,
           currency: row.currency,
@@ -137,20 +152,32 @@ export function ImportSection({ accounts, initialAccountId }: Readonly<Props>) {
             clearPreview();
           }}
           fileInputRef={fileField.inputProps.ref}
-          onPreview={handlePreview}
+          format={format}
+          onPreview={() => preview(accountId)}
           onFileChange={clearPreview}
           previewPending={previewMutation.isPending}
           disabled={confirmMutation.isPending}
           fileError={fileField.error}
           secondary={Boolean(rows?.length)}
         />
-        {previewMutation.isError ? <ImportPreviewError error={previewMutation.error} /> : null}
+        {previewMutation.isError ? (
+          <ImportPreviewError error={previewMutation.error} format={format} />
+        ) : null}
         {result ? <ImportResultLine result={result} /> : null}
       </Section>
 
       {rows ? (
         <Section className="space-y-4" aria-labelledby="import-review-title">
           <SectionTitle id="import-review-title">{t("imports.reviewSection")}</SectionTitle>
+          {statement ? (
+            <ImportStatementBar
+              statement={statement}
+              rows={rows}
+              accounts={accounts}
+              disabled={previewMutation.isPending || confirmMutation.isPending}
+              onSwitchAccount={switchAccount}
+            />
+          ) : null}
           <ImportPreviewTable
             rows={rows}
             accountId={accountId}

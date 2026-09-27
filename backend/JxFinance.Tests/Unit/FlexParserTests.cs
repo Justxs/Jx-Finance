@@ -90,6 +90,19 @@ public sealed class FlexParserTests
     }
 
     [Fact]
+    public async Task A_document_type_declaration_is_refused()
+    {
+        const string xml = """
+            <?xml version="1.0"?>
+            <!DOCTYPE FlexQueryResponse [<!ENTITY secret SYSTEM "file:///c:/windows/win.ini">]>
+            <FlexQueryResponse><FlexStatements><FlexStatement accountId="&secret;" /></FlexStatements></FlexQueryResponse>
+            """;
+        using var stream = new MemoryStream(Encoding.UTF8.GetBytes(xml));
+
+        Assert.True((await FlexParser.ParseAsync(stream, CancellationToken.None)).IsFailure);
+    }
+
+    [Fact]
     public async Task Content_that_is_not_a_flex_report_is_rejected()
     {
         using var stream = new MemoryStream(Encoding.UTF8.GetBytes("Statement,Header,Field Name"));

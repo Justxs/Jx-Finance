@@ -1,6 +1,5 @@
 using FastEndpoints;
 using JxFinance.Common;
-using JxFinance.Common.Errors;
 using JxFinance.Endpoints.Imports.Interfaces;
 
 namespace JxFinance.Endpoints.Imports.Preview;
@@ -10,21 +9,14 @@ public sealed class ImportPreviewEndpoint(IImportService importService)
 {
     public override void Configure()
     {
-        Post(ApiRoutes.Import + "/swedbank/preview");
+        Post(ApiRoutes.Import + "/preview");
         Group<ImportsGroup>();
         AllowFileUploads();
     }
 
     public override async Task HandleAsync(ImportPreviewRequest req, CancellationToken ct)
     {
-        if (req.File is null || req.File.Length is <= 0 or > 5 * 1024 * 1024)
-        {
-            AddError(r => r.File, "Choose a non-empty CSV file no larger than 5 MB.", ErrorCodes.ImportInvalidFile);
-            await Send.ErrorsAsync(cancellation: ct);
-            return;
-        }
-
         await using var stream = req.File.OpenReadStream();
-        await Send.OkOrProblemAsync(await importService.PreviewSwedbankCsvAsync(req.AccountId, stream, ct), ct);
+        await Send.OkOrProblemAsync(await importService.PreviewAsync(req.Format, req.AccountId, stream, ct), ct);
     }
 }

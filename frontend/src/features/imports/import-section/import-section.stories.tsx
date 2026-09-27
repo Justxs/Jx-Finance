@@ -1,9 +1,11 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { userEvent } from "storybook/test";
+import { expect, userEvent } from "storybook/test";
 import { getImportPreviewMockHandler } from "@/api/generated/imports/imports.msw";
 import { withPageFrame } from "@/storybook/decorators";
 import {
   accounts,
+  camtPreview,
+  camtPreviewOtherAccount,
   checkingAccount,
   ids,
   importFormatProblem,
@@ -24,7 +26,7 @@ const meta = {
   title: "Features/Imports/ImportSection",
   component: ImportSection,
   parameters: { layout: "fullscreen" },
-  args: { accounts },
+  args: { accounts, format: "swedbankCsv" },
   decorators: [withPageFrame],
 } satisfies Meta<typeof ImportSection>;
 
@@ -93,5 +95,23 @@ export const Confirmed: Story = {
     await userEvent.click(
       await canvas.findByRole("button", { name: /^(import \d+ rows?|importuoti \d+ eilu)/i }),
     );
+  },
+};
+
+export const CamtPreviewed: Story = {
+  args: { format: "camt053" },
+  parameters: withHandlers(getImportPreviewMockHandler(camtPreview)),
+  play: async ({ canvas, canvasElement }) => {
+    await uploadAndPreview(canvasElement, undefined, "camt053");
+    await expect(await canvas.findByText(/LT127300010123456789/)).toBeVisible();
+  },
+};
+
+export const CamtForAnotherAccount: Story = {
+  args: { format: "camt053" },
+  parameters: withHandlers(getImportPreviewMockHandler(camtPreviewOtherAccount)),
+  play: async ({ canvas, canvasElement }) => {
+    await uploadAndPreview(canvasElement, undefined, "camt053");
+    await userEvent.click(await canvas.findByRole("button", { name: /^(switch to|perjungti į)/i }));
   },
 };

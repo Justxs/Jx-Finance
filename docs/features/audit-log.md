@@ -17,7 +17,7 @@ Only what is shared into a household. The rule is the one the query filters alre
 | File attached to a transaction | the household of the transaction's account | created (read as "attached"), deleted, restored; see [Attachments](attachments.md) |
 | Household | itself | created, `renamed`, deleted, restored |
 | Membership | its household | `memberAdded`, `memberRemoved`, `memberRoleChanged` |
-| A Swedbank CSV import, an Interactive Brokers statement | the household of the account imported into, and of any other account a transfer row touched | one `imported` row with the number of entries |
+| A bank statement import (Swedbank CSV or camt.053 XML), an Interactive Brokers statement | the household of the account imported into, and of any other account a transfer row touched | one `imported` row with the number of entries |
 | A bulk category or bulk tag edit, a categorization-rule run | the household of every account whose transactions it touched | one `updated` row with no entity id and the number of transactions |
 
 Nothing personal is ever written. A transaction on an account that is not shared, a personal category or tag, and every record that cannot be shared at all — budgets, goals, assets, debts, recurring entries, categorization rules, net-worth snapshots, notifications, security prices, broker connections, users, sessions, settings and backups — produce no row. Recurring entries are personal even when the transactions they post land on a shared account; the posted transaction is logged as created, the schedule is not.
@@ -104,11 +104,11 @@ An edit that changes nothing a member can see — saving a form unchanged, a cha
 
 ### Imports and bulk edits
 
-A Swedbank CSV confirm of 800 rows would otherwise write 800 `created` rows and bury everything else in the log for weeks. Before its single save, a bulk operation calls `db.Audit.Summarise(action, kind, description, count, entityId, accounts)`. For the next save the collector still works out which households the tracked changes touch, adds the households of the accounts passed in, and writes one row per household with those words and that count instead of the per-record rows. The summary is taken by that save and does not leak into a later one.
+A bank statement confirm of 800 rows would otherwise write 800 `created` rows and bury everything else in the log for weeks. Before its single save, a bulk operation calls `db.Audit.Summarise(action, kind, description, count, entityId, accounts)`. For the next save the collector still works out which households the tracked changes touch, adds the households of the accounts passed in, and writes one row per household with those words and that count instead of the per-record rows. The summary is taken by that save and does not leak into a later one.
 
 | Operation | Row |
 | --- | --- |
-| `POST /api/import/swedbank/confirm` | `imported`, kind `transaction`, the account's id, `Swedbank CSV into Joint, 42 entries, 3 duplicates skipped` |
+| `POST /api/import/confirm` | `imported`, kind `transaction`, the account's id, `Swedbank CSV into Joint, 42 entries, 3 duplicates skipped`, or `camt.053 XML into Joint, …` for an XML statement |
 | Interactive Brokers upload, fetch and nightly sync | `imported`, kind `investmentTransaction`, the account's id, `Interactive Brokers statement into Broker, 12 trades, 3 cash entries` |
 | `POST /api/transactions/bulk-category` | `updated`, no entity id, `Category set to Groceries, 12 transactions` |
 | `POST /api/transactions/bulk-tags` | `updated`, no entity id, `Tags set to Holiday, Travel, 12 transactions` |

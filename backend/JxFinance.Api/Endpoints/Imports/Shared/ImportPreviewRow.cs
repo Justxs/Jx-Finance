@@ -1,5 +1,6 @@
 using JxFinance.Common.Json;
 using JxFinance.Domain.Common;
+using JxFinance.Endpoints.Transactions.Shared;
 
 namespace JxFinance.Endpoints.Imports.Shared;
 

@@ -45,6 +45,7 @@ import {
   emptyNetWorth,
   emptyReportSummary,
   emptyTransactionsSummary,
+  importPreview,
   serverErrorProblem,
   setupStatus,
 } from "@/storybook/fixtures";
@@ -64,6 +65,7 @@ import { onRouteOf, pending, problem, query } from "./http";
 import { importHandlers } from "./imports";
 import { emptyInvestmentHandlers, investmentHandlers } from "./investments";
 import { emptyPage } from "./lists";
+import { monthCloseHandlers } from "./month-close";
 import { assetHandlers, debtHandlers, netWorthHandlers } from "./net-worth";
 import { notificationHandlers } from "./notifications";
 import { recurringBillHandlers } from "./recurring-bills";
@@ -96,6 +98,7 @@ export const handlers: RequestHandler[] = [
   ...householdHandlers,
   ...importHandlers,
   ...investmentHandlers,
+  ...monthCloseHandlers,
   ...netWorthHandlers,
   ...notificationHandlers,
   ...recurringBillHandlers,
@@ -166,7 +169,7 @@ export const emptyHandlers: RequestHandler[] = [
       periodEnd: params.get("dateTo") ?? emptyReportSummary.periodEnd,
     };
   }),
-  getImportPreviewMockHandler({ rows: [] }),
+  getImportPreviewMockHandler({ ...importPreview, rows: [] }),
   getTrashMockHandler(emptyPage),
   ...handlers,
 ];

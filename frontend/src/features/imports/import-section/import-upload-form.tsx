@@ -1,6 +1,6 @@
 import { type RefObject, useState } from "react";
 import { useTranslation } from "react-i18next";
-import type { AccountResponse } from "@/api/generated/model";
+import type { AccountResponse, StatementFormat } from "@/api/generated/model";
 import { FieldShell, shellAria } from "@/components/form/field-shell/field-shell";
 import { SelectField } from "@/components/select-field/select-field";
 import { Button } from "@/components/ui/button/button";
@@ -11,10 +11,15 @@ import { namedOptions } from "@/lib/options";
 
 export const IMPORT_FILE_INPUT_ID = "import-file";
 
+export const importFormats: Record<StatementFormat, { accept: string; maxBytes: number }> = {
+  swedbankCsv: { accept: ".csv,text/csv", maxBytes: 5 * 1024 * 1024 },
+  camt053: { accept: ".xml,application/xml,text/xml", maxBytes: 20 * 1024 * 1024 },
+};
 interface Props {
   accounts: AccountResponse[];
   accountId: string;
   onAccountChange: (accountId: string) => void;
+  format: StatementFormat;
   fileInputRef: RefObject<HTMLInputElement | null>;
   onPreview: () => void;
   onFileChange: () => void;
@@ -28,6 +33,7 @@ export function ImportUploadForm({
   accounts,
   accountId,
   onAccountChange,
+  format,
   fileInputRef,
   onPreview,
   onFileChange,
@@ -80,14 +86,14 @@ export function ImportUploadForm({
         <FieldShell
           id={IMPORT_FILE_INPUT_ID}
           label={t("imports.file")}
-          hint={t("imports.fileHint")}
+          hint={t(`imports.formats.${format}.hint`)}
           error={fileError}
           className="col-span-full"
         >
           <FileInput
             id={IMPORT_FILE_INPUT_ID}
             ref={fileInputRef}
-            accept=".csv,text/csv"
+            accept={importFormats[format].accept}
             disabled={locked}
             onChange={(event) => {
               setFileName(event.target.files?.[0]?.name ?? "");

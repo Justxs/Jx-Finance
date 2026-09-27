@@ -1,6 +1,5 @@
 using System.Globalization;
 using System.Text.RegularExpressions;
-using System.Xml;
 using System.Xml.Linq;
 using JxFinance.Common.Errors;
 using JxFinance.Common.Formats;
@@ -21,19 +20,8 @@ public static partial class FlexParser
 
     public static async Task<Result<FlexStatement>> ParseAsync(Stream stream, CancellationToken cancellationToken)
     {
-        XDocument document;
-        try
-        {
-            var settings = new XmlReaderSettings { Async = true, DtdProcessing = DtdProcessing.Prohibit, XmlResolver = null };
-            using var reader = XmlReader.Create(stream, settings);
-            document = await XDocument.LoadAsync(reader, LoadOptions.None, cancellationToken);
-        }
-        catch (XmlException)
-        {
-            return Invalid();
-        }
-
-        var statements = document.Root?.Name.LocalName == ResponseRoot
+        var document = await SafeXml.LoadAsync(stream, cancellationToken);
+        var statements = document?.Root?.Name.LocalName == ResponseRoot
             ? document.Root.Descendants("FlexStatement").ToList()
             : [];
         if (statements.Count == 0)

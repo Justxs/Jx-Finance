@@ -63,7 +63,7 @@ public sealed class ImportEndpointTests(ApiFixture fixture) : IntegrationTestBas
         var account = await CreateAccountAsync("100.00");
 
         var response = await Client.PostAsJsonAsync(
-            "/api/import/swedbank/confirm",
+            "/api/import/confirm",
             new { accountId = account, rows = new[] { Row("invalid", amount) } }, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -109,7 +109,7 @@ public sealed class ImportEndpointTests(ApiFixture fixture) : IntegrationTestBas
         var transfer = await CreateTransferAsync(source, destination);
 
         var response = await Client.PostAsJsonAsync(
-            "/api/import/swedbank/confirm",
+            "/api/import/confirm",
             new
             {
                 accountId = source,
@@ -135,7 +135,7 @@ public sealed class ImportEndpointTests(ApiFixture fixture) : IntegrationTestBas
         await ConfirmAsync(source, Row("first-import", transferAccountId: destination, existingTransferId: transfer));
 
         var response = await Client.PostAsJsonAsync(
-            "/api/import/swedbank/confirm",
+            "/api/import/confirm",
             new { accountId = source, rows = new[] { Row("second-import", transferAccountId: destination, existingTransferId: transfer) } }, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -156,7 +156,7 @@ public sealed class ImportEndpointTests(ApiFixture fixture) : IntegrationTestBas
         var dollars = await CreateAccountAsync("100.00", currency: "usd");
 
         var response = await Client.PostAsJsonAsync(
-            "/api/import/swedbank/confirm",
+            "/api/import/confirm",
             new { accountId = euros, rows = new[] { Row("cross-currency", type: type, transferAccountId: dollars) } }, TestContext.Current.CancellationToken);
 
         await AssertRejectedAsync(response, "transfer.receivedAmountRequired");
@@ -186,13 +186,92 @@ public sealed class ImportEndpointTests(ApiFixture fixture) : IntegrationTestBas
         await using (await OnlyCurrenciesAsync("usd"))
         {
             var response = await Client.PostAsJsonAsync(
-                "/api/import/swedbank/confirm",
+                "/api/import/confirm",
                 new { accountId = account, rows = new[] { Row("pounds", currency: "gbp", transferAccountId: destination) } }, TestContext.Current.CancellationToken);
 
             await AssertRejectedAsync(response, "currency.disabled");
         }
 
         Assert.Equal("100.00", await CurrentBalanceAsync(account));
+    }
+
+    [Fact]
+    public async Task A_camt_statement_previews_confirms_and_is_then_all_duplicates()
+    {
+        var (account, iban) = await CreateAccountWithIbanAsync("100.00");
+        var (savings, savingsIban) = await CreateAccountWithIbanAsync("0.00");
+        var tag = await CreateTagAsync();
+        var entries = SampleCamt053.Entry(SampleCamt053.Detail(refs: "<AcctSvcrRef>LIDL-1</AcctSvcrRef>"))
+            + SampleCamt053.Entry(
+                SampleCamt053.Detail(parties: "<Dbtr><Nm>Employer UAB</Nm></Dbtr>", refs: "<AcctSvcrRef>PAY-1</AcctSvcrRef>"),
+                amount: "1000.00",
+                direction: "CRDT")
+            + SampleCamt053.Entry(SampleCamt053.Detail(
+                parties: $"<Cdtr><Nm>Me</Nm></Cdtr><CdtrAcct><Id><IBAN>{savingsIban}</IBAN></Id></CdtrAcct>",
+                remittance: "<Ustrd>Monthly</Ustrd>",
+                refs: "<AcctSvcrRef>SAVE-1</AcctSvcrRef>"), amount: "50.00")
+            + SampleCamt053.Entry(SampleCamt053.Detail(), status: "<Sts>PDNG</Sts>");
+        var xml = SampleCamt053.Document(SampleCamt053.Statement(entries, iban));
+
+        var preview = await ReadOkAsync<CamtPreviewDto>(await UploadCamtAsync(Client, account, xml));
+
+        Assert.Equal(["LIDL-1", "PAY-1", "SAVE-1"], preview.Rows.Select(r => r.ImportRef));
+        Assert.Equal(savings, preview.Rows[2].SuggestedTransferAccountId);
+        Assert.True(preview.Rows[2].LooksLikeTransfer);
+        Assert.Equal(
+            new StatementDto(iban, true, null, 1, 0, "1250.40", "eur", "100.00"),
+            preview.Statement with { ClosingDate = null });
+
+        var confirmed = await PostAsync<ConfirmDto>(Client, "/api/import/confirm", new
+        {
+            accountId = account,
+            format = "camt053",
+            rows = new[]
+            {
+                Row("LIDL-1", "15.77", tagIds: [tag]),
+                Row("PAY-1", "1000.00", "income"),
+                Row("SAVE-1", "50.00", transferAccountId: savings),
+            },
+        });
+        Assert.Equal(3, confirmed.Imported);
+
+        var again = await ReadOkAsync<CamtPreviewDto>(await UploadCamtAsync(Client, account, xml));
+        Assert.All(again.Rows, r => Assert.True(r.IsDuplicate));
+        Assert.Equal("1034.23", again.Statement.LedgerBalanceAtClose);
+        var imported = await Client.GetFromJsonAsync<PageDto<TransactionDto>>($"/api/transactions?accountId={account}", TestContext.Current.CancellationToken);
+        Assert.Equal([tag], imported!.Items.Single(t => t.Amount == "15.77").TagIds);
+    }
+
+    [Fact]
+    public async Task A_camt_statement_for_another_account_names_it()
+    {
+        var (account, _) = await CreateAccountWithIbanAsync("0.00");
+        var (other, otherIban) = await CreateAccountWithIbanAsync("0.00");
+        var xml = SampleCamt053.Document(SampleCamt053.Statement(SampleCamt053.Entry(SampleCamt053.Detail()), otherIban));
+
+        var preview = await ReadOkAsync<CamtPreviewDto>(await UploadCamtAsync(Client, account, xml));
+
+        Assert.Equal((otherIban, false, (Guid?)other), (preview.Statement.Iban, preview.Statement.IbanMatchesAccount, preview.Statement.OtherAccountId));
+    }
+
+    [Fact]
+    public async Task A_csv_file_sent_as_camt_is_refused()
+    {
+        var account = await CreateAccountAsync();
+
+        var response = await UploadCamtAsync(Client, account, string.Format(SampleCsv, "x"));
+
+        await AssertRejectedAsync(response, "import.invalidFile");
+    }
+
+    private async Task<(Guid Id, string Iban)> CreateAccountWithIbanAsync(string startingBalance)
+    {
+        var iban = $"LT{Random.Shared.NextInt64(100_000_000_000_000_000, 999_999_999_999_999_999)}";
+        var created = await PostAsync<IdDto>(
+            Client,
+            "/api/accounts",
+            new { name = $"Account {Guid.NewGuid():N}", type = "checking", startingBalance, iban, scope = "personal" });
+        return (created.Id, iban);
     }
 
     private async Task<Guid> CreateTransferAsync(Guid source, Guid destination) =>
@@ -214,7 +293,7 @@ public sealed class ImportEndpointTests(ApiFixture fixture) : IntegrationTestBas
         ConfirmAsync(accountId, rows.Select(r => Row(r.ImportRef, r.Amount, r.Type, r.Date, r.Description)).ToArray());
 
     private Task<ConfirmDto> ConfirmAsync(Guid accountId, params object[] rows) =>
-        PostAsync<ConfirmDto>(Client, "/api/import/swedbank/confirm", new { accountId, rows });
+        PostAsync<ConfirmDto>(Client, "/api/import/confirm", new { accountId, rows });
 
     private static object Row(
         string importRef,
@@ -224,8 +303,9 @@ public sealed class ImportEndpointTests(ApiFixture fixture) : IntegrationTestBas
         string? description = null,
         Guid? transferAccountId = null,
         Guid? existingTransferId = null,
-        string? currency = null) =>
-        new { importRef, amount, type, date = date ?? new DateOnly(2026, 9, 1), description, transferAccountId, existingTransferId, currency };
+        string? currency = null,
+        Guid[]? tagIds = null) =>
+        new { importRef, amount, type, date = date ?? new DateOnly(2026, 9, 1), description, transferAccountId, existingTransferId, currency, tagIds };
 
     private sealed record PreviewRowDto(
         string ImportRef,
@@ -238,6 +318,21 @@ public sealed class ImportEndpointTests(ApiFixture fixture) : IntegrationTestBas
         bool LooksLikeTransfer);
 
     private sealed record PreviewDto(List<PreviewRowDto> Rows);
+
+    private sealed record CamtRowDto(string ImportRef, bool IsDuplicate, bool LooksLikeTransfer, Guid? SuggestedTransferAccountId);
+
+    private sealed record StatementDto(
+        string? Iban,
+        bool IbanMatchesAccount,
+        Guid? OtherAccountId,
+        int NotBooked,
+        int Unreadable,
+        string? ClosingBalance,
+        string? ClosingCurrency,
+        string? LedgerBalanceAtClose,
+        DateOnly? ClosingDate = null);
+
+    private sealed record CamtPreviewDto(List<CamtRowDto> Rows, StatementDto Statement);
 
     private sealed record ConfirmDto(int Imported, int SkippedDuplicates);
 }

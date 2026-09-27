@@ -83,7 +83,7 @@ Four kinds are deliberately not purged, listed as `Retention.KeptKinds` so that 
 
 ```mermaid
 flowchart LR
-    Lock["Database.LockAsync, transaction-scoped"] --> A["per account: Swedbank confirm, broker import and sync"]
+    Lock["Database.LockAsync, transaction-scoped"] --> A["per account: statement import confirm, broker import and sync"]
     Lock --> Bi["per bill: payment confirmation"]
     Lock --> U["per user: net worth snapshot of today"]
     Lock --> Adm["AppLock.AdministratorChange: role change, deactivation"]

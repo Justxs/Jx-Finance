@@ -149,10 +149,13 @@ public abstract class IntegrationTestBase(ApiFixture fixture)
         Guid accountId,
         string xml = SampleFlexReport.Xml,
         Guid? fundingAccountId = null) =>
-        UploadAsync(client, "/api/investments/import/interactive-brokers", "flex.xml", "text/xml", xml, accountId, fundingAccountId);
+        UploadAsync(client, "/api/investments/import/interactive-brokers", "flex.xml", "text/xml", xml, accountId, fundingAccountId is { } funding ? ("fundingAccountId", funding.ToString()) : null);
 
     protected static Task<HttpResponseMessage> UploadCsvAsync(HttpClient client, Guid accountId, string csv) =>
-        UploadAsync(client, "/api/import/swedbank/preview", "export.csv", "text/csv", csv, accountId);
+        UploadAsync(client, "/api/import/preview", "export.csv", "text/csv", csv, accountId);
+
+    protected static Task<HttpResponseMessage> UploadCamtAsync(HttpClient client, Guid accountId, string xml) =>
+        UploadAsync(client, "/api/import/preview", "statement.xml", "application/xml", xml, accountId, ("format", "camt053"));
 
     protected static Task<T> PostAsync<T>(HttpClient client, string url, object body) =>
         Seed.PostAsync<T>(client, url, body);
@@ -259,14 +262,14 @@ public abstract class IntegrationTestBase(ApiFixture fixture)
         string contentType,
         string content,
         Guid accountId,
-        Guid? fundingAccountId = null)
+        (string Name, string Value)? field = null)
     {
         var file = new ByteArrayContent(Encoding.UTF8.GetBytes(content));
         file.Headers.ContentType = new MediaTypeHeaderValue(contentType);
         using var form = new MultipartFormDataContent { { file, "file", fileName }, { new StringContent(accountId.ToString()), "accountId" } };
-        if (fundingAccountId is { } funding)
+        if (field is { } extra)
         {
-            form.Add(new StringContent(funding.ToString()), "fundingAccountId");
+            form.Add(new StringContent(extra.Value), extra.Name);
         }
 
         return await client.PostAsync(url, form, TestContext.Current.CancellationToken);

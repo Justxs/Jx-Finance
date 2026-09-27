@@ -195,8 +195,8 @@ Every 201 goes through `CreatedAsync`, which sets `Location` to a path built fro
 | POST | `/api/households/{id}/members` |
 | DELETE | `/api/households/{id}/members/{userId}` |
 | PUT | `/api/households/{id}/members/{userId}` |
-| POST | `/api/import/swedbank/confirm` |
-| POST | `/api/import/swedbank/preview` |
+| POST | `/api/import/confirm` |
+| POST | `/api/import/preview` |
 | GET | `/api/investments/connections` |
 | PUT | `/api/investments/connections/{accountId}` |
 | DELETE | `/api/investments/connections/{accountId}` |
@@ -285,7 +285,7 @@ Every 201 goes through `CreatedAsync`, which sets `Location` to a path built fro
 | POST | `/api/users/{id}/reset-password` |
 | PUT | `/api/users/{id}/role` |
 
-Import confirm rows optionally select TransferAccountId and ExistingTransferId. Recurring entry confirmation requires ExpectedDueDate. Transfer listing accepts an optional Date filter. 2FA setup/disable requires Password. Resetting another user's password requires NewPassword and the administrator's own CurrentPassword, with ResetTwoFactor optional. Updating a transfer takes the body of creating one; updating a conversion takes the body of creating one without the account. The broker import result carries Splits, SkippedCorporateActions per type and PositionMismatches, which is null when the report has no Open Positions section.
+Import preview takes `format` (`swedbankCsv` or `camt053`) beside the file and account, and answers the rows with `isReversal` and `suggestedTransferAccountId` plus a `statement` summary (`iban`, `ibanMatchesAccount`, `otherAccountId`, `notBooked`, `unreadable`, `closingDate`, `closingBalance`, `closingCurrency`, `ledgerBalanceAtClose`); a camt.053 file with several statements and none for the account answers 400 `import.noStatementForAccount`, whose `reason` is the comma-separated IBANs the file holds. Import confirm takes the same `format`, and its rows optionally select TransferAccountId and ExistingTransferId. Recurring entry confirmation requires ExpectedDueDate. Transfer listing accepts an optional Date filter. 2FA setup/disable requires Password. Resetting another user's password requires NewPassword and the administrator's own CurrentPassword, with ResetTwoFactor optional. Updating a transfer takes the body of creating one; updating a conversion takes the body of creating one without the account. The broker import result carries Splits, SkippedCorporateActions per type and PositionMismatches, which is null when the report has no Open Positions section.
 
 `/api/users/me/dashboard-layout` is the signed-in user's own dashboard layout and is open to every signed-in user, under the `Dashboard` tag. `GET` answers `order` (every card id this version knows, saved ones first), `hidden` and `isDefault`; `PUT` takes `order` and `hidden` as lists of card id strings and answers the same shape, refusing an unknown id with `dashboard.cardUnknown` and a repeated one with `dashboard.cardDuplicate`; `DELETE` forgets the saved layout and answers the default. The card ids are the `DashboardCard` enum of the contract. See [Dashboard](features/dashboard.md).
 
