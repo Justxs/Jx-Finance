@@ -36,7 +36,7 @@ test("a Swedbank statement is imported and one row is matched to an existing tra
   });
   expect(transfer.status(), await transfer.text()).toBe(201);
 
-  await page.goto("/settings?section=import");
+  await page.goto("/profile?section=import");
   await page.getByRole("button", { name: "Import bank statement" }).click();
   const dialog = page.getByRole("dialog");
   await dialog.getByRole("button", { name: /Swedbank/ }).click();
@@ -104,7 +104,7 @@ test("a statement row is linked to the same purchase entered by hand two days ea
   });
   expect(entered.status(), await entered.text()).toBe(201);
 
-  await page.goto("/settings?section=import");
+  await page.goto("/profile?section=import");
   await page.getByRole("button", { name: "Import bank statement" }).click();
   const dialog = page.getByRole("dialog");
   await dialog.getByRole("button", { name: /Swedbank/ }).click();
@@ -116,7 +116,7 @@ test("a statement row is linked to the same purchase entered by hand two days ea
   });
   await dialog.getByRole("button", { name: "Preview" }).click();
 
-  const purchaseRow = dialog.getByRole("row", { name: new RegExp(`PIRKINYS ${reference}`) });
+  const purchaseRow = dialog.getByRole("row", { name: /LIDL\/50191/ });
   await expect(purchaseRow).toContainText("Matches your entry");
   await expect(purchaseRow.getByRole("checkbox")).toBeChecked();
   await dialog.getByRole("button", { name: "Import 2 rows" }).click();
@@ -185,7 +185,7 @@ test("a camt.053 statement proposes the transfer from the IBAN and agrees with t
   const checkingId = await createAccount(page.request, checking, { iban: checkingIban });
   await createAccount(page.request, savings, { type: "savings", iban: savingsIban });
 
-  await page.goto("/settings?section=import");
+  await page.goto("/profile?section=import");
   await page.getByRole("button", { name: "Import bank statement" }).click();
   const dialog = page.getByRole("dialog");
   await dialog.getByRole("button", { name: /ISO 20022/ }).click();
@@ -199,7 +199,7 @@ test("a camt.053 statement proposes the transfer from the IBAN and agrees with t
 
   await expect(dialog.getByText(`Statement for ${checkingIban}`)).toBeVisible();
   await expect(dialog.getByText("1 pending or informational entry skipped")).toBeVisible();
-  const transferRow = dialog.getByRole("row", { name: new RegExp(`Taupymas ${reference}`) });
+  const transferRow = dialog.getByRole("row", { name: /· Me / });
   await expect(transferRow.getByRole("combobox", { name: "Record as" })).toContainText(savings);
   await expect(transferRow.getByRole("checkbox")).not.toBeChecked();
 

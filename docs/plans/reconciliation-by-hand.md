@@ -1,6 +1,6 @@
 # Plan: Reconciliation by hand
 
-Status: planned 2026-09-28. Size M. Build it after [Match imports to hand-entered rows](import-manual-entry-matching.md), which changes the same `ImportService.ConfirmAsync` and statement bar. Build it before [Monthly digest](monthly-digest.md), which counts the accounts that are not reconciled among the open items.
+Status: planned 2026-09-28. Size M. It changes the same `ImportService.ConfirmAsync` and statement bar as the [match to hand-entered rows](../features/bank-statement-import.md#entries-you-already-made-by-hand), which has shipped. Build it before [Monthly digest](monthly-digest.md), which counts the accounts that are not reconciled among the open items.
 
 ## Outcome
 

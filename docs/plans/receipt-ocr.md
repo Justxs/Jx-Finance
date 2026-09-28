@@ -1,6 +1,6 @@
 # Plan: Receipt reading and automatic splits
 
-Status: planned 2026-09-28. Size L. Build it after [Matching imports to hand-entered rows](import-manual-entry-matching.md), because a transaction started from a receipt is a hand-entered row that the next bank import must link rather than import twice. It does not depend on [Refunds](refunds.md) or [Machine-learned categorization](machine-learned-categorization.md); a return receipt stays out until refunds exist.
+Status: planned 2026-09-28. Size L. A transaction started from a receipt is a hand-entered row, so the existing [match to hand-entered rows](../features/bank-statement-import.md#entries-you-already-made-by-hand) links it to the next bank import rather than importing it twice. It does not depend on [Refunds](refunds.md) or [Machine-learned categorization](machine-learned-categorization.md); a return receipt stays out until refunds exist.
 
 ## Outcome
 

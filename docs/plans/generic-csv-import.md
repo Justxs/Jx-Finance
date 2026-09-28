@@ -1,6 +1,6 @@
 # Plan: Generic CSV import
 
-Status: planned 2026-09-28. Size M. Build it after [Match imports to hand-entered rows](import-manual-entry-matching.md), so rows from a mapped CSV are matched to hand-entered ones from the start. It is independent of [Refunds](refunds.md). The backlog puts it after a real month of imports, to see how often it is needed.
+Status: planned 2026-09-28. Size M. Rows from a mapped CSV go through the existing [match to hand-entered rows](../features/bank-statement-import.md#entries-you-already-made-by-hand), so they are matched to hand-entered ones from the start. It is independent of [Refunds](refunds.md). The backlog puts it after a real month of imports, to see how often it is needed.
 
 ## Outcome
 
