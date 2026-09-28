@@ -19,6 +19,10 @@ flowchart LR
 
 The month figures, the monthly trend and the spending breakdown count investment dividends and interest as income and withholding tax and standalone fees as expense, exactly as the [report](reports.md) does, so the dashboard month and the report for that month agree. In the breakdown they are one row, "Investment taxes and fees", without a link. With the `Investments` feature off nothing is added.
 
+## Month-close prompt
+
+Above the cards, while `MonthClose` is on, `MonthClosePrompt` (`features/month-close/month-close-prompt`) shows a panel when the latest ended month is open or changed after closing: the month's status, its open checklist items with their action links, its net and savings rate, "Review month" and, for an open month, "Close August 2026". "Not now" hides it for that month in this browser. `warmDashboard` warms the month's review with the layout, the prompt renders nothing while it loads or when the load fails, and it is hidden while the dashboard is being customised. It is not one of the cards below: it has no id, no place in the layout and no entry in the customiser. See [Month-end close](month-end-close.md#screens).
+
 ## Choosing and ordering the cards
 
 Each user decides which of the nine cards the dashboard shows and in what order. The layout belongs to the person, not to a household or a browser: it is stored on the user row, so it follows them to every browser and device, and two members of one household each keep their own. Backend `Dashboard` (`GetDashboardLayout`, `SaveDashboardLayout`, `ResetDashboardLayout`, `DashboardLayoutService`) and `Domain/Dashboard`; frontend `dashboard-layout.ts`, `dashboard-card`, `dashboard-customiser` and the page.

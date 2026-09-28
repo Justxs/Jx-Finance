@@ -2,7 +2,7 @@ import { expect, test } from "vitest";
 import type { FeatureFlags } from "@/api/generated/model";
 import { shortcuts } from "@/lib/shortcuts";
 import { settingsFixture } from "@/test/settings";
-import { visibleNav } from "./app-sidebar";
+import { navEntries, visibleNav } from "./app-sidebar";
 
 const baseFlags = settingsFixture().features;
 
@@ -29,7 +29,14 @@ function paths(features: FeatureFlags, isAdmin: boolean) {
 }
 
 test("the core ledger pages are always there", () => {
-  expect(paths(allOff, false)).toEqual(["/", "/transactions", "/accounts", "/categories", "/tags"]);
+  expect(paths(allOff, false)).toEqual([
+    "/",
+    "/transactions",
+    "/accounts",
+    "/categories",
+    "/tags",
+    "/profile",
+  ]);
 });
 
 test("each feature flag adds its page", () => {
@@ -41,8 +48,9 @@ test("each feature flag adds its page", () => {
     "/tags",
     "/budgets",
     "/investments",
+    "/profile",
   ]);
-  expect(paths(allOn, false)).toHaveLength(14);
+  expect(paths(allOn, false)).toHaveLength(15);
 });
 
 test("multi-currency has no page of its own", () => {
@@ -75,4 +83,30 @@ test("shortcuts and sidebar gate pages on the same feature", () => {
 
     expect(gated).toEqual([...hidden]);
   }
+});
+
+function entryKeys(features: FeatureFlags, isAdmin: boolean) {
+  return navEntries(visibleNav(features, isAdmin)).map((entry) => entry.key);
+}
+
+test("sibling pages share one sidebar link", () => {
+  expect(entryKeys(allOn, true)).toEqual([
+    "nav.dashboard",
+    "nav.transactions",
+    "nav.accounts",
+    "nav.categories",
+    "nav.plan",
+    "nav.wealth",
+    "nav.reports",
+    "nav.settings",
+  ]);
+});
+
+test("a hub with one page left shows that page's own name", () => {
+  expect(entryKeys({ ...allOff, budgets: true }, false)).toContain("nav.budgets");
+  expect(entryKeys({ ...allOff, budgets: true }, false)).not.toContain("nav.plan");
+});
+
+test("settings keeps its name for a member with only the personal pages", () => {
+  expect(entryKeys(allOff, false).at(-1)).toBe("nav.settings");
 });

@@ -8,6 +8,7 @@ using JxFinance.Endpoints.Users.CreateUser;
 using JxFinance.Endpoints.Users.GetUsers;
 using JxFinance.Endpoints.Users.Interfaces;
 using JxFinance.Endpoints.Users.ResetUserPassword;
+using JxFinance.Endpoints.Users.UpdateMyEmailNotifications;
 using JxFinance.Endpoints.Users.UpdateMyProfile;
 using JxFinance.Endpoints.Users.UpdateUserRole;
 using JxFinance.Infrastructure.Auth;
@@ -274,7 +275,6 @@ public sealed class UserService(
 
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
         user.DisplayName = request.DisplayName;
-        user.BillReminderEmails = request.BillReminderEmails;
         var profileResult = await userManager.UpdateAsync(user);
         if (!profileResult.Succeeded)
             return profileResult.ToDomainError();
@@ -299,6 +299,25 @@ public sealed class UserService(
         }
 
         return profile;
+    }
+
+    public async Task<Result<UserProfileResponse>> UpdateOwnEmailNotificationsAsync(
+        UpdateMyEmailNotificationsRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (await FindAsync(currentUser.Id, cancellationToken) is not { } user)
+        {
+            return NotFound;
+        }
+
+        user.EmailNotificationTypes = [.. request.Types];
+        var result = await userManager.UpdateAsync(user);
+        if (!result.Succeeded)
+        {
+            return result.ToDomainError();
+        }
+
+        return await authService.ToProfileAsync(user);
     }
 
     private Task<AppUser?> FindAsync(Guid id, CancellationToken cancellationToken) =>

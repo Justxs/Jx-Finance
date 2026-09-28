@@ -1,5 +1,6 @@
 using System.Linq.Expressions;
 using JxFinance.Domain.Dashboard;
+using JxFinance.Domain.Notifications;
 using Microsoft.AspNetCore.Identity;
 
 namespace JxFinance.Infrastructure.Auth;
@@ -13,7 +14,7 @@ public sealed class AppUser : IdentityUser<Guid>
 
     public string DisplayName { get; set; } = string.Empty;
 
-    public bool BillReminderEmails { get; set; }
+    public List<NotificationType> EmailNotificationTypes { get; set; } = [];
 
     public DashboardLayout? DashboardLayout { get; set; }
 

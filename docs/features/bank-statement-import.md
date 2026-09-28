@@ -2,7 +2,7 @@
 
 Back to the [feature walkthrough](README.md). See also [decisions](../decisions/swedbank-csv-import.md), [architecture: Transactions, imports and receipts](../architecture/transactions.md), the [plan](../plans/camt053-import.md).
 
-Backend `Imports` (`ImportService`, parsers in `Endpoints/Imports/Parsing`), frontend `imports` (`ImportDataSection`, `ImportDialog`, `ImportSection`, `ImportStatementBar`). No route of its own; the dialog opens from Settings and Profile.
+Backend `Imports` (`ImportService`, parsers in `Endpoints/Imports/Parsing`), frontend `imports` (`ImportDataSection`, `ImportDialog`, `ImportSection`, `ImportStatementBar`). No route of its own; the dialog opens from the Import data section under Personal on the one Settings page (`/profile?section=import`), shown to every user while the `Import` switch is on.
 
 The dialog lists two providers, and each one is a statement format:
 

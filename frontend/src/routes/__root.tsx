@@ -4,16 +4,14 @@ import {
   createRootRouteWithContext,
   redirect,
   useLocation,
+  useRouterState,
 } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
-import {
-  getMeSuspenseQueryOptions,
-  getNotificationsSuspenseQueryOptions,
-  useMe,
-} from "@/api/generated";
+import { useMe } from "@/api/generated";
 import {
   AppSidebar,
-  type NavItem,
+  isEntryActive,
+  navEntries,
   navLinkActiveClass,
   navLinkClass,
   useVisibleNav,
@@ -23,7 +21,6 @@ import { HeaderActions } from "@/components/header-actions/header-actions";
 import { HouseholdSwitcher } from "@/components/household-switcher/household-switcher";
 import { LanguageToggle } from "@/components/language-toggle/language-toggle";
 import { LogoutButton } from "@/components/logout-button/logout-button";
-import { unreadParams } from "@/components/notification-bell/notification-bell";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { RouteError } from "@/components/route-error/route-error";
 import { RoutePending } from "@/components/route-pending/route-pending";
@@ -32,10 +29,11 @@ import { ThemeToggle } from "@/components/theme-toggle/theme-toggle";
 import { Skeleton } from "@/components/ui/skeleton/skeleton";
 import { CommandPalette } from "@/features/command-palette/command-palette/command-palette";
 import { EmailVerificationBanner } from "@/features/profile/email-verification-banner/email-verification-banner";
-import { settingsQueryOptions, usePublicSettings } from "@/hooks/use-settings";
+import { usePublicSettings } from "@/hooks/use-settings";
+import { warmAppShell } from "@/lib/app-shell";
 import { checkIsAuthenticated, checkSetupNeeded } from "@/lib/auth-gate";
-import { PUBLIC_PATHS, profileNavPage } from "@/lib/navigation";
-import { type RouterContext, warm } from "@/lib/route-prefetch";
+import { PUBLIC_PATHS } from "@/lib/navigation";
+import type { RouterContext } from "@/lib/route-prefetch";
 import { cn } from "@/lib/utils";
 
 export const Route = createRootRouteWithContext<RouterContext>()({
@@ -68,9 +66,7 @@ export const Route = createRootRouteWithContext<RouterContext>()({
     if (PUBLIC_PATHS.has(location.pathname)) {
       return;
     }
-    warm(queryClient, settingsQueryOptions());
-    warm(queryClient, getMeSuspenseQueryOptions());
-    warm(queryClient, getNotificationsSuspenseQueryOptions(unreadParams));
+    warmAppShell(queryClient);
   },
   component: RootLayout,
   pendingComponent: Splash,
@@ -78,25 +74,26 @@ export const Route = createRootRouteWithContext<RouterContext>()({
   pendingMinMs: 0,
 });
 
-interface MobileNavItem {
-  to: NavItem["to"] | (typeof profileNavPage)["to"];
-  key: NavItem["key"] | (typeof profileNavPage)["key"];
-}
-
 function RootLayout() {
   const location = useLocation();
   const { t } = useTranslation();
   const authenticatedArea = !PUBLIC_PATHS.has(location.pathname);
+  const renderedPath = useRouterState({
+    select: (state) => (state.resolvedLocation ?? state.location).pathname,
+  });
   const me = useMe({ query: { enabled: authenticatedArea } });
   const instanceName = usePublicSettings()?.instanceName;
 
-  const mobileNavItems: readonly MobileNavItem[] = [
-    ...useVisibleNav(me.data?.role, authenticatedArea),
-    profileNavPage,
-  ];
+  const visiblePages = useVisibleNav(me.data?.role, authenticatedArea);
+  const mobileEntries = navEntries(visiblePages);
 
-  const currentItem = mobileNavItems.find((item) => item.to === location.pathname);
+  const currentItem = visiblePages.find((item) => item.to === location.pathname);
   const currentTitle = currentItem ? t(currentItem.key) : undefined;
+  const crossingSignIn = PUBLIC_PATHS.has(renderedPath) === authenticatedArea;
+
+  if (crossingSignIn || (authenticatedArea && me.isPending)) {
+    return <Splash />;
+  }
 
   if (!authenticatedArea) {
     return (
@@ -146,17 +143,24 @@ function RootLayout() {
           aria-label={t("nav.main")}
           className="flex gap-1 overflow-x-auto border-b bg-sidebar px-2 py-1.5 md:hidden print:hidden"
         >
-          {mobileNavItems.map((item) => (
-            <Link
-              key={item.to}
-              to={item.to}
-              className={cn(navLinkClass, "shrink-0 px-3 py-2 pointer-coarse:py-3")}
-              activeProps={{ className: navLinkActiveClass }}
-              activeOptions={{ exact: item.to === "/" }}
-            >
-              {t(item.key)}
-            </Link>
-          ))}
+          {mobileEntries.map((entry, index) => {
+            const active = isEntryActive(entry, location.pathname);
+            return (
+              <Link
+                key={entry.to}
+                to={entry.to}
+                aria-current={active ? "page" : undefined}
+                className={cn(
+                  navLinkClass,
+                  "shrink-0 px-3 py-2 pointer-coarse:py-3",
+                  active && navLinkActiveClass,
+                )}
+                style={{ "--nav-link": `nav-strip-${index}` }}
+              >
+                {t(entry.key)}
+              </Link>
+            );
+          })}
         </nav>
         <main
           id="main-content"

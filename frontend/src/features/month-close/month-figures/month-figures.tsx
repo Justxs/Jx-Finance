@@ -1,12 +1,15 @@
 import { Link } from "@tanstack/react-router";
 import { useId } from "react";
 import { useTranslation } from "react-i18next";
-import type { CategoryBreakdownItem, ReportSummaryResponse } from "@/api/generated/model";
+import type {
+  CategoryBreakdownItem,
+  NetWorthSnapshotItem,
+  ReportSummaryResponse,
+} from "@/api/generated/model";
 import { ChangeBadge } from "@/components/change-badge/change-badge";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { Rows } from "@/components/ui/rows/rows";
-import { Section, SectionTitle, TitledSection } from "@/components/ui/section/section";
-import { SplitColumns } from "@/components/ui/split-columns/split-columns";
+import { SectionTitle, TitledSection } from "@/components/ui/section/section";
 import { ReportStats } from "@/features/reports/report-stats/report-stats";
 import { useCategoryName } from "@/hooks/use-category-name";
 import { useIsoDate, useMoney, usePercent } from "@/hooks/use-formatters";
@@ -41,29 +44,68 @@ function moversOf(figures: ReportSummaryResponse): Mover[] {
     .slice(0, MAX_MOVERS);
 }
 
-function savingsRate(income: string | undefined, net: string | undefined) {
+export function savingsRate(income: string | undefined, net: string | undefined) {
   const earned = Number(income ?? 0);
   return earned > 0 ? Number(net ?? 0) / earned : null;
 }
 
-interface Props {
-  month: string;
+interface FiguresProps {
   figures: ReportSummaryResponse;
+  netWorthStart: NetWorthSnapshotItem | null;
+  netWorthEnd: NetWorthSnapshotItem | null;
 }
 
-export function MonthFigures({ month, figures }: Readonly<Props>) {
+export function MonthFigures({ figures, netWorthStart, netWorthEnd }: Readonly<FiguresProps>) {
   const { t } = useTranslation();
   const money = useMoney();
   const percent = usePercent();
   const isoDate = useIsoDate();
   const titleId = useId();
-  const nameOf = useCategoryName();
-  const range = monthBounds(monthDate(month));
   const against = figures.comparison;
-  const movers = moversOf(figures);
 
   const rate = savingsRate(figures.totalIncome, figures.net);
   const earlierRate = against ? savingsRate(against.totalIncome, against.net) : null;
+  const netWorthChange =
+    netWorthStart && netWorthEnd
+      ? Number(netWorthEnd.netWorth) - Number(netWorthStart.netWorth)
+      : null;
+
+  const extra = [
+    {
+      label: t("monthClose.figures.savingsRate"),
+      value: undefined,
+      text: rate === null ? t("monthClose.figures.noIncome") : percent.format(rate),
+      note:
+        earlierRate === null ? undefined : (
+          <span className="text-xs text-muted-foreground tabular-nums">
+            {t("reports.comparison.was", { amount: percent.format(earlierRate) })}
+          </span>
+        ),
+    },
+    ...(netWorthStart && netWorthEnd && netWorthChange !== null
+      ? [
+          {
+            label: t("monthClose.figures.netWorth"),
+            value: String(netWorthChange),
+            sign: "auto" as const,
+            note: (
+              <span
+                className="text-xs text-muted-foreground tabular-nums"
+                title={t("monthClose.netWorth.since", {
+                  start: isoDate(netWorthStart.date),
+                  end: isoDate(netWorthEnd.date),
+                })}
+              >
+                {t("monthClose.netWorth.change", {
+                  from: money.format(Number(netWorthStart.netWorth)),
+                  to: money.format(Number(netWorthEnd.netWorth)),
+                })}
+              </span>
+            ),
+          },
+        ]
+      : []),
+  ];
 
   return (
     <section aria-labelledby={titleId} className="space-y-3">
@@ -84,65 +126,57 @@ export function MonthFigures({ month, figures }: Readonly<Props>) {
         totalExpense={figures.totalExpense}
         net={figures.net}
         comparison={against}
+        extra={extra}
       />
-
-      <SplitColumns className="gap-x-5 gap-y-5 lg:items-start">
-        <Section>
-          <p className="text-sm text-muted-foreground">{t("monthClose.figures.savingsRate")}</p>
-          {rate === null ? (
-            <p className="mt-1 text-sm">{t("monthClose.figures.noIncome")}</p>
-          ) : (
-            <>
-              <p className="mt-1 font-serif text-stat font-semibold lining-nums tabular-nums">
-                {percent.format(rate)}
-              </p>
-              {earlierRate === null ? null : (
-                <p className="mt-1 text-xs text-muted-foreground tabular-nums">
-                  {t("reports.comparison.was", { amount: percent.format(earlierRate) })}
-                </p>
-              )}
-            </>
-          )}
-        </Section>
-
-        <TitledSection title={t("monthClose.figures.movers")} bodyGap="sm">
-          {movers.length === 0 ? (
-            <EmptyText>{t("monthClose.figures.noMovers")}</EmptyText>
-          ) : (
-            <Rows>
-              {movers.map(({ key, item, type }) => (
-                <li
-                  key={key}
-                  className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 py-2.5"
-                >
-                  {item.categoryId && !item.syntheticGroup ? (
-                    <Link
-                      to="/transactions"
-                      search={{ page: 1, ...range, categoryId: item.categoryId, type }}
-                      className="min-w-0 text-sm font-medium wrap-break-word underline-offset-4 hover:underline"
-                    >
-                      {nameOf(item)}
-                    </Link>
-                  ) : (
-                    <span className="min-w-0 text-sm font-medium wrap-break-word">
-                      {nameOf(item)}
-                    </span>
-                  )}
-                  <span className="flex flex-wrap items-baseline justify-end gap-x-2">
-                    <span className="text-sm tabular-nums">
-                      {money.format(Number(item.amount))}
-                    </span>
-                    <ChangeBadge
-                      change={changeOf(item.amount, item.comparisonAmount ?? 0)}
-                      good={type === "income" ? "up" : "down"}
-                    />
-                  </span>
-                </li>
-              ))}
-            </Rows>
-          )}
-        </TitledSection>
-      </SplitColumns>
     </section>
+  );
+}
+
+interface MoversProps {
+  month: string;
+  figures: ReportSummaryResponse;
+}
+
+export function MonthMovers({ month, figures }: Readonly<MoversProps>) {
+  const { t } = useTranslation();
+  const money = useMoney();
+  const nameOf = useCategoryName();
+  const range = monthBounds(monthDate(month));
+  const movers = moversOf(figures);
+
+  return (
+    <TitledSection title={t("monthClose.figures.movers")} bodyGap="sm">
+      {movers.length === 0 ? (
+        <EmptyText>{t("monthClose.figures.noMovers")}</EmptyText>
+      ) : (
+        <Rows>
+          {movers.map(({ key, item, type }) => (
+            <li
+              key={key}
+              className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 py-2.5"
+            >
+              {item.categoryId && !item.syntheticGroup ? (
+                <Link
+                  to="/transactions"
+                  search={{ page: 1, ...range, categoryId: item.categoryId, type }}
+                  className="min-w-0 text-sm font-medium wrap-break-word underline-offset-4 hover:underline"
+                >
+                  {nameOf(item)}
+                </Link>
+              ) : (
+                <span className="min-w-0 text-sm font-medium wrap-break-word">{nameOf(item)}</span>
+              )}
+              <span className="flex flex-wrap items-baseline justify-end gap-x-2">
+                <span className="text-sm tabular-nums">{money.format(Number(item.amount))}</span>
+                <ChangeBadge
+                  change={changeOf(item.amount, item.comparisonAmount ?? 0)}
+                  good={type === "income" ? "up" : "down"}
+                />
+              </span>
+            </li>
+          ))}
+        </Rows>
+      )}
+    </TitledSection>
   );
 }

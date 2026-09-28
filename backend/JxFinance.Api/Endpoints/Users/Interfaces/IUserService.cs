@@ -3,6 +3,7 @@ using JxFinance.Endpoints.Auth.Shared;
 using JxFinance.Endpoints.Users.CreateUser;
 using JxFinance.Endpoints.Users.GetUsers;
 using JxFinance.Endpoints.Users.ResetUserPassword;
+using JxFinance.Endpoints.Users.UpdateMyEmailNotifications;
 using JxFinance.Endpoints.Users.UpdateMyProfile;
 using JxFinance.Endpoints.Users.UpdateUserRole;
 
@@ -28,5 +29,9 @@ public interface IUserService
 
     Task<Result<UserProfileResponse>> UpdateOwnProfileAsync(
         UpdateMyProfileRequest request,
+        CancellationToken cancellationToken);
+
+    Task<Result<UserProfileResponse>> UpdateOwnEmailNotificationsAsync(
+        UpdateMyEmailNotificationsRequest request,
         CancellationToken cancellationToken);
 }

@@ -124,5 +124,5 @@ public sealed class EmailVerificationTests(ApiFixture fixture) : EmailTestBase(f
     private static async Task<ProfileDto> MeAsync(HttpClient client) =>
         (await client.GetFromJsonAsync<ProfileDto>("/api/auth/me"))!;
 
-    private sealed record ProfileDto(Guid Id, string Email, bool IsActive, bool EmailConfirmed, bool BillReminderEmails);
+    private sealed record ProfileDto(Guid Id, string Email, bool IsActive, bool EmailConfirmed);
 }

@@ -1,9 +1,8 @@
-import { linkOptions } from "@tanstack/react-router";
+import { type LinkOptions, linkOptions } from "@tanstack/react-router";
 import { CircleAlert, CircleCheck } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import type { MonthChecklist } from "@/api/generated/model";
 import { Rows } from "@/components/ui/rows/rows";
-import { TitledSection } from "@/components/ui/section/section";
 import { TextLink } from "@/components/ui/text-link/text-link";
 import { useIsoDate } from "@/hooks/use-formatters";
 import { monthBounds } from "@/lib/calendar";
@@ -15,108 +14,130 @@ export function openItemCount(checklist: MonthChecklist) {
   return checklist.uncategorized + (checklist.unusual ?? 0) + (checklist.unconfirmedRecurring ?? 0);
 }
 
+function importsBehind(checklist: MonthChecklist, monthEnd: string) {
+  return (checklist.imports ?? []).filter((entry) => entry.latestImportedDate < monthEnd);
+}
+
+export function attentionCount(checklist: MonthChecklist, monthEnd: string) {
+  const counts = [checklist.uncategorized, checklist.unusual, checklist.unconfirmedRecurring];
+  return (
+    counts.filter((count) => (count ?? 0) > 0).length + importsBehind(checklist, monthEnd).length
+  );
+}
+
+interface Item {
+  key: string;
+  done: boolean;
+  label: string;
+  action: string;
+  link: LinkOptions;
+}
+
 interface Props {
   month: string;
   checklist: MonthChecklist;
+  openOnly?: boolean;
+  className?: string;
 }
 
-export function CloseChecklist({ month, checklist }: Readonly<Props>) {
+export function CloseChecklist({ month, checklist, openOnly = false, className }: Readonly<Props>) {
   const { t } = useTranslation();
   const isoDate = useIsoDate();
   const range = monthBounds(monthDate(month));
+  const review = t("monthClose.checklist.review");
 
-  const items = [
+  const items: Item[] = [
     {
-      count: checklist.uncategorized,
+      key: "uncategorized",
+      done: checklist.uncategorized === 0,
       label:
         checklist.uncategorized === 0
           ? t("monthClose.checklist.noUncategorized")
           : t("monthClose.checklist.uncategorized", { count: checklist.uncategorized }),
+      action: t("monthClose.checklist.categorize"),
       link: linkOptions({
         to: "/transactions",
         search: { page: 1, ...range, uncategorized: true },
       }),
     },
-    checklist.unusual === null
-      ? null
-      : {
-          count: checklist.unusual,
-          label:
-            checklist.unusual === 0
-              ? t("monthClose.checklist.noUnusual")
-              : t("monthClose.checklist.unusual", { count: checklist.unusual }),
-          link: linkOptions({ to: "/transactions", search: { page: 1, ...range, unusual: true } }),
+  ];
+
+  if (checklist.unusual !== null) {
+    items.push({
+      key: "unusual",
+      done: checklist.unusual === 0,
+      label:
+        checklist.unusual === 0
+          ? t("monthClose.checklist.noUnusual")
+          : t("monthClose.checklist.unusual", { count: checklist.unusual }),
+      action: review,
+      link: linkOptions({ to: "/transactions", search: { page: 1, ...range, unusual: true } }),
+    });
+  }
+
+  if (checklist.unconfirmedRecurring !== null) {
+    items.push({
+      key: "recurring",
+      done: checklist.unconfirmedRecurring === 0,
+      label:
+        checklist.unconfirmedRecurring === 0
+          ? t("monthClose.checklist.noRecurring")
+          : t("monthClose.checklist.recurring", { count: checklist.unconfirmedRecurring }),
+      action: t("monthClose.checklist.confirm"),
+      link: linkOptions({ to: "/recurring-bills" }),
+    });
+  }
+
+  for (const entry of checklist.imports ?? []) {
+    const behind = entry.latestImportedDate < range.dateTo;
+    items.push({
+      key: `import-${entry.accountId}`,
+      done: !behind,
+      label: t(
+        behind ? "monthClose.checklist.importBehind" : "monthClose.checklist.importCovered",
+        {
+          account: entry.accountName,
+          date: isoDate(entry.latestImportedDate),
         },
-    checklist.unconfirmedRecurring === null
-      ? null
-      : {
-          count: checklist.unconfirmedRecurring,
-          label:
-            checklist.unconfirmedRecurring === 0
-              ? t("monthClose.checklist.noRecurring")
-              : t("monthClose.checklist.recurring", { count: checklist.unconfirmedRecurring }),
-          link: linkOptions({ to: "/recurring-bills" }),
-        },
-  ].filter((item) => item !== null);
+      ),
+      action: t("monthClose.checklist.import"),
+      link: linkOptions({ to: "/profile", search: { section: "import" } }),
+    });
+  }
+
+  const shown = openOnly ? items.filter((item) => !item.done) : items;
 
   return (
-    <TitledSection title={t("monthClose.checklist.title")}>
-      <Rows className="mt-2">
-        {items.map(({ count, label, link }) => {
-          const Icon = count === 0 ? CircleCheck : CircleAlert;
-          return (
-            <li
-              key={label}
-              className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 py-2.5 text-sm"
-            >
-              <span className="flex min-w-0 items-start gap-2">
-                <Icon
-                  aria-hidden="true"
-                  className={cn("mt-0.5 size-4 shrink-0", count === 0 ? INCOME_TONE : EXPENSE_TONE)}
-                />
-                <span
-                  className={cn("min-w-0 wrap-break-word", count === 0 && "text-muted-foreground")}
-                >
-                  {label}
-                </span>
+    <Rows className={className}>
+      {shown.map((item) => {
+        const Icon = item.done ? CircleCheck : CircleAlert;
+        return (
+          <li
+            key={item.key}
+            className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 py-2.5 text-sm"
+          >
+            <span className="flex min-w-0 items-start gap-2.5">
+              <Icon
+                aria-hidden="true"
+                className={cn("mt-0.5 size-4 shrink-0", item.done ? INCOME_TONE : EXPENSE_TONE)}
+              />
+              <span
+                className={cn(
+                  "min-w-0 wrap-break-word tabular-nums",
+                  item.done ? "text-muted-foreground" : "font-medium",
+                )}
+              >
+                {item.label}
               </span>
-              {count === 0 ? null : (
-                <TextLink {...link}>{t("monthClose.checklist.review")}</TextLink>
-              )}
-            </li>
-          );
-        })}
-      </Rows>
-
-      {checklist.imports && checklist.imports.length > 0 ? (
-        <div className="mt-4">
-          <h3 className="text-sm font-medium">{t("monthClose.checklist.imports")}</h3>
-          <ul className="mt-1.5 space-y-1">
-            {checklist.imports.map((entry) => {
-              const behind = entry.latestImportedDate < range.dateTo;
-              return (
-                <li
-                  key={entry.accountId}
-                  className={cn(
-                    "text-sm wrap-break-word tabular-nums",
-                    behind ? EXPENSE_TONE : "text-muted-foreground",
-                  )}
-                >
-                  {t(
-                    behind
-                      ? "monthClose.checklist.importBehind"
-                      : "monthClose.checklist.importCovered",
-                    {
-                      account: entry.accountName,
-                      date: isoDate(entry.latestImportedDate),
-                    },
-                  )}
-                </li>
-              );
-            })}
-          </ul>
-        </div>
-      ) : null}
-    </TitledSection>
+            </span>
+            {item.done ? null : (
+              <TextLink {...item.link} className="ml-auto">
+                {item.action}
+              </TextLink>
+            )}
+          </li>
+        );
+      })}
+    </Rows>
   );
 }

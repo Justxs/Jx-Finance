@@ -1,7 +1,41 @@
 import tailwindcss from "@tailwindcss/vite";
 import { tanstackRouter } from "@tanstack/router-plugin/vite";
-import { defineConfig } from "vite";
+import { type Plugin, defineConfig } from "vite";
 import { reactPlugins, srcAlias } from "./vite.shared.ts";
+
+const preloadedFonts = [
+  "source-sans-3-latin-wght-normal.woff2",
+  "source-sans-3-latin-ext-wght-normal.woff2",
+  "source-serif-4-latin-wght-normal.woff2",
+  "source-serif-4-latin-ext-wght-normal.woff2",
+];
+
+function preloadFonts(files: readonly string[]): Plugin {
+  return {
+    name: "preload-fonts",
+    transformIndexHtml(_html, context) {
+      const assets = Object.values(context.bundle ?? {}).filter(
+        (output) => output.type === "asset",
+      );
+      return files.map((file) => {
+        const built = assets.find((asset) =>
+          asset.originalFileNames.some((name) => name.endsWith(`/${file}`)),
+        );
+        return {
+          tag: "link",
+          attrs: {
+            rel: "preload",
+            href: built ? `/${built.fileName}` : `/src/assets/fonts/${file}`,
+            as: "font",
+            type: "font/woff2",
+            crossorigin: "",
+          },
+          injectTo: "head",
+        };
+      });
+    },
+  };
+}
 
 export default defineConfig({
   plugins: [
@@ -14,6 +48,7 @@ export default defineConfig({
     }),
     ...reactPlugins(),
     tailwindcss(),
+    preloadFonts(preloadedFonts),
   ],
   resolve: { alias: srcAlias },
   server: {

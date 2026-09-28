@@ -127,9 +127,9 @@ The payload carries the currency so the bell and Discord format each amount in t
 
 | Kind | Bell and Discord, English | Lithuanian |
 | --- | --- | --- |
-| `unusualAmount` | "{amount}: {factor}× the usual {typical}" | "{amount}: {factor} karto daugiau nei įprasta ({typical})" |
+| `unusualAmount` | "{amount}: {factor}× the usual {typical}" | "{amount}: {factor}× daugiau nei įprasta ({typical})" |
 | `unusualAmounts` | "{count} expenses are well above their usual amount" | "Neįprastai didelių išlaidų: {count}" |
-| `recurringPriceRise` | "Charged {amount}, expected {expected}" | "Nuskaityta {amount}, tikėtasi {expected}" |
+| `recurringPriceRise` | "Charged {amount}, expected {expected}" | "Nuskaičiuota {amount}, tikėtasi {expected}" |
 
 The bell formats the amounts for the viewer's language; Discord writes them as `249.00 EUR`. `NotificationTexts.PagePath` answers `/transactions?unusual=true` for the first two and `/recurring-bills` for the third, and the profile's Discord section lists the three kinds with the others. `Message` carries the same sentence in the installation's default language, from `NotificationTexts.Sentence`.
 

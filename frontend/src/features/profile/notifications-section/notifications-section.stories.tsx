@@ -1,25 +1,34 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, fireEvent, userEvent, waitFor } from "storybook/test";
+import { getMeMockHandler } from "@/api/generated/auth/auth.msw";
 import {
   getMyDiscordMockHandler,
   getTestMyDiscordMockHandler,
 } from "@/api/generated/users/users.msw";
 import {
   discordWebhookGoneProblem,
+  emailSubscriber,
   myDiscordEmpty,
   myDiscordFailing,
   myDiscordGone,
   myDiscordUnreadable,
+  unverifiedUser,
 } from "@/storybook/fixtures";
-import { discordOffHandler, failWith, pending, withHandlers } from "@/storybook/handlers";
+import {
+  discordOffHandler,
+  emailEnabledHandler,
+  failWith,
+  pending,
+  withHandlers,
+} from "@/storybook/handlers";
 import { openedDialog } from "@/storybook/interactions";
-import { DiscordSection } from "./discord-section";
+import { NotificationsSection } from "./notifications-section";
 
 const meta = {
-  title: "Features/Profile/DiscordSection",
-  component: DiscordSection,
+  title: "Features/Profile/NotificationsSection",
+  component: NotificationsSection,
   parameters: { layout: "padded", route: "/profile" },
-} satisfies Meta<typeof DiscordSection>;
+} satisfies Meta<typeof NotificationsSection>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
@@ -29,19 +38,69 @@ const webhook = "https://discord.com/api/webhooks/123456789012345678/abc-DEF_123
 export const Configured: Story = {
   play: async ({ canvas }) => {
     await expect(await canvas.findByLabelText("Webhook URL")).toHaveValue("");
-    await expect(canvas.getByRole("checkbox", { name: "A recurring entry is due" })).toBeChecked();
-    await expect(canvas.getByRole("checkbox", { name: "A budget reaches 80%" })).not.toBeChecked();
+    await expect(
+      canvas.getByRole("checkbox", { name: "A recurring entry is due on Discord" }),
+    ).toBeChecked();
+    await expect(
+      canvas.getByRole("checkbox", { name: "A budget reaches 80% on Discord" }),
+    ).not.toBeChecked();
     await expect(canvas.getByText(/Last message delivered/u)).toBeInTheDocument();
   },
 };
 
-export const Empty: Story = {
+export const EmailNeedsAMailServer: Story = {
+  play: async ({ canvas }) => {
+    await expect(
+      await canvas.findByRole("checkbox", { name: "A recurring entry is due by email" }),
+    ).toHaveAttribute("aria-disabled", "true");
+    await expect(canvas.getByText(/cannot send mail yet/u)).toBeInTheDocument();
+  },
+};
+
+export const EmailChosen: Story = {
+  parameters: withHandlers(emailEnabledHandler, getMeMockHandler(emailSubscriber)),
+  play: async ({ canvas }) => {
+    const billByEmail = await canvas.findByRole("checkbox", {
+      name: "A recurring entry is due by email",
+    });
+    await waitFor(() => expect(billByEmail).not.toHaveAttribute("aria-disabled"));
+    await expect(billByEmail).toBeChecked();
+    await expect(
+      canvas.getByRole("checkbox", { name: "A budget reaches 80% by email" }),
+    ).not.toBeChecked();
+  },
+};
+
+export const EmailNeedsAConfirmedAddress: Story = {
+  parameters: withHandlers(emailEnabledHandler, getMeMockHandler(unverifiedUser)),
+  play: async ({ canvas }) => {
+    await waitFor(() =>
+      expect(canvas.getByText(/until you confirm your address/u)).toBeInTheDocument(),
+    );
+  },
+};
+
+export const SavingEmailChoices: Story = {
+  parameters: withHandlers(emailEnabledHandler),
+  play: async ({ canvas }) => {
+    const budget = await canvas.findByRole("checkbox", { name: "A budget reaches 80% by email" });
+    await waitFor(() => expect(budget).not.toHaveAttribute("aria-disabled"));
+    await userEvent.click(budget);
+    await expect(budget).toBeChecked();
+    const save = canvas.getByRole("button", { name: "Save" });
+    await userEvent.click(save);
+    await waitFor(() => expect(save).not.toHaveAttribute("aria-busy"));
+  },
+};
+
+export const NotConnected: Story = {
   parameters: withHandlers(getMyDiscordMockHandler(myDiscordEmpty)),
   play: async ({ canvas }) => {
     await expect(
-      await canvas.findByRole("button", { name: /Send a test message/u }),
-    ).toBeDisabled();
-    await expect(canvas.queryByRole("button", { name: /Remove webhook/u })).not.toBeInTheDocument();
+      await canvas.findByRole("checkbox", { name: "A recurring entry is due on Discord" }),
+    ).toHaveAttribute("aria-disabled", "true");
+    await expect(canvas.getByText(/Connect a Discord channel below/u)).toBeInTheDocument();
+    await expect(canvas.queryByRole("button", { name: /Send a test message/u })).toBeNull();
   },
 };
 
@@ -106,10 +165,12 @@ export const LastDeliveryFailed: Story = {
   },
 };
 
-export const InstallationOff: Story = {
+export const DiscordNotAllowed: Story = {
   parameters: withHandlers(discordOffHandler),
   play: async ({ canvas }) => {
-    await expect(await canvas.findByRole("status")).toHaveTextContent(/has not allowed Discord/u);
+    await waitFor(() =>
+      expect(canvas.getByText(/has not allowed it on this installation/u)).toBeInTheDocument(),
+    );
     await expect(canvas.getByLabelText("Webhook URL")).toBeDisabled();
     await expect(canvas.getByRole("button", { name: /Send a test message/u })).toBeDisabled();
   },

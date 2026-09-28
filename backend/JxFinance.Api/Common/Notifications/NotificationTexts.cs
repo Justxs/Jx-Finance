@@ -34,6 +34,12 @@ public static class NotificationTexts
             ? $"{PagePath(notification.Type)}?month={month.ToString(MonthFormat, CultureInfo.InvariantCulture)}"
             : PagePath(notification.Type);
 
+    public static string? PageUrl(Notification notification, string? siteUrl)
+    {
+        var site = siteUrl?.Trim().TrimEnd('/');
+        return string.IsNullOrEmpty(site) ? null : $"{site}{PageLink(notification)}";
+    }
+
     public static string MonthTitle(string language, DateOnly month) =>
         EmailTexts.IsLithuanian(language)
             ? $"{month.Year} m. {LithuanianMonths[month.Month - 1]}"
@@ -56,7 +62,7 @@ public static class NotificationTexts
                     : $"{PeriodName(false, period)} limit reached",
             NotificationType.UnusualAmount when payload is { Amount: { } amount, TypicalAmount: { } typical, Factor: { } factor } =>
                 lithuanian
-                    ? $"{Money(amount, payload.Currency)}: {Factor(factor)} karto daugiau nei įprasta ({Money(typical, payload.Currency)})"
+                    ? $"{Money(amount, payload.Currency)}: {Factor(factor)}× daugiau nei įprasta ({Money(typical, payload.Currency)})"
                     : $"{Money(amount, payload.Currency)}: {Factor(factor)}× the usual {Money(typical, payload.Currency)}",
             NotificationType.UnusualAmounts when payload?.Count is { } count =>
                 lithuanian
@@ -64,7 +70,7 @@ public static class NotificationTexts
                     : $"{count} expenses are well above their usual amount",
             NotificationType.RecurringPriceRise when payload is { Amount: { } charged, TypicalAmount: { } expected } =>
                 lithuanian
-                    ? $"Nuskaityta {Money(charged, payload.Currency)}, tikėtasi {Money(expected, payload.Currency)}"
+                    ? $"Nuskaičiuota {Money(charged, payload.Currency)}, tikėtasi {Money(expected, payload.Currency)}"
                     : $"Charged {Money(charged, payload.Currency)}, expected {Money(expected, payload.Currency)}",
             NotificationType.MonthReadyToClose when payload?.Month is { } month =>
                 lithuanian
@@ -81,10 +87,9 @@ public static class NotificationTexts
             $"**{DiscordText.Escape(notification.Title)}**",
             DiscordText.Escape(Sentence(language, notification)),
         };
-        var site = siteUrl?.Trim().TrimEnd('/');
-        if (!string.IsNullOrEmpty(site))
+        if (PageUrl(notification, siteUrl) is { } url)
         {
-            lines.Add($"<{site}{PageLink(notification)}>");
+            lines.Add($"<{url}>");
         }
 
         return TextLimit.Ellipsize(string.Join('\n', lines), DiscordMessage.ContentMaxLength);

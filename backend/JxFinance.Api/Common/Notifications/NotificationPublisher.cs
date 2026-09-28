@@ -1,7 +1,9 @@
 using System.Globalization;
 using FastEndpoints;
+using JxFinance.Common.Email;
 using JxFinance.Common.Settings;
 using JxFinance.Domain.Common;
+using JxFinance.Domain.Email;
 using JxFinance.Domain.Notifications;
 using JxFinance.Infrastructure.Auth;
 using JxFinance.Infrastructure.Configuration;
@@ -14,15 +16,21 @@ namespace JxFinance.Common.Notifications;
 [RegisterService<INotificationPublisher>(LifeTime.Scoped)]
 public sealed class NotificationPublisher(
     AppDbContext db,
+    IEmailOutbox outbox,
     IInstanceSettingsStore store,
     IClock clock,
     IOptions<AppOptions> options) : INotificationPublisher
 {
     private readonly Dictionary<Guid, IReadOnlySet<NotificationType>> discordTypes = [];
+    private readonly Dictionary<Guid, EmailRecipient> emailRecipients = [];
     private readonly HashSet<string> queuedKeys = new(StringComparer.Ordinal);
+    private readonly HashSet<string> queuedEmailKeys = new(StringComparer.Ordinal);
 
     public static INotificationPublisher For(IServiceProvider services, AppDbContext db) =>
-        ActivatorUtilities.CreateInstance<NotificationPublisher>(services, db);
+        ActivatorUtilities.CreateInstance<NotificationPublisher>(
+            services,
+            db,
+            ActivatorUtilities.CreateInstance<EmailOutbox>(services, db));
 
     public async Task PreloadAsync(IEnumerable<Guid> userIds, CancellationToken cancellationToken)
     {
@@ -37,29 +45,12 @@ public sealed class NotificationPublisher(
             discordTypes[userId] = new HashSet<NotificationType>();
         }
 
-        if (!store.Current.DiscordEnabled)
-        {
-            return;
-        }
-
-        var webhooks = await db.DiscordWebhooks
-            .IgnoreQueryFilters(QueryFilters.OwnerOnly)
-            .AsNoTracking()
-            .Where(w => missing.Contains(w.UserId) && w.IsEnabled && w.DisabledByDiscordAt == null)
-            .Where(w => db.Users.Where(AppUser.IsActive).Select(u => u.Id).Contains(w.UserId))
-            .Select(w => new { w.UserId, w.Types })
-            .ToListAsync(cancellationToken);
-        foreach (var webhook in webhooks)
-        {
-            discordTypes[webhook.UserId] = webhook.Types.ToHashSet();
-        }
-
         var since = clock.StartOfDay(clock.Today);
-        var queued = await db.DiscordMessages
-            .Where(m => missing.Contains(m.UserId) && m.CreatedAt >= since && m.DedupeKey != null)
-            .Select(m => m.DedupeKey!)
-            .ToListAsync(cancellationToken);
-        queuedKeys.UnionWith(queued);
+        await PreloadEmailAsync(missing, since, cancellationToken);
+        if (store.Current.DiscordEnabled)
+        {
+            await PreloadDiscordAsync(missing, since, cancellationToken);
+        }
     }
 
     public void Publish(Notification notification)
@@ -75,11 +66,70 @@ public sealed class NotificationPublisher(
         var key = string.Create(
             CultureInfo.InvariantCulture,
             $"{notification.UserId:N}:{notification.Type}:{notification.RelatedId ?? notification.Id.Value:N}:{clock.Today:yyyy-MM-dd}");
-        if (!types.Contains(notification.Type) || !queuedKeys.Add(key))
+        if (types.Contains(notification.Type) && queuedKeys.Add(key))
+        {
+            QueueDiscord(notification, key);
+        }
+
+        if (emailRecipients.TryGetValue(notification.UserId, out var recipient)
+            && recipient.Types.Contains(notification.Type)
+            && queuedEmailKeys.Add(key))
+        {
+            QueueEmail(notification, recipient, key);
+        }
+    }
+
+    private async Task PreloadEmailAsync(List<Guid> userIds, DateTimeOffset since, CancellationToken cancellationToken)
+    {
+        var users = await db.Users
+            .AsNoTracking()
+            .Where(AppUser.IsActive)
+            .Where(u => userIds.Contains(u.Id) && u.EmailConfirmed && u.Email != null)
+            .Select(u => new { u.Id, u.Email, u.DisplayName, u.EmailNotificationTypes })
+            .ToListAsync(cancellationToken);
+        var recipients = users.Where(u => u.EmailNotificationTypes.Count > 0).ToList();
+        if (recipients.Count == 0)
         {
             return;
         }
 
+        foreach (var user in recipients)
+        {
+            emailRecipients[user.Id] = new EmailRecipient(user.Email!, user.DisplayName, user.EmailNotificationTypes.ToHashSet());
+        }
+
+        var queued = await db.EmailMessages
+            .Where(m => (m.Kind == EmailKind.Notification || m.Kind == EmailKind.BillReminder)
+                && m.CreatedAt >= since
+                && m.DedupeKey != null)
+            .Select(m => m.DedupeKey!)
+            .ToListAsync(cancellationToken);
+        queuedEmailKeys.UnionWith(queued);
+    }
+
+    private async Task PreloadDiscordAsync(List<Guid> userIds, DateTimeOffset since, CancellationToken cancellationToken)
+    {
+        var webhooks = await db.DiscordWebhooks
+            .IgnoreQueryFilters(QueryFilters.OwnerOnly)
+            .AsNoTracking()
+            .Where(w => userIds.Contains(w.UserId) && w.IsEnabled && w.DisabledByDiscordAt == null)
+            .Where(w => db.Users.Where(AppUser.IsActive).Select(u => u.Id).Contains(w.UserId))
+            .Select(w => new { w.UserId, w.Types })
+            .ToListAsync(cancellationToken);
+        foreach (var webhook in webhooks)
+        {
+            discordTypes[webhook.UserId] = webhook.Types.ToHashSet();
+        }
+
+        var queued = await db.DiscordMessages
+            .Where(m => userIds.Contains(m.UserId) && m.CreatedAt >= since && m.DedupeKey != null)
+            .Select(m => m.DedupeKey!)
+            .ToListAsync(cancellationToken);
+        queuedKeys.UnionWith(queued);
+    }
+
+    private void QueueDiscord(Notification notification, string key)
+    {
         var now = clock.UtcNow;
         db.DiscordMessages.Add(new DiscordMessage
         {
@@ -91,4 +141,38 @@ public sealed class NotificationPublisher(
             NextAttemptAt = now,
         });
     }
+
+    private void QueueEmail(Notification notification, EmailRecipient recipient, string key)
+    {
+        var settings = store.Current;
+        var product = EmailTexts.Product(settings.InstanceName);
+        if (notification is { Type: NotificationType.BillDue, Payload.DueDate: { } due })
+        {
+            outbox.Enqueue(
+                EmailKind.BillReminder,
+                EmailTexts.BillReminder(
+                    settings.DefaultLanguage,
+                    recipient.Address,
+                    recipient.DisplayName,
+                    notification.Title,
+                    due,
+                    notification.Payload.Shape,
+                    product),
+                key);
+            return;
+        }
+
+        outbox.Enqueue(
+            EmailKind.Notification,
+            EmailTexts.Notification(
+                settings.DefaultLanguage,
+                recipient.Address,
+                recipient.DisplayName,
+                notification,
+                options.Value.SiteUrl,
+                product),
+            key);
+    }
+
+    private sealed record EmailRecipient(string Address, string DisplayName, IReadOnlySet<NotificationType> Types);
 }

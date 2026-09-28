@@ -29,6 +29,7 @@ import type {
   ProblemDetails,
   ResetUserPasswordRequest,
   UpdateMyDiscordRequest,
+  UpdateMyEmailNotificationsRequest,
   UpdateMyProfileRequest,
   UpdateUserRoleRequest,
   UserProfileResponse,
@@ -282,7 +283,7 @@ export const getUpdateMyProfileUrl = () => {
 };
 
 /**
- * Changes your display name, your bill reminder email preference and, optionally, your password. A password change needs the current password as well, and refreshes the session cookie so the browser stays signed in. This is the one user endpoint that does not require the Admin role.
+ * Changes your display name and, optionally, your password. A password change needs the current password as well, and refreshes the session cookie so the browser stays signed in. Any signed-in user may call it, not only administrators. Which notifications are emailed is saved separately, through PUT users/me/email-notifications.
  * @summary Update your own profile
  */
 export const updateMyProfile = async (
@@ -718,6 +719,118 @@ export const useTestMyDiscord = <TError = ErrorType<ProblemDetails | void>, TCon
   queryClient?: QueryClient,
 ): UseMutationResult<Awaited<ReturnType<typeof testMyDiscord>>, TError, void, TContext> => {
   return useMutation(getTestMyDiscordMutationOptions(options), queryClient);
+};
+export const getUpdateMyEmailNotificationsUrl = () => {
+  return `/api/users/me/email-notifications`;
+};
+
+/**
+ * Replaces the list of notification kinds that are also sent to your email address. Every in-app notification of a chosen kind then queues one email, at most once per kind, subject and day. Nothing is sent while the installation has no working mail server or while your address is not confirmed. An empty list is allowed and sends no notification email; account mail such as password reset links does not depend on it.
+ * @summary Choose which notifications you are emailed
+ */
+export const updateMyEmailNotifications = async (
+  updateMyEmailNotificationsRequest: UpdateMyEmailNotificationsRequest,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<UserProfileResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return customFetch<UserProfileResponse>(getUpdateMyEmailNotificationsUrl(), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(updateMyEmailNotificationsRequest),
+  });
+};
+
+export const getUpdateMyEmailNotificationsMutationKey = () =>
+  ["updateMyEmailNotifications"] as const;
+
+export const getUpdateMyEmailNotificationsMutationOptions = <
+  TError = ErrorType<ProblemDetails | void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateMyEmailNotifications>>,
+    TError,
+    UpdateMyEmailNotificationsMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateMyEmailNotifications>>,
+  TError,
+  UpdateMyEmailNotificationsMutationVariables,
+  TContext
+> => {
+  const mutationKey = getUpdateMyEmailNotificationsMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateMyEmailNotifications>>,
+    UpdateMyEmailNotificationsMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return updateMyEmailNotifications(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateMyEmailNotificationsMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateMyEmailNotifications>>
+>;
+export type UpdateMyEmailNotificationsMutationBody = UpdateMyEmailNotificationsRequest;
+export type UpdateMyEmailNotificationsMutationError = ErrorType<ProblemDetails | void>;
+export type UpdateMyEmailNotificationsMutationVariables = {
+  data: UpdateMyEmailNotificationsRequest;
+};
+
+/**
+ * @summary Choose which notifications you are emailed
+ */
+export const useUpdateMyEmailNotifications = <
+  TError = ErrorType<ProblemDetails | void>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof updateMyEmailNotifications>>,
+      TError,
+      UpdateMyEmailNotificationsMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof updateMyEmailNotifications>>,
+  TError,
+  UpdateMyEmailNotificationsMutationVariables,
+  TContext
+> => {
+  return useMutation(getUpdateMyEmailNotificationsMutationOptions(options), queryClient);
 };
 export const getDeactivateUserUrl = (id: string) => {
   return `/api/users/${id}/deactivate`;

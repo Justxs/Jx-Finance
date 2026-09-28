@@ -45,6 +45,8 @@ const STORY_ROUTES = [
   { path: "/goals" },
   { path: "/households" },
   { path: "/net-worth" },
+  { path: "/net-worth/assets/$assetId" },
+  { path: "/net-worth/debts/$debtId" },
   { path: "/profile", validateSearch: profileSearchSchema },
   { path: "/recurring-bills" },
   { path: "/settings", validateSearch: settingsSearchSchema },

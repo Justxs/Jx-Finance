@@ -1,8 +1,9 @@
 import { useTranslation } from "react-i18next";
 import { useHouseholdsSuspense } from "@/api/generated";
 import { CreateDialog } from "@/components/create-dialog/create-dialog";
-import { PageHeader } from "@/components/page-header/page-header";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
+import { SectionHeader } from "@/components/ui/section/section";
+import { SettingsLayout } from "@/features/settings/settings-nav/settings-nav";
 import { CreateHouseholdForm } from "../create-household-form/create-household-form";
 import { HouseholdCard } from "../household-card/household-card";
 
@@ -13,18 +14,18 @@ export function HouseholdsPage() {
   const householdList = households.data;
 
   return (
-    <div className="space-y-5">
-      <PageHeader title={t("households.title")}>
-        <CreateDialog label={t("households.add")} title={t("households.add")}>
+    <SettingsLayout current="households">
+      <SectionHeader title={t("households.title")}>
+        <CreateDialog secondary label={t("households.add")} title={t("households.add")}>
           {(close) => <CreateHouseholdForm onClose={close} />}
         </CreateDialog>
-      </PageHeader>
+      </SectionHeader>
 
       {householdList.length === 0 ? (
         <EmptyText>{t("households.empty")}</EmptyText>
       ) : (
         householdList.map((household) => <HouseholdCard key={household.id} household={household} />)
       )}
-    </div>
+    </SettingsLayout>
   );
 }

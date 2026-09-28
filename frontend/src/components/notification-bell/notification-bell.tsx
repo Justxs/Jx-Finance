@@ -12,7 +12,6 @@ import type {
   NotificationPayload,
   NotificationResponse,
   NotificationType,
-  NotificationsParams,
 } from "@/api/generated/model";
 import { Button } from "@/components/ui/button/button";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
@@ -27,6 +26,7 @@ import { Tooltip } from "@/components/ui/tooltip/tooltip";
 import { monthKeyOfIso } from "@/features/month-close/month-key";
 import { useDate, useMoney, useMonthName, useNumberFormat } from "@/hooks/use-formatters";
 import { type FeatureKey, useSettings } from "@/hooks/use-settings";
+import { unreadParams } from "@/lib/app-shell";
 import { parseIso } from "@/lib/calendar";
 import { pendingId } from "@/lib/mutations";
 import { optimisticRemoval, optimisticUpdate } from "@/lib/optimistic";
@@ -51,8 +51,6 @@ export function NotificationBellUnavailable() {
     </Tooltip>
   );
 }
-
-export const unreadParams: NotificationsParams = { unread: true };
 
 const bills = linkOptions({ to: "/recurring-bills" });
 const budgets = linkOptions({ to: "/budgets" });

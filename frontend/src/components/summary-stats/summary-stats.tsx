@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 interface SummaryStat {
   label: string;
   value: string | undefined;
+  text?: string;
   tone?: string;
   lead?: boolean;
   sign?: MoneySign;
@@ -24,6 +25,9 @@ export function SummaryStats({ items, currency }: Readonly<Props>) {
   const rest = items.filter((item) => item !== lead);
 
   function formatValue(item: SummaryStat) {
+    if (item.text !== undefined) {
+      return item.text;
+    }
     if (item.value === undefined) {
       return EMPTY_VALUE;
     }

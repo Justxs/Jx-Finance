@@ -1,4 +1,5 @@
-import { Link, useNavigate } from "@tanstack/react-router";
+import { useQueryClient } from "@tanstack/react-query";
+import { Link, useNavigate, useRouter } from "@tanstack/react-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
@@ -7,6 +8,7 @@ import type { LoginResponse } from "@/api/generated/model";
 import { useServerForm } from "@/components/form";
 import { FormError } from "@/components/form-error/form-error";
 import { useEmailEnabled } from "@/hooks/use-settings";
+import { loadAppShell } from "@/lib/app-shell";
 import { setAuthenticated } from "@/lib/auth-gate";
 import { silent } from "@/lib/mutations";
 import { requiredEmail, requiredValue } from "@/lib/validation";
@@ -22,6 +24,8 @@ interface FormValues {
 export function LoginPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const router = useRouter();
+  const queryClient = useQueryClient();
   const emailEnabled = useEmailEnabled();
   const [twoFactorRequired, setTwoFactorRequired] = useState(false);
 
@@ -34,12 +38,13 @@ export function LoginPage() {
 
   const loginMutation = useLogin(
     silent({
-      onSuccess: (data: LoginResponse) => {
+      onSuccess: async (data: LoginResponse) => {
         if (data.twoFactorRequired) {
           setTwoFactorRequired(true);
           return;
         }
         setAuthenticated(true);
+        await Promise.allSettled([loadAppShell(queryClient), router.preloadRoute({ to: "/" })]);
         void navigate({ to: "/" });
       },
     }),

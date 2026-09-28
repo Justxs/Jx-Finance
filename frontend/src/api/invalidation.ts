@@ -269,6 +269,10 @@ const rules: readonly Rule[] = [
     refresh: [api.getMeQueryKey, api.getUsersQueryKey, api.getSessionsQueryKey],
   },
   {
+    after: [api.getUpdateMyEmailNotificationsMutationKey],
+    refresh: [api.getMeQueryKey],
+  },
+  {
     after: [api.getUpdateSmtpSettingsMutationKey],
     refresh: [api.getSmtpSettingsQueryKey, api.getPublicSettingsQueryKey],
   },

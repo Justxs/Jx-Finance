@@ -8,9 +8,8 @@ import { EditModal, Modal } from "@/components/modal";
 import { PageHeader } from "@/components/page-header/page-header";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { Button } from "@/components/ui/button/button";
-import { Section, SectionTitle } from "@/components/ui/section/section";
+import { Section } from "@/components/ui/section/section";
 import { SectionSkeleton, Skeleton } from "@/components/ui/skeleton/skeleton";
-import { AccountBalances } from "@/features/dashboard/account-balances/account-balances";
 import { useConfirmedDelete } from "@/hooks/use-confirmed-delete";
 import { useDeferredParams } from "@/hooks/use-deferred-params";
 import { useSettings } from "@/hooks/use-settings";
@@ -84,21 +83,16 @@ export function AccountsPage() {
           deletingId={remove.pendingId}
           onDelete={remove.request}
           onConvert={features.multiCurrency ? setConvertAccountId : undefined}
+          positiveTotal={allAccountList.reduce(
+            (sum, account) => sum + Math.max(0, Number(account.reportingBalance)),
+            0,
+          )}
         />
       </Section>
 
       <QueryBoundary fallback={<Skeleton className="h-8 w-48" />}>
         <ArchivedAccounts />
       </QueryBoundary>
-
-      {accountList.length > 1 ? (
-        <Section>
-          <SectionTitle className="mb-4">{t("accounts.share")}</SectionTitle>
-          <div className="max-w-2xl">
-            <AccountBalances limit={12} />
-          </div>
-        </Section>
-      ) : null}
 
       <QueryBoundary fallback={<SectionSkeleton rows={3} />}>
         <TransfersSection

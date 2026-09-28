@@ -22,10 +22,15 @@ type Story = StoryObj<typeof meta>;
 
 export const Open: Story = {
   play: async ({ canvas }) => {
-    await expect(await canvas.findByRole("status")).toHaveTextContent(/is open/);
+    await expect(await canvas.findByRole("status")).toHaveTextContent(
+      /need attention before you close/,
+    );
+    await expect(
+      canvas.getByRole("heading", { name: "August 2026 is ready to close" }),
+    ).toBeVisible();
     await expect(canvas.getByText("3 uncategorized transactions")).toBeVisible();
-    await expect(canvas.getByRole("button", { name: "Close month" })).toBeEnabled();
-    await expect(canvas.getByRole("button", { name: /Aug/ })).toHaveAttribute(
+    await expect(canvas.getByRole("button", { name: "Close August 2026" })).toBeEnabled();
+    await expect(canvas.getByRole("button", { name: /^Aug/ })).toHaveAttribute(
       "aria-current",
       "date",
     );
@@ -34,7 +39,7 @@ export const Open: Story = {
 
 export const ClosingWithOpenItemsAsksFirst: Story = {
   play: async ({ canvas }) => {
-    await userEvent.click(await canvas.findByRole("button", { name: "Close month" }));
+    await userEvent.click(await canvas.findByRole("button", { name: "Close August 2026" }));
     const dialog = await openedDialog("alertdialog");
     await expect(within(dialog).getByText(/6 items still need attention/)).toBeVisible();
     await userEvent.click(within(dialog).getByRole("button", { name: "Close anyway" }));
@@ -46,7 +51,7 @@ export const ClosingAClearMonth: Story = {
   parameters: withHandlers(getMonthReviewMockHandler(clearOpenMonthReview)),
   play: async ({ canvas }) => {
     await userEvent.type(await canvas.findByLabelText("Note"), "Matched the statement");
-    const close = canvas.getByRole("button", { name: "Close month" });
+    const close = canvas.getByRole("button", { name: "Close August 2026" });
     await userEvent.click(close);
     await waitFor(() => expect(close).toBeEnabled());
   },
@@ -55,7 +60,7 @@ export const ClosingAClearMonth: Story = {
 export const Closed: Story = {
   parameters: withHandlers(getMonthReviewMockHandler(closedMonthReview)),
   play: async ({ canvas }) => {
-    await expect(await canvas.findByRole("status")).toHaveTextContent(/was closed on/);
+    await expect(await canvas.findByRole("status")).toHaveTextContent(/Closed on/);
     await expect(canvas.getByRole("button", { name: "Reopen" })).toBeVisible();
     await expect(canvas.queryByRole("heading", { name: "Changed since the close" })).toBeNull();
     await userEvent.click(canvas.getByRole("button", { name: "Reopen" }));
@@ -78,8 +83,8 @@ export const ClosedAndChanged: Story = {
 export const NotEnded: Story = {
   parameters: { route: "/close?month=2026-09" },
   play: async ({ canvas }) => {
-    await expect(await canvas.findByRole("status")).toHaveTextContent(/has not ended yet/);
-    await expect(canvas.queryByRole("button", { name: "Close month" })).toBeNull();
+    await expect(await canvas.findByRole("status")).toHaveTextContent(/once it has ended/);
+    await expect(canvas.queryByRole("button", { name: /^Close / })).toBeNull();
   },
 };
 
@@ -89,7 +94,7 @@ export const CloseFails: Story = {
     getCloseMonthMockHandler(failWith(serverErrorProblem)),
   ),
   play: async ({ canvas }) => {
-    await userEvent.click(await canvas.findByRole("button", { name: "Close month" }));
+    await userEvent.click(await canvas.findByRole("button", { name: "Close August 2026" }));
     await expect(await canvas.findByRole("alert")).toBeInTheDocument();
   },
 };

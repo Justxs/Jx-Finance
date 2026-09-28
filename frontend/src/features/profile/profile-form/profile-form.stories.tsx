@@ -1,15 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, waitFor } from "storybook/test";
 import { getUpdateMyProfileMockHandler } from "@/api/generated/users/users.msw";
 import { withWidth } from "@/storybook/decorators";
-import {
-  currentUser,
-  longNameUser,
-  reminderSubscriber,
-  unverifiedUser,
-  validationProblem,
-} from "@/storybook/fixtures";
-import { emailEnabledHandler, failWith, pending, withHandlers } from "@/storybook/handlers";
+import { currentUser, longNameUser, validationProblem } from "@/storybook/fixtures";
+import { failWith, pending, withHandlers } from "@/storybook/handlers";
 import { ProfileForm } from "./profile-form";
 
 const meta = {
@@ -31,39 +24,6 @@ export const MissingDisplayName: Story = { args: { profile: { ...currentUser, di
 
 export const Narrow: Story = {
   decorators: [withWidth("field")],
-};
-
-export const ReminderEmailsNeedAMailServer: Story = {
-  play: async ({ canvas }) => {
-    const preference = canvas.getByRole("checkbox", {
-      name: "Email me about a due recurring entry",
-    });
-    await expect(preference).not.toBeChecked();
-    await expect(canvas.getByText(/cannot send email yet/u)).toBeInTheDocument();
-  },
-};
-
-export const ReminderEmailsTurnedOn: Story = {
-  args: { profile: reminderSubscriber },
-  parameters: withHandlers(emailEnabledHandler),
-  play: async ({ canvas }) => {
-    await waitFor(() =>
-      expect(canvas.getByText(/One message per entry and day/u)).toBeInTheDocument(),
-    );
-    await expect(
-      canvas.getByRole("checkbox", { name: "Email me about a due recurring entry" }),
-    ).toBeChecked();
-  },
-};
-
-export const ReminderEmailsNeedAConfirmedAddress: Story = {
-  args: { profile: unverifiedUser },
-  parameters: withHandlers(emailEnabledHandler),
-  play: async ({ canvas }) => {
-    await waitFor(() =>
-      expect(canvas.getByText(/Confirm your address first/u)).toBeInTheDocument(),
-    );
-  },
 };
 
 export const WrongPasswordAfterSubmit: Story = {

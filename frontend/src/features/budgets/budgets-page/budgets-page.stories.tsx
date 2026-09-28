@@ -38,8 +38,10 @@ export const Default: Story = {
   play: async ({ canvas }) => {
     await expect(await canvas.findByText(/spent in window|išleista lange/i)).toBeVisible();
     await expect(canvas.getByText(/^(budgeted|suplanuota)$/i)).toBeVisible();
-    const links = canvas.getAllByRole("link");
-    await expect(links[0]).toHaveAttribute(
+    const ledgerLink = canvas
+      .getAllByRole("link")
+      .find((link) => link.getAttribute("href")?.startsWith("/transactions"));
+    await expect(ledgerLink).toHaveAttribute(
       "href",
       expect.stringMatching(/\/transactions\?.*categoryId=.*type=expense.*dateFrom=/),
     );

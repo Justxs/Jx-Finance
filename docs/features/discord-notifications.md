@@ -2,9 +2,9 @@
 
 Back to the [feature walkthrough](README.md). See also [decisions](../decisions/discord-notifications.md), [architecture: Background work and notifications](../architecture/background-jobs.md).
 
-Backend `Settings` (`settings/discord`) and `Users` (`users/me/discord`, `users/me/discord/test`), the fan-out in `Common/Notifications` (`INotificationPublisher`, `NotificationTexts`), the URL rules and texts in `Common/Discord`, the transport in `Infrastructure/Discord/DiscordWebhookClient` and the drain in `Infrastructure/BackgroundJobs/DiscordOutboxJob`. Frontend: the `discord` section of `/settings` (`features/settings/discord-section`) and of `/profile` (`features/profile/discord-form`).
+Backend `Settings` (`settings/discord`) and `Users` (`users/me/discord`, `users/me/discord/test`), the fan-out in `Common/Notifications` (`INotificationPublisher`, `NotificationTexts`), the URL rules and texts in `Common/Discord`, the transport in `Infrastructure/Discord/DiscordWebhookClient` and the drain in `Infrastructure/BackgroundJobs/DiscordOutboxJob`. Frontend: the `discord` section of `/settings` (`features/settings/discord-section`) and the `notifications` section of `/profile` (`features/profile/notifications-section`).
 
-A member pastes a Discord webhook URL into their profile, ticks the notification kinds that should go there, and from then on every in-app notification of those kinds is also posted to that channel. The webhook is personal, like the bill reminder email preference: nobody's alerts reach anyone else's channel. An administrator decides whether the installation may talk to Discord at all, because it is outbound traffic and the product promises that nothing leaves the server unless an administrator switched it on.
+A member pastes a Discord webhook URL into Settings › Personal › Notifications, ticks the notification kinds that should go there, and from then on every in-app notification of those kinds is also posted to that channel. The webhook is personal, like the choice of emailed kinds: nobody's alerts reach anyone else's channel. An administrator decides whether the installation may talk to Discord at all, because it is outbound traffic and the product promises that nothing leaves the server unless an administrator switched it on.
 
 Discord is not a feature switch. Like the mail server it is one installation setting with its own enabled flag, `InstanceSettings.DiscordEnabled`, off by default; turning it off stops every post and leaves every route and every saved webhook in place. Nothing is gated by `FeatureGateMiddleware`.
 
@@ -60,14 +60,14 @@ The outbox row stores the user id, never the URL. The job looks the webhook up w
 
 Every producer writes its notifications through `INotificationPublisher` (`Common/Notifications`, scoped `NotificationPublisher`), which is the one place a new delivery channel is added. See [Notifications](notifications.md).
 
-- `PreloadAsync(userIds)` runs before the first `Publish`: once per pass for every owner in `RecurringBillReminderJob`, once per user in `BudgetAlertJob`, which already works user by user, and once per pass in `UnusualAmountJob` for every owner it is about to notify. While the installation switch is on it loads the enabled, not disabled webhooks of those users, and it loads the Discord dedupe keys already queued today, so a pass over many users makes two queries, not one per notification.
-- `Publish(notification)` adds the `Notification` and a `DiscordMessage` when the owner's webhook takes that kind (the preload finds no webhook while the switch is off). The bill reminder enqueues its email through `IEmailOutbox` itself.
+- `PreloadAsync(userIds)` runs before the first `Publish`: once per pass for every owner in `RecurringBillReminderJob`, once per user in `BudgetAlertJob`, which already works user by user, and once per pass in `UnusualAmountJob` for every owner it is about to notify. While the installation switch is on it loads the enabled, not disabled webhooks of those users, and it loads the Discord dedupe keys already queued today, so a pass over many users makes two queries, not one per notification. It also loads, for the same users, the emailed kinds of those who are active and have a confirmed address, and today's queued email keys; see [Email](email.md).
+- `Publish(notification)` adds the `Notification`, a `DiscordMessage` when the owner's webhook takes that kind (the preload finds no webhook while the switch is off), and an email through `IEmailOutbox` when the owner ticked that kind for email. No producer enqueues mail itself.
 - Publishing for a user who was not preloaded throws `InvalidOperationException`, so a producer cannot forget the batch load and silently send nothing.
-- `NotificationPublisher.For(services, db)` builds a publisher bound to another `AppDbContext`. `BudgetAlertJob` needs it because it works on a per-user context from `AppDbContext.For`.
+- `NotificationPublisher.For(services, db)` builds a publisher bound to another `AppDbContext`. `BudgetAlertJob` needs it because it works on a per-user context from `AppDbContext.For`; the email outbox it uses is bound to the same context.
 
-Everything the publisher writes lands in the caller's context and is committed by the caller's transaction, under the caller's lock. The in-app row and the Discord message therefore appear together or not at all, and a second pass that the producer's own deduplication stops writes none of them.
+Everything the publisher writes lands in the caller's context and is committed by the caller's transaction, under the caller's lock. The in-app row, the email and the Discord message therefore appear together or not at all, and a second pass that the producer's own deduplication stops writes none of them.
 
-The dedupe key is `{userId:N}:{type}:{relatedId or notification id:N}:{local date yyyy-MM-dd}`, the date taken from `IClock.Today`. The user id is in it so that two users can never collide on a related row they share. The key is a second belt behind the producer's own check, the same way `EmailMessages` has one.
+The dedupe key is `{userId:N}:{type}:{relatedId or notification id:N}:{local date yyyy-MM-dd}`, the date taken from `IClock.Today`. The user id is in it so that two users can never collide on a related row they share. The key is a second belt behind the producer's own check, the same way `EmailMessages` has one. The email outbox uses the same key format; the two are separate tables, so they cannot collide.
 
 ## Message text
 
@@ -78,9 +78,9 @@ A notification's `Message` is raw data, an ISO date or a percentage, so the text
 | `billDue` | "Payment due", "Expected" or "Transfer due", then the date `yyyy-MM-dd`, by shape | "Mokėjimo data", "Numatoma gauti" or "Pervedimo data", then the date |
 | `budgetWarning` | "{Period} limit: {percent}% used" | "{Period} limitas: panaudota {percent}%" |
 | `budgetExceeded` | "{Period} limit reached" | "{Period} limitas pasiektas" |
-| `unusualAmount` | "{amount} {CUR}: {factor}× the usual {typical} {CUR}" | "{amount} {CUR}: {factor} karto daugiau nei įprasta ({typical} {CUR})" |
+| `unusualAmount` | "{amount} {CUR}: {factor}× the usual {typical} {CUR}" | "{amount} {CUR}: {factor}× daugiau nei įprasta ({typical} {CUR})" |
 | `unusualAmounts` | "{count} expenses are well above their usual amount" | "Neįprastai didelių išlaidų: {count}" |
-| `recurringPriceRise` | "Charged {amount} {CUR}, expected {expected} {CUR}" | "Nuskaityta {amount} {CUR}, tikėtasi {expected} {CUR}" |
+| `recurringPriceRise` | "Charged {amount} {CUR}, expected {expected} {CUR}" | "Nuskaičiuota {amount} {CUR}, tikėtasi {expected} {CUR}" |
 | `monthReadyToClose` | "{Month yyyy} has ended and is ready to close" | "{yyyy} m. {mėnuo} baigėsi: peržiūrėkite ir uždarykite mėnesį" |
 
 `unusualAmount`, `unusualAmounts` and `recurringPriceRise` arrived with [Unusual amounts](unusual-amounts.md), and `monthReadyToClose` with [Month-end close](month-end-close.md), whose title is the same month name through `NotificationTexts.MonthTitle`; `{CUR}` is the payload's `currency` as an uppercase code, left out when the payload has none. When the payload lacks the values the sentence falls back to `Message`. `NotificationTexts.Discord(language, notification, siteUrl)` puts the escaped title in bold on the first line, the escaped sentence on the second, and, when `App:SiteUrl` is set, `<{App:SiteUrl}{path}>` on a third, where the path is `/recurring-bills`, `/budgets`, `/transactions?unusual=true` or `/close?month=yyyy-MM` (`PageLink`, which adds the month from the payload to `PagePath`). The angle brackets stop Discord from unfurling a preview of a private address. The whole message is clipped to 2000 characters with an ellipsis. The language is the installation's `DefaultLanguage`, for the reason given under Language in [Email](email.md). A unit test fails for a `NotificationType` that has no text in either language, so a new kind cannot reach Discord as an empty line.
@@ -145,18 +145,19 @@ The user routes are under the `Users` tag. The test send is the only post made i
 
 ## Screens
 
-Settings has a Discord section after Email, with one checkbox, "Allow Discord notifications", a hint about what it sends and where, and Save; a failure stays on screen in `FormError`. The route loader warms its query.
+For administrators, Settings has a Discord section under Installation, after Email, with one checkbox, "Allow Discord notifications", a hint about what it sends and where, and Save; a failure stays on screen in `FormError`. The route loader warms its query.
 
-The profile has a Discord section after Signed-in browsers:
+For every user the Discord choices live in Settings › Personal › Notifications (`/profile?section=notifications`), one form with one Save shared with the email choices. The Notifications panel is a table of notification kinds, labelled from the bell's `notifications.kinds.*`, against three channels: "In app" (always, a muted check), "Email" and "Discord", with a checkbox per kind and channel. The Discord column is disabled, with a note under the table saying why, when an administrator has not allowed Discord, when no webhook is connected, or while "Send notifications to this channel" is unticked.
 
-- the webhook URL as a password input;
-- "Send my notifications to Discord";
-- "What to send", one checkbox per `NotificationType`, labelled from the bell's `notifications.kinds.*`;
+Below it the "Discord channel" panel holds:
+
+- the webhook URL as a password input, whose placeholder says when a URL is saved;
+- "Send notifications to this channel";
 - the delivery line ("Last message delivered …" or "Nothing has been delivered yet") and the last error;
 - an alert when the webhook was disabled by Discord and another when the stored URL is unreadable;
-- "Send a test message", "Remove webhook" behind a confirmation, and Save.
+- "Send a test message" and "Remove webhook" behind a confirmation, once a webhook exists.
 
-While the installation switch is off the section stays visible with a status line that says why, and its inputs, the test and Save are disabled. `useDiscordEnabled()` in `hooks/use-settings.ts` reads the public settings. The command palette has a Discord entry for each of the two sections, and the four mutations are listed in `src/api/invalidation.ts`.
+Save calls `PUT users/me/discord` only when the URL, the channel checkbox or the ticked Discord kinds changed and a webhook exists or a URL was typed, so an email-only change never touches the webhook. While the installation switch is off the URL field, the channel checkbox, the Discord column and the test are disabled, and the note says why. `useDiscordEnabled()` in `hooks/use-settings.ts` reads the public settings. The command palette has entries for the installation Discord section and for Notifications, and the Discord mutations are listed in `src/api/invalidation.ts`.
 
 ## Backup and restore
 

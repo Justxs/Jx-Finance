@@ -2,7 +2,7 @@
 
 Back to the [feature walkthrough](README.md). See also [decisions](../decisions/households-and-sharing.md), [architecture: Sharing and households](../architecture/sharing.md).
 
-Backend `Households`, page `/households`. Household roles (Owner, Member) are independent of application roles (Admin, Member). Only accounts, categories and tags can be shared.
+Backend `Households`, page `/households`, listed as Households under Shared on the one Settings page while the switch is on (see [Installation settings](installation-settings.md#one-settings-page)), with its title and a small outline "Create household" button in a section header. Household roles (Owner, Member) are independent of application roles (Admin, Member). Only accounts, categories and tags can be shared.
 
 ## Who sees what
 

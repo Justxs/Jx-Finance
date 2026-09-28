@@ -1,3 +1,5 @@
+using JxFinance.Domain.Notifications;
+
 namespace JxFinance.Endpoints.Auth.Shared;
 
 public sealed record UserProfileResponse(
@@ -8,4 +10,4 @@ public sealed record UserProfileResponse(
     bool TwoFactorEnabled,
     bool IsActive,
     bool EmailConfirmed,
-    bool BillReminderEmails);
+    IReadOnlyList<NotificationType> EmailNotificationTypes);

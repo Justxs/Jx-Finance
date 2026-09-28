@@ -1,8 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 import { getMeSuspenseQueryOptions, getMyDiscordSuspenseQueryOptions } from "@/api/generated";
-import { profileSections } from "@/features/profile/profile-nav/profile-nav";
 import { ProfilePage } from "@/features/profile/profile-page/profile-page";
+import { profileSections } from "@/features/settings/settings-nav/settings-nav";
 import { warm } from "@/lib/route-prefetch";
 import { optionalParam } from "@/lib/search-schema";
 

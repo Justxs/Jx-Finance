@@ -28,7 +28,7 @@ const meta = {
   title: "Features/NetWorth/AssetPage",
   component: AssetPage,
   args: { assetId: ids.assets.car },
-  parameters: { layout: "fullscreen", route: "/net-worth" },
+  parameters: { layout: "fullscreen", route: "/net-worth/assets/story" },
   decorators: [withPageFrame],
 } satisfies Meta<typeof AssetPage>;
 

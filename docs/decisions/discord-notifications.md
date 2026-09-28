@@ -4,12 +4,15 @@ Related: feature page [Discord notifications](../features/discord-notifications.
 
 ## Current
 
-Implemented 2026-09-26. One personal webhook per user, set on the profile with the notification kinds it takes, behind one installation setting that allows or stops all Discord traffic and is off by default; the URL must be a Discord webhook on one of Discord's own hosts, is data-protected and never returned; every producer writes through `INotificationPublisher`, which adds the in-app row, the email and the Discord post in the producer's transaction; posts leave through a `DiscordMessages` outbox drained every 30 seconds, as plain text in the installation language with mentions switched off
+Implemented 2026-09-26. One personal webhook per user, set in Settings › Personal › Notifications, where one table of notification kinds against the in-app, email and Discord channels chooses the kinds it takes and one Save stores the whole form, behind one installation setting that allows or stops all Discord traffic and is off by default; the URL must be a Discord webhook on one of Discord's own hosts, is data-protected and never returned; every producer writes through `INotificationPublisher`, which adds the in-app row, the email and the Discord post in the producer's transaction; posts leave through a `DiscordMessages` outbox drained every 30 seconds, as plain text in the installation language with mentions switched off
 
 ## Log
 
 Newest first. Each entry is a choice between real alternatives: what was chosen, what was rejected, and why.
 
+- **2026-09-27.** The Discord choices move into one Notifications section with the email choices: a table of kinds against "In app", "Email" and "Discord", the webhook in a "Discord channel" panel under it, and one Save that calls each endpoint only when its part changed
+  - Rejected: Separate Email and Discord sections, each with its own list of kinds and its own Save; a Save per panel inside the one section
+  - Why: With email now available for every kind, two sections would have listed the same kinds twice and made the reader compare two pages to see where a budget alert goes. One table answers that at a glance, a disabled column with a note says why a channel is unavailable, and one Save matches every other form in the product. The two endpoints stay separate, as decided for email, so the form only sends what changed and an email-only change never touches the webhook
 - **2026-09-27.** The outbox job saves each user's outcomes as soon as that user's rows are sent, with no cancellation token, and `DiscordWebhook.ProtectedUrl` is a concurrency token; a row or webhook changed underneath the job is left out of the save instead of failing it
   - Rejected: One save at the end of the pass; writing each outcome with `ExecuteUpdate`
   - Why: With one save, removing a webhook mid-pass (which deletes its unsent rows) or stopping the host threw away the `SentAt` of posts already delivered, and they went out again after the backoff. A stale 404 for a replaced URL also marked the new webhook as gone. Per-user saves keep the change small and keep the job on tracked entities like the email outbox

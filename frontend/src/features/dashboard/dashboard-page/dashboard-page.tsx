@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button/button";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { Section } from "@/components/ui/section/section";
 import { RowsSkeleton, SectionSkeleton, Skeleton } from "@/components/ui/skeleton/skeleton";
+import { MonthClosePrompt } from "@/features/month-close/month-close-prompt/month-close-prompt";
 import { useDateFormat } from "@/hooks/use-formatters";
 import { useSettingsSuspense, useTodayDate } from "@/hooks/use-settings";
 import { DashboardCard } from "../dashboard-card/dashboard-card";
@@ -86,6 +87,8 @@ export function DashboardPage() {
           </Button>
         )}
       </PageHeader>
+
+      {customising ? null : <MonthClosePrompt />}
 
       <QueryBoundary fallback={<DashboardSkeleton />} errorSubject={t("dashboard.layout.subject")}>
         <DashboardContent

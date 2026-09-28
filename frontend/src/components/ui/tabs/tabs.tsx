@@ -7,13 +7,22 @@ function Tabs({ className, ...props }: TabsPrimitive.Root.Props) {
   );
 }
 
-function TabsList({ className, ...props }: TabsPrimitive.List.Props) {
+function TabsList({ className, children, ...props }: TabsPrimitive.List.Props) {
   return (
     <TabsPrimitive.List
       data-slot="tabs-list"
-      className={cn("flex gap-x-5 overflow-x-auto shadow-[inset_0_-1px_0_var(--rule)]", className)}
+      className={cn(
+        "relative flex gap-x-5 overflow-x-auto shadow-[inset_0_-1px_0_var(--rule)]",
+        className,
+      )}
       {...props}
-    />
+    >
+      {children}
+      <TabsPrimitive.Indicator
+        data-slot="tabs-indicator"
+        className="absolute bottom-0 left-(--active-tab-left) h-0.5 w-(--active-tab-width) bg-foreground transition-all duration-300 ease-out-expo"
+      />
+    </TabsPrimitive.List>
   );
 }
 
@@ -22,7 +31,7 @@ function TabsTab({ className, ...props }: TabsPrimitive.Tab.Props) {
     <TabsPrimitive.Tab
       data-slot="tabs-tab"
       className={cn(
-        "h-9 shrink-0 border-b-2 border-transparent text-sm font-medium whitespace-nowrap text-muted-foreground transition-colors outline-none hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:ring-inset data-active:border-foreground data-active:font-semibold data-active:text-foreground data-disabled:pointer-events-none data-disabled:not-data-active:opacity-50 pointer-coarse:h-11",
+        "inline-flex h-9 shrink-0 items-center gap-2 text-sm font-medium whitespace-nowrap text-muted-foreground transition-all duration-200 ease-out-expo outline-none hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:ring-inset data-active:font-semibold data-active:text-foreground data-disabled:pointer-events-none data-disabled:not-data-active:opacity-50 pointer-coarse:h-11",
         className,
       )}
       {...props}

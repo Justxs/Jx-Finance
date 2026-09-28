@@ -96,7 +96,17 @@ export const LoginResponse = zod.object({
       twoFactorEnabled: zod.boolean(),
       isActive: zod.boolean(),
       emailConfirmed: zod.boolean(),
-      billReminderEmails: zod.boolean(),
+      emailNotificationTypes: zod.array(
+        zod.enum([
+          "billDue",
+          "budgetWarning",
+          "budgetExceeded",
+          "unusualAmount",
+          "unusualAmounts",
+          "recurringPriceRise",
+          "monthReadyToClose",
+        ]),
+      ),
     }),
   ]),
 });
@@ -119,7 +129,17 @@ export const MeResponse = zod.object({
   twoFactorEnabled: zod.boolean(),
   isActive: zod.boolean(),
   emailConfirmed: zod.boolean(),
-  billReminderEmails: zod.boolean(),
+  emailNotificationTypes: zod.array(
+    zod.enum([
+      "billDue",
+      "budgetWarning",
+      "budgetExceeded",
+      "unusualAmount",
+      "unusualAmounts",
+      "recurringPriceRise",
+      "monthReadyToClose",
+    ]),
+  ),
 });
 
 /**

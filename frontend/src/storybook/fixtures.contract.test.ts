@@ -55,7 +55,7 @@ const contracts: Record<string, Contract> = {
   currentUser: { schema: schemas.MeResponse },
   currentUserWithTwoFactor: { schema: schemas.MeResponse },
   unverifiedUser: { schema: schemas.MeResponse },
-  reminderSubscriber: { schema: schemas.MeResponse },
+  emailSubscriber: { schema: schemas.MeResponse },
   smtpSettings: { schema: schemas.SmtpSettingsResponse },
   smtpSettingsOff: { schema: schemas.SmtpSettingsResponse },
   smtpTestSent: { schema: schemas.SendTestEmailResponse },

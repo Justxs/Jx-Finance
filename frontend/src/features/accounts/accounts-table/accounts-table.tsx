@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button/button";
 import { SelectColumnFilter, TextColumnFilter } from "@/components/ui/column-filter/column-filter";
 import { SortableTableHead } from "@/components/ui/column-header/column-header";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
+import { Meter } from "@/components/ui/meter/meter";
 import { Rows } from "@/components/ui/rows/rows";
 import { StaleRegion } from "@/components/ui/stale-region/stale-region";
 import {
@@ -22,7 +23,7 @@ import {
   TableEmptyRow,
   ScrollRegion,
 } from "@/components/ui/table/table";
-import { EMPTY_VALUE, useMoney, useUsableCurrencies } from "@/hooks/use-formatters";
+import { EMPTY_VALUE, useMoney, usePercent, useUsableCurrencies } from "@/hooks/use-formatters";
 import { useSearchTable } from "@/hooks/use-search-table";
 import { AccountTypeIcon } from "@/lib/account-icons";
 import { nameById, optionsOf } from "@/lib/options";
@@ -37,6 +38,7 @@ interface Props {
   deletingId: string | null;
   onDelete: (id: string) => void;
   onConvert?: (id: string) => void;
+  positiveTotal: number;
 }
 
 function balanceTone(account: AccountResponse) {
@@ -50,9 +52,11 @@ export function AccountsTable({
   deletingId,
   onDelete,
   onConvert,
+  positiveTotal,
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const money = useMoney();
+  const percent = usePercent();
   const households = useHouseholdsSuspense();
   const search = useSearch({ from: "/accounts" });
   const navigate = useNavigate({ from: "/accounts" });
@@ -114,6 +118,28 @@ export function AccountsTable({
     );
   }
 
+  function shareLine(account: AccountResponse) {
+    const amount = Number(account.reportingBalance);
+    if (amount <= 0 || positiveTotal <= 0) {
+      return null;
+    }
+    return (
+      <div className="mt-1.5 flex items-center justify-end gap-2 font-normal">
+        <Meter
+          value={amount}
+          max={positiveTotal}
+          label={`${t("accounts.shareOfTotal")}: ${account.name}`}
+          className="w-16"
+        />
+        <span className="w-9 text-xs text-muted-foreground tabular-nums">
+          {percent.format(amount / positiveTotal)}
+        </span>
+      </div>
+    );
+  }
+
+  const listedTotal = accounts.reduce((sum, account) => sum + Number(account.reportingBalance), 0);
+
   let body: ReactNode;
   if (accounts.length === 0) {
     body = (
@@ -159,6 +185,7 @@ export function AccountsTable({
         </TableCell>
         <TableCell className="text-right font-semibold tabular-nums">
           <span className={balanceTone(account)}>{balanceLines(account)}</span>
+          {shareLine(account)}
         </TableCell>
         <TableCell>{actions(account)}</TableCell>
       </TableRow>
@@ -267,6 +294,27 @@ export function AccountsTable({
                 </TableRow>
               </TableHeader>
               <TableBody>{body}</TableBody>
+              {accounts.length > 1 ? (
+                <tfoot>
+                  <tr className="border-t">
+                    <TableCell colSpan={3} className="font-medium">
+                      {t("accounts.total")}
+                    </TableCell>
+                    <TableCell className="hidden xl:table-cell" />
+                    <TableCell className="text-right">
+                      <span
+                        className={cn(
+                          "border-b-3 border-double border-rule pb-0.5 font-semibold tabular-nums",
+                          listedTotal < 0 && EXPENSE_TONE,
+                        )}
+                      >
+                        {money.format(listedTotal)}
+                      </span>
+                    </TableCell>
+                    <TableCell />
+                  </tr>
+                </tfoot>
+              ) : null}
             </Table>
           </ScrollRegion>
         </ViewTransition>

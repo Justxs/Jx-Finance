@@ -1,22 +1,30 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { withWidth } from "@/storybook/decorators";
-import { SettingsNav, settingsSections } from "./settings-nav";
+import { getMeMockHandler } from "@/api/generated/auth/auth.msw";
+import { memberUser } from "@/storybook/fixtures";
+import { withHandlers } from "@/storybook/handlers";
+import { SettingsLayout } from "./settings-nav";
 
 const meta = {
-  title: "Features/Settings/SettingsNav",
-  component: SettingsNav,
-  parameters: { route: "/settings" },
-  decorators: [withWidth("narrow")],
-  args: { current: "general", sections: settingsSections },
-} satisfies Meta<typeof SettingsNav>;
+  title: "Features/Settings/SettingsLayout",
+  component: SettingsLayout,
+  parameters: { layout: "padded", route: "/settings" },
+  args: {
+    current: "general",
+    children: <p className="text-sm text-muted-foreground">Section content.</p>,
+  },
+} satisfies Meta<typeof SettingsLayout>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {};
+export const Administrator: Story = {};
 
-export const BackupsActive: Story = { args: { current: "backups" } };
+export const PersonalSectionActive: Story = {
+  args: { current: "notifications" },
+  parameters: { route: "/profile" },
+};
 
-export const WithoutImport: Story = {
-  args: { sections: settingsSections.filter((section) => section !== "import") },
+export const Member: Story = {
+  args: { current: "account" },
+  parameters: { route: "/profile", ...withHandlers(getMeMockHandler(memberUser)) },
 };

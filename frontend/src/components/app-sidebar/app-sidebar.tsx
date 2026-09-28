@@ -1,5 +1,5 @@
-import { Link } from "@tanstack/react-router";
-import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { Link, useLocation } from "@tanstack/react-router";
+import { type LucideIcon, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useMeSuspense } from "@/api/generated";
 import type { FeatureFlags } from "@/api/generated/model";
@@ -13,7 +13,8 @@ import { Button } from "@/components/ui/button/button";
 import { Skeleton } from "@/components/ui/skeleton/skeleton";
 import { Tooltip } from "@/components/ui/tooltip/tooltip";
 import { useSettings } from "@/hooks/use-settings";
-import { adminNavPages, navPages } from "@/lib/navigation";
+import type { TranslationKey } from "@/lib/i18n";
+import { type NavHub, adminNavPages, isPathIn, navHubs, navPages } from "@/lib/navigation";
 import { UserRole } from "@/lib/user-role";
 import { cn } from "@/lib/utils";
 import { useSidebarCollapsed } from "@/stores/sidebar-store";
@@ -33,9 +34,48 @@ function initials(name: string | undefined) {
 
 export type NavItem = (typeof navPages)[number] | (typeof adminNavPages)[number];
 
+export interface NavEntry {
+  to: NavItem["to"];
+  key: TranslationKey;
+  icon: LucideIcon;
+  group: NavItem["group"];
+  hub: NavHub | undefined;
+  pages: NavItem[];
+}
+
 export function visibleNav(features: FeatureFlags, isAdmin: boolean): readonly NavItem[] {
   const enabled = navPages.filter((item) => !("feature" in item) || features[item.feature]);
   return isAdmin ? [...enabled, ...adminNavPages] : enabled;
+}
+
+export function navEntries(pages: readonly NavItem[]): NavEntry[] {
+  const entries: NavEntry[] = [];
+  for (const page of pages) {
+    const hub = "hub" in page ? page.hub : undefined;
+    const existing = hub ? entries.find((entry) => entry.hub === hub) : undefined;
+    if (existing) {
+      existing.pages.push(page);
+      continue;
+    }
+    entries.push({
+      to: page.to,
+      key: hub ? navHubs[hub].key : page.key,
+      icon: hub ? navHubs[hub].icon : page.icon,
+      group: page.group,
+      hub,
+      pages: [page],
+    });
+  }
+  return entries.map((entry) => {
+    const [only] = entry.pages;
+    return entry.hub && navHubs[entry.hub].tabs && only && entry.pages.length === 1
+      ? { ...entry, key: only.key, icon: only.icon }
+      : entry;
+  });
+}
+
+export function isEntryActive(entry: NavEntry, pathname: string) {
+  return entry.pages.some((page) => isPathIn(pathname, page.to));
 }
 
 export function useVisibleNav(role: string | undefined, enabled = true) {
@@ -43,7 +83,7 @@ export function useVisibleNav(role: string | undefined, enabled = true) {
 }
 
 export const navLinkClass =
-  "rounded-md border border-transparent text-sm text-muted-foreground transition-colors hover:text-foreground";
+  "nav-link rounded-md border border-transparent text-sm text-muted-foreground transition-all duration-200 ease-out-expo hover:text-foreground";
 
 export const navLinkActiveClass = "border-border! bg-background font-semibold text-foreground!";
 
@@ -51,7 +91,8 @@ export function AppSidebar() {
   const { t } = useTranslation();
   const { collapsed, toggleSidebar } = useSidebarCollapsed();
   const me = useMeSuspense();
-  const visibleNavItems = useVisibleNav(me.data?.role);
+  const entries = navEntries(useVisibleNav(me.data?.role));
+  const { pathname } = useLocation();
 
   return (
     <aside
@@ -77,25 +118,30 @@ export function AppSidebar() {
         aria-label={t("nav.main")}
         className="flex min-h-0 flex-1 flex-col overflow-y-auto px-3 pb-3"
       >
-        {visibleNavItems.map((item, index) => (
-          <Tooltip key={item.to} content={collapsed ? t(item.key) : undefined} side="right">
-            <Link
-              to={item.to}
-              aria-label={collapsed ? t(item.key) : undefined}
-              className={cn(
-                navLinkClass,
-                "flex items-center gap-3 px-3 py-2",
-                collapsed && "justify-center px-0",
-                index > 0 && visibleNavItems[index - 1]?.group !== item.group && "mt-4",
-              )}
-              activeProps={{ className: navLinkActiveClass }}
-              activeOptions={{ exact: item.to === "/" }}
-            >
-              <item.icon className="size-4 shrink-0" />
-              {collapsed ? null : t(item.key)}
-            </Link>
-          </Tooltip>
-        ))}
+        {entries.map((entry, index) => {
+          const active = isEntryActive(entry, pathname);
+          return (
+            <Tooltip key={entry.to} content={collapsed ? t(entry.key) : undefined} side="right">
+              <Link
+                to={entry.to}
+                aria-label={collapsed ? t(entry.key) : undefined}
+                aria-current={active ? "page" : undefined}
+                className={cn(
+                  navLinkClass,
+                  "flex items-center gap-3 px-3 py-2",
+                  collapsed && "justify-center px-0",
+                  index > 0 && entries[index - 1]?.group !== entry.group && "mt-4",
+                  entry.hub === "settings" && "mt-auto",
+                  active && navLinkActiveClass,
+                )}
+                style={{ "--nav-link": `nav-side-${index}` }}
+              >
+                <entry.icon className="size-4 shrink-0" />
+                {collapsed ? null : t(entry.key)}
+              </Link>
+            </Tooltip>
+          );
+        })}
       </nav>
 
       <div

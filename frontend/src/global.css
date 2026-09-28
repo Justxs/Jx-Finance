@@ -422,6 +422,62 @@
   animation: page-in 220ms ease-out both;
 }
 
+:root:active-view-transition-type(page) .nav-link {
+  view-transition-name: var(--nav-link);
+  view-transition-class: nav-link;
+}
+
+::view-transition-group(.nav-link) {
+  animation-duration: 220ms;
+  animation-timing-function: var(--ease-out-expo);
+}
+
+:root:active-view-transition-type(page) .hub-title {
+  view-transition-name: var(--hub-title);
+  view-transition-class: hub-part;
+}
+
+:root:active-view-transition-type(page) .hub-tabs {
+  view-transition-name: var(--hub-tabs);
+  view-transition-class: hub-part hub-strip;
+}
+
+:root:active-view-transition-type(page) .hub-tab-indicator {
+  view-transition-name: var(--hub-tab-indicator);
+  view-transition-class: hub-slide;
+}
+
+::view-transition-group(.hub-part),
+::view-transition-old(.hub-part),
+::view-transition-new(.hub-part),
+::view-transition-old(.hub-slide),
+::view-transition-new(.hub-slide) {
+  animation: none;
+}
+
+::view-transition-group(.hub-slide) {
+  animation-duration: 280ms;
+  animation-timing-function: var(--ease-out-expo);
+}
+
+::view-transition-old(.hub-strip) {
+  animation: rows-out 160ms ease-in both;
+}
+
+::view-transition-new(.hub-strip) {
+  animation: rows-in 200ms ease-out both;
+}
+
+::view-transition-old(.hub-part):only-child,
+::view-transition-old(.hub-slide):only-child {
+  animation: page-out 130ms ease-in both;
+}
+
+::view-transition-new(.hub-part):only-child,
+::view-transition-new(.hub-slide):only-child {
+  animation: page-in 220ms ease-out both;
+}
+
 ::view-transition-old(transactions-rows),
 ::view-transition-old(accounts-rows),
 ::view-transition-old(users-rows),
@@ -486,6 +542,23 @@
   }
 
   ::view-transition-new(*) {
+    animation: rows-in 100ms linear both !important;
+  }
+
+  ::view-transition-old(.hub-part),
+  ::view-transition-new(.hub-part),
+  ::view-transition-old(.hub-slide),
+  ::view-transition-new(.hub-slide) {
+    animation: none !important;
+  }
+
+  ::view-transition-old(.hub-part):only-child,
+  ::view-transition-old(.hub-slide):only-child {
+    animation: rows-out 100ms linear both !important;
+  }
+
+  ::view-transition-new(.hub-part):only-child,
+  ::view-transition-new(.hub-slide):only-child {
     animation: rows-in 100ms linear both !important;
   }
 }

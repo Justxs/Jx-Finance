@@ -37,6 +37,11 @@ const preferencesSchema = z.object({
   locale: z.enum(locales).optional().catch(undefined),
   activeHouseholdId: z.uuid().optional().catch(undefined),
   commandRecents: z.array(z.string()).max(COMMAND_RECENTS_MAX).optional().catch(undefined),
+  monthClosePromptHidden: z
+    .string()
+    .regex(/^\d{4}-\d{2}$/)
+    .optional()
+    .catch(undefined),
 });
 
 export type Preferences = z.output<typeof preferencesSchema>;

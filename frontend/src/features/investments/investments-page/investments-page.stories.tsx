@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, userEvent, within } from "storybook/test";
+import { expect, userEvent, waitFor, within } from "storybook/test";
 import { getPortfolioMockHandler } from "@/api/generated/investments/investments.msw";
 import { withPageFrame } from "@/storybook/decorators";
 import { brokerAccount, incompletePortfolio } from "@/storybook/fixtures";
@@ -64,5 +64,18 @@ export const OpensEntryForm: Story = {
     await userEvent.click(await canvas.findByRole("button", { name: "Add entry" }));
     const dialog = within(await openedDialog());
     await expect(await dialog.findByLabelText("Entry type")).toBeInTheDocument();
+  },
+};
+
+export const TaxSummaryAndBack: Story = {
+  play: async ({ canvas }) => {
+    await userEvent.click(await canvas.findByRole("link", { name: /tax summary/i }));
+    const back = await canvas.findByRole("link", { name: "Back to the portfolio" });
+    await expect(back).toHaveAttribute("href", "/investments");
+    await userEvent.click(back);
+    await waitFor(() =>
+      expect(canvas.queryByRole("link", { name: "Back to the portfolio" })).toBeNull(),
+    );
+    await expect(canvas.getByRole("link", { name: /tax summary/i })).toBeVisible();
   },
 };

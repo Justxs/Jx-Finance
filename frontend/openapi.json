@@ -13354,7 +13354,7 @@
           "Users"
         ],
         "summary": "Update your own profile",
-        "description": "Changes your display name, your bill reminder email preference and, optionally, your password. A password change needs the current password as well, and refreshes the session cookie so the browser stays signed in. This is the one user endpoint that does not require the Admin role.",
+        "description": "Changes your display name and, optionally, your password. A password change needs the current password as well, and refreshes the session cookie so the browser stays signed in. Any signed-in user may call it, not only administrators. Which notifications are emailed is saved separately, through PUT users/me/email-notifications.",
         "operationId": "UpdateMyProfile",
         "requestBody": {
           "content": {
@@ -13365,8 +13365,7 @@
               "example": {
                 "displayName": "Justas",
                 "currentPassword": null,
-                "newPassword": null,
-                "billReminderEmails": false
+                "newPassword": null
               }
             }
           },
@@ -13853,6 +13852,82 @@
           },
           "429": {
             "description": "Too many test messages from this client; wait and retry."
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      }
+    },
+    "/api/users/me/email-notifications": {
+      "put": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Choose which notifications you are emailed",
+        "description": "Replaces the list of notification kinds that are also sent to your email address. Every in-app notification of a chosen kind then queues one email, at most once per kind, subject and day. Nothing is sent while the installation has no working mail server or while your address is not confirmed. An empty list is allowed and sends no notification email; account mail such as password reset links does not depend on it.",
+        "operationId": "UpdateMyEmailNotifications",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateMyEmailNotificationsRequest"
+              },
+              "example": {
+                "types": [
+                  "billDue",
+                  "budgetExceeded"
+                ]
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Your profile with the saved list of emailed notification kinds.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserProfileResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many changes from this client; wait and retry."
           },
           "500": {
             "description": "Server Error",
@@ -21996,12 +22071,35 @@
           ]
         }
       },
+      "UpdateMyEmailNotificationsRequest": {
+        "required": [
+          "types"
+        ],
+        "type": "object",
+        "properties": {
+          "types": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NotificationType"
+            },
+            "example": [
+              "billDue",
+              "budgetExceeded"
+            ]
+          }
+        },
+        "example": {
+          "types": [
+            "billDue",
+            "budgetExceeded"
+          ]
+        }
+      },
       "UpdateMyProfileRequest": {
         "required": [
           "displayName",
           "currentPassword",
-          "newPassword",
-          "billReminderEmails"
+          "newPassword"
         ],
         "type": "object",
         "properties": {
@@ -22026,18 +22124,12 @@
               "string"
             ],
             "description": "Omit to leave the password alone."
-          },
-          "billReminderEmails": {
-            "type": "boolean",
-            "description": "Send a reminder email beside the in-app notification of a recurring entry. Off by default, and it needs both a working mail server and a confirmed address to have any effect.",
-            "example": false
           }
         },
         "example": {
           "displayName": "Justas",
           "currentPassword": null,
-          "newPassword": null,
-          "billReminderEmails": false
+          "newPassword": null
         }
       },
       "UpdateRecurringBillRequest": {
@@ -22552,7 +22644,7 @@
           "twoFactorEnabled",
           "isActive",
           "emailConfirmed",
-          "billReminderEmails"
+          "emailNotificationTypes"
         ],
         "type": "object",
         "properties": {
@@ -22578,8 +22670,11 @@
           "emailConfirmed": {
             "type": "boolean"
           },
-          "billReminderEmails": {
-            "type": "boolean"
+          "emailNotificationTypes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NotificationType"
+            }
           }
         }
       },

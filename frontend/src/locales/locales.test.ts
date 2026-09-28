@@ -36,6 +36,23 @@ test("English and Lithuanian define the same translation keys", () => {
   expect([...lithuanian].filter((key) => !english.has(key))).toEqual([]);
 });
 
+test("every Lithuanian plural defines each Lithuanian plural form", () => {
+  const forms = new Intl.PluralRules("lt").resolvedOptions().pluralCategories;
+  const plurals = new Map<string, Set<string>>();
+  for (const key of leafTexts(lt).keys()) {
+    const match = pluralSuffix.exec(key);
+    if (match) {
+      const base = key.slice(0, match.index);
+      plurals.set(base, (plurals.get(base) ?? new Set()).add(match[1] ?? ""));
+    }
+  }
+  const incomplete = [...plurals]
+    .filter(([, defined]) => forms.some((form) => !defined.has(form)))
+    .map(([base]) => base);
+
+  expect(incomplete).toEqual([]);
+});
+
 test("a Lithuanian text uses the same placeholders as its English text", () => {
   const lithuanian = leafTexts(lt);
   const mismatched = [...leafTexts(en)]

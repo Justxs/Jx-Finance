@@ -8,6 +8,7 @@ import {
   getDashboardLayoutSuspenseQueryOptions,
   getDashboardSummarySuspenseQueryOptions,
   getMonthlyTrendSuspenseQueryOptions,
+  getMonthReviewSuspenseQueryOptions,
   getNetWorthHistorySuspenseQueryOptions,
   getRecurringBillsSuspenseQueryOptions,
   getReportSummarySuspenseQueryOptions,
@@ -19,6 +20,7 @@ import type {
   FeatureFlags,
   SettingsResponse,
 } from "@/api/generated/model";
+import { latestEndedMonth } from "@/features/month-close/month-key";
 import type { FeatureKey } from "@/hooks/use-settings";
 import { type MoveDirection, adjacentIndex, swapItems } from "@/lib/reorder";
 import { todayDateIn, warm, warmWithSettings } from "@/lib/route-prefetch";
@@ -133,6 +135,12 @@ export function warmDashboard(queryClient: QueryClient) {
     staleTime: Infinity,
   });
   warmWithSettings(queryClient, (settings) => {
+    if (settings.features.monthClose) {
+      warm(
+        queryClient,
+        getMonthReviewSuspenseQueryOptions(latestEndedMonth(todayDateIn(settings))),
+      );
+    }
     void layout.then((loaded) => warmShownCards(queryClient, loaded, settings), noop);
   });
   void layout.catch(noop);

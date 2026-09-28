@@ -82,8 +82,8 @@ afterAll(() => {
 });
 
 test("nothing is loaded for the palette until it is opened for the first time", async () => {
-  const { queryClient } = mount();
-  await screen.findByRole("heading", { level: 1, name: "Net worth" }, appWait);
+  const { queryClient } = mountApp("/profile");
+  await screen.findByRole("heading", { level: 1, name: "Settings" }, appWait);
   await settled(queryClient);
 
   expect(requestsTo("/api/accounts")).toHaveLength(0);

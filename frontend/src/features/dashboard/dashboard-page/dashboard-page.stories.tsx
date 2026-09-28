@@ -6,12 +6,14 @@ import {
   getSaveDashboardLayoutMockHandler,
 } from "@/api/generated/dashboard/dashboard.msw";
 import { getSettingsMockHandler } from "@/api/generated/settings/settings.msw";
+import { savePreferences } from "@/stores/preferences";
 import { withPageFrame } from "@/storybook/decorators";
 import {
   allHiddenDashboardLayout,
   customDashboardLayout,
   dashboardCardUnknownProblem,
   hiddenCardsDashboardLayout,
+  MONTH_CLOSE_MONTH,
   serverErrorProblem,
   settingsWith,
 } from "@/storybook/fixtures";
@@ -30,6 +32,9 @@ const meta = {
   component: DashboardPage,
   parameters: { layout: "fullscreen" },
   decorators: [withPageFrame],
+  beforeEach: () => {
+    savePreferences({ monthClosePromptHidden: MONTH_CLOSE_MONTH });
+  },
 } satisfies Meta<typeof DashboardPage>;
 
 export default meta;
@@ -177,5 +182,16 @@ export const LayoutUnavailable: Story = {
     await expect(await canvas.findByRole("alert")).toHaveTextContent(
       /dashboard layout|suvestinės išdėstymas/i,
     );
+  },
+};
+
+export const MonthReadyToClose: Story = {
+  beforeEach: () => {
+    savePreferences({ monthClosePromptHidden: undefined });
+  },
+  play: async ({ canvas }) => {
+    await expect(
+      await canvas.findByRole("heading", { level: 2, name: /ready to close|galima uždaryti/i }),
+    ).toBeVisible();
   },
 };

@@ -242,6 +242,7 @@ export * from "./updateInvestmentTransactionRequest";
 export * from "./updateMemberRoleRequest";
 export * from "./updateMonthNoteRequest";
 export * from "./updateMyDiscordRequest";
+export * from "./updateMyEmailNotificationsRequest";
 export * from "./updateMyProfileRequest";
 export * from "./updateRecurringBillRequest";
 export * from "./updateSettingsRequest";

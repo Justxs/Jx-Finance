@@ -32,6 +32,8 @@ sequenceDiagram
     Api-->>App: 200 profile
 ```
 
+After a successful sign-in the form keeps its busy button until the application shell is ready: `loadAppShell` (`lib/app-shell.ts`) loads the settings, the profile, the unread notifications and the households, and the router preloads the dashboard route with its code and queries. Only then does the page navigate, so the sidebar, its icons and the notification bell appear complete. Between the sign-in page and the application, in either direction, the root layout shows the splash instead of one side inside the other side's layout (see DESIGN.md, Overlays and errors).
+
 ## Forgot password
 
 The sign-in screen shows "Forgot your password?" only while `GET /api/settings/public` reports `emailEnabled`, so an installation without a mail server does not offer a dead end. The full flow, including the token and the reasons behind the throttling choices, is in [Email](email.md); what matters here is how it meets the lockout.

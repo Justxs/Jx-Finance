@@ -10,6 +10,7 @@ import {
   getTestMyDiscordMockHandler,
   getUpdateMyDiscordMockHandler,
   getUsersMockHandler,
+  getUpdateMyEmailNotificationsMockHandler,
   getUpdateMyProfileMockHandler,
   getUpdateUserRoleMockHandler,
 } from "@/api/generated/users/users.msw";
@@ -77,9 +78,16 @@ export const userHandlers = [
   }),
   getUpdateMyProfileMockHandler(async ({ request }) => {
     const body = await readBody(request);
+    return mergeProfile(currentUser, { displayName: body.displayName });
+  }),
+  getUpdateMyEmailNotificationsMockHandler(async ({ request }) => {
+    const body = await readBody(request);
+    const chosen: unknown[] = Array.isArray(body.types) ? body.types : [];
     return {
-      ...mergeProfile(currentUser, { displayName: body.displayName }),
-      billReminderEmails: body.billReminderEmails === true,
+      ...currentUser,
+      emailNotificationTypes: Object.values(NotificationType).filter((kind) =>
+        chosen.includes(kind),
+      ),
     };
   }),
   getDeactivateUserMockHandler(),

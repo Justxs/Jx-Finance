@@ -2,7 +2,7 @@
 
 Back to the [feature walkthrough](README.md). See also [decisions](../decisions/user-management.md).
 
-Backend `Users`, Admin role only, page `/users`. There is no public registration.
+Backend `Users`, Admin role only, page `/users`, listed as Users under Installation on the one Settings page (see [Installation settings](installation-settings.md#one-settings-page)); its title and a small outline "Create user" button sit in a section header inside that layout. There is no public registration.
 
 A created user starts with an unconfirmed address and, when the installation has a mail server, one queued confirmation link. Nothing waits for it: the account is usable at once, and an unconfirmed address blocks only unsolicited mail to that address. The administrator's password reset below stays the primary way back in; a user with a working mailbox can now also reset their own password from the sign-in screen. See [Email](email.md).
 

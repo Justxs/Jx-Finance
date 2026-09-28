@@ -7,7 +7,7 @@ import type {
 } from "@/api/generated/model";
 import type { FeatureKey } from "@/hooks/use-settings";
 import type { Translate, TranslationKey } from "@/lib/i18n";
-import { type RoutePath, adminNavPages, navPages, profileNavPage } from "@/lib/navigation";
+import { type RoutePath, adminNavPages, navPages } from "@/lib/navigation";
 import { type Locale, localeNames, nextLocale } from "@/stores/app-store";
 import type { Theme } from "@/stores/theme-store";
 
@@ -57,7 +57,11 @@ const pageSections: Partial<Record<RoutePath, readonly PageSection[]>> = {
     { id: "page-trash", search: { section: "trash" }, labelKey: "trash.title" },
     { id: "page-sessions", search: { section: "sessions" }, labelKey: "profile.sessions.title" },
     { id: "page-two-factor", search: { section: "security" }, labelKey: "profile.twoFactorTitle" },
-    { id: "page-discord", search: { section: "discord" }, labelKey: "profile.discord.title" },
+    {
+      id: "page-notifications",
+      search: { section: "notifications" },
+      labelKey: "profile.notifications.title",
+    },
     {
       id: "page-import",
       search: { section: "import" },
@@ -111,7 +115,6 @@ function commandsFor(page: NavPage, admin: boolean): PageCommand[] {
 
 const pageCommands: readonly PageCommand[] = [
   ...navPages.flatMap((page) => commandsFor(page, false)),
-  ...commandsFor(profileNavPage, false),
   ...adminNavPages.flatMap((page) => commandsFor(page, true)),
 ];
 

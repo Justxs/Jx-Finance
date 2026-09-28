@@ -1,3 +1,4 @@
+import { FileUp, RefreshCw } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { AccountResponse } from "@/api/generated/model";
@@ -75,9 +76,11 @@ function BrokerImportContent({
       >
         <TabsList>
           <TabsTab value="upload" disabled={mutations.busy}>
+            <FileUp aria-hidden="true" className="size-4 shrink-0" />
             {t("investments.import.tabs.upload")}
           </TabsTab>
           <TabsTab value="sync" disabled={mutations.busy}>
+            <RefreshCw aria-hidden="true" className="size-4 shrink-0" />
             {t("investments.import.tabs.sync")}
           </TabsTab>
         </TabsList>

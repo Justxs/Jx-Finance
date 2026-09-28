@@ -167,6 +167,30 @@ export const getTestMyDiscordMockHandler = (
   );
 };
 
+export const getUpdateMyEmailNotificationsMockHandler = (
+  overrideResponse?:
+    | UserProfileResponse
+    | ((
+        info: Parameters<Parameters<typeof http.put>[1]>[0],
+      ) => Promise<UserProfileResponse> | UserProfileResponse),
+  options?: RequestHandlerOptions,
+) => {
+  return http.put(
+    "*/api/users/me/email-notifications",
+    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : undefined,
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
 export const getDeactivateUserMockHandler = (
   overrideResponse?:
     | void
@@ -260,6 +284,7 @@ export const getUsersMock = () => [
   getMyDiscordMockHandler(),
   getUpdateMyDiscordMockHandler(),
   getTestMyDiscordMockHandler(),
+  getUpdateMyEmailNotificationsMockHandler(),
   getDeactivateUserMockHandler(),
   getReactivateUserMockHandler(),
   getResetUserPasswordMockHandler(),

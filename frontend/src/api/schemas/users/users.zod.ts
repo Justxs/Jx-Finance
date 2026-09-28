@@ -44,7 +44,17 @@ export const CreateUserResponse = zod.object({
   twoFactorEnabled: zod.boolean(),
   isActive: zod.boolean(),
   emailConfirmed: zod.boolean(),
-  billReminderEmails: zod.boolean(),
+  emailNotificationTypes: zod.array(
+    zod.enum([
+      "billDue",
+      "budgetWarning",
+      "budgetExceeded",
+      "unusualAmount",
+      "unusualAmounts",
+      "recurringPriceRise",
+      "monthReadyToClose",
+    ]),
+  ),
 });
 
 /**
@@ -59,12 +69,22 @@ export const UsersResponseItem = zod.object({
   twoFactorEnabled: zod.boolean(),
   isActive: zod.boolean(),
   emailConfirmed: zod.boolean(),
-  billReminderEmails: zod.boolean(),
+  emailNotificationTypes: zod.array(
+    zod.enum([
+      "billDue",
+      "budgetWarning",
+      "budgetExceeded",
+      "unusualAmount",
+      "unusualAmounts",
+      "recurringPriceRise",
+      "monthReadyToClose",
+    ]),
+  ),
 });
 export const UsersResponse = zod.array(UsersResponseItem);
 
 /**
- * Changes your display name, your bill reminder email preference and, optionally, your password. A password change needs the current password as well, and refreshes the session cookie so the browser stays signed in. This is the one user endpoint that does not require the Admin role.
+ * Changes your display name and, optionally, your password. A password change needs the current password as well, and refreshes the session cookie so the browser stays signed in. Any signed-in user may call it, not only administrators. Which notifications are emailed is saved separately, through PUT users/me/email-notifications.
  * @summary Update your own profile
  */
 export const updateMyProfileBodyDisplayNameMin = 0;
@@ -85,11 +105,6 @@ export const UpdateMyProfileBody = zod.object({
     .max(updateMyProfileBodyNewPasswordMax)
     .nullable()
     .describe("Omit to leave the password alone."),
-  billReminderEmails: zod
-    .boolean()
-    .describe(
-      "Send a reminder email beside the in-app notification of a recurring entry. Off by default, and it needs both a working mail server and a confirmed address to have any effect.",
-    ),
 });
 
 export const UpdateMyProfileResponse = zod.object({
@@ -100,7 +115,17 @@ export const UpdateMyProfileResponse = zod.object({
   twoFactorEnabled: zod.boolean(),
   isActive: zod.boolean(),
   emailConfirmed: zod.boolean(),
-  billReminderEmails: zod.boolean(),
+  emailNotificationTypes: zod.array(
+    zod.enum([
+      "billDue",
+      "budgetWarning",
+      "budgetExceeded",
+      "unusualAmount",
+      "unusualAmounts",
+      "recurringPriceRise",
+      "monthReadyToClose",
+    ]),
+  ),
 });
 
 /**
@@ -180,6 +205,45 @@ export const UpdateMyDiscordResponse = zod.object({
 export const TestMyDiscordResponse = zod.void();
 
 /**
+ * Replaces the list of notification kinds that are also sent to your email address. Every in-app notification of a chosen kind then queues one email, at most once per kind, subject and day. Nothing is sent while the installation has no working mail server or while your address is not confirmed. An empty list is allowed and sends no notification email; account mail such as password reset links does not depend on it.
+ * @summary Choose which notifications you are emailed
+ */
+export const UpdateMyEmailNotificationsBody = zod.object({
+  types: zod.array(
+    zod.enum([
+      "billDue",
+      "budgetWarning",
+      "budgetExceeded",
+      "unusualAmount",
+      "unusualAmounts",
+      "recurringPriceRise",
+      "monthReadyToClose",
+    ]),
+  ),
+});
+
+export const UpdateMyEmailNotificationsResponse = zod.object({
+  id: zod.uuid(),
+  email: zod.string(),
+  displayName: zod.string(),
+  role: zod.string(),
+  twoFactorEnabled: zod.boolean(),
+  isActive: zod.boolean(),
+  emailConfirmed: zod.boolean(),
+  emailNotificationTypes: zod.array(
+    zod.enum([
+      "billDue",
+      "budgetWarning",
+      "budgetExceeded",
+      "unusualAmount",
+      "unusualAmounts",
+      "recurringPriceRise",
+      "monthReadyToClose",
+    ]),
+  ),
+});
+
+/**
  * Locks the account out instead of deleting it, so the transactions and households it touched stay intact. Existing sessions are rejected on their next request. You cannot deactivate yourself, and the last active administrator cannot be deactivated, so an instance is never left without one. Administrators only.
  * @summary Deactivate a user
  */
@@ -230,7 +294,17 @@ export const ResetUserPasswordResponse = zod.object({
   twoFactorEnabled: zod.boolean(),
   isActive: zod.boolean(),
   emailConfirmed: zod.boolean(),
-  billReminderEmails: zod.boolean(),
+  emailNotificationTypes: zod.array(
+    zod.enum([
+      "billDue",
+      "budgetWarning",
+      "budgetExceeded",
+      "unusualAmount",
+      "unusualAmounts",
+      "recurringPriceRise",
+      "monthReadyToClose",
+    ]),
+  ),
 });
 
 /**
@@ -249,5 +323,15 @@ export const UpdateUserRoleResponse = zod.object({
   twoFactorEnabled: zod.boolean(),
   isActive: zod.boolean(),
   emailConfirmed: zod.boolean(),
-  billReminderEmails: zod.boolean(),
+  emailNotificationTypes: zod.array(
+    zod.enum([
+      "billDue",
+      "budgetWarning",
+      "budgetExceeded",
+      "unusualAmount",
+      "unusualAmounts",
+      "recurringPriceRise",
+      "monthReadyToClose",
+    ]),
+  ),
 });

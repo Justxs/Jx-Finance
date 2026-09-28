@@ -1,5 +1,7 @@
 using System.Globalization;
 using JxFinance.Common.Formats;
+using JxFinance.Common.Notifications;
+using JxFinance.Domain.Notifications;
 using JxFinance.Domain.RecurringBills;
 using JxFinance.Domain.Settings;
 
@@ -65,7 +67,7 @@ public static class EmailTexts
 
                 {link}
 
-                Kol adresas nepatvirtintas, paskyra veikia įprastai; tiesiog į šį adresą nesiunčiami laiškai.
+                Kol adresas nepatvirtintas, paskyra veikia įprastai, tik į šį adresą nesiunčiami laiškai.
                 """),
             ("confirm your email address",
                 $"""
@@ -82,7 +84,7 @@ public static class EmailTexts
         string toName,
         string billName,
         DateOnly dueDate,
-        RecurringBillShape shape,
+        RecurringBillShape? shape,
         string product)
     {
         var date = dueDate.ToString(DateFormats.IsoDate, CultureInfo.InvariantCulture);
@@ -107,7 +109,7 @@ public static class EmailTexts
                 $"""
                 {sentence}
 
-                Patvirtinti įrašą galite {product} skiltyje „Pasikartojantys įrašai“.
+                Patvirtinti įrašą galite {product} skiltyje „Periodiniai įrašai“.
 
                 Šiuos laiškus galite išjungti savo profilyje.
                 """),
@@ -119,6 +121,33 @@ public static class EmailTexts
 
                 You can switch these emails off on your profile.
                 """));
+    }
+
+    public static OutgoingEmail Notification(
+        string language,
+        string toAddress,
+        string toName,
+        Notification notification,
+        string? siteUrl,
+        string product)
+    {
+        var sentence = NotificationTexts.Sentence(language, notification);
+        var url = NotificationTexts.PageUrl(notification, siteUrl);
+        return Compose(
+            language,
+            toAddress,
+            toName,
+            product,
+            (notification.Title,
+                Paragraphs(
+                    sentence,
+                    url is null ? null : $"Atidaryti {product}: {url}",
+                    "Kuriuos pranešimus gauti el. paštu, galite pasirinkti savo profilyje.")),
+            (notification.Title,
+                Paragraphs(
+                    sentence,
+                    url is null ? null : $"Open it in {product}: {url}",
+                    "You can choose which notifications are emailed on your profile.")));
     }
 
     public static OutgoingEmail Test(string language, string toAddress, string toName, string product) =>
@@ -139,6 +168,9 @@ public static class EmailTexts
 
                 If it arrived, email delivery works.
                 """));
+
+    private static string Paragraphs(params string?[] paragraphs) =>
+        string.Join("\n\n", paragraphs.OfType<string>());
 
     private static OutgoingEmail Compose(
         string language,

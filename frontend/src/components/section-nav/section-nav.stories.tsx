@@ -1,38 +1,52 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { Link } from "@tanstack/react-router";
-import { Palette, ShieldCheck, UserRound } from "lucide-react";
+import { Palette, Settings2, ShieldCheck, UserRound } from "lucide-react";
 import { withWidth } from "@/storybook/decorators";
-import { SectionNav, type SectionNavItem } from "./section-nav";
+import { SectionNav, type SectionNavGroup } from "./section-nav";
 
-type Section = "account" | "security" | "appearance";
-
-const sections: readonly Section[] = ["account", "security", "appearance"];
-
-const items: Record<Section, SectionNavItem> = {
-  account: { labelKey: "profile.detailsTitle", icon: UserRound },
-  security: { labelKey: "profile.twoFactorTitle", icon: ShieldCheck },
-  appearance: { labelKey: "settings.appearance", icon: Palette },
-};
-
-function ProfileSectionNav({ current }: Readonly<{ current: Section }>) {
-  return (
-    <SectionNav
-      labelKey="profile.sectionsNav"
-      current={current}
-      sections={sections}
-      items={items}
-      renderLink={(section, props) => <Link to="/profile" search={{ section }} {...props} />}
-    />
-  );
-}
+const groups: SectionNavGroup[] = [
+  {
+    labelKey: "settingsHub.personal",
+    items: [
+      {
+        id: "account",
+        labelKey: "profile.detailsTitle",
+        icon: UserRound,
+        link: { to: "/profile", search: { section: "account" } },
+      },
+      {
+        id: "security",
+        labelKey: "profile.twoFactorTitle",
+        icon: ShieldCheck,
+        link: { to: "/profile", search: { section: "security" } },
+      },
+      {
+        id: "appearance",
+        labelKey: "settings.appearance",
+        icon: Palette,
+        link: { to: "/profile", search: { section: "appearance" } },
+      },
+    ],
+  },
+  {
+    labelKey: "settingsHub.installation",
+    items: [
+      {
+        id: "general",
+        labelKey: "settings.general.title",
+        icon: Settings2,
+        link: { to: "/settings", search: { section: "general" } },
+      },
+    ],
+  },
+];
 
 const meta = {
   title: "Components/SectionNav",
-  component: ProfileSectionNav,
+  component: SectionNav,
   parameters: { route: "/profile" },
   decorators: [withWidth("narrow")],
-  args: { current: "account" },
-} satisfies Meta<typeof ProfileSectionNav>;
+  args: { labelKey: "settingsHub.nav", current: "account", groups },
+} satisfies Meta<typeof SectionNav>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
@@ -40,3 +54,5 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 
 export const SecondActive: Story = { args: { current: "security" } };
+
+export const OtherGroupActive: Story = { args: { current: "general" } };

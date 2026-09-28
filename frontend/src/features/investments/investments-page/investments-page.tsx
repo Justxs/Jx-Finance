@@ -114,6 +114,7 @@ export function InvestmentsPage() {
       >
         {taxView ? (
           <Link
+            key="portfolio"
             to="/investments"
             search={{ accountId }}
             className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "print:hidden")}
@@ -124,6 +125,7 @@ export function InvestmentsPage() {
         ) : (
           <>
             <Link
+              key="tax-summary"
               to="/investments"
               search={{ view: "taxSummary" }}
               className={buttonVariants({ variant: "ghost", size: "sm" })}

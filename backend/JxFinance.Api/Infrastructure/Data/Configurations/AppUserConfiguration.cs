@@ -9,6 +9,7 @@ public sealed class AppUserConfiguration : IEntityTypeConfiguration<AppUser>
     public void Configure(EntityTypeBuilder<AppUser> builder)
     {
         builder.Property(u => u.DisplayName).HasMaxLength(100);
+        builder.Property(u => u.EmailNotificationTypes).StoredAsJson().HasDefaultValueSql("'[]'::jsonb");
         builder.ComplexProperty(u => u.DashboardLayout, layout =>
         {
             layout.IsRequired(false);

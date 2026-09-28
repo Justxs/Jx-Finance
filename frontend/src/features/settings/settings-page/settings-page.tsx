@@ -9,19 +9,15 @@ import {
   useSyncExchangeRates,
   useUpdateSettings,
 } from "@/api/generated";
-import { AppearancePicker } from "@/components/appearance-picker/appearance-picker";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
-import { SectionLayout } from "@/components/section-layout/section-layout";
-import { useNavSections } from "@/components/section-nav/section-nav";
 import { Button } from "@/components/ui/button/button";
 import { SectionSkeleton } from "@/components/ui/skeleton/skeleton";
-import { ImportDataSection } from "@/features/imports/import-data-section/import-data-section";
 import { useIsoDate } from "@/hooks/use-formatters";
 import { useSettingsSuspense } from "@/hooks/use-settings";
 import { BackupSection } from "../backup-section/backup-section";
 import { DiscordSection } from "../discord-section/discord-section";
 import { SettingsForm } from "../settings-form/settings-form";
-import { type SettingsSection, SettingsNav, settingsSections } from "../settings-nav/settings-nav";
+import { type SettingsSection, SettingsLayout } from "../settings-nav/settings-nav";
 import { SmtpSection } from "../smtp-section/smtp-section";
 
 function SettingsContent({ section }: Readonly<{ section: SettingsSection }>) {
@@ -103,24 +99,17 @@ function SettingsContent({ section }: Readonly<{ section: SettingsSection }>) {
 }
 
 export function SettingsPage() {
-  const { t } = useTranslation();
   const search = useSearch({ from: "/settings" });
-  const { sections, section } = useNavSections(settingsSections, search.section, "general");
+  const section = search.section ?? "general";
 
   return (
-    <SectionLayout
-      title={t("settings.title")}
-      description={t("settings.description")}
-      nav={<SettingsNav current={section} sections={sections} />}
-    >
+    <SettingsLayout current={section}>
       <QueryBoundary fallback={<SectionSkeleton rows={6} />}>
         <SettingsContent section={section} />
       </QueryBoundary>
       {section === "email" ? <SmtpSection /> : null}
       {section === "discord" ? <DiscordSection /> : null}
-      {section === "import" ? <ImportDataSection /> : null}
       {section === "backups" ? <BackupSection /> : null}
-      {section === "appearance" ? <AppearancePicker /> : null}
-    </SectionLayout>
+    </SettingsLayout>
   );
 }

@@ -10,8 +10,8 @@ import {
 } from "@/api/generated";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog/confirm-delete-dialog";
 import { CreateDialog } from "@/components/create-dialog/create-dialog";
-import { PageHeader } from "@/components/page-header/page-header";
-import { Section } from "@/components/ui/section/section";
+import { Section, SectionHeader } from "@/components/ui/section/section";
+import { SettingsLayout } from "@/features/settings/settings-nav/settings-nav";
 import { useConfirmedDelete } from "@/hooks/use-confirmed-delete";
 import { useDeferredParams } from "@/hooks/use-deferred-params";
 import { notify, pendingId } from "@/lib/mutations";
@@ -36,14 +36,13 @@ export function UsersPage() {
   const deactivate = useConfirmedDelete(deactivateMutation, list, userName);
 
   return (
-    <div className="space-y-5">
-      <PageHeader title={t("users.title")}>
-        <CreateDialog label={t("users.add")} title={t("users.add")}>
-          {(close) => <CreateUserForm onClose={close} />}
-        </CreateDialog>
-      </PageHeader>
-
-      <Section as="div">
+    <SettingsLayout current="users">
+      <Section>
+        <SectionHeader title={t("users.title")}>
+          <CreateDialog secondary label={t("users.add")} title={t("users.add")}>
+            {(close) => <CreateUserForm onClose={close} />}
+          </CreateDialog>
+        </SectionHeader>
         <UsersTable
           users={list}
           stale={stale}
@@ -69,6 +68,6 @@ export function UsersPage() {
         user={list.find((user) => user.id === resetId) ?? null}
         onClose={() => setResetId(null)}
       />
-    </div>
+    </SettingsLayout>
   );
 }

@@ -5,4 +5,5 @@ public enum EmailKind
     PasswordReset,
     EmailVerification,
     BillReminder,
+    Notification,
 }

@@ -2,7 +2,7 @@
 
 Back to the [feature walkthrough](README.md). See also [decisions](../decisions/installation-settings.md), [architecture: Installation settings](../architecture/installation-settings.md).
 
-Backend `Settings`, page `/settings` with sections `general`, `features`, `currencies`, `regional`, `defaults`, `email`, `discord`, `import`, `backups`, `appearance`. Administrators only; `GET /api/settings/public` is anonymous and carries only the name, the default language, whether this installation can send email and whether it allows Discord notifications.
+Backend `Settings`, page `/settings` with sections `general`, `features`, `currencies`, `regional`, `defaults`, `email`, `discord` and `backups`, shown under Installation on the one Settings page described [below](#one-settings-page). Administrators only; `GET /api/settings/public` is anonymous and carries only the name, the default language, whether this installation can send email and whether it allows Discord notifications.
 
 ```mermaid
 flowchart TD
@@ -13,7 +13,7 @@ flowchart TD
     Store --> Jobs["PeriodicJob.RequiredFeature"]
     Store --> Clock["SystemClock: time zone"]
     Store --> Rates["ExchangeRateService: reporting currency, enabled currencies"]
-    Client["useSettings, non-suspense, falls back to everything on"] --> Nav["Sidebar hides disabled features"]
+    Client["useSettings, non-suspense, falls back to everything on"] --> Nav["Sidebar, hub tabs and Settings sections hide disabled features"]
     Client --> Before["requireFeature in beforeLoad: redirect to the dashboard"]
     Client --> Cur["CurrencySelect: usable currencies plus the record's own;<br/>renders nothing when only one is usable"]
 ```
@@ -33,7 +33,7 @@ Each switch is declared by the endpoint groups under these prefixes (`ApiGroup(t
 | `Investments` | `/api/investments` | broker sync job |
 | `CategorizationRules` | `/api/categorization-rules` | the rule suggestions in the import preview |
 | `UnusualAmounts` | `/api/transactions/{id}/unusual` (dismiss and its undo), declared on the two endpoints | the unusual-amount job and its notifications, including price rises; the verdict fields of transaction responses, which read as empty; the `unusual` ledger filter, which is ignored; the flag in the import preview; `latestMatch` on recurring entries; the link on the two unusual kinds in the bell |
-| `MonthClose` | `/api/month-close` | the month-end reminder job; the `/close` page, its sidebar entry and its command palette action; the closed-month hint in the transaction and conversion forms; the link on a month-end reminder in the bell |
+| `MonthClose` | `/api/month-close` | the month-end reminder job; the `/close` page, its Month close tab in Reports, its command palette action and the dashboard prompt; the closed-month hint in the transaction and conversion forms; the link on a month-end reminder in the bell |
 
 `UnusualAmounts` is on by default and is the one switch that gates routes inside an ungated prefix: the ledger answers whatever it says, so the two routes carry the feature themselves rather than through their group, and `FeatureGateTests` takes the longest matching prefix. With it off the stored verdicts stay in their columns and come back when it is switched on; rows written meanwhile are checked on the first pass after that. See [Unusual amounts](unusual-amounts.md).
 
@@ -48,3 +48,15 @@ Turning a feature off deletes nothing; turning it on brings the data back. `/api
 `/api/tags` is not in the table either, and neither is `/api/transactions/bulk-tags`. A tag is an attribute of a transaction, exactly like its category, not a screen with its own data: `GET /api/transactions` would still answer `tagIds` and take the `tagIds` filter, both exports would still have to decide about their tag column and the report about `expenseByTag`, so a switch would buy a hidden management page at the price of a second shape for every one of those. A household that turned it off would also keep rows carrying tags it could no longer read or clear. Categories, the closest thing in the product, have no switch for the same reasons. See [Tags](tags.md).
 
 `CategorizationRules` is in the table for the mirror image of that reasoning. A rule is a screen and a route of its own, and what it produces is ordinary values on ordinary transactions: with the switch off the page leaves the navigation, the routes answer `feature.disabled`, the import preview stops suggesting and carries on importing, and every category and tag a rule ever set stays exactly where it is. Nothing anywhere else needs a second shape. See [Categorization rules](categorization-rules.md).
+
+## One Settings page
+
+Every user has one Settings entry at the bottom of the sidebar. It covers four routes that keep their own URLs, `/profile`, `/households`, `/users` and `/settings`, and each of them renders inside `SettingsLayout` (`features/settings/settings-nav`): a `SectionLayout` titled "Settings", with the user's email address as its description and a grouped `SectionNav` beside the content. The groups are built per user, and a group with nothing in it is left out:
+
+| Group | Sections | Shown to |
+| --- | --- | --- |
+| Personal | `profileSections` on `/profile?section=`: account, security, sessions, notifications, appearance, trash, and import while the `Import` switch is on | everyone |
+| Shared | Households (`/households`) | everyone, while the `Households` switch is on |
+| Installation | `settingsSections` on `/settings?section=`: general, features, currencies, regional, defaults, email, discord, backups; then Users (`/users`) | administrators |
+
+`SectionNav` takes groups of items whose `link` is typed router link options, so one nav can point at several routes. From the `lg` breakpoint it is a sticky column with a label over each group; below that it is one scrolling row without labels. The account section holds only the display name and the password; notification choices moved to the Notifications section, described in [Email](email.md#notification-emails) and [Discord notifications](discord-notifications.md#screens). Import data and Appearance are personal sections only: the installation sections used to repeat them, and a link to `/settings?section=import` or `appearance` now opens the General section. Users and Households put their title and a small outline create button ("Create user", "Create household") in a `SectionHeader` inside the layout, instead of a page header of their own.

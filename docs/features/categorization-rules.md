@@ -168,4 +168,4 @@ The call reads nothing and writes nothing — it is `RuleMatcher` behind an endp
 
 The form is one dialog with four groups — the name, the condition, the narrowing, and the action — and a **Try it** box at the bottom that runs the sample against the condition currently in the form. **Run over existing transactions** opens the second dialog: account, the recategorize checkbox, **Preview**, then an **Apply to N transactions** button that only becomes usable once a preview has found something.
 
-The rules page is in the sidebar under the ledger group and answers the `g u` shortcut, both gated on the feature switch like every other switchable page.
+The rules page is the "Rules" tab of the Categories hub, after Categories and Tags, and answers the `g u` shortcut; the tab and the shortcut are both gated on the feature switch like every other switchable page. See [Interface](interface.md#navigation).

@@ -1,3 +1,4 @@
+import type { ComponentProps } from "react";
 import { useTranslation } from "react-i18next";
 import type { ReportComparisonTotals } from "@/api/generated/model";
 import { ChangeBadge } from "@/components/change-badge/change-badge";
@@ -10,9 +11,16 @@ interface Props {
   totalExpense: string;
   net: string;
   comparison?: ReportComparisonTotals | null;
+  extra?: ComponentProps<typeof SummaryStats>["items"];
 }
 
-export function ReportStats({ totalIncome, totalExpense, net, comparison }: Readonly<Props>) {
+export function ReportStats({
+  totalIncome,
+  totalExpense,
+  net,
+  comparison,
+  extra,
+}: Readonly<Props>) {
   const { t } = useTranslation();
 
   const stats = [
@@ -45,11 +53,14 @@ export function ReportStats({ totalIncome, totalExpense, net, comparison }: Read
 
   return (
     <SummaryStats
-      items={stats.map((stat) => ({
-        ...stat,
-        label: t(stat.key),
-        note: <ChangeBadge change={changeOf(stat.value, stat.earlier)} good={stat.good} />,
-      }))}
+      items={[
+        ...stats.map((stat) => ({
+          ...stat,
+          label: t(stat.key),
+          note: <ChangeBadge change={changeOf(stat.value, stat.earlier)} good={stat.good} />,
+        })),
+        ...(extra ?? []),
+      ]}
     />
   );
 }

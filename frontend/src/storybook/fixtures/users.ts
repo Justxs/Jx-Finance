@@ -14,7 +14,7 @@ export function userProfile(seed: UserSeed): UserProfileResponse {
     twoFactorEnabled: false,
     isActive: true,
     emailConfirmed: true,
-    billReminderEmails: false,
+    emailNotificationTypes: [],
     ...seed,
   };
 }
@@ -56,9 +56,9 @@ export const unverifiedUser: UserProfileResponse = {
   emailConfirmed: false,
 };
 
-export const reminderSubscriber: UserProfileResponse = {
+export const emailSubscriber: UserProfileResponse = {
   ...currentUser,
-  billReminderEmails: true,
+  emailNotificationTypes: ["billDue", "budgetExceeded"],
 };
 
 export const users: UserProfileResponse[] = [currentUser, memberUser, longNameUser, inactiveUser];

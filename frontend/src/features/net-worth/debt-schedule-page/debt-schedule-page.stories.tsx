@@ -29,7 +29,7 @@ const meta = {
   title: "Features/NetWorth/DebtSchedulePage",
   component: DebtSchedulePage,
   args: { debtId: ids.debts.mortgage },
-  parameters: { layout: "fullscreen", route: "/net-worth" },
+  parameters: { layout: "fullscreen", route: "/net-worth/debts/story" },
   decorators: [withPageFrame],
 } satisfies Meta<typeof DebtSchedulePage>;
 

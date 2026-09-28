@@ -15,9 +15,15 @@ type Story = StoryObj<typeof meta>;
 
 export const WithOpenItems: Story = {
   play: async ({ canvas }) => {
-    const links = canvas.getAllByRole("link", { name: "Review" });
-    await expect(links).toHaveLength(3);
-    await expect(links[0]).toHaveAttribute("href", expect.stringContaining("uncategorized=true"));
+    await expect(canvas.getByRole("link", { name: "Categorize" })).toHaveAttribute(
+      "href",
+      expect.stringContaining("uncategorized=true"),
+    );
+    await expect(canvas.getByRole("link", { name: "Review" })).toHaveAttribute(
+      "href",
+      expect.stringContaining("unusual=true"),
+    );
+    await expect(canvas.getByRole("link", { name: "Confirm" })).toBeVisible();
     await expect(canvas.getByText(/before the month ends/)).toBeVisible();
   },
 };
@@ -25,7 +31,15 @@ export const WithOpenItems: Story = {
 export const AllClear: Story = {
   args: { checklist: clearOpenMonthReview.checklist },
   play: async ({ canvas }) => {
-    await expect(canvas.queryByRole("link", { name: "Review" })).toBeNull();
+    await expect(canvas.queryByRole("link")).toBeNull();
+  },
+};
+
+export const OpenItemsOnly: Story = {
+  args: { openOnly: true },
+  play: async ({ canvas }) => {
+    await expect(canvas.queryByText("No recurring entry is waiting")).toBeNull();
+    await expect(canvas.getByRole("link", { name: "Categorize" })).toBeVisible();
   },
 };
 

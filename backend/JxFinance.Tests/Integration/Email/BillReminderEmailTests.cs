@@ -1,4 +1,3 @@
-using System.Net.Http.Json;
 using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Email;
@@ -7,7 +6,7 @@ namespace JxFinance.Tests.Integration.Email;
 public sealed class BillReminderEmailTests(ApiFixture fixture) : EmailTestBase(fixture)
 {
     [Fact]
-    public async Task No_email_is_sent_while_the_preference_is_off()
+    public async Task No_email_is_sent_while_bill_reminders_are_not_ticked()
     {
         try
         {
@@ -30,7 +29,7 @@ public sealed class BillReminderEmailTests(ApiFixture fixture) : EmailTestBase(f
     }
 
     [Fact]
-    public async Task One_email_beside_one_notification_when_the_preference_is_on()
+    public async Task One_email_beside_one_notification_when_bill_reminders_are_ticked()
     {
         try
         {
@@ -110,7 +109,7 @@ public sealed class BillReminderEmailTests(ApiFixture fixture) : EmailTestBase(f
     }
 
     [Fact]
-    public async Task An_unconfirmed_address_gets_no_reminder_even_with_the_preference_on()
+    public async Task An_unconfirmed_address_gets_no_reminder_even_when_ticked()
     {
         try
         {
@@ -134,22 +133,7 @@ public sealed class BillReminderEmailTests(ApiFixture fixture) : EmailTestBase(f
         }
     }
 
-    private async Task ConfirmAddressAsync(string email)
-    {
-        await DrainAsync();
-        var token = TokenFrom(Assert.Single(Transport.To(email)).Email.Body, "verify-email");
-        using var anonymous = CreateClient();
-        (await anonymous.PostAsJsonAsync("/api/auth/verify-email", new { email, token })).EnsureSuccessStatusCode();
-        Transport.Reset();
-    }
-
-    private static async Task SubscribeAsync(HttpClient member)
-    {
-        var response = await member.PutAsJsonAsync(
-            "/api/users/me",
-            new { displayName = "Test User", currentPassword = (string?)null, newPassword = (string?)null, billReminderEmails = true });
-        response.EnsureSuccessStatusCode();
-    }
+    private static Task SubscribeAsync(HttpClient member) => ChooseEmailKindsAsync(member, "billDue");
 
     private Task<Guid> CreateDueBillAsync(HttpClient client, string? name = null) =>
         Seed.RecurringBillAsync(client, Today, name);

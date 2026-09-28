@@ -53,6 +53,21 @@ public abstract class EmailTestBase(ApiFixture fixture) : IntegrationTestBase(fi
 
     protected Task ScanBillsAsync() => Job<RecurringBillReminderJob>().RunOnceAsync(default);
 
+    protected async Task ConfirmAddressAsync(string email)
+    {
+        await DrainAsync();
+        var token = TokenFrom(Assert.Single(Transport.To(email)).Email.Body, "verify-email");
+        using var anonymous = CreateClient();
+        (await anonymous.PostAsJsonAsync("/api/auth/verify-email", new { email, token })).EnsureSuccessStatusCode();
+        Transport.Reset();
+    }
+
+    protected static async Task ChooseEmailKindsAsync(HttpClient member, params string[] types)
+    {
+        var response = await member.PutAsJsonAsync("/api/users/me/email-notifications", new { types });
+        response.EnsureSuccessStatusCode();
+    }
+
     protected static string TokenFrom(string body, string path)
     {
         var start = body.IndexOf($"{ApiFixture.SiteUrl}/{path}?", StringComparison.Ordinal);

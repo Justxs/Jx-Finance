@@ -1,36 +1,29 @@
 import { useSearch } from "@tanstack/react-router";
-import { useTranslation } from "react-i18next";
 import { useMeSuspense } from "@/api/generated";
 import { AppearancePicker } from "@/components/appearance-picker/appearance-picker";
-import { SectionLayout } from "@/components/section-layout/section-layout";
 import { useNavSections } from "@/components/section-nav/section-nav";
 import { ImportDataSection } from "@/features/imports/import-data-section/import-data-section";
-import { DiscordSection } from "../discord-form/discord-section";
+import { SettingsLayout, profileSections } from "@/features/settings/settings-nav/settings-nav";
+import { NotificationsSection } from "../notifications-section/notifications-section";
 import { ProfileForm } from "../profile-form/profile-form";
-import { ProfileNav, profileSections } from "../profile-nav/profile-nav";
 import { SessionsSection } from "../sessions-section/sessions-section";
 import { TrashSection } from "../trash-section/trash-section";
 import { TwoFactorSettings } from "../two-factor-settings";
 
 export function ProfilePage() {
-  const { t } = useTranslation();
   const me = useMeSuspense();
   const search = useSearch({ from: "/profile" });
-  const { sections, section } = useNavSections(profileSections, search.section, "account");
+  const { section } = useNavSections(profileSections, search.section, "account");
 
   return (
-    <SectionLayout
-      title={t("profile.title")}
-      description={me.data.email}
-      nav={<ProfileNav current={section} sections={sections} />}
-    >
+    <SettingsLayout current={section}>
       {section === "account" ? <ProfileForm profile={me.data} /> : null}
       {section === "security" ? <TwoFactorSettings /> : null}
       {section === "sessions" ? <SessionsSection /> : null}
-      {section === "discord" ? <DiscordSection /> : null}
+      {section === "notifications" ? <NotificationsSection /> : null}
       {section === "trash" ? <TrashSection /> : null}
       {section === "import" ? <ImportDataSection /> : null}
       {section === "appearance" ? <AppearancePicker /> : null}
-    </SectionLayout>
+    </SettingsLayout>
   );
 }

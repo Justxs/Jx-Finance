@@ -8,6 +8,10 @@ Related: feature page [Interface](../features/interface.md); architecture [Visua
 
 Neutral surfaces, compact controls, readable typography, semantic colors, mobile navigation; no external fonts
 
+### Navigation
+
+At most eight sidebar entries: Dashboard, Transactions and Accounts on their own, the hubs Categories (Categories, Tags, Rules), Plan (Budgets, Goals, Recurring entries), Wealth (Net worth, Investments) and Reports (Overview, Month close), and Settings at the bottom. A hub's pages keep their own routes and shortcuts and appear as tabs under the hub's title. Settings is one page for everyone over `/profile`, `/households`, `/users` and `/settings`, with a section nav grouped into Personal, Shared and Installation (administrators)
+
 ### Command palette
 
 One dialog on `Mod+K` over every page: the pages and sections from a table beside the entries, the accounts, categories and tags from the lists the client already holds, and the actions that exist today, each row gated by the caller's role and the installation's feature switches. Matching is case- and accent-insensitive and fuzzy, ordered by how close the match is and then by what was used recently; the last eight choices live in `jx-preferences`. It loads its four lists when it first opens, never on page load, and adds no endpoint
@@ -16,6 +20,15 @@ One dialog on `Mod+K` over every page: the pages and sections from a table besid
 
 Newest first. Each entry is a choice between real alternatives: what was chosen, what was rejected, and why.
 
+- **2026-09-27.** Related pages share one sidebar entry, a hub, and show as tabs under the hub's title; the routes, URLs and `g` shortcuts stay as they were
+  - Rejected: Nested routes such as `/plan/budgets`; one long page per hub; keeping the seventeen sidebar links; moving Categories, Tags and Rules into Settings
+  - Why: The sidebar had grown to seventeen links, most of them visited a few times a month, and the ones used every session were lost among them. Nested routes would have broken every saved link, bookmark and shortcut and changed every route file for no gain the reader could see, since the tabs already say where a page belongs. One long page per hub would load and scroll through three features to reach one, and would lose each page's own URL and search params. Categories, tags and rules are used in every bookkeeping session, so they are ledger work, not configuration, and keep their own entry
+- **2026-09-27.** One Settings page for everyone, grouped into Personal, Shared and Installation, over the existing `/profile`, `/households`, `/users` and `/settings` routes
+  - Rejected: Keeping Profile and the administrators' Settings as two pages with their own navigation, and Households and Users as pages of their own; merging the four into one route
+  - Why: A person looking for "settings" had to know whether a choice was theirs, their household's or the installation's before knowing where to look, and Import data and Appearance were shown in both Profile and Settings. One layout with labelled groups answers that on the page itself, and each group shows only to those who can use it. Keeping the four routes keeps their guards, loaders, links and palette entries as they were
+- **2026-09-27.** The Accounts page shows each account's share as a column of the accounts table and a Total row under it, instead of a separate "Balance by account" panel
+  - Rejected: Keeping the second list of the same balances under the table; a stacked composition bar across all accounts
+  - Why: The panel repeated every balance the table had just shown, one screen lower. A stacked bar needs a colour per account, which the Semantic Color Rule forbids because colour here means income, expense or the one accent; a navy meter per row shows the same share without that. The dashboard card keeps its share bars, because there it is the only list of balances
 - **2026-09-26.** Stale content dims to 55% after a 150 ms delay, with `aria-busy` and a progress cursor; this replaces the ink rule of 2026-09-20
   - Rejected: Keeping the ink rule; a small "Updating…" label beside the section's first line; no visible cue
   - Why: The owner found a line appearing above the table on every sort and filter distracting. The dimmed rows are superseded content that is about to be replaced, and the owner accepted that their muted text drops below 4.5:1 for that moment. The delay keeps fast answers from flickering

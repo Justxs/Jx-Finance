@@ -2,7 +2,7 @@
 
 Back to the [feature walkthrough](README.md). See also [decisions](../decisions/email.md).
 
-Backend `Settings` (`settings/smtp`, `settings/smtp/test`) and `Auth` (`forgot-password`, `reset-password`, `verify-email`, `send-verification-email`), the shared pieces in `Common/Email`, the transport in `Infrastructure/Email` and the drain in `Infrastructure/BackgroundJobs/EmailOutboxJob`. Frontend: the `email` section of `/settings`, the routes `/forgot-password`, `/reset-password` and `/verify-email`, the banner in the application shell and the preference on `/profile`.
+Backend `Settings` (`settings/smtp`, `settings/smtp/test`) and `Auth` (`forgot-password`, `reset-password`, `verify-email`, `send-verification-email`), the shared pieces in `Common/Email`, the transport in `Infrastructure/Email` and the drain in `Infrastructure/BackgroundJobs/EmailOutboxJob`. Frontend: the `email` section of `/settings`, the routes `/forgot-password`, `/reset-password` and `/verify-email`, the banner in the application shell and the Email column of the notification table in the Notifications section of `/profile`.
 
 Email is not a feature switch. It is one installation setting with its own enabled flag, so turning it off stops every outgoing message and leaves every route in place; nothing is gated by `FeatureGateMiddleware`. An installation that never fills the mail server in behaves exactly like the release before this one.
 
@@ -22,7 +22,7 @@ flowchart TD
     Reset["POST /api/auth/forgot-password"] --> Outbox
     Verify["POST /api/auth/send-verification-email"] --> Outbox
     Create["POST /api/users"] --> Outbox
-    Bills["RecurringBillReminderJob"] --> Outbox
+    Publisher["INotificationPublisher,<br/>called by every notification producer"] --> Outbox
     Outbox[("EmailMessages: kind, recipient,<br/>subject, body, dedupe key, attempts")] --> Job["EmailOutboxJob, every minute"]
     Job --> Delivery
     Admin --> Test["POST /api/settings/smtp/test"]
@@ -132,37 +132,47 @@ The choices about throttling and lockout, which the sign-in page already thinks 
 
 A user created by an administrator starts with an unconfirmed address and, if the mail server is set up, one queued confirmation message. The link opens `/verify-email`, which shows the address and a button; the token is consumed on the click, not on load, so a mail scanner that follows links cannot confirm an address on the user's behalf. Opening a link again after the address is confirmed answers 204, so a second click is not an error. The confirmation token is a separate provider (`JxEmailConfirmation`) with its own one-day lifetime, so a slow mailbox does not force a password-reset lifetime long enough to be uncomfortable.
 
-**What an unconfirmed address blocks: unsolicited mail to it, and nothing else.** A user with an unconfirmed address signs in, records transactions, is counted as an administrator and sees every screen. The only thing that changes is that `RecurringBillReminderJob` will not send reminder emails to it. Mail the person just asked for — the password-reset link and the confirmation message itself — is still sent, because refusing it would make an unconfirmed address a trap with no way out. The banner in the application shell says exactly this and offers "Send the link again"; it is shown only while the installation can send email, so an installation without a mail server never nags about an address it could not confirm anyway.
+**What an unconfirmed address blocks: unsolicited mail to it, and nothing else.** A user with an unconfirmed address signs in, records transactions, is counted as an administrator and sees every screen. The only thing that changes is that no notification email is sent to it, whatever kinds its owner ticked. Mail the person just asked for — the password-reset link and the confirmation message itself — is still sent, because refusing it would make an unconfirmed address a trap with no way out. The banner in the application shell says exactly this and offers "Send the link again"; it is shown only while the installation can send email, so an installation without a mail server never nags about an address it could not confirm anyway.
 
 The first administrator, created by first-run setup, is confirmed on the spot. There is no mail server at that moment and the person typed their own address into the screen that created the installation.
 
-## Bill reminder emails
+## Notification emails
+
+Since 2026-09-27 every notification kind can also leave as an email, chosen per kind by each user, the same way Discord works. The preference is `AspNetUsers.EmailNotificationTypes`, a `jsonb` list of `NotificationType` names, empty by default, saved with `PUT /api/users/me/email-notifications` and returned on the profile as `emailNotificationTypes`. It is separate from the display name: `PUT /api/users/me` no longer carries it, and the account form no longer has the bill-reminder checkbox it used to hold.
+
+Each user sets it in Settings › Personal › Notifications (`/profile?section=notifications`): one table of notification kinds against the channels "In app" (always on, a muted check), "Email" and "Discord", with a checkbox per kind and channel and one Save for the whole form. The Email column is disabled, with a note under the table, when the installation cannot send mail or the user's address is not confirmed. Save calls `PUT /api/users/me/email-notifications` only when the ticked email kinds changed, and that mutation refreshes the `me` query (`getMeQueryKey` in `src/api/invalidation.ts`). The Discord half of the same form is described in [Discord notifications](discord-notifications.md#screens).
 
 ```mermaid
 flowchart TD
-    Scan["RecurringBillReminderJob, every 15 min"] --> Lock["one transaction holding<br/>AppLock.RecurringBillReminders"]
-    Lock --> Already{"a notification for this bill<br/>exists since local midnight?"}
-    Already -->|"yes"| Skip["nothing"]
-    Already -->|"no"| Notif["INSERT Notification (InApp)"]
-    Notif --> Wants{"owner asked for emails,<br/>address confirmed,<br/>mail server on?"}
+    Producer["A producer: bill reminders, budget alerts,<br/>unusual amounts, month-end reminder"] --> Lock["its own transaction and advisory lock,<br/>its own 'already notified' check"]
+    Lock --> Preload["INotificationPublisher.PreloadAsync(owners):<br/>active owners with a confirmed address<br/>and at least one ticked kind"]
+    Preload --> Publish["Publish(notification)"]
+    Publish --> Notif["INSERT Notification (InApp)"]
+    Publish --> Wants{"kind ticked for email,<br/>key not queued today?"}
     Wants -->|"no"| Done["commit"]
-    Wants -->|"yes"| Mail["INSERT EmailMessages<br/>dedupe key bill:{id}:{local date}"]
+    Wants -->|"yes"| Outbox{"mail server on?<br/>(IEmailOutbox.Enqueue)"}
+    Outbox -->|"no"| Done
+    Outbox -->|"yes"| Mail["INSERT EmailMessages<br/>dedupe key {userId}:{type}:{related id}:{local date}"]
     Mail --> Done
 ```
 
-The email is written in the same transaction as the notification, under the same lock, guarded by the same question — has this bill already been reminded today. So the two cannot disagree: either both rows appear or neither does, and a second pass on the same day writes neither. A unique index on `DedupeKey` is the second belt: even if two processes ever got past the lock, the insert of the duplicate fails, the outbox catches that one exception and the pass continues.
+No producer sends mail itself. `NotificationPublisher` enqueues the email through `IEmailOutbox` on the producer's own `AppDbContext`, beside the notification and the Discord message, so all of them are written in the producer's transaction, under its lock, behind its own "was this already notified" question, and cannot disagree: either every row appears or none does. `BudgetAlertJob`, which works on a per-user context, gets a publisher and an outbox bound to that context through `NotificationPublisher.For`.
 
-The preference is `AspNetUsers.BillReminderEmails`, off by default, changed on the profile together with the display name. Nothing about the reminder job depends on the mail server being reachable: the job only writes rows.
+Three rules decide whether a message is queued, all at the moment the notification is written:
 
-The message is picked from the entry's shape, so an income entry reads "due to arrive" and a transfer "due to be transferred", the same distinction the bell makes.
+- The owner ticked that kind, is active and has a confirmed, non-empty address. The preload reads these in one query for the owners of a pass; an unconfirmed address never receives an unsolicited message.
+- The mail server is switched on and complete. `IEmailOutbox.Enqueue` writes nothing otherwise, exactly as it does for a reset link, so an installation without SMTP queues nothing it would later have to send. Nothing about a producer depends on the mail server being reachable: it only writes rows.
+- The dedupe key has not been queued today. The key is the one Discord uses, `{userId:N}:{type}:{related id or notification id:N}:{local date yyyy-MM-dd}`. The two outboxes are separate tables, so sharing the format cannot collide. The preload reads the keys of today's `BillReminder` and `Notification` rows once, so a second pass on the same day queues no second message and never trips the unique index on `DedupeKey`, which remains the last belt.
+
+The message for `BillDue` keeps its own text, `EmailTexts.BillReminder`, built from the notification: the title is the entry's name and the payload carries the due date and the shape, so an income entry reads "due to arrive" and a transfer "due to be transferred", the same distinction the bell makes. It is stored with the kind `BillReminder`. Every other kind uses `EmailTexts.Notification` and the kind `Notification`: the subject is the notification title, the body is the bell's sentence from `NotificationTexts.Sentence`, then, when `App:SiteUrl` is set, a link to the page the notification is about (`NotificationTexts.PageUrl`, the same address the Discord message carries), and a line saying where the choice is changed. `EmailKind` is stored as its name, so the new value needed no migration of old rows.
 
 ## Language
 
 Every message is plain text — no HTML part, no images, no tracking — in English or Lithuanian, and the texts live in `Common/Email/EmailTexts.cs` rather than in a resource file.
 
-The recipient's language is the installation's `DefaultLanguage`. That is honest about what the server knows: there is no per-user language in the data model. The language toggle in the interface is a per-browser preference kept in `jx-preferences` and never sent to the server, so at the moment a background job composes a reminder there is nothing else to read. When a per-user language setting arrives, it is a one-line change in the three places that call `EmailTexts`.
+The recipient's language is the installation's `DefaultLanguage`. That is honest about what the server knows: there is no per-user language in the data model. The language toggle in the interface is a per-browser preference kept in `jx-preferences` and never sent to the server, so at the moment a background job composes a reminder there is nothing else to read. When a per-user language setting arrives, it is a one-line change in the few places that call `EmailTexts`.
 
-The backend has no translation mechanism of its own and none was added. Server text that a user reads is otherwise a code — `ErrorCodes` — that the client turns into a sentence through `t("serverErrors.…")`, and that mechanism cannot reach an email, which leaves the application entirely. A resource-file infrastructure for four messages would be more machinery than message, so the two languages sit side by side in one file, which also makes it obvious when one of them is edited and the other is not.
+The backend has no translation mechanism of its own and none was added. Server text that a user reads is otherwise a code — `ErrorCodes` — that the client turns into a sentence through `t("serverErrors.…")`, and that mechanism cannot reach an email, which leaves the application entirely. A resource-file infrastructure for five messages would be more machinery than message, so the two languages sit side by side in one file, which also makes it obvious when one of them is edited and the other is not.
 
 ## Configuration outside the database
 
