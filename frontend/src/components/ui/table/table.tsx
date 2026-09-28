@@ -88,14 +88,24 @@ function TableCell({ className, numeric = false, ...props }: TableCellProps) {
 interface TableEmptyRowProps {
   colSpan: number;
   filtered?: boolean;
+  action?: React.ReactNode;
+  onClearFilters?: () => void;
   children: React.ReactNode;
 }
 
-function TableEmptyRow({ colSpan, filtered = false, children }: Readonly<TableEmptyRowProps>) {
+function TableEmptyRow({
+  colSpan,
+  filtered = false,
+  action,
+  onClearFilters,
+  children,
+}: Readonly<TableEmptyRowProps>) {
   return (
     <TableRow className="hover:bg-transparent">
       <TableCell colSpan={colSpan} className="py-0 whitespace-normal">
-        <EmptyText filtered={filtered}>{children}</EmptyText>
+        <EmptyText filtered={filtered} action={action} onClearFilters={onClearFilters}>
+          {children}
+        </EmptyText>
       </TableCell>
     </TableRow>
   );

@@ -110,11 +110,15 @@ internal static class Retention
         rows.IgnoreQueryFilters().Where(e => e.IsDeleted && e.UpdatedAt < cutoff);
 
     private static async Task<int> PurgeAsync<TEntity>(IQueryable<TEntity> expired, CancellationToken ct)
+        where TEntity : class
     {
         int deleted, purged = 0;
         do
         {
-            purged += deleted = await expired.Take(BatchSize).ExecuteDeleteAsync(ct);
+            purged += deleted = await expired
+                .OrderBy(e => EF.Property<object>(e, "Id"))
+                .Take(BatchSize)
+                .ExecuteDeleteAsync(ct);
         }
         while (deleted == BatchSize);
 

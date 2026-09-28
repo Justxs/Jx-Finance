@@ -7,7 +7,7 @@ namespace JxFinance.Endpoints.Budgets.Interfaces;
 
 public interface IBudgetService
 {
-    Task<IReadOnlyList<BudgetResponse>> GetAllAsync(CancellationToken cancellationToken);
+    Task<IReadOnlyList<BudgetResponse>> GetAllAsync(DateOnly? asOf, CancellationToken cancellationToken);
 
     Task<IReadOnlyList<BudgetResponse>> GetMonthlyAsync(DateOnly asOf, CancellationToken cancellationToken);
 

@@ -6,8 +6,8 @@ Backend `Dashboard`, page `/`. Three data endpoints, each card in its own `Query
 
 ```mermaid
 flowchart LR
-    S["GET /api/dashboard/summary"] --> Stats["DashboardStats: total balance at the newest rate,<br/>isComplete when every balance could be valued,<br/>income, expense, net for the month"]
-    C["GET /api/dashboard/category-breakdown"] --> Cats["Category rows, each links to the filtered transactions"]
+    S["GET /api/dashboard/summary?month="] --> Stats["DashboardStats: total balance at the month's end,<br/>today's on the current month,<br/>isComplete when every balance could be valued,<br/>income, expense, net for the shown month"]
+    C["GET /api/dashboard/category-breakdown?month="] --> Cats["Category rows, each links to the filtered transactions"]
     T["GET /api/dashboard/monthly-trend"] --> Chart["IncomeExpenseChart and SpendingPaceChart, lazy Recharts chunk"]
     Attr["ICategoryAttributionService"] --> C
     RA["Sum of ReportingAmount"] --> S
@@ -17,11 +17,26 @@ flowchart LR
     Inv --> C
 ```
 
+## Month
+
+The page has no "Dashboard" title: its `h1` is the shown month and year in the serif lead-figure size (`text-stat-lg`), and to its right a navigation group holds "This month", "Previous month" and "Next month". The group sits at the end of the row and "This month" keeps its place while invisible (`invisible`, so it is neither focusable nor announced) on the current month, and fades and slides in over 200 ms when the user leaves it, so the controls never move when the month name changes length. "Next month" is disabled on the current month; there is no lower bound. Each press moves the heading at once, but the URL, and with it the data, follows only 300 ms after the last press (`useDebouncedDraft`, TanStack Pacer), so clicking through several months fetches only the one the user stops on. The month is the `month` search parameter (`/?month=2026-02`), validated against `YYYY-MM` and dropped when it is the current month, so `/` always means today and a month can be bookmarked or shared. Changing it keeps the cards on screen, dimmed by `StaleRegion` through `useDeferredParams`, until the new month's data arrives, instead of dropping every card to its skeleton.
+
+Every card shows the chosen month. `summary` asks `GET /api/dashboard/summary?month=` for that month's income, expenses and net; its total balance is the balance at the end of that month, counting only rows dated on or before its last day and valuing currencies and holdings at that day's exchange rates and security prices, and away from the current month its label says "Balance at month end". On the current month, which has not ended, it is today's balance, the same figure as the accounts page. Accounts have no opening date, so a starting balance counts in every month, as it does for the statement import's closing balance, and a holding with no price on or before the month's end is left out with `isComplete` false. `monthlyTrend` asks for the six months ending with the shown one (`monthly-trend?months=6&month=`). `spendingByCategory` asks `category-breakdown?month=` and its rows link to transactions of that month. `spendingPace` compares the shown month with the one before, legends named by month; the current month's line stops at today and an earlier month's runs to its last day.
+
+On a month before the current one, the other cards look at that month's last day (`pastMonthEnd`); on the current month they ask exactly what the pages they link to ask, so they share those queries. Budgets in their window and balance by account pass it as `asOf` to `GET /api/budgets` and `GET /api/accounts`: each budget in the window holding that day, with today's limits, and each account's balance on that day. Net worth draws its history only up to that day (`until` on `NetWorthHistoryChart`, filtered in the browser, since the history is one query for every date). Recent transactions lists the latest six dated in the month (`dateFrom` and `dateTo`), and says "No transactions in this month." when there are none. Upcoming bills looks forward by nature, so on an earlier month it says "Upcoming bills are shown on the current month." and asks for nothing; the card keeps its place so the grid does not move. Away from the current month the [month-end close](#month-end-close) panel for the shown month takes the prompt's place above the cards. The route loader warms the shown month's queries the same way it warms the current month's.
+
+The summary card puts the balance on top and, under it, a ring beside the income, expenses and net rows. The ring is one arc on a neutral track: the share of the month's income kept, in the positive chart colour, with the percent and "kept" in its centre; a month that spent more than came in fills the ring in the expense colour and shows the percent spent. It is one arc and not a red and green pair because that pair fails the colour-vision check, and its accessible name is the sentence "73% of the month's income kept" or "Spent more than came in". With no income there is no ring. The ring block takes the height the card gets from its row and centres itself, so the card has no empty band.
+
 The month figures, the monthly trend and the spending breakdown count investment dividends and interest as income and withholding tax and standalone fees as expense, exactly as the [report](reports.md) does, so the dashboard month and the report for that month agree. In the breakdown they are one row, "Investment taxes and fees", without a link. With the `Investments` feature off nothing is added.
 
-## Month-close prompt
+## Month-end close
 
-Above the cards, while `MonthClose` is on, `MonthClosePrompt` (`features/month-close/month-close-prompt`) shows a panel when the latest ended month is open or changed after closing: the month's status, its open checklist items with their action links, its net and savings rate, "Review month" and, for an open month, "Close August 2026". "Not now" hides it for that month in this browser. `warmDashboard` warms the month's review with the layout, the prompt renders nothing while it loads or when the load fails, and it is hidden while the dashboard is being customised. It is not one of the cards below: it has no id, no place in the layout and no entry in the customiser. See [Month-end close](month-end-close.md#screens).
+The dashboard is where a month is closed; there is no separate page. While `MonthClose` is on, one of two panels sits above the cards, inside the same `StaleRegion` so it dims with them while the month changes:
+
+- **On the current month**, `MonthClosePrompt` (`features/month-close/month-close-prompt`) shows a panel when the latest ended month is open or changed after closing: the month's status, its open checklist items with their action links, its net and savings rate, "Review month", which steps the dashboard to that month, and, for an open month, "Close August 2026". "Not now" hides it for that month in this browser. It renders nothing while it loads or when the load fails.
+- **On any other month**, `MonthCloseReview` (`features/month-close/month-close-review`) shows that month's close panel: status, the checklist, the note and Close, Re-close or Reopen, and the drift panel below it when the month changed after closing. A month that has not ended shows its checklist without the note or a Close button.
+
+`warmDashboard` warms the review the panel needs: the latest ended month's on the current month, the shown month's otherwise. Neither panel is one of the cards below: they have no id, no place in the layout and no entry in the customiser. The review's figures, movers and monthly budgets from the old `/close` page are gone, because the summary, trend, category and budget cards already show the month. See [Month-end close](month-end-close.md#screens).
 
 ## Choosing and ordering the cards
 

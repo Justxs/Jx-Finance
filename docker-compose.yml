@@ -33,6 +33,7 @@ services:
       App__DataProtectionDirectory: /keys
       App__BackupDirectory: /backups
       App__AttachmentDirectory: /attachments
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
     env_file:
       - .env
     ports:
@@ -77,6 +78,7 @@ services:
       - telemetry
     environment:
       ASPIRE_DASHBOARD_UNSECURED_ALLOW_ANONYMOUS: "true"
+      Dashboard__TelemetryLimits__MaxLogCount: "100000"
     ports:
       - "127.0.0.1:18888:18888"
       - "127.0.0.1:4317:18889"

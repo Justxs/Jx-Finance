@@ -58,7 +58,7 @@ function ActivityList({ householdId, filters }: Readonly<ListProps>) {
     dateFrom: filters.from || undefined,
     dateTo: filters.to || undefined,
   });
-  const { items: events, pages } = usePagedItems(paging, audit.data, ACTIVITY_PAGE_SIZE);
+  const { items: events, pages, range } = usePagedItems(paging, audit.data, ACTIVITY_PAGE_SIZE);
   const filtered =
     filters.memberId !== ALL || filters.kind !== ALL || Boolean(filters.from || filters.to);
 
@@ -66,6 +66,7 @@ function ActivityList({ householdId, filters }: Readonly<ListProps>) {
     <PagedRows
       paging={paging}
       pages={pages}
+      range={range}
       count={events.length}
       emptyText={filtered ? t("audit.emptyFiltered") : t("audit.empty")}
     >

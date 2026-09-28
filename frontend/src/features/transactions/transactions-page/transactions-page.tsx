@@ -17,6 +17,7 @@ import { Pagination } from "@/components/pagination/pagination";
 import { Button } from "@/components/ui/button/button";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { Section } from "@/components/ui/section/section";
+import { TextLink } from "@/components/ui/text-link/text-link";
 import { ImportDialog } from "@/features/imports/import-dialog/import-dialog";
 import { useConfirmedDelete } from "@/hooks/use-confirmed-delete";
 import { useDeferredParams } from "@/hooks/use-deferred-params";
@@ -209,7 +210,16 @@ export function TransactionsPage() {
       </PageHeader>
 
       {accountList.length === 0 ? (
-        <EmptyText size="sm">{t("transactions.needAccount")}</EmptyText>
+        <EmptyText
+          size="sm"
+          action={
+            <TextLink to="/accounts" search={{ new: "account" }}>
+              {t("accounts.add")}
+            </TextLink>
+          }
+        >
+          {t("transactions.needAccount")}
+        </EmptyText>
       ) : null}
 
       <TransactionFormSection
@@ -278,6 +288,7 @@ export function TransactionsPage() {
             columnFilters={columnHeaders.byColumn}
             columnAriaSort={columnHeaders.ariaSortByColumn}
             filtered={columnHeaders.active}
+            onClearFilters={columnHeaders.clearAll}
             selection={{
               selectedIds: selection.selectedIds,
               selectableIds,
@@ -292,6 +303,7 @@ export function TransactionsPage() {
             data={items}
             isPlaceholder={stale}
             filtered={columnHeaders.active}
+            onClearFilters={columnHeaders.clearAll}
             {...rowHandlers}
           />
         </div>
@@ -299,6 +311,7 @@ export function TransactionsPage() {
         <Pagination
           page={page}
           pages={pageCount}
+          range={{ total, pageSize }}
           onPageChange={(nextPage) => navigate({ search: (prev) => ({ ...prev, page: nextPage }) })}
         />
       </Section>

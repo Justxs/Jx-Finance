@@ -24,7 +24,7 @@ test("the table opens on the page that holds the next payment", () => {
   renderWithQuery(<DebtScheduleTable currency="eur" plan={plan} asOf={asOf} />);
 
   const expectedPage = Math.floor(nextIndex / SCHEDULE_PAGE_SIZE) + 1;
-  expect(screen.getByText(`Page ${expectedPage} of ${pageCount}`)).toBeInTheDocument();
+  expect(screen.getByRole("textbox", { name: "Page" })).toHaveValue(String(expectedPage));
   const numbers = bodyRows().map((row) => firstCell(row)?.textContent);
   expect(numbers).toContain(String(nextIndex + 1));
   expect(bodyRows()).toHaveLength(SCHEDULE_PAGE_SIZE);
@@ -36,7 +36,7 @@ test("the last page holds the payoff and paging goes back from it", () => {
   expect(screen.getByRole("button", { name: "Next" })).toBeDisabled();
   expect(firstCell(bodyRows().at(-1))).toHaveTextContent(String(plan.rows.length));
   fireEvent.click(screen.getByRole("button", { name: "Previous" }));
-  expect(screen.getByText(`Page ${pageCount - 1} of ${pageCount}`)).toBeInTheDocument();
+  expect(screen.getByRole("textbox", { name: "Page" })).toHaveValue(String(pageCount - 1));
   expect(screen.getByRole("button", { name: "Next" })).toBeEnabled();
 });
 

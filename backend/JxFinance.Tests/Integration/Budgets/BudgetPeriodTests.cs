@@ -102,6 +102,32 @@ public sealed class BudgetPeriodTests(ApiFixture fixture) : IntegrationTestBase(
     }
 
     [Fact]
+    public async Task Every_period_reports_the_window_that_holds_the_asked_date()
+    {
+        var account = await CreateAccountAsync("5000.00");
+        var category = await CreateCategoryAsync();
+        var asOf = new DateOnly(Today.Year, Today.Month, 1).AddMonths(-12).AddDays(-1);
+        foreach (var period in new[] { "weekly", "monthly", "quarterly", "yearly" })
+        {
+            await PostAsync<BudgetDto>(Client, "/api/budgets", new { categoryId = category, limitAmount = "100.00", period });
+        }
+
+        await SpendAsync(account, category, "30.00", asOf);
+        await SpendAsync(account, category, "40.00", Today);
+
+        var past = await BudgetsOfAsync(category, $"?asOf={asOf:yyyy-MM-dd}");
+        var current = await BudgetsOfAsync(category, string.Empty);
+        var malformed = await Client.GetAsync("/api/budgets?asOf=not-a-date", TestContext.Current.CancellationToken);
+
+        Assert.Equal(4, past.Count);
+        Assert.All(past, b => Assert.InRange(asOf, b.WindowStart, b.WindowEnd));
+        Assert.All(past, b => Assert.Equal(("30.00", "70.00"), (b.Spent, b.Remaining)));
+        Assert.Equal(4, current.Count);
+        Assert.All(current, b => Assert.Equal("40.00", b.Spent));
+        await AssertValidationErrorAsync(malformed, "asOf");
+    }
+
+    [Fact]
     public async Task One_category_holds_one_budget_per_period()
     {
         var category = await CreateCategoryAsync();
@@ -158,6 +184,11 @@ public sealed class BudgetPeriodTests(ApiFixture fixture) : IntegrationTestBase(
 
     private async Task<BudgetDto> ReadBudgetAsync(Guid id) =>
         (await Client.GetFromJsonAsync<List<BudgetDto>>("/api/budgets"))!.Single(b => b.Id == id);
+
+    private async Task<List<BudgetDto>> BudgetsOfAsync(Guid category, string query) =>
+        (await Client.GetFromJsonAsync<List<BudgetDto>>($"/api/budgets{query}", TestContext.Current.CancellationToken))!
+            .Where(b => b.CategoryId == category)
+            .ToList();
 
     private Task SpendAsync(Guid account, Guid category, string amount, DateOnly date) =>
         PostAsync<IdDto>(

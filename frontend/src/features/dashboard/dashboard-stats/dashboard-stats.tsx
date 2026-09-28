@@ -1,21 +1,111 @@
 import { useTranslation } from "react-i18next";
 import { useDashboardSummarySuspense } from "@/api/generated";
+import { Skeleton } from "@/components/ui/skeleton/skeleton";
 import { useMoney, usePercent } from "@/hooks/use-formatters";
+import { useTodayDate } from "@/hooks/use-settings";
 import { EXPENSE_TONE, gainTone } from "@/lib/tone";
 import { cn } from "@/lib/utils";
+import { currentMonthKey } from "../dashboard-queries";
 
 const NEUTRAL_TONE = "text-foreground";
+const RING_RADIUS = 44;
+const RING_LENGTH = 2 * Math.PI * RING_RADIUS;
 
-export function DashboardStats() {
+interface RingProps {
+  share: number;
+  overspent: boolean;
+  value: string;
+  caption: string;
+  label: string;
+}
+
+function IncomeRing({ share, overspent, value, caption, label }: Readonly<RingProps>) {
+  return (
+    <div className="relative size-40 shrink-0">
+      <svg viewBox="0 0 100 100" role="img" aria-label={label} className="size-full -rotate-90">
+        <circle
+          cx="50"
+          cy="50"
+          r={RING_RADIUS}
+          fill="none"
+          strokeWidth="8"
+          className="stroke-muted"
+        />
+        {share > 0 ? (
+          <circle
+            cx="50"
+            cy="50"
+            r={RING_RADIUS}
+            fill="none"
+            strokeWidth="8"
+            strokeLinecap="round"
+            strokeDasharray={`${RING_LENGTH * share} ${RING_LENGTH}`}
+            className={cn(
+              "transition-all duration-500 ease-out-expo motion-reduce:transition-none",
+              overspent ? "stroke-(--chart-3)" : "stroke-(--chart-2)",
+            )}
+          />
+        ) : null}
+      </svg>
+      <div
+        aria-hidden="true"
+        className="absolute inset-0 flex flex-col items-center justify-center"
+      >
+        <span className="text-3xl font-semibold tabular-nums">{value}</span>
+        <span className="text-sm text-muted-foreground">{caption}</span>
+      </div>
+    </div>
+  );
+}
+
+export function DashboardStatsSkeleton() {
+  return (
+    <div aria-hidden="true" className="flex h-full flex-col gap-6">
+      <div>
+        <Skeleton className="h-4 w-28 rounded-sm" />
+        <Skeleton className="mt-2 h-11 w-52 max-w-full rounded-sm" />
+      </div>
+      <div className="flex flex-1 flex-wrap items-center justify-center gap-x-8 gap-y-5">
+        <svg viewBox="0 0 100 100" className="size-40 shrink-0 animate-pulse">
+          <circle
+            cx="50"
+            cy="50"
+            r={RING_RADIUS}
+            fill="none"
+            strokeWidth="8"
+            className="stroke-border"
+          />
+        </svg>
+        <div className="min-w-48 flex-1 space-y-2.5">
+          {["income", "expense", "net"].map((row) => (
+            <div key={row} className="flex h-7 items-center justify-between gap-4">
+              <Skeleton className="h-4 w-20 rounded-sm" />
+              <Skeleton className="h-5 w-24 rounded-sm" />
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+interface Props {
+  month: string;
+}
+
+export function DashboardStats({ month }: Readonly<Props>) {
   const { t } = useTranslation();
   const money = useMoney();
   const percent = usePercent();
-  const summary = useDashboardSummarySuspense();
+  const summary = useDashboardSummarySuspense({ month });
+  const isCurrent = month === currentMonthKey(useTodayDate());
 
   const income = Number(summary.data.monthIncome);
   const expense = Number(summary.data.monthExpense);
   const net = income - expense;
-  const spentShare = income > 0 ? Math.min(1, expense / income) : 0;
+  const spent = income > 0 ? expense / income : 0;
+  const overspent = net < 0;
+  const kept = Math.max(0, 1 - spent);
 
   const rows = [
     {
@@ -36,16 +126,31 @@ export function DashboardStats() {
   ];
 
   return (
-    <div className="flex h-full flex-col justify-between gap-8">
+    <div className="flex h-full flex-col gap-6">
       <dl>
-        <dt className="text-sm text-muted-foreground">{t("dashboard.totalBalance")}</dt>
+        <dt className="text-sm text-muted-foreground">
+          {isCurrent ? t("dashboard.totalBalance") : t("dashboard.balanceAtMonthEnd")}
+        </dt>
         <dd className="mt-1 max-w-full font-serif text-stat-lg font-semibold wrap-break-word lining-nums tabular-nums">
           {money.format(Number(summary.data.totalBalance))}
         </dd>
       </dl>
 
-      <div>
-        <dl className="space-y-2.5">
+      <div className="flex flex-1 flex-wrap items-center justify-center gap-x-8 gap-y-5">
+        {income > 0 ? (
+          <IncomeRing
+            share={overspent ? 1 : kept}
+            overspent={overspent}
+            value={percent.format(overspent ? spent : kept)}
+            caption={overspent ? t("dashboard.ring.spent") : t("dashboard.ring.kept")}
+            label={
+              overspent
+                ? t("dashboard.overspent")
+                : t("dashboard.keptShare", { percent: percent.format(kept) })
+            }
+          />
+        ) : null}
+        <dl className="min-w-48 flex-1 space-y-2.5">
           {rows.map((row) => (
             <div key={row.label} className="flex items-baseline justify-between gap-4">
               <dt className="min-w-0 text-sm text-muted-foreground">{row.label}</dt>
@@ -55,22 +160,6 @@ export function DashboardStats() {
             </div>
           ))}
         </dl>
-        {income > 0 ? (
-          <div className="mt-5">
-            <div aria-hidden="true" className="flex h-1.5 gap-0.5">
-              <div
-                className="w-(--spent-share) bg-destructive"
-                style={{ "--spent-share": `${spentShare * 100}%` }}
-              />
-              <div className="flex-1 bg-secondary" />
-            </div>
-            <p className="mt-2 text-xs text-muted-foreground tabular-nums">
-              {net >= 0
-                ? t("dashboard.keptShare", { percent: percent.format(1 - spentShare) })
-                : t("dashboard.overspent")}
-            </p>
-          </div>
-        ) : null}
       </div>
     </div>
   );

@@ -3,8 +3,12 @@ import { IncomeExpenseChart } from "@/components/chart";
 import { useShortMonth } from "@/hooks/use-formatters";
 import { monthlyTrendParams } from "../dashboard-queries";
 
-export function MonthlyTrendChart() {
-  const trend = useMonthlyTrendSuspense(monthlyTrendParams);
+interface Props {
+  month: string;
+}
+
+export function MonthlyTrendChart({ month }: Readonly<Props>) {
+  const trend = useMonthlyTrendSuspense(monthlyTrendParams(month));
   const monthFormat = useShortMonth();
 
   const items = trend.data.items;

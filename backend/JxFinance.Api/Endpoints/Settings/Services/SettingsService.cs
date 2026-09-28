@@ -314,7 +314,7 @@ public sealed class SettingsService(
 
     private async Task<InstanceSettings> LoadOrCreateAsync(CancellationToken cancellationToken)
     {
-        if (await db.InstanceSettings.FirstOrDefaultAsync(cancellationToken) is { } stored)
+        if (await db.InstanceSettings.FirstOrDefaultAsync(s => s.Id == InstanceSettings.SingletonId, cancellationToken) is { } stored)
         {
             return stored;
         }

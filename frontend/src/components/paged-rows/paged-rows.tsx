@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Pagination } from "@/components/pagination/pagination";
+import { type PageRange, Pagination } from "@/components/pagination/pagination";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { Rows } from "@/components/ui/rows/rows";
 import { StaleRegion } from "@/components/ui/stale-region/stale-region";
@@ -13,12 +13,13 @@ interface Paging {
 interface Props {
   paging: Paging;
   pages: number;
+  range?: PageRange;
   count: number;
   emptyText: string;
   children: ReactNode;
 }
 
-export function PagedRows({ paging, pages, count, emptyText, children }: Readonly<Props>) {
+export function PagedRows({ paging, pages, range, count, emptyText, children }: Readonly<Props>) {
   return (
     <>
       {count === 0 ? (
@@ -28,7 +29,7 @@ export function PagedRows({ paging, pages, count, emptyText, children }: Readonl
           <Rows>{children}</Rows>
         </StaleRegion>
       )}
-      <Pagination page={paging.page} pages={pages} onPageChange={paging.setPage} />
+      <Pagination page={paging.page} pages={pages} range={range} onPageChange={paging.setPage} />
     </>
   );
 }

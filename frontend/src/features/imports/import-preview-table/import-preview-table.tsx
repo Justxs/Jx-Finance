@@ -182,7 +182,12 @@ export function ImportPreviewTable({
         </ScrollRegion>
       </div>
 
-      <Pagination page={page} pages={pages} onPageChange={setPage} />
+      <Pagination
+        page={page}
+        pages={pages}
+        range={{ total: visible.length, pageSize: PREVIEW_PAGE_SIZE }}
+        onPageChange={setPage}
+      />
 
       <div className="flex flex-wrap justify-end gap-2">
         <Button variant="outline" disabled={confirmPending} onClick={onCancel}>

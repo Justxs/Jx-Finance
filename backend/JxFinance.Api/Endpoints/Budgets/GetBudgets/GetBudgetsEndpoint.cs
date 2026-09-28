@@ -5,7 +5,8 @@ using JxFinance.Endpoints.Budgets.Shared;
 
 namespace JxFinance.Endpoints.Budgets.GetBudgets;
 
-public sealed class GetBudgetsEndpoint(IBudgetService budgetService) : EndpointWithoutRequest<IReadOnlyList<BudgetResponse>>
+public sealed class GetBudgetsEndpoint(IBudgetService budgetService)
+    : Endpoint<GetBudgetsRequest, IReadOnlyList<BudgetResponse>>
 {
     public override void Configure()
     {
@@ -13,6 +14,6 @@ public sealed class GetBudgetsEndpoint(IBudgetService budgetService) : EndpointW
         Group<BudgetsGroup>();
     }
 
-    public override async Task HandleAsync(CancellationToken ct) =>
-        await Send.OkAsync(await budgetService.GetAllAsync(ct), ct);
+    public override async Task HandleAsync(GetBudgetsRequest req, CancellationToken ct) =>
+        await Send.OkAsync(await budgetService.GetAllAsync(req.AsOf, ct), ct);
 }

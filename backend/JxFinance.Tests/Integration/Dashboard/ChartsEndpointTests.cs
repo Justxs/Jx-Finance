@@ -40,6 +40,16 @@ public sealed class ChartsEndpointTests(ApiFixture fixture) : IntegrationTestBas
         Assert.Equal(3, trend!.Items.Count);
     }
 
+    [Fact]
+    public async Task Monthly_trend_ends_with_the_requested_month()
+    {
+        var last = new DateOnly(Today.Year, Today.Month, 1).AddMonths(-7);
+        var trend = await Client.GetFromJsonAsync<TrendDto>($"/api/dashboard/monthly-trend?months=3&month={last:yyyy-MM}", TestContext.Current.CancellationToken);
+        Assert.Equal(
+            [last.AddMonths(-2), last.AddMonths(-1), last],
+            trend!.Items.Select(i => new DateOnly(i.Year, i.Month, 1)));
+    }
+
     private sealed record BreakdownItemDto(Guid? CategoryId, string CategoryName, string Amount);
 
     private sealed record BreakdownDto(List<BreakdownItemDto> Items);

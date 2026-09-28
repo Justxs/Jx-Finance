@@ -22,7 +22,7 @@ import { createMutationCache } from "@/lib/query-client";
 import { emailTokenSearchSchema } from "@/lib/search-schema";
 import { routeTree } from "@/route-tree.gen";
 import { accountsSearchSchema } from "@/routes/accounts";
-import { closeSearchSchema } from "@/routes/close";
+import { dashboardSearchSchema } from "@/routes/index";
 import { investmentsSearchSchema } from "@/routes/investments";
 import { profileSearchSchema } from "@/routes/profile";
 import { reportsSearchSchema } from "@/routes/reports";
@@ -32,7 +32,7 @@ import { usersSearchSchema } from "@/routes/users";
 import { clearTransactionViews } from "@/stores/transaction-views";
 
 const STORY_ROUTES = [
-  { path: "/" },
+  { path: "/", validateSearch: dashboardSearchSchema },
   { path: "/accounts", validateSearch: accountsSearchSchema },
   { path: "/transactions", validateSearch: transactionsSearchSchema },
   { path: "/investments", validateSearch: investmentsSearchSchema },
@@ -55,7 +55,6 @@ const STORY_ROUTES = [
   { path: "/forgot-password" },
   { path: "/reset-password", validateSearch: emailTokenSearchSchema },
   { path: "/verify-email", validateSearch: emailTokenSearchSchema },
-  { path: "/close", validateSearch: closeSearchSchema },
 ] as const;
 
 const STORY_WIDTHS = {

@@ -137,7 +137,7 @@ public sealed class NotificationTextsTests
 
         Assert.Equal("August 2026 has ended and is ready to close", NotificationTexts.Sentence("en", notification));
         Assert.StartsWith("2026 m. rugpjūtis baigėsi", NotificationTexts.Sentence("lt", notification), StringComparison.Ordinal);
-        Assert.EndsWith("<https://finance.test/close?month=2026-08>", NotificationTexts.Discord("en", notification, "https://finance.test"), StringComparison.Ordinal);
+        Assert.EndsWith("<https://finance.test/?month=2026-08>", NotificationTexts.Discord("en", notification, "https://finance.test"), StringComparison.Ordinal);
     }
 
     [Fact]

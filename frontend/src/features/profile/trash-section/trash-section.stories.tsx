@@ -92,9 +92,9 @@ export const Paged: Story = {
     ),
   ),
   play: async ({ canvas }) => {
-    await expect(await canvas.findByText("Page 1 of 4")).toBeVisible();
+    await expect(await canvas.findByText(/^1–10 of /u)).toBeVisible();
     await userEvent.click(canvas.getByRole("button", { name: "Next" }));
-    await waitFor(() => expect(canvas.getByText("Page 2 of 4")).toBeVisible());
+    await waitFor(() => expect(canvas.getByText(/^11–20 of /u)).toBeVisible());
   },
 };
 

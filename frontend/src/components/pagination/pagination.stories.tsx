@@ -39,7 +39,7 @@ export const FirstPage: Story = {
 export const MiddlePage: Story = {
   args: { page: 4 },
   play: async ({ canvas, args }) => {
-    await expect(canvas.getByText("Page 4 of 7")).toBeVisible();
+    await expect(canvas.getByRole("textbox", { name: "Page" })).toHaveValue("4");
 
     await userEvent.click(canvas.getByRole("button", { name: "Previous" }));
     await userEvent.click(canvas.getByRole("button", { name: "Next" }));
@@ -66,3 +66,31 @@ export const SinglePage: Story = {
 };
 
 export const LargePageCount: Story = { args: { page: 1284, pages: 25000 } };
+
+export const WithRange: Story = {
+  args: { page: 2, pages: 9, range: { total: 438, pageSize: 50 } },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText("51–100 of 438")).toBeVisible();
+  },
+};
+
+export const GoToPage: Story = {
+  args: { page: 2, pages: 9 },
+  play: async ({ canvas, args }) => {
+    const input = canvas.getByRole("textbox", { name: "Page" });
+    await expect(input).toHaveValue("2");
+
+    await userEvent.clear(input);
+    await userEvent.type(input, "7{Enter}");
+
+    await expect(args.onPageChange).toHaveBeenCalledWith(7);
+  },
+};
+
+export const FewPagesHaveNoPageInput: Story = {
+  args: { page: 2, pages: 3 },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText("Page 2 of 3")).toBeVisible();
+    await expect(canvas.queryByRole("textbox")).toBeNull();
+  },
+};

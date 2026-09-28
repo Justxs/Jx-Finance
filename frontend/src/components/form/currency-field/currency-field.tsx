@@ -1,5 +1,6 @@
 import type { FieldWithValue } from "@tanstack/react-form";
 import type { ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 import type { Currency } from "@/api/generated/model";
 import { CurrencySelect } from "@/components/currency-select/currency-select";
 import { FieldShell, fieldAria } from "../field-shell/field-shell";
@@ -25,6 +26,7 @@ export function CurrencyField({
   all,
   className,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { error, ...aria } = fieldAria(field, { id, hint });
 
   return (
@@ -42,6 +44,7 @@ export function CurrencyField({
         all={all}
         value={field.value}
         preferred={preferred}
+        preferredLabel={t("currencyGroups.reporting")}
         onBlur={field.handleBlur}
         onChange={(value) => field.handleChange(value)}
       />

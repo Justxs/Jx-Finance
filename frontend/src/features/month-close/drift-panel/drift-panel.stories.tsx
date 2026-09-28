@@ -20,7 +20,7 @@ const changed = driftOf(closedChangedMonthReview);
 const meta = {
   title: "Features/MonthClose/DriftPanel",
   component: DriftPanel,
-  parameters: { layout: "padded", route: "/close" },
+  parameters: { layout: "padded" },
   args: { drift: changed, figures: closedChangedMonthReview.figures },
 } satisfies Meta<typeof DriftPanel>;
 

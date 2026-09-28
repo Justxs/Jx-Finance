@@ -4,9 +4,9 @@ namespace JxFinance.Endpoints.Dashboard.Interfaces;
 
 public interface IDashboardService
 {
-    Task<DashboardSummaryResponse> GetSummaryAsync(CancellationToken cancellationToken);
+    Task<DashboardSummaryResponse> GetSummaryAsync(string? month, CancellationToken cancellationToken);
 
     Task<CategoryBreakdownResponse> GetCategoryBreakdownAsync(string? month, CancellationToken cancellationToken);
 
-    Task<MonthlyTrendResponse> GetMonthlyTrendAsync(int months, CancellationToken cancellationToken);
+    Task<MonthlyTrendResponse> GetMonthlyTrendAsync(int months, string? month, CancellationToken cancellationToken);
 }

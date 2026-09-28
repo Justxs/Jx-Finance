@@ -38,11 +38,21 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {};
+export const Default: Story = {
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText(/1,324\.50 left/u)).toBeVisible();
+    await expect(canvas.getByText(/estimated .* a month/iu)).toBeVisible();
+  },
+};
 
 export const OpenEndedLongName: Story = { args: { goal: openEndedGoal } };
 
-export const Completed: Story = { args: { goal: completedGoal } };
+export const Completed: Story = {
+  args: { goal: completedGoal },
+  play: async ({ canvas }) => {
+    await expect(canvas.queryByText(/ left$/u)).toBeNull();
+  },
+};
 
 export const OverAchieved: Story = {
   args: { goal: { ...completedGoal, currentAmount: "1250.00", progressAmount: "1250.00" } },

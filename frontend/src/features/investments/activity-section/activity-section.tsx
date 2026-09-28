@@ -119,6 +119,7 @@ export function ActivitySection({ accounts, accountId }: Readonly<Props>) {
       <PagedRows
         paging={{ page, setPage, stale }}
         pages={pages}
+        range={{ total: transactions.data.total, pageSize: ACTIVITY_PAGE_SIZE }}
         count={items.length}
         emptyText={type === "" ? t("investments.activity.empty") : t("filters.noMatches")}
       >

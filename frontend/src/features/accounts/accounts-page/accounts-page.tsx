@@ -86,6 +86,7 @@ export function AccountsPage() {
           onDelete={remove.request}
           onConvert={features.multiCurrency ? setConvertAccountId : undefined}
           onImport={features.import ? setImportAccountId : undefined}
+          onCreate={() => setCreateOpen(true)}
           positiveTotal={allAccountList.reduce(
             (sum, account) => sum + Math.max(0, Number(account.reportingBalance)),
             0,

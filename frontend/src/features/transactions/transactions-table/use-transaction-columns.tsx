@@ -10,6 +10,7 @@ import { CategoryIcon } from "@/lib/category-icons";
 import { DebtPaymentMarker } from "../debt-payment/debt-payment";
 import { TransactionAmount, isOptimistic, transactionName } from "../transaction-amount";
 import { TransactionRowActions } from "../transaction-row-actions/transaction-row-actions";
+import { CategoryCell } from "./category-cell";
 import type { transactionTableFeatures } from "./table-features";
 
 const columnHelper = createColumnHelper<typeof transactionTableFeatures, TransactionResponse>();
@@ -47,6 +48,8 @@ export function useTransactionColumns({
 }: TransactionRowHandlers) {
   const { t } = useTranslation();
   const formatDate = useIsoDate();
+
+  const categories = [...categoryById.values()].filter((category) => category !== undefined);
 
   function rowName(row: TransactionResponse) {
     return transactionName(row, categoryById, t);
@@ -99,6 +102,10 @@ export function useTransactionColumns({
               </span>
             </span>
           );
+        }
+
+        if (!isOptimistic(row)) {
+          return <CategoryCell transaction={row} categories={categories} label={rowName(row)} />;
         }
 
         const category = categoryById.get(info.getValue() ?? "");

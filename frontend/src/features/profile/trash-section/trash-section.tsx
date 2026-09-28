@@ -19,7 +19,7 @@ function TrashList() {
   const formatDateTime = useDateTime();
   const paging = usePagedList();
   const trash = useTrashSuspense({ page: paging.shownPage, pageSize: TRASH_PAGE_SIZE });
-  const { items: entries, pages } = usePagedItems(paging, trash.data, TRASH_PAGE_SIZE);
+  const { items: entries, pages, range } = usePagedItems(paging, trash.data, TRASH_PAGE_SIZE);
 
   const restoreMutation = useRestoreDeleted(notify(t("trash.restored")));
   const restoringId = restoreMutation.isPending
@@ -27,7 +27,13 @@ function TrashList() {
     : undefined;
 
   return (
-    <PagedRows paging={paging} pages={pages} count={entries.length} emptyText={t("trash.empty")}>
+    <PagedRows
+      paging={paging}
+      pages={pages}
+      range={range}
+      count={entries.length}
+      emptyText={t("trash.empty")}
+    >
       {entries.map((entry) => (
         <ActionRow
           key={entry.id}

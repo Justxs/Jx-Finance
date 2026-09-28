@@ -27,6 +27,7 @@ import type {
   CategoryBreakdownParams,
   CategoryBreakdownResponse,
   DashboardLayoutResponse,
+  DashboardSummaryParams,
   DashboardSummaryResponse,
   MonthlyTrendParams,
   MonthlyTrendResponse,
@@ -203,7 +204,7 @@ export const getMonthlyTrendUrl = (params: MonthlyTrendParams) => {
 };
 
 /**
- * Returns income and expense totals per month, oldest first, ending with the current month. Months with no activity are still present with zero totals so the chart keeps an even x-axis. While the investments feature is on, the totals include investment dividends and interest as income and withholding tax and standalone fees as expense.
+ * Returns income and expense totals per month, oldest first, ending with the requested month. Months with no activity are still present with zero totals so the chart keeps an even x-axis. While the investments feature is on, the totals include investment dividends and interest as income and withholding tax and standalone fees as expense.
  * @summary Get the monthly income and expense trend
  */
 export const monthlyTrend = async (
@@ -319,42 +320,58 @@ export function useMonthlyTrendSuspense<
   return withQueryKey(query, queryOptions.queryKey);
 }
 
-export const getDashboardSummaryUrl = () => {
-  return `/api/dashboard/summary`;
+export const getDashboardSummaryUrl = (params?: DashboardSummaryParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/dashboard/summary?${stringifiedParams}`
+    : `/api/dashboard/summary`;
 };
 
 /**
- * Returns the headline figures for the current month: total balance across all visible accounts, income and expenses so far, and the resulting net flow. The month is resolved in the instance time zone, not the caller's. While the investments feature is on, income includes dividends and interest from the investment ledger and expenses include withholding tax and standalone fees, exactly as in the report summary. IsComplete is false when a balance or holding could not be valued and the total balance leaves it out.
+ * Returns the headline figures for one month: total balance across all visible accounts as of the month's last day, or as of today for the current month, and the month's income, expenses and resulting net flow. The month defaults to the current one, resolved in the instance time zone, not the caller's. A past month's balance counts only rows dated on or before its last day and values currencies and holdings at the rates and prices of that day. While the investments feature is on, income includes dividends and interest from the investment ledger and expenses include withholding tax and standalone fees, exactly as in the report summary. IsComplete is false when a balance or holding could not be valued and the total balance leaves it out.
  * @summary Get the dashboard summary
  */
 export const dashboardSummary = async (
+  params?: DashboardSummaryParams,
   options?: Parameters<typeof customFetch>[1],
 ): Promise<DashboardSummaryResponse> => {
-  return customFetch<DashboardSummaryResponse>(getDashboardSummaryUrl(), {
+  return customFetch<DashboardSummaryResponse>(getDashboardSummaryUrl(params), {
     ...options,
     method: "GET",
   });
 };
 
-export const getDashboardSummaryQueryKey = () => {
-  return [`/api/dashboard/summary`] as const;
+export const getDashboardSummaryQueryKey = (params?: DashboardSummaryParams) => {
+  return [`/api/dashboard/summary`, ...(params ? [params] : [])] as const;
 };
 
 export const getDashboardSummarySuspenseQueryOptions = <
   TData = Awaited<ReturnType<typeof dashboardSummary>>,
   TError = ErrorType<ProblemDetails>,
->(options?: {
-  query?: Partial<
-    UseSuspenseQueryOptions<Awaited<ReturnType<typeof dashboardSummary>>, TError, TData>
-  >;
-  request?: SecondParameter<typeof customFetch>;
-}) => {
+>(
+  params?: DashboardSummaryParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof dashboardSummary>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
 
-  const queryKey = queryOptions?.queryKey ?? getDashboardSummaryQueryKey();
+  const queryKey = queryOptions?.queryKey ?? getDashboardSummaryQueryKey(params);
 
   const queryFn: QueryFunction<Awaited<ReturnType<typeof dashboardSummary>>> = ({ signal }) =>
-    dashboardSummary({ signal, ...requestOptions });
+    dashboardSummary(params, { signal, ...requestOptions });
 
   return queryOptionsBuilder({
     queryKey,
@@ -376,6 +393,7 @@ export function useDashboardSummarySuspense<
   TData = Awaited<ReturnType<typeof dashboardSummary>>,
   TError = ErrorType<ProblemDetails>,
 >(
+  params: undefined | DashboardSummaryParams,
   options: {
     query: Partial<
       UseSuspenseQueryOptions<Awaited<ReturnType<typeof dashboardSummary>>, TError, TData>
@@ -388,6 +406,7 @@ export function useDashboardSummarySuspense<
   TData = Awaited<ReturnType<typeof dashboardSummary>>,
   TError = ErrorType<ProblemDetails>,
 >(
+  params?: DashboardSummaryParams,
   options?: {
     query?: Partial<
       UseSuspenseQueryOptions<Awaited<ReturnType<typeof dashboardSummary>>, TError, TData>
@@ -400,6 +419,7 @@ export function useDashboardSummarySuspense<
   TData = Awaited<ReturnType<typeof dashboardSummary>>,
   TError = ErrorType<ProblemDetails>,
 >(
+  params?: DashboardSummaryParams,
   options?: {
     query?: Partial<
       UseSuspenseQueryOptions<Awaited<ReturnType<typeof dashboardSummary>>, TError, TData>
@@ -416,6 +436,7 @@ export function useDashboardSummarySuspense<
   TData = Awaited<ReturnType<typeof dashboardSummary>>,
   TError = ErrorType<ProblemDetails>,
 >(
+  params?: DashboardSummaryParams,
   options?: {
     query?: Partial<
       UseSuspenseQueryOptions<Awaited<ReturnType<typeof dashboardSummary>>, TError, TData>
@@ -424,7 +445,7 @@ export function useDashboardSummarySuspense<
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-  const queryOptions = getDashboardSummarySuspenseQueryOptions(options);
+  const queryOptions = getDashboardSummarySuspenseQueryOptions(params, options);
 
   const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
     TData,

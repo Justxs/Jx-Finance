@@ -1,11 +1,15 @@
 import { useCategoryBreakdownSuspense } from "@/api/generated";
 import { CategoryBreakdown } from "@/components/category-breakdown/category-breakdown";
-import { useTodayDate } from "@/hooks/use-settings";
+import { monthDate } from "@/features/month-close/month-key";
 import { monthBounds } from "@/lib/calendar";
 
-export function CategoryBreakdownChart() {
-  const breakdown = useCategoryBreakdownSuspense();
-  const { dateFrom, dateTo } = monthBounds(useTodayDate());
+interface Props {
+  month: string;
+}
+
+export function CategoryBreakdownChart({ month }: Readonly<Props>) {
+  const breakdown = useCategoryBreakdownSuspense({ month });
+  const { dateFrom, dateTo } = monthBounds(monthDate(month));
 
   return <CategoryBreakdown items={breakdown.data.items} dateFrom={dateFrom} dateTo={dateTo} />;
 }

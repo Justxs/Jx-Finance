@@ -80,6 +80,9 @@ export const AllOverLimit: Story = {
   play: async ({ canvas }) => {
     const label = await canvas.findByText(/^(over by|viršyta)$/i);
     await expect(label.nextElementSibling).toHaveClass("text-expense");
+    const rowFigure = canvas.getByText(/88\.40 over budget/u);
+    await expect(rowFigure).toHaveClass("text-expense");
+    await expect(canvas.getByText(/98\.40 spent of .*10\.00/u)).toBeVisible();
   },
 };
 

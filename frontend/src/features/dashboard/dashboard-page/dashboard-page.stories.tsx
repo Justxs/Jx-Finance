@@ -145,3 +145,43 @@ export const MonthReadyToClose: Story = {
     ).toBeVisible();
   },
 };
+
+export const StepsBetweenMonths: Story = {
+  play: async ({ canvas }) => {
+    const previous = await canvas.findByRole("button", {
+      name: /previous month|ankstesnis mėnuo/i,
+    });
+    const next = canvas.getByRole("button", { name: /next month|kitas mėnuo/i });
+    const thisMonth = canvas.getByRole("button", {
+      name: /^(this month|šis mėnuo)$/i,
+      hidden: true,
+    });
+    const title = canvas.getByRole("heading", { level: 1 }).textContent;
+    await expect(next).toBeDisabled();
+    await expect(thisMonth.parentElement).toHaveClass("invisible");
+
+    await userEvent.click(previous);
+
+    await waitFor(() =>
+      expect(canvas.getByRole("heading", { level: 1 }).textContent).not.toBe(title),
+    );
+    await expect(next).toBeEnabled();
+    await expect(thisMonth.parentElement).not.toHaveClass("invisible");
+    await userEvent.click(thisMonth);
+
+    await waitFor(() => expect(canvas.getByRole("heading", { level: 1 })).toHaveTextContent(title));
+    await expect(thisMonth.parentElement).toHaveClass("invisible");
+  },
+};
+
+export const EndedMonthShowsTheClose: Story = {
+  parameters: { route: "/?month=2026-08" },
+  play: async ({ canvas }) => {
+    await expect(
+      await canvas.findByRole("heading", {
+        name: /august 2026 is ready to close|galima uždaryti/i,
+      }),
+    ).toBeVisible();
+    await expect(canvas.queryByRole("button", { name: /not now|ne dabar/i })).toBeNull();
+  },
+};

@@ -12,13 +12,17 @@ import {
 import type { RecurringBillResponse } from "@/api/generated/model";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog/confirm-delete-dialog";
 import { CreateDialog } from "@/components/create-dialog/create-dialog";
+import { Disclosure } from "@/components/disclosure/disclosure";
 import { EditModal } from "@/components/modal";
 import { PageHeader } from "@/components/page-header/page-header";
-import { PanelRows } from "@/components/panel-rows/panel-rows";
-import { TitledSection } from "@/components/ui/section/section";
+import { EmptyText } from "@/components/ui/empty-text/empty-text";
+import { Rows } from "@/components/ui/rows/rows";
+import { Section, TitledSection } from "@/components/ui/section/section";
 import { useConfirmedDelete } from "@/hooks/use-confirmed-delete";
+import { useToday } from "@/hooks/use-settings";
 import { notify, pendingId } from "@/lib/mutations";
 import { optimisticRemoval } from "@/lib/optimistic";
+import { billUrgencies, groupBills } from "../bill-groups";
 import { BillsForecastChart } from "../bills-forecast-chart";
 import { RecurringBillForm } from "../recurring-bill-form/recurring-bill-form";
 import { RecurringBillConfirmForm, RecurringBillRow } from "../recurring-bill-row";
@@ -65,6 +69,24 @@ export function RecurringBillsPage() {
   const billList = useDeferredValue(bills.data);
   const candidateList = useDeferredValue(candidates.data);
   const remove = useConfirmedDelete(deleteMutation, billList, (bill) => bill.name, "recurringBill");
+  const today = useToday();
+  const { groups, inactive } = groupBills(billList, today);
+
+  function billRow(bill: RecurringBillResponse) {
+    return (
+      <RecurringBillRow
+        key={bill.id}
+        bill={bill}
+        accounts={accountList}
+        categories={categoryList}
+        onEdit={() => setEditing(bill)}
+        onConfirm={() => setConfirming(bill)}
+        onUpdateAmount={(amount) => updateExpected(bill, amount)}
+        updatePending={pendingId(updateMutation) === bill.id}
+        {...remove.deleteProps(bill.id)}
+      />
+    );
+  }
 
   return (
     <div className="space-y-5">
@@ -81,21 +103,28 @@ export function RecurringBillsPage() {
           <BillsForecastChart bills={billList} />
         </TitledSection>
       ) : null}
-      <PanelRows count={billList.length} emptyText={t("recurringBills.empty")}>
-        {billList.map((bill) => (
-          <RecurringBillRow
-            key={bill.id}
-            bill={bill}
-            accounts={accountList}
-            categories={categoryList}
-            onEdit={() => setEditing(bill)}
-            onConfirm={() => setConfirming(bill)}
-            onUpdateAmount={(amount) => updateExpected(bill, amount)}
-            updatePending={pendingId(updateMutation) === bill.id}
-            {...remove.deleteProps(bill.id)}
-          />
-        ))}
-      </PanelRows>
+      {billList.length === 0 ? <EmptyText>{t("recurringBills.empty")}</EmptyText> : null}
+      {billList.length > inactive.length ? (
+        <Section className="space-y-4">
+          {billUrgencies.map((urgency) =>
+            groups[urgency].length > 0 ? (
+              <div key={urgency}>
+                <h2 id={`bills-${urgency}`} className="text-sm font-semibold text-muted-foreground">
+                  {t(`recurringBills.groups.${urgency}`)}
+                </h2>
+                <Rows aria-labelledby={`bills-${urgency}`}>{groups[urgency].map(billRow)}</Rows>
+              </div>
+            ) : null,
+          )}
+        </Section>
+      ) : null}
+      {inactive.length > 0 ? (
+        <Section>
+          <Disclosure summary={t("recurringBills.groups.inactive", { count: inactive.length })}>
+            <Rows>{inactive.map(billRow)}</Rows>
+          </Disclosure>
+        </Section>
+      ) : null}
       <SubscriptionSuggestions
         candidates={candidateList}
         accounts={accountList}

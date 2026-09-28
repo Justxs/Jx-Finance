@@ -6,7 +6,7 @@ import { CloseChecklist } from "./close-checklist";
 const meta = {
   title: "Features/MonthClose/CloseChecklist",
   component: CloseChecklist,
-  parameters: { layout: "padded", route: "/close" },
+  parameters: { layout: "padded" },
   args: { month: "2026-08", checklist: openMonthReview.checklist },
 } satisfies Meta<typeof CloseChecklist>;
 

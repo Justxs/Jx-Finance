@@ -34,6 +34,7 @@ function sources(overrides: Partial<CommandSources> = {}): CommandSources {
     categories,
     tags,
     households,
+    lastMonth: "2026-08",
     ...overrides,
   };
 }

@@ -36,7 +36,7 @@ export const CategoryBreakdownResponse = zod.object({
 });
 
 /**
- * Returns income and expense totals per month, oldest first, ending with the current month. Months with no activity are still present with zero totals so the chart keeps an even x-axis. While the investments feature is on, the totals include investment dividends and interest as income and withholding tax and standalone fees as expense.
+ * Returns income and expense totals per month, oldest first, ending with the requested month. Months with no activity are still present with zero totals so the chart keeps an even x-axis. While the investments feature is on, the totals include investment dividends and interest as income and withholding tax and standalone fees as expense.
  * @summary Get the monthly income and expense trend
  */
 export const monthlyTrendResponseItemsItemIncomeRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
@@ -54,7 +54,7 @@ export const MonthlyTrendResponse = zod.object({
 });
 
 /**
- * Returns the headline figures for the current month: total balance across all visible accounts, income and expenses so far, and the resulting net flow. The month is resolved in the instance time zone, not the caller's. While the investments feature is on, income includes dividends and interest from the investment ledger and expenses include withholding tax and standalone fees, exactly as in the report summary. IsComplete is false when a balance or holding could not be valued and the total balance leaves it out.
+ * Returns the headline figures for one month: total balance across all visible accounts as of the month's last day, or as of today for the current month, and the month's income, expenses and resulting net flow. The month defaults to the current one, resolved in the instance time zone, not the caller's. A past month's balance counts only rows dated on or before its last day and values currencies and holdings at the rates and prices of that day. While the investments feature is on, income includes dividends and interest from the investment ledger and expenses include withholding tax and standalone fees, exactly as in the report summary. IsComplete is false when a balance or holding could not be valued and the total balance leaves it out.
  * @summary Get the dashboard summary
  */
 export const dashboardSummaryResponseTotalBalanceRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");

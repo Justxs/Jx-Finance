@@ -78,7 +78,12 @@ export function DebtScheduleTable({ plan, asOf, currency }: Readonly<Props>) {
           </TableBody>
         </Table>
       </ScrollRegion>
-      <Pagination page={page} pages={pages} onPageChange={setPage} />
+      <Pagination
+        page={page}
+        pages={pages}
+        range={{ total: plan.rows.length, pageSize: SCHEDULE_PAGE_SIZE }}
+        onPageChange={setPage}
+      />
     </>
   );
 }

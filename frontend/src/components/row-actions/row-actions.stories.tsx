@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { Copy } from "lucide-react";
-import { fn } from "storybook/test";
-import { Button } from "@/components/ui/button/button";
+import { expect, fn } from "storybook/test";
+import { chooseMenuItem } from "@/storybook/interactions";
 import { RowActions } from "./row-actions";
 
 const meta = {
@@ -27,12 +27,21 @@ export const Archive: Story = { args: { removeKind: "archive" } };
 
 export const Large: Story = { args: { size: "icon" } };
 
-export const WithExtraAction: Story = {
+export const Collapsed: Story = {
   args: {
-    children: (
-      <Button variant="ghost" size="icon-sm" aria-label="Duplicate: Groceries">
-        <Copy />
-      </Button>
-    ),
+    actions: [{ icon: Copy, label: "Duplicate", onSelect: fn() }],
+  },
+  play: async ({ args, canvas }) => {
+    await chooseMenuItem(canvas.getByRole("button", { name: "Actions: Groceries" }), "Edit");
+    await expect(args.onEdit).toHaveBeenCalledOnce();
+    await expect(canvas.queryByRole("button", { name: "Edit: Groceries" })).toBeNull();
+  },
+};
+
+export const CollapsedDeleting: Story = {
+  args: {
+    ...Collapsed.args,
+    deletePending: true,
+    deleteDisabled: true,
   },
 };

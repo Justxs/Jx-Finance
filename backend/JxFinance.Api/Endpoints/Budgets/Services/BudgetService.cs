@@ -30,10 +30,10 @@ public sealed class BudgetService(
 {
     private static readonly DomainError NotFound = EntityLookup.NotFound("Budget not found.");
 
-    public async Task<IReadOnlyList<BudgetResponse>> GetAllAsync(CancellationToken cancellationToken)
+    public async Task<IReadOnlyList<BudgetResponse>> GetAllAsync(DateOnly? asOf, CancellationToken cancellationToken)
     {
         var budgets = await db.Budgets.ToListAsync(cancellationToken);
-        return budgets.Count == 0 ? [] : await ToResponsesAsync(budgets, clock.Today, cancellationToken);
+        return budgets.Count == 0 ? [] : await ToResponsesAsync(budgets, asOf ?? clock.Today, cancellationToken);
     }
 
     public async Task<IReadOnlyList<BudgetResponse>> GetMonthlyAsync(DateOnly asOf, CancellationToken cancellationToken)

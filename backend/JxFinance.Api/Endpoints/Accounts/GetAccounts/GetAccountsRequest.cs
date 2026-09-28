@@ -14,4 +14,6 @@ public sealed class GetAccountsRequest
     public AccountSortField? Sort { get; init; }
 
     public SortDirection? Direction { get; init; }
+
+    public DateOnly? AsOf { get; init; }
 }

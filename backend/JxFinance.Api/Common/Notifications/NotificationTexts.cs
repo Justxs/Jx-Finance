@@ -25,7 +25,7 @@ public static class NotificationTexts
         NotificationType.BudgetWarning or NotificationType.BudgetExceeded => "/budgets",
         NotificationType.UnusualAmount or NotificationType.UnusualAmounts => "/transactions?unusual=true",
         NotificationType.RecurringPriceRise => "/recurring-bills",
-        NotificationType.MonthReadyToClose => "/close",
+        NotificationType.MonthReadyToClose => "/",
         _ => throw new ArgumentOutOfRangeException(nameof(type), type, "This notification type has no page."),
     };
 

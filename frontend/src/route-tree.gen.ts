@@ -12,7 +12,6 @@ import { Route as AccountsRouteImport } from './routes/accounts'
 import { Route as BudgetsRouteImport } from './routes/budgets'
 import { Route as CategoriesRouteImport } from './routes/categories'
 import { Route as CategorizationRulesRouteImport } from './routes/categorization-rules'
-import { Route as CloseRouteImport } from './routes/close'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as GoalsRouteImport } from './routes/goals'
 import { Route as HouseholdsRouteImport } from './routes/households'
@@ -55,11 +54,6 @@ const CategoriesRoute = CategoriesRouteImport.update({
 const CategorizationRulesRoute = CategorizationRulesRouteImport.update({
   id: '/categorization-rules',
   path: '/categorization-rules',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CloseRoute = CloseRouteImport.update({
-  id: '/close',
-  path: '/close',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
@@ -159,7 +153,6 @@ export interface FileRoutesByFullPath {
   '/budgets': typeof BudgetsRoute
   '/categories': typeof CategoriesRoute
   '/categorization-rules': typeof CategorizationRulesRoute
-  '/close': typeof CloseRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/goals': typeof GoalsRoute
   '/households': typeof HouseholdsRoute
@@ -185,7 +178,6 @@ export interface FileRoutesByTo {
   '/budgets': typeof BudgetsRoute
   '/categories': typeof CategoriesRoute
   '/categorization-rules': typeof CategorizationRulesRoute
-  '/close': typeof CloseRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/goals': typeof GoalsRoute
   '/households': typeof HouseholdsRoute
@@ -212,7 +204,6 @@ export interface FileRoutesById {
   '/budgets': typeof BudgetsRoute
   '/categories': typeof CategoriesRoute
   '/categorization-rules': typeof CategorizationRulesRoute
-  '/close': typeof CloseRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/goals': typeof GoalsRoute
   '/households': typeof HouseholdsRoute
@@ -240,7 +231,6 @@ export interface FileRouteTypes {
     | '/budgets'
     | '/categories'
     | '/categorization-rules'
-    | '/close'
     | '/forgot-password'
     | '/goals'
     | '/households'
@@ -266,7 +256,6 @@ export interface FileRouteTypes {
     | '/budgets'
     | '/categories'
     | '/categorization-rules'
-    | '/close'
     | '/forgot-password'
     | '/goals'
     | '/households'
@@ -292,7 +281,6 @@ export interface FileRouteTypes {
     | '/budgets'
     | '/categories'
     | '/categorization-rules'
-    | '/close'
     | '/forgot-password'
     | '/goals'
     | '/households'
@@ -319,7 +307,6 @@ export interface RootRouteChildren {
   BudgetsRoute: typeof BudgetsRoute
   CategoriesRoute: typeof CategoriesRoute
   CategorizationRulesRoute: typeof CategorizationRulesRoute
-  CloseRoute: typeof CloseRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   GoalsRoute: typeof GoalsRoute
   HouseholdsRoute: typeof HouseholdsRoute
@@ -375,13 +362,6 @@ declare module '@tanstack/react-router' {
       path: '/categorization-rules'
       fullPath: '/categorization-rules'
       preLoaderRoute: typeof CategorizationRulesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/close': {
-      id: '/close'
-      path: '/close'
-      fullPath: '/close'
-      preLoaderRoute: typeof CloseRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/forgot-password': {
@@ -519,7 +499,6 @@ const rootRouteChildren: RootRouteChildren = {
   BudgetsRoute: BudgetsRoute,
   CategoriesRoute: CategoriesRoute,
   CategorizationRulesRoute: CategorizationRulesRoute,
-  CloseRoute: CloseRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
   GoalsRoute: GoalsRoute,
   HouseholdsRoute: HouseholdsRoute,

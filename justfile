@@ -128,13 +128,13 @@ fix:
     nub run --cwd frontend format
     node scripts/format-backend.mjs
 
-# Build and start the full Docker stack.
+# Build and start the full Docker stack with the Aspire dashboard on http://localhost:18888 receiving the API's logs, traces and metrics.
 up:
-    docker compose up -d --build
+    $env:OTEL_EXPORTER_OTLP_ENDPOINT = "http://aspire:18889"; docker compose --profile telemetry up -d --build
 
-# Stop the Docker stack.
+# Stop the Docker stack and the Aspire dashboard.
 down:
-    docker compose down
+    docker compose --profile telemetry down
 
 # Bring up the production overlay as a throwaway stack (project jx-verify, https://127.0.0.1:8443, own volumes) and assert: only 443 is published, security headers, Secure cookies, a session that survives recreating the API container, host filtering. CI runs the same script.
 verify-production:

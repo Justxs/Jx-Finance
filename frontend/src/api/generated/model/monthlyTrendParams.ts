@@ -8,7 +8,12 @@
 
 export type MonthlyTrendParams = {
   /**
-   * How many months to include, counting back from the current one. Defaults to 6.
+   * How many months to include, counting back from the last one. Defaults to 6.
    */
   months: number;
+  /**
+   * Last month to include as YYYY-MM. Defaults to the current month.
+   * @nullable
+   */
+  month?: string | null;
 };

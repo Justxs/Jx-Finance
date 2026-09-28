@@ -20,6 +20,19 @@ One dialog on `Mod+K` over every page: the pages and sections from a table besid
 
 Newest first. Each entry is a choice between real alternatives: what was chosen, what was rejected, and why.
 
+- **2026-09-28.** The sidebar foot keeps only the notification bell and the collapse control; language, theme, keyboard shortcuts and sign-out move into an account menu on the user tile, and theme and language are also choices under Settings, Appearance
+  - Rejected: Keeping five icon buttons in a row; only dropping the keyboard icon; moving the settings to the menu alone
+  - Why: The row held six controls for things set once or rarely, beside a bell that needs to stay in sight for its badge. A menu alone hides the settings from anyone who does not think to open their name, so the tile carries an up-down chevron, each row names the setting with its current value, and the same choices sit in Appearance where people look for them. The shortcuts help became a dialog because it no longer has a button to anchor a popover
+- **2026-09-28.** A ledger row's category can be changed in its cell with a borderless combobox that posts the single row to `POST /api/transactions/bulk-category`
+  - Rejected: Only the edit dialog; `PUT /api/transactions/{id}` with the whole row; a new single-row endpoint; a plain select in the cell
+  - Why: Filing a run of uncategorized rows through a dialog each is the slowest part of tidying a month, and bulk selection needs the rows picked first. A full PUT from a cell would send back every field the cell never showed and overwrite an edit made meanwhile, while the bulk endpoint already writes only the category with the type check and the split refusal. A new endpoint would repeat that rule. The combobox follows the standing rule that category pickers are searchable
+- **2026-09-28.** Form actions inside a dialog stick to the bottom of its scrolling body
+  - Rejected: A footer slot on `Modal`; leaving the actions at the end of the fields
+  - Why: A split transaction with many lines, or a form with a long description, pushed Save below the fold. A footer slot would move the buttons out of the form element, so every form would need its submit wired by id; sticky positioning keeps the markup and the Enter-to-submit behaviour unchanged
+- **2026-09-28.** The pager states the row range and total, and adds a page number field from five pages on
+  - Rejected: Numbered page buttons; a select listing every page; the field on every pager
+  - Why: Numbered buttons wrap on phones and still need ellipses on long lists, and a select of hundreds of pages is unusable. Below five pages, Previous and Next reach any page in a click or two, so a field would only add noise
+
 - **2026-09-28.** Expense / Income and the recurring bill's shape are a segmented radio group; every category picker is a combobox with its search box inside the popup; other short lists stay plain selects
   - Rejected: Plain selects everywhere; making `SelectField` searchable above an option count; a combobox that types into the trigger itself
   - Why: A two- or three-way choice is faster and clearer when every option is visible and one click away. Category lists grow with the household and are the one long list people pick from many times per session, so they need typing. A threshold would change a control's keyboard behaviour when a list grows past it. A search box inside the popup keeps the closed control looking and sizing like every other select, which matters in the import table's narrow cells. Forms choose the control with `kind` on `SelectFieldControl`, so no field component was added.
@@ -29,6 +42,10 @@ Newest first. Each entry is a choice between real alternatives: what was chosen,
 - **2026-09-28.** Importing a statement starts from the ledger header and from an account's row actions, as well as from Settings
   - Rejected: Keeping the only entry under Settings; moving the import to its own page; removing the Settings section
   - Why: Importing is the monthly ledger task, and a settings page is the last place people look for it. The dialog already existed, so the new entries only open it, and the account entry passes the account the dialog already accepted. The Settings section stays because the month-end checklist and the command palette link there.
+- **2026-09-28.** A row with three or more actions shows one vertical-ellipsis menu button listing them all; rows with one or two keep their inline icon buttons
+  - Rejected: Always inline icon buttons; always a menu; keeping edit inline and folding only the rest; a Popover with a button list
+  - Why: Transaction and account rows had grown to three or four look-alike icons that crowded the amount column and were hard to tell apart without hovering. A menu names each action in words and takes one slot. Rows with only edit and delete stay one click away, since a menu would add a click to the most common tasks for no space saved. Folding only some actions would split one row's actions across two places. The Base UI menu gives menu roles, arrow-key movement and typeahead that a popover of buttons would have to rebuild. Reorder arrows on rules stay inline because they are pressed repeatedly in a row.
+
 - **2026-09-27.** Related pages share one sidebar entry, a hub, and show as tabs under the hub's title; the routes, URLs and `g` shortcuts stay as they were
   - Rejected: Nested routes such as `/plan/budgets`; one long page per hub; keeping the seventeen sidebar links; moving Categories, Tags and Rules into Settings
   - Why: The sidebar had grown to seventeen links, most of them visited a few times a month, and the ones used every session were lost among them. Nested routes would have broken every saved link, bookmark and shortcut and changed every route file for no gain the reader could see, since the tabs already say where a page belongs. One long page per hub would load and scroll through three features to reach one, and would lose each page's own URL and search params. Categories, tags and rules are used in every bookkeeping session, so they are ledger work, not configuration, and keep their own entry

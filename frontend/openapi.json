@@ -87,7 +87,7 @@
           "Accounts"
         ],
         "summary": "List accounts",
-        "description": "Returns the accounts you can see: your own plus the shared accounts of your households, each with its current balance. Filters are optional and combine with AND.",
+        "description": "Returns the accounts you can see: your own plus the shared accounts of your households, each with its current balance. Filters are optional and combine with AND. With asOf, the balances are as of that date instead: only rows dated on or before it count, and currencies and holdings are valued at the exchange rates and security prices of that day. The same accounts are returned either way.",
         "operationId": "GetAccounts",
         "parameters": [
           {
@@ -134,6 +134,18 @@
             "description": "Asc or Desc. Defaults to Asc.",
             "schema": {
               "$ref": "#/components/schemas/SortDirection"
+            }
+          },
+          {
+            "name": "asOf",
+            "in": "query",
+            "description": "Date to compute the balances at, as YYYY-MM-DD. Defaults to today.",
+            "schema": {
+              "type": [
+                "null",
+                "string"
+              ],
+              "format": "date"
             }
           }
         ],
@@ -3061,8 +3073,22 @@
           "Budgets"
         ],
         "summary": "List budgets",
-        "description": "Returns every budget you can see, each with its current window, the amount spent against it inside that window, the base limit, the amount carried over from the previous window and the effective limit the two add up to, so the client can render progress and explain the number without a second call.",
+        "description": "Returns every budget you can see, each with its current window, the amount spent against it inside that window, the base limit, the amount carried over from the previous window and the effective limit the two add up to, so the client can render progress and explain the number without a second call. With asOf, each budget shows the window that contains that date instead of today's, with its spending and carry-over computed for that window; the limit is the budget's limit today, because changes to a limit are not kept by date.",
         "operationId": "GetBudgets",
+        "parameters": [
+          {
+            "name": "asOf",
+            "in": "query",
+            "description": "Date whose window to show, as YYYY-MM-DD. Defaults to today.",
+            "schema": {
+              "type": [
+                "null",
+                "string"
+              ],
+              "format": "date"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "The budgets visible to the signed-in user.",
@@ -4682,17 +4708,28 @@
           "Dashboard"
         ],
         "summary": "Get the monthly income and expense trend",
-        "description": "Returns income and expense totals per month, oldest first, ending with the current month. Months with no activity are still present with zero totals so the chart keeps an even x-axis. While the investments feature is on, the totals include investment dividends and interest as income and withholding tax and standalone fees as expense.",
+        "description": "Returns income and expense totals per month, oldest first, ending with the requested month. Months with no activity are still present with zero totals so the chart keeps an even x-axis. While the investments feature is on, the totals include investment dividends and interest as income and withholding tax and standalone fees as expense.",
         "operationId": "GetMonthlyTrend",
         "parameters": [
           {
             "name": "months",
             "in": "query",
-            "description": "How many months to include, counting back from the current one. Defaults to 6.",
+            "description": "How many months to include, counting back from the last one. Defaults to 6.",
             "required": true,
             "schema": {
               "type": "integer",
               "format": "int32"
+            }
+          },
+          {
+            "name": "month",
+            "in": "query",
+            "description": "Last month to include as YYYY-MM. Defaults to the current month.",
+            "schema": {
+              "type": [
+                "null",
+                "string"
+              ]
             }
           }
         ],
@@ -4751,11 +4788,24 @@
           "Dashboard"
         ],
         "summary": "Get the dashboard summary",
-        "description": "Returns the headline figures for the current month: total balance across all visible accounts, income and expenses so far, and the resulting net flow. The month is resolved in the instance time zone, not the caller's. While the investments feature is on, income includes dividends and interest from the investment ledger and expenses include withholding tax and standalone fees, exactly as in the report summary. IsComplete is false when a balance or holding could not be valued and the total balance leaves it out.",
+        "description": "Returns the headline figures for one month: total balance across all visible accounts as of the month's last day, or as of today for the current month, and the month's income, expenses and resulting net flow. The month defaults to the current one, resolved in the instance time zone, not the caller's. A past month's balance counts only rows dated on or before its last day and values currencies and holdings at the rates and prices of that day. While the investments feature is on, income includes dividends and interest from the investment ledger and expenses include withholding tax and standalone fees, exactly as in the report summary. IsComplete is false when a balance or holding could not be valued and the total balance leaves it out.",
         "operationId": "GetDashboardSummary",
+        "parameters": [
+          {
+            "name": "month",
+            "in": "query",
+            "description": "Month to report on as YYYY-MM. Defaults to the current month.",
+            "schema": {
+              "type": [
+                "null",
+                "string"
+              ]
+            }
+          }
+        ],
         "responses": {
           "200": {
-            "description": "The current-month totals.",
+            "description": "The month's totals and the total balance at the month's end.",
             "content": {
               "application/json": {
                 "schema": {

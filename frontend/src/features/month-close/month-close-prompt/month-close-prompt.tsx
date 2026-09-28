@@ -13,9 +13,13 @@ import { cn } from "@/lib/utils";
 import { hideMonthClosePrompt, useMonthClosePromptHidden } from "@/stores/month-close-prompt-store";
 import { CloseChecklist, attentionCount } from "../close-checklist/close-checklist";
 import { useMonthCloser } from "../close-form/use-month-closer";
-import { savingsRate } from "../month-figures/month-figures";
 import { latestEndedMonth } from "../month-key";
-import { statusMarkers } from "../month-picker/month-picker";
+import { statusMarkers } from "../status-markers";
+
+function savingsRate(income: string | undefined, net: string | undefined) {
+  const earned = Number(income ?? 0);
+  return earned > 0 ? Number(net ?? 0) / earned : null;
+}
 
 interface PanelProps {
   month: string;
@@ -43,7 +47,7 @@ function PromptPanel({ month, review }: Readonly<PanelProps>) {
 
   const reviewLink = (
     <Link
-      to="/close"
+      to="/"
       search={{ month }}
       className={buttonVariants({ variant: changed ? "default" : "outline" })}
     >

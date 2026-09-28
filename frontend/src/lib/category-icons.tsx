@@ -26,7 +26,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const categoryIcons: Record<string, LucideIcon> = {
+const categoryIcons = {
   banknote: Banknote,
   briefcase: Briefcase,
   bus: Bus,
@@ -50,9 +50,15 @@ const categoryIcons: Record<string, LucideIcon> = {
   tag: Tag,
   utensils: Utensils,
   wifi: Wifi,
-};
+} satisfies Record<string, LucideIcon>;
 
-export const categoryIconNames = Object.keys(categoryIcons);
+export type CategoryIconName = keyof typeof categoryIcons;
+
+export function isCategoryIconName(value: string): value is CategoryIconName {
+  return Object.hasOwn(categoryIcons, value);
+}
+
+export const categoryIconNames = Object.keys(categoryIcons).filter(isCategoryIconName);
 
 interface Props {
   icon?: string | null;
@@ -60,6 +66,6 @@ interface Props {
 }
 
 export function CategoryIcon({ icon, className }: Readonly<Props>) {
-  const Icon = (icon && categoryIcons[icon]) || Tag;
+  const Icon = icon && isCategoryIconName(icon) ? categoryIcons[icon] : Tag;
   return <Icon className={cn("size-4", className)} />;
 }

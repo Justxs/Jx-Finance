@@ -18,7 +18,8 @@ import {
   DialogDescription,
   DialogTitle,
 } from "@/components/ui/dialog/dialog";
-import { useSettings } from "@/hooks/use-settings";
+import { latestEndedMonth } from "@/features/month-close/month-key";
+import { useSettings, useTodayDate } from "@/hooks/use-settings";
 import { endSession } from "@/lib/auth-gate";
 import { notify } from "@/lib/mutations";
 import type { ShortcutRouter } from "@/lib/shortcuts";
@@ -84,6 +85,7 @@ function CommandPaletteContent({ onClose }: Readonly<ContentProps>) {
 
   const backupMutation = useCreateBackup(notify(t("backup.created")));
 
+  const lastMonth = latestEndedMonth(useTodayDate());
   const entries = buildCommandEntries({
     t,
     features,
@@ -95,6 +97,7 @@ function CommandPaletteContent({ onClose }: Readonly<ContentProps>) {
     categories: categories.data ?? [],
     tags: tags.data ?? [],
     households: households.data ?? [],
+    lastMonth,
   });
 
   const results = filterCommandEntries(entries, query, recents).slice(0, RESULT_LIMIT);

@@ -34,7 +34,7 @@ public sealed class InstanceSettingsStore(
         {
             using var scope = scopes.CreateScope();
             var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-            var stored = db.InstanceSettings.AsNoTracking().FirstOrDefault();
+            var stored = db.InstanceSettings.AsNoTracking().FirstOrDefault(s => s.Id == InstanceSettings.SingletonId);
             var snapshot = InstanceSettingsSnapshot.From(stored ?? Defaults());
             return Interlocked.CompareExchange(ref current, snapshot, null) ?? snapshot;
         }

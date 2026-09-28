@@ -1,5 +1,6 @@
 import type { FieldWithValue } from "@tanstack/react-form";
 import type { Ref } from "react";
+import { useTranslation } from "react-i18next";
 import type { Currency } from "@/api/generated/model";
 import { CurrencySelect } from "@/components/currency-select/currency-select";
 import { FieldError } from "@/components/ui/field-error";
@@ -39,6 +40,7 @@ export function MoneyAmountField({
   only,
   onCurrencyChange,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { error, ...aria } = fieldAria(field, { id, hint, touchedOnly });
   const currencyId = `${id}-currency`;
   const { error: currencyError, ...currencyAria } = fieldAria(currencyField, { id: currencyId });
@@ -70,6 +72,7 @@ export function MoneyAmountField({
           aria-label={currencyLabel}
           value={currencyField.value}
           preferred={preferred}
+          preferredLabel={t("currencyGroups.account")}
           only={only}
           onChange={(next) => {
             currencyField.handleChange(next);

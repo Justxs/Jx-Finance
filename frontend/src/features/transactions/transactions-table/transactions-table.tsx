@@ -25,7 +25,7 @@ import {
 
 const columnWidth: Record<string, string> = {
   date: "w-27",
-  categoryId: "w-36",
+  categoryId: "w-48",
   tagIds: "w-36",
   accountId: "w-36",
   amount: "w-30",
@@ -39,6 +39,7 @@ interface Props {
   columnFilters: Record<string, ReactNode>;
   columnAriaSort?: Record<string, "ascending" | "descending" | undefined>;
   filtered: boolean;
+  onClearFilters?: () => void;
   selection?: TransactionSelection;
 }
 
@@ -103,6 +104,7 @@ export function TransactionsTable({
   columnFilters,
   columnAriaSort,
   filtered,
+  onClearFilters,
   selection,
 }: Readonly<Props>) {
   "use no memo";
@@ -117,7 +119,7 @@ export function TransactionsTable({
   let body: ReactNode;
   if (table.getRowModel().rows.length === 0) {
     body = (
-      <TableEmptyRow colSpan={columnCount} filtered={filtered}>
+      <TableEmptyRow colSpan={columnCount} filtered={filtered} onClearFilters={onClearFilters}>
         {t("transactions.empty")}
       </TableEmptyRow>
     );

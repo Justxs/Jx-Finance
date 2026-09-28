@@ -26,3 +26,5 @@ flowchart LR
     Gone --> Unavailable["progressAmount null, row still listed"]
     Progress --> Meter["Meter and percentage of the target"]
 ```
+
+A row reads "€1,200.00 of €2,000.00", and under it "€800.00 left" beside the percentage until the goal is reached. A goal with a target date still ahead and something left to save adds "Estimated €200.00 a month to reach it" after the date. `monthlyToReach` in `features/goals/goal-pace.ts` divides what is left by the months to the date, rounded to whole months with a minimum of one, and rounds up to the cent. It is labelled as an estimate because it assumes even saving and ignores anything the funding account will do.

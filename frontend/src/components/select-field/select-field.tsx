@@ -1,7 +1,9 @@
-import type { FocusEventHandler, ReactNode } from "react";
+import { type FocusEventHandler, Fragment, type ReactNode } from "react";
 import {
   Select,
   SelectContent,
+  SelectGroup,
+  SelectGroupLabel,
   SelectItem,
   SelectTrigger,
   SelectValue,
@@ -12,6 +14,20 @@ export interface SelectOption<T extends string = string> {
   value: T;
   label: ReactNode;
   disabled?: boolean;
+  group?: string;
+}
+
+function optionGroups<T extends string>(options: SelectOption<T>[]) {
+  const groups: { label?: string; options: SelectOption<T>[] }[] = [];
+  for (const option of options) {
+    const last = groups.at(-1);
+    if (last && last.label === option.group) {
+      last.options.push(option);
+    } else {
+      groups.push({ label: option.group, options: [option] });
+    }
+  }
+  return groups;
 }
 
 interface Props<T extends string> {
@@ -21,6 +37,8 @@ interface Props<T extends string> {
   options: SelectOption<T>[];
   placeholder?: string;
   disabled?: boolean;
+  size?: "sm" | "default";
+  variant?: "default" | "ghost";
   className?: string;
   "aria-invalid"?: boolean;
   "aria-label"?: string;
@@ -36,6 +54,8 @@ export function SelectField<T extends string>({
   options,
   placeholder,
   disabled,
+  size,
+  variant,
   className,
   "aria-invalid": ariaInvalid,
   "aria-label": ariaLabel,
@@ -63,16 +83,28 @@ export function SelectField<T extends string>({
           aria-describedby={ariaDescribedBy}
           aria-busy={ariaBusy}
           onBlur={onBlur}
+          size={size}
+          variant={variant}
           className={cn("w-full min-w-0", className)}
         >
           <SelectValue placeholder={placeholder} />
         </SelectTrigger>
         <SelectContent alignItemWithTrigger={false}>
-          {options.map((option) => (
-            <SelectItem key={option.value} value={option.value} disabled={option.disabled}>
-              {option.label}
-            </SelectItem>
-          ))}
+          {optionGroups(options).map((group) => {
+            const items = group.options.map((option) => (
+              <SelectItem key={option.value} value={option.value} disabled={option.disabled}>
+                {option.label}
+              </SelectItem>
+            ));
+            return group.label ? (
+              <SelectGroup key={group.label}>
+                <SelectGroupLabel>{group.label}</SelectGroupLabel>
+                {items}
+              </SelectGroup>
+            ) : (
+              <Fragment key={group.options[0]?.value}>{items}</Fragment>
+            );
+          })}
         </SelectContent>
       </Select>
     </div>

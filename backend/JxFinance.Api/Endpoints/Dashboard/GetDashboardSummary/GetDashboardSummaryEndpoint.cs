@@ -6,7 +6,7 @@ using JxFinance.Endpoints.Dashboard.Shared;
 namespace JxFinance.Endpoints.Dashboard.GetDashboardSummary;
 
 public sealed class GetDashboardSummaryEndpoint(IDashboardService dashboardService)
-    : EndpointWithoutRequest<DashboardSummaryResponse>
+    : Endpoint<GetDashboardSummaryRequest, DashboardSummaryResponse>
 {
     public override void Configure()
     {
@@ -14,6 +14,6 @@ public sealed class GetDashboardSummaryEndpoint(IDashboardService dashboardServi
         Group<DashboardGroup>();
     }
 
-    public override async Task HandleAsync(CancellationToken ct) =>
-        await Send.OkAsync(await dashboardService.GetSummaryAsync(ct), ct);
+    public override async Task HandleAsync(GetDashboardSummaryRequest req, CancellationToken ct) =>
+        await Send.OkAsync(await dashboardService.GetSummaryAsync(req.Month, ct), ct);
 }

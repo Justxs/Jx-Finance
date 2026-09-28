@@ -16,6 +16,8 @@ interface Props<T extends string> {
   options: SelectOption<T>[];
   placeholder?: string;
   disabled?: boolean;
+  size?: "sm" | "default";
+  variant?: "default" | "ghost";
   className?: string;
   "aria-invalid"?: boolean;
   "aria-label"?: string;
@@ -30,6 +32,8 @@ export function ComboboxField<T extends string>({
   options,
   placeholder,
   disabled,
+  size = "default",
+  variant = "default",
   className,
   "aria-invalid": ariaInvalid,
   "aria-label": ariaLabel,
@@ -58,12 +62,14 @@ export function ComboboxField<T extends string>({
       >
         <Combobox.Trigger
           id={id}
+          data-size={size}
+          data-variant={variant}
           aria-invalid={ariaInvalid}
           aria-label={ariaLabel}
           aria-describedby={ariaDescribedBy}
           onBlur={onBlur}
           className={cn(
-            "flex h-9 w-full min-w-0 items-center justify-between gap-1.5 rounded-lg border border-input bg-muted/40 py-2 pr-2.5 pl-3 text-left text-base whitespace-nowrap transition-colors outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 data-placeholder:text-muted-foreground md:text-sm dark:bg-input/30 dark:hover:bg-input/50 pointer-coarse:h-11",
+            "flex h-9 w-full min-w-0 items-center justify-between gap-1.5 rounded-lg border border-input bg-muted/40 py-2 pr-2.5 pl-3 text-left text-base whitespace-nowrap transition-colors outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 data-placeholder:text-muted-foreground data-[size=sm]:h-8 data-[variant=ghost]:border-transparent data-[variant=ghost]:bg-transparent data-[variant=ghost]:pl-2 data-[variant=ghost]:hover:border-input md:text-sm dark:bg-input/30 dark:hover:bg-input/50 dark:data-[variant=ghost]:bg-transparent pointer-coarse:h-11",
             className,
           )}
         >

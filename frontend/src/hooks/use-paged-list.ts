@@ -32,8 +32,9 @@ export function usePagedItems<T>(
   data: PagedData<T> | undefined,
   pageSize: number,
 ) {
-  const pages = usePageClamp(paging, data?.total ?? 0, pageSize);
+  const total = data?.total ?? 0;
+  const pages = usePageClamp(paging, total, pageSize);
   const items = useDeferredValue(data?.items) ?? [];
 
-  return { items, pages };
+  return { items, pages, range: { total, pageSize } };
 }

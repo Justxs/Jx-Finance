@@ -11,7 +11,7 @@ public interface IAccountService
 {
     Task<IReadOnlyList<AccountResponse>> GetAllAsync(CancellationToken cancellationToken);
 
-    Task<(decimal Total, bool IsComplete)> GetReportingTotalAsync(CancellationToken cancellationToken);
+    Task<(decimal Total, bool IsComplete)> GetReportingTotalAsync(DateOnly? asOf, CancellationToken cancellationToken);
 
     Task<IReadOnlyDictionary<AccountId, decimal>> GetReportingBalancesAsync(
         IReadOnlyCollection<AccountId> accountIds,

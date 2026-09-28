@@ -22,10 +22,11 @@ public sealed class HoldingsValuation(AppDbContext db, IExchangeRateService rate
         InvestmentTransactionType.Split,
     ];
 
-    private readonly Dictionary<AccountId, (decimal Value, bool IsComplete)?> valued = [];
+    private readonly Dictionary<(AccountId Account, DateOnly? AsOf), (decimal Value, bool IsComplete)?> valued = [];
 
     public async Task<IReadOnlyDictionary<AccountId, (decimal Value, bool IsComplete)>> ValueAsync(
         IReadOnlyCollection<AccountId> accountIds,
+        DateOnly? asOf,
         CancellationToken cancellationToken)
     {
         if (!settings.Current.IsEnabled(Feature.Investments) || accountIds.Count == 0)
@@ -33,23 +34,24 @@ public sealed class HoldingsValuation(AppDbContext db, IExchangeRateService rate
             return new Dictionary<AccountId, (decimal Value, bool IsComplete)>();
         }
 
-        var missing = accountIds.Where(id => !valued.ContainsKey(id)).Distinct().ToList();
+        var missing = accountIds.Where(id => !valued.ContainsKey((id, asOf))).Distinct().ToList();
         if (missing.Count > 0)
         {
-            await ValueMissingAsync(missing, cancellationToken);
+            await ValueMissingAsync(missing, asOf, cancellationToken);
         }
 
         return accountIds
             .Distinct()
-            .Where(id => valued[id] is not null)
-            .ToDictionary(id => id, id => valued[id]!.Value);
+            .Where(id => valued[(id, asOf)] is not null)
+            .ToDictionary(id => id, id => valued[(id, asOf)]!.Value);
     }
 
-    private async Task ValueMissingAsync(List<AccountId> accountIds, CancellationToken cancellationToken)
+    private async Task ValueMissingAsync(List<AccountId> accountIds, DateOnly? asOf, CancellationToken cancellationToken)
     {
         var rows = await db.InvestmentTransactions
             .AsNoTracking()
-            .Where(t => accountIds.Contains(t.AccountId) && t.SecurityId != null && PositionTypes.Contains(t.Type))
+            .Where(t => accountIds.Contains(t.AccountId) && t.SecurityId != null && PositionTypes.Contains(t.Type)
+                && (asOf == null || t.Date <= asOf))
             .Select(t => new
             {
                 t.AccountId,
@@ -66,7 +68,7 @@ public sealed class HoldingsValuation(AppDbContext db, IExchangeRateService rate
 
         foreach (var id in accountIds)
         {
-            valued[id] = null;
+            valued[(id, asOf)] = null;
         }
 
         if (rows.Count == 0)
@@ -80,7 +82,12 @@ public sealed class HoldingsValuation(AppDbContext db, IExchangeRateService rate
             .Where(s => securityIds.Contains(s.Id))
             .Select(s => new { s.Id, s.LastPrice, s.Currency })
             .ToDictionaryAsync(s => s.Id, cancellationToken);
-        var latest = await rates.GetLatestAsync(cancellationToken);
+        var prices = asOf is { } day
+            ? await PricesOnAsync(securityIds, day, cancellationToken)
+            : securities.ToDictionary(s => s.Key, s => s.Value.LastPrice);
+        var table = asOf is { } date
+            ? await rates.GetForDateAsync(date, cancellationToken)
+            : await rates.GetLatestAsync(cancellationToken);
 
         foreach (var account in rows.GroupBy(t => t.AccountId))
         {
@@ -100,13 +107,26 @@ public sealed class HoldingsValuation(AppDbContext db, IExchangeRateService rate
             var isComplete = true;
             foreach (var position in Portfolio.Positions(entries).Values.Where(p => p.Quantity != 0m))
             {
-                var security = securities[position.SecurityId];
-                var value = position.Value(security.LastPrice, security.Currency, latest, rates.ReportingCurrency);
+                var value = position.Value(
+                    prices.GetValueOrDefault(position.SecurityId),
+                    securities[position.SecurityId].Currency,
+                    table,
+                    rates.ReportingCurrency);
                 total += value.Reporting ?? 0m;
                 isComplete &= value.IsComplete;
             }
 
-            valued[account.Key] = (total, isComplete);
+            valued[(account.Key, asOf)] = (total, isComplete);
         }
     }
+
+    private Task<Dictionary<SecurityId, decimal?>> PricesOnAsync(
+        List<SecurityId> securityIds,
+        DateOnly day,
+        CancellationToken cancellationToken) =>
+        db.SecurityPrices
+            .AsNoTracking()
+            .Where(p => securityIds.Contains(p.SecurityId)
+                && p.Date == db.SecurityPrices.Where(x => x.SecurityId == p.SecurityId && x.Date <= day).Max(x => (DateOnly?)x.Date))
+            .ToDictionaryAsync(p => p.SecurityId, p => (decimal?)p.Price, cancellationToken);
 }

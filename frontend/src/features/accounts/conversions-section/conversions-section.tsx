@@ -47,7 +47,7 @@ export function ConversionsSection({
   const paging = usePagedList();
   const listParams = movementsPageParams(paging.shownPage);
   const conversions = useConversionsSuspense(listParams);
-  const { items, pages } = usePagedItems(paging, conversions.data, pageSize);
+  const { items, pages, range } = usePagedItems(paging, conversions.data, pageSize);
   const accountNames = nameById(accounts);
 
   const categories = useCategoriesSuspense().data;
@@ -92,6 +92,7 @@ export function ConversionsSection({
     <PagedRows
       paging={paging}
       pages={pages}
+      range={range}
       count={items.length}
       emptyText={t("conversions.empty")}
     >

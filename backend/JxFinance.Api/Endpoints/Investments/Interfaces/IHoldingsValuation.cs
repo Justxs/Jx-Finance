@@ -6,5 +6,6 @@ public interface IHoldingsValuation
 {
     Task<IReadOnlyDictionary<AccountId, (decimal Value, bool IsComplete)>> ValueAsync(
         IReadOnlyCollection<AccountId> accountIds,
+        DateOnly? asOf,
         CancellationToken cancellationToken);
 }

@@ -18,6 +18,7 @@
     "reports": "Reports",
     "users": "Users",
     "profile": "Your profile",
+    "accountMenu": "Account menu",
     "collapse": "Collapse sidebar",
     "expand": "Expand sidebar",
     "main": "Main navigation",
@@ -27,7 +28,6 @@
     "monthClose": "Month close",
     "plan": "Plan",
     "wealth": "Wealth",
-    "reportsOverview": "Overview",
     "installation": "Installation"
   },
   "actions": {
@@ -63,27 +63,33 @@
     "pickEnd": "Pick an end date"
   },
   "dashboard": {
-    "title": "Dashboard",
+    "month": {
+      "label": "Month",
+      "previous": "Previous month",
+      "next": "Next month",
+      "current": "This month"
+    },
     "totalBalance": "Total balance",
-    "monthIncome": "Income this month",
-    "monthExpense": "Expenses this month",
-    "monthNet": "Net this month",
+    "balanceAtMonthEnd": "Balance at month end",
+    "monthIncome": "Income",
+    "monthExpense": "Expenses",
+    "monthNet": "Net",
     "budgets": "Budgets in their window",
     "noBudgets": "No budgets set.",
     "accounts": "Balance by account",
     "noAccounts": "No accounts yet.",
     "upcomingBills": "Upcoming bills",
     "noBills": "No active bills.",
+    "billsCurrentOnly": "Upcoming bills are shown on the current month.",
     "overdue": "Overdue",
     "pace": {
       "title": "Spending pace",
-      "current": "This month",
-      "previous": "Last month",
       "day": "Day {{day}}",
-      "label": "Cumulative spending by day, this month against last month"
+      "label": "Cumulative spending by day in {{month}} and {{previous}}"
     },
     "recent": "Recent transactions",
     "empty": "No transactions yet.",
+    "emptyMonth": "No transactions in this month.",
     "firstRun": {
       "intro": "The ledger is empty. Three steps start it:",
       "accounts": "Add an account",
@@ -93,13 +99,13 @@
       "budgets": "Set a budget",
       "budgetsHint": "to see whether the month is on plan."
     },
-    "spendingByCategory": "Spending by category (this month)",
+    "spendingByCategory": "Spending by category",
     "monthlyTrend": "Income vs. expenses",
     "other": "Other",
-    "noSpending": "No spending recorded this month.",
+    "noSpending": "No spending recorded.",
     "showTransactions": "Show {{category}} transactions",
-    "keptShare": "{{percent}} of this month's income kept",
-    "overspent": "Spent more than came in this month",
+    "keptShare": "{{percent}} of the month's income kept",
+    "overspent": "Spent more than came in",
     "layout": {
       "customise": "Customise",
       "title": "Customise the dashboard",
@@ -113,6 +119,10 @@
       "allHidden": "Every card is hidden.",
       "chooseCards": "Choose cards",
       "subject": "Dashboard layout"
+    },
+    "ring": {
+      "kept": "kept",
+      "spent": "spent"
     }
   },
   "accounts": {
@@ -207,7 +217,35 @@
     "icon": "Icon",
     "income": "Income",
     "expense": "Expense",
-    "empty": "No categories in this group."
+    "empty": "No categories in this group.",
+    "iconSelected": "Selected: {{name}}",
+    "noIcon": "No icon",
+    "noIconSelected": "No icon selected",
+    "icons": {
+      "banknote": "Banknote",
+      "briefcase": "Briefcase",
+      "bus": "Bus",
+      "car": "Car",
+      "clapperboard": "Clapperboard",
+      "coffee": "Coffee",
+      "coins": "Coins",
+      "dumbbell": "Dumbbell",
+      "gamepad-2": "Game controller",
+      "gift": "Gift",
+      "graduation-cap": "Graduation cap",
+      "heart-pulse": "Heart pulse",
+      "home": "Home",
+      "lightbulb": "Light bulb",
+      "paw-print": "Paw print",
+      "phone": "Phone",
+      "piggy-bank": "Piggy bank",
+      "plane": "Plane",
+      "shapes": "Shapes",
+      "shopping-bag": "Shopping bag",
+      "tag": "Tag",
+      "utensils": "Utensils",
+      "wifi": "Wi-Fi"
+    }
   },
   "tags": {
     "title": "Tags",
@@ -415,7 +453,13 @@
       "tooMany": "Only {{free}} more files fit on this transaction; {{name}} was left out.",
       "count_one": "{{count}} file attached",
       "count_other": "{{count}} files attached"
-    }
+    },
+    "splitSummary": "Transaction {{total}} · Assigned {{assigned}}",
+    "splitRemaining": "{{amount}} remaining",
+    "splitOver": "{{amount}} over",
+    "splitBalanced": "Fully assigned",
+    "useRemaining": "Use remaining {{amount}}",
+    "categoryFor": "Category for {{transaction}}"
   },
   "trash": {
     "title": "Trash",
@@ -494,7 +538,14 @@
   },
   "appearance": {
     "title": "Appearance",
-    "paletteHint": "Colors for this browser only. Light and dark are switched from the sidebar.",
+    "hint": "Theme, colors and language apply to this browser only. Theme and language can also be switched from the account menu at the foot of the sidebar.",
+    "theme": "Theme",
+    "themes": {
+      "light": "Light",
+      "dark": "Dark"
+    },
+    "palette": "Colors",
+    "language": "Language",
     "palettes": {
       "ledger": "Ledger navy",
       "plum": "Plum",
@@ -865,10 +916,8 @@
     "budgeted": "Budgeted",
     "remaining": "Remaining",
     "overBy": "Over by",
-    "spent": "Spent",
-    "limitSeries": "Limit",
-    "usage": "Budgeted against spent",
-    "usageLabel": "Budgeted and spent amount for each category in its current window"
+    "overBudget": "{{amount}} over budget",
+    "spentOf": "{{spent}} spent of {{limit}}"
   },
   "shortcuts": {
     "title": "Keyboard shortcuts",
@@ -923,7 +972,9 @@
     "fundedShareFrom": "From {{percent}}% of {{account}}",
     "unavailableAccount": "Unavailable account",
     "progressUnavailable": "Progress unavailable",
-    "progressUnavailableHint": "The funding account is archived or no longer shared with you."
+    "progressUnavailableHint": "The funding account is archived or no longer shared with you.",
+    "remaining": "{{amount}} left",
+    "monthlyEstimate": "Estimated {{amount}} a month to reach it"
   },
   "netWorth": {
     "title": "Net worth",
@@ -1470,7 +1521,13 @@
       "income": "Records the amount you enter for {{name}} as income dated {{date}} and moves the entry to its next due date.",
       "transfer": "Moves the amount you enter from {{from}} to {{to}} as a transfer dated {{date}} and moves the entry to its next due date."
     },
-    "confirmStale": "This occurrence was already confirmed, or the entry changed somewhere else. The entry has been refreshed: check the due date above and confirm again if it is still owed."
+    "confirmStale": "This occurrence was already confirmed, or the entry changed somewhere else. The entry has been refreshed: check the due date above and confirm again if it is still owed.",
+    "groups": {
+      "overdue": "Overdue",
+      "thisWeek": "Due this week",
+      "later": "Later",
+      "inactive": "Inactive ({{count}})"
+    }
   },
   "subscriptions": {
     "title": "Subscriptions we spotted",
@@ -1788,7 +1845,10 @@
     "wholeNumberBetween": "Enter a whole number from {{min}} to {{max}}."
   },
   "pagination": {
-    "pageOf": "Page {{page}} of {{pages}}"
+    "pageOf": "Page {{page}} of {{pages}}",
+    "range": "{{from}}–{{to}} of {{total}}",
+    "page": "Page",
+    "ofPages": "of {{pages}}"
   },
   "filters": {
     "filterBy": "Filter by {{column}}",
@@ -1801,7 +1861,8 @@
     "active": "Active filters",
     "remove": "Remove filter {{column}}: {{value}}",
     "since": "From {{date}}",
-    "until": "Until {{date}}"
+    "until": "Until {{date}}",
+    "clearAll": "Clear filters"
   },
   "charts": {
     "income": "Income",
@@ -2014,19 +2075,6 @@
   },
   "monthClose": {
     "title": "Month close",
-    "description": "Check a finished month, fix what needs attention, and close it.",
-    "picker": {
-      "label": "Month",
-      "previous": "Previous month",
-      "next": "Next month",
-      "year": "Months of {{year}}",
-      "status": {
-        "notEnded": "Not ended",
-        "open": "Open",
-        "closed": "Closed",
-        "closedChanged": "Changed after close"
-      }
-    },
     "checklist": {
       "uncategorized_one": "{{count}} uncategorized transaction",
       "uncategorized_other": "{{count}} uncategorized transactions",
@@ -2043,24 +2091,6 @@
       "categorize": "Categorize",
       "confirm": "Confirm",
       "import": "Import"
-    },
-    "figures": {
-      "title": "The month in numbers",
-      "against": "Compared with {{from}} – {{to}}",
-      "savingsRate": "Savings rate",
-      "noIncome": "No income this month",
-      "movers": "Categories that moved most",
-      "noMovers": "No category changed against the previous month.",
-      "netWorth": "Net worth change"
-    },
-    "budgets": {
-      "title": "Monthly budgets",
-      "description": "Usage as of the last day of the month, against today's limits.",
-      "empty": "There are no monthly budgets."
-    },
-    "netWorth": {
-      "change": "{{from}} → {{to}}",
-      "since": "Snapshots from {{start}} and {{end}}"
     },
     "drift": {
       "title": "Changed since the close",
@@ -2106,7 +2136,9 @@
       "reclosed": "{{month}} re-closed",
       "reopened": "{{month}} reopened",
       "noteSaved": "Note saved",
-      "closeMonth": "Close {{month}}"
+      "closeMonth": "Close {{month}}",
+      "addNote": "Add note",
+      "editNote": "Edit note"
     },
     "editHint": "{{month}} is closed. Saving will show as a change after the close.",
     "panel": {
@@ -2121,7 +2153,8 @@
       "attention_one": "{{count}} thing needs attention before you close.",
       "attention_other": "{{count}} things need attention before you close.",
       "closedOn": "Closed on {{date}}.",
-      "changedSince": "Closed on {{date}}. Something dated in it has changed since: re-close to accept it, or reopen."
+      "changedSince": "Closed on {{date}}. Something dated in it has changed since: re-close to accept it, or reopen.",
+      "details": "Details"
     },
     "prompt": {
       "title": {
@@ -2145,5 +2178,10 @@
     "installationOff": "An administrator has turned the Ko-fi link off for this installation.",
     "hideHint": "You can hide this link in Settings, Appearance.",
     "tooltipCollapsed": "Support me on Ko-fi. You can hide this link in Settings, Appearance."
+  },
+  "currencyGroups": {
+    "account": "Account currencies",
+    "reporting": "Reporting currency",
+    "other": "Other currencies"
   }
 }

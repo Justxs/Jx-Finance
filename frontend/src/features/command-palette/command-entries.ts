@@ -129,6 +129,7 @@ export interface CommandSources {
   categories: readonly CategoryResponse[];
   tags: readonly TagResponse[];
   households: readonly HouseholdResponse[];
+  lastMonth: string;
 }
 
 function isAllowed(page: PageCommand, features: FeatureFlags, isAdmin: boolean) {
@@ -154,7 +155,7 @@ function pageEntries({ t, features, isAdmin }: CommandSources): CommandEntry[] {
 }
 
 function actionEntries(sources: CommandSources): CommandEntry[] {
-  const { t, features, isAdmin, theme, locale, activeHouseholdId, households } = sources;
+  const { t, features, isAdmin, theme, locale, activeHouseholdId, households, lastMonth } = sources;
   const run = t("commandPalette.run");
 
   function action(
@@ -203,7 +204,8 @@ function actionEntries(sources: CommandSources): CommandEntry[] {
     entries.push(
       action("close-last-month", t("commandPalette.closeLastMonth"), t("nav.monthClose"), {
         kind: "navigate",
-        to: "/close",
+        to: "/",
+        search: { month: lastMonth },
       }),
     );
   }

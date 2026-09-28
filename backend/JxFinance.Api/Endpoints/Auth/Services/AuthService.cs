@@ -35,7 +35,7 @@ public sealed class AuthService(
             return new DomainError(ErrorCodes.SetupAlreadyCompleted, "Setup has already been completed.");
         }
 
-        var user = await userManager.Users.FirstOrDefaultAsync(cancellationToken);
+        var user = await userManager.Users.OrderBy(u => u.Id).FirstOrDefaultAsync(cancellationToken);
         IdentityResult identityResult;
         if (user is null)
         {

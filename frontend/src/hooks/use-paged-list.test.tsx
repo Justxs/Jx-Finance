@@ -44,6 +44,7 @@ test("usePagedItems exposes the items and the clamped page count", () => {
 
   expect(result.current.items).toEqual(["a", "b"]);
   expect(result.current.pages).toBe(2);
+  expect(result.current.range).toEqual({ total: 12, pageSize: 10 });
 });
 
 test("usePagedItems treats missing data as an empty first page", () => {

@@ -36,7 +36,7 @@ export function TransfersSection({ accounts, addOpen, onAddOpenChange }: Readonl
   const paging = usePagedList();
   const listParams = movementsPageParams(paging.shownPage);
   const transfers = useTransfersSuspense(listParams);
-  const { items, pages } = usePagedItems(paging, transfers.data, pageSize);
+  const { items, pages, range } = usePagedItems(paging, transfers.data, pageSize);
   const accountNames = nameById(accounts);
 
   const [editTarget, setEditTarget] = useState<string | null>(null);
@@ -69,7 +69,13 @@ export function TransfersSection({ accounts, addOpen, onAddOpenChange }: Readonl
   );
 
   const content = (
-    <PagedRows paging={paging} pages={pages} count={items.length} emptyText={t("transfers.empty")}>
+    <PagedRows
+      paging={paging}
+      pages={pages}
+      range={range}
+      count={items.length}
+      emptyText={t("transfers.empty")}
+    >
       {items.map((transfer) => (
         <RecordRow
           key={transfer.id}

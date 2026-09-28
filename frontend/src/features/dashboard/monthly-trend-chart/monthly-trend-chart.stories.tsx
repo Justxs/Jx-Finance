@@ -2,13 +2,14 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { getMonthlyTrendMockHandler } from "@/api/generated/dashboard/dashboard.msw";
 import { Card } from "@/components/ui/card/card";
 import { withWidth } from "@/storybook/decorators";
-import { monthlyTrendItems } from "@/storybook/fixtures";
+import { monthlyTrendItems, FIXTURE_MONTH } from "@/storybook/fixtures";
 import { emptyHandlers, errorHandlers, loadingHandlers, withHandlers } from "@/storybook/handlers";
 import { MonthlyTrendChart } from "./monthly-trend-chart";
 
 const meta = {
   title: "Features/Dashboard/MonthlyTrendChart",
   component: MonthlyTrendChart,
+  args: { month: FIXTURE_MONTH },
   decorators: [
     (Story) => (
       <Card className="p-6">

@@ -13,18 +13,17 @@ import { CreateDialog } from "@/components/create-dialog/create-dialog";
 import { EditModal } from "@/components/modal";
 import { PageHeader } from "@/components/page-header/page-header";
 import { PanelRows } from "@/components/panel-rows/panel-rows";
-import { ProgressAmount, ProgressRow } from "@/components/progress-row/progress-row";
+import { ProgressRow } from "@/components/progress-row/progress-row";
 import { SummaryStats } from "@/components/summary-stats/summary-stats";
-import { TitledSection } from "@/components/ui/section/section";
 import { Tooltip } from "@/components/ui/tooltip/tooltip";
 import { useConfirmedDelete } from "@/hooks/use-confirmed-delete";
 import { useIsoDate, useMoney } from "@/hooks/use-formatters";
 import { fromCents, toCents } from "@/lib/money";
 import { optimisticRemoval } from "@/lib/optimistic";
 import { EXPENSE_TONE } from "@/lib/tone";
+import { cn } from "@/lib/utils";
 import { budgetPeriodLabel } from "../budget-periods";
-import { BudgetRemaining, budgetFigures } from "../budget-remaining";
-import { BudgetUsageChart } from "../budget-usage-chart";
+import { budgetFigures } from "../budget-remaining";
 import { CreateBudgetForm } from "../create-budget-form/create-budget-form";
 
 export function BudgetsPage() {
@@ -81,11 +80,6 @@ export function BudgetsPage() {
           ]}
         />
       ) : null}
-      {budgetList.length > 1 ? (
-        <TitledSection title={t("budgets.usage")} bodyGap="md">
-          <BudgetUsageChart budgets={budgetList} />
-        </TitledSection>
-      ) : null}
       <PanelRows count={budgetList.length} emptyText={t("budgets.empty")}>
         {budgetList.map((budget) => {
           const { spent, limit, over } = budgetFigures(budget);
@@ -122,14 +116,20 @@ export function BudgetsPage() {
                 </p>
               }
               primary={
-                <ProgressAmount
-                  amount={money.format(spent)}
-                  of={t("budgets.ofLimit", { amount: money.format(limit) })}
-                />
+                <span className={cn("font-semibold", over && EXPENSE_TONE)}>
+                  {over
+                    ? t("budgets.overBudget", { amount: money.format(spent - limit) })
+                    : t("budgets.left", { amount: money.format(limit - spent) })}
+                </span>
               }
               secondary={
                 <>
-                  <BudgetRemaining spent={spent} limit={limit} className="block" />
+                  <p className="text-xs text-muted-foreground tabular-nums">
+                    {t("budgets.spentOf", {
+                      spent: money.format(spent),
+                      limit: money.format(limit),
+                    })}
+                  </p>
                   {budget.rolloverEnabled ? (
                     <p className="text-xs text-muted-foreground tabular-nums">
                       {t("budgets.carryLabel", {

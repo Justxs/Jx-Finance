@@ -9,7 +9,7 @@ import { silent } from "@/lib/mutations";
 import { openItemCount } from "../close-checklist/close-checklist";
 import { isClosedStatus } from "../month-key";
 
-export function useMonthCloser(month: string, review: MonthReviewResponse, onClosed?: () => void) {
+export function useMonthCloser(month: string, review: MonthReviewResponse) {
   const { t } = useTranslation();
   const monthName = useMonthName()(month);
   const [pendingNote, setPendingNote] = useState<string | null>(null);
@@ -18,12 +18,10 @@ export function useMonthCloser(month: string, review: MonthReviewResponse, onClo
 
   const mutation = useCloseMonth(
     silent({
-      onSuccess: () => {
+      onSuccess: () =>
         toast.success(
           t(closed ? "monthClose.form.reclosed" : "monthClose.form.closed", { month: monthName }),
-        );
-        onClosed?.();
-      },
+        ),
     }),
   );
 
@@ -55,6 +53,7 @@ export function useMonthCloser(month: string, review: MonthReviewResponse, onClo
   );
 
   return {
+    close,
     request,
     dialog,
     pending: mutation.isPending,

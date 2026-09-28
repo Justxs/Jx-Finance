@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { getTransactionsMockHandler } from "@/api/generated/transactions/transactions.msw";
 import { withWidth } from "@/storybook/decorators";
 import {
+  FIXTURE_MONTH,
   longDescriptionTransaction,
   splitTransaction,
   uncategorisedTransaction,
@@ -12,6 +13,7 @@ import { RecentTransactionsList } from "./recent-transactions-list";
 const meta = {
   title: "Features/Dashboard/RecentTransactionsList",
   component: RecentTransactionsList,
+  args: { month: FIXTURE_MONTH },
   decorators: [withWidth("wide")],
 } satisfies Meta<typeof RecentTransactionsList>;
 

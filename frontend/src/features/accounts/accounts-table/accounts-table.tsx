@@ -1,10 +1,10 @@
 import { useNavigate, useSearch } from "@tanstack/react-router";
-import { ArrowLeftRight, FileUp } from "lucide-react";
+import { ArrowLeftRight, FileUp, Plus } from "lucide-react";
 import { type ReactNode, ViewTransition } from "react";
 import { useTranslation } from "react-i18next";
 import { useHouseholdsSuspense } from "@/api/generated";
 import type { AccountResponse } from "@/api/generated/model";
-import { RowActions } from "@/components/row-actions/row-actions";
+import { type RowAction, RowActions } from "@/components/row-actions/row-actions";
 import { SharedScopeTag } from "@/components/shared-scope-tag/shared-scope-tag";
 import { Button } from "@/components/ui/button/button";
 import { SelectColumnFilter, TextColumnFilter } from "@/components/ui/column-filter/column-filter";
@@ -39,6 +39,7 @@ interface Props {
   onDelete: (id: string) => void;
   onConvert?: (id: string) => void;
   onImport?: (id: string) => void;
+  onCreate?: () => void;
   positiveTotal: number;
 }
 
@@ -54,6 +55,7 @@ export function AccountsTable({
   onDelete,
   onConvert,
   onImport,
+  onCreate,
   positiveTotal,
 }: Readonly<Props>) {
   const { t } = useTranslation();
@@ -69,6 +71,16 @@ export function AccountsTable({
   const table = useSearchTable(search, patchSearch);
 
   const filtered = Boolean(search.search) || Boolean(search.iban) || Boolean(search.type);
+  const emptyProps = {
+    filtered,
+    onClearFilters: () => patchSearch({ search: undefined, iban: undefined, type: undefined }),
+    action: onCreate ? (
+      <Button type="button" size="sm" onClick={onCreate}>
+        <Plus />
+        {t("accounts.add")}
+      </Button>
+    ) : undefined,
+  };
   const canConvert = useUsableCurrencies().length >= 2;
   const householdNames = nameById(households.data);
 
@@ -95,6 +107,22 @@ export function AccountsTable({
   }
 
   function actions(account: AccountResponse) {
+    const extra: RowAction[] = [];
+    if (onImport) {
+      extra.push({
+        icon: FileUp,
+        label: t("imports.open"),
+        onSelect: () => onImport(account.id),
+      });
+    }
+    if (onConvert) {
+      extra.push({
+        icon: ArrowLeftRight,
+        label: t("conversions.add"),
+        disabled: !canConvert,
+        onSelect: () => onConvert(account.id),
+      });
+    }
     return (
       <RowActions
         label={account.name}
@@ -104,29 +132,8 @@ export function AccountsTable({
         deletePending={deletingId === account.id}
         deleteDisabled={deletingId !== null}
         className="justify-end"
-      >
-        {onImport ? (
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            onClick={() => onImport(account.id)}
-            aria-label={`${t("imports.open")}: ${account.name}`}
-          >
-            <FileUp />
-          </Button>
-        ) : null}
-        {onConvert ? (
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            disabled={!canConvert}
-            onClick={() => onConvert(account.id)}
-            aria-label={`${t("conversions.add")}: ${account.name}`}
-          >
-            <ArrowLeftRight />
-          </Button>
-        ) : null}
-      </RowActions>
+        actions={extra}
+      />
     );
   }
 
@@ -155,7 +162,7 @@ export function AccountsTable({
   let body: ReactNode;
   if (accounts.length === 0) {
     body = (
-      <TableEmptyRow colSpan={6} filtered={filtered}>
+      <TableEmptyRow colSpan={6} {...emptyProps}>
         {t("accounts.empty")}
       </TableEmptyRow>
     );
@@ -208,7 +215,7 @@ export function AccountsTable({
     <>
       <StaleRegion stale={stale} className="md:hidden">
         {accounts.length === 0 ? (
-          <EmptyText filtered={filtered}>{t("accounts.empty")}</EmptyText>
+          <EmptyText {...emptyProps}>{t("accounts.empty")}</EmptyText>
         ) : (
           <Rows aria-label={t("accounts.title")}>
             {accounts.map((account) => {

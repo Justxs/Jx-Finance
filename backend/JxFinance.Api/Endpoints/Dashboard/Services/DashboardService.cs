@@ -21,12 +21,13 @@ public sealed class DashboardService(
     IInvestmentCashFlowService investmentCashFlows)
     : IDashboardService
 {
-    public async Task<DashboardSummaryResponse> GetSummaryAsync(CancellationToken cancellationToken)
+    public async Task<DashboardSummaryResponse> GetSummaryAsync(string? month, CancellationToken cancellationToken)
     {
-        var month = DateWindow.MonthOf(clock.Today);
-        var (monthStart, monthEnd) = month;
+        var period = ResolveMonth(month, clock.Today);
+        var (monthStart, monthEnd) = period;
 
-        var (totalBalance, isComplete) = await accountService.GetReportingTotalAsync(cancellationToken);
+        var balanceDate = period.InclusiveEnd < clock.Today ? period.InclusiveEnd : (DateOnly?)null;
+        var (totalBalance, isComplete) = await accountService.GetReportingTotalAsync(balanceDate, cancellationToken);
 
         var monthTotals = await db.Transactions
             .Where(t => t.Date >= monthStart && t.Date < monthEnd)
@@ -34,7 +35,7 @@ public sealed class DashboardService(
             .Select(g => new { Type = g.Key, Total = g.Sum(t => t.ReportingAmount) })
             .ToListAsync(cancellationToken);
 
-        var investmentFlows = await investmentCashFlows.GetFlowsAsync(month, null, cancellationToken);
+        var investmentFlows = await investmentCashFlows.GetFlowsAsync(period, null, cancellationToken);
 
         var monthIncome = (monthTotals.FirstOrDefault(t => t.Type == FlowType.Income)?.Total ?? 0m)
             + investmentFlows.Where(f => f.Type == FlowType.Income).Sum(f => f.Amount);
@@ -46,7 +47,7 @@ public sealed class DashboardService(
             monthIncome,
             monthExpense,
             monthStart,
-            month.InclusiveEnd,
+            period.InclusiveEnd,
             isComplete);
     }
 
@@ -70,12 +71,15 @@ public sealed class DashboardService(
         return new CategoryBreakdownResponse(items, period.Start, period.InclusiveEnd);
     }
 
-    public async Task<MonthlyTrendResponse> GetMonthlyTrendAsync(int months, CancellationToken cancellationToken)
+    public async Task<MonthlyTrendResponse> GetMonthlyTrendAsync(
+        int months,
+        string? month,
+        CancellationToken cancellationToken)
     {
         var clamped = Math.Clamp(months, 1, 24);
-        var currentMonth = DateWindow.MonthOf(clock.Today);
-        var earliestStart = currentMonth.Start.AddMonths(-(clamped - 1));
-        var end = currentMonth.ExclusiveEnd;
+        var lastMonth = ResolveMonth(month, clock.Today);
+        var earliestStart = lastMonth.Start.AddMonths(-(clamped - 1));
+        var end = lastMonth.ExclusiveEnd;
 
         var totals = await db.Transactions
             .Where(t => t.Date >= earliestStart && t.Date < end)

@@ -17,6 +17,11 @@ export async function chooseOption(trigger: HTMLElement, option: string | RegExp
   await waitFor(() => expect(screen.queryByRole("listbox")).toBeNull());
 }
 
+export async function chooseMenuItem(trigger: HTMLElement, item: string | RegExp) {
+  await userEvent.click(trigger);
+  await userEvent.click(await screen.findByRole("menuitem", { name: item }));
+}
+
 export async function openedDialog(role: "dialog" | "alertdialog" = "dialog") {
   const dialog = await screen.findByRole(role);
   await waitFor(() => expect(dialog).toBeVisible());

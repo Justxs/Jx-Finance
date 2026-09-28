@@ -15,13 +15,14 @@ interface Props {
   legend?: boolean;
   baseline?: boolean;
   yDomain?: ["auto", "auto"];
+  until?: string;
 }
 
-export function NetWorthSeriesChart({ series, ...chart }: Readonly<Props>) {
+export function NetWorthSeriesChart({ series, until, ...chart }: Readonly<Props>) {
   const { t } = useTranslation();
   const history = useNetWorthHistorySuspense();
 
-  const items = history.data.items;
+  const items = history.data.items.filter((item) => until === undefined || item.date <= until);
   if (items.length < 2) {
     return <EmptyText>{t("netWorth.notEnoughHistory")}</EmptyText>;
   }

@@ -60,15 +60,17 @@ public sealed class AccountService(
             .OrderBy(a => a.CreatedAt)
             .ToListAsync(cancellationToken);
 
-        var balances = await BalancesAsync(accounts, cancellationToken);
+        var balances = await BalancesAsync(accounts, request.AsOf, cancellationToken);
 
         return Sort(accounts, balances, request).Select(a => a.ToResponse(balances[a.Id])).ToList();
     }
 
-    public async Task<(decimal Total, bool IsComplete)> GetReportingTotalAsync(CancellationToken cancellationToken)
+    public async Task<(decimal Total, bool IsComplete)> GetReportingTotalAsync(
+        DateOnly? asOf,
+        CancellationToken cancellationToken)
     {
         var accounts = await db.Accounts.AsNoTracking().ToListAsync(cancellationToken);
-        var balances = (await BalancesAsync(accounts, cancellationToken)).Values;
+        var balances = (await BalancesAsync(accounts, asOf, cancellationToken)).Values;
         return (balances.Sum(b => b.Reporting.Amount), balances.All(b => b.IsComplete));
     }
 
@@ -83,7 +85,7 @@ public sealed class AccountService(
         }
 
         var accounts = await db.Accounts.AsNoTracking().Where(a => wanted.Contains(a.Id)).ToListAsync(cancellationToken);
-        var balances = await BalancesAsync(accounts, cancellationToken);
+        var balances = await BalancesAsync(accounts, null, cancellationToken);
 
         return balances.ToDictionary(entry => entry.Key, entry => entry.Value.Reporting.Amount);
     }
@@ -252,10 +254,11 @@ public sealed class AccountService(
     }
 
     private async Task<AccountBalance> BalanceAsync(Account account, CancellationToken cancellationToken) =>
-        (await BalancesAsync([account], cancellationToken))[account.Id];
+        (await BalancesAsync([account], null, cancellationToken))[account.Id];
 
     private async Task<Dictionary<AccountId, AccountBalance>> BalancesAsync(
         IReadOnlyList<Account> accounts,
+        DateOnly? asOf,
         CancellationToken cancellationToken)
     {
         var ids = accounts.Select(a => a.Id).ToList();
@@ -269,12 +272,14 @@ public sealed class AccountService(
             Apply(account.Id, account.Currency, account.StartingBalance.Amount);
         }
 
-        var moved = await AccountMovements.SumAsync(db, ids, null, cancellationToken);
+        var moved = await AccountMovements.SumAsync(db, ids, asOf, cancellationToken);
         moved.ForEach(m => Apply(m.AccountId, m.Currency, m.Amount));
 
-        var holdingValues = await holdings.ValueAsync(ids, cancellationToken);
+        var holdingValues = await holdings.ValueAsync(ids, asOf, cancellationToken);
 
-        var latest = await rates.GetLatestAsync(cancellationToken);
+        var table = asOf is { } date
+            ? await rates.GetForDateAsync(date, cancellationToken)
+            : await rates.GetLatestAsync(cancellationToken);
         var reporting = rates.ReportingCurrency;
 
         return accounts.ToDictionary(
@@ -289,7 +294,7 @@ public sealed class AccountService(
                     .ToList();
 
                 (decimal Value, bool IsComplete) holdingValue = holdingValues.GetValueOrDefault(account.Id, (0m, true));
-                decimal? In(Money money, Currency currency) => latest.Convert(money.Amount, money.Currency, currency);
+                decimal? In(Money money, Currency currency) => table.Convert(money.Amount, money.Currency, currency);
 
                 return new AccountBalance(
                     held,

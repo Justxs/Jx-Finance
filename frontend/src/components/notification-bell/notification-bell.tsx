@@ -13,6 +13,7 @@ import type {
   NotificationResponse,
   NotificationType,
 } from "@/api/generated/model";
+import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { Button } from "@/components/ui/button/button";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import {
@@ -22,6 +23,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover/popover";
 import { Rows } from "@/components/ui/rows/rows";
+import { Skeleton } from "@/components/ui/skeleton/skeleton";
 import { Tooltip } from "@/components/ui/tooltip/tooltip";
 import { monthKeyOfIso } from "@/features/month-close/month-key";
 import { useDate, useMoney, useMonthName, useNumberFormat } from "@/hooks/use-formatters";
@@ -66,7 +68,7 @@ const producers = {
   monthReadyToClose: {
     feature: "monthClose",
     link: ({ month }: NotificationPayload) =>
-      linkOptions({ to: "/close", search: { month: month ? monthKeyOfIso(month) : undefined } }),
+      linkOptions({ to: "/", search: { month: month ? monthKeyOfIso(month) : undefined } }),
   },
 } as const satisfies Record<
   NotificationType,
@@ -263,5 +265,16 @@ export function NotificationBell({ placement = "below" }: Readonly<Props>) {
         </span>
       ) : null}
     </div>
+  );
+}
+
+export function NotificationBellSlot(props: Readonly<Props>) {
+  return (
+    <QueryBoundary
+      fallback={<Skeleton className="size-9 rounded-md" />}
+      error={<NotificationBellUnavailable />}
+    >
+      <NotificationBell {...props} />
+    </QueryBoundary>
   );
 }

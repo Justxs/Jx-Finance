@@ -17,9 +17,10 @@ import {
 } from "@/features/transactions/transaction-amount";
 import { UnusualAmountBadge } from "@/features/transactions/unusual-amount/unusual-amount-badge";
 import { useShortDayIso } from "@/hooks/use-formatters";
+import { useTodayDate } from "@/hooks/use-settings";
 import { byId, nameById } from "@/lib/options";
 import { metaLine } from "@/lib/utils";
-import { recentTransactionsParams } from "../dashboard-queries";
+import { currentMonthKey, recentTransactionsParams } from "../dashboard-queries";
 import { DashboardSection } from "../dashboard-section/dashboard-section";
 
 function FirstRunSteps() {
@@ -53,11 +54,16 @@ function FirstRunSteps() {
   );
 }
 
-function RecentRows() {
+interface Props {
+  month: string;
+}
+
+function RecentRows({ month }: Readonly<Props>) {
   const { t } = useTranslation();
   const formatDay = useShortDayIso();
+  const today = useTodayDate();
 
-  const recent = useTransactionsSuspense(recentTransactionsParams);
+  const recent = useTransactionsSuspense(recentTransactionsParams(month, today));
   const categories = useCategoriesSuspense();
   const accounts = useAccountsSuspense();
 
@@ -69,7 +75,9 @@ function RecentRows() {
     return accounts.data.length === 0 ? (
       <FirstRunSteps />
     ) : (
-      <EmptyText>{t("dashboard.empty")}</EmptyText>
+      <EmptyText>
+        {month === currentMonthKey(today) ? t("dashboard.empty") : t("dashboard.emptyMonth")}
+      </EmptyText>
     );
   }
 
@@ -100,7 +108,10 @@ function RecentRows() {
   );
 }
 
-export function RecentTransactionsList({ className }: Readonly<{ className?: string }>) {
+export function RecentTransactionsList({
+  month,
+  className,
+}: Readonly<Props & { className?: string }>) {
   const { t } = useTranslation();
 
   return (
@@ -111,7 +122,7 @@ export function RecentTransactionsList({ className }: Readonly<{ className?: str
       linkLabel={t("nav.transactions")}
     >
       <QueryBoundary fallback={<RowsSkeleton rows={6} />} errorSubject={t("dashboard.recent")}>
-        <RecentRows />
+        <RecentRows month={month} />
       </QueryBoundary>
     </DashboardSection>
   );

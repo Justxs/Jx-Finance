@@ -54,7 +54,7 @@ export function HubTabs({ current, pages }: Readonly<Props>) {
             )}
           >
             <page.icon aria-hidden="true" className="size-4 shrink-0" />
-            {t("tabKey" in page ? page.tabKey : page.key)}
+            {t(page.key)}
             {active ? (
               <span
                 aria-hidden="true"

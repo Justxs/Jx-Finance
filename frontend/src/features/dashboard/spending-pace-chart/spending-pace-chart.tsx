@@ -7,9 +7,11 @@ import {
   TimeSeriesLineChart,
 } from "@/components/chart/time-series-line-chart";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
+import { monthDate } from "@/features/month-close/month-key";
+import { useShortMonth } from "@/hooks/use-formatters";
 import { useTodayDate } from "@/hooks/use-settings";
-import { parseIso } from "@/lib/calendar";
-import { spendingPaceRanges } from "../dashboard-queries";
+import { parseIso, previousMonth } from "@/lib/calendar";
+import { currentMonthKey, spendingPaceRanges } from "../dashboard-queries";
 
 function cumulativeByDay(points: readonly ReportTrendPoint[], lastDay: number) {
   const perDay = new Map<number, number>();
@@ -33,28 +35,36 @@ function lastDayOf(isoDate: string | null | undefined) {
   return parseIso(isoDate ?? "")?.getDate() ?? 0;
 }
 
-export function SpendingPaceChart() {
+interface Props {
+  month: string;
+}
+
+export function SpendingPaceChart({ month }: Readonly<Props>) {
   const { t } = useTranslation();
+  const monthFormat = useShortMonth();
   const today = useTodayDate();
-  const ranges = spendingPaceRanges(today);
+  const ranges = spendingPaceRanges(month);
   const current = useReportSummarySuspense(ranges.current);
   const previous = useReportSummarySuspense(ranges.previous);
 
   const daysInMonth = lastDayOf(ranges.current.dateTo);
   const daysInPrevious = lastDayOf(ranges.previous.dateTo);
-  const currentTotals = cumulativeByDay(current.data.trend, today.getDate());
+  const shownDays = month === currentMonthKey(today) ? today.getDate() : daysInMonth;
+  const currentTotals = cumulativeByDay(current.data.trend, shownDays);
+  const currentLabel = monthFormat.format(monthDate(month));
+  const previousLabel = monthFormat.format(previousMonth(monthDate(month)));
   const previousTotals = cumulativeByDay(previous.data.trend, daysInPrevious);
 
   const series: TimeSeriesLine[] = [
     {
       key: "current",
-      label: t("dashboard.pace.current"),
+      label: currentLabel,
       color: CHART_COLOR_PRIMARY,
       shape: "line",
     },
     {
       key: "previous",
-      label: t("dashboard.pace.previous"),
+      label: previousLabel,
       color: "var(--muted-foreground)",
       shape: "line",
       comparison: true,
@@ -75,7 +85,7 @@ export function SpendingPaceChart() {
     <TimeSeriesLineChart
       data={chartData}
       series={series}
-      ariaLabel={t("dashboard.pace.label")}
+      ariaLabel={t("dashboard.pace.label", { month: currentLabel, previous: previousLabel })}
       xAxis="day"
       curve="stepAfter"
       formatLabel={(day) => t("dashboard.pace.day", { day })}

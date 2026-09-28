@@ -239,7 +239,13 @@ export function TransactionForm({
 
         <SplitLinesEditor
           form={form}
-          fields={{ type: "type", isSplit: "isSplit", lines: "lines" }}
+          fields={{
+            type: "type",
+            amount: "amount",
+            currency: "currency",
+            isSplit: "isSplit",
+            lines: "lines",
+          }}
           categories={categories}
         />
 

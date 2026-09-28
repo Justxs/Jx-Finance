@@ -113,7 +113,7 @@ public sealed class TransactionService(
                 Income = g.Sum(t => t.Type == FlowType.Income ? t.ReportingAmount : 0m),
                 Expense = g.Sum(t => t.Type == FlowType.Expense ? t.ReportingAmount : 0m),
             })
-            .FirstOrDefaultAsync(cancellationToken);
+            .SingleOrDefaultAsync(cancellationToken);
 
         return new TransactionsSummaryResponse(
             totals?.Count ?? 0,

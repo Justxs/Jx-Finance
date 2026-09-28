@@ -9,9 +9,11 @@ import type {
 import { type DeleteProps, RowActions } from "@/components/row-actions/row-actions";
 import { Button } from "@/components/ui/button/button";
 import { Tag } from "@/components/ui/tag/tag";
-import { useIsoDate, useMoney } from "@/hooks/use-formatters";
+import { useIsoDate, useMoney, useRelativeDays } from "@/hooks/use-formatters";
 import { useToday } from "@/hooks/use-settings";
+import { EXPENSE_TONE } from "@/lib/tone";
 import { cn, metaLine } from "@/lib/utils";
+import { daysUntil } from "../bill-groups";
 import { BillRowLayout } from "../bill-row-layout";
 
 const shapeTone = {
@@ -43,13 +45,16 @@ export function RecurringBillRow({
   const { t } = useTranslation();
   const money = useMoney();
   const formatDate = useIsoDate();
+  const relativeDays = useRelativeDays();
 
   const category = categories.find((c) => c.id === bill.categoryId);
   const account = accounts.find((a) => a.id === bill.accountId);
   const toAccount = accounts.find((a) => a.id === bill.toAccountId);
 
   const today = useToday();
-  const overdue = bill.isActive && Boolean(bill.nextDueDate) && bill.nextDueDate < today;
+  const days = daysUntil(bill.nextDueDate, today);
+  const overdue = bill.isActive && days !== null && days < 0;
+  const soon = bill.isActive && days !== null && days < 7 ? relativeDays(days) : null;
   const isTransfer = bill.shape === "transfer";
   const rise = bill.latestMatch?.isPriceRise && bill.latestMatch.expected ? bill.latestMatch : null;
   const currency = account?.currency;
@@ -84,6 +89,11 @@ export function RecurringBillRow({
             <span className={cn("tabular-nums", bill.isActive && "text-foreground")}>
               {t("recurringBills.nextDueDate")}: {formatDate(bill.nextDueDate)}
             </span>
+            {soon ? (
+              <span className={cn("font-medium", overdue ? EXPENSE_TONE : "text-foreground")}>
+                {` (${soon})`}
+              </span>
+            ) : null}
             {meta ? ` · ${meta}` : ""}
           </p>
           {rise ? (

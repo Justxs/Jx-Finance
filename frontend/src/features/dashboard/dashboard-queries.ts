@@ -3,20 +3,41 @@ import type {
   ReportSummaryParams,
   TransactionsParams,
 } from "@/api/generated/model";
-import { monthBounds, previousMonth } from "@/lib/calendar";
+import { monthDate, monthKeyOfIso } from "@/features/month-close/month-key";
+import { monthBounds, previousMonth, toIso } from "@/lib/calendar";
 
-export const monthlyTrendParams: MonthlyTrendParams = { months: 6 };
+export function currentMonthKey(today: Date) {
+  return monthKeyOfIso(toIso(today));
+}
 
-export const recentTransactionsParams: TransactionsParams = { page: 1, pageSize: 6 };
+export function monthlyTrendParams(month: string): MonthlyTrendParams {
+  return { months: 6, month };
+}
+
+export function pastMonthEnd(month: string, today: Date): string | undefined {
+  return month === currentMonthKey(today) ? undefined : monthBounds(monthDate(month)).dateTo;
+}
+
+export function asOfParams(until: string | undefined) {
+  return until === undefined ? undefined : { asOf: until };
+}
+
+export function recentTransactionsParams(month: string, today: Date): TransactionsParams {
+  const latest = { page: 1, pageSize: 6 };
+  return month === currentMonthKey(today)
+    ? latest
+    : { ...latest, ...monthBounds(monthDate(month)) };
+}
 
 interface SpendingPaceRanges {
   current: ReportSummaryParams;
   previous: ReportSummaryParams;
 }
 
-export function spendingPaceRanges(today: Date): SpendingPaceRanges {
+export function spendingPaceRanges(month: string): SpendingPaceRanges {
+  const date = monthDate(month);
   return {
-    current: monthBounds(today),
-    previous: monthBounds(previousMonth(today)),
+    current: monthBounds(date),
+    previous: monthBounds(previousMonth(date)),
   };
 }

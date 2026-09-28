@@ -1,12 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { Landmark, Unlink } from "lucide-react";
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { getDebtsSuspenseQueryOptions, useUnlinkDebtPayment } from "@/api/generated";
 import type { TransactionResponse } from "@/api/generated/model";
 import { Modal } from "@/components/modal";
-import { Button, buttonVariants } from "@/components/ui/button/button";
+import type { RowAction } from "@/components/row-actions/row-actions";
+import { buttonVariants } from "@/components/ui/button/button";
 import { DebtPaymentForm } from "@/features/net-worth/debt-payments/debt-payments";
 import { useFeature } from "@/hooks/use-settings";
 import { isOptimistic } from "../transaction-amount";
@@ -39,7 +40,10 @@ export function DebtPaymentMarker({
   );
 }
 
-export function DebtPaymentAction({ transaction, label }: Readonly<Props & { label: string }>) {
+export function useDebtPaymentAction(transaction: TransactionResponse): {
+  action?: RowAction;
+  dialog: ReactNode;
+} {
   const { t } = useTranslation();
   const enabled = useFeature("netWorth");
   const debts = useQuery({ ...getDebtsSuspenseQueryOptions(), enabled }).data ?? [];
@@ -49,34 +53,29 @@ export function DebtPaymentAction({ transaction, label }: Readonly<Props & { lab
   const paid = transaction.debtPayment;
 
   if (paid) {
-    return (
-      <Button
-        variant="ghost"
-        size="icon-sm"
-        pending={unlink.isPending}
-        onClick={() => unlink.mutate({ id: paid.debtId, paymentId: paid.id })}
-        aria-label={`${t("netWorth.payments.unlinkFromDebt")}: ${label}`}
-      >
-        <Unlink />
-      </Button>
-    );
+    return {
+      action: {
+        icon: Unlink,
+        label: t("netWorth.payments.unlinkFromDebt"),
+        pending: unlink.isPending,
+        onSelect: () => unlink.mutate({ id: paid.debtId, paymentId: paid.id }),
+      },
+      dialog: null,
+    };
   }
 
   if (tracking.length === 0 || transaction.type !== "expense" || transaction.isSplit) {
-    return null;
+    return { dialog: null };
   }
 
-  return (
-    <>
-      <Button
-        variant="ghost"
-        size="icon-sm"
-        disabled={isOptimistic(transaction)}
-        onClick={() => setOpen(true)}
-        aria-label={`${t("netWorth.payments.linkToDebt")}: ${label}`}
-      >
-        <Landmark />
-      </Button>
+  return {
+    action: {
+      icon: Landmark,
+      label: t("netWorth.payments.linkToDebt"),
+      disabled: isOptimistic(transaction),
+      onSelect: () => setOpen(true),
+    },
+    dialog: (
       <Modal open={open} onOpenChange={setOpen} title={t("netWorth.payments.linkToDebt")}>
         <DebtPaymentForm
           debts={tracking}
@@ -84,6 +83,6 @@ export function DebtPaymentAction({ transaction, label }: Readonly<Props & { lab
           onClose={() => setOpen(false)}
         />
       </Modal>
-    </>
-  );
+    ),
+  };
 }

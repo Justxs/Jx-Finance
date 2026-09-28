@@ -25,6 +25,9 @@ import type { FeatureKey } from "@/hooks/use-settings";
 import { type MoveDirection, adjacentIndex, swapItems } from "@/lib/reorder";
 import { todayDateIn, warm, warmWithSettings } from "@/lib/route-prefetch";
 import {
+  asOfParams,
+  currentMonthKey,
+  pastMonthEnd,
   monthlyTrendParams,
   recentTransactionsParams,
   spendingPaceRanges,
@@ -82,39 +85,44 @@ export function setCardShown(draft: LayoutDraft, card: DashboardCard, shown: boo
   return { ...draft, hidden: shown ? hidden : [...hidden, card] };
 }
 
-function warmCard(queryClient: QueryClient, card: DashboardCard, settings: SettingsResponse) {
+function warmCard(queryClient: QueryClient, card: DashboardCard, month: string, today: Date) {
   switch (card) {
     case "summary":
-      warm(queryClient, getDashboardSummarySuspenseQueryOptions());
+      warm(queryClient, getDashboardSummarySuspenseQueryOptions({ month }));
       break;
     case "monthlyTrend":
-      warm(queryClient, getMonthlyTrendSuspenseQueryOptions(monthlyTrendParams));
+      warm(queryClient, getMonthlyTrendSuspenseQueryOptions(monthlyTrendParams(month)));
       break;
     case "spendingByCategory":
-      warm(queryClient, getCategoryBreakdownSuspenseQueryOptions());
+      warm(queryClient, getCategoryBreakdownSuspenseQueryOptions({ month }));
       break;
     case "spendingPace": {
-      const ranges = spendingPaceRanges(todayDateIn(settings));
+      const ranges = spendingPaceRanges(month);
       warm(queryClient, getReportSummarySuspenseQueryOptions(ranges.current));
       warm(queryClient, getReportSummarySuspenseQueryOptions(ranges.previous));
       break;
     }
     case "budgets":
-      warm(queryClient, getBudgetsSuspenseQueryOptions());
+      warm(queryClient, getBudgetsSuspenseQueryOptions(asOfParams(pastMonthEnd(month, today))));
       break;
     case "netWorth":
       warm(queryClient, getNetWorthHistorySuspenseQueryOptions());
       break;
     case "accounts":
-      warm(queryClient, getAccountsSuspenseQueryOptions());
+      warm(queryClient, getAccountsSuspenseQueryOptions(asOfParams(pastMonthEnd(month, today))));
       break;
     case "recentTransactions":
-      warm(queryClient, getTransactionsSuspenseQueryOptions(recentTransactionsParams));
+      warm(
+        queryClient,
+        getTransactionsSuspenseQueryOptions(recentTransactionsParams(month, today)),
+      );
       warm(queryClient, getCategoriesSuspenseQueryOptions());
       warm(queryClient, getAccountsSuspenseQueryOptions());
       break;
     case "upcomingBills":
-      warm(queryClient, getRecurringBillsSuspenseQueryOptions());
+      if (month === currentMonthKey(today)) {
+        warm(queryClient, getRecurringBillsSuspenseQueryOptions());
+      }
       break;
   }
 }
@@ -123,25 +131,27 @@ function warmShownCards(
   queryClient: QueryClient,
   layout: DashboardLayoutResponse,
   settings: SettingsResponse,
+  month: string,
 ) {
   for (const card of shownCards(layout, settings.features)) {
-    warmCard(queryClient, card, settings);
+    warmCard(queryClient, card, month, todayDateIn(settings));
   }
 }
 
-export function warmDashboard(queryClient: QueryClient) {
+export function warmDashboard(queryClient: QueryClient, month: string | undefined) {
   const layout = queryClient.query({
     ...getDashboardLayoutSuspenseQueryOptions(),
     staleTime: Infinity,
   });
   warmWithSettings(queryClient, (settings) => {
+    const today = todayDateIn(settings);
+    const current = currentMonthKey(today);
+    const shown = month ?? current;
     if (settings.features.monthClose) {
-      warm(
-        queryClient,
-        getMonthReviewSuspenseQueryOptions(latestEndedMonth(todayDateIn(settings))),
-      );
+      const reviewed = shown === current ? latestEndedMonth(today) : shown;
+      warm(queryClient, getMonthReviewSuspenseQueryOptions(reviewed));
     }
-    void layout.then((loaded) => warmShownCards(queryClient, loaded, settings), noop);
+    void layout.then((loaded) => warmShownCards(queryClient, loaded, settings, shown), noop);
   });
   void layout.catch(noop);
 }

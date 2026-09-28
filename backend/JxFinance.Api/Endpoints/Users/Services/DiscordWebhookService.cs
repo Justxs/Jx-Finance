@@ -30,7 +30,7 @@ public sealed class DiscordWebhookService(
 
     public async Task<DiscordWebhookResponse> GetAsync(CancellationToken cancellationToken)
     {
-        var webhook = await db.DiscordWebhooks.AsNoTracking().FirstOrDefaultAsync(cancellationToken);
+        var webhook = await db.DiscordWebhooks.AsNoTracking().FirstOrDefaultAsync(w => w.UserId == currentUser.Id, cancellationToken);
         if (webhook is null)
         {
             return new DiscordWebhookResponse(false, true, Enum.GetValues<NotificationType>(), null, null, false, false);
@@ -51,7 +51,7 @@ public sealed class DiscordWebhookService(
         CancellationToken cancellationToken)
     {
         var url = OptionalText.Normalize(request.WebhookUrl);
-        var webhook = await db.DiscordWebhooks.FirstOrDefaultAsync(cancellationToken);
+        var webhook = await db.DiscordWebhooks.FirstOrDefaultAsync(w => w.UserId == currentUser.Id, cancellationToken);
         if (webhook is null)
         {
             if (url is null)
@@ -115,7 +115,7 @@ public sealed class DiscordWebhookService(
                 "An administrator has not allowed Discord notifications on this installation.");
         }
 
-        if (await db.DiscordWebhooks.FirstOrDefaultAsync(cancellationToken) is not { } webhook)
+        if (await db.DiscordWebhooks.FirstOrDefaultAsync(w => w.UserId == currentUser.Id, cancellationToken) is not { } webhook)
         {
             return EntityLookup.NotFound(NoWebhook);
         }

@@ -2,13 +2,14 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { getCategoryBreakdownMockHandler } from "@/api/generated/dashboard/dashboard.msw";
 import { Card } from "@/components/ui/card/card";
 import { withWidth } from "@/storybook/decorators";
-import { categoryBreakdown } from "@/storybook/fixtures";
+import { categoryBreakdown, FIXTURE_MONTH } from "@/storybook/fixtures";
 import { emptyHandlers, errorHandlers, loadingHandlers, withHandlers } from "@/storybook/handlers";
 import { CategoryBreakdownChart } from "./category-breakdown-chart";
 
 const meta = {
   title: "Features/Dashboard/CategoryBreakdownChart",
   component: CategoryBreakdownChart,
+  args: { month: FIXTURE_MONTH },
   decorators: [
     (Story) => (
       <Card className="p-6">

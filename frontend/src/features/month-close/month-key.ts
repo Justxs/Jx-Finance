@@ -24,16 +24,6 @@ export function latestEndedMonth(today: Date) {
   return monthKeyOfIso(toIso(previousMonth(today)));
 }
 
-export function defaultMonth(today: Date, months: readonly MonthCloseMonthStatus[]) {
-  const latest = latestEndedMonth(today);
-  const open = months
-    .filter((entry) => entry.status === "open" && monthKeyOfIso(entry.month) <= latest)
-    .map((entry) => monthKeyOfIso(entry.month))
-    .toSorted()
-    .at(-1);
-  return open ?? latest;
-}
-
 export function isClosedStatus(status: MonthCloseMonthStatus["status"]) {
   return status === "closed" || status === "closedChanged";
 }

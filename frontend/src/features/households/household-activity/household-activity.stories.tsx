@@ -32,7 +32,7 @@ export const Default: Story = {
     ).toBeVisible();
     await expect(canvas.getByText(/edited in bulk: Category set to Maistas/u)).toBeVisible();
     await expect(canvas.getAllByRole("listitem")).toHaveLength(10);
-    await expect(canvas.getByText("Page 1 of 2")).toBeVisible();
+    await expect(canvas.getByText(`1–10 of ${householdAuditEvents.length}`)).toBeVisible();
   },
 };
 
@@ -65,9 +65,9 @@ export const LoadFailed: Story = { parameters: { msw: { handlers: errorHandlers 
 
 export const Paged: Story = {
   play: async ({ canvas }) => {
-    await expect(await canvas.findByText("Page 1 of 2")).toBeVisible();
+    await expect(await canvas.findByText(/^1–10 of /u)).toBeVisible();
     await userEvent.click(canvas.getByRole("button", { name: "Next" }));
-    await waitFor(() => expect(canvas.getByText("Page 2 of 2")).toBeVisible());
+    await waitFor(() => expect(canvas.getByText(/^11–\d+ of /u)).toBeVisible());
     await expect(await canvas.findByText(/created the household Šeima/u)).toBeVisible();
     await expect(canvas.getAllByRole("listitem")).toHaveLength(householdAuditEvents.length - 10);
   },
@@ -75,7 +75,7 @@ export const Paged: Story = {
 
 export const FilterByMemberAndKind: Story = {
   play: async ({ canvas }) => {
-    await canvas.findByText("Page 1 of 2");
+    await canvas.findByText(/^1–10 of /u);
 
     await chooseOption(canvas.getByLabelText("Member"), memberUser.displayName);
     await waitFor(() =>

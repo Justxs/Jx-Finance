@@ -4,6 +4,9 @@ import { Button } from "@/components/ui/button/button";
 import { cn } from "@/lib/utils";
 import { SubmitButton } from "../submit-button/submit-button";
 
+export const modalFooterClass =
+  "in-data-[slot=modal-body]:sticky in-data-[slot=modal-body]:bottom-0 in-data-[slot=modal-body]:z-10 in-data-[slot=modal-body]:-mx-4 in-data-[slot=modal-body]:-mb-5 in-data-[slot=modal-body]:border-t in-data-[slot=modal-body]:bg-popover in-data-[slot=modal-body]:px-4 in-data-[slot=modal-body]:py-3 sm:in-data-[slot=modal-body]:-mx-6 sm:in-data-[slot=modal-body]:px-6";
+
 interface Props {
   submitLabel: ReactNode;
   pending?: boolean;
@@ -24,7 +27,14 @@ export function FormActions({
   const { t } = useTranslation();
 
   return (
-    <div className={cn("flex justify-end gap-2 pt-2", span && "col-span-full flex-wrap")}>
+    <div
+      data-slot="form-actions"
+      className={cn(
+        "flex justify-end gap-2 pt-2",
+        span && "col-span-full flex-wrap",
+        modalFooterClass,
+      )}
+    >
       {onCancel ? (
         <Button type="button" variant="outline" disabled={cancelDisabled} onClick={onCancel}>
           {t("actions.cancel")}

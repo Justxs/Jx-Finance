@@ -28,6 +28,54 @@ public sealed class DashboardEndpointTests(ApiFixture fixture) : IntegrationTest
     }
 
     [Fact]
+    public async Task Summary_of_an_earlier_month_counts_that_month_and_its_balance_at_month_end()
+    {
+        using var member = await CreateUserClientAsync();
+        var earlier = new DateOnly(Today.Year, Today.Month, 1).AddMonths(-6);
+        var account = await CreateAccountAsync("100.00", client: member);
+        await PostAsync<IdDto>(
+            member,
+            "/api/transactions",
+            new { accountId = account, type = "expense", amount = "40.00", date = earlier.AddDays(14) });
+        await PostAsync<IdDto>(
+            member,
+            "/api/transactions",
+            new { accountId = account, type = "income", amount = "25.00", date = earlier.AddMonths(1) });
+
+        var past = await member.GetFromJsonAsync<SummaryDto>($"/api/dashboard/summary?month={earlier:yyyy-MM}", TestContext.Current.CancellationToken);
+        var current = await member.GetFromJsonAsync<SummaryDto>("/api/dashboard/summary", TestContext.Current.CancellationToken);
+
+        Assert.Equal(earlier, past!.MonthStart);
+        Assert.Equal(earlier.AddMonths(1).AddDays(-1), past.MonthEnd);
+        Assert.Equal("40.00", past.MonthExpense);
+        Assert.Equal("60.00", past.TotalBalance);
+        Assert.Equal("85.00", current!.TotalBalance);
+    }
+
+    [Fact]
+    public async Task Summary_of_an_earlier_month_values_holdings_at_that_months_prices()
+    {
+        using var member = await CreateUserClientAsync();
+        var earlier = new DateOnly(Today.Year, Today.Month, 1).AddMonths(-6);
+        var account = await CreateAccountAsync("5000.00", "investment", client: member);
+        var priced = await CreateSecurityAsync(member);
+        var pricedLater = await CreateSecurityAsync(member);
+        await RecordInvestmentAsync(member, new { accountId = account, securityId = priced, type = "buy", date = earlier.AddDays(9), quantity = "1", price = "100" });
+        await RecordInvestmentAsync(member, new { accountId = account, securityId = pricedLater, type = "buy", date = earlier.AddDays(9), quantity = "1", price = "50" });
+        await SetPriceAsync(member, priced, "150", earlier.AddDays(19));
+        await SetPriceAsync(member, priced, "300", Today);
+        await SetPriceAsync(member, pricedLater, "60", Today);
+
+        var past = await member.GetFromJsonAsync<SummaryDto>($"/api/dashboard/summary?month={earlier:yyyy-MM}", TestContext.Current.CancellationToken);
+        var current = await member.GetFromJsonAsync<SummaryDto>("/api/dashboard/summary", TestContext.Current.CancellationToken);
+
+        Assert.Equal("5000.00", past!.TotalBalance);
+        Assert.False(past.IsComplete);
+        Assert.Equal("5210.00", current!.TotalBalance);
+        Assert.True(current.IsComplete);
+    }
+
+    [Fact]
     public async Task Summary_says_when_the_total_leaves_out_a_holding_it_could_not_value()
     {
         using var member = await CreateUserClientAsync();
@@ -40,6 +88,12 @@ public sealed class DashboardEndpointTests(ApiFixture fixture) : IntegrationTest
         var summary = await member.GetFromJsonAsync<SummaryDto>("/api/dashboard/summary", TestContext.Current.CancellationToken);
         Assert.False(summary!.IsComplete);
         Assert.Equal("4900.00", summary.TotalBalance);
+    }
+
+    private static async Task SetPriceAsync(HttpClient client, Guid securityId, string lastPrice, DateOnly lastPriceDate)
+    {
+        var response = await client.PutAsJsonAsync($"/api/investments/securities/{securityId}/price", new { lastPrice, lastPriceDate }, TestContext.Current.CancellationToken);
+        Assert.True(response.IsSuccessStatusCode, await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
     }
 
     private static decimal Parse(string money) => decimal.Parse(money, CultureInfo.InvariantCulture);

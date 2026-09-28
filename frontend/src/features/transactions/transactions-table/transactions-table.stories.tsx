@@ -1,9 +1,10 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import { toast } from "sonner";
-import { expect } from "storybook/test";
+import { expect, fn, screen, userEvent, waitFor } from "storybook/test";
 import type { TransactionResponse } from "@/api/generated/model";
 import { getDebtsMockHandler } from "@/api/generated/net-worth/net-worth.msw";
+import { getBulkCategorizeTransactionsMockHandler } from "@/api/generated/transactions/transactions.msw";
 import {
   accounts,
   categories,
@@ -148,6 +149,41 @@ export const SpecialRows: Story = {
   },
 };
 
+const recategorized = fn();
+const expenseCategory = categories.find((category) => category.type === "expense");
+
+export const CategoryChangedInline: Story = {
+  args: { data: [uncategorisedTransaction] },
+  parameters: withHandlers(
+    getBulkCategorizeTransactionsMockHandler(async ({ request }) => {
+      recategorized(await request.json());
+      return { updated: 1 };
+    }),
+  ),
+  play: async ({ canvas }) => {
+    if (!expenseCategory) {
+      throw new Error("the fixtures have no expense category");
+    }
+    await userEvent.click(canvas.getByRole("combobox", { name: /^Category for / }));
+    await userEvent.type(await screen.findByLabelText("Search"), expenseCategory.name.slice(0, 3));
+    await userEvent.click(await screen.findByRole("option", { name: expenseCategory.name }));
+    await waitFor(() =>
+      expect(recategorized).toHaveBeenCalledWith({
+        transactionIds: [uncategorisedTransaction.id],
+        categoryId: expenseCategory.id,
+      }),
+    );
+  },
+};
+
+export const SplitRowsKeepTheirTag: Story = {
+  args: { data: [splitTransaction] },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText("Split")).toBeVisible();
+    await expect(canvas.queryByRole("combobox", { name: /^Category for / })).toBeNull();
+  },
+};
+
 export const PaysADebt: Story = {
   args: { data: [linkedPaymentTransaction, ...transactions.slice(0, 4)] },
   parameters: withHandlers(getDebtsMockHandler([trackedMortgage, ...debts.slice(1)])),
@@ -155,9 +191,16 @@ export const PaysADebt: Story = {
     await expect(
       canvas.getByRole("link", { name: `Pays debt: ${trackedMortgage.name}` }),
     ).toBeInTheDocument();
-    await expect(await canvas.findAllByRole("button", { name: /^Link to debt:/ })).not.toHaveLength(
-      0,
+    await userEvent.click(
+      canvas.getByRole("button", {
+        name: `Actions: ${linkedPaymentTransaction.description ?? ""}`,
+      }),
     );
-    await expect(canvas.getByRole("button", { name: /^Unlink from debt:/ })).toBeInTheDocument();
+    await expect(await screen.findByRole("menuitem", { name: "Unlink from debt" })).toBeVisible();
+    await userEvent.keyboard("{Escape}");
+    await userEvent.click(
+      canvas.getByRole("button", { name: `Actions: ${transactions[0]?.description ?? ""}` }),
+    );
+    await expect(await screen.findByRole("menuitem", { name: "Link to debt" })).toBeVisible();
   },
 };

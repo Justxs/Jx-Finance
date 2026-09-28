@@ -18,6 +18,7 @@
     "reports": "Ataskaitos",
     "users": "Naudotojai",
     "profile": "Jūsų profilis",
+    "accountMenu": "Paskyros meniu",
     "collapse": "Suskleisti šoninę juostą",
     "expand": "Išskleisti šoninę juostą",
     "main": "Pagrindinė navigacija",
@@ -27,7 +28,6 @@
     "monthClose": "Mėnesio uždarymas",
     "plan": "Planas",
     "wealth": "Turtas",
-    "reportsOverview": "Apžvalga",
     "installation": "Sistema"
   },
   "actions": {
@@ -63,27 +63,33 @@
     "pickEnd": "Pasirinkite pabaigos datą"
   },
   "dashboard": {
-    "title": "Suvestinė",
+    "month": {
+      "label": "Mėnuo",
+      "previous": "Ankstesnis mėnuo",
+      "next": "Kitas mėnuo",
+      "current": "Šis mėnuo"
+    },
     "totalBalance": "Bendras likutis",
-    "monthIncome": "Šio mėnesio pajamos",
-    "monthExpense": "Šio mėnesio išlaidos",
-    "monthNet": "Šio mėnesio balansas",
+    "balanceAtMonthEnd": "Likutis mėnesio pabaigoje",
+    "monthIncome": "Pajamos",
+    "monthExpense": "Išlaidos",
+    "monthNet": "Balansas",
     "budgets": "Einamojo laikotarpio biudžetai",
     "noBudgets": "Biudžetų nenustatyta.",
     "accounts": "Likutis pagal sąskaitą",
     "noAccounts": "Sąskaitų dar nėra.",
     "upcomingBills": "Artėjantys mokėjimai",
     "noBills": "Aktyvių mokėjimų nėra.",
+    "billsCurrentOnly": "Artėjantys mokėjimai rodomi einamajame mėnesyje.",
     "overdue": "Vėluoja",
     "pace": {
       "title": "Išlaidų tempas",
-      "current": "Šis mėnuo",
-      "previous": "Praėjęs mėnuo",
       "day": "{{day}} d.",
-      "label": "Sukauptos išlaidos pagal dienas: šis mėnuo, palyginti su praėjusiu"
+      "label": "Sukauptos išlaidos pagal dienas: {{month}} ir {{previous}}"
     },
     "recent": "Paskutinės operacijos",
     "empty": "Operacijų dar nėra.",
+    "emptyMonth": "Šį mėnesį operacijų nėra.",
     "firstRun": {
       "intro": "Įrašų dar nėra. Pradėkite nuo trijų žingsnių:",
       "accounts": "Pridėkite sąskaitą",
@@ -93,13 +99,13 @@
       "budgets": "Nustatykite biudžetą",
       "budgetsHint": "kad matytumėte, ar mėnesio išlaidos neviršija plano."
     },
-    "spendingByCategory": "Išlaidos pagal kategoriją (šį mėnesį)",
+    "spendingByCategory": "Išlaidos pagal kategoriją",
     "monthlyTrend": "Pajamos ir išlaidos",
     "other": "Kita",
-    "noSpending": "Šį mėnesį išlaidų neįrašyta.",
+    "noSpending": "Išlaidų neįrašyta.",
     "showTransactions": "Rodyti kategorijos „{{category}}“ operacijas",
-    "keptShare": "Sutaupyta {{percent}} šio mėnesio pajamų",
-    "overspent": "Šį mėnesį išleista daugiau nei gauta",
+    "keptShare": "Sutaupyta {{percent}} mėnesio pajamų",
+    "overspent": "Išleista daugiau nei gauta",
     "layout": {
       "customise": "Pritaikyti",
       "title": "Pritaikyti suvestinę",
@@ -113,6 +119,10 @@
       "allHidden": "Visos kortelės paslėptos.",
       "chooseCards": "Pasirinkti korteles",
       "subject": "Suvestinės išdėstymas"
+    },
+    "ring": {
+      "kept": "sutaupyta",
+      "spent": "išleista"
     }
   },
   "accounts": {
@@ -207,7 +217,35 @@
     "icon": "Piktograma",
     "income": "Pajamos",
     "expense": "Išlaidos",
-    "empty": "Šioje grupėje kategorijų nėra."
+    "empty": "Šioje grupėje kategorijų nėra.",
+    "iconSelected": "Pasirinkta: {{name}}",
+    "noIcon": "Be piktogramos",
+    "noIconSelected": "Piktograma nepasirinkta",
+    "icons": {
+      "banknote": "Banknotas",
+      "briefcase": "Portfelis",
+      "bus": "Autobusas",
+      "car": "Automobilis",
+      "clapperboard": "Filmavimo pliauškė",
+      "coffee": "Kava",
+      "coins": "Monetos",
+      "dumbbell": "Hantelis",
+      "gamepad-2": "Žaidimų pultas",
+      "gift": "Dovana",
+      "graduation-cap": "Absolvento kepurė",
+      "heart-pulse": "Širdies pulsas",
+      "home": "Namai",
+      "lightbulb": "Lemputė",
+      "paw-print": "Letenėlės pėdsakas",
+      "phone": "Telefonas",
+      "piggy-bank": "Taupyklė",
+      "plane": "Lėktuvas",
+      "shapes": "Figūros",
+      "shopping-bag": "Pirkinių krepšys",
+      "tag": "Etiketė",
+      "utensils": "Stalo įrankiai",
+      "wifi": "Wi-Fi"
+    }
   },
   "tags": {
     "title": "Žymos",
@@ -441,7 +479,13 @@
       "count_few": "Pridėti {{count}} failai",
       "count_many": "Pridėta {{count}} failo",
       "count_other": "Pridėta {{count}} failų"
-    }
+    },
+    "splitSummary": "Operacija {{total}} · Paskirstyta {{assigned}}",
+    "splitRemaining": "Liko {{amount}}",
+    "splitOver": "Viršyta {{amount}}",
+    "splitBalanced": "Paskirstyta visa suma",
+    "useRemaining": "Naudoti likutį {{amount}}",
+    "categoryFor": "Kategorija: {{transaction}}"
   },
   "trash": {
     "title": "Šiukšlinė",
@@ -520,7 +564,14 @@
   },
   "appearance": {
     "title": "Išvaizda",
-    "paletteHint": "Spalvos taikomos tik šioje naršyklėje. Šviesi ar tamsi tema perjungiama šoninėje juostoje.",
+    "hint": "Tema, spalvos ir kalba taikomos tik šioje naršyklėje. Temą ir kalbą taip pat galima perjungti paskyros meniu šoninės juostos apačioje.",
+    "theme": "Tema",
+    "themes": {
+      "light": "Šviesi",
+      "dark": "Tamsi"
+    },
+    "palette": "Spalvos",
+    "language": "Kalba",
     "palettes": {
       "ledger": "Tamsiai mėlyna",
       "plum": "Slyvinė",
@@ -895,10 +946,8 @@
     "budgeted": "Suplanuota",
     "remaining": "Liko",
     "overBy": "Viršyta",
-    "spent": "Išleista",
-    "limitSeries": "Limitas",
-    "usage": "Biudžetas ir išlaidos",
-    "usageLabel": "Kiekvienos kategorijos einamojo laikotarpio biudžetas ir išleista suma"
+    "overBudget": "Biudžetas viršytas {{amount}}",
+    "spentOf": "Išleista {{spent}} iš {{limit}}"
   },
   "shortcuts": {
     "title": "Spartieji klavišai",
@@ -953,7 +1002,9 @@
     "fundedShareFrom": "{{percent}}% sąskaitos „{{account}}“ likučio",
     "unavailableAccount": "Nepasiekiama sąskaita",
     "progressUnavailable": "Pažanga nepasiekiama",
-    "progressUnavailableHint": "Kaupimo sąskaita archyvuota arba su jumis nebebendrinama."
+    "progressUnavailableHint": "Kaupimo sąskaita archyvuota arba su jumis nebebendrinama.",
+    "remaining": "Liko {{amount}}",
+    "monthlyEstimate": "Apytiksliai {{amount}} per mėnesį, kad pasiektumėte laiku"
   },
   "netWorth": {
     "title": "Grynasis turtas",
@@ -1524,7 +1575,13 @@
       "income": "Jūsų įvesta suma bus įrašyta kaip „{{name}}“ pajamos {{date}} data, o įrašui bus nustatytas kitas terminas.",
       "transfer": "Jūsų įvesta suma bus pervesta iš „{{from}}“ į „{{to}}“ {{date}} data, o įrašui bus nustatytas kitas terminas."
     },
-    "confirmStale": "Šis terminas jau patvirtintas arba įrašas buvo pakeistas kitur. Įrašas atnaujintas: patikrinkite viršuje nurodytą terminą ir, jei jis vis dar aktualus, patvirtinkite dar kartą."
+    "confirmStale": "Šis terminas jau patvirtintas arba įrašas buvo pakeistas kitur. Įrašas atnaujintas: patikrinkite viršuje nurodytą terminą ir, jei jis vis dar aktualus, patvirtinkite dar kartą.",
+    "groups": {
+      "overdue": "Vėluoja",
+      "thisWeek": "Šią savaitę",
+      "later": "Vėliau",
+      "inactive": "Neaktyvūs ({{count}})"
+    }
   },
   "subscriptions": {
     "title": "Pastebėtos prenumeratos",
@@ -1858,7 +1915,10 @@
     "wholeNumberBetween": "Įveskite sveikąjį skaičių nuo {{min}} iki {{max}}."
   },
   "pagination": {
-    "pageOf": "Puslapis {{page}} iš {{pages}}"
+    "pageOf": "Puslapis {{page}} iš {{pages}}",
+    "range": "{{from}}–{{to}} iš {{total}}",
+    "page": "Puslapis",
+    "ofPages": "iš {{pages}}"
   },
   "filters": {
     "filterBy": "Filtruoti pagal: {{column}}",
@@ -1871,7 +1931,8 @@
     "active": "Taikomi filtrai",
     "remove": "Pašalinti filtrą {{column}}: {{value}}",
     "since": "Nuo {{date}}",
-    "until": "Iki {{date}}"
+    "until": "Iki {{date}}",
+    "clearAll": "Išvalyti filtrus"
   },
   "charts": {
     "income": "Pajamos",
@@ -2084,19 +2145,6 @@
   },
   "monthClose": {
     "title": "Mėnesio uždarymas",
-    "description": "Peržiūrėkite pasibaigusį mėnesį, sutvarkykite, ką reikia, ir uždarykite jį.",
-    "picker": {
-      "label": "Mėnuo",
-      "previous": "Ankstesnis mėnuo",
-      "next": "Kitas mėnuo",
-      "year": "{{year}} m. mėnesiai",
-      "status": {
-        "notEnded": "Nesibaigęs",
-        "open": "Atviras",
-        "closed": "Uždarytas",
-        "closedChanged": "Pakeistas po uždarymo"
-      }
-    },
     "checklist": {
       "uncategorized_one": "{{count}} operacija be kategorijos",
       "uncategorized_few": "{{count}} operacijos be kategorijos",
@@ -2119,24 +2167,6 @@
       "categorize": "Priskirti kategorijas",
       "confirm": "Patvirtinti",
       "import": "Importuoti"
-    },
-    "figures": {
-      "title": "Mėnesio skaičiai",
-      "against": "Palyginti su {{from}} – {{to}}",
-      "savingsRate": "Sutaupyta pajamų dalis",
-      "noIncome": "Šį mėnesį pajamų nebuvo",
-      "movers": "Labiausiai pasikeitusios kategorijos",
-      "noMovers": "Palyginti su ankstesniu mėnesiu, nė viena kategorija nepasikeitė.",
-      "netWorth": "Grynojo turto pokytis"
-    },
-    "budgets": {
-      "title": "Mėnesio biudžetai",
-      "description": "Panaudojimas paskutinę mėnesio dieną, palyginti su dabartiniais limitais.",
-      "empty": "Mėnesio biudžetų nėra."
-    },
-    "netWorth": {
-      "change": "{{from}} → {{to}}",
-      "since": "Pagal {{start}} ir {{end}} duomenis"
     },
     "drift": {
       "title": "Pakeista po uždarymo",
@@ -2184,7 +2214,9 @@
       "reclosed": "{{month}} uždarytas iš naujo",
       "reopened": "{{month}} vėl atidarytas",
       "noteSaved": "Pastaba išsaugota",
-      "closeMonth": "Uždaryti: {{month}}"
+      "closeMonth": "Uždaryti: {{month}}",
+      "addNote": "Pridėti pastabą",
+      "editNote": "Redaguoti pastabą"
     },
     "editHint": "{{month}} uždarytas, todėl išsaugotas pakeitimas bus rodomas kaip nuokrypis po uždarymo.",
     "panel": {
@@ -2201,7 +2233,8 @@
       "attention_many": "Prieš uždarant liko sutvarkyti {{count}} punkto.",
       "attention_other": "Prieš uždarant liko sutvarkyti {{count}} punktų.",
       "closedOn": "Uždaryta {{date}}.",
-      "changedSince": "Uždaryta {{date}}. Nuo tada kai kurie šio mėnesio įrašai pasikeitė: uždarykite iš naujo, kad priimtumėte pakeitimus, arba vėl atidarykite."
+      "changedSince": "Uždaryta {{date}}. Nuo tada kai kurie šio mėnesio įrašai pasikeitė: uždarykite iš naujo, kad priimtumėte pakeitimus, arba vėl atidarykite.",
+      "details": "Išsamiau"
     },
     "prompt": {
       "title": {
@@ -2225,5 +2258,10 @@
     "installationOff": "Administratorius šioje sistemoje išjungė Ko-fi nuorodą.",
     "hideHint": "Šią nuorodą galite paslėpti Nustatymuose, skiltyje „Išvaizda“.",
     "tooltipCollapsed": "Paremk mane per Ko-fi. Šią nuorodą galite paslėpti Nustatymuose, skiltyje „Išvaizda“."
+  },
+  "currencyGroups": {
+    "account": "Sąskaitos valiutos",
+    "reporting": "Ataskaitų valiuta",
+    "other": "Kitos valiutos"
   }
 }

@@ -1,20 +1,28 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { expect } from "storybook/test";
 import { getDashboardSummaryMockHandler } from "@/api/generated/dashboard/dashboard.msw";
 import { withWidth } from "@/storybook/decorators";
-import { dashboardSummary } from "@/storybook/fixtures";
+import { dashboardSummary, FIXTURE_MONTH } from "@/storybook/fixtures";
 import { emptyHandlers, errorHandlers, loadingHandlers, withHandlers } from "@/storybook/handlers";
 import { DashboardStats } from "./dashboard-stats";
 
 const meta = {
   title: "Features/Dashboard/DashboardStats",
   component: DashboardStats,
+  args: { month: FIXTURE_MONTH },
   decorators: [withWidth("full")],
 } satisfies Meta<typeof DashboardStats>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {};
+export const Default: Story = {
+  play: async ({ canvas }) => {
+    await expect(
+      await canvas.findByRole("img", { name: /of the month.s income kept|sutaupyta/i }),
+    ).toBeVisible();
+  },
+};
 
 export const Empty: Story = { parameters: { msw: { handlers: emptyHandlers } } };
 
@@ -42,8 +50,22 @@ function largeSummary() {
 
 export const Overspent: Story = {
   parameters: withHandlers(getDashboardSummaryMockHandler(overspentSummary)),
+  play: async ({ canvas }) => {
+    await expect(
+      await canvas.findByRole("img", { name: /spent more than came in|išleista daugiau/i }),
+    ).toBeVisible();
+  },
 };
 
 export const LargeAmounts: Story = {
   parameters: withHandlers(getDashboardSummaryMockHandler(largeSummary)),
+};
+
+export const EarlierMonth: Story = {
+  args: { month: "2026-03" },
+  play: async ({ canvas }) => {
+    await expect(
+      await canvas.findByText(/balance at month end|likutis mėnesio pabaigoje/i),
+    ).toBeVisible();
+  },
 };

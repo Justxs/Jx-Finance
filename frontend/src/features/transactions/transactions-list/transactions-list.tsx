@@ -23,6 +23,7 @@ interface Props extends TransactionRowHandlers {
   data: TransactionResponse[];
   isPlaceholder: boolean;
   filtered: boolean;
+  onClearFilters?: () => void;
 }
 
 export function TransactionsList({
@@ -32,6 +33,7 @@ export function TransactionsList({
   tagById,
   isPlaceholder,
   filtered,
+  onClearFilters,
   onEdit,
   onDuplicate,
   onDelete,
@@ -42,7 +44,11 @@ export function TransactionsList({
   const rows = useDeferredValue(data);
 
   if (rows.length === 0) {
-    return <EmptyText filtered={filtered}>{t("transactions.empty")}</EmptyText>;
+    return (
+      <EmptyText filtered={filtered} onClearFilters={onClearFilters}>
+        {t("transactions.empty")}
+      </EmptyText>
+    );
   }
 
   return (

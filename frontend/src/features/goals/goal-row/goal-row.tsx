@@ -4,6 +4,9 @@ import { ProgressAmount, ProgressRow } from "@/components/progress-row/progress-
 import type { DeleteProps } from "@/components/row-actions/row-actions";
 import { Tag } from "@/components/ui/tag/tag";
 import { useIsoDate, useMoney, usePercent } from "@/hooks/use-formatters";
+import { useToday } from "@/hooks/use-settings";
+import { metaLine } from "@/lib/utils";
+import { monthlyToReach } from "../goal-pace";
 
 interface Props extends DeleteProps {
   goal: GoalResponse;
@@ -16,10 +19,13 @@ export function GoalRow({ goal, accountNames, onEdit, ...deleteProps }: Readonly
   const money = useMoney();
   const formatDate = useIsoDate();
   const percent = usePercent();
+  const today = useToday();
 
   const target = Number(goal.targetAmount);
   const current = goal.progressAmount === null ? null : Number(goal.progressAmount);
   const reached = current !== null && target > 0 && current >= target;
+  const remaining = current === null ? 0 : Math.max(0, target - current);
+  const monthly = monthlyToReach(remaining, today, goal.targetDate);
 
   const accountName =
     accountNames.get(goal.fundingAccountId ?? "") ?? t("goals.unavailableAccount");
@@ -40,7 +46,12 @@ export function GoalRow({ goal, accountNames, onEdit, ...deleteProps }: Readonly
         <>
           {goal.targetDate ? (
             <p className="text-xs text-muted-foreground tabular-nums">
-              {t("goals.targetDate")}: {formatDate(goal.targetDate)}
+              {metaLine(
+                `${t("goals.targetDate")}: ${formatDate(goal.targetDate)}`,
+                monthly === null
+                  ? null
+                  : t("goals.monthlyEstimate", { amount: money.format(monthly) }),
+              )}
             </p>
           ) : null}
           {source ? (
@@ -65,6 +76,11 @@ export function GoalRow({ goal, accountNames, onEdit, ...deleteProps }: Readonly
           </p>
         ) : (
           <p className="flex items-center gap-2 text-xs text-muted-foreground tabular-nums sm:justify-end">
+            {reached ? null : (
+              <span className="font-medium text-foreground">
+                {t("goals.remaining", { amount: money.format(remaining) })}
+              </span>
+            )}
             {percent.format(target > 0 ? current / target : 0)}
             {reached ? <Tag tone="positive">{t("goals.reached")}</Tag> : null}
           </p>

@@ -7,6 +7,7 @@ using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Common.Settings;
 using JxFinance.Domain.Common;
+using JxFinance.Domain.Settings;
 using JxFinance.Domain.Transactions;
 using JxFinance.Endpoints.Auth.Interfaces;
 using JxFinance.Endpoints.Backups.Interfaces;
@@ -323,7 +324,7 @@ public sealed class BackupService(
         var attachments = staging.Publish();
         var header = restorer.Header!;
         db.ChangeTracker.Clear();
-        store.Set(await db.InstanceSettings.AsNoTracking().FirstOrDefaultAsync(cancellationToken) ?? store.Defaults());
+        store.Set(await db.InstanceSettings.AsNoTracking().FirstOrDefaultAsync(s => s.Id == InstanceSettings.SingletonId, cancellationToken) ?? store.Defaults());
         logger.LogWarning(
             "Installation restored from a backup taken at {CreatedAt}: {Tables} tables, {Rows} rows, {Attachments} attachment files.",
             header.CreatedAt,

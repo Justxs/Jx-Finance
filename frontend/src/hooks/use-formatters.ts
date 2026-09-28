@@ -24,6 +24,7 @@ export function useUsableCurrencies(): readonly Currency[] {
 
 const numberFormats = new Map<string, Intl.NumberFormat>();
 const dateFormats = new Map<string, Intl.DateTimeFormat>();
+const relativeFormats = new Map<string, Intl.RelativeTimeFormat>();
 
 function cached<TFormat>(
   cache: Map<string, TFormat>,
@@ -128,6 +129,20 @@ export function useCurrencyName() {
 
   return function currencyName(currency: string) {
     return names.of(currency.toUpperCase()) ?? currency.toUpperCase();
+  };
+}
+
+export function useRelativeDays() {
+  const { i18n } = useTranslation();
+  const format = cached(
+    relativeFormats,
+    i18n.language,
+    { numeric: "auto" },
+    () => new Intl.RelativeTimeFormat(i18n.language, { numeric: "auto" }),
+  );
+
+  return function formatRelativeDays(days: number) {
+    return format.format(days, "day");
   };
 }
 

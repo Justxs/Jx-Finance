@@ -6,7 +6,6 @@ import {
   setShortcutsHelpOpen,
   toggleShortcutsHelp,
 } from "@/stores/shortcuts-help-store";
-import { withWidth } from "@/storybook/decorators";
 import { openedDialog } from "@/storybook/interactions";
 import { ShortcutsHelp } from "./shortcuts-help";
 
@@ -18,7 +17,6 @@ const storyRouter = {
 const meta = {
   title: "Components/ShortcutsHelp",
   component: ShortcutsHelp,
-  decorators: [withWidth("flex min-h-[32rem] items-end p-4")],
   beforeEach: () => {
     setShortcutsHelpOpen(false);
     return () => setShortcutsHelpOpen(false);
@@ -36,7 +34,7 @@ export const Open: Story = {
   },
   play: async () => {
     const dialog = await openedDialog();
-    await expect(within(dialog).getAllByRole("listitem")).toHaveLength(17);
+    await expect(within(dialog).getAllByRole("listitem")).toHaveLength(16);
     await within(dialog).findByText("Command palette");
   },
 };

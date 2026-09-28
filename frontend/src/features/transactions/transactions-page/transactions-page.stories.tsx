@@ -16,7 +16,7 @@ import {
   pending,
   withHandlers,
 } from "@/storybook/handlers";
-import { openedDialog } from "@/storybook/interactions";
+import { chooseMenuItem, first, openedDialog } from "@/storybook/interactions";
 import { TransactionsPage } from "./transactions-page";
 
 const meta = {
@@ -133,10 +133,10 @@ export const SavedFilterNamingADeletedCategory: Story = {
 
 export const DuplicatingASplitRow: Story = {
   play: async ({ canvas }) => {
-    const duplicate = await canvas.findAllByRole("button", {
-      name: `Duplicate: ${splitTransaction.description ?? ""}`,
+    const actions = await canvas.findAllByRole("button", {
+      name: `Actions: ${splitTransaction.description ?? ""}`,
     });
-    await userEvent.click(duplicate[0]!);
+    await chooseMenuItem(first(actions), "Duplicate");
 
     const dialog = within(await openedDialog());
     const amounts = await dialog.findAllByLabelText("Amount");

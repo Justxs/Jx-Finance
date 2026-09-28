@@ -565,7 +565,7 @@ public sealed class NetWorthService(
     private async Task<(decimal Accounts, decimal Assets, decimal Debts, decimal NetWorth, bool IsComplete)> ComputeTotalsAsync(
         CancellationToken cancellationToken)
     {
-        var (accountsTotal, accountsComplete) = await accountService.GetReportingTotalAsync(cancellationToken);
+        var (accountsTotal, accountsComplete) = await accountService.GetReportingTotalAsync(null, cancellationToken);
         var assets = await db.Assets.AsNoTracking().ToListAsync(cancellationToken);
         var debts = await db.Debts.AsNoTracking().ToListAsync(cancellationToken);
         var valuations = await ValuationsOfAsync(assets, cancellationToken);
