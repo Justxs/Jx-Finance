@@ -10,6 +10,10 @@ Admin-created users; optional 2FA; absolute 1/30-day sessions; immediate stamp/d
 
 Newest first. Each entry is a choice between real alternatives: what was chosen, what was rejected, and why.
 
+- **2026-09-28.** The per-request session lookup in `JwtCookieAuthentication` runs with `CancellationToken.None`, not `RequestAborted`, so a browser that drops a request mid-authentication no longer produces an Error log from `JwtBearerHandler` and a failed Npgsql `CONNECT` span
+  - Rejected: A Serilog filter for `OperationCanceledException` from `JwtBearerHandler`, which hides the log but leaves the failed span in the trace
+  - Rejected: An OpenTelemetry processor that clears the error status of cancelled Npgsql spans, which is more code and cannot remove the recorded exception event
+  - Rejected: Turning off Npgsql's physical-open tracing, which would also hide real connection failures
 - **2026-09-20.** Every authenticated request checks that its `UserSessions` row still exists, so revoking a browser takes effect at once
   - Rejected: Leaving the access token valid for up to 10 minutes after the row is deleted and documenting the tail
   - Why: The handler already loads the user per request, so one more lookup by primary key costs little, and a "Sign out" button that leaves the other browser working for ten minutes would not do what it says. Sign out and restore gain the same immediacy

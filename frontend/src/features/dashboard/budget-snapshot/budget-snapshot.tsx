@@ -5,6 +5,7 @@ import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { TextLink } from "@/components/ui/text-link/text-link";
 import { BudgetRemaining, budgetFigures } from "@/features/budgets/budget-remaining";
 import { useMoney } from "@/hooks/use-formatters";
+import { asOfParams } from "../dashboard-queries";
 
 const MAX_ROWS = 5;
 
@@ -13,10 +14,14 @@ function usage(spent: string, limit: string) {
   return limitAmount > 0 ? Number(spent) / limitAmount : 0;
 }
 
-export function BudgetSnapshot() {
+interface Props {
+  asOf?: string;
+}
+
+export function BudgetSnapshot({ asOf }: Readonly<Props>) {
   const { t } = useTranslation();
   const money = useMoney();
-  const budgets = useBudgetsSuspense();
+  const budgets = useBudgetsSuspense(asOfParams(asOf));
 
   const rows = budgets.data
     .toSorted((a, b) => usage(b.spent, b.effectiveLimit) - usage(a.spent, a.effectiveLimit))

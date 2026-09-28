@@ -1,13 +1,6 @@
-import { Keyboard } from "lucide-react";
 import { Fragment } from "react";
 import { useTranslation } from "react-i18next";
-import { Button } from "@/components/ui/button/button";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTitle,
-  PopoverTrigger,
-} from "@/components/ui/popover/popover";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog/dialog";
 import { useSettings } from "@/hooks/use-settings";
 import { type Shortcut, shortcutKeyLabel, visibleShortcuts } from "@/lib/shortcuts";
 import { cn } from "@/lib/utils";
@@ -44,37 +37,16 @@ function ShortcutRow({ shortcut }: Readonly<RowProps>) {
   );
 }
 
-interface Props {
-  className?: string;
-}
-
-export function ShortcutsHelp({ className }: Readonly<Props>) {
+export function ShortcutsHelp() {
   const { t } = useTranslation();
   const { open, setOpen } = useShortcutsHelpOpen();
   const { features } = useSettings();
   const available = visibleShortcuts((feature) => features[feature]);
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger
-        render={
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className={className}
-            aria-label={t("shortcuts.title")}
-          >
-            <Keyboard />
-          </Button>
-        }
-      />
-      <PopoverContent
-        side="top"
-        align="start"
-        className="w-[min(30rem,calc(100vw-2rem))] gap-4 p-4"
-      >
-        <PopoverTitle className="text-lg leading-6">{t("shortcuts.title")}</PopoverTitle>
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogContent className="gap-4 sm:max-w-lg">
+        <DialogTitle className="text-lg leading-6">{t("shortcuts.title")}</DialogTitle>
         {groups.map(({ group, listClassName }) => (
           <section key={group} aria-labelledby={`shortcuts-${group}`}>
             <h3 id={`shortcuts-${group}`} className="text-xs font-medium text-muted-foreground">
@@ -89,7 +61,7 @@ export function ShortcutsHelp({ className }: Readonly<Props>) {
             </ul>
           </section>
         ))}
-      </PopoverContent>
-    </Popover>
+      </DialogContent>
+    </Dialog>
   );
 }

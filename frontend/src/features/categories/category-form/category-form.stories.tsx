@@ -49,7 +49,7 @@ export const ServerError: Story = { parameters: { msw: { handlers: errorHandlers
 export const FilledWithIcon: Story = {
   play: async ({ canvas }) => {
     await userEvent.type(await canvas.findByRole("textbox"), "Pets and veterinary care");
-    await userEvent.click(canvas.getByRole("button", { name: "coffee" }));
+    await userEvent.click(canvas.getByRole("button", { name: "Coffee" }));
   },
 };
 

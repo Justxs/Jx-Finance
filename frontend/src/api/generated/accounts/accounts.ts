@@ -168,7 +168,7 @@ export const getAccountsUrl = (params?: AccountsParams) => {
 };
 
 /**
- * Returns the accounts you can see: your own plus the shared accounts of your households, each with its current balance. Filters are optional and combine with AND.
+ * Returns the accounts you can see: your own plus the shared accounts of your households, each with its current balance. Filters are optional and combine with AND. With asOf, the balances are as of that date instead: only rows dated on or before it count, and currencies and holdings are valued at the exchange rates and security prices of that day. The same accounts are returned either way.
  * @summary List accounts
  */
 export const accounts = async (

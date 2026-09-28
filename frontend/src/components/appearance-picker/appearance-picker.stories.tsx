@@ -1,6 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, userEvent } from "storybook/test";
-import { fonts, palettes, textSizes } from "@/stores/theme-store";
+import { i18n } from "@/lib/i18n";
+import { locales } from "@/stores/preferences";
+import { fonts, palettes, textSizes, themes } from "@/stores/theme-store";
 import { AppearancePicker } from "./appearance-picker";
 
 const meta = {
@@ -14,16 +16,18 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   play: async ({ canvas }) => {
-    const palette = canvas.getByRole("radiogroup", { name: "Appearance" });
-    await expect(palette).toHaveAccessibleDescription();
     await expect(canvas.getAllByRole("radiogroup")).toEqual([
-      palette,
+      canvas.getByRole("radiogroup", { name: "Theme" }),
+      canvas.getByRole("radiogroup", { name: "Colors" }),
+      canvas.getByRole("radiogroup", { name: "Language" }),
       canvas.getByRole("radiogroup", { name: "Typeface" }),
       canvas.getByRole("radiogroup", { name: "Text size" }),
     ]);
     await expect(canvas.getAllByRole("radio")).toHaveLength(
-      palettes.length + fonts.length + textSizes.length,
+      themes.length + palettes.length + locales.length + fonts.length + textSizes.length,
     );
+    await expect(canvas.getByRole("radio", { name: "Light" })).toBeChecked();
+    await expect(canvas.getByRole("radio", { name: "English" })).toBeChecked();
     await expect(canvas.getByRole("radio", { name: "Ledger navy" })).toBeChecked();
     await expect(canvas.getByRole("radio", { name: "Classic" })).toBeChecked();
     await expect(canvas.getByRole("radio", { name: "Default" })).toBeChecked();
@@ -55,5 +59,18 @@ export const ChooseFontAndSize: Story = {
     await userEvent.click(canvas.getByRole("radio", { name: "Default" }));
     await expect(document.documentElement.dataset.font).toBeUndefined();
     await expect(document.documentElement.dataset.textSize).toBeUndefined();
+  },
+};
+
+export const ChooseThemeAndLanguage: Story = {
+  play: async ({ canvas }) => {
+    await userEvent.click(canvas.getByRole("radio", { name: "Dark" }));
+    await expect(document.documentElement).toHaveClass("dark");
+    await userEvent.click(canvas.getByRole("radio", { name: "Lietuvių" }));
+    await expect(i18n.language).toBe("lt");
+    await userEvent.click(canvas.getByRole("radio", { name: "Šviesi" }));
+    await expect(document.documentElement).not.toHaveClass("dark");
+    await userEvent.click(canvas.getByRole("radio", { name: "English" }));
+    await expect(i18n.language).toBe("en");
   },
 };

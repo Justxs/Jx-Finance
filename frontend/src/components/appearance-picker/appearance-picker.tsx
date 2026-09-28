@@ -1,8 +1,20 @@
+import { Moon, Sun } from "lucide-react";
 import { type ComponentProps, type ReactNode, useId } from "react";
 import { useTranslation } from "react-i18next";
 import { TitledSection } from "@/components/ui/section/section";
 import { cn } from "@/lib/utils";
-import { fonts, palettes, textSizes, useFont, usePalette, useTextSize } from "@/stores/theme-store";
+import { localeNames, useLocale } from "@/stores/app-store";
+import { locales } from "@/stores/preferences";
+import {
+  fonts,
+  palettes,
+  textSizes,
+  themes,
+  useFont,
+  usePalette,
+  useTextSize,
+  useTheme,
+} from "@/stores/theme-store";
 
 const sampleSizes = { small: "text-xs", default: "text-base", large: "text-xl" };
 
@@ -17,7 +29,9 @@ interface ChoiceGroupProps<T extends string> extends Pick<
   onChange: (value: T) => void;
   optionLabel: (option: T) => string;
   renderSample: (option: T) => ReactNode;
-  optionProps?: (option: T) => Record<`data-${string}`, string> & { className?: string };
+  optionProps?: (
+    option: T,
+  ) => Record<`data-${string}`, string> & { className?: string; lang?: string };
 }
 
 function ChoiceGroup<T extends string>({
@@ -78,21 +92,34 @@ function ChoiceGroup<T extends string>({
 
 export function AppearancePicker() {
   const { t } = useTranslation();
+  const { theme, setTheme } = useTheme();
+  const { locale, setLocale } = useLocale();
   const { palette, setPalette } = usePalette();
   const { font, setFont } = useFont();
   const { textSize, setTextSize } = useTextSize();
 
   return (
     <>
-      <TitledSection
-        titleId="appearance-title"
-        title={t("appearance.title")}
-        description={t("appearance.paletteHint")}
-      >
+      <TitledSection title={t("appearance.title")} description={t("appearance.hint")}>
+        <ChoiceGroup
+          name="theme"
+          heading={t("appearance.theme")}
+          options={themes}
+          value={theme}
+          onChange={setTheme}
+          optionLabel={(option) => t(`appearance.themes.${option}`)}
+          renderSample={(option) =>
+            option === "dark" ? (
+              <Moon aria-hidden="true" className="size-4 shrink-0" />
+            ) : (
+              <Sun aria-hidden="true" className="size-4 shrink-0" />
+            )
+          }
+        />
         <ChoiceGroup
           name="palette"
-          aria-labelledby="appearance-title"
-          aria-describedby="appearance-title-description"
+          heading={t("appearance.palette")}
+          className="mt-6"
           options={palettes}
           value={palette}
           onChange={setPalette}
@@ -106,6 +133,21 @@ export function AppearancePicker() {
               <span className="size-4 bg-sidebar" />
               <span className="size-4 bg-background" />
               <span className="size-4 bg-primary" />
+            </span>
+          )}
+        />
+        <ChoiceGroup
+          name="language"
+          heading={t("appearance.language")}
+          className="mt-6"
+          options={locales}
+          value={locale}
+          onChange={setLocale}
+          optionLabel={(option) => localeNames[option]}
+          optionProps={(option) => ({ lang: option })}
+          renderSample={(option) => (
+            <span aria-hidden="true" className="w-5 shrink-0 text-xs font-semibold uppercase">
+              {option}
             </span>
           )}
         />

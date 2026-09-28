@@ -3,12 +3,11 @@ import { type LucideIcon, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useMeSuspense } from "@/api/generated";
 import type { FeatureFlags } from "@/api/generated/model";
+import { AccountMenu } from "@/components/account-menu/account-menu";
 import { Brand } from "@/components/brand/brand";
-import { HeaderActions } from "@/components/header-actions/header-actions";
 import { HouseholdSwitcher } from "@/components/household-switcher/household-switcher";
-import { LogoutButton } from "@/components/logout-button/logout-button";
+import { NotificationBellSlot } from "@/components/notification-bell/notification-bell";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
-import { ShortcutsHelp } from "@/components/shortcuts-help/shortcuts-help";
 import { SupportLink } from "@/components/support-link/support-link";
 import { Button } from "@/components/ui/button/button";
 import { Skeleton } from "@/components/ui/skeleton/skeleton";
@@ -19,19 +18,6 @@ import { type NavHub, adminNavPages, isPathIn, navHubs, navPages } from "@/lib/n
 import { UserRole } from "@/lib/user-role";
 import { cn } from "@/lib/utils";
 import { useSidebarCollapsed } from "@/stores/sidebar-store";
-
-function initials(name: string | undefined) {
-  const trimmed = name?.trim();
-  if (!trimmed) {
-    return "?";
-  }
-
-  return trimmed
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((word) => word[0]?.toUpperCase())
-    .join("");
-}
 
 export type NavItem = (typeof navPages)[number] | (typeof adminNavPages)[number];
 
@@ -155,8 +141,7 @@ export function AppSidebar() {
           collapsed ? "flex-col items-center" : "items-center",
         )}
       >
-        <HeaderActions placement="above" />
-        <ShortcutsHelp />
+        <NotificationBellSlot placement="above" />
         <Button
           type="button"
           variant="ghost"
@@ -169,32 +154,13 @@ export function AppSidebar() {
         </Button>
       </div>
 
-      <div className={cn("flex items-center gap-1 border-t p-3", collapsed && "flex-col")}>
-        <Tooltip
-          content={[me.data?.displayName, me.data?.email].filter(Boolean).join(" · ") || undefined}
+      <div className={cn("flex border-t p-3", collapsed && "justify-center p-2")}>
+        <AccountMenu
+          compact={collapsed}
           side={collapsed ? "right" : "top"}
-        >
-          <Link
-            to="/profile"
-            aria-label={collapsed ? me.data?.displayName || t("nav.profile") : undefined}
-            className="flex min-w-0 flex-1 items-center gap-2.5 rounded-md p-1.5 transition-colors hover:bg-accent"
-          >
-            <span className="flex size-8 shrink-0 items-center justify-center rounded-md bg-primary text-xs font-semibold text-primary-foreground">
-              {initials(me.data?.displayName)}
-            </span>
-            {collapsed ? null : (
-              <span className="min-w-0 flex-1">
-                <span className="block truncate text-sm font-medium">
-                  {me.data?.displayName || t("nav.profile")}
-                </span>
-                <span className="block truncate text-xs text-muted-foreground">
-                  {me.data?.email}
-                </span>
-              </span>
-            )}
-          </Link>
-        </Tooltip>
-        <LogoutButton />
+          align={collapsed ? "end" : "start"}
+          className={collapsed ? undefined : "flex-1"}
+        />
       </div>
     </aside>
   );

@@ -62,7 +62,8 @@ test("a member enrols in two-factor authentication and signs in with a code and 
     member.getByText("Two-factor authentication is currently enabled for your account."),
   ).toBeVisible();
 
-  await member.getByRole("button", { name: "Log out" }).click();
+  await member.getByRole("button", { name: /Account menu/ }).click();
+  await member.getByRole("menuitem", { name: "Log out" }).click();
   await expect(member).toHaveURL(/\/login/);
 
   await fillSignIn(member, email, password);

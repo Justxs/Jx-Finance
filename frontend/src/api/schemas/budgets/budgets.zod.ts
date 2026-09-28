@@ -56,7 +56,7 @@ export const CreateBudgetResponse = zod.object({
 });
 
 /**
- * Returns every budget you can see, each with its current window, the amount spent against it inside that window, the base limit, the amount carried over from the previous window and the effective limit the two add up to, so the client can render progress and explain the number without a second call.
+ * Returns every budget you can see, each with its current window, the amount spent against it inside that window, the base limit, the amount carried over from the previous window and the effective limit the two add up to, so the client can render progress and explain the number without a second call. With asOf, each budget shows the window that contains that date instead of today's, with its spending and carry-over computed for that window; the limit is the budget's limit today, because changes to a limit are not kept by date.
  * @summary List budgets
  */
 export const budgetsResponseLimitAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");

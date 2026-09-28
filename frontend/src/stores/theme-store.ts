@@ -6,10 +6,11 @@ import {
   readPreferences,
   savePreferences,
   textSizes,
+  themes,
   usePreferences,
 } from "./preferences";
 
-export { fonts, palettes, textSizes };
+export { fonts, palettes, textSizes, themes };
 
 export type Theme = NonNullable<Preferences["theme"]>;
 export type Palette = Preferences["palette"];

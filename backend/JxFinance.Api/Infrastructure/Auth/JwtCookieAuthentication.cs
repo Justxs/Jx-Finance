@@ -45,7 +45,7 @@ public static class JwtCookieAuthentication
         var now = context.HttpContext.RequestServices.GetRequiredService<IClock>().UtcNow;
         var db = context.HttpContext.RequestServices.GetRequiredService<AppDbContext>();
         var hasSessionId = Guid.TryParse(principal!.FindFirstValue(AuthClaims.SessionId), out var sessionId);
-        var state = await SessionStateAsync(db, userId, sessionId, now, context.HttpContext.RequestAborted);
+        var state = await SessionStateAsync(db, userId, sessionId, now, CancellationToken.None);
 
         if (state is null
             || state.SecurityStamp != principal.FindFirstValue(AuthClaims.SecurityStamp)

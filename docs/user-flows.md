@@ -64,7 +64,7 @@ Currencies you use limits which currencies the pickers offer. A currency that is
 
 Changing the reporting currency shows a warning before saving. On save, every transaction is revalued at the exchange rate for its own date. If any rate is missing the save fails and nothing changes; use Sync now and try again. Budgets, goals, assets, debts, bills and net worth history keep their numbers and need reviewing by hand.
 
-Sync now fetches exchange rates immediately, including when automatic sync is off. The language toggle remembers each person's choice in their browser; the default language only applies until they choose.
+Sync now fetches exchange rates immediately, including when automatic sync is off. The language choice, in the account menu or under Appearance, is remembered in each person's browser; the default language only applies until they choose.
 
 ## Tracking investments
 

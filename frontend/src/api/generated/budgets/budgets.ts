@@ -25,6 +25,7 @@ import { customFetch } from "../../client";
 import type { ErrorType } from "../../client";
 import type {
   BudgetResponse,
+  BudgetsParams,
   CreateBudgetRequest,
   ProblemDetails,
   UpdateBudgetRequest,
@@ -151,40 +152,54 @@ export const useCreateBudget = <TError = ErrorType<ProblemDetails>, TContext = u
 > => {
   return useMutation(getCreateBudgetMutationOptions(options), queryClient);
 };
-export const getBudgetsUrl = () => {
-  return `/api/budgets`;
+export const getBudgetsUrl = (params?: BudgetsParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/budgets?${stringifiedParams}` : `/api/budgets`;
 };
 
 /**
- * Returns every budget you can see, each with its current window, the amount spent against it inside that window, the base limit, the amount carried over from the previous window and the effective limit the two add up to, so the client can render progress and explain the number without a second call.
+ * Returns every budget you can see, each with its current window, the amount spent against it inside that window, the base limit, the amount carried over from the previous window and the effective limit the two add up to, so the client can render progress and explain the number without a second call. With asOf, each budget shows the window that contains that date instead of today's, with its spending and carry-over computed for that window; the limit is the budget's limit today, because changes to a limit are not kept by date.
  * @summary List budgets
  */
 export const budgets = async (
+  params?: BudgetsParams,
   options?: Parameters<typeof customFetch>[1],
 ): Promise<BudgetResponse[]> => {
-  return customFetch<BudgetResponse[]>(getBudgetsUrl(), {
+  return customFetch<BudgetResponse[]>(getBudgetsUrl(params), {
     ...options,
     method: "GET",
   });
 };
 
-export const getBudgetsQueryKey = () => {
-  return [`/api/budgets`] as const;
+export const getBudgetsQueryKey = (params?: BudgetsParams) => {
+  return [`/api/budgets`, ...(params ? [params] : [])] as const;
 };
 
 export const getBudgetsSuspenseQueryOptions = <
   TData = Awaited<ReturnType<typeof budgets>>,
   TError = ErrorType<ProblemDetails>,
->(options?: {
-  query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof budgets>>, TError, TData>>;
-  request?: SecondParameter<typeof customFetch>;
-}) => {
+>(
+  params?: BudgetsParams,
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof budgets>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
 
-  const queryKey = queryOptions?.queryKey ?? getBudgetsQueryKey();
+  const queryKey = queryOptions?.queryKey ?? getBudgetsQueryKey(params);
 
   const queryFn: QueryFunction<Awaited<ReturnType<typeof budgets>>> = ({ signal }) =>
-    budgets({ signal, ...requestOptions });
+    budgets(params, { signal, ...requestOptions });
 
   return queryOptionsBuilder({
     queryKey,
@@ -204,6 +219,7 @@ export function useBudgetsSuspense<
   TData = Awaited<ReturnType<typeof budgets>>,
   TError = ErrorType<ProblemDetails>,
 >(
+  params: undefined | BudgetsParams,
   options: {
     query: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof budgets>>, TError, TData>>;
     request?: SecondParameter<typeof customFetch>;
@@ -214,6 +230,7 @@ export function useBudgetsSuspense<
   TData = Awaited<ReturnType<typeof budgets>>,
   TError = ErrorType<ProblemDetails>,
 >(
+  params?: BudgetsParams,
   options?: {
     query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof budgets>>, TError, TData>>;
     request?: SecondParameter<typeof customFetch>;
@@ -224,6 +241,7 @@ export function useBudgetsSuspense<
   TData = Awaited<ReturnType<typeof budgets>>,
   TError = ErrorType<ProblemDetails>,
 >(
+  params?: BudgetsParams,
   options?: {
     query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof budgets>>, TError, TData>>;
     request?: SecondParameter<typeof customFetch>;
@@ -238,13 +256,14 @@ export function useBudgetsSuspense<
   TData = Awaited<ReturnType<typeof budgets>>,
   TError = ErrorType<ProblemDetails>,
 >(
+  params?: BudgetsParams,
   options?: {
     query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof budgets>>, TError, TData>>;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-  const queryOptions = getBudgetsSuspenseQueryOptions(options);
+  const queryOptions = getBudgetsSuspenseQueryOptions(params, options);
 
   const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
     TData,

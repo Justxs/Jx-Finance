@@ -8,6 +8,7 @@ import {
 } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { useMe } from "@/api/generated";
+import { AccountMenu } from "@/components/account-menu/account-menu";
 import {
   AppSidebar,
   isEntryActive,
@@ -17,13 +18,13 @@ import {
   useVisibleNav,
 } from "@/components/app-sidebar/app-sidebar";
 import { Brand } from "@/components/brand/brand";
-import { HeaderActions } from "@/components/header-actions/header-actions";
 import { HouseholdSwitcher } from "@/components/household-switcher/household-switcher";
 import { LanguageToggle } from "@/components/language-toggle/language-toggle";
-import { LogoutButton } from "@/components/logout-button/logout-button";
+import { NotificationBellSlot } from "@/components/notification-bell/notification-bell";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { RouteError } from "@/components/route-error/route-error";
 import { RoutePending } from "@/components/route-pending/route-pending";
+import { ShortcutsHelp } from "@/components/shortcuts-help/shortcuts-help";
 import { Splash } from "@/components/splash/splash";
 import { ThemeToggle } from "@/components/theme-toggle/theme-toggle";
 import { Skeleton } from "@/components/ui/skeleton/skeleton";
@@ -124,6 +125,7 @@ function RootLayout() {
         </QueryBoundary>
         <QueryBoundary fallback={null} error={null}>
           <CommandPalette />
+          <ShortcutsHelp />
         </QueryBoundary>
       </div>
 
@@ -135,8 +137,10 @@ function RootLayout() {
           <QueryBoundary fallback={null} error={null}>
             <HouseholdSwitcher className="w-28" />
           </QueryBoundary>
-          <HeaderActions />
-          <LogoutButton />
+          <NotificationBellSlot />
+          <QueryBoundary fallback={<Skeleton className="size-11 rounded-md" />} error={null}>
+            <AccountMenu compact side="bottom" align="end" />
+          </QueryBoundary>
         </header>
 
         <nav
