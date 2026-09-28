@@ -2125,6 +2125,8 @@
     "title": "Support Jx Finance",
     "description": "Jx Finance is built and kept up by one developer. The sidebar carries a small link to the Ko-fi page where you can support that work. Nothing is loaded from Ko-fi until you open the link.",
     "show": "Show the Ko-fi link in the sidebar",
-    "installationOff": "An administrator has turned the Ko-fi link off for this installation."
+    "installationOff": "An administrator has turned the Ko-fi link off for this installation.",
+    "hideHint": "You can hide this link in Settings, Appearance.",
+    "tooltipCollapsed": "Support me on Ko-fi. You can hide this link in Settings, Appearance."
   }
 }

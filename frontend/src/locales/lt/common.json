@@ -2209,6 +2209,8 @@
     "title": "Paremti Jx Finance",
     "description": "Jx Finance kuria ir prižiūri vienas kūrėjas. Šoninėje juostoje yra nedidelė nuoroda į Ko-fi puslapį, kuriame galite paremti šį darbą. Kol neatidarote nuorodos, iš Ko-fi nieko neįkeliama.",
     "show": "Rodyti Ko-fi nuorodą šoninėje juostoje",
-    "installationOff": "Administratorius šioje sistemoje išjungė Ko-fi nuorodą."
+    "installationOff": "Administratorius šioje sistemoje išjungė Ko-fi nuorodą.",
+    "hideHint": "Šią nuorodą galite paslėpti Nustatymuose, skiltyje „Išvaizda“.",
+    "tooltipCollapsed": "Paremk mane per Ko-fi. Šią nuorodą galite paslėpti Nustatymuose, skiltyje „Išvaizda“."
   }
 }

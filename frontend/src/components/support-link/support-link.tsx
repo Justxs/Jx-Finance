@@ -46,7 +46,10 @@ export function SupportLink({ collapsed = false }: Readonly<{ collapsed?: boolea
   }
 
   return (
-    <Tooltip content={collapsed ? t("support.link") : undefined} side="right">
+    <Tooltip
+      content={collapsed ? t("support.tooltipCollapsed") : t("support.hideHint")}
+      side="right"
+    >
       <a
         href={SUPPORT_URL}
         target="_blank"
