@@ -354,7 +354,24 @@
     "runDone_one": "{{count}} transaction updated",
     "runDone_other": "{{count}} transactions updated",
     "runNeedsRules": "Add a rule first; there is nothing to run.",
-    "amountRangeInvalid": "The highest amount cannot be below the lowest one."
+    "amountRangeInvalid": "The highest amount cannot be below the lowest one.",
+    "suggested": {
+      "title": "Suggested rules",
+      "description": "You filed each of these by hand at least three times, always with the same category. Review one to adjust it before saving, or dismiss it.",
+      "question": {
+        "contains": "Always categorize descriptions containing \"{{pattern}}\" as {{category}}?",
+        "startsWith": "Always categorize descriptions starting with \"{{pattern}}\" as {{category}}?",
+        "exact": "Always categorize the description \"{{pattern}}\" as {{category}}?"
+      },
+      "create": "Create rule",
+      "dontAsk": "Don't ask again",
+      "created": "Rule created",
+      "review": "Review",
+      "reviewTitle": "Review the suggested rule",
+      "dismiss": "Dismiss",
+      "evidence_one": "Based on {{count}} transaction",
+      "evidence_other": "Based on {{count}} transactions"
+    }
   },
   "transactions": {
     "title": "Transactions",

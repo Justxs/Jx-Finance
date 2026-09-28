@@ -1,6 +1,6 @@
 # Plan: Spending by payee
 
-Status: planned 2026-09-28. Size M. Needs nothing else first. Its stored `Transaction.PayeeKey` is then read by [Rule suggestions from history](rule-suggestions.md) and [Machine-learned categorization](machine-learned-categorization.md) instead of normalizing in memory. If [Refunds](refunds.md) lands, a refund carries the shop's description and lowers that payee's total the same way it lowers the category's.
+Status: planned 2026-09-28. Size M. Needs nothing else first. Its stored `Transaction.PayeeKey` is then read by [suggested rules](../features/categorization-rules.md#suggested-rules) (`SuggestedRuleService`, which normalizes descriptions in memory until then) and [Machine-learned categorization](machine-learned-categorization.md) instead of normalizing in memory. If [Refunds](refunds.md) lands, a refund carries the shop's description and lowers that payee's total the same way it lowers the category's.
 
 ## Outcome
 

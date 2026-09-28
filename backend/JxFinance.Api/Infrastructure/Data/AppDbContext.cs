@@ -53,6 +53,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, ICurren
     public DbSet<Tag> Tags => Set<Tag>();
     public DbSet<CategorizationRule> CategorizationRules => Set<CategorizationRule>();
     public DbSet<CategorizationRuleTag> CategorizationRuleTags => Set<CategorizationRuleTag>();
+    public DbSet<SuggestedRuleDismissal> SuggestedRuleDismissals => Set<SuggestedRuleDismissal>();
     public DbSet<Transaction> Transactions => Set<Transaction>();
     public DbSet<TransactionLine> TransactionLines => Set<TransactionLine>();
     public DbSet<TransactionTag> TransactionTags => Set<TransactionTag>();

@@ -1,6 +1,6 @@
 # Plan: Machine-learned categorization
 
-Status: planned 2026-09-28. Size L. This reopens a deferred item. The backlog and `docs/decisions/general.md` keep it out of scope because rules and the import's recall of the last category cover the need. Do not start before the daily-use trial in the backlog has produced at least six months of real categorized rows, and build it after [Rule suggestions from history](rule-suggestions.md), which turns the repeated payees into rules first. If [Spending by payee](spending-by-payee.md) has landed, read its `PayeeKey` column instead of normalizing in memory. Backend step 2, the evaluation, is a gate: if it fails on the owner's ledger, the rest is not built and the item goes back to deferred with the numbers recorded.
+Status: planned 2026-09-28. Size L. This reopens a deferred item. The backlog and `docs/decisions/general.md` keep it out of scope because rules and the import's recall of the last category cover the need. Do not start before the daily-use trial in the backlog has produced at least six months of real categorized rows, and it builds on [suggested rules](../features/categorization-rules.md#suggested-rules), which shipped on 2026-09-29 and turn the repeated payees into rules first. If [Spending by payee](spending-by-payee.md) has landed, read its `PayeeKey` column instead of normalizing in memory. Backend step 2, the evaluation, is a gate: if it fails on the owner's ledger, the rest is not built and the item goes back to deferred with the numbers recorded.
 
 ## Outcome
 

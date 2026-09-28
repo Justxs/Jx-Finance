@@ -166,6 +166,35 @@ export const PreviewCategorizationRunResponse = zod.object({
 });
 
 /**
+ * Offers a rule for a payee you keep categorizing by hand. Your own unsplit transactions of the last 12 months are grouped by their normalized description. A group becomes a suggestion when at least three of its rows carry the same category, none of your current rules matches them, and no row of the group carries another category of the same flow type. The pattern is the descriptions' common start, or else a word they all contain, and it never matches a row of another category. Dismissed suggestions and suggestions for a full rule list are left out. With transactionId the answer holds at most the one suggestion that row backs, and only when it has exactly three rows, so a client can offer it once, right after the save that made it; a row you cannot see answers an empty list. Nothing is written.
+ * @summary List suggested categorization rules
+ */
+export const SuggestedRulesResponseItem = zod.object({
+  key: zod.string(),
+  name: zod.string(),
+  match: zod.enum(["contains", "startsWith", "exact"]),
+  pattern: zod.string(),
+  categoryId: zod.uuid(),
+  evidence: zod.int(),
+  lastSeen: zod.iso.date(),
+});
+export const SuggestedRulesResponse = zod.array(SuggestedRulesResponseItem);
+
+/**
+ * Stops offering one suggested rule to the signed-in user, on every device. The dismissal is stored against the normalized description key and the category, not against the transactions behind it, so later rows of the same payee do not bring the suggestion back. Dismissing the same pair twice changes nothing. It is not a deletion and has no trash entry.
+ * @summary Dismiss a suggested categorization rule
+ */
+export const dismissSuggestedRuleBodyKeyMin = 0;
+export const dismissSuggestedRuleBodyKeyMax = 200;
+
+export const DismissSuggestedRuleBody = zod.object({
+  key: zod.string().min(dismissSuggestedRuleBodyKeyMin).max(dismissSuggestedRuleBodyKeyMax),
+  categoryId: zod.uuid().min(1),
+});
+
+export const DismissSuggestedRuleResponse = zod.void();
+
+/**
  * Answers whether a condition that has not been saved yet would match a sample description, and whether a sample amount falls inside the range. Nothing is read from the ledger and nothing is written, so the form can ask this on every keystroke. The answer separates the two halves of the condition, so a rule that fails only on the amount can say so. The action the rule would take is already in the form, which is why this call does not repeat it.
  * @summary Try a rule against a sample description
  */

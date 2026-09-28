@@ -6,7 +6,6 @@ The table is in the suggested build order. Each plan's `Status:` line names what
 
 | Plan | Size | Where it lives | Build after |
 | --- | --- | --- | --- |
-| [Rule suggestions from history](rule-suggestions.md) | S | Toast after a save, Rules tab | |
 | [Budget limits from history](budget-limits-from-history.md) | S | Budgets | |
 | [Spending by payee](spending-by-payee.md) | M | Reports, ledger filter | |
 | [Cash-flow forecast](cash-flow-forecast.md) | M | Recurring entries, Accounts, dashboard card | Budget limits from history |
@@ -19,7 +18,7 @@ The table is in the suggested build order. Each plan's `Status:` line names what
 | [Personal API tokens](personal-api-tokens.md) | M | Security section of Settings | |
 | [Data export per user](data-export-per-user.md) | M | Settings | |
 | [Household settle-up](household-settle-up.md) | L | Households | Refunds, for "my share" later |
-| [Machine-learned categorization](machine-learned-categorization.md) | L, gated | Import review, transaction form, ledger | Rule suggestions, six months of real data |
+| [Machine-learned categorization](machine-learned-categorization.md) | L, gated | Import review, transaction form, ledger | Six months of real data |
 
 ## Changes to shared code
 
@@ -27,7 +26,7 @@ Several plans touch the same code. Whichever lands second adapts to the first:
 
 - `ImportService.ConfirmAsync` and the import preview, which already match hand-entered rows: refunds, generic CSV, reconciliation.
 - `Common/Statistics.cs` (the median moved out of `UnusualAmountRule`): budget limits, cash-flow forecast.
-- `Transaction.PayeeKey`: added by spending by payee, then read by rule suggestions and machine-learned categorization.
+- `Transaction.PayeeKey`: added by spending by payee, then read by machine-learned categorization and by the shipped `SuggestedRuleService`, which groups by `SubscriptionDescription.Normalize` in memory until then.
 - The month-close checklist field `checklist.imports` is renamed by reconciliation by hand, a contract change.
 - `ICurrentUser` registration gains a job user for the monthly digest.
 - The Security section of Settings: passkeys and personal API tokens.

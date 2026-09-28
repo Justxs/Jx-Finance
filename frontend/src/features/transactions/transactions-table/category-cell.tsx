@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import { useBulkCategorizeTransactions } from "@/api/generated";
 import type { CategoryResponse, TransactionResponse } from "@/api/generated/model";
 import { ComboboxField } from "@/components/combobox-field/combobox-field";
+import { useSuggestedRuleToast } from "@/features/categorization-rules/suggested-rule-toast/use-suggested-rule-toast";
 import { CategoryIcon } from "@/lib/category-icons";
 import { namedOptions } from "@/lib/options";
 import { cn } from "@/lib/utils";
@@ -17,6 +18,7 @@ interface Props {
 export function CategoryCell({ transaction, categories, label }: Readonly<Props>) {
   const { t } = useTranslation();
   const mutation = useBulkCategorizeTransactions();
+  const suggestion = useSuggestedRuleToast(categories);
 
   const pendingCategoryId = mutation.isPending ? mutation.variables.data.categoryId : undefined;
   const categoryId = pendingCategoryId === undefined ? transaction.categoryId : pendingCategoryId;
@@ -26,9 +28,16 @@ export function CategoryCell({ transaction, categories, label }: Readonly<Props>
   function choose(next: string) {
     const nextCategoryId = next === UNCATEGORIZED ? null : next;
     if (nextCategoryId !== transaction.categoryId) {
-      mutation.mutate({
-        data: { transactionIds: [transaction.id], categoryId: nextCategoryId },
-      });
+      mutation.mutate(
+        { data: { transactionIds: [transaction.id], categoryId: nextCategoryId } },
+        {
+          onSuccess: () => {
+            if (nextCategoryId) {
+              void suggestion.offerAfterSave(transaction.id);
+            }
+          },
+        },
+      );
     }
   }
 

@@ -10,6 +10,7 @@ import type { RequestHandlerOptions } from "msw";
 import type {
   CategorizationRuleResponse,
   RunRulesResponse,
+  SuggestedRuleResponse,
   TestCategorizationRuleResponse,
 } from "../model";
 
@@ -104,6 +105,49 @@ export const getPreviewCategorizationRunMockHandler = (
           : undefined,
         { status: 200 },
       );
+    },
+    options,
+  );
+};
+
+export const getSuggestedRulesMockHandler = (
+  overrideResponse?:
+    | SuggestedRuleResponse[]
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<SuggestedRuleResponse[]> | SuggestedRuleResponse[]),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/categorization-rules/suggested",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : undefined,
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getDismissSuggestedRuleMockHandler = (
+  overrideResponse?:
+    | void
+    | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<void> | void),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/categorization-rules/suggested/dismiss",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      if (typeof overrideResponse === "function") {
+        await overrideResponse(info);
+      }
+
+      return new HttpResponse(null, { status: 204 });
     },
     options,
   );
@@ -204,6 +248,8 @@ export const getCategorizationRulesMock = () => [
   getCategorizationRulesMockHandler(),
   getRunCategorizationRulesMockHandler(),
   getPreviewCategorizationRunMockHandler(),
+  getSuggestedRulesMockHandler(),
+  getDismissSuggestedRuleMockHandler(),
   getTestCategorizationRuleMockHandler(),
   getDeleteCategorizationRuleMockHandler(),
   getUpdateCategorizationRuleMockHandler(),

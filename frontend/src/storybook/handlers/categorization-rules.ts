@@ -2,15 +2,17 @@ import {
   getCategorizationRulesMockHandler,
   getCreateCategorizationRuleMockHandler,
   getDeleteCategorizationRuleMockHandler,
+  getDismissSuggestedRuleMockHandler,
   getMoveCategorizationRuleMockHandler,
   getPreviewCategorizationRunMockHandler,
   getRunCategorizationRulesMockHandler,
+  getSuggestedRulesMockHandler,
   getTestCategorizationRuleMockHandler,
   getUpdateCategorizationRuleMockHandler,
 } from "@/api/generated/categorization-rules/categorization-rules.msw";
 import type { CategorizationRuleResponse } from "@/api/generated/model";
-import { categorizationRules, rulesRunPreview } from "@/storybook/fixtures";
-import { found, readBody, text } from "./http";
+import { categorizationRules, rulesRunPreview, suggestedRules } from "@/storybook/fixtures";
+import { found, query, readBody, text } from "./http";
 import { NEW_ID } from "./ids";
 import { byId, updateFrom } from "./lists";
 
@@ -85,4 +87,8 @@ export const categorizationRuleHandlers = [
   }),
   getPreviewCategorizationRunMockHandler(runPreview),
   getRunCategorizationRulesMockHandler(runPreview),
+  getSuggestedRulesMockHandler(({ request }) =>
+    query(request).has("transactionId") ? [] : suggestedRules,
+  ),
+  getDismissSuggestedRuleMockHandler(),
 ];

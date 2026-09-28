@@ -368,7 +368,26 @@
     "runDone_many": "Atnaujinta {{count}} operacijos",
     "runDone_other": "Atnaujinta {{count}} operacijų",
     "runNeedsRules": "Pirmiausia pridėkite taisyklę – kol kas nėra ką taikyti.",
-    "amountRangeInvalid": "Didžiausia suma negali būti mažesnė už mažiausią."
+    "amountRangeInvalid": "Didžiausia suma negali būti mažesnė už mažiausią.",
+    "suggested": {
+      "title": "Siūlomos taisyklės",
+      "description": "Kiekvieną iš jų bent tris kartus rankiniu būdu priskyrėte tai pačiai kategorijai. Peržiūrėkite pasiūlymą ir prieš išsaugodami pakoreguokite arba jį atmeskite.",
+      "question": {
+        "contains": "Visada priskirti kategoriją „{{category}}“ aprašymams, kuriuose yra „{{pattern}}“?",
+        "startsWith": "Visada priskirti kategoriją „{{category}}“ aprašymams, kurie prasideda „{{pattern}}“?",
+        "exact": "Visada priskirti kategoriją „{{category}}“ aprašymui „{{pattern}}“?"
+      },
+      "create": "Sukurti taisyklę",
+      "dontAsk": "Daugiau neklausti",
+      "created": "Taisyklė sukurta",
+      "review": "Peržiūrėti",
+      "reviewTitle": "Siūlomos taisyklės peržiūra",
+      "dismiss": "Atmesti",
+      "evidence_one": "Pagal {{count}} operaciją",
+      "evidence_few": "Pagal {{count}} operacijas",
+      "evidence_many": "Pagal {{count}} operacijos",
+      "evidence_other": "Pagal {{count}} operacijų"
+    }
   },
   "transactions": {
     "title": "Operacijos",

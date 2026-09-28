@@ -49,7 +49,6 @@ Ordered by how much they would help daily use for the effort. Following the prod
 
 | Idea | Why | Where | Size |
 | --- | --- | --- | --- |
-| Rule suggestions from history | When the same normalized description has been given the same category three times by hand, offer "Always categorize … as …" once; the description normalizer from subscription detection already exists | Undo-style toast after a save, and the Rules tab | S |
 | Budget limits from history | A new budget's limit is prefilled with the median of the category's last six windows, and the budgets page names categories with steady spending and no budget | Budgets | S |
 | Monthly digest | On the first of the month, one email or Discord message with last month's income, expense, savings rate, the categories that moved most and the open close items, built from the month-close review and sent through `INotificationPublisher` | Notifications section of Settings | S |
 | Cash-flow forecast | Project the next 30 to 90 days of each account from its balance and the active recurring entries of all three shapes, and say when one would go below zero; replaces the fixed-expense bar chart | Accounts, and a dashboard card | M |
@@ -66,7 +65,7 @@ Ordered by how much they would help daily use for the effort. Following the prod
 ## Suggested order
 
 1. Section 1, because the release is not verified without it; the daily-use trial is also where the ideas above get confirmed or dropped.
-2. The three small helpers that reuse what exists: rule suggestions, budget limits from history and the monthly digest.
+2. The two small helpers that reuse what exists: budget limits from history and the monthly digest.
 3. Cash-flow forecast, now that recurring income and transfers exist to project, together with the forecast gap of recurring entries.
 4. Refunds and a generic CSV import, once a real month of imports shows how often each is needed.
 5. Per-user language for mail and Discord before a second member relies on either channel.
@@ -75,6 +74,7 @@ Ordered by how much they would help daily use for the effort. Following the prod
 
 | Date | Item | Where it is described |
 | --- | --- | --- |
+| 2026-09-29 | Rule suggestions from history: a payee filed by hand at least three times in twelve months with one category, and never with another of the same flow type, is offered as a rule once in a toast after the save that reaches the third row, and listed on the Rules tab with Review and Dismiss until it is created or dismissed; dismissals are stored per person | [Categorization rules](features/categorization-rules.md#suggested-rules) |
 | 2026-09-28 | Imports matched to hand-entered rows: a statement row with the same flow type, amount and currency as a transaction entered by hand on the account within three days starts linked to it, each transaction offered to the closest row only; confirming writes the bank reference onto the transaction and marks it imported instead of adding a copy, so the same line is a duplicate next time, and the transaction keeps its date, category, tags and description | [Bank statement import](features/bank-statement-import.md#entries-you-already-made-by-hand) |
 | 2026-09-28 | Navigation hubs: the sidebar reads Dashboard, Transactions, Accounts, Categories (categories, tags, rules), Plan (budgets, goals, recurring entries), Wealth (net worth, investments) and Reports, with one Settings page grouping the personal, shared and installation sections. The month-end close moved onto the dashboard, the dashboard layout into Settings, and language, theme, shortcuts and sign-out into an account menu on the user tile. The import dialog opens from the ledger and from an account's row, guards an unfinished review, and the ledger shows its active filters. An administrator can hide the Ko-fi support link | [Interface](features/interface.md), [Installation settings](features/installation-settings.md), [Bank statement import](features/bank-statement-import.md) |
 | 2026-09-27 | camt.053 statement import: ISO 20022 XML from most EU banks beside the Swedbank CSV, with an IBAN check against the account, a transfer proposed from the counterparty IBAN and the closing balance compared with the ledger | [Bank statement import](features/bank-statement-import.md) |

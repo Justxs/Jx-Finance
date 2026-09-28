@@ -84,6 +84,7 @@ const contracts: Record<string, Contract> = {
   tags: { schema: schemas.TagsResponse },
   categorizationRules: { schema: schemas.CategorizationRulesResponse },
   rulesRunPreview: { schema: schemas.PreviewCategorizationRunResponse },
+  suggestedRules: { schema: schemas.SuggestedRulesResponse },
   rulesRunNothing: { schema: schemas.PreviewCategorizationRunResponse },
   ruleTestNoMatch: { schema: schemas.TestCategorizationRuleResponse },
   ruleTestAmountOnly: { schema: schemas.TestCategorizationRuleResponse },

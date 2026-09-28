@@ -8,6 +8,7 @@ import {
   useCategorizationRulesSuspense,
   useDeleteCategorizationRule,
   useMoveCategorizationRule,
+  useSuggestedRulesSuspense,
   useTagsSuspense,
 } from "@/api/generated";
 import type { CategorizationRuleResponse } from "@/api/generated/model";
@@ -25,6 +26,7 @@ import { RuleForm } from "../rule-form/rule-form";
 import { movedRules } from "../rule-order";
 import { RuleRow } from "../rule-row/rule-row";
 import { RunRulesDialog } from "../run-rules-dialog/run-rules-dialog";
+import { SuggestedRules } from "../suggested-rules/suggested-rules";
 
 export function RulesPage() {
   const { t } = useTranslation();
@@ -35,6 +37,7 @@ export function RulesPage() {
   const accounts = useAccountsSuspense();
   const categories = useCategoriesSuspense();
   const tags = useTagsSuspense();
+  const suggestions = useSuggestedRulesSuspense();
 
   const deleteMutation = useDeleteCategorizationRule({
     mutation: optimisticRemoval<CategorizationRuleResponse>(getCategorizationRulesQueryKey()),
@@ -115,6 +118,13 @@ export function RulesPage() {
           onClose={() => setRunOpen(false)}
         />
       </Modal>
+
+      <SuggestedRules
+        suggestions={suggestions.data}
+        accounts={accounts.data}
+        categories={categories.data}
+        tags={tags.data}
+      />
 
       <ListSection
         title={t("categorizationRules.listTitle")}

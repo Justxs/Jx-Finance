@@ -7,7 +7,10 @@ import {
 import { getMeMockHandler } from "@/api/generated/auth/auth.msw";
 import { getBudgetsMockHandler } from "@/api/generated/budgets/budgets.msw";
 import { getCategoriesMockHandler } from "@/api/generated/categories/categories.msw";
-import { getCategorizationRulesMockHandler } from "@/api/generated/categorization-rules/categorization-rules.msw";
+import {
+  getCategorizationRulesMockHandler,
+  getSuggestedRulesMockHandler,
+} from "@/api/generated/categorization-rules/categorization-rules.msw";
 import { getConversionsMockHandler } from "@/api/generated/conversions/conversions.msw";
 import {
   getCategoryBreakdownMockHandler,
@@ -143,6 +146,7 @@ export const emptyHandlers: RequestHandler[] = [
   getBudgetsMockHandler([]),
   getCategoriesMockHandler([]),
   getCategorizationRulesMockHandler([]),
+  getSuggestedRulesMockHandler([]),
   getDebtsMockHandler([]),
   getGoalsMockHandler([]),
   getHouseholdsMockHandler([]),

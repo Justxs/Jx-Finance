@@ -3,6 +3,7 @@ import {
   getAccountsSuspenseQueryOptions,
   getCategoriesSuspenseQueryOptions,
   getCategorizationRulesSuspenseQueryOptions,
+  getSuggestedRulesSuspenseQueryOptions,
   getTagsSuspenseQueryOptions,
 } from "@/api/generated";
 import { RulesPage } from "@/features/categorization-rules/rules-page/rules-page";
@@ -17,6 +18,7 @@ export const Route = createFileRoute("/categorization-rules")({
     warm(queryClient, getAccountsSuspenseQueryOptions());
     warm(queryClient, getCategoriesSuspenseQueryOptions());
     warm(queryClient, getTagsSuspenseQueryOptions());
+    warm(queryClient, getSuggestedRulesSuspenseQueryOptions());
   },
   component: RulesPage,
   pendingComponent: RulesPending,

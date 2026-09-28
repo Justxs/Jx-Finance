@@ -4,11 +4,21 @@ Related: feature page [Categorization rules](../features/categorization-rules.md
 
 ## Current
 
-Personal, never shared, ordered by a dense integer position and evaluated first-match-wins; the condition is contains, starts with or equals on the description, ignoring case, optionally narrowed by account and by an amount range in the transaction's own currency, and the action sets a category, adds tags, or both; they suggest in the import preview and write to the ledger only through an explicit run that by default touches only rows with no category and never touches split rows; recategorizing rows that already carry a category is a separate labelled option; behind the `CategorizationRules` feature switch
+Personal, never shared, ordered by a dense integer position and evaluated first-match-wins; the condition is contains, starts with or equals on the description, ignoring case, optionally narrowed by account and by an amount range in the transaction's own currency, and the action sets a category, adds tags, or both; they suggest in the import preview and write to the ledger only through an explicit run that by default touches only rows with no category and never touches split rows; recategorizing rows that already carry a category is a separate labelled option; a payee filed by hand at least three times in twelve months with one category, and never with another of the same flow type, is offered as a suggested rule once in a toast and on the Rules tab until it is created or dismissed; behind the `CategorizationRules` feature switch
 
 ## Log
 
 Newest first. Each entry is a choice between real alternatives: what was chosen, what was rejected, and why.
+
+- **2026-09-29.** Two open questions of the rule-suggestions plan, decided while the owner was away and to be reviewed: a suggestion keeps needing three rows in twelve months, and an import confirm says nothing about the suggestions it created
+  - Rejected: Asking more rows of a payee that appears once a month; a "2 rule suggestions" line with a link to the Rules tab after an import confirm
+  - Why: Both were the plan's conservative defaults. Three rows are what the toast's "you filed this three times" promises, and the other-category check already stops a payee whose history disagrees; raising the bar can wait for the daily-use trial to show noise. The Rules tab already lists every open suggestion, and a second message in a dialog that already reports duplicates, transfers and matches would compete with them. Review both once real months of use exist
+- **2026-09-29.** A row counts as categorized by hand when none of the caller's current rules matches it, and a suggestion needs three such rows with one category and no row of the same key in another category of the same flow type
+  - Rejected: A new `CategorySource` column set by every write path; a majority vote among the categories a payee got; counting a housemate's rows on a shared account
+  - Why: Nothing records how a category was set, and old rows could never be told apart, so a source column would only work for rows written after it. A row a rule already matches needs no new rule, and because the first matching rule decides a row, a rule suggested behind an earlier one that already matches could never fire anyway. "Always" is only honest when the history never disagreed. Rules are personal, so the evidence is the caller's own rows
+- **2026-09-29.** A suggested rule is offered once by answering `GET /api/categorization-rules/suggested?transactionId=` only when that row's group has exactly three rows, and a dismissal is a server row of key and category
+  - Rejected: A toast after every save past the third; remembering "already offered" per browser; dismissals in a TanStack DB local-storage collection; a table of suggestions filled by a job
+  - Why: Exactly at the threshold gives "once" with no state at all, and a missed toast is not lost because the Rules tab lists the suggestion. The list is computed on the server on every read, so it must agree on every device, which a browser-local dismissal would break; the subscription dismissal already has the server-row shape. Computing on read is cheap for a household and leaves nothing to keep in step
 
 - **2026-09-20.** The first matching categorization rule decides a row, and no later rule sees it
   - Rejected: Letting every matching rule contribute, with the category from the first that sets one and the tags from all of them; a per-rule "stop here" flag

@@ -7,6 +7,7 @@ import {
   type AccountResponse,
   type CategorizationRuleResponse,
   type CategoryResponse,
+  type CreateCategorizationRuleRequest,
   DescriptionMatch,
   type TagResponse,
 } from "@/api/generated/model";
@@ -40,6 +41,7 @@ interface Props {
   categories: CategoryResponse[];
   tags: TagResponse[];
   initial?: CategorizationRuleResponse;
+  draft?: CreateCategorizationRuleRequest;
   onClose: () => void;
 }
 
@@ -52,7 +54,7 @@ function FormSection({ title, children }: Readonly<{ title: string; children: Re
   );
 }
 
-export function RuleForm({ accounts, categories, tags, initial, onClose }: Readonly<Props>) {
+export function RuleForm({ accounts, categories, tags, initial, draft, onClose }: Readonly<Props>) {
   const { t } = useTranslation();
   const [sample, setSample] = useState("");
   const [sampleAmount, setSampleAmount] = useState("");
@@ -85,15 +87,16 @@ export function RuleForm({ accounts, categories, tags, initial, onClose }: Reado
     useUpdateCategorizationRule(silent({ onSuccess: onClose })),
   );
 
+  const seed = initial ?? draft;
   const defaultValues: FormValues = {
-    name: initial?.name ?? "",
-    match: initial?.match ?? "contains",
-    pattern: initial?.pattern ?? "",
-    accountId: initial?.accountId ?? "",
-    minAmount: initial?.minAmount ?? "",
-    maxAmount: initial?.maxAmount ?? "",
-    categoryId: initial?.categoryId ?? "",
-    tagIds: initial?.tagIds ?? [],
+    name: seed?.name ?? "",
+    match: seed?.match ?? "contains",
+    pattern: seed?.pattern ?? "",
+    accountId: seed?.accountId ?? "",
+    minAmount: seed?.minAmount ?? "",
+    maxAmount: seed?.maxAmount ?? "",
+    categoryId: seed?.categoryId ?? "",
+    tagIds: seed?.tagIds ?? [],
   };
 
   const form = useServerForm({

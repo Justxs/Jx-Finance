@@ -1,4 +1,8 @@
-import type { CategorizationRuleResponse, RunRulesResponse } from "@/api/generated/model";
+import type {
+  CategorizationRuleResponse,
+  RunRulesResponse,
+  SuggestedRuleResponse,
+} from "@/api/generated/model";
 import { ids } from "./base";
 
 interface RuleOverrides {
@@ -50,6 +54,27 @@ export const categorizationRules: CategorizationRuleResponse[] = [
   rule(ids.rules.holidayCard, "Atostogų kortelė", 4, "contains", "BOOKING.COM", {
     tagIds: [ids.tags.holiday],
   }),
+];
+
+export const suggestedRules: SuggestedRuleResponse[] = [
+  {
+    key: "lidl",
+    name: "LIDL",
+    match: "startsWith",
+    pattern: "LIDL",
+    categoryId: ids.categories.food,
+    evidence: 5,
+    lastSeen: "2026-09-16",
+  },
+  {
+    key: "pirkinys bolt",
+    name: "BOLT",
+    match: "contains",
+    pattern: "BOLT",
+    categoryId: ids.categories.transport,
+    evidence: 3,
+    lastSeen: "2026-09-12",
+  },
 ];
 
 export const rulesRunPreview: RunRulesResponse = {

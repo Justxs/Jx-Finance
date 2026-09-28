@@ -53,7 +53,7 @@ const rules: readonly Rule[] = [
       api.getBulkTagTransactionsMutationKey,
     ],
     deleted: [api.getDeleteTransactionMutationKey],
-    refresh: ledger,
+    refresh: [...ledger, api.getSuggestedRulesQueryKey],
   },
   {
     after: [api.getUploadAttachmentMutationKey],
@@ -84,12 +84,16 @@ const rules: readonly Rule[] = [
     refresh: [api.getCategorizationRulesQueryKey],
   },
   {
+    after: [api.getDismissSuggestedRuleMutationKey],
+    refresh: [api.getSuggestedRulesQueryKey],
+  },
+  {
     after: [api.getRunCategorizationRulesMutationKey],
     refresh: [...ledger, api.getCategorizationRulesQueryKey],
   },
   {
     after: [api.getImportConfirmMutationKey],
-    refresh: [...ledger, api.getTransfersQueryKey],
+    refresh: [...ledger, api.getTransfersQueryKey, api.getSuggestedRulesQueryKey],
   },
   {
     after: [api.getConfirmRecurringBillMutationKey],

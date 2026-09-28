@@ -3900,6 +3900,140 @@
         ]
       }
     },
+    "/api/categorization-rules/suggested": {
+      "get": {
+        "tags": [
+          "CategorizationRules"
+        ],
+        "summary": "List suggested categorization rules",
+        "description": "Offers a rule for a payee you keep categorizing by hand. Your own unsplit transactions of the last 12 months are grouped by their normalized description. A group becomes a suggestion when at least three of its rows carry the same category, none of your current rules matches them, and no row of the group carries another category of the same flow type. The pattern is the descriptions' common start, or else a word they all contain, and it never matches a row of another category. Dismissed suggestions and suggestions for a full rule list are left out. With transactionId the answer holds at most the one suggestion that row backs, and only when it has exactly three rows, so a client can offer it once, right after the save that made it; a row you cannot see answers an empty list. Nothing is written.",
+        "operationId": "GetSuggestedRules",
+        "parameters": [
+          {
+            "name": "transactionId",
+            "in": "query",
+            "description": "A transaction just saved; answers only its suggestion, at exactly three rows.",
+            "schema": {
+              "type": [
+                "null",
+                "string"
+              ],
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The suggestions, most rows first, at most 20.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SuggestedRuleResponse"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      }
+    },
+    "/api/categorization-rules/suggested/dismiss": {
+      "post": {
+        "tags": [
+          "CategorizationRules"
+        ],
+        "summary": "Dismiss a suggested categorization rule",
+        "description": "Stops offering one suggested rule to the signed-in user, on every device. The dismissal is stored against the normalized description key and the category, not against the transactions behind it, so later rows of the same payee do not bring the suggestion back. Dismissing the same pair twice changes nothing. It is not a deletion and has no trash entry.",
+        "operationId": "DismissSuggestedRule",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DismissSuggestedRuleRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "The suggestion will not be offered to you again."
+          },
+          "400": {
+            "description": "Validation failed, or the category is not visible to you.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      }
+    },
     "/api/categorization-rules/test": {
       "post": {
         "tags": [
@@ -17302,6 +17436,25 @@
           }
         }
       },
+      "DismissSuggestedRuleRequest": {
+        "required": [
+          "key",
+          "categoryId"
+        ],
+        "type": "object",
+        "properties": {
+          "key": {
+            "maxLength": 200,
+            "minLength": 0,
+            "type": "string"
+          },
+          "categoryId": {
+            "minLength": 1,
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
       "EnableTwoFactorRequest": {
         "required": [
           "code"
@@ -20586,6 +20739,43 @@
             }
           },
           "nextExpectedDate": {
+            "$ref": "#/components/schemas/DateOnly"
+          }
+        }
+      },
+      "SuggestedRuleResponse": {
+        "required": [
+          "key",
+          "name",
+          "match",
+          "pattern",
+          "categoryId",
+          "evidence",
+          "lastSeen"
+        ],
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "match": {
+            "$ref": "#/components/schemas/DescriptionMatch"
+          },
+          "pattern": {
+            "type": "string"
+          },
+          "categoryId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "evidence": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "lastSeen": {
             "$ref": "#/components/schemas/DateOnly"
           }
         }

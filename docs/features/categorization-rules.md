@@ -162,9 +162,43 @@ A rule whose category has since been deleted matches nothing until it is edited.
 
 The call reads nothing and writes nothing — it is `RuleMatcher` behind an endpoint. It lives on the server rather than in the client so that "contains, ignoring case" has one definition: the form cannot drift from the import preview, which uses the same function, or from the run, whose `ILIKE` is built next to it.
 
+## Suggested rules
+
+A person who files the third MAXIMA line under Groceries by hand is asked, once, whether that should become a rule. `SuggestedRuleService` answers `GET /api/categorization-rules/suggested` in memory, from one query and without writing anything, so a suggestion is always as current as the ledger and there is nothing to invalidate on the server.
+
+```mermaid
+flowchart TD
+    Rows["the caller's own unsplit rows of the last 12 months<br/>that have a description, newest first, at most 5000"] --> Key["group by SubscriptionDescription.Normalize"]
+    Key --> Hand["keep rows with a visible category<br/>that none of the caller's rules matches"]
+    Hand --> Three{"at least 3 rows<br/>with one category?"}
+    Three -->|"no"| Skip["no suggestion"]
+    Three -->|"yes"| Other{"a row of the same key in another<br/>category of the same flow type?"}
+    Other -->|"yes"| Skip
+    Other -->|"no"| Dismissed{"key and category dismissed?"}
+    Dismissed -->|"yes"| Skip
+    Dismissed -->|"no"| Pattern["RulePatternFinder: common start,<br/>else a word every description contains"]
+    Pattern --> Check{"matches every evidence row<br/>and no row of another category?"}
+    Check -->|"no"| Skip
+    Check -->|"yes"| Offer["suggestion: name, match, pattern,<br/>category, row count, last date"]
+```
+
+**The evidence.** Rows are grouped by the key unusual amounts and subscription detection already use: lower case, punctuation gone, reference numbers and dates dropped, so every card line of one shop lands in one group. A group backs a suggestion when at least three of its rows carry the same category and no row of the group carries a different category of the same flow type; "always" is only honest when the history never disagreed. An income row with the same description does not block an expense suggestion, because an expense rule never matches income. Only rows the caller created count, on any account they can see: the question says "you filed this", and a housemate's rows on a shared account are that housemate's habit. Split rows, deleted rows and rows older than twelve months never count.
+
+**By hand.** Nothing records how a category was set, so a row counts as filed by hand when none of the caller's current rules matches it, with the same `RuleMatcher` the run uses. A row a rule already matches needs no new rule, which is also why creating the suggested rule makes the suggestion disappear.
+
+**The pattern.** A rule compares raw text, so the normalized key itself would never fire. `RulePatternFinder` takes the evidence rows' descriptions and first tries their longest common start, ignoring case, cut back to the end of a word that is not a reference number, at least three characters long, as `startsWith`. When the lines start differently, as card lines with a terminal number in front do, it takes the longest word of the key with at least three letters that every description contains, as `contains`. The result must still match every evidence row and no row of another category of the same flow type in the look-back; otherwise, or when neither choice exists, there is no suggestion. The name is the pattern as the newest row spells it, cut to 50 characters, and can be edited later like any rule's.
+
+**The toast.** After a save that set or changed a category — the transaction form's create and edit, and the category cell of the ledger — the client asks the same route with `transactionId`. The server answers only the suggestion that row backs, and only when it has exactly three rows, so the question comes once, at the save that reaches the third row, and later saves of the same payee stay quiet. The toast reads "Always categorize descriptions starting with "MAXIMA" as Groceries?" and stays for twelve seconds. **Create rule** posts the suggestion as an ordinary create body; **Don't ask again** dismisses it; closing the toast does neither, and a missed toast is not lost, because the Rules tab lists the suggestion.
+
+**The Rules tab.** Open suggestions sit above the rules, most rows first and then the most recent, at most 20, each with its condition in words, its category and "Based on 4 transactions". **Review** opens the ordinary rule form filled in, so the pattern, an account or an amount range can be changed before it is saved through the ordinary create. **Dismiss** removes it. With no suggestions the section is not shown at all.
+
+**Dismissing.** `POST /api/categorization-rules/suggested/dismiss` stores a `SuggestedRuleDismissal` holding the normalized key and the category, the same shape as a subscription dismissal, so it holds on every device and later rows of the payee do not bring it back. Dismissing twice writes nothing the second time. It is not a deletion and has no trash entry.
+
+A suggested rule, once created, is an ordinary rule: it goes last, suggests in the import preview and touches old rows only through **Run over existing transactions**. When the caller already has 100 rules the list is empty, because the create would be refused. Both routes sit in the `CategorizationRules` group and answer `feature.disabled` while the switch is off.
+
 ## The screen
 
-`/categorization-rules` follows `/tags`: a list, a dialog to add, a dialog to edit, and the confirm dialog every delete in the product uses. Each row shows its position, its name, its condition in words, and its action as chips, with **Move up** and **Move down** buttons on the right. There is no drag and drop: a list of a handful of rules is reordered a step at a time, the buttons work with a keyboard and a screen reader without any extra code, and each press is one request whose answer is the new order.
+`/categorization-rules` follows `/tags`: a list, a dialog to add, a dialog to edit, and the confirm dialog every delete in the product uses. The [suggested rules](#suggested-rules), when there are any, come first. Each row shows its position, its name, its condition in words, and its action as chips, with **Move up** and **Move down** buttons on the right. There is no drag and drop: a list of a handful of rules is reordered a step at a time, the buttons work with a keyboard and a screen reader without any extra code, and each press is one request whose answer is the new order.
 
 The form is one dialog with four groups — the name, the condition, the narrowing, and the action — and a **Try it** box at the bottom that runs the sample against the condition currently in the form. **Run over existing transactions** opens the second dialog: account, the recategorize checkbox, **Preview**, then an **Apply to N transactions** button that only becomes usable once a preview has found something.
 

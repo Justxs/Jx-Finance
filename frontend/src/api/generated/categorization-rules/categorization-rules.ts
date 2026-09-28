@@ -26,10 +26,13 @@ import type { ErrorType } from "../../client";
 import type {
   CategorizationRuleResponse,
   CreateCategorizationRuleRequest,
+  DismissSuggestedRuleRequest,
   MoveCategorizationRuleRequest,
   ProblemDetails,
   RunRulesRequest,
   RunRulesResponse,
+  SuggestedRuleResponse,
+  SuggestedRulesParams,
   TestCategorizationRuleRequest,
   TestCategorizationRuleResponse,
   UpdateCategorizationRuleRequest,
@@ -484,6 +487,247 @@ export const usePreviewCategorizationRun = <TError = ErrorType<ProblemDetails>, 
   TContext
 > => {
   return useMutation(getPreviewCategorizationRunMutationOptions(options), queryClient);
+};
+export const getSuggestedRulesUrl = (params?: SuggestedRulesParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/categorization-rules/suggested?${stringifiedParams}`
+    : `/api/categorization-rules/suggested`;
+};
+
+/**
+ * Offers a rule for a payee you keep categorizing by hand. Your own unsplit transactions of the last 12 months are grouped by their normalized description. A group becomes a suggestion when at least three of its rows carry the same category, none of your current rules matches them, and no row of the group carries another category of the same flow type. The pattern is the descriptions' common start, or else a word they all contain, and it never matches a row of another category. Dismissed suggestions and suggestions for a full rule list are left out. With transactionId the answer holds at most the one suggestion that row backs, and only when it has exactly three rows, so a client can offer it once, right after the save that made it; a row you cannot see answers an empty list. Nothing is written.
+ * @summary List suggested categorization rules
+ */
+export const suggestedRules = async (
+  params?: SuggestedRulesParams,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<SuggestedRuleResponse[]> => {
+  return customFetch<SuggestedRuleResponse[]>(getSuggestedRulesUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getSuggestedRulesQueryKey = (params?: SuggestedRulesParams) => {
+  return [`/api/categorization-rules/suggested`, ...(params ? [params] : [])] as const;
+};
+
+export const getSuggestedRulesSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof suggestedRules>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  params?: SuggestedRulesParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof suggestedRules>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getSuggestedRulesQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof suggestedRules>>> = ({ signal }) =>
+    suggestedRules(params, { signal, ...requestOptions });
+
+  return queryOptionsBuilder({
+    queryKey,
+    ...queryOptions,
+    queryFn: queryOptions?.queryFn ?? queryFn,
+  }) as UseSuspenseQueryOptions<Awaited<ReturnType<typeof suggestedRules>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  } & {
+    throwOnError?: ((this: never, error: TError) => boolean) & { readonly __inferenceOnly: never };
+  };
+};
+
+export type SuggestedRulesSuspenseQueryResult = NonNullable<
+  Awaited<ReturnType<typeof suggestedRules>>
+>;
+export type SuggestedRulesSuspenseQueryError = ErrorType<ProblemDetails>;
+
+export function useSuggestedRulesSuspense<
+  TData = Awaited<ReturnType<typeof suggestedRules>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  params: undefined | SuggestedRulesParams,
+  options: {
+    query: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof suggestedRules>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useSuggestedRulesSuspense<
+  TData = Awaited<ReturnType<typeof suggestedRules>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  params?: SuggestedRulesParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof suggestedRules>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useSuggestedRulesSuspense<
+  TData = Awaited<ReturnType<typeof suggestedRules>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  params?: SuggestedRulesParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof suggestedRules>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List suggested categorization rules
+ */
+
+export function useSuggestedRulesSuspense<
+  TData = Awaited<ReturnType<typeof suggestedRules>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  params?: SuggestedRulesParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof suggestedRules>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getSuggestedRulesSuspenseQueryOptions(params, options);
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export const getDismissSuggestedRuleUrl = () => {
+  return `/api/categorization-rules/suggested/dismiss`;
+};
+
+/**
+ * Stops offering one suggested rule to the signed-in user, on every device. The dismissal is stored against the normalized description key and the category, not against the transactions behind it, so later rows of the same payee do not bring the suggestion back. Dismissing the same pair twice changes nothing. It is not a deletion and has no trash entry.
+ * @summary Dismiss a suggested categorization rule
+ */
+export const dismissSuggestedRule = async (
+  dismissSuggestedRuleRequest: DismissSuggestedRuleRequest,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<void> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return customFetch<void>(getDismissSuggestedRuleUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(dismissSuggestedRuleRequest),
+  });
+};
+
+export const getDismissSuggestedRuleMutationKey = () => ["dismissSuggestedRule"] as const;
+
+export const getDismissSuggestedRuleMutationOptions = <
+  TError = ErrorType<ProblemDetails>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof dismissSuggestedRule>>,
+    TError,
+    DismissSuggestedRuleMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof dismissSuggestedRule>>,
+  TError,
+  DismissSuggestedRuleMutationVariables,
+  TContext
+> => {
+  const mutationKey = getDismissSuggestedRuleMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof dismissSuggestedRule>>,
+    DismissSuggestedRuleMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return dismissSuggestedRule(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DismissSuggestedRuleMutationResult = NonNullable<
+  Awaited<ReturnType<typeof dismissSuggestedRule>>
+>;
+export type DismissSuggestedRuleMutationBody = DismissSuggestedRuleRequest;
+export type DismissSuggestedRuleMutationError = ErrorType<ProblemDetails>;
+export type DismissSuggestedRuleMutationVariables = { data: DismissSuggestedRuleRequest };
+
+/**
+ * @summary Dismiss a suggested categorization rule
+ */
+export const useDismissSuggestedRule = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof dismissSuggestedRule>>,
+      TError,
+      DismissSuggestedRuleMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof dismissSuggestedRule>>,
+  TError,
+  DismissSuggestedRuleMutationVariables,
+  TContext
+> => {
+  return useMutation(getDismissSuggestedRuleMutationOptions(options), queryClient);
 };
 export const getTestCategorizationRuleUrl = () => {
   return `/api/categorization-rules/test`;

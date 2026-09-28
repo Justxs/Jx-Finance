@@ -31,7 +31,7 @@ Each switch is declared by the endpoint groups under these prefixes (`ApiGroup(t
 | `Households` | `/api/households` (list answers empty) | |
 | `MultiCurrency` | `/api/conversions` | foreign currency entry |
 | `Investments` | `/api/investments` | broker sync job |
-| `CategorizationRules` | `/api/categorization-rules` | the rule suggestions in the import preview |
+| `CategorizationRules` | `/api/categorization-rules` | the rule suggestions in the import preview; the suggested-rule toast after a save |
 | `UnusualAmounts` | `/api/transactions/{id}/unusual` (dismiss and its undo), declared on the two endpoints | the unusual-amount job and its notifications, including price rises; the verdict fields of transaction responses, which read as empty; the `unusual` ledger filter, which is ignored; the flag in the import preview; `latestMatch` on recurring entries; the link on the two unusual kinds in the bell |
 | `MonthClose` | `/api/month-close` | the month-end reminder job; the close panel on the dashboard for an earlier month, its command palette action and the dashboard prompt; the closed-month hint in the transaction and conversion forms; the link on a month-end reminder in the bell |
 

@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button/button";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { Section } from "@/components/ui/section/section";
 import { TextLink } from "@/components/ui/text-link/text-link";
+import { useSuggestedRuleToast } from "@/features/categorization-rules/suggested-rule-toast/use-suggested-rule-toast";
 import { ImportDialog } from "@/features/imports/import-dialog/import-dialog";
 import { useConfirmedDelete } from "@/hooks/use-confirmed-delete";
 import { useDeferredParams } from "@/hooks/use-deferred-params";
@@ -106,6 +107,7 @@ export function TransactionsPage() {
   const categories = useCategoriesSuspense();
   const tags = useTagsSuspense();
   const transactions = useTransactionsSuspense(listParams);
+  const suggestedRule = useSuggestedRuleToast(categories.data);
 
   const {
     create: createMutation,
@@ -161,12 +163,26 @@ export function TransactionsPage() {
   const total = transactions.data.total;
   const pageCount = Math.max(1, Math.ceil(total / pageSize));
 
+  function offerRule(saved: TransactionResponse, previousCategoryId: string | null = null) {
+    if (saved.categoryId && saved.categoryId !== previousCategoryId) {
+      void suggestedRule.offerAfterSave(saved.id);
+    }
+  }
+
   function handleCreate(values: TransactionFormValues) {
-    return createMutation.mutateAsync({ data: values }, { onSuccess: () => setCreateOpen(false) });
+    return createMutation.mutateAsync(
+      { data: values },
+      {
+        onSuccess: (created) => {
+          offerRule(created);
+          setCreateOpen(false);
+        },
+      },
+    );
   }
 
   async function handleCreateAnother(values: TransactionFormValues) {
-    await createMutation.mutateAsync({ data: values });
+    offerRule(await createMutation.mutateAsync({ data: values }));
     return true;
   }
 
@@ -179,7 +195,10 @@ export function TransactionsPage() {
     if (!editing) {
       return;
     }
-    await updateMutation.mutateAsync({ id: editing.id, data: values });
+    offerRule(
+      await updateMutation.mutateAsync({ id: editing.id, data: values }),
+      editing.categoryId,
+    );
   }
 
   return (

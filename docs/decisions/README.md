@@ -36,7 +36,7 @@ Before changing behaviour that a page here covers, read that page. When you choo
 | [Unusual amounts](unusual-amounts.md) | Unusual amounts | 7 | [Unusual amounts](../features/unusual-amounts.md) |
 | [Month-end close](month-end-close.md) | Month-end close | 13 | [Month-end close](../features/month-end-close.md) |
 | [Tags](tags.md) | Tags | 6 | [Tags](../features/tags.md) |
-| [Categorization rules](categorization-rules.md) | Categorization rules | 7 | [Categorization rules](../features/categorization-rules.md) |
+| [Categorization rules](categorization-rules.md) | Categorization rules | 10 | [Categorization rules](../features/categorization-rules.md) |
 | [Trash and undo](trash-and-undo.md) | Trash and undo | 10 | [Trash and undo](../features/trash-and-undo.md) |
 | [Attachments](attachments.md) | none | 3 | [Attachments](../features/attachments.md) |
 | [Audit log](audit-log.md) | none | 6 | [Audit log](../features/audit-log.md) |

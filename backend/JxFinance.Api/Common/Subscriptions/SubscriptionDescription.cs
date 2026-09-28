@@ -48,7 +48,7 @@ public static class SubscriptionDescription
         }
     }
 
-    private static bool IsReference(string token)
+    public static bool IsReference(string token)
     {
         var digits = 0;
         foreach (var character in token)
