@@ -7,11 +7,11 @@ test("a recurring bill is created and its payment confirmed", async ({ page }) =
   await createAccount(page.request, account);
 
   await page.goto("/recurring-bills");
-  await page.getByRole("button", { name: "Add recurring bill" }).first().click();
+  await page.getByRole("button", { name: "Add recurring entry" }).click();
   const create = page.getByRole("dialog");
   await create.getByLabel("Name").fill(bill);
   await create.getByLabel("Amount").fill("24,90");
-  await create.getByRole("button", { name: "Add recurring bill" }).click();
+  await create.getByRole("button", { name: "Add recurring entry" }).click();
   await expect(create).toBeHidden();
 
   const row = page.getByRole("listitem").filter({ hasText: bill });
@@ -33,5 +33,6 @@ test("a recurring bill is created and its payment confirmed", async ({ page }) =
   expect((bills.find((item) => item.name === bill)?.nextDueDate ?? "") > today()).toBe(true);
 
   await page.goto(`/transactions?search=${encodeURIComponent(bill)}`);
-  await expect(page.getByRole("row", { name: new RegExp(bill) })).toContainText("24.90");
+  const entry = page.getByRole("cell", { name: bill, exact: true });
+  await expect(page.getByRole("row").filter({ has: entry })).toContainText("24.90");
 });

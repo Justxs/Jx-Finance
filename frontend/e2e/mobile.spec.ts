@@ -4,10 +4,12 @@ test.use({ viewport: { width: 390, height: 844 }, hasTouch: true });
 
 test("the navigation strip moves between pages on a phone", async ({ page }) => {
   await page.goto("/");
-  await expect(page.getByRole("heading", { level: 1, name: "Dashboard" })).toBeVisible();
-
   const navigation = page.getByRole("navigation", { name: "Main navigation" });
   await expect(navigation).toHaveCount(1);
+  await expect(navigation.getByRole("link", { name: "Dashboard" })).toHaveAttribute(
+    "aria-current",
+    "page",
+  );
   await navigation.getByRole("link", { name: "Accounts" }).click();
   await expect(page).toHaveURL(/\/accounts$/);
   await expect(page.getByRole("heading", { level: 1, name: "Accounts" })).toBeVisible();

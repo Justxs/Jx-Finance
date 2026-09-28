@@ -33,7 +33,10 @@ test("a wrong password is refused with a translated message", async ({ page }) =
 test("an account added through the form shows up with its balance", async ({ page }) => {
   await signIn(page);
   await page.goto("/accounts");
-  await page.getByRole("button", { name: "Add account" }).click();
+  await page
+    .getByRole("region", { name: "Accounts" })
+    .getByRole("button", { name: "Add account" })
+    .click();
 
   const dialog = page.getByRole("dialog");
   await dialog.getByLabel("Name").fill("E2E checking");
@@ -85,7 +88,8 @@ test("a transaction posted to the API appears in the ledger and moves the balanc
 
 test("signing out returns to the login page and protects the app", async ({ page }) => {
   await signIn(page);
-  await page.getByRole("button", { name: /log out/i }).click();
+  await page.getByRole("button", { name: /Account menu/ }).click();
+  await page.getByRole("menuitem", { name: "Log out" }).click();
 
   await expect(page).toHaveURL(/\/login/);
   await page.goto("/transactions");

@@ -3,6 +3,11 @@ import { expect, setFeature, test } from "./support";
 test("turning a feature off hides it and redirects its address until it is turned on again", async ({
   page,
 }) => {
+  const planTabs = page.getByRole("navigation", { name: "Plan" });
+  const dashboard = page
+    .getByRole("navigation", { name: "Main navigation" })
+    .getByRole("link", { name: "Dashboard" });
+
   try {
     await page.goto("/settings?section=features");
     const goals = page.getByRole("checkbox", { name: "Goals" });
@@ -11,10 +16,12 @@ test("turning a feature off hides it and redirects its address until it is turne
     await page.getByRole("button", { name: "Save", exact: true }).click();
     await expect(page.getByText("You have unsaved changes.")).toBeHidden();
 
-    await expect(page.getByRole("link", { name: "Goals" })).toHaveCount(0);
+    await page.goto("/budgets");
+    await expect(planTabs.getByRole("link", { name: "Budgets" })).toBeVisible();
+    await expect(planTabs.getByRole("link", { name: "Goals" })).toHaveCount(0);
     await page.goto("/goals");
     await expect(page).toHaveURL(/\/$/);
-    await expect(page.getByRole("heading", { level: 1, name: "Dashboard" })).toBeVisible();
+    await expect(dashboard).toHaveAttribute("aria-current", "page");
 
     await page.goto("/settings?section=features");
     await expect(goals).not.toBeChecked();
@@ -22,10 +29,12 @@ test("turning a feature off hides it and redirects its address until it is turne
     await page.getByRole("button", { name: "Save", exact: true }).click();
     await expect(page.getByText("You have unsaved changes.")).toBeHidden();
 
-    await expect(page.getByRole("link", { name: "Goals" }).first()).toBeVisible();
     await page.goto("/goals");
     await expect(page).toHaveURL(/\/goals$/);
-    await expect(page.getByRole("heading", { level: 1, name: "Goals" })).toBeVisible();
+    await expect(planTabs.getByRole("link", { name: "Goals" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
   } finally {
     await setFeature(page.request, "goals", true);
   }

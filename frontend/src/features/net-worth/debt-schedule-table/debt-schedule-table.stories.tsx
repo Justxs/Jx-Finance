@@ -34,9 +34,12 @@ export const NotStartedYet: Story = {
 
 export const PagingForward: Story = {
   play: async ({ canvas }) => {
-    const before = canvas.getByText(/page \d+ of \d+|puslapis/i).textContent;
-    await userEvent.click(canvas.getByRole("button", { name: /^(next|kitas)$/i }));
-    await expect(canvas.getByText(/page \d+ of \d+|puslapis/i).textContent).not.toBe(before);
+    const range = /^\d+–\d+ of \d+$/u;
+    const before = canvas.getByText(range).textContent;
+    const page = Number(canvas.getByRole<HTMLInputElement>("textbox", { name: "Page" }).value);
+    await userEvent.click(canvas.getByRole("button", { name: "Next" }));
+    await expect(canvas.getByText(range).textContent).not.toBe(before);
+    await expect(canvas.getByRole("textbox", { name: "Page" })).toHaveValue(String(page + 1));
     await expect(canvas.getAllByRole("row")).toHaveLength(13);
   },
 };
