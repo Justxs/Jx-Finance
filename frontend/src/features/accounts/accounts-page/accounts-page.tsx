@@ -10,6 +10,7 @@ import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { Button } from "@/components/ui/button/button";
 import { Section } from "@/components/ui/section/section";
 import { SectionSkeleton, Skeleton } from "@/components/ui/skeleton/skeleton";
+import { ImportDialog } from "@/features/imports/import-dialog/import-dialog";
 import { useConfirmedDelete } from "@/hooks/use-confirmed-delete";
 import { useDeferredParams } from "@/hooks/use-deferred-params";
 import { useSettings } from "@/hooks/use-settings";
@@ -32,6 +33,7 @@ export function AccountsPage() {
   const allAccounts = useAccountsSuspense();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [convertAccountId, setConvertAccountId] = useState<string | null>(null);
+  const [importAccountId, setImportAccountId] = useState<string | null>(null);
 
   function setCreating(next: "account" | "transfer" | undefined) {
     void navigate({ search: (prev) => ({ ...prev, new: next }), replace: next === undefined });
@@ -83,6 +85,7 @@ export function AccountsPage() {
           deletingId={remove.pendingId}
           onDelete={remove.request}
           onConvert={features.multiCurrency ? setConvertAccountId : undefined}
+          onImport={features.import ? setImportAccountId : undefined}
           positiveTotal={allAccountList.reduce(
             (sum, account) => sum + Math.max(0, Number(account.reportingBalance)),
             0,
@@ -110,6 +113,19 @@ export function AccountsPage() {
             onConvertAccountChange={setConvertAccountId}
           />
         </QueryBoundary>
+      ) : null}
+
+      {features.import ? (
+        <ImportDialog
+          open={importAccountId !== null}
+          onOpenChange={(open) => {
+            if (!open) {
+              setImportAccountId(null);
+            }
+          }}
+          accounts={allAccountList}
+          initialAccountId={importAccountId ?? undefined}
+        />
       ) : null}
 
       <ConfirmDeleteDialog

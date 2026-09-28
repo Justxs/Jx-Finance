@@ -13,6 +13,8 @@ import {
   selectAllPatch,
   summarizeSelection,
   toPreviewRows,
+  viewCounts,
+  visibleRowIndexes,
 } from "./preview-rows";
 
 function category(id: string, name: string, type: FlowType): CategoryResponse {
@@ -346,5 +348,37 @@ describe("importDateRange", () => {
 
   test("is blank without rows", () => {
     expect(importDateRange([])).toEqual({ dateFrom: "", dateTo: "" });
+  });
+});
+
+describe("views and search", () => {
+  const rows = toPreviewRows(
+    [
+      row("1", "Lidl", "expense", "38.64"),
+      row("2", "Unknown shop", "expense", "12.00"),
+      row("3", "Maxima", "expense", "42.18", { isDuplicate: true }),
+      row("4", "Savings", "expense", "250.00", { looksLikeTransfer: true }),
+    ],
+    [transaction("2026-09-01", "Lidl", "expense", "food")],
+    categories,
+  );
+
+  test("counts each view, with attention meaning selected rows that would enter uncategorized", () => {
+    expect(viewCounts(rows)).toEqual({ all: 4, attention: 1, transfers: 1, duplicates: 1 });
+  });
+
+  test("filters by view and by description, case-insensitively", () => {
+    expect(visibleRowIndexes(rows, "all", "")).toEqual([0, 1, 2, 3]);
+    expect(visibleRowIndexes(rows, "attention", "")).toEqual([1]);
+    expect(visibleRowIndexes(rows, "duplicates", "")).toEqual([2]);
+    expect(visibleRowIndexes(rows, "all", "  MAX ")).toEqual([2]);
+    expect(visibleRowIndexes(rows, "transfers", "lidl")).toEqual([]);
+  });
+
+  test("select all can be limited to the visible rows", () => {
+    const cleared = selectAllPatch(rows, false, new Set([0, 1]));
+    expect(cleared.map((item) => item.selected)).toEqual([false, false, false, false]);
+    const selected = selectAllPatch(cleared, true, new Set([1, 2]));
+    expect(selected.map((item) => item.selected)).toEqual([false, true, false, false]);
   });
 });

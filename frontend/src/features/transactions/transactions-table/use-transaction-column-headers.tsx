@@ -13,6 +13,7 @@ import { TagPicker } from "@/features/tags/tag-picker/tag-picker";
 import { SEARCH_SHORTCUT_TARGET } from "@/lib/shortcuts";
 import { type AriaSort, ariaSortFor } from "@/lib/sort";
 import type { TransactionTypeFilter } from "../transaction-filter-fields";
+import { useFilterSummaries } from "../use-filter-summaries";
 import { useTransactionFilters } from "../use-transaction-filters";
 
 interface Args {
@@ -24,6 +25,7 @@ interface Args {
 export function useTransactionColumnHeaders({ accounts, categories, tags }: Args) {
   const filters = useTransactionFilters({ accounts, categories });
   const { search, fields, columnLabels } = filters;
+  const { valueOf } = useFilterSummaries({ accounts, categories, tags });
 
   type SortKey = NonNullable<typeof search.sort>;
 
@@ -52,6 +54,7 @@ export function useTransactionColumnHeaders({ accounts, categories, tags }: Args
         label={fields.date.label}
         value={fields.date.value}
         empty={{ from: "", to: "" }}
+        summary={valueOf("date")}
         onApply={fields.date.set}
       >
         {(draft, setDraft) => <DateRangePicker value={draft} onChange={setDraft} />}
@@ -84,6 +87,7 @@ export function useTransactionColumnHeaders({ accounts, categories, tags }: Args
             label={fields.tags.label}
             value={fields.tags.value}
             empty={[]}
+            summary={valueOf("tags")}
             onApply={fields.tags.set}
           >
             {(draft, setDraft) => (
@@ -114,6 +118,7 @@ export function useTransactionColumnHeaders({ accounts, categories, tags }: Args
         label={columnLabels.amount}
         value={{ type: fields.type.value, unusual: fields.unusual.value }}
         empty={{ type: "", unusual: false }}
+        summary={valueOf("type", "unusual")}
         onApply={(next) => fields.amount.set(next.type, next.unusual)}
       >
         {(draft, setDraft) => (

@@ -1,5 +1,5 @@
 import { useNavigate, useSearch } from "@tanstack/react-router";
-import { Plus } from "lucide-react";
+import { FileUp, Plus } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -17,6 +17,7 @@ import { Pagination } from "@/components/pagination/pagination";
 import { Button } from "@/components/ui/button/button";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { Section } from "@/components/ui/section/section";
+import { ImportDialog } from "@/features/imports/import-dialog/import-dialog";
 import { useConfirmedDelete } from "@/hooks/use-confirmed-delete";
 import { useDeferredParams } from "@/hooks/use-deferred-params";
 import { useExportUrl } from "@/hooks/use-export-url";
@@ -26,6 +27,7 @@ import { TRANSACTIONS_EXPORT_CSV_PATH, TRANSACTIONS_EXPORT_PDF_PATH } from "@/li
 import { byId, nameById } from "@/lib/options";
 import { metaLine } from "@/lib/utils";
 import { saveTransactionTemplate } from "@/stores/transaction-views";
+import { ActiveFilters } from "../active-filters/active-filters";
 import { SelectionToolbar } from "../selection-toolbar/selection-toolbar";
 import { signedAmount, transactionName } from "../transaction-amount";
 import {
@@ -52,7 +54,7 @@ import { useTransactionSelection } from "./use-transaction-selection";
 
 export function TransactionsPage() {
   const { t } = useTranslation();
-  const { defaultPageSize: pageSize } = useSettingsSuspense();
+  const { defaultPageSize: pageSize, features } = useSettingsSuspense();
   const money = useMoney();
   const formatDate = useIsoDate();
 
@@ -63,6 +65,7 @@ export function TransactionsPage() {
   const { page } = shown;
   const navigate = useNavigate({ from: "/transactions" });
   const [editing, setEditing] = useState<TransactionResponse | null>(null);
+  const [importOpen, setImportOpen] = useState(false);
   const [prefill, setPrefill] = useState<{ key: string; draft: TransactionDraft } | null>(null);
   const selection = useTransactionSelection(viewKey);
 
@@ -185,12 +188,20 @@ export function TransactionsPage() {
           accounts={accountList}
           categories={categoryList}
           tags={tagList}
-          filtered={columnHeaders.active}
-          onClearFilters={columnHeaders.clearAll}
           onUseTemplate={startFromDraft}
           exportUrl={exportCsvUrl}
           exportPdfUrl={exportPdfUrl}
         />
+        {features.import ? (
+          <Button
+            variant="outline"
+            onClick={() => setImportOpen(true)}
+            disabled={accountList.length === 0}
+          >
+            <FileUp />
+            {t("imports.open")}
+          </Button>
+        ) : null}
         <Button onClick={startBlank} disabled={accountList.length === 0}>
           <Plus />
           {t("transactions.add")}
@@ -221,6 +232,7 @@ export function TransactionsPage() {
       />
 
       <Section className="space-y-2">
+        <ActiveFilters accounts={accountList} categories={categoryList} tags={tagList} />
         {selectedItems.length > 0 ? (
           <SelectionToolbar
             selected={selectedItems}
@@ -292,6 +304,9 @@ export function TransactionsPage() {
       </Section>
 
       <ConfirmDeleteDialog {...remove.dialogProps} />
+      {features.import ? (
+        <ImportDialog open={importOpen} onOpenChange={setImportOpen} accounts={accountList} />
+      ) : null}
     </div>
   );
 }

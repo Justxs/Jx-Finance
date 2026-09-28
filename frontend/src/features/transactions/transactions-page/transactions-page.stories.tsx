@@ -85,9 +85,10 @@ export const SavingAndApplyingAFilter: Story = {
       expect.objectContaining({ search: "lidl", type: "expense" }),
     );
 
-    await userEvent.click(await canvas.findByRole("button", { name: "Clear filters" }));
+    const active = await canvas.findByRole("list", { name: "Active filters" });
+    await userEvent.click(within(active).getByRole("button", { name: "Clear filters" }));
     await waitFor(() =>
-      expect(canvas.queryByRole("button", { name: "Clear filters" })).not.toBeInTheDocument(),
+      expect(canvas.queryByRole("list", { name: "Active filters" })).not.toBeInTheDocument(),
     );
 
     await userEvent.click(await canvas.findByRole("button", { name: /^Saved filters/ }));
@@ -95,9 +96,23 @@ export const SavingAndApplyingAFilter: Story = {
       await screen.findByRole("button", { name: "Apply saved filter: Lidl expenses" }),
     );
 
-    await waitFor(() =>
-      expect(canvas.getByRole("button", { name: "Clear filters" })).toBeVisible(),
+    await waitFor(() => expect(canvas.getByRole("list", { name: "Active filters" })).toBeVisible());
+  },
+};
+
+export const RemovingOneActiveFilter: Story = {
+  parameters: { route: "/transactions?type=expense&search=lidl" },
+  play: async ({ canvas }) => {
+    const active = await canvas.findByRole("list", { name: "Active filters" });
+    await expect(within(active).getByText("“lidl”")).toBeVisible();
+    await expect(
+      canvas.getByRole("button", { name: "Filter by Description (now: lidl)" }),
+    ).toBeInTheDocument();
+    await userEvent.click(
+      within(active).getByRole("button", { name: "Remove filter Type: Expense" }),
     );
+    await waitFor(() => expect(within(active).queryByText("Expense")).not.toBeInTheDocument());
+    await expect(within(active).getByText("“lidl”")).toBeVisible();
   },
 };
 
@@ -111,9 +126,7 @@ export const SavedFilterNamingADeletedCategory: Story = {
 
     await userEvent.click(screen.getByRole("button", { name: "Apply saved filter: Renovation" }));
 
-    await waitFor(() =>
-      expect(canvas.getByRole("button", { name: "Clear filters" })).toBeVisible(),
-    );
+    await waitFor(() => expect(canvas.getByRole("list", { name: "Active filters" })).toBeVisible());
     await expect(canvas.getAllByRole("table")[0]).toBeVisible();
   },
 };

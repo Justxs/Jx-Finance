@@ -45,7 +45,9 @@
     "moveDown": "Nuleisti"
   },
   "common": {
-    "actions": "Veiksmai"
+    "actions": "Veiksmai",
+    "search": "Ieškoti",
+    "noMatches": "Atitikmenų nėra"
   },
   "confirmDelete": {
     "title": "Ištrinti šį įrašą?",
@@ -1747,14 +1749,6 @@
     "selectAll": "Pasirinkti visas eilutes",
     "selectAllHint": "Pažymi visas eilutes, išskyrus jau importuotas",
     "selectedOf": "Pasirinkta {{selected}} iš {{total}}",
-    "duplicateCount_one": "{{count}} dublikatas",
-    "duplicateCount_few": "{{count}} dublikatai",
-    "duplicateCount_many": "{{count}} dublikato",
-    "duplicateCount_other": "{{count}} dublikatų",
-    "transferCount_one": "{{count}} pervedimas",
-    "transferCount_few": "{{count}} pervedimai",
-    "transferCount_many": "{{count}} pervedimo",
-    "transferCount_other": "{{count}} pervedimų",
     "netSelected": "Pasirinktų eilučių balansas",
     "bulkCategory": "Priskirti kategoriją pasirinktoms eilutėms",
     "bulkCategoryPlaceholder": "Pasirinkite kategoriją",
@@ -1824,6 +1818,20 @@
       "closing": "Galutinis likutis {{date}}: {{amount}}",
       "agrees": "Sutampa su apskaitos likučiu įtraukus pasirinktas eilutes ({{ledger}})",
       "differs": "Apskaitos likutis įtraukus pasirinktas eilutes: {{ledger}}, skirtumas {{difference}}"
+    },
+    "discard": {
+      "title": "Atmesti šią peržiūrą?",
+      "description": "Pažymėtos, kategorizuotos ar kaip pervedimai susietos eilutės bus prarastos. Kol kas niekas neimportuota.",
+      "confirm": "Atmesti"
+    },
+    "views": {
+      "label": "Rodyti eilutes",
+      "all": "Visos",
+      "attention": "Reikia dėmesio",
+      "transfers": "Pervedimai",
+      "duplicates": "Dublikatai",
+      "search": "Ieškoti aprašymuose",
+      "empty": "Šiame rodinyje atitinkančių eilučių nėra."
     }
   },
   "errors": {
@@ -1858,7 +1866,12 @@
     "apply": "Taikyti",
     "noMatches": "Filtrus atitinkančių eilučių nėra.",
     "sortAsc": "Rikiuoti: {{column}}, didėjančiai",
-    "sortDesc": "Rikiuoti: {{column}}, mažėjančiai"
+    "sortDesc": "Rikiuoti: {{column}}, mažėjančiai",
+    "filterByActive": "Filtruoti pagal: {{column}} (dabar: {{value}})",
+    "active": "Taikomi filtrai",
+    "remove": "Pašalinti filtrą {{column}}: {{value}}",
+    "since": "Nuo {{date}}",
+    "until": "Iki {{date}}"
   },
   "charts": {
     "income": "Pajamos",

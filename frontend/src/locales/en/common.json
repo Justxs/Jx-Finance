@@ -45,7 +45,9 @@
     "moveDown": "Move down"
   },
   "common": {
-    "actions": "Actions"
+    "actions": "Actions",
+    "search": "Search",
+    "noMatches": "No matches"
   },
   "confirmDelete": {
     "title": "Delete this item?",
@@ -1689,10 +1691,6 @@
     "selectAll": "Select all rows",
     "selectAllHint": "Selects every row except those already imported",
     "selectedOf": "{{selected}} of {{total}} selected",
-    "duplicateCount_one": "{{count}} duplicate",
-    "duplicateCount_other": "{{count}} duplicates",
-    "transferCount_one": "{{count}} transfer",
-    "transferCount_other": "{{count}} transfers",
     "netSelected": "Net of selected",
     "bulkCategory": "Set category for selected",
     "bulkCategoryPlaceholder": "Choose a category",
@@ -1750,6 +1748,20 @@
       "closing": "Closing balance on {{date}}: {{amount}}",
       "agrees": "Matches the ledger after the selected rows ({{ledger}})",
       "differs": "Ledger after the selected rows: {{ledger}}, a difference of {{difference}}"
+    },
+    "discard": {
+      "title": "Discard this review?",
+      "description": "The rows you selected, categorised or matched as transfers will be lost. Nothing has been imported yet.",
+      "confirm": "Discard"
+    },
+    "views": {
+      "label": "Show rows",
+      "all": "All",
+      "attention": "Needs attention",
+      "transfers": "Transfers",
+      "duplicates": "Duplicates",
+      "search": "Search descriptions",
+      "empty": "No rows match this view."
     }
   },
   "errors": {
@@ -1784,7 +1796,12 @@
     "apply": "Apply",
     "noMatches": "No rows match these filters.",
     "sortAsc": "Sort {{column}} ascending",
-    "sortDesc": "Sort {{column}} descending"
+    "sortDesc": "Sort {{column}} descending",
+    "filterByActive": "Filter by {{column}} (now: {{value}})",
+    "active": "Active filters",
+    "remove": "Remove filter {{column}}: {{value}}",
+    "since": "From {{date}}",
+    "until": "Until {{date}}"
   },
   "charts": {
     "income": "Income",

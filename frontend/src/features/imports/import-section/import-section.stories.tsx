@@ -26,7 +26,12 @@ const meta = {
   title: "Features/Imports/ImportSection",
   component: ImportSection,
   parameters: { layout: "fullscreen" },
-  args: { accounts, format: "swedbankCsv" },
+  args: {
+    accounts,
+    format: "swedbankCsv",
+    onEditedChange: () => undefined,
+    confirmDiscard: (run) => run(),
+  },
   decorators: [withPageFrame],
 } satisfies Meta<typeof ImportSection>;
 

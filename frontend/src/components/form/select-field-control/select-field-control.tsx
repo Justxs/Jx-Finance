@@ -1,6 +1,8 @@
 import type { FieldWithValue } from "@tanstack/react-form";
 import type { ReactNode } from "react";
+import { ComboboxField } from "@/components/combobox-field/combobox-field";
 import { SelectField, type SelectOption } from "@/components/select-field/select-field";
+import { SegmentedControl } from "@/components/ui/segmented-control/segmented-control";
 import { FieldShell, fieldAria } from "../field-shell/field-shell";
 
 interface Props {
@@ -9,6 +11,7 @@ interface Props {
   label?: ReactNode;
   hint?: ReactNode;
   options: SelectOption[];
+  kind?: "select" | "search" | "segments";
   placeholder?: string;
   disabled?: boolean;
   className?: string;
@@ -24,6 +27,7 @@ export function SelectFieldControl({
   label,
   hint,
   options,
+  kind = "select",
   placeholder,
   disabled,
   className,
@@ -34,24 +38,55 @@ export function SelectFieldControl({
 }: Readonly<Props>) {
   const { error, ...aria } = fieldAria(field, { id, hint, touchedOnly });
 
+  function handleChange(next: string) {
+    const previous = field.value;
+    field.handleChange(next);
+    onValueChange?.(next, previous);
+  }
+
+  const shared = {
+    id,
+    value: field.value,
+    options,
+    disabled,
+    onChange: handleChange,
+    "aria-describedby": aria["aria-describedby"],
+  };
+
+  let control: ReactNode;
+  if (kind === "segments") {
+    control = (
+      <SegmentedControl
+        {...shared}
+        aria-label={ariaLabel ?? (typeof label === "string" ? label : undefined)}
+      />
+    );
+  } else if (kind === "search") {
+    control = (
+      <ComboboxField
+        {...shared}
+        aria-invalid={aria["aria-invalid"]}
+        aria-label={ariaLabel}
+        placeholder={placeholder}
+        onBlur={field.handleBlur}
+      />
+    );
+  } else {
+    control = (
+      <SelectField
+        {...shared}
+        aria-invalid={aria["aria-invalid"]}
+        aria-label={ariaLabel}
+        placeholder={placeholder}
+        className={fitContent ? "sm:w-auto" : undefined}
+        onBlur={field.handleBlur}
+      />
+    );
+  }
+
   return (
     <FieldShell id={id} label={label} hint={hint} error={error} className={className}>
-      <SelectField
-        {...aria}
-        id={id}
-        aria-label={ariaLabel}
-        value={field.value}
-        placeholder={placeholder}
-        disabled={disabled}
-        className={fitContent ? "sm:w-auto" : undefined}
-        options={options}
-        onBlur={field.handleBlur}
-        onChange={(next) => {
-          const previous = field.value;
-          field.handleChange(next);
-          onValueChange?.(next, previous);
-        }}
-      />
+      {control}
     </FieldShell>
   );
 }

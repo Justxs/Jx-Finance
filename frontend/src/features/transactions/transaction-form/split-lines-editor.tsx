@@ -37,6 +37,7 @@ function SplitLineRow({ fields, categories, index, onRemove }: Readonly<LineRowP
         {(field) => (
           <field.SelectFieldControl
             id={`tx-line-${index}-category`}
+            kind="search"
             aria-label={t("transactions.lineCategory")}
             options={namedOptions(categories, t("transactions.uncategorized"))}
           />

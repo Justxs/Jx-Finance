@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import { toast } from "sonner";
+import { expect, userEvent, within } from "storybook/test";
 import {
   accounts,
   categories,
@@ -9,6 +10,7 @@ import {
   tags,
   transactions,
 } from "@/storybook/fixtures";
+import { first } from "@/storybook/interactions";
 import { ImportPreviewTable } from "./import-preview-table";
 import { type PreviewRowState, toPreviewRows } from "./preview-rows";
 
@@ -104,3 +106,30 @@ export const ManyRows: Story = { args: { rows: manyRows } };
 export const NoCategories: Story = { args: { withCategories: false } };
 
 export const ConfirmPending: Story = { args: { confirmPending: true } };
+
+export const TransfersView: Story = {
+  play: async ({ canvas }) => {
+    await userEvent.click(canvas.getByRole("radio", { name: /^Transfers/ }));
+    await expect(canvas.getByRole("radio", { name: /^Transfers/ })).toBeChecked();
+    const table = within(first(canvas.getAllByRole("region", { name: "Preview" })));
+    await expect(table.getByText("Šarūnas Kazlauskas")).toBeVisible();
+    await expect(table.queryByText("VALSTYBINĖ MOKESČIŲ INSPEKCIJA")).not.toBeInTheDocument();
+  },
+};
+
+export const SearchingDescriptions: Story = {
+  play: async ({ canvas }) => {
+    await userEvent.type(canvas.getByRole("searchbox", { name: "Search descriptions" }), "gpm");
+    const table = within(first(canvas.getAllByRole("region", { name: "Preview" })));
+    await expect(table.getByText("VALSTYBINĖ MOKESČIŲ INSPEKCIJA")).toBeVisible();
+    await expect(table.queryByText("Šarūnas Kazlauskas")).not.toBeInTheDocument();
+  },
+};
+
+export const EmptyView: Story = {
+  args: { rows: recalledRows.map((row) => ({ ...row, isDuplicate: false })) },
+  play: async ({ canvas }) => {
+    await userEvent.click(canvas.getByRole("radio", { name: /^Duplicates/ }));
+    await expect(canvas.getByText("No rows match this view.")).toBeVisible();
+  },
+};

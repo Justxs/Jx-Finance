@@ -19,6 +19,7 @@ interface Props<T> {
   onApply: (value: T) => void;
   children: (draft: T, setDraft: (value: T) => void) => ReactNode;
   shortcut?: string;
+  summary?: string;
 }
 
 export function ColumnFilter<T>({
@@ -28,11 +29,16 @@ export function ColumnFilter<T>({
   onApply,
   children,
   shortcut,
+  summary,
 }: Readonly<Props<T>>) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState(value);
   const active = !sameValue(value, empty);
+  const triggerLabel =
+    active && summary
+      ? t("filters.filterByActive", { column: label, value: summary })
+      : t("filters.filterBy", { column: label });
 
   function handleOpenChange(next: boolean) {
     if (next) {
@@ -50,9 +56,9 @@ export function ColumnFilter<T>({
 
   return (
     <Popover open={open} onOpenChange={handleOpenChange}>
-      <Tooltip content={t("filters.filterBy", { column: label })}>
+      <Tooltip content={triggerLabel}>
         <PopoverTrigger
-          aria-label={t("filters.filterBy", { column: label })}
+          aria-label={triggerLabel}
           data-shortcut={shortcut}
           className={cn(
             "rounded p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground pointer-coarse:p-3",
@@ -97,6 +103,7 @@ interface TextFilterProps {
   onChange: (value: string) => void;
   placeholder?: string;
   shortcut?: string;
+  summary?: string;
 }
 
 export function TextColumnFilter({
@@ -105,9 +112,17 @@ export function TextColumnFilter({
   onChange,
   placeholder,
   shortcut,
+  summary,
 }: Readonly<TextFilterProps>) {
   return (
-    <ColumnFilter label={label} value={value} empty="" shortcut={shortcut} onApply={onChange}>
+    <ColumnFilter
+      label={label}
+      value={value}
+      empty=""
+      shortcut={shortcut}
+      summary={summary ?? value}
+      onApply={onChange}
+    >
       {(draft, setDraft) => (
         <Input
           placeholder={placeholder ?? label}
@@ -132,8 +147,15 @@ export function SelectColumnFilter<T extends string>({
   options,
   onChange,
 }: Readonly<SelectFilterProps<T>>) {
+  const chosen = options.find((option) => option.value === value)?.label;
   return (
-    <ColumnFilter<T | ""> label={label} value={value} empty="" onApply={onChange}>
+    <ColumnFilter<T | "">
+      label={label}
+      value={value}
+      empty=""
+      summary={typeof chosen === "string" ? chosen : undefined}
+      onApply={onChange}
+    >
       {(draft, setDraft) => (
         <SelectField aria-label={label} value={draft} onChange={setDraft} options={options} />
       )}

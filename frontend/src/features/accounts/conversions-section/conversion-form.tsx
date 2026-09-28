@@ -221,6 +221,7 @@ export function ConversionForm({
               {(field) => (
                 <field.SelectFieldControl
                   id="conversion-fee-category"
+                  kind="search"
                   label={t("conversions.feeCategory")}
                   disabled={noFee}
                   options={feeCategoryOptions}

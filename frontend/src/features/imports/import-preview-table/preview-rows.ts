@@ -32,6 +32,46 @@ interface SelectionSummary {
   selectableCount: number;
 }
 
+export const previewViews = ["all", "attention", "transfers", "duplicates"] as const;
+
+export type PreviewView = (typeof previewViews)[number];
+
+function isTransferRow(row: PreviewRowState) {
+  return row.looksLikeTransfer || Boolean(row.transferAccountId);
+}
+
+function needsAttention(row: PreviewRowState) {
+  return row.selected && !row.transferAccountId && !row.categoryId;
+}
+
+const viewFilters: Record<PreviewView, (row: PreviewRowState) => boolean> = {
+  all: () => true,
+  attention: needsAttention,
+  transfers: isTransferRow,
+  duplicates: (row) => row.isDuplicate,
+};
+
+export function viewCounts(rows: PreviewRowState[]): Record<PreviewView, number> {
+  return {
+    all: rows.length,
+    attention: rows.filter(needsAttention).length,
+    transfers: rows.filter(isTransferRow).length,
+    duplicates: rows.filter((row) => row.isDuplicate).length,
+  };
+}
+
+export function visibleRowIndexes(rows: PreviewRowState[], view: PreviewView, query: string) {
+  const needle = normalize(query);
+  return rows.flatMap((row, index) =>
+    viewFilters[view](row) &&
+    (!needle ||
+      normalize(row.description).includes(needle) ||
+      normalize(row.payee).includes(needle))
+      ? [index]
+      : [],
+  );
+}
+
 function normalize(text: string | null | undefined) {
   return text?.trim().toLocaleLowerCase() ?? "";
 }
@@ -97,7 +137,7 @@ export function summarizeSelection(rows: PreviewRowState[]): SelectionSummary {
     total: rows.length,
     selected: selectedRows.length,
     duplicates: rows.filter((row) => row.isDuplicate).length,
-    transfers: rows.filter((row) => row.looksLikeTransfer || Boolean(row.transferAccountId)).length,
+    transfers: rows.filter(isTransferRow).length,
     nets: netByCurrency(selectedRows),
     allSelected: selectable.length > 0 && selectable.every((row) => row.selected),
     someSelected: selectedRows.length > 0,
@@ -105,8 +145,15 @@ export function summarizeSelection(rows: PreviewRowState[]): SelectionSummary {
   };
 }
 
-export function selectAllPatch(rows: PreviewRowState[], checked: boolean): PreviewRowState[] {
-  return rows.map((row) => {
+export function selectAllPatch(
+  rows: PreviewRowState[],
+  checked: boolean,
+  only?: ReadonlySet<number>,
+): PreviewRowState[] {
+  return rows.map((row, index) => {
+    if (only && !only.has(index)) {
+      return row;
+    }
     if (!checked) {
       return { ...row, selected: false };
     }

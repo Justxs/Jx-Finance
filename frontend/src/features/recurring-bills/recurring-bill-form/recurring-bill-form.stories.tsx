@@ -25,7 +25,7 @@ export const NoCategories: Story = { args: { categories: [] } };
 
 export const ChooseIncomeShape: Story = {
   play: async ({ canvas }) => {
-    await chooseOption(canvas.getByRole("combobox", { name: "Records" }), "Income");
+    await userEvent.click(canvas.getByRole("radio", { name: "Income" }));
 
     await expect(canvas.getByRole("combobox", { name: "Category" })).toBeVisible();
     await expect(canvas.queryByRole("combobox", { name: "To account" })).toBeNull();
@@ -34,7 +34,7 @@ export const ChooseIncomeShape: Story = {
 
 export const ChooseTransferShape: Story = {
   play: async ({ canvas }) => {
-    await chooseOption(canvas.getByRole("combobox", { name: "Records" }), "Transfer");
+    await userEvent.click(canvas.getByRole("radio", { name: "Transfer" }));
 
     await expect(canvas.getByRole("combobox", { name: "From account" })).toBeVisible();
     await expect(canvas.getByRole("combobox", { name: "To account" })).toBeVisible();
@@ -48,7 +48,7 @@ export const TransferNeedsTwoDifferentAccounts: Story = {
     const [name, amount] = canvas.getAllByRole("textbox");
     await fireEvent.change(name!, { target: { value: "Standing order" } });
     await fireEvent.change(amount!, { target: { value: "250.00" } });
-    await chooseOption(canvas.getByRole("combobox", { name: "Records" }), "Transfer");
+    await userEvent.click(canvas.getByRole("radio", { name: "Transfer" }));
     await chooseOption(
       canvas.getByRole("combobox", { name: "From account" }),
       checkingAccount.name,

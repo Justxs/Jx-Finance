@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { AccountResponse, CategoryResponse, TagResponse } from "@/api/generated/model";
-import { SelectField } from "@/components/select-field/select-field";
+import { ComboboxField } from "@/components/combobox-field/combobox-field";
 import { Button } from "@/components/ui/button/button";
 import { Checkbox } from "@/components/ui/checkbox/checkbox";
 import { TableCell, TableRow } from "@/components/ui/table/table";
@@ -77,7 +77,7 @@ export function ImportRow({
   );
 
   const category = (
-    <SelectField
+    <ComboboxField
       aria-label={t("imports.categoryFor", { row: rowName })}
       disabled={Boolean(row.transferAccountId)}
       value={row.categoryId}

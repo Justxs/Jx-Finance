@@ -6,7 +6,7 @@ Related: feature page [Interface](../features/interface.md); architecture [Visua
 
 ### Design
 
-Neutral surfaces, compact controls, readable typography, semantic colors, mobile navigation; no external fonts
+Neutral surfaces, compact controls, readable typography, semantic colors, mobile navigation; no external fonts. Two-way choices are segmented controls and category pickers are searchable comboboxes. Active ledger filters show as removable chips above the rows. Statement import opens from the ledger header and account rows as well as Settings
 
 ### Navigation
 
@@ -20,6 +20,15 @@ One dialog on `Mod+K` over every page: the pages and sections from a table besid
 
 Newest first. Each entry is a choice between real alternatives: what was chosen, what was rejected, and why.
 
+- **2026-09-28.** Expense / Income and the recurring bill's shape are a segmented radio group; every category picker is a combobox with its search box inside the popup; other short lists stay plain selects
+  - Rejected: Plain selects everywhere; making `SelectField` searchable above an option count; a combobox that types into the trigger itself
+  - Why: A two- or three-way choice is faster and clearer when every option is visible and one click away. Category lists grow with the household and are the one long list people pick from many times per session, so they need typing. A threshold would change a control's keyboard behaviour when a list grows past it. A search box inside the popup keeps the closed control looking and sizing like every other select, which matters in the import table's narrow cells. Forms choose the control with `kind` on `SelectFieldControl`, so no field component was added.
+- **2026-09-28.** The ledger lists its active filters above the rows as removable chips, each column filter's button names its value, and the header's Clear filters button moved into that line
+  - Rejected: Only tinting the filter icon; writing the values into the column headers; chips that replace the column filters
+  - Why: A tint says that something is filtered but not what, so the totals and rows could not be read without opening every popover, and a screen reader heard no difference at all. Values in the headers would widen the columns. The column filters stay where people already edit them, and the chips only read and remove. One Clear filters control belongs next to the filters it clears; unlike the old header button, it keeps the sort, which is not a filter.
+- **2026-09-28.** Importing a statement starts from the ledger header and from an account's row actions, as well as from Settings
+  - Rejected: Keeping the only entry under Settings; moving the import to its own page; removing the Settings section
+  - Why: Importing is the monthly ledger task, and a settings page is the last place people look for it. The dialog already existed, so the new entries only open it, and the account entry passes the account the dialog already accepted. The Settings section stays because the month-end checklist and the command palette link there.
 - **2026-09-27.** Related pages share one sidebar entry, a hub, and show as tabs under the hub's title; the routes, URLs and `g` shortcuts stay as they were
   - Rejected: Nested routes such as `/plan/budgets`; one long page per hub; keeping the seventeen sidebar links; moving Categories, Tags and Rules into Settings
   - Why: The sidebar had grown to seventeen links, most of them visited a few times a month, and the ones used every session were lost among them. Nested routes would have broken every saved link, bookmark and shortcut and changed every route file for no gain the reader could see, since the tabs already say where a page belongs. One long page per hub would load and scroll through three features to reach one, and would lose each page's own URL and search params. Categories, tags and rules are used in every bookkeeping session, so they are ledger work, not configuration, and keep their own entry

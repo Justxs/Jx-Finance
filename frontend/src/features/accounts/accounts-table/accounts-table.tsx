@@ -1,5 +1,5 @@
 import { useNavigate, useSearch } from "@tanstack/react-router";
-import { ArrowLeftRight } from "lucide-react";
+import { ArrowLeftRight, FileUp } from "lucide-react";
 import { type ReactNode, ViewTransition } from "react";
 import { useTranslation } from "react-i18next";
 import { useHouseholdsSuspense } from "@/api/generated";
@@ -38,6 +38,7 @@ interface Props {
   deletingId: string | null;
   onDelete: (id: string) => void;
   onConvert?: (id: string) => void;
+  onImport?: (id: string) => void;
   positiveTotal: number;
 }
 
@@ -52,6 +53,7 @@ export function AccountsTable({
   deletingId,
   onDelete,
   onConvert,
+  onImport,
   positiveTotal,
 }: Readonly<Props>) {
   const { t } = useTranslation();
@@ -103,6 +105,16 @@ export function AccountsTable({
         deleteDisabled={deletingId !== null}
         className="justify-end"
       >
+        {onImport ? (
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            onClick={() => onImport(account.id)}
+            aria-label={`${t("imports.open")}: ${account.name}`}
+          >
+            <FileUp />
+          </Button>
+        ) : null}
         {onConvert ? (
           <Button
             variant="ghost"

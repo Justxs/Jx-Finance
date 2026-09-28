@@ -201,6 +201,7 @@ export function RuleForm({ accounts, categories, tags, initial, onClose }: Reado
             {(field) => (
               <field.SelectFieldControl
                 id="rule-category"
+                kind="search"
                 label={t("categorizationRules.category")}
                 options={namedOptions(categories, t("categorizationRules.noCategory"))}
                 hint={t("categorizationRules.categoryTypeHint")}

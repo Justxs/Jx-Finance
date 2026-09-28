@@ -39,9 +39,17 @@ interface Props {
   accounts: AccountResponse[];
   format: StatementFormat;
   initialAccountId?: string;
+  onEditedChange: (edited: boolean) => void;
+  confirmDiscard: (run: () => void) => void;
 }
 
-export function ImportSection({ accounts, format, initialAccountId }: Readonly<Props>) {
+export function ImportSection({
+  accounts,
+  format,
+  initialAccountId,
+  onEditedChange,
+  confirmDiscard,
+}: Readonly<Props>) {
   const { t } = useTranslation();
   const fileField = useFileField(
     IMPORT_FILE_INPUT_ID,
@@ -62,10 +70,20 @@ export function ImportSection({ accounts, format, initialAccountId }: Readonly<P
   const tagList = tags.data;
   const history = useTransactionsSuspense(recallParams);
 
+  function replaceRows(next: PreviewRowState[] | null) {
+    setRows(next);
+    onEditedChange(false);
+  }
+
+  function editRows(next: PreviewRowState[]) {
+    setRows(next);
+    onEditedChange(true);
+  }
+
   const previewMutation = useImportPreview(
     silent({
       onSuccess: (data: ImportPreviewResponse) => {
-        setRows(toPreviewRows(data.rows, history.data.items, categoryList));
+        replaceRows(toPreviewRows(data.rows, history.data.items, categoryList));
         setStatement(data.statement);
       },
     }),
@@ -84,14 +102,14 @@ export function ImportSection({ accounts, format, initialAccountId }: Readonly<P
           accountId: variables.data.accountId,
           ...importDateRange(confirmed),
         });
-        setRows(null);
+        replaceRows(null);
         fileField.reset();
       },
     },
   });
 
   function clearPreview() {
-    setRows(null);
+    replaceRows(null);
     fileField.clearError();
     previewMutation.reset();
   }
@@ -107,12 +125,13 @@ export function ImportSection({ accounts, format, initialAccountId }: Readonly<P
 
   function switchAccount(id: string) {
     setAccountId(id);
-    setRows(null);
+    replaceRows(null);
     preview(id);
   }
 
   function updateRow(index: number, patch: Partial<PreviewRowState>) {
     setRows((prev) => prev?.map((row, i) => (i === index ? { ...row, ...patch } : row)) ?? null);
+    onEditedChange(true);
   }
 
   function handleConfirm() {
@@ -147,14 +166,19 @@ export function ImportSection({ accounts, format, initialAccountId }: Readonly<P
           key={fileField.key}
           accounts={accounts}
           accountId={accountId}
-          onAccountChange={(id) => {
-            setAccountId(id);
-            clearPreview();
-          }}
+          onAccountChange={(id) =>
+            confirmDiscard(() => {
+              setAccountId(id);
+              clearPreview();
+            })
+          }
           fileInputRef={fileField.inputProps.ref}
           format={format}
-          onPreview={() => preview(accountId)}
-          onFileChange={clearPreview}
+          onPreview={() => confirmDiscard(() => preview(accountId))}
+          onFileChange={() => {
+            fileField.clearError();
+            previewMutation.reset();
+          }}
           previewPending={previewMutation.isPending}
           disabled={confirmMutation.isPending}
           fileError={fileField.error}
@@ -175,7 +199,7 @@ export function ImportSection({ accounts, format, initialAccountId }: Readonly<P
               rows={rows}
               accounts={accounts}
               disabled={previewMutation.isPending || confirmMutation.isPending}
-              onSwitchAccount={switchAccount}
+              onSwitchAccount={(id) => confirmDiscard(() => switchAccount(id))}
             />
           ) : null}
           <ImportPreviewTable
@@ -185,12 +209,14 @@ export function ImportSection({ accounts, format, initialAccountId }: Readonly<P
             categories={categoryList}
             tags={tagList}
             onRowChange={updateRow}
-            onRowsChange={setRows}
+            onRowsChange={editRows}
             onConfirm={handleConfirm}
-            onCancel={() => {
-              clearPreview();
-              fileField.reset();
-            }}
+            onCancel={() =>
+              confirmDiscard(() => {
+                clearPreview();
+                fileField.reset();
+              })
+            }
             confirmPending={confirmMutation.isPending}
           />
         </Section>

@@ -65,6 +65,7 @@ export function CreateBudgetForm({ categories, initial, onClose }: Readonly<Prop
             {(field) => (
               <field.SelectFieldControl
                 id="budget-category"
+                kind="search"
                 label={t("budgets.category")}
                 options={expenseCategories.map((category) => ({
                   value: category.id,

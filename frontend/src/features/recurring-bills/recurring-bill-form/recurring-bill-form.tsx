@@ -188,6 +188,7 @@ export function RecurringBillForm({ bill, draft, accounts, categories, onClose }
           {(field) => (
             <field.SelectFieldControl
               id={`${fieldId}-shape`}
+              kind="segments"
               label={t("recurringBills.shape")}
               options={[
                 { value: "expense", label: t("recurringBills.shapes.expense") },
@@ -257,6 +258,7 @@ export function RecurringBillForm({ bill, draft, accounts, categories, onClose }
                   ) : (
                     <field.SelectFieldControl
                       id={`${fieldId}-category`}
+                      kind="search"
                       label={t("recurringBills.category")}
                       options={categoryOptionsFor(shape)}
                     />

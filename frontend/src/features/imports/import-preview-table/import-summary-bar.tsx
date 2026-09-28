@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { CategoryResponse } from "@/api/generated/model";
-import { SelectField } from "@/components/select-field/select-field";
+import { ComboboxField } from "@/components/combobox-field/combobox-field";
 import { Button } from "@/components/ui/button/button";
 import { useMoney } from "@/hooks/use-formatters";
 import { EXPENSE_TONE, INCOME_TONE } from "@/lib/tone";
@@ -43,16 +43,8 @@ export function ImportSummaryBar({
   return (
     <div className="z-10 space-y-3 border-b bg-popover py-3 md:sticky md:top-0">
       <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-2">
-        <p className="text-sm tabular-nums" role="status">
-          <span className="font-semibold">
-            {t("imports.selectedOf", { selected: summary.selected, total: summary.total })}
-          </span>
-          <span className="text-muted-foreground">
-            {" · "}
-            {t("imports.duplicateCount", { count: summary.duplicates })}
-            {" · "}
-            {t("imports.transferCount", { count: summary.transfers })}
-          </span>
+        <p className="text-sm font-semibold tabular-nums" role="status">
+          {t("imports.selectedOf", { selected: summary.selected, total: summary.total })}
         </p>
         <p className="flex flex-wrap items-baseline justify-end gap-x-3 gap-y-1 text-sm">
           <span className="text-muted-foreground">{t("imports.netSelected")}</span>
@@ -76,20 +68,18 @@ export function ImportSummaryBar({
           <label className="text-xs text-muted-foreground" htmlFor="import-bulk-category">
             {t("imports.bulkCategory")}
           </label>
-          <SelectField
+          <ComboboxField
             id="import-bulk-category"
             value={bulkCategory ? bulkCategoryId : ""}
             disabled={disabled || offered.length === 0}
             onChange={setBulkCategoryId}
-            options={[
-              { value: "", label: t("imports.bulkCategoryPlaceholder") },
-              ...offered.map((category) => ({
-                value: category.id,
-                label: mixedTypes
-                  ? `${category.name} · ${t(`transactions.${category.type}`)}`
-                  : category.name,
-              })),
-            ]}
+            placeholder={t("imports.bulkCategoryPlaceholder")}
+            options={offered.map((category) => ({
+              value: category.id,
+              label: mixedTypes
+                ? `${category.name} · ${t(`transactions.${category.type}`)}`
+                : category.name,
+            }))}
           />
         </div>
         <Button variant="outline" disabled={disabled || !bulkCategory} onClick={handleApply}>

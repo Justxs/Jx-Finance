@@ -4,12 +4,18 @@ Related: feature page [Bank statement import](../features/bank-statement-import.
 
 ## Current
 
-Two statement formats, Swedbank CSV and ISO 20022 camt.053 XML, chosen explicitly from the provider list and sharing one preview and one confirm; duplicate references skipped, including deleted imports, with camt.053 references stored unprefixed; strict Swedbank columns with any supported currency; tolerant camt.053 reading that counts unreadable entries; an IBAN mismatch is a warning, not a refusal; explicit transfer matching; no automatic money movement
+Two statement formats, Swedbank CSV and ISO 20022 camt.053 XML, chosen explicitly from the provider list and sharing one preview and one confirm; duplicate references skipped, including deleted imports, with camt.053 references stored unprefixed; strict Swedbank columns with any supported currency; tolerant camt.053 reading that counts unreadable entries; an IBAN mismatch is a warning, not a refusal; explicit transfer matching; no automatic money movement; counted review views and a search that only change what is shown; an edited review asks before it is discarded and is not resumable
 
 ## Log
 
 Newest first. Each entry is a choice between real alternatives: what was chosen, what was rejected, and why.
 
+- **2026-09-28.** An edited review asks before any action discards it, and is not kept once the dialog closes
+  - Rejected: Keeping the review after closing and offering "Resume statement review", in memory or in a TanStack DB collection
+  - Why: The browser cannot keep the chosen file, so a resumed review could not preview again or switch account, and its duplicate and transfer flags would go stale against imports made in the meantime. Losing work happened by accident, through Escape, a click outside or the back button, and a confirmation stops that for a fraction of the code. An untouched preview is dropped without asking, so the question only appears when there is something to lose.
+- **2026-09-28.** The preview has four counted views (All, Needs attention, Transfers, Duplicates) and a description search, which only decide what is shown
+  - Rejected: Views that deselect the rows they hide; tabs with a panel per view; a search that debounces a server call
+  - Why: What is imported must not depend on what is on screen, so the counts, the net and the Import button always cover every row. The header checkbox acts on the visible rows, because selecting all transfers is the point of the Transfers view. One filtered list is not a set of panels, so the switch is a radio group. The rows are already in memory, so the search filters them on each keystroke.
 - **2026-09-27.** An IBAN that is not the chosen account's is a warning with a "Switch to" button when it belongs to another visible account; a file with several statements reads the one matching the account and refuses with `import.noStatementForAccount` when none does
   - Rejected: Refusing any mismatch
   - Why: A user who has recorded no IBANs must still be able to import a single-statement file

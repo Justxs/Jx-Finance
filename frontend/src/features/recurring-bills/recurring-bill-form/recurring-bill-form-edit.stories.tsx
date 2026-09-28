@@ -58,7 +58,7 @@ export const Transfer: Story = { args: { bill: transferBill } };
 
 export const SwitchesAnExpenseToATransfer: Story = {
   play: async ({ canvas, args }) => {
-    await chooseOption(canvas.getByRole("combobox", { name: "Records" }), "Transfer");
+    await userEvent.click(canvas.getByRole("radio", { name: "Transfer" }));
 
     await expect(canvas.queryByRole("combobox", { name: "Category" })).toBeNull();
     await userEvent.click(canvas.getByRole("button", { name: "Save" }));
@@ -75,7 +75,7 @@ export const SwitchesAnExpenseToATransfer: Story = {
 export const SwitchesATransferToAnIncome: Story = {
   args: { bill: transferBill },
   play: async ({ canvas, args }) => {
-    await chooseOption(canvas.getByRole("combobox", { name: "Records" }), "Income");
+    await userEvent.click(canvas.getByRole("radio", { name: "Income" }));
 
     await expect(canvas.queryByRole("combobox", { name: "To account" })).toBeNull();
     await expect(canvas.getByRole("combobox", { name: "Category" })).toBeVisible();

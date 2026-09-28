@@ -2,6 +2,7 @@ import { ArrowLeft, ChevronRight, Landmark } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { AccountResponse, StatementFormat } from "@/api/generated/model";
+import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog/confirm-delete-dialog";
 import { Modal } from "@/components/modal";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { Button } from "@/components/ui/button/button";
@@ -22,22 +23,41 @@ const providers = [
   },
 ] as const;
 
+interface PendingDiscard {
+  run: () => void;
+}
+
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   accounts: AccountResponse[];
+  initialAccountId?: string;
 }
 
-export function ImportDialog({ open, onOpenChange, accounts }: Readonly<Props>) {
+export function ImportDialog({ open, onOpenChange, accounts, initialAccountId }: Readonly<Props>) {
   const { t } = useTranslation();
   const [providerId, setProviderId] = useState<StatementFormat | null>(null);
+  const [edited, setEdited] = useState(false);
+  const [pendingDiscard, setPendingDiscard] = useState<PendingDiscard | null>(null);
   const provider = providers.find((item) => item.id === providerId);
 
-  function handleOpenChange(next: boolean) {
-    if (!next) {
-      setProviderId(null);
+  function confirmDiscard(run: () => void) {
+    if (edited) {
+      setPendingDiscard({ run });
+    } else {
+      run();
     }
-    onOpenChange(next);
+  }
+
+  function handleOpenChange(next: boolean) {
+    if (next) {
+      onOpenChange(true);
+      return;
+    }
+    confirmDiscard(() => {
+      setProviderId(null);
+      onOpenChange(false);
+    });
   }
 
   return (
@@ -54,12 +74,23 @@ export function ImportDialog({ open, onOpenChange, accounts }: Readonly<Props>) 
     >
       {provider ? (
         <div className="space-y-4">
-          <Button variant="ghost" size="sm" className="-ml-2" onClick={() => setProviderId(null)}>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="-ml-2"
+            onClick={() => confirmDiscard(() => setProviderId(null))}
+          >
             <ArrowLeft />
             {t("imports.allProviders")}
           </Button>
           <QueryBoundary fallback={<Skeleton className="h-64 w-full" />}>
-            <ImportSection accounts={accounts} format={provider.id} />
+            <ImportSection
+              accounts={accounts}
+              format={provider.id}
+              initialAccountId={initialAccountId}
+              onEditedChange={setEdited}
+              confirmDiscard={confirmDiscard}
+            />
           </QueryBoundary>
         </div>
       ) : (
@@ -85,6 +116,17 @@ export function ImportDialog({ open, onOpenChange, accounts }: Readonly<Props>) 
           ))}
         </Rows>
       )}
+      <ConfirmDeleteDialog
+        target={pendingDiscard}
+        title={t("imports.discard.title")}
+        description={t("imports.discard.description")}
+        confirmLabel={t("imports.discard.confirm")}
+        onCancel={() => setPendingDiscard(null)}
+        onConfirm={(pending) => {
+          setEdited(false);
+          pending.run();
+        }}
+      />
     </Modal>
   );
 }

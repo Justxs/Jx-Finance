@@ -58,6 +58,7 @@ function CategoryField({ form, categories }: Readonly<CategoryFieldProps>) {
           {(field) => (
             <field.SelectFieldControl
               id="tx-category"
+              kind="search"
               label={t("transactions.category")}
               options={namedOptions(
                 categories.filter((c) => c.type === typeField.value),
@@ -118,6 +119,7 @@ export function TransactionForm({
           {(field) => (
             <field.SelectFieldControl
               id="tx-type"
+              kind="segments"
               label={t("transactions.type")}
               options={[
                 { value: "expense", label: t("transactions.expense") },

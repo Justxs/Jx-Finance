@@ -91,6 +91,7 @@ export function CategoryForm({ initial, onClose }: Readonly<Props>) {
               {(field) => (
                 <field.SelectFieldControl
                   id="category-type"
+                  kind="segments"
                   label={t("transactions.type")}
                   options={optionsOf(["expense", "income"] as const, (type) =>
                     t(`categories.${type}`),

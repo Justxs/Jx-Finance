@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { CategoryResponse, TagResponse, TransactionResponse } from "@/api/generated/model";
-import { SelectField } from "@/components/select-field/select-field";
+import { ComboboxField } from "@/components/combobox-field/combobox-field";
 import { Button } from "@/components/ui/button/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover/popover";
 import { TagPicker } from "@/features/tags/tag-picker/tag-picker";
@@ -55,7 +55,7 @@ export function SelectionToolbar({
         {t("transactions.selectedCount", { count: selected.length })}
       </span>
       <div className="w-56 max-w-full">
-        <SelectField
+        <ComboboxField
           aria-label={t("transactions.bulkCategory")}
           aria-describedby={mixed ? "tx-selection-hint" : undefined}
           placeholder={t("transactions.bulkCategory")}

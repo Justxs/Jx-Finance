@@ -14,8 +14,6 @@ const meta = {
     tags,
     exportUrl: TRANSACTIONS_EXPORT_CSV_PATH,
     exportPdfUrl: TRANSACTIONS_EXPORT_PDF_PATH,
-    filtered: false,
-    onClearFilters: fn(),
     onUseTemplate: fn(),
   },
   parameters: { route: "/transactions" },
@@ -29,13 +27,11 @@ export const Default: Story = {};
 
 export const Filtered: Story = {
   args: {
-    filtered: true,
     exportUrl: `${TRANSACTIONS_EXPORT_CSV_PATH}?type=expense`,
     exportPdfUrl: `${TRANSACTIONS_EXPORT_PDF_PATH}?type=expense`,
   },
 };
 
 export const Narrow: Story = {
-  args: { filtered: true },
   decorators: [withWidth("w-56")],
 };

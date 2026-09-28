@@ -2,7 +2,7 @@
 
 Back to the [feature walkthrough](README.md). See also [decisions](../decisions/swedbank-csv-import.md), [architecture: Transactions, imports and receipts](../architecture/transactions.md), the [plan](../plans/camt053-import.md).
 
-Backend `Imports` (`ImportService`, parsers in `Endpoints/Imports/Parsing`), frontend `imports` (`ImportDataSection`, `ImportDialog`, `ImportSection`, `ImportStatementBar`). No route of its own; the dialog opens from the Import data section under Personal on the one Settings page (`/profile?section=import`), shown to every user while the `Import` switch is on.
+Backend `Imports` (`ImportService`, parsers in `Endpoints/Imports/Parsing`), frontend `imports` (`ImportDataSection`, `ImportDialog`, `ImportSection`, `ImportStatementBar`). No route of its own. The dialog opens from three places, all shown to every user while the `Import` switch is on: the "Import bank statement" button beside "Add transaction" in the ledger header, the same entry in an account's row actions on the Accounts page, which preselects that account, and the Import data section under Personal on the one Settings page (`/profile?section=import`).
 
 The dialog lists two providers, and each one is a statement format:
 
@@ -93,6 +93,14 @@ sequenceDiagram
 Confirm reads everything the rows can need before it walks them: the references already imported, the tags and categories they name, the currencies of the accounts they transfer to, the transfers they claim to match and the receipts those transfers already carry, and the exchange-rate history covering the dates it has to convert. The loop then adds rows without asking the database again, so a file of ten thousand entries costs a fixed number of queries instead of one per row. `ITransferAmountResolver.Resolve` is the synchronous half of the resolver, taking the two account currencies the caller already knows.
 
 Every confirmed row goes through the paths the manual forms use. A transaction row is valued by `ITransactionValuation`, so a row whose currency is switched off answers `currency.disabled`. A new transfer row goes through `ITransferAmountResolver`, the resolver of `POST /api/transfers`: the bank entry fixes the amount on the imported side, the other side is taken in its account's currency, and when the two differ the row answers `transfer.receivedAmountRequired`, because a statement line carries only one of the two amounts. Such a transfer is recorded under Transfers and the bank entry matched to it. Like every other confirm error, nothing of that request is written.
+
+## Views, search and leaving a review
+
+The rows sit under a switch of four counted views: All, Needs attention, Transfers and Duplicates. Needs attention holds the selected rows that are not recorded as a transfer and have no category, which would otherwise enter the ledger uncategorized. Transfers holds suspected transfers and rows recorded as one, and Duplicates the rows already imported. A search box narrows any view to rows whose description or payee contains the text, ignoring case.
+
+Views and search only decide which rows are shown. A hidden row keeps its selection, category and tags, and the selected count, the net, the statement balance check and the Import button always count every row. The header checkbox selects or clears only the rows the view and search show, while "Set category for selected" still applies to every selected row. Changing the view or the search returns the list to its first page, and neither is remembered.
+
+Everything decided in the review lives in the dialog until it is imported. Once a row has been changed (selected or cleared, given a category, tags or a transfer), every action that would throw the review away asks first: closing the dialog by Escape, a click outside or the close button, going back to All providers, Cancel, choosing another account, Preview and "Switch to" on the statement bar. Choosing another file does not clear the review by itself; the new file replaces it only when Preview runs. An untouched preview is discarded without asking.
 
 ## Real bank samples
 

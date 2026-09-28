@@ -25,6 +25,8 @@ flowchart LR
 
 `AccountsTable` is the page's one list of balances; there is no separate "Balance by account" panel under it. From the `lg` breakpoint a "Share of total" column shows each account's reporting balance as a navy `Meter` and a percent of the positive total. That total is the sum of the positive reporting balances of every active account, taken from the unfiltered list, so filtering the table does not change an account's share. A zero or negative balance leaves the cell blank. When more than one account is listed, a "Total" footer row sums the reporting balances of the listed accounts, filters applied, in the reporting currency on a double rule, in expense red when negative. The dashboard's `accounts` card keeps its own `AccountBalances` share bars, described in [Dashboard](dashboard.md).
 
+While the `Import` switch is on, each row's actions include "Import bank statement", which opens the [statement import](bank-statement-import.md) dialog with that account already chosen.
+
 ## Archiving and restoring
 
 The Archive button on a row soft-deletes the account: `IsDeleted` goes true and nothing else is written. That one flag hides a good deal, because transactions, currency conversions and investment entries are filtered through the account they belong to: they drop out of lists, balances and reports. A transfer stays visible while its other account is. A goal funded from the account keeps its row and answers `progressAmount` null. The broker sync skips the account. Recurring entries belong to their owner rather than to the account, so they stay listed and keep pointing at it. None of those rows is touched, no foreign key is cleared, and nothing forbids a second account of the same name, so there is no uniqueness to re-check.
