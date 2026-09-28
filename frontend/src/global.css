@@ -235,6 +235,13 @@
   font-size: 112.5%;
 }
 
+@theme {
+  --color-kofi: #72a4f2;
+  --color-kofi-ink: #0f2540;
+  --color-kofi-cup: #ffffff;
+  --color-kofi-heart: #ff5e5b;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);

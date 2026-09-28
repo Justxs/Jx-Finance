@@ -28,4 +28,5 @@ public sealed class InstanceSettings
     public string? SmtpFromAddress { get; set; }
     public string? SmtpFromName { get; set; }
     public bool DiscordEnabled { get; set; }
+    public bool SupportLinkEnabled { get; set; } = true;
 }

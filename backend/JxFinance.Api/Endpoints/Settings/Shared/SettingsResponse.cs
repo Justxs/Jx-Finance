@@ -14,4 +14,5 @@ public sealed record SettingsResponse(
     string TimeZone,
     FirstDayOfWeek FirstDayOfWeek,
     Guid? DefaultAccountId,
-    int DefaultPageSize);
+    int DefaultPageSize,
+    bool SupportLinkEnabled);

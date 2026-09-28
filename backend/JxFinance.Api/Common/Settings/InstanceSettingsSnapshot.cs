@@ -16,7 +16,8 @@ public sealed record InstanceSettingsSnapshot(
     Guid? DefaultAccountId,
     int DefaultPageSize,
     SmtpSettingsSnapshot Smtp,
-    bool DiscordEnabled)
+    bool DiscordEnabled,
+    bool SupportLinkEnabled)
 {
     public bool IsEnabled(Feature feature) => Features.IsEnabled(feature);
 
@@ -47,7 +48,8 @@ public sealed record InstanceSettingsSnapshot(
             settings.DefaultAccountId,
             settings.DefaultPageSize,
             SmtpSettingsSnapshot.From(settings),
-            settings.DiscordEnabled);
+            settings.DiscordEnabled,
+            settings.SupportLinkEnabled);
     }
 
     public static bool IsValidTimeZone(string? id)

@@ -62,6 +62,8 @@ The same row also holds the mail server: `SmtpEnabled`, `SmtpHost`, `SmtpPort` (
 
 `DiscordEnabled`, a boolean defaulting to false since the `AddDiscordNotifications` migration of 2026-09-26, is the installation's permission to post to Discord at all. It is in `InstanceSettingsSnapshot` and in the public settings as `discordEnabled`.
 
+`SupportLinkEnabled`, a boolean defaulting to true since the `SupportLinkSetting` migration of 2026-09-28, decides whether every user's sidebar shows the Ko-fi support link. It is part of `SettingsResponse` and `UpdateSettingsRequest`; see [Installation settings](features/installation-settings.md#the-ko-fi-support-link).
+
 `FeatureFlags` gained `UnusualAmounts` on 2026-09-26, the column `Features_UnusualAmounts` with a database default of true, so an upgraded installation has the feature on. It gained `MonthClose` in the `AddMonthClose` migration, the column `Features_MonthClose`, also with a database default of true.
 
 ## Email

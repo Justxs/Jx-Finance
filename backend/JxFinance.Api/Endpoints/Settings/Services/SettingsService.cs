@@ -93,6 +93,7 @@ public sealed class SettingsService(
         settings.FirstDayOfWeek = request.FirstDayOfWeek;
         settings.DefaultAccountId = request.DefaultAccountId;
         settings.DefaultPageSize = request.DefaultPageSize;
+        settings.SupportLinkEnabled = request.SupportLinkEnabled;
 
         await db.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
@@ -308,7 +309,8 @@ public sealed class SettingsService(
         settings.TimeZoneId,
         settings.FirstDayOfWeek,
         settings.DefaultAccountId,
-        settings.DefaultPageSize);
+        settings.DefaultPageSize,
+        settings.SupportLinkEnabled);
 
     private async Task<InstanceSettings> LoadOrCreateAsync(CancellationToken cancellationToken)
     {

@@ -24,4 +24,5 @@ export interface SettingsResponse {
   /** @nullable */
   defaultAccountId: string | null;
   defaultPageSize: number;
+  supportLinkEnabled: boolean;
 }

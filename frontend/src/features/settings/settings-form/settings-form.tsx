@@ -44,6 +44,7 @@ interface FormValues {
   firstDayOfWeek: FirstDayOfWeek;
   defaultAccountId: string;
   defaultPageSize: string;
+  supportLinkEnabled: boolean;
 }
 
 const pageSizes = ["10", "20", "50", "100"];
@@ -68,6 +69,7 @@ export function SettingsForm({
     firstDayOfWeek: z.enum(FirstDayOfWeek),
     defaultAccountId: z.string(),
     defaultPageSize: z.string(),
+    supportLinkEnabled: z.boolean(),
   });
 
   const defaultValues: FormValues = {
@@ -81,6 +83,7 @@ export function SettingsForm({
     firstDayOfWeek: settings.firstDayOfWeek,
     defaultAccountId: settings.defaultAccountId ?? "",
     defaultPageSize: String(settings.defaultPageSize),
+    supportLinkEnabled: settings.supportLinkEnabled,
   };
 
   const form = useServerForm({
@@ -99,6 +102,7 @@ export function SettingsForm({
           firstDayOfWeek: value.firstDayOfWeek,
           defaultAccountId: value.defaultAccountId || null,
           defaultPageSize: Number(value.defaultPageSize),
+          supportLinkEnabled: value.supportLinkEnabled,
         },
         () => formApi.reset(value),
       ),
@@ -120,6 +124,16 @@ export function SettingsForm({
               )}
             </form.Field>
           </FormGrid>
+          <form.Field name="supportLinkEnabled">
+            {(field) => (
+              <field.CheckboxField
+                id="settings-support-link"
+                className="mt-4 max-w-prose"
+                label={t("settings.general.supportLink")}
+                hint={t("settings.general.supportLinkHint")}
+              />
+            )}
+          </form.Field>
         </TitledSection>
 
         <TitledSection

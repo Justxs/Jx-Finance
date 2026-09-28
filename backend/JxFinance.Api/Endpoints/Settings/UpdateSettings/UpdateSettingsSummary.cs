@@ -16,6 +16,7 @@ public sealed class UpdateSettingsSummary : Summary<UpdateSettingsEndpoint, Upda
         RequestParam(r => r.EnabledCurrencies, "Currencies offered when entering data. The reporting currency is always included.");
         RequestParam(r => r.TimeZone, "IANA time zone id that decides what today and this month mean.");
         RequestParam(r => r.DefaultAccountId, "Account preselected when adding a transaction, if the user can see it.");
+        RequestParam(r => r.SupportLinkEnabled, "Shows the Support on Ko-fi link in every user's sidebar. It is a plain external link, so turning it on makes no outbound request.");
         Responses[200] = "The saved settings.";
         Responses[400] = "Validation failed, or the reporting currency could not be changed because a rate is missing.";
         Responses[403] = "Only administrators can change settings.";

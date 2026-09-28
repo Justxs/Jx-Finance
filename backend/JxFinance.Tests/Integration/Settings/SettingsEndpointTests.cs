@@ -17,6 +17,7 @@ public sealed class SettingsEndpointTests(ApiFixture fixture) : IntegrationTestB
         Assert.True(settings.Features.MultiCurrency);
         Assert.Equal("eur", settings.ReportingCurrency);
         Assert.Equal(20, settings.DefaultPageSize);
+        Assert.True(settings.SupportLinkEnabled);
         Assert.Contains("usd", settings.EnabledCurrencies);
     }
 
@@ -275,6 +276,23 @@ public sealed class SettingsEndpointTests(ApiFixture fixture) : IntegrationTestB
     }
 
     [Fact]
+    public async Task Support_link_can_be_switched_off_for_everyone()
+    {
+        var original = await ReadAsync();
+        try
+        {
+            var saved = await SaveAsync(original with { SupportLinkEnabled = false });
+
+            Assert.False(saved.SupportLinkEnabled);
+            Assert.False((await ReadAsync()).SupportLinkEnabled);
+        }
+        finally
+        {
+            await SaveAsync(original);
+        }
+    }
+
+    [Fact]
     public async Task Manual_sync_reports_the_newest_rate_date()
     {
         var response = await Client.PostAsync("/api/settings/exchange-rates/sync", null, TestContext.Current.CancellationToken);
@@ -321,7 +339,8 @@ public sealed class SettingsEndpointTests(ApiFixture fixture) : IntegrationTestB
         string TimeZone,
         string FirstDayOfWeek,
         Guid? DefaultAccountId,
-        int DefaultPageSize);
+        int DefaultPageSize,
+        bool SupportLinkEnabled);
 
     private sealed record SyncDto(int Added, DateOnly? RatesAsOf);
 }

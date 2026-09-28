@@ -25,6 +25,7 @@ export const settings: SettingsResponse = {
   firstDayOfWeek: "monday",
   defaultAccountId: null,
   defaultPageSize: 20,
+  supportLinkEnabled: true,
 };
 
 export const publicSettings: PublicSettingsResponse = {

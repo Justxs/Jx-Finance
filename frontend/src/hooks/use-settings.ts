@@ -48,6 +48,7 @@ const defaultSettings: SettingsResponse = {
   firstDayOfWeek: "monday",
   defaultAccountId: null,
   defaultPageSize: 20,
+  supportLinkEnabled: true,
 };
 
 interface SettingsOptions {

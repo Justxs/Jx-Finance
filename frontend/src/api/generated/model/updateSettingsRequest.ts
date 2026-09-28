@@ -32,4 +32,6 @@ export interface UpdateSettingsRequest {
    */
   defaultAccountId: string | null;
   defaultPageSize: number;
+  /** Shows the Support on Ko-fi link in every user's sidebar. It is a plain external link, so turning it on makes no outbound request. */
+  supportLinkEnabled: boolean;
 }

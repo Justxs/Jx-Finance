@@ -100,6 +100,7 @@ export const SettingsResponse = zod.object({
   firstDayOfWeek: zod.enum(["monday", "sunday"]),
   defaultAccountId: zod.uuid().nullable(),
   defaultPageSize: zod.int(),
+  supportLinkEnabled: zod.boolean(),
 });
 
 /**
@@ -207,6 +208,11 @@ export const UpdateSettingsBody = zod.object({
     .nullable()
     .describe("Account preselected when adding a transaction, if the user can see it."),
   defaultPageSize: zod.int(),
+  supportLinkEnabled: zod
+    .boolean()
+    .describe(
+      "Shows the Support on Ko-fi link in every user's sidebar. It is a plain external link, so turning it on makes no outbound request.",
+    ),
 });
 
 export const UpdateSettingsResponse = zod.object({
@@ -298,6 +304,7 @@ export const UpdateSettingsResponse = zod.object({
   firstDayOfWeek: zod.enum(["monday", "sunday"]),
   defaultAccountId: zod.uuid().nullable(),
   defaultPageSize: zod.int(),
+  supportLinkEnabled: zod.boolean(),
 });
 
 /**

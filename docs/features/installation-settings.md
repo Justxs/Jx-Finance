@@ -49,6 +49,10 @@ Turning a feature off deletes nothing; turning it on brings the data back. `/api
 
 `CategorizationRules` is in the table for the mirror image of that reasoning. A rule is a screen and a route of its own, and what it produces is ordinary values on ordinary transactions: with the switch off the page leaves the navigation, the routes answer `feature.disabled`, the import preview stops suggesting and carries on importing, and every category and tag a rule ever set stays exactly where it is. Nothing anywhere else needs a second shape. See [Categorization rules](categorization-rules.md).
 
+## The Ko-fi support link
+
+`InstanceSettings.SupportLinkEnabled` (column default true, migration `SupportLinkSetting`) is part of `GET` and `PUT /api/settings` and is edited in the General section as "Show the Support on Ko-fi link". Off hides the button in every user's sidebar and replaces the personal show/hide checkbox under Appearance with a line saying an administrator turned it off. The button is a plain link to the developer's Ko-fi page; Ko-fi's widget script is not used, because the Content-Security-Policy allows same-origin scripts only and the browser makes no third-party request.
+
 ## One Settings page
 
 Every user has one Settings entry at the bottom of the sidebar. It covers four routes that keep their own URLs, `/profile`, `/households`, `/users` and `/settings`, and each of them renders inside `SettingsLayout` (`features/settings/settings-nav`): a `SectionLayout` titled "Settings", with the user's email address as its description and a grouped `SectionNav` beside the content. The groups are built per user, and a group with nothing in it is left out:

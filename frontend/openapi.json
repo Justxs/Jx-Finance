@@ -20224,7 +20224,8 @@
           "timeZone",
           "firstDayOfWeek",
           "defaultAccountId",
-          "defaultPageSize"
+          "defaultPageSize",
+          "supportLinkEnabled"
         ],
         "type": "object",
         "properties": {
@@ -20278,6 +20279,9 @@
           "defaultPageSize": {
             "type": "integer",
             "format": "int32"
+          },
+          "supportLinkEnabled": {
+            "type": "boolean"
           }
         }
       },
@@ -22249,7 +22253,8 @@
           "timeZone",
           "firstDayOfWeek",
           "defaultAccountId",
-          "defaultPageSize"
+          "defaultPageSize",
+          "supportLinkEnabled"
         ],
         "type": "object",
         "properties": {
@@ -22299,6 +22304,10 @@
           "defaultPageSize": {
             "type": "integer",
             "format": "int32"
+          },
+          "supportLinkEnabled": {
+            "type": "boolean",
+            "description": "Shows the Support on Ko-fi link in every user's sidebar. It is a plain external link, so turning it on makes no outbound request."
           }
         }
       },

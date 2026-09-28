@@ -682,7 +682,9 @@
     "general": {
       "title": "General",
       "instanceName": "Installation name",
-      "instanceNameHint": "Shown beside the logo and in the browser tab. Leave empty to use the product name."
+      "instanceNameHint": "Shown beside the logo and in the browser tab. Leave empty to use the product name.",
+      "supportLink": "Show the Support on Ko-fi link",
+      "supportLinkHint": "Off hides the link in everyone's sidebar. It is a plain link, so nothing is loaded from Ko-fi either way."
     },
     "featureGroups": {
       "plan": "Plan",
@@ -2119,9 +2121,10 @@
     }
   },
   "support": {
-    "link": "Support on Ko-fi",
+    "link": "Support me on Ko-fi",
     "title": "Support Jx Finance",
     "description": "Jx Finance is built and kept up by one developer. The sidebar carries a small link to the Ko-fi page where you can support that work. Nothing is loaded from Ko-fi until you open the link.",
-    "show": "Show the Ko-fi link in the sidebar"
+    "show": "Show the Ko-fi link in the sidebar",
+    "installationOff": "An administrator has turned the Ko-fi link off for this installation."
   }
 }

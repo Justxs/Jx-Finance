@@ -708,7 +708,9 @@
     "general": {
       "title": "Bendrieji",
       "instanceName": "Sistemos pavadinimas",
-      "instanceNameHint": "Rodomas šalia logotipo ir naršyklės skirtuke. Palikus tuščią, rodomas produkto pavadinimas."
+      "instanceNameHint": "Rodomas šalia logotipo ir naršyklės skirtuke. Palikus tuščią, rodomas produkto pavadinimas.",
+      "supportLink": "Rodyti nuorodą „Paremti per Ko-fi“",
+      "supportLinkHint": "Išjungus nuoroda paslepiama visų naudotojų šoninėje juostoje. Tai paprasta nuoroda, todėl iš Ko-fi nieko neįkeliama bet kuriuo atveju."
     },
     "featureGroups": {
       "plan": "Planavimas",
@@ -2203,9 +2205,10 @@
     }
   },
   "support": {
-    "link": "Paremti per Ko-fi",
+    "link": "Paremk mane per Ko-fi",
     "title": "Paremti Jx Finance",
     "description": "Jx Finance kuria ir prižiūri vienas kūrėjas. Šoninėje juostoje yra nedidelė nuoroda į Ko-fi puslapį, kuriame galite paremti šį darbą. Kol neatidarote nuorodos, iš Ko-fi nieko neįkeliama.",
-    "show": "Rodyti Ko-fi nuorodą šoninėje juostoje"
+    "show": "Rodyti Ko-fi nuorodą šoninėje juostoje",
+    "installationOff": "Administratorius šioje sistemoje išjungė Ko-fi nuorodą."
   }
 }

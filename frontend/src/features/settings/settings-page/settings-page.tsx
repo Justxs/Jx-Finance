@@ -81,6 +81,7 @@ function SettingsContent({ section }: Readonly<{ section: SettingsSection }>) {
     firstDayOfWeek: settings.firstDayOfWeek,
     defaultAccountId: settings.defaultAccountId,
     defaultPageSize: settings.defaultPageSize,
+    supportLinkEnabled: settings.supportLinkEnabled,
   };
 
   return (
