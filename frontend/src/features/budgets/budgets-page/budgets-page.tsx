@@ -14,6 +14,7 @@ import { EditModal } from "@/components/modal";
 import { PageHeader } from "@/components/page-header/page-header";
 import { PanelRows } from "@/components/panel-rows/panel-rows";
 import { ProgressRow } from "@/components/progress-row/progress-row";
+import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { SummaryStats } from "@/components/summary-stats/summary-stats";
 import { Tooltip } from "@/components/ui/tooltip/tooltip";
 import { useConfirmedDelete } from "@/hooks/use-confirmed-delete";
@@ -24,6 +25,7 @@ import { EXPENSE_TONE } from "@/lib/tone";
 import { cn } from "@/lib/utils";
 import { budgetPeriodLabel } from "../budget-periods";
 import { budgetFigures } from "../budget-remaining";
+import { BudgetSuggestions } from "../budget-suggestions/budget-suggestions";
 import { CreateBudgetForm } from "../create-budget-form/create-budget-form";
 
 export function BudgetsPage() {
@@ -148,6 +150,9 @@ export function BudgetsPage() {
           );
         })}
       </PanelRows>
+      <QueryBoundary fallback={null}>
+        <BudgetSuggestions />
+      </QueryBoundary>
       <ConfirmDeleteDialog {...remove.dialogProps} />
     </div>
   );

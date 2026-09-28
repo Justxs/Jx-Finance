@@ -2,14 +2,20 @@ import {
   getCreateBudgetMockHandler,
   getDeleteBudgetMockHandler,
   getBudgetsMockHandler,
+  getBudgetSuggestionsMockHandler,
   getUpdateBudgetMockHandler,
 } from "@/api/generated/budgets/budgets.msw";
 import { BudgetPeriod } from "@/api/generated/model";
 import type { BudgetResponse } from "@/api/generated/model";
 import { toCents } from "@/lib/money";
-import { budgets, budgetWindows } from "@/storybook/fixtures";
+import {
+  budgetSuggestions,
+  budgets,
+  budgetWindows,
+  weeklyBudgetSuggestions,
+} from "@/storybook/fixtures";
 import { categoryName } from "./categories";
-import { readBody, text } from "./http";
+import { query, readBody, text } from "./http";
 import type { Body } from "./http";
 import { NEW_ID } from "./ids";
 import { updateFrom } from "./lists";
@@ -45,6 +51,13 @@ function mergeBudget(base: BudgetResponse, body: Body): BudgetResponse {
 
 export const budgetHandlers = [
   getBudgetsMockHandler(budgets),
+  getBudgetSuggestionsMockHandler(({ request }) => {
+    const period = periodOf(query(request).get("period"), "monthly");
+    if (period === "monthly") {
+      return budgetSuggestions;
+    }
+    return period === "weekly" ? weeklyBudgetSuggestions : { period, categories: [] };
+  }),
   getCreateBudgetMockHandler(async ({ request }) => {
     const base: BudgetResponse = {
       id: NEW_ID,

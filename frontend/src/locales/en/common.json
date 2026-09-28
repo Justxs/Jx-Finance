@@ -943,7 +943,22 @@
     "remaining": "Remaining",
     "overBy": "Over by",
     "overBudget": "{{amount}} over budget",
-    "spentOf": "{{spent}} spent of {{limit}}"
+    "spentOf": "{{spent}} spent of {{limit}}",
+    "historyHint": {
+      "weekly": "Median of the last {{number}} weeks: {{amount}}",
+      "monthly": "Median of the last {{number}} months: {{amount}}",
+      "quarterly": "Median of the last {{number}} quarters: {{amount}}",
+      "yearly": "Median of the last {{number}} years: {{amount}}"
+    },
+    "historyAmounts": "Oldest first: {{amounts}}",
+    "historyHintNone": "Not enough history yet",
+    "suggestions": {
+      "title": "Steady spending without a budget",
+      "description": "These categories cost about the same in each of the last six months and have no monthly budget.",
+      "about": "about {{amount}} a month",
+      "create": "Create {{amount}} monthly budget",
+      "created": "Budget created"
+    }
   },
   "shortcuts": {
     "title": "Keyboard shortcuts",

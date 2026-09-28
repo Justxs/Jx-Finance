@@ -977,7 +977,22 @@
     "remaining": "Liko",
     "overBy": "Viršyta",
     "overBudget": "Biudžetas viršytas {{amount}}",
-    "spentOf": "Išleista {{spent}} iš {{limit}}"
+    "spentOf": "Išleista {{spent}} iš {{limit}}",
+    "historyHint": {
+      "weekly": "Paskutinių {{number}} savaičių mediana: {{amount}}",
+      "monthly": "Paskutinių {{number}} mėnesių mediana: {{amount}}",
+      "quarterly": "Paskutinių {{number}} ketvirčių mediana: {{amount}}",
+      "yearly": "Paskutinių {{number}} metų mediana: {{amount}}"
+    },
+    "historyAmounts": "Nuo seniausio: {{amounts}}",
+    "historyHintNone": "Kol kas per mažai istorijos",
+    "suggestions": {
+      "title": "Pastovios išlaidos be biudžeto",
+      "description": "Šios kategorijos kiekvieną iš paskutinių šešių mėnesių kainavo panašiai ir neturi mėnesinio biudžeto.",
+      "about": "apie {{amount}} per mėnesį",
+      "create": "Sukurti {{amount}} mėnesinį biudžetą",
+      "created": "Biudžetas sukurtas"
+    }
   },
   "shortcuts": {
     "title": "Spartieji klavišai",

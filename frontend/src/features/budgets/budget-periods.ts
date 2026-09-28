@@ -13,6 +13,10 @@ const periodOrder: readonly BudgetPeriod[] = [
   BudgetPeriod.yearly,
 ];
 
+export function isBudgetPeriod(value: string): value is BudgetPeriod {
+  return periodOrder.some((period) => period === value);
+}
+
 export function budgetPeriodOptions(t: Translate): NamedOption[] {
   return optionsOf(periodOrder, (period) => budgetPeriodLabel(t, period));
 }

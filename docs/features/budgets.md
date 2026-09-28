@@ -93,6 +93,25 @@ flowchart TD
 
 One row per budget, per window, per threshold. Spending that drops back under a threshold inside the same window and rises again does not alert a second time, because the threshold was already crossed in that window; the next window starts fresh. When a carry has wiped the effective limit out — zero or negative — any spending at all counts as the limit reached. The rest of the rule, and why the rows survive the feature being switched off, is in [Notifications](notifications.md).
 
+## Limits from history
+
+`GET /api/budgets/suggestions?period=` answers, for every visible expense category that had spending lately, what it cost in each of the last six complete windows of that period. `BudgetSuggestionService` builds the windows with `BudgetWindow.For(IClock.Today, period, FirstDayOfWeek).Shift(-6)` to `Shift(-1)`, so the window that holds today is never one of them: it is partial and would pull the figure down. It then reads the caller's earliest visible transaction with one `MinAsync` and drops every window whose last day is before it, because a window from before the ledger started is a zero that means "not recorded yet", not "spent nothing". One `ICategoryAttributionService` call covers the remaining span and is bucketed per window and category in memory, the same way `BudgetUsageCalculator` does it, so a split line counts with its share and the figures are the ones the budget would have shown in those windows. Visibility is the ordinary one: spending on an account shared into the active household counts, another member's personal account does not. Categories with no spending in the span are left out.
+
+The rule lives in `Budgets/Shared/BudgetHistory.cs`, with the median and the spread from `Common/Statistics.cs`, which [unusual amounts](unusual-amounts.md) share:
+
+| Constant | Value | Meaning |
+| --- | --- | --- |
+| `Windows` | 6 | How many complete windows back are measured |
+| `MinimumWindows` | 3 | Fewer remaining windows give no median and no suggested limit |
+| `SteadyMinimumMedian` | 20 | A steady category costs at least 20 reporting units in the median window |
+| `SteadyMaxSpreadRatio` | 0.25 | Its spread, the median absolute deviation times 1.4826, is at most a quarter of the median |
+
+The median is taken over the windows, empty ones included, so one holiday month cannot move it. The suggested limit is the median rounded up to a whole unit of the reporting currency (312.01 gives 313, 312.00 stays 312), and null when the median is zero. A category is steady when all six windows had spending, the median reaches the floor and the spread stays under the ratio; a ledger younger than six windows has no steady categories yet. `hasBudget` says whether the caller already has a budget of that period on the category.
+
+In the add form, choosing a category and a period fills the limit with the suggested limit. The monthly answer is warmed by the `/budgets` loader and read with the suspense hook, so the first category's limit is in the form's default values; changing the category or the period reads that period's answer and refills the field only while it still shows the suggestion of the previous choice or is empty, so a typed limit always wins. The hint under the field says "Median of the last 6 months: €311.20" and lists the amounts oldest first, or "Not enough history yet". The edit form shows the same hint for the budget's category and period and never changes a stored limit.
+
+The page ends with "Steady spending without a budget": the monthly categories that are steady and have no monthly budget, largest median first and at most five, each with "about €83.00 a month" and a button "Create €83.00 monthly budget". The button posts the suggested limit to `POST /api/budgets` as a monthly budget without rollover; the budget mutations refresh `/api/budgets/suggestions` because it sits under `/api/budgets`, so the new budget appears above and the row leaves the section. The category name links to the ledger filtered to the category and the six windows. The section is its own `QueryBoundary` and renders nothing when there is no candidate. There is no dismissal: a category leaves the list when it gets a monthly budget or stops being steady.
+
 ## On screen
 
-The budgets page lists every budget with its period and window, the meter against the effective limit, and, when rollover is on, the base plus carried breakdown underneath. The category name links to the transactions list filtered to that category and that window, not to the calendar month. The dashboard snapshot reads the effective limit for the same reason. The form has the period select and the rollover switch next to the category and the limit.
+The budgets page lists every budget with its period and window, the meter against the effective limit, and, when rollover is on, the base plus carried breakdown underneath. The category name links to the transactions list filtered to that category and that window, not to the calendar month. The dashboard snapshot reads the effective limit for the same reason. The form has the period select and the rollover switch next to the category and the limit, and the limit carries the history hint described in [limits from history](#limits-from-history).

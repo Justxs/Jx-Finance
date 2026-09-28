@@ -1,6 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, fireEvent, fn, userEvent } from "storybook/test";
-import { getCreateBudgetMockHandler } from "@/api/generated/budgets/budgets.msw";
+import { expect, fireEvent, fn, userEvent, waitFor } from "storybook/test";
+import {
+  getBudgetSuggestionsMockHandler,
+  getCreateBudgetMockHandler,
+} from "@/api/generated/budgets/budgets.msw";
 import { withWidth } from "@/storybook/decorators";
 import {
   budgets,
@@ -9,8 +12,10 @@ import {
   overLimitBudget,
   problemOf,
   weeklyRolloverBudget,
+  youngBudgetSuggestions,
 } from "@/storybook/fixtures";
 import { failWith, pending, withHandlers } from "@/storybook/handlers";
+import { chooseOption } from "@/storybook/interactions";
 import { CreateBudgetForm } from "./create-budget-form";
 
 const meta = {
@@ -23,7 +28,58 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {};
+const periodSelect = /^(period|periodiškumas)$/i;
+
+export const Default: Story = {
+  play: async ({ canvas }) => {
+    await expect(await canvas.findByRole("textbox")).toHaveValue("312.00");
+    await expect(canvas.getByText("Median of the last 6 months: €311.20")).toBeVisible();
+    await expect(
+      canvas.getByText("Oldest first: €310.00 · €295.00 · €320.00 · €305.00 · €330.00 · €312.40"),
+    ).toBeVisible();
+    await expect(canvas.getByRole("textbox")).toHaveAccessibleDescription(
+      /median of the last 6 months/i,
+    );
+  },
+};
+
+export const PeriodChangeRefills: Story = {
+  play: async ({ canvas }) => {
+    const limit = await canvas.findByRole("textbox");
+    await chooseOption(canvas.getByRole("combobox", { name: periodSelect }), /^weekly$/i);
+    await waitFor(() => expect(limit).toHaveValue("74.00"));
+    await expect(canvas.getByText("Median of the last 6 weeks: €73.15")).toBeVisible();
+    await chooseOption(canvas.getByRole("combobox", { name: /^category$/i }), "Būstas");
+    await waitFor(() => expect(limit).toHaveValue(""));
+    await expect(canvas.getByText("Not enough history yet")).toBeVisible();
+  },
+};
+
+export const TypedLimitSurvivesPeriodChange: Story = {
+  play: async ({ canvas }) => {
+    const limit = await canvas.findByRole("textbox");
+    await fireEvent.change(limit, { target: { value: "250.00" } });
+    await chooseOption(canvas.getByRole("combobox", { name: periodSelect }), /^weekly$/i);
+    await canvas.findByText("Median of the last 6 weeks: €73.15");
+    await expect(limit).toHaveValue("250.00");
+  },
+};
+
+export const NotEnoughHistory: Story = {
+  parameters: withHandlers(getBudgetSuggestionsMockHandler(youngBudgetSuggestions)),
+  play: async ({ canvas }) => {
+    await expect(await canvas.findByText("Not enough history yet")).toBeVisible();
+    await expect(canvas.getByRole("textbox")).toHaveValue("");
+  },
+};
+
+export const EditShowsHistory: Story = {
+  args: { initial: overLimitBudget },
+  play: async ({ canvas }) => {
+    await expect(await canvas.findByText("Median of the last 6 months: €311.20")).toBeVisible();
+    await expect(canvas.getByRole("textbox")).toHaveValue("150.00");
+  },
+};
 
 export const Edit: Story = { args: { initial: budgets[2] } };
 
@@ -76,7 +132,7 @@ export const ServerFieldError: Story = {
     const message = await canvas.findByText("Enter an amount greater than 0, e.g. 12.34.");
     await expect(message).toHaveAttribute("id", "budget-limit-error");
     await expect(limit).toHaveAttribute("aria-invalid", "true");
-    await expect(limit).toHaveAttribute("aria-describedby", "budget-limit-error");
+    await expect(limit).toHaveAttribute("aria-describedby", "budget-limit-hint budget-limit-error");
     await expect(canvas.queryByRole("alert")).toBeNull();
 
     await fireEvent.change(limit, { target: { value: "260.00" } });

@@ -64,13 +64,6 @@ public sealed class UnusualAmountRuleTests
         Assert.Null(UnusualAmountRule.Evaluate(100m, [value, value, value, value], UnusualBasis.Payee));
     }
 
-    [Fact]
-    public void The_median_of_an_even_count_is_the_mean_of_the_middle_pair()
-    {
-        Assert.Equal(2.5m, UnusualAmountRule.Median([4m, 1m, 3m, 2m]));
-        Assert.Equal(3m, UnusualAmountRule.Median([5m, 1m, 3m]));
-    }
-
     [Theory]
     [InlineData(9.99, 10.50, true)]
     [InlineData(9.99, 10.49, false)]

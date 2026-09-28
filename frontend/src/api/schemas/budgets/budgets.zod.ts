@@ -84,6 +84,50 @@ export const BudgetsResponseItem = zod.object({
 export const BudgetsResponse = zod.array(BudgetsResponseItem);
 
 /**
+ * For every expense category you can see that had spending lately, returns what it cost in each of the last six complete windows of the period, oldest first. The window that holds today is left out because it is partial, and so is every window that ends before your earliest transaction. Spend is attributed as on the budgets page, split lines by their share. With at least three windows left the item carries their median, zero windows included, and a suggested limit: the median rounded up to a whole unit of the reporting currency, or null when the median is zero. isSteady is true when all six windows had spending, the median is at least 20 and the robust spread (median absolute deviation times 1.4826) is at most a quarter of the median. hasBudget tells whether you already have a budget of this period on the category. Nothing is written.
+ * @summary Suggest budget limits from past spending
+ */
+export const budgetSuggestionsResponseCategoriesItemWindowsItemSpentRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const budgetSuggestionsResponseCategoriesItemMedianRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const budgetSuggestionsResponseCategoriesItemSuggestedLimitRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+
+export const BudgetSuggestionsResponse = zod.object({
+  period: zod
+    .enum(["monthly", "weekly", "quarterly", "yearly"])
+    .describe("Weekly, Monthly, Quarterly, or Yearly. Defaults to Monthly."),
+  categories: zod.array(
+    zod.object({
+      categoryId: zod.uuid(),
+      categoryName: zod.string(),
+      windows: zod.array(
+        zod.object({
+          start: zod.iso.date(),
+          end: zod.iso.date(),
+          spent: zod.stringFormat(
+            "decimal",
+            budgetSuggestionsResponseCategoriesItemWindowsItemSpentRegExp,
+          ),
+        }),
+      ),
+      median: zod
+        .stringFormat("decimal", budgetSuggestionsResponseCategoriesItemMedianRegExp)
+        .nullable(),
+      suggestedLimit: zod
+        .stringFormat("decimal", budgetSuggestionsResponseCategoriesItemSuggestedLimitRegExp)
+        .nullable(),
+      isSteady: zod.boolean(),
+      hasBudget: zod.boolean(),
+    }),
+  ),
+});
+
+/**
  * Removes the spending limit. Transactions in the category are untouched.
  * @summary Delete a budget
  */

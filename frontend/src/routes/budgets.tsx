@@ -1,5 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { getBudgetsSuspenseQueryOptions, getCategoriesSuspenseQueryOptions } from "@/api/generated";
+import {
+  getBudgetSuggestionsSuspenseQueryOptions,
+  getBudgetsSuspenseQueryOptions,
+  getCategoriesSuspenseQueryOptions,
+} from "@/api/generated";
 import { BudgetsPage } from "@/features/budgets/budgets-page/budgets-page";
 import { BudgetsPending } from "@/features/budgets/budgets-page/budgets-page-pending";
 import { requireFeature } from "@/lib/feature-gate";
@@ -10,6 +14,7 @@ export const Route = createFileRoute("/budgets")({
   loader: ({ context: { queryClient } }) => {
     warm(queryClient, getCategoriesSuspenseQueryOptions());
     warm(queryClient, getBudgetsSuspenseQueryOptions());
+    warm(queryClient, getBudgetSuggestionsSuspenseQueryOptions({ period: "monthly" }));
   },
   component: BudgetsPage,
   pendingComponent: BudgetsPending,

@@ -25,6 +25,8 @@ import { customFetch } from "../../client";
 import type { ErrorType } from "../../client";
 import type {
   BudgetResponse,
+  BudgetSuggestionsParams,
+  BudgetSuggestionsResponse,
   BudgetsParams,
   CreateBudgetRequest,
   ProblemDetails,
@@ -264,6 +266,141 @@ export function useBudgetsSuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
   const queryOptions = getBudgetsSuspenseQueryOptions(params, options);
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export const getBudgetSuggestionsUrl = (params: BudgetSuggestionsParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/budgets/suggestions?${stringifiedParams}`
+    : `/api/budgets/suggestions`;
+};
+
+/**
+ * For every expense category you can see that had spending lately, returns what it cost in each of the last six complete windows of the period, oldest first. The window that holds today is left out because it is partial, and so is every window that ends before your earliest transaction. Spend is attributed as on the budgets page, split lines by their share. With at least three windows left the item carries their median, zero windows included, and a suggested limit: the median rounded up to a whole unit of the reporting currency, or null when the median is zero. isSteady is true when all six windows had spending, the median is at least 20 and the robust spread (median absolute deviation times 1.4826) is at most a quarter of the median. hasBudget tells whether you already have a budget of this period on the category. Nothing is written.
+ * @summary Suggest budget limits from past spending
+ */
+export const budgetSuggestions = async (
+  params: BudgetSuggestionsParams,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<BudgetSuggestionsResponse> => {
+  return customFetch<BudgetSuggestionsResponse>(getBudgetSuggestionsUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getBudgetSuggestionsQueryKey = (params?: BudgetSuggestionsParams) => {
+  return [`/api/budgets/suggestions`, ...(params ? [params] : [])] as const;
+};
+
+export const getBudgetSuggestionsSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof budgetSuggestions>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  params: BudgetSuggestionsParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof budgetSuggestions>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getBudgetSuggestionsQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof budgetSuggestions>>> = ({ signal }) =>
+    budgetSuggestions(params, { signal, ...requestOptions });
+
+  return queryOptionsBuilder({
+    queryKey,
+    ...queryOptions,
+    queryFn: queryOptions?.queryFn ?? queryFn,
+  }) as UseSuspenseQueryOptions<Awaited<ReturnType<typeof budgetSuggestions>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  } & {
+    throwOnError?: ((this: never, error: TError) => boolean) & { readonly __inferenceOnly: never };
+  };
+};
+
+export type BudgetSuggestionsSuspenseQueryResult = NonNullable<
+  Awaited<ReturnType<typeof budgetSuggestions>>
+>;
+export type BudgetSuggestionsSuspenseQueryError = ErrorType<ProblemDetails>;
+
+export function useBudgetSuggestionsSuspense<
+  TData = Awaited<ReturnType<typeof budgetSuggestions>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  params: BudgetSuggestionsParams,
+  options: {
+    query: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof budgetSuggestions>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useBudgetSuggestionsSuspense<
+  TData = Awaited<ReturnType<typeof budgetSuggestions>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  params: BudgetSuggestionsParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof budgetSuggestions>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useBudgetSuggestionsSuspense<
+  TData = Awaited<ReturnType<typeof budgetSuggestions>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  params: BudgetSuggestionsParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof budgetSuggestions>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Suggest budget limits from past spending
+ */
+
+export function useBudgetSuggestionsSuspense<
+  TData = Awaited<ReturnType<typeof budgetSuggestions>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  params: BudgetSuggestionsParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof budgetSuggestions>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getBudgetSuggestionsSuspenseQueryOptions(params, options);
 
   const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
     TData,

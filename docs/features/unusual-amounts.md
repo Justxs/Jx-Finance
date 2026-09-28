@@ -34,7 +34,7 @@ sequenceDiagram
 
 ## The rule
 
-`UnusualAmountRule` is a pure static class that holds every constant and decides from a list of numbers alone. The amounts are `ReportingAmount`, in the reporting currency, so rows in different currencies compare on one scale.
+`UnusualAmountRule` is a pure static class that holds every constant and decides from a list of numbers alone. The median and the spread come from `Common/Statistics.cs`, which [budget limits from history](budgets.md#limits-from-history) and `PriceRiseRule` share. The amounts are `ReportingAmount`, in the reporting currency, so rows in different currencies compare on one scale.
 
 | Constant | Value | Meaning |
 | --- | --- | --- |
@@ -44,7 +44,7 @@ sequenceDiagram
 | `MinimumFactor` | 2 | The amount must be at least twice the median |
 | `SpreadMultiple` | 4 | The amount must be at least the median plus four spreads |
 | `MinimumExcess` | 10 | The amount must be at least 10 reporting units above the median |
-| `MadScale` | 1.4826 | The spread is the median absolute deviation times this, which makes it comparable to a standard deviation |
+| `Statistics.MadScale` | 1.4826 | The spread (`Statistics.Spread`) is the median absolute deviation times this, which makes it comparable to a standard deviation |
 
 A row is flagged when all three conditions hold: `amount ≥ 2 × median`, `amount ≥ median + 4 × spread` and `amount − median ≥ 10`. With less history than the basis needs, or a median that is not positive, the rule says nothing. The median and the median absolute deviation are used rather than the mean and the standard deviation because they are robust to exactly the outliers the rule is looking for: one earlier spike does not raise the bar for the next one. Each condition covers a case the other two miss. The factor alone would flag a coffee at twice the usual price. The spread alone would flag anything above a perfectly flat history. The floor keeps small amounts quiet.
 
@@ -203,4 +203,4 @@ The constants are the ones the plan chose. The plan's last step, running the job
 
 ## Tests
 
-`UnusualAmountRuleTests` are the unit tests: too little history, three times the usual amount with its factor, a flat history, a noisy history, the 10-unit floor at its boundary, a median that is zero or negative, the median of an even count, the price-rise boundaries at 3% and 0.50, and the median a variable entry expects. `UnusualAmountTests` covers a payee baseline, a category baseline when the payee is new, too little history, income, split rows and transfers never flagged, an edit back to normal clearing the flag while a dismissal survives, a tag change asking for no new check, a silent backfill, a row left over from the backfill staying silent in a later pass, more than three flags making one summary and a second run notifying nothing, a single flag, the ledger filter with paging, a household partner seeing the flag on a shared account, the preview agreeing with the job, and the feature switched off. `PriceRiseTests` covers a fixed entry matched through its bank text, a variable entry matched through its name, a charge at the expected amount and a charge in another currency. `FeatureGateTests` knows the new gated prefix and `NotificationTextsTests` fails for a kind without text. The badge, the recurring entry row and the bell have stories for each state.
+`StatisticsTests` cover the median of an even count and the spread. `UnusualAmountRuleTests` are the unit tests: too little history, three times the usual amount with its factor, a flat history, a noisy history, the 10-unit floor at its boundary, a median that is zero or negative, the price-rise boundaries at 3% and 0.50, and the median a variable entry expects. `UnusualAmountTests` covers a payee baseline, a category baseline when the payee is new, too little history, income, split rows and transfers never flagged, an edit back to normal clearing the flag while a dismissal survives, a tag change asking for no new check, a silent backfill, a row left over from the backfill staying silent in a later pass, more than three flags making one summary and a second run notifying nothing, a single flag, the ledger filter with paging, a household partner seeing the flag on a shared account, the preview agreeing with the job, and the feature switched off. `PriceRiseTests` covers a fixed entry matched through its bank text, a variable entry matched through its name, a charge at the expected amount and a charge in another currency. `FeatureGateTests` knows the new gated prefix and `NotificationTextsTests` fails for a kind without text. The badge, the recurring entry row and the bell have stories for each state.

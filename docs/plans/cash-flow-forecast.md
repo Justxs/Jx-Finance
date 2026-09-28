@@ -1,6 +1,6 @@
 # Plan: Cash-flow forecast
 
-Status: planned 2026-09-28. Size M. Build it after [Budget limits from history](budget-limits-from-history.md), which moves the median into `Common/Statistics.cs`; if this plan goes first, it makes that move itself. It closes the recurring-entries forecast gap in section 2 of the [backlog](../backlog.md).
+Status: planned 2026-09-28. Size M. [Budget limits from history](../features/budgets.md#limits-from-history) has shipped and moved the median into `Common/Statistics.cs`, so this plan has no dependency left. It closes the recurring-entries forecast gap in section 2 of the [backlog](../backlog.md).
 
 ## Outcome
 
@@ -40,7 +40,7 @@ None. Nothing is stored; the forecast is computed on every read.
 
 ## Backend steps
 
-1. **Median.** Use `Statistics.Median` from [Budget limits from history](budget-limits-from-history.md).
+1. **Median.** Use `Statistics.Median` from `Common/Statistics.cs`, shipped with [budget limits from history](../features/budgets.md#limits-from-history).
 2. **Dated movements.** In `Endpoints/Accounts/Shared/AccountMovements.cs`, pull the union of the five sources into one private query that keeps `Date`. Then:
    - `SumAsync` groups it as before, and `AccountMovementsTests` still sees one statement.
    - A new `SumByDateAsync(db, ids, after, until, ct)` groups the same union by account, currency and date, for the rows dated after today.

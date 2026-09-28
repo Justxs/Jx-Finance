@@ -3141,6 +3141,74 @@
         ]
       }
     },
+    "/api/budgets/suggestions": {
+      "get": {
+        "tags": [
+          "Budgets"
+        ],
+        "summary": "Suggest budget limits from past spending",
+        "description": "For every expense category you can see that had spending lately, returns what it cost in each of the last six complete windows of the period, oldest first. The window that holds today is left out because it is partial, and so is every window that ends before your earliest transaction. Spend is attributed as on the budgets page, split lines by their share. With at least three windows left the item carries their median, zero windows included, and a suggested limit: the median rounded up to a whole unit of the reporting currency, or null when the median is zero. isSteady is true when all six windows had spending, the median is at least 20 and the robust spread (median absolute deviation times 1.4826) is at most a quarter of the median. hasBudget tells whether you already have a budget of this period on the category. Nothing is written.",
+        "operationId": "GetBudgetSuggestions",
+        "parameters": [
+          {
+            "name": "period",
+            "in": "query",
+            "description": "Weekly, Monthly, Quarterly, or Yearly: the windows to measure.",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/BudgetPeriod"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The categories with spending in those windows, by name.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BudgetSuggestionsResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The period is not one of the four.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      }
+    },
     "/api/budgets/{id}": {
       "delete": {
         "tags": [
@@ -15253,6 +15321,91 @@
           },
           "windowEnd": {
             "$ref": "#/components/schemas/DateOnly"
+          }
+        }
+      },
+      "BudgetSuggestionResponse": {
+        "required": [
+          "categoryId",
+          "categoryName",
+          "windows",
+          "median",
+          "suggestedLimit",
+          "isSteady",
+          "hasBudget"
+        ],
+        "type": "object",
+        "properties": {
+          "categoryId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "categoryName": {
+            "type": "string"
+          },
+          "windows": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BudgetWindowSpend"
+            }
+          },
+          "median": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "decimal"
+          },
+          "suggestedLimit": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "decimal"
+          },
+          "isSteady": {
+            "type": "boolean"
+          },
+          "hasBudget": {
+            "type": "boolean"
+          }
+        }
+      },
+      "BudgetSuggestionsResponse": {
+        "required": [
+          "period",
+          "categories"
+        ],
+        "type": "object",
+        "properties": {
+          "period": {
+            "$ref": "#/components/schemas/BudgetPeriod"
+          },
+          "categories": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BudgetSuggestionResponse"
+            }
+          }
+        }
+      },
+      "BudgetWindowSpend": {
+        "required": [
+          "start",
+          "end",
+          "spent"
+        ],
+        "type": "object",
+        "properties": {
+          "start": {
+            "$ref": "#/components/schemas/DateOnly"
+          },
+          "end": {
+            "$ref": "#/components/schemas/DateOnly"
+          },
+          "spent": {
+            "type": "string",
+            "format": "decimal"
           }
         }
       },

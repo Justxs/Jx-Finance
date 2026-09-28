@@ -148,6 +148,22 @@ describe("invalidateAfterMutation", () => {
     expect(isInvalidated(client, trashKey)).toBe(true);
   });
 
+  test.each([
+    ["createBudget", api.getCreateBudgetMutationKey],
+    ["updateBudget", api.getUpdateBudgetMutationKey],
+    ["deleteBudget", api.getDeleteBudgetMutationKey],
+    ["createTransaction", api.getCreateTransactionMutationKey],
+    ["importConfirm", api.getImportConfirmMutationKey],
+  ])("%s refreshes the budget suggestions", async (_name, getMutationKey) => {
+    const client = seededClient();
+    const suggestionsKey = api.getBudgetSuggestionsQueryKey({ period: "monthly" });
+    client.setQueryData(suggestionsKey, {});
+
+    await invalidateAfterMutation(client, getMutationKey());
+
+    expect(isInvalidated(client, suggestionsKey)).toBe(true);
+  });
+
   test("invalidates everything after a restore, because any kind can come back", async () => {
     const client = seededClient();
 

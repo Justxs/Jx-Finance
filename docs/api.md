@@ -149,6 +149,7 @@ Every 201 goes through `CreatedAsync`, which sets `Location` to a path built fro
 | POST | `/api/backups/upload` |
 | GET | `/api/budgets` |
 | POST | `/api/budgets` |
+| GET | `/api/budgets/suggestions` |
 | DELETE | `/api/budgets/{id}` |
 | PUT | `/api/budgets/{id}` |
 | GET | `/api/categorization-rules` |
@@ -341,3 +342,5 @@ Debt bodies also take `tracksPayments` (false when left out). A debt response ca
 Asset and debt responses carry `currency`, the reporting currency of the day the asset or debt was created, in which its amounts stay; a debt's loan amount and monthly payment are in the same currency. `GET /api/networth` answers `accounts`, `assets`, `debts` and `netWorth` in the reporting currency with `isComplete`, false when an account balance, a holding, an asset or a debt could not be valued and was left out; `GET /api/networth/history` converts a point stored in an earlier reporting currency at the rate of its date. `GET /api/dashboard/summary` carries the same `isComplete` for `totalBalance`.
 
 Budget bodies carry `period` (`weekly`, `monthly`, `quarterly` or `yearly`) and `rolloverEnabled`. Both default to the shape a body written before this addition had, monthly with no rollover, so such a body still creates the budget it used to. A category may carry one budget per period; a second one for the same pair is refused with 409 `conflict.duplicate`, on create and on an update that would move a budget onto a taken pair. The response adds `carriedAmount`, `effectiveLimit`, `rolloverEnabled`, `windowStart` and the inclusive `windowEnd`: `limitAmount` is still the typed limit, `effectiveLimit` is that plus the carry, and `spent` and `remaining` are measured inside the window instead of the calendar month. With rollover off the carry is zero and the three numbers read exactly as the two did before.
+
+`GET /api/budgets/suggestions?period=` is read-only and requires `period`; a value that is not one of the four answers 400 `request.malformed` on the `period` field, because the query binding rejects it before validation runs. It answers `period` and `categories`: every visible expense category with spending in the last six complete windows of that period, by name, each with `categoryId`, `categoryName`, `windows` (`start`, the inclusive `end` and `spent`, oldest first; the window that holds today is left out and windows that end before the caller's earliest transaction are dropped), `median` and `suggestedLimit` (both null with fewer than three windows; `suggestedLimit` is also null when the median is zero), `isSteady` and `hasBudget` (the caller has a budget of this period on the category). The client creates a suggested budget through `POST /api/budgets`. See [Budgets](features/budgets.md#limits-from-history).

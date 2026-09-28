@@ -7,7 +7,7 @@
  */
 import { HttpResponse, http } from "msw";
 import type { RequestHandlerOptions } from "msw";
-import type { BudgetResponse } from "../model";
+import type { BudgetResponse, BudgetSuggestionsResponse } from "../model";
 
 export const getCreateBudgetMockHandler = (
   overrideResponse?:
@@ -43,6 +43,30 @@ export const getBudgetsMockHandler = (
 ) => {
   return http.get(
     "*/api/budgets",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : undefined,
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getBudgetSuggestionsMockHandler = (
+  overrideResponse?:
+    | BudgetSuggestionsResponse
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<BudgetSuggestionsResponse> | BudgetSuggestionsResponse),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/budgets/suggestions",
     async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
@@ -102,6 +126,7 @@ export const getUpdateBudgetMockHandler = (
 export const getBudgetsMock = () => [
   getCreateBudgetMockHandler(),
   getBudgetsMockHandler(),
+  getBudgetSuggestionsMockHandler(),
   getDeleteBudgetMockHandler(),
   getUpdateBudgetMockHandler(),
 ];

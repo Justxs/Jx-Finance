@@ -5,7 +5,10 @@ import {
   getArchivedAccountsMockHandler,
 } from "@/api/generated/accounts/accounts.msw";
 import { getMeMockHandler } from "@/api/generated/auth/auth.msw";
-import { getBudgetsMockHandler } from "@/api/generated/budgets/budgets.msw";
+import {
+  getBudgetsMockHandler,
+  getBudgetSuggestionsMockHandler,
+} from "@/api/generated/budgets/budgets.msw";
 import { getCategoriesMockHandler } from "@/api/generated/categories/categories.msw";
 import {
   getCategorizationRulesMockHandler,
@@ -144,6 +147,7 @@ export const emptyHandlers: RequestHandler[] = [
   getArchivedAccountsMockHandler([]),
   getAssetsMockHandler([]),
   getBudgetsMockHandler([]),
+  getBudgetSuggestionsMockHandler({ period: "monthly", categories: [] }),
   getCategoriesMockHandler([]),
   getCategorizationRulesMockHandler([]),
   getSuggestedRulesMockHandler([]),

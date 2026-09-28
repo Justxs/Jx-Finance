@@ -12,5 +12,5 @@ public static class PriceRiseRule
     public static decimal? Expected(decimal? fixedAmount, IReadOnlyList<decimal> earlierCharges) =>
         fixedAmount is { } amount
             ? amount
-            : earlierCharges.Count > 0 ? UnusualAmountRule.Median(earlierCharges) : null;
+            : earlierCharges.Count > 0 ? Statistics.Median(earlierCharges) : null;
 }
