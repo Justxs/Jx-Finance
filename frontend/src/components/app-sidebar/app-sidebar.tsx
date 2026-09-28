@@ -145,7 +145,7 @@ export function AppSidebar() {
         })}
       </nav>
 
-      <div className={cn("px-3 pb-2", collapsed && "flex justify-center px-2")}>
+      <div className={cn("px-3 pb-1", collapsed && "px-2")}>
         <SupportLink collapsed={collapsed} />
       </div>
 

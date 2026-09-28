@@ -53,11 +53,11 @@ export function SupportLink({ collapsed = false }: Readonly<{ collapsed?: boolea
         rel="noopener noreferrer"
         aria-label={collapsed ? t("support.link") : undefined}
         className={cn(
-          "inline-flex h-8 items-center gap-2 rounded-lg bg-kofi text-xs font-semibold text-kofi-ink transition-colors hover:bg-kofi/85 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none",
-          collapsed ? "w-8 justify-center" : "px-2.5",
+          "flex items-center gap-3 rounded-md border border-transparent px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none",
+          collapsed && "justify-center px-0",
         )}
       >
-        <KofiCup className="size-5" />
+        <KofiCup className="-m-0.5 size-5" />
         {collapsed ? null : t("support.link")}
       </a>
     </Tooltip>
