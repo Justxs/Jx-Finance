@@ -9,6 +9,7 @@ import { HouseholdSwitcher } from "@/components/household-switcher/household-swi
 import { LogoutButton } from "@/components/logout-button/logout-button";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { ShortcutsHelp } from "@/components/shortcuts-help/shortcuts-help";
+import { SupportLink } from "@/components/support-link/support-link";
 import { Button } from "@/components/ui/button/button";
 import { Skeleton } from "@/components/ui/skeleton/skeleton";
 import { Tooltip } from "@/components/ui/tooltip/tooltip";
@@ -143,6 +144,10 @@ export function AppSidebar() {
           );
         })}
       </nav>
+
+      <div className={cn("px-3 pb-1", collapsed && "px-2")}>
+        <SupportLink collapsed={collapsed} />
+      </div>
 
       <div
         className={cn(

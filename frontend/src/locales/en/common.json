@@ -2117,5 +2117,11 @@
       "savingsRate": "Saved",
       "changed": "Something dated in it has changed since you closed it. Review the changes, then re-close or reopen."
     }
+  },
+  "support": {
+    "link": "Support on Ko-fi",
+    "title": "Support Jx Finance",
+    "description": "Jx Finance is built and kept up by one developer. The sidebar carries a small link to the Ko-fi page where you can support that work. Nothing is loaded from Ko-fi until you open the link.",
+    "show": "Show the Ko-fi link in the sidebar"
   }
 }

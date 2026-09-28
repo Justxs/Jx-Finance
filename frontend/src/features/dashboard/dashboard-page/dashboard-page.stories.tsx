@@ -3,7 +3,6 @@ import { expect, userEvent, waitFor, within } from "storybook/test";
 import {
   getDashboardLayoutMockHandler,
   getMonthlyTrendMockHandler,
-  getSaveDashboardLayoutMockHandler,
 } from "@/api/generated/dashboard/dashboard.msw";
 import { getSettingsMockHandler } from "@/api/generated/settings/settings.msw";
 import { savePreferences } from "@/stores/preferences";
@@ -11,7 +10,6 @@ import { withPageFrame } from "@/storybook/decorators";
 import {
   allHiddenDashboardLayout,
   customDashboardLayout,
-  dashboardCardUnknownProblem,
   hiddenCardsDashboardLayout,
   MONTH_CLOSE_MONTH,
   serverErrorProblem,
@@ -43,7 +41,6 @@ type Story = StoryObj<typeof meta>;
 const trendTitle = /^(income vs\. expenses|pajamos ir išlaidos)$/i;
 const accountsTitle = /^(balance by account|likutis pagal sąskaitą)$/i;
 const budgetsTitle = /^(budgets in their window|biudžetai savo lange)$/i;
-const customise = /^(customise|pritaikyti)$/i;
 
 async function cardHeadings(canvas: Canvas) {
   await canvas.findAllByRole("heading", { level: 2 });
@@ -115,13 +112,9 @@ export const AllHidden: Story = {
     await canvas.findByText(/every card is hidden|visos kortelės paslėptos/i);
     await expect(canvas.queryAllByRole("heading", { level: 2 })).toHaveLength(0);
 
-    await userEvent.click(
-      canvas.getByRole("button", { name: /choose cards|pasirinkti korteles/i }),
-    );
-
     await expect(
-      await canvas.findByRole("list", { name: /dashboard cards|suvestinės kortelės/i }),
-    ).toBeInTheDocument();
+      canvas.getByRole("link", { name: /choose cards|pasirinkti korteles/i }),
+    ).toHaveAttribute("href", "/profile?section=dashboard");
   },
 };
 
@@ -130,49 +123,6 @@ export const FeatureSwitchedOff: Story = {
   play: async ({ canvas }) => {
     await canvas.findByRole("heading", { level: 2, name: accountsTitle });
     await expect(canvas.queryByRole("heading", { name: budgetsTitle })).not.toBeInTheDocument();
-
-    await userEvent.click(canvas.getByRole("button", { name: customise }));
-
-    const list = await canvas.findByRole("list", { name: /dashboard cards|suvestinės kortelės/i });
-    await expect(within(list).queryByText(budgetsTitle)).not.toBeInTheDocument();
-    await expect(canvas.getByText(/switched off|išjungė/i)).toBeInTheDocument();
-  },
-};
-
-export const CustomiseAndSave: Story = {
-  play: async ({ canvas }) => {
-    await canvas.findByRole("heading", { level: 2, name: trendTitle });
-
-    await userEvent.click(canvas.getByRole("button", { name: customise }));
-    await userEvent.click(await canvas.findByRole("checkbox", { name: trendTitle }));
-    const up = canvas.getByRole("button", {
-      name: /^(move up|pakelti): (balance by account|likutis pagal sąskaitą)$/i,
-    });
-    up.focus();
-    await userEvent.keyboard("{Enter}{Enter}{Enter}{Enter}{Enter}{Enter}");
-    await userEvent.click(canvas.getByRole("button", { name: /^(save|išsaugoti)$/i }));
-
-    await waitFor(async () => {
-      const headings = await cardHeadings(canvas);
-      await expect(headings[0]).toMatch(accountsTitle);
-    });
-    await expect(canvas.queryByRole("heading", { name: trendTitle })).not.toBeInTheDocument();
-  },
-};
-
-export const SaveError: Story = {
-  parameters: withHandlers(
-    getSaveDashboardLayoutMockHandler(failWith(dashboardCardUnknownProblem)),
-  ),
-  play: async ({ canvas }) => {
-    await userEvent.click(await canvas.findByRole("button", { name: customise }));
-    await userEvent.click(await canvas.findByRole("button", { name: /^(save|išsaugoti)$/i }));
-
-    const alert = await canvas.findByRole("alert");
-    await expect(alert).toHaveTextContent(/does not know|nežino/i);
-    await expect(
-      canvas.getByRole("list", { name: /dashboard cards|suvestinės kortelės/i }),
-    ).toBeInTheDocument();
   },
 };
 

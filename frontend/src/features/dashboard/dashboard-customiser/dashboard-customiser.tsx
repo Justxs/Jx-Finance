@@ -6,16 +6,20 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import {
   getDashboardLayoutQueryKey,
+  useDashboardLayoutSuspense,
   useResetDashboardLayout,
   useSaveDashboardLayout,
 } from "@/api/generated";
 import type { DashboardCard, DashboardLayoutResponse, FeatureFlags } from "@/api/generated/model";
 import { FormError } from "@/components/form-error/form-error";
 import { MoveButtons } from "@/components/move-buttons/move-buttons";
+import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { Button } from "@/components/ui/button/button";
 import { Checkbox } from "@/components/ui/checkbox/checkbox";
 import { Rows } from "@/components/ui/rows/rows";
 import { Section, SectionTitle } from "@/components/ui/section/section";
+import { SectionSkeleton } from "@/components/ui/skeleton/skeleton";
+import { useSettingsSuspense } from "@/hooks/use-settings";
 import { silent } from "@/lib/mutations";
 import type { MoveDirection } from "@/lib/reorder";
 import { dashboardCardTitle } from "../dashboard-card/dashboard-card";
@@ -24,7 +28,7 @@ import { type LayoutDraft, availableCards, moveCard, setCardShown } from "../das
 interface Props {
   layout: DashboardLayoutResponse;
   features: FeatureFlags;
-  onDone: () => void;
+  onDone?: () => void;
 }
 
 export function DashboardCustomiser({ layout, features, onDone }: Readonly<Props>) {
@@ -37,7 +41,7 @@ export function DashboardCustomiser({ layout, features, onDone }: Readonly<Props
   function finish(saved: DashboardLayoutResponse, message: string) {
     queryClient.setQueryData(getDashboardLayoutQueryKey(), saved);
     toast.success(message);
-    onDone();
+    onDone?.();
   }
 
   const saveMutation = useSaveDashboardLayout(
@@ -133,14 +137,31 @@ export function DashboardCustomiser({ layout, features, onDone }: Readonly<Props
           {t("dashboard.layout.reset")}
         </Button>
         <div className="flex flex-wrap gap-2">
-          <Button variant="outline" onClick={onDone} disabled={busy}>
-            {t("actions.cancel")}
-          </Button>
+          {onDone ? (
+            <Button variant="outline" onClick={onDone} disabled={busy}>
+              {t("actions.cancel")}
+            </Button>
+          ) : null}
           <Button onClick={save} pending={saveMutation.isPending} disabled={busy}>
             {t("actions.save")}
           </Button>
         </div>
       </div>
     </Section>
+  );
+}
+
+function SavedLayoutCustomiser() {
+  const layout = useDashboardLayoutSuspense().data;
+  const { features } = useSettingsSuspense();
+
+  return <DashboardCustomiser key={JSON.stringify(layout)} layout={layout} features={features} />;
+}
+
+export function DashboardLayoutSection() {
+  return (
+    <QueryBoundary fallback={<SectionSkeleton rows={6} />}>
+      <SavedLayoutCustomiser />
+    </QueryBoundary>
   );
 }

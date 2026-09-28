@@ -117,13 +117,9 @@ test("hidden cards and cards of switched-off features never ask for their data",
   expect(screen.queryByRole("heading", { name: "Upcoming bills" })).not.toBeInTheDocument();
 });
 
-test("a card is hidden and moved with the keyboard, then saved for the user", async () => {
-  const { queryClient } = mountApp("/");
-  await screen.findByRole("heading", { level: 2, name: "Income vs. expenses" }, appWait);
-  await settled(queryClient);
-
-  fireEvent.click(screen.getByRole("button", { name: "Customise" }));
-  const list = await screen.findByRole("list", { name: "Dashboard cards" });
+test("a card is hidden and moved with the keyboard in settings, then saved for the user", async () => {
+  mountApp("/profile?section=dashboard");
+  const list = await screen.findByRole("list", { name: "Dashboard cards" }, appWait);
   fireEvent.click(within(list).getByRole("checkbox", { name: "Income vs. expenses" }));
   const down = within(list).getByRole("button", { name: "Move down: Total balance" });
   down.focus();
@@ -139,8 +135,12 @@ test("a card is hidden and moved with the keyboard, then saved for the user", as
     hidden: ["monthlyTrend"],
   });
   await waitFor(
-    () => expect(screen.queryByRole("list", { name: "Dashboard cards" })).not.toBeInTheDocument(),
+    () =>
+      expect(
+        within(screen.getByRole("list", { name: "Dashboard cards" })).getByRole("checkbox", {
+          name: "Income vs. expenses",
+        }),
+      ).not.toBeChecked(),
     appWait,
   );
-  expect(screen.queryByRole("heading", { name: "Income vs. expenses" })).not.toBeInTheDocument();
 });

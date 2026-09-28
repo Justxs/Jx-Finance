@@ -77,15 +77,15 @@ Feature switches are not applied on the server. A card whose switch is off keeps
 
 A hidden card never mounts, so its suspense queries never run, and the route loader asks for the layout and the settings in parallel and warms only the queries of the cards that will be shown, so hiding a card removes its requests entirely. Two cards share a query: `accounts` and `recentTransactions` both read `/api/accounts`, which is fetched once while either is shown. The layout query is warmed with an infinite stale time like the rest of the page; saving and resetting write their answer straight into the cache instead of invalidating it, because the response is the new layout and nothing else reads it.
 
-### The customise mode
+### Choosing the cards
 
 ```mermaid
 sequenceDiagram
     actor User
-    participant Page as DashboardPage
+    participant Page as Settings, Personal, Dashboard
     participant Cust as DashboardCustomiser
     participant Api as /api/users/me/dashboard-layout
-    User->>Page: Customise
+    User->>Page: open the Dashboard section
     Page->>Cust: layout and feature flags
     Cust->>Cust: draft copy of order and hidden
     User->>Cust: tick a card off, Move up or Move down
@@ -93,19 +93,17 @@ sequenceDiagram
     alt Save
         Cust->>Api: PUT order and hidden
         Api-->>Cust: resolved layout
-        Cust->>Page: layout written to the cache, grid shown
+        Cust->>Page: layout written to the cache, list shows the saved layout
     else Reset to default
         Cust->>Api: DELETE
         Api-->>Cust: default layout
-        Cust->>Page: layout written to the cache, grid shown
-    else Cancel
-        Cust->>Page: draft dropped, nothing sent
+        Cust->>Page: layout written to the cache, list shows the saved layout
     else refused or server error
         Api-->>Cust: problem, shown above the buttons, draft kept
     end
 ```
 
-The customiser replaces the grid while it is open, so no card data loads behind it. Each card is a row with a checkbox named by the card's title and two icon buttons, "Move up" and "Move down", named with the card too; there is no drag and drop, so reordering works the same with a keyboard, a pointer or a screen reader. Moving swaps a card with the nearest neighbour that is listed, stepping over cards whose feature is off so their stored position is left alone. After a move the focus stays on the pressed button, or moves to the opposite one when the card reached the end of the list, and a polite status region says the card's new position. On a phone the rows keep one line per card, the buttons grow to the 44-pixel touch size and the action row wraps; the grid itself is one column below the `lg` breakpoint, as before.
+The customiser is the Dashboard section of the Personal settings (`/profile?section=dashboard`, `DashboardLayoutSection`); the dashboard itself has no customise mode and no Customise button. When every card is hidden the dashboard shows one line and a "Choose cards" link to that section. In settings the customiser has no Cancel: leaving the section drops the draft, and a save or reset re-keys it on the saved layout. Each card is a row with a checkbox named by the card's title and two icon buttons, "Move up" and "Move down", named with the card too; there is no drag and drop, so reordering works the same with a keyboard, a pointer or a screen reader. Moving swaps a card with the nearest neighbour that is listed, stepping over cards whose feature is off so their stored position is left alone. After a move the focus stays on the pressed button, or moves to the opposite one when the card reached the end of the list, and a polite status region says the card's new position. On a phone the rows keep one line per card, the buttons grow to the 44-pixel touch size and the action row wraps; the grid itself is one column below the `lg` breakpoint, as before.
 
 The grid places cards in the chosen order with their usual widths. It does not pack them densely, because a visual order that differs from the reading and focus order is worse than a gap at the end of a row.
 

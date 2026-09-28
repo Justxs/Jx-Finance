@@ -17,6 +17,7 @@ const defaults = {
   font: DEFAULT_FONT,
   textSize: DEFAULT_TEXT_SIZE,
   sidebarCollapsed: false,
+  supportLinkHidden: false,
 };
 
 describe("reading", () => {

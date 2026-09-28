@@ -2201,5 +2201,11 @@
       "savingsRate": "Sutaupyta",
       "changed": "Nuo uždarymo kai kurie šio mėnesio įrašai pasikeitė. Peržiūrėkite pakeitimus, tada uždarykite iš naujo arba vėl atidarykite."
     }
+  },
+  "support": {
+    "link": "Paremti per Ko-fi",
+    "title": "Paremti Jx Finance",
+    "description": "Jx Finance kuria ir prižiūri vienas kūrėjas. Šoninėje juostoje yra nedidelė nuoroda į Ko-fi puslapį, kuriame galite paremti šį darbą. Kol neatidarote nuorodos, iš Ko-fi nieko neįkeliama.",
+    "show": "Rodyti Ko-fi nuorodą šoninėje juostoje"
   }
 }

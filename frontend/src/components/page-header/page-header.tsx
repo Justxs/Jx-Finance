@@ -37,7 +37,6 @@ export function PageHeader({ title, description, children }: Readonly<Props>) {
         ) : null}
       </div>
       {hub ? <HubTabs current={hub.current} pages={hub.pages} /> : null}
-      {description && hub ? <p className="text-sm text-muted-foreground">{description}</p> : null}
     </div>
   );
 }
