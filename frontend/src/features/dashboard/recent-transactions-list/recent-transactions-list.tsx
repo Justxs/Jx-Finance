@@ -121,7 +121,10 @@ export function RecentTransactionsList({
       to="/transactions"
       linkLabel={t("nav.transactions")}
     >
-      <QueryBoundary fallback={<RowsSkeleton rows={6} />} errorSubject={t("dashboard.recent")}>
+      <QueryBoundary
+        fallback={<RowsSkeleton rows={6} lines={2} />}
+        errorSubject={t("dashboard.recent")}
+      >
         <RecentRows month={month} />
       </QueryBoundary>
     </DashboardSection>

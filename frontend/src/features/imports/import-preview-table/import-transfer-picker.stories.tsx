@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
+import { expect } from "storybook/test";
 import type { ImportPreviewRow } from "@/api/generated/model";
 import { accounts, checkingAccount, ids, importPreviewRows } from "@/storybook/fixtures";
 import { errorHandlers, loadingHandlers } from "@/storybook/handlers";
@@ -43,6 +44,7 @@ function toState(
     selected: true,
     transferAccountId: "",
     existingTransferId: "",
+    existingTransactionId: "",
     categoryId: "",
     categorySuggested: false,
     ruleName: null,
@@ -95,6 +97,28 @@ export const MatchSelected: Story = {
       transferAccountId: ids.accounts.checking,
       existingTransferId: ids.transfers.toShared,
     }),
+  },
+};
+
+export const LinkedToEntry: Story = {
+  args: {
+    row: toState(
+      {
+        ...fallbackRow,
+        matchedTransaction: {
+          id: ids.transactions.uncategorised,
+          date: "2026-09-17",
+          description: "Savings",
+          categoryId: null,
+        },
+      },
+      { existingTransactionId: ids.transactions.uncategorised },
+    ),
+  },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByRole("combobox", { name: "Record as" })).toHaveTextContent(
+      "Your entry of",
+    );
   },
 };
 

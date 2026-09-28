@@ -41,7 +41,7 @@ function Demo() {
           <RowTransition key={name}>
             <li className="flex items-center justify-between py-2 text-sm">
               {name}
-              <Button variant="ghost" size="sm" onClick={() => remove(name)}>
+              <Button variant="outline" size="sm" onClick={() => remove(name)}>
                 Remove
               </Button>
             </li>

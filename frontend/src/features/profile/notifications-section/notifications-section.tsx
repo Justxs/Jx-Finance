@@ -1,6 +1,6 @@
 import { useMeSuspense, useMyDiscordSuspense } from "@/api/generated";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
-import { SectionSkeleton } from "@/components/ui/skeleton/skeleton";
+import { NotificationsSkeleton } from "../profile-page/profile-page-pending";
 import { NotificationsForm } from "./notifications-form";
 
 function NotificationSettings() {
@@ -23,7 +23,7 @@ function NotificationSettings() {
 
 export function NotificationsSection() {
   return (
-    <QueryBoundary fallback={<SectionSkeleton rows={8} />}>
+    <QueryBoundary fallback={<NotificationsSkeleton />}>
       <NotificationSettings />
     </QueryBoundary>
   );

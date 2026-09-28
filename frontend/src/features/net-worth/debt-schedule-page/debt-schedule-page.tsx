@@ -11,7 +11,6 @@ import { PageHeader } from "@/components/page-header/page-header";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { Section, SectionTitle, TitledSection } from "@/components/ui/section/section";
-import { SectionSkeleton, StatsSkeleton } from "@/components/ui/skeleton/skeleton";
 import { StaleRegion } from "@/components/ui/stale-region/stale-region";
 import { TextLink } from "@/components/ui/text-link/text-link";
 import { useDeferredParams } from "@/hooks/use-deferred-params";
@@ -26,6 +25,7 @@ import { DebtPaymentSplitChart } from "../debt-payment-split-chart";
 import { DebtPayments } from "../debt-payments/debt-payments";
 import { DebtScheduleSummary } from "../debt-schedule-summary/debt-schedule-summary";
 import { DebtScheduleTable } from "../debt-schedule-table/debt-schedule-table";
+import { DebtScheduleSkeleton } from "./debt-schedule-page-pending";
 
 interface Props {
   debtId: string;
@@ -40,12 +40,7 @@ export function DebtSchedulePage({ debtId }: Readonly<Props>) {
   if (debt) {
     content = (
       <QueryBoundary
-        fallback={
-          <div className="space-y-5">
-            <StatsSkeleton />
-            <SectionSkeleton rows={6} />
-          </div>
-        }
+        fallback={<DebtScheduleSkeleton tracked={debt.tracksPayments} />}
         errorSubject={t("netWorth.schedule.table")}
       >
         <div className="space-y-5">
@@ -66,7 +61,7 @@ export function DebtSchedulePage({ debtId }: Readonly<Props>) {
 
   return (
     <div className="space-y-5">
-      <p className="text-sm">
+      <p className="flex text-sm">
         <TextLink to="/net-worth" className="inline-flex items-center">
           <ArrowLeft className="mr-1 size-4" aria-hidden="true" />
           {t("netWorth.schedule.back")}

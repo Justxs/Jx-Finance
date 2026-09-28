@@ -54,12 +54,22 @@ Added on 2026-09-20 and 2026-09-21, each with its own integration tests, stories
 - [x] Debt amortization: optional repayment terms on a debt, a computed monthly schedule with the interest and principal of every payment, the payoff date, the scheduled balance beside the recorded one, and an overpayment preview.
 - [x] Dashboard customisation: each user chooses which cards the dashboard shows and in what order, stored on the account so it follows them to every device, with move up and move down buttons, a reset to the default, and no requests for hidden cards.
 
-None of that has been through a deployment, a real SMTP server or a day of ordinary use; only the automated checks have run.
+Added from 2026-09-26 to 2026-09-28, in the same way:
+
+- [x] Discord notifications through a personal webhook, allowed or stopped by an administrator.
+- [x] Unusual amounts and subscription price rises.
+- [x] Month-end close with a checklist, a snapshot and drift after the close.
+- [x] Asset valuations with straight-line depreciation, and debt payments linked to a debt.
+- [x] camt.053 statement import beside the Swedbank CSV.
+- [x] Navigation grouped into hubs, one Settings page, the close on the dashboard and an account menu.
+
+None of that has been through a deployment, a real SMTP server, a real Discord webhook or a day of ordinary use; only the automated checks have run.
 
 Still open:
 
-- [ ] Record a verification pass for everything added on 2026-09-20 and 2026-09-21. The backend suite, the frontend unit and DOM tests, the story tests with their accessibility scans and the Mermaid parse of every diagram all pass, but nothing in that list has been used by a person.
-- [ ] Run the end-to-end suite and the production overlay against the fifteen migrations added on those two days. They have only been applied by the test containers.
+- [ ] Record a verification pass for everything added from 2026-09-20 on. The backend suite, the frontend unit and DOM tests, the story tests with their accessibility scans and the Mermaid parse of every diagram all pass, but nothing in those lists has been used by a person.
+- [ ] Run the end-to-end suite and the production overlay against every migration added since 2026-09-20. They have only been applied by the test containers.
+- [ ] Import camt.053 files from at least two real banks; the parser has only read fixtures.
 - [ ] Production overlay on the real host: certificate trust on client devices, the real `SITE_ADDRESS` and `BIND_ADDRESS`. The script accepts Caddy's certificate without trusting it, so it proves nothing about trust.
 - [ ] Rerun `just verify-production` once the backend changes in progress on 2026-09-19 have their migration; on that working tree the API container did not start (pending model changes).
 - [ ] The CI jobs added on 2026-09-19 have not run on the Gitea runner yet.

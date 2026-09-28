@@ -7,8 +7,8 @@ import { Modal } from "@/components/modal";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { Button } from "@/components/ui/button/button";
 import { Rows } from "@/components/ui/rows/rows";
-import { Skeleton } from "@/components/ui/skeleton/skeleton";
 import { ImportSection } from "../import-section/import-section";
+import { ImportUploadFormSkeleton } from "../import-section/import-upload-form";
 
 const providers = [
   {
@@ -75,7 +75,7 @@ export function ImportDialog({ open, onOpenChange, accounts, initialAccountId }:
       {provider ? (
         <div className="space-y-4">
           <Button
-            variant="ghost"
+            variant="outline"
             size="sm"
             className="-ml-2"
             onClick={() => confirmDiscard(() => setProviderId(null))}
@@ -83,7 +83,7 @@ export function ImportDialog({ open, onOpenChange, accounts, initialAccountId }:
             <ArrowLeft />
             {t("imports.allProviders")}
           </Button>
-          <QueryBoundary fallback={<Skeleton className="h-64 w-full" />}>
+          <QueryBoundary fallback={<ImportUploadFormSkeleton />}>
             <ImportSection
               accounts={accounts}
               format={provider.id}

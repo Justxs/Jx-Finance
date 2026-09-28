@@ -57,7 +57,9 @@ export function ReportStats({
         ...stats.map((stat) => ({
           ...stat,
           label: t(stat.key),
-          note: <ChangeBadge change={changeOf(stat.value, stat.earlier)} good={stat.good} />,
+          note: comparison ? (
+            <ChangeBadge change={changeOf(stat.value, stat.earlier)} good={stat.good} />
+          ) : undefined,
         })),
         ...(extra ?? []),
       ]}

@@ -23,7 +23,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover/popover";
 import { Rows } from "@/components/ui/rows/rows";
-import { Skeleton } from "@/components/ui/skeleton/skeleton";
+import { IconButtonSkeleton, Skeleton } from "@/components/ui/skeleton/skeleton";
 import { Tooltip } from "@/components/ui/tooltip/tooltip";
 import { monthKeyOfIso } from "@/features/month-close/month-key";
 import { useDate, useMoney, useMonthName, useNumberFormat } from "@/hooks/use-formatters";
@@ -31,11 +31,40 @@ import { type FeatureKey, useSettings } from "@/hooks/use-settings";
 import { unreadParams } from "@/lib/app-shell";
 import { parseIso } from "@/lib/calendar";
 import { pendingId } from "@/lib/mutations";
+import { sidebarRowClass } from "@/lib/navigation";
 import { optimisticRemoval, optimisticUpdate } from "@/lib/optimistic";
 import { cn } from "@/lib/utils";
 
-export function NotificationBellUnavailable() {
+type SidebarState = "expanded" | "collapsed";
+
+interface Props {
+  sidebar?: SidebarState;
+}
+
+function sidebarTriggerClass(sidebar: SidebarState) {
+  return cn(
+    sidebarRowClass,
+    "w-full disabled:opacity-50 aria-expanded:bg-accent aria-expanded:text-foreground",
+    sidebar === "collapsed" && "justify-center px-0",
+  );
+}
+
+export function NotificationBellUnavailable({ sidebar }: Readonly<Props>) {
   const { t } = useTranslation();
+
+  if (sidebar) {
+    return (
+      <button
+        type="button"
+        disabled
+        aria-label={t("notifications.unavailable")}
+        className={sidebarTriggerClass(sidebar)}
+      >
+        <BellOff className="size-4 shrink-0" />
+        {sidebar === "expanded" ? t("notifications.title") : null}
+      </button>
+    );
+  }
 
   return (
     <Tooltip content={t("notifications.unavailable")}>
@@ -81,11 +110,16 @@ function noNotifications(): NotificationResponse[] {
   return [];
 }
 
-interface Props {
-  placement?: "below" | "above";
+function popoverPosition(sidebar: SidebarState | undefined) {
+  if (sidebar === "collapsed") {
+    return { side: "right", align: "end" } as const;
+  }
+  return sidebar
+    ? ({ side: "top", align: "start" } as const)
+    : ({ side: "bottom", align: "end" } as const);
 }
 
-export function NotificationBell({ placement = "below" }: Readonly<Props>) {
+export function NotificationBell({ sidebar }: Readonly<Props>) {
   const { t } = useTranslation();
   const date = useDate();
   const money = useMoney();
@@ -180,19 +214,39 @@ export function NotificationBell({ placement = "below" }: Readonly<Props>) {
     markReadMutation.mutate({ id: notification.id });
   }
 
+  const unreadCount = unreadList.length > 9 ? "9+" : unreadList.length;
+
+  const trigger = sidebar ? (
+    <button type="button" aria-label={bellLabel} className={sidebarTriggerClass(sidebar)}>
+      <Bell className="size-4 shrink-0" />
+      {sidebar === "expanded" ? (
+        <>
+          <span className="flex-1 text-left">{t("notifications.title")}</span>
+          {unreadList.length > 0 ? (
+            <span
+              aria-hidden="true"
+              className="flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-2xs font-semibold text-destructive-foreground"
+            >
+              {unreadCount}
+            </span>
+          ) : null}
+        </>
+      ) : null}
+    </button>
+  ) : (
+    <Button type="button" variant="ghost" size="icon" aria-label={bellLabel}>
+      <Bell />
+    </Button>
+  );
+
   return (
     <div className="relative">
       <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger
-          render={
-            <Button type="button" variant="ghost" size="icon" aria-label={bellLabel}>
-              <Bell />
-            </Button>
-          }
-        />
+        <Tooltip content={sidebar === "collapsed" ? bellLabel : undefined} side="right">
+          <PopoverTrigger render={trigger} />
+        </Tooltip>
         <PopoverContent
-          side={placement === "below" ? "bottom" : "top"}
-          align={placement === "below" ? "end" : "start"}
+          {...popoverPosition(sidebar)}
           sideOffset={8}
           className="w-[min(20rem,calc(100vw-2rem))] gap-0 p-0"
         >
@@ -203,7 +257,7 @@ export function NotificationBell({ placement = "below" }: Readonly<Props>) {
             {unreadList.length > 0 ? (
               <Button
                 type="button"
-                variant="ghost"
+                variant="outline"
                 size="sm"
                 pending={markAllReadMutation.isPending}
                 onClick={() => markAllReadMutation.mutate()}
@@ -256,12 +310,15 @@ export function NotificationBell({ placement = "below" }: Readonly<Props>) {
           </div>
         </PopoverContent>
       </Popover>
-      {unreadList.length > 0 ? (
+      {unreadList.length > 0 && sidebar !== "expanded" ? (
         <span
           aria-hidden="true"
-          className="pointer-events-none absolute -top-1 -right-1 flex size-4 items-center justify-center rounded-full bg-destructive text-2xs font-semibold text-destructive-foreground"
+          className={cn(
+            "pointer-events-none absolute flex size-4 items-center justify-center rounded-full bg-destructive text-2xs font-semibold text-destructive-foreground",
+            sidebar === "collapsed" ? "top-0 right-2" : "-top-1 -right-1",
+          )}
         >
-          {unreadList.length > 9 ? "9+" : unreadList.length}
+          {unreadCount}
         </span>
       ) : null}
     </div>
@@ -271,8 +328,14 @@ export function NotificationBell({ placement = "below" }: Readonly<Props>) {
 export function NotificationBellSlot(props: Readonly<Props>) {
   return (
     <QueryBoundary
-      fallback={<Skeleton className="size-9 rounded-md" />}
-      error={<NotificationBellUnavailable />}
+      fallback={
+        props.sidebar ? (
+          <Skeleton className="h-9 w-full rounded-md" />
+        ) : (
+          <IconButtonSkeleton size="md" />
+        )
+      }
+      error={<NotificationBellUnavailable {...props} />}
     >
       <NotificationBell {...props} />
     </QueryBoundary>

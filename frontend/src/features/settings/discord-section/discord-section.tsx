@@ -5,9 +5,9 @@ import { useUpdateDiscordSettings } from "@/api/generated";
 import { useServerForm } from "@/components/form";
 import { FormError } from "@/components/form-error/form-error";
 import { TitledSection } from "@/components/ui/section/section";
-import { Skeleton } from "@/components/ui/skeleton/skeleton";
 import { usePublicSettings } from "@/hooks/use-settings";
 import { silent } from "@/lib/mutations";
+import { DiscordFormSkeleton } from "../settings-page/settings-page-pending";
 
 function DiscordSettingsForm({ enabled }: Readonly<{ enabled: boolean }>) {
   const { t } = useTranslation();
@@ -60,7 +60,7 @@ export function DiscordSection() {
           enabled={settings.discordEnabled}
         />
       ) : (
-        <Skeleton className="mt-4 h-24 w-full" />
+        <DiscordFormSkeleton />
       )}
     </TitledSection>
   );

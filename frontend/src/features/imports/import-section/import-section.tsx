@@ -22,6 +22,7 @@ import { ImportStatementBar } from "../import-preview-table/import-statement-bar
 import {
   importDateRange,
   type PreviewRowState,
+  takesCategory,
   toPreviewRows,
 } from "../import-preview-table/preview-rows";
 import { recallParams } from "../import-queries";
@@ -94,10 +95,15 @@ export function ImportSection({
       onSuccess: (data, variables) => {
         const confirmed = (rows ?? []).filter((row) => row.selected);
         toast.success(
-          t("imports.confirmed", { imported: data.imported, skipped: data.skippedDuplicates }),
+          t("imports.confirmed", {
+            imported: data.imported,
+            linked: data.linked,
+            skipped: data.skippedDuplicates,
+          }),
         );
         setResult({
           imported: data.imported,
+          linked: data.linked,
           skipped: data.skippedDuplicates,
           accountId: variables.data.accountId,
           ...importDateRange(confirmed),
@@ -150,10 +156,11 @@ export function ImportSection({
           description: row.description,
           amount: row.amount,
           type: row.type,
-          categoryId: row.transferAccountId ? null : row.categoryId || null,
-          tagIds: row.transferAccountId ? [] : row.tagIds,
+          categoryId: takesCategory(row) ? row.categoryId || null : null,
+          tagIds: takesCategory(row) ? row.tagIds : [],
           transferAccountId: row.transferAccountId || null,
           existingTransferId: row.existingTransferId || null,
+          existingTransactionId: row.existingTransactionId || null,
         })),
       },
     });

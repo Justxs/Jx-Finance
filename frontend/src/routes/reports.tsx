@@ -7,6 +7,7 @@ import {
 import { ReportComparisonMode } from "@/api/generated/model";
 import { reportParams } from "@/features/reports/report-queries";
 import { ReportsPage } from "@/features/reports/reports-page/reports-page";
+import { ReportsPending } from "@/features/reports/reports-page/reports-page-pending";
 import { requireFeature } from "@/lib/feature-gate";
 import { todayDateIn, warm, warmWithSettings } from "@/lib/route-prefetch";
 import { optionalParam } from "@/lib/search-schema";
@@ -37,4 +38,5 @@ export const Route = createFileRoute("/reports")({
     });
   },
   component: ReportsPage,
+  pendingComponent: ReportsPending,
 });

@@ -4,6 +4,7 @@ import { getMeSuspenseQueryOptions, getUsersSuspenseQueryOptions } from "@/api/g
 import { UserSortField } from "@/api/generated/model";
 import { userListParams } from "@/features/users/user-queries";
 import { UsersPage } from "@/features/users/users-page/users-page";
+import { UsersPending } from "@/features/users/users-page/users-page-pending";
 import { requireAdmin } from "@/lib/feature-gate";
 import { warm } from "@/lib/route-prefetch";
 import { optionalParam, sortParams } from "@/lib/search-schema";
@@ -27,4 +28,5 @@ export const Route = createFileRoute("/users")({
     warm(queryClient, getUsersSuspenseQueryOptions(deps));
   },
   component: UsersPage,
+  pendingComponent: UsersPending,
 });

@@ -324,6 +324,10 @@
     scrollbar-color: var(--border) transparent;
   }
 
+  html {
+    scrollbar-gutter: stable;
+  }
+
   body {
     @apply bg-background text-foreground;
     margin: 0;

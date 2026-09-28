@@ -25,4 +25,6 @@ export interface ImportConfirmRow {
   currency?: null | Currency;
   /** @nullable */
   tagIds?: string[] | null;
+  /** @nullable */
+  existingTransactionId?: string | null;
 }

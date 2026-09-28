@@ -8,13 +8,13 @@ import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { Button } from "@/components/ui/button/button";
 import { Rows } from "@/components/ui/rows/rows";
 import { TitledSection } from "@/components/ui/section/section";
-import { Skeleton } from "@/components/ui/skeleton/skeleton";
 import { Tag } from "@/components/ui/tag/tag";
 import { useConfirmedDelete } from "@/hooks/use-confirmed-delete";
 import { useDateTime } from "@/hooks/use-formatters";
 import { notify } from "@/lib/mutations";
 import { describeUserAgent } from "@/lib/user-agent";
 import { ActionRow } from "../action-row/action-row";
+import { SessionListSkeleton } from "../profile-page/profile-page-pending";
 
 function useSessionLabel() {
   const { t } = useTranslation();
@@ -142,7 +142,7 @@ export function SessionsSection() {
       description={t("profile.sessions.description")}
       bodyGap="md"
     >
-      <QueryBoundary fallback={<Skeleton className="h-32 w-full" />}>
+      <QueryBoundary fallback={<SessionListSkeleton />}>
         <SessionList />
       </QueryBoundary>
     </TitledSection>

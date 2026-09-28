@@ -9,4 +9,5 @@
 export interface ImportConfirmResponse {
   imported: number;
   skippedDuplicates: number;
+  linked: number;
 }

@@ -201,6 +201,37 @@ describe("initial state", () => {
       "",
     ]);
   });
+
+  test("a row matching a hand-entered transaction starts linked, selected and out of the category work", () => {
+    const matchedTransaction = {
+      id: "entered",
+      date: "2026-09-17",
+      description: "Savings",
+      categoryId: null,
+    };
+    const rows = toPreviewRows(
+      [
+        row("1", "Savings", "expense", "1.00", {
+          looksLikeTransfer: true,
+          suggestedTransferAccountId: "savings",
+          matchedTransaction,
+        }),
+        row("2", "Maxima", "expense", "1.00", { isDuplicate: true, matchedTransaction }),
+      ],
+      [],
+      categories,
+    );
+
+    expect(
+      rows.map((item) => [item.selected, item.existingTransactionId, item.transferAccountId]),
+    ).toEqual([
+      [true, "entered", ""],
+      [false, "", ""],
+    ]);
+    expect(viewCounts(rows).attention).toBe(0);
+    expect(categoryTargetCount(rows, food)).toBe(0);
+    expect(applyCategory(rows, food)[0]?.categoryId).toBe("");
+  });
 });
 
 describe("selection summary", () => {

@@ -3,22 +3,25 @@ import { RotateCw } from "lucide-react";
 import { use } from "react";
 import { useTranslation } from "react-i18next";
 import { BrandMark } from "@/components/brand/brand";
-import { RetryContext } from "@/components/error-state/error-state";
+import { ErrorDetails } from "@/components/error-details/error-details";
+import { CaughtErrorContext, RetryContext } from "@/components/error-state/error-state";
 import { PageHeader } from "@/components/page-header/page-header";
 import { Button } from "@/components/ui/button/button";
 
 interface Props {
   title?: string;
+  error?: unknown;
 }
 
 function reloadPage() {
   globalThis.location.reload();
 }
 
-export function RouteError({ title }: Readonly<Props>) {
+export function RouteError({ title, error }: Readonly<Props>) {
   const router = useRouter();
   const { t } = useTranslation();
   const boundaryRetry = use(RetryContext);
+  const caught = use(CaughtErrorContext);
 
   function retry() {
     boundaryRetry?.();
@@ -40,6 +43,7 @@ export function RouteError({ title }: Readonly<Props>) {
           {t("errors.reload")}
         </Button>
       </div>
+      <ErrorDetails error={error ?? caught} />
     </div>
   );
 

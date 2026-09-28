@@ -46,10 +46,10 @@ export function DatePicker({ value, onChange, placeholder, ...trigger }: Readonl
               onSelect={(date) => pick(date ? toIso(date) : "")}
             />
             <div className="flex items-center justify-between border-t pt-2">
-              <Button type="button" variant="ghost" size="sm" onClick={() => pick("")}>
+              <Button type="button" variant="outline" size="sm" onClick={() => pick("")}>
                 {t("datePicker.clear")}
               </Button>
-              <Button type="button" variant="ghost" size="sm" onClick={() => pick(today)}>
+              <Button type="button" variant="outline" size="sm" onClick={() => pick(today)}>
                 {t("datePicker.today")}
               </Button>
             </div>

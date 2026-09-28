@@ -14,6 +14,7 @@ export const importHandlers = [
     const skipped = rows.filter((row) =>
       importPreview.rows.some((item) => item.importRef === row.importRef && item.isDuplicate),
     ).length;
-    return { imported: rows.length - skipped, skippedDuplicates: skipped };
+    const linked = rows.filter((row) => Boolean(row.existingTransactionId)).length;
+    return { imported: rows.length - skipped - linked, skippedDuplicates: skipped, linked };
   }),
 ];

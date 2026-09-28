@@ -38,7 +38,7 @@ export function TwoFactorSetup({ qrDataUrl, sharedKey, onEnabled, onCancel }: Re
         <img
           src={qrDataUrl}
           alt={t("profile.qrCodeAlt")}
-          className="h-auto w-48 max-w-full rounded-md border"
+          className="aspect-square w-48 max-w-full rounded-md border"
         />
         <p className="rounded-md bg-muted px-3 py-2 font-mono text-xs break-all">{sharedKey}</p>
 

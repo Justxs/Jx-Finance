@@ -81,12 +81,13 @@ export const categoryBreakdown: CategoryBreakdownResponse = {
   items: categoryBreakdownItems,
   periodStart: FIXTURE_MONTH_START,
   periodEnd: FIXTURE_MONTH_END,
+  comparisonStart: "2026-08-01",
+  comparisonEnd: "2026-08-18",
 };
 
 export const emptyCategoryBreakdown: CategoryBreakdownResponse = {
+  ...categoryBreakdown,
   items: [],
-  periodStart: FIXTURE_MONTH_START,
-  periodEnd: FIXTURE_MONTH_END,
 };
 
 export const defaultDashboardLayout: DashboardLayoutResponse = {

@@ -7,6 +7,7 @@ using JxFinance.Domain.Common;
 using JxFinance.Endpoints.Accounts.Interfaces;
 using JxFinance.Endpoints.Dashboard.Interfaces;
 using JxFinance.Endpoints.Dashboard.Shared;
+using JxFinance.Endpoints.Reports.Shared;
 using JxFinance.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -56,9 +57,16 @@ public sealed class DashboardService(
         CancellationToken cancellationToken)
     {
         var period = ResolveMonth(month, clock.Today);
+        var shown = period.Contains(clock.Today) ? DateWindow.Inclusive(period.Start, clock.Today) : period;
+        var earlier = ComparisonWindow.For(ReportComparisonMode.PreviousMonth, shown)!.Value;
 
         var categoryAttributions = await attributions.GetAttributionsAsync(
             period,
+            null,
+            FlowType.Expense,
+            cancellationToken);
+        var earlierAttributions = await attributions.GetAttributionsAsync(
+            earlier,
             null,
             FlowType.Expense,
             cancellationToken);
@@ -66,9 +74,21 @@ public sealed class DashboardService(
         var categories = await db.Categories.ToDictionaryAsync(c => c.Id, cancellationToken);
 
         var investmentFlows = await investmentCashFlows.GetFlowsAsync(period, null, cancellationToken);
-        var items = CategoryBreakdownBuilder.Build(categoryAttributions, categories, investmentFlows, FlowType.Expense);
+        var earlierFlows = await investmentCashFlows.GetFlowsAsync(earlier, null, cancellationToken);
+        var items = CategoryBreakdownBuilder.Build(
+            categoryAttributions,
+            categories,
+            investmentFlows,
+            FlowType.Expense,
+            earlierAttributions,
+            earlierFlows);
 
-        return new CategoryBreakdownResponse(items, period.Start, period.InclusiveEnd);
+        return new CategoryBreakdownResponse(
+            items,
+            period.Start,
+            period.InclusiveEnd,
+            earlier.Start,
+            earlier.InclusiveEnd);
     }
 
     public async Task<MonthlyTrendResponse> GetMonthlyTrendAsync(

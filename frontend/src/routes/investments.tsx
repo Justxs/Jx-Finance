@@ -13,6 +13,7 @@ import {
   taxSummaryParams,
 } from "@/features/investments/investment-queries";
 import { InvestmentsPage } from "@/features/investments/investments-page/investments-page";
+import { InvestmentsPending } from "@/features/investments/investments-page/investments-page-pending";
 import { requireFeature } from "@/lib/feature-gate";
 import { warm } from "@/lib/route-prefetch";
 import { optionalParam } from "@/lib/search-schema";
@@ -69,4 +70,5 @@ export const Route = createFileRoute("/investments")({
     );
   },
   component: InvestmentsPage,
+  pendingComponent: InvestmentsPending,
 });

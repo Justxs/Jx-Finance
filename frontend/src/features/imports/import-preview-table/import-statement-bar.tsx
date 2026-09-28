@@ -26,9 +26,9 @@ export function ImportStatementBar({
   const currency = statement.closingCurrency ?? undefined;
   const other = accounts.find((account) => account.id === statement.otherAccountId);
   const net =
-    summarizeSelection(rows.filter((row) => !row.existingTransferId)).nets.find(
-      (item) => item.currency === currency,
-    )?.cents ?? 0;
+    summarizeSelection(
+      rows.filter((row) => !row.existingTransferId && !row.existingTransactionId),
+    ).nets.find((item) => item.currency === currency)?.cents ?? 0;
   const ledger =
     statement.ledgerBalanceAtClose === null ? null : toCents(statement.ledgerBalanceAtClose) + net;
   const difference =

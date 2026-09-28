@@ -12,6 +12,8 @@ interface Props {
 
 export const RetryContext = createContext<(() => void) | undefined>(undefined);
 
+export const CaughtErrorContext = createContext<unknown>(undefined);
+
 export function ErrorState({ onRetry, subject, className }: Readonly<Props>) {
   const { t } = useTranslation();
   const boundaryRetry = use(RetryContext);

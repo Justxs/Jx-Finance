@@ -1,6 +1,8 @@
 import type { ReactNode } from "react";
 import { type DeleteProps, RowActions } from "@/components/row-actions/row-actions";
 import { RowTransition } from "@/components/row-transition/row-transition";
+import { Rows } from "@/components/ui/rows/rows";
+import { IconButtonSkeleton, TextSkeleton, rowWidth } from "@/components/ui/skeleton/skeleton";
 
 interface Props extends DeleteProps {
   title: ReactNode;
@@ -41,5 +43,28 @@ export function RecordRow({
         </div>
       </li>
     </RowTransition>
+  );
+}
+
+export function RecordRowsSkeleton({ rows = 3 }: Readonly<{ rows?: number }>) {
+  return (
+    <Rows data-slot="record-rows-skeleton" aria-hidden="true">
+      {Array.from({ length: rows }, (_, index) => (
+        <li
+          key={index}
+          className="flex flex-col gap-3 py-2.5 sm:flex-row sm:items-center sm:justify-between"
+        >
+          <div className="min-w-0 flex-1">
+            <TextSkeleton size="sm" width={rowWidth(index)} />
+            <TextSkeleton size="xs" width="w-1/3" />
+          </div>
+          <div className="flex items-center gap-1">
+            <TextSkeleton className="mr-2" width="w-20" />
+            <IconButtonSkeleton />
+            <IconButtonSkeleton />
+          </div>
+        </li>
+      ))}
+    </Rows>
   );
 }

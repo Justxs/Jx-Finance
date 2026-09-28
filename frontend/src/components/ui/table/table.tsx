@@ -1,5 +1,6 @@
 import * as React from "react";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
+import { Skeleton, TextSkeleton, rowWidth } from "@/components/ui/skeleton/skeleton";
 import { cn } from "@/lib/utils";
 
 function Table({ className, ...props }: React.ComponentProps<"table">) {
@@ -127,6 +128,53 @@ function ScrollRegion({ className, ...props }: Readonly<ScrollRegionProps>) {
   );
 }
 
+interface TableSkeletonProps {
+  rows?: number;
+  columns?: number;
+  lines?: 1 | 2;
+  className?: string;
+}
+
+function TableSkeleton({
+  rows = 5,
+  columns = 4,
+  lines = 1,
+  className,
+}: Readonly<TableSkeletonProps>) {
+  const cells = Array.from({ length: columns }, (_, index) => index);
+
+  return (
+    <div data-slot="table-skeleton" aria-hidden="true" className={cn("text-sm", className)}>
+      <div className="flex h-9 items-center gap-6 border-b px-3">
+        {cells.map((cell) => (
+          <TextSkeleton key={cell} size="xs" className="flex-1" width="w-16" />
+        ))}
+      </div>
+      {Array.from({ length: rows }, (_, row) => (
+        <div key={row} className="flex items-center gap-6 border-b px-3 py-2.5 last:border-b-0">
+          {lines === 2 ? (
+            <div className="flex-1">
+              <TextSkeleton size="sm" width={rowWidth(row)} />
+              <TextSkeleton size="sm" width="w-1/3" />
+            </div>
+          ) : null}
+          {cells.slice(lines === 2 ? 1 : 0).map((cell) => (
+            <div key={cell} className="flex h-8 flex-1 items-center">
+              <Skeleton
+                className={cn(
+                  "h-[0.7em] rounded-sm",
+                  cell === 0 ? rowWidth(row) : "w-3/5",
+                  cell === columns - 1 && "ml-auto",
+                )}
+              />
+            </div>
+          ))}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export {
   Table,
   TableHeader,
@@ -136,4 +184,5 @@ export {
   TableCell,
   TableEmptyRow,
   ScrollRegion,
+  TableSkeleton,
 };

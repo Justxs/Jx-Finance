@@ -36,6 +36,24 @@ const transferRows = defaultRows.map((row) =>
     : row,
 );
 
+const matchedRows: PreviewRowState[] = toPreviewRows(
+  importPreviewRows.map((row) =>
+    row.payee === "TRAFI UAB"
+      ? {
+          ...row,
+          matchedTransaction: {
+            id: ids.transactions.uncategorised,
+            date: "2026-09-16",
+            description: "Trafi monthly pass",
+            categoryId: ids.categories.transport,
+          },
+        }
+      : row,
+  ),
+  [],
+  categories,
+);
+
 const manyRows: PreviewRowState[] = Array.from({ length: 5 }, (_, batch) =>
   defaultRows.map((row, index) => ({
     ...row,
@@ -99,6 +117,15 @@ export const TransfersAssigned: Story = { args: { rows: transferRows } };
 
 export const NothingSelected: Story = {
   args: { rows: defaultRows.map((row) => ({ ...row, selected: false })) },
+};
+
+export const MatchesHandEnteredEntry: Story = {
+  args: { rows: matchedRows },
+  play: async ({ canvas }) => {
+    const table = within(first(canvas.getAllByRole("region", { name: "Preview" })));
+    await expect(table.getByText("Matches your entry")).toBeVisible();
+    await expect(table.getByRole("combobox", { name: /^Category: .*TRAFI UAB/ })).toBeDisabled();
+  },
 };
 
 export const ManyRows: Story = { args: { rows: manyRows } };

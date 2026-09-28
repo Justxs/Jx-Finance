@@ -68,7 +68,7 @@ export function DateRangePicker({ value, onChange, placeholder, ...trigger }: Re
               </span>
               <Button
                 type="button"
-                variant="ghost"
+                variant="outline"
                 size="sm"
                 disabled={!value.from && !value.to}
                 onClick={() => onChange({ from: "", to: "" })}

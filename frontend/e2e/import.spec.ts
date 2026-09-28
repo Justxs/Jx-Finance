@@ -85,6 +85,50 @@ test("a Swedbank statement is imported and one row is matched to an existing tra
   expect(accounts.find((account) => account.id === checkingId)?.currentBalance).toBe("1934.23");
 });
 
+test("a statement row is linked to the same purchase entered by hand two days earlier", async ({
+  page,
+}) => {
+  const reference = unique("E2ELINK").replace(" ", "-");
+  const checking = unique("Link checking");
+  const date = today();
+  const checkingId = await createAccount(page.request, checking);
+  const entered = await page.request.post("/api/transactions", {
+    data: {
+      accountId: checkingId,
+      categoryId: null,
+      type: "expense",
+      amount: "15.77",
+      date: new Date(Date.parse(date) - 2 * 86_400_000).toISOString().slice(0, 10),
+      description: `Lunch ${reference}`,
+    },
+  });
+  expect(entered.status(), await entered.text()).toBe(201);
+
+  await page.goto("/settings?section=import");
+  await page.getByRole("button", { name: "Import bank statement" }).click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByRole("button", { name: /Swedbank/ }).click();
+  await choose(page, dialog.getByRole("combobox", { name: "Account" }), checking);
+  await dialog.locator("#import-file").setInputFiles({
+    name: "swedbank.csv",
+    mimeType: "text/csv",
+    buffer: Buffer.from(statement(reference, date), "utf8"),
+  });
+  await dialog.getByRole("button", { name: "Preview" }).click();
+
+  const purchaseRow = dialog.getByRole("row", { name: new RegExp(`PIRKINYS ${reference}`) });
+  await expect(purchaseRow).toContainText("Matches your entry");
+  await expect(purchaseRow.getByRole("checkbox")).toBeChecked();
+  await dialog.getByRole("button", { name: "Import 2 rows" }).click();
+  await expect(
+    dialog.getByText("Imported 1 row. 1 linked to an entry you made by hand."),
+  ).toBeVisible();
+
+  await page.goto(`/transactions?search=${encodeURIComponent(reference)}`);
+  await expect(page.getByRole("row", { name: new RegExp(`Lunch ${reference}`) })).toBeVisible();
+  await expect(page.getByRole("row", { name: new RegExp(`PIRKINYS ${reference}`) })).toHaveCount(0);
+});
+
 function camtEntry(
   reference: string,
   amount: string,

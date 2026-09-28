@@ -18,7 +18,10 @@ public sealed class ImportPreviewSummary : Summary<ImportPreviewEndpoint, Import
             + "description, amount and flow type, and the first rule that matches fills in "
             + "suggestedCategoryId, suggestedTagIds and matchedRuleName; a row nothing matched carries "
             + "none of them. The suggestion is a suggestion: confirm sends back whatever the client "
-            + "decided. Nothing is written: this call only reads the file. Send the file as "
+            + "decided. A row that is not a duplicate and has the same flow type, amount and currency "
+            + "as a transaction entered by hand on the account within three days of it carries that "
+            + "transaction in matchedTransaction, each transaction offered to one row at most, the "
+            + "closest date first. Nothing is written: this call only reads the file. Send the file as "
             + "multipart/form-data.";
         Params["file"] = "The statement file, at most 5 MB for a CSV file and 20 MB for an XML file.";
         Params["accountId"] = "The account the statement belongs to.";

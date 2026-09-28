@@ -70,7 +70,7 @@ export function SavedListMenu({
       }}
     >
       <PopoverTrigger
-        render={<Button type="button" variant="ghost" size="sm" className={className} />}
+        render={<Button type="button" variant="outline" size="sm" className={className} />}
       >
         <Icon />
         {label}

@@ -1,6 +1,6 @@
 # Bank statement import
 
-Back to the [feature walkthrough](README.md). See also [decisions](../decisions/swedbank-csv-import.md), [architecture: Transactions, imports and receipts](../architecture/transactions.md), the [plan](../plans/camt053-import.md).
+Back to the [feature walkthrough](README.md). See also [decisions](../decisions/swedbank-csv-import.md), [architecture: Transactions, imports and receipts](../architecture/transactions.md).
 
 Backend `Imports` (`ImportService`, parsers in `Endpoints/Imports/Parsing`), frontend `imports` (`ImportDataSection`, `ImportDialog`, `ImportSection`, `ImportStatementBar`). No route of its own. The dialog opens from three places, all shown to every user while the `Import` switch is on: the "Import bank statement" button beside "Add transaction" in the ledger header, the same entry in an account's row actions on the Accounts page, which preselects that account, and the Import data section under Personal on the one Settings page (`/profile?section=import`).
 
@@ -75,17 +75,18 @@ sequenceDiagram
     Api->>Db: existing references: transactions incl. deleted, TransferImport receipts
     Api->>Db: while UnusualAmounts is on: one history query for the expense rows,<br/>judged against their payee or the rule's category
     Api->>Db: accounts with IBANs, ledger balance on the closing date
-    Api-->>Dlg: rows with isDuplicate, looksLikeTransfer, suggestedTransferAccountId,<br/>isReversal, suggestedCategoryId, suggestedTagIds, matchedRuleName, unusual;<br/>statement summary
-    Dlg->>Dlg: duplicates never selected, suspected transfers start unselected
+    Api->>Db: hand-entered transactions without a reference, within three days of the rows
+    Api-->>Dlg: rows with isDuplicate, looksLikeTransfer, suggestedTransferAccountId,<br/>isReversal, suggestedCategoryId, suggestedTagIds, matchedRuleName, unusual,<br/>matchedTransaction; statement summary
+    Dlg->>Dlg: duplicates never selected, suspected transfers start unselected,<br/>rows matching your own entry start selected and linked
     Dlg->>Dlg: where no rule matched, category recall:<br/>exact description and type among the latest 200
-    User->>Dlg: per row: income or expense with category and tags,<br/>new transfer with another account,<br/>or match an existing transfer
+    User->>Dlg: per row: income or expense with category and tags,<br/>new transfer with another account,<br/>match an existing transfer, or link your own entry
     Dlg->>Api: POST /api/import/confirm with format, selected rows only
     Api->>Db: begin transaction, advisory lock on the account id
     Api->>Api: matching verifies date, amount and direction
     alt transfer already holds a receipt for this account
         Api-->>Dlg: import.transferAlreadyMatched, nothing written
     else ok
-        Api->>Db: transactions, transfers, TransferImport receipts, one audit row naming the format
+        Api->>Db: transactions, transfers, TransferImport receipts,<br/>references on linked entries, one audit row naming the format
         Api-->>Dlg: result, link to the imported rows
     end
 ```
@@ -94,9 +95,23 @@ Confirm reads everything the rows can need before it walks them: the references 
 
 Every confirmed row goes through the paths the manual forms use. A transaction row is valued by `ITransactionValuation`, so a row whose currency is switched off answers `currency.disabled`. A new transfer row goes through `ITransferAmountResolver`, the resolver of `POST /api/transfers`: the bank entry fixes the amount on the imported side, the other side is taken in its account's currency, and when the two differ the row answers `transfer.receivedAmountRequired`, because a statement line carries only one of the two amounts. Such a transfer is recorded under Transfers and the bank entry matched to it. Like every other confirm error, nothing of that request is written.
 
+## Entries you already made by hand
+
+Since 2026-09-28 the preview also looks for a transaction you entered yourself before the statement arrived, such as a card payment typed in on the day. `ManualEntryMatcher` (`Endpoints/Imports/Matching`) is a pure function. A row that is not a duplicate matches a transaction on the same account when the transaction:
+
+- was entered by hand (`Source` manual) and has no import reference;
+- has the same flow type, amount and currency;
+- is dated at most three days before or after the bank entry.
+
+Each transaction goes to one row at most. All pairs are ranked by the number of days between them, then by row order, so two equal payments on different days each find the closest one. The preview reads the candidates with one query over the statement's date range widened by three days, and answers the transaction's id, date, description and category as `matchedTransaction`.
+
+In the review such a row starts selected and linked, even when it looks like a transfer. It shows "Matches your entry" with the date and description of your entry in the tooltip. Its "Record as" picker starts on "Your entry of 16 Sep", and choosing "Income / expense" or a transfer instead imports it the ordinary way. A linked row shows your entry's category and cannot take a category or tags from the review: it is not in Needs attention and "Set category for selected" skips it. The statement bar does not add it to the ledger balance, because your entry is already counted there.
+
+Confirm sends `existingTransactionId`. Instead of adding a transaction, the import writes the bank's reference onto yours and marks it imported, and nothing else about it changes: its date, category, tags, splits, description and attachments stay as you entered them. The confirm checks the same rule again under the account lock and answers `import.entryMismatch` when the transaction is gone, belongs to another account, already carries a reference, no longer fits or is named by two rows; as with every confirm error, nothing is written. The response counts `linked` beside `imported` and `skippedDuplicates`, and the household log's summary row names them. Because the reference is now stored, the same statement line is a duplicate on the next import. A linked row counts toward the month-close import coverage, and a link to a row dated in a closed month shows as an edit in its drift.
+
 ## Views, search and leaving a review
 
-The rows sit under a switch of four counted views: All, Needs attention, Transfers and Duplicates. Needs attention holds the selected rows that are not recorded as a transfer and have no category, which would otherwise enter the ledger uncategorized. Transfers holds suspected transfers and rows recorded as one, and Duplicates the rows already imported. A search box narrows any view to rows whose description or payee contains the text, ignoring case.
+The rows sit under a switch of four counted views: All, Needs attention, Transfers and Duplicates. Needs attention holds the selected rows that are not recorded as a transfer or linked to your own entry and have no category, which would otherwise enter the ledger uncategorized. Transfers holds suspected transfers and rows recorded as one, and Duplicates the rows already imported. A search box narrows any view to rows whose description or payee contains the text, ignoring case.
 
 Views and search only decide which rows are shown. A hidden row keeps its selection, category and tags, and the selected count, the net, the statement balance check and the Import button always count every row. The header checkbox selects or clears only the rows the view and search show, while "Set category for selected" still applies to every selected row. Changing the view or the search returns the list to its first page, and neither is remembered.
 

@@ -102,7 +102,7 @@ export function SelectionToolbar({
           </div>
         </PopoverContent>
       </Popover>
-      <Button type="button" variant="ghost" disabled={pending} onClick={onClear}>
+      <Button type="button" variant="outline" disabled={pending} onClick={onClear}>
         {t("transactions.clearSelection")}
       </Button>
       {mixed ? (

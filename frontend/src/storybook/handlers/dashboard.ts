@@ -13,6 +13,7 @@ import {
   type DashboardLayoutResponse,
   type MonthlyTrendResponse,
 } from "@/api/generated/model";
+import { shiftMonth } from "@/features/month-close/month-key";
 import {
   FIXTURE_MONTH,
   buildCategoryBreakdownItems,
@@ -21,6 +22,7 @@ import {
   defaultDashboardLayout,
   monthlyTrendItems,
   transactionsBetween,
+  withEarlierAmounts,
 } from "@/storybook/fixtures";
 import { query, readBody } from "./http";
 
@@ -33,13 +35,16 @@ function monthBounds(month: string): { start: string; end: string } {
 function resolveBreakdown(params: URLSearchParams): CategoryBreakdownResponse {
   const month = params.get("month");
   if (!month || month === FIXTURE_MONTH || !/^\d{4}-\d{2}$/.test(month)) {
-    return categoryBreakdown;
+    return { ...categoryBreakdown, items: withEarlierAmounts(categoryBreakdown.items) };
   }
   const { start, end } = monthBounds(month);
+  const earlier = monthBounds(shiftMonth(month, -1));
   return {
-    items: buildCategoryBreakdownItems(transactionsBetween(start, end)),
+    items: withEarlierAmounts(buildCategoryBreakdownItems(transactionsBetween(start, end))),
     periodStart: start,
     periodEnd: end,
+    comparisonStart: earlier.start,
+    comparisonEnd: earlier.end,
   };
 }
 

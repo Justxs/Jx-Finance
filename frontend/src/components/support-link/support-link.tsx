@@ -4,6 +4,7 @@ import { Checkbox } from "@/components/ui/checkbox/checkbox";
 import { TitledSection } from "@/components/ui/section/section";
 import { Tooltip } from "@/components/ui/tooltip/tooltip";
 import { useSettings } from "@/hooks/use-settings";
+import { sidebarRowClass } from "@/lib/navigation";
 import { cn } from "@/lib/utils";
 import { savePreferences, usePreferences } from "@/stores/preferences";
 
@@ -55,10 +56,7 @@ export function SupportLink({ collapsed = false }: Readonly<{ collapsed?: boolea
         target="_blank"
         rel="noopener noreferrer"
         aria-label={collapsed ? t("support.link") : undefined}
-        className={cn(
-          "flex items-center gap-3 rounded-md border border-transparent px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none",
-          collapsed && "justify-center px-0",
-        )}
+        className={cn(sidebarRowClass, collapsed && "justify-center px-0")}
       >
         <KofiCup className="-m-0.5 size-5" />
         {collapsed ? null : t("support.link")}

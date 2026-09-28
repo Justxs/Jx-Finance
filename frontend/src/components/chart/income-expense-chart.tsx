@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { Bar, Line, ReferenceLine } from "recharts";
+import { Bar, type BarShapeProps, Line, Rectangle, ReferenceLine } from "recharts";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { INCOME_TONE } from "@/lib/tone";
 import { BarChartFrame } from "./bar-chart-frame";
@@ -12,7 +12,10 @@ interface IncomeExpensePoint {
   expense: number;
   comparisonIncome?: number;
   comparisonExpense?: number;
+  partial?: boolean;
 }
+
+const PARTIAL_OPACITY = 0.4;
 
 interface Props {
   data: readonly IncomeExpensePoint[];
@@ -62,6 +65,20 @@ export function IncomeExpenseChart({ data, height = 280 }: Readonly<Props>) {
 
   const chartData = data.map((point) => ({ ...point, net: point.income - point.expense }));
   const showDots = chartData.length <= 16;
+  const partialLabels = new Set(data.filter((point) => point.partial).map((point) => point.label));
+
+  function partialAwareBar(props: BarShapeProps) {
+    return (
+      <Rectangle
+        {...props}
+        fillOpacity={data[props.index]?.partial ? PARTIAL_OPACITY : undefined}
+      />
+    );
+  }
+
+  function formatLabel(label: string) {
+    return partialLabels.has(label) ? t("charts.soFar", { label }) : label;
+  }
 
   if (
     chartData.every(
@@ -84,6 +101,7 @@ export function IncomeExpenseChart({ data, height = 280 }: Readonly<Props>) {
       barCategoryGap="28%"
       barGap={2}
       summaryKey="net"
+      formatLabel={partialLabels.size > 0 ? formatLabel : undefined}
     >
       <ReferenceLine y={0} stroke="var(--rule)" />
       <Bar
@@ -92,6 +110,7 @@ export function IncomeExpenseChart({ data, height = 280 }: Readonly<Props>) {
         dataKey="income"
         fill={CHART_COLOR_POSITIVE}
         radius={[1, 1, 0, 0]}
+        shape={partialAwareBar}
       />
       <Bar
         isAnimationActive={false}
@@ -99,6 +118,7 @@ export function IncomeExpenseChart({ data, height = 280 }: Readonly<Props>) {
         dataKey="expense"
         fill={CHART_COLOR_NEGATIVE}
         radius={[1, 1, 0, 0]}
+        shape={partialAwareBar}
       />
       {compared ? (
         <Line

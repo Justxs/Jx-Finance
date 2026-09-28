@@ -14,6 +14,7 @@ interface Props {
   barGap?: number;
   layout?: "horizontal" | "vertical";
   summaryKey?: string;
+  formatLabel?: (label: string) => string;
   formatCategory?: (value: string) => string;
   children: ReactNode;
 }
@@ -27,6 +28,7 @@ export function BarChartFrame({
   barGap,
   layout = "horizontal",
   summaryKey,
+  formatLabel,
   formatCategory,
   children,
 }: Readonly<Props>) {
@@ -80,7 +82,9 @@ export function BarChartFrame({
             )}
             <Tooltip
               cursor={vertical ? { fill: "var(--muted)", fillOpacity: 0.5 } : chartCursor}
-              content={<ChartTooltip series={series} summaryKey={summaryKey} />}
+              content={
+                <ChartTooltip series={series} summaryKey={summaryKey} formatLabel={formatLabel} />
+              }
               isAnimationActive={false}
               offset={12}
             />

@@ -7,6 +7,7 @@ import {
 } from "@/api/generated";
 import { settingsSections } from "@/features/settings/settings-nav/settings-nav";
 import { SettingsPage } from "@/features/settings/settings-page/settings-page";
+import { SettingsPagePending } from "@/features/settings/settings-page/settings-page-pending";
 import { settingsQueryOptions } from "@/hooks/use-settings";
 import { requireAdmin } from "@/lib/feature-gate";
 import { warm } from "@/lib/route-prefetch";
@@ -26,4 +27,5 @@ export const Route = createFileRoute("/settings")({
     warm(queryClient, getSmtpSettingsSuspenseQueryOptions());
   },
   component: SettingsPage,
+  pendingComponent: SettingsPagePending,
 });

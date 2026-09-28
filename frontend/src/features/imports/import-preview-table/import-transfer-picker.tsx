@@ -5,6 +5,8 @@ import { SelectField } from "@/components/select-field/select-field";
 import { useIsoDate, useMoney } from "@/hooks/use-formatters";
 import type { PreviewRowState } from "./preview-rows";
 
+const LINK_ENTRY = "entry";
+
 export function ImportTransferPicker({
   row,
   accountId,
@@ -20,6 +22,7 @@ export function ImportTransferPicker({
   const money = useMoney();
   const formatDate = useIsoDate();
   const receiving = row.type === "income";
+  const matched = row.matchedTransaction;
   const transfers = useTransfers(
     { date: row.date, page: 1, pageSize: 200 },
     { query: { enabled: Boolean(row.transferAccountId) } },
@@ -41,9 +44,23 @@ export function ImportTransferPicker({
     <div className="min-w-44 space-y-2">
       <SelectField
         aria-label={t("imports.recordAs")}
-        value={row.transferAccountId}
-        onChange={(transferAccountId) => onChange({ transferAccountId, existingTransferId: "" })}
+        value={row.existingTransactionId ? LINK_ENTRY : row.transferAccountId}
+        onChange={(value) =>
+          onChange(
+            value === LINK_ENTRY && matched
+              ? { existingTransactionId: matched.id, transferAccountId: "", existingTransferId: "" }
+              : { existingTransactionId: "", transferAccountId: value, existingTransferId: "" },
+          )
+        }
         options={[
+          ...(matched
+            ? [
+                {
+                  value: LINK_ENTRY,
+                  label: t("imports.linkEntry", { date: formatDate(matched.date) }),
+                },
+              ]
+            : []),
           { value: "", label: t("imports.transaction") },
           ...accounts
             .filter((a) => a.id !== accountId)

@@ -13,7 +13,7 @@ const meta = {
         "default",
         "outline",
         "ghost",
-        "ghost-destructive",
+        "outline-destructive",
         "destructive",
         "link",
         "link-muted",
@@ -37,7 +37,10 @@ export const Variants: Story = {
     <div className="flex flex-wrap items-center gap-3">
       <Button>Default</Button>
       <Button variant="outline">Outline</Button>
-      <Button variant="ghost">Ghost</Button>
+      <Button variant="outline-destructive">Remove</Button>
+      <Button variant="ghost" size="icon" aria-label="Delete">
+        <Trash2 />
+      </Button>
       <Button variant="destructive">Destructive</Button>
       <Button variant="link" size="inline">
         Link

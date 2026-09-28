@@ -15,8 +15,8 @@ const buttonVariants = cva(
           "border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50",
         ghost:
           "hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:hover:bg-muted/50",
-        "ghost-destructive":
-          "text-expense hover:bg-muted hover:text-expense aria-expanded:bg-muted dark:hover:bg-muted/50",
+        "outline-destructive":
+          "border-border bg-background text-expense hover:bg-muted hover:text-expense aria-expanded:bg-muted dark:border-input dark:bg-input/30 dark:hover:bg-input/50",
         destructive:
           "bg-destructive text-destructive-foreground hover:bg-destructive/85 focus-visible:border-destructive/40 focus-visible:ring-destructive/30",
         link: "rounded-sm border-0 whitespace-normal text-primary underline-offset-4 hover:underline active:not-aria-[haspopup]:translate-y-0",
@@ -29,6 +29,7 @@ const buttonVariants = cva(
         lg: "h-10 gap-1.5 px-4",
         icon: "size-9",
         "icon-sm": "size-8",
+        "icon-handle": "size-6 rounded-full [&_svg:not([class*='size-'])]:size-3.5",
         inline: "gap-1",
       },
     },
@@ -66,8 +67,14 @@ function Button({
       aria-busy={pending || undefined}
       {...props}
     >
-      {pending ? <Loader2Icon className="animate-spin" aria-hidden="true" /> : null}
-      {pending && iconOnly ? null : children}
+      {pending ? (
+        <>
+          <Loader2Icon className="absolute animate-spin" aria-hidden="true" />
+          <span className="contents text-transparent [&_svg]:opacity-0">{children}</span>
+        </>
+      ) : (
+        children
+      )}
     </ButtonPrimitive>
   );
 

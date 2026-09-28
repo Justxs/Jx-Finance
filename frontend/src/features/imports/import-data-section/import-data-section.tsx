@@ -5,7 +5,7 @@ import { useAccountsSuspense } from "@/api/generated";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { Button } from "@/components/ui/button/button";
 import { TitledSection } from "@/components/ui/section/section";
-import { Skeleton } from "@/components/ui/skeleton/skeleton";
+import { ButtonSkeleton } from "@/components/ui/skeleton/skeleton";
 import { TextLink } from "@/components/ui/text-link/text-link";
 import { useSettings } from "@/hooks/use-settings";
 import { ImportDialog } from "../import-dialog/import-dialog";
@@ -46,7 +46,11 @@ export function ImportDataSection() {
   return (
     <TitledSection title={t("imports.sectionTitle")} description={t("imports.sectionDescription")}>
       <QueryBoundary
-        fallback={<Skeleton className="mt-4 h-9 w-48" />}
+        fallback={
+          <div className="mt-4">
+            <ButtonSkeleton className="w-40" />
+          </div>
+        }
         errorSubject={t("imports.sectionTitle")}
       >
         <ImportActions />

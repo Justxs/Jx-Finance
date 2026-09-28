@@ -3,6 +3,8 @@ import type { Scope } from "@/api/generated/model";
 import { type DeleteProps, RowActions } from "@/components/row-actions/row-actions";
 import { RowTransition } from "@/components/row-transition/row-transition";
 import { SharedScopeTag } from "@/components/shared-scope-tag/shared-scope-tag";
+import { Rows } from "@/components/ui/rows/rows";
+import { IconButtonSkeleton, TextSkeleton, rowWidth } from "@/components/ui/skeleton/skeleton";
 
 interface Props extends DeleteProps {
   name: string;
@@ -33,5 +35,21 @@ export function NamedRow({
         <RowActions label={name} onEdit={onEdit} {...deleteProps} />
       </li>
     </RowTransition>
+  );
+}
+
+export function NamedRowsSkeleton({ rows = 5 }: Readonly<{ rows?: number }>) {
+  return (
+    <Rows data-slot="named-rows-skeleton" aria-hidden="true">
+      {Array.from({ length: rows }, (_, index) => (
+        <li key={index} className="flex items-center justify-between gap-2 py-1.5">
+          <TextSkeleton size="sm" className="flex-1" width={rowWidth(index)} />
+          <div className="flex items-center gap-1">
+            <IconButtonSkeleton />
+            <IconButtonSkeleton />
+          </div>
+        </li>
+      ))}
+    </Rows>
   );
 }

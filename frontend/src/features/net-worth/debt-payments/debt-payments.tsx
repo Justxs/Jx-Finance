@@ -26,7 +26,12 @@ import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { FormGrid } from "@/components/ui/form-grid/form-grid";
 import { Rows } from "@/components/ui/rows/rows";
 import { Section, SectionHeader } from "@/components/ui/section/section";
-import { SectionSkeleton } from "@/components/ui/skeleton/skeleton";
+import {
+  ButtonSkeleton,
+  Skeleton,
+  TextSkeleton,
+  rowWidth,
+} from "@/components/ui/skeleton/skeleton";
 import { EMPTY_VALUE, useIsoDate, useMoney } from "@/hooks/use-formatters";
 import { silent } from "@/lib/mutations";
 import { nameById, namedOptions, optionsOf } from "@/lib/options";
@@ -130,6 +135,28 @@ export function DebtPaymentForm({
 
 interface DebtProps {
   debt: DebtResponse;
+}
+
+function CandidatesSkeleton() {
+  return (
+    <div aria-hidden="true" className="space-y-4">
+      <Rows>
+        {Array.from({ length: 4 }, (_, index) => (
+          <li key={index} className="flex items-center gap-3 py-2">
+            <Skeleton className="size-4 shrink-0 rounded-md" />
+            <div className="min-w-0 flex-1">
+              <TextSkeleton size="sm" width={rowWidth(index)} />
+              <TextSkeleton size="xs" width="w-1/3" />
+            </div>
+            <TextSkeleton size="sm" className="shrink-0" width="w-20" />
+          </li>
+        ))}
+      </Rows>
+      <div className="flex justify-end">
+        <ButtonSkeleton className="w-40" />
+      </div>
+    </div>
+  );
 }
 
 function PaymentCandidates({ debt, onClose }: Readonly<DebtProps & { onClose: () => void }>) {
@@ -293,10 +320,7 @@ export function DebtPayments({ debt }: Readonly<DebtProps>) {
         {(payment, close) => <DebtPaymentForm debts={[debt]} payment={payment} onClose={close} />}
       </EditModal>
       <Modal open={linking} onOpenChange={setLinking} title={t("netWorth.payments.link")}>
-        <QueryBoundary
-          fallback={<SectionSkeleton rows={3} />}
-          errorSubject={t("netWorth.payments.link")}
-        >
+        <QueryBoundary fallback={<CandidatesSkeleton />} errorSubject={t("netWorth.payments.link")}>
           <PaymentCandidates debt={debt} onClose={() => setLinking(false)} />
         </QueryBoundary>
       </Modal>

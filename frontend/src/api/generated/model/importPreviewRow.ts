@@ -8,6 +8,7 @@
 import type { Currency } from "./currency";
 import type { DateOnly } from "./dateOnly";
 import type { FlowType } from "./flowType";
+import type { ImportMatchedTransaction } from "./importMatchedTransaction";
 import type { UnusualAmountResponse } from "./unusualAmountResponse";
 
 export interface ImportPreviewRow {
@@ -31,4 +32,5 @@ export interface ImportPreviewRow {
   /** @nullable */
   suggestedTransferAccountId: string | null;
   unusual?: null | UnusualAmountResponse;
+  matchedTransaction?: null | ImportMatchedTransaction;
 }

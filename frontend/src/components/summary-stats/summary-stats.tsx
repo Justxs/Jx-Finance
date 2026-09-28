@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { Section } from "@/components/ui/section/section";
+import { TextSkeleton } from "@/components/ui/skeleton/skeleton";
 import { SplitColumns } from "@/components/ui/split-columns/split-columns";
 import { EMPTY_VALUE, type MoneySign, useMoney } from "@/hooks/use-formatters";
 import { cn } from "@/lib/utils";
@@ -17,6 +18,13 @@ interface SummaryStat {
 interface Props {
   items: readonly SummaryStat[];
   currency?: string;
+}
+
+function restGrid(count: number) {
+  return cn(
+    "grid min-w-0 gap-x-8 gap-y-4",
+    count === 4 ? "grid-cols-2" : "grid-cols-[repeat(auto-fit,minmax(min(100%,8rem),1fr))]",
+  );
 }
 
 export function SummaryStats({ items, currency }: Readonly<Props>) {
@@ -54,14 +62,7 @@ export function SummaryStats({ items, currency }: Readonly<Props>) {
           {lead.note ? <dd className="mt-1.5">{lead.note}</dd> : null}
         </dl>
       ) : null}
-      <dl
-        className={cn(
-          "grid min-w-0 gap-x-8 gap-y-4",
-          rest.length === 4
-            ? "grid-cols-2"
-            : "grid-cols-[repeat(auto-fit,minmax(min(100%,8rem),1fr))]",
-        )}
-      >
+      <dl className={restGrid(rest.length)}>
         {rest.map((item) => (
           <div key={item.label} className="min-w-0">
             <dt className="text-sm text-muted-foreground">{item.label}</dt>
@@ -74,6 +75,30 @@ export function SummaryStats({ items, currency }: Readonly<Props>) {
           </div>
         ))}
       </dl>
+    </Section>
+  );
+}
+
+export function SummaryStatsSkeleton({ items = 2 }: Readonly<{ items?: number }>) {
+  return (
+    <Section
+      as={SplitColumns}
+      data-slot="summary-stats-skeleton"
+      aria-hidden="true"
+      className="gap-y-6 lg:items-end"
+    >
+      <div className="min-w-0">
+        <TextSkeleton size="sm" />
+        <TextSkeleton size="stat" className="mt-1" width="w-52" />
+      </div>
+      <div className={restGrid(items)}>
+        {Array.from({ length: items }, (_, index) => (
+          <div key={index} className="min-w-0">
+            <TextSkeleton size="sm" width="w-28" />
+            <TextSkeleton size="xl" className="mt-0.5" />
+          </div>
+        ))}
+      </div>
     </Section>
   );
 }

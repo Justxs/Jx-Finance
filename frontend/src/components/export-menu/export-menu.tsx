@@ -43,7 +43,7 @@ export function ExportMenu({ csvUrl, pdfUrl }: Readonly<Props>) {
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger render={<Button type="button" variant="ghost" size="sm" />}>
+      <PopoverTrigger render={<Button type="button" variant="outline" size="sm" />}>
         <Download />
         {t("export.button")}
         <ChevronDown aria-hidden="true" className="text-muted-foreground" />

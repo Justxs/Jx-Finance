@@ -6,6 +6,7 @@ import {
   getSubscriptionCandidatesSuspenseQueryOptions,
 } from "@/api/generated";
 import { RecurringBillsPage } from "@/features/recurring-bills/recurring-bills-page/recurring-bills-page";
+import { RecurringBillsPending } from "@/features/recurring-bills/recurring-bills-page/recurring-bills-page-pending";
 import { requireFeature } from "@/lib/feature-gate";
 import { warm } from "@/lib/route-prefetch";
 
@@ -18,4 +19,5 @@ export const Route = createFileRoute("/recurring-bills")({
     warm(queryClient, getSubscriptionCandidatesSuspenseQueryOptions());
   },
   component: RecurringBillsPage,
+  pendingComponent: RecurringBillsPending,
 });

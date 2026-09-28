@@ -1,22 +1,18 @@
 import { type ComponentType, lazy, Suspense } from "react";
-import { Skeleton } from "@/components/ui/skeleton/skeleton";
+import { ChartSkeleton, type ChartSkeletonProps } from "./chart-skeleton";
+
+type SkeletonShape<TProps> = ChartSkeletonProps | ((props: TProps) => ChartSkeletonProps);
 
 export function lazyChart<TProps extends object>(
   load: () => Promise<ComponentType<TProps>>,
-  fallbackHeight: number,
+  skeleton: SkeletonShape<TProps>,
 ) {
   const Chart = lazy(async () => ({ default: await load() }));
 
   function LazyChart(props: TProps) {
+    const shape = typeof skeleton === "function" ? skeleton(props) : skeleton;
     return (
-      <Suspense
-        fallback={
-          <Skeleton
-            className="h-(--chart-height) w-full rounded-sm"
-            style={{ "--chart-height": `${fallbackHeight}px` }}
-          />
-        }
-      >
+      <Suspense fallback={<ChartSkeleton {...shape} />}>
         <Chart {...props} />
       </Suspense>
     );

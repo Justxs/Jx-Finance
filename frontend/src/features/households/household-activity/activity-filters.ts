@@ -23,7 +23,3 @@ export interface ActivityFilters {
 }
 
 export const NO_FILTERS: ActivityFilters = { memberId: ALL, kind: ALL, from: "", to: "" };
-
-export function filterKey(filters: ActivityFilters) {
-  return [filters.memberId, filters.kind, filters.from, filters.to].join("|");
-}

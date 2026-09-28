@@ -3,15 +3,16 @@ import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { useAssetsSuspense } from "@/api/generated";
 import type { AssetResponse } from "@/api/generated/model";
+import { ChartSkeleton } from "@/components/chart/chart-skeleton";
 import { PageHeader } from "@/components/page-header/page-header";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { Section, TitledSection } from "@/components/ui/section/section";
-import { SectionSkeleton } from "@/components/ui/skeleton/skeleton";
 import { TextLink } from "@/components/ui/text-link/text-link";
 import { EMPTY_VALUE, useIsoDate, useMoney } from "@/hooks/use-formatters";
+import { AssetValueChart } from "../asset-value-chart";
+import { ValuationsSkeleton } from "./asset-page-pending";
 import { AssetValuations } from "./asset-valuations";
-import { AssetValueChart } from "./asset-value-chart";
 
 interface Props {
   assetId: string;
@@ -28,14 +29,14 @@ export function AssetPage({ assetId }: Readonly<Props>) {
         <AssetSummary asset={asset} />
         <TitledSection title={t("netWorth.asset.chart")} bodyGap="md">
           <QueryBoundary
-            fallback={<SectionSkeleton rows={4} />}
+            fallback={<ChartSkeleton legend />}
             errorSubject={t("netWorth.asset.chart")}
           >
             <AssetValueChart assetId={asset.id} />
           </QueryBoundary>
         </TitledSection>
         <QueryBoundary
-          fallback={<SectionSkeleton rows={3} />}
+          fallback={<ValuationsSkeleton />}
           errorSubject={t("netWorth.valuations.title")}
         >
           <AssetValuations asset={asset} />
@@ -48,7 +49,7 @@ export function AssetPage({ assetId }: Readonly<Props>) {
 
   return (
     <div className="space-y-5">
-      <p className="text-sm">
+      <p className="flex text-sm">
         <TextLink to="/net-worth" className="inline-flex items-center">
           <ArrowLeft className="mr-1 size-4" aria-hidden="true" />
           {t("netWorth.schedule.back")}

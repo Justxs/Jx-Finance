@@ -16,7 +16,7 @@ import { RowTransition } from "@/components/row-transition/row-transition";
 import { Button, buttonVariants } from "@/components/ui/button/button";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { Rows } from "@/components/ui/rows/rows";
-import { Skeleton } from "@/components/ui/skeleton/skeleton";
+import { Skeleton, TextSkeleton } from "@/components/ui/skeleton/skeleton";
 import { useConfirmedDelete } from "@/hooks/use-confirmed-delete";
 import { useBytes, useDateTime } from "@/hooks/use-formatters";
 import { silent } from "@/lib/mutations";
@@ -279,7 +279,14 @@ export function TransactionAttachments({ transactionId, className }: Readonly<Pr
         </p>
       </div>
       <QueryBoundary
-        fallback={<Skeleton className="h-24 w-full" />}
+        fallback={
+          <div className="space-y-3" aria-hidden="true">
+            <div className="py-2">
+              <TextSkeleton size="sm" width="w-48" />
+            </div>
+            <Skeleton className="h-20 rounded-lg" />
+          </div>
+        }
         error={
           <p role="alert" className="text-sm text-expense">
             {t("transactions.attachments.loadError")}

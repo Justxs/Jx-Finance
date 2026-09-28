@@ -76,8 +76,13 @@
     "monthNet": "Balansas",
     "budgets": "Einamojo laikotarpio biudžetai",
     "noBudgets": "Biudžetų nenustatyta.",
+    "budgetPeriodPassed": "{{name}}, praėjo {{percent}} laikotarpio",
     "accounts": "Likutis pagal sąskaitą",
     "noAccounts": "Sąskaitų dar nėra.",
+    "otherAccounts_one": "Dar {{count}} sąskaita",
+    "otherAccounts_few": "Dar {{count}} sąskaitos",
+    "otherAccounts_many": "Dar {{count}} sąskaitos",
+    "otherAccounts_other": "Dar {{count}} sąskaitų",
     "upcomingBills": "Artėjantys mokėjimai",
     "noBills": "Aktyvių mokėjimų nėra.",
     "billsCurrentOnly": "Artėjantys mokėjimai rodomi einamajame mėnesyje.",
@@ -85,7 +90,9 @@
     "pace": {
       "title": "Išlaidų tempas",
       "day": "{{day}} d.",
-      "label": "Sukauptos išlaidos pagal dienas: {{month}} ir {{previous}}"
+      "average": "Vidurkis {{from}}–{{to}}",
+      "projection": "Prognozė",
+      "label": "Sukauptos išlaidos pagal dienas: {{month}} ir {{from}}–{{to}} vidurkis"
     },
     "recent": "Paskutinės operacijos",
     "empty": "Operacijų dar nėra.",
@@ -105,6 +112,9 @@
     "noSpending": "Išlaidų neįrašyta.",
     "showTransactions": "Rodyti kategorijos „{{category}}“ operacijas",
     "keptShare": "Sutaupyta {{percent}} mėnesio pajamų",
+    "netWorthSoFar": "per šį mėnesį iki šiol",
+    "netWorthOverMonth": "per mėnesį",
+    "keptShareSoFar": "Iki šiol sutaupyta {{percent}} mėnesio pajamų",
     "overspent": "Išleista daugiau nei gauta",
     "layout": {
       "customise": "Pritaikyti",
@@ -122,6 +132,7 @@
     },
     "ring": {
       "kept": "sutaupyta",
+      "keptSoFar": "sutaupyta iki šiol",
       "spent": "išleista"
     }
   },
@@ -1775,9 +1786,12 @@
     "file": "Failas",
     "chooseFile": "Spustelėkite ir pasirinkite failą",
     "preview": "Peržiūra",
-    "confirmed": "Importuota operacijų: {{imported}} (praleista dublikatų: {{skipped}})",
+    "confirmed": "Importuota operacijų: {{imported}}, susieta su jūsų įrašais: {{linked}} (praleista dublikatų: {{skipped}})",
     "noRows": "Šiame faile nerasta importuojamų eilučių.",
     "duplicate": "Jau importuota",
+    "matched": "Atitinka jūsų įrašą",
+    "matchedHint": "Šį įrašą įvedėte {{date}}: {{description}}. Importuojant banko įrašas susiejamas su juo, o ne pridedamas antrą kartą, o jūsų kategorija, žymos ir aprašymas lieka.",
+    "linkEntry": "Jūsų įrašas, {{date}}",
     "looksLikeTransfer": "Panašu į pervedimą",
     "unusual": "Neįprasta suma",
     "recordAs": "Įrašyti kaip",
@@ -1825,6 +1839,10 @@
     "resultImported_few": "Importuotos {{count}} eilutės.",
     "resultImported_many": "Importuota {{count}} eilutės.",
     "resultImported_other": "Importuota {{count}} eilučių.",
+    "resultLinked_one": "Su jūsų įvestu įrašu susieta {{count}} eilutė.",
+    "resultLinked_few": "Su jūsų įvestais įrašais susietos {{count}} eilutės.",
+    "resultLinked_many": "Su jūsų įvestais įrašais susieta {{count}} eilutės.",
+    "resultLinked_other": "Su jūsų įvestais įrašais susieta {{count}} eilučių.",
     "resultSkipped_one": "Praleistas {{count}} dublikatas.",
     "resultSkipped_few": "Praleisti {{count}} dublikatai.",
     "resultSkipped_many": "Praleista {{count}} dublikato.",
@@ -1901,7 +1919,8 @@
     "loadHint": "Apskaitoje niekas nepakeista. Patikrinkite ryšį ir bandykite dar kartą.",
     "pageFailedTitle": "Nepavyko įkelti „Jx Finance“.",
     "pageFailedBody": "Serveris neatsakė. Apskaitoje niekas nepakeista. Bandykite dar kartą arba, jei problema išlieka, perkraukite puslapį.",
-    "reload": "Perkrauti puslapį"
+    "reload": "Perkrauti puslapį",
+    "details": "Techninė informacija"
   },
   "validation": {
     "rate": "Įveskite teisingą palūkanų normą, pvz., 4,5.",
@@ -1943,7 +1962,8 @@
     "net": "Balansas",
     "netWorth": "Grynasis turtas",
     "earlierIncome": "Pajamos, ankstesnis laikotarpis",
-    "earlierExpense": "Išlaidos, ankstesnis laikotarpis"
+    "earlierExpense": "Išlaidos, ankstesnis laikotarpis",
+    "soFar": "{{label}}, kol kas"
   },
   "serverErrors": {
     "access": {
@@ -2051,7 +2071,8 @@
       "invalidFile": "Failas tuščias, per didelis arba netinkamo formato.",
       "noStatementForAccount": "Faile yra tik šių sąskaitų išrašai: {{reason}}. Įrašykite šios sąskaitos IBAN arba pasirinkite sąskaitą, kuriai išrašas priklauso.",
       "transferAlreadyMatched": "Pasirinktas pervedimas jau susietas su kitu šios sąskaitos banko įrašu.",
-      "transferMismatch": "Pasirinktas pervedimas neatitinka šios eilutės."
+      "transferMismatch": "Pasirinktas pervedimas neatitinka šios eilutės.",
+      "entryMismatch": "Pasirinktas įrašas nebeatitinka šios eilutės arba jau susietas su kitu banko įrašu. Peržiūrėkite failą dar kartą."
     },
     "money": {
       "invalid": "Įveskite teisingą sumą, pvz., 12,34.",

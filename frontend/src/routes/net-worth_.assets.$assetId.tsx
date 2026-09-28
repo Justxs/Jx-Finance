@@ -5,6 +5,7 @@ import {
   getAssetsSuspenseQueryOptions,
 } from "@/api/generated";
 import { AssetPage } from "@/features/net-worth/asset-page/asset-page";
+import { AssetPending } from "@/features/net-worth/asset-page/asset-page-pending";
 import { requireFeature } from "@/lib/feature-gate";
 import { warm } from "@/lib/route-prefetch";
 
@@ -16,6 +17,7 @@ export const Route = createFileRoute("/net-worth_/assets/$assetId")({
     warm(queryClient, getAssetValuationsSuspenseQueryOptions(params.assetId));
   },
   component: AssetRoute,
+  pendingComponent: AssetPending,
 });
 
 function AssetRoute() {

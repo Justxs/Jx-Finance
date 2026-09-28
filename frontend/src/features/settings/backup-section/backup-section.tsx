@@ -9,11 +9,11 @@ import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog/confirm-
 import { EditModal } from "@/components/modal";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { TitledSection } from "@/components/ui/section/section";
-import { Skeleton } from "@/components/ui/skeleton/skeleton";
 import { useConfirmedDelete } from "@/hooks/use-confirmed-delete";
 import { useDateTime } from "@/hooks/use-formatters";
 import { endSession } from "@/lib/auth-gate";
 import { notify, pendingId, silent } from "@/lib/mutations";
+import { BackupListSkeleton } from "../settings-page/settings-page-pending";
 import { BackupNoteForm } from "./backup-note-form";
 import { BackupUploadForm } from "./backup-upload-form";
 import { BackupsTable } from "./backups-table";
@@ -110,7 +110,7 @@ export function BackupSection() {
     <TitledSection title={t("backup.title")} description={t("backup.description")}>
       <div className="mt-4 space-y-4">
         <CreateBackupForm />
-        <QueryBoundary fallback={<Skeleton className="h-32 w-full" />}>
+        <QueryBoundary fallback={<BackupListSkeleton />}>
           <BackupList />
         </QueryBoundary>
       </div>

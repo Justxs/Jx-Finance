@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button/button";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { Input } from "@/components/ui/input/input";
 import { Rows } from "@/components/ui/rows/rows";
-import { Skeleton } from "@/components/ui/skeleton/skeleton";
+import { TextSkeleton, rowWidth } from "@/components/ui/skeleton/skeleton";
 import { UserRole } from "@/lib/user-role";
 import { metaLine } from "@/lib/utils";
 import { SecurityModal } from "../security-form";
@@ -97,6 +97,25 @@ function SecuritiesList({ search, onEdit }: Readonly<ListProps>) {
   );
 }
 
+function SecurityRowsSkeleton() {
+  return (
+    <Rows aria-hidden="true">
+      {Array.from({ length: 4 }, (_, index) => (
+        <li key={index} className="flex items-center gap-3 py-2">
+          <div className="min-w-0 flex-1">
+            <TextSkeleton size="sm" width="w-24" />
+            <TextSkeleton size="xs" width={rowWidth(index)} />
+          </div>
+          <div className="shrink-0">
+            <TextSkeleton size="sm" className="justify-end" width="w-16" />
+            <TextSkeleton size="xs" className="justify-end" width="w-20" />
+          </div>
+        </li>
+      ))}
+    </Rows>
+  );
+}
+
 function SecuritiesDialogContent() {
   const { t } = useTranslation();
   const [search, setSearch] = useState("");
@@ -125,7 +144,7 @@ function SecuritiesDialogContent() {
           {t("investments.securities.add")}
         </Button>
       </div>
-      <QueryBoundary fallback={<Skeleton className="h-40 w-full" />}>
+      <QueryBoundary fallback={<SecurityRowsSkeleton />}>
         <SecuritiesList
           search={search}
           onEdit={(security) => {

@@ -19,4 +19,6 @@ public sealed record CategoryBreakdownItem(
 public sealed record CategoryBreakdownResponse(
     IReadOnlyList<CategoryBreakdownItem> Items,
     DateOnly PeriodStart,
-    DateOnly PeriodEnd);
+    DateOnly PeriodEnd,
+    DateOnly ComparisonStart,
+    DateOnly ComparisonEnd);

@@ -9,7 +9,6 @@ import { PageHeader } from "@/components/page-header/page-header";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { Button } from "@/components/ui/button/button";
 import { Section } from "@/components/ui/section/section";
-import { SectionSkeleton, Skeleton } from "@/components/ui/skeleton/skeleton";
 import { ImportDialog } from "@/features/imports/import-dialog/import-dialog";
 import { useConfirmedDelete } from "@/hooks/use-confirmed-delete";
 import { useDeferredParams } from "@/hooks/use-deferred-params";
@@ -21,6 +20,7 @@ import { AccountsTable } from "../accounts-table/accounts-table";
 import { ArchivedAccounts } from "../archived-accounts/archived-accounts";
 import { ConversionsSection } from "../conversions-section/conversions-section";
 import { TransfersSection } from "../transfers-section/transfers-section";
+import { MovementsSkeleton } from "./accounts-page-pending";
 
 export function AccountsPage() {
   const { t } = useTranslation();
@@ -94,11 +94,11 @@ export function AccountsPage() {
         />
       </Section>
 
-      <QueryBoundary fallback={<Skeleton className="h-8 w-48" />}>
+      <QueryBoundary fallback={null}>
         <ArchivedAccounts />
       </QueryBoundary>
 
-      <QueryBoundary fallback={<SectionSkeleton rows={3} />}>
+      <QueryBoundary fallback={<MovementsSkeleton />}>
         <TransfersSection
           accounts={allAccountList}
           addOpen={creating === "transfer"}
@@ -107,7 +107,7 @@ export function AccountsPage() {
       </QueryBoundary>
 
       {features.multiCurrency ? (
-        <QueryBoundary fallback={<SectionSkeleton rows={3} />}>
+        <QueryBoundary fallback={<MovementsSkeleton />}>
           <ConversionsSection
             accounts={allAccountList}
             convertAccountId={convertAccountId}

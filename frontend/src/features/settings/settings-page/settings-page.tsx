@@ -11,7 +11,6 @@ import {
 } from "@/api/generated";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { Button } from "@/components/ui/button/button";
-import { SectionSkeleton } from "@/components/ui/skeleton/skeleton";
 import { useIsoDate } from "@/hooks/use-formatters";
 import { useSettingsSuspense } from "@/hooks/use-settings";
 import { BackupSection } from "../backup-section/backup-section";
@@ -19,6 +18,7 @@ import { DiscordSection } from "../discord-section/discord-section";
 import { SettingsForm } from "../settings-form/settings-form";
 import { type SettingsSection, SettingsLayout } from "../settings-nav/settings-nav";
 import { SmtpSection } from "../smtp-section/smtp-section";
+import { SettingsFormSkeleton } from "./settings-page-pending";
 
 function SettingsContent({ section }: Readonly<{ section: SettingsSection }>) {
   const { t } = useTranslation();
@@ -105,12 +105,12 @@ export function SettingsPage() {
 
   return (
     <SettingsLayout current={section}>
-      <QueryBoundary fallback={<SectionSkeleton rows={6} />}>
-        <SettingsContent section={section} />
-      </QueryBoundary>
       {section === "email" ? <SmtpSection /> : null}
       {section === "discord" ? <DiscordSection /> : null}
       {section === "backups" ? <BackupSection /> : null}
+      <QueryBoundary fallback={<SettingsFormSkeleton section={section} />}>
+        <SettingsContent section={section} />
+      </QueryBoundary>
     </SettingsLayout>
   );
 }

@@ -13,4 +13,5 @@ public sealed record ImportConfirmRow(
     Guid? TransferAccountId = null,
     Guid? ExistingTransferId = null,
     Currency? Currency = null,
-    IReadOnlyList<Guid>? TagIds = null);
+    IReadOnlyList<Guid>? TagIds = null,
+    Guid? ExistingTransactionId = null);

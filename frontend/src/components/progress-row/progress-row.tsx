@@ -2,6 +2,12 @@ import type { ReactNode } from "react";
 import { type DeleteProps, RowActions } from "@/components/row-actions/row-actions";
 import { RowTransition } from "@/components/row-transition/row-transition";
 import { Meter } from "@/components/ui/meter/meter";
+import {
+  IconButtonSkeleton,
+  Skeleton,
+  TextSkeleton,
+  rowWidth,
+} from "@/components/ui/skeleton/skeleton";
 import { cn } from "@/lib/utils";
 
 interface ProgressMeter {
@@ -80,5 +86,31 @@ export function ProgressRow({
         {children}
       </li>
     </RowTransition>
+  );
+}
+
+export function ProgressRowsSkeleton({ rows = 4 }: Readonly<{ rows?: number }>) {
+  return (
+    <>
+      {Array.from({ length: rows }, (_, index) => (
+        <li key={index} aria-hidden="true" className="py-3">
+          <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-1 sm:grid-cols-[minmax(0,1fr)_auto_auto]">
+            <div className="min-w-0">
+              <TextSkeleton width={rowWidth(index)} />
+              <TextSkeleton size="xs" width="w-40" />
+            </div>
+            <div className="col-span-2 row-start-2 min-w-0 text-sm sm:col-span-1 sm:col-start-2 sm:row-start-1">
+              <TextSkeleton size="sm" className="sm:justify-end" width="w-32" />
+              <TextSkeleton size="xs" className="sm:justify-end" width="w-24" />
+            </div>
+            <div className="col-start-2 row-start-1 flex sm:col-start-3">
+              <IconButtonSkeleton size="md" />
+              <IconButtonSkeleton size="md" />
+            </div>
+          </div>
+          <Skeleton className="mt-2 h-1.5 w-full rounded-none" />
+        </li>
+      ))}
+    </>
   );
 }

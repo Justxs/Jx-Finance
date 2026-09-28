@@ -3,8 +3,8 @@ import { toast } from "sonner";
 import { useSendTestEmail, useSmtpSettingsSuspense, useUpdateSmtpSettings } from "@/api/generated";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { TitledSection } from "@/components/ui/section/section";
-import { Skeleton } from "@/components/ui/skeleton/skeleton";
 import { notify, silent } from "@/lib/mutations";
+import { SmtpFormSkeleton } from "../settings-page/settings-page-pending";
 import { SmtpForm } from "./smtp-form";
 
 function SmtpSettings() {
@@ -46,7 +46,7 @@ export function SmtpSection() {
 
   return (
     <TitledSection title={t("settings.smtp.title")} description={t("settings.smtp.description")}>
-      <QueryBoundary fallback={<Skeleton className="mt-4 h-72 w-full" />}>
+      <QueryBoundary fallback={<SmtpFormSkeleton />}>
         <SmtpSettings />
       </QueryBoundary>
     </TitledSection>

@@ -8,7 +8,7 @@ import {
 import type { AccountResponse, InvestmentTransactionResponse } from "@/api/generated/model";
 import { Modal } from "@/components/modal";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
-import { Skeleton } from "@/components/ui/skeleton/skeleton";
+import { FormGridSkeleton } from "@/components/ui/form-grid/form-grid";
 import { useRetained } from "@/hooks/use-retained";
 import { silent, upsert } from "@/lib/mutations";
 import { InvestmentEntryForm } from "./investment-entry-form";
@@ -78,7 +78,7 @@ export function InvestmentEntryModal({
       title={shown ? t("investments.entry.editTitle") : t("investments.entry.title")}
       description={shown ? undefined : t("investments.entry.description")}
     >
-      <QueryBoundary fallback={<Skeleton className="h-72 w-full" />}>
+      <QueryBoundary fallback={<FormGridSkeleton fields={8} actions={2} />}>
         <EntryModalContent
           key={shown?.id ?? "new"}
           onOpenChange={onOpenChange}

@@ -1,81 +1,134 @@
 import type { ComponentProps, ReactNode } from "react";
 import { Rows } from "@/components/ui/rows/rows";
 import { Section } from "@/components/ui/section/section";
-import { SplitColumns } from "@/components/ui/split-columns/split-columns";
 import { cn } from "@/lib/utils";
 
 function Skeleton({ className, ...props }: ComponentProps<"div">) {
   return (
     <div
       data-slot="skeleton"
+      aria-hidden="true"
       className={cn("animate-pulse rounded-md bg-border", className)}
       {...props}
     />
   );
 }
 
-const rowWidths = ["w-3/5", "w-2/5", "w-1/2", "w-2/3", "w-1/3", "w-3/5"] as const;
+const textSizes = {
+  xs: "text-xs",
+  sm: "text-sm",
+  base: "text-base",
+  label: "text-sm leading-none",
+  title: "text-lg leading-6",
+  xl: "text-xl",
+  page: "font-serif text-page-title",
+  stat: "font-serif text-stat",
+  "stat-lg": "font-serif text-stat-lg",
+} as const;
 
-interface RowsSkeletonProps {
-  rows?: number;
+interface TextSkeletonProps {
+  size?: keyof typeof textSizes;
+  width?: string;
   className?: string;
 }
 
-function RowsSkeleton({ rows = 5, className }: Readonly<RowsSkeletonProps>) {
+function TextSkeleton({ size = "base", width = "w-24", className }: Readonly<TextSkeletonProps>) {
+  return (
+    <div
+      data-slot="text-skeleton"
+      aria-hidden="true"
+      className={cn("flex h-lh items-center", textSizes[size], className)}
+    >
+      <Skeleton className={cn("h-[0.7em] max-w-full rounded-sm", width)} />
+    </div>
+  );
+}
+
+interface ButtonSkeletonProps {
+  size?: "sm" | "md";
+  className?: string;
+}
+
+function ButtonSkeleton({ size = "md", className }: Readonly<ButtonSkeletonProps>) {
+  return (
+    <Skeleton
+      className={cn(
+        "w-24 rounded-lg pointer-coarse:h-11",
+        size === "sm" ? "h-8" : "h-9",
+        className,
+      )}
+    />
+  );
+}
+
+function IconButtonSkeleton({ size = "sm" }: Readonly<{ size?: "sm" | "md" }>) {
+  return (
+    <Skeleton
+      className={cn(
+        "shrink-0 rounded-lg pointer-coarse:size-11",
+        size === "sm" ? "size-8" : "size-9",
+      )}
+    />
+  );
+}
+
+const rowWidths = ["w-3/5", "w-2/5", "w-1/2", "w-2/3", "w-1/3", "w-3/5"] as const;
+
+function rowWidth(index: number) {
+  return rowWidths[index % rowWidths.length];
+}
+
+interface RowsSkeletonProps {
+  rows?: number;
+  lines?: 1 | 2;
+  className?: string;
+}
+
+function RowsSkeleton({ rows = 5, lines = 1, className }: Readonly<RowsSkeletonProps>) {
   return (
     <Rows data-slot="rows-skeleton" aria-hidden="true" className={className}>
       {Array.from({ length: rows }, (_, index) => (
-        <li key={index} className="flex items-center gap-4 py-2.5">
-          <Skeleton className="h-4 w-14 shrink-0 rounded-sm" />
+        <li key={index} className="flex items-start gap-4 py-2.5">
+          <TextSkeleton size="sm" className="w-14 shrink-0" width="w-10" />
           <div className="min-w-0 flex-1">
-            <Skeleton className={cn("h-4 rounded-sm", rowWidths[index % rowWidths.length])} />
+            <TextSkeleton size="sm" width={rowWidth(index)} />
+            {lines === 2 ? <TextSkeleton size="xs" width="w-1/3" /> : null}
           </div>
-          <Skeleton className="h-4 w-20 shrink-0 rounded-sm" />
+          <TextSkeleton size="sm" className="shrink-0" width="w-20" />
         </li>
       ))}
     </Rows>
   );
 }
 
-function StatsSkeleton({ className }: Readonly<{ className?: string }>) {
-  return (
-    <Section
-      as={SplitColumns}
-      data-slot="stats-skeleton"
-      aria-hidden="true"
-      className={cn("gap-y-6 lg:items-end", className)}
-    >
-      <div className="min-w-0 space-y-2">
-        <Skeleton className="h-4 w-24 rounded-sm" />
-        <Skeleton className="h-11 w-52 max-w-full rounded-sm" />
-      </div>
-      <div className="grid min-w-0 grid-cols-[repeat(auto-fit,minmax(min(100%,8rem),1fr))] gap-x-8 gap-y-4">
-        <div className="space-y-2">
-          <Skeleton className="h-4 w-28 rounded-sm" />
-          <Skeleton className="h-6 w-24 rounded-sm" />
-        </div>
-        <div className="space-y-2">
-          <Skeleton className="h-4 w-28 rounded-sm" />
-          <Skeleton className="h-6 w-24 rounded-sm" />
-        </div>
-      </div>
-    </Section>
-  );
-}
-
 interface SectionSkeletonProps {
   rows?: number;
+  description?: boolean;
   className?: string;
   children?: ReactNode;
 }
 
-function SectionSkeleton({ rows = 4, className, children }: Readonly<SectionSkeletonProps>) {
+function SectionSkeleton({
+  rows = 4,
+  description = false,
+  className,
+  children,
+}: Readonly<SectionSkeletonProps>) {
   return (
     <Section data-slot="section-skeleton" aria-hidden="true" className={className}>
-      <Skeleton className="mb-5 h-5 w-40 max-w-full rounded-sm" />
-      {children ?? <RowsSkeleton rows={rows} />}
+      <TextSkeleton size="title" width="w-40" />
+      {description ? <TextSkeleton size="sm" className="mt-1" width="w-3/4 max-w-prose" /> : null}
+      <div className="mt-4">{children ?? <RowsSkeleton rows={rows} />}</div>
     </Section>
   );
 }
 
-export { Skeleton, RowsSkeleton, StatsSkeleton, SectionSkeleton };
+export {
+  Skeleton,
+  TextSkeleton,
+  ButtonSkeleton,
+  IconButtonSkeleton,
+  RowsSkeleton,
+  SectionSkeleton,
+  rowWidth,
+};

@@ -20,6 +20,16 @@ One dialog on `Mod+K` over every page: the pages and sections from a table besid
 
 Newest first. Each entry is a choice between real alternatives: what was chosen, what was rejected, and why.
 
+- **2026-09-28.** Every signed-in route declares a `pendingComponent` that mirrors its page, and `RoutePending` renders the matched route's one for both the router's pending state and the root Suspense fallback; skeletons of rows and blocks live next to the component they mirror
+  - Rejected: One generic page skeleton for every route (title, stats, six rows); a few shape variants chosen in `RoutePending` from a field on the navigation entries; making every page render its header outside a boundary so only the body suspends
+  - Why: The generic skeleton matched almost no page, so most pages jumped when they loaded. Variants would have put each feature's layout knowledge into a shared component. Restructuring every page was far more code than one small pending module per route, which the router already has a slot for
+
+- **2026-09-28.** The sidebar collapse control moves from the foot to a round handle on the sidebar's right border, level with the brand
+  - Rejected: Keeping it in the foot beside the notification bell; a button in the brand row, with the bird as the expand button when collapsed
+  - Why: Beside the bell it read as another notification or account control. On the border it sits on the edge it moves, leaves the brand row and the collapsed rail as they were, and needs no hover trick to be found
+- **2026-09-28.** Every button with a text label is outlined unless it is the primary or a filled destructive action; the ghost destructive variant becomes `outline-destructive`, and ghost stays only for icon-only buttons
+  - Rejected: Outlining icon-only buttons too (row actions, dialog close, sidebar and month arrows); outlining the filled primary and destructive buttons
+  - Why: Borderless text buttons such as Export read as plain labels rather than controls. A border on every row icon would crowd tables and chrome, and the filled primary keeps one clear main action per view
 - **2026-09-28.** The sidebar foot keeps only the notification bell and the collapse control; language, theme, keyboard shortcuts and sign-out move into an account menu on the user tile, and theme and language are also choices under Settings, Appearance
   - Rejected: Keeping five icon buttons in a row; only dropping the keyboard icon; moving the settings to the menu alone
   - Why: The row held six controls for things set once or rarely, beside a bell that needs to stay in sight for its badge. A menu alone hides the settings from anyone who does not think to open their name, so the tile carries an up-down chevron, each row names the setting with its current value, and the same choices sit in Appearance where people look for them. The shortcuts help became a dialog because it no longer has a button to anchor a popover

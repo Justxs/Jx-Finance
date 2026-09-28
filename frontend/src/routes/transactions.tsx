@@ -13,6 +13,7 @@ import {
   transactionView,
 } from "@/features/transactions/transaction-queries";
 import { TransactionsPage } from "@/features/transactions/transactions-page/transactions-page";
+import { TransactionsPending } from "@/features/transactions/transactions-page/transactions-page-pending";
 import { warm, warmWithSettings } from "@/lib/route-prefetch";
 import { optionalParam, sortParams } from "@/lib/search-schema";
 
@@ -48,4 +49,5 @@ export const Route = createFileRoute("/transactions")({
     });
   },
   component: TransactionsPage,
+  pendingComponent: TransactionsPending,
 });

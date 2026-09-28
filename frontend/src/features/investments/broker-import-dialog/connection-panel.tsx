@@ -87,7 +87,7 @@ export function ConnectionPanel({ accounts, accountId, mutations }: Readonly<Pro
             <>
               <Button
                 type="button"
-                variant="ghost-destructive"
+                variant="outline-destructive"
                 className="mr-auto"
                 disabled={busy}
                 pending={deleteMutation.isPending}

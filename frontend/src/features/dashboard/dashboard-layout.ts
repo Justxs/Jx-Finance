@@ -99,7 +99,9 @@ function warmCard(queryClient: QueryClient, card: DashboardCard, month: string, 
     case "spendingPace": {
       const ranges = spendingPaceRanges(month);
       warm(queryClient, getReportSummarySuspenseQueryOptions(ranges.current));
-      warm(queryClient, getReportSummarySuspenseQueryOptions(ranges.previous));
+      for (const range of ranges.earlier) {
+        warm(queryClient, getReportSummarySuspenseQueryOptions(range));
+      }
       break;
     }
     case "budgets":

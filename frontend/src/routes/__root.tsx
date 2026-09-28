@@ -11,6 +11,7 @@ import { useMe } from "@/api/generated";
 import { AccountMenu } from "@/components/account-menu/account-menu";
 import {
   AppSidebar,
+  AppSidebarSkeleton,
   isEntryActive,
   navEntries,
   navLinkActiveClass,
@@ -118,9 +119,7 @@ function RootLayout() {
         {t("nav.skip")}
       </a>
       <div className="contents print:hidden">
-        <QueryBoundary
-          fallback={<Skeleton className="hidden h-screen w-58 shrink-0 rounded-none md:block" />}
-        >
+        <QueryBoundary fallback={<AppSidebarSkeleton />}>
           <AppSidebar />
         </QueryBoundary>
         <QueryBoundary fallback={null} error={null}>
@@ -138,7 +137,14 @@ function RootLayout() {
             <HouseholdSwitcher className="w-28" />
           </QueryBoundary>
           <NotificationBellSlot />
-          <QueryBoundary fallback={<Skeleton className="size-11 rounded-md" />} error={null}>
+          <QueryBoundary
+            fallback={
+              <div className="p-1.5">
+                <Skeleton className="size-8 rounded-md" />
+              </div>
+            }
+            error={null}
+          >
             <AccountMenu compact side="bottom" align="end" />
           </QueryBoundary>
         </header>

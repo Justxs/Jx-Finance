@@ -2,9 +2,9 @@ import { useTranslation } from "react-i18next";
 import { useTransactionsSummarySuspense } from "@/api/generated";
 import type { TransactionsSummaryParams } from "@/api/generated/model";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
-import { Skeleton } from "@/components/ui/skeleton/skeleton";
 import { useMoney } from "@/hooks/use-formatters";
 import { cn } from "@/lib/utils";
+import { TransactionsTotalsSkeleton } from "../transactions-page/transactions-page-pending";
 
 interface LineProps {
   count: number;
@@ -74,13 +74,7 @@ function LoadedTotals({ params, stale }: Readonly<Props>) {
 
 export function TransactionsTotals({ params, stale }: Readonly<Props>) {
   return (
-    <QueryBoundary
-      fallback={
-        <div className="flex min-h-9 items-center">
-          <Skeleton className="h-4 w-72 max-w-full" />
-        </div>
-      }
-    >
+    <QueryBoundary fallback={<TransactionsTotalsSkeleton />}>
       <LoadedTotals params={params} stale={stale} />
     </QueryBoundary>
   );

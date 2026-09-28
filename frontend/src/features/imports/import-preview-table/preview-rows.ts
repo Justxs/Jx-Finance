@@ -9,6 +9,7 @@ import { toCents } from "@/lib/money";
 export interface PreviewRowState extends ImportPreviewRow {
   transferAccountId: string;
   existingTransferId: string;
+  existingTransactionId: string;
   selected: boolean;
   categoryId: string;
   categorySuggested: boolean;
@@ -40,8 +41,12 @@ function isTransferRow(row: PreviewRowState) {
   return row.looksLikeTransfer || Boolean(row.transferAccountId);
 }
 
+export function takesCategory(row: PreviewRowState) {
+  return !row.transferAccountId && !row.existingTransactionId;
+}
+
 function needsAttention(row: PreviewRowState) {
-  return row.selected && !row.transferAccountId && !row.categoryId;
+  return row.selected && takesCategory(row) && !row.categoryId;
 }
 
 const viewFilters: Record<PreviewView, (row: PreviewRowState) => boolean> = {
@@ -108,11 +113,13 @@ export function toPreviewRows(
     const ruleName = row.isDuplicate ? null : row.matchedRuleName;
     const ruleCategoryId = ruleName ? (row.suggestedCategoryId ?? "") : "";
     const categoryId = ruleCategoryId || recallCategoryId(row, transactions, categories);
+    const matchedId = row.isDuplicate ? "" : (row.matchedTransaction?.id ?? "");
     return {
       ...row,
-      selected: !row.isDuplicate && !row.looksLikeTransfer,
-      transferAccountId: row.suggestedTransferAccountId ?? "",
+      selected: !row.isDuplicate && (Boolean(matchedId) || !row.looksLikeTransfer),
+      transferAccountId: matchedId ? "" : (row.suggestedTransferAccountId ?? ""),
       existingTransferId: "",
+      existingTransactionId: matchedId,
       categoryId,
       categorySuggested: Boolean(categoryId),
       ruleName,
@@ -166,14 +173,14 @@ export function applyCategory(
   category: CategoryResponse,
 ): PreviewRowState[] {
   return rows.map((row) =>
-    row.selected && row.type === category.type && !row.transferAccountId
+    row.selected && row.type === category.type && takesCategory(row)
       ? { ...row, categoryId: category.id, categorySuggested: false }
       : row,
   );
 }
 
 export function categoryTargetCount(rows: PreviewRowState[], category: CategoryResponse) {
-  return rows.filter((row) => row.selected && row.type === category.type && !row.transferAccountId)
+  return rows.filter((row) => row.selected && row.type === category.type && takesCategory(row))
     .length;
 }
 

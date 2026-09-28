@@ -3,6 +3,7 @@ import { TextLink } from "@/components/ui/text-link/text-link";
 
 export interface ImportResult {
   imported: number;
+  linked: number;
   skipped: number;
   accountId: string;
   dateFrom: string;
@@ -16,9 +17,10 @@ export function ImportResultLine({ result }: Readonly<{ result: ImportResult }>)
     <p role="status" className="text-sm text-foreground">
       <span className="tabular-nums">
         {t("imports.resultImported", { count: result.imported })}
+        {result.linked > 0 ? ` ${t("imports.resultLinked", { count: result.linked })}` : ""}
         {result.skipped > 0 ? ` ${t("imports.resultSkipped", { count: result.skipped })}` : ""}
       </span>{" "}
-      {result.imported > 0 ? (
+      {result.imported + result.linked > 0 ? (
         <TextLink
           to="/transactions"
           search={{

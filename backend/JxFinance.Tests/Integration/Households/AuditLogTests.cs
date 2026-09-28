@@ -249,6 +249,31 @@ public sealed class AuditLogTests(ApiFixture fixture) : IntegrationTestBase(fixt
     }
 
     [Fact]
+    public async Task An_import_that_links_a_hand_entered_row_is_one_summarising_row()
+    {
+        var household = await CreateHouseholdAsync();
+        var account = await CreateAccountAsync("100.00", householdId: household);
+        var entered = await CreateTransactionAsync(Client, account, null, "expense", "4.00", "2026-09-04");
+        var marker = Guid.NewGuid().ToString("N")[..8];
+        await PostAsync<IdDto>(Client, "/api/import/confirm", new
+        {
+            accountId = account,
+            format = "swedbankCsv",
+            rows = new object[]
+            {
+                new { importRef = $"LINK-{marker}-1", amount = "4.00", type = "expense", date = new DateOnly(2026, 9, 5), existingTransactionId = entered.Id },
+                new { importRef = $"LINK-{marker}-2", amount = "1.00", type = "expense", date = new DateOnly(2026, 9, 5) },
+            },
+        });
+
+        var events = (await AuditAsync(Client, household)).Items.Where(e => e.EntityKind == "transaction").ToList();
+
+        Assert.Equal(["imported", "created"], events.Select(e => e.Action));
+        Assert.Equal(2, events[0].Count);
+        Assert.EndsWith("1 entry, 1 entry linked", events[0].Description);
+    }
+
+    [Fact]
     public async Task A_broker_statement_is_one_summarising_row()
     {
         var household = await CreateHouseholdAsync();

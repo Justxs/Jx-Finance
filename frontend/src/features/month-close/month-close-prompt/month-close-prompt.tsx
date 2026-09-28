@@ -74,7 +74,7 @@ function PromptPanel({ month, review }: Readonly<PanelProps>) {
         </div>
         <Button
           type="button"
-          variant="ghost"
+          variant="outline"
           size="sm"
           tooltip={t("monthClose.prompt.hideLabel")}
           onClick={() => hideMonthClosePrompt(month)}

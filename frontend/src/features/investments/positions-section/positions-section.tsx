@@ -10,9 +10,9 @@ import type {
 import { Disclosure } from "@/components/disclosure/disclosure";
 import { EditModal } from "@/components/modal";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
+import { RecordRowsSkeleton } from "@/components/record-row/record-row";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { Section, SectionTitle } from "@/components/ui/section/section";
-import { RowsSkeleton } from "@/components/ui/skeleton/skeleton";
 import { silent, silentQuery } from "@/lib/mutations";
 import { nameById } from "@/lib/options";
 import { PriceHistory } from "../price-history/price-history";
@@ -115,12 +115,22 @@ export function PositionsSection({ holdings, reportingCurrency, accounts }: Read
               onSubmit={(values) => priceMutation.mutateAsync({ id: security.id, data: values })}
               onCancel={() => setPriceTarget(null)}
             />
-            <QueryBoundary
-              fallback={<RowsSkeleton rows={3} />}
-              errorSubject={t("investments.priceHistory.title")}
-            >
-              <PriceHistory security={security} />
-            </QueryBoundary>
+            <div className="mt-5 border-t border-border pt-4">
+              <h3 className="text-sm font-semibold">{t("investments.priceHistory.title")}</h3>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {t("investments.priceHistory.hint")}
+              </p>
+              <QueryBoundary
+                fallback={
+                  <div className="mt-2">
+                    <RecordRowsSkeleton rows={3} />
+                  </div>
+                }
+                errorSubject={t("investments.priceHistory.title")}
+              >
+                <PriceHistory security={security} />
+              </QueryBoundary>
+            </div>
           </>
         )}
       </EditModal>

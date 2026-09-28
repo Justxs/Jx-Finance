@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { Card } from "@/components/ui/card/card";
-import { RowsSkeleton, Skeleton, StatsSkeleton } from "./skeleton";
+import { RowsSkeleton, SectionSkeleton, Skeleton, TextSkeleton } from "./skeleton";
 
 const meta = {
   title: "UI/Skeleton",
@@ -17,10 +17,10 @@ export const Circle: Story = { args: { className: "size-10 rounded-full" } };
 
 export const TextLines: Story = {
   render: () => (
-    <div className="w-72 space-y-2">
-      <Skeleton className="h-4 w-full" />
-      <Skeleton className="h-4 w-5/6" />
-      <Skeleton className="h-4 w-2/3" />
+    <div className="w-72">
+      <TextSkeleton size="title" width="w-2/3" />
+      <TextSkeleton size="sm" width="w-full" />
+      <TextSkeleton size="xs" width="w-1/2" />
     </div>
   ),
 };
@@ -48,10 +48,18 @@ export const LedgerRows: Story = {
   ),
 };
 
-export const SummaryFigures: Story = {
+export const TwoLineRows: Story = {
   render: () => (
-    <div className="w-[min(90vw,56rem)]">
-      <StatsSkeleton />
+    <div className="w-[min(90vw,36rem)]">
+      <RowsSkeleton rows={4} lines={2} />
+    </div>
+  ),
+};
+
+export const TitledSection: Story = {
+  render: () => (
+    <div className="w-[min(90vw,40rem)]">
+      <SectionSkeleton rows={3} description />
     </div>
   ),
 };

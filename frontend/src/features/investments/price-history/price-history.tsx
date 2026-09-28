@@ -39,9 +39,7 @@ export function PriceHistory({ security }: Readonly<Props>) {
   );
 
   return (
-    <div className="mt-5 border-t border-border pt-4">
-      <h3 className="text-sm font-semibold">{t("investments.priceHistory.title")}</h3>
-      <p className="mt-1 text-xs text-muted-foreground">{t("investments.priceHistory.hint")}</p>
+    <>
       <FormError error={deleteMutation.error} />
       {points.length === 0 ? (
         <EmptyText>{t("investments.priceHistory.empty")}</EmptyText>
@@ -69,6 +67,6 @@ export function PriceHistory({ security }: Readonly<Props>) {
         </ScrollRegion>
       )}
       <ConfirmDeleteDialog {...remove.dialogProps} />
-    </div>
+    </>
   );
 }

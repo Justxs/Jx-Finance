@@ -8,8 +8,9 @@ import {
   serverErrorProblem,
   unauthorizedProblem,
 } from "@/storybook/fixtures";
-import { failWith, pending, withHandlers } from "@/storybook/handlers";
+import { failWith, withHandlers } from "@/storybook/handlers";
 import { ProfilePage } from "./profile-page";
+import { ProfilePending } from "./profile-page-pending";
 
 const meta = {
   title: "Features/Profile/ProfilePage",
@@ -31,9 +32,7 @@ export const LongDisplayName: Story = {
   parameters: withHandlers(getMeMockHandler(longNameUser)),
 };
 
-export const Loading: Story = {
-  parameters: withHandlers(getMeMockHandler(pending)),
-};
+export const Loading: Story = { render: () => <ProfilePending /> };
 
 export const ServerError: Story = {
   parameters: withHandlers(

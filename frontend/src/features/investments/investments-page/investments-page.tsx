@@ -9,7 +9,6 @@ import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { SelectField } from "@/components/select-field/select-field";
 import { Button, buttonVariants } from "@/components/ui/button/button";
 import { TitledSection } from "@/components/ui/section/section";
-import { RowsSkeleton, StatsSkeleton } from "@/components/ui/skeleton/skeleton";
 import { StaleRegion } from "@/components/ui/stale-region/stale-region";
 import { useDeferredParams } from "@/hooks/use-deferred-params";
 import { namedOptions } from "@/lib/options";
@@ -25,6 +24,7 @@ import { PositionsSection } from "../positions-section";
 import { SecuritiesDialog } from "../securities-dialog/securities-dialog";
 import { TaxSummarySection } from "../tax-summary/tax-summary-section";
 import { ValueChartSection } from "../value-chart/value-chart-section";
+import { ActivitySkeleton, InvestmentsBodySkeleton } from "./investments-page-pending";
 
 interface OverviewProps {
   accounts: readonly AccountResponse[];
@@ -85,7 +85,7 @@ function InvestmentsOverview({
         accounts={accounts}
       />
       <IncomeByYear years={portfolio.data.years} currency={portfolio.data.reportingCurrency} />
-      <QueryBoundary fallback={<RowsSkeleton rows={5} />}>
+      <QueryBoundary fallback={<ActivitySkeleton />}>
         <ActivitySection accounts={accounts} accountId={shownAccountId} />
       </QueryBoundary>
     </StaleRegion>
@@ -117,7 +117,7 @@ export function InvestmentsPage() {
             key="portfolio"
             to="/investments"
             search={{ accountId }}
-            className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "print:hidden")}
+            className={cn(buttonVariants({ variant: "outline", size: "sm" }), "print:hidden")}
           >
             <ArrowLeft />
             {t("investments.tax.back")}
@@ -128,17 +128,17 @@ export function InvestmentsPage() {
               key="tax-summary"
               to="/investments"
               search={{ view: "taxSummary" }}
-              className={buttonVariants({ variant: "ghost", size: "sm" })}
+              className={buttonVariants({ variant: "outline", size: "sm" })}
             >
               <ReceiptText />
               {t("investments.tax.open")}
             </Link>
-            <Button variant="ghost" size="sm" onClick={() => setSecuritiesOpen(true)}>
+            <Button variant="outline" size="sm" onClick={() => setSecuritiesOpen(true)}>
               <Library />
               {t("investments.securities.title")}
             </Button>
             <Button
-              variant="ghost"
+              variant="outline"
               size="sm"
               disabled={noAccounts}
               onClick={() => setImportOpen(true)}
@@ -169,12 +169,7 @@ export function InvestmentsPage() {
 
       <QueryBoundary
         errorSubject={taxView ? t("investments.tax.title") : t("investments.title")}
-        fallback={
-          <div className="space-y-5">
-            <StatsSkeleton />
-            <RowsSkeleton rows={6} />
-          </div>
-        }
+        fallback={<InvestmentsBodySkeleton taxView={taxView} />}
       >
         {taxView ? (
           <TaxSummarySection accounts={accountList} />

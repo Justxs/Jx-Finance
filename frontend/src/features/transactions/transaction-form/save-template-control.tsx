@@ -27,7 +27,7 @@ export function SaveTemplateControl({ onSave }: Readonly<Props>) {
   if (!naming) {
     return (
       <div className="col-span-full">
-        <Button type="button" variant="ghost" size="sm" onClick={() => setNaming(true)}>
+        <Button type="button" variant="outline" size="sm" onClick={() => setNaming(true)}>
           <BookmarkPlus />
           {t("transactions.saveAsTemplate")}
         </Button>
@@ -56,7 +56,7 @@ export function SaveTemplateControl({ onSave }: Readonly<Props>) {
         <Button type="button" variant="outline" disabled={!name.trim()} onClick={save}>
           {t("transactions.saveTemplate")}
         </Button>
-        <Button type="button" variant="ghost" onClick={() => setNaming(false)}>
+        <Button type="button" variant="outline" onClick={() => setNaming(false)}>
           {t("actions.cancel")}
         </Button>
       </div>

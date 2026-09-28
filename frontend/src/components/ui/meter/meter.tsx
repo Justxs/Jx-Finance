@@ -11,10 +11,11 @@ interface Props {
   max: number;
   tone?: keyof typeof tones;
   label?: string;
+  mark?: number;
   className?: string;
 }
 
-export function Meter({ value, max, tone = "primary", label, className }: Readonly<Props>) {
+export function Meter({ value, max, tone = "primary", label, mark, className }: Readonly<Props>) {
   const ratio = max > 0 ? Math.min(1, Math.max(0, value / max)) : 0;
 
   return (
@@ -25,7 +26,7 @@ export function Meter({ value, max, tone = "primary", label, className }: Readon
       aria-valuemin={label ? 0 : undefined}
       aria-valuemax={label ? max : undefined}
       aria-valuenow={label ? Math.min(value, max) : undefined}
-      className={cn("h-1.5 bg-border", className)}
+      className={cn("relative h-1.5 bg-border", className)}
     >
       <div
         className={cn(
@@ -34,6 +35,12 @@ export function Meter({ value, max, tone = "primary", label, className }: Readon
         )}
         style={{ "--meter-fill": `${ratio * 100}%` }}
       />
+      {mark === undefined ? null : (
+        <div
+          className="absolute -inset-y-0.5 left-(--meter-mark) w-0.5 -translate-x-1/2 bg-foreground"
+          style={{ "--meter-mark": `${Math.min(1, Math.max(0, mark)) * 100}%` }}
+        />
+      )}
     </div>
   );
 }

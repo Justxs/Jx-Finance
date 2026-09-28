@@ -106,7 +106,7 @@ export function CloseForm({ month, review }: Readonly<Props>) {
               <>
                 <Button
                   type="button"
-                  variant="ghost-destructive"
+                  variant="outline-destructive"
                   pending={reopenMutation.isPending}
                   onClick={() => setConfirmingReopen(true)}
                 >

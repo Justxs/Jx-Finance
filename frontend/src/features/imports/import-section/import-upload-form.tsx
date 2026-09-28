@@ -6,7 +6,8 @@ import { SelectField } from "@/components/select-field/select-field";
 import { Button } from "@/components/ui/button/button";
 import { FileInput } from "@/components/ui/file-input/file-input";
 import { FormGrid } from "@/components/ui/form-grid/form-grid";
-import { SectionTitle } from "@/components/ui/section/section";
+import { Section, SectionTitle } from "@/components/ui/section/section";
+import { ButtonSkeleton, Skeleton, TextSkeleton } from "@/components/ui/skeleton/skeleton";
 import { namedOptions } from "@/lib/options";
 
 export const IMPORT_FILE_INPUT_ID = "import-file";
@@ -115,5 +116,27 @@ export function ImportUploadForm({
         </Button>
       </div>
     </form>
+  );
+}
+
+export function ImportUploadFormSkeleton() {
+  return (
+    <Section aria-hidden="true">
+      <TextSkeleton size="title" width="w-40" className="mb-4" />
+      <FormGrid>
+        <div className="space-y-1.5">
+          <TextSkeleton size="label" />
+          <Skeleton className="h-9 rounded-lg pointer-coarse:h-11" />
+        </div>
+        <div className="col-span-full space-y-1.5">
+          <TextSkeleton size="label" />
+          <Skeleton className="h-28 rounded-lg" />
+          <TextSkeleton size="xs" width="w-2/3" />
+        </div>
+      </FormGrid>
+      <div className="mt-4 flex justify-end">
+        <ButtonSkeleton />
+      </div>
+    </Section>
   );
 }

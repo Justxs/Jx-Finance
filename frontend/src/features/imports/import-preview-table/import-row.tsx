@@ -13,7 +13,7 @@ import { INCOME_TONE } from "@/lib/tone";
 import { cn, metaLine } from "@/lib/utils";
 import { ImportTagPicker } from "./import-tag-picker";
 import { ImportTransferPicker } from "./import-transfer-picker";
-import type { PreviewRowState } from "./preview-rows";
+import { type PreviewRowState, takesCategory } from "./preview-rows";
 
 interface Props {
   row: PreviewRowState;
@@ -45,11 +45,24 @@ export function ImportRow({
   const rowCategories = categories.filter((category) => category.type === row.type);
   const name = row.payee || row.description || EMPTY_VALUE;
   const rowName = metaLine(formatDate(row.date), row.payee || row.description);
-  const showTransfer = transferOpen || row.looksLikeTransfer || Boolean(row.transferAccountId);
-  const filledByRule = Boolean(row.ruleName) && !row.transferAccountId;
-  const recalled = row.categorySuggested && !row.ruleName && !row.transferAccountId;
-  const unusual = !row.isDuplicate && row.unusual ? unusualSentence(row.unusual) : null;
+  const linked = Boolean(row.existingTransactionId);
+  const editable = takesCategory(row);
+  const showTransfer =
+    transferOpen ||
+    row.looksLikeTransfer ||
+    Boolean(row.transferAccountId) ||
+    Boolean(row.matchedTransaction);
+  const filledByRule = Boolean(row.ruleName) && editable;
+  const recalled = row.categorySuggested && !row.ruleName && editable;
+  const unusual = !row.isDuplicate && !linked && row.unusual ? unusualSentence(row.unusual) : null;
+  const matchedHint = row.matchedTransaction
+    ? t("imports.matchedHint", {
+        date: formatDate(row.matchedTransaction.date),
+        description: row.matchedTransaction.description || EMPTY_VALUE,
+      })
+    : "";
   const hasFlags =
+    linked ||
     row.isDuplicate ||
     row.isReversal ||
     row.looksLikeTransfer ||
@@ -79,8 +92,8 @@ export function ImportRow({
   const category = (
     <ComboboxField
       aria-label={t("imports.categoryFor", { row: rowName })}
-      disabled={Boolean(row.transferAccountId)}
-      value={row.categoryId}
+      disabled={!editable}
+      value={linked ? (row.matchedTransaction?.categoryId ?? "") : row.categoryId}
       onChange={(categoryId) => onRowChange(index, { categoryId, categorySuggested: false })}
       options={namedOptions(rowCategories, t("transactions.uncategorized"))}
     />
@@ -89,9 +102,9 @@ export function ImportRow({
   const tagPicker = (
     <ImportTagPicker
       tags={tags}
-      value={row.tagIds}
+      value={linked ? [] : row.tagIds}
       label={t("imports.tagsFor", { row: rowName })}
-      disabled={Boolean(row.transferAccountId)}
+      disabled={!editable}
       onChange={(tagIds) => onRowChange(index, { tagIds })}
     />
   );
@@ -119,6 +132,11 @@ export function ImportRow({
   const flags = hasFlags ? (
     <div className="flex flex-wrap gap-1">
       {row.isDuplicate ? <Tag>{t("imports.duplicate")}</Tag> : null}
+      {linked ? (
+        <HintTag tone="accent" hint={matchedHint}>
+          {t("imports.matched")}
+        </HintTag>
+      ) : null}
       {row.isReversal ? <Tag>{t("imports.reversal")}</Tag> : null}
       {filledByRule ? (
         <HintTag tone="accent" hint={t("imports.ruleFilledHint", { rule: row.ruleName ?? "" })}>

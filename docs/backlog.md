@@ -1,6 +1,6 @@
 # Backlog and ideas
 
-What is not done yet. Written 2026-09-20 from [Features and scope](scope.md), [decisions](decisions/README.md), the [release checklist](release-checklist.md) and the [feature walkthrough](features/README.md). Nothing here is a promise; each item needs its own scoped change. Size is a rough guess: S is days, M is a week or two, L is more.
+What is not done yet. Rechecked against the code on 2026-09-28, from [Features and scope](scope.md), [decisions](decisions/README.md), the [release checklist](release-checklist.md) and the [feature walkthrough](features/README.md). Nothing here is a promise; each item needs its own scoped change. Size is a rough guess: S is days, M is a week or two, L is more.
 
 ## 1. Open release work
 
@@ -9,24 +9,28 @@ These come from the release checklist and block calling the current release veri
 | Item | Note |
 | --- | --- |
 | Production overlay on the real host | Certificate trust on client devices, real `SITE_ADDRESS` and `BIND_ADDRESS` |
-| Rerun `just verify-production` | The API container did not start on the 2026-09-19 working tree because of pending model changes |
+| Rerun `just verify-production` and `just e2e` | Against every migration added since 2026-09-20; they have only been applied by the test containers |
 | First run of the new CI jobs on the Gitea runner | Audit, `production-overlay`, client drift |
 | `--recover-admin` invoked inside the container | Only run on the host so far |
-| Fresh verification pass | Evidence in Verification predates multi-currency, investments, settings and backups |
-| Sustained daily-use trial | Cannot be inferred from automated checks |
+| Real outside services | A real SMTP server, a real Discord webhook and camt.053 files from at least two banks; only fakes and fixtures so far |
+| Fresh verification pass | Evidence in Verification predates everything added from 2026-09-20 on, including the navigation hubs of 2026-09-28 |
+| Sustained daily-use trial | Cannot be inferred from automated checks; month-end close and unusual amounts need at least one real month |
 
 ## 2. Gaps inside features that exist
 
 | Feature | Gap | Size |
 | --- | --- | --- |
+| Import | Swedbank CSV and camt.053 XML only; banks without camt.053 need a CSV format each | M per bank, or one generic column mapper |
+| Import | No credit-card statements | M |
+| Transactions | A refund is either income, which inflates income, or a hand-edited expense; there is no negative expense in the original category | M |
+| Recurring entries | The six-month forecast counts fixed expenses only; income, transfers and variable entries are left out | S, or part of the cash-flow forecast |
 | Investments | Corporate actions other than splits are only counted (mergers, spin-offs, symbol changes) | M |
 | Investments | Bonds by hand only; options, futures and short positions out of scope | L |
 | Investments | Only Interactive Brokers; no other broker and no generic trade CSV | M |
-| Import | Swedbank CSV and camt.053 XML only; banks without camt.053 need a CSV format each | M per bank, or one generic column mapper |
-| Import | No credit-card statements | M |
-| Households | Budgets, goals, assets, debts and bills cannot be shared | L |
+| Households | Budgets, goals, assets, debts and recurring entries cannot be shared | L |
 | Users | No forced password change after an administrator reset (rejected on 2026-09-19 unless done completely) | M |
-| Settings | Installation-wide only; no per-user reporting currency, language default or page size | L for currency, S for the rest |
+| Settings | The interface language is per browser and emails and Discord messages use the installation language, so a member who reads Lithuanian gets English mail | S |
+| Settings | Installation-wide only; no per-user reporting currency or page size | L for currency, S for page size |
 | Exchange rates | ECB only; no manual rate, no currencies outside the ECB list | S |
 | Backups | On demand only; a scheduler and offsite copies were removed on 2026-09-05 and stay a deliberate decision | M, needs the decision reopened |
 
@@ -37,30 +41,49 @@ These come from the release checklist and block calling the current release veri
 | Live investment prices | A market data source and a daily job that fills the price history, which exists since 2026-09-20; today a price arrives only from the broker import or by hand | M |
 | PWA and offline | Manifest, service worker, offline queue for new transactions | L |
 | Bank APIs | PSD2 aggregator; licensing and consent renewal make this costly for a household tool | L |
+| Machine-learned categorization | Out of scope; rules and the recall of the last category cover the need | L |
 
 ## 4. New ideas
 
-Ordered by how much they would help daily use for the effort.
+Ordered by how much they would help daily use for the effort. Following the product direction, each one lives on a page that already exists rather than adding a page. Every idea below and machine-learned categorization above has a written design in [Plans](plans/README.md).
 
-| Idea | Why | Size |
-| --- | --- | --- |
-| Cash-flow forecast | Project the next 30 to 90 days of each account from the active recurring entries of all three shapes; shows a coming shortfall before it happens | M |
-| Generic CSV import | The user maps columns once per bank and the mapping is stored; covers SEB, Luminor, Revolut and Wise without code per bank | M |
-| Passkeys | WebAuthn as a second factor or instead of the password | M |
-| Personal API tokens | Read-only tokens for scripts and spreadsheets | M |
-| Data export per user | A member takes their own records out as JSON or CSV without an administrator backup | M |
+| Idea | Why | Where | Size |
+| --- | --- | --- | --- |
+| Rule suggestions from history | When the same normalized description has been given the same category three times by hand, offer "Always categorize … as …" once; the description normalizer from subscription detection already exists | Undo-style toast after a save, and the Rules tab | S |
+| Budget limits from history | A new budget's limit is prefilled with the median of the category's last six windows, and the budgets page names categories with steady spending and no budget | Budgets | S |
+| Monthly digest | On the first of the month, one email or Discord message with last month's income, expense, savings rate, the categories that moved most and the open close items, built from the month-close review and sent through `INotificationPublisher` | Notifications section of Settings | S |
+| Cash-flow forecast | Project the next 30 to 90 days of each account from its balance and the active recurring entries of all three shapes, and say when one would go below zero; replaces the fixed-expense bar chart | Accounts, and a dashboard card | M |
+| Refunds | Record money coming back as a negative expense in the category it was spent in, optionally linked to the original row, so a returned purchase lowers spending instead of raising income; the import's reversal chip can propose it | Transaction form, import review | M |
+| Generic CSV import | The user maps columns once per bank and the mapping is stored; covers Revolut, Wise and card statements without code per bank | Import dialog | M |
+| Reconciliation by hand | For an account with no camt.053, type the statement's balance on a date and see the difference and the rows since the last reconciliation; the month-close checklist then shows the account as reconciled | Accounts, month close | S |
+| Spending by payee | A report breakdown by normalized description, the same key unusual amounts and subscription detection use, answering "how much went to Maxima this year" | Reports | S |
+| Household settle-up | Mark an expense as paid for the household and split it between members; the household card shows who owes whom and a settlement is recorded as a transfer | Households | L |
+| Passkeys | WebAuthn as a second factor or instead of the password | Security section of Settings | M |
+| Personal API tokens | Read-only tokens for scripts and spreadsheets | Settings | M |
+| Data export per user | A member takes their own records out as JSON or CSV without an administrator backup | Settings | M |
+| Receipt reading and automatic splits | Read a receipt photo or PDF, give each item a category and propose a split whose lines add up to the payment, so a grocery run becomes food and hygiene; opt-in, because the file is sent to a hosted model | Transaction form | L |
 
 ## Suggested order
 
-1. Section 1, because the release is not verified without it.
-2. A generic CSV import, for the banks that offer no camt.053 statement; camt.053 import now covers most EU banks, so this moved behind it.
-3. Cash-flow forecast, now that recurring income and transfers exist to project.
-4. Anything that depends on email, now that email is delivered: a weekly or monthly summary, a budget alert by mail, an invitation flow if public registration is ever wanted.
+1. Section 1, because the release is not verified without it; the daily-use trial is also where the ideas above get confirmed or dropped.
+2. The three small helpers that reuse what exists: rule suggestions, budget limits from history and the monthly digest.
+3. Cash-flow forecast, now that recurring income and transfers exist to project, together with the forecast gap of recurring entries.
+4. Refunds and a generic CSV import, once a real month of imports shows how often each is needed.
+5. Per-user language for mail and Discord before a second member relies on either channel.
 
 ## Done
 
 | Date | Item | Where it is described |
 | --- | --- | --- |
+| 2026-09-28 | Imports matched to hand-entered rows: a statement row with the same flow type, amount and currency as a transaction entered by hand on the account within three days starts linked to it, each transaction offered to the closest row only; confirming writes the bank reference onto the transaction and marks it imported instead of adding a copy, so the same line is a duplicate next time, and the transaction keeps its date, category, tags and description | [Bank statement import](features/bank-statement-import.md#entries-you-already-made-by-hand) |
+| 2026-09-28 | Navigation hubs: the sidebar reads Dashboard, Transactions, Accounts, Categories (categories, tags, rules), Plan (budgets, goals, recurring entries), Wealth (net worth, investments) and Reports, with one Settings page grouping the personal, shared and installation sections. The month-end close moved onto the dashboard, the dashboard layout into Settings, and language, theme, shortcuts and sign-out into an account menu on the user tile. The import dialog opens from the ledger and from an account's row, guards an unfinished review, and the ledger shows its active filters. An administrator can hide the Ko-fi support link | [Interface](features/interface.md), [Installation settings](features/installation-settings.md), [Bank statement import](features/bank-statement-import.md) |
+| 2026-09-27 | camt.053 statement import: ISO 20022 XML from most EU banks beside the Swedbank CSV, with an IBAN check against the account, a transfer proposed from the counterparty IBAN and the closing balance compared with the ledger | [Bank statement import](features/bank-statement-import.md) |
+| 2026-09-27 | Debt payments: a debt can track its payments, and expenses linked to it by hand, from suggestions or by confirming a recurring entry lower its balance by their principal | [Debt amortization](features/debt-amortization.md) |
+| 2026-09-27 | Asset valuations: dated valuations, optional straight-line depreciation in monthly steps to a residual value, and a page per asset with its value over time | [Net worth](features/net-worth.md) |
+| 2026-09-27 | Month-end close: a checklist, a summary against the previous month and a soft close that snapshots the figures and shows drift when a row dated in the month changes afterwards, with a reminder on days 1 to 5 | [Month-end close](features/month-end-close.md) |
+| 2026-09-26 | Unusual amounts: every new or edited expense is judged once against the same payee or category over the year before, badged in the ledger and the import preview, filterable and dismissable; the same pass reports a subscription price rise | [Unusual amounts](features/unusual-amounts.md) |
+| 2026-09-26 | Discord notifications: a personal webhook per member with a choice of notification kinds, allowed or stopped by an administrator, queued in an outbox | [Discord notifications](features/discord-notifications.md) |
+| 2026-09-21 | Receipts and attachments: up to ten image or PDF files per transaction, checked by their first bytes, kept on their own volume, in the trash, the household log and the backup archive | [Receipts and attachments](features/attachments.md) |
 | 2026-09-23 | Data retention: the daily `AuditRetentionJob` became `RetentionJob` with four steps. It still prunes the audit log after 400 days; it now also deletes every expired or revoked `UserSessions` row, which until then only went when that same user signed in again; it hard-deletes the records behind the trash past the 30-day window — transaction, transfer, conversion, budget, goal, asset, debt, recurring entry, investment entry and categorization rule, in the order the foreign keys demand and taking split lines, tag links, transfer receipts and attachment files with them; and it then prunes the `DeletionEntries` and `DeletionChanges` that described them. Categories, tags and households stay soft-deleted because restricting foreign keys still point at them, and attachments stay with `AttachmentPurgeJob`. Both the sweep and the trash read one cutoff helper, so nothing the list still offers can be taken, and every step pages 500 ids at a time. `AppDbContext` now takes `IClock`, so a delete stamps the row and its trash entry at one instant and time can be frozen in a test, and its synchronous `SaveChanges`, which nothing called, throws instead of blocking on the audit path | [Background jobs](features/background-jobs.md), [Trash and undo](features/trash-and-undo.md) |
 | 2026-09-21 | Dashboard customisation: a Customise mode on the dashboard lists the nine cards with a checkbox and Move up and Move down buttons each, and Save, Cancel and Reset to default. The layout is per user, kept in a `jsonb` column on the user row and read and written through `GET`, `PUT` and `DELETE /api/users/me/dashboard-layout`, so it follows the person across browsers and household members keep their own; unknown ids from another version are dropped and cards a layout does not mention are appended; cards of switched-off features are left out by the client and keep their place; hidden cards are neither rendered nor loaded, and the route warms only the shown ones. Part of every backup through the user row | [Dashboard](features/dashboard.md) |
 | 2026-09-21 | Debt amortization: a debt can carry its repayment terms — loan amount, first payment date, a term of 1 to 600 months or a fixed monthly payment, annuity or linear — all optional, so older debts stay valid without a schedule. A pure `decimal` calculator in `Common/Amortization` builds the monthly schedule on request: interest and principal of every payment rounded to cents, the last payment absorbing the rounding, the payoff date, and a refusal with `debt.paymentTooSmall` for a payment that would take more than 50 years. `GET /api/debts/{id}/schedule` answers it with the scheduled balance as of today and, for an optional extra monthly or one-off payment, the faster plan and what it saves. A page per debt shows the summary, both balances with a button that copies the scheduled one into the debt, the overpayment preview, a balance chart, a yearly interest and principal chart and the payments paged a year at a time. Net worth keeps subtracting the recorded amount | [Debt amortization](features/debt-amortization.md) |

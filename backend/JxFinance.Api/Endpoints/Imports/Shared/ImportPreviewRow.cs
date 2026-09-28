@@ -19,4 +19,5 @@ public sealed record ImportPreviewRow(
     string? MatchedRuleName,
     bool IsReversal,
     Guid? SuggestedTransferAccountId,
-    UnusualAmountResponse? Unusual = null);
+    UnusualAmountResponse? Unusual = null,
+    ImportMatchedTransaction? MatchedTransaction = null);

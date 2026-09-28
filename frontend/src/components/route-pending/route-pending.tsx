@@ -1,29 +1,53 @@
+import { useMatches, useRouter } from "@tanstack/react-router";
+import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { useHubTabs } from "@/components/hub-tabs/hub-tabs";
-import { PageHeader } from "@/components/page-header/page-header";
-import { Section } from "@/components/ui/section/section";
-import { RowsSkeleton, Skeleton, StatsSkeleton } from "@/components/ui/skeleton/skeleton";
+import { PageHeaderSkeleton } from "@/components/page-header/page-header";
+import { SummaryStatsSkeleton } from "@/components/summary-stats/summary-stats";
+import { SectionSkeleton } from "@/components/ui/skeleton/skeleton";
+import { cn } from "@/lib/utils";
 
-export function RoutePending() {
+interface PagePendingProps {
+  description?: boolean;
+  actions?: number | ReactNode;
+  header?: ReactNode;
+  className?: string;
+  children: ReactNode;
+}
+
+export function PagePending({
+  description,
+  actions,
+  header,
+  className,
+  children,
+}: Readonly<PagePendingProps>) {
   const { t } = useTranslation();
-  const hub = useHubTabs();
 
   return (
-    <div className="space-y-5" role="status" aria-busy="true">
-      <span className="sr-only">{t("errors.loading")}</span>
-      {hub ? (
-        <PageHeader title={t(hub.titleKey)} />
-      ) : (
-        <div className="space-y-2">
-          <Skeleton className="h-9 w-48 max-w-full rounded-sm" />
-          <Skeleton className="h-4 w-28 rounded-sm" />
-        </div>
-      )}
-      <StatsSkeleton />
-      <Section className="space-y-4">
-        <Skeleton className="h-5 w-40 rounded-sm" />
-        <RowsSkeleton rows={6} />
-      </Section>
+    <div className={cn("space-y-5", className)} aria-busy="true">
+      <span role="status" className="sr-only">
+        {t("errors.loading")}
+      </span>
+      {header ?? <PageHeaderSkeleton description={description} actions={actions} />}
+      {children}
     </div>
+  );
+}
+
+export function RoutePending() {
+  const router = useRouter();
+  const routeId = useMatches({ select: (matches) => matches.at(-1)?.routeId });
+  const Pending =
+    routeId === undefined ? undefined : router.routesById[routeId].options.pendingComponent;
+
+  if (Pending && Pending !== RoutePending) {
+    return <Pending />;
+  }
+
+  return (
+    <PagePending>
+      <SummaryStatsSkeleton />
+      <SectionSkeleton rows={6} />
+    </PagePending>
   );
 }

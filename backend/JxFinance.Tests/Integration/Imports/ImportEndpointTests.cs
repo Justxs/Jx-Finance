@@ -42,6 +42,68 @@ public sealed class ImportEndpointTests(ApiFixture fixture) : IntegrationTestBas
     }
 
     [Fact]
+    public async Task A_hand_entered_transaction_is_offered_and_linked_instead_of_imported_again()
+    {
+        var account = await CreateAccountAsync("100.00");
+        var entered = await CreateTransactionAsync(Client, account, null, "expense", "15.77", "2026-05-03", "Lidl groceries");
+        await CreateTransactionAsync(Client, account, null, "expense", "15.77", "2026-05-09");
+        var csv = string.Format(SampleCsv, Guid.NewGuid().ToString("N")[..8]);
+
+        var preview = await PreviewAsync(account, csv);
+
+        Assert.Equal(
+            [entered.Id, null, null],
+            preview.body!.Rows.Select(r => r.MatchedTransaction?.Id));
+        Assert.Equal(new MatchedDto(entered.Id, new DateOnly(2026, 5, 3), "Lidl groceries", null), preview.body.Rows[0].MatchedTransaction);
+
+        var confirmed = await ConfirmAsync(
+            account,
+            preview.body.Rows.Select(r => Row(r.ImportRef, r.Amount, r.Type, r.Date, r.Description, existingTransactionId: r.MatchedTransaction?.Id)).ToArray());
+
+        Assert.Equal(new ConfirmDto(2, 0, 1), confirmed);
+        Assert.Equal("1018.46", await CurrentBalanceAsync(account));
+        var linked = await Client.GetFromJsonAsync<TransactionDto>($"/api/transactions/{entered.Id}", TestContext.Current.CancellationToken);
+        Assert.Equal(("imported", new DateOnly(2026, 5, 3), "Lidl groceries"), (linked!.Source, linked.Date, linked.Description));
+        var again = await PreviewAsync(account, csv);
+        Assert.All(again.body!.Rows, r => Assert.True(r.IsDuplicate && r.MatchedTransaction is null));
+    }
+
+    [Fact]
+    public async Task One_hand_entered_transaction_cannot_be_linked_to_two_bank_entries()
+    {
+        var account = await CreateAccountAsync("100.00");
+        var entered = await CreateTransactionAsync(Client, account, null, "expense", "10.00", "2026-09-01");
+
+        var response = await Client.PostAsJsonAsync(
+            "/api/import/confirm",
+            new
+            {
+                accountId = account,
+                rows = new[] { Row("link-1", existingTransactionId: entered.Id), Row("link-2", existingTransactionId: entered.Id) },
+            },
+            TestContext.Current.CancellationToken);
+
+        await AssertRejectedAsync(response, "import.entryMismatch");
+        Assert.Equal("90.00", await CurrentBalanceAsync(account));
+        var retry = await ConfirmAsync(account, Row("link-2", existingTransactionId: entered.Id));
+        Assert.Equal(new ConfirmDto(0, 0, 1), retry);
+    }
+
+    [Fact]
+    public async Task A_link_to_an_entry_with_another_amount_is_refused()
+    {
+        var account = await CreateAccountAsync("100.00");
+        var entered = await CreateTransactionAsync(Client, account, null, "expense", "10.01", "2026-09-01");
+
+        var response = await Client.PostAsJsonAsync(
+            "/api/import/confirm",
+            new { accountId = account, rows = new[] { Row("other-amount", existingTransactionId: entered.Id) } },
+            TestContext.Current.CancellationToken);
+
+        await AssertRejectedAsync(response, "import.entryMismatch");
+    }
+
+    [Fact]
     public async Task Duplicate_rows_and_concurrent_retries_import_once()
     {
         var account = await CreateAccountAsync("100.00");
@@ -243,6 +305,23 @@ public sealed class ImportEndpointTests(ApiFixture fixture) : IntegrationTestBas
     }
 
     [Fact]
+    public async Task A_camt_row_is_offered_a_hand_entered_row_but_never_an_imported_one()
+    {
+        var (account, iban) = await CreateAccountWithIbanAsync("100.00");
+        await ConfirmAsync(account, Row("ALREADY-IN", "15.77", date: new DateOnly(2026, 9, 2)));
+        var xml = SampleCamt053.Document(SampleCamt053.Statement(
+            SampleCamt053.Entry(SampleCamt053.Detail(refs: "<AcctSvcrRef>LIDL-2</AcctSvcrRef>")),
+            iban));
+
+        var before = await ReadOkAsync<CamtPreviewDto>(await UploadCamtAsync(Client, account, xml));
+        var entered = await CreateTransactionAsync(Client, account, null, "expense", "15.77", "2026-08-30");
+        var after = await ReadOkAsync<CamtPreviewDto>(await UploadCamtAsync(Client, account, xml));
+
+        Assert.Null(before.Rows.Single().MatchedTransaction);
+        Assert.Equal(entered.Id, after.Rows.Single().MatchedTransaction?.Id);
+    }
+
+    [Fact]
     public async Task A_camt_statement_for_another_account_names_it()
     {
         var (account, _) = await CreateAccountWithIbanAsync("0.00");
@@ -304,8 +383,9 @@ public sealed class ImportEndpointTests(ApiFixture fixture) : IntegrationTestBas
         Guid? transferAccountId = null,
         Guid? existingTransferId = null,
         string? currency = null,
-        Guid[]? tagIds = null) =>
-        new { importRef, amount, type, date = date ?? new DateOnly(2026, 9, 1), description, transferAccountId, existingTransferId, currency, tagIds };
+        Guid[]? tagIds = null,
+        Guid? existingTransactionId = null) =>
+        new { importRef, amount, type, date = date ?? new DateOnly(2026, 9, 1), description, transferAccountId, existingTransferId, currency, tagIds, existingTransactionId };
 
     private sealed record PreviewRowDto(
         string ImportRef,
@@ -315,11 +395,19 @@ public sealed class ImportEndpointTests(ApiFixture fixture) : IntegrationTestBas
         string Amount,
         string Type,
         bool IsDuplicate,
-        bool LooksLikeTransfer);
+        bool LooksLikeTransfer,
+        MatchedDto? MatchedTransaction = null);
+
+    private sealed record MatchedDto(Guid Id, DateOnly Date, string? Description, Guid? CategoryId);
 
     private sealed record PreviewDto(List<PreviewRowDto> Rows);
 
-    private sealed record CamtRowDto(string ImportRef, bool IsDuplicate, bool LooksLikeTransfer, Guid? SuggestedTransferAccountId);
+    private sealed record CamtRowDto(
+        string ImportRef,
+        bool IsDuplicate,
+        bool LooksLikeTransfer,
+        Guid? SuggestedTransferAccountId,
+        MatchedDto? MatchedTransaction = null);
 
     private sealed record StatementDto(
         string? Iban,
@@ -334,5 +422,5 @@ public sealed class ImportEndpointTests(ApiFixture fixture) : IntegrationTestBas
 
     private sealed record CamtPreviewDto(List<CamtRowDto> Rows, StatementDto Statement);
 
-    private sealed record ConfirmDto(int Imported, int SkippedDuplicates);
+    private sealed record ConfirmDto(int Imported, int SkippedDuplicates, int Linked);
 }

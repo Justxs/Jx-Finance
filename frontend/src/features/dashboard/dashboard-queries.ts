@@ -4,7 +4,9 @@ import type {
   TransactionsParams,
 } from "@/api/generated/model";
 import { monthDate, monthKeyOfIso } from "@/features/month-close/month-key";
-import { monthBounds, previousMonth, toIso } from "@/lib/calendar";
+import { monthBounds, toIso } from "@/lib/calendar";
+
+const PACE_BASELINE_MONTHS = 3;
 
 export function currentMonthKey(today: Date) {
   return monthKeyOfIso(toIso(today));
@@ -31,13 +33,15 @@ export function recentTransactionsParams(month: string, today: Date): Transactio
 
 interface SpendingPaceRanges {
   current: ReportSummaryParams;
-  previous: ReportSummaryParams;
+  earlier: ReportSummaryParams[];
 }
 
 export function spendingPaceRanges(month: string): SpendingPaceRanges {
   const date = monthDate(month);
   return {
     current: monthBounds(date),
-    previous: monthBounds(previousMonth(date)),
+    earlier: Array.from({ length: PACE_BASELINE_MONTHS }, (_, index) =>
+      monthBounds(new Date(date.getFullYear(), date.getMonth() - PACE_BASELINE_MONTHS + index, 1)),
+    ),
   };
 }

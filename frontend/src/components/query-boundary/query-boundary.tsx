@@ -1,6 +1,6 @@
 import { QueryErrorResetBoundary } from "@tanstack/react-query";
 import { Component, type ErrorInfo, type ReactNode, Suspense, ViewTransition } from "react";
-import { ErrorState, RetryContext } from "@/components/error-state/error-state";
+import { CaughtErrorContext, ErrorState, RetryContext } from "@/components/error-state/error-state";
 
 interface FallbackProps {
   onReset: () => void;
@@ -14,13 +14,14 @@ interface BoundaryProps extends FallbackProps {
 
 interface BoundaryState {
   failed: boolean;
+  caught?: unknown;
 }
 
 class ErrorBoundary extends Component<BoundaryProps, BoundaryState> {
   override state: BoundaryState = { failed: false };
 
-  static getDerivedStateFromError(): BoundaryState {
-    return { failed: true };
+  static getDerivedStateFromError(caught: unknown): BoundaryState {
+    return { failed: true, caught };
   }
 
   override componentDidCatch(error: Error, info: ErrorInfo) {
@@ -33,17 +34,19 @@ class ErrorBoundary extends Component<BoundaryProps, BoundaryState> {
     }
 
     const retry = () => {
-      this.setState({ failed: false });
+      this.setState({ failed: false, caught: undefined });
       this.props.onReset();
     };
 
     return (
       <RetryContext value={retry}>
-        {this.props.error === undefined ? (
-          <ErrorState subject={this.props.subject} />
-        ) : (
-          this.props.error
-        )}
+        <CaughtErrorContext value={this.state.caught}>
+          {this.props.error === undefined ? (
+            <ErrorState subject={this.props.subject} />
+          ) : (
+            this.props.error
+          )}
+        </CaughtErrorContext>
       </RetryContext>
     );
   }

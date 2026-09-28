@@ -76,8 +76,11 @@
     "monthNet": "Net",
     "budgets": "Budgets in their window",
     "noBudgets": "No budgets set.",
+    "budgetPeriodPassed": "{{name}}, {{percent}} of the period passed",
     "accounts": "Balance by account",
     "noAccounts": "No accounts yet.",
+    "otherAccounts_one": "{{count}} other account",
+    "otherAccounts_other": "{{count}} other accounts",
     "upcomingBills": "Upcoming bills",
     "noBills": "No active bills.",
     "billsCurrentOnly": "Upcoming bills are shown on the current month.",
@@ -85,7 +88,9 @@
     "pace": {
       "title": "Spending pace",
       "day": "Day {{day}}",
-      "label": "Cumulative spending by day in {{month}} and {{previous}}"
+      "average": "Average {{from}}–{{to}}",
+      "projection": "Projected",
+      "label": "Cumulative spending by day in {{month}} and the average of {{from}}–{{to}}"
     },
     "recent": "Recent transactions",
     "empty": "No transactions yet.",
@@ -105,6 +110,9 @@
     "noSpending": "No spending recorded.",
     "showTransactions": "Show {{category}} transactions",
     "keptShare": "{{percent}} of the month's income kept",
+    "netWorthSoFar": "so far this month",
+    "netWorthOverMonth": "over the month",
+    "keptShareSoFar": "{{percent}} of the month's income kept so far",
     "overspent": "Spent more than came in",
     "layout": {
       "customise": "Customise",
@@ -122,6 +130,7 @@
     },
     "ring": {
       "kept": "kept",
+      "keptSoFar": "kept so far",
       "spent": "spent"
     }
   },
@@ -1717,9 +1726,12 @@
     "file": "File",
     "chooseFile": "Click to choose a file",
     "preview": "Preview",
-    "confirmed": "Imported {{imported}} transactions ({{skipped}} duplicates skipped)",
+    "confirmed": "Imported {{imported}} transactions, linked {{linked}} to your own entries ({{skipped}} duplicates skipped)",
     "noRows": "No importable rows found in this file.",
     "duplicate": "Already imported",
+    "matched": "Matches your entry",
+    "matchedHint": "You entered this on {{date}}: {{description}}. Importing links the bank entry to it instead of adding a copy, and your category, tags and description stay.",
+    "linkEntry": "Your entry of {{date}}",
     "looksLikeTransfer": "Looks like a transfer",
     "unusual": "Unusual amount",
     "recordAs": "Record as",
@@ -1761,6 +1773,8 @@
     "categoryFor": "Category: {{row}}",
     "resultImported_one": "Imported {{count}} row.",
     "resultImported_other": "Imported {{count}} rows.",
+    "resultLinked_one": "{{count}} linked to an entry you made by hand.",
+    "resultLinked_other": "{{count}} linked to entries you made by hand.",
     "resultSkipped_one": "{{count}} duplicate skipped.",
     "resultSkipped_other": "{{count}} duplicates skipped.",
     "resultLink": "View them in Transactions",
@@ -1831,7 +1845,8 @@
     "loadHint": "Nothing in the ledger was changed. Check the connection and try again.",
     "pageFailedTitle": "Jx Finance could not be loaded.",
     "pageFailedBody": "The server did not answer. Nothing in the ledger was changed. Try again, or reload the page if the problem stays.",
-    "reload": "Reload the page"
+    "reload": "Reload the page",
+    "details": "Technical details"
   },
   "validation": {
     "rate": "Enter a valid rate, e.g. 4.5.",
@@ -1873,7 +1888,8 @@
     "net": "Net",
     "netWorth": "Net worth",
     "earlierIncome": "Income, earlier period",
-    "earlierExpense": "Expenses, earlier period"
+    "earlierExpense": "Expenses, earlier period",
+    "soFar": "{{label}}, so far"
   },
   "serverErrors": {
     "access": {
@@ -1981,7 +1997,8 @@
       "invalidFile": "The file is empty, too large or not in the expected format.",
       "noStatementForAccount": "The file holds statements only for {{reason}}. Record this account's IBAN, or choose the account the statement belongs to.",
       "transferAlreadyMatched": "The chosen transfer is already matched to another bank entry of this account.",
-      "transferMismatch": "The chosen transfer does not match this row."
+      "transferMismatch": "The chosen transfer does not match this row.",
+      "entryMismatch": "The entry you chose no longer matches this row or is already linked to another bank entry. Preview the file again."
     },
     "money": {
       "invalid": "Enter a valid amount, e.g. 12.34.",

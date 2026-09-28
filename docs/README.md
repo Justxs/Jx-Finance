@@ -26,7 +26,7 @@ These pages describe the current code, not a wishlist. Where a page and the code
 - `features/`: one page per feature, each with diagrams, the backend folder, the frontend feature folder and the feature switch. `README.md` is the table of all of them.
 - `architecture/`: prose on how things work, one page per area.
 - `decisions/`: one page per topic, each with the standing decision and a dated log of choices and rejected alternatives.
-- `plans/`: designs written before a feature was built.
+- `plans/`: designs for features not built yet, deleted once the feature ships.
 - The top-level pages cover the whole product.
 
 File names are lowercase kebab-case without numbers, so that paths stay stable and need no quoting. `just check-docs` checks every link and heading anchor.

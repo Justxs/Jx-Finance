@@ -6,7 +6,6 @@ import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { Button, buttonVariants } from "@/components/ui/button/button";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { Section } from "@/components/ui/section/section";
-import { SectionSkeleton } from "@/components/ui/skeleton/skeleton";
 import { StaleRegion } from "@/components/ui/stale-region/stale-region";
 import { MonthClosePrompt } from "@/features/month-close/month-close-prompt/month-close-prompt";
 import { MonthCloseReview } from "@/features/month-close/month-close-review/month-close-review";
@@ -16,36 +15,12 @@ import { useDeferredParams } from "@/hooks/use-deferred-params";
 import { useMonthName } from "@/hooks/use-formatters";
 import { useSettingsSuspense, useTodayDate } from "@/hooks/use-settings";
 import { cn } from "@/lib/utils";
-import { ChartSkeleton, DashboardCard, ShareRowsSkeleton } from "../dashboard-card/dashboard-card";
+import { DashboardCard } from "../dashboard-card/dashboard-card";
 import { shownCards } from "../dashboard-layout";
 import { currentMonthKey } from "../dashboard-queries";
-import { DashboardStatsSkeleton } from "../dashboard-stats/dashboard-stats";
+import { DashboardSkeleton, dashboardGrid } from "./dashboard-pending";
 
 const MONTH_STEP_WAIT = 300;
-
-const grid = "grid gap-4 lg:grid-cols-6 xl:grid-cols-12 xl:gap-5";
-
-function DashboardSkeleton() {
-  return (
-    <div className={grid} aria-hidden="true">
-      <Section aria-hidden="true" className="lg:col-span-6 xl:col-span-4">
-        <DashboardStatsSkeleton />
-      </Section>
-      <SectionSkeleton className="lg:col-span-6 xl:col-span-8">
-        <ChartSkeleton legend tall />
-      </SectionSkeleton>
-      <SectionSkeleton className="lg:col-span-3 xl:col-span-4">
-        <ShareRowsSkeleton rows={6} />
-      </SectionSkeleton>
-      <SectionSkeleton className="lg:col-span-3 xl:col-span-4">
-        <ChartSkeleton legend />
-      </SectionSkeleton>
-      <SectionSkeleton className="lg:col-span-6 xl:col-span-4">
-        <ShareRowsSkeleton rows={5} />
-      </SectionSkeleton>
-    </div>
-  );
-}
 
 interface ContentProps {
   month: string;
@@ -74,9 +49,14 @@ function DashboardContent({ month }: Readonly<ContentProps>) {
   }
 
   return (
-    <div className={grid}>
+    <div className={dashboardGrid}>
       {cards.map((card) => (
-        <DashboardCard key={card} card={card} month={month} />
+        <DashboardCard
+          key={card}
+          card={card}
+          month={month}
+          widen={card === "spendingByCategory" && !cards.includes("spendingPace")}
+        />
       ))}
     </div>
   );

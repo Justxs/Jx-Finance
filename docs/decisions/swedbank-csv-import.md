@@ -1,14 +1,18 @@
 # Imports: decisions
 
-Related: feature page [Bank statement import](../features/bank-statement-import.md); architecture [Transactions, imports and receipts](../architecture/transactions.md); plan [CAMT.053 statement import](../plans/camt053-import.md).
+Related: feature page [Bank statement import](../features/bank-statement-import.md); architecture [Transactions, imports and receipts](../architecture/transactions.md).
 
 ## Current
 
-Two statement formats, Swedbank CSV and ISO 20022 camt.053 XML, chosen explicitly from the provider list and sharing one preview and one confirm; duplicate references skipped, including deleted imports, with camt.053 references stored unprefixed; strict Swedbank columns with any supported currency; tolerant camt.053 reading that counts unreadable entries; an IBAN mismatch is a warning, not a refusal; explicit transfer matching; no automatic money movement; counted review views and a search that only change what is shown; an edited review asks before it is discarded and is not resumable
+Two statement formats, Swedbank CSV and ISO 20022 camt.053 XML, chosen explicitly from the provider list and sharing one preview and one confirm; duplicate references skipped, including deleted imports, with camt.053 references stored unprefixed; a row matching a hand-entered transaction of the same type, amount and currency within three days is proposed as a link that stamps the bank reference on that transaction and adds nothing; strict Swedbank columns with any supported currency; tolerant camt.053 reading that counts unreadable entries; an IBAN mismatch is a warning, not a refusal; explicit transfer matching; no automatic money movement; counted review views and a search that only change what is shown; an edited review asks before it is discarded and is not resumable
 
 ## Log
 
 Newest first. Each entry is a choice between real alternatives: what was chosen, what was rejected, and why.
+
+- **2026-09-28.** A bank row with the same flow type, amount and currency as a hand-entered transaction on the account, dated within three days, is offered as a link and starts linked; confirming writes the bank reference onto the transaction and marks it imported, leaving its date, category, tags and description as entered
+  - Rejected: Flagging the match as a duplicate and leaving it unselected; replacing the hand-entered transaction with the imported row; taking the bank's date or description onto the linked transaction; matching on description text as well; a wider window
+  - Why: A duplicate flag would lose the bank reference, so the next import would offer the row again. Replacing or rewriting the entry would throw away what the person chose (a category, tags, splits, attachments), and the bank description is usually worse than theirs. Card payments are booked one to three days after the purchase, so three days covers the common case without pairing unrelated equal amounts, and descriptions typed by hand rarely resemble bank text. Every pair is ranked by distance before any is taken, so two equal payments on different days each find their own entry, and the confirm re-checks the rule under the account lock
 
 - **2026-09-28.** An edited review asks before any action discards it, and is not kept once the dialog closes
   - Rejected: Keeping the review after closing and offering "Resume statement review", in memory or in a TanStack DB collection

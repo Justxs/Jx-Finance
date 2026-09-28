@@ -7,7 +7,8 @@ import { Modal } from "@/components/modal";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { SelectField } from "@/components/select-field/select-field";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
-import { Skeleton } from "@/components/ui/skeleton/skeleton";
+import { FormGridSkeleton } from "@/components/ui/form-grid/form-grid";
+import { TextSkeleton } from "@/components/ui/skeleton/skeleton";
 import { Tabs, TabsList, TabsPanel, TabsTab } from "@/components/ui/tabs/tabs";
 import { namedOptions } from "@/lib/options";
 import { defaultInvestmentAccount } from "../investment-types";
@@ -93,7 +94,14 @@ function BrokerImportContent({
           />
         </TabsPanel>
         <TabsPanel value="sync" keepMounted>
-          <QueryBoundary fallback={<Skeleton className="h-56 w-full" />}>
+          <QueryBoundary
+            fallback={
+              <div className="space-y-4">
+                <TextSkeleton size="sm" width="w-3/4 max-w-prose" />
+                <FormGridSkeleton fields={3} actions={1} />
+              </div>
+            }
+          >
             <ConnectionPanel
               accounts={accounts}
               accountId={selectedAccountId}

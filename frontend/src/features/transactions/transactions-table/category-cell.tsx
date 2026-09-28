@@ -4,6 +4,7 @@ import type { CategoryResponse, TransactionResponse } from "@/api/generated/mode
 import { ComboboxField } from "@/components/combobox-field/combobox-field";
 import { CategoryIcon } from "@/lib/category-icons";
 import { namedOptions } from "@/lib/options";
+import { cn } from "@/lib/utils";
 
 const UNCATEGORIZED = "none";
 
@@ -32,7 +33,10 @@ export function CategoryCell({ transaction, categories, label }: Readonly<Props>
   }
 
   return (
-    <span className="-ml-2 flex min-w-0 items-center gap-1" aria-busy={mutation.isPending}>
+    <span
+      className={cn("-ml-2 flex min-w-0 items-center gap-1", mutation.isPending && "stale")}
+      aria-busy={mutation.isPending}
+    >
       {categoryId ? (
         <CategoryIcon icon={icon} className="ml-2 size-3.5 shrink-0 text-muted-foreground" />
       ) : null}

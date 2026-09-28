@@ -1,6 +1,7 @@
 import type { Decorator } from "@storybook/react-vite";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
+  type AnyRoute,
   type AnyRouter,
   Outlet,
   RouterProvider,
@@ -125,6 +126,13 @@ function BoundedStory({ Story }: Readonly<{ Story: FunctionComponent }>) {
   );
 }
 
+const appRoutes: readonly AnyRoute[] = Object.values(routeTree.children ?? {});
+
+function appPending(path: string) {
+  return appRoutes.find((route) => "path" in route.options && route.options.path === path)?.options
+    .pendingComponent;
+}
+
 function createStoryRouter(Story: FunctionComponent, initialPath: string, bounded: boolean) {
   function StoryRoute() {
     return bounded ? <BoundedStory Story={Story} /> : <Story />;
@@ -137,6 +145,7 @@ function createStoryRouter(Story: FunctionComponent, initialPath: string, bounde
       path: route.path,
       validateSearch: "validateSearch" in route ? route.validateSearch : undefined,
       component: StoryRoute,
+      pendingComponent: appPending(route.path),
     }),
   );
 

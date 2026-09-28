@@ -2,6 +2,7 @@ import { useId, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button/button";
 import { Input } from "@/components/ui/input/input";
+import { ButtonSkeleton, Skeleton, TextSkeleton } from "@/components/ui/skeleton/skeleton";
 import { useNumberFormat } from "@/hooks/use-formatters";
 
 const GO_TO_PAGE_FROM = 5;
@@ -103,6 +104,29 @@ export function Pagination({ page, pages, range, onPageChange }: Readonly<Props>
         >
           {t("actions.next")}
         </Button>
+      </div>
+    </div>
+  );
+}
+
+export function PaginationSkeleton({ goTo = false }: Readonly<{ goTo?: boolean }>) {
+  return (
+    <div
+      data-slot="pagination-skeleton"
+      aria-hidden="true"
+      className="flex flex-wrap items-center justify-between gap-3 pt-3"
+    >
+      <TextSkeleton size="sm" width="w-32" />
+      <div className="flex flex-wrap items-center gap-2">
+        {goTo ? (
+          <>
+            <TextSkeleton size="sm" width="w-10" />
+            <Skeleton className="h-8 w-20 rounded-lg pointer-coarse:h-11" />
+            <TextSkeleton size="sm" width="w-12" />
+          </>
+        ) : null}
+        <ButtonSkeleton size="sm" className="w-20" />
+        <ButtonSkeleton size="sm" className="w-16" />
       </div>
     </div>
   );

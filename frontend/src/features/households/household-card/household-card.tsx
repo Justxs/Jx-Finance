@@ -70,7 +70,7 @@ export function HouseholdCard({ household }: Readonly<Props>) {
       <div className="flex flex-wrap justify-end gap-2 pt-3">
         {activityVisible ? (
           <Button
-            variant="ghost"
+            variant="outline"
             size="sm"
             aria-expanded={activityOpen}
             onClick={() => setActivityOpen(!activityOpen)}

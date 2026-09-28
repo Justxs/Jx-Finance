@@ -1,5 +1,10 @@
+import { useQuery, useSuspenseQueries } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { useReportSummarySuspense } from "@/api/generated";
+import {
+  getRecurringBillsSuspenseQueryOptions,
+  getReportSummarySuspenseQueryOptions,
+  useReportSummarySuspense,
+} from "@/api/generated";
 import type { ReportTrendPoint } from "@/api/generated/model";
 import { CHART_COLOR_PRIMARY } from "@/components/chart";
 import {
@@ -7,11 +12,12 @@ import {
   TimeSeriesLineChart,
 } from "@/components/chart/time-series-line-chart";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
-import { monthDate } from "@/features/month-close/month-key";
+import { monthDate, shiftMonth } from "@/features/month-close/month-key";
 import { useShortMonth } from "@/hooks/use-formatters";
-import { useTodayDate } from "@/hooks/use-settings";
-import { parseIso, previousMonth } from "@/lib/calendar";
+import { useSettingsSuspense, useTodayDate } from "@/hooks/use-settings";
+import { parseIso } from "@/lib/calendar";
 import { currentMonthKey, spendingPaceRanges } from "../dashboard-queries";
+import { billsDueAfter, projectedTotals } from "./pace-projection";
 
 function cumulativeByDay(points: readonly ReportTrendPoint[], lastDay: number) {
   const perDay = new Map<number, number>();
@@ -31,6 +37,17 @@ function cumulativeByDay(points: readonly ReportTrendPoint[], lastDay: number) {
   return totals;
 }
 
+function averageByDay(months: readonly number[][], days: number) {
+  const spent = months.filter((totals) => (totals.at(-1) ?? 0) > 0);
+  if (spent.length === 0) {
+    return [];
+  }
+  return Array.from(
+    { length: days },
+    (_, index) => spent.reduce((sum, totals) => sum + (totals[index] ?? 0), 0) / spent.length,
+  );
+}
+
 function lastDayOf(isoDate: string | null | undefined) {
   return parseIso(isoDate ?? "")?.getDate() ?? 0;
 }
@@ -43,17 +60,39 @@ export function SpendingPaceChart({ month }: Readonly<Props>) {
   const { t } = useTranslation();
   const monthFormat = useShortMonth();
   const today = useTodayDate();
+  const { features } = useSettingsSuspense();
+  const isCurrent = month === currentMonthKey(today);
   const ranges = spendingPaceRanges(month);
   const current = useReportSummarySuspense(ranges.current);
-  const previous = useReportSummarySuspense(ranges.previous);
+  const earlier = useSuspenseQueries({
+    queries: ranges.earlier.map((range) => getReportSummarySuspenseQueryOptions(range)),
+  });
+  const bills = useQuery({
+    ...getRecurringBillsSuspenseQueryOptions(),
+    enabled: isCurrent && features.recurringBills,
+  });
 
   const daysInMonth = lastDayOf(ranges.current.dateTo);
-  const daysInPrevious = lastDayOf(ranges.previous.dateTo);
-  const shownDays = month === currentMonthKey(today) ? today.getDate() : daysInMonth;
+  const shownDays = isCurrent ? today.getDate() : daysInMonth;
   const currentTotals = cumulativeByDay(current.data.trend, shownDays);
+  const averageTotals = averageByDay(
+    earlier.map((query) => cumulativeByDay(query.data.trend, daysInMonth)),
+    daysInMonth,
+  );
+  const projection = isCurrent
+    ? projectedTotals(
+        currentTotals.at(-1) ?? 0,
+        shownDays,
+        averageTotals,
+        billsDueAfter(bills.data ?? [], today, daysInMonth),
+        daysInMonth,
+      )
+    : [];
   const currentLabel = monthFormat.format(monthDate(month));
-  const previousLabel = monthFormat.format(previousMonth(monthDate(month)));
-  const previousTotals = cumulativeByDay(previous.data.trend, daysInPrevious);
+  const span = {
+    from: monthFormat.format(monthDate(shiftMonth(month, -ranges.earlier.length))),
+    to: monthFormat.format(monthDate(shiftMonth(month, -1))),
+  };
 
   const series: TimeSeriesLine[] = [
     {
@@ -62,22 +101,34 @@ export function SpendingPaceChart({ month }: Readonly<Props>) {
       color: CHART_COLOR_PRIMARY,
       shape: "line",
     },
+    ...(projection.length > 0
+      ? [
+          {
+            key: "projection",
+            label: t("dashboard.pace.projection"),
+            color: CHART_COLOR_PRIMARY,
+            shape: "line",
+            comparison: true,
+          } satisfies TimeSeriesLine,
+        ]
+      : []),
     {
-      key: "previous",
-      label: previousLabel,
+      key: "average",
+      label: t("dashboard.pace.average", span),
       color: "var(--muted-foreground)",
       shape: "line",
       comparison: true,
     },
   ];
 
-  const chartData = Array.from({ length: Math.max(daysInMonth, daysInPrevious) }, (_, index) => ({
+  const chartData = Array.from({ length: daysInMonth }, (_, index) => ({
     day: index + 1,
     current: currentTotals[index],
-    previous: previousTotals[index],
+    average: averageTotals[index],
+    projection: projection[index],
   }));
 
-  if ((currentTotals.at(-1) ?? 0) === 0 && (previousTotals.at(-1) ?? 0) === 0) {
+  if ((currentTotals.at(-1) ?? 0) === 0 && averageTotals.length === 0) {
     return <EmptyText>{t("dashboard.noSpending")}</EmptyText>;
   }
 
@@ -85,7 +136,7 @@ export function SpendingPaceChart({ month }: Readonly<Props>) {
     <TimeSeriesLineChart
       data={chartData}
       series={series}
-      ariaLabel={t("dashboard.pace.label", { month: currentLabel, previous: previousLabel })}
+      ariaLabel={t("dashboard.pace.label", { month: currentLabel, ...span })}
       xAxis="day"
       curve="stepAfter"
       formatLabel={(day) => t("dashboard.pace.day", { day })}

@@ -22,7 +22,7 @@ Up to ten JPEG, PNG, WebP, HEIC or PDF files of at most 10 MB per transaction, d
 
 ## Trash and undo
 
-Deleting a transaction, transfer, currency conversion, budget, goal, asset, debt or recurring entry shows a toast with Undo, and the same delete stays in a Trash section of the profile for 30 days with a Restore button; a restored transaction brings its split lines and its tags with it and counts again in balances, budgets and reports, and a restored conversion brings back its fee transaction. Restoring is refused, with a reason, when the account was archived, the category is gone, a conversion's fee was deleted on its own or another budget took the category and period. Deleting a category, a tag, a rule or a household is still final, because those deletes rewrite rows they cannot put back, and archiving an account is still its own operation, undone from the accounts page. After the 30 days a nightly job removes the record for good, so a delete really is a delete in the end
+Deleting a transaction, transfer, currency conversion, budget, goal, asset, debt, recurring entry, investment entry, category, tag, categorization rule or household shows a toast with Undo, and the same delete stays in the Trash section of Settings for 30 days with a Restore button; a restored transaction brings its split lines, tags and attachments with it and counts again in balances, budgets and reports, a restored conversion brings back its fee transaction, and a restored category, tag, rule or household puts back the rows its delete rewrote where they are still sound. Restoring is refused, with a reason, when the account was archived, the category is gone, a conversion's fee was deleted on its own, another budget took the category and period, a tag's name was taken again or a restored investment entry would oversell a holding. Archiving an account is still its own operation, undone from the accounts page. After the 30 days a nightly job removes the record for good, so a delete really is a delete in the end
 
 ## Tags
 
@@ -51,7 +51,7 @@ Interactive Brokers Flex Query import by file upload or daily through the Flex W
 
 ## Bank statement import
 
-Swedbank CSV and ISO 20022 camt.053 XML statements, chosen from a provider list, in any supported currency; for camt.053 an IBAN check against the account with a switch to the account it belongs to, the counterparty IBAN proposing a transfer to another own account, and the closing balance compared with the ledger; preview, row selection, category and tag selection per row with a categorization rule filling both in before the user confirms, an "Unusual amount" mark on an expense far above its usual amount, explicit transfer creation/matching, duplicate detection including deleted imports
+Swedbank CSV and ISO 20022 camt.053 XML statements, chosen from a provider list, in any supported currency; for camt.053 an IBAN check against the account with a switch to the account it belongs to, the counterparty IBAN proposing a transfer to another own account, and the closing balance compared with the ledger; preview, row selection, category and tag selection per row with a categorization rule filling both in before the user confirms, an "Unusual amount" mark on an expense far above its usual amount, explicit transfer creation/matching, duplicate detection including deleted imports, and a row that matches a transaction entered by hand within three days linked to it instead of imported a second time
 
 ## Budgets
 

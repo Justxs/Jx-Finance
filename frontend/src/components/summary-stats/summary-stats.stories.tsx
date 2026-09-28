@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { SummaryStats } from "./summary-stats";
+import { SummaryStats, SummaryStatsSkeleton } from "./summary-stats";
 
 const meta = {
   title: "Components/SummaryStats",
@@ -28,6 +28,10 @@ export const Loading: Story = {
     ],
   },
 };
+
+export const Skeleton: Story = { render: () => <SummaryStatsSkeleton /> };
+
+export const SkeletonFourItems: Story = { render: () => <SummaryStatsSkeleton items={4} /> };
 
 export const SingleItem: Story = { args: { items: [{ label: "Net worth", value: "84210.07" }] } };
 

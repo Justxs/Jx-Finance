@@ -11,11 +11,15 @@ public sealed class ImportConfirmSummary : Summary<ImportConfirmEndpoint, Import
             + "flagged as already present are skipped rather than duplicated, and the response reports "
             + "how many were imported and how many were skipped. A row's tagIds are written as they "
             + "arrive, whether a rule suggested them in the preview or the user picked them, so an "
-            + "empty list imports the row with no tags. The audit entry names the format the rows came from.";
+            + "empty list imports the row with no tags. A row with existingTransactionId adds nothing: "
+            + "the bank entry is linked to that transaction, which keeps its date, category, tags and "
+            + "description and is then treated as imported, so the same entry is a duplicate next time. "
+            + "The audit entry names the format the rows came from.";
         RequestParam(r => r.AccountId, "The account the rows post to; must be the one previewed.");
         RequestParam(r => r.Rows, "The rows to import, as returned by preview, with any category and tag corrections applied.");
         RequestParam(r => r.Format, "The statement format: swedbankCsv for a Swedbank CSV export or camt053 for an ISO 20022 camt.053 XML statement.");
-        Responses[200] = "Counts of imported and skipped rows.";
-        Responses[400] = "Validation failed, a tag is not visible to you, or the account is not visible to the signed-in user.";
+        Responses[200] = "Counts of imported, linked and skipped rows.";
+        Responses[400] = "Validation failed, a tag is not visible to you, the account is not visible to the signed-in user, "
+            + "or a transaction to link no longer matches its bank entry or is already linked (import.entryMismatch).";
     }
 }

@@ -1,5 +1,5 @@
 import { Link, useLocation } from "@tanstack/react-router";
-import { type LucideIcon, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { ChevronLeft, ChevronRight, type LucideIcon } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useMeSuspense } from "@/api/generated";
 import type { FeatureFlags } from "@/api/generated/model";
@@ -74,6 +74,20 @@ export const navLinkClass =
 
 export const navLinkActiveClass = "border-border! bg-background font-semibold text-foreground!";
 
+export function AppSidebarSkeleton() {
+  const { collapsed } = useSidebarCollapsed();
+
+  return (
+    <div
+      aria-hidden="true"
+      className={cn(
+        "sticky top-0 hidden h-screen shrink-0 border-r bg-sidebar md:block",
+        collapsed ? "w-16" : "w-58",
+      )}
+    />
+  );
+}
+
 export function AppSidebar() {
   const { t } = useTranslation();
   const { collapsed, toggleSidebar } = useSidebarCollapsed();
@@ -95,8 +109,23 @@ export function AppSidebar() {
         <Brand compact={collapsed} />
       </Link>
 
+      <Button
+        type="button"
+        variant="outline"
+        size="icon-handle"
+        className="absolute top-5 -right-3 z-20"
+        tooltipSide="right"
+        onClick={toggleSidebar}
+        aria-label={t(collapsed ? "nav.expand" : "nav.collapse")}
+      >
+        {collapsed ? <ChevronRight /> : <ChevronLeft />}
+      </Button>
+
       <div className={cn("px-3 pb-3", collapsed && "px-2")}>
-        <QueryBoundary fallback={<Skeleton className="h-8 w-full rounded-lg" />} error={null}>
+        <QueryBoundary
+          fallback={<Skeleton className="h-8 w-full rounded-md pointer-coarse:h-11" />}
+          error={null}
+        >
           <HouseholdSwitcher collapsed={collapsed} />
         </QueryBoundary>
       </div>
@@ -131,27 +160,9 @@ export function AppSidebar() {
         })}
       </nav>
 
-      <div className={cn("px-3 pb-1", collapsed && "px-2")}>
+      <div className={cn("px-3 pb-3", collapsed && "px-2")}>
         <SupportLink collapsed={collapsed} />
-      </div>
-
-      <div
-        className={cn(
-          "flex gap-0.5 px-3 pb-2",
-          collapsed ? "flex-col items-center" : "items-center",
-        )}
-      >
-        <NotificationBellSlot placement="above" />
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          className={collapsed ? undefined : "ml-auto"}
-          onClick={toggleSidebar}
-          aria-label={t(collapsed ? "nav.expand" : "nav.collapse")}
-        >
-          {collapsed ? <PanelLeftOpen /> : <PanelLeftClose />}
-        </Button>
+        <NotificationBellSlot sidebar={collapsed ? "collapsed" : "expanded"} />
       </div>
 
       <div className={cn("flex border-t p-3", collapsed && "justify-center p-2")}>

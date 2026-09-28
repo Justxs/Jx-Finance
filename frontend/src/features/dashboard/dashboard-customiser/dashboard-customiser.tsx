@@ -18,12 +18,12 @@ import { Button } from "@/components/ui/button/button";
 import { Checkbox } from "@/components/ui/checkbox/checkbox";
 import { Rows } from "@/components/ui/rows/rows";
 import { Section, SectionTitle } from "@/components/ui/section/section";
-import { SectionSkeleton } from "@/components/ui/skeleton/skeleton";
 import { useSettingsSuspense } from "@/hooks/use-settings";
 import { silent } from "@/lib/mutations";
 import type { MoveDirection } from "@/lib/reorder";
 import { dashboardCardTitle } from "../dashboard-card/dashboard-card";
 import { type LayoutDraft, availableCards, moveCard, setCardShown } from "../dashboard-layout";
+import { DashboardLayoutSkeleton } from "./dashboard-layout-skeleton";
 
 interface Props {
   layout: DashboardLayoutResponse;
@@ -128,7 +128,7 @@ export function DashboardCustomiser({ layout, features, onDone }: Readonly<Props
 
       <div className="mt-5 flex flex-wrap items-center justify-between gap-2">
         <Button
-          variant="ghost"
+          variant="outline"
           onClick={resetToDefault}
           pending={resetMutation.isPending}
           disabled={busy}
@@ -160,7 +160,7 @@ function SavedLayoutCustomiser() {
 
 export function DashboardLayoutSection() {
   return (
-    <QueryBoundary fallback={<SectionSkeleton rows={6} />}>
+    <QueryBoundary fallback={<DashboardLayoutSkeleton />}>
       <SavedLayoutCustomiser />
     </QueryBoundary>
   );

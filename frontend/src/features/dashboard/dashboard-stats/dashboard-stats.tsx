@@ -1,6 +1,5 @@
 import { useTranslation } from "react-i18next";
 import { useDashboardSummarySuspense } from "@/api/generated";
-import { Skeleton } from "@/components/ui/skeleton/skeleton";
 import { useMoney, usePercent } from "@/hooks/use-formatters";
 import { useTodayDate } from "@/hooks/use-settings";
 import { EXPENSE_TONE, gainTone } from "@/lib/tone";
@@ -52,38 +51,9 @@ function IncomeRing({ share, overspent, value, caption, label }: Readonly<RingPr
         className="absolute inset-0 flex flex-col items-center justify-center"
       >
         <span className="text-3xl font-semibold tabular-nums">{value}</span>
-        <span className="text-sm text-muted-foreground">{caption}</span>
-      </div>
-    </div>
-  );
-}
-
-export function DashboardStatsSkeleton() {
-  return (
-    <div aria-hidden="true" className="flex h-full flex-col gap-6">
-      <div>
-        <Skeleton className="h-4 w-28 rounded-sm" />
-        <Skeleton className="mt-2 h-11 w-52 max-w-full rounded-sm" />
-      </div>
-      <div className="flex flex-1 flex-wrap items-center justify-center gap-x-8 gap-y-5">
-        <svg viewBox="0 0 100 100" className="size-40 shrink-0 animate-pulse">
-          <circle
-            cx="50"
-            cy="50"
-            r={RING_RADIUS}
-            fill="none"
-            strokeWidth="8"
-            className="stroke-border"
-          />
-        </svg>
-        <div className="min-w-48 flex-1 space-y-2.5">
-          {["income", "expense", "net"].map((row) => (
-            <div key={row} className="flex h-7 items-center justify-between gap-4">
-              <Skeleton className="h-4 w-20 rounded-sm" />
-              <Skeleton className="h-5 w-24 rounded-sm" />
-            </div>
-          ))}
-        </div>
+        <span className="max-w-24 text-center text-sm leading-tight text-muted-foreground">
+          {caption}
+        </span>
       </div>
     </div>
   );
@@ -106,6 +76,21 @@ export function DashboardStats({ month }: Readonly<Props>) {
   const spent = income > 0 ? expense / income : 0;
   const overspent = net < 0;
   const kept = Math.max(0, 1 - spent);
+
+  function keptCaption() {
+    if (overspent) {
+      return t("dashboard.ring.spent");
+    }
+    return isCurrent ? t("dashboard.ring.keptSoFar") : t("dashboard.ring.kept");
+  }
+
+  function keptLabel() {
+    if (overspent) {
+      return t("dashboard.overspent");
+    }
+    const share = { percent: percent.format(kept) };
+    return isCurrent ? t("dashboard.keptShareSoFar", share) : t("dashboard.keptShare", share);
+  }
 
   const rows = [
     {
@@ -142,12 +127,8 @@ export function DashboardStats({ month }: Readonly<Props>) {
             share={overspent ? 1 : kept}
             overspent={overspent}
             value={percent.format(overspent ? spent : kept)}
-            caption={overspent ? t("dashboard.ring.spent") : t("dashboard.ring.kept")}
-            label={
-              overspent
-                ? t("dashboard.overspent")
-                : t("dashboard.keptShare", { percent: percent.format(kept) })
-            }
+            caption={keptCaption()}
+            label={keptLabel()}
           />
         ) : null}
         <dl className="min-w-48 flex-1 space-y-2.5">

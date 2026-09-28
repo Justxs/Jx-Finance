@@ -197,6 +197,15 @@ function earlierFactor(index: number): number {
   return EARLIER_FACTORS[index % EARLIER_FACTORS.length] ?? 1;
 }
 
+export function withEarlierAmounts(
+  items: readonly CategoryBreakdownItem[],
+): CategoryBreakdownItem[] {
+  return items.map((item, index) => ({
+    ...item,
+    comparisonAmount: scaled(item.amount, earlierFactor(index)),
+  }));
+}
+
 export function withComparison(
   summary: ReportSummaryResponse,
   mode: ReportComparisonMode,
@@ -205,12 +214,9 @@ export function withComparison(
 ): ReportSummaryResponse {
   const shift = daysBetween(periodStart, summary.periodStart);
   const expenseByCategory: CategoryBreakdownItem[] = [
-    ...summary.expenseByCategory
-      .filter((item) => item.categoryId !== ids.categories.health)
-      .map((item, index) => ({
-        ...item,
-        comparisonAmount: scaled(item.amount, earlierFactor(index)),
-      })),
+    ...withEarlierAmounts(
+      summary.expenseByCategory.filter((item) => item.categoryId !== ids.categories.health),
+    ),
     vanished(ids.categories.health, "184.40"),
   ];
   const incomeByCategory: CategoryBreakdownItem[] = summary.incomeByCategory.map((item, index) => ({

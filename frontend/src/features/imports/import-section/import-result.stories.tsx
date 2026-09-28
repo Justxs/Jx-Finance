@@ -4,6 +4,7 @@ import { ImportResultLine } from "./import-result";
 
 const result = {
   imported: 6,
+  linked: 0,
   skipped: 0,
   accountId: ids.accounts.checking,
   dateFrom: "2026-09-10",
@@ -24,5 +25,7 @@ export const Default: Story = {};
 export const SingleRow: Story = { args: { result: { ...result, imported: 1 } } };
 
 export const WithSkippedDuplicates: Story = { args: { result: { ...result, skipped: 2 } } };
+
+export const WithLinkedEntries: Story = { args: { result: { ...result, linked: 2 } } };
 
 export const OnlyDuplicates: Story = { args: { result: { ...result, imported: 0, skipped: 3 } } };

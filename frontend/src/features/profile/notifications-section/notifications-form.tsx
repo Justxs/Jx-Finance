@@ -311,7 +311,7 @@ export function NotificationsForm({ profile, discord }: Readonly<Props>) {
               </Button>
               <Button
                 type="button"
-                variant="ghost-destructive"
+                variant="outline-destructive"
                 size="sm"
                 pending={removeMutation.isPending}
                 onClick={() => setConfirmingRemove(true)}

@@ -107,6 +107,7 @@ export * from "./importBrokerReportRequest";
 export * from "./importConfirmRequest";
 export * from "./importConfirmResponse";
 export * from "./importConfirmRow";
+export * from "./importMatchedTransaction";
 export * from "./importPreviewRequest";
 export * from "./importPreviewResponse";
 export * from "./importPreviewRow";

@@ -3,14 +3,13 @@ import { Suspense } from "react";
 import { getMeMockHandler } from "@/api/generated/auth/auth.msw";
 import { savePreferences } from "@/stores/preferences";
 import { longNameUser, memberUser } from "@/storybook/fixtures";
-import { withHandlers } from "@/storybook/handlers";
-import { Skeleton } from "../ui/skeleton/skeleton";
-import { AppSidebar } from "./app-sidebar";
+import { pending, withHandlers } from "@/storybook/handlers";
+import { AppSidebar, AppSidebarSkeleton } from "./app-sidebar";
 
 function SidebarExample() {
   return (
     <div className="flex min-h-screen">
-      <Suspense fallback={<Skeleton className="h-screen w-60 rounded-none" />}>
+      <Suspense fallback={<AppSidebarSkeleton />}>
         <AppSidebar />
       </Suspense>
       <main className="flex-1 p-6 text-sm text-muted-foreground">
@@ -43,6 +42,8 @@ export const Collapsed: Story = {
     return () => savePreferences({ sidebarCollapsed: false });
   },
 };
+
+export const Loading: Story = { parameters: withHandlers(getMeMockHandler(pending)) };
 
 export const MemberWithoutUsersLink: Story = {
   parameters: withHandlers(getMeMockHandler(memberUser)),

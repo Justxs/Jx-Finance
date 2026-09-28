@@ -19,6 +19,7 @@ using JxFinance.Endpoints.CategorizationRules.Interfaces;
 using JxFinance.Endpoints.CategorizationRules.Shared;
 using JxFinance.Endpoints.Imports.Confirm;
 using JxFinance.Endpoints.Imports.Interfaces;
+using JxFinance.Endpoints.Imports.Matching;
 using JxFinance.Endpoints.Imports.Parsing;
 using JxFinance.Endpoints.Imports.Preview;
 using JxFinance.Endpoints.Imports.Shared;
@@ -73,8 +74,10 @@ public sealed class ImportService(
 
         var parsedRows = statement.Rows;
         var existingRefSet = await ExistingRefsAsync(typedAccountId, parsedRows.Select(r => r.ImportRef), cancellationToken);
+        var duplicates = parsedRows.Select(r => !existingRefSet.Add(r.ImportRef)).ToList();
         var suggestions = await SuggestionsAsync(typedAccountId, parsedRows, cancellationToken);
         var unusualVerdicts = await UnusualAsync(typedAccountId, parsedRows, suggestions, cancellationToken);
+        var matchedEntries = await ManualMatchesAsync(typedAccountId, parsedRows, duplicates, cancellationToken);
 
         var rows = parsedRows
             .Select((r, index) => new ImportPreviewRow(
@@ -84,7 +87,7 @@ public sealed class ImportService(
                 r.Description,
                 r.Amount,
                 r.Type,
-                !existingRefSet.Add(r.ImportRef),
+                duplicates[index],
                 LooksLikeTransfer(r.Payee, r.Description) || OtherAccount(r.CounterpartyIban) is not null,
                 r.Currency,
                 suggestions[index]?.CategoryId,
@@ -92,7 +95,8 @@ public sealed class ImportService(
                 suggestions[index]?.RuleName,
                 r.IsReversal,
                 OtherAccount(r.CounterpartyIban),
-                unusualVerdicts[index].ToResponse()))
+                unusualVerdicts[index].ToResponse(),
+                matchedEntries[index]))
             .ToList();
 
         var closing = statement.ClosingBalance;
@@ -147,7 +151,7 @@ public sealed class ImportService(
             return counted.Error;
         }
 
-        if (totals.Imported > 0)
+        if (totals.Imported + totals.Linked > 0)
         {
             db.Audit.Summarise(
                 AuditAction.Imported,
@@ -155,8 +159,9 @@ public sealed class ImportService(
                 TrashLabel.Counted(
                     $"{(request.Format == StatementFormat.Camt053 ? "camt.053 XML" : "Swedbank CSV")} into {target.Name}",
                     (totals.Imported, "entry", "entries"),
+                    (totals.Linked, "entry linked", "entries linked"),
                     (totals.Skipped, "duplicate skipped", "duplicates skipped")),
-                totals.Imported,
+                totals.Imported + totals.Linked,
                 accountId.Value,
                 [accountId]);
         }
@@ -164,7 +169,7 @@ public sealed class ImportService(
         await db.SaveChangesAsync(cancellationToken);
 
         await transaction.CommitAsync(cancellationToken);
-        return new ImportConfirmResponse(totals.Imported, totals.Skipped);
+        return new ImportConfirmResponse(totals.Imported, totals.Skipped, totals.Linked);
     }
 
     private async Task<Result<ConfirmLookups>> LoadConfirmLookupsAsync(
@@ -213,9 +218,20 @@ public sealed class ImportService(
                 .Select(r => r.TransferId)
                 .ToListAsync(cancellationToken)).ToHashSet();
 
+        var entryIds = rows
+            .Where(r => r.ExistingTransactionId is not null)
+            .Select(r => new TransactionId(r.ExistingTransactionId!.Value))
+            .Distinct()
+            .ToList();
+        var entries = entryIds.Count == 0
+            ? []
+            : await db.Transactions
+                .Where(t => entryIds.Contains(t.Id))
+                .ToDictionaryAsync(t => t.Id, cancellationToken);
+
         await PreloadRatesAsync(accountCurrency, rows, cancellationToken);
 
-        return new ConfirmLookups(existingRefs, categoryTypes, otherCurrencies, candidates, alreadyImported);
+        return new ConfirmLookups(existingRefs, categoryTypes, otherCurrencies, candidates, alreadyImported, entries);
     }
 
     private async Task PreloadRatesAsync(
@@ -224,7 +240,9 @@ public sealed class ImportService(
         CancellationToken cancellationToken)
     {
         var converted = rows
-            .Where(r => r.TransferAccountId is null && (r.Currency ?? accountCurrency) != rates.ReportingCurrency)
+            .Where(r => r.TransferAccountId is null
+                && r.ExistingTransactionId is null
+                && (r.Currency ?? accountCurrency) != rates.ReportingCurrency)
             .Select(r => r.Date)
             .ToList();
         if (converted.Count > 0)
@@ -242,6 +260,7 @@ public sealed class ImportService(
     {
         var imported = 0;
         var skipped = 0;
+        var linked = 0;
         var matchedTransfers = new HashSet<TransferId>();
 
         foreach (var row in rows)
@@ -253,6 +272,17 @@ public sealed class ImportService(
             }
 
             var currency = row.Currency ?? accountCurrency;
+            if (row.ExistingTransactionId is { } entryId)
+            {
+                if (LinkEntry(accountId, row, currency, lookups.Entries.GetValueOrDefault(new TransactionId(entryId))) is { } linkError)
+                {
+                    return linkError;
+                }
+
+                linked++;
+                continue;
+            }
+
             var categoryId = row.CategoryId is { } id ? new CategoryId(id) : (CategoryId?)null;
             if (categoryId is { } chosen && lookups.CategoryTypes.GetValueOrDefault(chosen) != row.Type)
             {
@@ -299,7 +329,26 @@ public sealed class ImportService(
             imported++;
         }
 
-        return new ImportTotals(imported, skipped);
+        return new ImportTotals(imported, skipped, linked);
+    }
+
+    private static DomainError? LinkEntry(AccountId accountId, ImportConfirmRow row, Currency currency, Transaction? entry)
+    {
+        if (row.TransferAccountId is not null
+            || entry is null
+            || entry.AccountId != accountId
+            || entry.Source != TransactionSource.Manual
+            || entry.ImportRef is not null
+            || !new ManualEntry(entry.Id, entry.Date, entry.Type, entry.Amount).Fits(new StatementLine(row.Date, row.Type, new Money(row.Amount, currency))))
+        {
+            return new DomainError(
+                ErrorCodes.ImportEntryMismatch,
+                "The chosen entry does not match this bank entry or is already linked to another.");
+        }
+
+        entry.ImportRef = row.ImportRef;
+        entry.Source = TransactionSource.Imported;
+        return null;
     }
 
     private DomainError? AddTransfer(
@@ -379,9 +428,46 @@ public sealed class ImportService(
         IReadOnlyDictionary<CategoryId, FlowType?> CategoryTypes,
         IReadOnlyDictionary<AccountId, Currency> OtherCurrencies,
         IReadOnlyDictionary<TransferId, Transfer> Candidates,
-        IReadOnlySet<TransferId> AlreadyImported);
+        IReadOnlySet<TransferId> AlreadyImported,
+        IReadOnlyDictionary<TransactionId, Transaction> Entries);
 
-    private sealed record ImportTotals(int Imported, int Skipped);
+    private sealed record ImportTotals(int Imported, int Skipped, int Linked);
+
+    private async Task<IReadOnlyList<ImportMatchedTransaction?>> ManualMatchesAsync(
+        AccountId accountId,
+        IReadOnlyList<ParsedRow> parsedRows,
+        List<bool> duplicates,
+        CancellationToken cancellationToken)
+    {
+        var lines = parsedRows
+            .Select((r, index) => duplicates[index] ? null : new StatementLine(r.Date, r.Type, new Money(r.Amount, r.Currency)))
+            .ToList();
+        var dates = lines.OfType<StatementLine>().Select(line => line.Date).ToList();
+        if (dates.Count == 0)
+        {
+            return lines.Select(_ => (ImportMatchedTransaction?)null).ToList();
+        }
+
+        var from = dates.Min().AddDays(-ManualEntryMatcher.MaxDays);
+        var to = dates.Max().AddDays(ManualEntryMatcher.MaxDays);
+        var candidates = await db.Transactions
+            .Where(t => t.AccountId == accountId
+                && t.Source == TransactionSource.Manual
+                && t.ImportRef == null
+                && t.Date >= from
+                && t.Date <= to)
+            .Select(t => new { t.Id, t.Date, t.Type, t.Amount.Amount, t.Amount.Currency, t.Description, t.CategoryId })
+            .ToListAsync(cancellationToken);
+        var byId = candidates.ToDictionary(c => c.Id);
+
+        return ManualEntryMatcher
+            .Match(lines, candidates.Select(c => new ManualEntry(c.Id, c.Date, c.Type, new Money(c.Amount, c.Currency))).ToList())
+            .Select(entry => entry is null ? null : byId[entry.Id])
+            .Select(found => found is null
+                ? null
+                : new ImportMatchedTransaction(found.Id.Value, found.Date, found.Description, found.CategoryId?.Value))
+            .ToList();
+    }
 
     private async Task<IReadOnlyList<RuleSuggestion?>> SuggestionsAsync(
         AccountId accountId,

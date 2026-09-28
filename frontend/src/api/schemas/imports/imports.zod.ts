@@ -8,7 +8,7 @@
 import * as zod from "zod";
 
 /**
- * Writes the rows the user kept from a preview into the ledger. Rows the preview flagged as already present are skipped rather than duplicated, and the response reports how many were imported and how many were skipped. A row's tagIds are written as they arrive, whether a rule suggested them in the preview or the user picked them, so an empty list imports the row with no tags. The audit entry names the format the rows came from.
+ * Writes the rows the user kept from a preview into the ledger. Rows the preview flagged as already present are skipped rather than duplicated, and the response reports how many were imported and how many were skipped. A row's tagIds are written as they arrive, whether a rule suggested them in the preview or the user picked them, so an empty list imports the row with no tags. A row with existingTransactionId adds nothing: the bank entry is linked to that transaction, which keeps its date, category, tags and description and is then treated as imported, so the same entry is a duplicate next time. The audit entry names the format the rows came from.
  * @summary Commit previewed statement rows
  */
 
@@ -65,6 +65,7 @@ export const ImportConfirmBody = zod.object({
           ])
           .optional(),
         tagIds: zod.array(zod.uuid()).nullish(),
+        existingTransactionId: zod.uuid().nullish(),
       }),
     )
     .describe(
@@ -80,10 +81,11 @@ export const ImportConfirmBody = zod.object({
 export const ImportConfirmResponse = zod.object({
   imported: zod.int(),
   skippedDuplicates: zod.int(),
+  linked: zod.int(),
 });
 
 /**
- * Parses an exported bank statement and returns the rows it found, each with a flag saying whether a matching transaction already exists in the account. Two formats are read: swedbankCsv, the Swedbank CSV export, and camt053, an ISO 20022 camt.053 XML statement. From a camt.053 file only booked entries are returned; pending and informational entries and entries that could not be read are counted in statement. When the file holds several statements, the one for the account's IBAN is read. A counterparty IBAN that belongs to another of your accounts fills in suggestedTransferAccountId. Your categorization rules are evaluated against each row's description, amount and flow type, and the first rule that matches fills in suggestedCategoryId, suggestedTagIds and matchedRuleName; a row nothing matched carries none of them. The suggestion is a suggestion: confirm sends back whatever the client decided. Nothing is written: this call only reads the file. Send the file as multipart/form-data.
+ * Parses an exported bank statement and returns the rows it found, each with a flag saying whether a matching transaction already exists in the account. Two formats are read: swedbankCsv, the Swedbank CSV export, and camt053, an ISO 20022 camt.053 XML statement. From a camt.053 file only booked entries are returned; pending and informational entries and entries that could not be read are counted in statement. When the file holds several statements, the one for the account's IBAN is read. A counterparty IBAN that belongs to another of your accounts fills in suggestedTransferAccountId. Your categorization rules are evaluated against each row's description, amount and flow type, and the first rule that matches fills in suggestedCategoryId, suggestedTagIds and matchedRuleName; a row nothing matched carries none of them. The suggestion is a suggestion: confirm sends back whatever the client decided. A row that is not a duplicate and has the same flow type, amount and currency as a transaction entered by hand on the account within three days of it carries that transaction in matchedTransaction, each transaction offered to one row at most, the closest date first. Nothing is written: this call only reads the file. Send the file as multipart/form-data.
  * @summary Preview a bank statement
  */
 export const ImportPreviewBody = zod.object({
@@ -167,6 +169,17 @@ export const ImportPreviewResponse = zod.object({
             ),
             factor: zod.number(),
             sampleSize: zod.int(),
+          }),
+        ])
+        .optional(),
+      matchedTransaction: zod
+        .union([
+          zod.null(),
+          zod.object({
+            id: zod.uuid(),
+            date: zod.iso.date(),
+            description: zod.string().nullable(),
+            categoryId: zod.uuid().nullable(),
           }),
         ])
         .optional(),

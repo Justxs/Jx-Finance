@@ -6,6 +6,7 @@ import {
   getNetWorthSuspenseQueryOptions,
 } from "@/api/generated";
 import { NetWorthPage } from "@/features/net-worth/net-worth-page/net-worth-page";
+import { NetWorthPending } from "@/features/net-worth/net-worth-page/net-worth-page-pending";
 import { requireFeature } from "@/lib/feature-gate";
 import { warm } from "@/lib/route-prefetch";
 
@@ -18,4 +19,5 @@ export const Route = createFileRoute("/net-worth")({
     warm(queryClient, getDebtsSuspenseQueryOptions());
   },
   component: NetWorthPage,
+  pendingComponent: NetWorthPending,
 });

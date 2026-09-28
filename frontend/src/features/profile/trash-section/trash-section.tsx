@@ -4,12 +4,11 @@ import { useRestoreDeleted, useTrashSuspense } from "@/api/generated";
 import { PagedRows } from "@/components/paged-rows/paged-rows";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { TitledSection } from "@/components/ui/section/section";
-import { Skeleton } from "@/components/ui/skeleton/skeleton";
 import { Tag } from "@/components/ui/tag/tag";
 import { useDateTime } from "@/hooks/use-formatters";
 import { usePagedItems, usePagedList } from "@/hooks/use-paged-list";
 import { notify } from "@/lib/mutations";
-import { ActionRow } from "../action-row/action-row";
+import { ActionRow, ActionRowsSkeleton } from "../action-row/action-row";
 
 const TRASH_PAGE_SIZE = 10;
 const TRASH_RETENTION_DAYS = 30;
@@ -71,7 +70,7 @@ export function TrashSection() {
       description={t("trash.description", { days: TRASH_RETENTION_DAYS })}
       bodyGap="md"
     >
-      <QueryBoundary fallback={<Skeleton className="h-32 w-full" />}>
+      <QueryBoundary fallback={<ActionRowsSkeleton rows={3} />}>
         <TrashList />
       </QueryBoundary>
     </TitledSection>

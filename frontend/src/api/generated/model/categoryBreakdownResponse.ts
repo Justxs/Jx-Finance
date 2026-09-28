@@ -12,4 +12,6 @@ export interface CategoryBreakdownResponse {
   items: CategoryBreakdownItem[];
   periodStart: DateOnly;
   periodEnd: DateOnly;
+  comparisonStart: DateOnly;
+  comparisonEnd: DateOnly;
 }

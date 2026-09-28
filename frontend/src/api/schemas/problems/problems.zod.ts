@@ -94,6 +94,7 @@ export const ProblemDetailsResponse = zod
                 "household.required",
                 "household.scopeMismatch",
                 "iban.invalid",
+                "import.entryMismatch",
                 "import.invalidFile",
                 "import.noStatementForAccount",
                 "import.transferAlreadyMatched",

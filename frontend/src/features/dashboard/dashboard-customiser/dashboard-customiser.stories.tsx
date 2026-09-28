@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, fn, userEvent, waitFor, within } from "storybook/test";
 import {
+  getDashboardLayoutMockHandler,
   getResetDashboardLayoutMockHandler,
   getSaveDashboardLayoutMockHandler,
 } from "@/api/generated/dashboard/dashboard.msw";
@@ -14,7 +15,7 @@ import {
 } from "@/storybook/fixtures";
 import { failWith, pending, withHandlers } from "@/storybook/handlers";
 import type { Canvas } from "@/storybook/interactions";
-import { DashboardCustomiser } from "./dashboard-customiser";
+import { DashboardCustomiser, DashboardLayoutSection } from "./dashboard-customiser";
 
 const meta = {
   title: "Features/Dashboard/DashboardCustomiser",
@@ -143,4 +144,9 @@ export const SaveError: Story = {
     await expect(await canvas.findByRole("alert")).toBeInTheDocument();
     await expect(args.onDone).not.toHaveBeenCalled();
   },
+};
+
+export const Loading: Story = {
+  parameters: withHandlers(getDashboardLayoutMockHandler(pending)),
+  render: () => <DashboardLayoutSection />,
 };

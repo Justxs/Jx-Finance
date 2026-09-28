@@ -133,6 +133,21 @@ export const UnusualAmountsPriceRisesAndMonthClose: Story = {
   },
 };
 
+export const SidebarRow: Story = {
+  args: { sidebar: "expanded" },
+  decorators: [withWidth("flex h-96 w-58 flex-col justify-end")],
+  play: async ({ canvas }) => {
+    const row = await canvas.findByRole("button", { name: /unread/i });
+
+    await expect(row).toHaveTextContent("Notifications");
+  },
+};
+
+export const SidebarCollapsed: Story = {
+  args: { sidebar: "collapsed" },
+  decorators: [withWidth("flex h-96 w-16 flex-col justify-end px-2")],
+};
+
 export const Loading: Story = { parameters: { msw: { handlers: loadingHandlers } } };
 
 export const LoadFailed: Story = { parameters: { msw: { handlers: errorHandlers } } };

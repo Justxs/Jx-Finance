@@ -10,6 +10,7 @@ import {
 import { useAxisDateTick, useAxisMoney, useIsoDate } from "@/hooks/use-formatters";
 import { parseIso } from "@/lib/calendar";
 import { ChartLegend } from "./chart-legend";
+import { CHART_HEIGHT } from "./chart-skeleton";
 import { axisProps, chartCursor } from "./chart-theme";
 import { type ChartSeries, ChartTooltip } from "./chart-tooltip";
 
@@ -76,7 +77,7 @@ export function TimeSeriesLineChart({
 
   const chart = (
     <div role="img" aria-label={ariaLabel}>
-      <ResponsiveContainer width="100%" height={240}>
+      <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
         <LineChart
           accessibilityLayer={false}
           data={data}

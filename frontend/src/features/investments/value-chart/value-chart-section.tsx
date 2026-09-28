@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { ChartSkeleton } from "@/components/chart/chart-skeleton";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { SelectField } from "@/components/select-field/select-field";
 import { Section, SectionHeader } from "@/components/ui/section/section";
-import { Skeleton } from "@/components/ui/skeleton/skeleton";
 import { StaleRegion } from "@/components/ui/stale-region/stale-region";
 import { useDeferredParams } from "@/hooks/use-deferred-params";
 import { useTodayDate } from "@/hooks/use-settings";
@@ -33,7 +33,7 @@ export function ValueChartSection({ accountId }: Readonly<Props>) {
         />
       </SectionHeader>
       <QueryBoundary
-        fallback={<Skeleton className="h-56 w-full" />}
+        fallback={<ChartSkeleton legend />}
         errorSubject={t("investments.valueChart.title")}
       >
         <StaleRegion stale={stale}>
