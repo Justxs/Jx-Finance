@@ -262,6 +262,13 @@ function buildTags() {
   };
 }
 
+function buildPayees() {
+  return {
+    ...fixtures.emptyReportSummary,
+    expenseByPayee: fixtures.buildPayeeBreakdownItems(fixtures.transactions),
+  };
+}
+
 function buildReport() {
   return fixtures.buildReportSummary("2026-08-01", "2026-09-30");
 }
@@ -294,6 +301,10 @@ const builtResponses: Record<string, { schema: ZodType; build: () => unknown }> 
   buildTagBreakdownItems: {
     schema: schemas.ReportSummaryResponse,
     build: buildTags,
+  },
+  buildPayeeBreakdownItems: {
+    schema: schemas.ReportSummaryResponse,
+    build: buildPayees,
   },
 };
 

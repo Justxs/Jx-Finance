@@ -19,6 +19,13 @@ public static class WebApplicationExtensions
             logger.LogInformation("Applying {Count} migration(s): {Migrations}", pending.Count, string.Join(", ", pending));
             await db.Database.MigrateAsync();
         }
+
+        var filled = await PayeeKeyBackfill.RunAsync(db, CancellationToken.None);
+        if (filled > 0)
+        {
+            logger.LogInformation("Filled the payee key of {Count} transaction(s)", filled);
+        }
+
         if (app.Environment.IsDevelopment())
         {
             var users = services.GetRequiredService<UserManager<AppUser>>();

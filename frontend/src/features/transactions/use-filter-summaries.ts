@@ -62,6 +62,14 @@ export function useFilterSummaries({ accounts, categories, tags }: Args) {
       clear: () => fields.search.set(""),
     });
   }
+  if (fields.payee.value) {
+    summaries.push({
+      key: "payee",
+      label: fields.payee.label,
+      value: fields.payee.value,
+      clear: () => fields.payee.set(""),
+    });
+  }
   if (fields.account.value) {
     summaries.push({
       key: "account",

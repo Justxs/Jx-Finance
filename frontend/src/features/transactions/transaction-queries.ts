@@ -3,6 +3,7 @@ import type { FlowType, SortDirection, TransactionSortField } from "@/api/genera
 interface TransactionsView {
   page: number;
   search?: string;
+  payee?: string;
   accountId?: string;
   categoryId?: string;
   tagIds?: string;
@@ -31,6 +32,7 @@ export function transactionListParams(view: TransactionsView, pageSize: number) 
 export interface TransactionFilter {
   [key: string]: string | boolean | undefined;
   search?: string;
+  payee?: string;
   accountId?: string;
   categoryId?: string;
   tagIds?: string;
@@ -44,6 +46,7 @@ export interface TransactionFilter {
 export function transactionFilterParams(view: TransactionsView): TransactionFilter {
   return {
     search: view.search,
+    payee: view.payee,
     accountId: view.accountId,
     categoryId: view.categoryId,
     tagIds: view.tagIds,

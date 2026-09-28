@@ -30,6 +30,16 @@ export const DateRangeSince: Story = {
   },
 };
 
+export const PayeeFromTheReport: Story = {
+  parameters: { route: "/transactions?payee=maxima%20lt%20uab&type=expense" },
+  play: async ({ canvas }) => {
+    const chip = await canvas.findByRole("button", { name: "Remove filter Payee: maxima lt uab" });
+    await userEvent.click(chip);
+    await waitFor(() => expect(chip).not.toBeInTheDocument());
+    await expect(canvas.getByText("Expense")).toBeVisible();
+  },
+};
+
 export const NoFilters: Story = { parameters: { route: "/transactions" } };
 
 export const ClearingAll: Story = {

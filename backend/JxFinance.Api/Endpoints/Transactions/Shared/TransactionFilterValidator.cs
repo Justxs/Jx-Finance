@@ -15,5 +15,6 @@ public abstract class TransactionFilterValidator<TRequest> : Validator<TRequest>
             .Must(ids => GuidList.IsWellFormed(ids, TagRules.MaxTags))
             .WithErrorCode(ErrorCodes.TextInvalidFormat)
             .WithMessage($"tagIds must be up to {TagRules.MaxTags} tag ids separated by commas.");
+        RuleFor(r => r.Payee).HasMaxLength(500);
     }
 }

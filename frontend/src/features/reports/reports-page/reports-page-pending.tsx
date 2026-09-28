@@ -39,6 +39,10 @@ export function ReportsPending() {
             <ShareRowsSkeleton rows={4} />
             <TextSkeleton size="xs" className="mt-3" width="w-3/4" />
           </SectionSkeleton>
+          <SectionSkeleton>
+            <ShareRowsSkeleton rows={8} />
+            <TextSkeleton size="xs" className="mt-3" width="w-3/4" />
+          </SectionSkeleton>
         </div>
         <SectionSkeleton>
           <ChartSkeleton height={280} legend />

@@ -6,7 +6,6 @@ The table is in the suggested build order. Each plan's `Status:` line names what
 
 | Plan | Size | Where it lives | Build after |
 | --- | --- | --- | --- |
-| [Spending by payee](spending-by-payee.md) | M | Reports, ledger filter | |
 | [Cash-flow forecast](cash-flow-forecast.md) | M | Recurring entries, Accounts, dashboard card | |
 | [Reconciliation by hand](reconciliation-by-hand.md) | M | Accounts, month close | |
 | [Monthly digest](monthly-digest.md) | M | Notifications section of Settings | Reconciliation by hand |
@@ -25,7 +24,7 @@ Several plans touch the same code. Whichever lands second adapts to the first:
 
 - `ImportService.ConfirmAsync` and the import preview, which already match hand-entered rows: refunds, generic CSV, reconciliation.
 - `Common/Statistics.cs` (the median and spread moved out of `UnusualAmountRule`, shipped with [budget limits from history](../features/budgets.md#limits-from-history)): cash-flow forecast reuses it.
-- `Transaction.PayeeKey`: added by spending by payee, then read by machine-learned categorization and by the shipped `SuggestedRuleService`, which groups by `SubscriptionDescription.Normalize` in memory until then.
+- `Transaction.PayeeKey`, shipped with [spending by payee](../features/reports.md#expense-by-payee) and already read by `SuggestedRuleService`: machine-learned categorization reads it too. Unusual amounts, subscription detection and price rises still normalize in memory; moving them to the column is a follow-up that only removes code.
 - The month-close checklist field `checklist.imports` is renamed by reconciliation by hand, a contract change.
 - `ICurrentUser` registration gains a job user for the monthly digest.
 - The Security section of Settings: passkeys and personal API tokens.

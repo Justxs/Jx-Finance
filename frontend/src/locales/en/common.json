@@ -1728,6 +1728,10 @@
     "trend": "Trend",
     "expenseByCategory": "Expense by category",
     "incomeByCategory": "Income by category",
+    "expenseByPayee": "Expense by payee",
+    "payeeHint": "Whole transactions are counted, and descriptions that differ only in reference numbers are one payee.",
+    "noDescription": "No description",
+    "showAllPayees": "Show all",
     "noIncome": "No income recorded in this period.",
     "syntheticGroups": {
       "investmentIncome": "Investment income",
@@ -1909,7 +1913,8 @@
     "remove": "Remove filter {{column}}: {{value}}",
     "since": "From {{date}}",
     "until": "Until {{date}}",
-    "clearAll": "Clear filters"
+    "clearAll": "Clear filters",
+    "payee": "Payee"
   },
   "charts": {
     "income": "Income",

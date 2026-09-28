@@ -168,7 +168,7 @@ A person who files the third MAXIMA line under Groceries by hand is asked, once,
 
 ```mermaid
 flowchart TD
-    Rows["the caller's own unsplit rows of the last 12 months<br/>that have a description, newest first, at most 5000"] --> Key["group by SubscriptionDescription.Normalize"]
+    Rows["the caller's own unsplit rows of the last 12 months<br/>that have a description, newest first, at most 5000"] --> Key["group by the stored PayeeKey"]
     Key --> Hand["keep rows with a visible category<br/>that none of the caller's rules matches"]
     Hand --> Three{"at least 3 rows<br/>with one category?"}
     Three -->|"no"| Skip["no suggestion"]
@@ -182,7 +182,7 @@ flowchart TD
     Check -->|"yes"| Offer["suggestion: name, match, pattern,<br/>category, row count, last date"]
 ```
 
-**The evidence.** Rows are grouped by the key unusual amounts and subscription detection already use: lower case, punctuation gone, reference numbers and dates dropped, so every card line of one shop lands in one group. A group backs a suggestion when at least three of its rows carry the same category and no row of the group carries a different category of the same flow type; "always" is only honest when the history never disagreed. An income row with the same description does not block an expense suggestion, because an expense rule never matches income. Only rows the caller created count, on any account they can see: the question says "you filed this", and a housemate's rows on a shared account are that housemate's habit. Split rows, deleted rows and rows older than twelve months never count.
+**The evidence.** Rows are grouped by the key unusual amounts and subscription detection already use: lower case, punctuation gone, reference numbers and dates dropped, so every card line of one shop lands in one group. Since 2026-09-29 the query reads it from the stored `Transaction.PayeeKey` that [spending by payee](reports.md#expense-by-payee) added instead of normalizing each description in memory; both are `SubscriptionDescription.Normalize`, so the groups are the same. A group backs a suggestion when at least three of its rows carry the same category and no row of the group carries a different category of the same flow type; "always" is only honest when the history never disagreed. An income row with the same description does not block an expense suggestion, because an expense rule never matches income. Only rows the caller created count, on any account they can see: the question says "you filed this", and a housemate's rows on a shared account are that housemate's habit. Split rows, deleted rows and rows older than twelve months never count.
 
 **By hand.** Nothing records how a category was set, so a row counts as filed by hand when none of the caller's current rules matches it, with the same `RuleMatcher` the run uses. A row a rule already matches needs no new rule, which is also why creating the suggested rule makes the suggestion disappear.
 

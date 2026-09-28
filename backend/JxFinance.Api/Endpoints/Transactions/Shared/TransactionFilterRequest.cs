@@ -14,6 +14,8 @@ public abstract class TransactionFilterRequest
 
     public string? Search { get; init; }
 
+    public string? Payee { get; init; }
+
     public DateOnly? DateFrom { get; init; }
 
     public DateOnly? DateTo { get; init; }

@@ -16,6 +16,7 @@ const savedFilterSchema = z.object({
   name: z.string().max(SAVED_NAME_MAX_LENGTH),
   filter: z.object({
     search: z.string().optional().catch(undefined),
+    payee: z.string().optional().catch(undefined),
     accountId: z.string().optional().catch(undefined),
     categoryId: z.string().optional().catch(undefined),
     tagIds: z.string().optional().catch(undefined),

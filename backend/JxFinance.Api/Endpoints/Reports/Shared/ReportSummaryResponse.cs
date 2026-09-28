@@ -30,4 +30,5 @@ public sealed record ReportSummaryResponse(
     IReadOnlyList<ReportTrendPoint> Trend,
     string TrendBucket,
     IReadOnlyList<TagBreakdownItem> ExpenseByTag,
+    IReadOnlyList<PayeeBreakdownItem> ExpenseByPayee,
     ReportComparisonTotals? Comparison = null);

@@ -54,7 +54,7 @@ The result is an `UnusualVerdict(Basis, TypicalAmount, Factor, SampleSize)`: the
 
 `UnusualAmountService` picks the baseline per row:
 
-1. **Payee.** The rows on the same account whose description normalizes to the same key through `SubscriptionDescription.Normalize`, the function subscription detection already trusts. With at least 4 earlier rows the payee decides, and its answer is final even when it says the amount is usual.
+1. **Payee.** The rows on the same account whose description normalizes to the same key through `SubscriptionDescription.Normalize`, the function subscription detection already trusts. With at least 4 earlier rows the payee decides, and its answer is final even when it says the amount is usual. Since 2026-09-29 the same key is also stored on every transaction as `PayeeKey` for [spending by payee](reports.md#expense-by-payee); this check still computes it itself.
 2. **Category.** Otherwise the rows of the same category, on any account the account owner can see, with at least 8 earlier rows.
 3. Otherwise the row is not flagged. A row with no category and a new payee is never flagged.
 

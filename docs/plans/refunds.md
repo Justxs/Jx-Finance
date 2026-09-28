@@ -1,6 +1,6 @@
 # Plan: Refunds
 
-Status: planned 2026-09-28. Size M. It extends the matcher of [imports matched to hand-entered rows](../features/bank-statement-import.md#entries-you-already-made-by-hand) so a refund typed in by hand is linked to the bank's credit. It is independent of [Generic CSV import](generic-csv-import.md), whose card statements bring in the most refunds. [Household settle-up](household-settle-up.md) and [Spending by payee](spending-by-payee.md) should count spending the way this plan defines it.
+Status: planned 2026-09-28. Size M. It extends the matcher of [imports matched to hand-entered rows](../features/bank-statement-import.md#entries-you-already-made-by-hand) so a refund typed in by hand is linked to the bank's credit. It is independent of [Generic CSV import](generic-csv-import.md), whose card statements bring in the most refunds. [Household settle-up](household-settle-up.md) and the shipped [spending by payee](../features/reports.md#expense-by-payee) should count spending the way this plan defines it: a refund carries the shop's description and lowers that payee's total the same way it lowers the category's.
 
 ## Outcome
 

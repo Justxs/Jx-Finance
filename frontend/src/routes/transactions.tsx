@@ -20,6 +20,7 @@ import { optionalParam, sortParams } from "@/lib/search-schema";
 export const transactionsSearchSchema = z.object({
   page: z.coerce.number().int().min(1).optional().default(1).catch(1),
   search: optionalParam(z.string()),
+  payee: optionalParam(z.string()),
   accountId: optionalParam(z.uuid()),
   categoryId: optionalParam(z.uuid()),
   tagIds: optionalParam(

@@ -38,6 +38,7 @@ export function useTransactionFilters({ accounts, categories }: Args) {
 
   const activeCount = [
     search.search,
+    search.payee,
     search.type,
     search.dateFrom || search.dateTo,
     search.categoryId || search.uncategorized,
@@ -76,6 +77,11 @@ export function useTransactionFilters({ accounts, categories }: Args) {
       value: search.search ?? "",
       debounceMs: SEARCH_DEBOUNCE_MS,
       set: (next: string) => patchSearch({ search: next || undefined }),
+    },
+    payee: {
+      label: t("filters.payee"),
+      value: search.payee ?? "",
+      set: (next: string) => patchSearch({ payee: next || undefined }),
     },
     type: {
       label: t("transactions.type"),

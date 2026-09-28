@@ -33,6 +33,11 @@ export type TransactionsSummaryParams = {
    */
   search?: string | null;
   /**
+   * Keep only transactions whose normalized description equals the normalized value: lowercase words, punctuation dropped and tokens with three or more digits dropped. Send a payeeKey from the report's expenseByPayee or a raw description. A value with nothing left after normalizing is ignored.
+   * @nullable
+   */
+  payee?: string | null;
+  /**
    * Inclusive start date as YYYY-MM-DD.
    * @nullable
    */

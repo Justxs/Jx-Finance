@@ -15,6 +15,7 @@ import { useIsoDate } from "@/hooks/use-formatters";
 import { useFeature, useTodayDate } from "@/hooks/use-settings";
 import { TRANSACTIONS_EXPORT_CSV_PATH, TRANSACTIONS_EXPORT_PDF_PATH } from "@/lib/export-url";
 import { NetWorthChangeCard } from "../net-worth-change-card/net-worth-change-card";
+import { PayeeBreakdown } from "../payee-breakdown/payee-breakdown";
 import { detectPreset, ReportFilters } from "../report-filters";
 import { reportComparison, reportParams, reportRange } from "../report-queries";
 import { ReportStats } from "../report-stats/report-stats";
@@ -106,6 +107,13 @@ export function ReportsPage() {
               <TitledSection title={t("tags.byTag")} bodyGap="md">
                 <TagBreakdown
                   items={summary.data.expenseByTag}
+                  dateFrom={shown.dateFrom}
+                  dateTo={shown.dateTo}
+                />
+              </TitledSection>
+              <TitledSection title={t("reports.expenseByPayee")} bodyGap="md">
+                <PayeeBreakdown
+                  items={summary.data.expenseByPayee}
                   dateFrom={shown.dateFrom}
                   dateTo={shown.dateTo}
                 />

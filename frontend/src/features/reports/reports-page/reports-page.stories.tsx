@@ -129,3 +129,25 @@ export const CategoryLinksCarryTheRange: Story = {
     ).toEqual([]);
   },
 };
+
+export const PayeeLinksOpenTheLedgerForThatPayee: Story = {
+  parameters: { route: routeFor({ dateFrom: "2026-08-10", dateTo: "2026-09-12" }) },
+  play: async ({ canvas }) => {
+    const section = await canvas.findByRole("heading", {
+      name: /expense by payee|išlaidos pagal gavėją/i,
+    });
+    const targets = within(section.closest("section")!)
+      .getAllByRole("link")
+      .map((link) => link.getAttribute("href") ?? "");
+
+    await expect(targets.length).toBeGreaterThan(0);
+    await expect(
+      targets.filter(
+        (href) =>
+          !href.includes("payee=") ||
+          !href.includes("type=expense") ||
+          !href.includes("dateFrom=2026-08-10"),
+      ),
+    ).toEqual([]);
+  },
+};

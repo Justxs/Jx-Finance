@@ -6,7 +6,7 @@ Backend `Transactions`, page `/transactions`. One `Filtered` method builds the q
 
 ```mermaid
 flowchart TD
-    Url["Search params<br/>text, account, category, tags, type, dateFrom, dateTo, unusual, uncategorized, sort, direction, page"] --> Defer["useDeferredParams"]
+    Url["Search params<br/>text, payee, account, category, tags, type, dateFrom, dateTo, unusual, uncategorized, sort, direction, page"] --> Defer["useDeferredParams"]
     Defer --> List["GET /api/transactions"]
     Defer --> Summary["GET /api/transactions/summary"]
     Url --> Csv["GET /api/transactions/export"]
@@ -29,7 +29,7 @@ Since 2026-09-27 an expense can pay one of the signed-in user's debts that track
 
 ## Active filters and the header
 
-While a column filter is active its button names the value in its tooltip and accessible name, such as "Filter by Account (now: Swedbank einamoji)", besides the tint. Above the rows, one line lists every active filter as a removable chip, labelled with its column, and ends with "Clear filters", which keeps the sort. A date range that covers exactly one calendar month reads as the month, such as "September 2026"; otherwise it reads as a range, or "From" or "Until" one date. The search text is quoted, and the category chip can read "Uncategorized". The phone filters dialog writes the same search params, so the line shows on phones too. It replaced the "Clear filters" button that sat in the page header. `useFilterSummaries` builds the chip texts, and the column buttons read the same texts.
+While a column filter is active its button names the value in its tooltip and accessible name, such as "Filter by Account (now: Swedbank einamoji)", besides the tint. Above the rows, one line lists every active filter as a removable chip, labelled with its column, and ends with "Clear filters", which keeps the sort. A date range that covers exactly one calendar month reads as the month, such as "September 2026"; otherwise it reads as a range, or "From" or "Until" one date. The search text is quoted, the payee chip shows the key it filters on, and the category chip can read "Uncategorized". The phone filters dialog writes the same search params, so the line shows on phones too. It replaced the "Clear filters" button that sat in the page header. `useFilterSummaries` builds the chip texts, and the column buttons read the same texts.
 
 While the `Import` switch is on, the header also holds "Import bank statement" beside "Add transaction"; it opens the dialog described in [Bank statement import](bank-statement-import.md).
 
@@ -48,6 +48,10 @@ A save that sets or changes a category, in this cell or in the transaction form'
 `uncategorized=true` is a filter on the same four endpoints, part of `TransactionFilterRequest` like every other, and belongs to no feature. It keeps a transaction with no category, and a split transaction with at least one line without one; a split whose lines all carry a category is categorized even though its own `CategoryId` is empty. The ledger offers it as "Uncategorized", right after "All categories" in the category column's filter and in the phone filters dialog; choosing it clears `categoryId` and choosing a category clears it, so the two never combine. It is the `uncategorized` search param, counts as an active filter, travels in the export links and in a saved filter, and a saved filter written before it parses without it. It arrived with [month-end close](month-end-close.md), whose checklist counts the month's uncategorized rows through the summary and links to the ledger with the month's dates and this filter, so the count and the list it opens agree.
 
 While `MonthClose` is on, the create and edit dialogs of a transaction and a currency conversion show a hint under the date when that date falls in a month the user closed under the current household scope: "August 2026 is closed. Saving will show as a change after the close." `ClosedMonthHint` in `features/month-close` reads the year's statuses from `GET /api/month-close?year=`, fetched quietly on demand with a one-minute stale time; a failure shows no hint. It is a hint only: saving is never blocked, and the change shows as drift when the dashboard shows that month. Every transaction, transfer, conversion and investment mutation also invalidates the `/api/month-close` queries, so the month's status and drift follow without a reload.
+
+## Payee filter
+
+`payee` is a filter on the same four endpoints, part of `TransactionFilterRequest`, and belongs to no feature. The server normalizes the value with `SubscriptionDescription.Normalize` and keeps the rows whose stored `PayeeKey` equals it, so a key from the report and a pasted description such as "MAXIMA LT, UAB 4412" find the same rows; a value with nothing left after normalizing filters nothing, and more than 500 characters is refused with `text.tooLong`. It is how a row of "Expense by payee" on the reports page opens the ledger, together with `type=expense` and the range, so the list, the totals and both exports agree with the report's amount; see [Reports](reports.md#expense-by-payee). Unlike `search`, which is `ILIKE` on the raw text, it ignores punctuation and reference numbers. The filters dialog has no field for it, because it is reached from the report: it is the `payee` search param, counts as an active filter, shows as a removable "Payee" chip, travels in the export links and in a saved filter, and a saved filter written before it parses without it.
 
 ## Create with a split
 

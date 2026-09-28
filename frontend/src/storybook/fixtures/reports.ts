@@ -1,5 +1,6 @@
 import type {
   CategoryBreakdownItem,
+  PayeeBreakdownItem,
   ReportComparisonMode,
   ReportSummaryResponse,
   ReportTrendPoint,
@@ -11,6 +12,7 @@ import { categories } from "./categories";
 import { buildCategoryBreakdownItems, monthlyTrendItems } from "./dashboard";
 import { tags } from "./tags";
 import {
+  buildPayeeBreakdownItems,
   buildTagBreakdownItems,
   sumByType,
   transactions,
@@ -86,6 +88,7 @@ export function buildReportSummary(dateFrom: string, dateTo: string): ReportSumm
     trend: buildDailyTrend(dateFrom, dateTo),
     trendBucket: "day",
     expenseByTag: buildTagBreakdownItems(items),
+    expenseByPayee: buildPayeeBreakdownItems(items),
   };
 }
 
@@ -133,6 +136,35 @@ function yearTagShare(tagId: string, share: number): TagBreakdownItem {
   };
 }
 
+const YEAR_PAYEES: [string, string, number, number][] = [
+  ["būsto paskolos įmoka", "Būsto paskolos įmoka", 0.2, 12],
+  ["maxima x ukmergės g", "Maxima X, Ukmergės g.", 0.08, 41],
+  ["lidl žirmūnai", "Lidl Žirmūnai", 0.06, 38],
+  ["ignitis elektra", "Ignitis – elektra", 0.04, 12],
+  ["circle k degalai", "Circle K – degalai", 0.035, 19],
+  ["rimi hyper", "Rimi Hyper", 0.03, 22],
+  ["telia mobilusis ryšys ir internetas", "Telia – mobilusis ryšys ir internetas", 0.012, 12],
+  ["wolt jurgis ir drakonas", "Wolt – Jurgis ir Drakonas", 0.01, 14],
+  ["bolt pavėžėjimas", "Bolt pavėžėjimas", 0.006, 17],
+  ["spotify premium", "Spotify Premium", 0.005, 12],
+  ["eurovaistinė", "Eurovaistinė", 0.004, 7],
+];
+
+function yearPayeeShare([payeeKey, label, share, count]: [
+  string,
+  string,
+  number,
+  number,
+]): PayeeBreakdownItem {
+  return {
+    payeeKey,
+    label,
+    amount: fromCents(Math.round(yearExpenseCents * share)),
+    comparisonAmount: null,
+    count,
+  };
+}
+
 export const reportSummaryYear: ReportSummaryResponse = {
   periodStart: FIXTURE_YEAR_START,
   periodEnd: FIXTURE_MONTH_END,
@@ -174,7 +206,12 @@ export const reportSummaryYear: ReportSummaryResponse = {
     yearTagShare(ids.tags.reimbursable, 0.03),
     { tagId: null, tagName: "Untagged", amount: fromCents(Math.round(yearExpenseCents * 0.58)) },
   ],
+  expenseByPayee: YEAR_PAYEES.map(yearPayeeShare),
 };
+
+function payeeWeight(item: PayeeBreakdownItem): number {
+  return Math.max(Number(item.amount), Number(item.comparisonAmount ?? 0));
+}
 
 function scaled(amount: string, factor: number): string {
   return fromCents(Math.round(toCents(amount) * factor));
@@ -232,6 +269,19 @@ export function withComparison(
       })),
     { tagId: ids.tags.children, tagName: "Vaikai", amount: "0.00", comparisonAmount: "96.50" },
   ];
+  const expenseByPayee: PayeeBreakdownItem[] = [
+    ...summary.expenseByPayee.map((item, index) => ({
+      ...item,
+      comparisonAmount: scaled(item.amount, earlierFactor(index + 2)),
+    })),
+    {
+      payeeKey: "gym plius",
+      label: "Gym Plius – narystė",
+      amount: "0.00",
+      comparisonAmount: "39.00",
+      count: 0,
+    },
+  ].toSorted((a, b) => payeeWeight(b) - payeeWeight(a));
   const trend: ReportTrendPoint[] = summary.trend.map((point, index) => ({
     ...point,
     comparisonBucketStart: addDays(point.bucketStart, -shift),
@@ -247,6 +297,7 @@ export function withComparison(
     expenseByCategory,
     incomeByCategory,
     expenseByTag,
+    expenseByPayee,
     trend,
     comparison: {
       mode,
@@ -277,4 +328,5 @@ export const emptyReportSummary: ReportSummaryResponse = {
   trend: [],
   trendBucket: "day",
   expenseByTag: [],
+  expenseByPayee: [],
 };

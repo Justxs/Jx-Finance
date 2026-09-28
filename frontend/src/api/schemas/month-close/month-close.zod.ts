@@ -67,6 +67,12 @@ export const closeMonthResponseFiguresExpenseByTagItemAmountRegExp = new RegExp(
 export const closeMonthResponseFiguresExpenseByTagItemComparisonAmountRegExp = new RegExp(
   "^-?\\d+(\\.\\d{1,8})?$",
 );
+export const closeMonthResponseFiguresExpenseByPayeeItemAmountRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const closeMonthResponseFiguresExpenseByPayeeItemComparisonAmountRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
 export const closeMonthResponseFiguresComparisonTwoTotalIncomeRegExp = new RegExp(
   "^-?\\d+(\\.\\d{1,8})?$",
 );
@@ -201,6 +207,23 @@ export const CloseMonthResponse = zod.object({
         comparisonAmount: zod
           .stringFormat("decimal", closeMonthResponseFiguresExpenseByTagItemComparisonAmountRegExp)
           .nullish(),
+      }),
+    ),
+    expenseByPayee: zod.array(
+      zod.object({
+        payeeKey: zod.string().nullable(),
+        label: zod.string().nullable(),
+        amount: zod.stringFormat(
+          "decimal",
+          closeMonthResponseFiguresExpenseByPayeeItemAmountRegExp,
+        ),
+        comparisonAmount: zod
+          .stringFormat(
+            "decimal",
+            closeMonthResponseFiguresExpenseByPayeeItemComparisonAmountRegExp,
+          )
+          .nullable(),
+        count: zod.int(),
       }),
     ),
     comparison: zod
@@ -426,6 +449,12 @@ export const monthReviewResponseFiguresExpenseByTagItemAmountRegExp = new RegExp
 export const monthReviewResponseFiguresExpenseByTagItemComparisonAmountRegExp = new RegExp(
   "^-?\\d+(\\.\\d{1,8})?$",
 );
+export const monthReviewResponseFiguresExpenseByPayeeItemAmountRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const monthReviewResponseFiguresExpenseByPayeeItemComparisonAmountRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
 export const monthReviewResponseFiguresComparisonTwoTotalIncomeRegExp = new RegExp(
   "^-?\\d+(\\.\\d{1,8})?$",
 );
@@ -562,6 +591,23 @@ export const MonthReviewResponse = zod.object({
         comparisonAmount: zod
           .stringFormat("decimal", monthReviewResponseFiguresExpenseByTagItemComparisonAmountRegExp)
           .nullish(),
+      }),
+    ),
+    expenseByPayee: zod.array(
+      zod.object({
+        payeeKey: zod.string().nullable(),
+        label: zod.string().nullable(),
+        amount: zod.stringFormat(
+          "decimal",
+          monthReviewResponseFiguresExpenseByPayeeItemAmountRegExp,
+        ),
+        comparisonAmount: zod
+          .stringFormat(
+            "decimal",
+            monthReviewResponseFiguresExpenseByPayeeItemComparisonAmountRegExp,
+          )
+          .nullable(),
+        count: zod.int(),
       }),
     ),
     comparison: zod
@@ -809,6 +855,12 @@ export const updateMonthNoteResponseFiguresExpenseByTagItemAmountRegExp = new Re
 export const updateMonthNoteResponseFiguresExpenseByTagItemComparisonAmountRegExp = new RegExp(
   "^-?\\d+(\\.\\d{1,8})?$",
 );
+export const updateMonthNoteResponseFiguresExpenseByPayeeItemAmountRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const updateMonthNoteResponseFiguresExpenseByPayeeItemComparisonAmountRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
 export const updateMonthNoteResponseFiguresComparisonTwoTotalIncomeRegExp = new RegExp(
   "^-?\\d+(\\.\\d{1,8})?$",
 );
@@ -969,6 +1021,23 @@ export const UpdateMonthNoteResponse = zod.object({
             updateMonthNoteResponseFiguresExpenseByTagItemComparisonAmountRegExp,
           )
           .nullish(),
+      }),
+    ),
+    expenseByPayee: zod.array(
+      zod.object({
+        payeeKey: zod.string().nullable(),
+        label: zod.string().nullable(),
+        amount: zod.stringFormat(
+          "decimal",
+          updateMonthNoteResponseFiguresExpenseByPayeeItemAmountRegExp,
+        ),
+        comparisonAmount: zod
+          .stringFormat(
+            "decimal",
+            updateMonthNoteResponseFiguresExpenseByPayeeItemComparisonAmountRegExp,
+          )
+          .nullable(),
+        count: zod.int(),
       }),
     ),
     comparison: zod

@@ -26,6 +26,11 @@ public static class TransactionFilterSummary
         summary.Describe(nameof(TransactionFilterRequest.TagIds), Tags);
         summary.Describe(nameof(TransactionFilterRequest.Type), SummaryText.FlowType);
         summary.Describe(nameof(TransactionFilterRequest.Search), "Case-insensitive match against the description.");
+        summary.Describe(
+            nameof(TransactionFilterRequest.Payee),
+            "Keep only transactions whose normalized description equals the normalized value: lowercase words, "
+            + "punctuation dropped and tokens with three or more digits dropped. Send a payeeKey from the report's "
+            + "expenseByPayee or a raw description. A value with nothing left after normalizing is ignored.");
         summary.Describe(nameof(TransactionFilterRequest.DateFrom), dateFrom);
         summary.Describe(nameof(TransactionFilterRequest.DateTo), dateTo);
         summary.Describe(

@@ -1,5 +1,6 @@
 using System.Linq.Expressions;
 using System.Reflection;
+using JxFinance.Common.Subscriptions;
 using JxFinance.Domain.Accounts;
 using JxFinance.Domain.Audit;
 using JxFinance.Domain.Budgets;
@@ -207,9 +208,19 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, ICurren
                     {
                         ownable.UserId = CurrentUserId;
                     }
+
+                    if (entry.Entity is Transaction added)
+                    {
+                        added.PayeeKey = SubscriptionDescription.Normalize(added.Description);
+                    }
                     break;
                 case EntityState.Modified:
                     entry.Entity.UpdatedAt = now;
+                    if (entry.Entity is Transaction edited && entry.Property(nameof(Transaction.Description)).IsModified)
+                    {
+                        edited.PayeeKey = SubscriptionDescription.Normalize(edited.Description);
+                    }
+
                     if (entry.Entity is Transaction transaction && ChangesUnusualInputs(entry))
                     {
                         transaction.UnusualCheckedAt = null;

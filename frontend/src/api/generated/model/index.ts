@@ -157,6 +157,7 @@ export * from "./pagedResponseOfInvestmentTransactionResponse";
 export * from "./pagedResponseOfTransactionResponse";
 export * from "./pagedResponseOfTransferResponse";
 export * from "./pagedResponseOfTrashEntryResponse";
+export * from "./payeeBreakdownItem";
 export * from "./portfolioParams";
 export * from "./portfolioResponse";
 export * from "./portfolioYear";

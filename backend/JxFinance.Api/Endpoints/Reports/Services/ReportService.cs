@@ -62,6 +62,7 @@ public sealed class ReportService(
 
         var (trend, trendBucket) = BuildTrend(everything, period, earlier);
         var expenseByTag = await BuildTagBreakdownAsync(period, earlier, cancellationToken);
+        var expenseByPayee = await BuildPayeeBreakdownAsync(period, earlier, cancellationToken);
 
         var (totalIncome, totalExpense) = Totals(everything, period);
 
@@ -76,6 +77,7 @@ public sealed class ReportService(
             trend,
             trendBucket,
             expenseByTag,
+            expenseByPayee,
             earlier is null ? null : ComparisonTotals(comparison, earlier.Value, everything));
     }
 
@@ -157,6 +159,64 @@ public sealed class ReportService(
         }
 
         return items;
+    }
+
+    private async Task<IReadOnlyList<PayeeBreakdownItem>> BuildPayeeBreakdownAsync(
+        DateWindow period,
+        DateWindow? comparison,
+        CancellationToken cancellationToken)
+    {
+        var start = period.Start;
+        var end = period.ExclusiveEnd;
+        var expenses = db.Transactions.Where(Within(period, comparison)).Where(t => t.Type == FlowType.Expense);
+
+        var grouped = await expenses
+            .GroupBy(t => new { t.PayeeKey, Current = t.Date >= start && t.Date < end })
+            .Select(group => new
+            {
+                group.Key.PayeeKey,
+                group.Key.Current,
+                Amount = group.Sum(t => t.ReportingAmount),
+                Count = group.Count(),
+            })
+            .ToListAsync(cancellationToken);
+
+        var totals = grouped
+            .GroupBy(entry => entry.PayeeKey ?? string.Empty)
+            .Select(group => new
+            {
+                group.Key,
+                Amount = Money.Round(group.Where(entry => entry.Current).Sum(entry => entry.Amount)),
+                Earlier = comparison is null
+                    ? null
+                    : (decimal?)Money.Round(group.Where(entry => !entry.Current).Sum(entry => entry.Amount)),
+                Count = group.Where(entry => entry.Current).Sum(entry => entry.Count),
+            })
+            .OrderByDescending(item => item.Earlier is { } earlier ? Math.Max(item.Amount, earlier) : item.Amount)
+            .ThenBy(item => item.Key, StringComparer.Ordinal)
+            .Take(PayeeBreakdownItem.MaxItems)
+            .ToList();
+
+        var keys = totals.Select(item => item.Key).Where(key => key.Length > 0).ToList();
+        var labels = await expenses
+            .Where(t => keys.Contains(t.PayeeKey!))
+            .GroupBy(t => t.PayeeKey!)
+            .Select(group => new
+            {
+                group.Key,
+                Label = group
+                    .OrderByDescending(t => t.Date)
+                    .ThenByDescending(t => t.CreatedAt)
+                    .Select(t => t.Description)
+                    .FirstOrDefault(),
+            })
+            .ToDictionaryAsync(entry => entry.Key, entry => entry.Label, cancellationToken);
+
+        return totals
+            .Select(item => item.Key.Length == 0
+                ? new PayeeBreakdownItem(null, null, item.Amount, item.Earlier, item.Count)
+                : new PayeeBreakdownItem(item.Key, labels.GetValueOrDefault(item.Key), item.Amount, item.Earlier, item.Count))
+            .ToList();
     }
 
     private static (IReadOnlyList<ReportTrendPoint> Trend, string Bucket) BuildTrend(

@@ -1790,6 +1790,10 @@
     "trend": "Tendencija",
     "expenseByCategory": "Išlaidos pagal kategoriją",
     "incomeByCategory": "Pajamos pagal kategoriją",
+    "expenseByPayee": "Išlaidos pagal gavėją",
+    "payeeHint": "Skaičiuojamos visos operacijos, o aprašymai, kurie skiriasi tik nuorodų numeriais, laikomi vienu gavėju.",
+    "noDescription": "Be aprašymo",
+    "showAllPayees": "Rodyti visus",
     "noIncome": "Šiuo laikotarpiu pajamų nėra.",
     "syntheticGroups": {
       "investmentIncome": "Investicijų pajamos",
@@ -1985,7 +1989,8 @@
     "remove": "Pašalinti filtrą {{column}}: {{value}}",
     "since": "Nuo {{date}}",
     "until": "Iki {{date}}",
-    "clearAll": "Išvalyti filtrus"
+    "clearAll": "Išvalyti filtrus",
+    "payee": "Gavėjas"
   },
   "charts": {
     "income": "Pajamos",

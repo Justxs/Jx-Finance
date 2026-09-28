@@ -13,6 +13,8 @@ flowchart LR
     Api --> Trend["Trend over the range"]
     Break --> Drill["Category row links to /transactions<br/>with category, type and date range"]
     Tags --> TagDrill["Tag row links to /transactions<br/>with the tag, type and date range"]
+    Api --> Payees["Expense by payee<br/>grouped by the stored Transaction.PayeeKey"]
+    Payees --> PayeeDrill["Payee row links to /transactions<br/>with payee, type and date range"]
     Inv["IInvestmentCashFlowService<br/>only while Investments is on"] --> Totals
     Inv --> Trend
     Inv --> Groups["Synthetic groups, no link:<br/>Investment income, Investment taxes and fees"]
@@ -72,9 +74,9 @@ flowchart TB
 
 ### What the response carries
 
-`comparison` holds the earlier period's `mode`, `periodStart`, `periodEnd`, `totalIncome`, `totalExpense` and `net`. Every `CategoryBreakdownItem` and `TagBreakdownItem` gains `comparisonAmount`, and every `ReportTrendPoint` gains `comparisonBucketStart`, `comparisonIncome` and `comparisonExpense`. All of them are null when no comparison was asked for, so a client written against the older shape is unaffected.
+`comparison` holds the earlier period's `mode`, `periodStart`, `periodEnd`, `totalIncome`, `totalExpense` and `net`. Every `CategoryBreakdownItem`, `TagBreakdownItem` and `PayeeBreakdownItem` fills `comparisonAmount`, and every `ReportTrendPoint` gains `comparisonBucketStart`, `comparisonIncome` and `comparisonExpense`. All of them are null when no comparison was asked for, so a client written against the older shape is unaffected.
 
-The two breakdowns are merged on their key — the category id, the synthetic group, the tag id, or "none of those" for the uncategorized and untagged entries. A key only one period touched is still one entry, with `0.00` on the side that has nothing, because a category that stopped costing anything is the most interesting row a comparison has. That is also why the list is sorted by the larger of the two amounts rather than by the current one: a category that fell to zero keeps its place near the top instead of sinking out of sight. The list does not grow without bound — it is at most the union of two periods' categories or tags — and the page still shows five categories and eight tags, rolling the rest into "Other", with the earlier amounts of the rolled-up rows added into that row too.
+The breakdowns are merged on their key — the category id, the synthetic group, the tag id, the payee key, or "none of those" for the uncategorized and untagged entries. A key only one period touched is still one entry, with `0.00` on the side that has nothing, because a category that stopped costing anything is the most interesting row a comparison has. That is also why the list is sorted by the larger of the two amounts rather than by the current one: a category that fell to zero keeps its place near the top instead of sinking out of sight. The list does not grow without bound — it is at most the union of two periods' categories or tags — and the page still shows five categories and eight tags, rolling the rest into "Other", with the earlier amounts of the rolled-up rows added into that row too.
 
 The trend keeps the bucket size the chosen range decides (daily up to 62 days, monthly beyond) and applies it to both sides, then pairs bucket *i* of the range with bucket *i* of the earlier one. A bucket with no counterpart compares against zero; a counterpart past the end of the range is not drawn, though its amounts are still inside the comparison totals. `comparisonBucketStart` says which earlier bucket a point was paired with, so the chart can name it.
 
@@ -101,6 +103,22 @@ The CSV and PDF buttons on the page are transaction exports (`/api/transactions/
 A transaction can carry several tags, and then it counts once under each of them. The tag items can therefore add up to more than `totalExpense`; only the untagged item is disjoint from the rest. That is the nature of the question — one receipt really can be both the holiday and the thing a colleague will pay back — and the page says so in a line under the list. Investment cash flows carry no tag and are left out of the list entirely, so it can also come to less than `totalExpense`.
 
 The list covers expenses only. Tags in practice mark spending themes, the untagged group is about spending, and an income split by tag would double the page for a question `incomeByCategory` already answers. Visibility needs no code: the breakdown joins `TransactionTags` onto `db.Transactions`, which is already scoped by account visibility and by the active household, and the names come from `db.Tags`, filtered exactly as categories are. Tags are described in full on [Tags](tags.md).
+
+## Expense by payee
+
+`expenseByPayee` answers "how much went to Maxima this year" for whatever range and comparison the page shows. It holds one `PayeeBreakdownItem` per payee, with `payeeKey`, `label`, `amount`, `comparisonAmount` and `count`, and the page shows it as "Expense by payee" under the tag breakdown, behind the same `Reports` switch.
+
+**What a payee is.** `SubscriptionDescription.Normalize` of the description, the key unusual amounts, subscription detection and suggested rules already group by: lowercase words, punctuation gone, and any token that is all digits or carries three or more of them dropped. "MAXIMA LT, UAB 20260302" and "Maxima LT UAB 20260320" are one payee, `maxima lt uab`, so reference numbers and dates on card lines do not split one shop into many rows. The key is stored on every transaction as `PayeeKey` (see [Data model](../data-model.md#payee-key)), which makes the report one grouped query like the tag breakdown and lets the ledger filter on exactly the same key. A chain whose shops print different texts, such as "maxima x vilnius" and "maxima kaunas", stays several payees; the ledger's text search and its totals answer "all of Maxima" (see [decisions](../decisions/reports.md)).
+
+**What is counted.** Expenses only, as the sum of `ReportingAmount` over whole transactions: a split transaction counts once under its own description, because a split divides one payment between categories, not between payees. Income and the investment ledger's entries are left out, so the list can add up to less than `totalExpense`. The expenses without a description, or with nothing left after normalizing, are one entry with `payeeKey` and `label` null, which the page shows muted as "No description" and without a link. Visibility and the active household come from the query filter on `db.Transactions`, exactly as for tags, so a shared account's rows appear for every member.
+
+**How many.** The server returns at most `PayeeBreakdownItem.MaxItems`, 50 entries, ordered by the larger of the two amounts like the other breakdowns, so a payee that stopped costing anything keeps its place with `amount` `0.00`. The page shows eight and **Show all** reveals the rest in place; the shares are of the rows shown. Anything below the fifty is one ledger search away.
+
+**The label** is the newest description of the key, read by a second query for the listed keys only. The earlier period always lies before the chosen range, so that is the newest description inside the range when the payee has one there, and the newest of the earlier period otherwise. It reads like the bank text people recognise. `count` is the number of the payee's transactions inside the range.
+
+**Drill-through.** Each named row links to `/transactions` with `payee` set to the key, `type=expense` and the range. The ledger's `payee` filter keeps `PayeeKey == Normalize(value)`, so its list, its totals and both exports hold exactly the rows behind the amount; see [Transactions](transactions.md#payee-filter). The list itself is not exported, like the other breakdowns (see [What is not exported](#what-is-not-exported)).
+
+The month-end review's `figures` are this same report summary, so they carry the list as well; the month-end page does not show it.
 
 ## What counts as income and expense
 

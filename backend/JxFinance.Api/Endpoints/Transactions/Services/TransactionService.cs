@@ -5,6 +5,7 @@ using JxFinance.Common.Errors;
 using JxFinance.Common.ExchangeRates;
 using JxFinance.Common.References;
 using JxFinance.Common.Settings;
+using JxFinance.Common.Subscriptions;
 using JxFinance.Common.Trash;
 using JxFinance.Domain.Accounts;
 using JxFinance.Domain.Audit;
@@ -182,6 +183,11 @@ public sealed class TransactionService(
         {
             var pattern = LikePattern.Contains(request.Search);
             query = query.Where(t => t.Description != null && EF.Functions.ILike(t.Description, pattern, LikePattern.Escape));
+        }
+
+        if (SubscriptionDescription.Normalize(request.Payee) is { Length: > 0 } payeeKey)
+        {
+            query = query.Where(t => t.PayeeKey == payeeKey);
         }
 
         if (request.DateFrom is { } dateFrom)

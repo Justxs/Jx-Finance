@@ -95,6 +95,20 @@ describe("saved filters", () => {
     ]);
   });
 
+  test("a payee filter is kept and one saved before payees existed still parses", async () => {
+    seedRows(SAVED_FILTERS_STORAGE_KEY, [
+      { id: "stored-1", name: "Maxima", filter: { payee: "maxima lt uab", type: "expense" } },
+      { id: "stored-2", name: "Older", filter: { search: "lidl" } },
+    ]);
+
+    const store = await loadStore();
+
+    expect(store.readSavedFilters()).toEqual([
+      { id: "stored-1", name: "Maxima", filter: { payee: "maxima lt uab", type: "expense" } },
+      { id: "stored-2", name: "Older", filter: { search: "lidl" } },
+    ]);
+  });
+
   test("the hook follows writes", async () => {
     const store = await loadStore();
     const { result } = renderHook(() => store.useSavedFilters());

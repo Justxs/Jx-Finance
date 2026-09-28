@@ -152,13 +152,13 @@ public sealed class SuggestedRuleService(
             .OrderByDescending(t => t.Date)
             .ThenByDescending(t => t.CreatedAt)
             .Take(UnusualAmountService.MaxHistoryRows)
-            .Select(t => new { t.Id, t.AccountId, t.Type, t.Amount.Amount, t.Description, t.CategoryId, t.Date })
+            .Select(t => new { t.Id, t.AccountId, t.Type, t.Amount.Amount, t.Description, t.PayeeKey, t.CategoryId, t.Date })
             .ToListAsync(cancellationToken);
 
         return rows
             .Select(t => new HistoryRow(
                 new LedgerEntry(t.Id, t.AccountId, t.Type, t.Amount, t.Description),
-                SubscriptionDescription.Normalize(t.Description),
+                t.PayeeKey ?? string.Empty,
                 t.CategoryId,
                 t.Date))
             .ToList();

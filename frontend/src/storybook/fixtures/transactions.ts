@@ -1,4 +1,5 @@
 import type {
+  PayeeBreakdownItem,
   TagBreakdownItem,
   TransactionLineResponse,
   TransactionResponse,
@@ -288,4 +289,33 @@ export function buildTagBreakdownItems(items: TransactionResponse[]): TagBreakdo
       .toSorted((a, b) => Number(b.amount) - Number(a.amount)),
     { tagId: null, tagName: "Untagged", amount: fromCents(untagged) },
   ];
+}
+
+function payeeKeyOf(description: string | null): string {
+  return (description ?? "")
+    .toLowerCase()
+    .split(/[^\p{L}\p{N}]+/u)
+    .filter((token) => token !== "" && !/^\d+$/.test(token) && token.replace(/\D/g, "").length < 3)
+    .join(" ");
+}
+
+export function buildPayeeBreakdownItems(items: TransactionResponse[]): PayeeBreakdownItem[] {
+  const byKey = new Map<string, PayeeBreakdownItem>();
+  const newestFirst = items
+    .filter((item) => item.type === "expense")
+    .toSorted((a, b) => b.date.localeCompare(a.date));
+
+  for (const item of newestFirst) {
+    const key = payeeKeyOf(item.description);
+    const entry = byKey.get(key);
+    byKey.set(key, {
+      payeeKey: key || null,
+      label: key ? (entry?.label ?? item.description) : null,
+      amount: fromCents(toCents(entry?.amount ?? "0.00") + toCents(item.reportingAmount)),
+      comparisonAmount: null,
+      count: (entry?.count ?? 0) + 1,
+    });
+  }
+
+  return [...byKey.values()].toSorted((a, b) => Number(b.amount) - Number(a.amount));
 }

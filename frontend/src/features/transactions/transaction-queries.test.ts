@@ -23,6 +23,7 @@ describe("transactionFilterParams", () => {
       }),
     ).toEqual({
       search: "lidl",
+      payee: undefined,
       accountId: "account-1",
       categoryId: undefined,
       tagIds: undefined,
@@ -36,6 +37,10 @@ describe("transactionFilterParams", () => {
 describe("isEmptyFilter", () => {
   test("a view with nothing chosen is empty", () => {
     expect(isEmptyFilter(transactionFilterParams({ page: 1 }))).toBe(true);
+  });
+
+  test("a payee alone is a filter", () => {
+    expect(isEmptyFilter(transactionFilterParams({ page: 1, payee: "maxima lt uab" }))).toBe(false);
   });
 
   test("one chosen value is enough", () => {
