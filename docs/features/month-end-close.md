@@ -40,7 +40,7 @@ A close is personal and belongs to the scope it was taken under. `MonthClose` is
 | `closed` | A close exists and nothing has drifted |
 | `closedChanged` | A close exists and something drifted, see below |
 
-Only a month that has ended can be closed; `POST` on an unfinished one answers 409 `monthClose.notEnded`. A snapshot of a month still running would drift by design. Months are `YYYY-MM` with a year from 2000 to 2999 (`MonthKey.Parse`); anything else, including `2026-8` or a full date, answers 400 `monthClose.invalidMonth`.
+Only a month that has ended can be closed; `POST` on an unfinished one answers 409 `monthClose.notEnded`. A snapshot of a month still running would drift by design. Months are `YYYY-MM` with a year from 2000 to 2999 (`MonthKey.Parse` in `Common`, which the dashboard shares); anything else, including `2026-8` or a full date, answers 400 `month.invalid`.
 
 ## The snapshot
 
@@ -186,7 +186,7 @@ An outline "Not now" button, with the tooltip "Hide until next month", hides the
 
 | Code | Status | When |
 | --- | --- | --- |
-| `monthClose.invalidMonth` | 400 | The month is not `YYYY-MM` between 2000 and 2999, or `year` is outside that range |
+| `month.invalid` | 400 | The month is not `YYYY-MM` between 2000 and 2999, or `year` is outside that range |
 | `monthClose.notEnded` | 409 | Closing a month that has not ended |
 | `resource.notFound` | 404 | Changing the note of a month that is not closed in this scope |
 

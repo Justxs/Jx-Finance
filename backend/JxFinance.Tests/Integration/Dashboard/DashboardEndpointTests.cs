@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Net;
 using System.Net.Http.Json;
 using JxFinance.Tests.Support;
 
@@ -25,6 +26,19 @@ public sealed class DashboardEndpointTests(ApiFixture fixture) : IntegrationTest
         Assert.Equal(5.00m, Parse(after.MonthIncome) - Parse(before.MonthIncome));
         Assert.Equal(Parse(before.MonthExpense), Parse(after.MonthExpense));
         Assert.Equal(1, after.MonthStart.Day);
+    }
+
+    [Theory]
+    [InlineData("/api/dashboard/summary?month=2026-13")]
+    [InlineData("/api/dashboard/category-breakdown?month=August")]
+    [InlineData("/api/dashboard/monthly-trend?month=1999-12")]
+    public async Task A_malformed_month_is_refused_instead_of_showing_the_current_one(string url)
+    {
+        using var member = await CreateUserClientAsync();
+
+        var response = await member.GetAsync(url, TestContext.Current.CancellationToken);
+
+        await AssertProblemAsync(response, HttpStatusCode.BadRequest, "month.invalid");
     }
 
     [Fact]

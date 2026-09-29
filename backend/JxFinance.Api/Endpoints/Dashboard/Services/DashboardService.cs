@@ -1,4 +1,3 @@
-using System.Globalization;
 using FastEndpoints;
 using JxFinance.Common;
 using JxFinance.Common.CategoryAttributions;
@@ -136,9 +135,5 @@ public sealed class DashboardService(
     }
 
     private static DateWindow ResolveMonth(string? month, DateOnly fallbackToday) =>
-        DateWindow.MonthOf(
-            !string.IsNullOrWhiteSpace(month)
-            && DateTime.TryParseExact(month, "yyyy-MM", CultureInfo.InvariantCulture, DateTimeStyles.None, out var parsed)
-                ? DateOnly.FromDateTime(parsed)
-                : fallbackToday);
+        DateWindow.MonthOf(month is null ? fallbackToday : MonthKey.Parse(month).Value);
 }

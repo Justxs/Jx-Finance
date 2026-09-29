@@ -217,7 +217,6 @@ public sealed class UserService(
 
         var reauthenticated = await authService.ReauthenticateAsync(
             request.CurrentPassword,
-            ErrorCodes.PasswordIncorrect,
             new DomainError(ErrorCodes.AccessForbidden, "Only administrators can reset a password."),
             cancellationToken);
         if (reauthenticated.IsFailure)

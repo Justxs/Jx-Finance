@@ -82,7 +82,7 @@ export const ErrorCode = {
   moneynonNegative: "money.nonNegative",
   moneynonZero: "money.nonZero",
   moneypositive: "money.positive",
-  monthCloseinvalidMonth: "monthClose.invalidMonth",
+  monthinvalid: "month.invalid",
   monthClosenotEnded: "monthClose.notEnded",
   passkeyinvalid: "passkey.invalid",
   passkeylimitReached: "passkey.limitReached",

@@ -17,5 +17,6 @@ public sealed class GetDashboardSummarySummary : Summary<GetDashboardSummaryEndp
             + "IsComplete is false when a balance or holding could not be valued and the total balance leaves it out.";
         RequestParam(r => r.Month, "Month to report on as YYYY-MM. Defaults to the current month.");
         Responses[200] = "The month's totals and the total balance at the month's end.";
+        Responses[400] = "Validation failed: month.invalid, the month is not a YYYY-MM value between 2000 and 2999.";
     }
 }

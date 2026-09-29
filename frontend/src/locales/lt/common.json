@@ -2549,8 +2549,10 @@
       "mustBeEmpty": "Palikite tuščią.",
       "mustDiffer": "Pasirinkite kitą reikšmę."
     },
+    "month": {
+      "invalid": "Šio mėnesio šiame puslapyje parodyti negalima."
+    },
     "monthClose": {
-      "invalidMonth": "Šio mėnesio šiame puslapyje parodyti negalima.",
       "notEnded": "Uždaryti galima tik pasibaigusį mėnesį."
     },
     "reconciliation": {

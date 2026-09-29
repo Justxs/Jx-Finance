@@ -2,7 +2,7 @@ using System.Globalization;
 using JxFinance.Common.Errors;
 using JxFinance.Domain.Common;
 
-namespace JxFinance.Endpoints.MonthCloses.Shared;
+namespace JxFinance.Common;
 
 public static class MonthKey
 {
@@ -10,7 +10,7 @@ public static class MonthKey
     public const int MaxYear = 2999;
 
     public static readonly DomainError Invalid = new(
-        ErrorCodes.MonthCloseInvalidMonth,
+        ErrorCodes.MonthInvalid,
         $"Give the month as YYYY-MM, between {MinYear} and {MaxYear}.");
 
     public static Result<DateOnly> Parse(string? text)

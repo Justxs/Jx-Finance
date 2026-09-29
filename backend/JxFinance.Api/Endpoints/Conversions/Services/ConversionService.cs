@@ -202,7 +202,6 @@ public sealed class ConversionService(
                     if (fee is not null)
                     {
                         db.Transactions.Remove(fee);
-                        conversion.FeeTransactionId = feeId;
                     }
                 }
 

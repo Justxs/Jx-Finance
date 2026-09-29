@@ -6,6 +6,8 @@ namespace JxFinance.Infrastructure.Data;
 
 public static class DevDataSeeder
 {
+    public static readonly Guid DevUserId = Guid.Parse("11111111-1111-1111-1111-111111111111");
+
     public static async Task SeedAsync(
         AppDbContext db,
         UserManager<AppUser> userManager,
@@ -16,7 +18,7 @@ public static class DevDataSeeder
         {
             var devUser = new AppUser
             {
-                Id = DevCurrentUser.DevUserId,
+                Id = DevUserId,
                 UserName = "dev@localhost",
                 Email = "dev@localhost",
                 EmailConfirmed = true,
@@ -34,7 +36,7 @@ public static class DevDataSeeder
 
         if (!await db.Categories.IgnoreQueryFilters().AnyAsync(cancellationToken))
         {
-            await StarterCategories.AddAsync(db, DevCurrentUser.DevUserId, cancellationToken);
+            await StarterCategories.AddAsync(db, DevUserId, cancellationToken);
             logger.LogInformation("Seeded {Count} starter categories.", StarterCategories.Count);
         }
     }

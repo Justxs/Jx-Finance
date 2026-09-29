@@ -17,7 +17,7 @@ public sealed class EmailOutboxJob(
     protected override string Name => "Email outbox drain";
 
     protected override TimeSpan Interval =>
-        TimeSpan.FromSeconds(Math.Max(options.Value.Email.OutboxIntervalSeconds, 5));
+        TimeSpan.FromSeconds(options.Value.Email.OutboxIntervalSeconds);
 
     protected override async Task RunAsync(IServiceProvider services, CancellationToken ct)
     {
@@ -31,7 +31,7 @@ public sealed class EmailOutboxJob(
         }
 
         var now = clock.UtcNow;
-        var batchSize = Math.Max(options.Value.Email.OutboxBatchSize, 1);
+        var batchSize = options.Value.Email.OutboxBatchSize;
         List<EmailMessage> due;
         await using (var transaction = await db.Database.BeginTransactionAsync(ct))
         {
@@ -97,7 +97,7 @@ public sealed class EmailOutboxJob(
 
     private async Task PruneAsync(AppDbContext db, IClock clock, CancellationToken ct)
     {
-        var cutoff = clock.UtcNow.AddDays(-Math.Max(options.Value.Email.KeepSentDays, 1));
+        var cutoff = clock.UtcNow.AddDays(-options.Value.Email.KeepSentDays);
         await db.EmailMessages
             .Where(m => (m.SentAt != null && m.SentAt < cutoff)
                 || (m.Attempts >= EmailMessage.MaxAttempts && m.CreatedAt < cutoff))

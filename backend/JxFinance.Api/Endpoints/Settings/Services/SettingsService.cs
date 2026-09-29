@@ -271,7 +271,7 @@ public sealed class SettingsService(
         where T : class
         where TId : struct
     {
-        var batchSize = Math.Max(options.Value.RevalueBatchSize, 1);
+        var batchSize = options.Value.RevalueBatchSize;
         TId? after = null;
         while (true)
         {

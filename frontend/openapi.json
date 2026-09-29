@@ -6079,7 +6079,7 @@
             }
           },
           "400": {
-            "description": "Bad Request",
+            "description": "Validation failed: month.invalid, the month is not a YYYY-MM value between 2000 and 2999.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -6162,7 +6162,7 @@
             }
           },
           "400": {
-            "description": "Bad Request",
+            "description": "Validation failed: month.invalid, the month is not a YYYY-MM value between 2000 and 2999.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -6235,7 +6235,7 @@
             }
           },
           "400": {
-            "description": "Bad Request",
+            "description": "Validation failed: month.invalid, the month is not a YYYY-MM value between 2000 and 2999.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -11411,7 +11411,7 @@
             }
           },
           "400": {
-            "description": "monthClose.invalidMonth: the year is outside the supported range.",
+            "description": "month.invalid: the year is outside the supported range.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -11492,7 +11492,7 @@
             }
           },
           "400": {
-            "description": "Validation failed, or monthClose.invalidMonth.",
+            "description": "Validation failed, or month.invalid.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -11568,7 +11568,7 @@
             }
           },
           "400": {
-            "description": "monthClose.invalidMonth: the month is not a YYYY-MM value between 2000 and 2999.",
+            "description": "month.invalid: the month is not a YYYY-MM value between 2000 and 2999.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -11627,7 +11627,7 @@
             "description": "The month is open."
           },
           "400": {
-            "description": "monthClose.invalidMonth: the month is not a YYYY-MM value between 2000 and 2999.",
+            "description": "month.invalid: the month is not a YYYY-MM value between 2000 and 2999.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -11708,7 +11708,7 @@
             }
           },
           "400": {
-            "description": "Validation failed, or monthClose.invalidMonth.",
+            "description": "Validation failed, or month.invalid.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -21273,7 +21273,7 @@
           "money.nonNegative",
           "money.nonZero",
           "money.positive",
-          "monthClose.invalidMonth",
+          "month.invalid",
           "monthClose.notEnded",
           "passkey.invalid",
           "passkey.limitReached",

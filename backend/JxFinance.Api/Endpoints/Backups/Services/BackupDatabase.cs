@@ -12,6 +12,8 @@ public static class BackupDatabase
 {
     private const int FlushEveryRows = 1000;
 
+    public static string CurrentMigration(AppDbContext db) => db.Database.GetMigrations().LastOrDefault() ?? "";
+
     public static List<TableShape> ReadShapes(AppDbContext db)
     {
         string?[] transient =

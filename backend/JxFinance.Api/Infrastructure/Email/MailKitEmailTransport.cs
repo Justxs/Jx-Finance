@@ -36,7 +36,7 @@ public sealed class MailKitEmailTransport(IOptions<AppOptions> options, ILogger<
 
         using var client = new SmtpClient
         {
-            Timeout = Math.Max(options.Value.Email.SendTimeoutSeconds, 1) * 1000,
+            Timeout = options.Value.Email.SendTimeoutSeconds * 1000,
         };
 
         try

@@ -49,7 +49,7 @@ public sealed class UserExportService(
     public async Task<Result> WriteAsync(bool attachments, Func<string, Stream> start, CancellationToken cancellationToken)
     {
         var userId = currentUser.Id;
-        var migration = (await db.Database.GetAppliedMigrationsAsync(cancellationToken)).LastOrDefault() ?? "";
+        var migration = BackupDatabase.CurrentMigration(db);
         await using var transaction = await db.Database.BeginTransactionAsync(IsolationLevel.RepeatableRead, cancellationToken);
         if (!await db.Database.TryLockAsync(AppLock.UserExport, userId, cancellationToken))
         {

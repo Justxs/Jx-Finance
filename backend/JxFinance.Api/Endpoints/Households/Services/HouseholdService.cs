@@ -272,11 +272,9 @@ public sealed class HouseholdService(
         }
 
         var ids = households.Select(h => h.Id).ToList();
-        var rows = await (
-            from membership in db.HouseholdMemberships.Where(m => ids.Contains(m.HouseholdId))
-            join candidate in db.Users on membership.UserId equals candidate.Id into matched
-            from user in matched.DefaultIfEmpty()
-            select new { Membership = membership, User = user })
+        var rows = await db.HouseholdMemberships
+            .Where(m => ids.Contains(m.HouseholdId))
+            .LeftJoin(db.Users, m => m.UserId, u => u.Id, (membership, user) => new { Membership = membership, User = user })
             .ToListAsync(cancellationToken);
 
         var byHousehold = rows

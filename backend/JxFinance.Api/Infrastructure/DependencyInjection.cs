@@ -26,6 +26,11 @@ public static class DependencyInjection
             .Validate(options => InstanceSettingsSnapshot.IsValidTimeZone(options.TimeZone), "App:TimeZone is not a valid time zone id.")
             .Validate(options => options.BackupMaxDecompressedBytes > 0, "App:BackupMaxDecompressedBytes must be positive.")
             .Validate(options => options.BackupLockTimeoutSeconds > 0, "App:BackupLockTimeoutSeconds must be positive.")
+            .Validate(options => options.RevalueBatchSize > 0, "App:RevalueBatchSize must be positive.")
+            .Validate(options => options.Email.SendTimeoutSeconds > 0, "App:Email:SendTimeoutSeconds must be positive.")
+            .Validate(options => options.Email.OutboxBatchSize > 0, "App:Email:OutboxBatchSize must be positive.")
+            .Validate(options => options.Email.OutboxIntervalSeconds >= 5, "App:Email:OutboxIntervalSeconds must be at least 5.")
+            .Validate(options => options.Email.KeepSentDays > 0, "App:Email:KeepSentDays must be positive.")
             .ValidateOnStart();
 
         services.AddSingleton<IClock, Time.SystemClock>();

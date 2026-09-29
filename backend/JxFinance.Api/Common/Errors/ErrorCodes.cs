@@ -1,3 +1,4 @@
+using System.Collections.Frozen;
 using System.Reflection;
 
 namespace JxFinance.Common.Errors;
@@ -130,7 +131,7 @@ public static class ErrorCodes
     public const string DiscordRateLimited = "discord.rateLimited";
     public const string DiscordRejected = "discord.rejected";
     public const string DiscordSendFailed = "discord.sendFailed";
-    public const string MonthCloseInvalidMonth = "monthClose.invalidMonth";
+    public const string MonthInvalid = "month.invalid";
     public const string MonthCloseNotEnded = "monthClose.notEnded";
     public const string ReconciliationFutureDate = "reconciliation.futureDate";
     public const string ReceiptUnsupportedFile = "receipt.unsupportedFile";
@@ -145,7 +146,9 @@ public static class ErrorCodes
         .Order(StringComparer.Ordinal)
         .ToList();
 
-    public static bool IsKnown(string? errorCode) => errorCode is not null && All.Contains(errorCode, StringComparer.Ordinal);
+    private static readonly FrozenSet<string> Known = All.ToFrozenSet(StringComparer.Ordinal);
+
+    public static bool IsKnown(string? errorCode) => errorCode is not null && Known.Contains(errorCode);
 
     public static int StatusCodeFor(string? errorCode) => errorCode switch
     {

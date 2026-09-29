@@ -31,7 +31,6 @@ public interface IAuthService
 
     Task<Result<AppUser>> ReauthenticateAsync(
         string? password,
-        string rejectedCode,
         DomainError missing,
         CancellationToken cancellationToken);
 

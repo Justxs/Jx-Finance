@@ -2469,8 +2469,10 @@
       "mustBeEmpty": "Leave this empty.",
       "mustDiffer": "Choose a different value."
     },
+    "month": {
+      "invalid": "That is not a month this page can show."
+    },
     "monthClose": {
-      "invalidMonth": "That is not a month this page can show.",
       "notEnded": "Only a month that has ended can be closed."
     },
     "reconciliation": {

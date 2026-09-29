@@ -51,7 +51,7 @@ public sealed class PasskeyService(
             return Unavailable;
         }
 
-        var reauthenticated = await authService.ReauthenticateAsync(password, ErrorCodes.PasswordIncorrect, UserMissing, cancellationToken);
+        var reauthenticated = await authService.ReauthenticateAsync(password, UserMissing, cancellationToken);
         if (!reauthenticated.TryGetValue(out var user))
         {
             return reauthenticated.Error;

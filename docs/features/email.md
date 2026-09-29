@@ -185,6 +185,8 @@ The backend has no translation mechanism of its own and none was added. Server t
 | `App:Email:PasswordResetMinutes` | 60 | Reset token lifetime |
 | `App:Email:KeepSentDays` | 7 | How long sent and given-up rows stay before the job deletes them. The prune runs before the job looks at the mail server, so rows written while SMTP was configured still age out after it is switched off |
 
+The API refuses to start when `OutboxIntervalSeconds` is below 5 or `SendTimeoutSeconds`, `OutboxBatchSize` or `KeepSentDays` is not positive, instead of quietly raising the value.
+
 ## Error codes
 
 | Code | When |

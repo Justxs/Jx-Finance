@@ -16,6 +16,6 @@ public sealed class GetMonthCloseYearSummary : Summary<GetMonthCloseYearEndpoint
             + "scope's closes. The month review also compares each category.";
         RequestParam(r => r.Year, "The calendar year, from 2000 to 2999. Defaults to the current year.");
         Responses[200] = "Twelve month statuses.";
-        Responses[400] = "monthClose.invalidMonth: the year is outside the supported range.";
+        Responses[400] = "month.invalid: the year is outside the supported range.";
     }
 }

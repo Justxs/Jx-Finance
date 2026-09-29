@@ -29,7 +29,7 @@ public sealed class EmailDelivery(
         }
 
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-        timeout.CancelAfter(TimeSpan.FromSeconds(Math.Max(options.Value.Email.SendTimeoutSeconds, 1)));
+        timeout.CancelAfter(TimeSpan.FromSeconds(options.Value.Email.SendTimeoutSeconds));
         try
         {
             return await transport.SendAsync(delivery.Value!, email, timeout.Token);

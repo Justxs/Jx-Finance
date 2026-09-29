@@ -38,8 +38,6 @@ internal static class Retention
         TrashKind.Household,
     ];
 
-    internal static DateTimeOffset PurgeStart(DateTimeOffset now) => DeletionEntry.WindowStart(now);
-
     internal static Task<int> PruneAuditEventsAsync(AppDbContext db, DateTimeOffset now, CancellationToken ct)
     {
         var cutoff = AuditEvent.RetentionStart(now);
@@ -60,7 +58,7 @@ internal static class Retention
 
     internal static Task<int> PruneDeletionEntriesAsync(AppDbContext db, DateTimeOffset now, CancellationToken ct)
     {
-        var cutoff = PurgeStart(now);
+        var cutoff = DeletionEntry.WindowStart(now);
         return PurgeAsync(db.DeletionEntries.IgnoreQueryFilters().Where(e => e.DeletedAt < cutoff), ct);
     }
 
@@ -70,7 +68,7 @@ internal static class Retention
         DateTimeOffset now,
         CancellationToken ct)
     {
-        var cutoff = PurgeStart(now);
+        var cutoff = DeletionEntry.WindowStart(now);
         var transfers = Expired(db.Transfers, cutoff);
         var transactions = Expired(db.Transactions, cutoff)
             .Where(t => !db.CurrencyConversions.IgnoreQueryFilters().Any(c => c.FeeTransactionId == t.Id));

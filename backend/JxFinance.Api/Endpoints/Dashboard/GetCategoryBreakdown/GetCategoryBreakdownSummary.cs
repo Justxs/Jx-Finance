@@ -18,5 +18,6 @@ public sealed class GetCategoryBreakdownSummary : Summary<GetCategoryBreakdownEn
             + "12th; comparisonStart and comparisonEnd give the compared days.";
         RequestParam(r => r.Month, "Month to report on as YYYY-MM. Defaults to the current month.");
         Responses[200] = "One entry per category that had spending in the month.";
+        Responses[400] = "Validation failed: month.invalid, the month is not a YYYY-MM value between 2000 and 2999.";
     }
 }

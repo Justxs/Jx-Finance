@@ -1,3 +1,4 @@
+using System.Buffers;
 using System.Text;
 
 namespace JxFinance.Common.Discord;
@@ -6,7 +7,7 @@ public static class DiscordText
 {
     public const int UsernameMaxLength = 80;
 
-    private const string MarkdownCharacters = "\\*_~`|>[]()#-";
+    private static readonly SearchValues<char> MarkdownCharacters = SearchValues.Create("\\*_~`|>[]()#-");
 
     public static string Escape(string text)
     {
@@ -19,7 +20,7 @@ public static class DiscordText
                 continue;
             }
 
-            if (MarkdownCharacters.Contains(character, StringComparison.Ordinal))
+            if (MarkdownCharacters.Contains(character))
             {
                 builder.Append('\\');
             }

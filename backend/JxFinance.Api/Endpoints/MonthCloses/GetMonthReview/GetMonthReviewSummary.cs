@@ -25,6 +25,6 @@ public sealed class GetMonthReviewSummary : Summary<GetMonthReviewEndpoint>
             + "figures and never count as drift.";
         Params["month"] = "The month as YYYY-MM.";
         Responses[200] = "The month review.";
-        Responses[400] = "monthClose.invalidMonth: the month is not a YYYY-MM value between 2000 and 2999.";
+        Responses[400] = "month.invalid: the month is not a YYYY-MM value between 2000 and 2999.";
     }
 }

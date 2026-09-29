@@ -103,7 +103,6 @@ public sealed class AuthService(
 
     public async Task<Result<AppUser>> ReauthenticateAsync(
         string? password,
-        string rejectedCode,
         DomainError missing,
         CancellationToken cancellationToken)
     {
@@ -112,7 +111,7 @@ public sealed class AuthService(
             return missing;
         }
 
-        var confirmed = await ConfirmPasswordAsync(user, password, rejectedCode);
+        var confirmed = await ConfirmPasswordAsync(user, password, ErrorCodes.PasswordIncorrect);
         return confirmed.IsSuccess ? user : confirmed.Error;
     }
 

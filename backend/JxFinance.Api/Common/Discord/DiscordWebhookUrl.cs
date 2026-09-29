@@ -1,3 +1,4 @@
+using System.Buffers;
 using System.Diagnostics.CodeAnalysis;
 using System.Text.RegularExpressions;
 
@@ -6,6 +7,8 @@ namespace JxFinance.Common.Discord;
 public static partial class DiscordWebhookUrl
 {
     public const int MaxLength = 500;
+
+    private static readonly SearchValues<char> Forbidden = SearchValues.Create("?#\\@ ");
 
     private static readonly string[] AllowedHosts =
     [
@@ -23,7 +26,7 @@ public static partial class DiscordWebhookUrl
         var trimmed = text?.Trim();
         if (string.IsNullOrEmpty(trimmed)
             || trimmed.Length > MaxLength
-            || trimmed.IndexOfAny(['?', '#', '\\', '@', ' ']) >= 0
+            || trimmed.AsSpan().ContainsAny(Forbidden)
             || !Uri.TryCreate(trimmed, UriKind.Absolute, out var uri))
         {
             return false;

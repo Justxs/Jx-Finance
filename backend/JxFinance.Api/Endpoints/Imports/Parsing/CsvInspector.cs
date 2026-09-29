@@ -1,4 +1,4 @@
-using System.Text;
+using System.Text.Unicode;
 using CsvHelper;
 using JxFinance.Common.Errors;
 using JxFinance.Domain.Common;
@@ -54,20 +54,7 @@ public static class CsvInspector
 
     private static bool IsUtf8(byte[] bytes)
     {
-        if (bytes is [0xEF, 0xBB, 0xBF, ..] or [0xFF, 0xFE, ..] or [0xFE, 0xFF, ..])
-        {
-            return true;
-        }
-
-        try
-        {
-            _ = new UTF8Encoding(false, true).GetString(bytes);
-            return true;
-        }
-        catch (DecoderFallbackException)
-        {
-            return false;
-        }
+        return bytes is [0xEF, 0xBB, 0xBF, ..] or [0xFF, 0xFE, ..] or [0xFE, 0xFF, ..] || Utf8.IsValid(bytes);
     }
 
     private static (int Rows, int Cells) Fit(string text, string delimiter)

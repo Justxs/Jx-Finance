@@ -11,13 +11,6 @@ public static class RuleMatcher
         && AmountInRange(entry.Amount, rule.MinAmount, rule.MaxAmount)
         && Matches(rule.Match, rule.Pattern, entry.Description);
 
-    public static string LikePatternFor(DescriptionMatch match, string pattern) => match switch
-    {
-        DescriptionMatch.Contains => LikePattern.Contains(pattern),
-        DescriptionMatch.StartsWith => $"{LikePattern.Exactly(pattern)}%",
-        _ => LikePattern.Exactly(pattern),
-    };
-
     public static bool Matches(DescriptionMatch match, string pattern, string? description)
     {
         var text = description?.Trim();

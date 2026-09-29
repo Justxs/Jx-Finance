@@ -33,37 +33,23 @@ public sealed class SubscriptionDetectionService(
             .Take(SubscriptionDetection.MaxScannedTransactions)
             .ToListAsync(cancellationToken);
 
-        var groups = new Dictionary<GroupKey, List<Occurrence>>();
-        foreach (var occurrence in occurrences)
-        {
-            var description = SubscriptionDescription.Normalize(occurrence.Description);
-            if (description.Length == 0)
-            {
-                continue;
-            }
-
-            var key = new GroupKey(occurrence.AccountId, description);
-            if (!groups.TryGetValue(key, out var members))
-            {
-                members = [];
-                groups.Add(key, members);
-            }
-
-            members.Add(occurrence);
-        }
+        var groups = occurrences
+            .Select(o => (Key: new GroupKey(o.AccountId, SubscriptionDescription.Normalize(o.Description)), Occurrence: o))
+            .Where(pair => pair.Key.Description.Length > 0)
+            .ToLookup(pair => pair.Key, pair => pair.Occurrence);
 
         var covered = await CoveredAsync(cancellationToken);
         var dismissed = await DismissedAsync(cancellationToken);
 
         var candidates = new List<SubscriptionCandidateResponse>();
-        foreach (var (key, members) in groups)
+        foreach (var members in groups)
         {
-            if (dismissed.Contains(key) || IsCovered(covered, key))
+            if (dismissed.Contains(members.Key) || IsCovered(covered, members.Key))
             {
                 continue;
             }
 
-            if (Candidate(key, members) is { } candidate)
+            if (Candidate(members.Key, members) is { } candidate)
             {
                 candidates.Add(candidate);
             }
@@ -101,7 +87,7 @@ public sealed class SubscriptionDetectionService(
         return dismissal.Id.Value;
     }
 
-    private static SubscriptionCandidateResponse? Candidate(GroupKey key, List<Occurrence> members)
+    private static SubscriptionCandidateResponse? Candidate(GroupKey key, IEnumerable<Occurrence> members)
     {
         var dates = members.Select(m => m.Date).Distinct().Order().ToList();
         if (dates.Count < SubscriptionDetection.MinimumOccurrences)

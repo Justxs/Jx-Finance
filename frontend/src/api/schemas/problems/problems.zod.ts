@@ -107,7 +107,7 @@ export const ProblemDetailsResponse = zod
                 "money.nonNegative",
                 "money.nonZero",
                 "money.positive",
-                "monthClose.invalidMonth",
+                "month.invalid",
                 "monthClose.notEnded",
                 "passkey.invalid",
                 "passkey.limitReached",

@@ -18,18 +18,16 @@ public sealed class RetentionTests
     {
         var now = Clock.UtcNow;
 
-        Assert.Equal(DeletionEntry.WindowStart(now), Retention.PurgeStart(now));
-        Assert.Equal(now.AddDays(-DeletionEntry.RetentionDays), Retention.PurgeStart(now));
+        Assert.Equal(now.AddDays(-DeletionEntry.RetentionDays), DeletionEntry.WindowStart(now));
     }
 
     [Fact]
     public void A_record_deleted_exactly_on_the_boundary_is_restorable_and_not_purged()
     {
         var now = Clock.UtcNow;
-        var deletedAt = Retention.PurgeStart(now);
+        var deletedAt = DeletionEntry.WindowStart(now);
 
         Assert.False(deletedAt < DeletionEntry.WindowStart(now));
-        Assert.False(deletedAt < Retention.PurgeStart(now));
     }
 
     [Fact]
@@ -38,7 +36,7 @@ public sealed class RetentionTests
         var now = Clock.UtcNow;
 
         Assert.Equal(now.AddDays(-AuditEvent.RetentionDays), AuditEvent.RetentionStart(now));
-        Assert.True(AuditEvent.RetentionStart(now) < Retention.PurgeStart(now));
+        Assert.True(AuditEvent.RetentionStart(now) < DeletionEntry.WindowStart(now));
     }
 
     [Fact]

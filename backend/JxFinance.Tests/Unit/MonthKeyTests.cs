@@ -1,4 +1,4 @@
-using JxFinance.Endpoints.MonthCloses.Shared;
+using JxFinance.Common;
 
 namespace JxFinance.Tests.Unit;
 
@@ -28,6 +28,6 @@ public sealed class MonthKeyTests
         var parsed = MonthKey.Parse(text);
 
         Assert.True(parsed.IsFailure);
-        Assert.Equal("monthClose.invalidMonth", parsed.Error.Code);
+        Assert.Equal("month.invalid", parsed.Error.Code);
     }
 }

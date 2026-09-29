@@ -50,7 +50,7 @@ public sealed class MonthCloseTests(ApiFixture fixture) : IntegrationTestBase(fi
         var review = await ReviewAsync(member, current);
 
         await AssertProblemAsync(running, HttpStatusCode.Conflict, "monthClose.notEnded");
-        await AssertProblemAsync(malformed, HttpStatusCode.BadRequest, "monthClose.invalidMonth");
+        await AssertProblemAsync(malformed, HttpStatusCode.BadRequest, "month.invalid");
         Assert.Equal("notEnded", review.Status);
     }
 

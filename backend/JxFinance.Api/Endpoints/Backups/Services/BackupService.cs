@@ -41,14 +41,14 @@ public sealed class BackupService(
 
     public async Task<IReadOnlyList<BackupResponse>> GetAllAsync(CancellationToken cancellationToken)
     {
-        var migration = await CurrentMigrationAsync(cancellationToken);
+        var migration = BackupDatabase.CurrentMigration(db);
         return (await backups.ListAsync(cancellationToken)).Select(b => ToResponse(b, migration)).ToList();
     }
 
     public async Task<BackupResponse> CreateAsync(string? note, CancellationToken cancellationToken)
     {
         var id = Guid.NewGuid();
-        var migration = await CurrentMigrationAsync(cancellationToken);
+        var migration = BackupDatabase.CurrentMigration(db);
         var createdAt = clock.UtcNow;
 
         var stored = await backups.AddAsync(
@@ -122,7 +122,7 @@ public sealed class BackupService(
             },
             cancellationToken);
 
-        return ToResponse(stored, await CurrentMigrationAsync(cancellationToken));
+        return ToResponse(stored, BackupDatabase.CurrentMigration(db));
     }
 
     public async Task<Result<BackupResponse>> UpdateAsync(Guid id, string? note, CancellationToken cancellationToken)
@@ -134,7 +134,7 @@ public sealed class BackupService(
 
         var updated = stored with { Note = OptionalText.Normalize(note) };
         await backups.SaveAsync(updated, cancellationToken);
-        return ToResponse(updated, await CurrentMigrationAsync(cancellationToken));
+        return ToResponse(updated, BackupDatabase.CurrentMigration(db));
     }
 
     public async Task<Result> DeleteAsync(Guid id, CancellationToken cancellationToken)
@@ -168,7 +168,6 @@ public sealed class BackupService(
     {
         var reauthenticated = await authService.ReauthenticateAsync(
             password,
-            ErrorCodes.PasswordIncorrect,
             new DomainError(ErrorCodes.AccessForbidden, "Only administrators can restore a backup."),
             cancellationToken);
         if (reauthenticated.IsFailure)
@@ -202,9 +201,9 @@ public sealed class BackupService(
         string migration,
         CancellationToken cancellationToken)
     {
-        using var archive = new ZipArchive(output, ZipArchiveMode.Create, leaveOpen: true);
+        await using var archive = await ZipArchive.CreateAsync(output, ZipArchiveMode.Create, leaveOpen: true, entryNameEncoding: null, cancellationToken);
         (int Tables, long Rows, List<Guid> Attachments) written;
-        await using (var document = archive.CreateEntry(BackupArchive.DocumentEntry, CompressionLevel.Optimal).Open())
+        await using (var document = await archive.CreateEntry(BackupArchive.DocumentEntry, CompressionLevel.Optimal).OpenAsync(cancellationToken))
         {
             written = await WriteAsync(document, createdAt, migration, cancellationToken);
         }
@@ -219,7 +218,7 @@ public sealed class BackupService(
             }
 
             await using var source = files.OpenRead(attachmentId);
-            await using var target = archive.CreateEntry(BackupArchive.AttachmentEntry(attachmentId), CompressionLevel.NoCompression).Open();
+            await using var target = await archive.CreateEntry(BackupArchive.AttachmentEntry(attachmentId), CompressionLevel.NoCompression).OpenAsync(cancellationToken);
             await source.CopyToAsync(target, cancellationToken);
             attached++;
         }
@@ -269,7 +268,7 @@ public sealed class BackupService(
     private async Task<Result<RestoreBackupResponse>> RestoreAsync(Stream input, CancellationToken cancellationToken)
     {
         var container = await BackupArchive.DetectAsync(input, cancellationToken);
-        var migration = await CurrentMigrationAsync(cancellationToken);
+        var migration = BackupDatabase.CurrentMigration(db);
         await using var restorer = new BackupRestorer(db, BackupDatabase.ReadShapes(db), migration, options.Value.BackupLockTimeoutSeconds);
         using var staging = files.BeginStaging();
         var missing = 0;
@@ -346,7 +345,7 @@ public sealed class BackupService(
                 continue;
             }
 
-            await using var content = entry.Open();
+            await using var content = await entry.OpenAsync(cancellationToken);
             var staged = await staging.AddAsync(attachment.Id.Value, content, TransactionAttachment.MaxFileBytes, cancellationToken);
             if (!string.Equals(staged.Sha256, attachment.Sha256, StringComparison.OrdinalIgnoreCase))
             {
@@ -374,8 +373,8 @@ public sealed class BackupService(
         {
             if (container == BackupContainer.Zip)
             {
-                using var archive = new ZipArchive(input, ZipArchiveMode.Read, leaveOpen: true);
-                await using (var document = BackupArchive.Document(archive).Open())
+                await using var archive = await ZipArchive.CreateAsync(input, ZipArchiveMode.Read, leaveOpen: true, entryNameEncoding: null, cancellationToken);
+                await using (var document = await BackupArchive.Document(archive).OpenAsync(cancellationToken))
                 {
                     await ReadDocumentAsync(document, maximumBytes, visitor, cancellationToken);
                 }
@@ -422,7 +421,4 @@ public sealed class BackupService(
         await using var limited = new LimitedReadStream(document, maximumBytes);
         await new BackupReader(visitor).ReadAsync(limited, cancellationToken);
     }
-
-    private async Task<string> CurrentMigrationAsync(CancellationToken cancellationToken) =>
-        (await db.Database.GetAppliedMigrationsAsync(cancellationToken)).LastOrDefault() ?? "";
 }

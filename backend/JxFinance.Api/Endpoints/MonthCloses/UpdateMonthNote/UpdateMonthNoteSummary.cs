@@ -13,7 +13,7 @@ public sealed class UpdateMonthNoteSummary : Summary<UpdateMonthNoteEndpoint, Up
         Params["month"] = "The month as YYYY-MM.";
         RequestParam(r => r.Note, "At most 1000 characters.");
         Responses[200] = "The month review with the new note.";
-        Responses[400] = "Validation failed, or monthClose.invalidMonth.";
+        Responses[400] = "Validation failed, or month.invalid.";
         Responses[404] = "The month is not closed in this scope.";
     }
 }

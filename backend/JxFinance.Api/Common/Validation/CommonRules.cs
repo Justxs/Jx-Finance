@@ -27,6 +27,11 @@ public static class CommonRules
     public static IRuleBuilderOptions<T, string?> IsEmail<T>(this IRuleBuilder<T, string?> rule) =>
         rule.EmailAddress().WithErrorCode(ErrorCodes.EmailInvalid);
 
+    public static IRuleBuilderOptions<T, string?> IsMonth<T>(this IRuleBuilder<T, string?> rule) =>
+        rule.Must(text => text is null || MonthKey.Parse(text).IsSuccess)
+            .WithErrorCode(ErrorCodes.MonthInvalid)
+            .WithMessage(MonthKey.Invalid.Message);
+
     public static IRuleBuilderOptions<T, TProperty> IsKnownEnum<T, TProperty>(this IRuleBuilder<T, TProperty> rule) =>
         rule.IsInEnum().WithErrorCode(ErrorCodes.EnumInvalid);
 

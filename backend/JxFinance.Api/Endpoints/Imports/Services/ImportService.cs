@@ -1,3 +1,4 @@
+using System.Buffers;
 using FastEndpoints;
 using JxFinance.Common;
 using JxFinance.Common.Errors;
@@ -46,10 +47,9 @@ public sealed class ImportService(
     IInstanceSettingsStore settings,
     IReconciliationService reconciliations) : IImportService
 {
-    private static readonly string[] TransferKeywords =
-    [
-        "transfer", "pervedimas", "grynieji", "cash", "withdrawal", "easy saver", "atsiskaitom", "tarp saskaitu",
-    ];
+    private static readonly SearchValues<string> TransferKeywords = SearchValues.Create(
+        ["transfer", "pervedimas", "grynieji", "cash", "withdrawal", "easy saver", "atsiskaitom", "tarp saskaitu"],
+        StringComparison.OrdinalIgnoreCase);
 
     private static readonly DomainError MappingNotFound = new(ErrorCodes.ReferenceNotFound, "CSV mapping does not exist.");
 
@@ -668,11 +668,8 @@ public sealed class ImportService(
         return verdicts;
     }
 
-    private static bool LooksLikeTransfer(string? payee, string? description)
-    {
-        var text = $"{payee} {description}".ToLowerInvariant();
-        return TransferKeywords.Any(text.Contains);
-    }
+    private static bool LooksLikeTransfer(string? payee, string? description) =>
+        $"{payee} {description}".AsSpan().ContainsAny(TransferKeywords);
 
     private async Task<HashSet<string>> ExistingRefsAsync(
         AccountId accountId,

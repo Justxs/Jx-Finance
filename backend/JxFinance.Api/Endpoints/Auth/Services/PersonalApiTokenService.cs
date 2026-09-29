@@ -39,7 +39,7 @@ public sealed class PersonalApiTokenService(
         CreatePersonalApiTokenRequest request,
         CancellationToken cancellationToken)
     {
-        var reauthenticated = await authService.ReauthenticateAsync(request.Password, ErrorCodes.PasswordIncorrect, UserMissing, cancellationToken);
+        var reauthenticated = await authService.ReauthenticateAsync(request.Password, UserMissing, cancellationToken);
         if (!reauthenticated.TryGetValue(out var user))
         {
             return reauthenticated.Error;

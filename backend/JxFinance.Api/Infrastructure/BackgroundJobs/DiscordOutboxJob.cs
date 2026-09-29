@@ -178,7 +178,7 @@ public sealed class DiscordOutboxJob(
                     foreach (var waiting in messages.Skip(index))
                     {
                         waiting.Attempts--;
-                        waiting.NextAttemptAt = now + (result.RetryAfter ?? TimeSpan.FromSeconds(30));
+                        waiting.NextAttemptAt = now + result.RetryAfter.GetValueOrDefault();
                     }
 
                     return;

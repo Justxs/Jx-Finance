@@ -20,7 +20,7 @@ public abstract class PeriodicJob(IServiceScopeFactory scopes, ILogger logger) :
 
     public async Task RunOnceAsync(CancellationToken ct)
     {
-        using var scope = scopes.CreateScope();
+        await using var scope = scopes.CreateAsyncScope();
         var services = scope.ServiceProvider;
         if (RequiredFeature is { } feature
             && !services.GetRequiredService<IInstanceSettingsStore>().Current.IsEnabled(feature))

@@ -523,13 +523,10 @@ public sealed class NetWorthService(
         }
 
         var ids = tracking.Select(d => d.Id).ToList();
-        var links = await (
-                from payment in db.DebtPayments.AsNoTracking()
-                where ids.Contains(payment.DebtId)
-                join transaction in db.Transactions.AsNoTracking() on payment.TransactionId equals transaction.Id into matches
-                from transaction in matches.DefaultIfEmpty()
-                orderby payment.CreatedAt
-                select new { Link = payment, Transaction = transaction })
+        var links = await db.DebtPayments.AsNoTracking()
+            .Where(p => ids.Contains(p.DebtId))
+            .LeftJoin(db.Transactions.AsNoTracking(), p => p.TransactionId, t => t.Id, (payment, transaction) => new { Link = payment, Transaction = transaction })
+            .OrderBy(l => l.Link.CreatedAt)
             .ToListAsync(cancellationToken);
         var foreign = links
             .Where(l => l.Transaction is not null && l.Transaction.Amount.Currency != tracking.First(d => d.Id == l.Link.DebtId).Currency)
