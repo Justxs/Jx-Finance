@@ -54,7 +54,7 @@ public sealed class UnusualAmountJob(
 
             foreach (var owner in rows.GroupBy(row => row.OwnerId))
             {
-                await using var ownerDb = AppDbContext.For(services, owner.Key);
+                await using var ownerScope = UserScope(owner.Key);
                 var candidates = owner
                     .Select(row => new UnusualCandidate(
                         row.AccountId,
@@ -63,7 +63,7 @@ public sealed class UnusualAmountJob(
                         row.ReportingAmount,
                         row.Description))
                     .ToList();
-                var verdicts = await UnusualAmountService.For(ownerDb).EvaluateAsync(candidates, ct);
+                var verdicts = await ownerScope.ServiceProvider.GetRequiredService<IUnusualAmountService>().EvaluateAsync(candidates, ct);
                 await pass.StoreAsync(owner.ToList(), verdicts, ct);
             }
 
@@ -93,13 +93,13 @@ public sealed class UnusualAmountJob(
              t.Amount.Amount,
              t.Amount.Currency,
              t.Description,
-             t.UnusualBasis != null,
+             t.Unusual != null,
              t.UnusualDismissedAt != null,
              t.UpdatedAt))
         .Take(PageSize)
         .ToListAsync(ct);
 
-    private static async Task PublishAsync(
+    private async Task PublishAsync(
         AppDbContext db,
         IServiceProvider services,
         Pass pass,
@@ -125,7 +125,8 @@ public sealed class UnusualAmountJob(
         var rises = new List<PriceRise>();
         foreach (var owner in pass.Rises.Where(r => !raisedTransactions.Contains(r.TransactionId)).GroupBy(r => r.OwnerId))
         {
-            await using var ownerDb = AppDbContext.For(services, owner.Key);
+            await using var ownerScope = UserScope(owner.Key);
+            var ownerDb = ownerScope.ServiceProvider.GetRequiredService<AppDbContext>();
             var accountIds = owner.Select(r => r.AccountId).Distinct().ToList();
             var visible = await ownerDb.Accounts.Where(a => accountIds.Contains(a.Id)).Select(a => a.Id).ToListAsync(ct);
             rises.AddRange(owner.Where(r => visible.Contains(r.AccountId)));
@@ -226,20 +227,13 @@ public sealed class UnusualAmountJob(
                 var verdict = verdicts[index];
                 var id = row.Id;
                 var updatedAt = row.UpdatedAt;
-                var basis = verdict?.Basis;
-                var typical = verdict?.TypicalAmount;
-                var factor = verdict?.Factor;
-                var sampleSize = verdict?.SampleSize;
                 var stored = await db.Transactions
                     .IgnoreQueryFilters()
                     .Where(t => t.Id == id && t.UpdatedAt == updatedAt)
                     .ExecuteUpdateAsync(
                         setters => setters
                             .SetProperty(t => t.UnusualCheckedAt, now)
-                            .SetProperty(t => t.UnusualBasis, basis)
-                            .SetProperty(t => t.UnusualTypicalAmount, typical)
-                            .SetProperty(t => t.UnusualFactor, factor)
-                            .SetProperty(t => t.UnusualSampleSize, sampleSize),
+                            .SetProperty(t => t.Unusual, verdict),
                         ct);
 
                 if (stored == 1 && verdict is not null && Notifies(row) && !row.WasFlagged && !row.Dismissed)

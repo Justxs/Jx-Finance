@@ -1905,7 +1905,7 @@
             "description": "Two-factor authentication is off."
           },
           "400": {
-            "description": "Bad Request",
+            "description": "password.incorrect: the password was wrong.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -1915,7 +1915,7 @@
             }
           },
           "401": {
-            "description": "The password was wrong.",
+            "description": "Unauthorized",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -1988,7 +1988,7 @@
             }
           },
           "400": {
-            "description": "The code did not match the pending secret.",
+            "description": "Bad Request",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -1998,7 +1998,7 @@
             }
           },
           "401": {
-            "description": "Unauthorized",
+            "description": "twoFactor.invalidCode: the code did not match the pending secret.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -2071,7 +2071,7 @@
             }
           },
           "400": {
-            "description": "Bad Request",
+            "description": "password.incorrect: the password was wrong.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -2081,7 +2081,7 @@
             }
           },
           "401": {
-            "description": "The password was wrong, or two-factor authentication is already enabled.",
+            "description": "Unauthorized",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -2092,6 +2092,16 @@
           },
           "404": {
             "description": "The session points at a user that no longer exists.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "twoFactor.alreadyEnabled: two-factor authentication is already on.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -2148,16 +2158,6 @@
           },
           "400": {
             "description": "Bad Request",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -2710,16 +2710,6 @@
               }
             }
           },
-          "401": {
-            "description": "Unauthorized",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
           "429": {
             "description": "Too many attempts from this client; wait and retry."
           },
@@ -2920,14 +2910,7 @@
             }
           },
           "401": {
-            "description": "The refresh cookie is missing, expired, or revoked; sign in again.",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
+            "description": "The refresh cookie is missing, expired, or revoked; sign in again."
           },
           "429": {
             "description": "Too many renewals; wait and retry."
@@ -2974,16 +2957,6 @@
           },
           "400": {
             "description": "The link is no longer valid, or the new password was refused.",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -3524,16 +3497,6 @@
           },
           "400": {
             "description": "The link is no longer valid; ask for a new one from the profile.",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -12187,14 +12150,7 @@
             "description": "The request body is larger than an attachment can be."
           },
           "429": {
-            "description": "Too many calls from this client; wait and retry.",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
+            "description": "Too many calls from this client; wait and retry."
           },
           "500": {
             "description": "Server Error",
@@ -13313,16 +13269,6 @@
           },
           "400": {
             "description": "Bad Request",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -16409,6 +16355,9 @@
                 }
               }
             }
+          },
+          "429": {
+            "description": "Too Many Requests"
           },
           "500": {
             "description": "Server Error",
@@ -21333,6 +21282,7 @@
           "transfer.amountMismatch",
           "transfer.receivedAmountRequired",
           "transfer.sameAccount",
+          "twoFactor.alreadyEnabled",
           "twoFactor.invalidCode",
           "user.lastAdministrator",
           "user.selfChange",

@@ -139,6 +139,7 @@ export const ErrorCode = {
   transferamountMismatch: "transfer.amountMismatch",
   transferreceivedAmountRequired: "transfer.receivedAmountRequired",
   transfersameAccount: "transfer.sameAccount",
+  twoFactoralreadyEnabled: "twoFactor.alreadyEnabled",
   twoFactorinvalidCode: "twoFactor.invalidCode",
   userlastAdministrator: "user.lastAdministrator",
   userselfChange: "user.selfChange",

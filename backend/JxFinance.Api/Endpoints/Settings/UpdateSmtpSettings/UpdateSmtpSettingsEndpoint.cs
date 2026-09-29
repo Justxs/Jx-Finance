@@ -14,7 +14,6 @@ public sealed class UpdateSmtpSettingsEndpoint(ISettingsService settingsService)
         Put(ApiRoutes.Settings + "/smtp");
         Group<SettingsGroup>();
         Roles(AppRoles.Admin);
-        Description(d => d.ProducesProblemDetails(403));
     }
 
     public override async Task HandleAsync(UpdateSmtpSettingsRequest req, CancellationToken ct) =>

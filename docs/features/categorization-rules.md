@@ -104,7 +104,7 @@ One query per rule was never cheaper than one scan: every rule's query read the 
 ```mermaid
 sequenceDiagram
     participant Dlg as ImportSection
-    participant Api as ImportService
+    participant Api as ImportPreviewService
     participant Rules as CategorizationRuleService
     Dlg->>Api: POST /api/import/preview
     Api->>Api: parse the CSV, flag duplicates and likely transfers
@@ -125,7 +125,7 @@ A rule beats the **recall** that was already there. The import preview has long 
 
 A **duplicate** row gets no suggestion at all. A duplicate cannot be imported, so filling it in would only add noise to a row the user is being told to ignore.
 
-The confirm body gained `tagIds` per row, and `ImportService` writes the join rows beside the transaction in the same database transaction. Tags on an imported row would otherwise have had no way in at all, which would have made "a rule sets a tag" a promise the import could not keep.
+The confirm body gained `tagIds` per row, and `ImportConfirmService` writes the join rows beside the transaction in the same database transaction. Tags on an imported row would otherwise have had no way in at all, which would have made "a rule sets a tag" a promise the import could not keep.
 
 ## Running over the ledger
 

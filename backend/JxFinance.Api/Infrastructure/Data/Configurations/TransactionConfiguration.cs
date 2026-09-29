@@ -13,8 +13,13 @@ public sealed class TransactionConfiguration : IEntityTypeConfiguration<Transact
         builder.Property(t => t.Description).HasMaxLength(500);
         builder.Property(t => t.ImportRef).HasMaxLength(64);
         builder.Property(t => t.PayeeKey).HasMaxLength(SubscriptionDescription.MaxLength);
-        builder.Property(t => t.UnusualBasis).HasConversion<string>().HasMaxLength(20);
-        builder.Property(t => t.UnusualFactor).HasPrecision(9, 2);
+        builder.ComplexProperty(t => t.Unusual, unusual =>
+        {
+            unusual.Property(u => u.Basis).HasColumnName("UnusualBasis").HasConversion<string>().HasMaxLength(20);
+            unusual.Property(u => u.TypicalAmount).HasColumnName("UnusualTypicalAmount");
+            unusual.Property(u => u.Factor).HasColumnName("UnusualFactor").HasPrecision(9, 2);
+            unusual.Property(u => u.SampleSize).HasColumnName("UnusualSampleSize");
+        });
         builder.HasIndex(t => new { t.AccountId, t.Date }, "IX_Transactions_Unusual")
             .HasFilter("\"UnusualBasis\" IS NOT NULL AND \"UnusualDismissedAt\" IS NULL");
         builder.HasIndex(t => t.UnusualCheckedAt)

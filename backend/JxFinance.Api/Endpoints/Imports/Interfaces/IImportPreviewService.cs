@@ -1,13 +1,12 @@
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Imports;
-using JxFinance.Endpoints.Imports.Confirm;
 using JxFinance.Endpoints.Imports.InspectCsv;
 using JxFinance.Endpoints.Imports.Parsing;
 using JxFinance.Endpoints.Imports.Preview;
 
 namespace JxFinance.Endpoints.Imports.Interfaces;
 
-public interface IImportService
+public interface IImportPreviewService
 {
     Task<Result<ImportPreviewResponse>> PreviewAsync(
         StatementFormat format,
@@ -15,8 +14,6 @@ public interface IImportService
         Guid? mappingId,
         Stream fileStream,
         CancellationToken cancellationToken);
-
-    Task<Result<ImportConfirmResponse>> ConfirmAsync(ImportConfirmRequest request, CancellationToken cancellationToken);
 
     Task<Result<InspectCsvResponse>> InspectCsvAsync(
         Stream fileStream,

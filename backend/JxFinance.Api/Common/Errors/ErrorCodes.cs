@@ -39,6 +39,7 @@ public static class ErrorCodes
     public const string PasswordIncorrect = "password.incorrect";
     public const string PasswordTooWeak = "password.tooWeak";
     public const string TwoFactorInvalidCode = "twoFactor.invalidCode";
+    public const string TwoFactorAlreadyEnabled = "twoFactor.alreadyEnabled";
     public const string SessionCurrent = "session.current";
     public const string PasskeyInvalid = "passkey.invalid";
     public const string PasskeyStateInvalid = "passkey.stateInvalid";
@@ -155,10 +156,10 @@ public static class ErrorCodes
         ResourceNotFound or FeatureDisabled => StatusCodes.Status404NotFound,
         ConflictDuplicate or ConflictStale or ConflictBusy or SetupAlreadyCompleted or RestoreSlotTaken
             or RestoreNameTaken or AttachmentLimitReached or MonthCloseNotEnded or DebtPaymentTaken or PasskeyLimitReached
-            or TokenLimitReached or SettleUpAlreadySplit or SettleUpTransferTaken => StatusCodes.Status409Conflict,
+            or TokenLimitReached or SettleUpAlreadySplit or SettleUpTransferTaken or TwoFactorAlreadyEnabled => StatusCodes.Status409Conflict,
         AccessForbidden or UserSelfChange or UserLastAdministrator or SecurityNotHeld or SessionCurrent
             or TokenNotAllowed => StatusCodes.Status403Forbidden,
-        CredentialsInvalid or TokenInvalid => StatusCodes.Status401Unauthorized,
+        CredentialsInvalid or TokenInvalid or TwoFactorInvalidCode => StatusCodes.Status401Unauthorized,
         CredentialsLockedOut or TokenRateLimited => StatusCodes.Status429TooManyRequests,
         ReceiptEngineUnavailable => StatusCodes.Status503ServiceUnavailable,
         _ => StatusCodes.Status400BadRequest,

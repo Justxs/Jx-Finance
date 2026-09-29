@@ -12,7 +12,7 @@ public sealed class RefreshEndpoint(ISessionService sessionService) : EndpointWi
         Group<AuthGroup>();
         AllowAnonymous();
         Throttle(hitLimit: 60, durationSeconds: 300);
-        Description(d => d.Produces(429));
+        Description(d => d.Produces(429).Produces(401));
     }
 
     public override async Task HandleAsync(CancellationToken ct)

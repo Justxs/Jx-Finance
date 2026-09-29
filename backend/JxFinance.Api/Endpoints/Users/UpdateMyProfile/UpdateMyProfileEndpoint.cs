@@ -12,6 +12,7 @@ public sealed class UpdateMyProfileEndpoint(IUserService userService) : Endpoint
         Put(ApiRoutes.Users + "/me");
         Group<UsersGroup>();
         Throttle(hitLimit: 10, durationSeconds: 300);
+        Description(d => d.Produces(429));
     }
 
     public override async Task HandleAsync(UpdateMyProfileRequest req, CancellationToken ct) =>

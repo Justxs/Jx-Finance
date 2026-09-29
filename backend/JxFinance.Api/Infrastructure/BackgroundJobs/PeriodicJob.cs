@@ -51,12 +51,13 @@ public abstract class PeriodicJob(IServiceScopeFactory scopes, ILogger logger) :
         }
     }
 
+    protected AsyncServiceScope UserScope(Guid userId) => scopes.CreateUserScope(userId);
+
     protected async Task RunAsUserAsync(Guid userId, Func<IServiceProvider, Task> work)
     {
         try
         {
-            await using var scope = scopes.CreateAsyncScope();
-            scope.ServiceProvider.GetRequiredService<JobUser>().User = new FixedUser(userId);
+            await using var scope = UserScope(userId);
             await work(scope.ServiceProvider);
         }
         catch (Exception ex) when (ex is not OperationCanceledException)

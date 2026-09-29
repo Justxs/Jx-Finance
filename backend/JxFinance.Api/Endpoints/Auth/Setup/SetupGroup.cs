@@ -3,4 +3,4 @@ using JxFinance.Common.OpenApi;
 
 namespace JxFinance.Endpoints.Auth.Setup;
 
-public sealed class SetupGroup() : ApiGroup(ApiTags.Setup, requiresAuthentication: false);
+public sealed class SetupGroup() : ApiGroup(ApiTags.Setup);

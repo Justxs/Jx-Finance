@@ -2,7 +2,7 @@
 
 Back to the [feature walkthrough](README.md). See also [architecture: Authentication](../architecture/authentication.md).
 
-Backend `Auth/TwoFactor`. Setup and disable require the current password, which counts toward the lockout. A wrong code on enable counts toward the same lockout, and setup, enable and disable are each throttled to 5 calls per five minutes per client.
+Backend `Auth/TwoFactor`. Setup and disable require the current password, which counts toward the lockout and, when wrong, answers 400 `password.incorrect` like every other re-authentication; setup while the authenticator is on answers 409 `twoFactor.alreadyEnabled` before the password is checked. A wrong code answers 401 `twoFactor.invalidCode`, at sign-in and on enable alike. The endpoints only forward to `IAuthService` (`LoginAsync`, `SetupTwoFactorAsync`, `EnableTwoFactorAsync`, `DisableTwoFactorAsync`), which also renews the session after a change. A wrong code on enable counts toward the same lockout, and setup, enable and disable are each throttled to 5 calls per five minutes per client.
 
 ```mermaid
 stateDiagram-v2

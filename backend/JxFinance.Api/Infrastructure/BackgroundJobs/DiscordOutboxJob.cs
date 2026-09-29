@@ -42,18 +42,13 @@ public sealed class DiscordOutboxJob(
         await using (var transaction = await db.Database.BeginTransactionAsync(ct))
         {
             await db.Database.LockAsync(AppLock.DiscordOutbox, ct);
-            var ready = db.DiscordMessages
-                .Where(m => m.SentAt == null && m.Attempts < DiscordMessage.MaxAttempts && m.NextAttemptAt <= now);
+            var ready = db.DiscordMessages.Due(now);
             due = await ready
                 .Where(m => ready.Count(earlier => earlier.UserId == m.UserId && earlier.CreatedAt < m.CreatedAt) < PerUserPerPass)
                 .OrderBy(m => m.CreatedAt)
                 .Take(BatchSize)
                 .ToListAsync(ct);
-            foreach (var message in due)
-            {
-                message.Attempts++;
-                message.NextAttemptAt = Backoff(now, message.Attempts);
-            }
+            due.ForEach(message => message.Claim(now));
 
             await db.SaveChangesAsync(ct);
             await transaction.CommitAsync(ct);
@@ -108,9 +103,6 @@ public sealed class DiscordOutboxJob(
         }
     }
 
-    private static DateTimeOffset Backoff(DateTimeOffset now, int attempts) =>
-        now.AddMinutes(Math.Min(Math.Pow(4, attempts), 240));
-
     private sealed class Sender(
         IDiscordWebhookClient client,
         IDataProtectionProvider protection,
@@ -158,7 +150,7 @@ public sealed class DiscordOutboxJob(
                 catch (Exception ex)
                 {
                     logger.LogError(ex, "Sending the Discord message {MessageId} failed.", message.Id);
-                    message.LastError = TextLimit.Cut(ex.Message, DiscordMessage.ErrorMaxLength);
+                    message.LastError = TextLimit.Cut(ex.Message, OutboxMessage.ErrorMaxLength);
                     webhook.RecordSend(clock.UtcNow, message.LastError);
                     LogIfGivenUp(message);
                     continue;

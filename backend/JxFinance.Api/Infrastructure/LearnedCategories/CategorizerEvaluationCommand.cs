@@ -19,8 +19,7 @@ public static class CategorizerEvaluationCommand
     public static async Task RunAsync(IServiceProvider services, string email, TextWriter output)
     {
         var userId = await UserIdAsync(services, email);
-        await using var scope = services.CreateAsyncScope();
-        scope.ServiceProvider.GetRequiredService<JobUser>().User = new FixedUser(userId);
+        await using var scope = services.CreateUserScope(userId);
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         var evaluation = await EvaluateAsync(db, CancellationToken.None);
         CategorizerEvaluationReport.Write(evaluation, output);

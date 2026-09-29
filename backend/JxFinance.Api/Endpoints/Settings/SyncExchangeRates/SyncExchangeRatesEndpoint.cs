@@ -14,7 +14,6 @@ public sealed class SyncExchangeRatesEndpoint(ISettingsService settingsService)
         Post(ApiRoutes.Settings + "/exchange-rates/sync");
         Group<SettingsGroup>();
         Roles(AppRoles.Admin);
-        Description(d => d.ProducesProblemDetails(403));
     }
 
     public override async Task HandleAsync(CancellationToken ct) =>

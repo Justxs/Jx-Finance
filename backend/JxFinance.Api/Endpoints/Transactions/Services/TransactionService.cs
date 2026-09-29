@@ -196,7 +196,7 @@ public sealed class TransactionService(
 
         if (request.Unusual == true && UnusualEnabled)
         {
-            query = query.Where(t => t.UnusualBasis != null && t.UnusualDismissedAt == null);
+            query = query.Where(t => t.Unusual != null && t.UnusualDismissedAt == null);
         }
 
         if (request.Uncategorized == true)

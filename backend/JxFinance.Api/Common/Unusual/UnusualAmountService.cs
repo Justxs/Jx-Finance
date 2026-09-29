@@ -14,8 +14,6 @@ public sealed class UnusualAmountService(AppDbContext db) : IUnusualAmountServic
 {
     public const int MaxHistoryRows = 5000;
 
-    public static IUnusualAmountService For(AppDbContext db) => new UnusualAmountService(db);
-
     public async Task<IReadOnlyList<UnusualVerdict?>> EvaluateAsync(
         IReadOnlyList<UnusualCandidate> candidates,
         CancellationToken cancellationToken)

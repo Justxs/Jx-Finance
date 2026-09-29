@@ -1,5 +1,6 @@
 using FastEndpoints;
 using JxFinance.Common;
+using JxFinance.Common.Settings;
 using JxFinance.Endpoints.Households.Interfaces;
 using JxFinance.Endpoints.Households.Shared;
 
@@ -12,6 +13,7 @@ public sealed class GetHouseholdsEndpoint(IHouseholdService householdService)
     {
         Get(ApiRoutes.Households);
         Group<HouseholdsGroup>();
+        Options(b => b.WithMetadata(EmptyWhenFeatureOff.Instance));
     }
 
     public override async Task HandleAsync(CancellationToken ct) =>

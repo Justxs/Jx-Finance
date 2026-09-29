@@ -20,7 +20,7 @@ sequenceDiagram
     else email and password
         User->>App: email, password, remember me
         App->>Api: POST /api/auth/login
-        Api->>Auth: ValidateCredentialsAsync
+        Api->>Auth: LoginAsync, which runs ValidateCredentialsAsync
         alt locked out (5 failures, 15 minutes)
             Auth-->>App: 429 credentials.lockedOut
         else wrong password or deactivated
@@ -29,7 +29,7 @@ sequenceDiagram
             Api-->>App: 200 requiresTwoFactor true
             User->>App: authenticator or recovery code
             App->>Api: POST /api/auth/login with twoFactorCode
-            Api->>Auth: ConsumeTwoFactorCodeAsync
+            Api->>Auth: the code is checked and counted; a wrong one is 401 twoFactor.invalidCode
         end
     end
     Api->>Sess: SignInAsync(user, rememberMe)

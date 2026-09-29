@@ -26,7 +26,7 @@ public sealed class TwoFactorEndpointTests(ApiFixture fixture) : IntegrationTest
 
         var response = await client.PostAsJsonAsync("/api/auth/2fa/enable", new { code = "000000" }, TestContext.Current.CancellationToken);
 
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        await AssertProblemAsync(response, HttpStatusCode.Unauthorized, "twoFactor.invalidCode");
     }
 
     [Fact]
@@ -107,7 +107,20 @@ public sealed class TwoFactorEndpointTests(ApiFixture fixture) : IntegrationTest
 
         var response = await client.PostAsJsonAsync("/api/auth/2fa/setup", new { password = "incorrect" }, TestContext.Current.CancellationToken);
 
-        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        await AssertProblemAsync(response, HttpStatusCode.BadRequest, "password.incorrect");
+    }
+
+    [Fact]
+    public async Task Setup_is_refused_while_two_factor_is_on()
+    {
+        var user = await CreateUserAsync();
+        using var client = await LoginAsync(user);
+        var setup = await PostAsync<SetupDto>(client, "/api/auth/2fa/setup", new { password = user.Password });
+        await PostAsync<EnableDto>(client, "/api/auth/2fa/enable", new { code = Totp.GenerateCode(setup.SharedKey) });
+
+        var again = await client.PostAsJsonAsync("/api/auth/2fa/setup", new { password = user.Password }, TestContext.Current.CancellationToken);
+
+        await AssertProblemAsync(again, HttpStatusCode.Conflict, "twoFactor.alreadyEnabled");
     }
 
     [Fact]

@@ -101,9 +101,6 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, ICurren
 
     public AuditTrail Audit { get; } = new();
 
-    public static AppDbContext For(IServiceProvider services, Guid userId) =>
-        new(services.GetRequiredService<DbContextOptions<AppDbContext>>(), new FixedUser(userId), services.GetRequiredService<IClock>());
-
     public override int SaveChanges(bool acceptAllChangesOnSuccess) =>
         throw new NotSupportedException("Saving is asynchronous; call SaveChangesAsync instead.");
 
@@ -233,14 +230,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, ICurren
 
                     if (entry.Entity is Transaction transaction && ChangesUnusualInputs(entry))
                     {
-                        transaction.UnusualCheckedAt = null;
-                        if (transaction.IsSplit || transaction.Type != FlowType.Expense || transaction.Amount.Amount < 0)
-                        {
-                            transaction.UnusualBasis = null;
-                            transaction.UnusualTypicalAmount = null;
-                            transaction.UnusualFactor = null;
-                            transaction.UnusualSampleSize = null;
-                        }
+                        transaction.RecheckUnusual();
                     }
 
                     break;

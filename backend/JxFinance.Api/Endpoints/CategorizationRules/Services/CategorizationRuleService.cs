@@ -183,12 +183,7 @@ public sealed class CategorizationRuleService(
             var ids = group.SelectMany(m => m.Rows).Select(row => row.Id).ToList();
             await db.Transactions
                 .Where(t => ids.Contains(t.Id))
-                .ExecuteUpdateAsync(
-                    setters => setters
-                        .SetProperty(t => t.CategoryId, categoryId)
-                        .SetProperty(t => t.UpdatedAt, now)
-                        .SetProperty(t => t.UnusualCheckedAt, (DateTimeOffset?)null),
-                    cancellationToken);
+                .SetCategoryAsync(categoryId, now, cancellationToken);
         }
 
         await AddTagsAsync(matches, cancellationToken);

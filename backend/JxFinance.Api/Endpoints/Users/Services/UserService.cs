@@ -274,7 +274,7 @@ public sealed class UserService(
 
         if (request.NewPassword is not null)
         {
-            var confirmed = await authService.ConfirmPasswordAsync(user, request.CurrentPassword, ErrorCodes.PasswordIncorrect);
+            var confirmed = await authService.ConfirmPasswordAsync(user, request.CurrentPassword);
             if (confirmed.IsFailure)
             {
                 return confirmed.Error;

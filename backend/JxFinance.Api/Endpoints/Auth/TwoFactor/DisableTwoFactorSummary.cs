@@ -12,7 +12,7 @@ public sealed class DisableTwoFactorSummary : Summary<DisableTwoFactorEndpoint, 
             + "re-authenticating with the account password. Rate limited to five attempts per five minutes.";
         ExampleRequest = new ReauthenticateRequest("correct horse battery staple");
         Responses[204] = "Two-factor authentication is off.";
-        Responses[401] = "The password was wrong.";
+        Responses[400] = "password.incorrect: the password was wrong.";
         Responses[404] = "The session points at a user that no longer exists.";
         Responses[429] = "Too many attempts; wait and retry.";
     }

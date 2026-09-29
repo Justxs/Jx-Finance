@@ -1,11 +1,10 @@
 using System.Globalization;
 using JxFinance.Common;
-using JxFinance.Common.CategoryAttributions;
 using JxFinance.Common.Notifications;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Notifications;
 using JxFinance.Domain.Settings;
-using JxFinance.Endpoints.Budgets.Services;
+using JxFinance.Endpoints.Budgets.Interfaces;
 using JxFinance.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -28,12 +27,14 @@ public sealed class BudgetAlertJob(
     protected override Feature? RequiredFeature => Feature.Budgets;
 
     protected override Task RunAsync(IServiceProvider services, CancellationToken ct) =>
-        ForEachActiveUserAsync(services, userId => ScanUserAsync(services, userId, ct), ct);
+        ForEachActiveUserAsync(services, userId => ScanUserAsync(userId, ct), ct);
 
-    private static async Task ScanUserAsync(IServiceProvider services, Guid userId, CancellationToken ct)
+    private async Task ScanUserAsync(Guid userId, CancellationToken ct)
     {
+        await using var scope = UserScope(userId);
+        var services = scope.ServiceProvider;
         var clock = services.GetRequiredService<IClock>();
-        await using var db = AppDbContext.For(services, userId);
+        var db = services.GetRequiredService<AppDbContext>();
 
         var budgets = await db.Budgets.ToListAsync(ct);
         if (budgets.Count == 0)
@@ -41,12 +42,9 @@ public sealed class BudgetAlertJob(
             return;
         }
 
-        var calculator = ActivatorUtilities.CreateInstance<BudgetUsageCalculator>(
-            services,
-            new CategoryAttributionService(db));
-        var usage = await calculator.CalculateAsync(budgets, clock.Today, ct);
+        var usage = await services.GetRequiredService<IBudgetUsageCalculator>().CalculateAsync(budgets, clock.Today, ct);
         var categories = await db.Categories.ToDictionaryAsync(c => c.Id, c => c.Name, ct);
-        var publisher = NotificationPublisher.For(services, db);
+        var publisher = services.GetRequiredService<INotificationPublisher>();
 
         await using var transaction = await db.Database.BeginTransactionAsync(ct);
         await db.Database.LockAsync(AppLock.BudgetAlerts, ct);

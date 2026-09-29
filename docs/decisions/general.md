@@ -20,6 +20,9 @@ Apply EF migrations directly on startup; the `pg_dump` based dump, the backup sc
 
 Newest first. Each entry is a choice between real alternatives: what was chosen, what was rejected, and why.
 
+- **2026-09-29.** A background job that works as one user resolves its services from a user scope (`CreateUserScope`, which sets `JobUser`) and never builds a context or a service by hand; `AppDbContext.For`, `NotificationPublisher.For` and `UnusualAmountService.For` are removed
+  - Rejected: Keeping `AppDbContext.For` with `ActivatorUtilities` for the jobs with small graphs and the user scope for the deep ones
+  - Why: Two mechanisms meant every job author chose again, and the hand-built graphs had already drifted from DI: `NetWorthSnapshotter` constructed five services by hand, so any new constructor parameter broke it at run time only. The scope costs nothing measurable and gives the job exactly what a request would get
 - **2026-09-23.** `AppDbContext.SaveChanges` throws `NotSupportedException`
   - Rejected: Keeping `GetAwaiter().GetResult()` around the audit collector; duplicating the collector synchronously
   - Why: Nothing in the product, in Identity's stores or in the migration and seeding paths calls the synchronous save, so the blocking call was a deadlock kept alive for no caller. A second synchronous audit path would be a second place for the log to be wrong

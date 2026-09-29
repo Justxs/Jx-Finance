@@ -13,7 +13,6 @@ public sealed class CreateUserEndpoint(IUserService userService) : Endpoint<Crea
         Post(ApiRoutes.Users);
         Group<UsersGroup>();
         Roles(AppRoles.Admin);
-        Description(d => d.ProducesProblemDetails(403));
         Description(d => d.ProducesCreated<UserProfileResponse>());
     }
 

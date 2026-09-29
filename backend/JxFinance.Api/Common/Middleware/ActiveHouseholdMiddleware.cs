@@ -47,7 +47,7 @@ public sealed class ActiveHouseholdMiddleware(RequestDelegate next, IInstanceSet
         }
 
         var header = context.Request.Headers[ActiveHousehold.HeaderName].ToString();
-        var query = ActiveHousehold.TakesQueryScope(context.Request.Path)
+        var query = ActiveHousehold.TakesQueryScope(context.GetEndpoint())
             ? context.Request.Query[ActiveHousehold.QueryName].ToString()
             : string.Empty;
 

@@ -29,7 +29,7 @@ public sealed class EmailOutbox(
             ToName = Clip(email.ToName, EmailMessage.NameMaxLength),
             Subject = Clip(email.Subject, EmailMessage.SubjectMaxLength),
             Body = Clip(email.Body, EmailMessage.BodyMaxLength),
-            DedupeKey = dedupeKey is null ? null : Clip(dedupeKey, EmailMessage.DedupeKeyMaxLength),
+            DedupeKey = dedupeKey is null ? null : Clip(dedupeKey, OutboxMessage.DedupeKeyMaxLength),
             CreatedAt = now,
             NextAttemptAt = now,
         });

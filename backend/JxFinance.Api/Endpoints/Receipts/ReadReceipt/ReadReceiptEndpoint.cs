@@ -21,7 +21,7 @@ public sealed class ReadReceiptEndpoint(IReceiptService receiptService)
             .ProducesProblemDetails(404)
             .ProducesProblemDetails(409)
             .Produces(413)
-            .ProducesProblemDetails(429)
+            .Produces(429)
             .ProducesProblemDetails(503));
     }
 

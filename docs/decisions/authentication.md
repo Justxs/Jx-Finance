@@ -10,6 +10,9 @@ Admin-created users; optional 2FA; optional passkeys through ASP.NET Core Identi
 
 Newest first. Each entry is a choice between real alternatives: what was chosen, what was rejected, and why.
 
+- **2026-09-29.** A wrong password on two-factor setup or disable answers 400 `password.incorrect` like every other re-authentication, setup while two-factor is on answers 409 `twoFactor.alreadyEnabled`, and a wrong code answers 401 `twoFactor.invalidCode` at sign-in and on enable alike
+  - Rejected: Keeping 401 `credentials.invalid` for the two-factor password prompts and a login-only 401 for the code
+  - Why: The same act, confirming your own password while signed in, answered two ways depending on the screen, and "already enabled" was reported as a wrong password. One status per error code also lets the endpoints forward a `Result` without special-casing it; the client already exempts `/auth/2fa/` and `/auth/login` from its refresh-on-401, so the code's 401 signs nobody out
 - **2026-09-29.** Deactivating a member deletes their personal API tokens; reactivation does not bring them back. Decided while the owner was away as the plan's recommended and more secure answer to its open question; review it
   - Rejected: Suspending the tokens during a deactivation so that reactivation revives them
   - Why: A deactivation usually means someone else may be in the account or the person left; a credential that comes back by itself after a reactivation is one nobody decided to issue again. Creating a new token takes a minute, and the handler would refuse a deactivated member's token in any case

@@ -14,7 +14,8 @@ public sealed class SetupTwoFactorSummary : Summary<SetupTwoFactorEndpoint, Reau
             + "account password is required, and the call is rate limited to five attempts per five minutes.";
         ExampleRequest = new ReauthenticateRequest("correct horse battery staple");
         Responses[200] = "The shared key and otpauth URI to enrol with.";
-        Responses[401] = "The password was wrong, or two-factor authentication is already enabled.";
+        Responses[400] = "password.incorrect: the password was wrong.";
+        Responses[409] = "twoFactor.alreadyEnabled: two-factor authentication is already on.";
         Responses[404] = "The session points at a user that no longer exists.";
         Responses[429] = "Too many attempts; wait and retry.";
     }

@@ -164,6 +164,7 @@ export const ProblemDetailsResponse = zod
                 "transfer.amountMismatch",
                 "transfer.receivedAmountRequired",
                 "transfer.sameAccount",
+                "twoFactor.alreadyEnabled",
                 "twoFactor.invalidCode",
                 "user.lastAdministrator",
                 "user.selfChange",

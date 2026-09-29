@@ -1,14 +1,6 @@
 using FastEndpoints;
-using JxFinance.Common.ExchangeRates;
-using JxFinance.Common.Settings;
-using JxFinance.Common.Sharing;
-using JxFinance.Common.Trash;
-using JxFinance.Domain.Common;
-using JxFinance.Endpoints.Accounts.Services;
-using JxFinance.Endpoints.Investments.Services;
 using JxFinance.Endpoints.NetWorth.Interfaces;
 using JxFinance.Infrastructure.Auth;
-using JxFinance.Infrastructure.Data;
 
 namespace JxFinance.Endpoints.NetWorth.Services;
 
@@ -17,25 +9,7 @@ public sealed class NetWorthSnapshotter(IServiceScopeFactory scopes) : INetWorth
 {
     public async Task SnapshotAsync(Guid userId, CancellationToken cancellationToken)
     {
-        using var scope = scopes.CreateScope();
-        var services = scope.ServiceProvider;
-        var settings = services.GetRequiredService<IInstanceSettingsStore>();
-        var rates = services.GetRequiredService<IExchangeRateService>();
-        var user = new FixedUser(userId);
-        var clock = services.GetRequiredService<IClock>();
-        await using var db = AppDbContext.For(services, userId);
-        var service = new NetWorthService(
-            db,
-            new AccountService(
-                db,
-                user,
-                new SharingGuard(db, user),
-                rates,
-                new HoldingsValuation(db, rates, settings)),
-            rates,
-            clock,
-            new DeletionRecorder(db),
-            user);
-        await service.GetCurrentAsync(cancellationToken);
+        await using var scope = scopes.CreateUserScope(userId);
+        await scope.ServiceProvider.GetRequiredService<INetWorthService>().GetCurrentAsync(cancellationToken);
     }
 }

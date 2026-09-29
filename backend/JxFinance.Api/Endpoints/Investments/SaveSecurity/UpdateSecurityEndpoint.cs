@@ -13,7 +13,7 @@ public sealed class UpdateSecurityEndpoint(IInvestmentService investmentService)
         Put(ApiRoutes.Investments + "/securities/{id:guid}");
         Group<InvestmentsGroup>();
         Roles(AppRoles.Admin);
-        Description(d => d.ProducesProblemDetails(403).ProducesProblemDetails(404).ProducesProblemDetails(409));
+        Description(d => d.ProducesProblemDetails(404).ProducesProblemDetails(409));
     }
 
     public override async Task HandleAsync(SaveSecurityRequest req, CancellationToken ct) =>

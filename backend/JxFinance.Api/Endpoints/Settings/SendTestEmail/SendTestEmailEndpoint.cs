@@ -15,7 +15,7 @@ public sealed class SendTestEmailEndpoint(ISettingsService settingsService)
         Group<SettingsGroup>();
         Roles(AppRoles.Admin);
         Throttle(hitLimit: 10, durationSeconds: 300);
-        Description(d => d.Produces(429).ProducesProblemDetails(403));
+        Description(d => d.Produces(429));
     }
 
     public override async Task HandleAsync(CancellationToken ct) =>

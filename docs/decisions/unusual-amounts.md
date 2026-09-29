@@ -10,6 +10,9 @@ Implemented 2026-09-26 behind the `UnusualAmounts` switch, on by default. A job 
 
 Newest first. Each entry is a choice between real alternatives: what was chosen, what was rejected, and why.
 
+- **2026-09-29.** The verdict becomes an optional EF complex property `Transaction.Unusual` (`UnusualVerdict`) over the same four columns, replacing the scalar columns chosen on 2026-09-26
+  - Rejected: Keeping four nullable scalars that the mapper reassembles and the save rule clears one by one
+  - Why: EF Core 10 writes an optional complex property with `ExecuteUpdate` without loading or tracking rows, which was the only reason for the scalars. One property cannot be half set, the mapper passes it through, and clearing it is one assignment in `Transaction.RecheckUnusual`. The column names, and so the partial indexes, did not change, and no migration was needed
 - **2026-09-27.** The job pages unchecked rows by date, then id, and writes each verdict with its own `ExecuteUpdate` that matches the `UpdatedAt` it read; the factor is capped at 9 999 999.99, and a price rise reaches the entry's owner only while that owner can still see the charged account
   - Rejected: Paging by id; one bulk update for every row without a verdict; a minimum median
   - Why: Ids are random, so a page by id was a sample of the whole history and older rows were judged against the 5 000 newest rows of a window that did not reach them, then stamped for good. A bulk update also overwrote an edit that landed between the read and the write, leaving a verdict for the old amount. A median of a cent made the factor overflow its column and stop the job for everyone. An owner who left the household must not learn about charges on an account they can no longer see

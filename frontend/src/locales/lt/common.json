@@ -2539,7 +2539,8 @@
       "sameAccount": "Pasirinkite dvi skirtingas sąskaitas."
     },
     "twoFactor": {
-      "invalidCode": "Kodas neteisingas."
+      "invalidCode": "Kodas neteisingas.",
+      "alreadyEnabled": "Dviejų veiksnių autentifikavimas jau įjungtas."
     },
     "user": {
       "lastAdministrator": "Turi likti bent vienas aktyvus administratorius.",

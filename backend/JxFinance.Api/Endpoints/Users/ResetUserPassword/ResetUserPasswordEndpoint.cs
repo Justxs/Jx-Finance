@@ -15,7 +15,7 @@ public sealed class ResetUserPasswordEndpoint(IUserService userService)
         Group<UsersGroup>();
         Roles(AppRoles.Admin);
         Throttle(hitLimit: 10, durationSeconds: 300);
-        Description(d => d.ProducesProblemDetails(403).ProducesProblemDetails(404).Produces(429));
+        Description(d => d.ProducesProblemDetails(404).Produces(429));
     }
 
     public override async Task HandleAsync(ResetUserPasswordRequest req, CancellationToken ct) =>

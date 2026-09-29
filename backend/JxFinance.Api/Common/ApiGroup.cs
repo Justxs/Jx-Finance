@@ -9,7 +9,6 @@ public abstract class ApiGroup : Group
     protected ApiGroup(
         string tag,
         Feature? feature = null,
-        bool requiresAuthentication = true,
         string? role = null,
         bool tokenReadable = false)
     {
@@ -21,12 +20,7 @@ public abstract class ApiGroup : Group
             ApiRoutes.Prefix,
             ep =>
             {
-                ep.Description(d =>
-                {
-                    d.WithTags(tag).ProducesProblemDetails(400);
-                    if (requiresAuthentication) d.ProducesProblemDetails(401);
-                    if (role is not null) d.ProducesProblemDetails(403);
-                });
+                ep.Description(d => d.WithTags(tag).ProducesProblemDetails(400));
                 if (role is not null) ep.Roles(role);
                 if (metadata.Count > 0) ep.Options(b => b.WithMetadata([.. metadata]));
             });

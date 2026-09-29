@@ -15,15 +15,6 @@ public sealed class MeEndpoint(IAuthService authService)
         Description(d => d.ProducesProblemDetails(404));
     }
 
-    public override async Task HandleAsync(CancellationToken ct)
-    {
-        var profile = await authService.GetCurrentProfileAsync(ct);
-        if (profile is null)
-        {
-            await Send.NotFoundAsync(ct);
-            return;
-        }
-
-        await Send.OkAsync(profile, ct);
-    }
+    public override async Task HandleAsync(CancellationToken ct) =>
+        await Send.OkOrProblemAsync(await authService.GetCurrentProfileAsync(ct), ct);
 }

@@ -82,5 +82,5 @@ public sealed class MailKitEmailTransport(IOptions<AppOptions> options, ILogger<
         _ => SecureSocketOptions.StartTls,
     };
 
-    private static string Describe(Exception exception) => TextLimit.Cut(exception.Message, EmailMessage.ErrorMaxLength);
+    private static string Describe(Exception exception) => TextLimit.Cut(exception.Message, OutboxMessage.ErrorMaxLength);
 }

@@ -13,7 +13,6 @@ public sealed class UpdateDiscordSettingsEndpoint(ISettingsService settingsServi
         Put(ApiRoutes.Settings + "/discord");
         Group<SettingsGroup>();
         Roles(AppRoles.Admin);
-        Description(d => d.ProducesProblemDetails(403));
     }
 
     public override async Task HandleAsync(UpdateDiscordSettingsRequest req, CancellationToken ct)

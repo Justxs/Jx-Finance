@@ -4,7 +4,7 @@ using JxFinance.Endpoints.Imports.Interfaces;
 
 namespace JxFinance.Endpoints.Imports.Confirm;
 
-public sealed class ImportConfirmEndpoint(IImportService importService)
+public sealed class ImportConfirmEndpoint(IImportConfirmService importService)
     : Endpoint<ImportConfirmRequest, ImportConfirmResponse>
 {
     public override void Configure()

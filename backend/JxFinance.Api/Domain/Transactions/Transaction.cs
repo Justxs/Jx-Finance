@@ -20,9 +20,15 @@ public sealed class Transaction : OwnableEntity, IAccountScoped
     public bool IsSplit { get; set; }
     public TransactionId? RefundOfTransactionId { get; set; }
     public DateTimeOffset? UnusualCheckedAt { get; set; }
-    public UnusualBasis? UnusualBasis { get; set; }
-    public decimal? UnusualTypicalAmount { get; set; }
-    public decimal? UnusualFactor { get; set; }
-    public int? UnusualSampleSize { get; set; }
+    public UnusualVerdict? Unusual { get; set; }
     public DateTimeOffset? UnusualDismissedAt { get; set; }
+
+    public void RecheckUnusual()
+    {
+        UnusualCheckedAt = null;
+        if (IsSplit || Type != FlowType.Expense || Amount.Amount < 0)
+        {
+            Unusual = null;
+        }
+    }
 }

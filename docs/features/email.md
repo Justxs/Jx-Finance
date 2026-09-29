@@ -156,7 +156,7 @@ flowchart TD
     Mail --> Done
 ```
 
-No producer sends mail itself. `NotificationPublisher` enqueues the email through `IEmailOutbox` on the producer's own `AppDbContext`, beside the notification and the Discord message, so all of them are written in the producer's transaction, under its lock, behind its own "was this already notified" question, and cannot disagree: either every row appears or none does. `BudgetAlertJob`, which works on a per-user context, gets a publisher and an outbox bound to that context through `NotificationPublisher.For`.
+No producer sends mail itself. `NotificationPublisher` enqueues the email through `IEmailOutbox` on the producer's own `AppDbContext`, beside the notification and the Discord message, so all of them are written in the producer's transaction, under its lock, behind its own "was this already notified" question, and cannot disagree: either every row appears or none does. `BudgetAlertJob` works in a user scope and resolves its publisher, and with it the outbox, from that scope.
 
 Three rules decide whether a message is queued, all at the moment the notification is written:
 

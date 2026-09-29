@@ -4,7 +4,7 @@ using JxFinance.Endpoints.Imports.Interfaces;
 
 namespace JxFinance.Endpoints.Imports.Preview;
 
-public sealed class ImportPreviewEndpoint(IImportService importService)
+public sealed class ImportPreviewEndpoint(IImportPreviewService importService)
     : Endpoint<ImportPreviewRequest, ImportPreviewResponse>
 {
     public override void Configure()

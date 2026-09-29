@@ -4,7 +4,7 @@ using JxFinance.Endpoints.Imports.Interfaces;
 
 namespace JxFinance.Endpoints.Imports.InspectCsv;
 
-public sealed class InspectCsvEndpoint(IImportService importService) : Endpoint<InspectCsvRequest, InspectCsvResponse>
+public sealed class InspectCsvEndpoint(IImportPreviewService importService) : Endpoint<InspectCsvRequest, InspectCsvResponse>
 {
     public override void Configure()
     {

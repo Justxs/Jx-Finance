@@ -1,5 +1,5 @@
 using JxFinance.Domain.Settings;
-using JxFinance.Endpoints.Investments.Services;
+using JxFinance.Endpoints.Investments.Interfaces;
 using JxFinance.Infrastructure.Auth;
 using JxFinance.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
@@ -28,20 +28,14 @@ public sealed class BrokerSyncJob(IServiceScopeFactory scopes, ILogger<BrokerSyn
 
         foreach (var connection in connections)
         {
-            try
+            await RunAsUserAsync(connection.UserId, async scoped =>
             {
-                await using var db = AppDbContext.For(services, connection.UserId);
-                var importer = ActivatorUtilities.CreateInstance<BrokerImportService>(services, db, new FixedUser(connection.UserId));
-                var result = await importer.SyncAsync(connection.AccountId.Value, ct);
+                var result = await scoped.GetRequiredService<IBrokerImportService>().SyncAsync(connection.AccountId.Value, ct);
                 if (result.IsFailure)
                 {
                     Logger.LogWarning("Broker sync for account {AccountId} failed: {Error}", connection.AccountId, result.ErrorMessage);
                 }
-            }
-            catch (Exception ex) when (ex is not OperationCanceledException)
-            {
-                Logger.LogError(ex, "Broker sync for account {AccountId} failed.", connection.AccountId);
-            }
+            });
         }
     }
 }

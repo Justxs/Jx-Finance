@@ -322,7 +322,7 @@ export const updateMyProfile = async (
 export const getUpdateMyProfileMutationKey = () => ["updateMyProfile"] as const;
 
 export const getUpdateMyProfileMutationOptions = <
-  TError = ErrorType<ProblemDetails>,
+  TError = ErrorType<ProblemDetails | void>,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -361,13 +361,13 @@ export type UpdateMyProfileMutationResult = NonNullable<
   Awaited<ReturnType<typeof updateMyProfile>>
 >;
 export type UpdateMyProfileMutationBody = UpdateMyProfileRequest;
-export type UpdateMyProfileMutationError = ErrorType<ProblemDetails>;
+export type UpdateMyProfileMutationError = ErrorType<ProblemDetails | void>;
 export type UpdateMyProfileMutationVariables = { data: UpdateMyProfileRequest };
 
 /**
  * @summary Update your own profile
  */
-export const useUpdateMyProfile = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
+export const useUpdateMyProfile = <TError = ErrorType<ProblemDetails | void>, TContext = unknown>(
   options?: {
     mutation?: UseMutationOptions<
       Awaited<ReturnType<typeof updateMyProfile>>,

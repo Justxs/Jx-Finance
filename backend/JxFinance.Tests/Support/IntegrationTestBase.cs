@@ -216,16 +216,14 @@ public abstract class IntegrationTestBase(ApiFixture fixture)
 
     protected async Task WithDbAsync(Guid userId, Func<AppDbContext, Task> work)
     {
-        await using var scope = Services.CreateAsyncScope();
-        await using var db = AppDbContext.For(scope.ServiceProvider, userId);
-        await work(db);
+        await using var scope = Services.CreateUserScope(userId);
+        await work(scope.ServiceProvider.GetRequiredService<AppDbContext>());
     }
 
     protected async Task<T> WithDbAsync<T>(Guid userId, Func<AppDbContext, Task<T>> work)
     {
-        await using var scope = Services.CreateAsyncScope();
-        await using var db = AppDbContext.For(scope.ServiceProvider, userId);
-        return await work(db);
+        await using var scope = Services.CreateUserScope(userId);
+        return await work(scope.ServiceProvider.GetRequiredService<AppDbContext>());
     }
 
     protected Task<int> SqlAsync(FormattableString sql) =>

@@ -1,3 +1,4 @@
+using JxFinance.Domain.Common;
 using JxFinance.Domain.Email;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -13,8 +14,8 @@ public sealed class EmailMessageConfiguration : IEntityTypeConfiguration<EmailMe
         builder.Property(m => m.ToName).HasMaxLength(EmailMessage.NameMaxLength);
         builder.Property(m => m.Subject).HasMaxLength(EmailMessage.SubjectMaxLength);
         builder.Property(m => m.Body).HasMaxLength(EmailMessage.BodyMaxLength);
-        builder.Property(m => m.DedupeKey).HasMaxLength(EmailMessage.DedupeKeyMaxLength);
-        builder.Property(m => m.LastError).HasMaxLength(EmailMessage.ErrorMaxLength);
+        builder.Property(m => m.DedupeKey).HasMaxLength(OutboxMessage.DedupeKeyMaxLength);
+        builder.Property(m => m.LastError).HasMaxLength(OutboxMessage.ErrorMaxLength);
         builder.HasIndex(m => m.DedupeKey).IsUnique().HasFilter("\"DedupeKey\" IS NOT NULL");
         builder.HasIndex(m => new { m.SentAt, m.NextAttemptAt });
     }

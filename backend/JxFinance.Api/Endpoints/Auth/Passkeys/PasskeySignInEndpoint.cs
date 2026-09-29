@@ -15,7 +15,7 @@ public sealed class PasskeySignInEndpoint(IPasskeyService passkeyService)
         Group<AuthGroup>();
         AllowAnonymous();
         Throttle(hitLimit: 10, durationSeconds: 300);
-        Description(d => d.Produces(429));
+        Description(d => d.Produces(429).ProducesProblemDetails(401));
     }
 
     public override async Task HandleAsync(PasskeySignInRequest req, CancellationToken ct)

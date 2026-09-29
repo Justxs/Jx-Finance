@@ -60,7 +60,7 @@ public sealed class MiddlewareProblemTests
     [Fact]
     public async Task The_household_list_answers_empty_while_households_are_off()
     {
-        var context = CreateContext(ApiRoutes.HouseholdsPath, Feature.Households);
+        var context = CreateContext(ApiRoutes.HouseholdsPath, Feature.Households, EmptyWhenFeatureOff.Instance);
 
         await new FeatureGateMiddleware(_ => Task.CompletedTask, Settings(Feature.Households)).InvokeAsync(context);
 
@@ -72,7 +72,7 @@ public sealed class MiddlewareProblemTests
     public async Task Conflicting_active_households_answer_the_problem_an_endpoint_would_send()
     {
         var path = ApiRoutes.TransactionsPath + "/export";
-        var context = CreateContext(path, feature: null);
+        var context = CreateContext(path, feature: null, QueryHouseholdScope.Instance);
         context.User = new ClaimsPrincipal(new ClaimsIdentity([new Claim(ClaimTypes.Name, "probe")], "probe"));
         context.Request.Headers[ActiveHousehold.HeaderName] = Guid.NewGuid().ToString();
         context.Request.QueryString = QueryString.Create(ActiveHousehold.QueryName, Guid.NewGuid().ToString());
@@ -110,13 +110,13 @@ public sealed class MiddlewareProblemTests
         Assert.Empty(problem.GetProperty("errors").EnumerateArray());
     }
 
-    private static DefaultHttpContext CreateContext(string path, Feature? feature)
+    private static DefaultHttpContext CreateContext(string path, Feature? feature, params object[] marks)
     {
         var context = new DefaultHttpContext { TraceIdentifier = TraceId };
         context.Request.Method = HttpMethods.Get;
         context.Request.Path = path;
         context.Response.Body = new MemoryStream();
-        var metadata = feature is { } gated ? new EndpointMetadataCollection(new RequiresFeature(gated)) : EndpointMetadataCollection.Empty;
+        var metadata = new EndpointMetadataCollection(feature is { } gated ? [new RequiresFeature(gated), .. marks] : marks);
         context.SetEndpoint(new Endpoint(null, metadata, path));
         return context;
     }

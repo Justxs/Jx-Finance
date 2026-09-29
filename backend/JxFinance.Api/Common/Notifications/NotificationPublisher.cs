@@ -27,12 +27,6 @@ public sealed class NotificationPublisher(
     private readonly HashSet<string> queuedKeys = new(StringComparer.Ordinal);
     private readonly HashSet<string> queuedEmailKeys = new(StringComparer.Ordinal);
 
-    public static INotificationPublisher For(IServiceProvider services, AppDbContext db) =>
-        ActivatorUtilities.CreateInstance<NotificationPublisher>(
-            services,
-            db,
-            ActivatorUtilities.CreateInstance<EmailOutbox>(services, db));
-
     public async Task PreloadAsync(IEnumerable<Guid> userIds, CancellationToken cancellationToken)
     {
         var missing = userIds.Where(id => !discordTypes.ContainsKey(id)).Distinct().ToList();

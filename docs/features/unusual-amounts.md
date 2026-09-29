@@ -19,7 +19,7 @@ sequenceDiagram
     loop at most 40 pages of 500
         Job->>Db: unchecked non-split expenses in id order,<br/>with the owner of their account
         loop per account owner
-            Job->>Eval: candidates, through AppDbContext.For(owner)
+            Job->>Eval: candidates, in a user scope for the owner
             Eval->>Db: one projection: non-split expenses before the latest candidate,<br/>same accounts or categories, newest 5000
             Eval-->>Job: a verdict or null per candidate
             Job->>Db: ExecuteUpdate: UnusualCheckedAt and the verdict columns
@@ -72,7 +72,7 @@ Only expenses that are not split are evaluated, and only such rows count as hist
 
 A verdict means "unusual compared with the 12 months before its date, as of when it was recorded or last edited". It is computed once and stored, and later changes to the history do not re-flag or clear old rows, so a flag does not flicker as new rows arrive. Rows imported together are judged against each other, because the job reads the history after they are stored.
 
-`UnusualCheckedAt` null means "not evaluated yet", and that is the only hook the write paths need. `AppDbContext.ApplyEntityRules` sets it back to null when a tracked transaction changes its `Amount`, `AccountId`, `CategoryId`, `Type`, `Date`, `Description` or `IsSplit`; tags, attachments and anything else leave it alone. The three writers that change `CategoryId` with `ExecuteUpdate` clear it too: deleting a category, a categorization rule run, and restoring a deleted category from the trash. An edited row keeps its old verdict until the next pass replaces or clears it, which is at most one interval later, except a row that became split or stopped being an expense: the job never looks at those again, so the edit clears their verdict columns at once. Changing the reporting currency clears `UnusualCheckedAt` on every transaction, deleted ones included, so the ledger is judged again with medians and floors in the new currency. With nothing checked any more, the backfill starts again and stays silent until it has caught up, like the very first one, as described under The job below.
+`UnusualCheckedAt` null means "not evaluated yet", and that is the only hook the write paths need. `AppDbContext.ApplyEntityRules` calls `Transaction.RecheckUnusual()`, which sets it back to null (and drops the verdict of a row that is now split, not an expense or a refund), when a tracked transaction changes its `Amount`, `AccountId`, `CategoryId`, `Type`, `Date`, `Description` or `IsSplit`; tags, attachments and anything else leave it alone. The three writers that change `CategoryId` with `ExecuteUpdate` go through one `SetCategoryAsync` extension (`Common/TransactionUpdates.cs`), which clears it too: deleting a category, a categorization rule run, and restoring a deleted category from the trash. An edited row keeps its old verdict until the next pass replaces or clears it, which is at most one interval later, except a row that became split or stopped being an expense: the job never looks at those again, so the edit clears their verdict columns at once. Changing the reporting currency clears `UnusualCheckedAt` on every transaction, deleted ones included, so the ledger is judged again with medians and floors in the new currency. With nothing checked any more, the backfill starts again and stays silent until it has caught up, like the very first one, as described under The job below.
 
 ## Where the verdict lives
 
@@ -89,7 +89,7 @@ Six nullable columns on `Transactions`, added by `AddUnusualAmounts`:
 
 `TransactionMapper` turns the columns into the `unusual` response through the same `UnusualVerdict.ToResponse()` the import preview uses. A partial index on (`AccountId`, `Date`) where `UnusualBasis` is not null and `UnusualDismissedAt` is null serves the ledger filter, and a partial index on `UnusualCheckedAt` where it is null serves the job.
 
-They are plain scalar columns rather than an EF complex type, so the job and the dismissal can write them with `ExecuteUpdate`. Neither write moves `UpdatedAt` or passes through the change tracker, so a verdict is not an edit: it does not reset its own check, and it does not reach the household activity log.
+The four verdict columns are one optional EF complex property, `Transaction.Unusual` of type `UnusualVerdict`, mapped onto the existing column names, so a row either has a whole verdict or none. The job still writes it with one `ExecuteUpdate` per row (`SetProperty(t => t.Unusual, verdict)`), and the dismissal writes its own column the same way. Neither write moves `UpdatedAt` or passes through the change tracker, so a verdict is not an edit: it does not reset its own check, and it does not reach the household activity log.
 
 ## The job
 
@@ -97,7 +97,7 @@ They are plain scalar columns rather than an EF complex type, so the job and the
 
 1. It reads the **backfill start**, the earliest `UnusualCheckedAt` of any transaction, deleted or not. When none has been checked, this pass starts the backfill and all of it is silent: verdicts are stored, nothing is notified and no price is compared. In later passes a row is part of the backfill when its `UpdatedAt` is not after the backfill start, which means it has not been written since the backfill began, and such a row stays silent too. That covers the upgrade, since the migration leaves every row unchecked, and the first import of a new installation, however many passes the backfill takes.
 2. It pages 500 unchecked non-split expenses at a time in id order, ignoring the owner filter but not soft deletion, joined to their account for the owner, for at most 40 pages (20,000 rows); the rest wait for the next pass.
-3. Per account owner it evaluates the page's rows through `UnusualAmountService` on `AppDbContext.For(services, ownerId)`, so the category history is what that owner can see: their own accounts and the accounts shared into any of their households, without an active household. The service makes one bounded query for all the candidates, the non-split expenses from 12 months before the earliest candidate to the latest one on the candidates' accounts or in their categories, newest 5000 (`MaxHistoryRows`), groups them in memory by payee key and by category, and leaves each candidate out of its own history.
+3. Per account owner it evaluates the page's rows through `IUnusualAmountService` resolved from a user scope for that owner, so the category history is what that owner can see: their own accounts and the accounts shared into any of their households, without an active household. The service makes one bounded query for all the candidates, the non-split expenses from 12 months before the earliest candidate to the latest one on the candidates' accounts or in their categories, newest 5000 (`MaxHistoryRows`), groups them in memory by payee key and by category, and leaves each candidate out of its own history.
 4. It stores the result: one `ExecuteUpdate` per flagged row and one for all the usual rows, which clears any old verdict.
 5. While `RecurringBills` is on, it compares the page's charges with the recurring entries, described under Price rises below.
 
@@ -168,7 +168,7 @@ The actions live in the badge because that is where the reason is shown; the row
 
 ## In the import preview
 
-`ImportPreviewRow` gained `unusual` in the same shape. While the feature is on, `ImportService.PreviewAsync` makes, for either statement format, one batch call to `IUnusualAmountService.EvaluateAsync` over the expense rows, valued through `ITransactionValuation` at the rate for each row's date; a row that cannot be valued gets no verdict. The category a row is judged in is the one its categorization rule suggests, because the client's recall of the latest matching description happens after the preview is answered. The call runs as the caller through the request's context, so a narrowed household scope narrows the category history too.
+`ImportPreviewRow` gained `unusual` in the same shape. While the feature is on, `ImportPreviewService.PreviewAsync` makes, for either statement format, one batch call to `IUnusualAmountService.EvaluateAsync` over the expense rows, valued through `ITransactionValuation` at the rate for each row's date; a row that cannot be valued gets no verdict. The category a row is judged in is the one its categorization rule suggests, because the client's recall of the latest matching description happens after the preview is answered. The call runs as the caller through the request's context, so a narrowed household scope narrows the category history too.
 
 Nothing is stored. Confirmed rows arrive unchecked and the job evaluates them, so the stored flag has one source; for a payee baseline the two agree, which a test asserts. The screen shows an "Unusual amount" mark with the sentence in its tooltip in the row's flags, never on a duplicate row, since that one cannot be imported.
 

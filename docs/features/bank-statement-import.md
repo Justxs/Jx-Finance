@@ -2,7 +2,7 @@
 
 Back to the [feature walkthrough](README.md). See also [decisions](../decisions/swedbank-csv-import.md), [architecture: Transactions, imports and receipts](../architecture/transactions.md).
 
-Backend `Imports` (`ImportService`, `CsvMappingService`, parsers in `Endpoints/Imports/Parsing`), frontend `imports` (`ImportDataSection`, `ImportDialog`, `ImportProviders`, `ImportSection`, `CsvMappingForm`, `ImportStatementBar`). No route of its own. The dialog opens from three places, all shown to every user while the `Import` switch is on: the "Import bank statement" button beside "Add transaction" in the ledger header, the same entry in an account's row actions on the Accounts page, which preselects that account, and the Import data panel of the Import and export section under Personal on the one Settings page (`/profile?section=import`), whose other panel is the [data export per user](data-export-per-user.md).
+Backend `Imports` (`ImportPreviewService` for inspect and preview, `ImportConfirmService` for confirm, sharing `ImportQueries`, `CsvMappingService`, parsers in `Endpoints/Imports/Parsing`), frontend `imports` (`ImportDataSection`, `ImportDialog`, `ImportProviders`, `ImportSection`, `CsvMappingForm`, `ImportStatementBar`). No route of its own. The dialog opens from three places, all shown to every user while the `Import` switch is on: the "Import bank statement" button beside "Add transaction" in the ledger header, the same entry in an account's row actions on the Accounts page, which preselects that account, and the Import data panel of the Import and export section under Personal on the one Settings page (`/profile?section=import`), whose other panel is the [data export per user](data-export-per-user.md).
 
 The dialog lists the providers, and each one is a statement format:
 
@@ -96,7 +96,7 @@ The raw date cell keeps Revolut's time of day and the balance cell tells two equ
 
 ## Review
 
-The review is the same for every format. The preview fills each row in twice over. Your [categorization rules](categorization-rules.md) run first: the first rule that matches a row's description, amount and flow type puts its category and its tags on the row and names itself in `matchedRuleName`, which the screen shows as a "Filled by a rule" mark with the rule's name in its tooltip. Where no rule has an opinion, the older recall still guesses a category from the most recent transaction with the same description, marked "Suggested category" as before. A duplicate row gets neither, because it cannot be imported. Both are suggestions: the per-row category select, the per-row tag picker and the "set category for selected" action all replace them, the mark disappears, and the confirm request carries whatever the user decided — including `tagIds`, which `ImportService` writes as `TransactionTags` beside the new transaction in the same database transaction.
+The review is the same for every format. The preview fills each row in twice over. Your [categorization rules](categorization-rules.md) run first: the first rule that matches a row's description, amount and flow type puts its category and its tags on the row and names itself in `matchedRuleName`, which the screen shows as a "Filled by a rule" mark with the rule's name in its tooltip. Where no rule has an opinion, the older recall still guesses a category from the most recent transaction with the same description, marked "Suggested category" as before. A duplicate row gets neither, because it cannot be imported. Both are suggestions: the per-row category select, the per-row tag picker and the "set category for selected" action all replace them, the mark disappears, and the confirm request carries whatever the user decided — including `tagIds`, which `ImportConfirmService` writes as `TransactionTags` beside the new transaction in the same database transaction.
 
 Since 2026-09-26, while the `UnusualAmounts` switch is on, the preview also judges each expense row the way the background check will once it is stored: `IUnusualAmountService.EvaluateAsync` runs once over all the expense rows, valued at the rate for each row's date, against the same payee on the target account or, failing that, the category a rule suggested. A row far above its usual amount answers `unusual` and shows an "Unusual amount" mark with the sentence, such as "3.1× the usual €41.50 for this payee", in its tooltip; a duplicate row never shows it. It is information only and is not sent back: confirmed rows arrive unchecked and the job evaluates them, so the stored flag has one source. See [Unusual amounts](unusual-amounts.md).
 
@@ -114,7 +114,7 @@ The closing balance is kept after the import. Confirm sends it back as `statemen
 sequenceDiagram
     actor User
     participant Dlg as ImportDialog
-    participant Api as ImportService
+    participant Api as Import services
     participant Db as PostgreSQL
     User->>Dlg: choose a provider, target account, file
     Dlg->>Api: POST /api/import/preview with format
@@ -175,7 +175,7 @@ Of those the most recent wins. One query reads the account's purchases from 90 d
 
 The review starts a row as a refund, selected, when it carries a candidate or is a camt.053 reversal, unless it is a duplicate, matches your own entry or names another of your accounts by IBAN. A candidate's category is filled in, the rule and recall suggestions are dropped, and the row starts without tags. The selection summary and the statement bar are unchanged, because the bank's amount and direction are what moved.
 
-Confirm sends `asRefund` and, for the linked choice, `refundOfTransactionId`; `type` and `amount` stay the bank's. `ImportService` writes the row as an `Expense` with the negated amount, valued the usual way, in the chosen category, which must be an expense category (`category.wrongType`). The purchase is checked by `RefundOriginal`, the helper the transaction form's save uses: a visible expense that is not a refund, or `transaction.refundOriginalInvalid`. `asRefund` on an outgoing row, a transfer or a linked row, and `refundOfTransactionId` without `asRefund`, answer `import.refundInvalid`. As with every confirm error, nothing is written.
+Confirm sends `asRefund` and, for the linked choice, `refundOfTransactionId`; `type` and `amount` stay the bank's. `ImportConfirmService` writes the row as an `Expense` with the negated amount, valued the usual way, in the chosen category, which must be an expense category (`category.wrongType`). The purchase is checked by `RefundOriginal`, the helper the transaction form's save uses: a visible expense that is not a refund, or `transaction.refundOriginalInvalid`. `asRefund` on an outgoing row, a transfer or a linked row, and `refundOfTransactionId` without `asRefund`, answer `import.refundInvalid`. As with every confirm error, nothing is written.
 
 ## Views, search and leaving a review
 

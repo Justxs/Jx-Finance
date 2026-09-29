@@ -37,15 +37,11 @@ public sealed class EmailOutboxJob(
         {
             await db.Database.LockAsync(AppLock.EmailOutbox, ct);
             due = await db.EmailMessages
-                .Where(m => m.SentAt == null && m.Attempts < EmailMessage.MaxAttempts && m.NextAttemptAt <= now)
+                .Due(now)
                 .OrderBy(m => m.CreatedAt)
                 .Take(batchSize)
                 .ToListAsync(ct);
-            foreach (var message in due)
-            {
-                message.Attempts++;
-                message.NextAttemptAt = Backoff(now, message.Attempts);
-            }
+            due.ForEach(message => message.Claim(now));
 
             await db.SaveChangesAsync(ct);
             await transaction.CommitAsync(ct);
@@ -78,12 +74,12 @@ public sealed class EmailOutboxJob(
             }
             else
             {
-                message.LastError = TextLimit.Cut(result.ErrorMessage!, EmailMessage.ErrorMaxLength);
+                message.LastError = TextLimit.Cut(result.ErrorMessage!, OutboxMessage.ErrorMaxLength);
             }
         }
         catch (Exception ex) when (ex is not OperationCanceledException || !ct.IsCancellationRequested)
         {
-            message.LastError = TextLimit.Cut(ex.Message, EmailMessage.ErrorMaxLength);
+            message.LastError = TextLimit.Cut(ex.Message, OutboxMessage.ErrorMaxLength);
             logger.LogError(ex, "Sending the {Kind} email {MessageId} failed.", message.Kind, message.Id);
         }
 
@@ -98,15 +94,12 @@ public sealed class EmailOutboxJob(
         }
     }
 
-    private static DateTimeOffset Backoff(DateTimeOffset now, int attempts) =>
-        now.AddMinutes(Math.Min(Math.Pow(4, attempts), 240));
-
     private async Task PruneAsync(AppDbContext db, IClock clock, CancellationToken ct)
     {
         var cutoff = clock.UtcNow.AddDays(-options.Value.Email.KeepSentDays);
         await db.EmailMessages
             .Where(m => (m.SentAt != null && m.SentAt < cutoff)
-                || (m.Attempts >= EmailMessage.MaxAttempts && m.CreatedAt < cutoff))
+                || (m.Attempts >= OutboxMessage.MaxAttempts && m.CreatedAt < cutoff))
             .ExecuteDeleteAsync(ct);
     }
 }

@@ -1,4 +1,5 @@
 using System.Net.Http.Json;
+using JxFinance.Domain.Common;
 using JxFinance.Domain.Email;
 using JxFinance.Tests.Support;
 using Microsoft.EntityFrameworkCore;
@@ -18,7 +19,7 @@ public sealed class EmailOutboxTests(ApiFixture fixture) : EmailTestBase(fixture
             using var anonymous = CreateClient();
             (await anonymous.PostAsJsonAsync("/api/auth/forgot-password", new { email = user.Email }, TestContext.Current.CancellationToken))
                 .EnsureSuccessStatusCode();
-            Transport.ThrowOnSend = new IOException(new string('x', EmailMessage.ErrorMaxLength + 100));
+            Transport.ThrowOnSend = new IOException(new string('x', OutboxMessage.ErrorMaxLength + 100));
 
             await DrainAsync();
 
@@ -27,7 +28,7 @@ public sealed class EmailOutboxTests(ApiFixture fixture) : EmailTestBase(fixture
                 .SingleAsync(m => m.ToAddress == user.Email && m.Kind == EmailKind.PasswordReset, TestContext.Current.CancellationToken));
             Assert.Equal(1, message.Attempts);
             Assert.Null(message.SentAt);
-            Assert.Equal(EmailMessage.ErrorMaxLength, message.LastError!.Length);
+            Assert.Equal(OutboxMessage.ErrorMaxLength, message.LastError!.Length);
         }
         finally
         {

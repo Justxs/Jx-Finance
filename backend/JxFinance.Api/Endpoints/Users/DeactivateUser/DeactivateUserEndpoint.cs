@@ -12,7 +12,7 @@ public sealed class DeactivateUserEndpoint(IUserService userService) : EndpointW
         Post(ApiRoutes.Users + "/{id}/deactivate");
         Group<UsersGroup>();
         Roles(AppRoles.Admin);
-        Description(d => d.ProducesProblemDetails(403).ProducesProblemDetails(404));
+        Description(d => d.ProducesProblemDetails(404));
     }
 
     public override async Task HandleAsync(CancellationToken ct) =>

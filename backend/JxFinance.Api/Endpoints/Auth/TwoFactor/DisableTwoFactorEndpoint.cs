@@ -1,12 +1,11 @@
 using FastEndpoints;
 using JxFinance.Common;
-using JxFinance.Common.Errors;
 using JxFinance.Endpoints.Auth.Interfaces;
 using JxFinance.Endpoints.Auth.Shared;
 
 namespace JxFinance.Endpoints.Auth.TwoFactor;
 
-public sealed class DisableTwoFactorEndpoint(IAuthService authService, ISessionService sessions)
+public sealed class DisableTwoFactorEndpoint(IAuthService authService)
     : Endpoint<ReauthenticateRequest>
 {
     public override void Configure()
@@ -17,23 +16,6 @@ public sealed class DisableTwoFactorEndpoint(IAuthService authService, ISessionS
         Description(d => d.Produces(429).ProducesProblemDetails(404));
     }
 
-    public override async Task HandleAsync(ReauthenticateRequest req, CancellationToken ct)
-    {
-        if (await authService.CurrentAsync(ct) is not { } user)
-        {
-            await Send.NotFoundAsync(ct);
-            return;
-        }
-
-        var confirmed = await authService.ConfirmPasswordAsync(user, req.Password, ErrorCodes.CredentialsInvalid);
-        if (confirmed.IsFailure)
-        {
-            await Send.ProblemAsync(confirmed.Error, ct);
-            return;
-        }
-
-        await authService.DisableTwoFactorAsync(user);
-        await sessions.RenewAsync(user, ct);
-        await Send.NoContentAsync(ct);
-    }
+    public override async Task HandleAsync(ReauthenticateRequest req, CancellationToken ct) =>
+        await Send.NoContentOrProblemAsync(await authService.DisableTwoFactorAsync(req.Password, ct), ct);
 }

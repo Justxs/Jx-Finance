@@ -2459,7 +2459,8 @@
       "sameAccount": "Choose two different accounts."
     },
     "twoFactor": {
-      "invalidCode": "The code is not valid."
+      "invalidCode": "The code is not valid.",
+      "alreadyEnabled": "Two-factor authentication is already on."
     },
     "user": {
       "lastAdministrator": "At least one active administrator must remain.",

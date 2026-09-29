@@ -45,7 +45,12 @@ public static class ApiPipelineExtensions
     {
         c.Endpoints.ShortNames = true;
         c.Binding.ReflectionCache.AddFromJxFinanceApi();
-        c.Endpoints.Configurator = ep => ep.Description(d => d.ProducesProblemDetails(500));
+        c.Endpoints.Configurator = ep => ep.Description(d =>
+        {
+            d.ProducesProblemDetails(500);
+            if (ep.AnonymousVerbs is not { Length: > 0 }) d.ProducesProblemDetails(401);
+            if (ep.AllowedRoles is { Count: > 0 }) d.ProducesProblemDetails(403);
+        });
         c.Serializer.Options.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase));
         c.Serializer.SerializerErrorsField = ProblemResponses.SerializerErrorsField;
         c.Errors.GeneralErrorsField = ProblemResponses.GeneralErrorsField;

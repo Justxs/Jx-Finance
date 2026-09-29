@@ -14,7 +14,6 @@ public sealed class GetUsersEndpoint(IUserService userService)
         Get(ApiRoutes.Users);
         Group<UsersGroup>();
         Roles(AppRoles.Admin);
-        Description(d => d.ProducesProblemDetails(403));
     }
 
     public override async Task HandleAsync(GetUsersRequest req, CancellationToken ct) =>

@@ -4,6 +4,7 @@ using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Domain.Common;
 using JxFinance.Endpoints.Auth.Interfaces;
+using JxFinance.Endpoints.Auth.Login;
 using JxFinance.Endpoints.Auth.Shared;
 using JxFinance.Infrastructure.Auth;
 using JxFinance.Infrastructure.Data;
@@ -17,8 +18,13 @@ public sealed class AuthService(
     UserManager<AppUser> userManager,
     RoleManager<AppRole> roleManager,
     AppDbContext db,
-    ICurrentUser currentUser) : IAuthService
+    ICurrentUser currentUser,
+    ISessionService sessions) : IAuthService
 {
+    private static readonly DomainError UserMissing = EntityLookup.NotFound("The signed-in user no longer exists.");
+
+    private static readonly DomainError InvalidCode = new(ErrorCodes.TwoFactorInvalidCode, "Invalid authenticator code.");
+
     public Task<bool> IsSetupNeededAsync(CancellationToken cancellationToken) =>
         userManager.Users.AllAsync(u => u.PasswordHash == null, cancellationToken);
 
@@ -98,12 +104,37 @@ public sealed class AuthService(
         return failure is null ? user : failure;
     }
 
-    public async Task<Result> ConfirmPasswordAsync(AppUser user, string? password, string rejectedCode)
+    public async Task<Result<LoginResponse>> LoginAsync(LoginRequest request, CancellationToken cancellationToken)
+    {
+        var credentials = await ValidateCredentialsAsync(request.Email.Trim(), request.Password, cancellationToken);
+        if (!credentials.TryGetValue(out var user))
+        {
+            return credentials.Error;
+        }
+
+        if (user.TwoFactorEnabled)
+        {
+            if (string.IsNullOrWhiteSpace(request.TwoFactorCode))
+            {
+                return new LoginResponse(true, null);
+            }
+
+            if (await ConsumeTwoFactorCodeAsync(user, request.TwoFactorCode) is { } failure)
+            {
+                return failure;
+            }
+        }
+
+        await sessions.SignInAsync(user, request.RememberMe, cancellationToken);
+        return new LoginResponse(false, await ToProfileAsync(user));
+    }
+
+    public async Task<Result> ConfirmPasswordAsync(AppUser user, string? password)
     {
         var failure = await AttemptAsync(
             user,
             async () => !string.IsNullOrWhiteSpace(password) && await userManager.CheckPasswordAsync(user, password),
-            new DomainError(rejectedCode, "The password could not be confirmed."),
+            new DomainError(ErrorCodes.PasswordIncorrect, "The password could not be confirmed."),
             completesSignIn: true);
         return failure ?? Result.Success();
     }
@@ -118,7 +149,7 @@ public sealed class AuthService(
             return missing;
         }
 
-        var confirmed = await ConfirmPasswordAsync(user, password, ErrorCodes.PasswordIncorrect);
+        var confirmed = await ConfirmPasswordAsync(user, password);
         return confirmed.IsSuccess ? user : confirmed.Error;
     }
 
@@ -139,8 +170,8 @@ public sealed class AuthService(
         user.EmailNotificationTypes,
         user.Language);
 
-    public async Task<UserProfileResponse?> GetCurrentProfileAsync(CancellationToken cancellationToken) =>
-        await CurrentAsync(cancellationToken) is { } user ? await ToProfileAsync(user) : null;
+    public async Task<Result<UserProfileResponse>> GetCurrentProfileAsync(CancellationToken cancellationToken) =>
+        await CurrentAsync(cancellationToken) is { } user ? await ToProfileAsync(user) : UserMissing;
 
     public Task<AppUser?> CurrentAsync(CancellationToken cancellationToken)
     {
@@ -148,19 +179,24 @@ public sealed class AuthService(
         return userManager.Users.FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
     }
 
-    public async Task<Result> ConsumeTwoFactorCodeAsync(AppUser user, string code)
+    public async Task<Result<TwoFactorSetupResponse>> SetupTwoFactorAsync(string? password, CancellationToken cancellationToken)
     {
-        var failure = await AttemptAsync(
-            user,
-            async () => await userManager.VerifyTwoFactorTokenAsync(user, TokenOptions.DefaultAuthenticatorProvider, code)
-                || (await userManager.RedeemTwoFactorRecoveryCodeAsync(user, code)).Succeeded,
-            new DomainError(ErrorCodes.TwoFactorInvalidCode, "Invalid authenticator code."),
-            completesSignIn: true);
-        return failure ?? Result.Success();
-    }
+        if (await CurrentAsync(cancellationToken) is not { } user)
+        {
+            return UserMissing;
+        }
 
-    public async Task<TwoFactorSetupResponse> BeginTwoFactorSetupAsync(AppUser user)
-    {
+        if (user.TwoFactorEnabled)
+        {
+            return new DomainError(ErrorCodes.TwoFactorAlreadyEnabled, "Two-factor authentication is already on.");
+        }
+
+        var confirmed = await ConfirmPasswordAsync(user, password);
+        if (confirmed.IsFailure)
+        {
+            return confirmed.Error;
+        }
+
         var sharedKey = await userManager.GetAuthenticatorKeyAsync(user);
         if (string.IsNullOrEmpty(sharedKey))
         {
@@ -168,16 +204,21 @@ public sealed class AuthService(
             sharedKey = await userManager.GetAuthenticatorKeyAsync(user);
         }
 
-        var authenticatorUri = BuildAuthenticatorUri(user.Email!, sharedKey!);
-        return new TwoFactorSetupResponse(sharedKey!, authenticatorUri);
+        await sessions.RenewAsync(user, cancellationToken);
+        return new TwoFactorSetupResponse(sharedKey!, BuildAuthenticatorUri(user.Email!, sharedKey!));
     }
 
-    public async Task<Result<IReadOnlyList<string>>> EnableTwoFactorAsync(AppUser user, string code)
+    public async Task<Result<IReadOnlyList<string>>> EnableTwoFactorAsync(string code, CancellationToken cancellationToken)
     {
+        if (await CurrentAsync(cancellationToken) is not { } user)
+        {
+            return UserMissing;
+        }
+
         var failure = await AttemptAsync(
             user,
             () => userManager.VerifyTwoFactorTokenAsync(user, TokenOptions.DefaultAuthenticatorProvider, code),
-            new DomainError(ErrorCodes.TwoFactorInvalidCode, "Invalid authenticator code."),
+            InvalidCode,
             completesSignIn: true);
         if (failure is not null)
         {
@@ -186,15 +227,32 @@ public sealed class AuthService(
 
         await userManager.SetTwoFactorEnabledAsync(user, true);
         var recoveryCodes = await userManager.GenerateNewTwoFactorRecoveryCodesAsync(user, 10);
+        await sessions.RenewAsync(user, cancellationToken);
 
         return recoveryCodes!.ToList();
     }
 
-    public async Task DisableTwoFactorAsync(AppUser user)
+    public async Task<Result> DisableTwoFactorAsync(string? password, CancellationToken cancellationToken)
     {
+        var reauthenticated = await ReauthenticateAsync(password, UserMissing, cancellationToken);
+        if (!reauthenticated.TryGetValue(out var user))
+        {
+            return reauthenticated.Error;
+        }
+
         await userManager.SetTwoFactorEnabledAsync(user, false);
         await userManager.ResetAuthenticatorKeyAsync(user);
+        await sessions.RenewAsync(user, cancellationToken);
+        return Result.Success();
     }
+
+    private Task<DomainError?> ConsumeTwoFactorCodeAsync(AppUser user, string code) =>
+        AttemptAsync(
+            user,
+            async () => await userManager.VerifyTwoFactorTokenAsync(user, TokenOptions.DefaultAuthenticatorProvider, code)
+                || (await userManager.RedeemTwoFactorRecoveryCodeAsync(user, code)).Succeeded,
+            InvalidCode,
+            completesSignIn: true);
 
     private async Task<DomainError?> AttemptAsync(
         AppUser user,
