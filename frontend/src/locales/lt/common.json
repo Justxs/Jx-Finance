@@ -568,9 +568,8 @@
   },
   "receipts": {
     "fill": "Užpildyti iš kvito",
-    "sentToAnthropic": "Failas bus išsiųstas bendrovei Anthropic, kad būtų perskaitytas.",
     "reading": "Skaitomas kvitas…",
-    "readingHint": "Skaitomas kvitas, tai gali užtrukti iki minutės.",
+    "readingHint": "Skaitomas kvitas, tai užtrunka kelias sekundes.",
     "file": "Kvito failas",
     "chooseFile": "Pasirinkti kitą failą",
     "reviewTitle": "Kvitas: {{source}}",
@@ -582,6 +581,8 @@
     "rememberedHint": "Anksčiau šio pavadinimo prekę priskyrėte šiai kategorijai.",
     "adjustments": "Visam kvitui",
     "adjustmentsHint": "Paskirstoma eilutėms pagal jų dydį.",
+    "unread": "Neperskaitytos eilutės",
+    "unreadHint": "Patikrinkite jas kvite: jei tarp jų yra prekė, jos trūksta aukščiau esančiose eilutėse.",
     "lines": "Gautos eilutės",
     "itemsDiffer": "Prekių suma yra {{items}}, o kvite nurodyta {{printed}}.",
     "paymentDiffers": "Kvitas {{receipt}}, šis mokėjimas {{payment}}; eilutės perskaičiuotos pagal mokėjimą.",
@@ -589,7 +590,6 @@
     "returnReceipt": "Grąžinimo kvitų kol kas negalima išskaidyti.",
     "apply": "Naudoti šias eilutes",
     "readAgain": "Skaityti iš naujo",
-    "readAgainHint": "Tai skaičiuojama kaip dar vienas skaitymas.",
     "candidateTitle": "Jau yra apskaitoje?",
     "candidate": "{{description}}, {{date}}, {{amount}}",
     "splitCandidate": "Išskaidyti tą mokėjimą",
@@ -962,7 +962,7 @@
         },
         "receiptReading": {
           "name": "Kvitų skaitymas",
-          "hint": "Operacijos išskaidymą užpildo iš kvito nuotraukos ar PDF failo, kurį perskaito Anthropic Claude modelis. Numatytai išjungta; taip pat reikia API rakto skiltyje „Kvitų skaitymas“."
+          "hint": "Operacijos išskaidymą užpildo iš kvito nuotraukos ar PDF failo, kurį perskaito šis serveris su Tesseract; niekas niekur nesiunčiama."
         }
       }
     },
@@ -1054,30 +1054,6 @@
       "enabled": "Leisti Discord pranešimus",
       "enabledHint": "Žinutės siunčiamos iš šio serverio į discord.com. Kol išjungta, niekas nesiunčiama, o narių webhook lieka išsaugoti.",
       "saved": "Discord nustatymas išsaugotas"
-    },
-    "receipts": {
-      "title": "Kvitų skaitymas",
-      "description": "Kvitų nuotraukas ir PDF failus perskaito Anthropic Claude modelis ir pasiūlo išskaidymą pagal kategorijas. Niekas neskaitoma, kol kas nors nepaprašo perskaityti konkretaus failo.",
-      "enabled": "Skaityti kvitus, kai kas nors paprašo",
-      "enabledHint": "Taip pat reikia įjungti „Kvitų skaitymą“ skiltyje „Funkcijos“.",
-      "apiKey": "Anthropic API raktas",
-      "apiKeyHint": "Saugomas užšifruotas ir daugiau nerodomas. Palikite tuščią, jei nenorite keisti išsaugoto.",
-      "apiKeyStored": "Raktas išsaugotas",
-      "model": "Modelis",
-      "models": {
-        "claude-sonnet-5": "Claude Sonnet 5, apie 0,03 USD už kvitą",
-        "claude-haiku-4-5": "Claude Haiku 4.5, apie 0,01 USD už kvitą, mažesnė vaizdo raiška",
-        "claude-opus-5-5": "Claude Opus 5.5, apie 0,07 USD už kvitą, tiksliausias"
-      },
-      "monthlyLimit": "Skaitymų per mėnesį",
-      "monthlyLimitHint": "Visai sistemai. Skaitymas įskaičiuojamas prieš kreipiantis į Anthropic, net jei nepavyksta.",
-      "usage": "Šį mėnesį: {{used}} iš {{limit}} skaitymų",
-      "test": "Patikrinti raktą",
-      "testHint": "Pirmiausia išsaugokite. Anthropic paklausiama, ar raktas tinka pasirinktam modeliui; tai nieko nekainuoja.",
-      "testPassed": "Anthropic priėmė raktą",
-      "saved": "Kvitų skaitymo nustatymai išsaugoti",
-      "privacyTitle": "Kas išsiunčiama iš šio serverio",
-      "privacy": "Kvitų skaitymas siunčia kvito nuotrauką arba PDF failą bendrovei Anthropic (JAV), kurios Claude modelis jį perskaito ir grąžina prekių sąrašą. Prieš siunčiant nuotrauka perkoduojama, todėl jos vietos ir fotoaparato duomenys neišsiunčiami. Kartu siunčiami jūsų išlaidų kategorijų pavadinimai, bet nieko daugiau iš apskaitos. Pagal numatytąsias sąlygas Anthropic nemoko savo modelių per API gautais duomenimis ir saugo juos tik tiek, kiek leidžia jos komercinės sąlygos. Kvite matyti, ką, kur ir kada pirkote, taip pat ir vaistinės prekės. Įjunkite tik tada, jei tam neprieštarauja visi šios sistemos naudotojai."
     }
   },
   "settingsHub": {
@@ -2469,14 +2445,10 @@
       "futureDate": "Išrašo data negali būti vėlesnė nei šiandien."
     },
     "receipt": {
-      "notConfigured": "Kvitų skaitymas nenustatytas. Administratorius gali jį įjungti nustatymuose.",
-      "limitReached": "Ši sistema šį mėnesį išnaudojo visus kvitų skaitymus. Administratorius gali padidinti ribą.",
       "unsupportedFile": "Šio failo negalima perskaityti kaip kvito. Naudokite JPEG, PNG, WebP ar HEIC nuotrauką arba PDF failą be slaptažodžio.",
-      "unreadable": "Kvito perskaityti nepavyko. Nufotografuokite visą kvitą ryškiau ir tiesiai, tada bandykite dar kartą.",
-      "providerFailed": "Anthropic šiuo metu negali perskaityti kvito. Bandykite po minutės.",
-      "keyRejected": "Anthropic nepriėmė API rakto. Patikrinkite jį nustatymuose.",
-      "keyUnreadable": "Išsaugoto Anthropic API rakto nebepavyksta perskaityti. Įveskite jį iš naujo.",
-      "modelNotAllowed": "Pasirinkite vieną iš siūlomų modelių."
+      "pdfWithoutText": "Šiame PDF faile yra tik kvito paveikslėlis. Vietoj jo nufotografuokite kvitą.",
+      "unreadable": "Nepavyko perskaityti nei prekių, nei sumos. Nufotografuokite visą kvitą ryškiau, tiesiai ir gerai apšviestą, tada bandykite dar kartą.",
+      "engineUnavailable": "Kvitų skaitymas neprieinamas: serveryje nėra Tesseract su lietuvių ir anglų kalbų duomenimis."
     },
     "passkey": {
       "invalid": "Prieigos rakto patvirtinti nepavyko.",

@@ -2,7 +2,6 @@ import type {
   ReceiptItemResponse,
   ReceiptReadingResponse,
   ReceiptResultResponse,
-  ReceiptSettingsResponse,
 } from "@/api/generated/model";
 import { ids, uid } from "./base";
 import { problemOf } from "./problems";
@@ -44,12 +43,12 @@ export const maximaReceipt: ReceiptResultResponse = {
     item("Colgate dantų pasta 75 ml", "3.49", health),
     item("Head&Shoulders šampūnas 250 ml", "5.99", health, { discount: "1.20" }),
   ],
-  adjustments: [{ kind: "discount", label: "Ačiū kortelės nuolaida", amount: "-0.50" }],
+  adjustments: [{ kind: "discount", label: "AČIŪ kortelės nuolaida", amount: "-0.50" }],
+  unreadLines: [],
 };
 
 export const receiptReading: ReceiptReadingResponse = {
   id: uid("5ec5ec5e", 1),
-  model: "claude-sonnet-5",
   cached: false,
   result: maximaReceipt,
   candidates: [],
@@ -115,31 +114,19 @@ export const receiptReadingPdf: ReceiptReadingResponse = {
   result: { ...maximaReceipt, merchant: "Pigu.lt", pagesRead: 3, pageCount: 7 },
 };
 
-export const receiptSettings: ReceiptSettingsResponse = {
-  enabled: true,
-  hasKey: true,
-  model: "claude-sonnet-5",
-  monthlyLimit: 100,
-  readingsThisMonth: 23,
-};
-
-export const receiptSettingsEmpty: ReceiptSettingsResponse = {
-  enabled: false,
-  hasKey: false,
-  model: "claude-sonnet-5",
-  monthlyLimit: 100,
-  readingsThisMonth: 0,
-};
-
-export const receiptSettingsOverLimit: ReceiptSettingsResponse = {
-  ...receiptSettings,
-  readingsThisMonth: 100,
+export const receiptReadingUnreadLines: ReceiptReadingResponse = {
+  ...receiptReading,
+  result: {
+    ...maximaReceipt,
+    total: "20.40",
+    unreadLines: ["Kiausiniai M 10 vnt Z,19 A"],
+  },
 };
 
 export const receiptUnreadableProblem = problemOf(
   400,
   "receipt.unreadable",
-  "The receipt could not be read. Take a sharper, straight photo of the whole receipt and try again.",
+  "No items or total could be read. Take a sharper, straight photo of the whole receipt in even light and try again.",
   { instance: "/api/receipts/read" },
 );
 
@@ -150,23 +137,9 @@ export const receiptUnsupportedFileProblem = problemOf(
   { instance: "/api/receipts/read" },
 );
 
-export const receiptLimitReachedProblem = problemOf(
-  429,
-  "receipt.limitReached",
-  "This installation has used its 100 receipt reads for this month.",
+export const receiptEngineUnavailableProblem = problemOf(
+  503,
+  "receipt.engineUnavailable",
+  "Receipt reading needs Tesseract with Lithuanian and English language data on the server, and it is not installed.",
   { instance: "/api/receipts/read" },
-);
-
-export const receiptProviderFailedProblem = problemOf(
-  502,
-  "receipt.providerFailed",
-  "Anthropic could not read the receipt right now. Try again in a minute.",
-  { instance: "/api/receipts/read" },
-);
-
-export const receiptKeyRejectedProblem = problemOf(
-  400,
-  "receipt.keyRejected",
-  "Anthropic did not accept the API key.",
-  { instance: "/api/settings/receipts/test" },
 );

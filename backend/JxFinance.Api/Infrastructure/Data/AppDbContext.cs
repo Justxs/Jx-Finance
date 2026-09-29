@@ -94,7 +94,6 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, ICurren
     public DbSet<AuditEvent> AuditEvents => Set<AuditEvent>();
     public DbSet<ReceiptReading> ReceiptReadings => Set<ReceiptReading>();
     public DbSet<ReceiptItemCategory> ReceiptItemCategories => Set<ReceiptItemCategory>();
-    public DbSet<ReceiptReadingUsage> ReceiptReadingUsages => Set<ReceiptReadingUsage>();
 
     public AuditTrail Audit { get; } = new();
 

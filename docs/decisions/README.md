@@ -41,6 +41,6 @@ Before changing behaviour that a page here covers, read that page. When you choo
 | [Categorization rules](categorization-rules.md) | Categorization rules | 10 | [Categorization rules](../features/categorization-rules.md) |
 | [Trash and undo](trash-and-undo.md) | Trash and undo | 10 | [Trash and undo](../features/trash-and-undo.md) |
 | [Attachments](attachments.md) | none | 3 | [Attachments](../features/attachments.md) |
-| [Receipt reading](receipt-reading.md) | Receipt reading | 8 | [Receipt reading](../features/receipt-reading.md) |
+| [Receipt reading](receipt-reading.md) | Receipt reading | 16 | [Receipt reading](../features/receipt-reading.md) |
 | [Audit log](audit-log.md) | none | 6 | [Audit log](../features/audit-log.md) |
 | [Debt amortization](debt-amortization.md) | none | 13 | [Debt amortization](../features/debt-amortization.md) |

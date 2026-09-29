@@ -30,7 +30,7 @@ public interface ICategorizationRuleService
     Task<Result<RunRulesResponse>> RunAsync(RunRulesRequest request, CancellationToken cancellationToken);
 
     Task<IReadOnlyList<RuleSuggestion?>> SuggestAsync(
-        AccountId accountId,
+        AccountId? accountId,
         IReadOnlyList<RuleCandidate> candidates,
         CancellationToken cancellationToken);
 }

@@ -344,53 +344,6 @@ export const PublicSettingsResponse = zod.object({
 });
 
 /**
- * Answers whether receipt reading is enabled, whether an Anthropic API key is stored, the chosen model, the monthly limit on reads for the whole installation and how many reads this month has used. The key itself is never part of the answer. Administrators only.
- * @summary Read the receipt reading settings
- */
-export const ReceiptSettingsResponse = zod.object({
-  enabled: zod.boolean(),
-  hasKey: zod.boolean(),
-  model: zod.string(),
-  monthlyLimit: zod.int(),
-  readingsThisMonth: zod.int(),
-});
-
-/**
- * Stores whether receipt reading is enabled, the Anthropic API key, the model and the monthly limit on reads for the whole installation. The key is encrypted with ASP.NET Data Protection before it is stored and is never returned: the answer carries hasKey instead. An empty apiKey keeps the stored one. Switching enabled on without any key answers 400 required on apiKey. The model must be one of claude-sonnet-5 (the default), claude-haiku-4-5 or claude-opus-5-5; any other answers 400 receipt.modelNotAllowed. The limit is between 1 and 10000. Reading also needs the ReceiptReading feature switch. Administrators only.
- * @summary Save the receipt reading settings
- */
-export const updateReceiptSettingsBodyApiKeyMin = 0;
-export const updateReceiptSettingsBodyApiKeyMax = 500;
-
-export const updateReceiptSettingsBodyMonthlyLimitMax = 10000;
-
-export const UpdateReceiptSettingsBody = zod.object({
-  enabled: zod.boolean(),
-  apiKey: zod
-    .string()
-    .min(updateReceiptSettingsBodyApiKeyMin)
-    .max(updateReceiptSettingsBodyApiKeyMax)
-    .nullable()
-    .describe("Leave empty to keep the stored key."),
-  model: zod.string(),
-  monthlyLimit: zod.int().min(1).max(updateReceiptSettingsBodyMonthlyLimitMax),
-});
-
-export const UpdateReceiptSettingsResponse = zod.object({
-  enabled: zod.boolean(),
-  hasKey: zod.boolean(),
-  model: zod.string(),
-  monthlyLimit: zod.int(),
-  readingsThisMonth: zod.int(),
-});
-
-/**
- * Asks Anthropic's Models API for the chosen model with the key that is stored right now. This costs nothing and reads no receipt. Save the settings before testing them. Answers 400 receipt.keyRejected when Anthropic refuses the key, receipt.keyUnreadable when the stored key cannot be decrypted, which is what a restore into an installation with different data protection keys leaves behind, receipt.notConfigured when no key is stored, and 502 receipt.providerFailed when Anthropic cannot be reached or does not offer the model. Rate limited to 10 calls per five minutes per client. Administrators only.
- * @summary Test the stored Anthropic API key
- */
-export const TestReceiptKeyResponse = zod.void();
-
-/**
  * Answers the SMTP host, port, encryption mode, user name, sender address and sender name, plus the enabled switch. The password is never part of the answer; hasPassword says only whether one is stored. Administrators only, unlike GET /api/settings, because these values describe an outside system.
  * @summary Read the mail server of this installation
  */

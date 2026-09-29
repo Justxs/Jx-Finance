@@ -1,9 +1,9 @@
 using ImageMagick;
+using ImageMagick.Drawing;
 using JxFinance.Common.Attachments;
 using JxFinance.Common.Errors;
 using JxFinance.Infrastructure.Receipts;
-using PdfSharp.Pdf;
-using PdfSharp.Pdf.IO;
+using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Unit;
 
@@ -20,26 +20,28 @@ public sealed class ReceiptImageTests
         photo.SetProfile(exif);
         photo.Orientation = OrientationType.RightTop;
 
-        var prepared = ReceiptImage.Prepare(photo.ToByteArray(MagickFormat.Jpeg), AttachmentContent.Jpeg, 2576).Value!;
+        var prepared = ReceiptImage.Prepare(photo.ToByteArray(MagickFormat.Jpeg), AttachmentContent.Jpeg).Value!;
 
-        using var sent = new MagickImage(prepared.Content);
-        Assert.Equal((400u, 800u), (sent.Width, sent.Height));
-        Assert.Null(sent.GetExifProfile());
-        Assert.Equal((AttachmentContent.Jpeg, 1, 1), (prepared.MediaType, prepared.PagesRead, prepared.PageCount));
+        using var read = new MagickImage(prepared.Image!);
+        Assert.True(read.Height > read.Width);
+        Assert.Null(read.GetExifProfile());
+        Assert.Equal((null, 1, 1), (prepared.Text, prepared.PagesRead, prepared.PageCount));
     }
 
     [Theory]
-    [InlineData(2576)]
-    [InlineData(1568)]
-    public void A_large_photo_is_shrunk_to_the_models_long_edge(int longEdge)
+    [InlineData(400, 900)]
+    [InlineData(3000, 4000)]
+    public void A_photo_is_scaled_to_the_width_tesseract_reads_best_and_turned_black_and_white(int width, int height)
     {
-        using var photo = new MagickImage(MagickColors.White, 3000, 4000);
+        using var photo = new MagickImage(new MagickColor("#d8d2c0"), (uint)width, (uint)height);
+        photo.Draw(new Drawables().FillColor(MagickColors.Black).Rectangle(20, 20, 120, 60));
 
-        var prepared = ReceiptImage.Prepare(photo.ToByteArray(MagickFormat.Png), AttachmentContent.Png, longEdge).Value!;
+        var prepared = ReceiptImage.Prepare(photo.ToByteArray(MagickFormat.Png), AttachmentContent.Png).Value!;
 
-        using var sent = new MagickImage(prepared.Content);
-        Assert.Equal((uint)longEdge, sent.Height);
-        Assert.Equal(MagickFormat.Jpeg, sent.Format);
+        using var read = new MagickImage(prepared.Image!);
+        Assert.Equal((uint)ReceiptImage.OcrWidth, read.Width);
+        Assert.Equal(MagickFormat.Png, read.Format);
+        Assert.True(read.TotalColors <= 2);
     }
 
     [Fact]
@@ -47,7 +49,7 @@ public sealed class ReceiptImageTests
     {
         using var photo = new MagickImage(MagickColors.White, 150, 600);
 
-        var prepared = ReceiptImage.Prepare(photo.ToByteArray(MagickFormat.Jpeg), AttachmentContent.Jpeg, 2576);
+        var prepared = ReceiptImage.Prepare(photo.ToByteArray(MagickFormat.Jpeg), AttachmentContent.Jpeg);
 
         Assert.Equal(ErrorCodes.ReceiptUnsupportedFile, prepared.ErrorCode);
     }
@@ -56,52 +58,29 @@ public sealed class ReceiptImageTests
     public void Bytes_that_are_not_the_detected_image_are_refused() =>
         Assert.Equal(
             ErrorCodes.ReceiptUnsupportedFile,
-            ReceiptImage.Prepare([0xFF, 0xD8, 0xFF, 0x00, 0x01], AttachmentContent.Jpeg, 2576).ErrorCode);
+            ReceiptImage.Prepare([0xFF, 0xD8, 0xFF, 0x00, 0x01], AttachmentContent.Jpeg).ErrorCode);
 
     [Fact]
     public void Heic_photos_can_be_decoded() =>
         Assert.Contains(MagickNET.SupportedFormats, format => format is { Format: MagickFormat.Heic, SupportsReading: true });
 
     [Fact]
-    public void A_long_pdf_is_cut_to_its_first_three_pages()
+    public void A_pdf_is_read_from_its_text_line_by_line_on_its_first_three_pages()
     {
-        var prepared = ReceiptImage.Prepare(Pdf(5), AttachmentContent.Pdf, 2576).Value!;
+        var prepared = ReceiptImage.Prepare(SampleReceiptPdf.Of(5, "Duona 800 g  1,89 A", "Pienas 1 l  1,19 A"), AttachmentContent.Pdf).Value!;
 
-        using var sent = PdfReader.Open(new MemoryStream(prepared.Content), PdfDocumentOpenMode.Import);
-        Assert.Equal(3, sent.PageCount);
-        Assert.Equal((AttachmentContent.Pdf, 3, 5), (prepared.MediaType, prepared.PagesRead, prepared.PageCount));
+        Assert.Null(prepared.Image);
+        Assert.Equal((3, 5), (prepared.PagesRead, prepared.PageCount));
+        var lines = prepared.Text!.Split('\n');
+        Assert.Equal(6, lines.Length);
+        Assert.Equal(["Duona 800 g 1,89 A", "Pienas 1 l 1,19 A"], lines[..2]);
     }
 
     [Fact]
-    public void A_short_pdf_is_sent_as_it_is()
-    {
-        var pdf = Pdf(2);
-
-        var prepared = ReceiptImage.Prepare(pdf, AttachmentContent.Pdf, 2576).Value!;
-
-        Assert.Equal(pdf, prepared.Content);
-        Assert.Equal((2, 2), (prepared.PagesRead, prepared.PageCount));
-    }
+    public void A_pdf_without_text_is_refused_with_its_own_code() =>
+        Assert.Equal(ErrorCodes.ReceiptPdfWithoutText, ReceiptImage.Prepare(SampleReceiptPdf.Of(1), AttachmentContent.Pdf).ErrorCode);
 
     [Fact]
     public void A_password_protected_pdf_is_refused() =>
-        Assert.Equal(ErrorCodes.ReceiptUnsupportedFile, ReceiptImage.Prepare(Pdf(1, "secret"), AttachmentContent.Pdf, 2576).ErrorCode);
-
-    private static byte[] Pdf(int pages, string? password = null)
-    {
-        using var document = new PdfDocument();
-        for (var page = 0; page < pages; page++)
-        {
-            document.AddPage();
-        }
-
-        if (password is not null)
-        {
-            document.SecuritySettings.UserPassword = password;
-        }
-
-        using var output = new MemoryStream();
-        document.Save(output, false);
-        return output.ToArray();
-    }
+        Assert.Equal(ErrorCodes.ReceiptUnsupportedFile, ReceiptImage.Prepare(SampleReceiptPdf.Encrypted("secret", "Duona  1,89 A"), AttachmentContent.Pdf).ErrorCode);
 }

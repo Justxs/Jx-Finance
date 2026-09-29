@@ -17,65 +17,121 @@ namespace JxFinance.Tests.Integration.Receipts;
 [Collection<IntegrationCollection>]
 public sealed class ReceiptReadingTests(ApiFixture fixture) : IntegrationTestBase(fixture)
 {
-    private const string ApiKey = "sk-ant-test-key";
-
     private FakeReceiptReader Reader => Services.GetRequiredService<FakeReceiptReader>();
 
     [Fact]
     public async Task Reading_answers_feature_disabled_while_the_switch_is_off()
     {
-        await ConfigureAsync(enabled: true);
+        Reader.Reset();
+        await using var off = await FeatureOffAsync("receiptReading");
         using var member = await CreateUserClientAsync();
 
         var response = await ReadUploadAsync(member, Jpeg());
 
         await AssertProblemAsync(response, HttpStatusCode.NotFound, ErrorCodes.FeatureDisabled);
+        Assert.False((await ReadyAsync(member)).ReceiptReadingReady);
     }
 
     [Fact]
-    public async Task Reading_answers_not_configured_until_an_administrator_enables_it()
+    public async Task Without_tesseract_a_photo_answers_engine_unavailable_and_reading_is_not_offered()
     {
-        await using var on = await SwitchOnAsync();
-        await ConfigureAsync(enabled: false);
+        Reader.Reset();
         using var member = await CreateUserClientAsync();
+        Assert.True((await ReadyAsync(member)).ReceiptReadingReady);
+        Reader.IsAvailable = false;
 
         var response = await ReadUploadAsync(member, Jpeg());
 
-        await AssertProblemAsync(response, HttpStatusCode.BadRequest, ErrorCodes.ReceiptNotConfigured);
+        await AssertProblemAsync(response, HttpStatusCode.ServiceUnavailable, ErrorCodes.ReceiptEngineUnavailable);
+        Assert.False((await ReadyAsync(member)).ReceiptReadingReady);
         Assert.Empty(Reader.Calls);
     }
 
     [Fact]
-    public async Task Reading_an_attachment_answers_the_items_with_the_callers_categories()
+    public async Task A_pdf_with_text_is_read_without_the_engine()
     {
-        await using var on = await ReadyAsync();
+        Reader.Reset();
+        Reader.IsAvailable = false;
         using var member = await CreateUserClientAsync();
-        var categories = await CategoriesAsync(member);
+        var pdf = SampleReceiptPdf.Of(1, "RIMI LIETUVA", "2026-09-20 11:05", "Makaronai 500 g  0,99 A", "Kefyras 500 g  1,09 A", "IŠ VISO  2,08");
+
+        var reading = await ReadOkAsync(await ReadUploadAsync(member, pdf, "application/pdf", "receipt.pdf"));
+
+        Assert.Equal(("RIMI LIETUVA", new DateOnly(2026, 9, 20), "2.08"), (reading.Result.Merchant, reading.Result.Date, reading.Result.Total));
+        Assert.Equal(["Makaronai 500 g", "Kefyras 500 g"], reading.Result.Items.Select(i => i.Name));
+        Assert.Empty(Reader.Calls);
+    }
+
+    [Fact]
+    public async Task A_pdf_without_text_is_refused_with_its_own_code()
+    {
+        Reader.Reset();
+        using var member = await CreateUserClientAsync();
+
+        var response = await ReadUploadAsync(member, SampleReceiptPdf.Of(1), "application/pdf", "scan.pdf");
+
+        await AssertProblemAsync(response, HttpStatusCode.BadRequest, ErrorCodes.ReceiptPdfWithoutText);
+    }
+
+    [Fact]
+    public async Task Reading_an_attachment_answers_the_items_with_the_callers_rule_categories()
+    {
+        Reader.Reset();
+        using var member = await CreateUserClientAsync();
+        var hygiene = await Seed.CategoryAsync(member, "Hygiene");
+        var salary = await Seed.CategoryAsync(member, "Side job", "income");
+        await Seed.RuleAsync(member, "contains", "šampūnas", hygiene);
+        await Seed.RuleAsync(member, "contains", "Colgate", hygiene);
+        await Seed.RuleAsync(member, "contains", "Duona", salary);
         var transaction = await NewExpenseAsync(member, "18.21", "2026-09-26");
         var attachment = await AttachAsync(member, transaction, Jpeg());
 
         var reading = await ReadOkAsync(await ReadAttachmentAsync(member, attachment));
 
         Assert.False(reading.Cached);
-        Assert.Equal(ReceiptModels.Default, reading.Model);
         Assert.Equal(("MAXIMA LT, UAB", new DateOnly(2026, 9, 26), "eur", "18.21"), (reading.Result.Merchant, reading.Result.Date, reading.Result.Currency, reading.Result.Total));
         Assert.Equal(7, reading.Result.Items.Count);
-        Assert.Equal(
-            [categories.Food, categories.Food, categories.Food, categories.Food, categories.Food, categories.Hygiene, categories.Hygiene],
-            reading.Result.Items.Select(i => i.CategoryId));
+        Assert.Equal([null, null, null, null, null, hygiene, hygiene], reading.Result.Items.Select(i => i.CategoryId));
+        Assert.All(reading.Result.Items, item => Assert.False(item.Remembered));
         Assert.Equal(("0.86", "0.10"), (reading.Result.Items[2].Discount, reading.Result.Items[4].Deposit));
         Assert.Equal(("discount", "-0.50"), (reading.Result.Adjustments[0].Kind, reading.Result.Adjustments[0].Amount));
+        Assert.Empty(reading.Result.UnreadLines);
         Assert.Empty(reading.Candidates);
-        var call = Assert.Single(Reader.Calls);
-        Assert.Equal((ApiKey, "image/jpeg"), (call.ApiKey, call.Input.MediaType));
-        Assert.Contains("Hygiene", call.CategoryNames);
-        Assert.DoesNotContain("Salary", call.CategoryNames);
+        using var sent = new MagickImage(Assert.Single(Reader.Calls));
+        Assert.Equal(MagickFormat.Png, sent.Format);
+    }
+
+    [Fact]
+    public async Task Rules_are_not_used_while_categorization_rules_are_switched_off()
+    {
+        Reader.Reset();
+        using var member = await CreateUserClientAsync();
+        var hygiene = await Seed.CategoryAsync(member, "Hygiene");
+        await Seed.RuleAsync(member, "contains", "šampūnas", hygiene);
+        await using var off = await FeatureOffAsync("categorizationRules");
+
+        var reading = await ReadOkAsync(await ReadUploadAsync(member, Jpeg()));
+
+        Assert.All(reading.Result.Items, item => Assert.Null(item.CategoryId));
+    }
+
+    [Fact]
+    public async Task Lines_that_cannot_be_read_come_back_for_the_review()
+    {
+        Reader.Reset();
+        Reader.Answer = FakeReceiptReader.MaximaNoisy;
+        using var member = await CreateUserClientAsync();
+
+        var reading = await ReadOkAsync(await ReadUploadAsync(member, Jpeg()));
+
+        Assert.Equal(["Kiausiniai M 10 vnt Z,19 A", "So. ~~ . 7"], reading.Result.UnreadLines);
+        Assert.Equal("20.40", reading.Result.Total);
     }
 
     [Fact]
     public async Task A_stranger_cannot_read_an_attachment_they_cannot_see()
     {
-        await using var on = await ReadyAsync();
+        Reader.Reset();
         using var owner = await CreateUserClientAsync();
         using var stranger = await CreateUserClientAsync();
         var attachment = await AttachAsync(owner, await NewExpenseAsync(owner, "18.21", "2026-09-26"), Jpeg());
@@ -89,9 +145,10 @@ public sealed class ReceiptReadingTests(ApiFixture fixture) : IntegrationTestBas
     [Fact]
     public async Task A_household_partner_gets_a_reading_of_their_own_with_their_own_categories()
     {
-        await using var on = await ReadyAsync();
+        Reader.Reset();
         using var pair = await CreateHouseholdPairAsync();
-        await Seed.CategoryAsync(pair.PartnerClient, "Partner groceries");
+        var partnerHygiene = await Seed.CategoryAsync(pair.PartnerClient, "Partner hygiene");
+        await Seed.RuleAsync(pair.PartnerClient, "contains", "Colgate", partnerHygiene);
         var account = await CreateAccountAsync(householdId: pair.HouseholdId, client: pair.OwnerClient);
         var transaction = await CreateTransactionAsync(pair.OwnerClient, account, null, "expense", "18.21", "2026-09-26", "Maxima");
         var attachment = await AttachAsync(pair.OwnerClient, transaction.Id, Jpeg());
@@ -102,14 +159,14 @@ public sealed class ReceiptReadingTests(ApiFixture fixture) : IntegrationTestBas
         Assert.NotEqual(mine.Id, theirs.Id);
         Assert.False(theirs.Cached);
         Assert.Equal(2, Reader.Calls.Count);
-        Assert.Contains("Partner groceries", Reader.Calls[1].CategoryNames);
-        Assert.DoesNotContain("Partner groceries", Reader.Calls[0].CategoryNames);
+        Assert.Null(mine.Result.Items[5].CategoryId);
+        Assert.Equal(partnerHygiene, theirs.Result.Items[5].CategoryId);
     }
 
     [Fact]
     public async Task Reading_the_same_file_again_answers_the_stored_reading_until_forced()
     {
-        await using var on = await ReadyAsync();
+        Reader.Reset();
         using var member = await CreateUserClientAsync();
         var file = Jpeg();
 
@@ -134,7 +191,7 @@ public sealed class ReceiptReadingTests(ApiFixture fixture) : IntegrationTestBas
     [Fact]
     public async Task Two_reads_of_the_same_file_at_once_give_one_conflict()
     {
-        await using var on = await ReadyAsync();
+        Reader.Reset();
         using var member = await CreateUserClientAsync();
         var file = Jpeg();
         Reader.Hold = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -153,36 +210,31 @@ public sealed class ReceiptReadingTests(ApiFixture fixture) : IntegrationTestBas
     }
 
     [Fact]
-    public async Task Every_read_counts_before_the_call_and_the_limit_stops_the_next_one()
+    public async Task A_failed_read_is_kept_as_failed_and_the_next_read_is_not_busy()
     {
-        await using var on = await ReadyAsync();
+        Reader.Reset();
         using var member = await CreateUserClientAsync();
-        var before = await UsageAsync();
-        Reader.FailWith = new DomainError(ErrorCodes.ReceiptProviderFailed, "Timed out.");
+        var file = Jpeg();
+        Reader.FailWith = new DomainError(ErrorCodes.ReceiptUnreadable, "Blurred.");
 
-        var failed = await ReadUploadAsync(member, Jpeg());
-
-        await AssertProblemAsync(failed, HttpStatusCode.BadGateway, ErrorCodes.ReceiptProviderFailed);
-        Assert.Equal(before.Readings + 1, (await UsageAsync()).Readings);
-
+        var failed = await ReadUploadAsync(member, file);
         Reader.FailWith = null;
-        await ConfigureAsync(enabled: true, monthlyLimit: before.Readings + 1);
-        var limited = await ReadUploadAsync(member, Jpeg());
-        await ConfigureAsync(enabled: true);
+        var next = await ReadUploadAsync(member, file);
 
-        await AssertProblemAsync(limited, (HttpStatusCode)429, ErrorCodes.ReceiptLimitReached);
-        Assert.Single(Reader.Calls);
-
-        await ReadOkAsync(await ReadUploadAsync(member, Jpeg()));
-        var after = await UsageAsync();
-        Assert.Equal(before.Readings + 2, after.Readings);
-        Assert.Equal(before.InputTokens + FakeReceiptReader.InputTokens, after.InputTokens);
+        await AssertProblemAsync(failed, HttpStatusCode.BadRequest, ErrorCodes.ReceiptUnreadable);
+        Assert.False((await ReadOkAsync(next)).Cached);
+        var sha = Sha(file);
+        var statuses = await WithDbAsync(db => db.ReceiptReadings.IgnoreQueryFilters()
+            .Where(r => r.Sha256 == sha)
+            .Select(r => r.Status)
+            .ToListAsync(TestContext.Current.CancellationToken));
+        Assert.Equal([ReceiptReadingStatus.Read, ReceiptReadingStatus.Failed], statuses.Order());
     }
 
     [Fact]
     public async Task An_uploaded_file_is_not_stored_and_offers_the_matching_unsplit_expense()
     {
-        await using var on = await ReadyAsync();
+        Reader.Reset();
         using var member = await CreateUserClientAsync();
         using var stranger = await CreateUserClientAsync();
         var account = await CreateAccountAsync(client: member);
@@ -190,7 +242,7 @@ public sealed class ReceiptReadingTests(ApiFixture fixture) : IntegrationTestBas
         var far = await CreateTransactionAsync(member, account, null, "expense", "18.21", "2026-09-20", "Too early");
         await CreateTransactionAsync(member, account, null, "expense", "18.20", "2026-09-26", "Other amount");
         await CreateTransactionAsync(stranger, await CreateAccountAsync(client: stranger), null, "expense", "18.21", "2026-09-26", "Not visible");
-        var food = (await CategoriesAsync(member)).Food;
+        var food = await FoodAsync(member);
         await RecordTransactionAsync(member, new
         {
             accountId = account,
@@ -212,13 +264,16 @@ public sealed class ReceiptReadingTests(ApiFixture fixture) : IntegrationTestBas
     }
 
     [Fact]
-    public async Task A_chosen_category_is_remembered_for_the_next_receipt_while_the_category_exists()
+    public async Task A_chosen_category_is_remembered_before_rules_for_the_next_receipt_while_the_category_exists()
     {
-        await using var on = await ReadyAsync();
+        Reader.Reset();
         using var member = await CreateUserClientAsync();
-        var categories = await CategoriesAsync(member);
+        var food = await FoodAsync(member);
         var bread = await Seed.CategoryAsync(member, "Bakery");
+        await Seed.RuleAsync(member, "contains", "Duona", food);
+        await Seed.RuleAsync(member, "contains", "Pienas", food);
         var reading = await ReadOkAsync(await ReadUploadAsync(member, Jpeg()));
+        Assert.Equal((food, false), (reading.Result.Items[0].CategoryId, reading.Result.Items[0].Remembered));
 
         var saved = await member.PutAsJsonAsync(
             $"/api/receipts/{reading.Id}/categories",
@@ -226,13 +281,15 @@ public sealed class ReceiptReadingTests(ApiFixture fixture) : IntegrationTestBas
             TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.NoContent, saved.StatusCode);
 
+        Reader.Answer = FakeReceiptReader.MaximaNoisy;
         var next = await ReadOkAsync(await ReadUploadAsync(member, Jpeg()));
+        Assert.Equal("Duona BOCIU 800 g", next.Result.Items[0].Name);
         Assert.Equal((bread, true), (next.Result.Items[0].CategoryId, next.Result.Items[0].Remembered));
-        Assert.Equal((categories.Food, false), (next.Result.Items[1].CategoryId, next.Result.Items[1].Remembered));
+        Assert.Equal((food, false), (next.Result.Items[1].CategoryId, next.Result.Items[1].Remembered));
 
         (await member.DeleteAsync($"/api/categories/{bread}", TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
         var withoutBakery = await ReadOkAsync(await ReadUploadAsync(member, Jpeg()));
-        Assert.Equal((categories.Food, false), (withoutBakery.Result.Items[0].CategoryId, withoutBakery.Result.Items[0].Remembered));
+        Assert.Equal((food, false), (withoutBakery.Result.Items[0].CategoryId, withoutBakery.Result.Items[0].Remembered));
 
         (await member.PostAsJsonAsync("/api/trash/restore", new { kind = "category", entityId = bread }, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
         var restored = await ReadOkAsync(await ReadUploadAsync(member, Jpeg()));
@@ -242,7 +299,7 @@ public sealed class ReceiptReadingTests(ApiFixture fixture) : IntegrationTestBas
     [Fact]
     public async Task Choosing_an_income_category_for_an_item_is_refused()
     {
-        await using var on = await ReadyAsync();
+        Reader.Reset();
         using var member = await CreateUserClientAsync();
         var salary = await Seed.CategoryAsync(member, "Side job", "income");
         var reading = await ReadOkAsync(await ReadUploadAsync(member, Jpeg()));
@@ -258,7 +315,7 @@ public sealed class ReceiptReadingTests(ApiFixture fixture) : IntegrationTestBas
     [Fact]
     public async Task A_return_receipt_is_marked_as_a_return()
     {
-        await using var on = await ReadyAsync();
+        Reader.Reset();
         using var member = await CreateUserClientAsync();
         Reader.Answer = FakeReceiptReader.Return;
 
@@ -270,7 +327,7 @@ public sealed class ReceiptReadingTests(ApiFixture fixture) : IntegrationTestBas
     [Fact]
     public async Task The_purge_keeps_readings_while_their_file_exists_and_removes_the_rest_after_a_day()
     {
-        await using var on = await ReadyAsync();
+        Reader.Reset();
         using var member = await CreateUserClientAsync();
         var transaction = await NewExpenseAsync(member, "18.21", "2026-09-26");
         var attachment = await AttachAsync(member, transaction, Jpeg());
@@ -333,7 +390,7 @@ public sealed class ReceiptReadingTests(ApiFixture fixture) : IntegrationTestBas
 
         var linked = await Client.GetFromJsonAsync<TransactionDto>($"/api/transactions/{entered.Id}", TestContext.Current.CancellationToken);
         Assert.Equal(("imported", true), (linked!.Source, linked.IsSplit));
-        Assert.Equal(["10.15", "8.06"], linked.Lines!.Select(l => l.Amount));
+        Assert.Equal(["10.15", "8.06"], linked.Lines!.Select(l => l.Amount).Order(StringComparer.Ordinal));
     }
 
     private static byte[] Jpeg()
@@ -347,35 +404,8 @@ public sealed class ReceiptReadingTests(ApiFixture fixture) : IntegrationTestBas
 
     private static string Sha(byte[] file) => Convert.ToHexStringLower(SHA256.HashData(file));
 
-    private async Task<IAsyncDisposable> ReadyAsync()
-    {
-        var on = await SwitchOnAsync();
-        await ConfigureAsync(enabled: true);
-        return on;
-    }
-
-    private async Task<IAsyncDisposable> SwitchOnAsync()
-    {
-        Reader.Reset();
-        return await OverrideSettingsAsync(settings => settings["features"]!["receiptReading"] = true);
-    }
-
-    private async Task ConfigureAsync(bool enabled, int monthlyLimit = ReceiptModels.MaxMonthlyLimit)
-    {
-        var response = await Client.PutAsJsonAsync(
-            "/api/settings/receipts",
-            new { enabled, apiKey = ApiKey, model = ReceiptModels.Default, monthlyLimit },
-            TestContext.Current.CancellationToken);
-        Assert.True(response.IsSuccessStatusCode, await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
-    }
-
-    private Task<ReceiptReadingUsage> UsageAsync() =>
-        WithDbAsync(async db =>
-        {
-            var month = ReceiptReadingUsage.MonthOf(Today);
-            return await db.ReceiptReadingUsages.AsNoTracking().FirstOrDefaultAsync(u => u.Month == month, TestContext.Current.CancellationToken)
-                ?? new ReceiptReadingUsage { Month = month };
-        });
+    private static async Task<ReadyDto> ReadyAsync(HttpClient client) =>
+        (await client.GetFromJsonAsync<ReadyDto>("/api/settings", TestContext.Current.CancellationToken))!;
 
     private Task BackdateReadingsAsync(Guid userId, TimeSpan age) =>
         WithDbAsync(db => db.ReceiptReadings.IgnoreQueryFilters()
@@ -390,11 +420,10 @@ public sealed class ReceiptReadingTests(ApiFixture fixture) : IntegrationTestBas
             .Select(id => id.Value)
             .ToList());
 
-    private static async Task<(Guid Food, Guid Hygiene)> CategoriesAsync(HttpClient client)
+    private static async Task<Guid> FoodAsync(HttpClient client)
     {
-        var hygiene = await Seed.CategoryAsync(client, "Hygiene");
         var all = await client.GetFromJsonAsync<List<NamedRow>>("/api/categories", TestContext.Current.CancellationToken);
-        return (all!.Single(c => c.Name == "Food").Id, hygiene);
+        return all!.Single(c => c.Name == "Food").Id;
     }
 
     private async Task<Guid> NewExpenseAsync(HttpClient client, string amount, string date)
@@ -419,11 +448,16 @@ public sealed class ReceiptReadingTests(ApiFixture fixture) : IntegrationTestBas
         return client.PostAsync("/api/receipts/read", content, TestContext.Current.CancellationToken);
     }
 
-    private static Task<HttpResponseMessage> ReadUploadAsync(HttpClient client, byte[] file, bool force = false)
+    private static Task<HttpResponseMessage> ReadUploadAsync(
+        HttpClient client,
+        byte[] file,
+        string contentType = "image/jpeg",
+        string fileName = "receipt.jpg",
+        bool force = false)
     {
         var part = new ByteArrayContent(file);
-        part.Headers.ContentType = new MediaTypeHeaderValue("image/jpeg");
-        var content = new MultipartFormDataContent { { part, "file", "receipt.jpg" } };
+        part.Headers.ContentType = new MediaTypeHeaderValue(contentType);
+        var content = new MultipartFormDataContent { { part, "file", fileName } };
         if (force)
         {
             content.Add(new StringContent("true"), "force");
@@ -434,7 +468,9 @@ public sealed class ReceiptReadingTests(ApiFixture fixture) : IntegrationTestBas
 
     private static Task<ReadingDto> ReadOkAsync(HttpResponseMessage response) => ReadOkAsync<ReadingDto>(response);
 
-    private sealed record ReadingDto(Guid Id, string Model, bool Cached, ResultDto Result, List<CandidateDto> Candidates);
+    private sealed record ReadyDto(bool ReceiptReadingReady);
+
+    private sealed record ReadingDto(Guid Id, bool Cached, ResultDto Result, List<CandidateDto> Candidates);
 
     private sealed record ResultDto(
         string? Merchant,
@@ -445,7 +481,8 @@ public sealed class ReceiptReadingTests(ApiFixture fixture) : IntegrationTestBas
         int PagesRead,
         int PageCount,
         List<ItemDto> Items,
-        List<AdjustmentDto> Adjustments);
+        List<AdjustmentDto> Adjustments,
+        List<string> UnreadLines);
 
     private sealed record ItemDto(string Name, string? Quantity, string Amount, string Discount, string Deposit, Guid? CategoryId, bool Remembered);
 

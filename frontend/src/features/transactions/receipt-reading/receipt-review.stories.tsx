@@ -10,19 +10,20 @@ import {
   receiptReadingPdf,
   receiptReadingRemembered,
   receiptReadingReturn,
+  receiptReadingUnreadLines,
   receiptReadingWithCandidate,
 } from "@/storybook/fixtures";
 import { chooseOption, openedDialog } from "@/storybook/interactions";
 import { ReceiptReview } from "./receipt-review";
 
-const providerFailed = new ApiError({
-  status: 502,
-  title: "An error occurred while processing your request.",
+const readAgainFailed = new ApiError({
+  status: 400,
+  title: "One or more validation errors occurred.",
   errors: [
     {
       name: "generalErrors",
-      reason: "Anthropic could not read the receipt right now.",
-      code: "receipt.providerFailed",
+      reason: "No items or total could be read.",
+      code: "receipt.unreadable",
     },
   ],
 });
@@ -152,11 +153,21 @@ export const ReadingAgain: Story = {
   },
 };
 
-export const ProviderFailed: Story = {
-  args: { error: providerFailed },
+export const ReadAgainFailed: Story = {
+  args: { error: readAgainFailed },
   play: async () => {
     await openedDialog();
-    await expect(screen.getByRole("alert")).toHaveTextContent(/Anthropic could not read/u);
+    await expect(screen.getByRole("alert")).toHaveTextContent(/No items or total could be read/u);
+  },
+};
+
+export const UnreadLines: Story = {
+  args: { reading: receiptReadingUnreadLines },
+  play: async () => {
+    await openedDialog();
+    const unread = screen.getByRole("region", { name: "Lines that could not be read" });
+    await expect(unread).toHaveTextContent("Kiausiniai M 10 vnt Z,19 A");
+    await expect(await linesText()).toMatch(/The items add up to €18.21, the receipt says €20.40/u);
   },
 };
 

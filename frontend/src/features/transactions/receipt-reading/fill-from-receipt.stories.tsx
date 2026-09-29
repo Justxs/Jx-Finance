@@ -8,8 +8,7 @@ import {
   accounts,
   categories,
   ids,
-  receiptLimitReachedProblem,
-  receiptProviderFailedProblem,
+  receiptEngineUnavailableProblem,
   receiptReadingWithCandidate,
   receiptUnreadableProblem,
   receiptUnsupportedFileProblem,
@@ -53,9 +52,6 @@ type Story = StoryObj<typeof meta>;
 export const ReadsAPickedFile: Story = {
   args: { onReceiptFile: fn() },
   play: async ({ canvas, args }) => {
-    await expect(
-      await canvas.findByText("The file is sent to Anthropic to be read."),
-    ).toBeVisible();
     await pickReceipt();
     await openedDialog();
     await userEvent.click(screen.getByRole("button", { name: "Use these lines" }));
@@ -91,12 +87,12 @@ export const Reading: Story = {
   play: async ({ canvas }) => {
     await pickReceipt();
     await expect(
-      await canvas.findByText("Reading the receipt, this can take up to a minute."),
+      await canvas.findByText("Reading the receipt, this takes a few seconds."),
     ).toBeVisible();
     await userEvent.click(first(canvas.getAllByRole("button", { name: "Cancel" })));
-    await expect(
-      await canvas.findByText("The file is sent to Anthropic to be read."),
-    ).toBeVisible();
+    await waitFor(() =>
+      expect(canvas.queryByText("Reading the receipt, this takes a few seconds.")).toBeNull(),
+    );
   },
 };
 
@@ -129,19 +125,11 @@ export const UnsupportedFile: Story = {
   },
 };
 
-export const LimitReached: Story = {
-  parameters: failingRead(receiptLimitReachedProblem),
+export const EngineUnavailable: Story = {
+  parameters: failingRead(receiptEngineUnavailableProblem),
   play: async ({ canvas }) => {
     await pickReceipt();
-    await expect(await canvas.findByRole("alert")).toHaveTextContent(/all its receipt reads/u);
-  },
-};
-
-export const ProviderFailed: Story = {
-  parameters: failingRead(receiptProviderFailedProblem),
-  play: async ({ canvas }) => {
-    await pickReceipt();
-    await expect(await canvas.findByRole("alert")).toHaveTextContent(/Try again in a minute/u);
+    await expect(await canvas.findByRole("alert")).toHaveTextContent(/no Tesseract/u);
   },
 };
 
@@ -149,15 +137,13 @@ export const HiddenUntilReady: Story = {
   parameters: withHandlers(getSettingsMockHandler(settingsWith({ receiptReadingReady: false }))),
   play: async ({ canvas }) => {
     await expect(await canvas.findByLabelText("Description")).toBeVisible();
-    await expect(canvas.queryByText("The file is sent to Anthropic to be read.")).toBeNull();
+    await expect(canvas.queryByLabelText(/Fill from receipt/u)).toBeNull();
   },
 };
 
 export const Lithuanian: Story = {
   globals: { locale: "lt" },
   play: async ({ canvas }) => {
-    await expect(
-      await canvas.findByText("Failas bus išsiųstas bendrovei Anthropic, kad būtų perskaitytas."),
-    ).toBeVisible();
+    await expect(await canvas.findByText("Užpildyti iš kvito")).toBeVisible();
   },
 };

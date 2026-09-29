@@ -211,7 +211,7 @@ public sealed class CategorizationRuleService(
     }
 
     public async Task<IReadOnlyList<RuleSuggestion?>> SuggestAsync(
-        AccountId accountId,
+        AccountId? accountId,
         IReadOnlyList<RuleCandidate> candidates,
         CancellationToken cancellationToken)
     {

@@ -192,7 +192,6 @@ function BackupSkeleton() {
 function SectionBodySkeleton({ section }: Readonly<{ section: SettingsSection }>) {
   switch (section) {
     case "email":
-    case "receipts":
       return (
         <TitledSkeleton>
           <SmtpFormSkeleton />

@@ -1,8 +1,6 @@
 MAXIMA LT, UAB
-Parduotuvė Nr. 123, Savanorių pr. 1, Vilnius
-2026-09-27 10:12   Kasa 1
-
+Savanorių pr. 247, LT-02300 Vilnius
+2026-09-27 10:12 Kasa 1
 GRĄŽINIMAS
-Head&Shoulders šampūnas 250 ml       -4,79 A
---------------------------------------------
-GRĄŽINTI                             -4,79
+Head&Shoulders šampūnas 250 ml -4,79 A
+GRĄŽINTI EUR -4,79

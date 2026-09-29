@@ -9,8 +9,11 @@ using JxFinance.Common.Settings;
 using JxFinance.Domain.Categories;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Receipts;
+using JxFinance.Domain.Settings;
 using JxFinance.Domain.Transactions;
 using JxFinance.Endpoints.Attachments.Shared;
+using JxFinance.Endpoints.CategorizationRules.Interfaces;
+using JxFinance.Endpoints.CategorizationRules.Shared;
 using JxFinance.Endpoints.Imports.Matching;
 using JxFinance.Endpoints.Receipts.Interfaces;
 using JxFinance.Endpoints.Receipts.Mappers;
@@ -19,7 +22,6 @@ using JxFinance.Endpoints.Receipts.UpdateReceiptCategories;
 using JxFinance.Infrastructure.Attachments;
 using JxFinance.Infrastructure.Data;
 using JxFinance.Infrastructure.Receipts;
-using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 
 namespace JxFinance.Endpoints.Receipts.Services;
@@ -29,8 +31,8 @@ public sealed class ReceiptService(
     AppDbContext db,
     AttachmentStore files,
     IReceiptReader reader,
+    ICategorizationRuleService rules,
     IInstanceSettingsStore store,
-    IDataProtectionProvider protection,
     IReferenceGuard references,
     IClock clock) : IReceiptService
 {
@@ -41,10 +43,6 @@ public sealed class ReceiptService(
     private static readonly DomainError FileGone = new(
         ErrorCodes.ReceiptUnsupportedFile,
         "The file of this attachment is no longer stored, so it cannot be read.");
-
-    private static readonly DomainError NotConfigured = new(
-        ErrorCodes.ReceiptNotConfigured,
-        "Receipt reading is not set up. An administrator can switch it on in Settings.");
 
     private static readonly DomainError Busy = new(
         ErrorCodes.ConflictBusy,
@@ -67,44 +65,27 @@ public sealed class ReceiptService(
             return await ToResponseAsync(stored, cached: true, source, cancellationToken);
         }
 
-        var settings = store.Current;
-        if (!settings.ReceiptReadingReady)
-        {
-            return NotConfigured;
-        }
-
-        var apiKey = ReceiptApiKey.Unprotect(protection, settings.Receipts);
-        if (!apiKey.TryGetValue(out var key))
-        {
-            return apiKey.Error;
-        }
-
-        var model = settings.Receipts.Model;
-        var prepared = ReceiptImage.Prepare(file.Content, file.ContentType, ReceiptModels.LongEdge(model));
+        var prepared = ReceiptImage.Prepare(file.Content, file.ContentType);
         if (!prepared.TryGetValue(out var input))
         {
             return prepared.Error;
         }
 
-        var started = await StartAsync(file.Sha256, model, settings.Receipts.MonthlyLimit, cancellationToken);
+        if (input.Text is null && !reader.IsAvailable)
+        {
+            return ReceiptErrors.EngineUnavailable;
+        }
+
+        var started = await StartAsync(file.Sha256, cancellationToken);
         if (!started.TryGetValue(out var reading))
         {
             return started.Error;
         }
 
-        var categories = await db.Categories
-            .AsNoTracking()
-            .Where(c => c.Type == FlowType.Expense)
-            .OrderBy(c => c.Name)
-            .Select(c => new { c.Id, c.Name })
-            .ToListAsync(cancellationToken);
-
-        Result<ReceiptExtraction> extraction;
+        Result<ReceiptResult> parsed;
         try
         {
-            extraction = await reader.ReadAsync(
-                new ReceiptRequest(input, key, model, [.. categories.Select(c => c.Name)]),
-                cancellationToken);
+            parsed = await ParseAsync(input, cancellationToken);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
@@ -112,27 +93,14 @@ public sealed class ReceiptService(
             throw;
         }
 
-        if (!extraction.TryGetValue(out var read))
+        if (!parsed.TryGetValue(out var result))
         {
-            await FinishAsync(reading, null, extraction.ErrorCode, cancellationToken);
-            return extraction.Error;
+            await FinishAsync(reading, null, parsed.ErrorCode, cancellationToken);
+            return parsed.Error;
         }
 
-        var items = read.Result.Items
-            .Select((item, index) => item with { CategoryId = read.ItemCategories[index] is { } number ? categories[number - 1].Id.Value : null })
-            .ToList();
-        reading.InputTokens = read.InputTokens;
-        reading.OutputTokens = read.OutputTokens;
-        await FinishAsync(reading, read.Result with { Items = await RememberedAsync(items, cancellationToken) }, null, cancellationToken);
-
-        var month = ReceiptReadingUsage.MonthOf(clock.Today);
-        await db.ReceiptReadingUsages
-            .Where(u => u.Month == month)
-            .ExecuteUpdateAsync(
-                s => s
-                    .SetProperty(u => u.InputTokens, u => u.InputTokens + read.InputTokens)
-                    .SetProperty(u => u.OutputTokens, u => u.OutputTokens + read.OutputTokens),
-                cancellationToken);
+        var items = await CategorizedAsync(result.Items, cancellationToken);
+        await FinishAsync(reading, result with { Items = items }, null, cancellationToken);
         await db.ReceiptReadings
             .Where(r => r.Sha256 == file.Sha256 && r.Status == ReceiptReadingStatus.Read && r.Id != reading.Id)
             .ExecuteDeleteAsync(cancellationToken);
@@ -289,11 +257,7 @@ public sealed class ReceiptService(
             .OrderByDescending(r => r.CompletedAt)
             .FirstOrDefaultAsync(cancellationToken);
 
-    private async Task<Result<ReceiptReading>> StartAsync(
-        string sha256,
-        string model,
-        int monthlyLimit,
-        CancellationToken cancellationToken)
+    private async Task<Result<ReceiptReading>> StartAsync(string sha256, CancellationToken cancellationToken)
     {
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
         await db.Database.LockAsync(AppLock.ReceiptReadings, cancellationToken);
@@ -306,27 +270,21 @@ public sealed class ReceiptService(
             return Busy;
         }
 
-        var month = ReceiptReadingUsage.MonthOf(clock.Today);
-        var usage = await db.ReceiptReadingUsages.FirstOrDefaultAsync(u => u.Month == month, cancellationToken);
-        if (usage is null)
-        {
-            usage = new ReceiptReadingUsage { Month = month };
-            db.ReceiptReadingUsages.Add(usage);
-        }
-
-        if (usage.Readings >= monthlyLimit)
-        {
-            return new DomainError(
-                ErrorCodes.ReceiptLimitReached,
-                $"This installation has used its {monthlyLimit} receipt reads for this month. An administrator can raise the limit.");
-        }
-
-        usage.Readings++;
-        var reading = new ReceiptReading { Sha256 = sha256, Model = model, Status = ReceiptReadingStatus.Pending };
+        var reading = new ReceiptReading { Sha256 = sha256, Status = ReceiptReadingStatus.Pending };
         db.ReceiptReadings.Add(reading);
         await db.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
         return reading;
+    }
+
+    private async Task<Result<ReceiptResult>> ParseAsync(ReceiptInput input, CancellationToken cancellationToken)
+    {
+        var text = input.Text is { } embedded
+            ? Result<string>.Success(embedded)
+            : await reader.ReadTextAsync(input.Image!, cancellationToken);
+        return text.TryGetValue(out var read)
+            ? ReceiptTextParser.Parse(read).Map(result => result with { PagesRead = input.PagesRead, PageCount = input.PageCount })
+            : text.Error;
     }
 
     private async Task FinishAsync(
@@ -342,7 +300,7 @@ public sealed class ReceiptService(
         await db.SaveChangesAsync(cancellationToken);
     }
 
-    private async Task<List<ReceiptItem>> RememberedAsync(List<ReceiptItem> items, CancellationToken cancellationToken)
+    private async Task<List<ReceiptItem>> CategorizedAsync(IReadOnlyList<ReceiptItem> items, CancellationToken cancellationToken)
     {
         var keys = items.Select(item => ReceiptItemKey.Normalize(item.Name)).Where(key => key.Length > 0).Distinct().ToList();
         var remembered = await db.ReceiptItemCategories
@@ -350,12 +308,15 @@ public sealed class ReceiptService(
             .Where(m => keys.Contains(m.Key)
                 && db.Categories.Any(c => c.Id == m.CategoryId && c.Type == FlowType.Expense))
             .ToDictionaryAsync(m => m.Key, m => m.CategoryId.Value, cancellationToken);
+        IReadOnlyList<RuleSuggestion?> suggestions = store.Current.IsEnabled(Feature.CategorizationRules)
+            ? await rules.SuggestAsync(null, [.. items.Select(item => new RuleCandidate(item.Name, item.Amount, FlowType.Expense))], cancellationToken)
+            : [.. items.Select(_ => (RuleSuggestion?)null)];
 
         return
         [
-            .. items.Select(item => remembered.TryGetValue(ReceiptItemKey.Normalize(item.Name), out var categoryId)
+            .. items.Select((item, index) => remembered.TryGetValue(ReceiptItemKey.Normalize(item.Name), out var categoryId)
                 ? item with { CategoryId = categoryId, Remembered = true }
-                : item),
+                : item with { CategoryId = suggestions[index]?.CategoryId }),
         ];
     }
 
@@ -370,7 +331,7 @@ public sealed class ReceiptService(
             && result is { Total: > 0 and var total, Date: { } date }
             ? await CandidatesAsync(total, result.Currency, date, cancellationToken)
             : [];
-        return new ReceiptReadingResponse(reading.Id.Value, reading.Model, cached, result.ToResponse(), candidates);
+        return new ReceiptReadingResponse(reading.Id.Value, cached, result.ToResponse(), candidates);
     }
 
     private async Task<IReadOnlyList<ReceiptCandidateResponse>> CandidatesAsync(

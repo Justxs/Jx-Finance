@@ -10,12 +10,26 @@ public static class ReceiptItemKey
         "g", "kg", "mg", "l", "ml", "cl", "dl", "vnt", "pcs", "x",
     };
 
+    public static string Fold(string text)
+    {
+        var folded = new StringBuilder(text.Length);
+        foreach (var character in text.Normalize(NormalizationForm.FormD))
+        {
+            if (CharUnicodeInfo.GetUnicodeCategory(character) != UnicodeCategory.NonSpacingMark)
+            {
+                folded.Append(char.ToLower(character, CultureInfo.InvariantCulture));
+            }
+        }
+
+        return folded.ToString();
+    }
+
     public static string Normalize(string name)
     {
         var letters = new StringBuilder(name.Length);
-        foreach (var character in name.Normalize(NormalizationForm.FormC))
+        foreach (var character in Fold(name))
         {
-            letters.Append(char.IsLetter(character) ? char.ToLower(character, CultureInfo.InvariantCulture) : ' ');
+            letters.Append(char.IsLetter(character) ? character : ' ');
         }
 
         var words = letters.ToString()

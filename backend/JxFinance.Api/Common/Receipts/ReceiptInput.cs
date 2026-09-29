@@ -1,3 +1,3 @@
 namespace JxFinance.Common.Receipts;
 
-public sealed record ReceiptInput(byte[] Content, string MediaType, int PagesRead, int PageCount);
+public sealed record ReceiptInput(byte[]? Image, string? Text, int PagesRead, int PageCount);

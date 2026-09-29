@@ -11,10 +11,12 @@ public sealed record ReceiptResult(
     int PagesRead,
     int PageCount,
     IReadOnlyList<ReceiptItem> Items,
-    IReadOnlyList<ReceiptAdjustment> Adjustments)
+    IReadOnlyList<ReceiptAdjustment> Adjustments,
+    IReadOnlyList<string> UnreadLines)
 {
     public const int MaxItems = 200;
     public const int MaxAdjustments = 20;
+    public const int MaxUnreadLines = 50;
     public const int TextMaxLength = 200;
     public const int QuantityMaxLength = 40;
 }

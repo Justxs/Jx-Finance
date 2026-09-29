@@ -17,8 +17,6 @@ public sealed record FeatureFlags(
 {
     public static FeatureFlags All { get; } = new(true, true, true, true, true, true, true, true, true, true, true, true, true);
 
-    public static FeatureFlags Default { get; } = All with { ReceiptReading = false };
-
     public bool IsEnabled(Feature feature) => feature switch
     {
         Feature.Budgets => Budgets,

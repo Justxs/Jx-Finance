@@ -15,7 +15,7 @@ export const settings: SettingsResponse = {
     categorizationRules: true,
     unusualAmounts: true,
     monthClose: true,
-    receiptReading: false,
+    receiptReading: true,
   },
   reportingCurrency: "eur",
   enabledCurrencies: ["eur", "usd", "gbp", "pln", "chf", "sek", "nok"],

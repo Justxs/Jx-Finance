@@ -22,7 +22,7 @@ public sealed class ReadReceiptEndpoint(IReceiptService receiptService)
             .ProducesProblemDetails(409)
             .Produces(413)
             .ProducesProblemDetails(429)
-            .ProducesProblemDetails(502));
+            .ProducesProblemDetails(503));
     }
 
     public override async Task HandleAsync(ReadReceiptRequest req, CancellationToken ct)

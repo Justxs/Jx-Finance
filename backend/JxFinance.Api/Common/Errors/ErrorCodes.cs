@@ -120,14 +120,10 @@ public static class ErrorCodes
     public const string MonthCloseInvalidMonth = "monthClose.invalidMonth";
     public const string MonthCloseNotEnded = "monthClose.notEnded";
     public const string ReconciliationFutureDate = "reconciliation.futureDate";
-    public const string ReceiptNotConfigured = "receipt.notConfigured";
-    public const string ReceiptLimitReached = "receipt.limitReached";
     public const string ReceiptUnsupportedFile = "receipt.unsupportedFile";
+    public const string ReceiptPdfWithoutText = "receipt.pdfWithoutText";
     public const string ReceiptUnreadable = "receipt.unreadable";
-    public const string ReceiptProviderFailed = "receipt.providerFailed";
-    public const string ReceiptKeyRejected = "receipt.keyRejected";
-    public const string ReceiptKeyUnreadable = "receipt.keyUnreadable";
-    public const string ReceiptModelNotAllowed = "receipt.modelNotAllowed";
+    public const string ReceiptEngineUnavailable = "receipt.engineUnavailable";
 
     public static IReadOnlyList<string> All { get; } = typeof(ErrorCodes)
         .GetFields(BindingFlags.Public | BindingFlags.Static)
@@ -145,8 +141,8 @@ public static class ErrorCodes
             or RestoreNameTaken or AttachmentLimitReached or MonthCloseNotEnded or DebtPaymentTaken or PasskeyLimitReached => StatusCodes.Status409Conflict,
         AccessForbidden or UserSelfChange or UserLastAdministrator or SecurityNotHeld or SessionCurrent => StatusCodes.Status403Forbidden,
         CredentialsInvalid => StatusCodes.Status401Unauthorized,
-        CredentialsLockedOut or ReceiptLimitReached => StatusCodes.Status429TooManyRequests,
-        ReceiptProviderFailed => StatusCodes.Status502BadGateway,
+        CredentialsLockedOut => StatusCodes.Status429TooManyRequests,
+        ReceiptEngineUnavailable => StatusCodes.Status503ServiceUnavailable,
         _ => StatusCodes.Status400BadRequest,
     };
 }

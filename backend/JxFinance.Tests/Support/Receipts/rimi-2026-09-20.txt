@@ -1,15 +1,14 @@
 UAB "RIMI LIETUVA"
 Rimi Ozas, Ozo g. 18, Vilnius
 PVM mok. kodas LT100000000001
-2026-09-20 11:05   Kasa 7   Kvitas 1203
-
-Obuoliai Gala      0,845 kg x 2,29    1,94 A
-Kefyras 2,5 % 500 g                   1,09 A
-  Mano Rimi nuolaida                 -0,20
-Makaronai 500 g                       0,99 A
-Dantų šepetėlis                       2,49 B
---------------------------------------------
-IŠ VISO                               6,31
-Mokėta kortele                        6,31
-PVM A 9 %      Be PVM 3,49   PVM 0,33
-PVM B 21 %     Be PVM 2,06   PVM 0,43
+Obuoliai Gala
+0,845 kg x 2,29 EUR/kg 1,94 A
+Kefyras 2,5 % 500 g 1,09 A
+Mano Rimi nuolaida -0,20
+Makaronai 500 g 0,99 A
+Dantų šepetėlis 2,49 B
+IŠ VISO 6,31
+Mokėta kortele 6,31
+PVM A 9 % Be PVM 3,49 PVM 0,33
+PVM B 21 % Be PVM 2,06 PVM 0,43
+2026-09-20 11:05 Kasa 7 Kvitas 1203

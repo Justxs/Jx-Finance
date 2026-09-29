@@ -302,9 +302,11 @@ export function FillFromReceipt({
           </Button>
         ) : null}
       </div>
-      <p role={busy ? "status" : undefined} className="text-xs text-muted-foreground">
-        {busy ? t("receipts.readingHint") : t("receipts.sentToAnthropic")}
-      </p>
+      {busy ? (
+        <p role="status" className="text-xs text-muted-foreground">
+          {t("receipts.readingHint")}
+        </p>
+      ) : null}
       {reading ? null : <FormError error={readMutation.error ?? uploadMutation.error} />}
 
       {reading ? (

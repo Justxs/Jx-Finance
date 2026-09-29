@@ -6,7 +6,6 @@ namespace JxFinance.Endpoints.Receipts.Shared;
 
 public sealed record ReceiptReadingResponse(
     Guid Id,
-    string Model,
     bool Cached,
     ReceiptResultResponse Result,
     IReadOnlyList<ReceiptCandidateResponse> Candidates);
@@ -20,7 +19,8 @@ public sealed record ReceiptResultResponse(
     int PagesRead,
     int PageCount,
     IReadOnlyList<ReceiptItemResponse> Items,
-    IReadOnlyList<ReceiptAdjustmentResponse> Adjustments);
+    IReadOnlyList<ReceiptAdjustmentResponse> Adjustments,
+    IReadOnlyList<string> UnreadLines);
 
 public sealed record ReceiptItemResponse(
     string Name,

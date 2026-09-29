@@ -10,7 +10,6 @@ import type { RequestHandlerOptions } from "msw";
 import type {
   ExchangeRateSyncResponse,
   PublicSettingsResponse,
-  ReceiptSettingsResponse,
   SettingsResponse,
   SmtpSettingsResponse,
   SmtpTestResponse,
@@ -131,73 +130,6 @@ export const getPublicSettingsMockHandler = (
   );
 };
 
-export const getReceiptSettingsMockHandler = (
-  overrideResponse?:
-    | ReceiptSettingsResponse
-    | ((
-        info: Parameters<Parameters<typeof http.get>[1]>[0],
-      ) => Promise<ReceiptSettingsResponse> | ReceiptSettingsResponse),
-  options?: RequestHandlerOptions,
-) => {
-  return http.get(
-    "*/api/settings/receipts",
-    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
-      return HttpResponse.json(
-        overrideResponse !== undefined
-          ? typeof overrideResponse === "function"
-            ? await overrideResponse(info)
-            : overrideResponse
-          : undefined,
-        { status: 200 },
-      );
-    },
-    options,
-  );
-};
-
-export const getUpdateReceiptSettingsMockHandler = (
-  overrideResponse?:
-    | ReceiptSettingsResponse
-    | ((
-        info: Parameters<Parameters<typeof http.put>[1]>[0],
-      ) => Promise<ReceiptSettingsResponse> | ReceiptSettingsResponse),
-  options?: RequestHandlerOptions,
-) => {
-  return http.put(
-    "*/api/settings/receipts",
-    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
-      return HttpResponse.json(
-        overrideResponse !== undefined
-          ? typeof overrideResponse === "function"
-            ? await overrideResponse(info)
-            : overrideResponse
-          : undefined,
-        { status: 200 },
-      );
-    },
-    options,
-  );
-};
-
-export const getTestReceiptKeyMockHandler = (
-  overrideResponse?:
-    | void
-    | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<void> | void),
-  options?: RequestHandlerOptions,
-) => {
-  return http.post(
-    "*/api/settings/receipts/test",
-    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
-      if (typeof overrideResponse === "function") {
-        await overrideResponse(info);
-      }
-
-      return new HttpResponse(null, { status: 204 });
-    },
-    options,
-  );
-};
-
 export const getSmtpSettingsMockHandler = (
   overrideResponse?:
     | SmtpSettingsResponse
@@ -275,9 +207,6 @@ export const getSettingsMock = () => [
   getUpdateDiscordSettingsMockHandler(),
   getSyncExchangeRatesMockHandler(),
   getPublicSettingsMockHandler(),
-  getReceiptSettingsMockHandler(),
-  getUpdateReceiptSettingsMockHandler(),
-  getTestReceiptKeyMockHandler(),
   getSmtpSettingsMockHandler(),
   getUpdateSmtpSettingsMockHandler(),
   getSendTestEmailMockHandler(),

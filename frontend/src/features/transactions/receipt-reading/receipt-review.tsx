@@ -221,6 +221,20 @@ export function ReceiptReview({
           </section>
         ) : null}
 
+        {result.unreadLines.length > 0 ? (
+          <section aria-label={t("receipts.unread")}>
+            <h3 className="text-sm font-semibold">{t("receipts.unread")}</h3>
+            <p className="text-xs text-muted-foreground">{t("receipts.unreadHint")}</p>
+            <Rows>
+              {Array.from(result.unreadLines, (line, index) => (
+                <li key={index} className="py-2 font-mono text-sm break-words">
+                  {line}
+                </li>
+              ))}
+            </Rows>
+          </section>
+        ) : null}
+
         <div className="space-y-1 rounded-md bg-muted/50 px-4 py-3 text-sm">
           <p className="font-medium">{t("receipts.lines")}</p>
           <p className="tabular-nums">{[...lines, format(lineTotal, currency)].join(" · ")}</p>
@@ -264,7 +278,6 @@ export function ReceiptReview({
             <RefreshCw />
             {t("receipts.readAgain")}
           </Button>
-          <span className="text-xs text-muted-foreground">{t("receipts.readAgainHint")}</span>
           <div className="ml-auto flex gap-2">
             <Button type="button" variant="outline" onClick={onClose}>
               {t("actions.cancel")}

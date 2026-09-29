@@ -24,7 +24,6 @@ public sealed class ReceiptReadingConfiguration : IEntityTypeConfiguration<Recei
     {
         builder.Property(r => r.Sha256).HasMaxLength(ReceiptReading.Sha256Length).IsFixedLength();
         builder.Property(r => r.Status).HasConversion<string>().HasMaxLength(20);
-        builder.Property(r => r.Model).HasMaxLength(ReceiptModels.MaxLength);
         builder.Property(r => r.ErrorCode).HasMaxLength(ReceiptReading.ErrorCodeMaxLength);
         builder.Property(r => r.Result)
             .HasColumnType(DbSchema.Json)

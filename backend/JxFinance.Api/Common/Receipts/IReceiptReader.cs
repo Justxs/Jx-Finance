@@ -4,7 +4,7 @@ namespace JxFinance.Common.Receipts;
 
 public interface IReceiptReader
 {
-    Task<Result<ReceiptExtraction>> ReadAsync(ReceiptRequest request, CancellationToken cancellationToken);
+    bool IsAvailable { get; }
 
-    Task<Result> CheckKeyAsync(string apiKey, string model, CancellationToken cancellationToken);
+    Task<Result<string>> ReadTextAsync(byte[] image, CancellationToken cancellationToken);
 }

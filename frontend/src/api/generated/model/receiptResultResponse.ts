@@ -22,4 +22,5 @@ export interface ReceiptResultResponse {
   pageCount: number;
   items: ReceiptItemResponse[];
   adjustments: ReceiptAdjustmentResponse[];
+  unreadLines: string[];
 }

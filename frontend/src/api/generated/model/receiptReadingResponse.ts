@@ -10,7 +10,6 @@ import type { ReceiptResultResponse } from "./receiptResultResponse";
 
 export interface ReceiptReadingResponse {
   id: string;
-  model: string;
   cached: boolean;
   result: ReceiptResultResponse;
   candidates: ReceiptCandidateResponse[];

@@ -1,12 +1,10 @@
-UAB "Palink"  IKI
+UAB "Palink" IKI
 Žirmūnų g. 64, Vilnius
-2026-09-22 19:30   Kasa 2
-
-Alus 0,5 l                            1,49 A
-  Užstatas                            0,10
-Traškučiai 130 g                      1,79 A
-Taromato kvitas                      -0,60
---------------------------------------------
-MOKĖTI                                2,78
-Grynais                               5,00
-Grąža                                 2,22
+2026-09-22 19:30 Kasa 2
+Alus 0,5 l 1,49 A
+Užstatas 0,10 D
+Traškučiai 130 g 1,79 A
+Taromato kvitas -0,60
+MOKĖTI EUR 2,78
+Grynais 5,00
+Grąža 2,22

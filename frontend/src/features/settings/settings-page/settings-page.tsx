@@ -15,7 +15,6 @@ import { useIsoDate } from "@/hooks/use-formatters";
 import { useSettingsSuspense } from "@/hooks/use-settings";
 import { BackupSection } from "../backup-section/backup-section";
 import { DiscordSection } from "../discord-section/discord-section";
-import { ReceiptsSection } from "../receipts-section/receipts-section";
 import { SettingsForm } from "../settings-form/settings-form";
 import { type SettingsSection, SettingsLayout } from "../settings-nav/settings-nav";
 import { SmtpSection } from "../smtp-section/smtp-section";
@@ -108,7 +107,6 @@ export function SettingsPage() {
     <SettingsLayout current={section}>
       {section === "email" ? <SmtpSection /> : null}
       {section === "discord" ? <DiscordSection /> : null}
-      {section === "receipts" ? <ReceiptsSection /> : null}
       {section === "backups" ? <BackupSection /> : null}
       <QueryBoundary fallback={<SettingsFormSkeleton section={section} />}>
         <SettingsContent section={section} />

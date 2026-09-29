@@ -1,21 +1,24 @@
 MAXIMA LT, UAB
-Parduotuvė Nr. 123, Savanorių pr. 1, Vilnius
-PVM mok. kodas LT123456789
-Kasa 3   Kvitas 0457   2026-09-26 18:42
-
-Duona "Bočių" 800 g                   1,89 A
-Pienas 2,5 % 1 l          2 x 1,19    2,38 A
-Sūris "Džiugas" 180 g                 4,29 A
-  Nuolaida                           -0,86
-Bananai          1,236 kg x 1,49      1,84 A
-Mineralinis vanduo 1,5 l              0,79 A
-  Užstatas                            0,10
-Colgate dantų pasta 75 ml             3,49 A
-Head&Shoulders šampūnas 250 ml        5,99 A
-  Nuolaida                           -1,20
-Ačiū kortelės nuolaida               -0,50
---------------------------------------------
-MOKĖTI                               18,21
-Mokėta kortele                       18,21
-PVM  A 21 %    Be PVM 15,05   PVM 3,16
-Ačiū taškai: +18
+Savanorių pr. 247, LT-02300 Vilnius
+PVM mok. kodas LT230330812
+Kasa 3 Kvitas 0457
+Duona BOČIŲ 800 g 1,89 A
+Pienas 2,5 % 1 l
+2 x 1,19 2,38 A
+Sūris DŽIUGAS 180 g 4,29 A
+Nuolaida -0,86 A
+Bananai
+1,236 kg x 1,49 EUR/kg 1,84 A
+Mineralinis vanduo 1,5 l 0,79 A
+Užstatas 0,10 D
+Colgate dantų pasta 75 ml 3,49 A
+Head&Shoulders šampūnas 250 ml 5,99 A
+Nuolaida -1,20 A
+AČIŪ kortelės nuolaida -0,50
+Mokėti EUR 18,21
+Mokėta kortele 18,21
+PVM Be PVM PVM Su PVM
+A 21 14,90 3,13 18,03
+D 0 0,10 0,00 0,10
+AČIŪ taškai +18
+2026-09-26 18:42 Kasininkas 12

@@ -3,9 +3,10 @@ using JxFinance.Common.Attachments;
 using JxFinance.Common.Errors;
 using JxFinance.Common.Receipts;
 using JxFinance.Domain.Common;
-using PdfSharp;
-using PdfSharp.Pdf;
-using PdfSharp.Pdf.IO;
+using UglyToad.PdfPig;
+using UglyToad.PdfPig.Content;
+using UglyToad.PdfPig.Core;
+using UglyToad.PdfPig.Exceptions;
 
 namespace JxFinance.Infrastructure.Receipts;
 
@@ -14,12 +15,11 @@ public static class ReceiptImage
     public const int MaxPdfPages = 3;
     public const int MinShortEdge = 200;
     public const int MaxPixelEdge = 16000;
+    public const int OcrWidth = 1600;
+    public const int OcrMaxHeight = 12000;
 
-    private const int JpegQuality = 90;
-
-    private static readonly DomainError Unsupported = new(
-        ErrorCodes.ReceiptUnsupportedFile,
-        "This file cannot be read as a receipt. Use a JPEG, PNG, WebP or HEIC photo or a PDF that is not password protected.");
+    private const int ThresholdWindow = 30;
+    private const double ThresholdBias = -0.05;
 
     private static readonly DomainError TooSmall = new(
         ErrorCodes.ReceiptUnsupportedFile,
@@ -40,12 +40,12 @@ public static class ReceiptImage
         ResourceLimits.Memory = 512UL * 1024 * 1024;
     }
 
-    public static Result<ReceiptInput> Prepare(byte[] content, string contentType, int longEdge) =>
-        contentType == AttachmentContent.Pdf ? PreparePdf(content)
-        : Formats.TryGetValue(contentType, out var format) ? PrepareImage(content, format, longEdge)
-        : Unsupported;
+    public static Result<ReceiptInput> Prepare(byte[] content, string contentType) =>
+        contentType == AttachmentContent.Pdf ? ReadPdf(content)
+        : Formats.TryGetValue(contentType, out var format) ? PrepareImage(content, format)
+        : ReceiptErrors.Unsupported;
 
-    private static Result<ReceiptInput> PrepareImage(byte[] content, MagickFormat format, int longEdge)
+    private static Result<ReceiptInput> PrepareImage(byte[] content, MagickFormat format)
     {
         try
         {
@@ -57,51 +57,42 @@ public static class ReceiptImage
                 return TooSmall;
             }
 
-            if (Math.Max(image.Width, image.Height) > longEdge)
-            {
-                image.Resize(new MagickGeometry((uint)longEdge, (uint)longEdge));
-            }
-
             image.BackgroundColor = MagickColors.White;
             image.Alpha(AlphaOption.Remove);
-            image.Quality = JpegQuality;
-            return new ReceiptInput(image.ToByteArray(MagickFormat.Jpeg), AttachmentContent.Jpeg, 1, 1);
+            image.Grayscale();
+            image.Resize(new MagickGeometry(OcrWidth, OcrMaxHeight));
+            image.AdaptiveThreshold(ThresholdWindow, ThresholdWindow, ThresholdBias * Quantum.Max);
+            return new ReceiptInput(image.ToByteArray(MagickFormat.Png), null, 1, 1);
         }
         catch (MagickException)
         {
-            return Unsupported;
+            return ReceiptErrors.Unsupported;
         }
     }
 
-    private static Result<ReceiptInput> PreparePdf(byte[] content)
+    private static Result<ReceiptInput> ReadPdf(byte[] content)
     {
         try
         {
-            using var source = PdfReader.Open(new MemoryStream(content), PdfDocumentOpenMode.Import);
-            var pageCount = source.PageCount;
-            if (pageCount == 0)
-            {
-                return Unsupported;
-            }
-
-            if (pageCount <= MaxPdfPages)
-            {
-                return new ReceiptInput(content, AttachmentContent.Pdf, pageCount, pageCount);
-            }
-
-            using var kept = new PdfDocument();
-            for (var page = 0; page < MaxPdfPages; page++)
-            {
-                kept.AddPage(source.Pages[page]);
-            }
-
-            using var output = new MemoryStream();
-            kept.Save(output, false);
-            return new ReceiptInput(output.ToArray(), AttachmentContent.Pdf, MaxPdfPages, pageCount);
+            using var document = PdfDocument.Open(content);
+            var pageCount = document.NumberOfPages;
+            var pagesRead = Math.Min(pageCount, MaxPdfPages);
+            var text = string.Join('\n', Enumerable.Range(1, pagesRead).Select(number => PageText(document.GetPage(number))));
+            return pageCount == 0 ? ReceiptErrors.Unsupported
+                : string.IsNullOrWhiteSpace(text) ? ReceiptErrors.PdfWithoutText
+                : new ReceiptInput(null, text, pagesRead, pageCount);
         }
-        catch (Exception ex) when (ex is PdfSharpException or InvalidOperationException or FormatException or IOException)
+        catch (Exception ex) when (ex is PdfDocumentFormatException or PdfDocumentEncryptedException or InvalidOperationException or ArgumentException)
         {
-            return Unsupported;
+            return ReceiptErrors.Unsupported;
         }
     }
+
+    private static string PageText(Page page) =>
+        string.Join(
+            '\n',
+            page.GetWords()
+                .GroupBy(word => Math.Round(word.Letters[0].StartBaseLine.Y))
+                .OrderByDescending(line => line.Key)
+                .Select(line => string.Join(' ', line.OrderBy(word => word.BoundingBox.Left).Select(word => word.Text))));
 }

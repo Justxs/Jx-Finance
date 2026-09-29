@@ -536,9 +536,8 @@
   },
   "receipts": {
     "fill": "Fill from receipt",
-    "sentToAnthropic": "The file is sent to Anthropic to be read.",
     "reading": "Reading the receipt…",
-    "readingHint": "Reading the receipt, this can take up to a minute.",
+    "readingHint": "Reading the receipt, this takes a few seconds.",
     "file": "Receipt file",
     "chooseFile": "Choose another file",
     "reviewTitle": "Receipt from {{source}}",
@@ -550,6 +549,8 @@
     "rememberedHint": "You filed an item with this name under this category before.",
     "adjustments": "On the whole receipt",
     "adjustmentsHint": "Shared across the lines by their size.",
+    "unread": "Lines that could not be read",
+    "unreadHint": "Check them on the receipt: an item among them is missing from the lines above.",
     "lines": "Resulting lines",
     "itemsDiffer": "The items add up to {{items}}, the receipt says {{printed}}.",
     "paymentDiffers": "Receipt {{receipt}}, this payment {{payment}}; the lines are scaled to the payment.",
@@ -557,7 +558,6 @@
     "returnReceipt": "Return receipts cannot be split yet.",
     "apply": "Use these lines",
     "readAgain": "Read again",
-    "readAgainHint": "This counts as another read.",
     "candidateTitle": "Already in the ledger?",
     "candidate": "{{description}}, {{date}}, {{amount}}",
     "splitCandidate": "Split that payment instead",
@@ -930,7 +930,7 @@
         },
         "receiptReading": {
           "name": "Receipt reading",
-          "hint": "Fills a transaction's split from a receipt photo or PDF read by Anthropic's Claude. Off by default, and it also needs an API key under Receipt reading."
+          "hint": "Fills a transaction's split from a receipt photo or PDF, read on this server with Tesseract; nothing is sent anywhere."
         }
       }
     },
@@ -1018,30 +1018,6 @@
       "enabled": "Allow Discord notifications",
       "enabledHint": "Messages go from this server to discord.com. While this is off nothing is sent, and members' webhooks stay saved.",
       "saved": "Discord setting saved"
-    },
-    "receipts": {
-      "title": "Receipt reading",
-      "description": "Reads receipt photos and PDFs with Anthropic's Claude and proposes a split by category. Nothing is read until someone asks for one file.",
-      "enabled": "Read receipts when someone asks",
-      "enabledHint": "Also needs the Receipt reading switch under Features.",
-      "apiKey": "Anthropic API key",
-      "apiKeyHint": "Stored encrypted and never shown again. Leave empty to keep the stored one.",
-      "apiKeyStored": "A key is saved",
-      "model": "Model",
-      "models": {
-        "claude-sonnet-5": "Claude Sonnet 5, about 0.03 USD a receipt",
-        "claude-haiku-4-5": "Claude Haiku 4.5, about 0.01 USD a receipt, lower image resolution",
-        "claude-opus-5-5": "Claude Opus 5.5, about 0.07 USD a receipt, most accurate"
-      },
-      "monthlyLimit": "Reads a month",
-      "monthlyLimitHint": "For the whole installation. A read counts before Anthropic is asked, also when it fails.",
-      "usage": "This month: {{used}} of {{limit}} reads",
-      "test": "Test the key",
-      "testHint": "Save first. Asks Anthropic whether the key works with the chosen model; this costs nothing.",
-      "testPassed": "Anthropic accepted the key",
-      "saved": "Receipt reading saved",
-      "privacyTitle": "What leaves this server",
-      "privacy": "Receipt reading sends the photo or PDF of a receipt to Anthropic, a company in the United States, whose Claude model reads it and answers with the items. The photo is re-encoded first, so its location and camera details are not sent. The names of your expense categories go with it; nothing else from the ledger does. By default Anthropic does not train its models on data sent to its API, and it keeps that data only as its commercial terms allow. A receipt shows what was bought, where and when, including pharmacy items. Turn this on only if everyone who uses this installation is comfortable with that."
     }
   },
   "settingsHub": {
@@ -2389,14 +2365,10 @@
       "futureDate": "The statement date cannot be after today."
     },
     "receipt": {
-      "notConfigured": "Receipt reading is not set up. An administrator can switch it on in Settings.",
-      "limitReached": "This installation has used all its receipt reads for this month. An administrator can raise the limit.",
       "unsupportedFile": "This file cannot be read as a receipt. Use a JPEG, PNG, WebP or HEIC photo or a PDF without a password.",
-      "unreadable": "The receipt could not be read. Take a sharper, straight photo of the whole receipt and try again.",
-      "providerFailed": "Anthropic could not read the receipt right now. Try again in a minute.",
-      "keyRejected": "Anthropic did not accept the API key. Check it in Settings.",
-      "keyUnreadable": "The stored Anthropic API key can no longer be read. Enter it again.",
-      "modelNotAllowed": "Choose one of the offered models."
+      "pdfWithoutText": "This PDF holds only a picture of the receipt. Take a photo of the receipt instead.",
+      "unreadable": "No items or total could be read. Take a sharper, straight photo of the whole receipt in even light and try again.",
+      "engineUnavailable": "Receipt reading is not available: the server has no Tesseract with Lithuanian and English language data."
     },
     "passkey": {
       "invalid": "The passkey could not be verified.",

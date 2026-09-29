@@ -14,9 +14,6 @@ public sealed class ReceiptReading : OwnableEntity
     public ReceiptReadingId Id { get; set; } = ReceiptReadingId.New();
     public required string Sha256 { get; set; }
     public ReceiptReadingStatus Status { get; set; }
-    public required string Model { get; set; }
-    public int InputTokens { get; set; }
-    public int OutputTokens { get; set; }
     public ReceiptResult? Result { get; set; }
     public string? ErrorCode { get; set; }
     public DateTimeOffset? CompletedAt { get; set; }

@@ -60,7 +60,7 @@ public static class ApiServiceExtensions
             client.DefaultRequestHeaders.UserAgent.ParseAdd("JxFinance/1.0");
         }).RemoveAllLoggers();
 
-        builder.Services.AddHttpClient<IReceiptReader, AnthropicReceiptReader>().RemoveAllLoggers();
+        builder.Services.AddSingleton<IReceiptReader, TesseractReceiptReader>();
 
         if (!builder.Configuration.GetValue<bool>("export-openapi-docs") && builder.Configuration.GetValue(ConfigKeys.BackgroundJobs, true))
         {
