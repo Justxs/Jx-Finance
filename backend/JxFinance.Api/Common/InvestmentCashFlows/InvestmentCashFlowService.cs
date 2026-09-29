@@ -1,4 +1,3 @@
-using System.Linq.Expressions;
 using FastEndpoints;
 using JxFinance.Common.Settings;
 using JxFinance.Domain.Common;
@@ -25,7 +24,7 @@ public sealed class InvestmentCashFlowService(AppDbContext db, IInstanceSettings
         InvestmentTransactionType.Fee,
     ];
 
-    public async Task<IReadOnlyList<InvestmentCashFlow>> GetFlowsAsync(
+    public async Task<IReadOnlyList<DatedFlow>> GetFlowsAsync(
         DateWindow window,
         DateWindow? comparison,
         CancellationToken cancellationToken)
@@ -37,7 +36,7 @@ public sealed class InvestmentCashFlowService(AppDbContext db, IInstanceSettings
 
         var rows = await db.InvestmentTransactions
             .AsNoTracking()
-            .Where(Within(window, comparison))
+            .Within(window, comparison)
             .Where(t => IncomeTypes.Contains(t.Type) || ExpenseTypes.Contains(t.Type))
             .GroupBy(t => new { t.Date, t.Type })
             .Select(g => new { g.Key.Date, g.Key.Type, Total = g.Sum(t => t.ReportingAmount) })
@@ -46,14 +45,8 @@ public sealed class InvestmentCashFlowService(AppDbContext db, IInstanceSettings
         return rows
             .GroupBy(r => new { r.Date, IsIncome = IncomeTypes.Contains(r.Type) })
             .Select(g => g.Key.IsIncome
-                ? new InvestmentCashFlow(g.Key.Date, FlowType.Income, g.Sum(r => r.Total))
-                : new InvestmentCashFlow(g.Key.Date, FlowType.Expense, -g.Sum(r => r.Total)))
+                ? new DatedFlow(g.Key.Date, FlowType.Income, g.Sum(r => r.Total))
+                : new DatedFlow(g.Key.Date, FlowType.Expense, -g.Sum(r => r.Total)))
             .ToList();
     }
-
-    private static Expression<Func<InvestmentTransaction, bool>> Within(DateWindow window, DateWindow? comparison) =>
-        comparison is { } other
-            ? t => (t.Date >= window.Start && t.Date < window.ExclusiveEnd)
-                || (t.Date >= other.Start && t.Date < other.ExclusiveEnd)
-            : t => t.Date >= window.Start && t.Date < window.ExclusiveEnd;
 }

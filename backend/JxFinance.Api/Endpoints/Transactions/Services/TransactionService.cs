@@ -396,7 +396,7 @@ public sealed class TransactionService(
         return db.DeleteOrNotFoundAsync<Transaction>(
             id,
             t => t.Id == transactionId,
-            NotFound.Message,
+            NotFound,
             transaction => deletions.Record(
                 TrashKind.Transaction,
                 id,

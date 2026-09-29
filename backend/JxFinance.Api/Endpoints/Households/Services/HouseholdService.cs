@@ -226,7 +226,7 @@ public sealed class HouseholdService(
     private Task<Result<Household>> FindAsync(Guid id, CancellationToken cancellationToken)
     {
         var householdId = new HouseholdId(id);
-        return db.Households.FindOrNotFoundAsync(h => h.Id == householdId, "Household not found.", cancellationToken);
+        return db.Households.FindOrNotFoundAsync(h => h.Id == householdId, EntityLookup.NotFound("Household not found."), cancellationToken);
     }
 
     private async Task<Result<Household>> FindOwnedAsync(Guid id, CancellationToken cancellationToken)

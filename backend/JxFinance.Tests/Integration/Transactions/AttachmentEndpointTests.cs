@@ -281,7 +281,7 @@ public sealed class AttachmentEndpointTests(ApiFixture fixture) : IntegrationTes
         var oldOrphan = WriteOrphan(TimeSpan.FromHours(2));
         var newOrphan = WriteOrphan(TimeSpan.Zero);
 
-        await Job<AttachmentPurgeJob>().RunOnceAsync(TestContext.Current.CancellationToken);
+        await Job<RetentionJob>().RunOnceAsync(TestContext.Current.CancellationToken);
 
         Assert.True(FileExists(kept.Id));
         Assert.True(FileExists(recent.Id));
@@ -293,8 +293,8 @@ public sealed class AttachmentEndpointTests(ApiFixture fixture) : IntegrationTes
         Assert.Empty(await StoredIdsAsync(gone));
         await AssertProblemAsync(
             await member.PostAsJsonAsync("/api/trash/restore", new { kind = "attachment", entityId = expired.Id }, TestContext.Current.CancellationToken),
-            HttpStatusCode.BadRequest,
-            "restore.expired");
+            HttpStatusCode.NotFound,
+            "resource.notFound");
         File.Delete(Path.Combine(directory, newOrphan.ToString("N")));
     }
 

@@ -1,7 +1,5 @@
-using System.Linq.Expressions;
 using FastEndpoints;
 using JxFinance.Domain.Common;
-using JxFinance.Domain.Transactions;
 using JxFinance.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -16,7 +14,7 @@ public sealed class CategoryAttributionService(AppDbContext db) : ICategoryAttri
         FlowType type,
         CancellationToken cancellationToken)
     {
-        var dated = db.Transactions.Where(Within(window, comparison));
+        var dated = db.Transactions.Within(window, comparison);
 
         var nonSplit = (await dated
             .Where(t => !t.IsSplit && t.Type == type)
@@ -60,10 +58,4 @@ public sealed class CategoryAttributionService(AppDbContext db) : ICategoryAttri
 
         return [.. nonSplit, .. lineAmounts];
     }
-
-    private static Expression<Func<Transaction, bool>> Within(DateWindow window, DateWindow? comparison) =>
-        comparison is { } other
-            ? t => (t.Date >= window.Start && t.Date < window.ExclusiveEnd)
-                || (t.Date >= other.Start && t.Date < other.ExclusiveEnd)
-            : t => t.Date >= window.Start && t.Date < window.ExclusiveEnd;
 }

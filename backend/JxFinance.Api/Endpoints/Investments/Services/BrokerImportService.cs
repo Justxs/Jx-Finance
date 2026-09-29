@@ -1,4 +1,3 @@
-using System.Security.Cryptography;
 using FastEndpoints;
 using JxFinance.Common;
 using JxFinance.Common.Errors;
@@ -32,7 +31,7 @@ public sealed class BrokerImportService(
 
     private static readonly DomainError NotFound = EntityLookup.NotFound("Connection not found.");
 
-    private IDataProtector Protector => protection.CreateProtector("JxFinance.BrokerConnection.Token");
+    private const string TokenPurpose = "JxFinance.BrokerConnection.Token";
 
     public async Task<Result<BrokerImportResponse>> ImportAsync(
         Guid accountId,
@@ -150,7 +149,7 @@ public sealed class BrokerImportService(
         connection.IsEnabled = request.IsEnabled;
         if (!string.IsNullOrEmpty(request.Token))
         {
-            connection.ProtectedToken = Protector.Protect(request.Token);
+            connection.ProtectedToken = protection.Protect(TokenPurpose, request.Token);
         }
 
         await db.SaveChangesAsync(cancellationToken);
@@ -163,7 +162,7 @@ public sealed class BrokerImportService(
         return db.DeleteOrNotFoundAsync<BrokerConnection>(
             accountId,
             c => c.AccountId == account,
-            NotFound.Message,
+            NotFound,
             connection => connection.ProtectedToken = string.Empty,
             cancellationToken);
     }
@@ -191,12 +190,7 @@ public sealed class BrokerImportService(
         BrokerConnection connection,
         CancellationToken cancellationToken)
     {
-        string token;
-        try
-        {
-            token = Protector.Unprotect(connection.ProtectedToken);
-        }
-        catch (CryptographicException)
+        if (protection.TryUnprotect(TokenPurpose, connection.ProtectedToken) is not { } token)
         {
             return new DomainError(ErrorCodes.BrokerTokenRequired, "The stored token can no longer be read. Enter it again.");
         }

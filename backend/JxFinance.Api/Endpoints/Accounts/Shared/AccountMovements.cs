@@ -28,16 +28,16 @@ public sealed record AccountMovementRow(
 
 public static class AccountMovements
 {
+    public static decimal BalanceOf(Money startingBalance, IEnumerable<AccountMovement> moved) =>
+        startingBalance.Amount + moved.Where(m => m.Currency == startingBalance.Currency).Sum(m => m.Amount);
+
     public static async Task<decimal> LedgerBalanceOnAsync(
         AppDbContext db,
         AccountId accountId,
         Money startingBalance,
         DateOnly date,
-        CancellationToken cancellationToken)
-    {
-        var moved = await SumAsync(db, [accountId], date, cancellationToken);
-        return startingBalance.Amount + moved.Where(m => m.Currency == startingBalance.Currency).Sum(m => m.Amount);
-    }
+        CancellationToken cancellationToken) =>
+        BalanceOf(startingBalance, await SumAsync(db, [accountId], date, cancellationToken));
 
     public static async Task<(IReadOnlyList<AccountMovementRow> Rows, int Count)> ListAsync(
         AppDbContext db,
@@ -48,7 +48,7 @@ public static class AccountMovements
         int limit,
         CancellationToken cancellationToken)
     {
-        var rows = Rows(db, accountId, currency, after, until);
+        var rows = Between(Rows(db).Where(r => r.AccountId == accountId && r.Currency == currency), after, until);
         var page = await rows
             .OrderByDescending(r => r.Date)
             .ThenBy(r => r.Kind)
@@ -64,9 +64,9 @@ public static class AccountMovements
         IReadOnlyList<AccountId> ids,
         DateOnly? until,
         CancellationToken cancellationToken) =>
-        Movements(db, ids, null, until)
-            .GroupBy(m => new { m.AccountId, m.Currency })
-            .Select(g => new AccountMovement(g.Key.AccountId, g.Key.Currency, g.Sum(m => m.Amount)))
+        Between(Rows(db).Where(r => ids.Contains(r.AccountId)), null, until)
+            .GroupBy(r => new { r.AccountId, r.Currency })
+            .Select(g => new AccountMovement(g.Key.AccountId, g.Key.Currency, g.Sum(r => r.Amount)))
             .ToListAsync(cancellationToken);
 
     public static Task<List<DatedAccountMovement>> SumByDateAsync(
@@ -75,122 +75,85 @@ public static class AccountMovements
         DateOnly after,
         DateOnly until,
         CancellationToken cancellationToken) =>
-        Movements(db, ids, after, until)
-            .GroupBy(m => new { m.AccountId, m.Currency, m.Date })
-            .Select(g => new DatedAccountMovement(g.Key.AccountId, g.Key.Currency, g.Key.Date, g.Sum(m => m.Amount)))
+        Between(Rows(db).Where(r => ids.Contains(r.AccountId)), after, until)
+            .GroupBy(r => new { r.AccountId, r.Currency, r.Date })
+            .Select(g => new DatedAccountMovement(g.Key.AccountId, g.Key.Currency, g.Key.Date, g.Sum(r => r.Amount)))
             .ToListAsync(cancellationToken);
 
-    private static IQueryable<Movement> Movements(
-        AppDbContext db,
-        IReadOnlyList<AccountId> ids,
-        DateOnly? after,
-        DateOnly? until) =>
+    private static IQueryable<MovementRow> Between(IQueryable<MovementRow> rows, DateOnly? after, DateOnly? until) =>
+        rows.Where(r => (after == null || r.Date > after) && (until == null || r.Date <= until));
+
+    private static IQueryable<MovementRow> Rows(AppDbContext db) =>
         db.Transactions
-            .Where(t => ids.Contains(t.AccountId) && (after == null || t.Date > after) && (until == null || t.Date <= until))
-            .Select(t => new Movement
+            .Select(t => new MovementRow
             {
                 AccountId = t.AccountId,
                 Currency = t.Amount.Currency,
-                Date = t.Date,
-                Amount = t.Type == FlowType.Income ? t.Amount.Amount : -t.Amount.Amount,
-            })
-            .Concat(db.Transfers
-                .Where(t => ids.Contains(t.FromAccountId) && (after == null || t.Date > after) && (until == null || t.Date <= until))
-                .Select(t => new Movement { AccountId = t.FromAccountId, Currency = t.Amount.Currency, Date = t.Date, Amount = -t.Amount.Amount }))
-            .Concat(db.Transfers
-                .Where(t => ids.Contains(t.ToAccountId) && (after == null || t.Date > after) && (until == null || t.Date <= until))
-                .Select(t => new Movement { AccountId = t.ToAccountId, Currency = t.ReceivedAmount.Currency, Date = t.Date, Amount = t.ReceivedAmount.Amount }))
-            .Concat(db.CurrencyConversions
-                .Where(c => ids.Contains(c.AccountId) && (after == null || c.Date > after) && (until == null || c.Date <= until))
-                .Select(c => new Movement { AccountId = c.AccountId, Currency = c.FromAmount.Currency, Date = c.Date, Amount = -c.FromAmount.Amount }))
-            .Concat(db.CurrencyConversions
-                .Where(c => ids.Contains(c.AccountId) && (after == null || c.Date > after) && (until == null || c.Date <= until))
-                .Select(c => new Movement { AccountId = c.AccountId, Currency = c.ToAmount.Currency, Date = c.Date, Amount = c.ToAmount.Amount }))
-            .Concat(db.InvestmentTransactions
-                .Where(t => ids.Contains(t.AccountId) && (after == null || t.Date > after) && (until == null || t.Date <= until))
-                .Select(t => new Movement { AccountId = t.AccountId, Currency = t.CashAmount.Currency, Date = t.Date, Amount = t.CashAmount.Amount }));
-
-    private static IQueryable<MovementRow> Rows(
-        AppDbContext db,
-        AccountId accountId,
-        Currency currency,
-        DateOnly? after,
-        DateOnly until) =>
-        db.Transactions
-            .Where(t => t.AccountId == accountId && t.Amount.Currency == currency && (after == null || t.Date > after) && t.Date <= until)
-            .Select(t => new MovementRow
-            {
                 Kind = AccountMovementKind.Transaction,
                 Id = (Guid)(object)t.Id,
                 Date = t.Date,
                 Description = t.Description,
                 Amount = t.Type == FlowType.Income ? t.Amount.Amount : -t.Amount.Amount,
             })
-            .Concat(db.Transfers
-                .Where(t => t.FromAccountId == accountId && t.Amount.Currency == currency && (after == null || t.Date > after) && t.Date <= until)
-                .Select(t => new MovementRow
-                {
-                    Kind = AccountMovementKind.TransferOut,
-                    Id = (Guid)(object)t.Id,
-                    Date = t.Date,
-                    Description = t.Description,
-                    Amount = -t.Amount.Amount,
-                }))
-            .Concat(db.Transfers
-                .Where(t => t.ToAccountId == accountId && t.ReceivedAmount.Currency == currency && (after == null || t.Date > after) && t.Date <= until)
-                .Select(t => new MovementRow
-                {
-                    Kind = AccountMovementKind.TransferIn,
-                    Id = (Guid)(object)t.Id,
-                    Date = t.Date,
-                    Description = t.Description,
-                    Amount = t.ReceivedAmount.Amount,
-                }))
-            .Concat(db.CurrencyConversions
-                .Where(c => c.AccountId == accountId && c.FromAmount.Currency == currency && (after == null || c.Date > after) && c.Date <= until)
-                .Select(c => new MovementRow
-                {
-                    Kind = AccountMovementKind.Conversion,
-                    Id = (Guid)(object)c.Id,
-                    Date = c.Date,
-                    Description = c.Description,
-                    Amount = -c.FromAmount.Amount,
-                }))
-            .Concat(db.CurrencyConversions
-                .Where(c => c.AccountId == accountId && c.ToAmount.Currency == currency && (after == null || c.Date > after) && c.Date <= until)
-                .Select(c => new MovementRow
-                {
-                    Kind = AccountMovementKind.Conversion,
-                    Id = (Guid)(object)c.Id,
-                    Date = c.Date,
-                    Description = c.Description,
-                    Amount = c.ToAmount.Amount,
-                }))
-            .Concat(db.InvestmentTransactions
-                .Where(t => t.AccountId == accountId && t.CashAmount.Currency == currency && (after == null || t.Date > after) && t.Date <= until)
-                .Select(t => new MovementRow
-                {
-                    Kind = AccountMovementKind.InvestmentEntry,
-                    Id = (Guid)(object)t.Id,
-                    Date = t.Date,
-                    Description = t.Description,
-                    Amount = t.CashAmount.Amount,
-                }));
+            .Concat(db.Transfers.Select(t => new MovementRow
+            {
+                AccountId = t.FromAccountId,
+                Currency = t.Amount.Currency,
+                Kind = AccountMovementKind.TransferOut,
+                Id = (Guid)(object)t.Id,
+                Date = t.Date,
+                Description = t.Description,
+                Amount = -t.Amount.Amount,
+            }))
+            .Concat(db.Transfers.Select(t => new MovementRow
+            {
+                AccountId = t.ToAccountId,
+                Currency = t.ReceivedAmount.Currency,
+                Kind = AccountMovementKind.TransferIn,
+                Id = (Guid)(object)t.Id,
+                Date = t.Date,
+                Description = t.Description,
+                Amount = t.ReceivedAmount.Amount,
+            }))
+            .Concat(db.CurrencyConversions.Select(c => new MovementRow
+            {
+                AccountId = c.AccountId,
+                Currency = c.FromAmount.Currency,
+                Kind = AccountMovementKind.Conversion,
+                Id = (Guid)(object)c.Id,
+                Date = c.Date,
+                Description = c.Description,
+                Amount = -c.FromAmount.Amount,
+            }))
+            .Concat(db.CurrencyConversions.Select(c => new MovementRow
+            {
+                AccountId = c.AccountId,
+                Currency = c.ToAmount.Currency,
+                Kind = AccountMovementKind.Conversion,
+                Id = (Guid)(object)c.Id,
+                Date = c.Date,
+                Description = c.Description,
+                Amount = c.ToAmount.Amount,
+            }))
+            .Concat(db.InvestmentTransactions.Select(t => new MovementRow
+            {
+                AccountId = t.AccountId,
+                Currency = t.CashAmount.Currency,
+                Kind = AccountMovementKind.InvestmentEntry,
+                Id = (Guid)(object)t.Id,
+                Date = t.Date,
+                Description = t.Description,
+                Amount = t.CashAmount.Amount,
+            }));
 
     private sealed class MovementRow
     {
+        public AccountId AccountId { get; init; }
+        public Currency Currency { get; init; }
         public AccountMovementKind Kind { get; init; }
         public Guid Id { get; init; }
         public DateOnly Date { get; init; }
         public string? Description { get; init; }
-        public decimal Amount { get; init; }
-    }
-
-    private sealed class Movement
-    {
-        public AccountId AccountId { get; init; }
-        public Currency Currency { get; init; }
-        public DateOnly Date { get; init; }
         public decimal Amount { get; init; }
     }
 }

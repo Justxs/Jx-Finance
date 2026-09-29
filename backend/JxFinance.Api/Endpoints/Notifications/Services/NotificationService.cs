@@ -34,7 +34,7 @@ public sealed class NotificationService(AppDbContext db) : INotificationService
         var notificationId = new NotificationId(id);
         var found = await db.Notifications.FindOrNotFoundAsync(
             n => n.Id == notificationId,
-            "Notification not found.",
+            EntityLookup.NotFound("Notification not found."),
             cancellationToken);
         if (!found.TryGetValue(out var notification))
         {

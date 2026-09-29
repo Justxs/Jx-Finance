@@ -29,18 +29,9 @@ public sealed class DashboardService(
         var balanceDate = period.InclusiveEnd < clock.Today ? period.InclusiveEnd : (DateOnly?)null;
         var (totalBalance, isComplete) = await accountService.GetReportingTotalAsync(balanceDate, cancellationToken);
 
-        var monthTotals = await db.Transactions
-            .Where(t => t.Date >= monthStart && t.Date < monthEnd)
-            .GroupBy(t => t.Type)
-            .Select(g => new { Type = g.Key, Total = g.Sum(t => t.ReportingAmount) })
-            .ToListAsync(cancellationToken);
-
-        var investmentFlows = await investmentCashFlows.GetFlowsAsync(period, null, cancellationToken);
-
-        var monthIncome = (monthTotals.FirstOrDefault(t => t.Type == FlowType.Income)?.Total ?? 0m)
-            + investmentFlows.Where(f => f.Type == FlowType.Income).Sum(f => f.Amount);
-        var monthExpense = (monthTotals.FirstOrDefault(t => t.Type == FlowType.Expense)?.Total ?? 0m)
-            + investmentFlows.Where(f => f.Type == FlowType.Expense).Sum(f => f.Amount);
+        var (monthIncome, monthExpense) = (await db.Transactions.Within(period).DailyFlowsAsync(cancellationToken))
+            .Concat(await investmentCashFlows.GetFlowsAsync(period, null, cancellationToken))
+            .Totals();
 
         return new DashboardSummaryResponse(
             totalBalance,
@@ -98,40 +89,20 @@ public sealed class DashboardService(
         var clamped = Math.Clamp(months, 1, 24);
         var lastMonth = ResolveMonth(month, clock.Today);
         var earliestStart = lastMonth.Start.AddMonths(-(clamped - 1));
-        var end = lastMonth.ExclusiveEnd;
 
-        var totals = await db.Transactions
-            .Where(t => t.Date >= earliestStart && t.Date < end)
-            .GroupBy(t => new { t.Date.Year, t.Date.Month, t.Type })
-            .Select(g => new { g.Key.Year, g.Key.Month, g.Key.Type, Total = g.Sum(t => t.ReportingAmount) })
-            .ToListAsync(cancellationToken);
+        var window = new DateWindow(earliestStart, lastMonth.ExclusiveEnd);
+        var byMonth = (await db.Transactions.Within(window).DailyFlowsAsync(cancellationToken))
+            .Concat(await investmentCashFlows.GetFlowsAsync(window, null, cancellationToken))
+            .ToLookup(f => DateWindow.MonthOf(f.Date).Start);
 
-        var investmentFlows = await investmentCashFlows.GetFlowsAsync(new DateWindow(earliestStart, end), null, cancellationToken);
-
-        var items = new List<MonthlyTrendItem>();
-        for (var i = 0; i < clamped; i++)
-        {
-            var monthStart = earliestStart.AddMonths(i);
-            var monthFlows = investmentFlows
-                .Where(f => f.Date.Year == monthStart.Year && f.Date.Month == monthStart.Month)
-                .ToList();
-            var income = (totals
-                .FirstOrDefault(t => t.Year == monthStart.Year && t.Month == monthStart.Month && t.Type == FlowType.Income)
-                ?.Total ?? 0m)
-                + monthFlows.Where(f => f.Type == FlowType.Income).Sum(f => f.Amount);
-            var expense = (totals
-                .FirstOrDefault(t => t.Year == monthStart.Year && t.Month == monthStart.Month && t.Type == FlowType.Expense)
-                ?.Total ?? 0m)
-                + monthFlows.Where(f => f.Type == FlowType.Expense).Sum(f => f.Amount);
-
-            items.Add(new MonthlyTrendItem(
-                monthStart.Year,
-                monthStart.Month,
-                income,
-                expense));
-        }
-
-        return new MonthlyTrendResponse(items);
+        return new MonthlyTrendResponse(Enumerable.Range(0, clamped)
+            .Select(i =>
+            {
+                var monthStart = earliestStart.AddMonths(i);
+                var (income, expense) = byMonth[monthStart].Totals();
+                return new MonthlyTrendItem(monthStart.Year, monthStart.Month, income, expense);
+            })
+            .ToList());
     }
 
     private static DateWindow ResolveMonth(string? month, DateOnly fallbackToday) =>

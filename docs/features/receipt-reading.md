@@ -2,7 +2,7 @@
 
 Back to the [feature walkthrough](README.md). See also [decisions](../decisions/receipt-reading.md), [attachments](attachments.md), [transactions](transactions.md#create-with-a-split).
 
-Backend `Receipts` (`ReceiptService`, `POST /api/receipts/read`, `PUT /api/receipts/{id}/categories`), `Common/Receipts` (`IReceiptReader`, `ReceiptInput`, `ReceiptErrors`), `Infrastructure/Receipts` (`TesseractReceiptReader`, `ReceiptImage`, `ReceiptTextParser`), `Domain/Receipts` and the last step of `AttachmentPurgeJob`; frontend `transactions/receipt-reading` (`fill-from-receipt`, `receipt-review`, `receipt-split.ts`) inside the transaction form. Feature switch `ReceiptReading`.
+Backend `Receipts` (`ReceiptService`, `POST /api/receipts/read`, `PUT /api/receipts/{id}/categories`), `Common/Receipts` (`IReceiptReader`, `ReceiptInput`, `ReceiptErrors`), `Infrastructure/Receipts` (`TesseractReceiptReader`, `ReceiptImage`, `ReceiptTextParser`), `Domain/Receipts` and the last step of `RetentionJob`; frontend `transactions/receipt-reading` (`fill-from-receipt`, `receipt-review`, `receipt-split.ts`) inside the transaction form. Feature switch `ReceiptReading`.
 
 A grocery receipt is one payment for several kinds of spending. Splitting it by hand means adding up the food and the toothpaste with a calculator, and the discounts and the bottle deposit make that slow. "Fill from receipt" in the transaction form reads the photo or PDF on the server with [Tesseract](https://github.com/tesseract-ocr/tesseract), turns the text into items, and gives each item the category the person chose for that name before or the one their categorization rules pick. The form then gets split lines that add up exactly to the payment. Nothing is saved until the person presses Save on the form, so every rule of [splits](transactions.md#create-with-a-split) applies unchanged.
 
@@ -138,7 +138,7 @@ Before the read, in one short transaction under `AppLock.ReceiptReadings`, the s
 
 ## Retention
 
-A reading lives while its file does. The last step of `AttachmentPurgeJob` deletes readings older than 24 hours that failed or are still pending, and those whose SHA-256 is no longer the hash of any attachment row, trashed ones included; 500 at a time, with `Retention.PurgeAsync`. So a reading survives a file moved to the trash and goes when the file is purged, and a reading of an uploaded file that was never attached goes after a day. Readings are hard-deleted and never enter the trash. The dictionary stays until the person changes an entry. Both tables are part of every backup.
+A reading lives while its file does. The last step of `RetentionJob` deletes readings older than 24 hours that failed or are still pending, and those whose SHA-256 is no longer the hash of any attachment row, trashed ones included; 500 at a time, with `Retention.PurgeAsync`. So a reading survives a file moved to the trash and goes when the file is purged, and a reading of an uploaded file that was never attached goes after a day. Readings are hard-deleted and never enter the trash. The dictionary stays until the person changes an entry. Both tables are part of every backup.
 
 ## Errors
 

@@ -9,9 +9,6 @@ namespace JxFinance.Endpoints.Imports.Parsing;
 
 public static class GenericCsvParser
 {
-    private const int MaxRows = 10000;
-    private const int DescriptionMaxLength = 500;
-
     public static Result<ParsedStatement> Parse(Stream stream, CsvImportMapping mapping, Currency accountCurrency)
     {
         try
@@ -70,7 +67,7 @@ public static class GenericCsvParser
                 rows.Add(entry);
             }
 
-            if (rows.Count > MaxRows)
+            if (rows.Count > ParsedStatement.MaxRows)
             {
                 return Invalid();
             }
@@ -119,7 +116,7 @@ public static class GenericCsvParser
 
             var payee = Text(Cell(cells, columns.Payee));
             var description = Text(Cell(cells, columns.Description)) ?? payee;
-            description = description?[..Math.Min(description.Length, DescriptionMaxLength)];
+            description = description?[..Math.Min(description.Length, ParsedStatement.DescriptionMaxLength)];
             var reference = Cell(cells, columns.Reference);
             if (reference.Length is 0 or > ImportReferences.MaxLength)
             {

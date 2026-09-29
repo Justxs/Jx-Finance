@@ -1,4 +1,3 @@
-using System.Security.Cryptography;
 using FastEndpoints;
 using JxFinance.Common.Errors;
 using JxFinance.Common.Settings;
@@ -50,18 +49,11 @@ public sealed class EmailDelivery(
         }
 
         string? password = null;
-        if (smtp.HasPassword)
+        if (smtp.HasPassword && (password = protection.TryUnprotect(ProtectorPurpose, smtp.ProtectedPassword)) is null)
         {
-            try
-            {
-                password = protection.CreateProtector(ProtectorPurpose).Unprotect(smtp.ProtectedPassword);
-            }
-            catch (CryptographicException)
-            {
-                return new DomainError(
-                    ErrorCodes.EmailPasswordUnreadable,
-                    "The stored mail server password can no longer be read. Enter it again.");
-            }
+            return new DomainError(
+                ErrorCodes.EmailPasswordUnreadable,
+                "The stored mail server password can no longer be read. Enter it again.");
         }
 
         return new SmtpDelivery(

@@ -166,14 +166,14 @@ public sealed class AttachmentService(
             return AttachmentMissing;
         }
 
-        if (!files.Exists(id))
+        if (files.TryOpenRead(id) is not { } content)
         {
             logger.LogWarning("Attachment {AttachmentId} has no file in the attachment directory.", id);
             return FileMissing;
         }
 
         return new AttachmentDownload(
-            files.OpenRead(id),
+            content,
             attachment.FileName,
             attachment.ContentType,
             attachment.SizeBytes,
@@ -186,7 +186,7 @@ public sealed class AttachmentService(
         return db.DeleteOrNotFoundAsync<TransactionAttachment>(
             id,
             a => a.Id == typedId,
-            AttachmentMissing.Message,
+            AttachmentMissing,
             async attachment =>
             {
                 var transaction = await db.Transactions
@@ -216,15 +216,7 @@ public sealed class AttachmentService(
         IReadOnlyList<TransactionAttachment> attachments,
         CancellationToken cancellationToken)
     {
-        var userIds = attachments.Select(a => a.UserId).Distinct().ToList();
-        var names = await db.Users
-            .AsNoTracking()
-            .Where(u => userIds.Contains(u.Id))
-            .Select(u => new { u.Id, u.DisplayName, u.Email })
-            .ToDictionaryAsync(
-                u => u.Id,
-                u => AppUser.DisplayNameOrEmail(u.DisplayName, u.Email),
-                cancellationToken);
+        var names = await db.Users.DisplayNamesAsync(attachments.Select(a => a.UserId), cancellationToken);
 
         return
         [

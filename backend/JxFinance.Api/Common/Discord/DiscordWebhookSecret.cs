@@ -1,4 +1,3 @@
-using System.Security.Cryptography;
 using JxFinance.Common.Errors;
 using JxFinance.Domain.Common;
 using Microsoft.AspNetCore.DataProtection;
@@ -10,16 +9,11 @@ public static class DiscordWebhookSecret
     public const string ProtectorPurpose = "JxFinance.Discord.Webhook";
 
     public static string Protect(IDataProtectionProvider protection, string url) =>
-        protection.CreateProtector(ProtectorPurpose).Protect(url.Trim());
+        protection.Protect(ProtectorPurpose, url.Trim());
 
     public static Result<DiscordTarget> Read(IDataProtectionProvider protection, string protectedUrl)
     {
-        string url;
-        try
-        {
-            url = protection.CreateProtector(ProtectorPurpose).Unprotect(protectedUrl);
-        }
-        catch (CryptographicException)
+        if (protection.TryUnprotect(ProtectorPurpose, protectedUrl) is not { } url)
         {
             return new DomainError(
                 ErrorCodes.DiscordWebhookUnreadable,

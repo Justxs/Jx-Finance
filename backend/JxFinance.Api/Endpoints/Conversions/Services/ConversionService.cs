@@ -192,7 +192,7 @@ public sealed class ConversionService(
         return db.DeleteOrNotFoundAsync<CurrencyConversion>(
             id,
             c => c.Id == conversionId,
-            NotFound.Message,
+            NotFound,
             async conversion =>
             {
                 Transaction? fee = null;

@@ -15,7 +15,11 @@ public sealed record ParsedStatement(
     DateOnly? ClosingDate = null,
     Money? ClosingBalance = null,
     int NotBooked = 0,
-    int Unreadable = 0);
+    int Unreadable = 0)
+{
+    public const int MaxRows = 10000;
+    public const int DescriptionMaxLength = 500;
+}
 
 public sealed record ParsedRow(
     string ImportRef,

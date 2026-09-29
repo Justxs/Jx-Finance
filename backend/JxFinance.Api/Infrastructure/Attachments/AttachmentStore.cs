@@ -38,8 +38,17 @@ public sealed class AttachmentStore(IConfiguration configuration, IHostEnvironme
 
     public bool Exists(Guid id) => File.Exists(PathOf(id));
 
-    public Stream OpenRead(Guid id) =>
-        new FileStream(PathOf(id), FileMode.Open, FileAccess.Read, FileShare.Read, CopyBufferBytes, useAsync: true);
+    public Stream? TryOpenRead(Guid id)
+    {
+        try
+        {
+            return new FileStream(PathOf(id), FileMode.Open, FileAccess.Read, FileShare.Read, CopyBufferBytes, useAsync: true);
+        }
+        catch (Exception ex) when (ex is FileNotFoundException or DirectoryNotFoundException)
+        {
+            return null;
+        }
+    }
 
     public void Delete(Guid id) => File.Delete(PathOf(id));
 

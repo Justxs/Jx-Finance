@@ -69,39 +69,39 @@ public sealed class SettingsService(
             }
         }
 
-        await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
-
-        var settings = await LoadOrCreateAsync(cancellationToken);
-
-        if (settings.ReportingCurrency != request.ReportingCurrency)
-        {
-            var error = await RevalueAsync(request.ReportingCurrency, cancellationToken);
-            if (error is not null)
+        var failed = await UpdateStoredAsync(
+            async settings =>
             {
-                return new DomainError(ErrorCodes.ExchangeRateUnavailable, error);
-            }
+                if (settings.ReportingCurrency != request.ReportingCurrency
+                    && await RevalueAsync(request.ReportingCurrency, cancellationToken) is { } error)
+                {
+                    return new DomainError(ErrorCodes.ExchangeRateUnavailable, error);
+                }
+
+                var currencies = request.EnabledCurrencies
+                    .Append(request.ReportingCurrency)
+                    .Distinct()
+                    .OrderBy(c => c.ToCode(), StringComparer.Ordinal);
+
+                settings.InstanceName = OptionalText.Normalize(request.InstanceName);
+                settings.Features = request.Features;
+                settings.ReportingCurrency = request.ReportingCurrency;
+                settings.EnabledCurrencyCodes = string.Join(',', currencies.Select(c => c.ToCode()));
+                settings.ExchangeRateSyncEnabled = request.ExchangeRateSyncEnabled;
+                settings.DefaultLanguage = request.DefaultLanguage;
+                settings.TimeZone = request.TimeZone;
+                settings.FirstDayOfWeek = request.FirstDayOfWeek;
+                settings.DefaultAccountId = request.DefaultAccountId;
+                settings.DefaultPageSize = request.DefaultPageSize;
+                settings.SupportLinkEnabled = request.SupportLinkEnabled;
+                return null;
+            },
+            cancellationToken);
+
+        if (failed is not null)
+        {
+            return failed;
         }
-
-        var currencies = request.EnabledCurrencies
-            .Append(request.ReportingCurrency)
-            .Distinct()
-            .OrderBy(c => c.ToCode(), StringComparer.Ordinal);
-
-        settings.InstanceName = OptionalText.Normalize(request.InstanceName);
-        settings.Features = request.Features;
-        settings.ReportingCurrency = request.ReportingCurrency;
-        settings.EnabledCurrencyCodes = string.Join(',', currencies.Select(c => c.ToCode()));
-        settings.ExchangeRateSyncEnabled = request.ExchangeRateSyncEnabled;
-        settings.DefaultLanguage = request.DefaultLanguage;
-        settings.TimeZone = request.TimeZone;
-        settings.FirstDayOfWeek = request.FirstDayOfWeek;
-        settings.DefaultAccountId = request.DefaultAccountId;
-        settings.DefaultPageSize = request.DefaultPageSize;
-        settings.SupportLinkEnabled = request.SupportLinkEnabled;
-
-        await db.SaveChangesAsync(cancellationToken);
-        await transaction.CommitAsync(cancellationToken);
-        store.Set(settings);
 
         return await GetAsync(cancellationToken);
     }
@@ -110,12 +110,13 @@ public sealed class SettingsService(
 
     public async Task<Result<SmtpSettingsResponse>> UpdateSmtpAsync(
         UpdateSmtpSettingsRequest request,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken) =>
+        await UpdateStoredAsync(settings => Task.FromResult(ApplySmtp(request, settings)), cancellationToken) is { } error
+            ? error
+            : ToResponse(store.Current.Smtp);
+
+    private DomainError? ApplySmtp(UpdateSmtpSettingsRequest request, InstanceSettings settings)
     {
-        await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
-
-        var settings = await LoadOrCreateAsync(cancellationToken);
-
         var userName = OptionalText.Normalize(request.UserName);
         var host = OptionalText.Normalize(request.Host);
         var password = OptionalText.Normalize(request.Password);
@@ -144,16 +145,10 @@ public sealed class SettingsService(
         }
         else if (password is not null)
         {
-            settings.SmtpProtectedPassword = protection
-                .CreateProtector(EmailDelivery.ProtectorPurpose)
-                .Protect(password);
+            settings.SmtpProtectedPassword = protection.Protect(EmailDelivery.ProtectorPurpose, password);
         }
 
-        await db.SaveChangesAsync(cancellationToken);
-        await transaction.CommitAsync(cancellationToken);
-        store.Set(settings);
-
-        return ToResponse(store.Current.Smtp);
+        return null;
     }
 
     public async Task<Result<SmtpTestResponse>> SendTestEmailAsync(CancellationToken cancellationToken)
@@ -175,14 +170,30 @@ public sealed class SettingsService(
         return sent.IsSuccess ? new SmtpTestResponse(address) : sent.Error;
     }
 
-    public async Task UpdateDiscordAsync(UpdateDiscordSettingsRequest request, CancellationToken cancellationToken)
+    public Task UpdateDiscordAsync(UpdateDiscordSettingsRequest request, CancellationToken cancellationToken) =>
+        UpdateStoredAsync(
+            settings =>
+            {
+                settings.DiscordEnabled = request.Enabled;
+                return Task.FromResult<DomainError?>(null);
+            },
+            cancellationToken);
+
+    private async Task<DomainError?> UpdateStoredAsync(
+        Func<InstanceSettings, Task<DomainError?>> change,
+        CancellationToken cancellationToken)
     {
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
         var settings = await LoadOrCreateAsync(cancellationToken);
-        settings.DiscordEnabled = request.Enabled;
+        if (await change(settings) is { } error)
+        {
+            return error;
+        }
+
         await db.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
         store.Set(settings);
+        return null;
     }
 
     public async Task<ExchangeRateSyncResponse> SyncExchangeRatesAsync(CancellationToken cancellationToken)

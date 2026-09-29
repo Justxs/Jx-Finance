@@ -211,13 +211,13 @@ public sealed class BackupService(
         var attached = 0;
         foreach (var attachmentId in written.Attachments)
         {
-            if (!files.Exists(attachmentId))
+            await using var source = files.TryOpenRead(attachmentId);
+            if (source is null)
             {
                 logger.LogWarning("Attachment {AttachmentId} has no file and is left out of the backup.", attachmentId);
                 continue;
             }
 
-            await using var source = files.OpenRead(attachmentId);
             await using var target = await archive.CreateEntry(BackupArchive.AttachmentEntry(attachmentId), CompressionLevel.NoCompression).OpenAsync(cancellationToken);
             await source.CopyToAsync(target, cancellationToken);
             attached++;

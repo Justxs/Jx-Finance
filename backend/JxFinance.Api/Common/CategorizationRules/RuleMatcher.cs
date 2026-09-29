@@ -1,3 +1,4 @@
+using JxFinance.Domain.Categories;
 using JxFinance.Domain.CategorizationRules;
 using JxFinance.Domain.Common;
 
@@ -10,6 +11,19 @@ public static class RuleMatcher
         && (categoryType is not { } type || entry.Type == type)
         && AmountInRange(entry.Amount, rule.MinAmount, rule.MaxAmount)
         && Matches(rule.Match, rule.Pattern, entry.Description);
+
+    public static bool Applies(
+        CategorizationRule rule,
+        IReadOnlyDictionary<CategoryId, FlowType> categoryTypes,
+        LedgerEntry entry)
+    {
+        if (rule.CategoryId is not { } categoryId)
+        {
+            return Matches(rule, null, entry);
+        }
+
+        return categoryTypes.TryGetValue(categoryId, out var type) && Matches(rule, type, entry);
+    }
 
     public static bool Matches(DescriptionMatch match, string pattern, string? description)
     {

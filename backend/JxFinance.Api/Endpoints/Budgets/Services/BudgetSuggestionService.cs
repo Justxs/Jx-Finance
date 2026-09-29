@@ -55,7 +55,7 @@ public sealed class BudgetSuggestionService(
                     .Select(w => new BudgetWindowSpend(
                         w.Start,
                         w.LastDay,
-                        Money.Round(spend[c.Id].Where(a => w.Contains(a.Date)).Sum(a => a.Amount))))
+                        BudgetUsageCalculator.SpentIn(w, spend[c.Id])))
                     .ToList();
                 var amounts = spent.Select(w => w.Spent).ToList();
                 return new BudgetSuggestionResponse(
@@ -75,10 +75,6 @@ public sealed class BudgetSuggestionService(
     private List<BudgetWindow> WindowsSince(BudgetPeriod period, DateOnly earliest)
     {
         var current = BudgetWindow.For(clock.Today, period, settings.Current.FirstDayOfWeek);
-        return Enumerable.Range(1, BudgetHistory.Windows)
-            .Reverse()
-            .Select(back => current.Shift(-back))
-            .Where(w => w.LastDay >= earliest)
-            .ToList();
+        return current.Preceding(BudgetHistory.Windows).Where(w => w.LastDay >= earliest).ToList();
     }
 }

@@ -78,13 +78,9 @@ public sealed class MonthCloseService(
                 .Select(r => new { r.Id, r.Date, r.UpdatedAt })
                 .ToListAsync(cancellationToken);
         var reporting = settings.Current.ReportingCurrency;
-        var flows = await db.Transactions
-            .Where(t => t.Date >= start && t.Date < end)
-            .GroupBy(t => new { t.Date, t.Type })
-            .Select(g => new InvestmentCashFlow(g.Key.Date, g.Key.Type, g.Sum(t => t.ReportingAmount)))
-            .ToListAsync(cancellationToken);
-        var totals = flows
-            .Concat(await investmentCashFlows.GetFlowsAsync(new DateWindow(start, end), null, cancellationToken))
+        var span = new DateWindow(start, end);
+        var totals = (await db.Transactions.Within(span).DailyFlowsAsync(cancellationToken))
+            .Concat(await investmentCashFlows.GetFlowsAsync(span, null, cancellationToken))
             .ToLookup(f => (DateWindow.MonthOf(f.Date).Start, f.Type), f => f.Amount);
 
         var months = Enumerable.Range(0, 12).Select(offset =>
@@ -298,11 +294,11 @@ public sealed class MonthCloseService(
         var window = DateWindow.MonthOf(start);
         var summary = await reports.GetSummaryAsync(window.Start, window.InclusiveEnd, ReportComparisonMode.None, cancellationToken);
         var transactionIds = await db.Transactions
-            .Where(t => t.Date >= window.Start && t.Date < window.ExclusiveEnd)
+            .Within(window)
             .Select(t => t.Id.Value)
             .ToListAsync(cancellationToken);
         var entryIds = await db.InvestmentTransactions
-            .Where(t => t.Date >= window.Start && t.Date < window.ExclusiveEnd)
+            .Within(window)
             .Select(t => t.Id.Value)
             .ToListAsync(cancellationToken);
 
@@ -332,9 +328,7 @@ public sealed class MonthCloseService(
             return new MonthDrift(true, snapshot.ReportingCurrency, null, [], [], 0);
         }
 
-        var currentCount = await db.Transactions.CountAsync(
-            t => t.Date >= window.Start && t.Date < window.ExclusiveEnd,
-            cancellationToken);
+        var currentCount = await db.Transactions.Within(window).CountAsync(cancellationToken);
         var totals = new MonthDriftTotals(
             snapshot.TotalIncome,
             snapshot.TotalExpense,

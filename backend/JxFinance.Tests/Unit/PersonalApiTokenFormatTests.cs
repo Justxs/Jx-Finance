@@ -13,8 +13,8 @@ public sealed class PersonalApiTokenFormatTests
         Assert.Equal(issued.Prefix, prefix);
         Assert.Equal(PersonalApiTokenFormat.PrefixLength, prefix.Length);
         Assert.Equal(PersonalApiTokenFormat.HashLength, issued.SecretHash.Length);
-        Assert.True(PersonalApiTokenFormat.HashMatches(issued.SecretHash, secret));
-        Assert.False(PersonalApiTokenFormat.HashMatches(PersonalApiTokenFormat.Issue().SecretHash, secret));
+        Assert.True(SecretHash.Matches(issued.SecretHash, secret));
+        Assert.False(SecretHash.Matches(PersonalApiTokenFormat.Issue().SecretHash, secret));
         Assert.DoesNotContain(issued.Token, issued.ToString(), StringComparison.Ordinal);
     }
 

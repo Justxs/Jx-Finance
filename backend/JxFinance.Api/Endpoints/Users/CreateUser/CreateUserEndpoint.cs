@@ -17,5 +17,5 @@ public sealed class CreateUserEndpoint(IUserService userService) : Endpoint<Crea
     }
 
     public override async Task HandleAsync(CreateUserRequest req, CancellationToken ct) =>
-        await Send.CreatedOrProblemAsync(await userService.CreateAsync(req, ct), user => $"{ApiRoutes.UsersPath}/{user.Id}", ct);
+        await Send.CreatedOrProblemAsync(await userService.CreateAsync(req, ct), user => user.Id, ct);
 }

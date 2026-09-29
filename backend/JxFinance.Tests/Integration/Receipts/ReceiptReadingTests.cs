@@ -365,7 +365,7 @@ public sealed class ReceiptReadingTests(ApiFixture fixture) : IntegrationTestBas
             .SingleAsync(TestContext.Current.CancellationToken));
         await BackdateReadingsAsync(userId, TimeSpan.FromHours(25));
 
-        await Job<AttachmentPurgeJob>().RunOnceAsync(TestContext.Current.CancellationToken);
+        await Job<RetentionJob>().RunOnceAsync(TestContext.Current.CancellationToken);
 
         Assert.Equal([attached.Id], await ReadingIdsAsync(userId));
         Assert.DoesNotContain(unattached.Id, await ReadingIdsAsync(userId));
@@ -373,7 +373,7 @@ public sealed class ReceiptReadingTests(ApiFixture fixture) : IntegrationTestBas
         await WithDbAsync(db => db.TransactionAttachments.IgnoreQueryFilters()
             .Where(a => a.Id == new TransactionAttachmentId(attachment))
             .ExecuteUpdateAsync(s => s.SetProperty(a => a.UpdatedAt, DateTimeOffset.UtcNow.AddDays(-31)), TestContext.Current.CancellationToken));
-        await Job<AttachmentPurgeJob>().RunOnceAsync(TestContext.Current.CancellationToken);
+        await Job<RetentionJob>().RunOnceAsync(TestContext.Current.CancellationToken);
 
         Assert.Empty(await ReadingIdsAsync(userId));
     }

@@ -1,4 +1,3 @@
-using System.Globalization;
 using JxFinance.Common;
 using JxFinance.Common.Notifications;
 using JxFinance.Common.Settings;
@@ -16,8 +15,6 @@ public sealed class MonthCloseReminderJob(
     IClock clock,
     ILogger<MonthCloseReminderJob> logger) : PeriodicJob(scopeFactory, logger)
 {
-    public const int LastReminderDay = 5;
-
     protected override string Name => "Month-end close reminder";
 
     protected override TimeSpan Interval => TimeSpan.FromHours(1);
@@ -26,8 +23,7 @@ public sealed class MonthCloseReminderJob(
 
     protected override async Task RunAsync(IServiceProvider services, CancellationToken ct)
     {
-        var today = clock.Today;
-        if (today.Day > LastReminderDay)
+        if (ClosingMonth.On(clock.Today) is not (var month, var monthText))
         {
             return;
         }
@@ -38,8 +34,6 @@ public sealed class MonthCloseReminderJob(
         await using var transaction = await db.Database.BeginTransactionAsync(ct);
         await db.Database.LockAsync(AppLock.MonthCloseReminders, ct);
 
-        var month = DateWindow.MonthOf(today).Start.AddMonths(-1);
-        var monthText = month.ToString(NotificationTexts.MonthFormat, CultureInfo.InvariantCulture);
         var closes = db.MonthCloses.IgnoreQueryFilters(QueryFilters.OwnerOnly);
         var reminders = db.Notifications.IgnoreQueryFilters()
             .Where(n => n.Type == NotificationType.MonthReadyToClose && n.Message == monthText);

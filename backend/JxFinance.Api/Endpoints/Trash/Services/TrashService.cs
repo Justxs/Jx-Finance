@@ -52,7 +52,7 @@ public sealed class TrashService(
             .OrderByDescending(e => e.DeletedAt)
             .FindOrNotFoundAsync(
                 e => e.Kind == request.Kind && e.EntityId == request.EntityId,
-                "Nothing you deleted matches that record.",
+                EntityLookup.NotFound("Nothing you deleted matches that record."),
                 cancellationToken);
         if (!found.TryGetValue(out var entry))
         {

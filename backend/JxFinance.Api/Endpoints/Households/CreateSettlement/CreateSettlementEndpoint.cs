@@ -21,6 +21,6 @@ public sealed class CreateSettlementEndpoint(ISettleUpService settleUpService)
     public override async Task HandleAsync(CreateSettlementRequest req, CancellationToken ct) =>
         await Send.CreatedOrProblemAsync(
             await settleUpService.CreateSettlementAsync(req, ct),
-            settlement => $"{ApiRoutes.HouseholdsPath}/{req.Id}/settlements/{settlement.Id}",
+            settlement => settlement.Id,
             ct);
 }

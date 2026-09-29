@@ -27,20 +27,20 @@ public sealed class Result
 
 public sealed class Result<T>
 {
-    private Result(bool isSuccess, T? value, string? errorCode, string? errorMessage)
+    private Result(T? value, DomainError? error)
     {
-        IsSuccess = isSuccess;
         Value = value;
-        ErrorCode = errorCode;
-        ErrorMessage = errorMessage;
+        FailureError = error;
     }
 
-    public bool IsSuccess { get; }
+    private DomainError? FailureError { get; }
+
+    public bool IsSuccess => FailureError is null;
     public bool IsFailure => !IsSuccess;
     public T? Value { get; }
-    public string? ErrorCode { get; }
-    public string? ErrorMessage { get; }
-    public DomainError Error => new(ErrorCode!, ErrorMessage!);
+    public string? ErrorCode => FailureError?.Code;
+    public string? ErrorMessage => FailureError?.Message;
+    public DomainError Error => FailureError!;
 
     public bool TryGetValue([NotNullWhen(true)] out T? value)
     {
@@ -49,13 +49,13 @@ public sealed class Result<T>
     }
 
     public Result<TOut> Map<TOut>(Func<T, TOut> map) =>
-        IsSuccess ? map(Value!) : Result<TOut>.Failure(ErrorCode!, ErrorMessage!);
+        IsSuccess ? map(Value!) : Result<TOut>.Failure(Error);
 
-    public static Result<T> Success(T value) => new(true, value, null, null);
+    public static Result<T> Success(T value) => new(value, null);
 
-    public static Result<T> Failure(string code, string message) => new(false, default, code, message);
+    public static Result<T> Failure(string code, string message) => new(default, new DomainError(code, message));
 
-    public static Result<T> Failure(DomainError error) => Failure(error.Code, error.Message);
+    public static Result<T> Failure(DomainError error) => new(default, error);
 
     public static implicit operator Result<T>(T value) => Success(value);
 

@@ -15,5 +15,5 @@ public sealed class CreateDebtEndpoint(INetWorthService netWorthService) : Endpo
     }
 
     public override async Task HandleAsync(CreateDebtRequest req, CancellationToken ct) =>
-        await Send.CreatedOrProblemAsync(await netWorthService.CreateDebtAsync(req, ct), debt => $"{ApiRoutes.DebtsPath}/{debt.Id}", ct);
+        await Send.CreatedOrProblemAsync(await netWorthService.CreateDebtAsync(req, ct), debt => debt.Id, ct);
 }

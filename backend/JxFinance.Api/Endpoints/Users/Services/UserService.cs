@@ -55,7 +55,7 @@ public sealed class UserService(
         if (request.IsActive is { } isActive)
         {
             query = isActive
-                ? query.Where(u => u.LockoutEnd == null || u.LockoutEnd < AppUser.DeactivatedUntil)
+                ? query.Where(AppUser.IsNotDeactivated)
                 : query.Where(u => u.LockoutEnd >= AppUser.DeactivatedUntil);
         }
 
@@ -193,8 +193,8 @@ public sealed class UserService(
         var administrators = await (
             from userRole in db.UserRoles
             join role in db.Roles on userRole.RoleId equals role.Id
-            join user in db.Users on userRole.UserId equals user.Id
-            where role.Name == AppRoles.Admin && (user.LockoutEnd == null || user.LockoutEnd < AppUser.DeactivatedUntil)
+            join user in db.Users.Where(AppUser.IsNotDeactivated) on userRole.UserId equals user.Id
+            where role.Name == AppRoles.Admin
             select user.Id).ToListAsync(cancellationToken);
         return administrators.Contains(id) && administrators.Count == 1;
     }

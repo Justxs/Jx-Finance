@@ -25,4 +25,8 @@ public interface IReferenceGuard
         CancellationToken cancellationToken);
 
     Task<DomainError?> TagsExistAsync(IEnumerable<Guid> tagIds, CancellationToken cancellationToken);
+
+    Task<IReadOnlyDictionary<CategoryId, FlowType>> CategoryTypesAsync(
+        IEnumerable<CategoryId?> categoryIds,
+        CancellationToken cancellationToken);
 }

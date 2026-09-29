@@ -17,7 +17,7 @@ namespace JxFinance.Endpoints.Imports.Services;
 [RegisterService<ICsvMappingService>(LifeTime.Scoped)]
 public sealed class CsvMappingService(AppDbContext db, IDeletionRecorder deletions) : ICsvMappingService
 {
-    private const string NotFound = "CSV mapping not found.";
+    private static readonly DomainError NotFound = EntityLookup.NotFound("CSV mapping not found.");
 
     public async Task<IReadOnlyList<CsvMappingResponse>> GetAllAsync(CancellationToken cancellationToken)
     {

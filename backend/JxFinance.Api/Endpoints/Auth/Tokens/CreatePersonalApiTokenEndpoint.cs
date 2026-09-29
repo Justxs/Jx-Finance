@@ -18,6 +18,6 @@ public sealed class CreatePersonalApiTokenEndpoint(IPersonalApiTokenService toke
     public override async Task HandleAsync(CreatePersonalApiTokenRequest req, CancellationToken ct) =>
         await Send.CreatedOrProblemAsync(
             await tokenService.CreateAsync(req, ct),
-            token => $"{ApiRoutes.AuthPath}/tokens/{token.Id}",
+            token => token.Id,
             ct);
 }

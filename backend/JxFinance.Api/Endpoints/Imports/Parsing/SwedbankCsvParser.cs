@@ -54,10 +54,10 @@ public static class SwedbankCsvParser
             var importRef = csv.GetField(8)!.Trim();
 
             if (direction is not ("D" or "K") || !CurrencyCode.TryParse(csv.GetField(6), out var currency)
-                || string.IsNullOrWhiteSpace(importRef) || importRef.Length > 64
-                || amount <= 0 || !DecimalRules.FitsMoney(amount) || description?.Length > 500)
+                || string.IsNullOrWhiteSpace(importRef) || importRef.Length > ImportReferences.MaxLength
+                || amount <= 0 || !DecimalRules.FitsMoney(amount) || description?.Length > ParsedStatement.DescriptionMaxLength)
                 throw new FormatException("Invalid bank entry.");
-            if (rows.Count >= 10000) throw new FormatException("At most 10000 entries can be imported at once.");
+            if (rows.Count >= ParsedStatement.MaxRows) throw new FormatException($"At most {ParsedStatement.MaxRows} entries can be imported at once.");
 
             rows.Add(new ParsedRow(
                 importRef,

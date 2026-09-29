@@ -25,7 +25,7 @@ public sealed class DiscordWebhookService(
     IInstanceSettingsStore store,
     IClock clock) : IDiscordWebhookService
 {
-    private const string NoWebhook = "No Discord webhook is saved on your profile.";
+    private static readonly DomainError NoWebhook = EntityLookup.NotFound("No Discord webhook is saved on your profile.");
 
     public async Task<DiscordWebhookResponse> GetAsync(CancellationToken cancellationToken)
     {
@@ -112,7 +112,7 @@ public sealed class DiscordWebhookService(
 
         if (await db.DiscordWebhooks.FirstOrDefaultAsync(w => w.UserId == currentUser.Id, cancellationToken) is not { } webhook)
         {
-            return EntityLookup.NotFound(NoWebhook);
+            return NoWebhook;
         }
 
         var target = DiscordWebhookSecret.Read(protection, webhook.ProtectedUrl);

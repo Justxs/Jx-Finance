@@ -16,5 +16,5 @@ public sealed class CreateCsvMappingEndpoint(ICsvMappingService mappingService)
     }
 
     public override async Task HandleAsync(CreateCsvMappingRequest req, CancellationToken ct) =>
-        await Send.CreatedOrProblemAsync(await mappingService.CreateAsync(req, ct), mapping => $"{ApiRoutes.CsvMappingsPath}/{mapping.Id}", ct);
+        await Send.CreatedOrProblemAsync(await mappingService.CreateAsync(req, ct), mapping => mapping.Id, ct);
 }

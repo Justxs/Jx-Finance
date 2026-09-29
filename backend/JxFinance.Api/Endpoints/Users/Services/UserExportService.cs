@@ -73,7 +73,12 @@ public sealed class UserExportService(
 
             foreach (var id in present)
             {
-                await using var source = files.OpenRead(id);
+                await using var source = files.TryOpenRead(id);
+                if (source is null)
+                {
+                    continue;
+                }
+
                 await WriteEntryAsync(archive, BackupArchive.AttachmentEntry(id), CompressionLevel.NoCompression, target => source.CopyToAsync(target, cancellationToken), cancellationToken);
             }
         }

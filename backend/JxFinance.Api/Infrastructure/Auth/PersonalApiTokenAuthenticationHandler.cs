@@ -35,10 +35,10 @@ public sealed class PersonalApiTokenAuthenticationHandler(
             .AsNoTracking()
             .Where(t => t.Prefix == prefix
                 && t.ExpiresAt > now
-                && db.Users.Any(u => u.Id == t.UserId && (u.LockoutEnd == null || u.LockoutEnd < AppUser.DeactivatedUntil)))
+                && db.Users.Where(AppUser.IsNotDeactivated).Any(u => u.Id == t.UserId))
             .Select(t => new { t.Id, t.UserId, t.SecretHash, t.LastUsedAt })
             .FirstOrDefaultAsync(CancellationToken.None);
-        if (token is null || !PersonalApiTokenFormat.HashMatches(token.SecretHash, secret))
+        if (token is null || !SecretHash.Matches(token.SecretHash, secret))
         {
             return AuthenticateResult.Fail("The personal API token is unknown, expired or revoked.");
         }

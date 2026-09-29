@@ -41,9 +41,9 @@ public sealed class NetWorthService(
     IDeletionRecorder deletions,
     ICurrentUser currentUser) : INetWorthService
 {
-    private const string AssetNotFound = "Asset not found.";
-    private const string DebtNotFound = "Debt not found.";
-    private const string PaymentNotFound = "That payment is not linked to this debt.";
+    private static readonly DomainError AssetNotFound = EntityLookup.NotFound("Asset not found.");
+    private static readonly DomainError DebtNotFound = EntityLookup.NotFound("Debt not found.");
+    private static readonly DomainError PaymentNotFound = EntityLookup.NotFound("That payment is not linked to this debt.");
 
     public async Task<IReadOnlyList<AssetResponse>> GetAssetsAsync(CancellationToken cancellationToken)
     {
@@ -132,7 +132,7 @@ public sealed class NetWorthService(
 
         var point = await db.AssetValuations.FindOrNotFoundAsync(
             v => v.AssetId == asset.Id && v.Date == request.Date,
-            "No valuation is recorded for that date.",
+            EntityLookup.NotFound("No valuation is recorded for that date."),
             cancellationToken);
         if (!point.TryGetValue(out var valuation))
         {
@@ -377,7 +377,7 @@ public sealed class NetWorthService(
 
         var paymentId = new DebtPaymentId(request.PaymentId);
         var removed = await db.DebtPayments.Where(p => p.Id == paymentId && p.DebtId == debt.Id).ExecuteDeleteAsync(cancellationToken);
-        return removed == 1 ? Result.Success() : EntityLookup.NotFound(PaymentNotFound);
+        return removed == 1 ? Result.Success() : PaymentNotFound;
     }
 
     public async Task<Result<IReadOnlyList<TransactionResponse>>> GetDebtPaymentCandidatesAsync(

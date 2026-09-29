@@ -1,4 +1,3 @@
-using System.Globalization;
 using JxFinance.Common;
 using JxFinance.Common.Notifications;
 using JxFinance.Common.Settings;
@@ -17,8 +16,6 @@ public sealed class MonthlyDigestJob(
     IClock clock,
     ILogger<MonthlyDigestJob> logger) : PeriodicJob(scopeFactory, logger)
 {
-    public const int LastDigestDay = 5;
-
     protected override string Name => "Monthly digest";
 
     protected override TimeSpan Interval => TimeSpan.FromHours(1);
@@ -27,14 +24,11 @@ public sealed class MonthlyDigestJob(
 
     protected override async Task RunAsync(IServiceProvider services, CancellationToken ct)
     {
-        var today = clock.Today;
-        if (today.Day > LastDigestDay)
+        if (ClosingMonth.On(clock.Today) is not (var month, var monthText))
         {
             return;
         }
 
-        var month = DateWindow.MonthOf(today).Start.AddMonths(-1);
-        var monthText = month.ToString(NotificationTexts.MonthFormat, CultureInfo.InvariantCulture);
         foreach (var userId in await SubscribersAsync(services, monthText, ct))
         {
             await RunAsUserAsync(userId, scoped => SendAsync(scoped, userId, month, monthText, ct));

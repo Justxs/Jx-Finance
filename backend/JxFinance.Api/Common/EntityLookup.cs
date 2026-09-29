@@ -13,14 +13,14 @@ public static class EntityLookup
     public static async Task<Result<T>> FindOrNotFoundAsync<T>(
         this IQueryable<T> query,
         Expression<Func<T, bool>> predicate,
-        string message,
+        DomainError notFound,
         CancellationToken cancellationToken)
         where T : class
     {
         var entity = await query.FirstOrDefaultAsync(predicate, cancellationToken);
         if (entity is null)
         {
-            return NotFound(message);
+            return notFound;
         }
 
         return entity;
@@ -29,12 +29,12 @@ public static class EntityLookup
     public static async Task<Result<T>> UpdateOrNotFoundAsync<T>(
         this AppDbContext db,
         Expression<Func<T, bool>> predicate,
-        string message,
+        DomainError notFound,
         Action<T> apply,
         CancellationToken cancellationToken)
         where T : class
     {
-        var found = await db.Set<T>().FindOrNotFoundAsync(predicate, message, cancellationToken);
+        var found = await db.Set<T>().FindOrNotFoundAsync(predicate, notFound, cancellationToken);
         if (found.TryGetValue(out var entity))
         {
             apply(entity);
@@ -48,23 +48,23 @@ public static class EntityLookup
         this AppDbContext db,
         Guid id,
         Expression<Func<T, bool>> predicate,
-        string message,
+        DomainError notFound,
         CancellationToken cancellationToken)
         where T : class =>
-        db.DeleteOrNotFoundAsync(id, predicate, message, _ => { }, cancellationToken);
+        db.DeleteOrNotFoundAsync(id, predicate, notFound, _ => { }, cancellationToken);
 
     public static Task<Result<Guid>> DeleteOrNotFoundAsync<T>(
         this AppDbContext db,
         Guid id,
         Expression<Func<T, bool>> predicate,
-        string message,
+        DomainError notFound,
         Action<T> beforeDelete,
         CancellationToken cancellationToken)
         where T : class =>
         db.DeleteOrNotFoundAsync<T>(
             id,
             predicate,
-            message,
+            notFound,
             entity =>
             {
                 beforeDelete(entity);
@@ -76,12 +76,12 @@ public static class EntityLookup
         this AppDbContext db,
         Guid id,
         Expression<Func<T, bool>> predicate,
-        string message,
+        DomainError notFound,
         Func<T, Task<DomainError?>> beforeDelete,
         CancellationToken cancellationToken)
         where T : class
     {
-        var found = await db.Set<T>().FindOrNotFoundAsync(predicate, message, cancellationToken);
+        var found = await db.Set<T>().FindOrNotFoundAsync(predicate, notFound, cancellationToken);
         if (!found.TryGetValue(out var entity))
         {
             return found.Error;

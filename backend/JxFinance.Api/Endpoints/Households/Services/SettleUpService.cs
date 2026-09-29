@@ -32,8 +32,8 @@ public sealed class SettleUpService(
     ITransferService transfers) : ISettleUpService
 {
     private const string HouseholdMissing = "Household not found.";
-    private const string ExpenseMissing = "Split not found.";
-    private const string SettlementMissing = "Payment not found.";
+    private static readonly DomainError ExpenseMissing = EntityLookup.NotFound("Split not found.");
+    private static readonly DomainError SettlementMissing = EntityLookup.NotFound("Payment not found.");
 
     private static readonly DomainError TransactionNotFound = new(ErrorCodes.ReferenceNotFound, "Transaction not found.");
     private static readonly DomainError AccountNotFound = new(ErrorCodes.ReferenceNotFound, "Account not found.");
@@ -338,12 +338,7 @@ public sealed class SettleUpService(
     private async Task<Result<HouseholdId>> HouseholdAsync(Guid id, CancellationToken cancellationToken)
     {
         var householdId = new HouseholdId(id);
-        if (currentUser.ActiveHouseholdId is { } active && active != householdId)
-        {
-            return EntityLookup.NotFound(HouseholdMissing);
-        }
-
-        return await db.Households.AnyAsync(h => h.Id == householdId, cancellationToken)
+        return await HouseholdVisibility.IsVisibleAsync(db, currentUser, householdId, cancellationToken)
             ? householdId
             : EntityLookup.NotFound(HouseholdMissing);
     }
@@ -561,16 +556,8 @@ public sealed class SettleUpService(
                 .ToListAsync(cancellationToken),
         ];
 
-    private async Task<Dictionary<Guid, string>> NamesAsync(IEnumerable<Guid> userIds, CancellationToken cancellationToken)
-    {
-        var ids = userIds.Distinct().ToList();
-        var users = await db.Users
-            .AsNoTracking()
-            .Where(u => ids.Contains(u.Id))
-            .Select(u => new { u.Id, u.DisplayName, u.Email })
-            .ToListAsync(cancellationToken);
-        return users.ToDictionary(u => u.Id, u => AppUser.DisplayNameOrEmail(u.DisplayName, u.Email));
-    }
+    private Task<Dictionary<Guid, string>> NamesAsync(IEnumerable<Guid> userIds, CancellationToken cancellationToken) =>
+        db.Users.DisplayNamesAsync(userIds, cancellationToken);
 
     private async Task<List<SharedExpenseResponse>> DescribeAsync(
         IReadOnlyCollection<SharedExpense> expenses,

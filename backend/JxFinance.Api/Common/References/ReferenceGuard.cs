@@ -62,6 +62,18 @@ public sealed class ReferenceGuard(AppDbContext db) : IReferenceGuard
             : TagMissing;
     }
 
+    public async Task<IReadOnlyDictionary<CategoryId, FlowType>> CategoryTypesAsync(
+        IEnumerable<CategoryId?> categoryIds,
+        CancellationToken cancellationToken)
+    {
+        var wanted = categoryIds.OfType<CategoryId>().Distinct().ToList();
+        return wanted.Count == 0
+            ? new Dictionary<CategoryId, FlowType>()
+            : await db.Categories
+                .Where(c => wanted.Contains(c.Id))
+                .ToDictionaryAsync(c => c.Id, c => c.Type, cancellationToken);
+    }
+
     private Task<FlowType?> TypeOfAsync(CategoryId categoryId, CancellationToken cancellationToken) =>
         db.Categories
             .Where(c => c.Id == categoryId)

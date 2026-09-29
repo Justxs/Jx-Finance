@@ -2,6 +2,13 @@ namespace JxFinance.Domain.Investments;
 
 public static class Portfolio
 {
+    public static readonly InvestmentTransactionType[] PositionTypes =
+    [
+        InvestmentTransactionType.Buy,
+        InvestmentTransactionType.Sell,
+        InvestmentTransactionType.Split,
+    ];
+
     public static IReadOnlyDictionary<SecurityId, Position> Positions(IEnumerable<InvestmentTransaction> transactions)
     {
         var positions = new Dictionary<SecurityId, Position>();

@@ -32,13 +32,6 @@ public sealed class StatementImport(
     private const decimal QuantityTolerance = 0.0001m;
     private static readonly string[] SecurityCategories = ["STK", "FUND"];
 
-    private static readonly InvestmentTransactionType[] ReplayedTypes =
-    [
-        InvestmentTransactionType.Buy,
-        InvestmentTransactionType.Sell,
-        InvestmentTransactionType.Split,
-    ];
-
     private static readonly (string Marker, InvestmentTransactionType Type)[] CashTypes =
     [
         ("Withholding Tax", InvestmentTransactionType.WithholdingTax),
@@ -565,7 +558,7 @@ public sealed class StatementImport(
 
         var asOf = reported.Max(p => p.Date);
         var entries = await db.InvestmentTransactions
-            .Where(t => t.AccountId == account && t.Date <= asOf && ReplayedTypes.Contains(t.Type))
+            .Where(t => t.AccountId == account && t.Date <= asOf && Portfolio.PositionTypes.Contains(t.Type))
             .ToListAsync(cancellationToken);
         var replayed = Portfolio.Positions(entries).ToDictionary(p => p.Key, p => p.Value.Quantity);
 

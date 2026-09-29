@@ -1,5 +1,5 @@
+using JxFinance.Common;
 using JxFinance.Common.CategoryAttributions;
-using JxFinance.Common.InvestmentCashFlows;
 using JxFinance.Domain.Categories;
 using JxFinance.Domain.Common;
 
@@ -10,10 +10,10 @@ public static class CategoryBreakdownBuilder
     public static IReadOnlyList<CategoryBreakdownItem> Build(
         IEnumerable<CategoryAttribution> attributions,
         IReadOnlyDictionary<CategoryId, Category> categories,
-        IEnumerable<InvestmentCashFlow> investmentFlows,
+        IEnumerable<DatedFlow> investmentFlows,
         FlowType type,
         IEnumerable<CategoryAttribution>? comparisonAttributions = null,
-        IEnumerable<InvestmentCashFlow>? comparisonFlows = null)
+        IEnumerable<DatedFlow>? comparisonFlows = null)
     {
         var current = Totals(attributions);
         var earlier = comparisonAttributions is null ? null : Totals(comparisonAttributions);

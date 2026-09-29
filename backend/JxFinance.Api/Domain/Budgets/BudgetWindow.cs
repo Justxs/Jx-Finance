@@ -15,6 +15,12 @@ public readonly record struct BudgetWindow(BudgetPeriod Period, DateOnly Start, 
 
     public BudgetWindow Shift(int windows) => FromStart(Period, ShiftStart(Start, Period, windows));
 
+    public IEnumerable<BudgetWindow> Preceding(int count)
+    {
+        var current = this;
+        return Enumerable.Range(1, count).Reverse().Select(back => current.Shift(-back));
+    }
+
     private static BudgetWindow FromStart(BudgetPeriod period, DateOnly start) =>
         new(period, start, ShiftStart(start, period, 1));
 

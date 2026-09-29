@@ -91,7 +91,7 @@ public sealed class AuthService(
     {
         var rejected = new DomainError(ErrorCodes.CredentialsInvalid, "Invalid email or password.");
         var user = await userManager.FindByEmailAsync(email);
-        if (user?.PasswordHash is null || user.IsDeactivated)
+        if (user is not { CanSignIn: true })
         {
             return rejected;
         }

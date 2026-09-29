@@ -71,14 +71,10 @@ public sealed class TransferService(
         CancellationToken cancellationToken)
     {
         var transferId = new TransferId(request.Id);
-        if (await db.Transfers.FirstOrDefaultAsync(t => t.Id == transferId, cancellationToken) is not { } transfer)
+        var found = await FindEditableAsync(transferId, cancellationToken);
+        if (!found.TryGetValue(out var transfer))
         {
-            return NotFound;
-        }
-
-        if (!await SeesBothAccountsAsync(transfer, cancellationToken))
-        {
-            return new DomainError(ErrorCodes.AccessForbidden, "Access to both accounts is required.");
+            return found.Error;
         }
 
         var draft = ToDraft(request);
@@ -110,14 +106,10 @@ public sealed class TransferService(
     public async Task<Result<Guid>> DeleteAsync(Guid id, CancellationToken cancellationToken)
     {
         var transferId = new TransferId(id);
-        if (await db.Transfers.FirstOrDefaultAsync(t => t.Id == transferId, cancellationToken) is not { } transfer)
+        var found = await FindEditableAsync(transferId, cancellationToken);
+        if (!found.TryGetValue(out var transfer))
         {
-            return NotFound;
-        }
-
-        if (!await SeesBothAccountsAsync(transfer, cancellationToken))
-        {
-            return new DomainError(ErrorCodes.AccessForbidden, "Access to both accounts is required.");
+            return found.Error;
         }
 
         deletions.Record(
@@ -174,8 +166,15 @@ public sealed class TransferService(
         return null;
     }
 
-    private async Task<bool> SeesBothAccountsAsync(Transfer transfer, CancellationToken cancellationToken) =>
-        await db.Accounts.CountAsync(
-            a => a.Id == transfer.FromAccountId || a.Id == transfer.ToAccountId,
-            cancellationToken) == 2;
+    private async Task<Result<Transfer>> FindEditableAsync(TransferId transferId, CancellationToken cancellationToken)
+    {
+        if (await db.Transfers.FirstOrDefaultAsync(t => t.Id == transferId, cancellationToken) is not { } transfer)
+        {
+            return NotFound;
+        }
+
+        return await db.SeesBothAccountsAsync(transfer, cancellationToken)
+            ? transfer
+            : new DomainError(ErrorCodes.AccessForbidden, "Access to both accounts is required.");
+    }
 }

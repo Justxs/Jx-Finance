@@ -151,7 +151,7 @@ public sealed class RecurringBillService(
         return db.DeleteOrNotFoundAsync<RecurringBill>(
             id,
             b => b.Id == billId,
-            NotFound.Message,
+            NotFound,
             bill => deletions.Record(TrashKind.RecurringBill, id, bill.Name),
             cancellationToken);
     }

@@ -23,12 +23,7 @@ public sealed class HouseholdAuditService(AppDbContext db, ICurrentUser currentU
         CancellationToken cancellationToken)
     {
         var householdId = new HouseholdId(request.Id);
-        if (currentUser.ActiveHouseholdId is { } active && active != householdId)
-        {
-            return NotFound;
-        }
-
-        if (!await db.Households.AnyAsync(h => h.Id == householdId, cancellationToken))
+        if (!await HouseholdVisibility.IsVisibleAsync(db, currentUser, householdId, cancellationToken))
         {
             return NotFound;
         }
@@ -61,13 +56,7 @@ public sealed class HouseholdAuditService(AppDbContext db, ICurrentUser currentU
             sorted => sorted.OrderByDescending(e => e.OccurredAt).ThenBy(e => e.EntityKind).ThenBy(e => e.Id),
             cancellationToken);
 
-        var actorIds = page.Items.Select(e => e.ActorUserId).Distinct().ToList();
-        var actors = await db.Users
-            .AsNoTracking()
-            .Where(u => actorIds.Contains(u.Id))
-            .Select(u => new { u.Id, u.DisplayName, u.Email })
-            .ToListAsync(cancellationToken);
-        var names = actors.ToDictionary(u => u.Id, u => AppUser.DisplayNameOrEmail(u.DisplayName, u.Email));
+        var names = await db.Users.DisplayNamesAsync(page.Items.Select(e => e.ActorUserId), cancellationToken);
 
         return page.Map(e => ToResponse(e, names.GetValueOrDefault(e.ActorUserId) ?? ""));
     }

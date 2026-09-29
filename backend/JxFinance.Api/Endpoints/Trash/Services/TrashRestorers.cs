@@ -21,6 +21,8 @@ using JxFinance.Domain.Transactions;
 using JxFinance.Domain.Transfers;
 using JxFinance.Domain.Trash;
 using JxFinance.Endpoints.CategorizationRules.Shared;
+using JxFinance.Endpoints.Tags.Shared;
+using JxFinance.Endpoints.Transfers.Shared;
 using JxFinance.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -235,11 +237,7 @@ public static class TrashRestorers
 
     private static async Task<Result> CheckTransferAsync(TrashRestore r, Transfer transfer)
     {
-        var visible = await r.Db.Accounts.CountAsync(
-            a => a.Id == transfer.FromAccountId || a.Id == transfer.ToAccountId,
-            r.CancellationToken);
-
-        return visible == 2 ? Result.Success() : AccountGone;
+        return await r.Db.SeesBothAccountsAsync(transfer, r.CancellationToken) ? Result.Success() : AccountGone;
     }
 
     private static async Task<Result> RestoreConversionAsync(TrashRestore r, CurrencyConversion conversion)
@@ -422,15 +420,7 @@ public static class TrashRestorers
     {
         var db = r.Db;
         var tagId = tag.Id;
-        var pattern = LikePattern.Exactly(tag.Name);
-        var nameTaken = await db.Tags
-            .IgnoreQueryFilters(QueryFilters.OwnerOnly)
-            .AnyAsync(
-                t => t.UserId == tag.UserId
-                    && t.Id != tagId
-                    && EF.Functions.ILike(t.Name, pattern, LikePattern.Escape),
-                r.CancellationToken);
-        if (nameTaken)
+        if (await TagNames.TakenAsync(db, tag.UserId, tag.Name, tagId, r.CancellationToken))
         {
             return new DomainError(
                 ErrorCodes.RestoreNameTaken,
@@ -457,10 +447,7 @@ public static class TrashRestorers
     private static async Task<Result> RestoreRuleAsync(TrashRestore r, CategorizationRule rule)
     {
         var db = r.Db;
-        var rules = await db.CategorizationRules
-            .OrderBy(x => x.Position)
-            .ThenBy(x => x.CreatedAt)
-            .ToListAsync(r.CancellationToken);
+        var rules = await db.CategorizationRules.Ordered().ToListAsync(r.CancellationToken);
         if (rules.Count >= RuleLimits.MaxRulesPerUser)
         {
             return new DomainError(
@@ -476,10 +463,7 @@ public static class TrashRestorers
             .ToListAsync(r.CancellationToken);
 
         rules.Insert(Math.Clamp(rule.Position, 0, rules.Count), rule);
-        for (var index = 0; index < rules.Count; index++)
-        {
-            rules[index].Position = index;
-        }
+        rules.Renumber();
 
         var ruleId = rule.Id;
         db.CategorizationRuleTags.AddRange(tags.Select(tagId => new CategorizationRuleTag { RuleId = ruleId, TagId = tagId }));

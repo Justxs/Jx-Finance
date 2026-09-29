@@ -17,5 +17,5 @@ public sealed class CreateCategorizationRuleEndpoint(ICategorizationRuleService 
     }
 
     public override async Task HandleAsync(CreateCategorizationRuleRequest req, CancellationToken ct) =>
-        await Send.CreatedOrProblemAsync(await ruleService.CreateAsync(req, ct), rule => $"{ApiRoutes.CategorizationRulesPath}/{rule.Id}", ct);
+        await Send.CreatedOrProblemAsync(await ruleService.CreateAsync(req, ct), rule => rule.Id, ct);
 }

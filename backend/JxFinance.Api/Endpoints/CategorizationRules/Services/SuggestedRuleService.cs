@@ -32,7 +32,9 @@ public sealed class SuggestedRuleService(
         }
 
         var rows = await HistoryAsync(cancellationToken);
-        var categoryTypes = await CategoryTypesAsync(rules, rows, cancellationToken);
+        var categoryTypes = await references.CategoryTypesAsync(
+            rules.Select(rule => rule.CategoryId).Concat(rows.Select(row => row.CategoryId)),
+            cancellationToken);
         var dismissed = await DismissedAsync(cancellationToken);
 
         var found = new List<Found>();
@@ -46,7 +48,7 @@ public sealed class SuggestedRuleService(
             var handFiled = group
                 .Where(row => row.CategoryId is { } categoryId
                     && categoryTypes.ContainsKey(categoryId)
-                    && !rules.Any(rule => Matches(rule, categoryTypes, row.Entry)))
+                    && !rules.Any(rule => RuleMatcher.Applies(rule, categoryTypes, row.Entry)))
                 .GroupBy(row => row.CategoryId!.Value);
             foreach (var evidence in handFiled)
             {
@@ -128,19 +130,6 @@ public sealed class SuggestedRuleService(
         return new SuggestedRuleResponse(key, name, match, pattern, categoryId.Value, evidence.Count, evidence[0].Date);
     }
 
-    private static bool Matches(
-        CategorizationRule rule,
-        IReadOnlyDictionary<CategoryId, FlowType> categoryTypes,
-        LedgerEntry entry)
-    {
-        if (rule.CategoryId is not { } categoryId)
-        {
-            return RuleMatcher.Matches(rule, null, entry);
-        }
-
-        return categoryTypes.TryGetValue(categoryId, out var type) && RuleMatcher.Matches(rule, type, entry);
-    }
-
     private async Task<List<HistoryRow>> HistoryAsync(CancellationToken cancellationToken)
     {
         var userId = currentUser.Id;
@@ -162,25 +151,6 @@ public sealed class SuggestedRuleService(
                 t.CategoryId,
                 t.Date))
             .ToList();
-    }
-
-    private async Task<IReadOnlyDictionary<CategoryId, FlowType>> CategoryTypesAsync(
-        List<CategorizationRule> rules,
-        List<HistoryRow> rows,
-        CancellationToken cancellationToken)
-    {
-        var wanted = rules
-            .Select(rule => rule.CategoryId)
-            .Concat(rows.Select(row => row.CategoryId))
-            .OfType<CategoryId>()
-            .Distinct()
-            .ToList();
-
-        return wanted.Count == 0
-            ? new Dictionary<CategoryId, FlowType>()
-            : await db.Categories
-                .Where(c => wanted.Contains(c.Id))
-                .ToDictionaryAsync(c => c.Id, c => c.Type, cancellationToken);
     }
 
     private async Task<HashSet<(string Key, CategoryId CategoryId)>> DismissedAsync(CancellationToken cancellationToken)

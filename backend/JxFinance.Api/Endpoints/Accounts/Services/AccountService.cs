@@ -171,7 +171,7 @@ public sealed class AccountService(
         db.DeleteOrNotFoundAsync<Account>(
             id,
             a => a.Id == new AccountId(id),
-            NotFound.Message,
+            NotFound,
             account => Task.FromResult(account.UserId == currentUser.Id ? null : OnlyOwnerArchives),
             cancellationToken);
 

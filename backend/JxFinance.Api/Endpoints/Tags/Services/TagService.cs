@@ -118,16 +118,7 @@ public sealed class TagService(
 
         var ownerId = existing?.UserId ?? currentUser.Id;
         var name = input.NormalizedName();
-        var pattern = LikePattern.Exactly(name);
-        var excludedId = existing?.Id ?? default;
-        var hasExcluded = existing is not null;
-        var taken = await db.Tags
-            .IgnoreQueryFilters(QueryFilters.OwnerOnly)
-            .AnyAsync(
-                t => t.UserId == ownerId
-                    && EF.Functions.ILike(t.Name, pattern, LikePattern.Escape)
-                    && (!hasExcluded || t.Id != excludedId),
-                cancellationToken);
+        var taken = await TagNames.TakenAsync(db, ownerId, name, existing?.Id, cancellationToken);
 
         return taken
             ? new DomainError(ErrorCodes.ConflictDuplicate, $"You already have a tag named \"{name}\".")

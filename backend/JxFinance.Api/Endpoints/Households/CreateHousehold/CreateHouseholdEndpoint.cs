@@ -16,5 +16,5 @@ public sealed class CreateHouseholdEndpoint(IHouseholdService householdService)
     }
 
     public override async Task HandleAsync(CreateHouseholdRequest req, CancellationToken ct) =>
-        await Send.CreatedOrProblemAsync(await householdService.CreateAsync(req, ct), household => $"{ApiRoutes.HouseholdsPath}/{household.Id}", ct);
+        await Send.CreatedOrProblemAsync(await householdService.CreateAsync(req, ct), household => household.Id, ct);
 }

@@ -16,5 +16,5 @@ public sealed class CreateConversionEndpoint(IConversionService conversionServic
     }
 
     public override async Task HandleAsync(CreateConversionRequest req, CancellationToken ct) =>
-        await Send.CreatedOrProblemAsync(await conversionService.CreateAsync(req, ct), conversion => $"{ApiRoutes.ConversionsPath}/{conversion.Id}", ct);
+        await Send.CreatedOrProblemAsync(await conversionService.CreateAsync(req, ct), conversion => conversion.Id, ct);
 }

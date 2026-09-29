@@ -1,5 +1,4 @@
 using System.Security.Cryptography;
-using System.Text;
 using JxFinance.Common;
 using Microsoft.AspNetCore.WebUtilities;
 
@@ -12,10 +11,9 @@ public static class PersonalApiTokenFormat
     public const int HashLength = 64;
 
     private const string BearerMarker = "Bearer " + Marker;
-    private const int SecretBytes = 32;
     private const string PrefixAlphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
     private static readonly int SecretStart = Marker.Length + PrefixLength + 1;
-    private static readonly int SecretLength = WebEncoders.Base64UrlEncode(new byte[SecretBytes]).Length;
+    private static readonly int SecretLength = WebEncoders.Base64UrlEncode(new byte[SecretHash.SecretBytes]).Length;
 
     public static bool IsBearerToken(string? authorization) =>
         authorization is not null && authorization.StartsWith(BearerMarker, StringComparison.OrdinalIgnoreCase);
@@ -23,8 +21,8 @@ public static class PersonalApiTokenFormat
     public static IssuedToken Issue()
     {
         var prefix = RandomNumberGenerator.GetString(PrefixAlphabet, PrefixLength);
-        var secret = WebEncoders.Base64UrlEncode(RandomNumberGenerator.GetBytes(SecretBytes));
-        return new IssuedToken(prefix, Hash(secret), $"{Marker}{prefix}_{secret}");
+        var secret = SecretHash.NewSecret();
+        return new IssuedToken(prefix, SecretHash.Of(secret), $"{Marker}{prefix}_{secret}");
     }
 
     public static bool TryParse(string? authorization, out string prefix, out string secret)
@@ -56,17 +54,12 @@ public static class PersonalApiTokenFormat
         return true;
     }
 
-    public static bool HashMatches(string expectedHash, string secret) =>
-        CryptographicOperations.FixedTimeEquals(Encoding.UTF8.GetBytes(expectedHash), Encoding.UTF8.GetBytes(Hash(secret)));
-
-    private static string Hash(string secret) => Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(secret)));
-
     private static bool IsSecret(string candidate)
     {
         try
         {
             var bytes = WebEncoders.Base64UrlDecode(candidate);
-            return bytes.Length == SecretBytes && WebEncoders.Base64UrlEncode(bytes) == candidate;
+            return bytes.Length == SecretHash.SecretBytes && WebEncoders.Base64UrlEncode(bytes) == candidate;
         }
         catch (FormatException)
         {

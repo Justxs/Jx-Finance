@@ -79,7 +79,7 @@ public sealed class GoalService(
         return db.DeleteOrNotFoundAsync<Goal>(
             id,
             g => g.Id == goalId,
-            NotFound.Message,
+            NotFound,
             goal => deletions.Record(TrashKind.Goal, id, goal.Name),
             cancellationToken);
     }

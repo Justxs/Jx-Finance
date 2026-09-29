@@ -77,7 +77,6 @@ public static class ApiServiceExtensions
             builder.Services.AddHostedService<MonthCloseReminderJob>();
             builder.Services.AddHostedService<MonthlyDigestJob>();
             builder.Services.AddHostedService<RetentionJob>();
-            builder.Services.AddHostedService<AttachmentPurgeJob>();
         }
 
         return builder;

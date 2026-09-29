@@ -88,7 +88,7 @@ public sealed class BudgetService(
         return db.DeleteOrNotFoundAsync<Budget>(
             id,
             b => b.Id == budgetId,
-            NotFound.Message,
+            NotFound,
             async budget =>
             {
                 var categoryName = await db.Categories

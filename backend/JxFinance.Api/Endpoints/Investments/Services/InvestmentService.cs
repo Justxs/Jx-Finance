@@ -389,7 +389,7 @@ public sealed class InvestmentService(
     {
         var id = new SecurityId(request.Id);
         var symbol = request.Symbol.Trim().ToUpperInvariant();
-        var found = await db.Securities.FindOrNotFoundAsync(s => s.Id == id, "Security not found.", cancellationToken);
+        var found = await db.Securities.FindOrNotFoundAsync(s => s.Id == id, EntityLookup.NotFound("Security not found."), cancellationToken);
         if (!found.TryGetValue(out var security))
         {
             return found.Error;

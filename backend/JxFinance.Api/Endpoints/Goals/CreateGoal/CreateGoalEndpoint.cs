@@ -15,5 +15,5 @@ public sealed class CreateGoalEndpoint(IGoalService goalService) : Endpoint<Crea
     }
 
     public override async Task HandleAsync(CreateGoalRequest req, CancellationToken ct) =>
-        await Send.CreatedOrProblemAsync(await goalService.CreateAsync(req, ct), goal => $"{ApiRoutes.GoalsPath}/{goal.Id}", ct);
+        await Send.CreatedOrProblemAsync(await goalService.CreateAsync(req, ct), goal => goal.Id, ct);
 }

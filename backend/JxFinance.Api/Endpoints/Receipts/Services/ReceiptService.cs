@@ -1,4 +1,3 @@
-using System.Security.Cryptography;
 using FastEndpoints;
 using JxFinance.Common;
 using JxFinance.Common.Attachments;
@@ -202,12 +201,12 @@ public sealed class ReceiptService(
             return EntityLookup.NotFound("Attachment not found.");
         }
 
-        if (!files.Exists(attachmentId))
+        await using var stream = files.TryOpenRead(attachmentId);
+        if (stream is null)
         {
             return FileGone;
         }
 
-        await using var stream = files.OpenRead(attachmentId);
         using var content = new MemoryStream();
         await stream.CopyToAsync(content, cancellationToken);
         return new ReceiptFile(content.ToArray(), attachment.ContentType, attachment.Sha256);
@@ -215,26 +214,20 @@ public sealed class ReceiptService(
 
     private static async Task<Result<ReceiptFile>> LoadUploadAsync(AttachmentUpload upload, CancellationToken cancellationToken)
     {
-        if (upload.Length <= 0)
-        {
-            return AttachmentErrors.Empty;
-        }
-
-        if (upload.Length > TransactionAttachment.MaxFileBytes)
-        {
-            return AttachmentErrors.TooLarge;
-        }
-
         using var content = new MemoryStream();
-        await upload.Content.CopyToAsync(content, cancellationToken);
-        if (content.Length == 0)
+        StoredAttachment copied;
+        try
         {
-            return AttachmentErrors.Empty;
+            copied = await AttachmentStore.CopyAsync(upload.Content, content, string.Empty, TransactionAttachment.MaxFileBytes, cancellationToken);
         }
-
-        if (content.Length > TransactionAttachment.MaxFileBytes)
+        catch (AttachmentTooLargeException)
         {
             return AttachmentErrors.TooLarge;
+        }
+
+        if (copied.SizeBytes == 0)
+        {
+            return AttachmentErrors.Empty;
         }
 
         var bytes = content.ToArray();
@@ -246,7 +239,7 @@ public sealed class ReceiptService(
             return contentType.Error;
         }
 
-        return new ReceiptFile(bytes, detected, Convert.ToHexStringLower(SHA256.HashData(bytes)));
+        return new ReceiptFile(bytes, detected, copied.Sha256);
     }
 
     private Task<ReceiptReading?> StoredReadingAsync(string sha256, CancellationToken cancellationToken) =>

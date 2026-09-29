@@ -16,5 +16,5 @@ public sealed class CreateTagEndpoint(ITagService tagService)
     }
 
     public override async Task HandleAsync(CreateTagRequest req, CancellationToken ct) =>
-        await Send.CreatedOrProblemAsync(await tagService.CreateAsync(req, ct), tag => $"{ApiRoutes.TagsPath}/{tag.Id}", ct);
+        await Send.CreatedOrProblemAsync(await tagService.CreateAsync(req, ct), tag => tag.Id, ct);
 }

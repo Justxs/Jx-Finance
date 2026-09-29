@@ -105,7 +105,7 @@ public sealed class CashFlowForecastService(AppDbContext db, IExchangeRateServic
         DateOnly end)
     {
         var own = held.Where(m => m.AccountId == account.Id).ToList();
-        var start = account.StartingBalance.Amount + own.Where(m => m.Currency == account.Currency).Sum(m => m.Amount);
+        var start = AccountMovements.BalanceOf(account.StartingBalance, own);
         var projection = CashFlowProjection.Project(start, changes, dailySpending, today, end);
 
         return new AccountForecastResponse(

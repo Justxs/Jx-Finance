@@ -24,13 +24,6 @@ public sealed class SecurityPriceService(AppDbContext db, IExchangeRateService r
     private const string NotHeldMessage =
         "Only someone who holds this security, or an administrator, can change its prices.";
 
-    private static readonly InvestmentTransactionType[] ReplayedTypes =
-    [
-        InvestmentTransactionType.Buy,
-        InvestmentTransactionType.Sell,
-        InvestmentTransactionType.Split,
-    ];
-
     public async Task<Result<SecurityResponse>> SetPriceAsync(
         SetSecurityPriceRequest request,
         bool isAdministrator,
@@ -94,7 +87,7 @@ public sealed class SecurityPriceService(AppDbContext db, IExchangeRateService r
             return writable.Error;
         }
 
-        var found = await db.SecurityPrices.FindOrNotFoundAsync(p => p.SecurityId == id && p.Date == request.Date, "No price is recorded for that date.", cancellationToken);
+        var found = await db.SecurityPrices.FindOrNotFoundAsync(p => p.SecurityId == id && p.Date == request.Date, EntityLookup.NotFound("No price is recorded for that date."), cancellationToken);
         if (!found.TryGetValue(out var point))
         {
             return found.Error;
@@ -115,7 +108,7 @@ public sealed class SecurityPriceService(AppDbContext db, IExchangeRateService r
 
         var query = db.InvestmentTransactions
             .AsNoTracking()
-            .Where(t => t.SecurityId != null && t.Date <= to && ReplayedTypes.Contains(t.Type));
+            .Where(t => t.SecurityId != null && t.Date <= to && Portfolio.PositionTypes.Contains(t.Type));
         if (request.AccountId is { } accountId)
         {
             var typedAccountId = new AccountId(accountId);
@@ -218,7 +211,7 @@ public sealed class SecurityPriceService(AppDbContext db, IExchangeRateService r
         bool isAdministrator,
         CancellationToken cancellationToken)
     {
-        var found = await db.Securities.FindOrNotFoundAsync(s => s.Id == id, "Security not found.", cancellationToken);
+        var found = await db.Securities.FindOrNotFoundAsync(s => s.Id == id, EntityLookup.NotFound("Security not found."), cancellationToken);
         if (!found.TryGetValue(out var security))
         {
             return found.Error;
@@ -236,7 +229,7 @@ public sealed class SecurityPriceService(AppDbContext db, IExchangeRateService r
     {
         var history = await db.InvestmentTransactions
             .AsNoTracking()
-            .Where(t => t.SecurityId == securityId && ReplayedTypes.Contains(t.Type))
+            .Where(t => t.SecurityId == securityId && Portfolio.PositionTypes.Contains(t.Type))
             .ToListAsync(cancellationToken);
 
         return history

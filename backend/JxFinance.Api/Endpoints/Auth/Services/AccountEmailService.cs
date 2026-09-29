@@ -36,7 +36,7 @@ public sealed class AccountEmailService(
     public async Task RequestPasswordResetAsync(string email, CancellationToken cancellationToken)
     {
         var user = await userManager.FindByEmailAsync(email);
-        if (user is null || user.PasswordHash is null || user.IsDeactivated)
+        if (user is not { CanSignIn: true })
         {
             logger.LogInformation("A password reset was asked for an address that cannot receive one.");
             return;
@@ -63,7 +63,7 @@ public sealed class AccountEmailService(
         CancellationToken cancellationToken)
     {
         var user = await userManager.FindByEmailAsync(email);
-        if (user is null || user.PasswordHash is null || user.IsDeactivated)
+        if (user is not { CanSignIn: true })
         {
             return ResetTokenInvalid;
         }

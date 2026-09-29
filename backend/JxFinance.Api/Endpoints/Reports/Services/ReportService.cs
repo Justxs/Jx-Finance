@@ -1,10 +1,8 @@
-using System.Linq.Expressions;
 using FastEndpoints;
 using JxFinance.Common;
 using JxFinance.Common.CategoryAttributions;
 using JxFinance.Common.InvestmentCashFlows;
 using JxFinance.Domain.Common;
-using JxFinance.Domain.Transactions;
 using JxFinance.Endpoints.Dashboard.Shared;
 using JxFinance.Endpoints.Reports.Interfaces;
 using JxFinance.Endpoints.Reports.Shared;
@@ -20,8 +18,6 @@ public sealed class ReportService(
     ICategoryAttributionService attributions,
     IInvestmentCashFlowService investmentCashFlows) : IReportService
 {
-    private sealed record DatedFlow(DateOnly Date, FlowType Type, decimal Amount);
-
     private sealed record Bucket(DateOnly Start, decimal Income, decimal Expense);
 
     public async Task<ReportSummaryResponse> GetSummaryAsync(
@@ -36,7 +32,6 @@ public sealed class ReportService(
         var period = DateWindow.Inclusive(periodStart, periodEnd);
         var earlier = ComparisonWindow.For(comparison, period);
 
-        var flows = await ReadTransactionFlowsAsync(period, earlier, cancellationToken);
         var investmentFlows = await investmentCashFlows.GetFlowsAsync(period, earlier, cancellationToken);
 
         var expenseAttributions = await attributions.GetAttributionsAsync(period, earlier, FlowType.Expense, cancellationToken);
@@ -56,9 +51,7 @@ public sealed class ReportService(
         var expenseByCategory = Breakdown(expenseAttributions, FlowType.Expense);
         var incomeByCategory = Breakdown(incomeAttributions, FlowType.Income);
 
-        var everything = flows
-            .Concat(investmentFlows.Select(f => new DatedFlow(f.Date, f.Type, f.Amount)))
-            .ToList();
+        List<DatedFlow> everything = [.. await db.Transactions.Within(period, earlier).DailyFlowsAsync(cancellationToken), .. investmentFlows];
 
         var (trend, trendBucket) = BuildTrend(everything, period, earlier);
         var expenseByTag = await BuildTagBreakdownAsync(period, earlier, cancellationToken);
@@ -91,25 +84,7 @@ public sealed class ReportService(
     }
 
     private static (decimal Income, decimal Expense) Totals(IEnumerable<DatedFlow> flows, DateWindow window) =>
-        Sum(flows.Where(f => window.Contains(f.Date)).ToList());
-
-    private static (decimal Income, decimal Expense) Sum(IReadOnlyList<DatedFlow> flows) => (
-        flows.Where(f => f.Type == FlowType.Income).Sum(f => f.Amount),
-        flows.Where(f => f.Type == FlowType.Expense).Sum(f => f.Amount));
-
-    private async Task<IReadOnlyList<DatedFlow>> ReadTransactionFlowsAsync(
-        DateWindow period,
-        DateWindow? comparison,
-        CancellationToken cancellationToken)
-    {
-        var rows = await db.Transactions
-            .Where(Within(period, comparison))
-            .GroupBy(t => new { t.Date, t.Type })
-            .Select(g => new { g.Key.Date, g.Key.Type, Total = g.Sum(t => t.ReportingAmount) })
-            .ToListAsync(cancellationToken);
-
-        return rows.Select(r => new DatedFlow(r.Date, r.Type, r.Total)).ToList();
-    }
+        flows.Where(f => window.Contains(f.Date)).Totals();
 
     private async Task<IReadOnlyList<TagBreakdownItem>> BuildTagBreakdownAsync(
         DateWindow period,
@@ -118,7 +93,7 @@ public sealed class ReportService(
     {
         var start = period.Start;
         var end = period.ExclusiveEnd;
-        var expenses = db.Transactions.Where(Within(period, comparison)).Where(t => t.Type == FlowType.Expense);
+        var expenses = db.Transactions.Within(period, comparison).Where(t => t.Type == FlowType.Expense);
 
         var tagged = await expenses
             .SelectMany(t => db.TransactionTags
@@ -168,7 +143,7 @@ public sealed class ReportService(
     {
         var start = period.Start;
         var end = period.ExclusiveEnd;
-        var expenses = db.Transactions.Where(Within(period, comparison)).Where(t => t.Type == FlowType.Expense);
+        var expenses = db.Transactions.Within(period, comparison).Where(t => t.Type == FlowType.Expense);
 
         var grouped = await expenses
             .GroupBy(t => new { t.PayeeKey, Current = t.Date >= start && t.Date < end })
@@ -251,17 +226,11 @@ public sealed class ReportService(
         while (cursor < window.ExclusiveEnd)
         {
             var next = monthly ? cursor.AddMonths(1) : cursor.AddDays(1);
-            var (income, expense) = Sum(flows.Where(f => f.Date >= cursor && f.Date < next && window.Contains(f.Date)).ToList());
+            var (income, expense) = flows.Where(f => f.Date >= cursor && f.Date < next && window.Contains(f.Date)).Totals();
             buckets.Add(new Bucket(cursor, income, expense));
             cursor = next;
         }
 
         return buckets;
     }
-
-    private static Expression<Func<Transaction, bool>> Within(DateWindow window, DateWindow? comparison) =>
-        comparison is { } other
-            ? t => (t.Date >= window.Start && t.Date < window.ExclusiveEnd)
-                || (t.Date >= other.Start && t.Date < other.ExclusiveEnd)
-            : t => t.Date >= window.Start && t.Date < window.ExclusiveEnd;
 }

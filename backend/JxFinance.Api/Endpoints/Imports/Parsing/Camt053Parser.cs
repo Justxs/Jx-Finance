@@ -55,7 +55,7 @@ public static class Camt053Parser
             }
         }
 
-        if (rows.Count > 10000)
+        if (rows.Count > ParsedStatement.MaxRows)
         {
             return Invalid();
         }
@@ -120,7 +120,7 @@ public static class Camt053Parser
             ?? Text(detail, "RmtInf", "Strd", "CdtrRefInf", "Ref")
             ?? Text(detail, "AddtlTxInf")
             ?? Text(entry, "AddtlNtryInf");
-        description = description?[..Math.Min(description.Length, 500)];
+        description = description?[..Math.Min(description.Length, ParsedStatement.DescriptionMaxLength)];
 
         var reference = new[]
             {

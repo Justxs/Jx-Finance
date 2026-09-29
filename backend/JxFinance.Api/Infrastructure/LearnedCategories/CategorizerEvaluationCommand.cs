@@ -112,10 +112,7 @@ public static class CategorizerEvaluationCommand
         List<CategorizationRule> rules,
         Dictionary<CategoryId, FlowType> categoryTypes,
         LedgerEntry entry) =>
-        rules.FirstOrDefault(rule => rule.CategoryId is not { } categoryId
-            ? RuleMatcher.Matches(rule, null, entry)
-            : categoryTypes.TryGetValue(categoryId, out var type) && RuleMatcher.Matches(rule, type, entry))
-            ?.CategoryId;
+        rules.FirstOrDefault(rule => RuleMatcher.Applies(rule, categoryTypes, entry))?.CategoryId;
 
     private static CategoryId? Recall(List<EvaluationRow> history, EvaluationRow row)
     {

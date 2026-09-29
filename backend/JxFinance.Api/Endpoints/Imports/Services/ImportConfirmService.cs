@@ -112,10 +112,9 @@ public sealed class ImportConfirmService(
             return tagError;
         }
 
-        var categoryIds = rows.Where(r => r.CategoryId is not null).Select(r => new CategoryId(r.CategoryId!.Value)).Distinct().ToList();
-        var categoryTypes = await db.Categories
-            .Where(c => categoryIds.Contains(c.Id))
-            .ToDictionaryAsync(c => c.Id, c => (FlowType?)c.Type, cancellationToken);
+        var categoryTypes = await references.CategoryTypesAsync(
+            rows.Select(r => r.CategoryId is { } id ? new CategoryId(id) : (CategoryId?)null),
+            cancellationToken);
 
         var otherAccountIds = rows
             .Where(r => r.TransferAccountId is not null)
@@ -217,7 +216,7 @@ public sealed class ImportConfirmService(
 
             var type = row.AsRefund ? FlowType.Expense : row.Type;
             var categoryId = row.CategoryId is { } id ? new CategoryId(id) : (CategoryId?)null;
-            if (categoryId is { } chosen && lookups.CategoryTypes.GetValueOrDefault(chosen) != type)
+            if (categoryId is { } chosen && (!lookups.CategoryTypes.TryGetValue(chosen, out var chosenType) || chosenType != type))
             {
                 return new DomainError(ErrorCodes.CategoryWrongType, "Category does not exist or has the wrong type.");
             }
@@ -365,7 +364,7 @@ public sealed class ImportConfirmService(
 
     private sealed record ConfirmLookups(
         HashSet<string> ExistingRefs,
-        IReadOnlyDictionary<CategoryId, FlowType?> CategoryTypes,
+        IReadOnlyDictionary<CategoryId, FlowType> CategoryTypes,
         IReadOnlyDictionary<AccountId, Currency> OtherCurrencies,
         IReadOnlyDictionary<TransferId, Transfer> Candidates,
         IReadOnlySet<TransferId> AlreadyImported,

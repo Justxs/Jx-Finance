@@ -16,5 +16,5 @@ public sealed class CreateTransactionEndpoint(ITransactionService transactionSer
     }
 
     public override async Task HandleAsync(CreateTransactionRequest req, CancellationToken ct) =>
-        await Send.CreatedOrProblemAsync(await transactionService.CreateAsync(req, ct), transaction => $"{ApiRoutes.TransactionsPath}/{transaction.Id}", ct);
+        await Send.CreatedOrProblemAsync(await transactionService.CreateAsync(req, ct), transaction => transaction.Id, ct);
 }

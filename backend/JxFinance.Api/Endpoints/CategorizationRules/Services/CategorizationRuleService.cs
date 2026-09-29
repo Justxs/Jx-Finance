@@ -99,7 +99,7 @@ public sealed class CategorizationRuleService(
 
         await using var dbTransaction = await db.Database.BeginTransactionAsync(cancellationToken);
 
-        var rules = await Ordered(db.CategorizationRules).ToListAsync(cancellationToken);
+        var rules = await db.CategorizationRules.Ordered().ToListAsync(cancellationToken);
         var rule = rules.Find(r => r.Id == ruleId);
         if (rule is null)
         {
@@ -119,7 +119,7 @@ public sealed class CategorizationRuleService(
         await db.CategorizationRuleTags.Where(t => t.RuleId == ruleId).ExecuteDeleteAsync(cancellationToken);
         db.CategorizationRules.Remove(rule);
         rules.Remove(rule);
-        Renumber(rules);
+        rules.Renumber();
         await db.SaveChangesAsync(cancellationToken);
 
         await dbTransaction.CommitAsync(cancellationToken);
@@ -133,7 +133,7 @@ public sealed class CategorizationRuleService(
         CancellationToken cancellationToken)
     {
         var ruleId = new CategorizationRuleId(id);
-        var rules = await Ordered(db.CategorizationRules).ToListAsync(cancellationToken);
+        var rules = await db.CategorizationRules.Ordered().ToListAsync(cancellationToken);
 
         var index = rules.FindIndex(r => r.Id == ruleId);
         if (index < 0)
@@ -147,7 +147,7 @@ public sealed class CategorizationRuleService(
             (rules[index], rules[target]) = (rules[target], rules[index]);
         }
 
-        Renumber(rules);
+        rules.Renumber();
         await db.SaveChangesAsync(cancellationToken);
 
         var moved = await WithTagsAsync(rules, cancellationToken);
@@ -217,35 +217,17 @@ public sealed class CategorizationRuleService(
             return candidates.Select(_ => (RuleSuggestion?)null).ToList();
         }
 
-        var categoryTypes = await CategoryTypesAsync(applicable, cancellationToken);
+        var categoryTypes = await references.CategoryTypesAsync(applicable.Select(r => r.Rule.CategoryId), cancellationToken);
 
-        return candidates.Select(candidate => First(applicable, categoryTypes, candidate)).ToList();
-    }
-
-    private static RuleSuggestion? First(
-        IReadOnlyList<CategorizationRuleWithTags> rules,
-        IReadOnlyDictionary<CategoryId, FlowType> categoryTypes,
-        RuleCandidate candidate)
-    {
-        foreach (var item in rules)
-        {
-            var rule = item.Rule;
-            if (rule.CategoryId is { } categoryId
-                && (!categoryTypes.TryGetValue(categoryId, out var categoryType) || categoryType != candidate.Type))
+        return candidates
+            .Select(candidate =>
             {
-                continue;
-            }
-
-            if (!RuleMatcher.AmountInRange(candidate.Amount, rule.MinAmount, rule.MaxAmount)
-                || !RuleMatcher.Matches(rule.Match, rule.Pattern, candidate.Description))
-            {
-                continue;
-            }
-
-            return new RuleSuggestion(rule.Name, rule.CategoryId?.Value, item.TagIds);
-        }
-
-        return null;
+                var entry = new LedgerEntry(default, accountId ?? default, candidate.Type, candidate.Amount, candidate.Description);
+                return applicable.FirstOrDefault(item => RuleMatcher.Applies(item.Rule, categoryTypes, entry)) is { } item
+                    ? new RuleSuggestion(item.Rule.Name, item.Rule.CategoryId?.Value, item.TagIds)
+                    : null;
+            })
+            .ToList();
     }
 
     private async Task<Result<List<LedgerMatch>>> MatchLedgerAsync(
@@ -259,38 +241,15 @@ public sealed class CategorizationRuleService(
         }
 
         var rules = await LoadAllAsync(cancellationToken);
-        var categoryTypes = await CategoryTypesAsync(rules, cancellationToken);
+        var categoryTypes = await references.CategoryTypesAsync(rules.Select(r => r.Rule.CategoryId), cancellationToken);
         var candidates = await CandidatesAsync(request, cancellationToken);
 
-        var claimed = new HashSet<TransactionId>();
-        var matches = new List<LedgerMatch>(rules.Count);
-        foreach (var item in rules)
-        {
-            var rule = item.Rule;
-            FlowType? categoryType = null;
-            if (rule.CategoryId is { } categoryId)
-            {
-                if (!categoryTypes.TryGetValue(categoryId, out var found))
-                {
-                    matches.Add(new LedgerMatch(item, []));
-                    continue;
-                }
+        var byRule = candidates
+            .Select(row => (Row: row, Rule: rules.FirstOrDefault(item => RuleMatcher.Applies(item.Rule, categoryTypes, row))))
+            .Where(pair => pair.Rule is not null)
+            .ToLookup(pair => pair.Rule!.Rule.Id, pair => pair.Row);
 
-                categoryType = found;
-            }
-
-            var rows = candidates
-                .Where(row => !claimed.Contains(row.Id) && RuleMatcher.Matches(rule, categoryType, row))
-                .ToList();
-            foreach (var row in rows)
-            {
-                claimed.Add(row.Id);
-            }
-
-            matches.Add(new LedgerMatch(item, rows));
-        }
-
-        return matches;
+        return rules.Select(item => new LedgerMatch(item, byRule[item.Rule.Id].ToList())).ToList();
     }
 
     private async Task<List<LedgerEntry>> CandidatesAsync(RunRulesRequest request, CancellationToken cancellationToken)
@@ -337,38 +296,10 @@ public sealed class CategorizationRuleService(
             .Select(pair => new TransactionTag { TransactionId = pair.Id, TagId = pair.Tag }));
     }
 
-    private async Task<IReadOnlyDictionary<CategoryId, FlowType>> CategoryTypesAsync(
-        IReadOnlyList<CategorizationRuleWithTags> rules,
-        CancellationToken cancellationToken)
-    {
-        var wanted = rules
-            .Select(r => r.Rule.CategoryId)
-            .OfType<CategoryId>()
-            .Distinct()
-            .ToList();
-
-        return wanted.Count == 0
-            ? new Dictionary<CategoryId, FlowType>()
-            : await db.Categories
-                .Where(c => wanted.Contains(c.Id))
-                .ToDictionaryAsync(c => c.Id, c => c.Type, cancellationToken);
-    }
-
     private static RunRulesResponse Summarize(IReadOnlyList<LedgerMatch> matches, bool recategorize) => new(
         matches.Select(m => new RunRulesRow(m.Item.Rule.Id.Value, m.Item.Rule.Name, m.Rows.Count)).ToList(),
         matches.Sum(m => m.Rows.Count),
         recategorize);
-
-    private static void Renumber(List<CategorizationRule> rules)
-    {
-        for (var index = 0; index < rules.Count; index++)
-        {
-            rules[index].Position = index;
-        }
-    }
-
-    private static IOrderedQueryable<CategorizationRule> Ordered(IQueryable<CategorizationRule> rules) =>
-        rules.OrderBy(r => r.Position).ThenBy(r => r.CreatedAt);
 
     private static List<Guid> Distinct(IReadOnlyList<Guid> tagIds) => tagIds.Distinct().ToList();
 
@@ -397,7 +328,7 @@ public sealed class CategorizationRuleService(
 
     private async Task<IReadOnlyList<CategorizationRuleWithTags>> LoadAllAsync(CancellationToken cancellationToken)
     {
-        var rules = await Ordered(db.CategorizationRules.AsNoTracking()).ToListAsync(cancellationToken);
+        var rules = await db.CategorizationRules.AsNoTracking().Ordered().ToListAsync(cancellationToken);
 
         return await WithTagsAsync(rules, cancellationToken);
     }

@@ -17,6 +17,6 @@ public sealed class AddPasskeyEndpoint(IPasskeyService passkeyService)
     public override async Task HandleAsync(AddPasskeyRequest req, CancellationToken ct) =>
         await Send.CreatedOrProblemAsync(
             await passkeyService.AddAsync(req, ct),
-            passkey => $"{ApiRoutes.AuthPath}/passkeys/{passkey.Id}",
+            passkey => passkey.Id,
             ct);
 }

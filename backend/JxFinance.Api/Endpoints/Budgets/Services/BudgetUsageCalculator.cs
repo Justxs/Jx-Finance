@@ -57,18 +57,7 @@ public sealed class BudgetUsageCalculator(
         var createdOn = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(budget.CreatedAt, clock.TimeZone).DateTime);
         var earliest = BudgetWindow.For(createdOn, budget.Period, firstDayOfWeek).Start;
 
-        var windows = new List<BudgetWindow>();
-        for (var back = BudgetWindow.MaxCarryWindows; back > 0; back--)
-        {
-            var window = current.Shift(-back);
-            if (window.Start >= earliest)
-            {
-                windows.Add(window);
-            }
-        }
-
-        windows.Add(current);
-        return windows;
+        return [.. current.Preceding(BudgetWindow.MaxCarryWindows).Where(w => w.Start >= earliest), current];
     }
 
     private static BudgetUsage Usage(
@@ -86,6 +75,6 @@ public sealed class BudgetUsageCalculator(
         return new BudgetUsage(windows[^1], carried, SpentIn(windows[^1], spend));
     }
 
-    private static decimal SpentIn(BudgetWindow window, IReadOnlyList<CategoryAttribution> spend) =>
+    public static decimal SpentIn(BudgetWindow window, IEnumerable<CategoryAttribution> spend) =>
         Money.Round(spend.Where(a => window.Contains(a.Date)).Sum(a => a.Amount));
 }

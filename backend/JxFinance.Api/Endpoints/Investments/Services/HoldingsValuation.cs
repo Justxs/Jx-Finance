@@ -15,13 +15,6 @@ namespace JxFinance.Endpoints.Investments.Services;
 public sealed class HoldingsValuation(AppDbContext db, IExchangeRateService rates, IInstanceSettingsStore settings)
     : IHoldingsValuation
 {
-    private static readonly InvestmentTransactionType[] PositionTypes =
-    [
-        InvestmentTransactionType.Buy,
-        InvestmentTransactionType.Sell,
-        InvestmentTransactionType.Split,
-    ];
-
     private readonly Dictionary<(AccountId Account, DateOnly? AsOf), (decimal Value, bool IsComplete)?> valued = [];
 
     public async Task<IReadOnlyDictionary<AccountId, (decimal Value, bool IsComplete)>> ValueAsync(
@@ -50,7 +43,7 @@ public sealed class HoldingsValuation(AppDbContext db, IExchangeRateService rate
     {
         var rows = await db.InvestmentTransactions
             .AsNoTracking()
-            .Where(t => accountIds.Contains(t.AccountId) && t.SecurityId != null && PositionTypes.Contains(t.Type)
+            .Where(t => accountIds.Contains(t.AccountId) && t.SecurityId != null && Portfolio.PositionTypes.Contains(t.Type)
                 && (asOf == null || t.Date <= asOf))
             .Select(t => new
             {

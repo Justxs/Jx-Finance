@@ -1,6 +1,4 @@
 using System.Security.Claims;
-using System.Security.Cryptography;
-using System.Text;
 using FastEndpoints;
 using FastEndpoints.Security;
 using JxFinance.Common;
@@ -11,7 +9,6 @@ using JxFinance.Endpoints.Auth.Sessions;
 using JxFinance.Infrastructure.Auth;
 using JxFinance.Infrastructure.Data;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.EntityFrameworkCore;
 
 namespace JxFinance.Endpoints.Auth.Services;
@@ -64,8 +61,8 @@ public sealed class SessionService(
         }
 
         var session = await db.UserSessions.AsNoTracking().FirstOrDefaultAsync(s => s.Id == sessionId, cancellationToken);
-        var isCurrent = session is not null && HashMatches(session.TokenHash, secret);
-        var isPrevious = session?.PreviousTokenHash is { } previousHash && !isCurrent && HashMatches(previousHash, secret);
+        var isCurrent = session is not null && SecretHash.Matches(session.TokenHash, secret);
+        var isPrevious = session?.PreviousTokenHash is { } previousHash && !isCurrent && SecretHash.Matches(previousHash, secret);
         if (session is null || (!isCurrent && !isPrevious))
         {
             ClearCookies();
@@ -92,8 +89,8 @@ public sealed class SessionService(
         }
 
         var currentHash = session.TokenHash;
-        var newSecret = NewSecret();
-        var newHash = Hash(newSecret);
+        var newSecret = SecretHash.NewSecret();
+        var newHash = SecretHash.Of(newSecret);
         var rotated = await db.UserSessions
             .Where(s => s.Id == session.Id && s.TokenHash == currentHash)
             .ExecuteUpdateAsync(
@@ -191,8 +188,8 @@ public sealed class SessionService(
 
     private async Task IssueAsync(UserSession session, AppUser user, CancellationToken cancellationToken)
     {
-        var secret = NewSecret();
-        session.TokenHash = Hash(secret);
+        var secret = SecretHash.NewSecret();
+        session.TokenHash = SecretHash.Of(secret);
         session.PreviousTokenHash = null;
         session.RotatedAt = null;
         session.SecurityStamp = user.SecurityStamp ?? string.Empty;
@@ -226,8 +223,6 @@ public sealed class SessionService(
 
     private static DateTimeOffset? CookieExpiry(UserSession session) => session.IsPersistent ? session.ExpiresAt : null;
 
-    private static string NewSecret() => WebEncoders.Base64UrlEncode(RandomNumberGenerator.GetBytes(32));
-
     private void ClearCookies()
     {
         Http.Response.Cookies.Delete(AuthCookies.AccessToken, CookieOptions(AuthCookies.AccessTokenPath, null));
@@ -248,9 +243,4 @@ public sealed class SessionService(
         secret = parts[1];
         return secret.Length > 0;
     }
-
-    private static string Hash(string secret) => Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(secret)));
-
-    private static bool HashMatches(string expectedHash, string secret) =>
-        CryptographicOperations.FixedTimeEquals(Encoding.UTF8.GetBytes(expectedHash), Encoding.UTF8.GetBytes(Hash(secret)));
 }

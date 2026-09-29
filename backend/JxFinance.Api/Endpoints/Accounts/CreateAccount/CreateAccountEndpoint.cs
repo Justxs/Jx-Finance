@@ -16,5 +16,5 @@ public sealed class CreateAccountEndpoint(IAccountService accountService)
     }
 
     public override async Task HandleAsync(CreateAccountRequest req, CancellationToken ct) =>
-        await Send.CreatedOrProblemAsync(await accountService.CreateAsync(req, ct), account => $"{ApiRoutes.AccountsPath}/{account.Id}", ct);
+        await Send.CreatedOrProblemAsync(await accountService.CreateAsync(req, ct), account => account.Id, ct);
 }

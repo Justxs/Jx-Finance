@@ -59,6 +59,14 @@ public static class ResultResponses
     public static Task CreatedOrProblemAsync<TRequest, TResponse>(
         this ResponseSender<TRequest, TResponse> send,
         Result<TResponse> result,
+        Func<TResponse, Guid> id,
+        CancellationToken ct)
+        where TRequest : notnull =>
+        send.CreatedOrProblemAsync(result, value => $"{send.HttpContext.Request.Path.Value!.TrimEnd('/')}/{id(value)}", ct);
+
+    public static Task CreatedOrProblemAsync<TRequest, TResponse>(
+        this ResponseSender<TRequest, TResponse> send,
+        Result<TResponse> result,
         Func<TResponse, string> location,
         CancellationToken ct)
         where TRequest : notnull =>

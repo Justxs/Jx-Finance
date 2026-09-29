@@ -2,7 +2,7 @@
 
 Back to the [feature walkthrough](README.md). See also [decisions](../decisions/attachments.md), [architecture: Transactions, imports and receipts](../architecture/transactions.md).
 
-Backend `Attachments` (`AttachmentService`, four endpoints), `Common/Attachments/AttachmentContent`, `Infrastructure/Attachments/AttachmentStore` and `AttachmentPurgeJob`; frontend `transactions/transaction-attachments`, shown under the form of the transaction edit dialog, and a paperclip with a count in the ledger. A receipt, an invoice or a warranty card belongs with the payment it explains. Until now the only place for it was the description field, so the paper went into a drawer and the photo into a phone gallery, and neither came back when the payment was questioned. A transaction now carries up to ten files, which are kept on a volume next to the database, go into every backup, and follow the transaction's visibility, trash and audit rules exactly as its own fields do.
+Backend `Attachments` (`AttachmentService`, four endpoints), `Common/Attachments/AttachmentContent`, `Infrastructure/Attachments/AttachmentStore` and `RetentionJob`; frontend `transactions/transaction-attachments`, shown under the form of the transaction edit dialog, and a paperclip with a count in the ledger. A receipt, an invoice or a warranty card belongs with the payment it explains. Until now the only place for it was the description field, so the paper went into a drawer and the photo into a phone gallery, and neither came back when the payment was questioned. A transaction now carries up to ten files, which are kept on a volume next to the database, go into every backup, and follow the transaction's visibility, trash and audit rules exactly as its own fields do.
 
 ## The model
 
@@ -85,14 +85,14 @@ stateDiagram-v2
     WithTransaction --> Live: the transaction is restored within 30 days
     Trashed --> Purged: older than 30 days
     WithTransaction --> Purged: transaction deleted over 30 days ago
-    Purged --> [*]: row and file removed by AttachmentPurgeJob
+    Purged --> [*]: row and file removed by RetentionJob
 ```
 
 Removing a file is a soft delete written with `IDeletionRecorder` as kind `attachment`, described as `receipt.pdf, Maxima, 42.18 EUR`, and the file stays on disk. The toast offers Undo and the trash lists it for 30 days, like every other delete. A restore is refused with `restore.referenceMissing` while the transaction itself is deleted or invisible (restore the transaction first), with `attachment.limitReached` when ten other files were added in the meantime, and with `restore.detailsLost` when the file is no longer on disk.
 
 Deleting a transaction does not touch its files. They are hidden because their transaction is, and restoring the transaction brings them back with it, with no entry of their own in the trash. The same is true of archiving an account.
 
-`AttachmentPurgeJob` runs daily and was the first job that hard-deletes something a person put into the ledger. It hard-deletes the rows, and then the files, of attachments removed more than 30 days ago (`DeletionEntry.RetentionDays`) and of attachments whose transaction was deleted more than 30 days ago, and it removes files that no row refers to once they are an hour old. A trash entry whose attachment was purged answers `restore.expired`, which is what it would have answered anyway.
+The attachment steps of `RetentionJob`, a separate `AttachmentPurgeJob` until 2026-09-29, run daily and were the first code that hard-deletes something a person put into the ledger. It hard-deletes the rows, and then the files, of attachments removed more than 30 days ago (`DeletionEntry.RetentionDays`) and of attachments whose transaction was deleted more than 30 days ago, and it removes files that no row refers to once they are an hour old. A trash entry whose attachment was purged answers `restore.expired`, which is what it would have answered anyway.
 
 Its last step deletes [receipt readings](receipt-reading.md#retention) older than 24 hours that failed or are still pending, and those whose SHA-256 no attachment row carries any more, trashed ones included, so a reading of a file lives exactly as long as the file and survives a delete that is undone. Reading a receipt changes nothing about the attachment itself: a household member who can see a file can read it and gets a reading of their own.
 

@@ -9,6 +9,9 @@ public sealed class AppUser : IdentityUser<Guid>
 {
     public static readonly DateTimeOffset DeactivatedUntil = DateTimeOffset.MaxValue;
 
+    public static readonly Expression<Func<AppUser, bool>> IsNotDeactivated =
+        u => u.LockoutEnd == null || u.LockoutEnd < DeactivatedUntil;
+
     public static readonly Expression<Func<AppUser, bool>> IsActive =
         u => u.PasswordHash != null && (u.LockoutEnd == null || u.LockoutEnd < DeactivatedUntil);
 
@@ -21,6 +24,8 @@ public sealed class AppUser : IdentityUser<Guid>
     public DashboardLayout? DashboardLayout { get; set; }
 
     public bool IsDeactivated => LockoutEnd >= DeactivatedUntil;
+
+    public bool CanSignIn => PasswordHash is not null && !IsDeactivated;
 
     public static string DisplayNameOrEmail(string? displayName, string? email) =>
         string.IsNullOrWhiteSpace(displayName) ? email ?? "" : displayName;

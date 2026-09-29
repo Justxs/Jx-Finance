@@ -166,7 +166,7 @@ public sealed class PasskeyService(
         }
 
         var user = assertion.User;
-        if (user.IsDeactivated || user.PasswordHash is null)
+        if (!user.CanSignIn)
         {
             return new DomainError(ErrorCodes.CredentialsInvalid, "Invalid email or password.");
         }

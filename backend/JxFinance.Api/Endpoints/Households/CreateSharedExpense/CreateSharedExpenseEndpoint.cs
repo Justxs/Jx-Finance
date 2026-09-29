@@ -18,6 +18,6 @@ public sealed class CreateSharedExpenseEndpoint(ISettleUpService settleUpService
     public override async Task HandleAsync(CreateSharedExpenseRequest req, CancellationToken ct) =>
         await Send.CreatedOrProblemAsync(
             await settleUpService.CreateSharedExpenseAsync(req, ct),
-            expense => $"{ApiRoutes.HouseholdsPath}/{req.Id}/shared-expenses/{expense.Id}",
+            expense => expense.Id,
             ct);
 }
