@@ -20,8 +20,6 @@ These come from the release checklist and block calling the current release veri
 
 | Feature | Gap | Size |
 | --- | --- | --- |
-| Import | Swedbank CSV and camt.053 XML only; banks without camt.053 need a CSV format each | M per bank, or one generic column mapper |
-| Import | No credit-card statements | M |
 | Investments | Corporate actions other than splits are only counted (mergers, spin-offs, symbol changes) | M |
 | Investments | Bonds by hand only; options, futures and short positions out of scope | L |
 | Investments | Only Interactive Brokers; no other broker and no generic trade CSV | M |
@@ -46,7 +44,6 @@ Ordered by how much they would help daily use for the effort. Following the prod
 
 | Idea | Why | Where | Size |
 | --- | --- | --- | --- |
-| Generic CSV import | The user maps columns once per bank and the mapping is stored; covers Revolut, Wise and card statements without code per bank | Import dialog | M |
 | Household settle-up | Mark an expense as paid for the household and split it between members; the household card shows who owes whom and a settlement is recorded as a transfer | Households | L |
 | Passkeys | WebAuthn as a second factor or instead of the password | Security section of Settings | M |
 | Personal API tokens | Read-only tokens for scripts and spreadsheets | Settings | M |
@@ -56,12 +53,12 @@ Ordered by how much they would help daily use for the effort. Following the prod
 ## Suggested order
 
 1. Section 1, because the release is not verified without it; the daily-use trial is also where the ideas above get confirmed or dropped.
-2. A generic CSV import, once a real month of imports shows how often it is needed.
 
 ## Done
 
 | Date | Item | Where it is described |
 | --- | --- | --- |
+| 2026-09-29 | Generic CSV import: "Other bank (CSV)" in the import dialog reads a CSV export from any bank, card issuer or payment app. After the file is chosen, the dialog proposes its encoding, delimiter, header line, date formats and decimal mark, and the user says once which column is the date, the amount (signed either way, debit and credit, or with a direction column), the description, payee, reference, balance, fee, currency and status. The mapping is saved under a name and listed as a provider with Edit and Delete, and a file whose header fits a saved mapping is offered it. Mapped rows get the same review as Swedbank and camt.053: duplicates, rule and recall suggestions, unusual amounts, tags, transfers, hand-entered matches and refunds, and a balance column is checked against the ledger and kept as a reconciliation. Credit-card statements import into an account of type Other with the "Card statement" amount style | [Bank statement import](features/bank-statement-import.md#generic-csv) |
 | 2026-09-29 | Refunds: money back is recorded as a refund, an expense with a negative amount in the category it was spent in, which lowers that category, the month's expenses, the budget and spending by payee and raises the balance instead of counting as income. The form has a Refund type, an expense row has "Record refund", which fills the form from the purchase and links the two, and the ledger shows the refund as "+" with a Refund tag and the purchase as "Refunded €12.00". The import review offers "Refund" and "Refund of …" for an incoming row and starts a camt.053 reversal, or a credit from a payee paid in the last 90 days, as a refund; a refund typed in by hand matches the bank's credit. Unusual amounts, subscription detection, price rises, debt payments and rule suggestions ignore refunds | [Transactions](features/transactions.md#refunds) |
 | 2026-09-29 | Monthly digest and the member's language: a member who ticks "Monthly digest" for email or Discord in Settings › Personal › Notifications receives, in the first days of a month, one message about the month that ended, read from the month-close review as that member in the "Everything" scope: income, expenses, net and the share kept, the three expense categories that moved most, the open close items or "Nothing left to do", whether the month is closed and a link to it on the dashboard, with a bell row beside it and nothing for an empty month. The language picked in the interface is saved on the server and used for every email and Discord message to that member, the installation's while none is saved | [Monthly digest](features/monthly-digest.md) |
 | 2026-09-29 | Reconciliation by hand: every account row has a Reconcile action that takes a statement's date and balance and shows the ledger balance on that date, the difference as it is typed and the rows since the previous reconciliation, saving the balance even when it differs; earlier reconciliations are listed with today's difference, which follows later edits, and can be deleted. A camt.053 import keeps its closing balance as a reconciliation by itself, and the month-close checklist has one line per account, reconciled, differs, imported or behind, with a Reconcile link that opens the dialog on the accounts page | [Reconciliation](features/reconciliation.md) |

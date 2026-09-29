@@ -12,6 +12,7 @@ using JxFinance.Domain.Email;
 using JxFinance.Domain.ExchangeRates;
 using JxFinance.Domain.Goals;
 using JxFinance.Domain.Households;
+using JxFinance.Domain.Imports;
 using JxFinance.Domain.Investments;
 using JxFinance.Domain.MonthCloses;
 using JxFinance.Domain.NetWorth;
@@ -56,6 +57,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, ICurren
     public DbSet<CategorizationRule> CategorizationRules => Set<CategorizationRule>();
     public DbSet<CategorizationRuleTag> CategorizationRuleTags => Set<CategorizationRuleTag>();
     public DbSet<SuggestedRuleDismissal> SuggestedRuleDismissals => Set<SuggestedRuleDismissal>();
+    public DbSet<CsvImportMapping> CsvImportMappings => Set<CsvImportMapping>();
     public DbSet<Transaction> Transactions => Set<Transaction>();
     public DbSet<TransactionLine> TransactionLines => Set<TransactionLine>();
     public DbSet<TransactionTag> TransactionTags => Set<TransactionTag>();

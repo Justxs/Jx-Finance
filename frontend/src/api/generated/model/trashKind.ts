@@ -26,4 +26,5 @@ export const TrashKind = {
   categorizationRule: "categorizationRule",
   household: "household",
   attachment: "attachment",
+  csvImportMapping: "csvImportMapping",
 } as const;

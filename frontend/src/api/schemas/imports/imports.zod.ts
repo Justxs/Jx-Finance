@@ -8,7 +8,7 @@
 import * as zod from "zod";
 
 /**
- * Writes the rows the user kept from a preview into the ledger. Rows the preview flagged as already present are skipped rather than duplicated, and the response reports how many were imported and how many were skipped. A row's tagIds are written as they arrive, whether a rule suggested them in the preview or the user picked them, so an empty list imports the row with no tags. A row with existingTransactionId adds nothing: the bank entry is linked to that transaction, which keeps its date, category, tags and description and is then treated as imported, so the same entry is a duplicate next time. The audit entry names the format the rows came from. For a camt.053 file, statement echoes the preview's closing date, balance and currency; when the currency is the account's, that balance is recorded as a reconciliation of the account after the rows are written, replacing one on the same date, and returned with its difference from the ledger. An incoming row sent with asRefund is written as a refund: an expense with the negated amount in the expense category given, linked to refundOfTransactionId when that is set.
+ * Writes the rows the user kept from a preview into the ledger. Rows the preview flagged as already present are skipped rather than duplicated, and the response reports how many were imported and how many were skipped. A row's tagIds are written as they arrive, whether a rule suggested them in the preview or the user picked them, so an empty list imports the row with no tags. A row with existingTransactionId adds nothing: the bank entry is linked to that transaction, which keeps its date, category, tags and description and is then treated as imported, so the same entry is a duplicate next time. The audit entry names the format the rows came from, and for genericCsv the mapping. For a camt.053 file or a mapped CSV with a balance column, statement echoes the preview's closing date, balance and currency; when the currency is the account's, that balance is recorded as a reconciliation of the account after the rows are written, replacing one on the same date, and returned with its difference from the ledger. An incoming row sent with asRefund is written as a refund: an expense with the negated amount in the expense category given, linked to refundOfTransactionId when that is set.
  * @summary Commit previewed statement rows
  */
 
@@ -78,9 +78,9 @@ export const ImportConfirmBody = zod.object({
       "The rows to import, as returned by preview, with any category and tag corrections applied.",
     ),
   format: zod
-    .enum(["swedbankCsv", "camt053"])
+    .enum(["swedbankCsv", "camt053", "genericCsv"])
     .describe(
-      "The statement format: swedbankCsv for a Swedbank CSV export or camt053 for an ISO 20022 camt.053 XML statement.",
+      "The statement format: swedbankCsv for a Swedbank CSV export, camt053 for an ISO 20022 camt.053 XML statement, or genericCsv for a CSV read through a saved mapping.",
     ),
   statement: zod
     .union([
@@ -127,7 +127,13 @@ export const ImportConfirmBody = zod.object({
     ])
     .optional()
     .describe(
-      "Optional. The closing balance the camt.053 preview answered; ignored for other formats.",
+      "Optional. The closing balance the camt.053 or mapped CSV preview answered; ignored for Swedbank CSV.",
+    ),
+  mappingId: zod
+    .uuid()
+    .nullish()
+    .describe(
+      "The saved CSV column mapping the preview used; required for genericCsv, whose audit entry names it.",
     ),
 });
 
@@ -198,17 +204,536 @@ export const ImportConfirmResponse = zod.object({
 });
 
 /**
- * Parses an exported bank statement and returns the rows it found, each with a flag saying whether a matching transaction already exists in the account. Two formats are read: swedbankCsv, the Swedbank CSV export, and camt053, an ISO 20022 camt.053 XML statement. From a camt.053 file only booked entries are returned; pending and informational entries and entries that could not be read are counted in statement. When the file holds several statements, the one for the account's IBAN is read. A counterparty IBAN that belongs to another of your accounts fills in suggestedTransferAccountId. Your categorization rules are evaluated against each row's description, amount and flow type, and the first rule that matches fills in suggestedCategoryId, suggestedTagIds and matchedRuleName; a row nothing matched carries none of them. The suggestion is a suggestion: confirm sends back whatever the client decided. A row that is not a duplicate and has the same flow type, amount and currency as a transaction entered by hand on the account within three days of it carries that transaction in matchedTransaction, each transaction offered to one row at most, the closest date first. An incoming row that is neither a duplicate nor matched carries refundCandidate when an expense on the account, not a refund, in the same currency, of at least the row's amount and dated at most 90 days before it has the same normalized payee or description as the row; the most recent such expense wins. Nothing is written: this call only reads the file. Send the file as multipart/form-data.
+ * Saves how to read one bank's CSV export, so its next file goes straight to the preview with format genericCsv and this mapping's id. Columns are named by their header text. The amount style decides which columns carry the money: signedNegativeIsExpense and signedPositiveIsExpense read one signed amount column (the second for card statements, where a positive amount is a purchase), debitCredit reads a debit and a credit column, and amountWithDirection reads an amount and a direction column whose value equals expenseValue, ignoring case, for money out. A mapping is personal: nobody else sees it.
+ * @summary Save a CSV column mapping
+ */
+export const createCsvMappingBodyNameMin = 0;
+export const createCsvMappingBodyNameMax = 60;
+
+export const createCsvMappingBodySkipLinesMin = 0;
+export const createCsvMappingBodySkipLinesMax = 20;
+
+export const CreateCsvMappingBody = zod.object({
+  name: zod
+    .string()
+    .min(createCsvMappingBodyNameMin)
+    .max(createCsvMappingBodyNameMax)
+    .describe("What the provider list calls the mapping, at most 60 characters."),
+  encoding: zod
+    .enum(["utf8", "windows1257", "windows1252"])
+    .describe(
+      "The encoding of a file without a byte-order mark: utf8, windows1257 or windows1252.",
+    ),
+  delimiter: zod.string().min(1).describe("A comma, a semicolon, a tab or a pipe."),
+  skipLines: zod
+    .int()
+    .min(createCsvMappingBodySkipLinesMin)
+    .max(createCsvMappingBodySkipLinesMax)
+    .describe("How many non-empty lines sit above the header row, 0 to 20."),
+  amountStyle: zod
+    .enum([
+      "signedNegativeIsExpense",
+      "signedPositiveIsExpense",
+      "debitCredit",
+      "amountWithDirection",
+    ])
+    .describe("How the amount columns say which way the money moved."),
+  dateFormat: zod
+    .string()
+    .describe(
+      "One of yyyy-MM-dd, dd.MM.yyyy, dd/MM/yyyy, MM/dd/yyyy, dd-MM-yyyy, yyyy.MM.dd, yyyy/MM/dd or d.M.yyyy. A time after a space or T is ignored.",
+    ),
+  decimalSeparator: zod
+    .enum(["dot", "comma"])
+    .describe(
+      "The decimal mark of the numbers, dot or comma; the other one is read as a thousands mark.",
+    ),
+  columns: zod
+    .object({
+      date: zod.string(),
+      description: zod.string().nullish(),
+      payee: zod.string().nullish(),
+      amount: zod.string().nullish(),
+      debit: zod.string().nullish(),
+      credit: zod.string().nullish(),
+      direction: zod.string().nullish(),
+      expenseValue: zod.string().nullish(),
+      currency: zod.string().nullish(),
+      reference: zod.string().nullish(),
+      balance: zod.string().nullish(),
+      fee: zod.string().nullish(),
+      status: zod.string().nullish(),
+      bookedValues: zod.string().nullish(),
+    })
+    .describe(
+      "The header names of the columns to read. date is required, and the amount style needs its columns. bookedValues is a comma-separated list of the status values that mean booked.",
+    ),
+  currency: zod
+    .union([
+      zod.null(),
+      zod.enum([
+        "eur",
+        "usd",
+        "gbp",
+        "chf",
+        "pln",
+        "sek",
+        "nok",
+        "dkk",
+        "czk",
+        "huf",
+        "ron",
+        "isk",
+        "try",
+        "jpy",
+        "cny",
+        "hkd",
+        "sgd",
+        "krw",
+        "inr",
+        "idr",
+        "myr",
+        "php",
+        "thb",
+        "aud",
+        "nzd",
+        "cad",
+        "mxn",
+        "brl",
+        "ils",
+        "zar",
+      ]),
+    ])
+    .optional()
+    .describe(
+      "Optional. The currency of every row when the file has no currency column; the account's currency when left out.",
+    ),
+});
+
+export const CreateCsvMappingResponse = zod.object({
+  id: zod.uuid(),
+  name: zod.string(),
+  encoding: zod
+    .enum(["utf8", "windows1257", "windows1252"])
+    .describe(
+      "The encoding of a file without a byte-order mark: utf8, windows1257 or windows1252.",
+    ),
+  delimiter: zod.string(),
+  skipLines: zod.int(),
+  amountStyle: zod
+    .enum([
+      "signedNegativeIsExpense",
+      "signedPositiveIsExpense",
+      "debitCredit",
+      "amountWithDirection",
+    ])
+    .describe("How the amount columns say which way the money moved."),
+  dateFormat: zod.string(),
+  decimalSeparator: zod
+    .enum(["dot", "comma"])
+    .describe(
+      "The decimal mark of the numbers, dot or comma; the other one is read as a thousands mark.",
+    ),
+  currency: zod.union([
+    zod.null(),
+    zod.enum([
+      "eur",
+      "usd",
+      "gbp",
+      "chf",
+      "pln",
+      "sek",
+      "nok",
+      "dkk",
+      "czk",
+      "huf",
+      "ron",
+      "isk",
+      "try",
+      "jpy",
+      "cny",
+      "hkd",
+      "sgd",
+      "krw",
+      "inr",
+      "idr",
+      "myr",
+      "php",
+      "thb",
+      "aud",
+      "nzd",
+      "cad",
+      "mxn",
+      "brl",
+      "ils",
+      "zar",
+    ]),
+  ]),
+  columns: zod
+    .object({
+      date: zod.string(),
+      description: zod.string().nullish(),
+      payee: zod.string().nullish(),
+      amount: zod.string().nullish(),
+      debit: zod.string().nullish(),
+      credit: zod.string().nullish(),
+      direction: zod.string().nullish(),
+      expenseValue: zod.string().nullish(),
+      currency: zod.string().nullish(),
+      reference: zod.string().nullish(),
+      balance: zod.string().nullish(),
+      fee: zod.string().nullish(),
+      status: zod.string().nullish(),
+      bookedValues: zod.string().nullish(),
+    })
+    .describe(
+      "The header names of the columns to read. date is required, and the amount style needs its columns. bookedValues is a comma-separated list of the status values that mean booked.",
+    ),
+});
+
+/**
+ * Returns your saved CSV column mappings by name. The import dialog lists each one as a provider next to Swedbank and camt.053. Mappings are personal: nobody else sees them.
+ * @summary List CSV column mappings
+ */
+export const ListCsvMappingsResponseItem = zod.object({
+  id: zod.uuid(),
+  name: zod.string(),
+  encoding: zod
+    .enum(["utf8", "windows1257", "windows1252"])
+    .describe(
+      "The encoding of a file without a byte-order mark: utf8, windows1257 or windows1252.",
+    ),
+  delimiter: zod.string(),
+  skipLines: zod.int(),
+  amountStyle: zod
+    .enum([
+      "signedNegativeIsExpense",
+      "signedPositiveIsExpense",
+      "debitCredit",
+      "amountWithDirection",
+    ])
+    .describe("How the amount columns say which way the money moved."),
+  dateFormat: zod.string(),
+  decimalSeparator: zod
+    .enum(["dot", "comma"])
+    .describe(
+      "The decimal mark of the numbers, dot or comma; the other one is read as a thousands mark.",
+    ),
+  currency: zod.union([
+    zod.null(),
+    zod.enum([
+      "eur",
+      "usd",
+      "gbp",
+      "chf",
+      "pln",
+      "sek",
+      "nok",
+      "dkk",
+      "czk",
+      "huf",
+      "ron",
+      "isk",
+      "try",
+      "jpy",
+      "cny",
+      "hkd",
+      "sgd",
+      "krw",
+      "inr",
+      "idr",
+      "myr",
+      "php",
+      "thb",
+      "aud",
+      "nzd",
+      "cad",
+      "mxn",
+      "brl",
+      "ils",
+      "zar",
+    ]),
+  ]),
+  columns: zod
+    .object({
+      date: zod.string(),
+      description: zod.string().nullish(),
+      payee: zod.string().nullish(),
+      amount: zod.string().nullish(),
+      debit: zod.string().nullish(),
+      credit: zod.string().nullish(),
+      direction: zod.string().nullish(),
+      expenseValue: zod.string().nullish(),
+      currency: zod.string().nullish(),
+      reference: zod.string().nullish(),
+      balance: zod.string().nullish(),
+      fee: zod.string().nullish(),
+      status: zod.string().nullish(),
+      bookedValues: zod.string().nullish(),
+    })
+    .describe(
+      "The header names of the columns to read. date is required, and the amount style needs its columns. bookedValues is a comma-separated list of the status values that mean booked.",
+    ),
+});
+export const ListCsvMappingsResponse = zod.array(ListCsvMappingsResponseItem);
+
+/**
+ * Removes a saved mapping from the provider list. Rows imported through it stay as they are. The deletion is listed in the trash, and POST /api/trash/restore brings the mapping back.
+ * @summary Delete a CSV column mapping
+ */
+export const DeleteCsvMappingResponse = zod.void();
+
+/**
+ * Replaces every setting of a saved mapping, the column names included. Rows already imported keep their references. Without a reference column a row's reference is a hash of its date, amount, currency, description, payee and balance cells, so changing the description, payee or balance column makes rows imported earlier look new.
+ * @summary Update a CSV column mapping
+ */
+export const updateCsvMappingBodyNameMin = 0;
+export const updateCsvMappingBodyNameMax = 60;
+
+export const updateCsvMappingBodySkipLinesMin = 0;
+export const updateCsvMappingBodySkipLinesMax = 20;
+
+export const UpdateCsvMappingBody = zod.object({
+  name: zod.string().min(updateCsvMappingBodyNameMin).max(updateCsvMappingBodyNameMax),
+  encoding: zod
+    .enum(["utf8", "windows1257", "windows1252"])
+    .describe(
+      "The encoding of a file without a byte-order mark: utf8, windows1257 or windows1252.",
+    ),
+  delimiter: zod.string().min(1),
+  skipLines: zod.int().min(updateCsvMappingBodySkipLinesMin).max(updateCsvMappingBodySkipLinesMax),
+  amountStyle: zod
+    .enum([
+      "signedNegativeIsExpense",
+      "signedPositiveIsExpense",
+      "debitCredit",
+      "amountWithDirection",
+    ])
+    .describe("How the amount columns say which way the money moved."),
+  dateFormat: zod.string(),
+  decimalSeparator: zod
+    .enum(["dot", "comma"])
+    .describe(
+      "The decimal mark of the numbers, dot or comma; the other one is read as a thousands mark.",
+    ),
+  columns: zod
+    .object({
+      date: zod.string(),
+      description: zod.string().nullish(),
+      payee: zod.string().nullish(),
+      amount: zod.string().nullish(),
+      debit: zod.string().nullish(),
+      credit: zod.string().nullish(),
+      direction: zod.string().nullish(),
+      expenseValue: zod.string().nullish(),
+      currency: zod.string().nullish(),
+      reference: zod.string().nullish(),
+      balance: zod.string().nullish(),
+      fee: zod.string().nullish(),
+      status: zod.string().nullish(),
+      bookedValues: zod.string().nullish(),
+    })
+    .describe(
+      "The header names of the columns to read. date is required, and the amount style needs its columns. bookedValues is a comma-separated list of the status values that mean booked.",
+    ),
+  currency: zod
+    .union([
+      zod.null(),
+      zod.enum([
+        "eur",
+        "usd",
+        "gbp",
+        "chf",
+        "pln",
+        "sek",
+        "nok",
+        "dkk",
+        "czk",
+        "huf",
+        "ron",
+        "isk",
+        "try",
+        "jpy",
+        "cny",
+        "hkd",
+        "sgd",
+        "krw",
+        "inr",
+        "idr",
+        "myr",
+        "php",
+        "thb",
+        "aud",
+        "nzd",
+        "cad",
+        "mxn",
+        "brl",
+        "ils",
+        "zar",
+      ]),
+    ])
+    .optional(),
+});
+
+export const UpdateCsvMappingResponse = zod.object({
+  id: zod.uuid(),
+  name: zod.string(),
+  encoding: zod
+    .enum(["utf8", "windows1257", "windows1252"])
+    .describe(
+      "The encoding of a file without a byte-order mark: utf8, windows1257 or windows1252.",
+    ),
+  delimiter: zod.string(),
+  skipLines: zod.int(),
+  amountStyle: zod
+    .enum([
+      "signedNegativeIsExpense",
+      "signedPositiveIsExpense",
+      "debitCredit",
+      "amountWithDirection",
+    ])
+    .describe("How the amount columns say which way the money moved."),
+  dateFormat: zod.string(),
+  decimalSeparator: zod
+    .enum(["dot", "comma"])
+    .describe(
+      "The decimal mark of the numbers, dot or comma; the other one is read as a thousands mark.",
+    ),
+  currency: zod.union([
+    zod.null(),
+    zod.enum([
+      "eur",
+      "usd",
+      "gbp",
+      "chf",
+      "pln",
+      "sek",
+      "nok",
+      "dkk",
+      "czk",
+      "huf",
+      "ron",
+      "isk",
+      "try",
+      "jpy",
+      "cny",
+      "hkd",
+      "sgd",
+      "krw",
+      "inr",
+      "idr",
+      "myr",
+      "php",
+      "thb",
+      "aud",
+      "nzd",
+      "cad",
+      "mxn",
+      "brl",
+      "ils",
+      "zar",
+    ]),
+  ]),
+  columns: zod
+    .object({
+      date: zod.string(),
+      description: zod.string().nullish(),
+      payee: zod.string().nullish(),
+      amount: zod.string().nullish(),
+      debit: zod.string().nullish(),
+      credit: zod.string().nullish(),
+      direction: zod.string().nullish(),
+      expenseValue: zod.string().nullish(),
+      currency: zod.string().nullish(),
+      reference: zod.string().nullish(),
+      balance: zod.string().nullish(),
+      fee: zod.string().nullish(),
+      status: zod.string().nullish(),
+      bookedValues: zod.string().nullish(),
+    })
+    .describe(
+      "The header names of the columns to read. date is required, and the amount style needs its columns. bookedValues is a comma-separated list of the status values that mean booked.",
+    ),
+});
+
+/**
+ * Reads a CSV export from any bank, card issuer or payment app and proposes how to read it: the text encoding (a byte-order mark decides UTF-8 or UTF-16, otherwise windows1257 is proposed when the bytes are not valid UTF-8), the delimiter (comma, semicolon, tab or pipe) and how many lines sit above the header row. It returns the header names, up to ten sample rows of raw cells, and for each column the date formats that read every sample and the decimal separator its numbers use. matchingMappingIds lists your saved mappings whose every named column is in this header, so the client can offer one. Send encoding, delimiter or skipLines to read the file again after the user corrected a proposal. Nothing is written. Send the file as multipart/form-data.
+ * @summary Inspect a CSV file for a column mapping
+ */
+export const inspectCsvBodySkipLinesMin = 0;
+export const inspectCsvBodySkipLinesMax = 20;
+
+export const InspectCsvBody = zod.object({
+  file: zod.instanceof(Blob).optional(),
+  encoding: zod
+    .union([
+      zod.null(),
+      zod
+        .enum(["utf8", "windows1257", "windows1252"])
+        .describe(
+          "The encoding of a file without a byte-order mark: utf8, windows1257 or windows1252.",
+        ),
+    ])
+    .optional()
+    .describe(
+      "Optional. The encoding to read the file with when it has no byte-order mark: utf8, windows1257 or windows1252.",
+    ),
+  delimiter: zod
+    .string()
+    .nullish()
+    .describe("Optional. The delimiter: a comma, semicolon, tab or pipe."),
+  skipLines: zod
+    .int()
+    .min(inspectCsvBodySkipLinesMin)
+    .max(inspectCsvBodySkipLinesMax)
+    .nullish()
+    .describe("Optional. How many non-empty lines sit above the header row, 0 to 20."),
+});
+
+export const InspectCsvResponse = zod.object({
+  encoding: zod
+    .enum(["utf8", "windows1257", "windows1252"])
+    .describe(
+      "The encoding of a file without a byte-order mark: utf8, windows1257 or windows1252.",
+    ),
+  delimiter: zod.string(),
+  skipLines: zod.int(),
+  columns: zod.array(
+    zod.object({
+      name: zod.string(),
+      dateFormats: zod.array(zod.string()),
+      decimalSeparator: zod.union([
+        zod.null(),
+        zod
+          .enum(["dot", "comma"])
+          .describe(
+            "The decimal mark of the numbers, dot or comma; the other one is read as a thousands mark.",
+          ),
+      ]),
+    }),
+  ),
+  samples: zod.array(zod.array(zod.string())),
+  matchingMappingIds: zod.array(zod.uuid()),
+});
+
+/**
+ * Parses an exported bank statement and returns the rows it found, each with a flag saying whether a matching transaction already exists in the account. Three formats are read: swedbankCsv, the Swedbank CSV export, camt053, an ISO 20022 camt.053 XML statement, and genericCsv, any CSV export read through the saved column mapping named by mappingId. From a camt.053 file only booked entries are returned; pending and informational entries and entries that could not be read are counted in statement. A mapped CSV counts rows its status filter leaves out or whose amount is zero in notBooked and rows it cannot read in unreadable, and with a balance column answers the balance of its latest row as the closing balance. When the file holds several statements, the one for the account's IBAN is read. A counterparty IBAN that belongs to another of your accounts fills in suggestedTransferAccountId. Your categorization rules are evaluated against each row's description, amount and flow type, and the first rule that matches fills in suggestedCategoryId, suggestedTagIds and matchedRuleName; a row nothing matched carries none of them. The suggestion is a suggestion: confirm sends back whatever the client decided. A row that is not a duplicate and has the same flow type, amount and currency as a transaction entered by hand on the account within three days of it carries that transaction in matchedTransaction, each transaction offered to one row at most, the closest date first. An incoming row that is neither a duplicate nor matched carries refundCandidate when an expense on the account, not a refund, in the same currency, of at least the row's amount and dated at most 90 days before it has the same normalized payee or description as the row; the most recent such expense wins. Nothing is written: this call only reads the file. Send the file as multipart/form-data.
  * @summary Preview a bank statement
  */
 export const ImportPreviewBody = zod.object({
   file: zod.instanceof(Blob).optional(),
   accountId: zod.uuid().optional().describe("The account the statement belongs to."),
   format: zod
-    .enum(["swedbankCsv", "camt053"])
+    .enum(["swedbankCsv", "camt053", "genericCsv"])
     .optional()
     .describe(
-      "The statement format: swedbankCsv for a Swedbank CSV export or camt053 for an ISO 20022 camt.053 XML statement.",
+      "The statement format: swedbankCsv for a Swedbank CSV export, camt053 for an ISO 20022 camt.053 XML statement, or genericCsv for a CSV read through a saved mapping.",
+    ),
+  mappingId: zod
+    .uuid()
+    .nullish()
+    .describe(
+      "The saved CSV column mapping to read the file with; required for genericCsv and ignored otherwise.",
     ),
 });
 

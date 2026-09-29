@@ -24,6 +24,7 @@ internal static class Retention
         TrashKind.RecurringBill,
         TrashKind.InvestmentTransaction,
         TrashKind.CategorizationRule,
+        TrashKind.CsvImportMapping,
     ];
 
     internal static IReadOnlyList<TrashKind> KeptKinds { get; } =
@@ -81,6 +82,7 @@ internal static class Retention
         purged += await PurgeAsync(Expired(db.RecurringBills, cutoff), ct);
         purged += await PurgeAsync(Expired(db.InvestmentTransactions, cutoff), ct);
         purged += await PurgeAsync(Expired(db.CategorizationRules, cutoff), ct);
+        purged += await PurgeAsync(Expired(db.CsvImportMappings, cutoff), ct);
         return purged;
     }
 

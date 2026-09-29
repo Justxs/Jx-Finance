@@ -7,11 +7,12 @@
  */
 
 /**
- * The statement format: swedbankCsv for a Swedbank CSV export or camt053 for an ISO 20022 camt.053 XML statement.
+ * The statement format: swedbankCsv for a Swedbank CSV export, camt053 for an ISO 20022 camt.053 XML statement, or genericCsv for a CSV read through a saved mapping.
  */
 export type StatementFormat = (typeof StatementFormat)[keyof typeof StatementFormat];
 
 export const StatementFormat = {
   swedbankCsv: "swedbankCsv",
   camt053: "camt053",
+  genericCsv: "genericCsv",
 } as const;

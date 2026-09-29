@@ -50,7 +50,7 @@ Every feature the current code implements, one page per feature under `features/
 | 37 | [Reconciliation against a statement balance](reconciliation.md) | always on; recording from a camt.053 import follows `Import` | `Accounts` (`accounts/{id}/reconciliations`, `ReconciliationService`, `AccountMovements`), the closing-balance hook of `Imports`, the account lines of `MonthCloses` | `accounts` (`reconcile-dialog`, Reconcile row action, `?reconcile=`), `imports` (result line), `month-close` (checklist account lines) |
 | 38 | [Monthly digest and the member's language](monthly-digest.md) | `MonthClose`; each member opts in per channel | `MonthlyDigestJob`, `Common/Notifications` (`MonthlyDigest`, texts), `Users` (`users/me/language`) | `profile` (`notifications-section`: the digest row), notification bell, `stores/app-store.ts` (language saved on the server) |
 
-Not implemented: live prices, per-user reporting currency, manual exchange rates, credit-card statements, PWA/offline, bank APIs, scheduled or offsite backups and sharing of budgets, goals, assets, debts and bills. See [Features and scope](../scope.md) and, for what is planned next, [Backlog and ideas](../backlog.md).
+Not implemented: live prices, per-user reporting currency, manual exchange rates, PWA/offline, bank APIs, scheduled or offsite backups and sharing of budgets, goals, assets, debts and bills. See [Features and scope](../scope.md) and, for what is planned next, [Backlog and ideas](../backlog.md).
 
 ## Where to read more
 

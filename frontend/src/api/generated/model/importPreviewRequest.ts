@@ -12,4 +12,9 @@ export interface ImportPreviewRequest {
   /** The account the statement belongs to. */
   accountId?: string;
   format?: StatementFormat;
+  /**
+   * The saved CSV column mapping to read the file with; required for genericCsv and ignored otherwise.
+   * @nullable
+   */
+  mappingId?: string | null;
 }

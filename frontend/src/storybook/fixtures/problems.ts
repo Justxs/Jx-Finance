@@ -114,3 +114,14 @@ export const dashboardCardUnknownProblem = problemOf(
   "'weather' is not a dashboard card.",
   { name: "order[0]", instance: "/api/users/me/dashboard-layout" },
 );
+
+export const csvMappingIncompleteProblem = problemOf(
+  400,
+  "import.mappingIncomplete",
+  "Name the amount column for a signed amount, the debit and credit columns, or the amount, direction and money-out value.",
+  { instance: "/api/import/csv-mappings" },
+);
+
+export const missingColumnsProblem = problemOf(400, "import.missingColumns", '"Completed Date"', {
+  instance: "/api/import/preview",
+});

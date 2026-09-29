@@ -92,6 +92,11 @@ const rules: readonly Rule[] = [
     refresh: [...ledger, api.getCategorizationRulesQueryKey],
   },
   {
+    after: [api.getCreateCsvMappingMutationKey, api.getUpdateCsvMappingMutationKey],
+    deleted: [api.getDeleteCsvMappingMutationKey],
+    refresh: [api.getListCsvMappingsQueryKey],
+  },
+  {
     after: [api.getImportConfirmMutationKey],
     refresh: [...ledger, api.getTransfersQueryKey, api.getSuggestedRulesQueryKey],
   },
@@ -337,6 +342,7 @@ export const mutationsWithoutInvalidation: readonly MutationKeyGetter[] = [
   api.getSetupMutationKey,
   api.getSetupTwoFactorMutationKey,
   api.getImportPreviewMutationKey,
+  api.getInspectCsvMutationKey,
   api.getPreviewCategorizationRunMutationKey,
   api.getTestCategorizationRuleMutationKey,
   api.getRestoreBackupMutationKey,

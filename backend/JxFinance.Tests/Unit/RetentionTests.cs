@@ -113,6 +113,7 @@ public sealed class RetentionTests
                 "RecurringBills",
                 "InvestmentTransactions",
                 "CategorizationRules",
+                "CsvImportMappings",
             ],
             tables);
         Assert.All(

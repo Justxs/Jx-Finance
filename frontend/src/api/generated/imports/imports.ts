@@ -5,31 +5,60 @@
  * Personal and household finance ledger. Every route lives under /api and answers JSON. Money is carried as a decimal string with at most two decimal places so nothing is lost to floating point; dates are YYYY-MM-DD in the instance time zone. Collections that can grow are paged with page and pageSize and answer with items, page, pageSize, and total. Authentication is a session cookie from POST /api/auth/login, so browser clients must send credentials. Failures answer application/problem+json with a machine-readable code per error; see the ProblemDetails schema.
  * OpenAPI spec version: v1
  */
-import { useMutation } from "@tanstack/react-query";
+import {
+  queryOptions as queryOptionsBuilder,
+  useMutation,
+  useSuspenseQuery,
+} from "@tanstack/react-query";
 import type {
+  DataTag,
   MutationFunction,
   QueryClient,
+  QueryFunction,
+  QueryKey,
   UseMutationOptions,
   UseMutationResult,
+  UseSuspenseQueryOptions,
+  UseSuspenseQueryResult,
 } from "@tanstack/react-query";
 import { customFetch } from "../../client";
 import type { ErrorType } from "../../client";
 import type {
+  CreateCsvMappingRequest,
+  CsvMappingResponse,
   ImportConfirmRequest,
   ImportConfirmResponse,
   ImportPreviewRequest,
   ImportPreviewResponse,
+  InspectCsvRequest,
+  InspectCsvResponse,
   ProblemDetails,
+  UpdateCsvMappingRequest,
 } from "../model";
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
+
+const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKey: K } => {
+  const result = { queryKey } as T & { queryKey: K };
+  for (const key of Object.keys(query)) {
+    // The explicit queryKey always wins, matching the previous
+    // `{ ...query, queryKey }` spread where it was set last.
+    if (key === "queryKey") continue;
+    Object.defineProperty(result, key, {
+      enumerable: true,
+      configurable: true,
+      get: () => (query as Record<string, unknown>)[key],
+    });
+  }
+  return result;
+};
 
 export const getImportConfirmUrl = () => {
   return `/api/import/confirm`;
 };
 
 /**
- * Writes the rows the user kept from a preview into the ledger. Rows the preview flagged as already present are skipped rather than duplicated, and the response reports how many were imported and how many were skipped. A row's tagIds are written as they arrive, whether a rule suggested them in the preview or the user picked them, so an empty list imports the row with no tags. A row with existingTransactionId adds nothing: the bank entry is linked to that transaction, which keeps its date, category, tags and description and is then treated as imported, so the same entry is a duplicate next time. The audit entry names the format the rows came from. For a camt.053 file, statement echoes the preview's closing date, balance and currency; when the currency is the account's, that balance is recorded as a reconciliation of the account after the rows are written, replacing one on the same date, and returned with its difference from the ledger. An incoming row sent with asRefund is written as a refund: an expense with the negated amount in the expense category given, linked to refundOfTransactionId when that is set.
+ * Writes the rows the user kept from a preview into the ledger. Rows the preview flagged as already present are skipped rather than duplicated, and the response reports how many were imported and how many were skipped. A row's tagIds are written as they arrive, whether a rule suggested them in the preview or the user picked them, so an empty list imports the row with no tags. A row with existingTransactionId adds nothing: the bank entry is linked to that transaction, which keeps its date, category, tags and description and is then treated as imported, so the same entry is a duplicate next time. The audit entry names the format the rows came from, and for genericCsv the mapping. For a camt.053 file or a mapped CSV with a balance column, statement echoes the preview's closing date, balance and currency; when the currency is the account's, that balance is recorded as a reconciliation of the account after the rows are written, replacing one on the same date, and returned with its difference from the ledger. An incoming row sent with asRefund is written as a refund: an expense with the negated amount in the expense category given, linked to refundOfTransactionId when that is set.
  * @summary Commit previewed statement rows
  */
 export const importConfirm = async (
@@ -128,12 +157,523 @@ export const useImportConfirm = <TError = ErrorType<ProblemDetails>, TContext = 
 > => {
   return useMutation(getImportConfirmMutationOptions(options), queryClient);
 };
+export const getCreateCsvMappingUrl = () => {
+  return `/api/import/csv-mappings`;
+};
+
+/**
+ * Saves how to read one bank's CSV export, so its next file goes straight to the preview with format genericCsv and this mapping's id. Columns are named by their header text. The amount style decides which columns carry the money: signedNegativeIsExpense and signedPositiveIsExpense read one signed amount column (the second for card statements, where a positive amount is a purchase), debitCredit reads a debit and a credit column, and amountWithDirection reads an amount and a direction column whose value equals expenseValue, ignoring case, for money out. A mapping is personal: nobody else sees it.
+ * @summary Save a CSV column mapping
+ */
+export const createCsvMapping = async (
+  createCsvMappingRequest: CreateCsvMappingRequest,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<CsvMappingResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return customFetch<CsvMappingResponse>(getCreateCsvMappingUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(createCsvMappingRequest),
+  });
+};
+
+export const getCreateCsvMappingMutationKey = () => ["createCsvMapping"] as const;
+
+export const getCreateCsvMappingMutationOptions = <
+  TError = ErrorType<ProblemDetails>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createCsvMapping>>,
+    TError,
+    CreateCsvMappingMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createCsvMapping>>,
+  TError,
+  CreateCsvMappingMutationVariables,
+  TContext
+> => {
+  const mutationKey = getCreateCsvMappingMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createCsvMapping>>,
+    CreateCsvMappingMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return createCsvMapping(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateCsvMappingMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createCsvMapping>>
+>;
+export type CreateCsvMappingMutationBody = CreateCsvMappingRequest;
+export type CreateCsvMappingMutationError = ErrorType<ProblemDetails>;
+export type CreateCsvMappingMutationVariables = { data: CreateCsvMappingRequest };
+
+/**
+ * @summary Save a CSV column mapping
+ */
+export const useCreateCsvMapping = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof createCsvMapping>>,
+      TError,
+      CreateCsvMappingMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof createCsvMapping>>,
+  TError,
+  CreateCsvMappingMutationVariables,
+  TContext
+> => {
+  return useMutation(getCreateCsvMappingMutationOptions(options), queryClient);
+};
+export const getListCsvMappingsUrl = () => {
+  return `/api/import/csv-mappings`;
+};
+
+/**
+ * Returns your saved CSV column mappings by name. The import dialog lists each one as a provider next to Swedbank and camt.053. Mappings are personal: nobody else sees them.
+ * @summary List CSV column mappings
+ */
+export const listCsvMappings = async (
+  options?: Parameters<typeof customFetch>[1],
+): Promise<CsvMappingResponse[]> => {
+  return customFetch<CsvMappingResponse[]>(getListCsvMappingsUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListCsvMappingsQueryKey = () => {
+  return [`/api/import/csv-mappings`] as const;
+};
+
+export const getListCsvMappingsSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof listCsvMappings>>,
+  TError = ErrorType<ProblemDetails>,
+>(options?: {
+  query?: Partial<
+    UseSuspenseQueryOptions<Awaited<ReturnType<typeof listCsvMappings>>, TError, TData>
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListCsvMappingsQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listCsvMappings>>> = ({ signal }) =>
+    listCsvMappings({ signal, ...requestOptions });
+
+  return queryOptionsBuilder({
+    queryKey,
+    ...queryOptions,
+    queryFn: queryOptions?.queryFn ?? queryFn,
+  }) as UseSuspenseQueryOptions<Awaited<ReturnType<typeof listCsvMappings>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  } & {
+    throwOnError?: ((this: never, error: TError) => boolean) & { readonly __inferenceOnly: never };
+  };
+};
+
+export type ListCsvMappingsSuspenseQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listCsvMappings>>
+>;
+export type ListCsvMappingsSuspenseQueryError = ErrorType<ProblemDetails>;
+
+export function useListCsvMappingsSuspense<
+  TData = Awaited<ReturnType<typeof listCsvMappings>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options: {
+    query: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof listCsvMappings>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListCsvMappingsSuspense<
+  TData = Awaited<ReturnType<typeof listCsvMappings>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof listCsvMappings>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListCsvMappingsSuspense<
+  TData = Awaited<ReturnType<typeof listCsvMappings>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof listCsvMappings>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List CSV column mappings
+ */
+
+export function useListCsvMappingsSuspense<
+  TData = Awaited<ReturnType<typeof listCsvMappings>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof listCsvMappings>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListCsvMappingsSuspenseQueryOptions(options);
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export const getDeleteCsvMappingUrl = (id: string) => {
+  return `/api/import/csv-mappings/${id}`;
+};
+
+/**
+ * Removes a saved mapping from the provider list. Rows imported through it stay as they are. The deletion is listed in the trash, and POST /api/trash/restore brings the mapping back.
+ * @summary Delete a CSV column mapping
+ */
+export const deleteCsvMapping = async (
+  id: string,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<void> => {
+  return customFetch<void>(getDeleteCsvMappingUrl(id), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getDeleteCsvMappingMutationKey = () => ["deleteCsvMapping"] as const;
+
+export const getDeleteCsvMappingMutationOptions = <
+  TError = ErrorType<ProblemDetails>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteCsvMapping>>,
+    TError,
+    DeleteCsvMappingMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteCsvMapping>>,
+  TError,
+  DeleteCsvMappingMutationVariables,
+  TContext
+> => {
+  const mutationKey = getDeleteCsvMappingMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteCsvMapping>>,
+    DeleteCsvMappingMutationVariables
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return deleteCsvMapping(id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteCsvMappingMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteCsvMapping>>
+>;
+
+export type DeleteCsvMappingMutationError = ErrorType<ProblemDetails>;
+export type DeleteCsvMappingMutationVariables = { id: string };
+
+/**
+ * @summary Delete a CSV column mapping
+ */
+export const useDeleteCsvMapping = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof deleteCsvMapping>>,
+      TError,
+      DeleteCsvMappingMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof deleteCsvMapping>>,
+  TError,
+  DeleteCsvMappingMutationVariables,
+  TContext
+> => {
+  return useMutation(getDeleteCsvMappingMutationOptions(options), queryClient);
+};
+export const getUpdateCsvMappingUrl = (id: string) => {
+  return `/api/import/csv-mappings/${id}`;
+};
+
+/**
+ * Replaces every setting of a saved mapping, the column names included. Rows already imported keep their references. Without a reference column a row's reference is a hash of its date, amount, currency, description, payee and balance cells, so changing the description, payee or balance column makes rows imported earlier look new.
+ * @summary Update a CSV column mapping
+ */
+export const updateCsvMapping = async (
+  id: string,
+  updateCsvMappingRequest: UpdateCsvMappingRequest,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<CsvMappingResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return customFetch<CsvMappingResponse>(getUpdateCsvMappingUrl(id), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(updateCsvMappingRequest),
+  });
+};
+
+export const getUpdateCsvMappingMutationKey = () => ["updateCsvMapping"] as const;
+
+export const getUpdateCsvMappingMutationOptions = <
+  TError = ErrorType<ProblemDetails>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateCsvMapping>>,
+    TError,
+    UpdateCsvMappingMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateCsvMapping>>,
+  TError,
+  UpdateCsvMappingMutationVariables,
+  TContext
+> => {
+  const mutationKey = getUpdateCsvMappingMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateCsvMapping>>,
+    UpdateCsvMappingMutationVariables
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return updateCsvMapping(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateCsvMappingMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateCsvMapping>>
+>;
+export type UpdateCsvMappingMutationBody = UpdateCsvMappingRequest;
+export type UpdateCsvMappingMutationError = ErrorType<ProblemDetails>;
+export type UpdateCsvMappingMutationVariables = { id: string; data: UpdateCsvMappingRequest };
+
+/**
+ * @summary Update a CSV column mapping
+ */
+export const useUpdateCsvMapping = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof updateCsvMapping>>,
+      TError,
+      UpdateCsvMappingMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof updateCsvMapping>>,
+  TError,
+  UpdateCsvMappingMutationVariables,
+  TContext
+> => {
+  return useMutation(getUpdateCsvMappingMutationOptions(options), queryClient);
+};
+export const getInspectCsvUrl = () => {
+  return `/api/import/csv/inspect`;
+};
+
+/**
+ * Reads a CSV export from any bank, card issuer or payment app and proposes how to read it: the text encoding (a byte-order mark decides UTF-8 or UTF-16, otherwise windows1257 is proposed when the bytes are not valid UTF-8), the delimiter (comma, semicolon, tab or pipe) and how many lines sit above the header row. It returns the header names, up to ten sample rows of raw cells, and for each column the date formats that read every sample and the decimal separator its numbers use. matchingMappingIds lists your saved mappings whose every named column is in this header, so the client can offer one. Send encoding, delimiter or skipLines to read the file again after the user corrected a proposal. Nothing is written. Send the file as multipart/form-data.
+ * @summary Inspect a CSV file for a column mapping
+ */
+export const inspectCsv = async (
+  inspectCsvRequest: InspectCsvRequest,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<InspectCsvResponse> => {
+  const formData = new FormData();
+  if (inspectCsvRequest.file !== undefined) {
+    formData.append(`file`, inspectCsvRequest.file);
+  }
+  if (inspectCsvRequest.encoding !== undefined && inspectCsvRequest.encoding !== null) {
+    formData.append(`encoding`, inspectCsvRequest.encoding);
+  }
+  if (inspectCsvRequest.delimiter !== undefined && inspectCsvRequest.delimiter !== null) {
+    formData.append(`delimiter`, inspectCsvRequest.delimiter);
+  }
+  if (inspectCsvRequest.skipLines !== undefined && inspectCsvRequest.skipLines !== null) {
+    formData.append(`skipLines`, inspectCsvRequest.skipLines.toString());
+  }
+
+  return customFetch<InspectCsvResponse>(getInspectCsvUrl(), {
+    ...options,
+    method: "POST",
+    body: formData,
+  });
+};
+
+export const getInspectCsvMutationKey = () => ["inspectCsv"] as const;
+
+export const getInspectCsvMutationOptions = <
+  TError = ErrorType<ProblemDetails>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof inspectCsv>>,
+    TError,
+    InspectCsvMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof inspectCsv>>,
+  TError,
+  InspectCsvMutationVariables,
+  TContext
+> => {
+  const mutationKey = getInspectCsvMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof inspectCsv>>,
+    InspectCsvMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return inspectCsv(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type InspectCsvMutationResult = NonNullable<Awaited<ReturnType<typeof inspectCsv>>>;
+export type InspectCsvMutationBody = InspectCsvRequest;
+export type InspectCsvMutationError = ErrorType<ProblemDetails>;
+export type InspectCsvMutationVariables = { data: InspectCsvRequest };
+
+/**
+ * @summary Inspect a CSV file for a column mapping
+ */
+export const useInspectCsv = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof inspectCsv>>,
+      TError,
+      InspectCsvMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof inspectCsv>>,
+  TError,
+  InspectCsvMutationVariables,
+  TContext
+> => {
+  return useMutation(getInspectCsvMutationOptions(options), queryClient);
+};
 export const getImportPreviewUrl = () => {
   return `/api/import/preview`;
 };
 
 /**
- * Parses an exported bank statement and returns the rows it found, each with a flag saying whether a matching transaction already exists in the account. Two formats are read: swedbankCsv, the Swedbank CSV export, and camt053, an ISO 20022 camt.053 XML statement. From a camt.053 file only booked entries are returned; pending and informational entries and entries that could not be read are counted in statement. When the file holds several statements, the one for the account's IBAN is read. A counterparty IBAN that belongs to another of your accounts fills in suggestedTransferAccountId. Your categorization rules are evaluated against each row's description, amount and flow type, and the first rule that matches fills in suggestedCategoryId, suggestedTagIds and matchedRuleName; a row nothing matched carries none of them. The suggestion is a suggestion: confirm sends back whatever the client decided. A row that is not a duplicate and has the same flow type, amount and currency as a transaction entered by hand on the account within three days of it carries that transaction in matchedTransaction, each transaction offered to one row at most, the closest date first. An incoming row that is neither a duplicate nor matched carries refundCandidate when an expense on the account, not a refund, in the same currency, of at least the row's amount and dated at most 90 days before it has the same normalized payee or description as the row; the most recent such expense wins. Nothing is written: this call only reads the file. Send the file as multipart/form-data.
+ * Parses an exported bank statement and returns the rows it found, each with a flag saying whether a matching transaction already exists in the account. Three formats are read: swedbankCsv, the Swedbank CSV export, camt053, an ISO 20022 camt.053 XML statement, and genericCsv, any CSV export read through the saved column mapping named by mappingId. From a camt.053 file only booked entries are returned; pending and informational entries and entries that could not be read are counted in statement. A mapped CSV counts rows its status filter leaves out or whose amount is zero in notBooked and rows it cannot read in unreadable, and with a balance column answers the balance of its latest row as the closing balance. When the file holds several statements, the one for the account's IBAN is read. A counterparty IBAN that belongs to another of your accounts fills in suggestedTransferAccountId. Your categorization rules are evaluated against each row's description, amount and flow type, and the first rule that matches fills in suggestedCategoryId, suggestedTagIds and matchedRuleName; a row nothing matched carries none of them. The suggestion is a suggestion: confirm sends back whatever the client decided. A row that is not a duplicate and has the same flow type, amount and currency as a transaction entered by hand on the account within three days of it carries that transaction in matchedTransaction, each transaction offered to one row at most, the closest date first. An incoming row that is neither a duplicate nor matched carries refundCandidate when an expense on the account, not a refund, in the same currency, of at least the row's amount and dated at most 90 days before it has the same normalized payee or description as the row; the most recent such expense wins. Nothing is written: this call only reads the file. Send the file as multipart/form-data.
  * @summary Preview a bank statement
  */
 export const importPreview = async (
@@ -149,6 +689,9 @@ export const importPreview = async (
   }
   if (importPreviewRequest.format !== undefined) {
     formData.append(`format`, importPreviewRequest.format);
+  }
+  if (importPreviewRequest.mappingId !== undefined && importPreviewRequest.mappingId !== null) {
+    formData.append(`mappingId`, importPreviewRequest.mappingId);
   }
 
   return customFetch<ImportPreviewResponse>(getImportPreviewUrl(), {

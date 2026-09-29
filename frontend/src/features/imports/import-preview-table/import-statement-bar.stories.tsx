@@ -17,6 +17,7 @@ const meta = {
   component: ImportStatementBar,
   args: {
     statement: camtStatement,
+    format: "camt053",
     rows,
     accounts,
     onSwitchAccount: (accountId) => toast.message(`Switch to ${accountId}`),

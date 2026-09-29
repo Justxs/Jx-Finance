@@ -211,3 +211,61 @@ test("a camt.053 statement proposes the transfer from the IBAN and agrees with t
   const accounts = await readJson(await page.request.get("/api/accounts"), AccountsResponse);
   expect(accounts.find((account) => account.id === checkingId)?.currentBalance).toBe("1934.23");
 });
+
+function revolutExport(reference: string, rows: string[]) {
+  return [
+    "Type,Product,Started Date,Completed Date,Description,Amount,Fee,Currency,State,Balance",
+    ...rows.map((row) => row.replace("{ref}", reference)),
+  ].join("\n");
+}
+
+test("any bank's CSV is mapped once and the next file goes through the saved mapping", async ({
+  page,
+}) => {
+  const reference = unique("E2ECSV").replace(" ", "-");
+  const checking = unique("Csv checking");
+  const mappingName = unique("Revolut");
+  const date = today();
+  await createAccount(page.request, checking);
+  const coffee = `CARD_PAYMENT,Current,${date} 08:00:00,${date} 08:00:01,Coffee {ref},-3.50,0.00,EUR,COMPLETED,96.50`;
+  const topUp = `TOPUP,Current,${date} 09:00:00,${date} 09:00:01,Top-up {ref},500.00,0.00,EUR,COMPLETED,596.50`;
+  const bakery = `CARD_PAYMENT,Current,${date} 10:00:00,${date} 10:00:01,Bakery {ref},-2.20,0.00,EUR,COMPLETED,594.30`;
+
+  await page.goto("/profile?section=import");
+  await page.getByRole("button", { name: "Import bank statement" }).click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByRole("button", { name: /Other bank \(CSV\)/ }).click();
+  await choose(page, dialog.getByRole("combobox", { name: "Account" }), checking);
+  await dialog.locator("#import-file").setInputFiles({
+    name: "revolut.csv",
+    mimeType: "text/csv",
+    buffer: Buffer.from(revolutExport(reference, [coffee, topUp]), "utf8"),
+  });
+  await dialog.getByRole("button", { name: "Preview" }).click();
+
+  await expect(dialog.getByRole("region", { name: "Map the columns" })).toBeVisible();
+  await dialog.getByLabel("Name", { exact: true }).fill(mappingName);
+  await choose(page, dialog.getByRole("combobox", { name: "Description" }), /^Description ·/);
+  await dialog.getByRole("button", { name: "Save and preview" }).click();
+  await expect(dialog.getByRole("row", { name: new RegExp(`Coffee ${reference}`) })).toBeVisible();
+  await dialog.getByRole("button", { name: "Import 2 rows" }).click();
+  await expect(dialog.getByText("Imported 2 rows.")).toBeVisible();
+
+  await dialog.getByRole("button", { name: "All providers" }).click();
+  await dialog.getByRole("button", { name: new RegExp(`^${mappingName}`) }).click();
+  await choose(page, dialog.getByRole("combobox", { name: "Account" }), checking);
+  await dialog.locator("#import-file").setInputFiles({
+    name: "revolut-next.csv",
+    mimeType: "text/csv",
+    buffer: Buffer.from(revolutExport(reference, [coffee, topUp, bakery]), "utf8"),
+  });
+  await dialog.getByRole("button", { name: "Preview" }).click();
+
+  await expect(dialog.getByRole("row", { name: new RegExp(`Bakery ${reference}`) })).toBeVisible();
+  await dialog.getByRole("button", { name: "Import 1 row" }).click();
+  await expect(dialog.getByText("Imported 1 row.")).toBeVisible();
+
+  await page.goto(`/transactions?search=${encodeURIComponent(reference)}`);
+  await expect(page.getByRole("row", { name: new RegExp(`Bakery ${reference}`) })).toBeVisible();
+  await expect(page.getByRole("row", { name: new RegExp(`Coffee ${reference}`) })).toBeVisible();
+});

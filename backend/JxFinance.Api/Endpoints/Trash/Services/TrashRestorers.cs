@@ -11,6 +11,7 @@ using JxFinance.Domain.Common;
 using JxFinance.Domain.Conversions;
 using JxFinance.Domain.Goals;
 using JxFinance.Domain.Households;
+using JxFinance.Domain.Imports;
 using JxFinance.Domain.Investments;
 using JxFinance.Domain.NetWorth;
 using JxFinance.Domain.RecurringBills;
@@ -134,6 +135,9 @@ public static class TrashRestorers
             (db, id) => db.TransactionAttachments.Where(a => a.Id == id),
             check: CheckAttachmentTransactionAsync,
             restore: RestoreAttachmentAsync),
+        [TrashKind.CsvImportMapping] = Owned<CsvImportMapping, CsvImportMappingId>(
+            Feature.Import,
+            (db, id) => db.CsvImportMappings.Where(m => m.Id == id)),
     }.ToFrozenDictionary();
 
     public static TrashRestorer? Of(TrashKind kind) => All.GetValueOrDefault(kind);

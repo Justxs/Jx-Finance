@@ -13,6 +13,7 @@ using JxFinance.Domain.Accounts;
 using JxFinance.Domain.Audit;
 using JxFinance.Domain.Categories;
 using JxFinance.Domain.Common;
+using JxFinance.Domain.Imports;
 using JxFinance.Domain.Settings;
 using JxFinance.Domain.Transactions;
 using JxFinance.Domain.Transfers;
@@ -21,6 +22,7 @@ using JxFinance.Endpoints.Accounts.Shared;
 using JxFinance.Endpoints.CategorizationRules.Interfaces;
 using JxFinance.Endpoints.CategorizationRules.Shared;
 using JxFinance.Endpoints.Imports.Confirm;
+using JxFinance.Endpoints.Imports.InspectCsv;
 using JxFinance.Endpoints.Imports.Interfaces;
 using JxFinance.Endpoints.Imports.Matching;
 using JxFinance.Endpoints.Imports.Parsing;
@@ -49,9 +51,37 @@ public sealed class ImportService(
         "transfer", "pervedimas", "grynieji", "cash", "withdrawal", "easy saver", "atsiskaitom", "tarp saskaitu",
     ];
 
+    private static readonly DomainError MappingNotFound = new(ErrorCodes.ReferenceNotFound, "CSV mapping does not exist.");
+
+    public async Task<Result<InspectCsvResponse>> InspectCsvAsync(
+        Stream fileStream,
+        CsvEncoding? encoding,
+        string? delimiter,
+        int? skipLines,
+        CancellationToken cancellationToken)
+    {
+        var inspected = await CsvInspector.InspectAsync(fileStream, encoding, delimiter, skipLines, cancellationToken);
+        if (!inspected.TryGetValue(out var inspection))
+        {
+            return inspected.Error;
+        }
+
+        var headers = inspection.Columns.Select(c => c.Name).ToHashSet(StringComparer.Ordinal);
+        var mappings = await db.CsvImportMappings
+            .AsNoTracking()
+            .OrderBy(m => m.Name)
+            .ThenBy(m => m.CreatedAt)
+            .ToListAsync(cancellationToken);
+        return inspection with
+        {
+            MatchingMappingIds = mappings.Where(m => m.Columns.Named().All(headers.Contains)).Select(m => m.Id.Value).ToList(),
+        };
+    }
+
     public async Task<Result<ImportPreviewResponse>> PreviewAsync(
         StatementFormat format,
         Guid accountId,
+        Guid? mappingId,
         Stream fileStream,
         CancellationToken cancellationToken)
     {
@@ -65,9 +95,14 @@ public sealed class ImportService(
             return new DomainError(ErrorCodes.ReferenceNotFound, "Account does not exist.");
         }
 
-        var parsed = format == StatementFormat.Camt053
-            ? await Camt053Parser.ParseAsync(fileStream, account.Iban, settings.Current.TimeZone, cancellationToken)
-            : SwedbankCsvParser.Parse(fileStream);
+        var parsed = format switch
+        {
+            StatementFormat.Camt053 => await Camt053Parser.ParseAsync(fileStream, account.Iban, settings.Current.TimeZone, cancellationToken),
+            StatementFormat.GenericCsv => await FindMappingAsync(mappingId, cancellationToken) is { } mapping
+                ? GenericCsvParser.Parse(fileStream, mapping, account.Currency)
+                : MappingNotFound,
+            _ => SwedbankCsvParser.Parse(fileStream),
+        };
         if (!parsed.TryGetValue(out var statement))
         {
             return parsed.Error;
@@ -167,7 +202,7 @@ public sealed class ImportService(
                 AuditAction.Imported,
                 AuditEntityKind.Transaction,
                 TrashLabel.Counted(
-                    $"{(request.Format == StatementFormat.Camt053 ? "camt.053 XML" : "Swedbank CSV")} into {target.Name}",
+                    $"{await FormatLabelAsync(request, cancellationToken)} into {target.Name}",
                     (totals.Imported, "entry", "entries"),
                     (totals.Linked, "entry linked", "entries linked"),
                     (totals.Skipped, "duplicate skipped", "duplicates skipped")),
@@ -178,7 +213,7 @@ public sealed class ImportService(
 
         await db.SaveChangesAsync(cancellationToken);
 
-        var reconciliation = request is { Format: StatementFormat.Camt053, Statement: { } closing }
+        var reconciliation = request is { Format: StatementFormat.Camt053 or StatementFormat.GenericCsv, Statement: { } closing }
             && closing.ClosingCurrency == accountCurrency
                 ? (await reconciliations.RecordAsync(
                     request.AccountId,
@@ -191,6 +226,19 @@ public sealed class ImportService(
         await transaction.CommitAsync(cancellationToken);
         return new ImportConfirmResponse(totals.Imported, totals.Skipped, totals.Linked, reconciliation);
     }
+
+    private async Task<CsvImportMapping?> FindMappingAsync(Guid? mappingId, CancellationToken cancellationToken)
+    {
+        var id = new CsvImportMappingId(mappingId ?? Guid.Empty);
+        return await db.CsvImportMappings.AsNoTracking().FirstOrDefaultAsync(m => m.Id == id, cancellationToken);
+    }
+
+    private async Task<string> FormatLabelAsync(ImportConfirmRequest request, CancellationToken cancellationToken) => request.Format switch
+    {
+        StatementFormat.Camt053 => "camt.053 XML",
+        StatementFormat.GenericCsv => $"{(await FindMappingAsync(request.MappingId, cancellationToken))?.Name ?? "Mapped"} CSV",
+        _ => "Swedbank CSV",
+    };
 
     private async Task<Result<ConfirmLookups>> LoadConfirmLookupsAsync(
         AccountId accountId,

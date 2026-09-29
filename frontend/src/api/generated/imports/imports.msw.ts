@@ -7,7 +7,12 @@
  */
 import { HttpResponse, http } from "msw";
 import type { RequestHandlerOptions } from "msw";
-import type { ImportConfirmResponse, ImportPreviewResponse } from "../model";
+import type {
+  CsvMappingResponse,
+  ImportConfirmResponse,
+  ImportPreviewResponse,
+  InspectCsvResponse,
+} from "../model";
 
 export const getImportConfirmMockHandler = (
   overrideResponse?:
@@ -19,6 +24,121 @@ export const getImportConfirmMockHandler = (
 ) => {
   return http.post(
     "*/api/import/confirm",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : undefined,
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getCreateCsvMappingMockHandler = (
+  overrideResponse?:
+    | CsvMappingResponse
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<CsvMappingResponse> | CsvMappingResponse),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/import/csv-mappings",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : undefined,
+        { status: 201 },
+      );
+    },
+    options,
+  );
+};
+
+export const getListCsvMappingsMockHandler = (
+  overrideResponse?:
+    | CsvMappingResponse[]
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<CsvMappingResponse[]> | CsvMappingResponse[]),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/import/csv-mappings",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : undefined,
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getDeleteCsvMappingMockHandler = (
+  overrideResponse?:
+    | void
+    | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<void> | void),
+  options?: RequestHandlerOptions,
+) => {
+  return http.delete(
+    "*/api/import/csv-mappings/:id",
+    async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+      if (typeof overrideResponse === "function") {
+        await overrideResponse(info);
+      }
+
+      return new HttpResponse(null, { status: 204 });
+    },
+    options,
+  );
+};
+
+export const getUpdateCsvMappingMockHandler = (
+  overrideResponse?:
+    | CsvMappingResponse
+    | ((
+        info: Parameters<Parameters<typeof http.put>[1]>[0],
+      ) => Promise<CsvMappingResponse> | CsvMappingResponse),
+  options?: RequestHandlerOptions,
+) => {
+  return http.put(
+    "*/api/import/csv-mappings/:id",
+    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : undefined,
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getInspectCsvMockHandler = (
+  overrideResponse?:
+    | InspectCsvResponse
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<InspectCsvResponse> | InspectCsvResponse),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/import/csv/inspect",
     async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
@@ -56,4 +176,12 @@ export const getImportPreviewMockHandler = (
     options,
   );
 };
-export const getImportsMock = () => [getImportConfirmMockHandler(), getImportPreviewMockHandler()];
+export const getImportsMock = () => [
+  getImportConfirmMockHandler(),
+  getCreateCsvMappingMockHandler(),
+  getListCsvMappingsMockHandler(),
+  getDeleteCsvMappingMockHandler(),
+  getUpdateCsvMappingMockHandler(),
+  getInspectCsvMockHandler(),
+  getImportPreviewMockHandler(),
+];

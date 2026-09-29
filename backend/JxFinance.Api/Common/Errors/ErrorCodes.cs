@@ -67,6 +67,9 @@ public static class ErrorCodes
     public const string ImportTransferAlreadyMatched = "import.transferAlreadyMatched";
     public const string ImportEntryMismatch = "import.entryMismatch";
     public const string ImportRefundInvalid = "import.refundInvalid";
+    public const string ImportMissingColumns = "import.missingColumns";
+    public const string ImportMappingIncomplete = "import.mappingIncomplete";
+    public const string ImportInvalidDateFormat = "import.invalidDateFormat";
     public const string RestoreExpired = "restore.expired";
     public const string RestoreReferenceMissing = "restore.referenceMissing";
     public const string RestoreCompanionDeleted = "restore.companionDeleted";

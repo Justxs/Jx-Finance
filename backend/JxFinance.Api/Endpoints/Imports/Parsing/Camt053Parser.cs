@@ -1,7 +1,4 @@
-using System.Buffers.Text;
 using System.Globalization;
-using System.Security.Cryptography;
-using System.Text;
 using System.Xml.Linq;
 using JxFinance.Common.Errors;
 using JxFinance.Common.Formats;
@@ -63,16 +60,7 @@ public static class Camt053Parser
             return Invalid();
         }
 
-        var seen = new Dictionary<string, int>(StringComparer.Ordinal);
-        for (var index = 0; index < rows.Count; index++)
-        {
-            var occurrence = seen.GetValueOrDefault(rows[index].ImportRef);
-            seen[rows[index].ImportRef] = occurrence + 1;
-            if (occurrence > 0)
-            {
-                rows[index] = rows[index] with { ImportRef = Hashed($"{rows[index].ImportRef}#{occurrence}") };
-            }
-        }
+        ImportReferences.Disambiguate(rows);
 
         var closing = matching
             .SelectMany(s => Children(s, "Bal"))
@@ -142,9 +130,9 @@ public static class Camt053Parser
                 Text(detail, "Refs", "EndToEndId"),
             }
             .FirstOrDefault(r => r is not null && !r.StartsWith("NOTPROVIDED", StringComparison.Ordinal));
-        if (reference is not { Length: <= 64 })
+        if (reference is not { Length: <= ImportReferences.MaxLength })
         {
-            reference = Hashed($"{date:yyyy-MM-dd}|{amount.ToString(CultureInfo.InvariantCulture)}|{type}|{counterpartyIban}|{description}|{suffix}");
+            reference = ImportReferences.Hash($"{date:yyyy-MM-dd}|{amount.ToString(CultureInfo.InvariantCulture)}|{type}|{counterpartyIban}|{description}|{suffix}");
         }
 
         return new ParsedRow(
@@ -158,8 +146,6 @@ public static class Camt053Parser
             counterpartyIban,
             Text(entry, "RvslInd") is "true" or "1");
     }
-
-    private static string Hashed(string input) => "h:" + Base64Url.EncodeToString(SHA256.HashData(Encoding.UTF8.GetBytes(input)));
 
     private static string? IbanOf(XElement statement) => Iban.Normalize(Text(statement, "Acct", "Id", "IBAN"));
 

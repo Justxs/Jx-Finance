@@ -209,10 +209,14 @@ public sealed class AuditLogTests(ApiFixture fixture) : IntegrationTestBase(fixt
     [Theory]
     [InlineData("swedbankCsv", "Swedbank CSV into Account ")]
     [InlineData("camt053", "camt.053 XML into Account ")]
+    [InlineData("genericCsv", "Audit bank CSV into Account ")]
     public async Task An_import_and_a_bulk_edit_are_each_one_summarising_row(string format, string label)
     {
         var household = await CreateHouseholdAsync();
         var account = await CreateAccountAsync("100.00", householdId: household);
+        Guid? mappingId = format == "genericCsv"
+            ? (await PostAsync<IdDto>(Client, "/api/import/csv-mappings", SampleCsv.RevolutBody("Audit bank"))).Id
+            : null;
         var marker = Guid.NewGuid().ToString("N")[..8];
         var rows = Enumerable.Range(0, 3)
             .Select(i => new
@@ -224,7 +228,7 @@ public sealed class AuditLogTests(ApiFixture fixture) : IntegrationTestBase(fixt
                 description = $"Imported {i}",
             })
             .ToArray();
-        await PostAsync<IdDto>(Client, "/api/import/confirm", new { accountId = account, rows, format });
+        await PostAsync<IdDto>(Client, "/api/import/confirm", new { accountId = account, rows, format, mappingId });
         var imported = await Client.GetFromJsonAsync<PageDto<IdDto>>($"/api/transactions?accountId={account}", TestContext.Current.CancellationToken);
         var category = await CreateCategoryAsync();
         (await Client.PostAsJsonAsync(

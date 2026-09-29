@@ -23,7 +23,10 @@ import {
 } from "@/api/generated/dashboard/dashboard.msw";
 import { getGoalsMockHandler } from "@/api/generated/goals/goals.msw";
 import { getHouseholdsMockHandler } from "@/api/generated/households/households.msw";
-import { getImportPreviewMockHandler } from "@/api/generated/imports/imports.msw";
+import {
+  getImportPreviewMockHandler,
+  getListCsvMappingsMockHandler,
+} from "@/api/generated/imports/imports.msw";
 import {
   getAssetsMockHandler,
   getDebtsMockHandler,
@@ -181,6 +184,7 @@ export const emptyHandlers: RequestHandler[] = [
     };
   }),
   getImportPreviewMockHandler({ ...importPreview, rows: [] }),
+  getListCsvMappingsMockHandler([]),
   getTrashMockHandler(emptyPage),
   ...handlers,
 ];

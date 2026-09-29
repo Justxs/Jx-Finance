@@ -1,7 +1,9 @@
 import type {
+  CsvMappingResponse,
   ImportPreviewResponse,
   ImportPreviewRow,
   ImportStatementSummary,
+  InspectCsvResponse,
 } from "@/api/generated/model";
 import { ids, uid } from "./base";
 import { statusProblem } from "./problems";
@@ -283,4 +285,101 @@ export const importFormatProblem = {
   ...statusProblem(400),
   instance: "/api/import/preview",
   detail: "The file doesn't match the expected Swedbank CSV export shape.",
+};
+
+export const revolutCsv = `Type,Product,Started Date,Completed Date,Description,Amount,Fee,Currency,State,Balance
+CARD_PAYMENT,Current,2026-09-01 10:15:02,2026-09-02 08:01:44,Lidl,-15.77,0.00,EUR,COMPLETED,984.23
+CARD_PAYMENT,Current,2026-09-03 12:00:00,2026-09-03 12:00:05,Coffee,-3.50,0.00,EUR,COMPLETED,980.73
+TOPUP,Current,2026-09-04 09:00:00,2026-09-04 09:00:01,Top-up by *1234,500.00,0.00,EUR,COMPLETED,1480.73
+ATM,Current,2026-09-05 18:30:00,2026-09-05 18:30:02,Cash at Vilnius,-10.00,0.50,EUR,COMPLETED,1470.23
+CARD_PAYMENT,Current,2026-09-06 20:00:00,,Pending shop,-7.00,0.00,EUR,PENDING,
+`;
+
+export const revolutMapping: CsvMappingResponse = {
+  id: uid("c5c5c5c5", 1),
+  name: "Revolut",
+  encoding: "utf8",
+  delimiter: ",",
+  skipLines: 0,
+  amountStyle: "signedNegativeIsExpense",
+  dateFormat: "yyyy-MM-dd",
+  decimalSeparator: "dot",
+  currency: null,
+  columns: {
+    date: "Completed Date",
+    description: "Description",
+    payee: null,
+    amount: "Amount",
+    debit: null,
+    credit: null,
+    direction: null,
+    expenseValue: null,
+    currency: "Currency",
+    reference: null,
+    balance: "Balance",
+    fee: "Fee",
+    status: "State",
+    bookedValues: "COMPLETED",
+  },
+};
+
+export const csvMappings: CsvMappingResponse[] = [revolutMapping];
+
+export const revolutInspection: InspectCsvResponse = {
+  encoding: "utf8",
+  delimiter: ",",
+  skipLines: 0,
+  columns: [
+    { name: "Type", dateFormats: [], decimalSeparator: null },
+    { name: "Product", dateFormats: [], decimalSeparator: null },
+    { name: "Started Date", dateFormats: ["yyyy-MM-dd"], decimalSeparator: null },
+    { name: "Completed Date", dateFormats: ["yyyy-MM-dd"], decimalSeparator: null },
+    { name: "Description", dateFormats: [], decimalSeparator: null },
+    { name: "Amount", dateFormats: [], decimalSeparator: "dot" },
+    { name: "Fee", dateFormats: [], decimalSeparator: "dot" },
+    { name: "Currency", dateFormats: [], decimalSeparator: null },
+    { name: "State", dateFormats: [], decimalSeparator: null },
+    { name: "Balance", dateFormats: [], decimalSeparator: "dot" },
+  ],
+  samples: revolutCsv
+    .trim()
+    .split("\n")
+    .slice(1)
+    .map((line) => line.split(",")),
+  matchingMappingIds: [],
+};
+
+export const revolutInspectionFitting: InspectCsvResponse = {
+  ...revolutInspection,
+  matchingMappingIds: [revolutMapping.id],
+};
+
+export const cardInspection: InspectCsvResponse = {
+  encoding: "windows1257",
+  delimiter: ";",
+  skipLines: 3,
+  columns: [
+    { name: "Data", dateFormats: ["dd/MM/yyyy", "MM/dd/yyyy"], decimalSeparator: null },
+    { name: "Prekybininkas", dateFormats: [], decimalSeparator: null },
+    { name: "Suma", dateFormats: [], decimalSeparator: "comma" },
+    { name: "Likutis", dateFormats: [], decimalSeparator: "comma" },
+  ],
+  samples: [
+    ["03/09/2026", "Mokėjimas – ačiū", "-150,00", "50,00"],
+    ["05/09/2026", "Grąžinimas Zara", "-19,99", "200,00"],
+    ["07/09/2026", "Zara", "49,99", "219,99"],
+    ["09/09/2026", "Maxima", "170,00", "170,00"],
+  ],
+  matchingMappingIds: [],
+};
+
+export const mappedCsvPreview: ImportPreviewResponse = {
+  rows: camtPreviewRows.slice(0, 3),
+  statement: {
+    ...camtStatement,
+    iban: null,
+    ibanMatchesAccount: false,
+    notBooked: 1,
+    unreadable: 2,
+  },
 };

@@ -1,10 +1,22 @@
 import {
+  getCreateCsvMappingMockHandler,
+  getDeleteCsvMappingMockHandler,
   getImportConfirmMockHandler,
   getImportPreviewMockHandler,
+  getInspectCsvMockHandler,
+  getListCsvMappingsMockHandler,
+  getUpdateCsvMappingMockHandler,
 } from "@/api/generated/imports/imports.msw";
-import { importPreview } from "@/storybook/fixtures";
+import {
+  csvMappings,
+  importPreview,
+  revolutInspection,
+  revolutMapping,
+} from "@/storybook/fixtures";
 import { readBody } from "./http";
 import type { Body } from "./http";
+import { NEW_ID } from "./ids";
+import { updateFrom } from "./lists";
 
 export const importHandlers = [
   getImportPreviewMockHandler(importPreview),
@@ -22,4 +34,13 @@ export const importHandlers = [
       reconciliation: null,
     };
   }),
+  getListCsvMappingsMockHandler(csvMappings),
+  getCreateCsvMappingMockHandler(async ({ request }) => ({
+    ...revolutMapping,
+    ...(await readBody(request)),
+    id: NEW_ID,
+  })),
+  getUpdateCsvMappingMockHandler(updateFrom(csvMappings)),
+  getDeleteCsvMappingMockHandler(),
+  getInspectCsvMockHandler(revolutInspection),
 ];

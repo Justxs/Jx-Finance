@@ -1,5 +1,9 @@
 import { useTranslation } from "react-i18next";
-import type { AccountResponse, ImportStatementSummary } from "@/api/generated/model";
+import type {
+  AccountResponse,
+  ImportStatementSummary,
+  StatementFormat,
+} from "@/api/generated/model";
 import { Button } from "@/components/ui/button/button";
 import { useIsoDate, useMoney } from "@/hooks/use-formatters";
 import { toCents } from "@/lib/money";
@@ -7,6 +11,7 @@ import { type PreviewRowState, summarizeSelection } from "./preview-rows";
 
 interface Props {
   statement: ImportStatementSummary;
+  format: StatementFormat;
   rows: PreviewRowState[];
   accounts: AccountResponse[];
   onSwitchAccount: (accountId: string) => void;
@@ -15,6 +20,7 @@ interface Props {
 
 export function ImportStatementBar({
   statement,
+  format,
   rows,
   accounts,
   onSwitchAccount,
@@ -69,7 +75,10 @@ export function ImportStatementBar({
       ) : null}
       {statement.notBooked > 0 ? (
         <p className="text-muted-foreground">
-          {t("imports.statement.notBooked", { count: statement.notBooked })}
+          {t(
+            format === "genericCsv" ? "imports.statement.skipped" : "imports.statement.notBooked",
+            { count: statement.notBooked },
+          )}
         </p>
       ) : null}
       {statement.unreadable > 0 ? (

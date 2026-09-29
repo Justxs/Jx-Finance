@@ -3,6 +3,7 @@ using FluentValidation;
 using JxFinance.Common.Errors;
 using JxFinance.Common.Validation;
 using JxFinance.Domain.Common;
+using JxFinance.Endpoints.Imports.Parsing;
 
 namespace JxFinance.Endpoints.Imports.Confirm;
 
@@ -12,6 +13,7 @@ public sealed class ImportConfirmValidator : Validator<ImportConfirmRequest>
     {
         RuleFor(r => r.AccountId).IsRequired();
         RuleFor(r => r.Format).IsKnownEnum();
+        RuleFor(r => r.MappingId).IsPresent().When(r => r.Format == StatementFormat.GenericCsv);
         RuleFor(r => r.Rows)
             .IsPresent()
             .Must(rows => rows is { Count: > 0 and <= 10000 })

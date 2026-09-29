@@ -50,6 +50,9 @@ public static class ApiRoutes
     public const string Import = "import";
     public const string ImportPath = Base + "/" + Import;
 
+    public const string CsvMappings = Import + "/csv-mappings";
+    public const string CsvMappingsPath = Base + "/" + CsvMappings;
+
     public const string Investments = "investments";
     public const string InvestmentsPath = Base + "/" + Investments;
 

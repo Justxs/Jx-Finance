@@ -7,16 +7,22 @@ import {
   useTransactionsSuspense,
   useImportConfirm,
   useImportPreview,
+  useInspectCsv,
+  useListCsvMappingsSuspense,
 } from "@/api/generated";
 import type {
   AccountResponse,
+  CsvMappingResponse,
   ImportPreviewResponse,
   ImportStatementSummary,
+  InspectCsvResponse,
   StatementFormat,
 } from "@/api/generated/model";
+import { Button } from "@/components/ui/button/button";
 import { Section, SectionTitle } from "@/components/ui/section/section";
 import { useFileField } from "@/hooks/use-file-field";
 import { silent } from "@/lib/mutations";
+import { CsvMappingForm, type ReadOptions } from "../csv-mapping-form/csv-mapping-form";
 import { ImportPreviewTable } from "../import-preview-table/import-preview-table";
 import { ImportStatementBar } from "../import-preview-table/import-statement-bar";
 import {
@@ -26,7 +32,7 @@ import {
   toPreviewRows,
 } from "../import-preview-table/preview-rows";
 import { recallParams } from "../import-queries";
-import { ImportPreviewError } from "./import-preview-error";
+import { ImportPreviewError, problemDetail } from "./import-preview-error";
 import { type ImportResult, ImportResultLine, useReconciliationText } from "./import-result";
 import { IMPORT_FILE_INPUT_ID, ImportUploadForm, importFormats } from "./import-upload-form";
 
@@ -39,6 +45,7 @@ const uploadProblemKeys = {
 interface Props {
   accounts: AccountResponse[];
   format: StatementFormat;
+  mapping?: CsvMappingResponse;
   initialAccountId?: string;
   onEditedChange: (edited: boolean) => void;
   confirmDiscard: (run: () => void) => void;
@@ -47,6 +54,7 @@ interface Props {
 export function ImportSection({
   accounts,
   format,
+  mapping: chosenMapping,
   initialAccountId,
   onEditedChange,
   confirmDiscard,
@@ -65,12 +73,16 @@ export function ImportSection({
   const [result, setResult] = useState<ImportResult | null>(null);
   const [rows, setRows] = useState<PreviewRowState[] | null>(null);
   const [statement, setStatement] = useState<ImportStatementSummary | null>(null);
+  const [mapping, setMapping] = useState(chosenMapping);
+  const [inspection, setInspection] = useState<InspectCsvResponse | null>(null);
+  const [remapping, setRemapping] = useState<CsvMappingResponse | undefined>(undefined);
 
   const categories = useCategoriesSuspense();
   const categoryList = categories.data;
   const tags = useTagsSuspense();
   const tagList = tags.data;
   const history = useTransactionsSuspense(recallParams);
+  const mappings = useListCsvMappingsSuspense();
 
   function replaceRows(next: PreviewRowState[] | null) {
     setRows(next);
@@ -90,6 +102,8 @@ export function ImportSection({
       },
     }),
   );
+
+  const inspectMutation = useInspectCsv(silent({ onSuccess: setInspection }));
 
   const confirmMutation = useImportConfirm({
     mutation: {
@@ -125,13 +139,37 @@ export function ImportSection({
     previewMutation.reset();
   }
 
-  function preview(id: string) {
+  function inspect(options?: ReadOptions) {
+    const file = fileField.take();
+    if (file) {
+      inspectMutation.mutate({ data: { file, ...options } });
+    }
+  }
+
+  function preview(id: string, mappingId = mapping?.id) {
+    setResult(null);
+    if (format === "genericCsv" && !mappingId) {
+      inspect();
+      return;
+    }
     const file = fileField.take();
     if (!id || !file) {
       return;
     }
-    setResult(null);
-    previewMutation.mutate({ data: { file, accountId: id, format } });
+    previewMutation.mutate({ data: { file, accountId: id, format, mappingId } });
+  }
+
+  function applyMapping(chosen: CsvMappingResponse) {
+    setMapping(chosen);
+    setInspection(null);
+    setRemapping(undefined);
+    preview(accountId, chosen.id);
+  }
+
+  function remap() {
+    setRemapping(mapping);
+    previewMutation.reset();
+    inspect();
   }
 
   function switchAccount(id: string) {
@@ -155,6 +193,7 @@ export function ImportSection({
       data: {
         accountId,
         format,
+        mappingId: mapping?.id ?? null,
         statement:
           closingDate && closingBalance && closingCurrency
             ? { closingDate, closingBalance, closingCurrency }
@@ -178,6 +217,8 @@ export function ImportSection({
     });
   }
 
+  const missingColumns = problemDetail(previewMutation.error, "import.missingColumns");
+
   return (
     <div className="space-y-5">
       <Section className="space-y-4">
@@ -197,8 +238,10 @@ export function ImportSection({
           onFileChange={() => {
             fileField.clearError();
             previewMutation.reset();
+            inspectMutation.reset();
+            setInspection(null);
           }}
-          previewPending={previewMutation.isPending}
+          previewPending={previewMutation.isPending || inspectMutation.isPending}
           disabled={confirmMutation.isPending}
           fileError={fileField.error}
           secondary={Boolean(rows?.length)}
@@ -206,8 +249,40 @@ export function ImportSection({
         {previewMutation.isError ? (
           <ImportPreviewError error={previewMutation.error} format={format} />
         ) : null}
+        {inspectMutation.isError ? (
+          <ImportPreviewError error={inspectMutation.error} format={format} />
+        ) : null}
+        {missingColumns && mapping ? (
+          <Button variant="outline" size="sm" onClick={remap}>
+            {t("imports.mapping.updateFromFile")}
+          </Button>
+        ) : null}
         {result ? <ImportResultLine result={result} /> : null}
       </Section>
+
+      {inspection ? (
+        <Section className="space-y-4" aria-labelledby="import-mapping-title">
+          <div className="space-y-1">
+            <SectionTitle id="import-mapping-title">{t("imports.mapping.title")}</SectionTitle>
+            <p className="max-w-prose text-sm text-muted-foreground">
+              {t("imports.mapping.description")}
+            </p>
+          </div>
+          <CsvMappingForm
+            key={`${inspection.encoding}|${inspection.delimiter}|${inspection.skipLines}`}
+            inspection={inspection}
+            initial={remapping}
+            fitting={mappings.data.filter((item) =>
+              inspection.matchingMappingIds.includes(item.id),
+            )}
+            readPending={inspectMutation.isPending}
+            onRead={inspect}
+            onUse={applyMapping}
+            onSaved={applyMapping}
+            onCancel={() => setInspection(null)}
+          />
+        </Section>
+      ) : null}
 
       {rows ? (
         <Section className="space-y-4" aria-labelledby="import-review-title">
@@ -215,6 +290,7 @@ export function ImportSection({
           {statement ? (
             <ImportStatementBar
               statement={statement}
+              format={format}
               rows={rows}
               accounts={accounts}
               disabled={previewMutation.isPending || confirmMutation.isPending}

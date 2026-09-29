@@ -8,10 +8,13 @@ public sealed class ImportPreviewSummary : Summary<ImportPreviewEndpoint, Import
     {
         Summary = "Preview a bank statement";
         Description = "Parses an exported bank statement and returns the rows it found, each with "
-            + "a flag saying whether a matching transaction already exists in the account. Two formats "
-            + "are read: swedbankCsv, the Swedbank CSV export, and camt053, an ISO 20022 camt.053 XML "
-            + "statement. From a camt.053 file only booked entries are returned; pending and "
-            + "informational entries and entries that could not be read are counted in statement. "
+            + "a flag saying whether a matching transaction already exists in the account. Three formats "
+            + "are read: swedbankCsv, the Swedbank CSV export, camt053, an ISO 20022 camt.053 XML "
+            + "statement, and genericCsv, any CSV export read through the saved column mapping named by mappingId. "
+            + "From a camt.053 file only booked entries are returned; pending and "
+            + "informational entries and entries that could not be read are counted in statement. A mapped CSV counts "
+            + "rows its status filter leaves out or whose amount is zero in notBooked and rows it cannot read in unreadable, "
+            + "and with a balance column answers the balance of its latest row as the closing balance. "
             + "When the file holds several statements, the one for the account's IBAN is read. A "
             + "counterparty IBAN that belongs to another of your accounts fills in "
             + "suggestedTransferAccountId. Your categorization rules are evaluated against each row's "
@@ -27,8 +30,9 @@ public sealed class ImportPreviewSummary : Summary<ImportPreviewEndpoint, Import
             + "multipart/form-data.";
         Params["file"] = "The statement file, at most 5 MB for a CSV file and 20 MB for an XML file.";
         Params["accountId"] = "The account the statement belongs to.";
-        Params["format"] = "The statement format: swedbankCsv for a Swedbank CSV export or camt053 for an ISO 20022 camt.053 XML statement.";
+        Params["format"] = "The statement format: swedbankCsv for a Swedbank CSV export, camt053 for an ISO 20022 camt.053 XML statement, or genericCsv for a CSV read through a saved mapping.";
+        Params["mappingId"] = "The saved CSV column mapping to read the file with; required for genericCsv and ignored otherwise.";
         Responses[200] = "The parsed rows with suggestions and duplicate flags, and what the statement says about its account and closing balance.";
-        Responses[400] = "No file, a file over the size limit, an unreadable statement, a file with no statement for this account, or an account that is not yours.";
+        Responses[400] = "No file, a file over the size limit, an unreadable statement, a file with no statement for this account, a CSV without a column the mapping names (import.missingColumns), or an account or mapping that is not yours.";
     }
 }

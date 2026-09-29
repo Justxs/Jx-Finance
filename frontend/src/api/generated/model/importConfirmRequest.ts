@@ -18,6 +18,11 @@ export interface ImportConfirmRequest {
   /** The rows to import, as returned by preview, with any category and tag corrections applied. */
   rows: ImportConfirmRow[];
   format: StatementFormat;
-  /** Optional. The closing balance the camt.053 preview answered; ignored for other formats. */
+  /** Optional. The closing balance the camt.053 or mapped CSV preview answered; ignored for Swedbank CSV. */
   statement?: null | ImportStatementBalance;
+  /**
+   * The saved CSV column mapping the preview used; required for genericCsv, whose audit entry names it.
+   * @nullable
+   */
+  mappingId?: string | null;
 }

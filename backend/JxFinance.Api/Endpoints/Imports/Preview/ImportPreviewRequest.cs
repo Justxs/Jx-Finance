@@ -9,4 +9,6 @@ public sealed class ImportPreviewRequest
     public Guid AccountId { get; set; }
 
     public StatementFormat Format { get; set; }
+
+    public Guid? MappingId { get; set; }
 }

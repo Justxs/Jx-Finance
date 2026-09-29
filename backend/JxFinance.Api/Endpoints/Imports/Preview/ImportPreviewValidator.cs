@@ -11,6 +11,7 @@ public sealed class ImportPreviewValidator : Validator<ImportPreviewRequest>
     public ImportPreviewValidator()
     {
         RuleFor(r => r.Format).IsKnownEnum();
+        RuleFor(r => r.MappingId).IsPresent().When(r => r.Format == StatementFormat.GenericCsv);
         RuleFor(r => r.File)
             .Must((request, file) => file is { Length: > 0 } && file.Length <= (request.Format == StatementFormat.Camt053 ? 20 : 5) * 1024 * 1024)
             .WithErrorCode(ErrorCodes.ImportInvalidFile)

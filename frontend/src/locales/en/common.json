@@ -557,7 +557,8 @@
       "tag": "Tag",
       "categorizationRule": "Categorization rule",
       "household": "Household",
-      "attachment": "File"
+      "attachment": "File",
+      "csvImportMapping": "CSV mapping"
     }
   },
   "theme": {
@@ -1906,7 +1907,10 @@
       "swedbank": "Swedbank",
       "swedbankFormat": "Account statement, CSV",
       "camt053": "Bank statement XML (ISO 20022)",
-      "camt053Format": "camt.053 statement from any bank that offers it"
+      "camt053Format": "camt.053 statement from any bank that offers it",
+      "genericCsv": "Other bank (CSV)",
+      "genericCsvFormat": "Any CSV export: say once which column holds what",
+      "savedMappingFormat": "Your CSV mapping"
     },
     "ruleFilled": "Filled by a rule",
     "ruleFilledHint": "Filled by your rule \"{{rule}}\". Change it if it does not fit.",
@@ -1923,6 +1927,11 @@
         "hint": "In internet banking, download the account statement as XML / ISO 20022 / camt.053, up to 20 MB. Nothing is saved until you confirm the reviewed rows.",
         "errorFormat": "This file is not a camt.053 bank statement in ISO 20022 XML.",
         "errorFix": "Download the account statement from internet banking as XML (ISO 20022, camt.053) and upload it unchanged. Intraday reports (camt.052) and notifications (camt.054) are not read."
+      },
+      "genericCsv": {
+        "hint": "A CSV export from any bank, card issuer or payment app, up to 5 MB. Nothing is saved until you confirm the reviewed rows.",
+        "errorFormat": "This file cannot be read as a CSV statement with a header row.",
+        "errorFix": "Export the statement as CSV and upload it unchanged. If the columns look wrong, correct the encoding, the delimiter or the lines above the header."
       }
     },
     "statement": {
@@ -1935,7 +1944,9 @@
       "unreadable_other": "{{count}} entries could not be read and are not shown",
       "closing": "Closing balance on {{date}}: {{amount}}",
       "agrees": "Matches the ledger after the selected rows ({{ledger}})",
-      "differs": "Ledger after the selected rows: {{ledger}}, a difference of {{difference}}"
+      "differs": "Ledger after the selected rows: {{ledger}}, a difference of {{difference}}",
+      "skipped_one": "{{count}} row left out by the status filter or with a zero amount",
+      "skipped_other": "{{count}} rows left out by the status filter or with a zero amount"
     },
     "discard": {
       "title": "Discard this review?",
@@ -1952,7 +1963,88 @@
       "empty": "No rows match this view."
     },
     "resultReconciled": "Balance matches the statement on {{date}}.",
-    "resultDiffers": "The statement differs by {{difference}} on {{date}}."
+    "resultDiffers": "The statement differs by {{difference}} on {{date}}.",
+    "mapping": {
+      "title": "Map the columns",
+      "description": "Description",
+      "editTitle": "Edit {{name}}",
+      "fits": "A saved mapping fits this file:",
+      "use": "Use {{name}}",
+      "name": "Name",
+      "namePlaceholder": "Revolut, Wise, SEB card",
+      "nameHint": "Shown in the provider list next to Swedbank.",
+      "reading": "Reading the file",
+      "readingHint": "Changing these reads the file again and starts the mapping over.",
+      "encoding": "Text encoding",
+      "encodings": {
+        "utf8": "UTF-8",
+        "windows1257": "Windows-1257 (Baltic)",
+        "windows1252": "Windows-1252 (Western)"
+      },
+      "delimiter": "Delimiter",
+      "delimiters": {
+        "comma": "Comma",
+        "semicolon": "Semicolon",
+        "tab": "Tab",
+        "pipe": "Pipe"
+      },
+      "skipLines": "Lines above the header",
+      "money": "Money",
+      "amountStyle": "How the amount is written",
+      "styles": {
+        "signedNegativeIsExpense": {
+          "label": "Signed",
+          "example": "-12.50 is money out, 12.50 money in."
+        },
+        "signedPositiveIsExpense": {
+          "label": "Card statement",
+          "example": "12.50 is a purchase, -12.50 a payment or a refund."
+        },
+        "debitCredit": {
+          "label": "Debit and credit",
+          "example": "Money out in one column, money in in another."
+        },
+        "amountWithDirection": {
+          "label": "Amount and direction",
+          "example": "An amount, and a column such as D/K saying which way it went."
+        }
+      },
+      "amount": "Amount",
+      "debit": "Money out (debit)",
+      "credit": "Money in (credit)",
+      "direction": "Direction",
+      "expenseValue": "Direction value for money out",
+      "expenseValuePlaceholder": "D",
+      "decimalSeparator": "Decimal mark",
+      "separators": {
+        "dot": "Dot (12.50)",
+        "comma": "Comma (12,50)"
+      },
+      "fee": "Fee",
+      "feeHint": "Added to money out, so the row matches the balance.",
+      "columns": "Columns",
+      "none": "Not used",
+      "required": "Choose the column this needs.",
+      "date": "Date",
+      "dateFormat": "Date format",
+      "proposed": "Reads this file",
+      "otherFormats": "Other formats",
+      "ambiguous": "More than one format reads every date in the file. Choose the one your bank uses.",
+      "payee": "Payee",
+      "reference": "Reference",
+      "balance": "Balance",
+      "currencyColumn": "Currency column",
+      "currency": "Currency",
+      "accountCurrency": "The account's currency",
+      "status": "Status",
+      "statusHint": "Only rows with a booked status are imported.",
+      "bookedValues": "Booked status values",
+      "bookedValuesHint": "Separate several with commas, such as COMPLETED.",
+      "referenceHint": "Without a reference column, rows get new references when the description, payee or balance column changes, so rows imported earlier would be offered again.",
+      "samples": "First rows of the file",
+      "saveAndPreview": "Save and preview",
+      "updateFromFile": "Update the mapping from this file"
+    }
   },
   "errors": {
     "generic": "Something went wrong. Please try again.",
@@ -2119,7 +2211,10 @@
       "transferAlreadyMatched": "The chosen transfer is already matched to another bank entry of this account.",
       "transferMismatch": "The chosen transfer does not match this row.",
       "entryMismatch": "The entry you chose no longer matches this row or is already linked to another bank entry. Preview the file again.",
-      "refundInvalid": "Only an incoming row recorded as a transaction can be a refund. Preview the file again."
+      "refundInvalid": "Only an incoming row recorded as a transaction can be a refund. Preview the file again.",
+      "missingColumns": "The file has no column named {{reason}}. Update the mapping from this file, or check that it is the right bank's export.",
+      "mappingIncomplete": "Choose the columns this amount style needs, and the booked values when a status column is set.",
+      "invalidDateFormat": "Choose one of the listed date formats."
     },
     "money": {
       "invalid": "Enter a valid amount, e.g. 12.34.",

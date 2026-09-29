@@ -6,6 +6,7 @@ public enum StatementFormat
 {
     SwedbankCsv,
     Camt053,
+    GenericCsv,
 }
 
 public sealed record ParsedStatement(

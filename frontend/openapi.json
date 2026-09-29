@@ -7584,7 +7584,7 @@
           "Imports"
         ],
         "summary": "Commit previewed statement rows",
-        "description": "Writes the rows the user kept from a preview into the ledger. Rows the preview flagged as already present are skipped rather than duplicated, and the response reports how many were imported and how many were skipped. A row's tagIds are written as they arrive, whether a rule suggested them in the preview or the user picked them, so an empty list imports the row with no tags. A row with existingTransactionId adds nothing: the bank entry is linked to that transaction, which keeps its date, category, tags and description and is then treated as imported, so the same entry is a duplicate next time. The audit entry names the format the rows came from. For a camt.053 file, statement echoes the preview's closing date, balance and currency; when the currency is the account's, that balance is recorded as a reconciliation of the account after the rows are written, replacing one on the same date, and returned with its difference from the ledger. An incoming row sent with asRefund is written as a refund: an expense with the negated amount in the expense category given, linked to refundOfTransactionId when that is set.",
+        "description": "Writes the rows the user kept from a preview into the ledger. Rows the preview flagged as already present are skipped rather than duplicated, and the response reports how many were imported and how many were skipped. A row's tagIds are written as they arrive, whether a rule suggested them in the preview or the user picked them, so an empty list imports the row with no tags. A row with existingTransactionId adds nothing: the bank entry is linked to that transaction, which keeps its date, category, tags and description and is then treated as imported, so the same entry is a duplicate next time. The audit entry names the format the rows came from, and for genericCsv the mapping. For a camt.053 file or a mapped CSV with a balance column, statement echoes the preview's closing date, balance and currency; when the currency is the account's, that balance is recorded as a reconciliation of the account after the rows are written, replacing one on the same date, and returned with its difference from the ledger. An incoming row sent with asRefund is written as a refund: an expense with the negated amount in the expense category given, linked to refundOfTransactionId when that is set.",
         "operationId": "ImportConfirm",
         "requestBody": {
           "content": {
@@ -7645,13 +7645,416 @@
         ]
       }
     },
+    "/api/import/csv-mappings": {
+      "post": {
+        "tags": [
+          "Imports"
+        ],
+        "summary": "Save a CSV column mapping",
+        "description": "Saves how to read one bank's CSV export, so its next file goes straight to the preview with format genericCsv and this mapping's id. Columns are named by their header text. The amount style decides which columns carry the money: signedNegativeIsExpense and signedPositiveIsExpense read one signed amount column (the second for card statements, where a positive amount is a purchase), debitCredit reads a debit and a credit column, and amountWithDirection reads an amount and a direction column whose value equals expenseValue, ignoring case, for money out. A mapping is personal: nobody else sees it.",
+        "operationId": "CreateCsvMapping",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCsvMappingRequest"
+              },
+              "example": {
+                "name": "Revolut",
+                "encoding": "utf8",
+                "delimiter": ",",
+                "skipLines": 0,
+                "amountStyle": "signedNegativeIsExpense",
+                "dateFormat": "yyyy-MM-dd",
+                "decimalSeparator": "dot",
+                "columns": {
+                  "date": "Completed Date",
+                  "description": "Description",
+                  "payee": null,
+                  "amount": "Amount",
+                  "debit": null,
+                  "credit": null,
+                  "direction": null,
+                  "expenseValue": null,
+                  "currency": "Currency",
+                  "reference": null,
+                  "balance": "Balance",
+                  "fee": "Fee",
+                  "status": "State",
+                  "bookedValues": "COMPLETED"
+                },
+                "currency": null
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "The mapping was saved. The Location header points at it.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CsvMappingResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed, the amount style lacks its columns (import.mappingIncomplete) or the date format is not one of the list (import.invalidDateFormat).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      },
+      "get": {
+        "tags": [
+          "Imports"
+        ],
+        "summary": "List CSV column mappings",
+        "description": "Returns your saved CSV column mappings by name. The import dialog lists each one as a provider next to Swedbank and camt.053. Mappings are personal: nobody else sees them.",
+        "operationId": "ListCsvMappings",
+        "responses": {
+          "200": {
+            "description": "The mappings of the signed-in user, by name.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CsvMappingResponse"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      }
+    },
+    "/api/import/csv-mappings/{id}": {
+      "delete": {
+        "tags": [
+          "Imports"
+        ],
+        "summary": "Delete a CSV column mapping",
+        "description": "Removes a saved mapping from the provider list. Rows imported through it stay as they are. The deletion is listed in the trash, and POST /api/trash/restore brings the mapping back.",
+        "operationId": "DeleteCsvMapping",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The mapping id.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "The mapping is gone."
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such mapping belongs to the signed-in user.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "Imports"
+        ],
+        "summary": "Update a CSV column mapping",
+        "description": "Replaces every setting of a saved mapping, the column names included. Rows already imported keep their references. Without a reference column a row's reference is a hash of its date, amount, currency, description, payee and balance cells, so changing the description, payee or balance column makes rows imported earlier look new.",
+        "operationId": "UpdateCsvMapping",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The mapping id. Takes precedence over the id in the body.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "example": "00000000-0000-0000-0000-000000000000"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCsvMappingRequest"
+              },
+              "example": {
+                "name": "SEB card",
+                "encoding": "windows1257",
+                "delimiter": ";",
+                "skipLines": 2,
+                "amountStyle": "signedPositiveIsExpense",
+                "dateFormat": "dd.MM.yyyy",
+                "decimalSeparator": "comma",
+                "columns": {
+                  "date": "Data",
+                  "description": "Aprašymas",
+                  "payee": null,
+                  "amount": "Suma",
+                  "debit": null,
+                  "credit": null,
+                  "direction": null,
+                  "expenseValue": null,
+                  "currency": null,
+                  "reference": null,
+                  "balance": null,
+                  "fee": null,
+                  "status": null,
+                  "bookedValues": null
+                },
+                "currency": null
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "The updated mapping.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CsvMappingResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed, the amount style lacks its columns (import.mappingIncomplete) or the date format is not one of the list (import.invalidDateFormat).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such mapping belongs to the signed-in user.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      }
+    },
+    "/api/import/csv/inspect": {
+      "post": {
+        "tags": [
+          "Imports"
+        ],
+        "summary": "Inspect a CSV file for a column mapping",
+        "description": "Reads a CSV export from any bank, card issuer or payment app and proposes how to read it: the text encoding (a byte-order mark decides UTF-8 or UTF-16, otherwise windows1257 is proposed when the bytes are not valid UTF-8), the delimiter (comma, semicolon, tab or pipe) and how many lines sit above the header row. It returns the header names, up to ten sample rows of raw cells, and for each column the date formats that read every sample and the decimal separator its numbers use. matchingMappingIds lists your saved mappings whose every named column is in this header, so the client can offer one. Send encoding, delimiter or skipLines to read the file again after the user corrected a proposal. Nothing is written. Send the file as multipart/form-data.",
+        "operationId": "InspectCsv",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/InspectCsvRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "The proposals, the header, the sample rows and the saved mappings that fit.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectCsvResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "No file, a file over 5 MB, a file with no header row and data (import.invalidFile), or an invalid option.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      }
+    },
     "/api/import/preview": {
       "post": {
         "tags": [
           "Imports"
         ],
         "summary": "Preview a bank statement",
-        "description": "Parses an exported bank statement and returns the rows it found, each with a flag saying whether a matching transaction already exists in the account. Two formats are read: swedbankCsv, the Swedbank CSV export, and camt053, an ISO 20022 camt.053 XML statement. From a camt.053 file only booked entries are returned; pending and informational entries and entries that could not be read are counted in statement. When the file holds several statements, the one for the account's IBAN is read. A counterparty IBAN that belongs to another of your accounts fills in suggestedTransferAccountId. Your categorization rules are evaluated against each row's description, amount and flow type, and the first rule that matches fills in suggestedCategoryId, suggestedTagIds and matchedRuleName; a row nothing matched carries none of them. The suggestion is a suggestion: confirm sends back whatever the client decided. A row that is not a duplicate and has the same flow type, amount and currency as a transaction entered by hand on the account within three days of it carries that transaction in matchedTransaction, each transaction offered to one row at most, the closest date first. An incoming row that is neither a duplicate nor matched carries refundCandidate when an expense on the account, not a refund, in the same currency, of at least the row's amount and dated at most 90 days before it has the same normalized payee or description as the row; the most recent such expense wins. Nothing is written: this call only reads the file. Send the file as multipart/form-data.",
+        "description": "Parses an exported bank statement and returns the rows it found, each with a flag saying whether a matching transaction already exists in the account. Three formats are read: swedbankCsv, the Swedbank CSV export, camt053, an ISO 20022 camt.053 XML statement, and genericCsv, any CSV export read through the saved column mapping named by mappingId. From a camt.053 file only booked entries are returned; pending and informational entries and entries that could not be read are counted in statement. A mapped CSV counts rows its status filter leaves out or whose amount is zero in notBooked and rows it cannot read in unreadable, and with a balance column answers the balance of its latest row as the closing balance. When the file holds several statements, the one for the account's IBAN is read. A counterparty IBAN that belongs to another of your accounts fills in suggestedTransferAccountId. Your categorization rules are evaluated against each row's description, amount and flow type, and the first rule that matches fills in suggestedCategoryId, suggestedTagIds and matchedRuleName; a row nothing matched carries none of them. The suggestion is a suggestion: confirm sends back whatever the client decided. A row that is not a duplicate and has the same flow type, amount and currency as a transaction entered by hand on the account within three days of it carries that transaction in matchedTransaction, each transaction offered to one row at most, the closest date first. An incoming row that is neither a duplicate nor matched carries refundCandidate when an expense on the account, not a refund, in the same currency, of at least the row's amount and dated at most 90 days before it has the same normalized payee or description as the row; the most recent such expense wins. Nothing is written: this call only reads the file. Send the file as multipart/form-data.",
         "operationId": "ImportPreview",
         "requestBody": {
           "content": {
@@ -7675,7 +8078,7 @@
             }
           },
           "400": {
-            "description": "No file, a file over the size limit, an unreadable statement, a file with no statement for this account, or an account that is not yours.",
+            "description": "No file, a file over the size limit, an unreadable statement, a file with no statement for this account, a CSV without a column the mapping names (import.missingColumns), or an account or mapping that is not yours.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -16963,6 +17366,96 @@
           "feeCategoryId": null
         }
       },
+      "CreateCsvMappingRequest": {
+        "required": [
+          "name",
+          "encoding",
+          "delimiter",
+          "skipLines",
+          "amountStyle",
+          "dateFormat",
+          "decimalSeparator",
+          "columns"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "maxLength": 60,
+            "minLength": 0,
+            "type": "string",
+            "description": "What the provider list calls the mapping, at most 60 characters.",
+            "example": "Revolut"
+          },
+          "encoding": {
+            "$ref": "#/components/schemas/CsvEncoding"
+          },
+          "delimiter": {
+            "minLength": 1,
+            "type": "string",
+            "description": "A comma, a semicolon, a tab or a pipe.",
+            "example": ","
+          },
+          "skipLines": {
+            "maximum": 20,
+            "minimum": 0,
+            "type": "integer",
+            "description": "How many non-empty lines sit above the header row, 0 to 20.",
+            "format": "int32",
+            "example": 0
+          },
+          "amountStyle": {
+            "$ref": "#/components/schemas/CsvAmountStyle"
+          },
+          "dateFormat": {
+            "type": "string",
+            "description": "One of yyyy-MM-dd, dd.MM.yyyy, dd/MM/yyyy, MM/dd/yyyy, dd-MM-yyyy, yyyy.MM.dd, yyyy/MM/dd or d.M.yyyy. A time after a space or T is ignored.",
+            "example": "yyyy-MM-dd"
+          },
+          "decimalSeparator": {
+            "$ref": "#/components/schemas/CsvDecimalSeparator"
+          },
+          "columns": {
+            "$ref": "#/components/schemas/CsvColumnMap"
+          },
+          "currency": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Currency"
+              }
+            ],
+            "description": "Optional. The currency of every row when the file has no currency column; the account's currency when left out."
+          }
+        },
+        "example": {
+          "name": "Revolut",
+          "encoding": "utf8",
+          "delimiter": ",",
+          "skipLines": 0,
+          "amountStyle": "signedNegativeIsExpense",
+          "dateFormat": "yyyy-MM-dd",
+          "decimalSeparator": "dot",
+          "columns": {
+            "date": "Completed Date",
+            "description": "Description",
+            "payee": null,
+            "amount": "Amount",
+            "debit": null,
+            "credit": null,
+            "direction": null,
+            "expenseValue": null,
+            "currency": "Currency",
+            "reference": null,
+            "balance": "Balance",
+            "fee": "Fee",
+            "status": "State",
+            "bookedValues": "COMPLETED"
+          },
+          "currency": null
+        }
+      },
       "CreateDebtRequest": {
         "required": [
           "name",
@@ -17623,6 +18116,179 @@
           "displayName": "Partner",
           "role": "Member",
           "password": "correct horse battery staple"
+        }
+      },
+      "CsvAmountStyle": {
+        "enum": [
+          "signedNegativeIsExpense",
+          "signedPositiveIsExpense",
+          "debitCredit",
+          "amountWithDirection"
+        ],
+        "type": "string",
+        "description": "How the amount columns say which way the money moved."
+      },
+      "CsvColumnMap": {
+        "required": [
+          "date"
+        ],
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string"
+          },
+          "description": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "payee": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "amount": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "debit": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "credit": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "direction": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "expenseValue": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "currency": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "reference": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "balance": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "fee": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "status": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "bookedValues": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        },
+        "description": "The header names of the columns to read. date is required, and the amount style needs its columns. bookedValues is a comma-separated list of the status values that mean booked."
+      },
+      "CsvDecimalSeparator": {
+        "enum": [
+          "dot",
+          "comma"
+        ],
+        "type": "string",
+        "description": "The decimal mark of the numbers, dot or comma; the other one is read as a thousands mark."
+      },
+      "CsvEncoding": {
+        "enum": [
+          "utf8",
+          "windows1257",
+          "windows1252"
+        ],
+        "type": "string",
+        "description": "The encoding of a file without a byte-order mark: utf8, windows1257 or windows1252."
+      },
+      "CsvMappingResponse": {
+        "required": [
+          "id",
+          "name",
+          "encoding",
+          "delimiter",
+          "skipLines",
+          "amountStyle",
+          "dateFormat",
+          "decimalSeparator",
+          "currency",
+          "columns"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "encoding": {
+            "$ref": "#/components/schemas/CsvEncoding"
+          },
+          "delimiter": {
+            "type": "string"
+          },
+          "skipLines": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "amountStyle": {
+            "$ref": "#/components/schemas/CsvAmountStyle"
+          },
+          "dateFormat": {
+            "type": "string"
+          },
+          "decimalSeparator": {
+            "$ref": "#/components/schemas/CsvDecimalSeparator"
+          },
+          "currency": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Currency"
+              }
+            ]
+          },
+          "columns": {
+            "$ref": "#/components/schemas/CsvColumnMap"
+          }
         }
       },
       "CurrenciesResponse": {
@@ -18383,7 +19049,10 @@
           "household.scopeMismatch",
           "iban.invalid",
           "import.entryMismatch",
+          "import.invalidDateFormat",
           "import.invalidFile",
+          "import.mappingIncomplete",
+          "import.missingColumns",
           "import.noStatementForAccount",
           "import.refundInvalid",
           "import.transferAlreadyMatched",
@@ -18938,7 +19607,15 @@
                 "$ref": "#/components/schemas/ImportStatementBalance"
               }
             ],
-            "description": "Optional. The closing balance the camt.053 preview answered; ignored for other formats."
+            "description": "Optional. The closing balance the camt.053 or mapped CSV preview answered; ignored for Swedbank CSV."
+          },
+          "mappingId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The saved CSV column mapping the preview used; required for genericCsv, whose audit entry names it.",
+            "format": "uuid"
           }
         }
       },
@@ -19111,6 +19788,14 @@
           },
           "format": {
             "$ref": "#/components/schemas/StatementFormat"
+          },
+          "mappingId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The saved CSV column mapping to read the file with; required for genericCsv and ignored otherwise.",
+            "format": "uuid"
           }
         }
       },
@@ -19338,6 +20023,117 @@
               "string"
             ],
             "format": "decimal"
+          }
+        }
+      },
+      "InspectCsvColumn": {
+        "required": [
+          "name",
+          "dateFormats",
+          "decimalSeparator"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "dateFormats": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "decimalSeparator": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/CsvDecimalSeparator"
+              }
+            ]
+          }
+        }
+      },
+      "InspectCsvRequest": {
+        "type": "object",
+        "properties": {
+          "file": {
+            "type": "string",
+            "format": "binary"
+          },
+          "encoding": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/CsvEncoding"
+              }
+            ],
+            "description": "Optional. The encoding to read the file with when it has no byte-order mark: utf8, windows1257 or windows1252."
+          },
+          "delimiter": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Optional. The delimiter: a comma, semicolon, tab or pipe."
+          },
+          "skipLines": {
+            "maximum": 20,
+            "minimum": 0,
+            "type": [
+              "null",
+              "integer"
+            ],
+            "description": "Optional. How many non-empty lines sit above the header row, 0 to 20.",
+            "format": "int32"
+          }
+        }
+      },
+      "InspectCsvResponse": {
+        "required": [
+          "encoding",
+          "delimiter",
+          "skipLines",
+          "columns",
+          "samples",
+          "matchingMappingIds"
+        ],
+        "type": "object",
+        "properties": {
+          "encoding": {
+            "$ref": "#/components/schemas/CsvEncoding"
+          },
+          "delimiter": {
+            "type": "string"
+          },
+          "skipLines": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "columns": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/InspectCsvColumn"
+            }
+          },
+          "samples": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "matchingMappingIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
           }
         }
       },
@@ -21976,10 +22772,11 @@
       "StatementFormat": {
         "enum": [
           "swedbankCsv",
-          "camt053"
+          "camt053",
+          "genericCsv"
         ],
         "type": "string",
-        "description": "The statement format: swedbankCsv for a Swedbank CSV export or camt053 for an ISO 20022 camt.053 XML statement."
+        "description": "The statement format: swedbankCsv for a Swedbank CSV export, camt053 for an ISO 20022 camt.053 XML statement, or genericCsv for a CSV read through a saved mapping."
       },
       "SubscriptionCandidateResponse": {
         "required": [
@@ -22869,7 +23666,8 @@
           "tag",
           "categorizationRule",
           "household",
-          "attachment"
+          "attachment",
+          "csvImportMapping"
         ],
         "type": "string",
         "description": "Which kind of record to bring back, as listed by GET /api/trash."
@@ -23292,6 +24090,91 @@
           "feeAmount": "2.00",
           "feeCurrency": "eur",
           "feeCategoryId": null
+        }
+      },
+      "UpdateCsvMappingRequest": {
+        "required": [
+          "name",
+          "encoding",
+          "delimiter",
+          "skipLines",
+          "amountStyle",
+          "dateFormat",
+          "decimalSeparator",
+          "columns"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "maxLength": 60,
+            "minLength": 0,
+            "type": "string",
+            "example": "SEB card"
+          },
+          "encoding": {
+            "$ref": "#/components/schemas/CsvEncoding"
+          },
+          "delimiter": {
+            "minLength": 1,
+            "type": "string",
+            "example": ";"
+          },
+          "skipLines": {
+            "maximum": 20,
+            "minimum": 0,
+            "type": "integer",
+            "format": "int32",
+            "example": 2
+          },
+          "amountStyle": {
+            "$ref": "#/components/schemas/CsvAmountStyle"
+          },
+          "dateFormat": {
+            "type": "string",
+            "example": "dd.MM.yyyy"
+          },
+          "decimalSeparator": {
+            "$ref": "#/components/schemas/CsvDecimalSeparator"
+          },
+          "columns": {
+            "$ref": "#/components/schemas/CsvColumnMap"
+          },
+          "currency": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Currency"
+              }
+            ]
+          }
+        },
+        "example": {
+          "name": "SEB card",
+          "encoding": "windows1257",
+          "delimiter": ";",
+          "skipLines": 2,
+          "amountStyle": "signedPositiveIsExpense",
+          "dateFormat": "dd.MM.yyyy",
+          "decimalSeparator": "comma",
+          "columns": {
+            "date": "Data",
+            "description": "Aprašymas",
+            "payee": null,
+            "amount": "Suma",
+            "debit": null,
+            "credit": null,
+            "direction": null,
+            "expenseValue": null,
+            "currency": null,
+            "reference": null,
+            "balance": null,
+            "fee": null,
+            "status": null,
+            "bookedValues": null
+          },
+          "currency": null
         }
       },
       "UpdateDebtPaymentRequest": {

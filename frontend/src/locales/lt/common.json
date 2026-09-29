@@ -589,7 +589,8 @@
       "tag": "Žyma",
       "categorizationRule": "Kategorizavimo taisyklė",
       "household": "Namų ūkis",
-      "attachment": "Failas"
+      "attachment": "Failas",
+      "csvImportMapping": "CSV susiejimas"
     }
   },
   "theme": {
@@ -1980,7 +1981,10 @@
       "swedbank": "Swedbank",
       "swedbankFormat": "Sąskaitos išrašas, CSV",
       "camt053": "Banko išrašas XML (ISO 20022)",
-      "camt053Format": "camt.053 išrašas iš bet kurio jį siūlančio banko"
+      "camt053Format": "camt.053 išrašas iš bet kurio jį siūlančio banko",
+      "genericCsv": "Kitas bankas (CSV)",
+      "genericCsvFormat": "Bet koks CSV eksportas: vieną kartą nurodykite, kuriame stulpelyje kas",
+      "savedMappingFormat": "Jūsų CSV susiejimas"
     },
     "ruleFilled": "Užpildė taisyklė",
     "ruleFilledHint": "Užpildė jūsų taisyklė „{{rule}}“. Pakeiskite, jei netinka.",
@@ -1997,6 +2001,11 @@
         "hint": "Internetinėje bankininkystėje atsisiųskite sąskaitos išrašą XML / ISO 20022 / camt.053 formatu, iki 20 MB. Niekas neišsaugoma, kol nepatvirtinate peržiūrėtų eilučių.",
         "errorFormat": "Šis failas nėra camt.053 banko išrašas ISO 20022 XML formatu.",
         "errorFix": "Atsisiųskite sąskaitos išrašą iš internetinės bankininkystės XML (ISO 20022, camt.053) formatu ir įkelkite jo nekeisdami. Dienos ataskaitos (camt.052) ir pranešimai (camt.054) neskaitomi."
+      },
+      "genericCsv": {
+        "hint": "Bet kurio banko, kortelių išdavėjo ar mokėjimų programėlės CSV eksportas, iki 5 MB. Niekas neišsaugoma, kol nepatvirtinate peržiūrėtų eilučių.",
+        "errorFormat": "Šio failo nepavyko perskaityti kaip CSV išrašo su antraštės eilute.",
+        "errorFix": "Eksportuokite išrašą kaip CSV ir įkelkite jį nepakeistą. Jei stulpeliai atrodo neteisingai, pataisykite koduotę, skyriklį arba eilučių virš antraštės skaičių."
       }
     },
     "statement": {
@@ -2013,7 +2022,11 @@
       "unreadable_other": "Nepavyko perskaityti {{count}} įrašų, jie nerodomi",
       "closing": "Galutinis likutis {{date}}: {{amount}}",
       "agrees": "Sutampa su apskaitos likučiu įtraukus pasirinktas eilutes ({{ledger}})",
-      "differs": "Apskaitos likutis įtraukus pasirinktas eilutes: {{ledger}}, skirtumas {{difference}}"
+      "differs": "Apskaitos likutis įtraukus pasirinktas eilutes: {{ledger}}, skirtumas {{difference}}",
+      "skipped_one": "Praleista {{count}} eilutė dėl būsenos filtro arba nulinės sumos",
+      "skipped_few": "Praleistos {{count}} eilutės dėl būsenos filtro arba nulinės sumos",
+      "skipped_many": "Praleista {{count}} eilutės dėl būsenos filtro arba nulinės sumos",
+      "skipped_other": "Praleista {{count}} eilučių dėl būsenos filtro arba nulinės sumos"
     },
     "discard": {
       "title": "Atmesti šią peržiūrą?",
@@ -2030,7 +2043,88 @@
       "empty": "Šiame rodinyje atitinkančių eilučių nėra."
     },
     "resultReconciled": "Likutis sutampa su išrašu {{date}}.",
-    "resultDiffers": "Išrašas skiriasi {{difference}} ({{date}})."
+    "resultDiffers": "Išrašas skiriasi {{difference}} ({{date}}).",
+    "mapping": {
+      "title": "Susiekite stulpelius",
+      "description": "Aprašymas",
+      "editTitle": "Redaguoti {{name}}",
+      "fits": "Šiam failui tinka išsaugotas susiejimas:",
+      "use": "Naudoti {{name}}",
+      "name": "Pavadinimas",
+      "namePlaceholder": "Revolut, Wise, SEB kortelė",
+      "nameHint": "Rodomas teikėjų sąraše šalia Swedbank.",
+      "reading": "Failo skaitymas",
+      "readingHint": "Pakeitus šiuos nustatymus failas perskaitomas iš naujo ir susiejimas pradedamas iš pradžių.",
+      "encoding": "Teksto koduotė",
+      "encodings": {
+        "utf8": "UTF-8",
+        "windows1257": "Windows-1257 (Baltijos)",
+        "windows1252": "Windows-1252 (Vakarų)"
+      },
+      "delimiter": "Skyriklis",
+      "delimiters": {
+        "comma": "Kablelis",
+        "semicolon": "Kabliataškis",
+        "tab": "Tabuliacija",
+        "pipe": "Vertikali linija"
+      },
+      "skipLines": "Eilučių virš antraštės",
+      "money": "Pinigai",
+      "amountStyle": "Kaip įrašyta suma",
+      "styles": {
+        "signedNegativeIsExpense": {
+          "label": "Su ženklu",
+          "example": "-12,50 yra išlaidos, 12,50 pajamos."
+        },
+        "signedPositiveIsExpense": {
+          "label": "Kortelės išrašas",
+          "example": "12,50 yra pirkinys, -12,50 mokėjimas arba grąžinimas."
+        },
+        "debitCredit": {
+          "label": "Debetas ir kreditas",
+          "example": "Išlaidos viename stulpelyje, pajamos kitame."
+        },
+        "amountWithDirection": {
+          "label": "Suma ir kryptis",
+          "example": "Suma ir stulpelis, pvz., D/K, nurodantis kryptį."
+        }
+      },
+      "amount": "Suma",
+      "debit": "Išlaidos (debetas)",
+      "credit": "Pajamos (kreditas)",
+      "direction": "Kryptis",
+      "expenseValue": "Išlaidų krypties reikšmė",
+      "expenseValuePlaceholder": "D",
+      "decimalSeparator": "Dešimtainis ženklas",
+      "separators": {
+        "dot": "Taškas (12.50)",
+        "comma": "Kablelis (12,50)"
+      },
+      "fee": "Mokestis",
+      "feeHint": "Pridedamas prie išlaidų, kad eilutė atitiktų likutį.",
+      "columns": "Stulpeliai",
+      "none": "Nenaudojamas",
+      "required": "Pasirinkite reikiamą stulpelį.",
+      "date": "Data",
+      "dateFormat": "Datos formatas",
+      "proposed": "Tinka šiam failui",
+      "otherFormats": "Kiti formatai",
+      "ambiguous": "Visas failo datas perskaito daugiau nei vienas formatas. Pasirinkite tą, kurį naudoja jūsų bankas.",
+      "payee": "Gavėjas",
+      "reference": "Nuoroda",
+      "balance": "Likutis",
+      "currencyColumn": "Valiutos stulpelis",
+      "currency": "Valiuta",
+      "accountCurrency": "Sąskaitos valiuta",
+      "status": "Būsena",
+      "statusHint": "Importuojamos tik eilutės su įvykdyta būsena.",
+      "bookedValues": "Įvykdytos būsenos reikšmės",
+      "bookedValuesHint": "Kelias atskirkite kableliais, pvz., COMPLETED.",
+      "referenceHint": "Be nuorodos stulpelio eilutės gauna naujas nuorodas, kai pakeičiamas aprašymo, gavėjo ar likučio stulpelis, todėl anksčiau importuotos eilutės būtų pasiūlytos dar kartą.",
+      "samples": "Pirmosios failo eilutės",
+      "saveAndPreview": "Išsaugoti ir peržiūrėti",
+      "updateFromFile": "Atnaujinti susiejimą pagal šį failą"
+    }
   },
   "errors": {
     "generic": "Kažkas nepavyko. Bandykite dar kartą.",
@@ -2197,7 +2291,10 @@
       "transferAlreadyMatched": "Pasirinktas pervedimas jau susietas su kitu šios sąskaitos banko įrašu.",
       "transferMismatch": "Pasirinktas pervedimas neatitinka šios eilutės.",
       "entryMismatch": "Pasirinktas įrašas nebeatitinka šios eilutės arba jau susietas su kitu banko įrašu. Peržiūrėkite failą dar kartą.",
-      "refundInvalid": "Grąžinimu gali būti tik gaunama eilutė, įrašoma kaip operacija. Peržiūrėkite failą dar kartą."
+      "refundInvalid": "Grąžinimu gali būti tik gaunama eilutė, įrašoma kaip operacija. Peržiūrėkite failą dar kartą.",
+      "missingColumns": "Faile nėra stulpelio {{reason}}. Atnaujinkite susiejimą pagal šį failą arba patikrinkite, ar tai tinkamo banko eksportas.",
+      "mappingIncomplete": "Pasirinkite šiam sumos būdui reikalingus stulpelius ir, jei nurodytas būsenos stulpelis, įvykdytos būsenos reikšmes.",
+      "invalidDateFormat": "Pasirinkite vieną iš išvardytų datos formatų."
     },
     "money": {
       "invalid": "Įveskite teisingą sumą, pvz., 12,34.",

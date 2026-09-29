@@ -16,4 +16,5 @@ public enum TrashKind
     CategorizationRule,
     Household,
     Attachment,
+    CsvImportMapping,
 }

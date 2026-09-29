@@ -29,6 +29,7 @@ public sealed class TrashRestorersTests
     [InlineData(TrashKind.CategorizationRule, Feature.CategorizationRules)]
     [InlineData(TrashKind.Household, Feature.Households)]
     [InlineData(TrashKind.Attachment, null)]
+    [InlineData(TrashKind.CsvImportMapping, Feature.Import)]
     public void Each_kind_belongs_to_its_feature(TrashKind kind, Feature? feature) =>
         Assert.Equal(feature, TrashRestorers.FeatureOf(kind));
 

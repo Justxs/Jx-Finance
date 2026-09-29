@@ -10,7 +10,7 @@ web
 
 The owner and the few people in their household. They are trusted, invited by an administrator, and already know what the product is for. Nobody arrives cold.
 
-The main situation is a sit-down session at a desktop computer, weekly or monthly: import the bank statement (Swedbank CSV or camt.053 XML), review and categorize rows, record anything the bank did not see, then check balances, budgets, upcoming bills and reports. The phone is secondary and is used for the occasional quick entry or lookup.
+The main situation is a sit-down session at a desktop computer, weekly or monthly: import the bank statement (Swedbank CSV, camt.053 XML or any bank's CSV through a saved column mapping), review and categorize rows, record anything the bank did not see, then check balances, budgets, upcoming bills and reports. The phone is secondary and is used for the occasional quick entry or lookup.
 
 ## Product Purpose
 
@@ -24,7 +24,7 @@ A private ledger that the household runs itself. Data stays in its own PostgreSQ
 
 ## Operating Context
 
-- Bank statements are the main bulk input: Swedbank CSV, or camt.053 XML from any bank that offers it. Import is a review step: preview, row selection, category choice, transfer matching and duplicate detection.
+- Bank statements are the main bulk input: Swedbank CSV, camt.053 XML from any bank that offers it, or the CSV of any other bank, card issuer or payment app through a column mapping saved once. Import is a review step: preview, row selection, category choice, transfer matching and duplicate detection.
 - The installation has one reporting currency, EUR by default. Accounts have a main currency and can hold balances in any of 30 supported currencies; every transaction carries its own currency. Totals, budgets and reports are expressed in the reporting currency using the ECB reference rate on each transaction's date, synced daily when the administrator allows it. Entry accepts comma decimals. Dates and numbers follow the chosen locale.
 - Investments are kept by hand or imported from an Interactive Brokers Flex Query, by file upload or daily through the Flex Web Service when a connection is saved. Cost basis is first-in-first-out; the last price comes from the broker or is set by hand. Holdings count toward the account's value, the dashboard total and net worth.
 - The interface is English and Lithuanian. Lithuanian labels and bank descriptions are long and use diacritics (ą č ę ė į š ų ū ž).
@@ -38,7 +38,7 @@ A private ledger that the household runs itself. Data stays in its own PostgreSQ
 - Routes: dashboard, transactions, accounts (with transfers), categories, tags, rules, budgets, goals, recurring bills, net worth, investments, reports, month close, profile, households, users (admin), settings (admin), login, first-run setup. The sidebar groups them into hubs with tabs under the page title (Categories, Plan, Wealth, Reports) and one Settings page for everyone, whose Personal, Shared and Installation (admin) sections cover profile, households, users and settings. Bank statement import is not a route: it opens as a dialog from Settings › Personal › Import data (provider list, then the statement review with bulk selection, bulk category and category recall). Import and investments can be switched off per installation.
 - Light and dark themes are both first-class.
 - The browser makes no third-party network requests. The Content-Security-Policy allows scripts, fonts and connections from the same origin only; fonts must be bundled. The only outbound traffic comes from the server, and only when an administrator enables it: the daily ECB rate sync, a saved Interactive Brokers Flex connection, and notifications posted to the Discord webhooks members add, once an administrator allows Discord.
-- Out of scope for the product: bank APIs, live investment prices, manual exchange rates, per-user reporting currency, machine-learned categorization, credit-card statements, PWA/offline, scheduled or offsite backups.
+- Out of scope for the product: bank APIs, live investment prices, manual exchange rates, per-user reporting currency, machine-learned categorization, PWA/offline, scheduled or offsite backups.
 - Frontend conventions that design work must respect: React Compiler (no manual memo hooks or effects), no code comments, function declarations, shadcn/ui components on Base UI, Storybook stories for every component.
 
 ## Brand Commitments

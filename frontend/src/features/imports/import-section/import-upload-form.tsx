@@ -15,6 +15,7 @@ export const IMPORT_FILE_INPUT_ID = "import-file";
 export const importFormats: Record<StatementFormat, { accept: string; maxBytes: number }> = {
   swedbankCsv: { accept: ".csv,text/csv", maxBytes: 5 * 1024 * 1024 },
   camt053: { accept: ".xml,application/xml,text/xml", maxBytes: 20 * 1024 * 1024 },
+  genericCsv: { accept: ".csv,.txt,text/csv", maxBytes: 5 * 1024 * 1024 },
 };
 interface Props {
   accounts: AccountResponse[];

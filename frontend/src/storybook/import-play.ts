@@ -1,11 +1,12 @@
 import { userEvent, within } from "storybook/test";
 import type { StatementFormat } from "@/api/generated/model";
 import { IMPORT_FILE_INPUT_ID } from "@/features/imports/import-section/import-upload-form";
-import { camtStatementXml, transactionsCsv } from "./fixtures";
+import { camtStatementXml, revolutCsv, transactionsCsv } from "./fixtures";
 
 const sampleFiles = {
   swedbankCsv: { name: "swedbank-2026-09.csv", type: "text/csv", content: transactionsCsv },
   camt053: { name: "statement-2026-09.xml", type: "application/xml", content: camtStatementXml },
+  genericCsv: { name: "revolut-2026-09.csv", type: "text/csv", content: revolutCsv },
 } satisfies Record<StatementFormat, { name: string; type: string; content: string }>;
 
 export async function uploadAndPreview(

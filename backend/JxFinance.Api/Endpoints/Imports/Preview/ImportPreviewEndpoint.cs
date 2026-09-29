@@ -17,6 +17,6 @@ public sealed class ImportPreviewEndpoint(IImportService importService)
     public override async Task HandleAsync(ImportPreviewRequest req, CancellationToken ct)
     {
         await using var stream = req.File.OpenReadStream();
-        await Send.OkOrProblemAsync(await importService.PreviewAsync(req.Format, req.AccountId, stream, ct), ct);
+        await Send.OkOrProblemAsync(await importService.PreviewAsync(req.Format, req.AccountId, req.MappingId, stream, ct), ct);
     }
 }

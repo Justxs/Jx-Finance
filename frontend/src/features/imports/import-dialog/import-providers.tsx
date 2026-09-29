@@ -1,0 +1,116 @@
+import { ChevronRight, FileSpreadsheet, Landmark, type LucideIcon } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import {
+  getListCsvMappingsQueryKey,
+  useDeleteCsvMapping,
+  useListCsvMappingsSuspense,
+} from "@/api/generated";
+import type { CsvMappingResponse, StatementFormat } from "@/api/generated/model";
+import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog/confirm-delete-dialog";
+import { RowActions } from "@/components/row-actions/row-actions";
+import { Rows } from "@/components/ui/rows/rows";
+import { useConfirmedDelete } from "@/hooks/use-confirmed-delete";
+import { optimisticRemoval } from "@/lib/optimistic";
+
+export interface ImportProvider {
+  format: StatementFormat;
+  name: string;
+  mapping?: CsvMappingResponse;
+}
+
+interface Props {
+  onChoose: (provider: ImportProvider) => void;
+  onEdit: (mapping: CsvMappingResponse) => void;
+}
+
+function ProviderButton({
+  icon: Icon,
+  name,
+  format,
+  onClick,
+}: Readonly<{ icon: LucideIcon; name: string; format: string; onClick: () => void }>) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="-mx-2 flex min-w-0 flex-1 items-center gap-3 rounded-md px-2 py-3 text-left transition-colors hover:bg-muted focus-visible:bg-muted"
+    >
+      <Icon aria-hidden="true" className="size-4 shrink-0 text-muted-foreground" />
+      <span className="min-w-0 flex-1">
+        <span className="block text-sm font-medium wrap-break-word">{name}</span>
+        <span className="block text-xs text-muted-foreground">{format}</span>
+      </span>
+      <ChevronRight aria-hidden="true" className="size-4 shrink-0 text-muted-foreground" />
+    </button>
+  );
+}
+
+export function ImportProviders({ onChoose, onEdit }: Readonly<Props>) {
+  const { t } = useTranslation();
+  const mappings = useListCsvMappingsSuspense();
+  const deleteMutation = useDeleteCsvMapping({
+    mutation: optimisticRemoval<CsvMappingResponse>(getListCsvMappingsQueryKey()),
+  });
+  const remove = useConfirmedDelete(
+    deleteMutation,
+    mappings.data,
+    (mapping) => mapping.name,
+    "csvImportMapping",
+  );
+
+  const fixed = [
+    {
+      format: "swedbankCsv",
+      name: t("imports.providers.swedbank"),
+      detail: t("imports.providers.swedbankFormat"),
+    },
+    {
+      format: "camt053",
+      name: t("imports.providers.camt053"),
+      detail: t("imports.providers.camt053Format"),
+    },
+  ] as const;
+
+  return (
+    <>
+      <Rows className="-my-2">
+        {fixed.map((item) => (
+          <li key={item.format} className="flex">
+            <ProviderButton
+              icon={Landmark}
+              name={item.name}
+              format={item.detail}
+              onClick={() => onChoose({ format: item.format, name: item.name })}
+            />
+          </li>
+        ))}
+        {mappings.data.map((mapping) => (
+          <li key={mapping.id} className="flex items-center gap-2">
+            <ProviderButton
+              icon={FileSpreadsheet}
+              name={mapping.name}
+              format={t("imports.providers.savedMappingFormat")}
+              onClick={() => onChoose({ format: "genericCsv", name: mapping.name, mapping })}
+            />
+            <RowActions
+              label={mapping.name}
+              onEdit={() => onEdit(mapping)}
+              {...remove.deleteProps(mapping.id)}
+            />
+          </li>
+        ))}
+        <li className="flex">
+          <ProviderButton
+            icon={FileSpreadsheet}
+            name={t("imports.providers.genericCsv")}
+            format={t("imports.providers.genericCsvFormat")}
+            onClick={() =>
+              onChoose({ format: "genericCsv", name: t("imports.providers.genericCsv") })
+            }
+          />
+        </li>
+      </Rows>
+      <ConfirmDeleteDialog {...remove.dialogProps} />
+    </>
+  );
+}
