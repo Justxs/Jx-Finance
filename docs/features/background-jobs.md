@@ -69,6 +69,7 @@ Every job runs outside a request and therefore outside the active-household scop
 | Step | What it deletes | Window |
 | --- | --- | --- |
 | Audit log | `AuditEvents` by `OccurredAt`, in one `ExecuteDelete` over the `OccurredAt` index | `AuditEvent.RetentionDays`, 400 days |
+| Read notifications | `Notifications` that are read and older than the window, for every user; unread ones stay. The reminder and month jobs only deduplicate within their own short windows; the unusual-amount job could flag a row again only if that row is re-checked more than 180 days after it was flagged and read | `Notification.ReadRetentionDays`, 180 days |
 | Sessions | `UserSessions` that have expired, and ones whose `SecurityStamp` no longer matches their user's, which is what "revoked" means for a session | none; the row is already dead |
 | API tokens | `PersonalApiTokens` by `ExpiresAt`, in one `ExecuteDelete`; an expired token stays listed, marked Expired, until then | `PersonalApiToken.KeptAfterExpiry`, 30 days after expiry |
 | Deleted records | the rows of the thirteen trash kinds listed in `Retention.PurgedKinds`, whose `IsDeleted` is true and whose `UpdatedAt` is before the window | `DeletionEntry.RetentionDays`, 30 days |

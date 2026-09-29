@@ -1,3 +1,4 @@
+using JxFinance.Common.Settings;
 using JxFinance.Domain.Accounts;
 using JxFinance.Domain.Budgets;
 using JxFinance.Domain.Categories;
@@ -16,7 +17,6 @@ namespace JxFinance.Infrastructure.Data;
 public static class DemoDataCommand
 {
     private const int Months = 6;
-    private const Currency DemoCurrency = Currency.Eur;
 
     private static readonly (string Category, string Description, decimal Amount, int Day)[] MonthlyExpenses =
     [
@@ -50,22 +50,23 @@ public static class DemoDataCommand
             .ToDictionaryAsync(c => c.Name, c => c.Id);
 
         var today = scope.ServiceProvider.GetRequiredService<IClock>().Today;
+        var currency = scope.ServiceProvider.GetRequiredService<IInstanceSettingsStore>().Current.ReportingCurrency;
         var firstMonth = new DateOnly(today.Year, today.Month, 1).AddMonths(1 - Months);
 
-        var checking = NewAccount(user.Id, "Main account", AccountType.Checking, 1250.00m);
-        var savings = NewAccount(user.Id, "Savings", AccountType.Savings, 4000.00m);
-        var cash = NewAccount(user.Id, "Wallet", AccountType.Cash, 80.00m);
+        var checking = NewAccount(user.Id, currency, "Main account", AccountType.Checking, 1250.00m);
+        var savings = NewAccount(user.Id, currency, "Savings", AccountType.Savings, 4000.00m);
+        var cash = NewAccount(user.Id, currency, "Wallet", AccountType.Cash, 80.00m);
         db.Accounts.AddRange(checking, savings, cash);
 
         for (var month = 0; month < Months; month++)
         {
             var start = firstMonth.AddMonths(month);
-            Record(db, user.Id, checking.Id, categories["Salary"], FlowType.Income, 2450.00m, start.AddDays(9), "Salary", today);
+            Record(db, currency, user.Id, checking.Id, categories["Salary"], FlowType.Income, 2450.00m, start.AddDays(9), "Salary", today);
             foreach (var expense in MonthlyExpenses)
             {
                 var amount = expense.Amount + month * 1.15m;
                 var account = expense.Description == "Lunch" ? cash.Id : checking.Id;
-                Record(db, user.Id, account, categories[expense.Category], FlowType.Expense, amount, start.AddDays(expense.Day - 1), expense.Description, today);
+                Record(db, currency, user.Id, account, categories[expense.Category], FlowType.Expense, amount, start.AddDays(expense.Day - 1), expense.Description, today);
             }
 
             var transferDate = start.AddDays(11);
@@ -76,8 +77,8 @@ public static class DemoDataCommand
                     UserId = user.Id,
                     FromAccountId = checking.Id,
                     ToAccountId = savings.Id,
-                    Amount = new Money(300.00m, DemoCurrency),
-                    ReceivedAmount = new Money(300.00m, DemoCurrency),
+                    Amount = new Money(300.00m, currency),
+                    ReceivedAmount = new Money(300.00m, currency),
                     Date = transferDate,
                     Description = "Monthly saving",
                 });
@@ -85,17 +86,17 @@ public static class DemoDataCommand
         }
 
         db.Budgets.AddRange(
-            new Budget { UserId = user.Id, CategoryId = categories["Food"], LimitAmount = new Money(300.00m, DemoCurrency) },
-            new Budget { UserId = user.Id, CategoryId = categories["Transport"], LimitAmount = new Money(60.00m, DemoCurrency) },
-            new Budget { UserId = user.Id, CategoryId = categories["Entertainment"], LimitAmount = new Money(50.00m, DemoCurrency) });
+            new Budget { UserId = user.Id, CategoryId = categories["Food"], LimitAmount = new Money(300.00m, currency) },
+            new Budget { UserId = user.Id, CategoryId = categories["Transport"], LimitAmount = new Money(60.00m, currency) },
+            new Budget { UserId = user.Id, CategoryId = categories["Entertainment"], LimitAmount = new Money(50.00m, currency) });
         db.Goals.AddRange(
-            new Goal { UserId = user.Id, Name = "Emergency fund", TargetAmount = new Money(6000.00m, DemoCurrency), CurrentAmount = new Money(4300.00m, DemoCurrency) },
-            new Goal { UserId = user.Id, Name = "Summer trip", TargetAmount = new Money(1800.00m, DemoCurrency), CurrentAmount = new Money(450.00m, DemoCurrency), TargetDate = today.AddMonths(8) },
+            new Goal { UserId = user.Id, Name = "Emergency fund", TargetAmount = new Money(6000.00m, currency), CurrentAmount = new Money(4300.00m, currency) },
+            new Goal { UserId = user.Id, Name = "Summer trip", TargetAmount = new Money(1800.00m, currency), CurrentAmount = new Money(450.00m, currency), TargetDate = today.AddMonths(8) },
             new Goal
             {
                 UserId = user.Id,
                 Name = "House deposit",
-                TargetAmount = new Money(15000.00m, DemoCurrency),
+                TargetAmount = new Money(15000.00m, currency),
                 Funding = GoalFunding.Account,
                 FundingAccountId = savings.Id,
                 FundingSharePercent = 100,
@@ -107,11 +108,11 @@ public static class DemoDataCommand
             UserId = user.Id,
             Name = "Car",
             Type = AssetType.Vehicle,
-            CurrentValue = new Money(11800.00m, DemoCurrency),
+            CurrentValue = new Money(11800.00m, currency),
             AsOf = inspected,
             Depreciation = new Depreciation(bought, 16000.00m, 96, 2000.00m),
         };
-        var flat = new Asset { UserId = user.Id, Name = "Flat", Type = AssetType.Property, CurrentValue = new Money(156000.00m, DemoCurrency), AsOf = today };
+        var flat = new Asset { UserId = user.Id, Name = "Flat", Type = AssetType.Property, CurrentValue = new Money(156000.00m, currency), AsOf = today };
         db.Assets.AddRange(car, flat);
         db.AssetValuations.AddRange(
             new AssetValuation { AssetId = car.Id, Date = bought, Value = 16000.00m, Note = "Purchase price" },
@@ -124,7 +125,7 @@ public static class DemoDataCommand
             UserId = user.Id,
             Name = "Car loan",
             Type = DebtType.Loan,
-            OutstandingAmount = new Money(3200.00m, DemoCurrency),
+            OutstandingAmount = new Money(3200.00m, currency),
             InterestRate = 5.4m,
             AsOf = today,
             LoanAmount = 6000.00m,
@@ -183,15 +184,15 @@ public static class DemoDataCommand
         Console.WriteLine($"Seeded {Months} months of demo data for {email}.");
     }
 
-    private static Account NewAccount(Guid userId, string name, AccountType type, decimal startingBalance) =>
-        new() { UserId = userId, Name = name, Type = type, StartingBalance = new Money(startingBalance, DemoCurrency) };
+    private static Account NewAccount(Guid userId, Currency currency, string name, AccountType type, decimal startingBalance) =>
+        new() { UserId = userId, Name = name, Type = type, StartingBalance = new Money(startingBalance, currency) };
 
     private static void Record(
-        AppDbContext db, Guid userId, AccountId accountId, CategoryId categoryId, FlowType type,
+        AppDbContext db, Currency currency, Guid userId, AccountId accountId, CategoryId categoryId, FlowType type,
         decimal amount, DateOnly date, string description, DateOnly today)
     {
         if (date > today) return;
-        var money = new Money(amount, DemoCurrency);
+        var money = new Money(amount, currency);
         db.Transactions.Add(new Transaction
         {
             UserId = userId,

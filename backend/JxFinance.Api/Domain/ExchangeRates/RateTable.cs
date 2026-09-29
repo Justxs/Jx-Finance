@@ -4,6 +4,8 @@ namespace JxFinance.Domain.ExchangeRates;
 
 public sealed class RateTable(DateOnly? asOf, IReadOnlyDictionary<Currency, decimal> perEuro)
 {
+    public const int MaxGapDays = 5;
+
     public static RateTable Empty { get; } = new(null, new Dictionary<Currency, decimal>());
 
     public DateOnly? AsOf { get; } = asOf;
@@ -24,6 +26,8 @@ public sealed class RateTable(DateOnly? asOf, IReadOnlyDictionary<Currency, deci
 
         return toPerEuro.Value / fromPerEuro.Value;
     }
+
+    public bool IsFreshOn(DateOnly day) => AsOf is { } asOf && day.DayNumber - asOf.DayNumber <= MaxGapDays;
 
     public decimal? Convert(decimal amount, Currency from, Currency to) =>
         Rate(from, to) is { } rate ? Money.Round(amount * rate) : null;

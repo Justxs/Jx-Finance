@@ -434,7 +434,7 @@ export const CashFlowForecastResponse = zod.object({
     zod.object({
       billId: zod.uuid(),
       name: zod.string(),
-      reason: zod.enum(["noAccount", "noHistory", "accountNotVisible"]),
+      reason: zod.enum(["noAccount", "noHistory", "accountNotVisible", "noExchangeRate"]),
     }),
   ),
 });

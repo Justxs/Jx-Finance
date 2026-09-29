@@ -4,6 +4,8 @@ namespace JxFinance.Domain.Notifications;
 
 public sealed class Notification : OwnableEntity
 {
+    public const int ReadRetentionDays = 180;
+
     public NotificationId Id { get; set; } = NotificationId.New();
     public NotificationType Type { get; set; }
     public required string Title { get; set; }

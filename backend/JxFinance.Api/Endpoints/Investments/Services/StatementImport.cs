@@ -188,7 +188,7 @@ public sealed class StatementImport(
                 rows[0].Date,
                 new Money(0m, security.Currency),
                 0m,
-                description is { Length: > MaxDescriptionLength } ? description[..MaxDescriptionLength] : description,
+                description,
                 ratio);
             counts.Splits++;
         }
@@ -369,7 +369,7 @@ public sealed class StatementImport(
 
     private Security? Find(FlexInstrument instrument)
     {
-        var symbol = instrument.Symbol.ToUpperInvariant();
+        var symbol = SymbolOf(instrument);
         var isin = instrument.Isin?.ToUpperInvariant();
         if (instrument.ContractId is { } contractId && renamedContracts.TryGetValue(contractId, out var renamed))
         {
@@ -393,10 +393,10 @@ public sealed class StatementImport(
         {
             security = new Security
             {
-                Symbol = instrument.Symbol.ToUpperInvariant(),
-                Name = instrument.Name,
+                Symbol = SymbolOf(instrument),
+                Name = TextLimit.Ellipsize(instrument.Name, Security.NameMaxLength),
                 Isin = instrument.Isin?.ToUpperInvariant(),
-                Exchange = instrument.Exchange,
+                Exchange = TextLimit.Ellipsize(instrument.Exchange, Security.ExchangeMaxLength),
                 Currency = instrument.Currency,
                 Type = instrument switch
                 {
@@ -414,6 +414,9 @@ public sealed class StatementImport(
         security.Isin ??= instrument.Isin?.ToUpperInvariant();
         return security;
     }
+
+    private static string SymbolOf(FlexInstrument instrument) =>
+        TextLimit.Cut(instrument.Symbol.ToUpperInvariant(), Security.SymbolMaxLength);
 
     private async Task<DomainError?> AddEntryAsync(
         string reference,
@@ -460,7 +463,7 @@ public sealed class StatementImport(
             Fee = fee,
             CashAmount = cash,
             ReportingAmount = reportingAmount,
-            Description = description,
+            Description = TextLimit.Ellipsize(description, MaxDescriptionLength),
             Source = InvestmentSource.InteractiveBrokers,
             ExternalId = reference,
         });
@@ -499,7 +502,7 @@ public sealed class StatementImport(
             Amount = amounts.Value!.Sent,
             ReceivedAmount = amounts.Value.Received,
             Date = entry.Date,
-            Description = entry.Description,
+            Description = TextLimit.Ellipsize(entry.Description, MaxDescriptionLength),
         };
         db.Transfers.Add(transfer);
         db.TransferImports.Add(new TransferImport { AccountId = account, ImportRef = reference, TransferId = transfer.Id });

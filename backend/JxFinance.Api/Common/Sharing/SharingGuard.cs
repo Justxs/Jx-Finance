@@ -24,7 +24,9 @@ public sealed class SharingGuard(AppDbContext db, ICurrentUser currentUser) : IS
         if (next.Scope == Scope.Shared && next.HouseholdId is { } householdId)
         {
             var isMember = await db.HouseholdMemberships.AnyAsync(
-                m => m.HouseholdId == householdId && m.UserId == currentUser.Id,
+                m => m.HouseholdId == householdId
+                    && m.UserId == currentUser.Id
+                    && db.Households.Any(h => h.Id == householdId),
                 cancellationToken);
             if (!isMember)
             {

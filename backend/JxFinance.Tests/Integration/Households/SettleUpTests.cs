@@ -83,10 +83,11 @@ public sealed class SettleUpTests(ApiFixture fixture) : IntegrationTestBase(fixt
             "access.forbidden");
         Assert.Equal(HttpStatusCode.Forbidden, (await pair.PartnerClient.DeleteAsync(url, TestContext.Current.CancellationToken)).StatusCode);
 
-        (await pair.OwnerClient.PutAsJsonAsync(
+        var corrected = await ReadOkAsync<LedgerRowDto>(await pair.OwnerClient.PutAsJsonAsync(
             $"/api/transactions/{groceries}",
             new { accountId = account, type = "expense", amount = "96.00", date = "2026-09-10", description = "Maxima" },
-            TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
+            TestContext.Current.CancellationToken));
+        Assert.True(corrected.SharedExpense!.AmountDiffers);
         var ledger = await ReadOkAsync<PageDto<LedgerRowDto>>(await pair.OwnerClient.GetAsync("/api/transactions?pageSize=200", TestContext.Current.CancellationToken));
         Assert.True(ledger.Items.Single(t => t.Id == groceries).SharedExpense!.AmountDiffers);
         Assert.True((await ExpensesAsync(pair.OwnerClient, pair.HouseholdId)).Items.Single().AmountDiffers);
@@ -123,6 +124,8 @@ public sealed class SettleUpTests(ApiFixture fixture) : IntegrationTestBase(fixt
         Assert.Equal("15.00", payerRow.SharedExpense.MyShare);
         Assert.False(payerRow.SharedExpense.AmountDiffers);
         Assert.Null(partnerRow.SharedExpense);
+        var single = await ReadOkAsync<LedgerRowDto>(await pair.OwnerClient.GetAsync($"/api/transactions/{groceries}", TestContext.Current.CancellationToken));
+        Assert.Equal(split.Id, single.SharedExpense!.Id);
     }
 
     [Fact]

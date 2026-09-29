@@ -77,13 +77,7 @@ public sealed class AccountEmailService(
                 : result.ToDomainError();
         }
 
-        if (!user.IsDeactivated)
-        {
-            await userManager.SetLockoutEndDateAsync(user, null);
-        }
-
-        await userManager.ResetAccessFailedCountAsync(user);
-        await userManager.UpdateSecurityStampAsync(user);
+        await PasswordReset.CompleteAsync(userManager, db, user, cancellationToken);
         await transaction.CommitAsync(cancellationToken);
 
         return Result.Success();

@@ -1,5 +1,6 @@
 using JxFinance.Domain.Audit;
 using JxFinance.Domain.Common;
+using JxFinance.Domain.Notifications;
 using JxFinance.Domain.Trash;
 using JxFinance.Infrastructure.Attachments;
 using JxFinance.Infrastructure.Data;
@@ -26,6 +27,15 @@ public sealed class RetentionJob(IServiceScopeFactory scopes, ILogger<RetentionJ
                 "Pruned {Count} audit events older than {Days} days.",
                 events,
                 AuditEvent.RetentionDays);
+        }
+
+        var notifications = await Retention.PruneReadNotificationsAsync(db, now, ct);
+        if (notifications > 0)
+        {
+            Logger.LogInformation(
+                "Pruned {Count} read notifications older than {Days} days.",
+                notifications,
+                Notification.ReadRetentionDays);
         }
 
         var sessions = await Retention.PruneSessionsAsync(db, now, ct);

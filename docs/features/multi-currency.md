@@ -18,6 +18,8 @@ flowchart LR
     Rates --> Tot
 ```
 
+Account balances use the same five-day rule as a single conversion (`IExchangeRateService.IsFresh`): a currency whose newest rate is older than five days before the balance date is left out of the account and reporting totals, and the account answers `isComplete` false, rather than being valued at a rate that may be weeks old.
+
 ## Rate lookup
 
 ```mermaid

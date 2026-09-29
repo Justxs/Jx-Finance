@@ -51,45 +51,51 @@ public sealed class EmailOutboxJob(
             await transaction.CommitAsync(ct);
         }
 
-        foreach (var message in due)
+        try
         {
-            try
+            foreach (var message in due)
             {
-                var result = await delivery.SendAsync(
-                    new OutgoingEmail(message.ToAddress, message.ToName, message.Subject, message.Body),
-                    ct);
-                if (result.IsSuccess)
-                {
-                    message.SentAt = clock.UtcNow;
-                    message.LastError = null;
-                }
-                else
-                {
-                    message.LastError = result.ErrorMessage;
-                }
-            }
-            catch (OperationCanceledException) when (ct.IsCancellationRequested)
-            {
-                throw;
-            }
-            catch (Exception ex)
-            {
-                message.LastError = ex.Message;
-                logger.LogError(ex, "Sending the {Kind} email {MessageId} failed.", message.Kind, message.Id);
-            }
-
-            if (message.IsGivenUp)
-            {
-                logger.LogWarning(
-                    "The {Kind} email {MessageId} was given up after {Attempts} attempts: {Error}",
-                    message.Kind,
-                    message.Id,
-                    message.Attempts,
-                    message.LastError);
+                await SendAsync(delivery, clock, message, ct);
             }
         }
+        finally
+        {
+            await db.SaveChangesAsync(CancellationToken.None);
+        }
+    }
 
-        await db.SaveChangesAsync(ct);
+    private async Task SendAsync(IEmailDelivery delivery, IClock clock, EmailMessage message, CancellationToken ct)
+    {
+        try
+        {
+            var result = await delivery.SendAsync(
+                new OutgoingEmail(message.ToAddress, message.ToName, message.Subject, message.Body),
+                ct);
+            if (result.IsSuccess)
+            {
+                message.SentAt = clock.UtcNow;
+                message.LastError = null;
+            }
+            else
+            {
+                message.LastError = TextLimit.Cut(result.ErrorMessage!, EmailMessage.ErrorMaxLength);
+            }
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException || !ct.IsCancellationRequested)
+        {
+            message.LastError = TextLimit.Cut(ex.Message, EmailMessage.ErrorMaxLength);
+            logger.LogError(ex, "Sending the {Kind} email {MessageId} failed.", message.Kind, message.Id);
+        }
+
+        if (message.IsGivenUp)
+        {
+            logger.LogWarning(
+                "The {Kind} email {MessageId} was given up after {Attempts} attempts: {Error}",
+                message.Kind,
+                message.Id,
+                message.Attempts,
+                message.LastError);
+        }
     }
 
     private static DateTimeOffset Backoff(DateTimeOffset now, int attempts) =>

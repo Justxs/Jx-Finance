@@ -122,7 +122,7 @@ Everything else answers 403 `token.notAllowed`: every `POST`, `PUT`, `PATCH` and
 | Expiry | 1 to 365 days after creation; there is no "never" |
 | Revoke in the section | the row is deleted |
 | Deactivation by an administrator | every token of the member is deleted in the same transaction; reactivation does not bring them back |
-| Password reset by an administrator | every token of the member is deleted in the same transaction |
+| Password reset, by an administrator or through the emailed link | every token of the member is deleted in the same transaction |
 | `--recover-admin` | every token of that administrator is deleted |
 | `ApiTokens` switched off | every token request answers 404 `feature.disabled`; the rows are kept, and the tokens work again when the switch is back on |
 | Own password change, two-factor or passkey changes | nothing: the token is not tied to the security stamp |

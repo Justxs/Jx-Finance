@@ -5,4 +5,5 @@ public enum ForecastSkipReason
     NoAccount,
     NoHistory,
     AccountNotVisible,
+    NoExchangeRate,
 }

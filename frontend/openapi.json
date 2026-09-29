@@ -2017,6 +2017,9 @@
               }
             }
           },
+          "429": {
+            "description": "Too many attempts, or credentials.lockedOut after five wrong codes; wait and retry."
+          },
           "500": {
             "description": "Server Error",
             "content": {
@@ -21553,7 +21556,8 @@
         "enum": [
           "noAccount",
           "noHistory",
-          "accountNotVisible"
+          "accountNotVisible",
+          "noExchangeRate"
         ],
         "type": "string"
       },

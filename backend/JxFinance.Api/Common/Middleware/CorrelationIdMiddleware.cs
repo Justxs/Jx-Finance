@@ -1,3 +1,4 @@
+using System.Buffers;
 using Serilog.Context;
 
 namespace JxFinance.Common.Middleware;
@@ -6,13 +7,17 @@ public sealed class CorrelationIdMiddleware(RequestDelegate next)
 {
     public const string HeaderName = "X-Correlation-ID";
 
+    public const int MaxLength = 64;
+
+    private static readonly SearchValues<char> Allowed =
+        SearchValues.Create("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_.");
+
     public async Task InvokeAsync(HttpContext context)
     {
-        var correlationId =
-            context.Request.Headers.TryGetValue(HeaderName, out var inbound)
-            && !string.IsNullOrWhiteSpace(inbound.ToString())
-                ? inbound.ToString()
-                : Guid.NewGuid().ToString("N");
+        var inbound = context.Request.Headers[HeaderName].ToString();
+        var correlationId = inbound is { Length: > 0 and <= MaxLength } && !inbound.AsSpan().ContainsAnyExcept(Allowed)
+            ? inbound
+            : Guid.NewGuid().ToString("N");
 
         context.Response.Headers[HeaderName] = correlationId;
 

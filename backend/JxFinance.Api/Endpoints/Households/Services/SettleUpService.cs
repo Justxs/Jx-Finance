@@ -154,7 +154,10 @@ public sealed class SettleUpService(
 
         db.SharedExpenses.Add(expense);
         db.SharedExpenseShares.AddRange(rows);
-        await db.SaveChangesAsync(cancellationToken);
+        if (await db.SaveOrConflictAsync(AlreadySplit, cancellationToken) is { } conflict)
+        {
+            return conflict;
+        }
 
         return (await DescribeAsync([expense], cancellationToken))[0];
     }
@@ -292,7 +295,11 @@ public sealed class SettleUpService(
 
         settlement.TransferId = transferId;
         db.Settlements.Add(settlement);
-        await db.SaveChangesAsync(cancellationToken);
+        if (await db.SaveOrConflictAsync(TransferTaken, cancellationToken) is { } conflict)
+        {
+            return conflict;
+        }
+
         await dbTransaction.CommitAsync(cancellationToken);
 
         var names = await NamesAsync([settlement.FromUserId, settlement.ToUserId], cancellationToken);

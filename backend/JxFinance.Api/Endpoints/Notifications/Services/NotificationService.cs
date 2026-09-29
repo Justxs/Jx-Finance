@@ -17,7 +17,7 @@ public sealed class NotificationService(AppDbContext db) : INotificationService
         bool? unreadOnly,
         CancellationToken cancellationToken)
     {
-        var query = db.Notifications.AsQueryable();
+        var query = db.Notifications.AsNoTracking();
         if (unreadOnly is true)
         {
             query = query.Where(n => !n.IsRead);

@@ -2,7 +2,7 @@
 
 Back to the [feature walkthrough](README.md). See also [architecture: Authentication](../architecture/authentication.md).
 
-Backend `Auth/TwoFactor`. Setup and disable require the current password, which counts toward the lockout.
+Backend `Auth/TwoFactor`. Setup and disable require the current password, which counts toward the lockout. A wrong code on enable counts toward the same lockout, and setup, enable and disable are each throttled to 5 calls per five minutes per client.
 
 ```mermaid
 stateDiagram-v2

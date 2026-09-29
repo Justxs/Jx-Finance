@@ -13,7 +13,6 @@ using JxFinance.Endpoints.Users.UpdateMyDiscord;
 using JxFinance.Infrastructure.Data;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
-using Npgsql;
 
 namespace JxFinance.Endpoints.Users.Services;
 
@@ -74,13 +73,9 @@ public sealed class DiscordWebhookService(
 
         webhook.IsEnabled = request.IsEnabled;
         webhook.Types = request.Types.Order().ToList();
-        try
+        if (await db.SaveOrConflictAsync(new DomainError(ErrorCodes.ConflictBusy, "The webhook was saved from another window just now. Try again."), cancellationToken) is { } conflict)
         {
-            await db.SaveChangesAsync(cancellationToken);
-        }
-        catch (DbUpdateException ex) when (ex.InnerException is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation })
-        {
-            return new DomainError(ErrorCodes.ConflictBusy, "The webhook was saved from another window just now. Try again.");
+            return conflict;
         }
 
         return await GetAsync(cancellationToken);

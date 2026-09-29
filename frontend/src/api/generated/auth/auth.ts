@@ -217,7 +217,7 @@ export const enableTwoFactor = async (
 export const getEnableTwoFactorMutationKey = () => ["enableTwoFactor"] as const;
 
 export const getEnableTwoFactorMutationOptions = <
-  TError = ErrorType<ProblemDetails>,
+  TError = ErrorType<ProblemDetails | void>,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -256,13 +256,13 @@ export type EnableTwoFactorMutationResult = NonNullable<
   Awaited<ReturnType<typeof enableTwoFactor>>
 >;
 export type EnableTwoFactorMutationBody = EnableTwoFactorRequest;
-export type EnableTwoFactorMutationError = ErrorType<ProblemDetails>;
+export type EnableTwoFactorMutationError = ErrorType<ProblemDetails | void>;
 export type EnableTwoFactorMutationVariables = { data: EnableTwoFactorRequest };
 
 /**
  * @summary Finish two-factor enrolment
  */
-export const useEnableTwoFactor = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
+export const useEnableTwoFactor = <TError = ErrorType<ProblemDetails | void>, TContext = unknown>(
   options?: {
     mutation?: UseMutationOptions<
       Awaited<ReturnType<typeof enableTwoFactor>>,

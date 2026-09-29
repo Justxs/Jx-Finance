@@ -1,5 +1,6 @@
 using JxFinance.Domain.Audit;
 using JxFinance.Domain.Common;
+using JxFinance.Domain.Notifications;
 using JxFinance.Domain.Transactions;
 using JxFinance.Domain.Trash;
 using JxFinance.Infrastructure.Attachments;
@@ -49,6 +50,15 @@ internal static class Retention
             .Where(s => s.ExpiresAt <= now
                 || !db.Users.Any(u => u.Id == s.UserId && (u.SecurityStamp ?? string.Empty) == s.SecurityStamp))
             .ExecuteDeleteAsync(ct);
+
+    internal static Task<int> PruneReadNotificationsAsync(AppDbContext db, DateTimeOffset now, CancellationToken ct)
+    {
+        var cutoff = now.AddDays(-Notification.ReadRetentionDays);
+        return db.Notifications
+            .IgnoreQueryFilters()
+            .Where(n => n.IsRead && n.CreatedAt < cutoff)
+            .ExecuteDeleteAsync(ct);
+    }
 
     internal static Task<int> PruneApiTokensAsync(AppDbContext db, DateTimeOffset now, CancellationToken ct)
     {

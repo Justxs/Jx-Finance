@@ -83,7 +83,7 @@ sequenceDiagram
 
 The only message that is sent inside a request is the administrator's test message, because its whole purpose is to report what the mail server said. It is bounded by the same send timeout, it writes nothing, and it is throttled to 10 calls per five minutes per client. Everything else goes through the outbox.
 
-Failures are contained three ways. A message is taken and its attempt counted in one short transaction that commits before any socket is opened, so a process that dies mid-send loses at most one attempt, never the row. Each message is then sent inside its own `try`, the way `BrokerSyncJob` isolates connections, so one bad recipient does not stop the batch. After five attempts the row is given up on, logged once with the kind and the id, and deleted a week later. The lock is `AppLock.EmailOutbox`, held only while rows are claimed, so a second pass or a restart cannot claim the same row twice.
+Failures are contained three ways. A message is taken and its attempt counted in one short transaction that commits before any socket is opened, so a process that dies mid-send loses at most one attempt, never the row. Each message is then sent inside its own `try`, the way `BrokerSyncJob` isolates connections, so one bad recipient does not stop the batch. The error is cut to the 500-character column, and the outcomes are saved in a `finally` without the stopping token, so a shutdown mid-batch still records the messages already accepted instead of sending them again later. After five attempts the row is given up on, logged once with the kind and the id, and deleted a week later. The lock is `AppLock.EmailOutbox`, held only while rows are claimed, so a second pass or a restart cannot claim the same row twice.
 
 ## Password reset by link
 
@@ -111,14 +111,14 @@ sequenceDiagram
     App->>Api: POST /api/auth/reset-password
     Api->>Id: ResetPasswordAsync(user, token, newPassword)
     alt token matches the current security stamp and has not expired
-        Api->>Id: clear the failed-attempt counter and a temporary lockout,<br/>UpdateSecurityStampAsync
+        Api->>Id: clear the failed-attempt counter and a temporary lockout,<br/>delete the personal API tokens
         Api-->>App: 204, every session of that user ends
     else used, expired, tampered, or the user is deactivated
         Api-->>App: 400 passwordReset.tokenInvalid
     end
 ```
 
-The token is ASP.NET Identity's own `DataProtectorTokenProvider` token, not something invented here, and nothing about it is stored. That is what makes the link single-use: the token embeds the user's security stamp, and a completed reset changes that stamp, so the same link is refused the second time — there is no "used" column to keep, sweep or get wrong. Its lifetime is one hour, set through `DataProtectionTokenProviderOptions.TokenLifespan` (`App:Email:PasswordResetMinutes`).
+The token is ASP.NET Identity's own `DataProtectorTokenProvider` token, not something invented here, and nothing about it is stored. That is what makes the link single-use: the token embeds the user's security stamp, and a completed reset changes that stamp (Identity changes it with the password hash), so the same link is refused the second time — there is no "used" column to keep, sweep or get wrong. Its lifetime is one hour, set through `DataProtectionTokenProviderOptions.TokenLifespan` (`App:Email:PasswordResetMinutes`).
 
 The choices about throttling and lockout, which the sign-in page already thinks about in [Sign-in, sessions and lockout](sign-in-and-sessions.md):
 

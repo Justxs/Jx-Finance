@@ -45,6 +45,19 @@ public sealed class SharingLeakageTests(ApiFixture fixture) : IntegrationTestBas
     }
 
     [Fact]
+    public async Task Sharing_into_a_deleted_household_is_rejected()
+    {
+        using var pair = await CreateHouseholdPairAsync();
+        (await Client.DeleteAsync($"/api/households/{pair.HouseholdId}", TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
+
+        var response = await pair.PartnerClient.PostAsJsonAsync(
+            "/api/accounts",
+            new { name = "Should fail", type = "checking", startingBalance = "0.00", scope = "shared", householdId = pair.HouseholdId }, TestContext.Current.CancellationToken);
+
+        await AssertProblemAsync(response, HttpStatusCode.BadRequest, "household.notMember");
+    }
+
+    [Fact]
     public async Task Only_the_owner_can_rescope_an_account_and_rescoping_hides_its_history_from_members()
     {
         var member = await CreateUserAsync();

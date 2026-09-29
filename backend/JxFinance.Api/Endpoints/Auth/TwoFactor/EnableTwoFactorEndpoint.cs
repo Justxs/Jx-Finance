@@ -11,7 +11,8 @@ public sealed class EnableTwoFactorEndpoint(IAuthService authService, ISessionSe
     {
         Post(ApiRoutes.Auth + "/2fa/enable");
         Group<AuthGroup>();
-        Description(d => d.ProducesProblemDetails(404));
+        Throttle(5, 300);
+        Description(d => d.Produces(429).ProducesProblemDetails(404));
     }
 
     public override async Task HandleAsync(EnableTwoFactorRequest req, CancellationToken ct)

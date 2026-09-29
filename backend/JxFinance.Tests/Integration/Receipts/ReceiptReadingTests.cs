@@ -232,6 +232,28 @@ public sealed class ReceiptReadingTests(ApiFixture fixture) : IntegrationTestBas
     }
 
     [Fact]
+    public async Task A_read_that_throws_is_kept_as_failed_and_the_next_read_is_not_busy()
+    {
+        Reader.Reset();
+        using var member = await CreateUserClientAsync();
+        var file = Jpeg();
+        Reader.ThrowOnRead = new InvalidOperationException("The engine crashed.");
+
+        var crashed = await ReadUploadAsync(member, file);
+        Reader.ThrowOnRead = null;
+        var next = await ReadUploadAsync(member, file);
+
+        Assert.Equal(HttpStatusCode.InternalServerError, crashed.StatusCode);
+        Assert.False((await ReadOkAsync(next)).Cached);
+        var sha = Sha(file);
+        var statuses = await WithDbAsync(db => db.ReceiptReadings.IgnoreQueryFilters()
+            .Where(r => r.Sha256 == sha)
+            .Select(r => r.Status)
+            .ToListAsync(TestContext.Current.CancellationToken));
+        Assert.Equal([ReceiptReadingStatus.Read, ReceiptReadingStatus.Failed], statuses.Order());
+    }
+
+    [Fact]
     public async Task An_uploaded_file_is_not_stored_and_offers_the_matching_unsplit_expense()
     {
         Reader.Reset();

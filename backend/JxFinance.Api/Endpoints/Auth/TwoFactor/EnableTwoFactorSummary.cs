@@ -15,5 +15,6 @@ public sealed class EnableTwoFactorSummary : Summary<EnableTwoFactorEndpoint, En
         Responses[200] = "Two-factor authentication is on. The recovery codes are returned once.";
         Responses[400] = "The code did not match the pending secret.";
         Responses[404] = "The session points at a user that no longer exists.";
+        Responses[429] = "Too many attempts, or credentials.lockedOut after five wrong codes; wait and retry.";
     }
 }

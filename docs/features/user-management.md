@@ -8,7 +8,7 @@ A created user starts with an unconfirmed address and, when the installation has
 
 ```mermaid
 stateDiagram-v2
-    [*] --> Active: POST /api/users, starter categories seeded
+    [*] --> Active: POST /api/users, user, role and starter categories<br/>in one transaction, then the verification email is queued
     Active --> Deactivated: deactivate, LockoutEnd = MaxValue,<br/>stamp changes, signed out everywhere,<br/>personal API tokens deleted
     Deactivated --> Active: reactivate, counter cleared, stamp changes,<br/>old password works, old sessions stay closed
     Active --> TemporarilyLocked: 5 wrong secrets in a row
@@ -16,7 +16,7 @@ stateDiagram-v2
     Active --> Active: role change Admin or Member
 ```
 
-Deactivation and an administrator's password reset also delete every [personal API token](personal-api-tokens.md) of the member, in the transaction that makes the change, because either means someone else may be in the account. Reactivation brings none back; the member creates new ones. An own password change keeps them.
+Deactivation and a password reset, by an administrator or through the emailed link, also delete every [personal API token](personal-api-tokens.md) of the member, in the transaction that makes the change, because either means someone else may be in the account. Reactivation brings none back; the member creates new ones. An own password change keeps them.
 
 ## Listing users
 

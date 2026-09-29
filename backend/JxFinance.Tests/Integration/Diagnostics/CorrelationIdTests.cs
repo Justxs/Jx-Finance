@@ -27,4 +27,19 @@ public sealed class CorrelationIdTests(ApiFixture fixture) : IntegrationTestBase
         var correlationId = Assert.Single(response.Headers.GetValues(CorrelationIdMiddleware.HeaderName));
         Assert.Equal("test-correlation-id", correlationId);
     }
+
+    [Theory]
+    [InlineData("has spaces and <angle> brackets")]
+    [InlineData("0123456789012345678901234567890123456789012345678901234567890123456789")]
+    public async Task An_unsafe_or_overlong_inbound_id_is_replaced(string inbound)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Get, "/api/ping");
+        request.Headers.TryAddWithoutValidation(CorrelationIdMiddleware.HeaderName, inbound);
+
+        var response = await Client.SendAsync(request, TestContext.Current.CancellationToken);
+
+        var correlationId = Assert.Single(response.Headers.GetValues(CorrelationIdMiddleware.HeaderName));
+        Assert.NotEqual(inbound, correlationId);
+        Assert.Equal(32, correlationId.Length);
+    }
 }

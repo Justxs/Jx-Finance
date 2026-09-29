@@ -75,6 +75,20 @@ public sealed class RetentionTests
     }
 
     [Fact]
+    public async Task Pruning_notifications_deletes_only_old_read_ones_of_every_user()
+    {
+        await using var capture = new SqlCapture();
+
+        await Retention.PruneReadNotificationsAsync(capture.Db, Clock.UtcNow, TestContext.Current.CancellationToken);
+
+        var statement = capture.OnlyStatement;
+        Assert.StartsWith("DELETE FROM \"Notifications\"", statement, StringComparison.Ordinal);
+        Assert.Contains("\"IsRead\"", statement, StringComparison.Ordinal);
+        Assert.Contains("\"CreatedAt\" < @", statement, StringComparison.Ordinal);
+        Assert.DoesNotContain("\"UserId\" = @", statement, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public async Task Pruning_audit_events_deletes_by_the_occurrence_time()
     {
         await using var capture = new SqlCapture();

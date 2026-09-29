@@ -17,7 +17,6 @@ public sealed class ExchangeRateService(
     IInstanceSettingsStore settings,
     ILogger<ExchangeRateService> logger) : IExchangeRateService
 {
-    private const int MaxGapDays = 5;
     private const int FetchWindowDays = 10;
     private const int InitialSyncDays = 30;
     private const int RangeChunkDays = 90;
@@ -48,7 +47,7 @@ public sealed class ExchangeRateService(
         }
 
         var table = await LoadAsync(target, cancellationToken);
-        if (IsStale(table, target) && await FetchAsync(target.AddDays(-FetchWindowDays), target, false, cancellationToken) > 0)
+        if (!IsFresh(table, target) && await FetchAsync(target.AddDays(-FetchWindowDays), target, false, cancellationToken) > 0)
         {
             table = await LoadAsync(target, cancellationToken);
         }
@@ -82,7 +81,7 @@ public sealed class ExchangeRateService(
         }
 
         var table = await GetForDateAsync(date, cancellationToken);
-        return !IsStale(table, date) && table.Convert(amount.Amount, amount.Currency, to) is { } converted
+        return IsFresh(table, date) && table.Convert(amount.Amount, amount.Currency, to) is { } converted
             ? converted
             : new DomainError(
                 ErrorCodes.ExchangeRateUnavailable,
@@ -129,7 +128,7 @@ public sealed class ExchangeRateService(
         DateOnly end,
         CancellationToken cancellationToken)
     {
-        var anchor = start.AddDays(-MaxGapDays);
+        var anchor = start.AddDays(-RateTable.MaxGapDays);
         var known = await db.ExchangeRates
             .AsNoTracking()
             .Where(r => r.Date >= anchor && r.Date <= end)
@@ -138,11 +137,11 @@ public sealed class ExchangeRateService(
             .OrderBy(date => date)
             .ToListAsync(cancellationToken);
 
-        return RateCoverage.Uncovered(known, start, end, MaxGapDays);
+        return RateCoverage.Uncovered(known, start, end, RateTable.MaxGapDays);
     }
 
-    private bool IsStale(RateTable table, DateOnly date) =>
-        table.AsOf is not { } asOf || (date > Today ? Today : date).DayNumber - asOf.DayNumber > MaxGapDays;
+    public bool IsFresh(RateTable table, DateOnly? date) =>
+        table.IsFreshOn(date is { } day && day < Today ? day : Today);
 
     private Task<DateOnly?> LatestDateOnOrBeforeAsync(DateOnly date, CancellationToken cancellationToken) =>
         db.ExchangeRates.Where(r => r.Date <= date).MaxAsync(r => (DateOnly?)r.Date, cancellationToken);

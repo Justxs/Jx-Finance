@@ -35,6 +35,7 @@ public sealed class CashFlowForecastService(AppDbContext db, IExchangeRateServic
         var history = await HistoryAsync(ids, today, cancellationToken);
         var usual = await UsualDailySpendingAsync(accounts.Values, bills, today, cancellationToken);
         var table = await rates.GetLatestAsync(cancellationToken);
+        var fresh = rates.IsFresh(table, today);
 
         var changes = ids.ToDictionary(
             id => id,
@@ -69,13 +70,18 @@ public sealed class CashFlowForecastService(AppDbContext db, IExchangeRateServic
             }
 
             var estimated = bill.Kind == RecurringBillKind.Variable;
-            var received = Received(bill, account, value, accounts, table);
+            var received = Received(bill, account, value, accounts, fresh ? table : RateTable.Empty);
+            if (received is { Amount: null })
+            {
+                notCounted.Add(new ForecastSkippedEntry(bill.Id.Value, bill.Name, ForecastSkipReason.NoExchangeRate));
+            }
+
             foreach (var occurrence in CashFlowProjection.Occurrences(bill, today, end, matches.Select(row => row.Date)))
             {
                 changes[accountId].Add(Entry(bill, occurrence, bill.Shape == RecurringBillShape.Income ? value : -value, estimated));
-                if (received is { } arrival)
+                if (received is { Amount: { } arrived } arrival)
                 {
-                    changes[arrival.Account].Add(Entry(bill, occurrence, arrival.Amount, estimated || arrival.Converted));
+                    changes[arrival.Account].Add(Entry(bill, occurrence, arrived, estimated || arrival.Converted));
                 }
             }
         }
@@ -119,7 +125,7 @@ public sealed class CashFlowForecastService(AppDbContext db, IExchangeRateServic
     private static ForecastEntryResponse Entry(RecurringBill bill, ForecastOccurrence occurrence, decimal amount, bool estimated) =>
         new(occurrence.Date, ForecastEntrySource.Recurring, bill.Id.Value, bill.Name, bill.Shape, amount, estimated, occurrence.Overdue, 0m);
 
-    private static (AccountId Account, decimal Amount, bool Converted)? Received(
+    private static (AccountId Account, decimal? Amount, bool Converted)? Received(
         RecurringBill bill,
         Account source,
         decimal amount,
@@ -128,13 +134,12 @@ public sealed class CashFlowForecastService(AppDbContext db, IExchangeRateServic
     {
         if (bill.Shape != RecurringBillShape.Transfer
             || bill.ToAccountId is not { } toAccountId
-            || !accounts.TryGetValue(toAccountId, out var destination)
-            || table.Convert(amount, source.Currency, destination.Currency) is not { } converted)
+            || !accounts.TryGetValue(toAccountId, out var destination))
         {
             return null;
         }
 
-        return (toAccountId, converted, destination.Currency != source.Currency);
+        return (toAccountId, table.Convert(amount, source.Currency, destination.Currency), destination.Currency != source.Currency);
     }
 
     private static bool Matches(RecurringBill bill, Currency currency, HistoryRow row) =>

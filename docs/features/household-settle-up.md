@@ -29,7 +29,7 @@ The server refuses:
 | The transaction is not visible to the caller | 400 `reference.notFound` |
 | It sits on an account the caller does not own, for example a housemate's payment on a shared account | 400 `settleUp.notPayer` |
 | It is income, a refund (a negative expense) or not an expense at all | 400 `settleUp.notExpense` |
-| It is split already, in this or another household | 409 `settleUp.alreadySplit` |
+| It is split already, in this or another household, including by a request that won the race to the unique index | 409 `settleUp.alreadySplit` |
 | A member is not in the household | 400 `household.notMember` |
 | Nobody but the payer takes part | 400 `settleUp.noOtherMember` |
 | Exact amounts that do not add up to the expense | 400 `settleUp.sharesMismatch` |
@@ -102,7 +102,7 @@ flowchart TD
     Link -->|"yes"| Save
 ```
 
-A payment and a transfer must be between two different members (400 `settleUp.samePerson`). `transferId` links a transfer that already exists, for example one the camt.053 import proposed from the counterparty IBAN, under the same checks; the API offers it and the dialog does not. Without either, nothing is written to any account. Deleting a payment leaves its transfer alone, because a transfer is a fact of the ledger with its own delete; purging a transfer clears the payment's link.
+A payment and a transfer must be between two different members (400 `settleUp.samePerson`). Two requests linking the same transfer at once both pass the check, and the unique index on `TransferId` answers the loser 409 `settleUp.transferTaken` through `UniqueSave.SaveOrConflictAsync` rather than a 500. `transferId` links a transfer that already exists, for example one the camt.053 import proposed from the counterparty IBAN, under the same checks; the API offers it and the dialog does not. Without either, nothing is written to any account. Deleting a payment leaves its transfer alone, because a transfer is a fact of the ledger with its own delete; purging a transfer clears the payment's link.
 
 ## Former members
 

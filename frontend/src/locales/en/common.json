@@ -1749,7 +1749,8 @@
     "reasons": {
       "noAccount": "No account",
       "noHistory": "Variable amount with no history yet",
-      "accountNotVisible": "Its account is not shown"
+      "accountNotVisible": "Its account is not shown",
+      "noExchangeRate": "No current exchange rate for the receiving account"
     },
     "totals": "Scheduled in the next {{days}} days: {{out}} out, {{in}} in"
   },

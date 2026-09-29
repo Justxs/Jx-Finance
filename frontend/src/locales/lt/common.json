@@ -1809,7 +1809,8 @@
     "reasons": {
       "noAccount": "Nenurodyta sąskaita",
       "noHistory": "Kintama suma, dar be istorijos",
-      "accountNotVisible": "Jo sąskaita nerodoma"
+      "accountNotVisible": "Jo sąskaita nerodoma",
+      "noExchangeRate": "Gaunančiai sąskaitai nėra dabartinio valiutos kurso"
     },
     "totals": "Suplanuota per artimiausias {{days}} dienų: išeis {{out}}, ateis {{in}}"
   },

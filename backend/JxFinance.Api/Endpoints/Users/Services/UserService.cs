@@ -100,14 +100,19 @@ public sealed class UserService(
             DisplayName = request.DisplayName,
         };
 
-        var identityResult = await userManager.CreateAsync(user, request.Password);
-        if (!identityResult.Succeeded)
+        await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
+        if (await userManager.CreateAsync(user, request.Password) is { Succeeded: false } created)
         {
-            return identityResult.ToDomainError();
+            return created.ToDomainError();
         }
 
-        await userManager.AddToRoleAsync(user, request.Role);
+        if (await userManager.AddToRoleAsync(user, request.Role) is { Succeeded: false } assigned)
+        {
+            return assigned.ToDomainError();
+        }
+
         await StarterCategories.SeedAsync(db, user.Id, cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
         await accountEmails.SendVerificationAsync(user.Id, cancellationToken);
         return await authService.ToProfileAsync(user);
     }
@@ -134,8 +139,15 @@ public sealed class UserService(
         }
 
         var currentRoles = await userManager.GetRolesAsync(user);
-        await userManager.RemoveFromRolesAsync(user, currentRoles);
-        await userManager.AddToRoleAsync(user, request.Role);
+        if (await userManager.RemoveFromRolesAsync(user, currentRoles) is { Succeeded: false } removed)
+        {
+            return removed.ToDomainError();
+        }
+
+        if (await userManager.AddToRoleAsync(user, request.Role) is { Succeeded: false } assigned)
+        {
+            return assigned.ToDomainError();
+        }
 
         await userManager.UpdateSecurityStampAsync(user);
         await transaction.CommitAsync(cancellationToken);
@@ -245,14 +257,7 @@ public sealed class UserService(
             await db.UserPasskeys.Where(p => p.UserId == user.Id).ExecuteDeleteAsync(cancellationToken);
         }
 
-        if (!user.IsDeactivated)
-        {
-            await userManager.SetLockoutEndDateAsync(user, null);
-        }
-
-        await userManager.ResetAccessFailedCountAsync(user);
-        await userManager.UpdateSecurityStampAsync(user);
-        await db.PersonalApiTokens.Where(t => t.UserId == user.Id).ExecuteDeleteAsync(cancellationToken);
+        await PasswordReset.CompleteAsync(userManager, db, user, cancellationToken);
         await transaction.CommitAsync(cancellationToken);
 
         return await authService.ToProfileAsync(user);

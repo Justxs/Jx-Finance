@@ -54,8 +54,11 @@ public sealed class AuthService(
             user.UserName = email;
             user.DisplayName = displayName;
             user.EmailConfirmed = true;
-            await userManager.UpdateAsync(user);
-            identityResult = await userManager.AddPasswordAsync(user, password);
+            identityResult = await userManager.UpdateAsync(user);
+            if (identityResult.Succeeded)
+            {
+                identityResult = await userManager.AddPasswordAsync(user, password);
+            }
         }
 
         if (!identityResult.Succeeded)
@@ -64,7 +67,11 @@ public sealed class AuthService(
         }
 
         await EnsureRolesExistAsync();
-        await userManager.AddToRoleAsync(user, AppRoles.Admin);
+        if (await userManager.AddToRoleAsync(user, AppRoles.Admin) is { Succeeded: false } assigned)
+        {
+            return assigned.ToDomainError();
+        }
+
         await StarterCategories.SeedAsync(db, user.Id, cancellationToken);
         await transaction.CommitAsync(cancellationToken);
 
@@ -167,13 +174,14 @@ public sealed class AuthService(
 
     public async Task<Result<IReadOnlyList<string>>> EnableTwoFactorAsync(AppUser user, string code)
     {
-        var isValid = await userManager.VerifyTwoFactorTokenAsync(
+        var failure = await AttemptAsync(
             user,
-            TokenOptions.DefaultAuthenticatorProvider,
-            code);
-        if (!isValid)
+            () => userManager.VerifyTwoFactorTokenAsync(user, TokenOptions.DefaultAuthenticatorProvider, code),
+            new DomainError(ErrorCodes.TwoFactorInvalidCode, "Invalid authenticator code."),
+            completesSignIn: true);
+        if (failure is not null)
         {
-            return new DomainError(ErrorCodes.TwoFactorInvalidCode, "Invalid authenticator code.");
+            return failure;
         }
 
         await userManager.SetTwoFactorEnabledAsync(user, true);

@@ -21,6 +21,8 @@ public sealed class FakeReceiptReader : IReceiptReader
 
     public DomainError? FailWith { get; set; }
 
+    public Exception? ThrowOnRead { get; set; }
+
     public TaskCompletionSource? Hold { get; set; }
 
     public IReadOnlyList<byte[]> Calls => calls.ToList();
@@ -36,6 +38,11 @@ public sealed class FakeReceiptReader : IReceiptReader
             await hold.Task.WaitAsync(cancellationToken);
         }
 
+        if (ThrowOnRead is { } exception)
+        {
+            throw exception;
+        }
+
         return FailWith is { } failure ? failure : Fixture(Answer);
     }
 
@@ -44,6 +51,7 @@ public sealed class FakeReceiptReader : IReceiptReader
         IsAvailable = true;
         Answer = Maxima;
         FailWith = null;
+        ThrowOnRead = null;
         Hold = null;
         calls.Clear();
     }

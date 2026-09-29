@@ -310,7 +310,17 @@ public sealed class BackupService(
                 "The database was busy with other work. Nothing was changed; try again in a moment.");
         }
 
-        var attachments = staging.Publish();
+        int attachments;
+        try
+        {
+            attachments = staging.Publish();
+        }
+        catch (IOException ex)
+        {
+            logger.LogError(ex, "The database was restored, but moving the restored attachment files into place failed part-way.");
+            throw;
+        }
+
         var header = restorer.Header!;
         db.ChangeTracker.Clear();
         store.Set(await db.InstanceSettings.AsNoTracking().FirstOrDefaultAsync(s => s.Id == InstanceSettings.SingletonId, cancellationToken) ?? store.Defaults());

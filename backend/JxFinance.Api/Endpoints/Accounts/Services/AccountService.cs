@@ -281,6 +281,7 @@ public sealed class AccountService(
             ? await rates.GetForDateAsync(date, cancellationToken)
             : await rates.GetLatestAsync(cancellationToken);
         var reporting = rates.ReportingCurrency;
+        var fresh = rates.IsFresh(table, asOf);
 
         return accounts.ToDictionary(
             account => account.Id,
@@ -294,7 +295,8 @@ public sealed class AccountService(
                     .ToList();
 
                 (decimal Value, bool IsComplete) holdingValue = holdingValues.GetValueOrDefault(account.Id, (0m, true));
-                decimal? In(Money money, Currency currency) => table.Convert(money.Amount, money.Currency, currency);
+                decimal? In(Money money, Currency currency) =>
+                    fresh || money.Currency == currency ? table.Convert(money.Amount, money.Currency, currency) : null;
 
                 return new AccountBalance(
                     held,

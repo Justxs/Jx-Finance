@@ -22,6 +22,16 @@ public class RateTableTests
         Assert.Equal(100.00m, Table.Convert(110m, Currency.Usd, Currency.Eur));
     }
 
+    [Theory]
+    [InlineData("2026-09-01", true)]
+    [InlineData("2026-09-06", true)]
+    [InlineData("2026-09-07", false)]
+    public void Rates_are_fresh_for_five_days_after_their_date(string day, bool fresh)
+    {
+        Assert.Equal(fresh, Table.IsFreshOn(DateOnly.Parse(day, System.Globalization.CultureInfo.InvariantCulture)));
+        Assert.False(RateTable.Empty.IsFreshOn(DateOnly.Parse(day, System.Globalization.CultureInfo.InvariantCulture)));
+    }
+
     [Fact]
     public void Two_foreign_currencies_cross_through_the_euro()
     {

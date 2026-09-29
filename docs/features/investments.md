@@ -233,6 +233,8 @@ sequenceDiagram
     Note over Imp: still colliding after 3 attempts: 409 conflict.busy, nothing imported<br/>missing exchange rate: whole import fails with date and currency named
 ```
 
+The broker report is not bound by the app's own validators, so `StatementImport` fits its text to the columns instead of letting one long value fail the whole import: a new security's symbol is cut to 32 characters (the same cut is used when looking a security up), its name and exchange are shortened with an ellipsis to 200 and 32, and entry and transfer descriptions to 500.
+
 ## Automatic sync
 
 ```mermaid

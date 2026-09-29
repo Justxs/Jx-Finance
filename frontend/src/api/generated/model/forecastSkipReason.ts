@@ -12,4 +12,5 @@ export const ForecastSkipReason = {
   noAccount: "noAccount",
   noHistory: "noHistory",
   accountNotVisible: "accountNotVisible",
+  noExchangeRate: "noExchangeRate",
 } as const;

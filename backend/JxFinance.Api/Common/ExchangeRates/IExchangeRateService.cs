@@ -13,6 +13,8 @@ public interface IExchangeRateService
 
     Task<RateTable> GetForDateAsync(DateOnly date, CancellationToken cancellationToken);
 
+    bool IsFresh(RateTable table, DateOnly? date);
+
     Task<RateHistory> GetHistoryAsync(DateOnly from, DateOnly to, CancellationToken cancellationToken);
 
     Task<Result<decimal>> ToReportingAsync(Money amount, DateOnly date, CancellationToken cancellationToken);

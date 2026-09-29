@@ -4,6 +4,10 @@ namespace JxFinance.Domain.Investments;
 
 public sealed class Security : EntityBase
 {
+    public const int SymbolMaxLength = 32;
+    public const int NameMaxLength = 200;
+    public const int ExchangeMaxLength = 32;
+
     public SecurityId Id { get; set; } = SecurityId.New();
     public string Symbol { get; set; } = string.Empty;
     public string Name { get; set; } = string.Empty;

@@ -29,7 +29,6 @@ using JxFinance.Endpoints.Transactions.Mappers;
 using JxFinance.Endpoints.Transactions.Shared;
 using JxFinance.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
-using Npgsql;
 
 namespace JxFinance.Endpoints.NetWorth.Services;
 
@@ -113,13 +112,9 @@ public sealed class NetWorthService(
 
         var point = await AssetValuationBook.RecordAsync(db, asset, request.Date, request.Value!.Value, cancellationToken);
         point.Note = OptionalText.Normalize(request.Note);
-        try
+        if (await db.SaveOrConflictAsync(new DomainError(ErrorCodes.ConflictBusy, "Someone else recorded a valuation for that date just now. Try again."), cancellationToken) is { } conflict)
         {
-            await db.SaveChangesAsync(cancellationToken);
-        }
-        catch (DbUpdateException ex) when (ex.InnerException is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation })
-        {
-            return new DomainError(ErrorCodes.ConflictBusy, "Someone else recorded a valuation for that date just now. Try again.");
+            return conflict;
         }
 
         return await ToResponseAsync(asset, cancellationToken);
@@ -318,7 +313,7 @@ public sealed class NetWorthService(
             return new DomainError(ErrorCodes.ReferenceNotFound, "Transaction does not exist.");
         }
 
-        if (transaction.Type != FlowType.Expense || transaction.Amount.Amount < 0)
+        if (transaction.Type != FlowType.Expense || transaction.Amount.Amount <= 0)
         {
             return new DomainError(ErrorCodes.DebtPaymentWrongType, "Only an expense, not a refund, can pay a debt.");
         }
@@ -343,13 +338,9 @@ public sealed class NetWorthService(
             Kind = request.Kind ?? (regularThatMonth ? DebtPaymentKind.Extra : DebtPaymentKind.Regular),
             Principal = request.Principal,
         });
-        try
+        if (await db.SaveOrConflictAsync(new DomainError(ErrorCodes.DebtPaymentTaken, "This transaction already pays a debt."), cancellationToken) is { } conflict)
         {
-            await db.SaveChangesAsync(cancellationToken);
-        }
-        catch (DbUpdateException ex) when (ex.InnerException is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation })
-        {
-            return new DomainError(ErrorCodes.DebtPaymentTaken, "This transaction already pays a debt.");
+            return conflict;
         }
 
         return await ToResponseAsync(debt, cancellationToken);

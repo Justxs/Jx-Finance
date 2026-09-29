@@ -20,7 +20,6 @@ using JxFinance.Endpoints.Investments.Shared;
 using JxFinance.Endpoints.Investments.UpdateInvestmentTransaction;
 using JxFinance.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
-using Npgsql;
 
 namespace JxFinance.Endpoints.Investments.Services;
 
@@ -197,7 +196,7 @@ public sealed class InvestmentService(
         CreateInvestmentTransactionRequest request,
         CancellationToken cancellationToken)
     {
-        var built = await BuildTransactionAsync(request, cancellationToken);
+        var built = await BuildTransactionAsync(request, null, cancellationToken);
         if (built.IsFailure)
         {
             return built.Error;
@@ -233,7 +232,7 @@ public sealed class InvestmentService(
                 "This entry was imported from a broker. Correct it there and import again.");
         }
 
-        var built = await BuildTransactionAsync(request, cancellationToken);
+        var built = await BuildTransactionAsync(request, transaction.CashAmount.Currency, cancellationToken);
         if (built.IsFailure)
         {
             return built.Error;
@@ -283,6 +282,7 @@ public sealed class InvestmentService(
 
     private async Task<Result<(InvestmentTransaction Transaction, Security? Security)>> BuildTransactionAsync(
         IInvestmentTransactionInput request,
+        Currency? keptCurrency,
         CancellationToken cancellationToken)
     {
         var accountFound = await references.AccountCurrencyAsync(new AccountId(request.AccountId), cancellationToken);
@@ -304,7 +304,7 @@ public sealed class InvestmentService(
 
         var isTrade = request.Type is InvestmentTransactionType.Buy or InvestmentTransactionType.Sell;
         var currency = (isTrade ? null : request.Currency) ?? security?.Currency ?? request.Currency ?? accountCurrency;
-        if (rates.UnusableReason(currency) is { } currencyError)
+        if (currency != keptCurrency && rates.UnusableReason(currency) is { } currencyError)
         {
             return new DomainError(ErrorCodes.CurrencyDisabled, currencyError);
         }
@@ -377,13 +377,9 @@ public sealed class InvestmentService(
         db.Securities.Add(security);
         request.ApplyTo(symbol, security);
         await RecordPriceAsync(request, security, cancellationToken);
-        try
+        if (await db.SaveOrConflictAsync(Duplicate(symbol, request.Currency), cancellationToken) is { } conflict)
         {
-            await db.SaveChangesAsync(cancellationToken);
-        }
-        catch (DbUpdateException ex) when (ex.InnerException is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation })
-        {
-            return Duplicate(symbol, request.Currency);
+            return conflict;
         }
 
         return security.ToResponse();
@@ -426,7 +422,7 @@ public sealed class InvestmentService(
             ? SecurityPriceBook.RecordAsync(db, security, request.LastPriceDate ?? clock.Today, price, cancellationToken)
             : Task.CompletedTask;
 
-    private static Result<SecurityResponse> Duplicate(string symbol, Currency currency) =>
+    private static DomainError Duplicate(string symbol, Currency currency) =>
         new DomainError(ErrorCodes.ConflictDuplicate, $"{symbol} in {currency.ToCode()} already exists.");
 
     private async Task<bool> IsOversoldAsync(

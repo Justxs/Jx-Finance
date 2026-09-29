@@ -20,6 +20,7 @@ flowchart TD
     Fixed --> Occ["Occurrences: RecurringBill.Advance from NextDueDate,<br/>before today placed on today as overdue,<br/>first one skipped when a matching row already paid it"]
     Est --> Occ
     Occ --> Changes["signed entries per account:<br/>expense minus, income plus,<br/>transfer out of the source and into a visible destination"]
+    Occ -->|"transfer into another currency<br/>with no rate within 5 days"| NC4["out of the source only,<br/>notCounted: noExchangeRate"]
     Start --> Proj["CashFlowProjection.Project"]
     Changes --> Proj
     Usual["Usual daily spending: median over the last 3 complete months<br/>of expenses outside the entries, divided by the month's days"] --> Proj

@@ -14,7 +14,6 @@ using JxFinance.Endpoints.Investments.SetSecurityPrice;
 using JxFinance.Endpoints.Investments.Shared;
 using JxFinance.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
-using Npgsql;
 
 namespace JxFinance.Endpoints.Investments.Services;
 
@@ -50,13 +49,9 @@ public sealed class SecurityPriceService(AppDbContext db, IExchangeRateService r
             request.LastPriceDate ?? clock.Today,
             request.LastPrice!.Value,
             cancellationToken);
-        try
+        if (await db.SaveOrConflictAsync(new DomainError(ErrorCodes.ConflictBusy, "Someone else recorded a price for that date just now. Try again."), cancellationToken) is { } conflict)
         {
-            await db.SaveChangesAsync(cancellationToken);
-        }
-        catch (DbUpdateException ex) when (ex.InnerException is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation })
-        {
-            return new DomainError(ErrorCodes.ConflictBusy, "Someone else recorded a price for that date just now. Try again.");
+            return conflict;
         }
 
         return security.ToResponse();

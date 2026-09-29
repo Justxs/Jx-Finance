@@ -1,6 +1,8 @@
 using System.Net;
 using System.Net.Http.Json;
+using JxFinance.Infrastructure.Auth;
 using JxFinance.Tests.Support;
+using Microsoft.EntityFrameworkCore;
 
 namespace JxFinance.Tests.Integration.Email;
 
@@ -36,6 +38,46 @@ public sealed class PasswordResetByLinkTests(ApiFixture fixture) : EmailTestBase
             Assert.Equal(
                 HttpStatusCode.Unauthorized,
                 (await TryLoginAsync(withOldPassword, user.Email, user.Password)).StatusCode);
+        }
+        finally
+        {
+            await DisableEmailAsync();
+        }
+    }
+
+    [Fact]
+    public async Task A_reset_by_link_deletes_the_personal_api_tokens()
+    {
+        try
+        {
+            await EnableEmailAsync();
+            var user = await CreateUserAsync();
+            var issued = PersonalApiTokenFormat.Issue();
+            await WithDbAsync(async db =>
+            {
+                db.PersonalApiTokens.Add(new PersonalApiToken
+                {
+                    Id = Guid.NewGuid(),
+                    UserId = user.Id,
+                    Name = "Script",
+                    Prefix = issued.Prefix,
+                    SecretHash = issued.SecretHash,
+                    CreatedAt = DateTimeOffset.UtcNow,
+                    ExpiresAt = DateTimeOffset.UtcNow.AddDays(30),
+                });
+                await db.SaveChangesAsync(TestContext.Current.CancellationToken);
+            });
+            using var anonymous = CreateClient();
+            await AskAsync(anonymous, user.Email);
+            await DrainAsync();
+            var token = TokenFrom(ResetMessageFor(user.Email), "reset-password");
+
+            var reset = await ResetAsync(anonymous, user.Email, token, NewPassword);
+
+            Assert.Equal(HttpStatusCode.NoContent, reset.StatusCode);
+            Assert.Equal(
+                0,
+                await WithDbAsync(db => db.PersonalApiTokens.CountAsync(t => t.UserId == user.Id, TestContext.Current.CancellationToken)));
         }
         finally
         {

@@ -82,25 +82,24 @@ public sealed class ReceiptService(
             return started.Error;
         }
 
-        Result<ReceiptResult> parsed;
         try
         {
-            parsed = await ParseAsync(input, cancellationToken);
+            var parsed = await ParseAsync(input, cancellationToken);
+            if (!parsed.TryGetValue(out var result))
+            {
+                await FinishAsync(reading, null, parsed.ErrorCode, cancellationToken);
+                return parsed.Error;
+            }
+
+            var items = await CategorizedAsync(result.Items, cancellationToken);
+            await FinishAsync(reading, result with { Items = items }, null, cancellationToken);
         }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        catch (Exception)
         {
             await FinishAsync(reading, null, null, CancellationToken.None);
             throw;
         }
 
-        if (!parsed.TryGetValue(out var result))
-        {
-            await FinishAsync(reading, null, parsed.ErrorCode, cancellationToken);
-            return parsed.Error;
-        }
-
-        var items = await CategorizedAsync(result.Items, cancellationToken);
-        await FinishAsync(reading, result with { Items = items }, null, cancellationToken);
         await db.ReceiptReadings
             .Where(r => r.Sha256 == file.Sha256 && r.Status == ReceiptReadingStatus.Read && r.Id != reading.Id)
             .ExecuteDeleteAsync(cancellationToken);
