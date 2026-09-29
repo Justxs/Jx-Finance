@@ -1,7 +1,6 @@
 import { Link, type LinkOptions } from "@tanstack/react-router";
 import type { LucideIcon } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { useFeature } from "@/hooks/use-settings";
 import type { TranslationKey } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
@@ -28,10 +27,7 @@ export function useNavSections<TSection extends string>(
   requested: TSection | undefined,
   fallback: TSection,
 ) {
-  const importEnabled = useFeature("import");
-  const sections = all.filter((item) => item !== "import" || importEnabled);
-
-  return { sections, section: sections.find((item) => item === requested) ?? fallback };
+  return { section: all.find((item) => item === requested) ?? fallback };
 }
 
 export function SectionNav({ labelKey, current, groups }: Readonly<Props>) {

@@ -109,7 +109,7 @@ describe("buildCommandEntries", () => {
     expect(entries).not.toContain("page-investments");
     expect(entries).not.toContain("page-tax-summary");
     expect(entries).not.toContain("page-categorization-rules");
-    expect(entries).not.toContain("page-import");
+    expect(entries).toContain("page-import");
     expect(entries).toContain("page-transactions");
   });
 

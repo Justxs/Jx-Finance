@@ -10,6 +10,8 @@ Every route accepts the optional request header `X-Active-Household`, a househol
 
 The three file downloads — `GET /api/transactions/export`, `GET /api/transactions/export/pdf` and `GET /api/investments/tax-summary/export` — accept the same value as an `activeHousehold` query parameter as well, because a CSV is fetched by the browser from a plain link that carries no headers. The same middleware reads it, on those three paths only, and applies the same membership check, so it can only narrow. A request that sends the header and the parameter must send the same household in both (letter case aside); two different households answer 400 `household.scopeMismatch`. The parameter is not in the OpenAPI document either, and an export URL carries no other identifier of the caller.
 
+A fourth download, `GET /api/users/me/export`, the [data export per user](features/data-export-per-user.md), is a plain link too but answers the caller's own records whatever the scope: it reads no `activeHousehold` parameter and ignores `X-Active-Household`. It streams a zip without `Content-Length`, is throttled to three an hour per client and answers 409 `conflict.busy` while another export of the same member runs. A personal API token cannot reach it.
+
 ## Authorization header
 
 A script reads the API with a [personal API token](features/personal-api-tokens.md) instead of the session cookie: `Authorization: Bearer jxp_<prefix>_<secret>`, while the `ApiTokens` feature is on. The token reaches only the `GET` operations whose OpenAPI entry lists the `PersonalApiToken` security scheme beside `Cookie`, plus `GET /api/ping`; anything else answers 403 `token.notAllowed`, a malformed, unknown, expired or revoked token answers 401 `token.invalid` with `WWW-Authenticate: Bearer error="invalid_token"`, the feature switched off answers 404 `feature.disabled`, and more than 60 requests a minute with one token answer 429 `token.rateLimited` with `Retry-After`. A request that carries a token is authenticated by the token alone; its cookies are ignored. `X-Active-Household` and the `activeHousehold` query parameter of the three downloads narrow a token's answers exactly as they narrow the browser's. Examples for curl, PowerShell, Python and Excel Power Query are on the feature page.
@@ -37,7 +39,7 @@ Every endpoint is a FastEndpoints class under `Endpoints/<Feature>/<Operation>/`
 `Configure()` carries the contract:
 
 - The route is declared relative to the feature's `Group`, and the group supplies the `api` prefix, the OpenAPI tag, and the error responses every endpoint in it can return. Groups derive from `Common/ApiGroup.cs`; a group behind a feature switch passes its `Feature`, which gates every endpoint in it (see [Installation settings](architecture/installation-settings.md)); the two anonymous ones (`Setup`, `Diagnostics`) pass `requiresAuthentication: false` so they do not advertise a 401 they never return.
-- `Description()` declares status codes the framework cannot infer: the 201 returned by the create endpoints (always `d.ProducesCreated<TResponse>()` from `Common/CreatedDescription.cs`, which replaces the default 200 with a JSON 201), the 404 an owner-scoped lookup can return, the 429 from a throttled endpoint, and the file content types of the two export endpoints.
+- `Description()` declares status codes the framework cannot infer: the 201 returned by the create endpoints (always `d.ProducesCreated<TResponse>()` from `Common/CreatedDescription.cs`, which replaces the default 200 with a JSON 201), the 404 an owner-scoped lookup can return, the 429 from a throttled endpoint, and the file content types of the export endpoints.
 - Cross-cutting settings sit next to the route: `AllowAnonymous()`, `Roles(AppRoles.Admin)`, `Throttle(...)`, `AllowFileUploads()`.
 
 The prose documentation lives next door in `<Operation>Summary.cs`, a `Summary<TEndpoint, TRequest>` (or `Summary<TEndpoint>` where the endpoint takes no request) that FastEndpoints binds to the endpoint by type. It holds a one-line summary, a paragraph of behaviour worth knowing before calling, a description per route and query parameter, a description per status code, and an example request body. This is the only place endpoint documentation lives — Scalar and the generated client both read it out of the OpenAPI document.
@@ -310,6 +312,7 @@ Every 201 goes through `CreatedAsync`, which sets `Location` to a path built fro
 | PUT | `/api/users/me/discord` |
 | POST | `/api/users/me/discord/test` |
 | PUT | `/api/users/me/email-notifications` |
+| GET | `/api/users/me/export` |
 | PUT | `/api/users/me/language` |
 | POST | `/api/users/{id}/deactivate` |
 | POST | `/api/users/{id}/reactivate` |

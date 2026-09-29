@@ -1,9 +1,11 @@
+import { HttpResponse } from "msw";
 import { NotificationType } from "@/api/generated/model";
 import type { UserProfileResponse } from "@/api/generated/model";
 import {
   getCreateUserMockHandler,
   getDeactivateUserMockHandler,
   getDeleteMyDiscordMockHandler,
+  getExportMyDataMockHandler,
   getMyDiscordMockHandler,
   getReactivateUserMockHandler,
   getResetUserPasswordMockHandler,
@@ -23,7 +25,7 @@ import {
   users,
   wrongAdminPasswordProblem,
 } from "@/storybook/fixtures";
-import { found, problem, query, readBody, text } from "./http";
+import { found, onRouteOf, problem, query, readBody, text } from "./http";
 import type { Body } from "./http";
 import { NEW_USER_ID } from "./ids";
 import { applyDirection, byId, compareText, includesText } from "./lists";
@@ -127,4 +129,15 @@ export const userHandlers = [
   }),
   getDeleteMyDiscordMockHandler(),
   getTestMyDiscordMockHandler(),
+  onRouteOf(getExportMyDataMockHandler(new Blob()), () =>
+    HttpResponse.arrayBuffer(
+      new Uint8Array([0x50, 0x4b, 0x05, 0x06, ...Array.from({ length: 18 }, () => 0)]).buffer,
+      {
+        headers: {
+          "Content-Type": "application/zip",
+          "Content-Disposition": 'attachment; filename="jx-finance-export-2026-09-18.zip"',
+        },
+      },
+    ),
+  ),
 ];

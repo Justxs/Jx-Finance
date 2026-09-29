@@ -256,6 +256,12 @@ export const UpdateMyEmailNotificationsResponse = zod.object({
 });
 
 /**
+ * Streams a zip archive named jx-finance-export-<date>.zip with every record you own: data.json in the backup's table format (format jx-finance-user-export, version 1, with your user id), and accounts.csv, transactions.csv and transfers.csv for a spreadsheet. It holds your accounts, personal, shared and archived, with everything recorded on them by anyone, the transfers that touch them, your categories, tags, rules, budgets, goals, assets, debts, recurring entries, notifications, month closes and trash, and the categories, tags and securities your records point at. It never holds passwords, two-factor secrets, passkeys, API tokens, sessions, the broker token, the Discord webhook, households, memberships or the activity log, nor another member's accounts. The active household is ignored. Nothing is kept on the server, and the answer carries no Content-Length. The file cannot be imported yet.
+ * @summary Download your own data
+ */
+export const ExportMyDataResponse = zod.unknown();
+
+/**
  * Saves the language you picked in the interface, en or lt, so that every email and Discord message the server sends you is written in it. Until you save one, messages use the installation's default language. The interface itself keeps its language per browser.
  * @summary Save your language
  */

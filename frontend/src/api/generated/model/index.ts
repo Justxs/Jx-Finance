@@ -107,6 +107,7 @@ export * from "./errorCode";
 export * from "./exchangeRateParams";
 export * from "./exchangeRateResponse";
 export * from "./exchangeRateSyncResponse";
+export * from "./exportMyDataParams";
 export * from "./exportTaxSummaryParams";
 export * from "./exportTransactionsParams";
 export * from "./exportTransactionsPdfParams";

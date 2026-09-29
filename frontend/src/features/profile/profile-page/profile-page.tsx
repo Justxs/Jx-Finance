@@ -8,6 +8,7 @@ import { ImportDataSection } from "@/features/imports/import-data-section/import
 import { SettingsLayout, profileSections } from "@/features/settings/settings-nav/settings-nav";
 import { useFeature } from "@/hooks/use-settings";
 import { ApiTokensSection } from "../api-tokens-section/api-tokens-section";
+import { ExportDataPanel } from "../export-data-panel/export-data-panel";
 import { NotificationsSection } from "../notifications-section/notifications-section";
 import { PasskeysSection } from "../passkeys-section/passkeys-section";
 import { ProfileForm } from "../profile-form/profile-form";
@@ -32,6 +33,7 @@ export function ProfilePage() {
       {section === "dashboard" ? <DashboardLayoutSection /> : null}
       {section === "trash" ? <TrashSection /> : null}
       {section === "import" ? <ImportDataSection /> : null}
+      {section === "import" ? <ExportDataPanel /> : null}
       {section === "appearance" ? <AppearancePicker /> : null}
       {section === "appearance" ? <SupportLinkSetting /> : null}
     </SettingsLayout>

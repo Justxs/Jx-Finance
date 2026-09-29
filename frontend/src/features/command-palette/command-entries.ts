@@ -66,8 +66,7 @@ const pageSections: Partial<Record<RoutePath, readonly PageSection[]>> = {
     {
       id: "page-import",
       search: { section: "import" },
-      labelKey: "imports.sectionTitle",
-      feature: "import",
+      labelKey: "profile.dataExport.navTitle",
     },
     { id: "page-appearance", search: { section: "appearance" }, labelKey: "settings.appearance" },
   ],

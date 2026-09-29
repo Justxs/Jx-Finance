@@ -2,7 +2,7 @@
 
 Back to the [feature walkthrough](README.md). See also [decisions](../decisions/backup-and-restore.md), [architecture: Backup and restore](../architecture/backup-and-restore.md).
 
-Backend `Backups` (`BackupService`, `BackupArchive`, `BackupStore`, `BackupReader`, `BackupInspector`, `BackupRestorer`, `BackupDatabase`), Backups section of `/settings`. Administrators only; nothing is scheduled or copied offsite.
+Backend `Backups` (`BackupService`, `BackupArchive`, `BackupStore`, `BackupReader`, `BackupInspector`, `BackupRestorer`, `BackupDatabase`), Backups section of `/settings`. Administrators only; nothing is scheduled or copied offsite. A member takes their own records without an administrator through the [data export per user](data-export-per-user.md), which writes the same table format under another `format` value.
 
 Since [attachments](attachments.md) a backup is a zip archive: `backup.json`, the same JSON document as before, deflated, and one uncompressed entry `attachments/<id>` per attached file. A restore writes the files back after checking each one's SHA-256 against its restored row. Backups taken before are gzip-compressed JSON and are still listed, downloaded and uploaded as they are. The archive is about as large as the attachment directory plus the compressed data, so an upload may now be 2 GB, and the decompressed-size guard applies to `backup.json` alone.
 

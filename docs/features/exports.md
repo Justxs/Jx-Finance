@@ -15,6 +15,8 @@ flowchart TD
     Cap -->|"no"| Pdf["MigraDoc lays out the document in memory"]
 ```
 
+These exports answer what the current screen shows. A member who wants everything they own, in one file and whatever the household scope, takes the [data export per user](data-export-per-user.md) from Settings › Personal › Import and export; its `transactions.csv` has the columns below and is written by the same `TransactionCsvWriter` (`Endpoints/Transactions/Shared`).
+
 ## The scope of an export
 
 Every export answers the same scope as the screen it was started from. The filters of the screen are already in the URL, including "Unusual only" as `unusual=true` since 2026-09-26 and "Uncategorized" as `uncategorized=true` since 2026-09-27, which the two transaction exports honour through the same `Filtered` query as the list; neither export gained a column for them; since 2026-09-21 the active household is there too, as `activeHousehold`, written by `useExportUrl` from the same browser preference the API client reads for its `X-Active-Household` header. A CSV is a plain `<a href>` and a browser sends no header of its own with one, so without that parameter a CSV downloaded under a household scope held rows the screen did not show, and disagreed with the PDF of the same screen.

@@ -1,7 +1,7 @@
 # Quality requirements
 
 - Exact ledger values: canonical decimal-string API contract, validated numeric range, transfers excluded from spending, split allocation consistency.
-- Isolation: verify personal/shared reads and mutations, member removal, account re-scoping, mixed-scope transfers, role changes and deactivated sessions; a personal API token reads only the allowlisted `GET` routes of its owner and never writes or reaches administration.
+- Isolation: verify personal/shared reads and mutations, member removal, account re-scoping, mixed-scope transfers, role changes and deactivated sessions; a personal API token reads only the allowlisted `GET` routes of its owner and never writes or reaches administration; a member's data export holds their own rows and the rows those point at, never a partner's accounts or anything on them, and no password hash, stamp, two-factor secret, passkey, API token hash, session, broker token or Discord webhook (`UserExportTests` scans the zip for each).
 - Reliability: migrations on fresh and existing databases, repeat-safe imports and bill confirmations, unique daily snapshots, repeat-safe reminder scans.
 - Usability: preserve failed form submissions; expose edits and pagination; visible labels and keyboard focus; responsive desktop/phone layouts; meaningful empty and error states.
 - Localization: EN/LT dictionary parity, translated controls and new bill reminders, locale-aware currency/date display, dot/comma decimal entry. Existing user-authored category names are data and are not automatically translated.

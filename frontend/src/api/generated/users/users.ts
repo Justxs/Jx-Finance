@@ -26,6 +26,7 @@ import type { ErrorType } from "../../client";
 import type {
   CreateUserRequest,
   DiscordWebhookResponse,
+  ExportMyDataParams,
   ProblemDetails,
   ResetUserPasswordRequest,
   UpdateMyDiscordRequest,
@@ -833,6 +834,139 @@ export const useUpdateMyEmailNotifications = <
 > => {
   return useMutation(getUpdateMyEmailNotificationsMutationOptions(options), queryClient);
 };
+export const getExportMyDataUrl = (params?: ExportMyDataParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/users/me/export?${stringifiedParams}`
+    : `/api/users/me/export`;
+};
+
+/**
+ * Streams a zip archive named jx-finance-export-<date>.zip with every record you own: data.json in the backup's table format (format jx-finance-user-export, version 1, with your user id), and accounts.csv, transactions.csv and transfers.csv for a spreadsheet. It holds your accounts, personal, shared and archived, with everything recorded on them by anyone, the transfers that touch them, your categories, tags, rules, budgets, goals, assets, debts, recurring entries, notifications, month closes and trash, and the categories, tags and securities your records point at. It never holds passwords, two-factor secrets, passkeys, API tokens, sessions, the broker token, the Discord webhook, households, memberships or the activity log, nor another member's accounts. The active household is ignored. Nothing is kept on the server, and the answer carries no Content-Length. The file cannot be imported yet.
+ * @summary Download your own data
+ */
+export const exportMyData = async (
+  params?: ExportMyDataParams,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<Blob> => {
+  return customFetch<Blob>(getExportMyDataUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getExportMyDataQueryKey = (params?: ExportMyDataParams) => {
+  return [`/api/users/me/export`, ...(params ? [params] : [])] as const;
+};
+
+export const getExportMyDataSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof exportMyData>>,
+  TError = ErrorType<ProblemDetails | void>,
+>(
+  params?: ExportMyDataParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof exportMyData>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getExportMyDataQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof exportMyData>>> = ({ signal }) =>
+    exportMyData(params, { signal, ...requestOptions });
+
+  return queryOptionsBuilder({
+    queryKey,
+    ...queryOptions,
+    queryFn: queryOptions?.queryFn ?? queryFn,
+  }) as UseSuspenseQueryOptions<Awaited<ReturnType<typeof exportMyData>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  } & {
+    throwOnError?: ((this: never, error: TError) => boolean) & { readonly __inferenceOnly: never };
+  };
+};
+
+export type ExportMyDataSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof exportMyData>>>;
+export type ExportMyDataSuspenseQueryError = ErrorType<ProblemDetails | void>;
+
+export function useExportMyDataSuspense<
+  TData = Awaited<ReturnType<typeof exportMyData>>,
+  TError = ErrorType<ProblemDetails | void>,
+>(
+  params: undefined | ExportMyDataParams,
+  options: {
+    query: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof exportMyData>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useExportMyDataSuspense<
+  TData = Awaited<ReturnType<typeof exportMyData>>,
+  TError = ErrorType<ProblemDetails | void>,
+>(
+  params?: ExportMyDataParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof exportMyData>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useExportMyDataSuspense<
+  TData = Awaited<ReturnType<typeof exportMyData>>,
+  TError = ErrorType<ProblemDetails | void>,
+>(
+  params?: ExportMyDataParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof exportMyData>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Download your own data
+ */
+
+export function useExportMyDataSuspense<
+  TData = Awaited<ReturnType<typeof exportMyData>>,
+  TError = ErrorType<ProblemDetails | void>,
+>(
+  params?: ExportMyDataParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof exportMyData>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getExportMyDataSuspenseQueryOptions(params, options);
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
 export const getUpdateMyLanguageUrl = () => {
   return `/api/users/me/language`;
 };

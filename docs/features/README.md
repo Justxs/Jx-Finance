@@ -20,7 +20,7 @@ Every feature the current code implements, one page per feature under `features/
 | 7 | [Transactions, splits, refunds, filters, bulk recategorize](transactions.md) | always on | `Transactions` | `transactions` |
 | 8 | [Transfers](transfers.md) | always on | `Transfers` | `accounts` (Transfers section) |
 | 9 | [Multi-currency, conversions, exchange rates](multi-currency.md) | `MultiCurrency` | `Conversions`, `Currencies`, `Infrastructure/ExchangeRates` | `accounts` (Currency conversions section) |
-| 10 | [Bank statement import](bank-statement-import.md) | `Import` | `Imports` | `imports` (dialog from Settings › Personal › Import data) |
+| 10 | [Bank statement import](bank-statement-import.md) | `Import` | `Imports` | `imports` (dialog from Settings › Personal › Import and export) |
 | 11 | [Budgets](budgets.md) | `Budgets` | `Budgets` | `budgets` |
 | 12 | [Goals](goals.md) | `Goals` | `Goals` | `goals` |
 | 13 | [Recurring entries](recurring-bills.md) | `RecurringBills` | `RecurringBills` | `recurring-bills` |
@@ -52,6 +52,7 @@ Every feature the current code implements, one page per feature under `features/
 | 39 | [Receipt reading](receipt-reading.md) | `ReceiptReading`, and Tesseract where the API runs | `Receipts`, `Common/Receipts`, `Infrastructure/Receipts` (`TesseractReceiptReader`, `ReceiptTextParser`), the last step of `AttachmentPurgeJob` | `transactions` (`receipt-reading`: Fill from receipt and the review in the transaction form) |
 | 40 | [Passkeys](passkeys.md) | always on; offered only over HTTPS or on localhost | `Auth/Passkeys`, `Auth/Services/PasskeyService.cs`, `Infrastructure/Auth` (`PasskeyStateCookie`, `PasskeySite`) | `profile` (`passkeys-section`, `password-prompt`), `auth` (passkey button on `/login`), `lib/passkeys.ts` |
 | 41 | [Personal API tokens](personal-api-tokens.md) | `ApiTokens`, off by default | `Auth/Tokens`, `Auth/Services/PersonalApiTokenService.cs`, `Infrastructure/Auth` (`PersonalApiToken`, `PersonalApiTokenFormat`, `PersonalApiTokenAuthenticationHandler`), `Common/Middleware` (`PersonalApiTokenGateMiddleware`, `PersonalApiTokenRateLimit`), `Common/TokenReadable.cs` | `profile` (`api-tokens-section`) |
+| 42 | [Data export per user](data-export-per-user.md) | always on | `Users` (`users/me/export`, `UserExportService`, `UserExportTables`), the table writer of `Backups`, `Transactions/Shared/TransactionCsvWriter` | `profile` (`export-data-panel` in the Import and export section of Settings › Personal) |
 
 Not implemented: live prices, per-user reporting currency, manual exchange rates, PWA/offline, bank APIs, scheduled or offsite backups and sharing of budgets, goals, assets, debts and bills. See [Features and scope](../scope.md) and, for what is planned next, [Backlog and ideas](../backlog.md).
 

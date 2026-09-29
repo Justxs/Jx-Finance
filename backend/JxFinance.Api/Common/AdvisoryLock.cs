@@ -15,6 +15,7 @@ public enum AppLock : long
     MonthCloseReminders = 738192442,
     MonthlyDigest = 738192443,
     ReceiptReadings = 738192444,
+    UserExport = 738192445,
 }
 
 public static class AdvisoryLock
@@ -24,6 +25,10 @@ public static class AdvisoryLock
 
     public static Task LockAsync(this DatabaseFacade database, AppLock key, CancellationToken cancellationToken) =>
         LockAsync(database, (long)key, cancellationToken);
+
+    public static Task<bool> TryLockAsync(this DatabaseFacade database, AppLock scope, Guid key, CancellationToken cancellationToken) =>
+        database.SqlQuery<bool>($"SELECT pg_try_advisory_xact_lock({(int)scope}, hashtext({key.ToString()})) AS \"Value\"")
+            .SingleAsync(cancellationToken);
 
     private static Task<int> LockAsync(DatabaseFacade database, long key, CancellationToken cancellationToken) =>
         database.ExecuteSqlInterpolatedAsync($"SELECT pg_advisory_xact_lock({key})", cancellationToken);

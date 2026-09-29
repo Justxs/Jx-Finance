@@ -31,6 +31,19 @@ public sealed class BackupReaderTests
         Assert.Equal(["big", longValue], recorder.Rows[5_000]);
     }
 
+    [Fact]
+    public async Task A_member_export_header_carries_the_member_and_the_missing_files()
+    {
+        var userId = Guid.NewGuid();
+        var json = $"{{{Header},\"{BackupJsonNames.UserId}\":\"{userId}\",\"{BackupJsonNames.MissingAttachments}\":2,\"tables\":[]}}";
+        var recorder = new Recorder();
+
+        await new BackupReader(recorder).ReadAsync(new MemoryStream(Encoding.UTF8.GetBytes(json)), TestContext.Current.CancellationToken);
+
+        Assert.Equal(userId, recorder.Header!.UserId);
+        Assert.Equal(2, recorder.Header.MissingAttachments);
+    }
+
     [Theory]
     [InlineData("[]")]
     [InlineData("{}")]

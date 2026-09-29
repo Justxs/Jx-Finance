@@ -1,3 +1,4 @@
+using System.Text.Json;
 using JxFinance.Domain.Email;
 using JxFinance.Domain.Notifications;
 using JxFinance.Infrastructure.Auth;
@@ -9,6 +10,8 @@ namespace JxFinance.Endpoints.Backups.Services;
 
 public static class BackupDatabase
 {
+    private const int FlushEveryRows = 1000;
+
     public static List<TableShape> ReadShapes(AppDbContext db)
     {
         string?[] transient =
@@ -78,6 +81,49 @@ public static class BackupDatabase
             command.Parameters.Add(new NpgsqlParameter { Value = column });
             await command.ExecuteNonQueryAsync(cancellationToken);
         }
+    }
+
+    public static async Task<long> WriteTableAsync(
+        NpgsqlConnection connection,
+        TableShape table,
+        Utf8JsonWriter json,
+        string? condition,
+        NpgsqlParameter[] parameters,
+        CancellationToken cancellationToken)
+    {
+        json.WriteStartObject();
+        json.WriteString(BackupJsonNames.Name, table.Name);
+        json.WriteStartArray(BackupJsonNames.Columns);
+        foreach (var column in table.Columns) json.WriteStringValue(column.Name);
+        json.WriteEndArray();
+        json.WriteStartArray(BackupJsonNames.Rows);
+
+        var columns = string.Join(", ", table.Columns.Select(c => $"{Quote(c.Name)}::text"));
+        var where = condition is null ? "" : $" WHERE {condition}";
+        await using var command = new NpgsqlCommand($"SELECT {columns} FROM {table.QuotedName}{where}", connection);
+        command.Parameters.AddRange(parameters);
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+
+        long written = 0;
+        while (await reader.ReadAsync(cancellationToken))
+        {
+            json.WriteStartArray();
+            for (var i = 0; i < reader.FieldCount; i++)
+            {
+                if (reader.IsDBNull(i)) json.WriteNullValue();
+                else json.WriteStringValue(reader.GetString(i));
+            }
+
+            json.WriteEndArray();
+            if (++written % FlushEveryRows == 0)
+            {
+                await json.FlushAsync(cancellationToken);
+            }
+        }
+
+        json.WriteEndArray();
+        json.WriteEndObject();
+        return written;
     }
 
     public static async Task ExecuteAsync(NpgsqlConnection connection, string sql, CancellationToken cancellationToken)

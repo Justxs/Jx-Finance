@@ -37,8 +37,6 @@ public sealed class BackupService(
     public const string Format = "jx-finance-backup";
     public const int Version = 1;
 
-    private const int FlushEveryRows = 1000;
-
     private static readonly DomainError NotFound = EntityLookup.NotFound("The backup does not exist.");
 
     public async Task<IReadOnlyList<BackupResponse>> GetAllAsync(CancellationToken cancellationToken)
@@ -252,15 +250,7 @@ public sealed class BackupService(
 
         foreach (var table in tables)
         {
-            json.WriteStartObject();
-            json.WriteString(BackupJsonNames.Name, table.Name);
-            json.WriteStartArray(BackupJsonNames.Columns);
-            foreach (var column in table.Columns) json.WriteStringValue(column.Name);
-            json.WriteEndArray();
-            json.WriteStartArray(BackupJsonNames.Rows);
-            rows += await WriteRowsAsync(connection, table, json, cancellationToken);
-            json.WriteEndArray();
-            json.WriteEndObject();
+            rows += await BackupDatabase.WriteTableAsync(connection, table, json, null, [], cancellationToken);
         }
 
         json.WriteEndArray();
@@ -431,40 +421,6 @@ public sealed class BackupService(
     {
         await using var limited = new LimitedReadStream(document, maximumBytes);
         await new BackupReader(visitor).ReadAsync(limited, cancellationToken);
-    }
-
-    private static async Task<long> WriteRowsAsync(
-        NpgsqlConnection connection,
-        TableShape table,
-        Utf8JsonWriter json,
-        CancellationToken cancellationToken)
-    {
-        var columns = string.Join(", ", table.Columns.Select(c => $"{BackupDatabase.Quote(c.Name)}::text"));
-        await using var command = new NpgsqlCommand($"SELECT {columns} FROM {table.QuotedName}", connection);
-        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
-
-        long written = 0;
-        var pending = 0;
-        while (await reader.ReadAsync(cancellationToken))
-        {
-            json.WriteStartArray();
-            for (var i = 0; i < reader.FieldCount; i++)
-            {
-                if (reader.IsDBNull(i)) json.WriteNullValue();
-                else json.WriteStringValue(reader.GetString(i));
-            }
-
-            json.WriteEndArray();
-            written++;
-
-            if (++pending == FlushEveryRows)
-            {
-                await json.FlushAsync(cancellationToken);
-                pending = 0;
-            }
-        }
-
-        return written;
     }
 
     private async Task<string> CurrentMigrationAsync(CancellationToken cancellationToken) =>

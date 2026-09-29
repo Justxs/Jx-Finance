@@ -52,6 +52,7 @@ The narrowing happens in one place, the shareable branch of `ApplyQueryFilters` 
 - Creating a record while a household is active proposes that household on the forms that already ask for a scope (a new account, a new category). It is a default in an empty form, nothing more: editing an existing record keeps the scope that record has, and switching the scope never rewrites a stored record.
 - Background jobs, the reminder and alert jobs, the broker sync, the snapshotter, backup and restore and the administrator recovery command run outside a request and keep the unscoped view. `ICurrentUser.ActiveHouseholdId` defaults to "no household", so anything that is not an HTTP request is unscoped by construction.
 - Every export answers the scope of the screen it was started from. The CSV exports stay plain browser downloads and carry the scope in the URL; the PDF export goes through the API client and carries it in the header as well. The backup download is not scoped: a backup is the whole installation, taken by an administrator, and it is written and read outside the query filter exactly as the background jobs are.
+- The [data export per user](data-export-per-user.md) is not scoped either: it answers "what is mine", not "what am I looking at", so it ignores the header and takes no `activeHousehold` parameter. An own account shared into a household other than the active one is still in it, and a partner's shared account never is.
 
 ## Deleting and restoring a household
 

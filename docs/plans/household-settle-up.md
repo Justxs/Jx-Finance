@@ -55,7 +55,7 @@ Status: planned 2026-09-28. Size L. Independent of the other plans. [Refunds](..
 | `AccountResponse.OwnerId` | New field, so the payment dialog can offer each party's accounts |
 | Enums | `AuditEntityKind.SharedExpense` and `Settlement`; `TrashKind.SharedExpense` and `Settlement`, appended |
 
-Migration: `AddSettleUp`. Backups carry the three tables with no code, because `BackupDatabase.ReadShapes` reads the model.
+Migration: `AddSettleUp`. Backups carry the three tables with no code, because `BackupDatabase.ReadShapes` reads the model. The [data export per user](../features/data-export-per-user.md) does not: each new table needs a rule in `UserExportTables` (a shared expense and a settlement concern several members, so the member who recorded them owns them, or they are excluded as household rows), and `UserExportTablesTests` fails until it has one.
 
 ## Backend steps
 

@@ -191,6 +191,30 @@ export const getUpdateMyEmailNotificationsMockHandler = (
   );
 };
 
+export const getExportMyDataMockHandler = (
+  overrideResponse?:
+    | Blob
+    | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<Blob> | Blob),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/users/me/export",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      const binaryBody =
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : undefined;
+      return new HttpResponse(binaryBody, {
+        status: 200,
+        headers: { "Content-Type": "application/octet-stream" },
+      });
+    },
+    options,
+  );
+};
+
 export const getUpdateMyLanguageMockHandler = (
   overrideResponse?:
     | UserProfileResponse
@@ -309,6 +333,7 @@ export const getUsersMock = () => [
   getUpdateMyDiscordMockHandler(),
   getTestMyDiscordMockHandler(),
   getUpdateMyEmailNotificationsMockHandler(),
+  getExportMyDataMockHandler(),
   getUpdateMyLanguageMockHandler(),
   getDeactivateUserMockHandler(),
   getReactivateUserMockHandler(),

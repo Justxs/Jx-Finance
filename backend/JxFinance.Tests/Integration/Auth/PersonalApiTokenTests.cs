@@ -162,6 +162,8 @@ public sealed class PersonalApiTokenTests(ApiFixture fixture) : IntegrationTestB
             (HttpMethod.Get, $"/api/attachments/{Guid.NewGuid()}/content"),
             (HttpMethod.Get, "/api/investments/connections"),
             (HttpMethod.Get, "/api/users/me/dashboard-layout"),
+            (HttpMethod.Get, "/api/users/me/export"),
+            (HttpMethod.Get, "/api/users/me/export?attachments=true"),
             (HttpMethod.Get, "/api/trash"),
             (HttpMethod.Get, "/api/notifications"),
             (HttpMethod.Get, "/health"),

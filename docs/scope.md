@@ -87,7 +87,7 @@ Custom date ranges, income/expense/net, expense and income breakdown by category
 
 ## Exports
 
-Filtered transaction CSV and PDF, both carrying account, category and tag names; a yearly investment tax summary CSV, printed from the page rather than laid out as a PDF
+Filtered transaction CSV and PDF, both carrying account, category and tag names; a yearly investment tax summary CSV, printed from the page rather than laid out as a PDF; a member downloads their own records from Settings › Personal › Import and export as one zip (every owned table in the backup's table format, accounts, transactions and transfers as CSV, attached files on request), without secrets, sessions, household rows or other members' accounts, whatever the household scope, three times an hour; the file is not re-importable yet
 
 ## Backup and restore
 

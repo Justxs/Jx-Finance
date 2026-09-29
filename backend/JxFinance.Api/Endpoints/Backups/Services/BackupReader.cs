@@ -17,6 +17,8 @@ public sealed class BackupReader(IBackupVisitor visitor)
     private int? version;
     private DateTimeOffset? createdAt;
     private string? migration;
+    private Guid? userId;
+    private int missingAttachments;
     private bool tablesSeen;
     private string? tableName;
     private List<string>? columns;
@@ -181,9 +183,19 @@ public sealed class BackupReader(IBackupVisitor visitor)
             case BackupJsonNames.Migration when token is JsonTokenType.String or JsonTokenType.Null:
                 migration = reader.GetString();
                 break;
+            case BackupJsonNames.UserId when token == JsonTokenType.String && reader.TryGetGuid(out var user):
+                userId = user;
+                break;
+            case BackupJsonNames.MissingAttachments when token == JsonTokenType.Number && reader.TryGetInt32(out var missing):
+                missingAttachments = missing;
+                break;
             case BackupJsonNames.Tables when token == JsonTokenType.StartArray && !tablesSeen && version is { } known && createdAt is { } taken:
                 tablesSeen = true;
-                steps.Add(new Step(StepKind.Begin, Header: new BackupHeader(format, known, taken, migration)));
+                steps.Add(new Step(StepKind.Begin, Header: new BackupHeader(format, known, taken, migration)
+                {
+                    UserId = userId,
+                    MissingAttachments = missingAttachments,
+                }));
                 position = Position.Tables;
                 return;
             default:

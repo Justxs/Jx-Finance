@@ -754,6 +754,14 @@
     }
   },
   "profile": {
+    "dataExport": {
+      "navTitle": "Import and export",
+      "title": "Export your data",
+      "description": "Download everything you own as one zip file: your accounts, personal, shared and archived, with all that is recorded on them, the transfers that touch them, and your categories, tags, rules, budgets, goals, assets, debts, recurring entries and notifications. data.json holds every record, and accounts.csv, transactions.csv and transfers.csv open in a spreadsheet.",
+      "excluded": "Passwords, two-factor secrets, passkeys, API tokens, households and other members' accounts are never included. The file cannot be imported yet.",
+      "attachments": "Include attached files",
+      "download": "Download my data"
+    },
     "qrCodeAlt": "Authenticator QR code",
     "title": "Your profile",
     "detailsTitle": "Name and password",

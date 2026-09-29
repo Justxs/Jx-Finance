@@ -69,7 +69,7 @@ const profileItems: Record<ProfileSection, [TranslationKey, LucideIcon]> = {
   dashboard: ["nav.dashboard", LayoutDashboard],
   appearance: ["settings.appearance", Palette],
   trash: ["trash.title", Trash2],
-  import: ["imports.sectionTitle", FileUp],
+  import: ["profile.dataExport.navTitle", FileUp],
 };
 
 const settingsItems: Record<SettingsSection, [TranslationKey, LucideIcon]> = {
@@ -87,17 +87,15 @@ function useSettingsGroups(): SectionNavGroup[] {
   const { features } = useSettings();
   const isAdmin = useMeSuspense().data.role === UserRole.admin;
 
-  const personal: SectionNavItem[] = profileSections
-    .filter((section) => section !== "import" || features.import)
-    .map((section) => {
-      const [labelKey, icon] = profileItems[section];
-      return {
-        id: section,
-        labelKey,
-        icon,
-        link: linkOptions({ to: "/profile", search: { section } }),
-      };
-    });
+  const personal: SectionNavItem[] = profileSections.map((section) => {
+    const [labelKey, icon] = profileItems[section];
+    return {
+      id: section,
+      labelKey,
+      icon,
+      link: linkOptions({ to: "/profile", search: { section } }),
+    };
+  });
 
   const shared: SectionNavItem[] = features.households
     ? [

@@ -2,7 +2,7 @@
 
 Back to the [feature walkthrough](README.md). See also [decisions](../decisions/swedbank-csv-import.md), [architecture: Transactions, imports and receipts](../architecture/transactions.md).
 
-Backend `Imports` (`ImportService`, `CsvMappingService`, parsers in `Endpoints/Imports/Parsing`), frontend `imports` (`ImportDataSection`, `ImportDialog`, `ImportProviders`, `ImportSection`, `CsvMappingForm`, `ImportStatementBar`). No route of its own. The dialog opens from three places, all shown to every user while the `Import` switch is on: the "Import bank statement" button beside "Add transaction" in the ledger header, the same entry in an account's row actions on the Accounts page, which preselects that account, and the Import data section under Personal on the one Settings page (`/profile?section=import`).
+Backend `Imports` (`ImportService`, `CsvMappingService`, parsers in `Endpoints/Imports/Parsing`), frontend `imports` (`ImportDataSection`, `ImportDialog`, `ImportProviders`, `ImportSection`, `CsvMappingForm`, `ImportStatementBar`). No route of its own. The dialog opens from three places, all shown to every user while the `Import` switch is on: the "Import bank statement" button beside "Add transaction" in the ledger header, the same entry in an account's row actions on the Accounts page, which preselects that account, and the Import data panel of the Import and export section under Personal on the one Settings page (`/profile?section=import`), whose other panel is the [data export per user](data-export-per-user.md).
 
 The dialog lists the providers, and each one is a statement format:
 
