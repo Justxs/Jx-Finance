@@ -11,4 +11,5 @@ public enum DashboardCard
     Accounts,
     RecentTransactions,
     UpcomingBills,
+    CashFlow,
 }

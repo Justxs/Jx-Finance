@@ -7,7 +7,7 @@
  */
 import { HttpResponse, http } from "msw";
 import type { RequestHandlerOptions } from "msw";
-import type { AccountResponse, ArchivedAccountResponse } from "../model";
+import type { AccountResponse, ArchivedAccountResponse, CashFlowForecastResponse } from "../model";
 
 export const getCreateAccountMockHandler = (
   overrideResponse?:
@@ -67,6 +67,30 @@ export const getArchivedAccountsMockHandler = (
 ) => {
   return http.get(
     "*/api/accounts/archived",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : undefined,
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getCashFlowForecastMockHandler = (
+  overrideResponse?:
+    | CashFlowForecastResponse
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<CashFlowForecastResponse> | CashFlowForecastResponse),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/accounts/forecast",
     async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
@@ -175,6 +199,7 @@ export const getAccountsMock = () => [
   getCreateAccountMockHandler(),
   getAccountsMockHandler(),
   getArchivedAccountsMockHandler(),
+  getCashFlowForecastMockHandler(),
   getDeleteAccountMockHandler(),
   getAccountMockHandler(),
   getUpdateAccountMockHandler(),

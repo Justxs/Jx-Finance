@@ -49,6 +49,15 @@ export const Default: Story = {};
 
 export const Empty: Story = { parameters: { msw: { handlers: emptyHandlers } } };
 
+export const ForecastTotals: Story = {
+  play: async ({ canvas }) => {
+    await expect(
+      await canvas.findByText("Scheduled in the next 90 days: €2,158.59 out, €6,540.00 in"),
+    ).toBeVisible();
+    await expect(canvas.getByRole("heading", { name: "Next 90 days" })).toBeVisible();
+  },
+};
+
 export const Loading: Story = { parameters: { msw: { handlers: loadingHandlers } } };
 
 export const ServerError: Story = { parameters: { msw: { handlers: errorHandlers } } };
@@ -133,8 +142,9 @@ export const AddDialogWithoutAccounts: Story = {
 };
 
 async function openFromRow(canvas: Canvas, billName: string, label: RegExp) {
-  const heading = await canvas.findByText(billName);
-  const row = heading.closest("li");
+  const row = (await canvas.findAllByText(billName))
+    .map((element) => element.closest("li"))
+    .find((item) => item && within(item).queryByRole("button", { name: label }));
   if (!row) {
     throw new Error("expected the bill row");
   }

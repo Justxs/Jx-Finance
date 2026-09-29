@@ -206,7 +206,11 @@ const rules: readonly Rule[] = [
   {
     after: [api.getCreateRecurringBillMutationKey, api.getUpdateRecurringBillMutationKey],
     deleted: [api.getDeleteRecurringBillMutationKey],
-    refresh: [api.getRecurringBillsQueryKey, api.getSubscriptionCandidatesQueryKey],
+    refresh: [
+      api.getRecurringBillsQueryKey,
+      api.getSubscriptionCandidatesQueryKey,
+      api.getAccountsQueryKey,
+    ],
   },
   {
     after: [api.getDismissSubscriptionCandidateMutationKey],

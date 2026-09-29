@@ -18,4 +18,5 @@ export const DashboardCard = {
   accounts: "accounts",
   recentTransactions: "recentTransactions",
   upcomingBills: "upcomingBills",
+  cashFlow: "cashFlow",
 } as const;

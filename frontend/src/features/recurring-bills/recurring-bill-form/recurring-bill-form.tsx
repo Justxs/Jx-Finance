@@ -148,7 +148,7 @@ export function RecurringBillForm({ bill, draft, accounts, categories, onClose }
         cadence: value.cadence,
         nextDueDate: value.nextDueDate,
         remindDaysBefore: Number(value.remindDaysBefore),
-        matchKey: value.shape === "expense" ? value.matchKey.trim() || null : null,
+        matchKey: value.matchKey.trim() || null,
         debtId: value.shape === "expense" ? value.debtId || null : null,
       };
 
@@ -283,17 +283,15 @@ export function RecurringBillForm({ bill, draft, accounts, categories, onClose }
                 )}
               </form.Field>
 
-              {shape === "expense" ? (
-                <form.Field name="matchKey">
-                  {(field) => (
-                    <field.TextField
-                      id={`${fieldId}-match-key`}
-                      label={t("recurringBills.matchKey")}
-                      hint={t("recurringBills.matchKeyHint")}
-                    />
-                  )}
-                </form.Field>
-              ) : null}
+              <form.Field name="matchKey">
+                {(field) => (
+                  <field.TextField
+                    id={`${fieldId}-match-key`}
+                    label={t("recurringBills.matchKey")}
+                    hint={t("recurringBills.matchKeyHint")}
+                  />
+                )}
+              </form.Field>
 
               {shape === "expense" && payableDebts.length > 0 ? (
                 <form.Field name="debtId">

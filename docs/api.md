@@ -112,6 +112,7 @@ Every 201 goes through `CreatedAsync`, which sets `Location` to a path built fro
 | GET | `/api/accounts` |
 | POST | `/api/accounts` |
 | GET | `/api/accounts/archived` |
+| GET | `/api/accounts/forecast` |
 | DELETE | `/api/accounts/{id}` |
 | GET | `/api/accounts/{id}` |
 | PUT | `/api/accounts/{id}` |
@@ -328,6 +329,8 @@ A `disposal` has `id`, `date`, `accountId`, `securityId`, `symbol`, `name`, `cur
 Nothing is computed beyond restating the entries: no tax, rate or allowance is applied.
 
 `GET /api/investments/tax-summary/export?year&accountIds` answers the same year as a CSV attachment named `investment-tax-summary-<year>.csv`, streamed without a `Content-Length`; its columns are on the [Exports page](features/exports.md). Both sit under `/api/investments` and answer 404 `feature.disabled` while the feature is off.
+
+`GET /api/accounts/forecast?days=` projects each visible account's main-currency balance from today for `days` days, 30 to 90 and 90 by default, refused as `range.invalid` outside that range. It answers `from`, `to`, `accounts` (only those with an entry in the horizon, those that go below zero first) and `notCounted`, the caller's active recurring entries it could not place, each with `reason` `noAccount`, `noHistory` or `accountNotVisible`. Each account carries `startBalance`, `usualDailySpending`, `lowestBalance`, `lowestOn`, `belowZeroOn`, `belowZeroWithSpendingOn`, `otherCurrencies` and `entries` (`date`, `source` `recurring` or `ledger`, `billId`, `name`, `shape`, signed `amount`, `estimated`, `overdue`, `balanceAfter`). The literal segment takes precedence over `/api/accounts/{id}`, and the route carries `RequiresFeature(RecurringBills)`, so it answers 404 `feature.disabled` while that switch is off. Details in [Cash-flow forecast](features/cash-flow-forecast.md).
 
 `GET /api/accounts/archived` answers the archived accounts the caller would see if they were active — their own, and the shared accounts of households both they and the owner still belong to — narrowed by the active household exactly as `GET /api/accounts` is, sorted by name. Each row carries `id`, `name`, `description`, `iban`, `type`, `startingBalance`, `currency`, `scope`, `householdId`, `archivedAt` and `canRestore`, which is true only for the owner. There is no balance: the transactions of an archived account are filtered out with it. `POST /api/accounts/{id}/restore` takes no body and answers 200 with the account as `GET /api/accounts/{id}` would, balance included. It answers the same 200 for an account that is already active, which makes it safe to repeat, 403 `access.forbidden` when the caller can see the archived account but does not own it, and 404 `resource.notFound` when no such account, archived or active, is visible — including one that belongs to another household than the active one. An account still marked as shared into a household its owner no longer belongs to comes back personal rather than being refused. Details in [Accounts](features/accounts.md).
 

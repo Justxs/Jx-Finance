@@ -329,6 +329,115 @@ export const ArchivedAccountsResponseItem = zod.object({
 export const ArchivedAccountsResponse = zod.array(ArchivedAccountsResponseItem);
 
 /**
+ * Projects each visible account's balance in its main currency from today to the end of the horizon. It starts from the balance as of today, places ledger rows already dated after today on their own dates, and adds every occurrence of the caller's own active recurring entries: expenses and income on their account, transfers out of the source and, when the caller can see it, into the destination at the newest exchange rate. A fixed entry counts its amount; a variable entry counts the median of its last six matching rows within 13 months and is marked estimated. An occurrence before today is placed on today and marked overdue, and the next one is skipped when a matching row already paid it. usualDailySpending is the median daily spending of the last three complete months outside the entries, null with less history. Only accounts with an entry in the horizon are listed, those that go below zero first. notCounted names the entries that could not be placed. Nothing is stored. Needs the recurringBills feature.
+ * @summary Forecast account balances from recurring entries
+ */
+export const cashFlowForecastResponseAccountsItemStartBalanceRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const cashFlowForecastResponseAccountsItemUsualDailySpendingRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const cashFlowForecastResponseAccountsItemLowestBalanceRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const cashFlowForecastResponseAccountsItemEntriesItemAmountRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const cashFlowForecastResponseAccountsItemEntriesItemBalanceAfterRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+
+export const CashFlowForecastResponse = zod.object({
+  from: zod.iso.date(),
+  to: zod.iso.date(),
+  accounts: zod.array(
+    zod.object({
+      accountId: zod.uuid(),
+      accountName: zod.string(),
+      currency: zod.enum([
+        "eur",
+        "usd",
+        "gbp",
+        "chf",
+        "pln",
+        "sek",
+        "nok",
+        "dkk",
+        "czk",
+        "huf",
+        "ron",
+        "isk",
+        "try",
+        "jpy",
+        "cny",
+        "hkd",
+        "sgd",
+        "krw",
+        "inr",
+        "idr",
+        "myr",
+        "php",
+        "thb",
+        "aud",
+        "nzd",
+        "cad",
+        "mxn",
+        "brl",
+        "ils",
+        "zar",
+      ]),
+      startBalance: zod.stringFormat(
+        "decimal",
+        cashFlowForecastResponseAccountsItemStartBalanceRegExp,
+      ),
+      usualDailySpending: zod
+        .stringFormat("decimal", cashFlowForecastResponseAccountsItemUsualDailySpendingRegExp)
+        .nullable(),
+      lowestBalance: zod.stringFormat(
+        "decimal",
+        cashFlowForecastResponseAccountsItemLowestBalanceRegExp,
+      ),
+      lowestOn: zod.iso.date(),
+      belowZeroOn: zod.union([zod.null(), zod.iso.date()]),
+      belowZeroWithSpendingOn: zod.union([zod.null(), zod.iso.date()]),
+      otherCurrencies: zod.boolean(),
+      entries: zod.array(
+        zod.object({
+          date: zod.iso.date(),
+          source: zod.enum(["recurring", "ledger"]),
+          billId: zod.uuid().nullable(),
+          name: zod.string().nullable(),
+          shape: zod.union([
+            zod.null(),
+            zod
+              .enum(["expense", "income", "transfer"])
+              .describe("Expense, Income, or Transfer. Decides what a confirmation writes."),
+          ]),
+          amount: zod.stringFormat(
+            "decimal",
+            cashFlowForecastResponseAccountsItemEntriesItemAmountRegExp,
+          ),
+          estimated: zod.boolean(),
+          overdue: zod.boolean(),
+          balanceAfter: zod.stringFormat(
+            "decimal",
+            cashFlowForecastResponseAccountsItemEntriesItemBalanceAfterRegExp,
+          ),
+        }),
+      ),
+    }),
+  ),
+  notCounted: zod.array(
+    zod.object({
+      billId: zod.uuid(),
+      name: zod.string(),
+      reason: zod.enum(["noAccount", "noHistory", "accountNotVisible"]),
+    }),
+  ),
+});
+
+/**
  * Archives the account instead of deleting it: the transactions posted to it stay in the ledger and in reports, but the account no longer appears in listings or pickers.
  * @summary Archive an account
  */

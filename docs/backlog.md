@@ -23,7 +23,6 @@ These come from the release checklist and block calling the current release veri
 | Import | Swedbank CSV and camt.053 XML only; banks without camt.053 need a CSV format each | M per bank, or one generic column mapper |
 | Import | No credit-card statements | M |
 | Transactions | A refund is either income, which inflates income, or a hand-edited expense; there is no negative expense in the original category | M |
-| Recurring entries | The six-month forecast counts fixed expenses only; income, transfers and variable entries are left out | S, or part of the cash-flow forecast |
 | Investments | Corporate actions other than splits are only counted (mergers, spin-offs, symbol changes) | M |
 | Investments | Bonds by hand only; options, futures and short positions out of scope | L |
 | Investments | Only Interactive Brokers; no other broker and no generic trade CSV | M |
@@ -50,7 +49,6 @@ Ordered by how much they would help daily use for the effort. Following the prod
 | Idea | Why | Where | Size |
 | --- | --- | --- | --- |
 | Monthly digest | On the first of the month, one email or Discord message with last month's income, expense, savings rate, the categories that moved most and the open close items, built from the month-close review and sent through `INotificationPublisher` | Notifications section of Settings | S |
-| Cash-flow forecast | Project the next 30 to 90 days of each account from its balance and the active recurring entries of all three shapes, and say when one would go below zero; replaces the fixed-expense bar chart | Accounts, and a dashboard card | M |
 | Refunds | Record money coming back as a negative expense in the category it was spent in, optionally linked to the original row, so a returned purchase lowers spending instead of raising income; the import's reversal chip can propose it | Transaction form, import review | M |
 | Generic CSV import | The user maps columns once per bank and the mapping is stored; covers Revolut, Wise and card statements without code per bank | Import dialog | M |
 | Reconciliation by hand | For an account with no camt.053, type the statement's balance on a date and see the difference and the rows since the last reconciliation; the month-close checklist then shows the account as reconciled | Accounts, month close | S |
@@ -64,14 +62,14 @@ Ordered by how much they would help daily use for the effort. Following the prod
 
 1. Section 1, because the release is not verified without it; the daily-use trial is also where the ideas above get confirmed or dropped.
 2. The small helper that reuses what exists: the monthly digest.
-3. Cash-flow forecast, now that recurring income and transfers exist to project, together with the forecast gap of recurring entries.
-4. Refunds and a generic CSV import, once a real month of imports shows how often each is needed.
-5. Per-user language for mail and Discord before a second member relies on either channel.
+3. Refunds and a generic CSV import, once a real month of imports shows how often each is needed.
+4. Per-user language for mail and Discord before a second member relies on either channel.
 
 ## Done
 
 | Date | Item | Where it is described |
 | --- | --- | --- |
+| 2026-09-29 | Cash-flow forecast: the accounts page, under the table, and the recurring entries page, in place of the six-month bar chart, project each account's main-currency balance over the next 30, 60 or 90 days from today's balance, the rows dated ahead and the caller's active entries of every shape and kind, variable ones estimated from the median of their matching rows, with a dashed line for usual everyday spending, a sentence for each account that goes below zero, the entries and what could not be counted; a Cash flow dashboard card shows each account's lowest point on the current month, and "Matches bank text" is offered on income and transfer entries too | [Cash-flow forecast](features/cash-flow-forecast.md) |
 | 2026-09-29 | Spending by payee: the reports page breaks expenses down by payee, the normalized description stored on every transaction as `PayeeKey`, with the eight largest and Show all for up to fifty, earlier amounts and change badges under a comparison, and "No description" as one row; each payee opens the ledger filtered to it by the new `payee` filter, whose totals and CSV and PDF export equal the report's amount. Suggested rules read the stored key | [Reports](features/reports.md#expense-by-payee) |
 | 2026-09-29 | Budget limits from history: a new budget's limit is prefilled with the median of the category's spend in the last six complete windows of its period, rounded up to a whole unit, with the amounts in a hint and "Not enough history yet" below three windows; a typed limit survives a change of category or period. The budgets page ends with up to five categories whose monthly spending was steady and that have no monthly budget, each created in one click | [Budgets](features/budgets.md#limits-from-history) |
 | 2026-09-29 | Rule suggestions from history: a payee filed by hand at least three times in twelve months with one category, and never with another of the same flow type, is offered as a rule once in a toast after the save that reaches the third row, and listed on the Rules tab with Review and Dismiss until it is created or dismissed; dismissals are stored per person | [Categorization rules](features/categorization-rules.md#suggested-rules) |

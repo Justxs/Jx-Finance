@@ -27,6 +27,8 @@ import type {
   AccountResponse,
   AccountsParams,
   ArchivedAccountResponse,
+  CashFlowForecastParams,
+  CashFlowForecastResponse,
   CreateAccountRequest,
   ProblemDetails,
   UpdateAccountRequest,
@@ -380,6 +382,141 @@ export function useArchivedAccountsSuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
   const queryOptions = getArchivedAccountsSuspenseQueryOptions(options);
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export const getCashFlowForecastUrl = (params: CashFlowForecastParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/accounts/forecast?${stringifiedParams}`
+    : `/api/accounts/forecast`;
+};
+
+/**
+ * Projects each visible account's balance in its main currency from today to the end of the horizon. It starts from the balance as of today, places ledger rows already dated after today on their own dates, and adds every occurrence of the caller's own active recurring entries: expenses and income on their account, transfers out of the source and, when the caller can see it, into the destination at the newest exchange rate. A fixed entry counts its amount; a variable entry counts the median of its last six matching rows within 13 months and is marked estimated. An occurrence before today is placed on today and marked overdue, and the next one is skipped when a matching row already paid it. usualDailySpending is the median daily spending of the last three complete months outside the entries, null with less history. Only accounts with an entry in the horizon are listed, those that go below zero first. notCounted names the entries that could not be placed. Nothing is stored. Needs the recurringBills feature.
+ * @summary Forecast account balances from recurring entries
+ */
+export const cashFlowForecast = async (
+  params: CashFlowForecastParams,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<CashFlowForecastResponse> => {
+  return customFetch<CashFlowForecastResponse>(getCashFlowForecastUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getCashFlowForecastQueryKey = (params?: CashFlowForecastParams) => {
+  return [`/api/accounts/forecast`, ...(params ? [params] : [])] as const;
+};
+
+export const getCashFlowForecastSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof cashFlowForecast>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  params: CashFlowForecastParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof cashFlowForecast>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getCashFlowForecastQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof cashFlowForecast>>> = ({ signal }) =>
+    cashFlowForecast(params, { signal, ...requestOptions });
+
+  return queryOptionsBuilder({
+    queryKey,
+    ...queryOptions,
+    queryFn: queryOptions?.queryFn ?? queryFn,
+  }) as UseSuspenseQueryOptions<Awaited<ReturnType<typeof cashFlowForecast>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  } & {
+    throwOnError?: ((this: never, error: TError) => boolean) & { readonly __inferenceOnly: never };
+  };
+};
+
+export type CashFlowForecastSuspenseQueryResult = NonNullable<
+  Awaited<ReturnType<typeof cashFlowForecast>>
+>;
+export type CashFlowForecastSuspenseQueryError = ErrorType<ProblemDetails>;
+
+export function useCashFlowForecastSuspense<
+  TData = Awaited<ReturnType<typeof cashFlowForecast>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  params: CashFlowForecastParams,
+  options: {
+    query: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof cashFlowForecast>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useCashFlowForecastSuspense<
+  TData = Awaited<ReturnType<typeof cashFlowForecast>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  params: CashFlowForecastParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof cashFlowForecast>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useCashFlowForecastSuspense<
+  TData = Awaited<ReturnType<typeof cashFlowForecast>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  params: CashFlowForecastParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof cashFlowForecast>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Forecast account balances from recurring entries
+ */
+
+export function useCashFlowForecastSuspense<
+  TData = Awaited<ReturnType<typeof cashFlowForecast>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  params: CashFlowForecastParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof cashFlowForecast>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getCashFlowForecastSuspenseQueryOptions(params, options);
 
   const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
     TData,

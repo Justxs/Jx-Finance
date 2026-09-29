@@ -1,5 +1,6 @@
 import {
   getArchivedAccountsMockHandler,
+  getCashFlowForecastMockHandler,
   getCreateAccountMockHandler,
   getDeleteAccountMockHandler,
   getAccountMockHandler,
@@ -9,7 +10,13 @@ import {
 } from "@/api/generated/accounts/accounts.msw";
 import type { AccountResponse } from "@/api/generated/model";
 import { toCents } from "@/lib/money";
-import { accounts, archivedAccounts, checkingAccount, withBalance } from "@/storybook/fixtures";
+import {
+  accounts,
+  archivedAccounts,
+  cashFlowForecast,
+  checkingAccount,
+  withBalance,
+} from "@/storybook/fixtures";
 import { found, mergeScoped, query, readBody } from "./http";
 import { CREATED_AT, NEW_ID } from "./ids";
 import { applyDirection, byId, byIdFrom, compareText, includesText, updateFrom } from "./lists";
@@ -49,6 +56,7 @@ function filterAccounts(params: URLSearchParams): AccountResponse[] {
 
 export const accountHandlers = [
   getArchivedAccountsMockHandler(archivedAccounts),
+  getCashFlowForecastMockHandler(cashFlowForecast),
   getAccountsMockHandler(({ request }) => filterAccounts(query(request))),
   getCreateAccountMockHandler(async ({ request }) => {
     const created: AccountResponse = {

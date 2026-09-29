@@ -70,6 +70,7 @@ export const cardSkeletons: Record<
   netWorth: <NetWorthSkeleton />,
   accounts: <ShareRowsSkeleton rows={6} />,
   upcomingBills: <RowsSkeleton rows={5} />,
+  cashFlow: <RowsSkeleton rows={2} lines={2} />,
 };
 
 export function DashboardSkeleton() {

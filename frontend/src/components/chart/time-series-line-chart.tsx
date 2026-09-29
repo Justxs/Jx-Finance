@@ -2,6 +2,7 @@ import {
   CartesianGrid,
   Line,
   LineChart,
+  ReferenceLine,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -40,6 +41,7 @@ interface Props {
   ariaLabel: string;
   legend?: boolean;
   baseline?: boolean;
+  zeroLine?: boolean;
   yDomain?: ["auto", "auto"];
   xAxis?: keyof typeof X_AXES;
   curve?: "monotone" | "stepAfter";
@@ -53,6 +55,7 @@ export function TimeSeriesLineChart({
   ariaLabel,
   legend = false,
   baseline = false,
+  zeroLine = false,
   yDomain,
   xAxis = "date",
   curve = "monotone",
@@ -112,6 +115,7 @@ export function TimeSeriesLineChart({
             isAnimationActive={false}
             offset={12}
           />
+          {zeroLine ? <ReferenceLine y={0} stroke="var(--rule)" /> : null}
           {lines.map((item) => (
             <Line
               key={item.key}

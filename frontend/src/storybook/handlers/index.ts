@@ -3,6 +3,7 @@ import type { RequestHandler } from "msw";
 import {
   getAccountsMockHandler,
   getArchivedAccountsMockHandler,
+  getCashFlowForecastMockHandler,
 } from "@/api/generated/accounts/accounts.msw";
 import { getMeMockHandler } from "@/api/generated/auth/auth.msw";
 import {
@@ -46,6 +47,7 @@ import { getTrashMockHandler } from "@/api/generated/trash/trash.msw";
 import { getUsersMockHandler } from "@/api/generated/users/users.msw";
 import {
   currentUser,
+  emptyCashFlowForecast,
   emptyCategoryBreakdown,
   emptyDashboardSummary,
   emptyNetWorth,
@@ -145,6 +147,7 @@ function dataGetHandlers(): HttpHandler[] {
 export const emptyHandlers: RequestHandler[] = [
   getAccountsMockHandler([]),
   getArchivedAccountsMockHandler([]),
+  getCashFlowForecastMockHandler(emptyCashFlowForecast),
   getAssetsMockHandler([]),
   getBudgetsMockHandler([]),
   getBudgetSuggestionsMockHandler({ period: "monthly", categories: [] }),

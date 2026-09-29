@@ -3,6 +3,7 @@ import { noop } from "@tanstack/react-query";
 import {
   getAccountsSuspenseQueryOptions,
   getBudgetsSuspenseQueryOptions,
+  getCashFlowForecastSuspenseQueryOptions,
   getCategoriesSuspenseQueryOptions,
   getCategoryBreakdownSuspenseQueryOptions,
   getDashboardLayoutSuspenseQueryOptions,
@@ -20,6 +21,7 @@ import type {
   FeatureFlags,
   SettingsResponse,
 } from "@/api/generated/model";
+import { FORECAST_DAYS } from "@/features/accounts/cash-flow-forecast/forecast-series";
 import { latestEndedMonth } from "@/features/month-close/month-key";
 import type { FeatureKey } from "@/hooks/use-settings";
 import { type MoveDirection, adjacentIndex, swapItems } from "@/lib/reorder";
@@ -43,6 +45,7 @@ const cardFeature: Partial<Record<DashboardCard, FeatureKey>> = {
   budgets: "budgets",
   netWorth: "netWorth",
   upcomingBills: "recurringBills",
+  cashFlow: "recurringBills",
 };
 
 function isCardAvailable(card: DashboardCard, features: FeatureFlags): boolean {
@@ -124,6 +127,11 @@ function warmCard(queryClient: QueryClient, card: DashboardCard, month: string, 
     case "upcomingBills":
       if (month === currentMonthKey(today)) {
         warm(queryClient, getRecurringBillsSuspenseQueryOptions());
+      }
+      break;
+    case "cashFlow":
+      if (month === currentMonthKey(today)) {
+        warm(queryClient, getCashFlowForecastSuspenseQueryOptions({ days: FORECAST_DAYS }));
       }
       break;
   }

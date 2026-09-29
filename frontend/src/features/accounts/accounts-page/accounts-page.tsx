@@ -18,6 +18,7 @@ import { AccountForm } from "../account-form/account-form";
 import { accountListParams } from "../account-queries";
 import { AccountsTable } from "../accounts-table/accounts-table";
 import { ArchivedAccounts } from "../archived-accounts/archived-accounts";
+import { CashFlowForecast } from "../cash-flow-forecast/cash-flow-forecast";
 import { ConversionsSection } from "../conversions-section/conversions-section";
 import { TransfersSection } from "../transfers-section/transfers-section";
 import { MovementsSkeleton } from "./accounts-page-pending";
@@ -93,6 +94,8 @@ export function AccountsPage() {
           )}
         />
       </Section>
+
+      {features.recurringBills ? <CashFlowForecast /> : null}
 
       <QueryBoundary fallback={null}>
         <ArchivedAccounts />

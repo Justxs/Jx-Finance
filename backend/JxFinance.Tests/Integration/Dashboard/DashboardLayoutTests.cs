@@ -20,6 +20,7 @@ public sealed class DashboardLayoutTests(ApiFixture fixture) : IntegrationTestBa
         "accounts",
         "recentTransactions",
         "upcomingBills",
+        "cashFlow",
     ];
 
     [Fact]
@@ -125,6 +126,20 @@ public sealed class DashboardLayoutTests(ApiFixture fixture) : IntegrationTestBa
 
         string[] expected = ["accounts", "summary", .. DefaultOrder.Where(c => c is not "accounts" and not "summary")];
         Assert.Equal(new LayoutDto(expected, ["accounts"], false), layout, LayoutComparer.Instance);
+    }
+
+    [Fact]
+    public async Task A_layout_saved_before_the_cash_flow_card_existed_shows_it_last()
+    {
+        var user = await CreateUserAsync();
+        using var client = await LoginAsync(user);
+        const string stored = """{"order":["upcomingBills","summary","monthlyTrend","spendingByCategory","spendingPace","budgets","netWorth","accounts","recentTransactions"],"hidden":["budgets"]}""";
+        Assert.Equal(1, await SqlAsync($"""UPDATE "AspNetUsers" SET "DashboardLayout" = {stored}::jsonb WHERE "Id" = {user.Id}"""));
+
+        var layout = await client.GetFromJsonAsync<LayoutDto>(Url, TestContext.Current.CancellationToken);
+
+        Assert.Equal("cashFlow", layout!.Order[^1]);
+        Assert.Equal(["budgets"], layout.Hidden);
     }
 
     [Fact]

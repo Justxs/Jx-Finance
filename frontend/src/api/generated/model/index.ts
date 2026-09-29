@@ -6,6 +6,7 @@
  * OpenAPI spec version: v1
  */
 
+export * from "./accountForecastResponse";
 export * from "./accountResponse";
 export * from "./accountSortField";
 export * from "./accountsParams";
@@ -38,6 +39,8 @@ export * from "./bulkCategorizeTransactionsRequest";
 export * from "./bulkCategorizeTransactionsResponse";
 export * from "./bulkTagTransactionsRequest";
 export * from "./bulkTagTransactionsResponse";
+export * from "./cashFlowForecastParams";
+export * from "./cashFlowForecastResponse";
 export * from "./categorizationRuleResponse";
 export * from "./categoryBreakdownItem";
 export * from "./categoryBreakdownParams";
@@ -99,6 +102,10 @@ export * from "./exportTransactionsPdfParams";
 export * from "./featureFlags";
 export * from "./firstDayOfWeek";
 export * from "./flowType";
+export * from "./forecastEntryResponse";
+export * from "./forecastEntrySource";
+export * from "./forecastSkippedEntry";
+export * from "./forecastSkipReason";
 export * from "./forgotPasswordRequest";
 export * from "./getPingResponse";
 export * from "./goalFunding";

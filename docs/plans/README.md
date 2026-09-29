@@ -6,7 +6,6 @@ The table is in the suggested build order. Each plan's `Status:` line names what
 
 | Plan | Size | Where it lives | Build after |
 | --- | --- | --- | --- |
-| [Cash-flow forecast](cash-flow-forecast.md) | M | Recurring entries, Accounts, dashboard card | |
 | [Reconciliation by hand](reconciliation-by-hand.md) | M | Accounts, month close | |
 | [Monthly digest](monthly-digest.md) | M | Notifications section of Settings | Reconciliation by hand |
 | [Refunds](refunds.md) | M | Transaction form, import review | |
@@ -23,8 +22,8 @@ The table is in the suggested build order. Each plan's `Status:` line names what
 Several plans touch the same code. Whichever lands second adapts to the first:
 
 - `ImportService.ConfirmAsync` and the import preview, which already match hand-entered rows: refunds, generic CSV, reconciliation.
-- `Common/Statistics.cs` (the median and spread moved out of `UnusualAmountRule`, shipped with [budget limits from history](../features/budgets.md#limits-from-history)): cash-flow forecast reuses it.
-- `Transaction.PayeeKey`, shipped with [spending by payee](../features/reports.md#expense-by-payee) and already read by `SuggestedRuleService`: machine-learned categorization reads it too. Unusual amounts, subscription detection and price rises still normalize in memory; moving them to the column is a follow-up that only removes code.
+- `Common/Statistics.cs` (the median and spread moved out of `UnusualAmountRule`, shipped with [budget limits from history](../features/budgets.md#limits-from-history)), reused by the [cash-flow forecast](../features/cash-flow-forecast.md) since it shipped on 2026-09-29.
+- `Transaction.PayeeKey`, shipped with [spending by payee](../features/reports.md#expense-by-payee) and already read by `SuggestedRuleService`: machine-learned categorization reads it too. The cash-flow forecast's usual spending groups by it too. Unusual amounts, subscription detection, price rises and the forecast's matching rows (through `PriceRiseMatcher.LoadChargesAsync`) still normalize in memory; moving them to the column is a follow-up that only removes code.
 - The month-close checklist field `checklist.imports` is renamed by reconciliation by hand, a contract change.
 - `ICurrentUser` registration gains a job user for the monthly digest.
 - The Security section of Settings: passkeys and personal API tokens.

@@ -287,6 +287,7 @@ public sealed class UnusualAmountJob(
                 db.Transactions.IgnoreQueryFilters(QueryFilters.OwnerOnly),
                 matched.Select(m => m.charge.AccountId).Distinct().ToList(),
                 matched.Min(m => m.charge.Date),
+                FlowType.Expense,
                 ct);
             foreach (var (charge, bill, target) in matched)
             {

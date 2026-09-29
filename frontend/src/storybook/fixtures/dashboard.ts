@@ -107,6 +107,7 @@ export const customDashboardLayout: DashboardLayoutResponse = {
     "spendingPace",
     "budgets",
     "netWorth",
+    "cashFlow",
   ],
   hidden: [],
   isDefault: false,

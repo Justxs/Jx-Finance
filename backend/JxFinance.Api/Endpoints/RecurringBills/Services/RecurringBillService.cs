@@ -76,7 +76,7 @@ public sealed class RecurringBillService(
         var currencies = await db.Accounts
             .Where(a => accountIds.Contains(a.Id))
             .ToDictionaryAsync(a => a.Id, a => a.StartingBalance.Currency, cancellationToken);
-        var charges = await PriceRiseMatcher.LoadChargesAsync(db.Transactions, accountIds, clock.Today, cancellationToken);
+        var charges = await PriceRiseMatcher.LoadChargesAsync(db.Transactions, accountIds, clock.Today, FlowType.Expense, cancellationToken);
 
         var matches = new Dictionary<RecurringBillId, RecurringBillMatchResponse>();
         foreach (var bill in eligible)

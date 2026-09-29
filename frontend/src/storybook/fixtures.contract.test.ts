@@ -47,6 +47,10 @@ function asUnusualTransaction(fixture: unknown) {
   return { ...fixtures.longDescriptionTransaction, unusual: fixture };
 }
 
+function asForecast(fixture: unknown) {
+  return { ...fixtures.emptyCashFlowForecast, accounts: [fixture] };
+}
+
 function asPortfolio(fixture: unknown) {
   return { ...fixtures.emptyPortfolio, holdings: [fixture] };
 }
@@ -80,6 +84,18 @@ const contracts: Record<string, Contract> = {
   archivedAccount: { schema: schemas.ArchivedAccountsResponseItem },
   archivedSharedAccount: { schema: schemas.ArchivedAccountsResponseItem },
   archivedAccounts: { schema: schemas.ArchivedAccountsResponse },
+  atRiskAccountForecast: { schema: schemas.CashFlowForecastResponse, toResponse: asForecast },
+  savingsAccountForecast: { schema: schemas.CashFlowForecastResponse, toResponse: asForecast },
+  usualSpendingAccountForecast: {
+    schema: schemas.CashFlowForecastResponse,
+    toResponse: asForecast,
+  },
+  calmAccountForecast: { schema: schemas.CashFlowForecastResponse, toResponse: asForecast },
+  cashFlowForecast: { schema: schemas.CashFlowForecastResponse },
+  usualSpendingCashFlowForecast: { schema: schemas.CashFlowForecastResponse },
+  calmCashFlowForecast: { schema: schemas.CashFlowForecastResponse },
+  otherCurrenciesCashFlowForecast: { schema: schemas.CashFlowForecastResponse },
+  emptyCashFlowForecast: { schema: schemas.CashFlowForecastResponse },
   categories: { schema: schemas.CategoriesResponse },
   tags: { schema: schemas.TagsResponse },
   categorizationRules: { schema: schemas.CategorizationRulesResponse },

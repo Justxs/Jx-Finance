@@ -27,6 +27,14 @@ describe("shownCards", () => {
     expect(shown).not.toContain("spendingPace");
     expect(shown).toContain("summary");
   });
+
+  test("leaves out the cash-flow card with the upcoming bills while recurring entries are off", () => {
+    const shown = shownCards(draft, { ...allOn, recurringBills: false });
+
+    expect(shown).not.toContain("cashFlow");
+    expect(shown).not.toContain("upcomingBills");
+    expect(shownCards(draft, allOn).at(-1)).toBe("cashFlow");
+  });
 });
 
 describe("moveCard", () => {

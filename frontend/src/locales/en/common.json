@@ -85,6 +85,11 @@
     "noBills": "No active bills.",
     "billsCurrentOnly": "Upcoming bills are shown on the current month.",
     "overdue": "Overdue",
+    "cashFlow": "Cash flow",
+    "cashFlowCurrentOnly": "The cash-flow forecast is shown on the current month.",
+    "cashFlowLowest": "Lowest {{amount}} on {{date}}",
+    "cashFlowBelowZero": "Below zero on {{date}}",
+    "cashFlowMayGoBelowZero": "May go below zero around {{date}}",
     "pace": {
       "title": "Spending pace",
       "day": "Day {{day}}",
@@ -1507,7 +1512,7 @@
     "amount": "Amount",
     "variableAmountHint": "Variable entries don't need an amount upfront — you'll enter it when you confirm.",
     "matchKey": "Matches bank text",
-    "matchKeyHint": "The text of the bank rows this entry pays. Leave empty to match its name.",
+    "matchKeyHint": "The text of the bank rows this entry pays or receives. Leave empty to match its name. It also estimates a variable amount.",
     "debt": "Pays debt",
     "debtHint": "Each confirmed payment is linked to the debt as a regular payment.",
     "noDebt": "No debt",
@@ -1546,10 +1551,6 @@
       "income": "Record income",
       "transfer": "Record transfer"
     },
-    "forecast": "Due in the next six months",
-    "forecastSeries": "Expenses due",
-    "forecastEmpty": "No fixed-amount expenses are due in the next six months.",
-    "forecastLabel": "Total of fixed recurring expenses due in each of the next six months",
     "editTitle": "Edit recurring entry",
     "activeHint": "An inactive entry sends no reminders and cannot be confirmed.",
     "confirmFixed": {
@@ -1569,6 +1570,38 @@
       "later": "Later",
       "inactive": "Inactive ({{count}})"
     }
+  },
+  "forecast": {
+    "title": "Next {{days}} days",
+    "basis": "From today's balance, the rows already dated ahead and your recurring entries.",
+    "horizon": "Period",
+    "horizonOption": "{{days}} days",
+    "account": "Account",
+    "belowZero": "{{account}} goes below zero on {{date}}, after {{entry}} ({{amount}}).",
+    "belowZeroToday": "{{account}} is below zero today.",
+    "belowZeroWithSpending": "With usual spending, {{account}} may go below zero around {{date}}.",
+    "noneAtRisk": "No account goes below zero in the next {{days}} days.",
+    "empty": "Nothing is scheduled in the next {{days}} days.",
+    "scheduled": "Scheduled",
+    "withSpending": "With usual spending",
+    "chartLabel": "Balance of {{account}} over the next {{days}} days",
+    "entriesLabel": "Entries of {{account}} in the next {{days}} days",
+    "date": "Date",
+    "entry": "Entry",
+    "amount": "Amount",
+    "balanceAfter": "Balance after",
+    "ledgerEntry": "Already in the ledger",
+    "ledgerRows": "rows already in the ledger",
+    "estimated": "Estimated",
+    "overdue": "Overdue",
+    "otherCurrencies": "{{account}} also holds other currencies; only its {{currency}} balance is projected.",
+    "notCounted": "Not counted ({{count}})",
+    "reasons": {
+      "noAccount": "No account",
+      "noHistory": "Variable amount with no history yet",
+      "accountNotVisible": "Its account is not shown"
+    },
+    "totals": "Scheduled in the next {{days}} days: {{out}} out, {{in}} in"
   },
   "subscriptions": {
     "title": "Subscriptions we spotted",

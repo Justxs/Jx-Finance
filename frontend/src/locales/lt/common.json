@@ -87,6 +87,11 @@
     "noBills": "Aktyvių mokėjimų nėra.",
     "billsCurrentOnly": "Artėjantys mokėjimai rodomi einamajame mėnesyje.",
     "overdue": "Vėluoja",
+    "cashFlow": "Pinigų srautas",
+    "cashFlowCurrentOnly": "Pinigų srauto prognozė rodoma einamajame mėnesyje.",
+    "cashFlowLowest": "Mažiausias {{amount}} {{date}}",
+    "cashFlowBelowZero": "Neigiamas nuo {{date}}",
+    "cashFlowMayGoBelowZero": "Gali tapti neigiamas apie {{date}}",
     "pace": {
       "title": "Išlaidų tempas",
       "day": "{{day}} d.",
@@ -1565,7 +1570,7 @@
     "amount": "Suma",
     "variableAmountHint": "Kintamos sumos įrašams suma iš anksto nereikalinga – ją įvesite patvirtindami.",
     "matchKey": "Banko išrašo tekstas",
-    "matchKeyHint": "Banko išrašo eilučių, kurias apmoka šis įrašas, tekstas. Palikus tuščią, lyginama su pavadinimu.",
+    "matchKeyHint": "Banko išrašo eilučių, kurias apmoka ar gauna šis įrašas, tekstas. Palikus tuščią, lyginama su pavadinimu. Pagal jį įvertinama ir kintama suma.",
     "debt": "Dengiama skola",
     "debtHint": "Kiekviena patvirtinta įmoka susiejama su skola kaip įprasta įmoka.",
     "noDebt": "Nesusieta su skola",
@@ -1604,10 +1609,6 @@
       "income": "Registruoti pajamas",
       "transfer": "Registruoti pervedimą"
     },
-    "forecast": "Mokėtina per artimiausius šešis mėnesius",
-    "forecastSeries": "Mokėtinos išlaidos",
-    "forecastEmpty": "Per artimiausius šešis mėnesius fiksuotos sumos išlaidų nėra.",
-    "forecastLabel": "Fiksuotų periodinių išlaidų suma kiekvieną iš artimiausių šešių mėnesių",
     "editTitle": "Redaguoti periodinį įrašą",
     "activeHint": "Neaktyvus įrašas nesiunčia priminimų ir jo negalima patvirtinti.",
     "confirmFixed": {
@@ -1627,6 +1628,38 @@
       "later": "Vėliau",
       "inactive": "Neaktyvūs ({{count}})"
     }
+  },
+  "forecast": {
+    "title": "Artimiausios {{days}} dienų",
+    "basis": "Pagal šiandienos likutį, jau įrašytas būsimų dienų eilutes ir jūsų periodinius įrašus.",
+    "horizon": "Laikotarpis",
+    "horizonOption": "{{days}} dienų",
+    "account": "Sąskaita",
+    "belowZero": "Sąskaitos „{{account}}“ likutis taps neigiamas {{date}}, po įrašo „{{entry}}“ ({{amount}}).",
+    "belowZeroToday": "Sąskaitos „{{account}}“ likutis šiandien neigiamas.",
+    "belowZeroWithSpending": "Įvertinus įprastas išlaidas, sąskaitos „{{account}}“ likutis gali tapti neigiamas apie {{date}}.",
+    "noneAtRisk": "Per artimiausias {{days}} dienų nė vienos sąskaitos likutis netaps neigiamas.",
+    "empty": "Per artimiausias {{days}} dienų nieko nesuplanuota.",
+    "scheduled": "Suplanuota",
+    "withSpending": "Su įprastomis išlaidomis",
+    "chartLabel": "Sąskaitos „{{account}}“ likutis per artimiausias {{days}} dienų",
+    "entriesLabel": "Sąskaitos „{{account}}“ įrašai per artimiausias {{days}} dienų",
+    "date": "Data",
+    "entry": "Įrašas",
+    "amount": "Suma",
+    "balanceAfter": "Likutis po",
+    "ledgerEntry": "Jau įrašyta",
+    "ledgerRows": "jau įrašytos eilutės",
+    "estimated": "Apytiksliai",
+    "overdue": "Vėluoja",
+    "otherCurrencies": "Sąskaitoje „{{account}}“ yra ir kitų valiutų; prognozuojamas tik {{currency}} likutis.",
+    "notCounted": "Neįskaičiuota ({{count}})",
+    "reasons": {
+      "noAccount": "Nenurodyta sąskaita",
+      "noHistory": "Kintama suma, dar be istorijos",
+      "accountNotVisible": "Jo sąskaita nerodoma"
+    },
+    "totals": "Suplanuota per artimiausias {{days}} dienų: išeis {{out}}, ateis {{in}}"
   },
   "subscriptions": {
     "title": "Pastebėtos prenumeratos",

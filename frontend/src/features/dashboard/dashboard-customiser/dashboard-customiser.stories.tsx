@@ -42,7 +42,7 @@ function listedTitles(canvas: Canvas) {
 
 export const Default: Story = {
   play: async ({ canvas }) => {
-    await expect(canvas.getAllByRole("checkbox")).toHaveLength(9);
+    await expect(canvas.getAllByRole("checkbox")).toHaveLength(10);
     await expect(canvas.queryAllByRole("checkbox", { checked: false })).toHaveLength(0);
     await expect(
       canvas.getByRole("button", { name: /^(move up|pakelti): (total balance|bendras likutis)$/i }),
@@ -74,7 +74,7 @@ export const FeatureSwitchedOff: Story = {
     features: { ...settings.features, budgets: false, netWorth: false, reports: false },
   },
   play: async ({ canvas }) => {
-    await expect(canvas.getAllByRole("checkbox")).toHaveLength(6);
+    await expect(canvas.getAllByRole("checkbox")).toHaveLength(7);
     await expect(canvas.getByText(/switched off|išjungė/i)).toBeInTheDocument();
   },
 };

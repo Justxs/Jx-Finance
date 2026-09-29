@@ -3,6 +3,7 @@ import { z } from "zod";
 import {
   getAccountsSuspenseQueryOptions,
   getArchivedAccountsSuspenseQueryOptions,
+  getCashFlowForecastSuspenseQueryOptions,
   getCategoriesSuspenseQueryOptions,
   getConversionsSuspenseQueryOptions,
   getHouseholdsSuspenseQueryOptions,
@@ -13,6 +14,7 @@ import { accountListParams, movementsPageParams } from "@/features/accounts/acco
 import { accountTypes } from "@/features/accounts/account-types";
 import { AccountsPage } from "@/features/accounts/accounts-page/accounts-page";
 import { AccountsPending } from "@/features/accounts/accounts-page/accounts-page-pending";
+import { FORECAST_DAYS } from "@/features/accounts/cash-flow-forecast/forecast-series";
 import { warm, warmWithSettings } from "@/lib/route-prefetch";
 import { optionalParam, sortParams } from "@/lib/search-schema";
 
@@ -34,6 +36,9 @@ export const Route = createFileRoute("/accounts")({
     warm(queryClient, getHouseholdsSuspenseQueryOptions());
     warm(queryClient, getTransfersSuspenseQueryOptions(movementsPageParams(1)));
     warmWithSettings(queryClient, (settings) => {
+      if (settings.features.recurringBills) {
+        warm(queryClient, getCashFlowForecastSuspenseQueryOptions({ days: FORECAST_DAYS }));
+      }
       if (settings.features.multiCurrency) {
         warm(queryClient, getConversionsSuspenseQueryOptions(movementsPageParams(1)));
         warm(queryClient, getCategoriesSuspenseQueryOptions());

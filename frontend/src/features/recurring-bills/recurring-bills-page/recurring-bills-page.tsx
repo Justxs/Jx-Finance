@@ -17,13 +17,13 @@ import { EditModal } from "@/components/modal";
 import { PageHeader } from "@/components/page-header/page-header";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { Rows } from "@/components/ui/rows/rows";
-import { Section, TitledSection } from "@/components/ui/section/section";
+import { Section } from "@/components/ui/section/section";
+import { CashFlowForecast } from "@/features/accounts/cash-flow-forecast/cash-flow-forecast";
 import { useConfirmedDelete } from "@/hooks/use-confirmed-delete";
 import { useToday } from "@/hooks/use-settings";
 import { notify, pendingId } from "@/lib/mutations";
 import { optimisticRemoval } from "@/lib/optimistic";
 import { billUrgencies, groupBills } from "../bill-groups";
-import { BillsForecastChart } from "../bills-forecast-chart";
 import { RecurringBillForm } from "../recurring-bill-form/recurring-bill-form";
 import { RecurringBillConfirmForm, RecurringBillRow } from "../recurring-bill-row";
 import { SubscriptionSuggestions } from "../subscription-suggestions/subscription-suggestions";
@@ -98,11 +98,7 @@ export function RecurringBillsPage() {
         </CreateDialog>
       </PageHeader>
 
-      {billList.length > 0 ? (
-        <TitledSection title={t("recurringBills.forecast")} bodyGap="md">
-          <BillsForecastChart bills={billList} />
-        </TitledSection>
-      ) : null}
+      {billList.length > 0 ? <CashFlowForecast totals /> : null}
       {billList.length === 0 ? <EmptyText>{t("recurringBills.empty")}</EmptyText> : null}
       {billList.length > inactive.length ? (
         <Section className="space-y-4">

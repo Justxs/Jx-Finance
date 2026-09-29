@@ -1,3 +1,4 @@
+import { ChartSkeleton } from "@/components/chart/chart-skeleton";
 import { RecordRowsSkeleton } from "@/components/record-row/record-row";
 import { PagePending } from "@/components/route-pending/route-pending";
 import { Rows } from "@/components/ui/rows/rows";
@@ -54,6 +55,11 @@ export function AccountsPending() {
           className="-mx-3 hidden md:block"
         />
       </Section>
+      {features.recurringBills ? (
+        <SectionSkeleton>
+          <ChartSkeleton />
+        </SectionSkeleton>
+      ) : null}
       <MovementsSkeleton />
       {features.multiCurrency ? <MovementsSkeleton /> : null}
     </PagePending>

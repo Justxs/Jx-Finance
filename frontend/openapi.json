@@ -261,6 +261,75 @@
         ]
       }
     },
+    "/api/accounts/forecast": {
+      "get": {
+        "tags": [
+          "Accounts"
+        ],
+        "summary": "Forecast account balances from recurring entries",
+        "description": "Projects each visible account's balance in its main currency from today to the end of the horizon. It starts from the balance as of today, places ledger rows already dated after today on their own dates, and adds every occurrence of the caller's own active recurring entries: expenses and income on their account, transfers out of the source and, when the caller can see it, into the destination at the newest exchange rate. A fixed entry counts its amount; a variable entry counts the median of its last six matching rows within 13 months and is marked estimated. An occurrence before today is placed on today and marked overdue, and the next one is skipped when a matching row already paid it. usualDailySpending is the median daily spending of the last three complete months outside the entries, null with less history. Only accounts with an entry in the horizon are listed, those that go below zero first. notCounted names the entries that could not be placed. Nothing is stored. Needs the recurringBills feature.",
+        "operationId": "GetCashFlowForecast",
+        "parameters": [
+          {
+            "name": "days",
+            "in": "query",
+            "description": "How many days after today to project, from 30 to 90. Defaults to 90.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The forecast per account and the entries left out.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CashFlowForecastResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "days is outside 30 to 90.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      }
+    },
     "/api/accounts/{id}": {
       "delete": {
         "tags": [
@@ -14627,6 +14696,81 @@
   },
   "components": {
     "schemas": {
+      "AccountForecastResponse": {
+        "required": [
+          "accountId",
+          "accountName",
+          "currency",
+          "startBalance",
+          "usualDailySpending",
+          "lowestBalance",
+          "lowestOn",
+          "belowZeroOn",
+          "belowZeroWithSpendingOn",
+          "otherCurrencies",
+          "entries"
+        ],
+        "type": "object",
+        "properties": {
+          "accountId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "accountName": {
+            "type": "string"
+          },
+          "currency": {
+            "$ref": "#/components/schemas/Currency"
+          },
+          "startBalance": {
+            "type": "string",
+            "format": "decimal"
+          },
+          "usualDailySpending": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "decimal"
+          },
+          "lowestBalance": {
+            "type": "string",
+            "format": "decimal"
+          },
+          "lowestOn": {
+            "$ref": "#/components/schemas/DateOnly"
+          },
+          "belowZeroOn": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/NullableOfDateOnly"
+              }
+            ]
+          },
+          "belowZeroWithSpendingOn": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/NullableOfDateOnly"
+              }
+            ]
+          },
+          "otherCurrencies": {
+            "type": "boolean"
+          },
+          "entries": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ForecastEntryResponse"
+            }
+          }
+        }
+      },
       "AccountResponse": {
         "required": [
           "id",
@@ -15551,6 +15695,35 @@
           "updated": {
             "type": "integer",
             "format": "int32"
+          }
+        }
+      },
+      "CashFlowForecastResponse": {
+        "required": [
+          "from",
+          "to",
+          "accounts",
+          "notCounted"
+        ],
+        "type": "object",
+        "properties": {
+          "from": {
+            "$ref": "#/components/schemas/DateOnly"
+          },
+          "to": {
+            "$ref": "#/components/schemas/DateOnly"
+          },
+          "accounts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AccountForecastResponse"
+            }
+          },
+          "notCounted": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ForecastSkippedEntry"
+            }
           }
         }
       },
@@ -17076,7 +17249,8 @@
           "netWorth",
           "accounts",
           "recentTransactions",
-          "upcomingBills"
+          "upcomingBills",
+          "cashFlow"
         ],
         "type": "string"
       },
@@ -17906,6 +18080,100 @@
         "enum": [
           "income",
           "expense"
+        ],
+        "type": "string"
+      },
+      "ForecastEntryResponse": {
+        "required": [
+          "date",
+          "source",
+          "billId",
+          "name",
+          "shape",
+          "amount",
+          "estimated",
+          "overdue",
+          "balanceAfter"
+        ],
+        "type": "object",
+        "properties": {
+          "date": {
+            "$ref": "#/components/schemas/DateOnly"
+          },
+          "source": {
+            "$ref": "#/components/schemas/ForecastEntrySource"
+          },
+          "billId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "name": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "shape": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/RecurringBillShape"
+              }
+            ]
+          },
+          "amount": {
+            "type": "string",
+            "format": "decimal"
+          },
+          "estimated": {
+            "type": "boolean"
+          },
+          "overdue": {
+            "type": "boolean"
+          },
+          "balanceAfter": {
+            "type": "string",
+            "format": "decimal"
+          }
+        }
+      },
+      "ForecastEntrySource": {
+        "enum": [
+          "recurring",
+          "ledger"
+        ],
+        "type": "string"
+      },
+      "ForecastSkippedEntry": {
+        "required": [
+          "billId",
+          "name",
+          "reason"
+        ],
+        "type": "object",
+        "properties": {
+          "billId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "reason": {
+            "$ref": "#/components/schemas/ForecastSkipReason"
+          }
+        }
+      },
+      "ForecastSkipReason": {
+        "enum": [
+          "noAccount",
+          "noHistory",
+          "accountNotVisible"
         ],
         "type": "string"
       },

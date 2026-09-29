@@ -10,6 +10,7 @@ import type { Translate, TranslationKey } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { AccountBalances } from "../account-balances/account-balances";
 import { BudgetSnapshot } from "../budget-snapshot/budget-snapshot";
+import { CashFlowCard } from "../cash-flow-card/cash-flow-card";
 import { CategoryBreakdownChart } from "../category-breakdown-chart/category-breakdown-chart";
 import { cardSkeletons, DashboardStatsSkeleton } from "../dashboard-page/dashboard-pending";
 import { pastMonthEnd } from "../dashboard-queries";
@@ -35,6 +36,7 @@ const titleKeys = {
   accounts: "dashboard.accounts",
   recentTransactions: "dashboard.recent",
   upcomingBills: "dashboard.upcomingBills",
+  cashFlow: "dashboard.cashFlow",
 } as const satisfies Record<DashboardCardId, TranslationKey>;
 
 interface CardView {
@@ -42,9 +44,9 @@ interface CardView {
   until: string | undefined;
 }
 
-function CurrentMonthOnly() {
+function CurrentMonthOnly({ text }: Readonly<{ text: TranslationKey }>) {
   const { t } = useTranslation();
-  return <EmptyText>{t("dashboard.billsCurrentOnly")}</EmptyText>;
+  return <EmptyText>{t(text)}</EmptyText>;
 }
 
 interface SectionCard {
@@ -88,7 +90,14 @@ const sectionCards: Record<
   upcomingBills: {
     span: "narrow",
     link: { to: "/recurring-bills", label: "nav.recurringBills" },
-    content: ({ until }) => (until ? <CurrentMonthOnly /> : <UpcomingBills />),
+    content: ({ until }) =>
+      until ? <CurrentMonthOnly text="dashboard.billsCurrentOnly" /> : <UpcomingBills />,
+  },
+  cashFlow: {
+    span: "narrow",
+    link: { to: "/accounts", label: "nav.accounts" },
+    content: ({ until }) =>
+      until ? <CurrentMonthOnly text="dashboard.cashFlowCurrentOnly" /> : <CashFlowCard />,
   },
 };
 

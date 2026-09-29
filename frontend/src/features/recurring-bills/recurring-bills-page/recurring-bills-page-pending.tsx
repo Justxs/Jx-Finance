@@ -44,7 +44,7 @@ export function RecurringBillsPending() {
   return (
     <PagePending actions={1}>
       <SectionSkeleton>
-        <ChartSkeleton height={220} />
+        <ChartSkeleton />
       </SectionSkeleton>
       <Section aria-hidden="true" className="space-y-4">
         {[2, 3].map((rows) => (

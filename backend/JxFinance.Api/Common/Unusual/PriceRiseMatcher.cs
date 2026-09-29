@@ -40,13 +40,14 @@ public static class PriceRiseMatcher
         IQueryable<Transaction> transactions,
         IReadOnlyCollection<AccountId> accountIds,
         DateOnly since,
+        FlowType type,
         CancellationToken cancellationToken)
     {
         var from = since.AddMonths(-PriceRiseRule.LookBackMonths);
         return transactions
             .AsNoTracking()
             .Where(t => accountIds.Contains(t.AccountId)
-                && t.Type == FlowType.Expense
+                && t.Type == type
                 && !t.IsSplit
                 && t.Description != null
                 && t.Date >= from)

@@ -27,6 +27,8 @@ flowchart LR
 
 `AccountsTable` is the page's one list of balances; there is no separate "Balance by account" panel under it. From the `lg` breakpoint a "Share of total" column shows each account's reporting balance as a navy `Meter` and a percent of the positive total. That total is the sum of the positive reporting balances of every active account, taken from the unfiltered list, so filtering the table does not change an account's share. A zero or negative balance leaves the cell blank. When more than one account is listed, a "Total" footer row sums the reporting balances of the listed accounts, filters applied, in the reporting currency on a double rule, in expense red when negative. The dashboard's `accounts` card keeps its own `AccountBalances` share bars, described in [Dashboard](dashboard.md).
 
+While `RecurringBills` is on, the [cash-flow forecast](cash-flow-forecast.md) section sits under the table, before the archived accounts: the balance of each account over the next 30 to 90 days from its recurring entries, with a warning for each account that goes below zero. It reads `GET /api/accounts/forecast`, which starts from the balance as of today and places rows dated after today on their own dates, unlike `currentBalance`. `AccountMovements.SumByDateAsync` serves it: the same union as `SumAsync`, grouped by date as well.
+
 While the `Import` switch is on, each row's actions include "Import bank statement", which opens the [statement import](bank-statement-import.md) dialog with that account already chosen.
 
 ## Archiving and restoring
