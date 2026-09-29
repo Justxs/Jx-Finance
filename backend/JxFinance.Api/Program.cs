@@ -4,6 +4,7 @@ using JxFinance.Extensions;
 using JxFinance.Infrastructure;
 using JxFinance.Infrastructure.Auth;
 using JxFinance.Infrastructure.Data;
+using JxFinance.Infrastructure.LearnedCategories;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,6 +16,12 @@ var app = builder.Build();
 if (EmailAfter("--recover-admin", "administrator") is { } adminEmail)
 {
     await RecoveryCommand.RunAsync(app.Services, adminEmail);
+    return;
+}
+
+if (EmailAfter("--evaluate-categorizer", "user") is { } evaluatedEmail)
+{
+    await CategorizerEvaluationCommand.RunAsync(app.Services, evaluatedEmail, Console.Out);
     return;
 }
 

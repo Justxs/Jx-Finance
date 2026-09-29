@@ -1,6 +1,6 @@
 # Plan: Machine-learned categorization
 
-Status: planned 2026-09-28. Size L. This reopens a deferred item. The backlog and `docs/decisions/general.md` keep it out of scope because rules and the import's recall of the last category cover the need. Do not start before the daily-use trial in the backlog has produced at least six months of real categorized rows, and it builds on [suggested rules](../features/categorization-rules.md#suggested-rules), which shipped on 2026-09-29 and turn the repeated payees into rules first. Read the `PayeeKey` column that [spending by payee](../features/reports.md#expense-by-payee) added on 2026-09-29 instead of normalizing in memory. Backend step 2, the evaluation, is a gate: if it fails on the owner's ledger, the rest is not built and the item goes back to deferred with the numbers recorded.
+Status: planned 2026-09-28; backend steps 1 and 2 (the model and the `--evaluate-categorizer` command) built on 2026-09-29, the gate not yet measured because no real ledger was available, see [Evaluation](#evaluation). Everything from backend step 3 on waits for that measurement. Size L. This reopens a deferred item. The backlog and `docs/decisions/general.md` keep it out of scope because rules and the import's recall of the last category cover the need. Do not evaluate before the daily-use trial in the backlog has produced at least six months of real categorized rows, and it builds on [suggested rules](../features/categorization-rules.md#suggested-rules), which shipped on 2026-09-29 and turn the repeated payees into rules first. Read the `PayeeKey` column that [spending by payee](../features/reports.md#expense-by-payee) added on 2026-09-29 instead of normalizing in memory. Backend step 2, the evaluation, is a gate: if it fails on the owner's ledger, the rest is not built and the item goes back to deferred with the numbers recorded.
 
 ## Outcome
 
@@ -102,6 +102,32 @@ No table for the model: it is computed per request.
 5. After a month of imports with the switch on, fewer than 1 in 20 accepted learned guesses were changed afterwards, counted by hand from the ledger.
 
 If 2 or 3 fails, record the numbers in `docs/decisions/general.md`, keep the item deferred and delete the code of steps 1 and 2.
+
+## Evaluation
+
+**2026-09-29.** Steps 1 and 2 are built as described in [Categorization rules](../features/categorization-rules.md#evaluating-a-learned-categorizer), with these differences from the steps above:
+
+- `CategoryFeatures.Of` takes the stored `PayeeKey` rather than the description; a caller without a stored row passes `SubscriptionDescription.Normalize(description)`. Amounts below 2 fall into bucket 0, so a negative amount never reaches the logarithm.
+- `CategoryModel` also has `Posteriors`, which `Predict` uses and the tests read. `Predict` takes the threshold as an optional argument so that the evaluation can sweep it. Support is the most training rows of the chosen category that share one word with the row, not the rows that share any word.
+- Training and held-out rows leave out refunds (negative expenses), as the evidence of suggested rules does, because the plan predates refunds and the import files a refund in the category of the purchase it refunds. Whether the model should learn from refunds is a question for the service step.
+- The held-out window ends at the newest categorized row, not today, so a restored older backup is evaluated on its own last three months. The recall is replayed over the 200 newest categorized training rows.
+- The evaluation lives in `Infrastructure/LearnedCategories` as `CategorizerEvaluationCommand`, `CategorizerEvaluation` and `CategorizerEvaluationReport`, and prints a pass or fail line for conditions 1 to 3 below.
+
+Measured on the development database, read-only (`default_transaction_read_only=on`); `just seed` was not run, because it writes into that same database:
+
+| Data set | Categorized rows, months | Held out | Rules | Recall | Model at 0.80 | Neither rule nor recall | Conditions 1, 2, 3 |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| User 1, which is `just seed` demo data (11 descriptions) | 75, 6 | 39 | none | 100% filled, 97.4% right | 76.9% filled, 96.7% right; 100% right from 0.85 up | 0 rows | fail, fail, fail |
+| User 2 | 2, 1 | 2 | none | 0% | 0% | 2 rows, none filled | fail, fail, pass |
+
+No member has a real ledger or even a few hundred categorized rows, so the gate is not measured, not failed. The demo data cannot answer it: every description repeats every month, so the recall fills every held-out row and the rows the model is meant for do not exist. Condition 3 fails there because the one row both got wrong counts among 30 model guesses against 39 recall answers.
+
+Timing on the development laptop, from 10,000 synthetic rows in 40 categories with a 3,000-word vocabulary and 500 candidates, warm, the query not included: training 31 to 72 ms, training plus 500 predictions 82 to 124 ms, one prediction after training about 0.05 ms. That is under condition 4's 150 ms and 100 ms, but with little room, and it has to be measured on the production host with the query.
+
+What remains:
+
+1. Run `--evaluate-categorizer` on the owner's own ledger, or on a restored copy of it, once the daily-use trial has produced six months and 1,500 categorized rows, and record the numbers and the chosen constants here and in the decisions.
+2. If conditions 2 and 3 pass, build backend steps 3 to 9, the frontend steps and the docs as planned. If either fails, delete `Common/LearnedCategories`, `Infrastructure/LearnedCategories`, the `--evaluate-categorizer` branch of `Program.cs` and their tests, and record the numbers in `docs/decisions/general.md`.
 
 ## Open questions
 

@@ -36,7 +36,7 @@ These come from the release checklist and block calling the current release veri
 | Live investment prices | A market data source and a daily job that fills the price history, which exists since 2026-09-20; today a price arrives only from the broker import or by hand | M |
 | PWA and offline | Manifest, service worker, offline queue for new transactions | L |
 | Bank APIs | PSD2 aggregator; licensing and consent renewal make this costly for a household tool | L |
-| Machine-learned categorization | Out of scope; rules and the recall of the last category cover the need | L |
+| Machine-learned categorization | Out of scope; rules and the recall of the last category cover the need. Since 2026-09-29 the model and `--evaluate-categorizer <email>` exist, but nothing suggests from them: the development database had only `just seed` demo data, where the recall already fills every held-out row (97.4% right, the model 96.7% at 0.80), so the gate was not measured. It needs six months and 1,500 real categorized rows; see the [plan](plans/machine-learned-categorization.md#evaluation) | L |
 
 ## 4. New ideas
 

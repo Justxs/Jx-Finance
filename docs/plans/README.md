@@ -6,7 +6,7 @@ The table is in the suggested build order. Each plan's `Status:` line names what
 
 | Plan | Size | Where it lives | Build after |
 | --- | --- | --- | --- |
-| [Machine-learned categorization](machine-learned-categorization.md) | L, gated | Import review, transaction form, ledger | Six months of real data |
+| [Machine-learned categorization](machine-learned-categorization.md) | L, gated; model and `--evaluate-categorizer` built, gate not measured yet | Import review, transaction form, ledger | Six months of real data, then running the evaluation on the owner's ledger |
 
 ## Changes to shared code
 
