@@ -5,6 +5,7 @@ using JxFinance.Common.Discord;
 using JxFinance.Common.Email;
 using JxFinance.Domain.Email;
 using JxFinance.Endpoints.Auth.Passkeys;
+using JxFinance.Endpoints.Auth.Tokens;
 using JxFinance.Endpoints.Users.UpdateMyDiscord;
 using JxFinance.Infrastructure.Auth;
 
@@ -71,6 +72,9 @@ public sealed partial class SecretRedactionTests
         Assert.Contains(nameof(AddPasskeyRequest), guarded);
         Assert.Contains(nameof(PasskeySignInRequest), guarded);
         Assert.Contains(nameof(PasskeyState), guarded);
+        Assert.Contains(nameof(CreatePersonalApiTokenRequest), guarded);
+        Assert.Contains(nameof(CreatedPersonalApiTokenResponse), guarded);
+        Assert.Contains(nameof(IssuedToken), guarded);
         Assert.True(
             offenders.Count == 0,
             "Records that print a secret in ToString:" + Environment.NewLine + string.Join(Environment.NewLine, offenders));

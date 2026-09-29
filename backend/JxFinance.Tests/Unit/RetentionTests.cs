@@ -65,6 +65,18 @@ public sealed class RetentionTests
     }
 
     [Fact]
+    public async Task Pruning_api_tokens_deletes_the_ones_that_expired_more_than_thirty_days_ago()
+    {
+        await using var capture = new SqlCapture();
+
+        await Retention.PruneApiTokensAsync(capture.Db, Clock.UtcNow, TestContext.Current.CancellationToken);
+
+        var statement = capture.OnlyStatement;
+        Assert.Contains("DELETE FROM \"PersonalApiTokens\"", statement, StringComparison.Ordinal);
+        Assert.Contains("\"ExpiresAt\" < @", statement, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public async Task Pruning_audit_events_deletes_by_the_occurrence_time()
     {
         await using var capture = new SqlCapture();

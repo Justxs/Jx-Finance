@@ -20,4 +20,5 @@ export interface FeatureFlags {
   unusualAmounts: boolean;
   monthClose: boolean;
   receiptReading: boolean;
+  apiTokens: boolean;
 }

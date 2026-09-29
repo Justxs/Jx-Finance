@@ -2,6 +2,7 @@ using FastEndpoints;
 using JxFinance.Api;
 using JxFinance.Common.Discord;
 using JxFinance.Common.ExchangeRates;
+using JxFinance.Common.Middleware;
 using JxFinance.Common.Receipts;
 using JxFinance.Endpoints.Backups.UploadBackup;
 using JxFinance.Infrastructure.BackgroundJobs;
@@ -31,6 +32,7 @@ public static class ApiServiceExtensions
         builder.Services.AddFastEndpoints(DiscoveredTypes.All);
         builder.Services.RegisterServicesFromJxFinanceApi();
         builder.Services.AddApiOpenApiDocument();
+        builder.Services.AddRateLimiter(PersonalApiTokenRateLimit.Configure);
 
         builder.Services.AddHealthChecks()
             .AddNpgSql(builder.Configuration.DefaultConnectionString());

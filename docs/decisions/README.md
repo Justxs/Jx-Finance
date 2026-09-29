@@ -12,7 +12,7 @@ Before changing behaviour that a page here covers, read that page. When you choo
 | [General](general.md) | Architecture, Release scope, Database lifecycle | 2 |  |
 | [Development and testing](development.md) | none | 9 |  |
 | [Deployment](deployment.md) | CI | 5 |  |
-| [Authentication and sessions](authentication.md) | Authentication | 17 | [Sign-in, sessions and lockout](../features/sign-in-and-sessions.md), [Passkeys](../features/passkeys.md) |
+| [Authentication and sessions](authentication.md) | Authentication | 29 | [Sign-in, sessions and lockout](../features/sign-in-and-sessions.md), [Passkeys](../features/passkeys.md), [Personal API tokens](../features/personal-api-tokens.md) |
 | [User management](user-management.md) | none | 2 | [User management](../features/user-management.md) |
 | [Money and multi-currency](multi-currency.md) | Money | 2 | [Multi-currency](../features/multi-currency.md) |
 | [Transactions, saved filters and templates](transactions.md) | Saved filters and templates | 4 | [Transactions](../features/transactions.md) |

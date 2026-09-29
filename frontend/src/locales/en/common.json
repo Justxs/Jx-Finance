@@ -815,6 +815,37 @@
       "alreadyRegistered": "This authenticator already holds a passkey for your account.",
       "failed": "The browser could not create the passkey. Try again."
     },
+    "apiTokens": {
+      "title": "Personal API tokens",
+      "description": "Let a script or a spreadsheet on your own computer read what you see here. A token can only read: it changes nothing and never reaches settings, backups, attachments or administration.",
+      "empty": "No tokens yet.",
+      "create": "Create a token",
+      "createTitle": "Create a personal API token",
+      "name": "Name",
+      "namePlaceholder": "Monthly spreadsheet",
+      "expiry": "Expires after",
+      "expiryOptions": {
+        "30": "30 days",
+        "90": "90 days",
+        "365": "1 year"
+      },
+      "secret": "Your new token",
+      "copy": "Copy",
+      "copied": "Token copied",
+      "copyFailed": "The browser did not allow copying. Select the token and copy it yourself.",
+      "shownOnce": "You will not see this token again. Keep it where your script can read it, such as an environment variable.",
+      "done": "Done",
+      "created": "Created",
+      "expires": "Expires",
+      "expired": "Expired",
+      "expiredTag": "Expired",
+      "lastUsed": "Last used",
+      "never": "Never",
+      "revoke": "Revoke",
+      "revokeTitle": "Revoke this token?",
+      "revokeDescription": "Scripts and spreadsheets that use it stop working at once.",
+      "revoked": "Token revoked"
+    },
     "emailUnconfirmedTitle": "Confirm your email address",
     "emailUnconfirmedBody": "{{email}} is not confirmed yet, so this installation sends no mail to it. Nothing else is blocked.",
     "resendVerification": "Send the link again",
@@ -931,6 +962,10 @@
         "receiptReading": {
           "name": "Receipt reading",
           "hint": "Fills a transaction's split from a receipt photo or PDF, read on this server with Tesseract; nothing is sent anywhere."
+        },
+        "apiTokens": {
+          "name": "Personal API tokens",
+          "hint": "Members can create read-only tokens for their own scripts and spreadsheets. Off suspends every token until it is on again."
         }
       }
     },
@@ -2375,6 +2410,12 @@
       "stateInvalid": "That took too long. Try again.",
       "limitReached": "You already have 10 passkeys. Remove one first.",
       "unavailable": "Passkeys cannot be used at this installation's address."
+    },
+    "token": {
+      "invalid": "The API token is missing, expired or revoked.",
+      "notAllowed": "An API token can only read the ledger.",
+      "limitReached": "You already have 10 tokens. Revoke one first.",
+      "rateLimited": "Too many requests with this token. Wait a minute."
     }
   },
   "export": {

@@ -1,14 +1,51 @@
 # Authentication and sessions: decisions
 
-Related: feature pages [Sign-in, sessions and lockout](../features/sign-in-and-sessions.md) and [Passkeys](../features/passkeys.md); architecture [Authentication](../architecture/authentication.md).
+Related: feature pages [Sign-in, sessions and lockout](../features/sign-in-and-sessions.md), [Passkeys](../features/passkeys.md) and [Personal API tokens](../features/personal-api-tokens.md); architecture [Authentication](../architecture/authentication.md).
 
 ## Current
 
-Admin-created users; optional 2FA; optional passkeys through ASP.NET Core Identity, each a whole sign-in that never counts toward the lockout; absolute 1/30-day sessions; immediate stamp/deactivation validation; 15-minute lockout after five failed passwords or codes
+Admin-created users; optional 2FA; optional passkeys through ASP.NET Core Identity, each a whole sign-in that never counts toward the lockout; absolute 1/30-day sessions; immediate stamp/deactivation validation; 15-minute lockout after five failed passwords or codes; read-only personal API tokens behind the `ApiTokens` switch, off by default, reaching only an allowlist of `GET` routes and never administration
 
 ## Log
 
 Newest first. Each entry is a choice between real alternatives: what was chosen, what was rejected, and why.
+
+- **2026-09-29.** Deactivating a member deletes their personal API tokens; reactivation does not bring them back. Decided while the owner was away as the plan's recommended and more secure answer to its open question; review it
+  - Rejected: Suspending the tokens during a deactivation so that reactivation revives them
+  - Why: A deactivation usually means someone else may be in the account or the person left; a credential that comes back by itself after a reactivation is one nobody decided to issue again. Creating a new token takes a minute, and the handler would refuse a deactivated member's token in any case
+- **2026-09-29.** Attachment files cannot be read with a personal API token; the whole Attachments group stays off the list. Decided while the owner was away as the plan's conservative answer to its open question; review it if a member wants a script that archives receipts
+  - Rejected: Opening `GET /api/attachments/{id}/content` and the attachment list to tokens
+  - Why: A receipt photo is personal data that a spreadsheet does not need, and a stolen token should expose figures, not documents. Opening one group later is a one-word change with a test
+- **2026-09-29.** Personal API tokens are `jxp_` + an 8-character public prefix + `_` + 32 random bytes in base64url; the table keeps the prefix under a unique index and the SHA-256 hash of the secret, compared with `CryptographicOperations.FixedTimeEquals`
+  - Rejected: A PBKDF2 or Identity password hash; storing the token encrypted; a signed JWT
+  - Why: 256 random bits cannot be guessed, so a fast hash loses nothing and a slow one would cost every request. An encrypted token could be decrypted with the key ring. A JWT could not be revoked or show when it was last used without a lookup anyway. The prefix lets people and secret scanners recognise a leaked token
+- **2026-09-29.** A token travels only in the `Authorization: Bearer` header
+  - Rejected: A `?token=` query parameter for spreadsheet functions that cannot set headers
+  - Why: A query string ends up in Caddy's and Serilog's request logs, in shell history and in spreadsheet cells. The functions that cannot set headers, such as Google Sheets `IMPORTDATA`, run on Google's servers, which cannot reach a private installation anyway
+- **2026-09-29.** Tokens are a second scheme (`PersonalApiTokenAuthenticationHandler`) behind a policy scheme that is now the default; a request whose header starts with `Bearer jxp_` is authenticated by the token alone and its cookies are ignored. The principal has a user id and a `jx.token` claim, never a `sid` or a role
+  - Rejected: Parsing tokens inside `JwtCookieAuthentication.OnMessageReceived`; copying the user's roles into the token principal
+  - Why: Two small handlers each keep one rule, and the cookie path with its per-request session check stays exactly as it was. Administrator endpoints are writes, backups and settings, which a read-only script needs none of; without a role claim `Roles(AppRoles.Admin)` refuses by construction
+- **2026-09-29.** A token reaches only `GET` routes of groups that opt in with `ApiGroup(…, tokenReadable: true)`, less the broker connections and the dashboard layout, which opt out with `TokenReadable.No`. `PersonalApiTokenGateMiddleware` runs before `UseAuthorization`, not after it as the plan had it, and a request with an invalid token is challenged on anonymous routes too. `HEAD` is not allowed, although the plan listed it
+  - Rejected: Every `GET` endpoint (a denylist); per-endpoint opt-in flags; the gate after authorization; allowing `HEAD`
+  - Why: Several `GET` routes must stay out of reach (the backup download, SMTP settings, sessions, the token list, attachment files), and an allowlist cannot forget a new route the way a denylist can; `TokenReadableTests` pins the exact list besides, so a new `GET` in a readable group is a conscious choice. The broker connections describe an outside account and the dashboard layout is a personal setting, which the reviewed allowlist keeps out although their groups are readable. Before authorization, a token never reaches a policy or an endpoint outside the list, and the gate writes the one problem body for every refusal. Challenging on anonymous routes makes `GET /api/ping` a real check of the token. FastEndpoints registers no `HEAD` routes, so allowing it would only open routes that do not exist
+- **2026-09-29.** A switched-off `ApiTokens` answers token requests with 404 `feature.disabled`, not 403 as the plan said
+  - Rejected: A 403 for this one case
+  - Why: `feature.disabled` maps to 404 everywhere else (`ErrorCodes.StatusCodeFor`, the feature gate), and a code with two statuses would break the rule that the code decides the status
+- **2026-09-29.** Tokens expire after 1 to 365 days (30, 90 or 365 offered, 90 by default), at most ten unexpired per member, names up to 60 characters, one implicit read scope with no column
+  - Rejected: Tokens that never expire; unlimited tokens; a `Scopes` column now
+  - Why: A token in a forgotten script or workbook should die on its own. Ten keeps the list readable and bounds what a stolen session could create. There is one scope; a column with a default is a one-line migration when write scopes come
+- **2026-09-29.** A token ends on expiry, revocation, deactivation, an administrator's password reset and `--recover-admin`, and is suspended while the switch is off; an own password change, two-factor and passkey changes keep it
+  - Rejected: Tying tokens to the security stamp like sessions
+  - Why: An own password change is routine and should not break automation. An administrator reset or a deactivation means someone else may be in the account, so every credential goes
+- **2026-09-29.** Tokens are limited to 60 requests a minute each by ASP.NET Core's rate limiter partitioned by the token id; `LastUsedAt` is written at most once a minute; no per-request audit
+  - Rejected: FastEndpoints `Throttle`; a write on every request; storing the client address; an audit table of token reads
+  - Why: `Throttle` counts per endpoint and per client address, while a script loop needs one budget per token across all routes. A write per request is waste, and the address is personal data the list does not need. Tokens only read, so the household activity log has nothing to record; the request log's `TokenPrefix` answers what a token read
+- **2026-09-29.** No antiforgery for tokens; backups carry `PersonalApiTokens`
+  - Rejected: Antiforgery tokens; leaving the table out of backups like `UserSessions`
+  - Why: A browser never adds an `Authorization` header to a cross-site request by itself and there is no CORS policy, while the cookies stay SameSite=Strict. A token is a durable credential its member chose to create, not state of one browser, and only its hash is stored
+- **2026-09-29.** The OpenAPI document lists a `PersonalApiToken` bearer scheme on the readable `GET` operations, beside `Cookie`
+  - Rejected: Leaving the scheme out of the contract; adding it to every operation through FastEndpoints' `AddAuth`
+  - Why: The contract then says which operations a script can call, and orval ignores `security`, so the generated client did not change. `AddAuth` would have marked writes as reachable with a token
 
 - **2026-09-29.** A member who has the authenticator app switched on signs in with a passkey alone and is not asked for the code after it. Decided while the owner was away, as the plan recommended; review it
   - Rejected: Asking a two-factor member for the authenticator code after a passkey

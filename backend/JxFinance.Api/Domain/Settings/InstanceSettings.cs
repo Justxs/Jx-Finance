@@ -10,7 +10,7 @@ public sealed class InstanceSettings
 
     public int Id { get; set; } = SingletonId;
     public string? InstanceName { get; set; }
-    public FeatureFlags Features { get; set; } = FeatureFlags.All;
+    public FeatureFlags Features { get; set; } = FeatureFlags.Default;
     public Currency ReportingCurrency { get; set; } = Currency.Eur;
     public string EnabledCurrencyCodes { get; set; } = string.Empty;
     public bool ExchangeRateSyncEnabled { get; set; } = true;

@@ -1,6 +1,6 @@
 # Plan: Data export per user
 
-Status: planned 2026-09-28. Size M. Independent of the other plans. [Personal API tokens](personal-api-tokens.md) must keep this route out of token reach, and [Household settle-up](household-settle-up.md) adds tables that the ownership list below has to classify when either lands second.
+Status: planned 2026-09-28. Size M. Independent of the other plans. [Personal API tokens](../features/personal-api-tokens.md), shipped on 2026-09-29, must stay unable to reach this route (`UsersGroup` is not token-readable, and `TokenReadableTests` pins the readable routes), and [Household settle-up](household-settle-up.md) adds tables that the ownership list below has to classify when either lands second.
 
 ## Outcome
 
@@ -82,7 +82,7 @@ None. The new code is a list, not a table.
   - Readability: `data.json` parses with `BackupReader`, and each CSV parses with the documented header.
   - Attachments: with the flag the files are present and their SHA-256 matches the rows; a missing file is counted.
   - Limits: a second concurrent export answers 409; the fourth in an hour answers 429.
-  - Refusals: a personal API token gets 403 `token.notAllowed` once that plan has shipped.
+  - Refusals: a personal API token gets 403 `token.notAllowed`.
 
 ## Docs
 

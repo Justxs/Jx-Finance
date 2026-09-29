@@ -3,6 +3,7 @@ using JxFinance.Domain.Common;
 using JxFinance.Domain.Transactions;
 using JxFinance.Domain.Trash;
 using JxFinance.Infrastructure.Attachments;
+using JxFinance.Infrastructure.Auth;
 using JxFinance.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -48,6 +49,12 @@ internal static class Retention
             .Where(s => s.ExpiresAt <= now
                 || !db.Users.Any(u => u.Id == s.UserId && (u.SecurityStamp ?? string.Empty) == s.SecurityStamp))
             .ExecuteDeleteAsync(ct);
+
+    internal static Task<int> PruneApiTokensAsync(AppDbContext db, DateTimeOffset now, CancellationToken ct)
+    {
+        var cutoff = now - PersonalApiToken.KeptAfterExpiry;
+        return db.PersonalApiTokens.Where(t => t.ExpiresAt < cutoff).ExecuteDeleteAsync(ct);
+    }
 
     internal static Task<int> PruneDeletionEntriesAsync(AppDbContext db, DateTimeOffset now, CancellationToken ct)
     {

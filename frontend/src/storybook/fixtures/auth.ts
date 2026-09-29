@@ -1,8 +1,10 @@
 import type {
+  CreatedPersonalApiTokenResponse,
   EnableTwoFactorResponse,
   LoginResponse,
   PasskeyOptionsResponse,
   PasskeyResponse,
+  PersonalApiTokenResponse,
   SessionResponse,
   TwoFactorSetupResponse,
 } from "@/api/generated/model";
@@ -125,4 +127,41 @@ export const passkeyLimitReachedProblem = problemOf(
   "passkey.limitReached",
   "An account can hold at most 10 passkeys.",
   { instance: "/api/auth/passkeys/registration-options" },
+);
+
+export const personalApiTokens: PersonalApiTokenResponse[] = [
+  {
+    id: "7b1e2d4a-3c5f-4e6a-8b7c-9d0e1f2a3b01",
+    name: "Monthly spreadsheet",
+    prefix: "4fK2aQ9m",
+    createdAt: "2026-09-02T08:30:00Z",
+    expiresAt: "2026-12-01T08:30:00Z",
+    lastUsedAt: "2026-09-18T06:00:00Z",
+    isExpired: false,
+  },
+  {
+    id: "7b1e2d4a-3c5f-4e6a-8b7c-9d0e1f2a3b02",
+    name: "Old budget script",
+    prefix: "Zt7pLw3R",
+    createdAt: "2026-06-10T19:12:00Z",
+    expiresAt: "2026-07-10T19:12:00Z",
+    lastUsedAt: null,
+    isExpired: true,
+  },
+];
+
+export const createdPersonalApiToken: CreatedPersonalApiTokenResponse = {
+  id: "7b1e2d4a-3c5f-4e6a-8b7c-9d0e1f2a3b03",
+  name: "Power Query",
+  prefix: "Q8vN2mXa",
+  createdAt: "2026-09-20T09:15:00Z",
+  expiresAt: "2026-12-19T09:15:00Z",
+  token: "jxp_Q8vN2mXa_c3Rvcnlib29rLW5vdC1hLXJlYWwtdG9rZW4tc2VjcmV",
+};
+
+export const tokenLimitReachedProblem = problemOf(
+  409,
+  "token.limitReached",
+  "An account can hold at most 10 tokens that have not expired.",
+  { instance: "/api/auth/tokens" },
 );

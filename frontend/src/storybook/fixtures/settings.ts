@@ -16,6 +16,7 @@ export const settings: SettingsResponse = {
     unusualAmounts: true,
     monthClose: true,
     receiptReading: true,
+    apiTokens: true,
   },
   reportingCurrency: "eur",
   enabledCurrencies: ["eur", "usd", "gbp", "pln", "chf", "sek", "nok"],

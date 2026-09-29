@@ -3,4 +3,4 @@ using JxFinance.Common.OpenApi;
 
 namespace JxFinance.Endpoints.Transfers;
 
-public sealed class TransfersGroup() : ApiGroup(ApiTags.Transfers);
+public sealed class TransfersGroup() : ApiGroup(ApiTags.Transfers, tokenReadable: true);

@@ -39,6 +39,7 @@ const defaultSettings: SettingsResponse = {
     unusualAmounts: true,
     monthClose: true,
     receiptReading: true,
+    apiTokens: true,
   },
   reportingCurrency: DEFAULT_CURRENCY,
   enabledCurrencies: [DEFAULT_CURRENCY],

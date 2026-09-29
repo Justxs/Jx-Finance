@@ -197,6 +197,9 @@
         "security": [
           {
             "Cookie": [ ]
+          },
+          {
+            "PersonalApiToken": [ ]
           }
         ]
       }
@@ -257,6 +260,9 @@
         "security": [
           {
             "Cookie": [ ]
+          },
+          {
+            "PersonalApiToken": [ ]
           }
         ]
       }
@@ -326,6 +332,9 @@
         "security": [
           {
             "Cookie": [ ]
+          },
+          {
+            "PersonalApiToken": [ ]
           }
         ]
       }
@@ -473,6 +482,9 @@
         "security": [
           {
             "Cookie": [ ]
+          },
+          {
+            "PersonalApiToken": [ ]
           }
         ]
       },
@@ -653,6 +665,9 @@
         "security": [
           {
             "Cookie": [ ]
+          },
+          {
+            "PersonalApiToken": [ ]
           }
         ]
       },
@@ -829,6 +844,9 @@
         "security": [
           {
             "Cookie": [ ]
+          },
+          {
+            "PersonalApiToken": [ ]
           }
         ]
       }
@@ -1131,6 +1149,9 @@
         "security": [
           {
             "Cookie": [ ]
+          },
+          {
+            "PersonalApiToken": [ ]
           }
         ]
       }
@@ -1379,6 +1400,9 @@
         "security": [
           {
             "Cookie": [ ]
+          },
+          {
+            "PersonalApiToken": [ ]
           }
         ]
       }
@@ -1671,6 +1695,9 @@
         "security": [
           {
             "Cookie": [ ]
+          },
+          {
+            "PersonalApiToken": [ ]
           }
         ]
       }
@@ -3232,6 +3259,240 @@
         ]
       }
     },
+    "/api/auth/tokens": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Create a personal API token",
+        "description": "Confirms the account password and creates a read-only token for scripts and spreadsheets. The token is returned once, in this response, and never again: only its public prefix and a hash of its secret are kept. Send it as Authorization: Bearer jxp_... to read what you read in the browser. It cannot write anything and cannot reach administration, sessions, tokens, settings, backups or attachments. The password counts toward the account lockout. Needs the ApiTokens feature switch. Rate limited to five attempts per five minutes.",
+        "operationId": "CreatePersonalApiToken",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePersonalApiTokenRequest"
+              },
+              "example": {
+                "name": "Monthly spreadsheet",
+                "expiresInDays": 90,
+                "password": "correct horse battery staple"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "The token was created; the response holds the secret, once.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreatedPersonalApiTokenResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed, or the password was wrong (password.incorrect).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The ApiTokens feature is off (feature.disabled), or the session points at a user that no longer exists.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The account already holds ten tokens that have not expired (token.limitReached).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many attempts, or the account is locked after repeated failures."
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      },
+      "get": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "List your personal API tokens",
+        "description": "Returns the signed-in user's tokens, newest first: the name, the public prefix, when each was created, when it expires and when it was last used, to the minute. Expired tokens stay listed, marked as expired, until they are removed 30 days after expiry. The secret is never returned. Needs the ApiTokens feature switch.",
+        "operationId": "GetPersonalApiTokens",
+        "responses": {
+          "200": {
+            "description": "The tokens of the signed-in user.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PersonalApiTokenResponse"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The ApiTokens feature is off (feature.disabled).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      }
+    },
+    "/api/auth/tokens/{id}": {
+      "delete": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Revoke a personal API token",
+        "description": "Deletes one of your tokens, so the next request that carries it answers 401 token.invalid. Needs the ApiTokens feature switch.",
+        "operationId": "RevokePersonalApiToken",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The token id, as returned by the token list.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "The token is gone."
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No token with this id belongs to the signed-in user, or the ApiTokens feature is off.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      }
+    },
     "/api/auth/verify-email": {
       "post": {
         "tags": [
@@ -4073,6 +4334,9 @@
         "security": [
           {
             "Cookie": [ ]
+          },
+          {
+            "PersonalApiToken": [ ]
           }
         ]
       }
@@ -4141,6 +4405,9 @@
         "security": [
           {
             "Cookie": [ ]
+          },
+          {
+            "PersonalApiToken": [ ]
           }
         ]
       }
@@ -4448,6 +4715,9 @@
         "security": [
           {
             "Cookie": [ ]
+          },
+          {
+            "PersonalApiToken": [ ]
           }
         ]
       }
@@ -5540,6 +5810,9 @@
         "security": [
           {
             "Cookie": [ ]
+          },
+          {
+            "PersonalApiToken": [ ]
           }
         ]
       }
@@ -5766,6 +6039,9 @@
         "security": [
           {
             "Cookie": [ ]
+          },
+          {
+            "PersonalApiToken": [ ]
           }
         ]
       }
@@ -5836,6 +6112,9 @@
         "security": [
           {
             "Cookie": [ ]
+          },
+          {
+            "PersonalApiToken": [ ]
           }
         ]
       }
@@ -5916,6 +6195,9 @@
         "security": [
           {
             "Cookie": [ ]
+          },
+          {
+            "PersonalApiToken": [ ]
           }
         ]
       }
@@ -5986,6 +6268,9 @@
         "security": [
           {
             "Cookie": [ ]
+          },
+          {
+            "PersonalApiToken": [ ]
           }
         ]
       }
@@ -6124,6 +6409,9 @@
         "security": [
           {
             "Cookie": [ ]
+          },
+          {
+            "PersonalApiToken": [ ]
           }
         ]
       }
@@ -6390,6 +6678,9 @@
         "security": [
           {
             "Cookie": [ ]
+          },
+          {
+            "PersonalApiToken": [ ]
           }
         ]
       }
@@ -6471,6 +6762,9 @@
         "security": [
           {
             "Cookie": [ ]
+          },
+          {
+            "PersonalApiToken": [ ]
           }
         ]
       },
@@ -6860,6 +7154,9 @@
         "security": [
           {
             "Cookie": [ ]
+          },
+          {
+            "PersonalApiToken": [ ]
           }
         ]
       }
@@ -6957,6 +7254,9 @@
         "security": [
           {
             "Cookie": [ ]
+          },
+          {
+            "PersonalApiToken": [ ]
           }
         ]
       }
@@ -7091,6 +7391,9 @@
         "security": [
           {
             "Cookie": [ ]
+          },
+          {
+            "PersonalApiToken": [ ]
           }
         ]
       }
@@ -7387,6 +7690,9 @@
         "security": [
           {
             "Cookie": [ ]
+          },
+          {
+            "PersonalApiToken": [ ]
           }
         ]
       }
@@ -7544,6 +7850,9 @@
         "security": [
           {
             "Cookie": [ ]
+          },
+          {
+            "PersonalApiToken": [ ]
           }
         ]
       },
@@ -7788,6 +8097,9 @@
         "security": [
           {
             "Cookie": [ ]
+          },
+          {
+            "PersonalApiToken": [ ]
           }
         ]
       }
@@ -9069,6 +9381,9 @@
         "security": [
           {
             "Cookie": [ ]
+          },
+          {
+            "PersonalApiToken": [ ]
           }
         ]
       }
@@ -9142,6 +9457,9 @@
         "security": [
           {
             "Cookie": [ ]
+          },
+          {
+            "PersonalApiToken": [ ]
           }
         ]
       },
@@ -9530,6 +9848,9 @@
         "security": [
           {
             "Cookie": [ ]
+          },
+          {
+            "PersonalApiToken": [ ]
           }
         ]
       }
@@ -9703,6 +10024,9 @@
         "security": [
           {
             "Cookie": [ ]
+          },
+          {
+            "PersonalApiToken": [ ]
           }
         ]
       }
@@ -9786,6 +10110,9 @@
         "security": [
           {
             "Cookie": [ ]
+          },
+          {
+            "PersonalApiToken": [ ]
           }
         ]
       }
@@ -9972,6 +10299,9 @@
         "security": [
           {
             "Cookie": [ ]
+          },
+          {
+            "PersonalApiToken": [ ]
           }
         ]
       }
@@ -10236,6 +10566,9 @@
         "security": [
           {
             "Cookie": [ ]
+          },
+          {
+            "PersonalApiToken": [ ]
           }
         ]
       }
@@ -10671,6 +11004,9 @@
         "security": [
           {
             "Cookie": [ ]
+          },
+          {
+            "PersonalApiToken": [ ]
           }
         ]
       }
@@ -10728,6 +11064,9 @@
         "security": [
           {
             "Cookie": [ ]
+          },
+          {
+            "PersonalApiToken": [ ]
           }
         ]
       }
@@ -11295,6 +11634,9 @@
         "security": [
           {
             "Cookie": [ ]
+          },
+          {
+            "PersonalApiToken": [ ]
           }
         ]
       }
@@ -11355,6 +11697,9 @@
         "security": [
           {
             "Cookie": [ ]
+          },
+          {
+            "PersonalApiToken": [ ]
           }
         ]
       }
@@ -11562,6 +11907,9 @@
         "security": [
           {
             "Cookie": [ ]
+          },
+          {
+            "PersonalApiToken": [ ]
           }
         ]
       },
@@ -11852,6 +12200,9 @@
         "security": [
           {
             "Cookie": [ ]
+          },
+          {
+            "PersonalApiToken": [ ]
           }
         ]
       }
@@ -12662,6 +13013,9 @@
         "security": [
           {
             "Cookie": [ ]
+          },
+          {
+            "PersonalApiToken": [ ]
           }
         ]
       }
@@ -13137,6 +13491,9 @@
         "security": [
           {
             "Cookie": [ ]
+          },
+          {
+            "PersonalApiToken": [ ]
           }
         ]
       }
@@ -13508,6 +13865,9 @@
         "security": [
           {
             "Cookie": [ ]
+          },
+          {
+            "PersonalApiToken": [ ]
           }
         ]
       }
@@ -13711,6 +14071,9 @@
         "security": [
           {
             "Cookie": [ ]
+          },
+          {
+            "PersonalApiToken": [ ]
           }
         ]
       }
@@ -13881,6 +14244,9 @@
         "security": [
           {
             "Cookie": [ ]
+          },
+          {
+            "PersonalApiToken": [ ]
           }
         ]
       }
@@ -14028,6 +14394,9 @@
         "security": [
           {
             "Cookie": [ ]
+          },
+          {
+            "PersonalApiToken": [ ]
           }
         ]
       },
@@ -14615,6 +14984,9 @@
         "security": [
           {
             "Cookie": [ ]
+          },
+          {
+            "PersonalApiToken": [ ]
           }
         ]
       }
@@ -15855,7 +16227,7 @@
           "Users"
         ],
         "summary": "Deactivate a user",
-        "description": "Locks the account out instead of deleting it, so the transactions and households it touched stay intact. Existing sessions are rejected on their next request. You cannot deactivate yourself, and the last active administrator cannot be deactivated, so an instance is never left without one. Administrators only.",
+        "description": "Locks the account out instead of deleting it, so the transactions and households it touched stay intact. Existing sessions are rejected on their next request and every personal API token of the user is deleted. You cannot deactivate yourself, and the last active administrator cannot be deactivated, so an instance is never left without one. Administrators only.",
         "operationId": "DeactivateUser",
         "parameters": [
           {
@@ -16021,7 +16393,7 @@
           "Users"
         ],
         "summary": "Set a new password for another user",
-        "description": "Administrators only. For a user who forgot their password: the administrator chooses a temporary password and hands it over outside the application, and the user changes it on their profile after signing in. The administrator confirms the action with their own current password; a wrong one answers password.incorrect, counts toward the administrator's sign-in lockout, and a locked-out administrator answers credentials.lockedOut. The new password must satisfy the same rules as any other password, otherwise password.tooWeak. Every session of the target user is revoked and their failed sign-in counter and temporary lockout are cleared; a deactivated user stays deactivated. With resetTwoFactor the authenticator is switched off, the recovery codes are invalidated and every passkey is removed as well, for a user who also lost their device. The target may be a member or another administrator, never the caller: change your own password on the profile. Rate limited to 10 calls per five minutes per client.",
+        "description": "Administrators only. For a user who forgot their password: the administrator chooses a temporary password and hands it over outside the application, and the user changes it on their profile after signing in. The administrator confirms the action with their own current password; a wrong one answers password.incorrect, counts toward the administrator's sign-in lockout, and a locked-out administrator answers credentials.lockedOut. The new password must satisfy the same rules as any other password, otherwise password.tooWeak. Every session and personal API token of the target user is revoked and their failed sign-in counter and temporary lockout are cleared; a deactivated user stays deactivated. With resetTwoFactor the authenticator is switched off, the recovery codes are invalidated and every passkey is removed as well, for a user who also lost their device. The target may be a member or another administrator, never the caller: change your own password on the profile. Rate limited to 10 calls per five minutes per client.",
         "operationId": "ResetUserPassword",
         "parameters": [
           {
@@ -18314,6 +18686,40 @@
           "tracksPayments": false
         }
       },
+      "CreatedPersonalApiTokenResponse": {
+        "required": [
+          "id",
+          "name",
+          "prefix",
+          "createdAt",
+          "expiresAt",
+          "token"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "prefix": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "token": {
+            "type": "string"
+          }
+        }
+      },
       "CreateGoalRequest": {
         "required": [
           "name",
@@ -18500,6 +18906,42 @@
           "fee": "1.25",
           "currency": null,
           "description": null
+        }
+      },
+      "CreatePersonalApiTokenRequest": {
+        "required": [
+          "name",
+          "expiresInDays",
+          "password"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "maxLength": 60,
+            "minLength": 0,
+            "type": "string",
+            "description": "A name for the list, at most 60 characters.",
+            "example": "Monthly spreadsheet"
+          },
+          "expiresInDays": {
+            "maximum": 365,
+            "minimum": 1,
+            "type": "integer",
+            "description": "Days until the token stops working, from 1 to 365.",
+            "format": "int32",
+            "example": 90
+          },
+          "password": {
+            "minLength": 1,
+            "type": "string",
+            "description": "The account password.",
+            "example": "correct horse battery staple"
+          }
+        },
+        "example": {
+          "name": "Monthly spreadsheet",
+          "expiresInDays": 90,
+          "password": "correct horse battery staple"
         }
       },
       "CreateRecurringBillRequest": {
@@ -19845,6 +20287,10 @@
           "text.invalidFormat",
           "text.tooLong",
           "text.tooShort",
+          "token.invalid",
+          "token.limitReached",
+          "token.notAllowed",
+          "token.rateLimited",
           "transaction.linesMismatch",
           "transaction.refundOriginalInvalid",
           "transaction.splitNotAllowed",
@@ -19921,7 +20367,8 @@
           "categorizationRules",
           "unusualAmounts",
           "monthClose",
-          "receiptReading"
+          "receiptReading",
+          "apiTokens"
         ],
         "type": "object",
         "properties": {
@@ -19962,6 +20409,9 @@
             "type": "boolean"
           },
           "receiptReading": {
+            "type": "boolean"
+          },
+          "apiTokens": {
             "type": "boolean"
           }
         }
@@ -22185,6 +22635,48 @@
           "count": {
             "type": "integer",
             "format": "int32"
+          }
+        }
+      },
+      "PersonalApiTokenResponse": {
+        "required": [
+          "id",
+          "name",
+          "prefix",
+          "createdAt",
+          "expiresAt",
+          "lastUsedAt",
+          "isExpired"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "prefix": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "lastUsedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "isExpired": {
+            "type": "boolean"
           }
         }
       },
@@ -26434,6 +26926,11 @@
         "description": "JWT access token cookie issued by POST /api/auth/login and renewed by POST /api/auth/refresh. Send requests with credentials included.",
         "name": "jx_access",
         "in": "cookie"
+      },
+      "PersonalApiToken": {
+        "type": "http",
+        "description": "Read-only personal API token (jxp_...) created in Settings > Personal > Security. Accepted only on the GET operations that list it, while the ApiTokens feature is on; anything else answers 403 token.notAllowed. At most 60 requests a minute per token.",
+        "scheme": "bearer"
       }
     }
   },

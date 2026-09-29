@@ -341,6 +341,10 @@ const rules: readonly Rule[] = [
     ],
     refresh: [api.getPasskeysQueryKey],
   },
+  {
+    after: [api.getCreatePersonalApiTokenMutationKey, api.getRevokePersonalApiTokenMutationKey],
+    refresh: [api.getPersonalApiTokensQueryKey],
+  },
 ];
 
 export const mutationsWithoutInvalidation: readonly MutationKeyGetter[] = [

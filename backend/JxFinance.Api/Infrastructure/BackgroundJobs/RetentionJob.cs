@@ -34,6 +34,12 @@ public sealed class RetentionJob(IServiceScopeFactory scopes, ILogger<RetentionJ
             Logger.LogInformation("Deleted {Count} expired or revoked sessions.", sessions);
         }
 
+        var tokens = await Retention.PruneApiTokensAsync(db, now, ct);
+        if (tokens > 0)
+        {
+            Logger.LogInformation("Deleted {Count} personal API tokens that expired more than 30 days ago.", tokens);
+        }
+
         var records = await Retention.PurgeDeletedAsync(db, files, now, ct);
         if (records > 0)
         {

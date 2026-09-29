@@ -8,10 +8,12 @@
 import { HttpResponse, http } from "msw";
 import type { RequestHandlerOptions } from "msw";
 import type {
+  CreatedPersonalApiTokenResponse,
   EnableTwoFactorResponse,
   LoginResponse,
   PasskeyOptionsResponse,
   PasskeyResponse,
+  PersonalApiTokenResponse,
   SessionResponse,
   TwoFactorSetupResponse,
   UserProfileResponse,
@@ -452,6 +454,73 @@ export const getRevokeSessionMockHandler = (
   );
 };
 
+export const getCreatePersonalApiTokenMockHandler = (
+  overrideResponse?:
+    | CreatedPersonalApiTokenResponse
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<CreatedPersonalApiTokenResponse> | CreatedPersonalApiTokenResponse),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/auth/tokens",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : undefined,
+        { status: 201 },
+      );
+    },
+    options,
+  );
+};
+
+export const getPersonalApiTokensMockHandler = (
+  overrideResponse?:
+    | PersonalApiTokenResponse[]
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<PersonalApiTokenResponse[]> | PersonalApiTokenResponse[]),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/auth/tokens",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : undefined,
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getRevokePersonalApiTokenMockHandler = (
+  overrideResponse?:
+    | void
+    | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<void> | void),
+  options?: RequestHandlerOptions,
+) => {
+  return http.delete(
+    "*/api/auth/tokens/:id",
+    async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+      if (typeof overrideResponse === "function") {
+        await overrideResponse(info);
+      }
+
+      return new HttpResponse(null, { status: 204 });
+    },
+    options,
+  );
+};
+
 export const getVerifyEmailMockHandler = (
   overrideResponse?:
     | void
@@ -491,5 +560,8 @@ export const getAuthMock = () => [
   getSessionsMockHandler(),
   getRevokeOtherSessionsMockHandler(),
   getRevokeSessionMockHandler(),
+  getCreatePersonalApiTokenMockHandler(),
+  getPersonalApiTokensMockHandler(),
+  getRevokePersonalApiTokenMockHandler(),
   getVerifyEmailMockHandler(),
 ];

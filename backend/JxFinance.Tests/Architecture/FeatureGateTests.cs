@@ -28,6 +28,7 @@ public sealed class FeatureGateTests
         (ApiRoutes.MonthClosePath, Feature.MonthClose),
         (ApiRoutes.AccountsPath + "/forecast", Feature.RecurringBills),
         (ApiRoutes.ReceiptsPath, Feature.ReceiptReading),
+        (ApiRoutes.AuthPath + "/tokens", Feature.ApiTokens),
     ];
 
     [Fact]

@@ -39,7 +39,7 @@ flowchart LR
     N --> Snap["Snapshot per active user, failures isolated per user"]
     E --> Rates["Rates from the day after the newest stored rate,<br/>or the last 30 days; prunes ExchangeRateFetchLog"]
     B --> Imp["ImportAsync per enabled connection, failures isolated;<br/>each statement is one audit row for the owner"]
-    L --> Prune["four steps: AuditEvents over 400 days,<br/>expired and revoked UserSessions,<br/>records soft-deleted over 30 days ago,<br/>then the DeletionEntries that described them"]
+    L --> Prune["five steps: AuditEvents over 400 days,<br/>expired and revoked UserSessions,<br/>API tokens expired over 30 days ago,<br/>records soft-deleted over 30 days ago,<br/>then the DeletionEntries that described them"]
     P --> Purge["deletes attachments deleted over 30 days ago, their files,<br/>and files no row refers to after an hour"]
 ```
 
@@ -70,6 +70,7 @@ Every job runs outside a request and therefore outside the active-household scop
 | --- | --- | --- |
 | Audit log | `AuditEvents` by `OccurredAt`, in one `ExecuteDelete` over the `OccurredAt` index | `AuditEvent.RetentionDays`, 400 days |
 | Sessions | `UserSessions` that have expired, and ones whose `SecurityStamp` no longer matches their user's, which is what "revoked" means for a session | none; the row is already dead |
+| API tokens | `PersonalApiTokens` by `ExpiresAt`, in one `ExecuteDelete`; an expired token stays listed, marked Expired, until then | `PersonalApiToken.KeptAfterExpiry`, 30 days after expiry |
 | Deleted records | the rows of the ten trash kinds listed in `Retention.PurgedKinds`, whose `IsDeleted` is true and whose `UpdatedAt` is before the window | `DeletionEntry.RetentionDays`, 30 days |
 | Trash entries | `DeletionEntries` by `DeletedAt`, and their `DeletionChanges` through the cascading foreign key | the same 30 days |
 

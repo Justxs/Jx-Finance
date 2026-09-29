@@ -163,6 +163,7 @@ public sealed class UserService(
         user.LockoutEnabled = true;
         await userManager.SetLockoutEndDateAsync(user, AppUser.DeactivatedUntil);
         await userManager.UpdateSecurityStampAsync(user);
+        await db.PersonalApiTokens.Where(t => t.UserId == user.Id).ExecuteDeleteAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
 
         return id;
@@ -252,6 +253,7 @@ public sealed class UserService(
 
         await userManager.ResetAccessFailedCountAsync(user);
         await userManager.UpdateSecurityStampAsync(user);
+        await db.PersonalApiTokens.Where(t => t.UserId == user.Id).ExecuteDeleteAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
 
         return await authService.ToProfileAsync(user);

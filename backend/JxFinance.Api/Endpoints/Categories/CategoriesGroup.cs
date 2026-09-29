@@ -3,4 +3,4 @@ using JxFinance.Common.OpenApi;
 
 namespace JxFinance.Endpoints.Categories;
 
-public sealed class CategoriesGroup() : ApiGroup(ApiTags.Categories);
+public sealed class CategoriesGroup() : ApiGroup(ApiTags.Categories, tokenReadable: true);

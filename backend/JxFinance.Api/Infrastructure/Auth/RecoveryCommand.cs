@@ -14,7 +14,7 @@ public static class RecoveryCommand
         if (user is null || !await users.IsInRoleAsync(user, AppRoles.Admin))
             throw new InvalidOperationException("An existing administrator is required. This command does not provision users.");
         if (Console.IsInputRedirected) throw new InvalidOperationException("Run recovery in an interactive terminal.");
-        Console.WriteLine("Administrator recovery resets the password, 2FA and passkeys, and revokes existing sessions.");
+        Console.WriteLine("Administrator recovery resets the password, 2FA and passkeys, and revokes existing sessions and API tokens.");
         Console.Write("New password: ");
         var password = ReadPassword();
         Console.Write("Confirm password: ");
@@ -32,7 +32,9 @@ public static class RecoveryCommand
         await users.SetTwoFactorEnabledAsync(user, false);
         await users.ResetAuthenticatorKeyAsync(user);
         await users.GenerateNewTwoFactorRecoveryCodesAsync(user, 0);
-        await services.GetRequiredService<AppDbContext>().UserPasskeys.Where(p => p.UserId == user.Id).ExecuteDeleteAsync();
+        var db = services.GetRequiredService<AppDbContext>();
+        await db.UserPasskeys.Where(p => p.UserId == user.Id).ExecuteDeleteAsync();
+        await db.PersonalApiTokens.Where(t => t.UserId == user.Id).ExecuteDeleteAsync();
         await users.SetLockoutEndDateAsync(user, null);
         await users.ResetAccessFailedCountAsync(user);
         await users.UpdateSecurityStampAsync(user);

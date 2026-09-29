@@ -350,6 +350,59 @@ export const RevokeOtherSessionsResponse = zod.void();
 export const RevokeSessionResponse = zod.void();
 
 /**
+ * Confirms the account password and creates a read-only token for scripts and spreadsheets. The token is returned once, in this response, and never again: only its public prefix and a hash of its secret are kept. Send it as Authorization: Bearer jxp_... to read what you read in the browser. It cannot write anything and cannot reach administration, sessions, tokens, settings, backups or attachments. The password counts toward the account lockout. Needs the ApiTokens feature switch. Rate limited to five attempts per five minutes.
+ * @summary Create a personal API token
+ */
+export const createPersonalApiTokenBodyNameMin = 0;
+export const createPersonalApiTokenBodyNameMax = 60;
+
+export const createPersonalApiTokenBodyExpiresInDaysMax = 365;
+
+export const CreatePersonalApiTokenBody = zod.object({
+  name: zod
+    .string()
+    .min(createPersonalApiTokenBodyNameMin)
+    .max(createPersonalApiTokenBodyNameMax)
+    .describe("A name for the list, at most 60 characters."),
+  expiresInDays: zod
+    .int()
+    .min(1)
+    .max(createPersonalApiTokenBodyExpiresInDaysMax)
+    .describe("Days until the token stops working, from 1 to 365."),
+  password: zod.string().min(1).describe("The account password."),
+});
+
+export const CreatePersonalApiTokenResponse = zod.object({
+  id: zod.uuid(),
+  name: zod.string(),
+  prefix: zod.string(),
+  createdAt: zod.iso.datetime({ offset: true }),
+  expiresAt: zod.iso.datetime({ offset: true }),
+  token: zod.string(),
+});
+
+/**
+ * Returns the signed-in user's tokens, newest first: the name, the public prefix, when each was created, when it expires and when it was last used, to the minute. Expired tokens stay listed, marked as expired, until they are removed 30 days after expiry. The secret is never returned. Needs the ApiTokens feature switch.
+ * @summary List your personal API tokens
+ */
+export const PersonalApiTokensResponseItem = zod.object({
+  id: zod.uuid(),
+  name: zod.string(),
+  prefix: zod.string(),
+  createdAt: zod.iso.datetime({ offset: true }),
+  expiresAt: zod.iso.datetime({ offset: true }),
+  lastUsedAt: zod.iso.datetime({ offset: true }).nullable(),
+  isExpired: zod.boolean(),
+});
+export const PersonalApiTokensResponse = zod.array(PersonalApiTokensResponseItem);
+
+/**
+ * Deletes one of your tokens, so the next request that carries it answers 401 token.invalid. Needs the ApiTokens feature switch.
+ * @summary Revoke a personal API token
+ */
+export const RevokePersonalApiTokenResponse = zod.void();
+
+/**
  * Consumes the token from the confirmation link and marks the address confirmed. The token is ASP.NET Identity's own email-confirmation token and is valid for one day. Opening the link again after the address is confirmed answers 204, so a second click is not an error; an unknown address, an expired token and a tampered token answer 400 email.tokenInvalid. The call needs no session, because the person reading the mailbox may not be signed in. An unconfirmed address blocks nothing but unsolicited mail to it, so nothing else changes. Rate limited to 10 calls per five minutes per client.
  * @summary Confirm an email address
  */

@@ -6,6 +6,8 @@ import { SupportLinkSetting } from "@/components/support-link/support-link";
 import { DashboardLayoutSection } from "@/features/dashboard/dashboard-customiser/dashboard-customiser";
 import { ImportDataSection } from "@/features/imports/import-data-section/import-data-section";
 import { SettingsLayout, profileSections } from "@/features/settings/settings-nav/settings-nav";
+import { useFeature } from "@/hooks/use-settings";
+import { ApiTokensSection } from "../api-tokens-section/api-tokens-section";
 import { NotificationsSection } from "../notifications-section/notifications-section";
 import { PasskeysSection } from "../passkeys-section/passkeys-section";
 import { ProfileForm } from "../profile-form/profile-form";
@@ -17,12 +19,14 @@ export function ProfilePage() {
   const me = useMeSuspense();
   const search = useSearch({ from: "/profile" });
   const { section } = useNavSections(profileSections, search.section, "account");
+  const apiTokens = useFeature("apiTokens");
 
   return (
     <SettingsLayout current={section}>
       {section === "account" ? <ProfileForm profile={me.data} /> : null}
       {section === "security" ? <TwoFactorSettings /> : null}
       {section === "security" ? <PasskeysSection /> : null}
+      {section === "security" && apiTokens ? <ApiTokensSection /> : null}
       {section === "sessions" ? <SessionsSection /> : null}
       {section === "notifications" ? <NotificationsSection /> : null}
       {section === "dashboard" ? <DashboardLayoutSection /> : null}

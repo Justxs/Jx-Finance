@@ -2,6 +2,7 @@ import {
   getAddPasskeyMockHandler,
   getBeginPasskeyRegistrationMockHandler,
   getBeginPasskeySignInMockHandler,
+  getCreatePersonalApiTokenMockHandler,
   getDisableTwoFactorMockHandler,
   getEnableTwoFactorMockHandler,
   getForgotPasswordMockHandler,
@@ -10,10 +11,12 @@ import {
   getMeMockHandler,
   getPasskeySignInMockHandler,
   getPasskeysMockHandler,
+  getPersonalApiTokensMockHandler,
   getRemovePasskeyMockHandler,
   getRenamePasskeyMockHandler,
   getResetPasswordMockHandler,
   getRevokeOtherSessionsMockHandler,
+  getRevokePersonalApiTokenMockHandler,
   getRevokeSessionMockHandler,
   getSendVerificationEmailMockHandler,
   getSessionsMockHandler,
@@ -22,11 +25,13 @@ import {
 } from "@/api/generated/auth/auth.msw";
 import type { ProblemDetails } from "@/api/generated/model";
 import {
+  createdPersonalApiToken,
   currentUser,
   loginSuccess,
   loginTwoFactorRequired,
   passkeyOptions,
   passkeys,
+  personalApiTokens,
   resetLink,
   resetTokenInvalidProblem,
   sessionCurrentProblem,
@@ -93,4 +98,9 @@ export const authHandlers = [
   getResetPasswordMockHandler(requireLinkToken(resetTokenInvalidProblem)),
   getVerifyEmailMockHandler(requireLinkToken(verificationTokenInvalidProblem)),
   getSendVerificationEmailMockHandler(),
+  getPersonalApiTokensMockHandler(personalApiTokens),
+  getCreatePersonalApiTokenMockHandler(createdPersonalApiToken),
+  getRevokePersonalApiTokenMockHandler(({ params }) => {
+    found(personalApiTokens.find((token) => token.id === params.id));
+  }),
 ];

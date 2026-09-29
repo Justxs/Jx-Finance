@@ -43,6 +43,10 @@ public static class ErrorCodes
     public const string PasskeyStateInvalid = "passkey.stateInvalid";
     public const string PasskeyLimitReached = "passkey.limitReached";
     public const string PasskeyUnavailable = "passkey.unavailable";
+    public const string TokenInvalid = "token.invalid";
+    public const string TokenNotAllowed = "token.notAllowed";
+    public const string TokenLimitReached = "token.limitReached";
+    public const string TokenRateLimited = "token.rateLimited";
     public const string SetupAlreadyCompleted = "setup.alreadyCompleted";
     public const string FeatureDisabled = "feature.disabled";
     public const string UserSelfChange = "user.selfChange";
@@ -138,10 +142,12 @@ public static class ErrorCodes
     {
         ResourceNotFound or FeatureDisabled => StatusCodes.Status404NotFound,
         ConflictDuplicate or ConflictStale or ConflictBusy or SetupAlreadyCompleted or RestoreSlotTaken
-            or RestoreNameTaken or AttachmentLimitReached or MonthCloseNotEnded or DebtPaymentTaken or PasskeyLimitReached => StatusCodes.Status409Conflict,
-        AccessForbidden or UserSelfChange or UserLastAdministrator or SecurityNotHeld or SessionCurrent => StatusCodes.Status403Forbidden,
-        CredentialsInvalid => StatusCodes.Status401Unauthorized,
-        CredentialsLockedOut => StatusCodes.Status429TooManyRequests,
+            or RestoreNameTaken or AttachmentLimitReached or MonthCloseNotEnded or DebtPaymentTaken or PasskeyLimitReached
+            or TokenLimitReached => StatusCodes.Status409Conflict,
+        AccessForbidden or UserSelfChange or UserLastAdministrator or SecurityNotHeld or SessionCurrent
+            or TokenNotAllowed => StatusCodes.Status403Forbidden,
+        CredentialsInvalid or TokenInvalid => StatusCodes.Status401Unauthorized,
+        CredentialsLockedOut or TokenRateLimited => StatusCodes.Status429TooManyRequests,
         ReceiptEngineUnavailable => StatusCodes.Status503ServiceUnavailable,
         _ => StatusCodes.Status400BadRequest,
     };

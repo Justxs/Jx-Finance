@@ -8,7 +8,8 @@ public sealed class DeactivateUserSummary : Summary<DeactivateUserEndpoint>
     {
         Summary = "Deactivate a user";
         Description = "Locks the account out instead of deleting it, so the transactions and households "
-            + "it touched stay intact. Existing sessions are rejected on their next request. You cannot "
+            + "it touched stay intact. Existing sessions are rejected on their next request and every personal API "
+            + "token of the user is deleted. You cannot "
             + "deactivate yourself, and the last active administrator cannot be deactivated, so an instance "
             + "is never left without one. Administrators only.";
         Params["id"] = "The user id.";

@@ -2,6 +2,7 @@ using System.Security.Claims;
 using FastEndpoints.Security;
 using JxFinance.Domain.Common;
 using JxFinance.Infrastructure.Data;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 
@@ -9,6 +10,8 @@ namespace JxFinance.Infrastructure.Auth;
 
 public static class JwtCookieAuthentication
 {
+    public const string CredentialSelectorScheme = "Credentials";
+
     public static IServiceCollection AddJwtCookieAuthentication(this IServiceCollection services, IConfiguration configuration)
     {
         var signingKey = JwtSigningKey.Resolve(configuration);
@@ -30,8 +33,25 @@ public static class JwtCookieAuthentication
                 };
             });
 
+        services.AddAuthentication(options =>
+            {
+                options.DefaultScheme = CredentialSelectorScheme;
+                options.DefaultAuthenticateScheme = CredentialSelectorScheme;
+                options.DefaultChallengeScheme = CredentialSelectorScheme;
+                options.DefaultForbidScheme = CredentialSelectorScheme;
+            })
+            .AddPolicyScheme(CredentialSelectorScheme, null, policy => policy.ForwardDefaultSelector = SelectScheme)
+            .AddScheme<AuthenticationSchemeOptions, PersonalApiTokenAuthenticationHandler>(
+                PersonalApiTokenAuthenticationHandler.SchemeName,
+                null);
+
         return services;
     }
+
+    private static string SelectScheme(HttpContext context) =>
+        PersonalApiTokenFormat.IsBearerToken(context.Request.Headers.Authorization)
+            ? PersonalApiTokenAuthenticationHandler.SchemeName
+            : JwtBearerDefaults.AuthenticationScheme;
 
     private static async Task ValidatePrincipalAsync(TokenValidatedContext context)
     {

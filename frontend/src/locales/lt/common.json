@@ -847,6 +847,37 @@
       "alreadyRegistered": "Šiame autentifikatoriuje jau yra jūsų paskyros prieigos raktas.",
       "failed": "Naršyklė nesukūrė prieigos rakto. Bandykite dar kartą."
     },
+    "apiTokens": {
+      "title": "Asmeniniai API raktai",
+      "description": "Leiskite savo kompiuterio scenarijui ar skaičiuoklei skaityti tai, ką matote čia. Raktu galima tik skaityti: jis nieko nekeičia ir niekada nepasiekia nustatymų, atsarginių kopijų, priedų ar administravimo.",
+      "empty": "Raktų dar nėra.",
+      "create": "Sukurti raktą",
+      "createTitle": "Sukurti asmeninį API raktą",
+      "name": "Pavadinimas",
+      "namePlaceholder": "Mėnesio skaičiuoklė",
+      "expiry": "Galioja",
+      "expiryOptions": {
+        "30": "30 dienų",
+        "90": "90 dienų",
+        "365": "1 metus"
+      },
+      "secret": "Jūsų naujas raktas",
+      "copy": "Kopijuoti",
+      "copied": "Raktas nukopijuotas",
+      "copyFailed": "Naršyklė neleido kopijuoti. Pažymėkite raktą ir nukopijuokite patys.",
+      "shownOnce": "Šio rakto daugiau nebepamatysite. Laikykite jį ten, kur scenarijus galės jį perskaityti, pavyzdžiui, aplinkos kintamajame.",
+      "done": "Baigta",
+      "created": "Sukurtas",
+      "expires": "Galioja iki",
+      "expired": "Nebegalioja nuo",
+      "expiredTag": "Nebegalioja",
+      "lastUsed": "Paskutinį kartą naudotas",
+      "never": "Niekada",
+      "revoke": "Atšaukti",
+      "revokeTitle": "Atšaukti šį raktą?",
+      "revokeDescription": "Jį naudojantys scenarijai ir skaičiuoklės iškart nustos veikti.",
+      "revoked": "Raktas atšauktas"
+    },
     "emailUnconfirmedTitle": "Patvirtinkite el. pašto adresą",
     "emailUnconfirmedBody": "Adresas {{email}} dar nepatvirtintas, todėl į jį nesiunčiami jokie laiškai. Kitos funkcijos neribojamos.",
     "resendVerification": "Siųsti nuorodą dar kartą",
@@ -963,6 +994,10 @@
         "receiptReading": {
           "name": "Kvitų skaitymas",
           "hint": "Operacijos išskaidymą užpildo iš kvito nuotraukos ar PDF failo, kurį perskaito šis serveris su Tesseract; niekas niekur nesiunčiama."
+        },
+        "apiTokens": {
+          "name": "Asmeniniai API raktai",
+          "hint": "Nariai gali kurti tik skaitymo raktus savo scenarijams ir skaičiuoklėms. Išjungus visi raktai sustabdomi, kol funkcija vėl įjungiama."
         }
       }
     },
@@ -2455,6 +2490,12 @@
       "stateInvalid": "Tai užtruko per ilgai. Bandykite dar kartą.",
       "limitReached": "Jau turite 10 prieigos raktų. Pirmiausia pašalinkite vieną.",
       "unavailable": "Šios sistemos adresu prieigos raktų naudoti negalima."
+    },
+    "token": {
+      "invalid": "API raktas nepateiktas, nebegalioja arba atšauktas.",
+      "notAllowed": "API raktu galima tik skaityti apskaitą.",
+      "limitReached": "Jau turite 10 raktų. Pirmiausia atšaukite vieną.",
+      "rateLimited": "Per daug užklausų su šiuo raktu. Palaukite minutę."
     }
   },
   "export": {

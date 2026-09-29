@@ -6,8 +6,17 @@ namespace JxFinance.Common;
 
 public abstract class ApiGroup : Group
 {
-    protected ApiGroup(string tag, Feature? feature = null, bool requiresAuthentication = true, string? role = null)
+    protected ApiGroup(
+        string tag,
+        Feature? feature = null,
+        bool requiresAuthentication = true,
+        string? role = null,
+        bool tokenReadable = false)
     {
+        List<object> metadata = [];
+        if (feature is { } gated) metadata.Add(new RequiresFeature(gated));
+        if (tokenReadable) metadata.Add(TokenReadable.Yes);
+
         Configure(
             ApiRoutes.Prefix,
             ep =>
@@ -19,7 +28,7 @@ public abstract class ApiGroup : Group
                     if (role is not null) d.ProducesProblemDetails(403);
                 });
                 if (role is not null) ep.Roles(role);
-                if (feature is { } gated) ep.Options(b => b.WithMetadata(new RequiresFeature(gated)));
+                if (metadata.Count > 0) ep.Options(b => b.WithMetadata([.. metadata]));
             });
     }
 }

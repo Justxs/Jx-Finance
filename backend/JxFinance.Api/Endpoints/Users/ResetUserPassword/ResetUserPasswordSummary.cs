@@ -12,7 +12,7 @@ public sealed class ResetUserPasswordSummary : Summary<ResetUserPasswordEndpoint
             + "profile after signing in. The administrator confirms the action with their own current password; "
             + "a wrong one answers password.incorrect, counts toward the administrator's sign-in lockout, and a "
             + "locked-out administrator answers credentials.lockedOut. The new password must satisfy the same "
-            + "rules as any other password, otherwise password.tooWeak. Every session of the target user is "
+            + "rules as any other password, otherwise password.tooWeak. Every session and personal API token of the target user is "
             + "revoked and their failed sign-in counter and temporary lockout are cleared; a deactivated user "
             + "stays deactivated. With resetTwoFactor the authenticator is switched off, the recovery codes "
             + "are invalidated and every passkey is removed as well, for a user who also lost their device. The target may be a member or "

@@ -31,6 +31,8 @@ import { customFetch } from "../../client";
 import type { ErrorType } from "../../client";
 import type {
   AddPasskeyRequest,
+  CreatePersonalApiTokenRequest,
+  CreatedPersonalApiTokenResponse,
   EnableTwoFactorRequest,
   EnableTwoFactorResponse,
   ForgotPasswordRequest,
@@ -39,6 +41,7 @@ import type {
   PasskeyOptionsResponse,
   PasskeyResponse,
   PasskeySignInRequest,
+  PersonalApiTokenResponse,
   ProblemDetails,
   ReauthenticateRequest,
   RenamePasskeyRequest,
@@ -1999,6 +2002,315 @@ export const useRevokeSession = <TError = ErrorType<ProblemDetails>, TContext = 
   TContext
 > => {
   return useMutation(getRevokeSessionMutationOptions(options), queryClient);
+};
+export const getCreatePersonalApiTokenUrl = () => {
+  return `/api/auth/tokens`;
+};
+
+/**
+ * Confirms the account password and creates a read-only token for scripts and spreadsheets. The token is returned once, in this response, and never again: only its public prefix and a hash of its secret are kept. Send it as Authorization: Bearer jxp_... to read what you read in the browser. It cannot write anything and cannot reach administration, sessions, tokens, settings, backups or attachments. The password counts toward the account lockout. Needs the ApiTokens feature switch. Rate limited to five attempts per five minutes.
+ * @summary Create a personal API token
+ */
+export const createPersonalApiToken = async (
+  createPersonalApiTokenRequest: CreatePersonalApiTokenRequest,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<CreatedPersonalApiTokenResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return customFetch<CreatedPersonalApiTokenResponse>(getCreatePersonalApiTokenUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(createPersonalApiTokenRequest),
+  });
+};
+
+export const getCreatePersonalApiTokenMutationKey = () => ["createPersonalApiToken"] as const;
+
+export const getCreatePersonalApiTokenMutationOptions = <
+  TError = ErrorType<ProblemDetails | void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createPersonalApiToken>>,
+    TError,
+    CreatePersonalApiTokenMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createPersonalApiToken>>,
+  TError,
+  CreatePersonalApiTokenMutationVariables,
+  TContext
+> => {
+  const mutationKey = getCreatePersonalApiTokenMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createPersonalApiToken>>,
+    CreatePersonalApiTokenMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return createPersonalApiToken(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreatePersonalApiTokenMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createPersonalApiToken>>
+>;
+export type CreatePersonalApiTokenMutationBody = CreatePersonalApiTokenRequest;
+export type CreatePersonalApiTokenMutationError = ErrorType<ProblemDetails | void>;
+export type CreatePersonalApiTokenMutationVariables = { data: CreatePersonalApiTokenRequest };
+
+/**
+ * @summary Create a personal API token
+ */
+export const useCreatePersonalApiToken = <
+  TError = ErrorType<ProblemDetails | void>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof createPersonalApiToken>>,
+      TError,
+      CreatePersonalApiTokenMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof createPersonalApiToken>>,
+  TError,
+  CreatePersonalApiTokenMutationVariables,
+  TContext
+> => {
+  return useMutation(getCreatePersonalApiTokenMutationOptions(options), queryClient);
+};
+export const getPersonalApiTokensUrl = () => {
+  return `/api/auth/tokens`;
+};
+
+/**
+ * Returns the signed-in user's tokens, newest first: the name, the public prefix, when each was created, when it expires and when it was last used, to the minute. Expired tokens stay listed, marked as expired, until they are removed 30 days after expiry. The secret is never returned. Needs the ApiTokens feature switch.
+ * @summary List your personal API tokens
+ */
+export const personalApiTokens = async (
+  options?: Parameters<typeof customFetch>[1],
+): Promise<PersonalApiTokenResponse[]> => {
+  return customFetch<PersonalApiTokenResponse[]>(getPersonalApiTokensUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getPersonalApiTokensQueryKey = () => {
+  return [`/api/auth/tokens`] as const;
+};
+
+export const getPersonalApiTokensSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof personalApiTokens>>,
+  TError = ErrorType<ProblemDetails>,
+>(options?: {
+  query?: Partial<
+    UseSuspenseQueryOptions<Awaited<ReturnType<typeof personalApiTokens>>, TError, TData>
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getPersonalApiTokensQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof personalApiTokens>>> = ({ signal }) =>
+    personalApiTokens({ signal, ...requestOptions });
+
+  return queryOptionsBuilder({
+    queryKey,
+    ...queryOptions,
+    queryFn: queryOptions?.queryFn ?? queryFn,
+  }) as UseSuspenseQueryOptions<Awaited<ReturnType<typeof personalApiTokens>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  } & {
+    throwOnError?: ((this: never, error: TError) => boolean) & { readonly __inferenceOnly: never };
+  };
+};
+
+export type PersonalApiTokensSuspenseQueryResult = NonNullable<
+  Awaited<ReturnType<typeof personalApiTokens>>
+>;
+export type PersonalApiTokensSuspenseQueryError = ErrorType<ProblemDetails>;
+
+export function usePersonalApiTokensSuspense<
+  TData = Awaited<ReturnType<typeof personalApiTokens>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options: {
+    query: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof personalApiTokens>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function usePersonalApiTokensSuspense<
+  TData = Awaited<ReturnType<typeof personalApiTokens>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof personalApiTokens>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function usePersonalApiTokensSuspense<
+  TData = Awaited<ReturnType<typeof personalApiTokens>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof personalApiTokens>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List your personal API tokens
+ */
+
+export function usePersonalApiTokensSuspense<
+  TData = Awaited<ReturnType<typeof personalApiTokens>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof personalApiTokens>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getPersonalApiTokensSuspenseQueryOptions(options);
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export const getRevokePersonalApiTokenUrl = (id: string) => {
+  return `/api/auth/tokens/${id}`;
+};
+
+/**
+ * Deletes one of your tokens, so the next request that carries it answers 401 token.invalid. Needs the ApiTokens feature switch.
+ * @summary Revoke a personal API token
+ */
+export const revokePersonalApiToken = async (
+  id: string,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<void> => {
+  return customFetch<void>(getRevokePersonalApiTokenUrl(id), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getRevokePersonalApiTokenMutationKey = () => ["revokePersonalApiToken"] as const;
+
+export const getRevokePersonalApiTokenMutationOptions = <
+  TError = ErrorType<ProblemDetails>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof revokePersonalApiToken>>,
+    TError,
+    RevokePersonalApiTokenMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof revokePersonalApiToken>>,
+  TError,
+  RevokePersonalApiTokenMutationVariables,
+  TContext
+> => {
+  const mutationKey = getRevokePersonalApiTokenMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof revokePersonalApiToken>>,
+    RevokePersonalApiTokenMutationVariables
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return revokePersonalApiToken(id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type RevokePersonalApiTokenMutationResult = NonNullable<
+  Awaited<ReturnType<typeof revokePersonalApiToken>>
+>;
+
+export type RevokePersonalApiTokenMutationError = ErrorType<ProblemDetails>;
+export type RevokePersonalApiTokenMutationVariables = { id: string };
+
+/**
+ * @summary Revoke a personal API token
+ */
+export const useRevokePersonalApiToken = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof revokePersonalApiToken>>,
+      TError,
+      RevokePersonalApiTokenMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof revokePersonalApiToken>>,
+  TError,
+  RevokePersonalApiTokenMutationVariables,
+  TContext
+> => {
+  return useMutation(getRevokePersonalApiTokenMutationOptions(options), queryClient);
 };
 export const getVerifyEmailUrl = () => {
   return `/api/auth/verify-email`;

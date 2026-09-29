@@ -15,4 +15,5 @@ public enum Feature
     UnusualAmounts,
     MonthClose,
     ReceiptReading,
+    ApiTokens,
 }

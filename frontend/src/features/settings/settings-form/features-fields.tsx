@@ -29,6 +29,7 @@ const groupOf = {
   households: "ledger",
   multiCurrency: "ledger",
   receiptReading: "ledger",
+  apiTokens: "ledger",
 } as const satisfies Record<FeatureKey, FeatureGroup>;
 
 const groupTitles: Record<FeatureGroup, TranslationKey> = {

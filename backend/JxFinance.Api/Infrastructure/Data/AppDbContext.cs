@@ -86,6 +86,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, ICurren
     public DbSet<Household> Households => Set<Household>();
     public DbSet<HouseholdMembership> HouseholdMemberships => Set<HouseholdMembership>();
     public DbSet<UserSession> UserSessions => Set<UserSession>();
+    public DbSet<PersonalApiToken> PersonalApiTokens => Set<PersonalApiToken>();
     public DbSet<EmailMessage> EmailMessages => Set<EmailMessage>();
     public DbSet<DiscordWebhook> DiscordWebhooks => Set<DiscordWebhook>();
     public DbSet<DiscordMessage> DiscordMessages => Set<DiscordMessage>();

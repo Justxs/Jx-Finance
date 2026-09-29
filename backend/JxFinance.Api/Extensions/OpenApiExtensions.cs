@@ -56,6 +56,7 @@ public static class OpenApiExtensions
 
                     return Task.CompletedTask;
                 });
+                openApi.AddOperationTransformer(TokenSecurity.MarkReadable);
                 openApi.AddDocumentTransformer((document, _, _) =>
                 {
                     document.Info.Description = DocumentDescription;
@@ -63,6 +64,7 @@ public static class OpenApiExtensions
                     SchemaVariants.Collapse(document);
                     ArrayWrappers.Inline(document);
                     ErrorContract.Describe(document);
+                    TokenSecurity.Describe(document);
                     OperationNames.Shorten(document);
                     return Task.CompletedTask;
                 });

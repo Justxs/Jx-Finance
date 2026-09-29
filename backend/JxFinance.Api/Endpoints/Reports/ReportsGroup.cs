@@ -4,4 +4,4 @@ using JxFinance.Domain.Settings;
 
 namespace JxFinance.Endpoints.Reports;
 
-public sealed class ReportsGroup() : ApiGroup(ApiTags.Reports, Feature.Reports);
+public sealed class ReportsGroup() : ApiGroup(ApiTags.Reports, Feature.Reports, tokenReadable: true);

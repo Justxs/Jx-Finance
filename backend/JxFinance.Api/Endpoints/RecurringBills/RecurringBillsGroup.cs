@@ -4,4 +4,4 @@ using JxFinance.Domain.Settings;
 
 namespace JxFinance.Endpoints.RecurringBills;
 
-public sealed class RecurringBillsGroup() : ApiGroup(ApiTags.RecurringBills, Feature.RecurringBills);
+public sealed class RecurringBillsGroup() : ApiGroup(ApiTags.RecurringBills, Feature.RecurringBills, tokenReadable: true);

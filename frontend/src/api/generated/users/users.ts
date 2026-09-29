@@ -944,7 +944,7 @@ export const getDeactivateUserUrl = (id: string) => {
 };
 
 /**
- * Locks the account out instead of deleting it, so the transactions and households it touched stay intact. Existing sessions are rejected on their next request. You cannot deactivate yourself, and the last active administrator cannot be deactivated, so an instance is never left without one. Administrators only.
+ * Locks the account out instead of deleting it, so the transactions and households it touched stay intact. Existing sessions are rejected on their next request and every personal API token of the user is deleted. You cannot deactivate yourself, and the last active administrator cannot be deactivated, so an instance is never left without one. Administrators only.
  * @summary Deactivate a user
  */
 export const deactivateUser = async (
@@ -1110,7 +1110,7 @@ export const getResetUserPasswordUrl = (id: string) => {
 };
 
 /**
- * Administrators only. For a user who forgot their password: the administrator chooses a temporary password and hands it over outside the application, and the user changes it on their profile after signing in. The administrator confirms the action with their own current password; a wrong one answers password.incorrect, counts toward the administrator's sign-in lockout, and a locked-out administrator answers credentials.lockedOut. The new password must satisfy the same rules as any other password, otherwise password.tooWeak. Every session of the target user is revoked and their failed sign-in counter and temporary lockout are cleared; a deactivated user stays deactivated. With resetTwoFactor the authenticator is switched off, the recovery codes are invalidated and every passkey is removed as well, for a user who also lost their device. The target may be a member or another administrator, never the caller: change your own password on the profile. Rate limited to 10 calls per five minutes per client.
+ * Administrators only. For a user who forgot their password: the administrator chooses a temporary password and hands it over outside the application, and the user changes it on their profile after signing in. The administrator confirms the action with their own current password; a wrong one answers password.incorrect, counts toward the administrator's sign-in lockout, and a locked-out administrator answers credentials.lockedOut. The new password must satisfy the same rules as any other password, otherwise password.tooWeak. Every session and personal API token of the target user is revoked and their failed sign-in counter and temporary lockout are cleared; a deactivated user stays deactivated. With resetTwoFactor the authenticator is switched off, the recovery codes are invalidated and every passkey is removed as well, for a user who also lost their device. The target may be a member or another administrator, never the caller: change your own password on the profile. Rate limited to 10 calls per five minutes per client.
  * @summary Set a new password for another user
  */
 export const resetUserPassword = async (

@@ -4,4 +4,4 @@ using JxFinance.Domain.Settings;
 
 namespace JxFinance.Endpoints.Budgets;
 
-public sealed class BudgetsGroup() : ApiGroup(ApiTags.Budgets, Feature.Budgets);
+public sealed class BudgetsGroup() : ApiGroup(ApiTags.Budgets, Feature.Budgets, tokenReadable: true);

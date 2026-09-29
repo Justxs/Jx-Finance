@@ -261,6 +261,8 @@ const contracts: Record<string, Contract> = {
   sessions: { schema: schemas.SessionsResponse },
   passkeys: { schema: schemas.PasskeysResponse },
   passkeyOptions: { schema: schemas.BeginPasskeyRegistrationResponse },
+  personalApiTokens: { schema: schemas.PersonalApiTokensResponse },
+  createdPersonalApiToken: { schema: schemas.CreatePersonalApiTokenResponse },
   setupStatus: { schema: schemas.SetupStatusResponse },
   worldEtf: { schema: schemas.SecuritiesResponseItem },
   usStock: { schema: schemas.SecuritiesResponseItem },

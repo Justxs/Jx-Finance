@@ -24,6 +24,8 @@ public static class ApiPipelineExtensions
         app.UseSerilogRequestLogging(options => options.GetLevel = RequestLogLevel);
 
         app.UseAuthentication();
+        app.UseRateLimiter();
+        app.UseMiddleware<PersonalApiTokenGateMiddleware>();
         app.UseAuthorization();
         app.UseMiddleware<FeatureGateMiddleware>();
         app.UseMiddleware<ActiveHouseholdMiddleware>();
