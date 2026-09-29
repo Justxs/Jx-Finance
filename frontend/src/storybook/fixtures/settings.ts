@@ -15,6 +15,7 @@ export const settings: SettingsResponse = {
     categorizationRules: true,
     unusualAmounts: true,
     monthClose: true,
+    receiptReading: false,
   },
   reportingCurrency: "eur",
   enabledCurrencies: ["eur", "usd", "gbp", "pln", "chf", "sek", "nok"],
@@ -26,6 +27,7 @@ export const settings: SettingsResponse = {
   defaultAccountId: null,
   defaultPageSize: 20,
   supportLinkEnabled: true,
+  receiptReadingReady: false,
 };
 
 export const publicSettings: PublicSettingsResponse = {

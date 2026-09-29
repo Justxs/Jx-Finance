@@ -66,6 +66,9 @@ public static class ApiRoutes
 
     public const string Ping = "ping";
 
+    public const string Receipts = "receipts";
+    public const string ReceiptsPath = Base + "/" + Receipts;
+
     public const string RecurringBills = "recurring-bills";
     public const string RecurringBillsPath = Base + "/" + RecurringBills;
 

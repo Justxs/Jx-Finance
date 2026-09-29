@@ -9,6 +9,7 @@ import {
   useCreateTransaction,
   useDeleteTransaction,
   useUpdateTransaction,
+  useUploadAttachment,
 } from "@/api/generated";
 import type {
   Currency,
@@ -18,6 +19,7 @@ import type {
 import { useReportingCurrency } from "@/hooks/use-formatters";
 import { silent } from "@/lib/mutations";
 import { optimisticPagedRemoval, optimisticUpdate } from "@/lib/optimistic";
+import { errorMessage } from "@/lib/query-client";
 import { normalizeMoney } from "@/lib/validation";
 import { optimisticId } from "../transaction-amount";
 
@@ -113,5 +115,15 @@ export function useTransactionMutations({ listKey, onUpdated, onBulkApplied }: R
     },
   });
 
-  return { create, update, remove, bulkTag, bulkCategory };
+  const uploadReceipt = useUploadAttachment(silent());
+
+  async function attachReceipt(transactionId: string, file: File) {
+    try {
+      await uploadReceipt.mutateAsync({ transactionId, data: { file } });
+    } catch (error) {
+      toast.error(t("receipts.attachFailed"), { description: errorMessage(error).description });
+    }
+  }
+
+  return { create, update, remove, bulkTag, bulkCategory, attachReceipt };
 }

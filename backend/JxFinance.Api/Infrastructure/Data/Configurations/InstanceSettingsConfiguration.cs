@@ -1,3 +1,4 @@
+using JxFinance.Domain.Receipts;
 using JxFinance.Domain.Settings;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -14,6 +15,7 @@ public sealed class InstanceSettingsConfiguration : IEntityTypeConfiguration<Ins
             features.Property(f => f.CategorizationRules).HasDefaultValue(true);
             features.Property(f => f.UnusualAmounts).HasDefaultValue(true);
             features.Property(f => f.MonthClose).HasDefaultValue(true);
+            features.Property(f => f.ReceiptReading).HasDefaultValue(false);
         });
         builder.Property(s => s.InstanceName).HasMaxLength(40);
         builder.Property(s => s.EnabledCurrencyCodes).HasMaxLength(200);
@@ -27,5 +29,8 @@ public sealed class InstanceSettingsConfiguration : IEntityTypeConfiguration<Ins
         builder.Property(s => s.SmtpFromAddress).HasMaxLength(320);
         builder.Property(s => s.SmtpFromName).HasMaxLength(100);
         builder.Property(s => s.SupportLinkEnabled).HasDefaultValue(true);
+        builder.Property(s => s.ReceiptApiKeyProtected).HasMaxLength(2000);
+        builder.Property(s => s.ReceiptModel).HasMaxLength(ReceiptModels.MaxLength).HasDefaultValue(ReceiptModels.Default);
+        builder.Property(s => s.ReceiptMonthlyLimit).HasDefaultValue(ReceiptModels.DefaultMonthlyLimit);
     }
 }

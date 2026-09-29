@@ -29,20 +29,6 @@ public sealed class AttachmentService(
     private static readonly DomainError FileMissing =
         EntityLookup.NotFound("The file of this attachment is no longer stored.");
 
-    private static readonly DomainError Empty = new(ErrorCodes.AttachmentEmpty, "Choose a file that is not empty.");
-
-    private static readonly DomainError TooLarge = new(
-        ErrorCodes.AttachmentTooLarge,
-        $"A file can be at most {TransactionAttachment.MaxFileBytes / (1024 * 1024)} MB.");
-
-    private static readonly DomainError TypeNotAllowed = new(
-        ErrorCodes.AttachmentTypeNotAllowed,
-        "Only JPEG, PNG, WebP and HEIC images and PDF documents can be attached.");
-
-    private static readonly DomainError ContentMismatch = new(
-        ErrorCodes.AttachmentContentMismatch,
-        "The file's content does not match its type. Save it again from the program that made it and retry.");
-
     private static readonly DomainError LimitReached = new(
         ErrorCodes.AttachmentLimitReached,
         $"A transaction can have at most {TransactionAttachment.MaxPerTransaction} files.");
@@ -77,20 +63,19 @@ public sealed class AttachmentService(
             return TransactionMissing;
         }
 
-        var declared = AttachmentContent.Canonical(upload.ContentType);
-        if (declared is null && !AttachmentContent.IsUnspecified(upload.ContentType))
+        if (AttachmentContent.Canonical(upload.ContentType) is null && !AttachmentContent.IsUnspecified(upload.ContentType))
         {
-            return TypeNotAllowed;
+            return AttachmentErrors.TypeNotAllowed;
         }
 
         if (upload.Length <= 0)
         {
-            return Empty;
+            return AttachmentErrors.Empty;
         }
 
         if (upload.Length > TransactionAttachment.MaxFileBytes)
         {
-            return TooLarge;
+            return AttachmentErrors.TooLarge;
         }
 
         if (await db.TransactionAttachments.CountAsync(a => a.TransactionId == typedId, cancellationToken)
@@ -106,7 +91,7 @@ public sealed class AttachmentService(
         }
         catch (AttachmentTooLargeException)
         {
-            return TooLarge;
+            return AttachmentErrors.TooLarge;
         }
 
         var kept = false;
@@ -114,18 +99,13 @@ public sealed class AttachmentService(
         {
             if (stored.SizeBytes == 0)
             {
-                return Empty;
+                return AttachmentErrors.Empty;
             }
 
-            var detected = await DetectAsync(stored.Path, cancellationToken);
-            if (detected is null)
+            var contentType = AttachmentErrors.ContentTypeOf(upload.ContentType, await ReadHeaderAsync(stored.Path, cancellationToken));
+            if (!contentType.TryGetValue(out var detected))
             {
-                return declared is null ? TypeNotAllowed : ContentMismatch;
-            }
-
-            if (declared is not null && declared != detected)
-            {
-                return ContentMismatch;
+                return contentType.Error;
             }
 
             var attachment = new TransactionAttachment
@@ -224,12 +204,12 @@ public sealed class AttachmentService(
             cancellationToken);
     }
 
-    private static async Task<string?> DetectAsync(string path, CancellationToken cancellationToken)
+    private static async Task<byte[]> ReadHeaderAsync(string path, CancellationToken cancellationToken)
     {
         var header = new byte[AttachmentContent.HeaderBytes];
         await using var stream = File.OpenRead(path);
         var read = await stream.ReadAtLeastAsync(header, header.Length, throwOnEndOfStream: false, cancellationToken);
-        return AttachmentContent.Detect(header.AsSpan(0, read));
+        return header[..read];
     }
 
     private async Task<IReadOnlyList<AttachmentResponse>> ToResponsesAsync(

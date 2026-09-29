@@ -6,6 +6,7 @@ import type {
   TransactionResponse,
 } from "@/api/generated/model";
 import { EditModal, Modal } from "@/components/modal";
+import type { ReceiptCandidateSplit } from "@/features/transactions/receipt-reading/fill-from-receipt";
 import { TransactionAttachments } from "@/features/transactions/transaction-attachments/transaction-attachments";
 import {
   TransactionForm,
@@ -21,6 +22,7 @@ interface Props {
   onCreateOpenChange: (open: boolean) => void;
   prefill?: { key: string; draft: TransactionDraft };
   editing: TransactionResponse | null;
+  editPrefill?: TransactionDraft;
   onCancelEdit: () => void;
   updatePending: boolean;
   createPending: boolean;
@@ -30,6 +32,8 @@ interface Props {
   onCreateAnother?: (values: TransactionFormValues) => Promise<boolean>;
   onSaveAsTemplate?: (name: string, values: TransactionFormValues) => void;
   onUpdate: (values: TransactionFormValues) => Promise<unknown> | void;
+  onReceiptFile?: (file: File) => void;
+  onSplitCandidate?: (split: ReceiptCandidateSplit) => void;
 }
 
 export function TransactionFormSection({
@@ -40,6 +44,7 @@ export function TransactionFormSection({
   onCreateOpenChange,
   prefill,
   editing,
+  editPrefill,
   onCancelEdit,
   updatePending,
   createPending,
@@ -49,6 +54,8 @@ export function TransactionFormSection({
   onCreateAnother,
   onSaveAsTemplate,
   onUpdate,
+  onReceiptFile,
+  onSplitCandidate,
 }: Readonly<Props>) {
   const { t } = useTranslation();
 
@@ -72,6 +79,8 @@ export function TransactionFormSection({
           onSubmitAndAddAnother={onCreateAnother}
           onSaveAsTemplate={onSaveAsTemplate}
           onCancel={() => onCreateOpenChange(false)}
+          onReceiptFile={onReceiptFile}
+          onSplitCandidate={onSplitCandidate}
         />
       </Modal>
 
@@ -88,6 +97,7 @@ export function TransactionFormSection({
               categories={categories}
               tags={tags}
               initial={transaction}
+              prefill={editPrefill}
               pending={updatePending}
               error={updateError}
               onSubmit={onUpdate}

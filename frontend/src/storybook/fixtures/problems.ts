@@ -17,6 +17,10 @@ const statusDefaults = {
     type: "https://www.rfc-editor.org/rfc/rfc7231#section-6.6.1",
     title: "Internal Server Error",
   },
+  502: {
+    type: "https://www.rfc-editor.org/rfc/rfc7231#section-6.6.3",
+    title: "An error occurred while processing your request.",
+  },
 };
 
 type ProblemStatus = keyof typeof statusDefaults;

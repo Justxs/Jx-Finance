@@ -15,4 +15,5 @@ public sealed record SettingsResponse(
     FirstDayOfWeek FirstDayOfWeek,
     Guid? DefaultAccountId,
     int DefaultPageSize,
-    bool SupportLinkEnabled);
+    bool SupportLinkEnabled,
+    bool ReceiptReadingReady);

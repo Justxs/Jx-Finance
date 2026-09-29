@@ -20,6 +20,7 @@ public static class ApiTags
     public const string MonthClose = "MonthClose";
     public const string NetWorth = "NetWorth";
     public const string Notifications = "Notifications";
+    public const string Receipts = "Receipts";
     public const string RecurringBills = "RecurringBills";
     public const string Reports = "Reports";
     public const string Settings = "Settings";

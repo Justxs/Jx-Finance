@@ -12,6 +12,7 @@ import {
   MessagesSquare,
   MonitorSmartphone,
   Palette,
+  ReceiptText,
   Settings2,
   ShieldCheck,
   SlidersHorizontal,
@@ -52,6 +53,7 @@ export const settingsSections = [
   "defaults",
   "email",
   "discord",
+  "receipts",
   "backups",
 ] as const;
 
@@ -80,6 +82,7 @@ const settingsItems: Record<SettingsSection, [TranslationKey, LucideIcon]> = {
   defaults: ["settings.defaults.title", SlidersHorizontal],
   email: ["settings.smtp.title", Mail],
   discord: ["settings.discord.title", MessagesSquare],
+  receipts: ["settings.receipts.title", ReceiptText],
   backups: ["backup.title", DatabaseBackup],
 };
 

@@ -19,4 +19,5 @@ export interface FeatureFlags {
   categorizationRules: boolean;
   unusualAmounts: boolean;
   monthClose: boolean;
+  receiptReading: boolean;
 }

@@ -1,6 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <ItemGroup>
+    <PackageReference Include="Anthropic" />
     <PackageReference Include="AspNetCore.HealthChecks.NpgSql" />
     <PackageReference Include="CsvHelper" />
     <PackageReference Include="FastEndpoints" />
@@ -10,6 +11,7 @@
     </PackageReference>
     <PackageReference Include="FastEndpoints.OpenApi" />
     <PackageReference Include="FastEndpoints.Security" />
+    <PackageReference Include="Magick.NET-Q8-AnyCPU" />
     <PackageReference Include="MailKit" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" />

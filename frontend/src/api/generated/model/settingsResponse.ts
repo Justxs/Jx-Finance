@@ -25,4 +25,5 @@ export interface SettingsResponse {
   defaultAccountId: string | null;
   defaultPageSize: number;
   supportLinkEnabled: boolean;
+  receiptReadingReady: boolean;
 }

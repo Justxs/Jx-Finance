@@ -16,6 +16,7 @@ export * from "./investments/investments";
 export * from "./month-close/month-close";
 export * from "./net-worth/net-worth";
 export * from "./notifications/notifications";
+export * from "./receipts/receipts";
 export * from "./recurring-bills/recurring-bills";
 export * from "./reports/reports";
 export * from "./settings/settings";

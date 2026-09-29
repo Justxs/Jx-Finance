@@ -14,4 +14,5 @@ public enum Feature
     CategorizationRules,
     UnusualAmounts,
     MonthClose,
+    ReceiptReading,
 }

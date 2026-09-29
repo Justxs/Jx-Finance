@@ -1,4 +1,5 @@
 using JxFinance.Domain.Common;
+using JxFinance.Domain.Receipts;
 using JxFinance.Domain.Trash;
 using JxFinance.Infrastructure.Attachments;
 using JxFinance.Infrastructure.Data;
@@ -17,7 +18,8 @@ public sealed class AttachmentPurgeJob(IServiceScopeFactory scopes, ILogger<Atta
     {
         var db = services.GetRequiredService<AppDbContext>();
         var files = services.GetRequiredService<AttachmentStore>();
-        var cutoff = DeletionEntry.WindowStart(services.GetRequiredService<IClock>().UtcNow);
+        var now = services.GetRequiredService<IClock>().UtcNow;
+        var cutoff = DeletionEntry.WindowStart(now);
 
         var expired = await Retention.DeleteAttachmentsAsync(
             db,
@@ -45,6 +47,19 @@ public sealed class AttachmentPurgeJob(IServiceScopeFactory scopes, ILogger<Atta
         if (orphans > 0)
         {
             Logger.LogInformation("Removed {Count} attachment files that no row refers to.", orphans);
+        }
+
+        var readingCutoff = now - ReceiptReading.UnattachedLifetime;
+        var readings = await Retention.PurgeAsync(
+            db.ReceiptReadings
+                .IgnoreQueryFilters()
+                .Where(r => r.CreatedAt < readingCutoff
+                    && (r.Status != ReceiptReadingStatus.Read
+                        || !db.TransactionAttachments.IgnoreQueryFilters().Any(a => a.Sha256 == r.Sha256))),
+            ct);
+        if (readings > 0)
+        {
+            Logger.LogInformation("Removed {Count} receipt readings whose file is gone or whose read failed.", readings);
         }
     }
 }

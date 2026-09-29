@@ -111,7 +111,7 @@ internal static class Retention
         where TEntity : EntityBase =>
         rows.IgnoreQueryFilters().Where(e => e.IsDeleted && e.UpdatedAt < cutoff);
 
-    private static async Task<int> PurgeAsync<TEntity>(IQueryable<TEntity> expired, CancellationToken ct)
+    internal static async Task<int> PurgeAsync<TEntity>(IQueryable<TEntity> expired, CancellationToken ct)
         where TEntity : class
     {
         int deleted, purged = 0;

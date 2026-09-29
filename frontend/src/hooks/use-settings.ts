@@ -38,6 +38,7 @@ const defaultSettings: SettingsResponse = {
     categorizationRules: true,
     unusualAmounts: true,
     monthClose: true,
+    receiptReading: true,
   },
   reportingCurrency: DEFAULT_CURRENCY,
   enabledCurrencies: [DEFAULT_CURRENCY],
@@ -49,6 +50,7 @@ const defaultSettings: SettingsResponse = {
   defaultAccountId: null,
   defaultPageSize: 20,
   supportLinkEnabled: true,
+  receiptReadingReady: false,
 };
 
 interface SettingsOptions {

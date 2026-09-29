@@ -14,6 +14,7 @@ public enum AppLock : long
     UnusualAmounts = 738192441,
     MonthCloseReminders = 738192442,
     MonthlyDigest = 738192443,
+    ReceiptReadings = 738192444,
 }
 
 public static class AdvisoryLock

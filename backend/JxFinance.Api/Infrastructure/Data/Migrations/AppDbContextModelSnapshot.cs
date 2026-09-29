@@ -1413,6 +1413,116 @@ namespace JxFinance.Infrastructure.Data.Migrations
                     b.ToTable("Notifications");
                 });
 
+            modelBuilder.Entity("JxFinance.Domain.Receipts.ReceiptItemCategory", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("CategoryId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Key")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CategoryId");
+
+                    b.HasIndex("UserId", "Key")
+                        .IsUnique();
+
+                    b.ToTable("ReceiptItemCategories");
+                });
+
+            modelBuilder.Entity("JxFinance.Domain.Receipts.ReceiptReading", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("CompletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ErrorCode")
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
+
+                    b.Property<int>("InputTokens")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Model")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
+
+                    b.Property<int>("OutputTokens")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Result")
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("Sha256")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character(64)")
+                        .IsFixedLength();
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "Sha256");
+
+                    b.ToTable("ReceiptReadings");
+                });
+
+            modelBuilder.Entity("JxFinance.Domain.Receipts.ReceiptReadingUsage", b =>
+                {
+                    b.Property<DateOnly>("Month")
+                        .HasColumnType("date");
+
+                    b.Property<long>("InputTokens")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("OutputTokens")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("Readings")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Month");
+
+                    b.ToTable("ReceiptReadingUsages");
+                });
+
             modelBuilder.Entity("JxFinance.Domain.RecurringBills.RecurringBill", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1564,6 +1674,26 @@ namespace JxFinance.Infrastructure.Data.Migrations
                         .HasMaxLength(40)
                         .HasColumnType("character varying(40)");
 
+                    b.Property<string>("ReceiptApiKeyProtected")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<string>("ReceiptModel")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)")
+                        .HasDefaultValue("claude-sonnet-5");
+
+                    b.Property<int>("ReceiptMonthlyLimit")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(100);
+
+                    b.Property<bool>("ReceiptReadingEnabled")
+                        .HasColumnType("boolean");
+
                     b.Property<string>("ReportingCurrency")
                         .IsRequired()
                         .HasMaxLength(3)
@@ -1645,6 +1775,11 @@ namespace JxFinance.Infrastructure.Data.Migrations
 
                             b1.Property<bool>("NetWorth")
                                 .HasColumnType("boolean");
+
+                            b1.Property<bool>("ReceiptReading")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("boolean")
+                                .HasDefaultValue(false);
 
                             b1.Property<bool>("RecurringBills")
                                 .HasColumnType("boolean");
@@ -2666,6 +2801,30 @@ namespace JxFinance.Infrastructure.Data.Migrations
                 });
 
             modelBuilder.Entity("JxFinance.Domain.Notifications.Notification", b =>
+                {
+                    b.HasOne("JxFinance.Infrastructure.Auth.AppUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("JxFinance.Domain.Receipts.ReceiptItemCategory", b =>
+                {
+                    b.HasOne("JxFinance.Domain.Categories.Category", null)
+                        .WithMany()
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("JxFinance.Infrastructure.Auth.AppUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("JxFinance.Domain.Receipts.ReceiptReading", b =>
                 {
                     b.HasOne("JxFinance.Infrastructure.Auth.AppUser", null)
                         .WithMany()

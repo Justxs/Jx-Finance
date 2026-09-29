@@ -294,6 +294,10 @@ const rules: readonly Rule[] = [
     refresh: [api.getSmtpSettingsQueryKey, api.getPublicSettingsQueryKey],
   },
   {
+    after: [api.getUpdateReceiptSettingsMutationKey],
+    refresh: [api.getReceiptSettingsQueryKey, api.getSettingsQueryKey],
+  },
+  {
     after: [api.getDismissUnusualAmountMutationKey, api.getRestoreUnusualAmountMutationKey],
     refresh: [
       api.getTransactionsQueryKey,
@@ -352,6 +356,9 @@ export const mutationsWithoutInvalidation: readonly MutationKeyGetter[] = [
   api.getSendTestEmailMutationKey,
   api.getSaveDashboardLayoutMutationKey,
   api.getResetDashboardLayoutMutationKey,
+  api.getTestReceiptKeyMutationKey,
+  api.getReadReceiptMutationKey,
+  api.getUpdateReceiptCategoriesMutationKey,
 ];
 
 function withTrash(refresh: Rule["refresh"]): Rule["refresh"] {

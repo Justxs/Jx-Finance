@@ -17,9 +17,12 @@ public sealed record InstanceSettingsSnapshot(
     int DefaultPageSize,
     SmtpSettingsSnapshot Smtp,
     bool DiscordEnabled,
-    bool SupportLinkEnabled)
+    bool SupportLinkEnabled,
+    ReceiptSettingsSnapshot Receipts)
 {
     public bool IsEnabled(Feature feature) => Features.IsEnabled(feature);
+
+    public bool ReceiptReadingReady => Features.ReceiptReading && Receipts.Enabled && Receipts.HasKey;
 
     public IReadOnlyList<Currency> UsableCurrencies { get; } =
         Features.MultiCurrency
@@ -49,7 +52,8 @@ public sealed record InstanceSettingsSnapshot(
             settings.DefaultPageSize,
             SmtpSettingsSnapshot.From(settings),
             settings.DiscordEnabled,
-            settings.SupportLinkEnabled);
+            settings.SupportLinkEnabled,
+            ReceiptSettingsSnapshot.From(settings));
     }
 
     public static bool IsValidTimeZone(string? id)

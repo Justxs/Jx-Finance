@@ -10441,6 +10441,198 @@
         }
       }
     },
+    "/api/receipts/read": {
+      "post": {
+        "tags": [
+          "Receipts"
+        ],
+        "summary": "Read a receipt and propose its items by category",
+        "description": "Sends one receipt photo or PDF to Anthropic, whose Claude model reads the items and picks one of the caller's visible expense categories for each, and answers the reading for review. Nothing in the ledger changes. Send multipart/form-data with exactly one of attachmentId, a file already attached to a transaction the caller can see, or file, a new JPEG, PNG, WebP, HEIC or PDF of at most 10 MB that is read but never stored. Photos are turned upright, stripped of their location and camera details and shrunk before they are sent; only the first 3 pages of a PDF are sent. The request waits for the answer, which takes 5 to 60 seconds. A reading is kept per user and file content: reading the same file again answers the stored reading with cached true and costs nothing, unless force is true, which reads it again and counts as another read. An item whose name the caller filed before gets the remembered category. For an uploaded file, candidates lists up to three visible unsplit expenses with the receipt's total, within three days of its date. Every read counts against the installation's monthly limit before Anthropic is called. Needs the ReceiptReading feature switch, and an administrator must enable reading and store an API key. Rate limited to 30 calls per five minutes per client.",
+        "operationId": "ReadReceipt",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/ReadReceiptRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "The reading.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReceiptReadingResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Neither or both of attachmentId and file (required, value.mustBeEmpty), an attachment.* file problem, receipt.unsupportedFile, receipt.unreadable, receipt.keyRejected, receipt.keyUnreadable, or receipt.notConfigured.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The attachment is not visible to the caller, or the feature is switched off (feature.disabled).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "This file is being read for the caller right now (conflict.busy).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "The request body is larger than an attachment can be."
+          },
+          "429": {
+            "description": "The installation's monthly limit of reads is reached (receipt.limitReached), or too many calls.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Anthropic could not be reached or failed (receipt.providerFailed).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      }
+    },
+    "/api/receipts/{id}/categories": {
+      "put": {
+        "tags": [
+          "Receipts"
+        ],
+        "summary": "Keep the categories chosen for a receipt's items",
+        "description": "Stores the category the caller chose for each listed item of one of their readings, and remembers it for that item's name, so the next receipt with the same item gets it without asking the model. An item set to no category forgets its name. Names are compared after lowercasing and dropping digits, units and punctuation. Nothing in the ledger changes: the split itself is saved with the transaction. Every category must be an expense category the caller can see.",
+        "operationId": "UpdateReceiptCategories",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The reading id.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateReceiptCategoriesRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "The choices are stored."
+          },
+          "400": {
+            "description": "An item index outside the reading (range.invalid), or a category that is not a visible expense category (reference.notFound, category.wrongType).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such reading belongs to the caller, or the feature is switched off (feature.disabled).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      }
+    },
     "/api/recurring-bills": {
       "post": {
         "tags": [
@@ -11465,6 +11657,233 @@
             }
           }
         }
+      }
+    },
+    "/api/settings/receipts": {
+      "get": {
+        "tags": [
+          "Settings"
+        ],
+        "summary": "Read the receipt reading settings",
+        "description": "Answers whether receipt reading is enabled, whether an Anthropic API key is stored, the chosen model, the monthly limit on reads for the whole installation and how many reads this month has used. The key itself is never part of the answer. Administrators only.",
+        "operationId": "GetReceiptSettings",
+        "responses": {
+          "200": {
+            "description": "The receipt reading settings, without the key.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReceiptSettingsResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Only administrators can read the receipt reading settings.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [
+              "Admin"
+            ]
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "Settings"
+        ],
+        "summary": "Save the receipt reading settings",
+        "description": "Stores whether receipt reading is enabled, the Anthropic API key, the model and the monthly limit on reads for the whole installation. The key is encrypted with ASP.NET Data Protection before it is stored and is never returned: the answer carries hasKey instead. An empty apiKey keeps the stored one. Switching enabled on without any key answers 400 required on apiKey. The model must be one of claude-sonnet-5 (the default), claude-haiku-4-5 or claude-opus-5-5; any other answers 400 receipt.modelNotAllowed. The limit is between 1 and 10000. Reading also needs the ReceiptReading feature switch. Administrators only.",
+        "operationId": "UpdateReceiptSettings",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateReceiptSettingsRequest"
+              },
+              "example": {
+                "enabled": true,
+                "apiKey": "sk-ant-api03-example",
+                "model": "claude-sonnet-5",
+                "monthlyLimit": 100
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "The saved settings, without the key.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReceiptSettingsResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid settings, required on apiKey, or receipt.modelNotAllowed.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Only administrators can change installation settings.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [
+              "Admin"
+            ]
+          }
+        ]
+      }
+    },
+    "/api/settings/receipts/test": {
+      "post": {
+        "tags": [
+          "Settings"
+        ],
+        "summary": "Test the stored Anthropic API key",
+        "description": "Asks Anthropic's Models API for the chosen model with the key that is stored right now. This costs nothing and reads no receipt. Save the settings before testing them. Answers 400 receipt.keyRejected when Anthropic refuses the key, receipt.keyUnreadable when the stored key cannot be decrypted, which is what a restore into an installation with different data protection keys leaves behind, receipt.notConfigured when no key is stored, and 502 receipt.providerFailed when Anthropic cannot be reached or does not offer the model. Rate limited to 10 calls per five minutes per client. Administrators only.",
+        "operationId": "TestReceiptKey",
+        "responses": {
+          "204": {
+            "description": "Anthropic accepted the key and offers the model."
+          },
+          "400": {
+            "description": "The key was refused, cannot be read, or none is stored.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Only administrators can test the key.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many tests from this client; wait and retry."
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Anthropic could not be reached or does not offer the model.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [
+              "Admin"
+            ]
+          }
+        ]
       }
     },
     "/api/settings/smtp": {
@@ -19069,6 +19488,14 @@
           "quantity.nonNegative",
           "quantity.positive",
           "range.invalid",
+          "receipt.keyRejected",
+          "receipt.keyUnreadable",
+          "receipt.limitReached",
+          "receipt.modelNotAllowed",
+          "receipt.notConfigured",
+          "receipt.providerFailed",
+          "receipt.unreadable",
+          "receipt.unsupportedFile",
           "reconciliation.futureDate",
           "recurringBill.debtShape",
           "recurringBill.inactive",
@@ -19166,7 +19593,8 @@
           "investments",
           "categorizationRules",
           "unusualAmounts",
-          "monthClose"
+          "monthClose",
+          "receiptReading"
         ],
         "type": "object",
         "properties": {
@@ -19204,6 +19632,9 @@
             "type": "boolean"
           },
           "monthClose": {
+            "type": "boolean"
+          },
+          "receiptReading": {
             "type": "boolean"
           }
         }
@@ -21588,6 +22019,35 @@
           }
         }
       },
+      "ReadReceiptRequest": {
+        "type": "object",
+        "properties": {
+          "attachmentId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "An attached file to read; leave empty when sending file.",
+            "format": "uuid"
+          },
+          "file": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "string",
+                "format": "binary"
+              }
+            ],
+            "description": "A new file to read, at most 10 MB; leave empty when sending attachmentId."
+          },
+          "force": {
+            "type": "boolean",
+            "description": "Read again even when a stored reading exists."
+          }
+        }
+      },
       "ReauthenticateRequest": {
         "required": [
           "password"
@@ -21601,6 +22061,269 @@
         },
         "example": {
           "password": "correct horse battery staple"
+        }
+      },
+      "ReceiptAdjustmentKind": {
+        "enum": [
+          "discount",
+          "voucher",
+          "rounding",
+          "other"
+        ],
+        "type": "string"
+      },
+      "ReceiptAdjustmentResponse": {
+        "required": [
+          "kind",
+          "label",
+          "amount"
+        ],
+        "type": "object",
+        "properties": {
+          "kind": {
+            "$ref": "#/components/schemas/ReceiptAdjustmentKind"
+          },
+          "label": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "string",
+            "format": "decimal"
+          }
+        }
+      },
+      "ReceiptCandidateResponse": {
+        "required": [
+          "id",
+          "accountId",
+          "date",
+          "description",
+          "amount",
+          "currency"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "accountId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "date": {
+            "$ref": "#/components/schemas/DateOnly"
+          },
+          "description": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "amount": {
+            "type": "string",
+            "format": "decimal"
+          },
+          "currency": {
+            "$ref": "#/components/schemas/Currency"
+          }
+        }
+      },
+      "ReceiptItemChoice": {
+        "required": [
+          "index",
+          "categoryId"
+        ],
+        "type": "object",
+        "properties": {
+          "index": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "categoryId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          }
+        }
+      },
+      "ReceiptItemResponse": {
+        "required": [
+          "name",
+          "quantity",
+          "amount",
+          "discount",
+          "deposit",
+          "categoryId",
+          "remembered"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "quantity": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "amount": {
+            "type": "string",
+            "format": "decimal"
+          },
+          "discount": {
+            "type": "string",
+            "format": "decimal"
+          },
+          "deposit": {
+            "type": "string",
+            "format": "decimal"
+          },
+          "categoryId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "remembered": {
+            "type": "boolean"
+          }
+        }
+      },
+      "ReceiptReadingResponse": {
+        "required": [
+          "id",
+          "model",
+          "cached",
+          "result",
+          "candidates"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "model": {
+            "type": "string"
+          },
+          "cached": {
+            "type": "boolean"
+          },
+          "result": {
+            "$ref": "#/components/schemas/ReceiptResultResponse"
+          },
+          "candidates": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReceiptCandidateResponse"
+            }
+          }
+        }
+      },
+      "ReceiptResultResponse": {
+        "required": [
+          "merchant",
+          "date",
+          "currency",
+          "total",
+          "isReturn",
+          "pagesRead",
+          "pageCount",
+          "items",
+          "adjustments"
+        ],
+        "type": "object",
+        "properties": {
+          "merchant": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "date": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/NullableOfDateOnly"
+              }
+            ]
+          },
+          "currency": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Currency"
+              }
+            ]
+          },
+          "total": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "decimal"
+          },
+          "isReturn": {
+            "type": "boolean"
+          },
+          "pagesRead": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReceiptItemResponse"
+            }
+          },
+          "adjustments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReceiptAdjustmentResponse"
+            }
+          }
+        }
+      },
+      "ReceiptSettingsResponse": {
+        "required": [
+          "enabled",
+          "hasKey",
+          "model",
+          "monthlyLimit",
+          "readingsThisMonth"
+        ],
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean"
+          },
+          "hasKey": {
+            "type": "boolean"
+          },
+          "model": {
+            "type": "string"
+          },
+          "monthlyLimit": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "readingsThisMonth": {
+            "type": "integer",
+            "format": "int32"
+          }
         }
       },
       "ReconciliationPreviewResponse": {
@@ -22568,7 +23291,8 @@
           "firstDayOfWeek",
           "defaultAccountId",
           "defaultPageSize",
-          "supportLinkEnabled"
+          "supportLinkEnabled",
+          "receiptReadingReady"
         ],
         "type": "object",
         "properties": {
@@ -22624,6 +23348,9 @@
             "format": "int32"
           },
           "supportLinkEnabled": {
+            "type": "boolean"
+          },
+          "receiptReadingReady": {
             "type": "boolean"
           }
         }
@@ -24658,6 +25385,62 @@
           "newPassword": null
         }
       },
+      "UpdateReceiptCategoriesRequest": {
+        "required": [
+          "items"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReceiptItemChoice"
+            }
+          }
+        }
+      },
+      "UpdateReceiptSettingsRequest": {
+        "required": [
+          "enabled",
+          "apiKey",
+          "model",
+          "monthlyLimit"
+        ],
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "example": true
+          },
+          "apiKey": {
+            "maxLength": 500,
+            "minLength": 0,
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Leave empty to keep the stored key.",
+            "example": "sk-ant-api03-example"
+          },
+          "model": {
+            "type": "string",
+            "example": "claude-sonnet-5"
+          },
+          "monthlyLimit": {
+            "maximum": 10000,
+            "minimum": 1,
+            "type": "integer",
+            "format": "int32",
+            "example": 100
+          }
+        },
+        "example": {
+          "enabled": true,
+          "apiKey": "sk-ant-api03-example",
+          "model": "claude-sonnet-5",
+          "monthlyLimit": 100
+        }
+      },
       "UpdateRecurringBillRequest": {
         "required": [
           "name",
@@ -25389,6 +26172,9 @@
     {
       "name": "Diagnostics",
       "description": "Unauthenticated liveness probes."
+    },
+    {
+      "name": "Receipts"
     },
     {
       "name": "RecurringBills",

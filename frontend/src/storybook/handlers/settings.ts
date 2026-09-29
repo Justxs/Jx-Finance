@@ -1,16 +1,20 @@
 import {
   getPublicSettingsMockHandler,
+  getReceiptSettingsMockHandler,
   getSendTestEmailMockHandler,
   getSettingsMockHandler,
   getSmtpSettingsMockHandler,
   getSyncExchangeRatesMockHandler,
+  getTestReceiptKeyMockHandler,
   getUpdateDiscordSettingsMockHandler,
+  getUpdateReceiptSettingsMockHandler,
   getUpdateSettingsMockHandler,
   getUpdateSmtpSettingsMockHandler,
 } from "@/api/generated/settings/settings.msw";
 import {
   FIXTURE_TODAY,
   publicSettings,
+  receiptSettings,
   settings,
   smtpSettings,
   smtpTestSent,
@@ -42,4 +46,14 @@ export const settingsHandlers = [
   }),
   getSendTestEmailMockHandler(smtpTestSent),
   getUpdateDiscordSettingsMockHandler(),
+  getReceiptSettingsMockHandler(receiptSettings),
+  getUpdateReceiptSettingsMockHandler(async ({ request }) => {
+    const body = await readBody(request);
+    return {
+      ...receiptSettings,
+      ...body,
+      hasKey: receiptSettings.hasKey || Boolean(text(body.apiKey)),
+    };
+  }),
+  getTestReceiptKeyMockHandler(),
 ];

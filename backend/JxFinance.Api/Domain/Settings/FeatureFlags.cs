@@ -12,9 +12,12 @@ public sealed record FeatureFlags(
     bool Investments,
     bool CategorizationRules,
     bool UnusualAmounts,
-    bool MonthClose)
+    bool MonthClose,
+    bool ReceiptReading)
 {
-    public static FeatureFlags All { get; } = new(true, true, true, true, true, true, true, true, true, true, true, true);
+    public static FeatureFlags All { get; } = new(true, true, true, true, true, true, true, true, true, true, true, true, true);
+
+    public static FeatureFlags Default { get; } = All with { ReceiptReading = false };
 
     public bool IsEnabled(Feature feature) => feature switch
     {
@@ -30,6 +33,7 @@ public sealed record FeatureFlags(
         Feature.CategorizationRules => CategorizationRules,
         Feature.UnusualAmounts => UnusualAmounts,
         Feature.MonthClose => MonthClose,
+        Feature.ReceiptReading => ReceiptReading,
         _ => true,
     };
 }

@@ -2,7 +2,7 @@
 
 Back to the [feature walkthrough](README.md). See also [decisions](../decisions/installation-settings.md), [architecture: Installation settings](../architecture/installation-settings.md).
 
-Backend `Settings`, page `/settings` with sections `general`, `features`, `currencies`, `regional`, `defaults`, `email`, `discord` and `backups`, shown under Installation on the one Settings page described [below](#one-settings-page). Administrators only; `GET /api/settings/public` is anonymous and carries only the name, the default language, whether this installation can send email and whether it allows Discord notifications.
+Backend `Settings`, page `/settings` with sections `general`, `features`, `currencies`, `regional`, `defaults`, `email`, `discord`, `receipts` and `backups`, shown under Installation on the one Settings page described [below](#one-settings-page). Administrators only; `GET /api/settings/public` is anonymous and carries only the name, the default language, whether this installation can send email and whether it allows Discord notifications.
 
 ```mermaid
 flowchart TD
@@ -33,11 +33,14 @@ Each switch is declared by the endpoint groups under these prefixes (`ApiGroup(t
 | `Investments` | `/api/investments` | broker sync job |
 | `CategorizationRules` | `/api/categorization-rules` | the rule suggestions in the import preview; the suggested-rule toast after a save |
 | `UnusualAmounts` | `/api/transactions/{id}/unusual` (dismiss and its undo), declared on the two endpoints | the unusual-amount job and its notifications, including price rises; the verdict fields of transaction responses, which read as empty; the `unusual` ledger filter, which is ignored; the flag in the import preview; `latestMatch` on recurring entries; the link on the two unusual kinds in the bell |
+| `ReceiptReading` | `/api/receipts` | the Fill from receipt action in the transaction form, through `receiptReadingReady` |
 | `MonthClose` | `/api/month-close` | the month-end reminder job; the close panel on the dashboard for an earlier month, its command palette action and the dashboard prompt; the closed-month hint in the transaction and conversion forms; the link on a month-end reminder in the bell |
 
 `UnusualAmounts` is on by default and is the one switch that gates routes inside an ungated prefix: the ledger answers whatever it says, so the two routes carry the feature themselves rather than through their group, and `FeatureGateTests` takes the longest matching prefix. With it off the stored verdicts stay in their columns and come back when it is switched on; rows written meanwhile are checked on the first pass after that. See [Unusual amounts](unusual-amounts.md).
 
 `MonthClose` is on by default too (`HasDefaultValue(true)`) and is listed with the review features in the Features section. With it off every close stays in its table and edits keep stamping `UpdatedAt`, so switching it back on shows each closed month with the drift that happened meanwhile. See [Month-end close](month-end-close.md).
+
+`ReceiptReading` is the one switch that starts off: `FeatureFlags.Default`, the initial value of a new settings row, has it off, and the migration that added the column used `HasDefaultValue(false)`, so an existing installation does not start sending receipts out on upgrade. `FeatureFlags.All` still means every switch on and is what the tests start from. Reading also needs its own settings, `GET` and `PUT /api/settings/receipts` (administrators only): an enabled flag, the Anthropic API key protected like the SMTP password and answered only as `hasKey`, the model from a fixed list and the monthly limit on reads, with this month's count. `GET /api/settings` answers `receiptReadingReady`, true when the switch, the enabled flag and a stored key all agree, and the transaction form shows the action only then. See [Receipt reading](receipt-reading.md#settings).
 
 The mail server is an installation setting that is not part of this form and not a feature switch. It has its own admin-only pair, `GET` and `PUT /api/settings/smtp`, and its own `enabled` flag, because `GET /api/settings` is readable by every signed-in user and an SMTP user name is a credential; because one save of the main form would have to either resend the password or lose it; and because `forgot-password`, `reset-password` and `verify-email` must keep answering even when sending is switched off, so gating them in `FeatureGateMiddleware` would break links that were already mailed. See [Email](email.md).
 
@@ -61,6 +64,6 @@ Every user has one Settings entry at the bottom of the sidebar. It covers four r
 | --- | --- | --- |
 | Personal | `profileSections` on `/profile?section=`: account, security, sessions, notifications, appearance, trash, and import while the `Import` switch is on | everyone |
 | Shared | Households (`/households`) | everyone, while the `Households` switch is on |
-| Installation | `settingsSections` on `/settings?section=`: general, features, currencies, regional, defaults, email, discord, backups; then Users (`/users`) | administrators |
+| Installation | `settingsSections` on `/settings?section=`: general, features, currencies, regional, defaults, email, discord, receipts, backups; then Users (`/users`) | administrators |
 
 `SectionNav` takes groups of items whose `link` is typed router link options, so one nav can point at several routes. From the `lg` breakpoint it is a sticky column with a label over each group; below that it is one scrolling row without labels. The account section holds only the display name and the password; notification choices moved to the Notifications section, described in [Email](email.md#notification-emails) and [Discord notifications](discord-notifications.md#screens). Import data and Appearance are personal sections only: the installation sections used to repeat them, and a link to `/settings?section=import` or `appearance` now opens the General section. Users and Households put their title and a small outline create button ("Create user", "Create household") in a `SectionHeader` inside the layout, instead of a page header of their own.

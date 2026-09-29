@@ -17,6 +17,7 @@ export * from "./month-close/month-close.zod";
 export * from "./net-worth/net-worth.zod";
 export * from "./notifications/notifications.zod";
 export * from "./problems/problems.zod";
+export * from "./receipts/receipts.zod";
 export * from "./recurring-bills/recurring-bills.zod";
 export * from "./reports/reports.zod";
 export * from "./settings/settings.zod";

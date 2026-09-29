@@ -16,7 +16,9 @@ import { heldCurrencies } from "@/features/accounts/held-currencies";
 import { ClosedMonthHint } from "@/features/month-close/closed-month-hint/closed-month-hint";
 import { TagPicker } from "@/features/tags/tag-picker/tag-picker";
 import { EMPTY_VALUE, useIsoDate } from "@/hooks/use-formatters";
+import { useSettings } from "@/hooks/use-settings";
 import { namedOptions } from "@/lib/options";
+import { FillFromReceipt, type ReceiptCandidateSplit } from "../receipt-reading/fill-from-receipt";
 import { emptyLine } from "./line-form-value";
 import { SaveTemplateControl } from "./save-template-control";
 import { SplitLinesEditor } from "./split-lines-editor";
@@ -53,6 +55,8 @@ interface Props {
   onSubmitAndAddAnother?: (values: TransactionFormValues) => Promise<boolean>;
   onSaveAsTemplate?: (name: string, values: TransactionFormValues) => void;
   onCancel?: () => void;
+  onReceiptFile?: (file: File) => void;
+  onSplitCandidate?: (split: ReceiptCandidateSplit) => void;
 }
 
 function RefundOfLine({ form }: Readonly<{ form: TransactionFormApi }>) {
@@ -122,8 +126,11 @@ export function TransactionForm({
   onSubmitAndAddAnother,
   onSaveAsTemplate,
   onCancel,
+  onReceiptFile,
+  onSplitCandidate,
 }: Readonly<Props>) {
   const { t } = useTranslation();
+  const { receiptReadingReady } = useSettings();
   const intent = useRef<SubmitIntent>("save");
   const amountInput = useRef<HTMLInputElement>(null);
   const [anotherPending, setAnotherPending] = useState(false);
@@ -287,6 +294,22 @@ export function TransactionForm({
             )
           }
         </form.Subscribe>
+
+        {receiptReadingReady ? (
+          <form.Subscribe selector={(state) => state.values.type === "expense"}>
+            {(expense) =>
+              expense ? (
+                <FillFromReceipt
+                  form={form}
+                  categories={categories}
+                  transactionId={initial?.id}
+                  onReceiptFile={onReceiptFile}
+                  onSplitCandidate={onSplitCandidate}
+                />
+              ) : null
+            }
+          </form.Subscribe>
+        ) : null}
 
         <SplitLinesEditor
           form={form}

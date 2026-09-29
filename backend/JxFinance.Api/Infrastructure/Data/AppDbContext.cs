@@ -17,6 +17,7 @@ using JxFinance.Domain.Investments;
 using JxFinance.Domain.MonthCloses;
 using JxFinance.Domain.NetWorth;
 using JxFinance.Domain.Notifications;
+using JxFinance.Domain.Receipts;
 using JxFinance.Domain.RecurringBills;
 using JxFinance.Domain.Settings;
 using JxFinance.Domain.Tags;
@@ -91,6 +92,9 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, ICurren
     public DbSet<DeletionEntry> DeletionEntries => Set<DeletionEntry>();
     public DbSet<DeletionChange> DeletionChanges => Set<DeletionChange>();
     public DbSet<AuditEvent> AuditEvents => Set<AuditEvent>();
+    public DbSet<ReceiptReading> ReceiptReadings => Set<ReceiptReading>();
+    public DbSet<ReceiptItemCategory> ReceiptItemCategories => Set<ReceiptItemCategory>();
+    public DbSet<ReceiptReadingUsage> ReceiptReadingUsages => Set<ReceiptReadingUsage>();
 
     public AuditTrail Audit { get; } = new();
 

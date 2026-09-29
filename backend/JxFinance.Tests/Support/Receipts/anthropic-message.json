@@ -1,0 +1,25 @@
+{
+  "id": "msg_01ReceiptExample",
+  "type": "message",
+  "role": "assistant",
+  "model": "claude-sonnet-5",
+  "content": [
+    {
+      "type": "thinking",
+      "thinking": "",
+      "signature": "EqQBCkYIBxgCKkA"
+    },
+    {
+      "type": "text",
+      "text": "{\"merchant\":\"MAXIMA LT, UAB\",\"date\":\"2026-09-26\",\"currency\":\"EUR\",\"total\":18.21,\"isReturn\":false,\"items\":[{\"name\":\"Duona \\\"Bočių\\\" 800 g\",\"quantity\":null,\"amount\":1.89,\"discount\":0,\"deposit\":0,\"category\":1},{\"name\":\"Pienas 2,5 % 1 l\",\"quantity\":\"2 x 1,19\",\"amount\":2.38,\"discount\":0,\"deposit\":0,\"category\":1},{\"name\":\"Sūris \\\"Džiugas\\\" 180 g\",\"quantity\":null,\"amount\":4.29,\"discount\":0.86,\"deposit\":0,\"category\":1},{\"name\":\"Bananai\",\"quantity\":\"1,236 kg x 1,49\",\"amount\":1.84,\"discount\":0,\"deposit\":0,\"category\":1},{\"name\":\"Mineralinis vanduo 1,5 l\",\"quantity\":null,\"amount\":0.79,\"discount\":0,\"deposit\":0.1,\"category\":1},{\"name\":\"Colgate dantų pasta 75 ml\",\"quantity\":null,\"amount\":3.49,\"discount\":0,\"deposit\":0,\"category\":2},{\"name\":\"Head&Shoulders šampūnas 250 ml\",\"quantity\":null,\"amount\":5.99,\"discount\":1.2,\"deposit\":0,\"category\":2}],\"adjustments\":[{\"kind\":\"discount\",\"label\":\"Ačiū kortelės nuolaida\",\"amount\":-0.5}]}"
+    }
+  ],
+  "stop_reason": "end_turn",
+  "stop_sequence": null,
+  "usage": {
+    "input_tokens": 2211,
+    "output_tokens": 684,
+    "cache_creation_input_tokens": 0,
+    "cache_read_input_tokens": 0
+  }
+}

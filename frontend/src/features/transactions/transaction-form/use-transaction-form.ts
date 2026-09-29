@@ -43,7 +43,9 @@ export function useTransactionForm({
 
   const { defaultAccountId } = useSettingsSuspense();
   const defaultAccount = accounts.find((account) => account.id === defaultAccountId) ?? accounts[0];
-  const source: TransactionDraft = initial ? draftFromTransaction(initial) : (prefill ?? {});
+  const source: TransactionDraft = initial
+    ? { ...draftFromTransaction(initial), ...prefill }
+    : (prefill ?? {});
   const defaultValues = defaultFormFields(source, defaultAccount, today);
 
   const form = useAppForm({

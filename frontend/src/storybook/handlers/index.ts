@@ -79,6 +79,7 @@ import { emptyPage } from "./lists";
 import { monthCloseHandlers } from "./month-close";
 import { assetHandlers, debtHandlers, netWorthHandlers } from "./net-worth";
 import { notificationHandlers } from "./notifications";
+import { receiptHandlers } from "./receipts";
 import { recurringBillHandlers } from "./recurring-bills";
 import { reportHandlers } from "./reports";
 import { settingsHandlers } from "./settings";
@@ -112,6 +113,7 @@ export const handlers: RequestHandler[] = [
   ...monthCloseHandlers,
   ...netWorthHandlers,
   ...notificationHandlers,
+  ...receiptHandlers,
   ...recurringBillHandlers,
   ...reportHandlers,
   ...settingsHandlers,

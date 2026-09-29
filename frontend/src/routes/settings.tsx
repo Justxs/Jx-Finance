@@ -3,6 +3,7 @@ import { z } from "zod";
 import {
   getAccountsSuspenseQueryOptions,
   getBackupsSuspenseQueryOptions,
+  getReceiptSettingsSuspenseQueryOptions,
   getSmtpSettingsSuspenseQueryOptions,
 } from "@/api/generated";
 import { settingsSections } from "@/features/settings/settings-nav/settings-nav";
@@ -25,6 +26,7 @@ export const Route = createFileRoute("/settings")({
     warm(queryClient, getAccountsSuspenseQueryOptions());
     warm(queryClient, getBackupsSuspenseQueryOptions());
     warm(queryClient, getSmtpSettingsSuspenseQueryOptions());
+    warm(queryClient, getReceiptSettingsSuspenseQueryOptions());
   },
   component: SettingsPage,
   pendingComponent: SettingsPagePending,

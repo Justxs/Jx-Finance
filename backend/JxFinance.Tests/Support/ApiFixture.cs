@@ -3,6 +3,7 @@ using FastEndpoints.Testing;
 using JxFinance.Common.Discord;
 using JxFinance.Common.Email;
 using JxFinance.Common.ExchangeRates;
+using JxFinance.Common.Receipts;
 using JxFinance.Infrastructure.Brokers.InteractiveBrokers;
 using JxFinance.Infrastructure.Configuration;
 using Microsoft.AspNetCore.Hosting;
@@ -72,6 +73,9 @@ public sealed class ApiFixture : AppFixture<Program>
         services.RemoveAll<IDiscordWebhookClient>();
         services.AddSingleton<FakeDiscordWebhookClient>();
         services.AddSingleton<IDiscordWebhookClient>(sp => sp.GetRequiredService<FakeDiscordWebhookClient>());
+        services.RemoveAll<IReceiptReader>();
+        services.AddSingleton<FakeReceiptReader>();
+        services.AddSingleton<IReceiptReader>(sp => sp.GetRequiredService<FakeReceiptReader>());
     }
 
     protected override async ValueTask SetupAsync()

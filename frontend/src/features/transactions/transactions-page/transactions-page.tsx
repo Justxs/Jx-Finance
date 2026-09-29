@@ -1,9 +1,11 @@
+import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useSearch } from "@tanstack/react-router";
 import { FileUp, Plus } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import {
+  getTransactionSuspenseQueryOptions,
   getTransactionsQueryKey,
   useAccountsSuspense,
   useCategoriesSuspense,
@@ -30,6 +32,7 @@ import { byId, nameById } from "@/lib/options";
 import { metaLine } from "@/lib/utils";
 import { saveTransactionTemplate } from "@/stores/transaction-views";
 import { ActiveFilters } from "../active-filters/active-filters";
+import type { ReceiptCandidateSplit } from "../receipt-reading/fill-from-receipt";
 import { SelectionToolbar } from "../selection-toolbar/selection-toolbar";
 import { signedAmount, transactionName } from "../transaction-amount";
 import {
@@ -70,12 +73,16 @@ export function TransactionsPage() {
   const [editing, setEditing] = useState<TransactionResponse | null>(null);
   const [importOpen, setImportOpen] = useState(false);
   const [prefill, setPrefill] = useState<{ key: string; draft: TransactionDraft } | null>(null);
+  const [editPrefill, setEditPrefill] = useState<TransactionDraft | undefined>(undefined);
+  const [receiptFile, setReceiptFile] = useState<File | null>(null);
+  const queryClient = useQueryClient();
   const selection = useTransactionSelection(viewKey);
 
   function setCreateOpen(open: boolean) {
     createMutation.reset();
     if (!open) {
       setPrefill(null);
+      setReceiptFile(null);
     }
     void navigate({
       search: (prev) => ({ ...prev, new: open ? true : undefined }),
@@ -93,8 +100,9 @@ export function TransactionsPage() {
     setCreateOpen(true);
   }
 
-  function startEditing(transaction: TransactionResponse) {
+  function startEditing(transaction: TransactionResponse, draft?: TransactionDraft) {
     updateMutation.reset();
+    setEditPrefill(draft);
     setEditing(transaction);
   }
 
@@ -116,6 +124,7 @@ export function TransactionsPage() {
     remove: deleteMutation,
     bulkTag: bulkTagMutation,
     bulkCategory: bulkCategoryMutation,
+    attachReceipt,
   } = useTransactionMutations({
     listKey,
     onUpdated: () => setEditing(null),
@@ -154,7 +163,7 @@ export function TransactionsPage() {
     accountNames,
     categoryById,
     tagById,
-    onEdit: startEditing,
+    onEdit: (transaction) => startEditing(transaction),
     onDuplicate: (transaction) => startFromDraft(duplicateDraft(transaction)),
     onRefund: (transaction) => startFromDraft(refundDraft(transaction)),
     onDelete: remove.request,
@@ -177,6 +186,9 @@ export function TransactionsPage() {
       {
         onSuccess: (created) => {
           offerRule(created);
+          if (receiptFile) {
+            void attachReceipt(created.id, receiptFile);
+          }
           setCreateOpen(false);
         },
       },
@@ -184,8 +196,20 @@ export function TransactionsPage() {
   }
 
   async function handleCreateAnother(values: TransactionFormValues) {
-    offerRule(await createMutation.mutateAsync({ data: values }));
+    const created = await createMutation.mutateAsync({ data: values });
+    offerRule(created);
+    if (receiptFile) {
+      setReceiptFile(null);
+      void attachReceipt(created.id, receiptFile);
+    }
     return true;
+  }
+
+  async function splitCandidate({ candidateId, draft, file }: ReceiptCandidateSplit) {
+    await attachReceipt(candidateId, file);
+    const candidate = await queryClient.query(getTransactionSuspenseQueryOptions(candidateId));
+    setCreateOpen(false);
+    startEditing(candidate, draft);
   }
 
   function handleSaveAsTemplate(name: string, values: TransactionFormValues) {
@@ -251,6 +275,7 @@ export function TransactionsPage() {
         onCreateOpenChange={setCreateOpen}
         prefill={prefill ?? undefined}
         editing={editing}
+        editPrefill={editPrefill}
         onCancelEdit={() => setEditing(null)}
         updatePending={updateMutation.isPending}
         createPending={createMutation.isPending}
@@ -260,6 +285,8 @@ export function TransactionsPage() {
         onCreateAnother={handleCreateAnother}
         onSaveAsTemplate={handleSaveAsTemplate}
         onUpdate={handleUpdate}
+        onReceiptFile={setReceiptFile}
+        onSplitCandidate={splitCandidate}
       />
 
       <Section className="space-y-2">

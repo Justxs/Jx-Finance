@@ -3,16 +3,19 @@ using JxFinance.Common;
 using JxFinance.Common.Email;
 using JxFinance.Common.Errors;
 using JxFinance.Common.ExchangeRates;
+using JxFinance.Common.Receipts;
 using JxFinance.Common.Settings;
 using JxFinance.Domain.Accounts;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Investments;
+using JxFinance.Domain.Receipts;
 using JxFinance.Domain.Settings;
 using JxFinance.Domain.Transactions;
 using JxFinance.Endpoints.Auth.Interfaces;
 using JxFinance.Endpoints.Settings.Interfaces;
 using JxFinance.Endpoints.Settings.Shared;
 using JxFinance.Endpoints.Settings.UpdateDiscordSettings;
+using JxFinance.Endpoints.Settings.UpdateReceiptSettings;
 using JxFinance.Endpoints.Settings.UpdateSettings;
 using JxFinance.Endpoints.Settings.UpdateSmtpSettings;
 using JxFinance.Infrastructure.Configuration;
@@ -31,6 +34,7 @@ public sealed class SettingsService(
     IEmailDelivery emails,
     IAuthService authService,
     IDataProtectionProvider protection,
+    IReceiptReader receipts,
     IClock clock,
     IOptions<AppOptions> options) : ISettingsService
 {
@@ -169,6 +173,47 @@ public sealed class SettingsService(
             cancellationToken);
 
         return sent.IsSuccess ? new SmtpTestResponse(address) : sent.Error;
+    }
+
+    public async Task<ReceiptSettingsResponse> GetReceiptsAsync(CancellationToken cancellationToken)
+    {
+        var month = ReceiptReadingUsage.MonthOf(clock.Today);
+        var used = await db.ReceiptReadingUsages
+            .Where(u => u.Month == month)
+            .Select(u => u.Readings)
+            .FirstOrDefaultAsync(cancellationToken);
+        var settings = store.Current.Receipts;
+        return new ReceiptSettingsResponse(settings.Enabled, settings.HasKey, settings.Model, settings.MonthlyLimit, used);
+    }
+
+    public async Task<ReceiptSettingsResponse> UpdateReceiptsAsync(
+        UpdateReceiptSettingsRequest request,
+        CancellationToken cancellationToken)
+    {
+        await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
+        var settings = await LoadOrCreateAsync(cancellationToken);
+        settings.ReceiptReadingEnabled = request.Enabled;
+        settings.ReceiptModel = request.Model;
+        settings.ReceiptMonthlyLimit = request.MonthlyLimit;
+        if (OptionalText.Normalize(request.ApiKey) is { } apiKey)
+        {
+            settings.ReceiptApiKeyProtected = ReceiptApiKey.Protect(protection, apiKey);
+        }
+
+        await db.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+        store.Set(settings);
+
+        return await GetReceiptsAsync(cancellationToken);
+    }
+
+    public async Task<Result> TestReceiptKeyAsync(CancellationToken cancellationToken)
+    {
+        var settings = store.Current.Receipts;
+        var apiKey = ReceiptApiKey.Unprotect(protection, settings);
+        return apiKey.TryGetValue(out var key)
+            ? await receipts.CheckKeyAsync(key, settings.Model, cancellationToken)
+            : Result.Failure(apiKey.Error);
     }
 
     public async Task UpdateDiscordAsync(UpdateDiscordSettingsRequest request, CancellationToken cancellationToken)
@@ -310,7 +355,8 @@ public sealed class SettingsService(
         settings.FirstDayOfWeek,
         settings.DefaultAccountId,
         settings.DefaultPageSize,
-        settings.SupportLinkEnabled);
+        settings.SupportLinkEnabled,
+        settings.ReceiptReadingReady);
 
     private async Task<InstanceSettings> LoadOrCreateAsync(CancellationToken cancellationToken)
     {

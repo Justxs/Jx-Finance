@@ -14,7 +14,7 @@ import { SettingsPending } from "@/features/settings/settings-layout/settings-pe
 import { ALL_CURRENCIES } from "@/lib/currency";
 import { type SettingsSection, settingsSections } from "../settings-nav/settings-nav";
 
-const featureGroupSizes = { plan: 3, review: 5, ledger: 4 } as const;
+const featureGroupSizes = { plan: 3, review: 5, ledger: 5 } as const;
 
 interface CheckboxFieldSkeletonProps {
   hintLines?: 1 | 2;
@@ -192,6 +192,7 @@ function BackupSkeleton() {
 function SectionBodySkeleton({ section }: Readonly<{ section: SettingsSection }>) {
   switch (section) {
     case "email":
+    case "receipts":
       return (
         <TitledSkeleton>
           <SmtpFormSkeleton />

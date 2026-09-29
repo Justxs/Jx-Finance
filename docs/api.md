@@ -89,7 +89,7 @@ Failures answer `application/problem+json` shaped by FastEndpoints' RFC 9457 `Pr
 
 `name` is the offending request property, or `generalErrors` for a failure that is not tied to one field. A nested property is a path with every segment in camel case, such as `depreciation.lifeMonths` or `lines[1].amount`; `ProblemResponses.Build` converts each segment. `code` is the machine-readable reason, and is what clients should branch on rather than the prose in `reason`.
 
-Services return `Result<T>` with one of the codes in `Common/Errors/ErrorCodes.cs`. Endpoints hand it to one of the sender helpers in `Common/ResultResponses.cs`, which answer without throwing and map the code to a status through `ErrorCodes.StatusCodeFor`: `not_found` to 404, `conflict` to 409, `forbidden` to 403, `unauthorized` to 401, anything else to 400. `feature.disabled` maps to 404 as well, so a service that answers it — today only a restore of a record whose feature is switched off — reads the same as the feature gate's own answer on a gated prefix. Nothing reaching for a resource it cannot see is told the difference between "missing" and "not yours": those cases return 404 on purpose.
+Services return `Result<T>` with one of the codes in `Common/Errors/ErrorCodes.cs`. Endpoints hand it to one of the sender helpers in `Common/ResultResponses.cs`, which answer without throwing and map the code to a status through `ErrorCodes.StatusCodeFor`: `not_found` to 404, `conflict` to 409, `forbidden` to 403, `unauthorized` to 401, `credentials.lockedOut` and `receipt.limitReached` to 429, `receipt.providerFailed` to 502, anything else to 400. `feature.disabled` maps to 404 as well, so a service that answers it — today only a restore of a record whose feature is switched off — reads the same as the feature gate's own answer on a gated prefix. Nothing reaching for a resource it cannot see is told the difference between "missing" and "not yours": those cases return 404 on purpose.
 
 | Helper | Success | Failure |
 | --- | --- | --- |
@@ -240,6 +240,8 @@ Every 201 goes through `CreatedAsync`, which sets `Location` to a path built fro
 | POST | `/api/notifications/read-all` |
 | PATCH | `/api/notifications/{id}/read` |
 | GET | `/api/ping` |
+| POST | `/api/receipts/read` |
+| PUT | `/api/receipts/{id}/categories` |
 | GET | `/api/recurring-bills` |
 | POST | `/api/recurring-bills` |
 | DELETE | `/api/recurring-bills/{id}` |
@@ -254,6 +256,9 @@ Every 201 goes through `CreatedAsync`, which sets `Location` to a path built fro
 | PUT | `/api/settings/discord` |
 | POST | `/api/settings/exchange-rates/sync` |
 | GET | `/api/settings/public` |
+| GET | `/api/settings/receipts` |
+| PUT | `/api/settings/receipts` |
+| POST | `/api/settings/receipts/test` |
 | GET | `/api/settings/smtp` |
 | PUT | `/api/settings/smtp` |
 | POST | `/api/settings/smtp/test` |
@@ -360,6 +365,10 @@ Restoring a transaction brings its split lines and its tags with it and a conver
 `TrashGroup` declares no feature, for the reason the notification routes are ungated: the pair belongs to no single feature, so the service filters by feature per row instead.
 
 Files attached to a transaction: `GET /api/transactions/{transactionId}/attachments` lists them oldest first, and `POST` to the same route takes one file as multipart/form-data in the field `file` and answers 201 with `id`, `transactionId`, `fileName`, `contentType`, `sizeBytes`, `sha256`, `uploadedById`, `uploadedByName` and `uploadedAt`. JPEG, PNG, WebP, HEIC and PDF up to 10 MB are accepted, ten per transaction; the type is read from the bytes and a disagreeing declared type is refused (`attachment.empty`, `attachment.tooLarge`, `attachment.typeNotAllowed`, `attachment.contentMismatch`, 409 `attachment.limitReached`). `GET /api/attachments/{id}/content` streams the file as `Content-Disposition: attachment` with `nosniff`, a sandboxing policy and the SHA-256 as ETag (304 on a match); `DELETE /api/attachments/{id}` moves it to the trash as kind `attachment`. Every route answers 404 for a transaction or file the caller cannot see. A transaction response carries `attachmentCount`. See [Attachments](features/attachments.md).
+
+`POST /api/receipts/read` takes multipart/form-data with exactly one of `attachmentId` (a file attached to a transaction the caller can see) and `file` (a new JPEG, PNG, WebP, HEIC or PDF of at most 10 MB, read and never stored), plus `force`, and waits for Anthropic's answer. It answers `id`, `model`, `cached`, `result` (`merchant`, `date`, `currency`, `total`, `isReturn`, `pagesRead`, `pageCount`, `items` with `name`, `quantity`, `amount`, `discount`, `deposit`, `categoryId` and `remembered`, and `adjustments` with `kind`, `label` and `amount`) and `candidates` (for an uploaded file, up to three visible unsplit expenses with the receipt's total within three days: `id`, `accountId`, `date`, `description`, `amount`, `currency`). Neither or both sources answer `required` or `value.mustBeEmpty`; the file answers the `attachment.*` codes of an upload; the rest are `receipt.notConfigured`, `receipt.unsupportedFile`, `receipt.unreadable`, `receipt.keyRejected`, `receipt.keyUnreadable`, 409 `conflict.busy`, 429 `receipt.limitReached` and 502 `receipt.providerFailed`. It is throttled to 30 calls per five minutes.
+`PUT /api/receipts/{id}/categories` takes `items`, each `index` and `categoryId` (null to forget), stores the choices and remembers them per item name, and answers 204; an index outside the reading answers `range.invalid`, a category that is not a visible expense category `reference.notFound` or `category.wrongType`, and someone else's reading 404. Both sit under `/api/receipts` and answer 404 `feature.disabled` while `ReceiptReading` is off.
+`GET` and `PUT /api/settings/receipts` (administrators) read and save `enabled`, `apiKey` (write only; empty keeps it), `model` (`receipt.modelNotAllowed` outside the list) and `monthlyLimit` (1 to 10000), answering `enabled`, `hasKey`, `model`, `monthlyLimit` and `readingsThisMonth`; `POST /api/settings/receipts/test` answers 204 or the key's error. `GET /api/settings` answers `receiptReadingReady`. See [Receipt reading](features/receipt-reading.md).
 
 Debt bodies take optional repayment terms: `loanAmount`, `firstPaymentDate`, `termMonths` (1 to 600) or `monthlyPayment` but not both (`value.mustBeEmpty`), and `amortizationType` (`annuity`, the default, or `linear`, which takes no monthly payment). A body written before this addition leaves them out and stores a debt without a schedule, and because an update replaces the debt, leaving them out of a `PUT` clears them. A monthly payment that would not repay the loan within 600 payments is refused with `debt.paymentTooSmall`. A debt response carries the terms and `payoffDate`, the date of the last scheduled payment, or null when the terms are incomplete. `GET /api/debts/{id}/schedule?extraMonthly&lumpSum&lumpSumDate` answers the computed schedule — the regular payment, the scheduled balance and payments made as of today, and a `plan` with its payoff date, totals and one row per payment (date, payment, interest, principal, extra, balance) — plus `withExtra`, `interestSaved` and `paymentsSaved` when an overpayment was asked for. The overpayments are dot-decimal query strings (`money.nonNegative`), and a positive `lumpSum` needs `lumpSumDate` (`required`). It answers 404 for a debt the caller does not own and 400 `debt.scheduleIncomplete` for one without complete terms. See [Debt amortization](features/debt-amortization.md).
 

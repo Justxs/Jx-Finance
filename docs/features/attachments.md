@@ -94,6 +94,8 @@ Deleting a transaction does not touch its files. They are hidden because their t
 
 `AttachmentPurgeJob` runs daily and was the first job that hard-deletes something a person put into the ledger. It hard-deletes the rows, and then the files, of attachments removed more than 30 days ago (`DeletionEntry.RetentionDays`) and of attachments whose transaction was deleted more than 30 days ago, and it removes files that no row refers to once they are an hour old. A trash entry whose attachment was purged answers `restore.expired`, which is what it would have answered anyway.
 
+Its last step deletes [receipt readings](receipt-reading.md#retention) older than 24 hours that failed or are still pending, and those whose SHA-256 no attachment row carries any more, trashed ones included, so a reading of a file lives exactly as long as the file and survives a delete that is undone. Reading a receipt changes nothing about the attachment itself: a household member who can see a file can read it and gets a reading of their own.
+
 It still owns the files on disk, so attachments are the one trash kind `RetentionJob` leaves alone. The one place the two meet is a transaction old enough to be purged: `RetentionJob` deletes that transaction's attachment rows and their files itself, in the same step and by the same rule, because the restricting foreign key from the attachment would otherwise refuse the delete and neither job may depend on having run first. Both are idempotent, so whichever runs first leaves nothing for the other. See [Trash and undo](trash-and-undo.md) and [Background jobs](background-jobs.md).
 
 ## Audit

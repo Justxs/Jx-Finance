@@ -2,12 +2,14 @@ using FastEndpoints;
 using JxFinance.Api;
 using JxFinance.Common.Discord;
 using JxFinance.Common.ExchangeRates;
+using JxFinance.Common.Receipts;
 using JxFinance.Endpoints.Backups.UploadBackup;
 using JxFinance.Infrastructure.BackgroundJobs;
 using JxFinance.Infrastructure.Brokers.InteractiveBrokers;
 using JxFinance.Infrastructure.Configuration;
 using JxFinance.Infrastructure.Discord;
 using JxFinance.Infrastructure.ExchangeRates;
+using JxFinance.Infrastructure.Receipts;
 using Serilog;
 
 namespace JxFinance.Extensions;
@@ -57,6 +59,8 @@ public static class ApiServiceExtensions
             client.MaxResponseContentBufferSize = 64 * 1024;
             client.DefaultRequestHeaders.UserAgent.ParseAdd("JxFinance/1.0");
         }).RemoveAllLoggers();
+
+        builder.Services.AddHttpClient<IReceiptReader, AnthropicReceiptReader>().RemoveAllLoggers();
 
         if (!builder.Configuration.GetValue<bool>("export-openapi-docs") && builder.Configuration.GetValue(ConfigKeys.BackgroundJobs, true))
         {

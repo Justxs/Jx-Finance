@@ -6,7 +6,6 @@ The table is in the suggested build order. Each plan's `Status:` line names what
 
 | Plan | Size | Where it lives | Build after |
 | --- | --- | --- | --- |
-| [Receipt reading and automatic splits](receipt-ocr.md) | L | Transaction form | |
 | [Passkeys](passkeys.md) | M | Security section of Settings, sign-in | |
 | [Personal API tokens](personal-api-tokens.md) | M | Security section of Settings | |
 | [Data export per user](data-export-per-user.md) | M | Settings | |

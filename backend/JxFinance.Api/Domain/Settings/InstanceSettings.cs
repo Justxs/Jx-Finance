@@ -1,5 +1,6 @@
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Email;
+using JxFinance.Domain.Receipts;
 
 namespace JxFinance.Domain.Settings;
 
@@ -10,7 +11,7 @@ public sealed class InstanceSettings
 
     public int Id { get; set; } = SingletonId;
     public string? InstanceName { get; set; }
-    public FeatureFlags Features { get; set; } = FeatureFlags.All;
+    public FeatureFlags Features { get; set; } = FeatureFlags.Default;
     public Currency ReportingCurrency { get; set; } = Currency.Eur;
     public string EnabledCurrencyCodes { get; set; } = string.Empty;
     public bool ExchangeRateSyncEnabled { get; set; } = true;
@@ -29,4 +30,8 @@ public sealed class InstanceSettings
     public string? SmtpFromName { get; set; }
     public bool DiscordEnabled { get; set; }
     public bool SupportLinkEnabled { get; set; } = true;
+    public bool ReceiptReadingEnabled { get; set; }
+    public string ReceiptApiKeyProtected { get; set; } = string.Empty;
+    public string ReceiptModel { get; set; } = ReceiptModels.Default;
+    public int ReceiptMonthlyLimit { get; set; } = ReceiptModels.DefaultMonthlyLimit;
 }

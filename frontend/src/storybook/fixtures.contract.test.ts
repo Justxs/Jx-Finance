@@ -55,6 +55,10 @@ function asPortfolio(fixture: unknown) {
   return { ...fixtures.emptyPortfolio, holdings: [fixture] };
 }
 
+function asReceiptReading(fixture: unknown) {
+  return { ...fixtures.receiptReading, result: fixture };
+}
+
 const contracts: Record<string, Contract> = {
   currentUser: { schema: schemas.MeResponse },
   currentUserWithTwoFactor: { schema: schemas.MeResponse },
@@ -64,6 +68,17 @@ const contracts: Record<string, Contract> = {
   smtpSettings: { schema: schemas.SmtpSettingsResponse },
   smtpSettingsOff: { schema: schemas.SmtpSettingsResponse },
   smtpTestSent: { schema: schemas.SendTestEmailResponse },
+  receiptSettings: { schema: schemas.ReceiptSettingsResponse },
+  receiptSettingsEmpty: { schema: schemas.ReceiptSettingsResponse },
+  receiptSettingsOverLimit: { schema: schemas.ReceiptSettingsResponse },
+  receiptReading: { schema: schemas.ReadReceiptResponse },
+  receiptReadingWithCandidate: { schema: schemas.ReadReceiptResponse },
+  receiptReadingMisread: { schema: schemas.ReadReceiptResponse },
+  receiptReadingOneCategory: { schema: schemas.ReadReceiptResponse },
+  receiptReadingRemembered: { schema: schemas.ReadReceiptResponse },
+  receiptReadingReturn: { schema: schemas.ReadReceiptResponse },
+  receiptReadingPdf: { schema: schemas.ReadReceiptResponse },
+  maximaReceipt: { schema: schemas.ReadReceiptResponse, toResponse: asReceiptReading },
   myDiscord: { schema: schemas.MyDiscordResponse },
   myDiscordEmpty: { schema: schemas.MyDiscordResponse },
   myDiscordGone: { schema: schemas.MyDiscordResponse },
