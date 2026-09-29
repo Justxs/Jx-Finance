@@ -2340,6 +2340,533 @@
         ]
       }
     },
+    "/api/auth/passkeys": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Finish adding a passkey",
+        "description": "Verifies the credential the browser created from the registration options and stores it under the given name. The state cookie of the registration is read and deleted; it must belong to the signed-in user and to this session and be less than five minutes old. User verification (a PIN or biometric) is required and no attestation is checked.",
+        "operationId": "AddPasskey",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddPasskeyRequest"
+              },
+              "example": {
+                "credentialJson": "{\"id\":\"...\",\"type\":\"public-key\",\"response\":{}}",
+                "name": "Chrome on Windows"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "The passkey was added.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PasskeyResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed, the ceremony state is missing, expired or not this session's (passkey.stateInvalid), or the credential did not verify (passkey.invalid).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The session points at a user that no longer exists.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The account already holds ten passkeys (passkey.limitReached).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      },
+      "get": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "List your passkeys",
+        "description": "Returns the signed-in user's passkeys, oldest first: the base64url credential id, the name, when it was added and whether it is synced between devices (backup eligible) or tied to one authenticator. Public keys and sign counts are never returned.",
+        "operationId": "GetPasskeys",
+        "responses": {
+          "200": {
+            "description": "The passkeys of the signed-in user.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PasskeyResponse"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      }
+    },
+    "/api/auth/passkeys/registration-options": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Begin adding a passkey",
+        "description": "Confirms the account password and returns the WebAuthn creation options as JSON text, ready for PublicKeyCredential.parseCreationOptionsFromJSON. The ceremony state travels in a protected, five-minute, single-use cookie bound to this user and this session; post the credential to POST /api/auth/passkeys to finish. The password counts toward the account lockout. Rate limited to five attempts per five minutes.",
+        "operationId": "BeginPasskeyRegistration",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReauthenticateRequest"
+              },
+              "example": {
+                "password": "correct horse battery staple"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "The creation options.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PasskeyOptionsResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The password was wrong (password.incorrect), or this installation cannot offer passkeys (passkey.unavailable).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The session points at a user that no longer exists.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The account already holds ten passkeys (passkey.limitReached).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many attempts, or the account is locked after repeated failures."
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      }
+    },
+    "/api/auth/passkeys/sign-in": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Sign in with a passkey",
+        "description": "Anonymous. Verifies the assertion the browser made from the sign-in options and signs the owner of the passkey in exactly as a password sign-in does: a session row and the jx_access and jx_refresh cookies. A user-verified passkey is a whole sign-in, so no email, password or authenticator code is asked. A failed assertion never counts toward the account lockout, and a temporarily locked-out account may still sign in this way; a completed sign-in resets the failed-attempt counter. Rate limited to 10 attempts per five minutes per client.",
+        "operationId": "PasskeySignIn",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PasskeySignInRequest"
+              },
+              "example": {
+                "credentialJson": "{\"id\":\"...\",\"type\":\"public-key\",\"response\":{}}",
+                "rememberMe": false
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Signed in; twoFactorRequired is always false.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed, or the ceremony state is missing or expired (passkey.stateInvalid).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "The assertion did not verify (passkey.invalid), or the account is deactivated (credentials.invalid).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many attempts from this client; wait and retry."
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/passkeys/sign-in-options": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Begin signing in with a passkey",
+        "description": "Anonymous. Returns WebAuthn request options as JSON text, ready for PublicKeyCredential.parseRequestOptionsFromJSON, with no allowed credentials, so the authenticator offers the passkeys it holds for this site. The challenge travels in a protected, five-minute, single-use cookie; post the assertion to POST /api/auth/passkeys/sign-in. Rate limited to 10 calls per five minutes per client.",
+        "operationId": "BeginPasskeySignIn",
+        "responses": {
+          "200": {
+            "description": "The request options.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PasskeyOptionsResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "This installation cannot offer passkeys (passkey.unavailable).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many attempts from this client; wait and retry."
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/passkeys/{id}": {
+      "delete": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Remove a passkey",
+        "description": "Deletes one of your passkeys, so it can no longer sign in. Sessions that are already open stay open; sign out everywhere else to end them.",
+        "operationId": "RemovePasskey",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The base64url credential id, as returned by the passkey list.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "The passkey is gone."
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No passkey with this id belongs to the signed-in user.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Rename a passkey",
+        "description": "Changes the name the list shows for one of your passkeys. Nothing else about the passkey changes.",
+        "operationId": "RenamePasskey",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The base64url credential id, as returned by the passkey list.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "pQx0Yq1bTj6T0l7c3m2hVw"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RenamePasskeyRequest"
+              },
+              "example": {
+                "name": "Phone"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "The renamed passkey.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PasskeyResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No passkey with this id belongs to the signed-in user.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      }
+    },
     "/api/auth/refresh": {
       "post": {
         "tags": [
@@ -11613,7 +12140,7 @@
           "Settings"
         ],
         "summary": "Read the settings the sign-in page needs",
-        "description": "Anonymous. Returns only the installation name, the default language, whether this installation can send email, which is what decides if the sign-in page offers \"Forgot password\", and whether an administrator allowed Discord notifications, which the profile uses to explain its Discord section. No host name, no address and no credential is part of the answer.",
+        "description": "Anonymous. Returns only the installation name, the default language, whether this installation can send email, which is what decides if the sign-in page offers \"Forgot password\", and whether an administrator allowed Discord notifications, which the profile uses to explain its Discord section, and whether passkeys can work here, which is false when the configured site address is plain HTTP or an IP address. No host name, no address and no credential is part of the answer.",
         "operationId": "GetPublicSettings",
         "responses": {
           "200": {
@@ -15721,7 +16248,7 @@
           "Users"
         ],
         "summary": "Set a new password for another user",
-        "description": "Administrators only. For a user who forgot their password: the administrator chooses a temporary password and hands it over outside the application, and the user changes it on their profile after signing in. The administrator confirms the action with their own current password; a wrong one answers password.incorrect, counts toward the administrator's sign-in lockout, and a locked-out administrator answers credentials.lockedOut. The new password must satisfy the same rules as any other password, otherwise password.tooWeak. Every session of the target user is revoked and their failed sign-in counter and temporary lockout are cleared; a deactivated user stays deactivated. With resetTwoFactor the authenticator is switched off and the recovery codes are invalidated as well, for a user who also lost their device. The target may be a member or another administrator, never the caller: change your own password on the profile. Rate limited to 10 calls per five minutes per client.",
+        "description": "Administrators only. For a user who forgot their password: the administrator chooses a temporary password and hands it over outside the application, and the user changes it on their profile after signing in. The administrator confirms the action with their own current password; a wrong one answers password.incorrect, counts toward the administrator's sign-in lockout, and a locked-out administrator answers credentials.lockedOut. The new password must satisfy the same rules as any other password, otherwise password.tooWeak. Every session of the target user is revoked and their failed sign-in counter and temporary lockout are cleared; a deactivated user stays deactivated. With resetTwoFactor the authenticator is switched off, the recovery codes are invalidated and every passkey is removed as well, for a user who also lost their device. The target may be a member or another administrator, never the caller: change your own password on the profile. Rate limited to 10 calls per five minutes per client.",
         "operationId": "ResetUserPassword",
         "parameters": [
           {
@@ -16177,6 +16704,33 @@
         "example": {
           "email": "partner@example.com",
           "role": "member"
+        }
+      },
+      "AddPasskeyRequest": {
+        "required": [
+          "credentialJson",
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "credentialJson": {
+            "maxLength": 65536,
+            "minLength": 0,
+            "type": "string",
+            "description": "JSON text of PublicKeyCredential.toJSON() from navigator.credentials.create().",
+            "example": "{\"id\":\"...\",\"type\":\"public-key\",\"response\":{}}"
+          },
+          "name": {
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string",
+            "description": "A name for the list, at most 100 characters; the client sends the browser's label.",
+            "example": "Chrome on Windows"
+          }
+        },
+        "example": {
+          "credentialJson": "{\"id\":\"...\",\"type\":\"public-key\",\"response\":{}}",
+          "name": "Chrome on Windows"
         }
       },
       "AmortizationType": {
@@ -19482,6 +20036,10 @@
           "money.positive",
           "monthClose.invalidMonth",
           "monthClose.notEnded",
+          "passkey.invalid",
+          "passkey.limitReached",
+          "passkey.stateInvalid",
+          "passkey.unavailable",
           "password.incorrect",
           "password.tooWeak",
           "passwordReset.tokenInvalid",
@@ -21762,6 +22320,66 @@
           }
         }
       },
+      "PasskeyOptionsResponse": {
+        "required": [
+          "optionsJson"
+        ],
+        "type": "object",
+        "properties": {
+          "optionsJson": {
+            "type": "string"
+          }
+        }
+      },
+      "PasskeyResponse": {
+        "required": [
+          "id",
+          "name",
+          "createdAt",
+          "isSynced"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "isSynced": {
+            "type": "boolean"
+          }
+        }
+      },
+      "PasskeySignInRequest": {
+        "required": [
+          "credentialJson",
+          "rememberMe"
+        ],
+        "type": "object",
+        "properties": {
+          "credentialJson": {
+            "maxLength": 65536,
+            "minLength": 0,
+            "type": "string",
+            "description": "JSON text of PublicKeyCredential.toJSON() from navigator.credentials.get().",
+            "example": "{\"id\":\"...\",\"type\":\"public-key\",\"response\":{}}"
+          },
+          "rememberMe": {
+            "type": "boolean",
+            "description": "Keeps the session for 30 days instead of one day.",
+            "example": false
+          }
+        },
+        "example": {
+          "credentialJson": "{\"id\":\"...\",\"type\":\"public-key\",\"response\":{}}",
+          "rememberMe": false
+        }
+      },
       "PayeeBreakdownItem": {
         "required": [
           "payeeKey",
@@ -21998,7 +22616,8 @@
           "instanceName",
           "defaultLanguage",
           "emailEnabled",
-          "discordEnabled"
+          "discordEnabled",
+          "passkeysAvailable"
         ],
         "type": "object",
         "properties": {
@@ -22015,6 +22634,9 @@
             "type": "boolean"
           },
           "discordEnabled": {
+            "type": "boolean"
+          },
+          "passkeysAvailable": {
             "type": "boolean"
           }
         }
@@ -22591,6 +23213,23 @@
         "type": "string",
         "description": "Expense, Income, or Transfer. Decides what a confirmation writes."
       },
+      "RenamePasskeyRequest": {
+        "required": [
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string",
+            "example": "Phone"
+          }
+        },
+        "example": {
+          "name": "Phone"
+        }
+      },
       "ReportComparisonMode": {
         "enum": [
           "none",
@@ -22817,7 +23456,7 @@
           },
           "resetTwoFactor": {
             "type": "boolean",
-            "description": "Also switch off two-factor authentication and invalidate the recovery codes. Default false.",
+            "description": "Also switch off two-factor authentication, invalidate the recovery codes and remove every passkey. Default false.",
             "default": false,
             "example": false
           }

@@ -52,7 +52,7 @@ sequenceDiagram
         Identity->>Identity: stamp changes, every session of the target ends
         Identity->>Identity: clear counter and temporary lockout, deactivation stays
         opt resetTwoFactor
-            Identity->>Identity: disable authenticator, new key, recovery codes invalidated
+            Identity->>Identity: disable authenticator, new key, recovery codes invalidated,<br/>every passkey removed (AspNetUserPasskeys rows deleted in the same transaction)
         end
         Api-->>Admin: 204, users list refreshed
     end

@@ -2,11 +2,11 @@
 
 ## Authentication
 
-First-run administrator setup; admin-created users; 1-day absolute session or 30-day remembered session (short-lived JWT access cookie plus rotating refresh cookie); optional authenticator 2FA and recovery codes; a list of signed-in browsers on the profile with sign out for one browser or for every other browser, effective on that browser's next request
+First-run administrator setup; admin-created users; 1-day absolute session or 30-day remembered session (short-lived JWT access cookie plus rotating refresh cookie); optional authenticator 2FA and recovery codes; optional passkeys (up to ten per member, added under Settings › Personal › Security after the password, each a whole sign-in with a PIN or biometric, offered only over HTTPS by name or on localhost); a list of signed-in browsers on the profile with sign out for one browser or for every other browser, effective on that browser's next request
 
 ## User management
 
-Create users, change roles, deactivate (after a confirmation that explains the consequences) and reactivate; the last active administrator cannot be deactivated or demoted; an administrator sets a temporary password for a user who forgot theirs, confirmed with the administrator's own password, optionally clearing that user's 2FA, and a user can also reset their own password through an emailed link; update own name, password and bill reminder email preference; new users receive starter categories and, when the mail server is set up, a confirmation link for their address
+Create users, change roles, deactivate (after a confirmation that explains the consequences) and reactivate; the last active administrator cannot be deactivated or demoted; an administrator sets a temporary password for a user who forgot theirs, confirmed with the administrator's own password, optionally clearing that user's 2FA and passkeys, and a user can also reset their own password through an emailed link; update own name, password and bill reminder email preference; new users receive starter categories and, when the mail server is set up, a confirmation link for their address
 
 ## Accounts
 

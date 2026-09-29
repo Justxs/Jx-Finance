@@ -1,4 +1,5 @@
 import { useSearch } from "@tanstack/react-router";
+import { NamedRowsSkeleton } from "@/components/named-row/named-row";
 import { useNavSections } from "@/components/section-nav/section-nav";
 import { Section } from "@/components/ui/section/section";
 import {
@@ -118,7 +119,14 @@ function ProfileSectionSkeleton({
     case "account":
       return <ProfileFormSkeleton />;
     case "security":
-      return <TwoFactorSkeleton />;
+      return (
+        <>
+          <TwoFactorSkeleton />
+          <SectionSkeleton description>
+            <NamedRowsSkeleton rows={2} />
+          </SectionSkeleton>
+        </>
+      );
     case "sessions":
       return (
         <SectionSkeleton description>

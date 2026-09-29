@@ -1,14 +1,12 @@
 import QRCode from "qrcode";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { z } from "zod";
 import { useDisableTwoFactor, useMeSuspense, useSetupTwoFactor } from "@/api/generated";
 import type { TwoFactorSetupResponse } from "@/api/generated/model";
-import { useServerForm } from "@/components/form";
-import { FormError } from "@/components/form-error/form-error";
-import { Section, SectionTitle } from "@/components/ui/section/section";
+import { TitledSection } from "@/components/ui/section/section";
 import type { TranslationKey } from "@/lib/i18n";
 import { silent } from "@/lib/mutations";
+import { PasswordPrompt } from "../password-prompt/password-prompt";
 import { TwoFactorRecoveryCodes } from "./two-factor-recovery-codes";
 import { TwoFactorSetup } from "./two-factor-setup";
 
@@ -29,60 +27,6 @@ const promptCopy = {
   PromptMode,
   { subtitle: TranslationKey; submitLabel: TranslationKey; variant: "default" | "destructive" }
 >;
-
-interface PasswordPromptProps {
-  mode: PromptMode;
-  pending: boolean;
-  error: unknown;
-  onSubmit: (password: string) => Promise<unknown>;
-}
-
-function PasswordPrompt({ mode, pending, error, onSubmit }: Readonly<PasswordPromptProps>) {
-  const { t } = useTranslation();
-  const copy = promptCopy[mode];
-
-  const form = useServerForm({
-    defaultValues: { password: "" },
-    schema: z.object({ password: z.string() }),
-    submit: async (value, formApi) => {
-      try {
-        await onSubmit(value.password);
-      } finally {
-        formApi.setFieldValue("password", "");
-      }
-    },
-  });
-
-  return (
-    <form.AppForm>
-      <form.FormShell as={Section} className="space-y-4 *:max-w-md">
-        <SectionTitle>{t("profile.twoFactorTitle")}</SectionTitle>
-        <p className="text-sm text-muted-foreground">{t(copy.subtitle)}</p>
-
-        <form.Field name="password">
-          {(field) => (
-            <field.TextField
-              id="two-factor-password"
-              label={t("profile.currentPassword")}
-              type="password"
-              autoComplete="current-password"
-            />
-          )}
-        </form.Field>
-
-        <FormError error={error} />
-
-        <form.Subscribe selector={(state) => state.values.password !== ""}>
-          {(ready) => (
-            <form.SubmitButton variant={copy.variant} pending={pending} disabled={!ready}>
-              {t(copy.submitLabel)}
-            </form.SubmitButton>
-          )}
-        </form.Subscribe>
-      </form.FormShell>
-    </form.AppForm>
-  );
-}
 
 export function TwoFactorSettings() {
   const { t } = useTranslation();
@@ -133,12 +77,18 @@ export function TwoFactorSettings() {
     );
   }
 
+  const copy = promptCopy[mode];
+
   return (
-    <PasswordPrompt
-      mode={mode}
-      pending={promptMutation.isPending}
-      error={promptMutation.error}
-      onSubmit={(password) => promptMutation.mutateAsync({ data: { password } })}
-    />
+    <TitledSection title={t("profile.twoFactorTitle")} description={t(copy.subtitle)} bodyGap="md">
+      <PasswordPrompt
+        id="two-factor-password"
+        submitLabel={t(copy.submitLabel)}
+        variant={copy.variant}
+        pending={promptMutation.isPending}
+        error={promptMutation.error}
+        onSubmit={(password) => promptMutation.mutateAsync({ data: { password } })}
+      />
+    </TitledSection>
   );
 }

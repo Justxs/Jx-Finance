@@ -3,14 +3,16 @@ import { Link, useNavigate, useRouter } from "@tanstack/react-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
-import { useLogin } from "@/api/generated";
+import { useBeginPasskeySignIn, useLogin, usePasskeySignIn } from "@/api/generated";
 import type { LoginResponse } from "@/api/generated/model";
 import { useServerForm } from "@/components/form";
 import { FormError } from "@/components/form-error/form-error";
-import { useEmailEnabled } from "@/hooks/use-settings";
+import { Button } from "@/components/ui/button/button";
+import { useEmailEnabled, usePasskeysAvailable } from "@/hooks/use-settings";
 import { loadAppShell } from "@/lib/app-shell";
 import { setAuthenticated } from "@/lib/auth-gate";
 import { silent } from "@/lib/mutations";
+import { type PasskeyFailure, getPasskey, passkeysSupported } from "@/lib/passkeys";
 import { requiredEmail, requiredValue } from "@/lib/validation";
 import { AuthCard } from "../auth-card/auth-card";
 
@@ -21,13 +23,68 @@ interface FormValues {
   twoFactorCode: string;
 }
 
+interface PasskeySignInProps {
+  label: string;
+  rememberMe: () => boolean;
+  onSignedIn: () => Promise<void>;
+}
+
+function PasskeySignIn({ label, rememberMe, onSignedIn }: Readonly<PasskeySignInProps>) {
+  const { t } = useTranslation();
+  const [failure, setFailure] = useState<PasskeyFailure | null>(null);
+  const begin = useBeginPasskeySignIn(silent());
+  const signIn = usePasskeySignIn(silent({ onSuccess: onSignedIn }));
+
+  function start() {
+    setFailure(null);
+    signIn.reset();
+    begin.mutate(undefined, {
+      onSuccess: async ({ optionsJson }) => {
+        const asserted = await getPasskey(optionsJson);
+        if (asserted.ok) {
+          signIn.mutate({
+            data: { credentialJson: asserted.credentialJson, rememberMe: rememberMe() },
+          });
+        } else {
+          setFailure(asserted.reason);
+        }
+      },
+    });
+  }
+
+  return (
+    <div className="space-y-4">
+      <Button
+        type="button"
+        variant="outline"
+        className="w-full"
+        pending={begin.isPending || signIn.isPending}
+        onClick={start}
+      >
+        {label}
+      </Button>
+      <FormError
+        error={begin.error ?? signIn.error}
+        message={failure && failure !== "cancelled" ? t("auth.passkeyFailed") : undefined}
+      />
+    </div>
+  );
+}
+
 export function LoginPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const router = useRouter();
   const queryClient = useQueryClient();
   const emailEnabled = useEmailEnabled();
+  const passkeysOffered = usePasskeysAvailable() && passkeysSupported();
   const [twoFactorRequired, setTwoFactorRequired] = useState(false);
+
+  async function enterApp() {
+    setAuthenticated(true);
+    await Promise.allSettled([loadAppShell(queryClient), router.preloadRoute({ to: "/" })]);
+    void navigate({ to: "/" });
+  }
 
   const schema = z.object({
     email: requiredEmail(t),
@@ -43,9 +100,7 @@ export function LoginPage() {
           setTwoFactorRequired(true);
           return;
         }
-        setAuthenticated(true);
-        await Promise.allSettled([loadAppShell(queryClient), router.preloadRoute({ to: "/" })]);
-        void navigate({ to: "/" });
+        await enterApp();
       },
     }),
   );
@@ -141,6 +196,15 @@ export function LoginPage() {
           ) : null}
         </form.FormShell>
       </form.AppForm>
+      {passkeysOffered ? (
+        <div className="mt-4">
+          <PasskeySignIn
+            label={twoFactorRequired ? t("auth.usePasskeyInstead") : t("auth.signInWithPasskey")}
+            rememberMe={() => form.getFieldValue("rememberMe")}
+            onSignedIn={enterApp}
+          />
+        </div>
+      ) : null}
     </AuthCard>
   );
 }

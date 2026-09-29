@@ -6,7 +6,6 @@ The table is in the suggested build order. Each plan's `Status:` line names what
 
 | Plan | Size | Where it lives | Build after |
 | --- | --- | --- | --- |
-| [Passkeys](passkeys.md) | M | Security section of Settings, sign-in | |
 | [Personal API tokens](personal-api-tokens.md) | M | Security section of Settings | |
 | [Data export per user](data-export-per-user.md) | M | Settings | |
 | [Household settle-up](household-settle-up.md) | L | Households | |
@@ -22,6 +21,6 @@ Several plans touch the same code. Whichever lands second adapts to the first:
 - The month-close checklist's `checklist.accounts`, which replaced `checklist.imports` when [reconciliation](../features/reconciliation.md#in-the-month-end-close) shipped: the [monthly digest](../features/monthly-digest.md), shipped on 2026-09-29, counts its `differs` and `behind` lines as accounts not reconciled, so a change to the states changes the digest too.
 - `AccountMovements`, which gained `LedgerBalanceOnAsync` and `ListAsync` with [reconciliation](../features/reconciliation.md); `ListAsync` has its own union of the five sources beside the summing one, so a plan that changes how a movement is signed adapts both. Refunds needed neither, because `-Amount` of a negative expense already raises the balance.
 - `ICurrentUser`, which since the [monthly digest](../features/monthly-digest.md) shipped on 2026-09-29 resolves to a scoped `JobUser` inside `PeriodicJob.RunAsUserAsync` and to `HttpCurrentUser` everywhere else: a plan whose background work needs a service as one member sees it uses that scope rather than composing the service by hand.
-- The Security section of Settings: passkeys and personal API tokens.
+- The Security section of Settings, which since [passkeys](../features/passkeys.md) shipped on 2026-09-29 holds two-factor authentication and the passkey list under the nav label Security: personal API tokens add their block under the passkeys, and `PasswordPrompt` (`features/profile/password-prompt`) is the shared password confirmation to reuse.
 
 A new plan is a kebab-case file here, starting with `# Plan: <name>` and a `Status:` line, and gets a row in this table.

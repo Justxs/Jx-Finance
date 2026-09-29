@@ -147,6 +147,137 @@ export const MeResponse = zod.object({
 });
 
 /**
+ * Verifies the credential the browser created from the registration options and stores it under the given name. The state cookie of the registration is read and deleted; it must belong to the signed-in user and to this session and be less than five minutes old. User verification (a PIN or biometric) is required and no attestation is checked.
+ * @summary Finish adding a passkey
+ */
+export const addPasskeyBodyCredentialJsonMin = 0;
+export const addPasskeyBodyCredentialJsonMax = 65536;
+
+export const addPasskeyBodyNameMin = 0;
+export const addPasskeyBodyNameMax = 100;
+
+export const AddPasskeyBody = zod.object({
+  credentialJson: zod
+    .string()
+    .min(addPasskeyBodyCredentialJsonMin)
+    .max(addPasskeyBodyCredentialJsonMax)
+    .describe("JSON text of PublicKeyCredential.toJSON() from navigator.credentials.create()."),
+  name: zod
+    .string()
+    .min(addPasskeyBodyNameMin)
+    .max(addPasskeyBodyNameMax)
+    .describe("A name for the list, at most 100 characters; the client sends the browser's label."),
+});
+
+export const AddPasskeyResponse = zod.object({
+  id: zod.string(),
+  name: zod.string(),
+  createdAt: zod.iso.datetime({ offset: true }),
+  isSynced: zod.boolean(),
+});
+
+/**
+ * Returns the signed-in user's passkeys, oldest first: the base64url credential id, the name, when it was added and whether it is synced between devices (backup eligible) or tied to one authenticator. Public keys and sign counts are never returned.
+ * @summary List your passkeys
+ */
+export const PasskeysResponseItem = zod.object({
+  id: zod.string(),
+  name: zod.string(),
+  createdAt: zod.iso.datetime({ offset: true }),
+  isSynced: zod.boolean(),
+});
+export const PasskeysResponse = zod.array(PasskeysResponseItem);
+
+/**
+ * Confirms the account password and returns the WebAuthn creation options as JSON text, ready for PublicKeyCredential.parseCreationOptionsFromJSON. The ceremony state travels in a protected, five-minute, single-use cookie bound to this user and this session; post the credential to POST /api/auth/passkeys to finish. The password counts toward the account lockout. Rate limited to five attempts per five minutes.
+ * @summary Begin adding a passkey
+ */
+export const BeginPasskeyRegistrationBody = zod.object({
+  password: zod.string(),
+});
+
+export const BeginPasskeyRegistrationResponse = zod.object({
+  optionsJson: zod.string(),
+});
+
+/**
+ * Anonymous. Verifies the assertion the browser made from the sign-in options and signs the owner of the passkey in exactly as a password sign-in does: a session row and the jx_access and jx_refresh cookies. A user-verified passkey is a whole sign-in, so no email, password or authenticator code is asked. A failed assertion never counts toward the account lockout, and a temporarily locked-out account may still sign in this way; a completed sign-in resets the failed-attempt counter. Rate limited to 10 attempts per five minutes per client.
+ * @summary Sign in with a passkey
+ */
+export const passkeySignInBodyCredentialJsonMin = 0;
+export const passkeySignInBodyCredentialJsonMax = 65536;
+
+export const PasskeySignInBody = zod.object({
+  credentialJson: zod
+    .string()
+    .min(passkeySignInBodyCredentialJsonMin)
+    .max(passkeySignInBodyCredentialJsonMax)
+    .describe("JSON text of PublicKeyCredential.toJSON() from navigator.credentials.get()."),
+  rememberMe: zod.boolean().describe("Keeps the session for 30 days instead of one day."),
+});
+
+export const PasskeySignInResponse = zod.object({
+  twoFactorRequired: zod.boolean(),
+  profile: zod.union([
+    zod.null(),
+    zod.object({
+      id: zod.uuid(),
+      email: zod.string(),
+      displayName: zod.string(),
+      role: zod.string(),
+      twoFactorEnabled: zod.boolean(),
+      isActive: zod.boolean(),
+      emailConfirmed: zod.boolean(),
+      emailNotificationTypes: zod.array(
+        zod.enum([
+          "billDue",
+          "budgetWarning",
+          "budgetExceeded",
+          "unusualAmount",
+          "unusualAmounts",
+          "recurringPriceRise",
+          "monthReadyToClose",
+          "monthlyDigest",
+        ]),
+      ),
+      language: zod.string().nullable(),
+    }),
+  ]),
+});
+
+/**
+ * Anonymous. Returns WebAuthn request options as JSON text, ready for PublicKeyCredential.parseRequestOptionsFromJSON, with no allowed credentials, so the authenticator offers the passkeys it holds for this site. The challenge travels in a protected, five-minute, single-use cookie; post the assertion to POST /api/auth/passkeys/sign-in. Rate limited to 10 calls per five minutes per client.
+ * @summary Begin signing in with a passkey
+ */
+export const BeginPasskeySignInResponse = zod.object({
+  optionsJson: zod.string(),
+});
+
+/**
+ * Deletes one of your passkeys, so it can no longer sign in. Sessions that are already open stay open; sign out everywhere else to end them.
+ * @summary Remove a passkey
+ */
+export const RemovePasskeyResponse = zod.void();
+
+/**
+ * Changes the name the list shows for one of your passkeys. Nothing else about the passkey changes.
+ * @summary Rename a passkey
+ */
+export const renamePasskeyBodyNameMin = 0;
+export const renamePasskeyBodyNameMax = 100;
+
+export const RenamePasskeyBody = zod.object({
+  name: zod.string().min(renamePasskeyBodyNameMin).max(renamePasskeyBodyNameMax),
+});
+
+export const RenamePasskeyResponse = zod.object({
+  id: zod.string(),
+  name: zod.string(),
+  createdAt: zod.iso.datetime({ offset: true }),
+  isSynced: zod.boolean(),
+});
+
+/**
  * Exchanges the refresh cookie for a new access token cookie and a rotated refresh cookie. Call it when a request answers 401, then retry that request once. The session keeps its original absolute expiry; renewing never extends it. A session whose user was deactivated, locked out, or had their role or password changed elsewhere is rejected.
  * @summary Renew the access token
  */

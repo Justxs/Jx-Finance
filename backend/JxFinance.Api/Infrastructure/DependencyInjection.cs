@@ -7,6 +7,7 @@ using JxFinance.Infrastructure.Pdf;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 namespace JxFinance.Infrastructure;
 
@@ -40,18 +41,16 @@ public static class DependencyInjection
         services.AddDbContext<AppDbContext>(options =>
             options.UseNpgsql(connectionString));
 
-        services.AddIdentityCore<AppUser>(options =>
-            {
-                options.User.RequireUniqueEmail = true;
-                options.Lockout.AllowedForNewUsers = true;
-                options.Lockout.MaxFailedAccessAttempts = 5;
-                options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
-                options.Tokens.EmailConfirmationTokenProvider = EmailConfirmationTokenProviderOptions.ProviderName;
-            })
+        services.AddIdentityCore<AppUser>(ConfigureIdentity)
             .AddRoles<AppRole>()
             .AddEntityFrameworkStores<AppDbContext>()
             .AddDefaultTokenProviders()
             .AddTokenProvider<EmailConfirmationTokenProvider>(EmailConfirmationTokenProviderOptions.ProviderName);
+
+        services.AddScoped<IPasskeyHandler<AppUser>, PasskeyHandler<AppUser>>();
+        services.AddScoped<PasskeyStateCookie>();
+        services.AddOptions<IdentityPasskeyOptions>()
+            .Configure<IOptions<AppOptions>>((passkeys, app) => PasskeySite.Configure(passkeys, app.Value.SiteUrl));
 
         var passwordResetMinutes = configuration.GetValue(
             $"{AppOptions.SectionName}:Email:PasswordResetMinutes",
@@ -69,5 +68,15 @@ public static class DependencyInjection
         services.AddAuthorizationBuilder();
 
         return services;
+    }
+
+    public static void ConfigureIdentity(IdentityOptions options)
+    {
+        options.User.RequireUniqueEmail = true;
+        options.Lockout.AllowedForNewUsers = true;
+        options.Lockout.MaxFailedAccessAttempts = 5;
+        options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
+        options.Tokens.EmailConfirmationTokenProvider = EmailConfirmationTokenProviderOptions.ProviderName;
+        options.Stores.SchemaVersion = IdentitySchemaVersions.Version3;
     }
 }

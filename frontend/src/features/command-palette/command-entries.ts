@@ -57,6 +57,7 @@ const pageSections: Partial<Record<RoutePath, readonly PageSection[]>> = {
     { id: "page-trash", search: { section: "trash" }, labelKey: "trash.title" },
     { id: "page-sessions", search: { section: "sessions" }, labelKey: "profile.sessions.title" },
     { id: "page-two-factor", search: { section: "security" }, labelKey: "profile.twoFactorTitle" },
+    { id: "page-passkeys", search: { section: "security" }, labelKey: "profile.passkeys.title" },
     {
       id: "page-notifications",
       search: { section: "notifications" },

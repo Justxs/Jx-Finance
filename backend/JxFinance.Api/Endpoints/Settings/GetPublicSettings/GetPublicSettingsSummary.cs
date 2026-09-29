@@ -10,7 +10,8 @@ public sealed class GetPublicSettingsSummary : Summary<GetPublicSettingsEndpoint
         Description = "Anonymous. Returns only the installation name, the default language, whether this "
             + "installation can send email, which is what decides if the sign-in page offers \"Forgot password\", and "
             + "whether an administrator allowed Discord notifications, which the profile uses to explain its Discord "
-            + "section. No host name, no address and no credential is part of the answer.";
+            + "section, and whether passkeys can work here, which is false when the configured site address is plain "
+            + "HTTP or an IP address. No host name, no address and no credential is part of the answer.";
         Responses[200] = "The public settings.";
     }
 }

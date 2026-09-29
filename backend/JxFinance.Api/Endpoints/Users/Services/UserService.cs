@@ -242,6 +242,7 @@ public sealed class UserService(
             await userManager.SetTwoFactorEnabledAsync(user, false);
             await userManager.ResetAuthenticatorKeyAsync(user);
             await userManager.GenerateNewTwoFactorRecoveryCodesAsync(user, 0);
+            await db.UserPasskeys.Where(p => p.UserId == user.Id).ExecuteDeleteAsync(cancellationToken);
         }
 
         if (!user.IsDeactivated)

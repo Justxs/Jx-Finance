@@ -19,6 +19,6 @@ export interface ResetUserPasswordRequest {
    * @maxLength 100
    */
   currentPassword: string;
-  /** Also switch off two-factor authentication and invalidate the recovery codes. Default false. */
+  /** Also switch off two-factor authentication, invalidate the recovery codes and remove every passkey. Default false. */
   resetTwoFactor?: boolean;
 }

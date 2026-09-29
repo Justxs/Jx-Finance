@@ -2,7 +2,7 @@
 
 Back to the [feature walkthrough](README.md). See also [decisions](../decisions/authentication.md), [architecture: Authentication](../architecture/authentication.md).
 
-Backend `Auth` (`AuthService`, `SessionService`, `AccountEmailService`), routes `login`, `logout`, `me`, `refresh`, `sessions`, `sessions/{id}`, `sessions/revoke-others`, `forgot-password`, `reset-password`, `verify-email`, `send-verification-email`. Login is throttled to 10 calls per five minutes per client.
+Backend `Auth` (`AuthService`, `SessionService`, `AccountEmailService`, `PasskeyService`), routes `login`, `logout`, `me`, `refresh`, `sessions`, `sessions/{id}`, `sessions/revoke-others`, `forgot-password`, `reset-password`, `verify-email`, `send-verification-email`, and the passkey routes of [Passkeys](passkeys.md). Login and each passkey sign-in endpoint are throttled to 10 calls per five minutes per client.
 
 ## Sign-in
 
@@ -10,21 +10,27 @@ Backend `Auth` (`AuthService`, `SessionService`, `AccountEmailService`), routes 
 sequenceDiagram
     actor User
     participant App as Frontend
-    participant Api as LoginEndpoint
+    participant Api as Auth endpoints
     participant Auth as AuthService.AttemptAsync
     participant Sess as SessionService
-    User->>App: email, password, remember me
-    App->>Api: POST /api/auth/login
-    Api->>Auth: ValidateCredentialsAsync
-    alt locked out (5 failures, 15 minutes)
-        Auth-->>App: 429 credentials.lockedOut
-    else wrong password or deactivated
-        Auth-->>App: 401 credentials.invalid, failure counted
-    else password correct, 2FA on, no code sent
-        Api-->>App: 200 requiresTwoFactor true
-        User->>App: authenticator or recovery code
-        App->>Api: POST /api/auth/login with twoFactorCode
-        Api->>Auth: ConsumeTwoFactorCodeAsync
+    alt passkey (sign-in page, or "Use a passkey instead" on the code step)
+        User->>App: Sign in with a passkey, PIN or biometric
+        App->>Api: POST /api/auth/passkeys/sign-in-options, then /sign-in
+        Note over Api: see Passkeys: a failed assertion is 401 passkey.invalid and never counted,<br/>a temporary lockout does not block it, a deactivated user gets credentials.invalid
+    else email and password
+        User->>App: email, password, remember me
+        App->>Api: POST /api/auth/login
+        Api->>Auth: ValidateCredentialsAsync
+        alt locked out (5 failures, 15 minutes)
+            Auth-->>App: 429 credentials.lockedOut
+        else wrong password or deactivated
+            Auth-->>App: 401 credentials.invalid, failure counted
+        else password correct, 2FA on, no code sent
+            Api-->>App: 200 requiresTwoFactor true
+            User->>App: authenticator or recovery code
+            App->>Api: POST /api/auth/login with twoFactorCode
+            Api->>Auth: ConsumeTwoFactorCodeAsync
+        end
     end
     Api->>Sess: SignInAsync(user, rememberMe)
     Note over Sess: UserSessions row, absolute expiry 1 day or 30 days<br/>user agent (first 256 characters) and LastSeenAt stored<br/>failure counter resets only here
@@ -32,7 +38,7 @@ sequenceDiagram
     Api-->>App: 200 profile
 ```
 
-After a successful sign-in the form keeps its busy button until the application shell is ready: `loadAppShell` (`lib/app-shell.ts`) loads the settings, the profile, the unread notifications and the households, and the router preloads the dashboard route with its code and queries. Only then does the page navigate, so the sidebar, its icons and the notification bell appear complete. Between the sign-in page and the application, in either direction, the root layout shows the splash instead of one side inside the other side's layout (see DESIGN.md, Overlays and errors).
+After a successful sign-in, by password or by [passkey](passkeys.md), the form keeps its busy button until the application shell is ready: `loadAppShell` (`lib/app-shell.ts`) loads the settings, the profile, the unread notifications and the households, and the router preloads the dashboard route with its code and queries. Only then does the page navigate, so the sidebar, its icons and the notification bell appear complete. Between the sign-in page and the application, in either direction, the root layout shows the splash instead of one side inside the other side's layout (see DESIGN.md, Overlays and errors).
 
 ## Forgot password
 

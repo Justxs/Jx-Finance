@@ -24,8 +24,9 @@ async function signedInMember(admin: Page, browser: Browser, testInfo: TestInfo)
 
 async function enrol(member: Page) {
   await member.goto("/profile?section=security");
-  await member.getByLabel("Current password").fill(password);
-  await member.getByRole("button", { name: "Enable two-factor authentication" }).click();
+  const section = member.getByRole("region", { name: "Two-factor authentication" });
+  await section.getByLabel("Current password").fill(password);
+  await section.getByRole("button", { name: "Enable two-factor authentication" }).click();
   await expect(member.getByAltText("Authenticator QR code")).toBeVisible();
   const sharedKey = (await member.locator("p.font-mono").innerText()).replaceAll(/\s/g, "");
   const totp = new TOTP({ secret: Secret.fromBase32(sharedKey.toUpperCase()) });

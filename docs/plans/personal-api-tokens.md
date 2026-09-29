@@ -1,6 +1,6 @@
 # Plan: Personal API tokens
 
-Status: planned 2026-09-28. Size M. Independent of the other plans. It adds to the same Security section as [Passkeys](passkeys.md). The per-user export in [Data export per user](data-export-per-user.md) is deliberately not reachable with a token.
+Status: planned 2026-09-28. Size M. Independent of the other plans. It adds to the same Security section as [passkeys](../features/passkeys.md), which shipped on 2026-09-29. The per-user export in [Data export per user](data-export-per-user.md) is deliberately not reachable with a token.
 
 ## Outcome
 

@@ -39,6 +39,10 @@ public static class ErrorCodes
     public const string PasswordTooWeak = "password.tooWeak";
     public const string TwoFactorInvalidCode = "twoFactor.invalidCode";
     public const string SessionCurrent = "session.current";
+    public const string PasskeyInvalid = "passkey.invalid";
+    public const string PasskeyStateInvalid = "passkey.stateInvalid";
+    public const string PasskeyLimitReached = "passkey.limitReached";
+    public const string PasskeyUnavailable = "passkey.unavailable";
     public const string SetupAlreadyCompleted = "setup.alreadyCompleted";
     public const string FeatureDisabled = "feature.disabled";
     public const string UserSelfChange = "user.selfChange";
@@ -138,7 +142,7 @@ public static class ErrorCodes
     {
         ResourceNotFound or FeatureDisabled => StatusCodes.Status404NotFound,
         ConflictDuplicate or ConflictStale or ConflictBusy or SetupAlreadyCompleted or RestoreSlotTaken
-            or RestoreNameTaken or AttachmentLimitReached or MonthCloseNotEnded or DebtPaymentTaken => StatusCodes.Status409Conflict,
+            or RestoreNameTaken or AttachmentLimitReached or MonthCloseNotEnded or DebtPaymentTaken or PasskeyLimitReached => StatusCodes.Status409Conflict,
         AccessForbidden or UserSelfChange or UserLastAdministrator or SecurityNotHeld or SessionCurrent => StatusCodes.Status403Forbidden,
         CredentialsInvalid => StatusCodes.Status401Unauthorized,
         CredentialsLockedOut or ReceiptLimitReached => StatusCodes.Status429TooManyRequests,

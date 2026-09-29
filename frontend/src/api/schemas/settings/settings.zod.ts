@@ -332,7 +332,7 @@ export const SyncExchangeRatesResponse = zod.object({
 });
 
 /**
- * Anonymous. Returns only the installation name, the default language, whether this installation can send email, which is what decides if the sign-in page offers "Forgot password", and whether an administrator allowed Discord notifications, which the profile uses to explain its Discord section. No host name, no address and no credential is part of the answer.
+ * Anonymous. Returns only the installation name, the default language, whether this installation can send email, which is what decides if the sign-in page offers "Forgot password", and whether an administrator allowed Discord notifications, which the profile uses to explain its Discord section, and whether passkeys can work here, which is false when the configured site address is plain HTTP or an IP address. No host name, no address and no credential is part of the answer.
  * @summary Read the settings the sign-in page needs
  */
 export const PublicSettingsResponse = zod.object({
@@ -340,6 +340,7 @@ export const PublicSettingsResponse = zod.object({
   defaultLanguage: zod.string(),
   emailEnabled: zod.boolean(),
   discordEnabled: zod.boolean(),
+  passkeysAvailable: zod.boolean(),
 });
 
 /**

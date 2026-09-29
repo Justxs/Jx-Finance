@@ -15,6 +15,8 @@ public sealed class AuthorizationTests(ApiFixture fixture) : IntegrationTestBase
         "POST /api/auth/forgot-password",
         "POST /api/auth/reset-password",
         "POST /api/auth/verify-email",
+        "POST /api/auth/passkeys/sign-in-options",
+        "POST /api/auth/passkeys/sign-in",
         "GET /api/setup/status",
         "POST /api/setup",
         "GET /api/ping",

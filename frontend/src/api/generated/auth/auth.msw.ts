@@ -10,6 +10,8 @@ import type { RequestHandlerOptions } from "msw";
 import type {
   EnableTwoFactorResponse,
   LoginResponse,
+  PasskeyOptionsResponse,
+  PasskeyResponse,
   SessionResponse,
   TwoFactorSetupResponse,
   UserProfileResponse,
@@ -168,6 +170,169 @@ export const getMeMockHandler = (
   );
 };
 
+export const getAddPasskeyMockHandler = (
+  overrideResponse?:
+    | PasskeyResponse
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<PasskeyResponse> | PasskeyResponse),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/auth/passkeys",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : undefined,
+        { status: 201 },
+      );
+    },
+    options,
+  );
+};
+
+export const getPasskeysMockHandler = (
+  overrideResponse?:
+    | PasskeyResponse[]
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<PasskeyResponse[]> | PasskeyResponse[]),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/auth/passkeys",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : undefined,
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getBeginPasskeyRegistrationMockHandler = (
+  overrideResponse?:
+    | PasskeyOptionsResponse
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<PasskeyOptionsResponse> | PasskeyOptionsResponse),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/auth/passkeys/registration-options",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : undefined,
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getPasskeySignInMockHandler = (
+  overrideResponse?:
+    | LoginResponse
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<LoginResponse> | LoginResponse),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/auth/passkeys/sign-in",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : undefined,
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getBeginPasskeySignInMockHandler = (
+  overrideResponse?:
+    | PasskeyOptionsResponse
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<PasskeyOptionsResponse> | PasskeyOptionsResponse),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/auth/passkeys/sign-in-options",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : undefined,
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getRemovePasskeyMockHandler = (
+  overrideResponse?:
+    | void
+    | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<void> | void),
+  options?: RequestHandlerOptions,
+) => {
+  return http.delete(
+    "*/api/auth/passkeys/:id",
+    async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+      if (typeof overrideResponse === "function") {
+        await overrideResponse(info);
+      }
+
+      return new HttpResponse(null, { status: 204 });
+    },
+    options,
+  );
+};
+
+export const getRenamePasskeyMockHandler = (
+  overrideResponse?:
+    | PasskeyResponse
+    | ((
+        info: Parameters<Parameters<typeof http.put>[1]>[0],
+      ) => Promise<PasskeyResponse> | PasskeyResponse),
+  options?: RequestHandlerOptions,
+) => {
+  return http.put(
+    "*/api/auth/passkeys/:id",
+    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : undefined,
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
 export const getRefreshMockHandler = (
   overrideResponse?:
     | void
@@ -313,6 +478,13 @@ export const getAuthMock = () => [
   getLoginMockHandler(),
   getLogoutMockHandler(),
   getMeMockHandler(),
+  getAddPasskeyMockHandler(),
+  getPasskeysMockHandler(),
+  getBeginPasskeyRegistrationMockHandler(),
+  getPasskeySignInMockHandler(),
+  getBeginPasskeySignInMockHandler(),
+  getRemovePasskeyMockHandler(),
+  getRenamePasskeyMockHandler(),
   getRefreshMockHandler(),
   getResetPasswordMockHandler(),
   getSendVerificationEmailMockHandler(),

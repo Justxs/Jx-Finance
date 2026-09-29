@@ -1,6 +1,8 @@
 import type {
   EnableTwoFactorResponse,
   LoginResponse,
+  PasskeyOptionsResponse,
+  PasskeyResponse,
   SessionResponse,
   TwoFactorSetupResponse,
 } from "@/api/generated/model";
@@ -84,4 +86,43 @@ export const sessionCurrentProblem = problemOf(
   "session.current",
   "Sign out to end the session of this browser.",
   { instance: "/api/auth/sessions/5d0f6a52-5a0e-4f0e-9b57-0a4f3a1c9e01" },
+);
+
+export const passkeys: PasskeyResponse[] = [
+  {
+    id: "pQx0Yq1bTj6T0l7c3m2hVw",
+    name: "Chrome 140 on Windows",
+    createdAt: "2026-09-12T18:05:00Z",
+    isSynced: true,
+  },
+  {
+    id: "Zm9vYmFyYmF6cXV4MTIzNA",
+    name: "YubiKey 5C",
+    createdAt: "2026-09-18T07:42:00Z",
+    isSynced: false,
+  },
+];
+
+export const passkeyOptions: PasskeyOptionsResponse = {
+  optionsJson: JSON.stringify({
+    challenge: "c3Rvcnlib29rLWNoYWxsZW5nZQ",
+    rp: { id: "localhost", name: "localhost" },
+    user: { id: "dXNlcg", name: "ruta.kazlauskiene@example.lt", displayName: "Rūta" },
+    pubKeyCredParams: [{ type: "public-key", alg: -7 }],
+    timeout: 120000,
+  }),
+};
+
+export const passkeyInvalidProblem = problemOf(
+  401,
+  "passkey.invalid",
+  "The passkey could not be verified.",
+  { instance: "/api/auth/passkeys/sign-in" },
+);
+
+export const passkeyLimitReachedProblem = problemOf(
+  409,
+  "passkey.limitReached",
+  "An account can hold at most 10 passkeys.",
+  { instance: "/api/auth/passkeys/registration-options" },
 );

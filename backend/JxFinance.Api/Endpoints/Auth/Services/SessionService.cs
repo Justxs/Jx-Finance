@@ -9,7 +9,6 @@ using JxFinance.Domain.Common;
 using JxFinance.Endpoints.Auth.Interfaces;
 using JxFinance.Endpoints.Auth.Sessions;
 using JxFinance.Infrastructure.Auth;
-using JxFinance.Infrastructure.Configuration;
 using JxFinance.Infrastructure.Data;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.WebUtilities;
@@ -235,15 +234,8 @@ public sealed class SessionService(
         Http.Response.Cookies.Delete(AuthCookies.RefreshToken, CookieOptions(AuthCookies.RefreshTokenPath, null));
     }
 
-    private CookieOptions CookieOptions(string path, DateTimeOffset? expires) => new()
-    {
-        HttpOnly = true,
-        SameSite = SameSiteMode.Strict,
-        Secure = configuration.GetValue<bool>(ConfigKeys.SecureCookies) || Http.Request.IsHttps,
-        Path = path,
-        Expires = expires,
-        IsEssential = true,
-    };
+    private CookieOptions CookieOptions(string path, DateTimeOffset? expires) =>
+        AuthCookies.Options(Http, configuration, path, expires);
 
     private bool TryReadRefreshCookie(out Guid sessionId, out string secret)
     {

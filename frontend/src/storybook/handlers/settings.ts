@@ -31,6 +31,11 @@ export const discordOffHandler = getPublicSettingsMockHandler({
   discordEnabled: false,
 });
 
+export const passkeysOffHandler = getPublicSettingsMockHandler({
+  ...publicSettings,
+  passkeysAvailable: false,
+});
+
 export const settingsHandlers = [
   getPublicSettingsMockHandler(publicSettings),
   getSettingsMockHandler(settings),

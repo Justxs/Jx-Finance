@@ -708,7 +708,10 @@
     "verifyPending": "One moment.",
     "verifyDone": "Your address is confirmed.",
     "verifyFailed": "This link is no longer valid. Sign in and ask for a new one on your profile.",
-    "confirmAddress": "Confirm this address"
+    "confirmAddress": "Confirm this address",
+    "signInWithPasskey": "Sign in with a passkey",
+    "usePasskeyInstead": "Use a passkey instead",
+    "passkeyFailed": "This browser could not use a passkey. Try again or sign in with your password."
   },
   "users": {
     "title": "Users",
@@ -742,8 +745,8 @@
       "consequences": "{{name}} is signed out on every device and a temporary lockout is lifted. The application does not tell them the new password: pass it on yourself and ask them to change it on Profile.",
       "newPassword": "Temporary password",
       "newPasswordHint": "{{min}} to {{max}} characters.",
-      "resetTwoFactor": "Also reset two-factor authentication",
-      "resetTwoFactorHint": "Only needed when they also lost the authenticator and the recovery codes. They enrol again after signing in.",
+      "resetTwoFactor": "Also reset two-factor authentication and passkeys",
+      "resetTwoFactorHint": "Only needed when they also lost the authenticator and the recovery codes, or the device that holds their passkey. They set them up again after signing in.",
       "currentPassword": "Your current password",
       "currentPasswordHint": "Confirms that you are the one making this change.",
       "submit": "Reset password",
@@ -758,6 +761,7 @@
     "newPassword": "New password (optional)",
     "save": "Save changes",
     "updated": "Profile updated",
+    "securityTitle": "Security",
     "twoFactorTitle": "Two-factor authentication",
     "twoFactorDisabledSubtitle": "Add an authenticator app for an extra layer of security when signing in.",
     "twoFactorEnabledSubtitle": "Two-factor authentication is currently enabled for your account.",
@@ -787,6 +791,29 @@
       "confirmOthersDescription": "Every other browser will have to sign in again. This browser stays signed in.",
       "signedOut": "Browser signed out",
       "othersSignedOut": "Signed out everywhere else"
+    },
+    "passkeys": {
+      "title": "Passkeys",
+      "description": "Sign in with your phone, your computer, a password manager or a security key instead of your password and authenticator code. A PIN or your fingerprint unlocks the passkey.",
+      "empty": "No passkeys yet.",
+      "synced": "Synced across devices",
+      "deviceBound": "This device only",
+      "addedOn": "Added",
+      "add": "Add a passkey",
+      "added": "Passkey added",
+      "defaultName": "Passkey",
+      "renameTitle": "Rename passkey",
+      "name": "Name",
+      "removeTitle": "Remove this passkey?",
+      "removeDescription": "It can no longer sign in to your account.",
+      "remove": "Remove",
+      "removed": "Passkey removed",
+      "signOutHint": "If the device with that passkey is lost, also sign out everywhere else.",
+      "signOutLink": "Signed-in browsers",
+      "unavailable": "Passkeys need this installation to be opened over HTTPS by its name, not over plain HTTP or by an IP address. Ask your administrator.",
+      "unsupported": "This browser cannot create passkeys. Use a current Chrome, Edge, Firefox or Safari.",
+      "alreadyRegistered": "This authenticator already holds a passkey for your account.",
+      "failed": "The browser could not create the passkey. Try again."
     },
     "emailUnconfirmedTitle": "Confirm your email address",
     "emailUnconfirmedBody": "{{email}} is not confirmed yet, so this installation sends no mail to it. Nothing else is blocked.",
@@ -2370,6 +2397,12 @@
       "keyRejected": "Anthropic did not accept the API key. Check it in Settings.",
       "keyUnreadable": "The stored Anthropic API key can no longer be read. Enter it again.",
       "modelNotAllowed": "Choose one of the offered models."
+    },
+    "passkey": {
+      "invalid": "The passkey could not be verified.",
+      "stateInvalid": "That took too long. Try again.",
+      "limitReached": "You already have 10 passkeys. Remove one first.",
+      "unavailable": "Passkeys cannot be used at this installation's address."
     }
   },
   "export": {

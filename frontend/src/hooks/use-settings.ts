@@ -94,3 +94,7 @@ export function useToday(): string {
 export function useTodayDate(): Date {
   return parseIso(useToday()) ?? new Date();
 }
+
+export function usePasskeysAvailable(): boolean {
+  return usePublicSettings()?.passkeysAvailable ?? false;
+}

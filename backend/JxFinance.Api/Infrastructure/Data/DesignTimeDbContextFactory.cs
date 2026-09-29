@@ -1,5 +1,6 @@
 using JxFinance.Infrastructure.Auth;
 using JxFinance.Infrastructure.Configuration;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 
@@ -10,9 +11,12 @@ public sealed class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<App
     public AppDbContext CreateDbContext(string[] args)
     {
         var connectionString = Environment.GetEnvironmentVariable(ConfigKeys.DefaultConnectionVariable);
+        var identity = new ServiceCollection()
+            .Configure<IdentityOptions>(DependencyInjection.ConfigureIdentity)
+            .BuildServiceProvider();
 
         var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
-        optionsBuilder.UseNpgsql(connectionString);
+        optionsBuilder.UseNpgsql(connectionString).UseApplicationServiceProvider(identity);
 
         return new AppDbContext(optionsBuilder.Options, new DevCurrentUser(), new Time.UtcClock());
     }

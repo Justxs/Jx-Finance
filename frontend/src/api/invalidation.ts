@@ -337,6 +337,14 @@ const rules: readonly Rule[] = [
     after: [api.getRevokeSessionMutationKey, api.getRevokeOtherSessionsMutationKey],
     refresh: [api.getSessionsQueryKey],
   },
+  {
+    after: [
+      api.getAddPasskeyMutationKey,
+      api.getRenamePasskeyMutationKey,
+      api.getRemovePasskeyMutationKey,
+    ],
+    refresh: [api.getPasskeysQueryKey],
+  },
 ];
 
 export const mutationsWithoutInvalidation: readonly MutationKeyGetter[] = [
@@ -345,6 +353,9 @@ export const mutationsWithoutInvalidation: readonly MutationKeyGetter[] = [
   api.getRefreshMutationKey,
   api.getSetupMutationKey,
   api.getSetupTwoFactorMutationKey,
+  api.getBeginPasskeyRegistrationMutationKey,
+  api.getBeginPasskeySignInMutationKey,
+  api.getPasskeySignInMutationKey,
   api.getImportPreviewMutationKey,
   api.getInspectCsvMutationKey,
   api.getPreviewCategorizationRunMutationKey,

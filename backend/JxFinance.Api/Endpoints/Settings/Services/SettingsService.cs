@@ -18,6 +18,7 @@ using JxFinance.Endpoints.Settings.UpdateDiscordSettings;
 using JxFinance.Endpoints.Settings.UpdateReceiptSettings;
 using JxFinance.Endpoints.Settings.UpdateSettings;
 using JxFinance.Endpoints.Settings.UpdateSmtpSettings;
+using JxFinance.Infrastructure.Auth;
 using JxFinance.Infrastructure.Configuration;
 using JxFinance.Infrastructure.Data;
 using Microsoft.AspNetCore.DataProtection;
@@ -52,7 +53,8 @@ public sealed class SettingsService(
             store.Current.InstanceName,
             store.Current.DefaultLanguage,
             store.Current.Smtp.IsConfigured,
-            store.Current.DiscordEnabled);
+            store.Current.DiscordEnabled,
+            PasskeySite.IsAvailable(options.Value.SiteUrl));
 
     public async Task<Result<SettingsResponse>> UpdateAsync(
         UpdateSettingsRequest request,

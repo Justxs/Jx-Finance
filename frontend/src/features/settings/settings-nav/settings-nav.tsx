@@ -65,7 +65,7 @@ type SettingsPage = ProfileSection | SettingsSection | "households" | "users";
 
 const profileItems: Record<ProfileSection, [TranslationKey, LucideIcon]> = {
   account: ["profile.detailsTitle", UserRound],
-  security: ["profile.twoFactorTitle", ShieldCheck],
+  security: ["profile.securityTitle", ShieldCheck],
   sessions: ["profile.sessions.title", MonitorSmartphone],
   notifications: ["profile.notifications.title", Bell],
   dashboard: ["nav.dashboard", LayoutDashboard],

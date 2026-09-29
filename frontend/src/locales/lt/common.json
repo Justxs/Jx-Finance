@@ -740,7 +740,10 @@
     "verifyPending": "Palaukite akimirką…",
     "verifyDone": "Jūsų adresas patvirtintas.",
     "verifyFailed": "Ši nuoroda nebegalioja. Prisijunkite ir naujos nuorodos paprašykite savo profilyje.",
-    "confirmAddress": "Patvirtinti šį adresą"
+    "confirmAddress": "Patvirtinti šį adresą",
+    "signInWithPasskey": "Prisijungti su prieigos raktu",
+    "usePasskeyInstead": "Naudoti prieigos raktą",
+    "passkeyFailed": "Ši naršyklė negalėjo panaudoti prieigos rakto. Bandykite dar kartą arba prisijunkite slaptažodžiu."
   },
   "users": {
     "title": "Naudotojai",
@@ -774,8 +777,8 @@
       "consequences": "Naudotojas {{name}} bus atjungtas visuose įrenginiuose, o laikinas užblokavimas bus panaikintas. Programa naujo slaptažodžio naudotojui nepraneša: perduokite jį patys ir paprašykite pasikeisti profilio puslapyje.",
       "newPassword": "Laikinas slaptažodis",
       "newPasswordHint": "Nuo {{min}} iki {{max}} simbolių.",
-      "resetTwoFactor": "Taip pat išjungti dviejų veiksnių autentifikavimą",
-      "resetTwoFactorHint": "Reikia tik tada, kai naudotojas prarado ir autentifikavimo programėlę, ir atsarginius kodus. Prisijungęs jis galės jį vėl įjungti.",
+      "resetTwoFactor": "Taip pat išjungti dviejų veiksnių autentifikavimą ir prieigos raktus",
+      "resetTwoFactorHint": "Reikia tik tada, kai naudotojas prarado ir autentifikavimo programėlę, ir atsarginius kodus, arba įrenginį su prieigos raktu. Prisijungęs jis galės juos vėl nustatyti.",
       "currentPassword": "Jūsų dabartinis slaptažodis",
       "currentPasswordHint": "Patvirtina, kad šį pakeitimą atliekate jūs.",
       "submit": "Nustatyti slaptažodį",
@@ -790,6 +793,7 @@
     "newPassword": "Naujas slaptažodis (nebūtina)",
     "save": "Išsaugoti pakeitimus",
     "updated": "Profilis atnaujintas",
+    "securityTitle": "Sauga",
     "twoFactorTitle": "Dviejų veiksnių autentifikavimas",
     "twoFactorDisabledSubtitle": "Pridėkite autentifikavimo programėlę, kad prisijungimas būtų saugesnis.",
     "twoFactorEnabledSubtitle": "Jūsų paskyroje įjungtas dviejų veiksnių autentifikavimas.",
@@ -819,6 +823,29 @@
       "confirmOthersDescription": "Visose kitose naršyklėse reikės prisijungti iš naujo. Ši naršyklė liks prisijungusi.",
       "signedOut": "Naršyklė atjungta",
       "othersSignedOut": "Atjungta visur kitur"
+    },
+    "passkeys": {
+      "title": "Prieigos raktai",
+      "description": "Prisijunkite telefonu, kompiuteriu, slaptažodžių tvarkykle ar saugos raktu vietoj slaptažodžio ir autentifikavimo kodo. Prieigos raktą atrakina PIN kodas arba piršto atspaudas.",
+      "empty": "Prieigos raktų dar nėra.",
+      "synced": "Sinchronizuojamas tarp įrenginių",
+      "deviceBound": "Tik šiame įrenginyje",
+      "addedOn": "Pridėtas",
+      "add": "Pridėti prieigos raktą",
+      "added": "Prieigos raktas pridėtas",
+      "defaultName": "Prieigos raktas",
+      "renameTitle": "Pervadinti prieigos raktą",
+      "name": "Pavadinimas",
+      "removeTitle": "Pašalinti šį prieigos raktą?",
+      "removeDescription": "Juo nebebus galima prisijungti prie jūsų paskyros.",
+      "remove": "Pašalinti",
+      "removed": "Prieigos raktas pašalintas",
+      "signOutHint": "Jei įrenginys su šiuo prieigos raktu prarastas, atjunkite ir visas kitas naršykles.",
+      "signOutLink": "Prisijungusios naršyklės",
+      "unavailable": "Prieigos raktams reikia, kad ši sistema būtų atidaryta per HTTPS jos vardu, o ne paprastu HTTP ar IP adresu. Kreipkitės į administratorių.",
+      "unsupported": "Ši naršyklė negali sukurti prieigos raktų. Naudokite naujausią Chrome, Edge, Firefox ar Safari.",
+      "alreadyRegistered": "Šiame autentifikatoriuje jau yra jūsų paskyros prieigos raktas.",
+      "failed": "Naršyklė nesukūrė prieigos rakto. Bandykite dar kartą."
     },
     "emailUnconfirmedTitle": "Patvirtinkite el. pašto adresą",
     "emailUnconfirmedBody": "Adresas {{email}} dar nepatvirtintas, todėl į jį nesiunčiami jokie laiškai. Kitos funkcijos neribojamos.",
@@ -2450,6 +2477,12 @@
       "keyRejected": "Anthropic nepriėmė API rakto. Patikrinkite jį nustatymuose.",
       "keyUnreadable": "Išsaugoto Anthropic API rakto nebepavyksta perskaityti. Įveskite jį iš naujo.",
       "modelNotAllowed": "Pasirinkite vieną iš siūlomų modelių."
+    },
+    "passkey": {
+      "invalid": "Prieigos rakto patvirtinti nepavyko.",
+      "stateInvalid": "Tai užtruko per ilgai. Bandykite dar kartą.",
+      "limitReached": "Jau turite 10 prieigos raktų. Pirmiausia pašalinkite vieną.",
+      "unavailable": "Šios sistemos adresu prieigos raktų naudoti negalima."
     }
   },
   "export": {

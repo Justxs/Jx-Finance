@@ -61,9 +61,7 @@ export const SavesDisplayName: Story = {
 
 export const SwitchesToSecurity: Story = {
   play: async ({ canvas }) => {
-    const link = await canvas.findByRole("link", {
-      name: /two-factor authentication|dvigubas tapatybės patvirtinimas/i,
-    });
+    const link = await canvas.findByRole("link", { name: /^(security|sauga)$/i });
     await userEvent.click(link);
 
     await expect(
@@ -71,6 +69,7 @@ export const SwitchesToSecurity: Story = {
         name: /enable two-factor authentication|įjungti dvigubą tapatybės patvirtinimą/i,
       }),
     ).toBeVisible();
+    await expect(canvas.getByRole("heading", { name: "Passkeys" })).toBeVisible();
     await expect(link).toHaveAttribute("aria-current", "page");
     await expect(canvas.queryByLabelText(/display name|rodomas vardas/i)).toBeNull();
   },

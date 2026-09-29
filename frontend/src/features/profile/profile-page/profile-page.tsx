@@ -7,6 +7,7 @@ import { DashboardLayoutSection } from "@/features/dashboard/dashboard-customise
 import { ImportDataSection } from "@/features/imports/import-data-section/import-data-section";
 import { SettingsLayout, profileSections } from "@/features/settings/settings-nav/settings-nav";
 import { NotificationsSection } from "../notifications-section/notifications-section";
+import { PasskeysSection } from "../passkeys-section/passkeys-section";
 import { ProfileForm } from "../profile-form/profile-form";
 import { SessionsSection } from "../sessions-section/sessions-section";
 import { TrashSection } from "../trash-section/trash-section";
@@ -21,6 +22,7 @@ export function ProfilePage() {
     <SettingsLayout current={section}>
       {section === "account" ? <ProfileForm profile={me.data} /> : null}
       {section === "security" ? <TwoFactorSettings /> : null}
+      {section === "security" ? <PasskeysSection /> : null}
       {section === "sessions" ? <SessionsSection /> : null}
       {section === "notifications" ? <NotificationsSection /> : null}
       {section === "dashboard" ? <DashboardLayoutSection /> : null}

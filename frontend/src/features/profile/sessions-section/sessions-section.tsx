@@ -16,15 +16,24 @@ import { describeUserAgent } from "@/lib/user-agent";
 import { ActionRow } from "../action-row/action-row";
 import { SessionListSkeleton } from "../profile-page/profile-page-pending";
 
-function useSessionLabel() {
+export function useBrowserLabel() {
   const { t } = useTranslation();
 
-  return function sessionLabel(session: SessionResponse) {
-    const { browser, os } = describeUserAgent(session.userAgent);
+  return function browserLabel(userAgent: string | null | undefined) {
+    const { browser, os } = describeUserAgent(userAgent);
     if (browser && os) {
       return t("profile.sessions.browserOn", { browser, os });
     }
-    return browser ?? os ?? t("profile.sessions.unknownBrowser");
+    return browser ?? os;
+  };
+}
+
+function useSessionLabel() {
+  const { t } = useTranslation();
+  const browserLabel = useBrowserLabel();
+
+  return function sessionLabel(session: SessionResponse) {
+    return browserLabel(session.userAgent) ?? t("profile.sessions.unknownBrowser");
   };
 }
 

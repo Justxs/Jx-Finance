@@ -1,9 +1,20 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, userEvent } from "storybook/test";
-import { getLoginMockHandler } from "@/api/generated/auth/auth.msw";
+import { expect, userEvent, waitFor } from "storybook/test";
+import { getLoginMockHandler, getPasskeySignInMockHandler } from "@/api/generated/auth/auth.msw";
 import { withWidth } from "@/storybook/decorators";
-import { loginTwoFactorRequired, unauthorizedProblem } from "@/storybook/fixtures";
-import { emailEnabledHandler, failWith, pending, withHandlers } from "@/storybook/handlers";
+import {
+  loginTwoFactorRequired,
+  passkeyInvalidProblem,
+  unauthorizedProblem,
+} from "@/storybook/fixtures";
+import {
+  emailEnabledHandler,
+  failWith,
+  passkeysOffHandler,
+  pending,
+  withHandlers,
+} from "@/storybook/handlers";
+import { browserWithoutPasskeys, fakePasskeyBrowser } from "@/storybook/passkeys";
 import { LoginPage } from "./login-page";
 
 const meta = {
@@ -57,4 +68,54 @@ export const InvalidCredentialsAfterSubmit: Story = {
 
 export const PendingAfterSubmit: Story = {
   parameters: withHandlers(getLoginMockHandler(pending)),
+};
+
+export const PasskeyButtonNeedsBrowserSupport: Story = {
+  beforeEach: browserWithoutPasskeys,
+  play: async ({ canvas }) => {
+    await expect(await canvas.findByRole("button", { name: "Sign in" })).toBeVisible();
+    await expect(canvas.queryByRole("button", { name: "Sign in with a passkey" })).toBeNull();
+  },
+};
+
+export const PasskeyButtonHiddenOnAnUnsuitableAddress: Story = {
+  beforeEach: fakePasskeyBrowser(),
+  parameters: withHandlers(passkeysOffHandler),
+  play: async ({ canvas }) => {
+    await expect(await canvas.findByRole("button", { name: "Sign in" })).toBeVisible();
+    await expect(canvas.queryByRole("button", { name: "Sign in with a passkey" })).toBeNull();
+  },
+};
+
+export const PasskeyRefused: Story = {
+  beforeEach: fakePasskeyBrowser(),
+  parameters: withHandlers(getPasskeySignInMockHandler(failWith(passkeyInvalidProblem))),
+  play: async ({ canvas }) => {
+    await userEvent.click(await canvas.findByRole("button", { name: "Sign in with a passkey" }));
+    await expect(await canvas.findByRole("alert")).toHaveTextContent(
+      "The passkey could not be verified.",
+    );
+  },
+};
+
+export const PasskeyCancelledQuietly: Story = {
+  beforeEach: fakePasskeyBrowser("cancelled"),
+  play: async ({ canvas }) => {
+    const button = await canvas.findByRole("button", { name: "Sign in with a passkey" });
+    await userEvent.click(button);
+    await waitFor(() => expect(button).toBeEnabled());
+    await expect(canvas.queryByRole("alert")).toBeNull();
+  },
+};
+
+export const PasskeyOfferedOnTheCodeStep: Story = {
+  beforeEach: fakePasskeyBrowser(),
+  parameters: withHandlers(getLoginMockHandler(loginTwoFactorRequired)),
+  play: async ({ canvas }) => {
+    await userEvent.type(canvas.getByLabelText("Email"), "ruta@example.lt");
+    await userEvent.type(canvas.getByLabelText("Password"), "fixture-value");
+    await userEvent.click(canvas.getByRole("button", { name: "Sign in" }));
+    await expect(await canvas.findByLabelText("Authenticator code")).toBeVisible();
+    await expect(canvas.getByRole("button", { name: "Use a passkey instead" })).toBeVisible();
+  },
 };

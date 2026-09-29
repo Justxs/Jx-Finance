@@ -261,6 +261,8 @@ const contracts: Record<string, Contract> = {
   loginSuccess: { schema: schemas.LoginResponse },
   loginTwoFactorRequired: { schema: schemas.LoginResponse },
   sessions: { schema: schemas.SessionsResponse },
+  passkeys: { schema: schemas.PasskeysResponse },
+  passkeyOptions: { schema: schemas.BeginPasskeyRegistrationResponse },
   setupStatus: { schema: schemas.SetupStatusResponse },
   worldEtf: { schema: schemas.SecuritiesResponseItem },
   usStock: { schema: schemas.SecuritiesResponseItem },

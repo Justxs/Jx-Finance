@@ -8,6 +8,8 @@ flowchart TD
     Exists -->|"no"| Stop["stops, creates nothing"]
     Exists -->|"yes"| Ask["interactive password entry, never a command-line argument"]
     Ask --> Reset["reset password, clear lockout end and counter"]
-    Reset --> Tfa["disable 2FA, new authenticator key, recovery codes invalidated"]
+    Reset --> Tfa["disable 2FA, new authenticator key, recovery codes invalidated,<br/>every passkey of the administrator removed"]
     Tfa --> Sessions["sessions revoked"]
 ```
+
+The console text says that the password, two-factor authentication and passkeys are reset. The steps after the password prompt live in `RecoveryCommand.RecoverAsync`, which the integration tests call directly because the command itself refuses to run without an interactive terminal. See [Passkeys](passkeys.md#resets-and-recovery).

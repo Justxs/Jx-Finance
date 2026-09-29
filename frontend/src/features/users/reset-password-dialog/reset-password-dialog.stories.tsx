@@ -77,7 +77,7 @@ export const ResetsPasswordAndTwoFactor: Story = {
   play: async ({ args }) => {
     const dialog = within(await openedDialog());
     await userEvent.click(
-      dialog.getByRole("checkbox", { name: "Also reset two-factor authentication" }),
+      dialog.getByRole("checkbox", { name: "Also reset two-factor authentication and passkeys" }),
     );
     await submitReset();
 

@@ -4,6 +4,7 @@ using JxFinance.Tests.Support;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
 
 namespace JxFinance.Tests.Integration.Data;
@@ -63,7 +64,9 @@ public sealed class MigrationBackfillTests(ApiFixture fixture) : IntegrationTest
         await ExecuteAsync(ConnectionString, $"CREATE DATABASE \"{database}\"");
         try
         {
-            var options = new DbContextOptionsBuilder<AppDbContext>().UseNpgsql(connectionString).Options;
+            var options = new DbContextOptionsBuilder<AppDbContext>(Services.GetRequiredService<DbContextOptions<AppDbContext>>())
+                .UseNpgsql(connectionString)
+                .Options;
             await using var db = new AppDbContext(options, new FixedUser(Guid.NewGuid()), new TestClock());
             var migrator = db.GetService<IMigrator>();
             await migrator.MigrateAsync(migrationBefore, TestContext.Current.CancellationToken);

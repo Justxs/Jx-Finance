@@ -349,15 +349,18 @@ public sealed class BackupEndpointTests(ApiFixture fixture) : IntegrationTestBas
     private sealed record RestoredDepreciationDto(DateOnly StartDate, string StartValue, int LifeMonths, string ResidualValue);
 
     [Fact]
-    public async Task Restore_brings_back_the_dashboard_layout_of_each_user()
+    public async Task Restore_brings_back_the_dashboard_layout_and_the_passkeys_of_each_user()
     {
         const string layoutUrl = "/api/users/me/dashboard-layout";
         var member = await CreateUserAsync();
         using var memberClient = await LoginAsync(member);
+        using var authenticator = new SoftwareAuthenticator();
+        Assert.Equal(HttpStatusCode.Created, (await authenticator.RegisterAsync(memberClient, member.Password)).StatusCode);
         (await memberClient.PutAsJsonAsync(layoutUrl, new RestoredLayoutDto(["upcomingBills", "summary"], ["netWorth"], false), TestContext.Current.CancellationToken))
             .EnsureSuccessStatusCode();
         var backup = await CreateBackupAsync();
         (await memberClient.DeleteAsync(layoutUrl, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
+        (await memberClient.DeleteAsync($"/api/auth/passkeys/{authenticator.Id}", TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
 
         try
         {
@@ -373,6 +376,8 @@ public sealed class BackupEndpointTests(ApiFixture fixture) : IntegrationTestBas
         Assert.False(layout!.IsDefault);
         Assert.Equal(["upcomingBills", "summary"], layout.Order.Take(2));
         Assert.Equal(["netWorth"], layout.Hidden);
+        using var passkeyClient = CreateClient();
+        Assert.Equal(HttpStatusCode.OK, (await authenticator.SignInAsync(passkeyClient)).StatusCode);
     }
 
     [Fact]
@@ -530,6 +535,7 @@ public sealed class BackupEndpointTests(ApiFixture fixture) : IntegrationTestBas
         Assert.Contains("ReceiptReadings", tables);
         Assert.Contains("ReceiptItemCategories", tables);
         Assert.Contains("ReceiptReadingUsages", tables);
+        Assert.Contains("AspNetUserPasskeys", tables);
         Assert.DoesNotContain("UserSessions", tables);
         Assert.DoesNotContain("EmailMessages", tables);
     }
