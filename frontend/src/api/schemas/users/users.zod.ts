@@ -53,8 +53,10 @@ export const CreateUserResponse = zod.object({
       "unusualAmounts",
       "recurringPriceRise",
       "monthReadyToClose",
+      "monthlyDigest",
     ]),
   ),
+  language: zod.string().nullable(),
 });
 
 /**
@@ -78,8 +80,10 @@ export const UsersResponseItem = zod.object({
       "unusualAmounts",
       "recurringPriceRise",
       "monthReadyToClose",
+      "monthlyDigest",
     ]),
   ),
+  language: zod.string().nullable(),
 });
 export const UsersResponse = zod.array(UsersResponseItem);
 
@@ -124,8 +128,10 @@ export const UpdateMyProfileResponse = zod.object({
       "unusualAmounts",
       "recurringPriceRise",
       "monthReadyToClose",
+      "monthlyDigest",
     ]),
   ),
+  language: zod.string().nullable(),
 });
 
 /**
@@ -150,6 +156,7 @@ export const MyDiscordResponse = zod.object({
       "unusualAmounts",
       "recurringPriceRise",
       "monthReadyToClose",
+      "monthlyDigest",
     ]),
   ),
   lastDeliveredAt: zod.iso.datetime({ offset: true }).nullable(),
@@ -174,6 +181,7 @@ export const UpdateMyDiscordBody = zod.object({
       "unusualAmounts",
       "recurringPriceRise",
       "monthReadyToClose",
+      "monthlyDigest",
     ]),
   ),
 });
@@ -190,6 +198,7 @@ export const UpdateMyDiscordResponse = zod.object({
       "unusualAmounts",
       "recurringPriceRise",
       "monthReadyToClose",
+      "monthlyDigest",
     ]),
   ),
   lastDeliveredAt: zod.iso.datetime({ offset: true }).nullable(),
@@ -218,6 +227,7 @@ export const UpdateMyEmailNotificationsBody = zod.object({
       "unusualAmounts",
       "recurringPriceRise",
       "monthReadyToClose",
+      "monthlyDigest",
     ]),
   ),
 });
@@ -239,8 +249,41 @@ export const UpdateMyEmailNotificationsResponse = zod.object({
       "unusualAmounts",
       "recurringPriceRise",
       "monthReadyToClose",
+      "monthlyDigest",
     ]),
   ),
+  language: zod.string().nullable(),
+});
+
+/**
+ * Saves the language you picked in the interface, en or lt, so that every email and Discord message the server sends you is written in it. Until you save one, messages use the installation's default language. The interface itself keeps its language per browser.
+ * @summary Save your language
+ */
+export const UpdateMyLanguageBody = zod.object({
+  language: zod.string(),
+});
+
+export const UpdateMyLanguageResponse = zod.object({
+  id: zod.uuid(),
+  email: zod.string(),
+  displayName: zod.string(),
+  role: zod.string(),
+  twoFactorEnabled: zod.boolean(),
+  isActive: zod.boolean(),
+  emailConfirmed: zod.boolean(),
+  emailNotificationTypes: zod.array(
+    zod.enum([
+      "billDue",
+      "budgetWarning",
+      "budgetExceeded",
+      "unusualAmount",
+      "unusualAmounts",
+      "recurringPriceRise",
+      "monthReadyToClose",
+      "monthlyDigest",
+    ]),
+  ),
+  language: zod.string().nullable(),
 });
 
 /**
@@ -303,8 +346,10 @@ export const ResetUserPasswordResponse = zod.object({
       "unusualAmounts",
       "recurringPriceRise",
       "monthReadyToClose",
+      "monthlyDigest",
     ]),
   ),
+  language: zod.string().nullable(),
 });
 
 /**
@@ -332,6 +377,8 @@ export const UpdateUserRoleResponse = zod.object({
       "unusualAmounts",
       "recurringPriceRise",
       "monthReadyToClose",
+      "monthlyDigest",
     ]),
   ),
+  language: zod.string().nullable(),
 });

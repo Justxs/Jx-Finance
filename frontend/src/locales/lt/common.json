@@ -802,7 +802,9 @@
       "discordNotAllowed": "Discord negalimas: administratorius šioje sistemoje jo neleido.",
       "discordNotConnected": "Prijunkite Discord kanalą žemiau, kad galėtumėte naudoti Discord stulpelį.",
       "discordPaused": "Discord pristabdytas. Pažymėkite „Siųsti pranešimus į šį kanalą“ žemiau, kad atnaujintumėte.",
-      "saved": "Pranešimų nustatymai išsaugoti"
+      "saved": "Pranešimų nustatymai išsaugoti",
+      "digestOnlyOutside": "Siunčiama tik el. paštu arba į Discord",
+      "digestNote": "Mėnesio suvestinė atkeliauja pirmosiomis mėnesio dienomis ir apibendrina pasibaigusį mėnesį: pajamas ir išlaidas, labiausiai pasikeitusias kategorijas ir tai, ką dar reikia sutvarkyti prieš jį uždarant. Pažymėkite el. paštą arba Discord, kad ją gautumėte."
     },
     "discord": {
       "title": "Discord kanalas",
@@ -1724,7 +1726,8 @@
       "unusualAmount": "Išlaida gerokai viršija įprastą sumą",
       "unusualAmounts": "Kelios neįprastos išlaidos vienu metu",
       "recurringPriceRise": "Už prenumeratą nuskaičiuota daugiau nei tikėtasi",
-      "monthReadyToClose": "Pasibaigusį mėnesį galima uždaryti"
+      "monthReadyToClose": "Pasibaigusį mėnesį galima uždaryti",
+      "monthlyDigest": "Mėnesio suvestinė"
     },
     "unusualAmount": "{{amount}}: {{factor}}× daugiau nei įprasta ({{typical}})",
     "unusualAmounts_one": "{{count}} išlaida gerokai viršija įprastą sumą",
@@ -1741,7 +1744,8 @@
     "budgetExceeded": "{{period}} limitas pasiektas",
     "titleWithCount": "Pranešimai, neskaitytų: {{count}}",
     "unavailable": "Nepavyko įkelti pranešimų",
-    "monthReadyToClose": "{{month}} baigėsi: peržiūrėkite ir uždarykite mėnesį"
+    "monthReadyToClose": "{{month}} baigėsi: peržiūrėkite ir uždarykite mėnesį",
+    "monthlyDigest": "Pajamos {{income}}, išlaidos {{expense}}, grynai {{net}}"
   },
   "households": {
     "name": "Namų ūkio pavadinimas",

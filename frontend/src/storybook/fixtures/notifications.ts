@@ -160,6 +160,34 @@ export const monthReadyNotification: NotificationResponse = {
   createdAt: "2026-09-01T07:00:00Z",
 };
 
+export const monthlyDigestNotification: NotificationResponse = {
+  id: ids.notifications.augustDigest,
+  type: "monthlyDigest",
+  title: "August 2026",
+  message: "2026-08",
+  payload: {
+    month: "2026-08-01",
+    digest: {
+      currency: "eur",
+      income: "3200.00",
+      expense: "2450.00",
+      net: "750.00",
+      keptPercent: 23,
+      movers: [{ name: "Maistas", amount: "420.00", previous: "380.00" }],
+      uncategorized: 3,
+      unusual: 0,
+      unconfirmedRecurring: null,
+      accountsNeedingAttention: 1,
+      closed: false,
+    },
+  },
+  relatedType: null,
+  relatedId: null,
+  channel: "inApp",
+  isRead: false,
+  createdAt: "2026-09-01T07:05:00Z",
+};
+
 export const notifications: NotificationResponse[] = [
   expenseDueNotification,
   budgetExceededNotification,

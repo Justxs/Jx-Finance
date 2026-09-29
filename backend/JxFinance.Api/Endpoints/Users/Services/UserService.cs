@@ -9,6 +9,7 @@ using JxFinance.Endpoints.Users.GetUsers;
 using JxFinance.Endpoints.Users.Interfaces;
 using JxFinance.Endpoints.Users.ResetUserPassword;
 using JxFinance.Endpoints.Users.UpdateMyEmailNotifications;
+using JxFinance.Endpoints.Users.UpdateMyLanguage;
 using JxFinance.Endpoints.Users.UpdateMyProfile;
 using JxFinance.Endpoints.Users.UpdateUserRole;
 using JxFinance.Infrastructure.Auth;
@@ -301,16 +302,24 @@ public sealed class UserService(
         return profile;
     }
 
-    public async Task<Result<UserProfileResponse>> UpdateOwnEmailNotificationsAsync(
+    public Task<Result<UserProfileResponse>> UpdateOwnEmailNotificationsAsync(
         UpdateMyEmailNotificationsRequest request,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken) =>
+        UpdateOwnAsync(user => user.EmailNotificationTypes = [.. request.Types], cancellationToken);
+
+    public Task<Result<UserProfileResponse>> UpdateOwnLanguageAsync(
+        UpdateMyLanguageRequest request,
+        CancellationToken cancellationToken) =>
+        UpdateOwnAsync(user => user.Language = request.Language, cancellationToken);
+
+    private async Task<Result<UserProfileResponse>> UpdateOwnAsync(Action<AppUser> change, CancellationToken cancellationToken)
     {
         if (await FindAsync(currentUser.Id, cancellationToken) is not { } user)
         {
             return NotFound;
         }
 
-        user.EmailNotificationTypes = [.. request.Types];
+        change(user);
         var result = await userManager.UpdateAsync(user);
         if (!result.Succeeded)
         {

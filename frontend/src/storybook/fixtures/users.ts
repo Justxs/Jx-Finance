@@ -15,6 +15,7 @@ export function userProfile(seed: UserSeed): UserProfileResponse {
     isActive: true,
     emailConfirmed: true,
     emailNotificationTypes: [],
+    language: null,
     ...seed,
   };
 }
@@ -59,6 +60,11 @@ export const unverifiedUser: UserProfileResponse = {
 export const emailSubscriber: UserProfileResponse = {
   ...currentUser,
   emailNotificationTypes: ["billDue", "budgetExceeded"],
+};
+
+export const digestSubscriber: UserProfileResponse = {
+  ...currentUser,
+  emailNotificationTypes: ["monthlyDigest"],
 };
 
 export const users: UserProfileResponse[] = [currentUser, memberUser, longNameUser, inactiveUser];

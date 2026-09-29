@@ -16,4 +16,6 @@ export interface UserProfileResponse {
   isActive: boolean;
   emailConfirmed: boolean;
   emailNotificationTypes: NotificationType[];
+  /** @nullable */
+  language: string | null;
 }

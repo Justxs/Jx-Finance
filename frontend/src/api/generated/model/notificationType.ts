@@ -16,4 +16,5 @@ export const NotificationType = {
   unusualAmounts: "unusualAmounts",
   recurringPriceRise: "recurringPriceRise",
   monthReadyToClose: "monthReadyToClose",
+  monthlyDigest: "monthlyDigest",
 } as const;

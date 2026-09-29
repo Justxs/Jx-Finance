@@ -32,7 +32,10 @@ public static class DependencyInjection
         services.AddSingleton<Attachments.AttachmentStore>();
         services.AddSingleton<Common.Email.IEmailTransport, Email.MailKitEmailTransport>();
         services.AddHttpContextAccessor();
-        services.AddScoped<ICurrentUser, HttpCurrentUser>();
+        services.AddScoped<JobUser>();
+        services.AddScoped<HttpCurrentUser>();
+        services.AddScoped<ICurrentUser>(sp =>
+            sp.GetRequiredService<JobUser>().User ?? (ICurrentUser)sp.GetRequiredService<HttpCurrentUser>());
 
         services.AddDbContext<AppDbContext>(options =>
             options.UseNpgsql(connectionString));

@@ -87,6 +87,10 @@ const bills = linkOptions({ to: "/recurring-bills" });
 const budgets = linkOptions({ to: "/budgets" });
 const unusual = linkOptions({ to: "/transactions", search: { unusual: true } });
 
+function monthLink({ month }: NotificationPayload) {
+  return linkOptions({ to: "/", search: { month: month ? monthKeyOfIso(month) : undefined } });
+}
+
 const producers = {
   billDue: { feature: "recurringBills", link: () => bills },
   budgetWarning: { feature: "budgets", link: () => budgets },
@@ -94,11 +98,8 @@ const producers = {
   unusualAmount: { feature: "unusualAmounts", link: () => unusual },
   unusualAmounts: { feature: "unusualAmounts", link: () => unusual },
   recurringPriceRise: { feature: "recurringBills", link: () => bills },
-  monthReadyToClose: {
-    feature: "monthClose",
-    link: ({ month }: NotificationPayload) =>
-      linkOptions({ to: "/", search: { month: month ? monthKeyOfIso(month) : undefined } }),
-  },
+  monthReadyToClose: { feature: "monthClose", link: monthLink },
+  monthlyDigest: { feature: "monthClose", link: monthLink },
 } as const satisfies Record<
   NotificationType,
   { feature: FeatureKey; link: (payload: NotificationPayload) => unknown }
@@ -160,7 +161,7 @@ export function NotificationBell({ sidebar }: Readonly<Props>) {
   }
 
   function describe(notification: NotificationResponse) {
-    const { dueDate, shape, amount, typicalAmount, factor, count, currency, month } =
+    const { dueDate, shape, amount, typicalAmount, factor, count, currency, month, digest } =
       notification.payload;
     const inCurrency = currency ?? undefined;
 
@@ -191,6 +192,14 @@ export function NotificationBell({ sidebar }: Readonly<Props>) {
       case "monthReadyToClose":
         return month
           ? t("notifications.monthReadyToClose", { month: monthName(month) })
+          : notification.message;
+      case "monthlyDigest":
+        return digest
+          ? t("notifications.monthlyDigest", {
+              income: money.format(Number(digest.income), digest.currency),
+              expense: money.format(Number(digest.expense), digest.currency),
+              net: money.format(Number(digest.net), digest.currency),
+            })
           : notification.message;
       default:
         return describeBudget(notification);

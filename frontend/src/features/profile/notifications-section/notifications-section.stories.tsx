@@ -6,6 +6,7 @@ import {
   getTestMyDiscordMockHandler,
 } from "@/api/generated/users/users.msw";
 import {
+  digestSubscriber,
   discordWebhookGoneProblem,
   emailSubscriber,
   myDiscordEmpty,
@@ -68,6 +69,30 @@ export const EmailChosen: Story = {
     await expect(
       canvas.getByRole("checkbox", { name: "A budget reaches 80% by email" }),
     ).not.toBeChecked();
+  },
+};
+
+export const DigestChosen: Story = {
+  parameters: withHandlers(emailEnabledHandler, getMeMockHandler(digestSubscriber)),
+  play: async ({ canvas }) => {
+    const digestByEmail = await canvas.findByRole("checkbox", { name: "Monthly digest by email" });
+    await waitFor(() => expect(digestByEmail).not.toHaveAttribute("aria-disabled"));
+    await expect(digestByEmail).toBeChecked();
+    await expect(
+      canvas.getByRole("img", { name: "Only sent by email or Discord" }),
+    ).toBeInTheDocument();
+    await expect(canvas.getByText(/sums up the month that ended/u)).toBeInTheDocument();
+  },
+};
+
+export const DigestWithEmailOff: Story = {
+  play: async ({ canvas }) => {
+    await expect(
+      await canvas.findByRole("checkbox", { name: "Monthly digest by email" }),
+    ).toHaveAttribute("aria-disabled", "true");
+    await expect(
+      canvas.getByRole("checkbox", { name: "Monthly digest on Discord" }),
+    ).not.toHaveAttribute("aria-disabled");
   },
 };
 

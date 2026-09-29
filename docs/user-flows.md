@@ -39,6 +39,10 @@ The pencil opens Edit recurring entry, which changes everything the entry has, t
 
 The record button opens Confirm recurring entry, which says in words what will be written — an expense, an income, or a move from one named account to another — and asks for the amount of a variable entry, for an account when an expense or income has no default one, and for the amount that arrived when a transfer crosses two currencies. Confirmation uses the displayed expected due date, writes the transaction or the transfer, and advances the entry. A repeated or stale confirmation returns a conflict: the dialog stays open, says the occurrence was already confirmed or the entry changed elsewhere, and the entry is refreshed so the due date shown is the current one before Confirm is pressed again. Dates use calendar arithmetic; a monthly date near month end may clamp to the next month's last valid date. Above the list, the [cash-flow forecast](features/cash-flow-forecast.md) shows each account's balance over the next 30, 60 or 90 days with every entry, warns when one goes below zero, and totals the scheduled expenses and income; the same section sits under the accounts table, and the dashboard's Cash flow card lists each account's lowest point.
 
+## Get a summary of last month
+
+In Settings › Personal › Notifications, tick Email or Discord on the "Monthly digest" row and save. In the first days of each month one message arrives about the month that ended: income, expenses, net and the share kept, the three expense categories that changed most against the month before, what is still open before the month can be closed, whether it is closed, and a link to that month on the dashboard. The bell shows it too. A month with nothing recorded and nothing open sends nothing. See [Monthly digest](features/monthly-digest.md).
+
 ## Sharing
 Create a household and add an existing user by email. Share an owned account or category. Household members can edit visible records, but only the record owner can change its sharing boundary. Only an account owner can archive it. Removing a member revokes visibility of other users' shared accounts and transaction history, including transactions the removed member entered. The accounts and categories the removed member had shared with the household become personal again, so the remaining members no longer see them and their owner keeps them. Personally owned accounts remain visible to their owner. Editing or deleting a transfer requires access to both of its accounts, and an edit that moves it also requires access to the accounts it moves to.
 
@@ -70,7 +74,7 @@ Currencies you use limits which currencies the pickers offer. A currency that is
 
 Changing the reporting currency shows a warning before saving. On save, every transaction is revalued at the exchange rate for its own date. If any rate is missing the save fails and nothing changes; use Sync now and try again. Budgets, goals, assets, debts, bills and net worth history keep their numbers and need reviewing by hand.
 
-Sync now fetches exchange rates immediately, including when automatic sync is off. The language choice, in the account menu or under Appearance, is remembered in each person's browser; the default language only applies until they choose.
+Sync now fetches exchange rates immediately, including when automatic sync is off. The language choice, in the account menu or under Appearance, is remembered in each person's browser; the default language only applies until they choose. The choice is also saved on the server, so email and Discord messages reach that person in the language they picked.
 
 ## Tracking investments
 

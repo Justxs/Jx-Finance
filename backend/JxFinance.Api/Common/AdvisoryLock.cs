@@ -13,6 +13,7 @@ public enum AppLock : long
     DiscordOutbox = 738192440,
     UnusualAmounts = 738192441,
     MonthCloseReminders = 738192442,
+    MonthlyDigest = 738192443,
 }
 
 public static class AdvisoryLock

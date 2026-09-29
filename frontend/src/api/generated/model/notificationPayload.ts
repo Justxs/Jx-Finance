@@ -7,6 +7,7 @@
  */
 import type { BudgetPeriod } from "./budgetPeriod";
 import type { Currency } from "./currency";
+import type { MonthlyDigestPayload } from "./monthlyDigestPayload";
 import type { NullableOfDateOnly } from "./nullableOfDateOnly";
 import type { RecurringBillShape } from "./recurringBillShape";
 
@@ -30,4 +31,5 @@ export interface NotificationPayload {
   count?: number | null;
   currency?: null | Currency;
   month?: null | NullableOfDateOnly;
+  digest?: null | MonthlyDigestPayload;
 }

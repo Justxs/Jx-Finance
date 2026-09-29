@@ -9,4 +9,5 @@ public enum NotificationType
     UnusualAmounts,
     RecurringPriceRise,
     MonthReadyToClose,
+    MonthlyDigest,
 }

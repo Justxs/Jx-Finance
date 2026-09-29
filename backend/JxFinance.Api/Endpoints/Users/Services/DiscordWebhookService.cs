@@ -127,9 +127,13 @@ public sealed class DiscordWebhookService(
         }
 
         var product = EmailTexts.Product(settings.InstanceName);
+        var language = await db.Users
+            .Where(u => u.Id == currentUser.Id)
+            .Select(u => u.Language)
+            .FirstOrDefaultAsync(cancellationToken);
         var sent = await client.SendAsync(
             destination,
-            new DiscordPost(NotificationTexts.DiscordTest(settings.DefaultLanguage, product), DiscordText.Username(product)),
+            new DiscordPost(NotificationTexts.DiscordTest(language ?? settings.DefaultLanguage, product), DiscordText.Username(product)),
             cancellationToken);
 
         webhook.RecordSend(clock.UtcNow, sent.Error?.Message, sent.Error?.Code == ErrorCodes.DiscordWebhookGone);

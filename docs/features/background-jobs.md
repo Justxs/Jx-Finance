@@ -2,7 +2,7 @@
 
 Back to the [feature walkthrough](README.md). See also [architecture: Background work and notifications](../architecture/background-jobs.md).
 
-All eleven derive from `PeriodicJob`: a `PeriodicTimer` loop, a fresh service scope per pass, an optional feature gate, one pass immediately at startup, failures logged as "{Job} failed.".
+All twelve derive from `PeriodicJob`: a `PeriodicTimer` loop, a fresh service scope per pass, an optional feature gate, one pass immediately at startup, failures logged as "{Job} failed.".
 
 ```mermaid
 flowchart LR
@@ -12,6 +12,7 @@ flowchart LR
         A["BudgetAlertJob<br/>hourly, needs Budgets"]
         U["UnusualAmountJob<br/>every 15 min, needs UnusualAmounts"]
         C["MonthCloseReminderJob<br/>hourly, acts on days 1 to 5, needs MonthClose"]
+        G["MonthlyDigestJob<br/>hourly, acts on days 1 to 5, needs MonthClose"]
         N["NetWorthSnapshotJob<br/>hourly, needs NetWorth"]
         E["ExchangeRateSyncJob<br/>every 6 h, obeys the auto-sync setting"]
         B["BrokerSyncJob<br/>daily, needs Investments"]
@@ -26,6 +27,8 @@ flowchart LR
     U --> Verdict["Verdicts on unchecked expenses, written with ExecuteUpdate;<br/>silent for rows not written since the backfill began,<br/>otherwise new flags within 45 days<br/>and price rises of recurring entries"]
     C --> Pub
     C --> Ready["One MonthReadyToClose per user who closed a month before<br/>and has not closed last month, deduplicated per user and month"]
+    G --> Review["Last month's review read as each subscribed member,<br/>in RunAsUserAsync, one MonthlyDigest per member and month"]
+    Review --> Pub
     Pub --> Notif["Notifications"]
     Pub --> Mail["An EmailMessages row, only for a bill reminder<br/>whose owner asked for reminder emails"]
     Pub --> Disc["A DiscordMessages row, only when Discord is allowed<br/>and the owner's webhook takes that kind"]
@@ -46,6 +49,7 @@ flowchart LR
 | `BudgetAlertJob` | 1 hour | `Budgets` | Spending only moves when a transaction is entered or imported, and an alert is not urgent to the minute. Each pass recomputes the usage of every budget, which for a rollover budget reads up to twelve windows of attributions, so hourly keeps the cost small and matches `NetWorthSnapshotJob` |
 | `UnusualAmountJob` | 15 minutes | `UnusualAmounts`; the price-rise half also needs `RecurringBills` | An unusual charge is worth hearing about soon after it is imported, and a pass that finds no unchecked row is one query over a partial index. It takes at most 40 pages of 500 rows, so a backfill of a large ledger is spread over several passes |
 | `MonthCloseReminderJob` | 1 hour, acting only on days 1 to 5 of a month | `MonthClose` | The reminder belongs to the first days of a month in the installation time zone. `PeriodicJob` counts its interval from the process start, so a daily interval would land at an arbitrary hour and a restart would move it; hourly passes find the new month within an hour of it starting, a pass on day 6 or later returns before touching the database, and the deduplication per user and month makes the extra passes harmless |
+| `MonthlyDigestJob` | 1 hour, acting only on days 1 to 5 of a month | `MonthClose`; only members who ticked the digest for email or Discord | The same reasoning as the reminder: the first pass of a month sends the digest within an hour of the month starting, a server that was off on the 1st catches up until the 5th, and the deduplication per member and month makes later passes harmless. Each member's review is a handful of report queries, run once a month |
 | `NetWorthSnapshotJob` | 1 hour | `NetWorth` | One point per day; an hour is enough to have today's point before anyone looks |
 | `ExchangeRateSyncJob` | 6 hours | none, obeys the auto-sync setting | The ECB publishes once per working day |
 | `BrokerSyncJob` | 24 hours | `Investments` | The Flex Web Service is rate limited and the statement changes once a day |
@@ -94,6 +98,7 @@ flowchart LR
     Lock --> Disc["AppLock.DiscordOutbox: claiming the next batch of Discord posts"]
     Lock --> Unu["AppLock.UnusualAmounts: unusual-amount scan, held for the whole pass"]
     Lock --> Close["AppLock.MonthCloseReminders: month-end reminder pass"]
+    Lock --> Dig["AppLock.MonthlyDigest: one member's digest"]
     Lock --> Att["per transaction: attaching a file, restoring one from the trash"]
 ```
 
@@ -106,5 +111,7 @@ flowchart LR
 `UnusualAmountJob` takes `AppLock.UnusualAmounts` (`738192441`) once, in one transaction for the whole pass, like the reminder scan. Inside it the job pages the unchecked expenses, writes each verdict with `ExecuteUpdate`, reads which rows and price rises were already notified and publishes the rest, so a second instance or a restart waits for the first pass and then finds nothing left to check. It evaluates each account owner's rows through a per-owner `AppDbContext` from `AppDbContext.For`, because the category history is what that owner can see, but writes and publishes on the job's own context, inside the lock. The backfill stores verdicts without notifying anybody: a pass where no transaction was ever checked is silent, and later passes notify only rows written after the earliest check. See [Unusual amounts](unusual-amounts.md).
 
 `MonthCloseReminderJob` takes `AppLock.MonthCloseReminders` (`738192442`) in one transaction for a pass on days 1 to 5. Inside it one query finds the active users who have a close of any month, have none of the previous month under any scope, and have no `MonthReadyToClose` notification whose `Message` is that month (`yyyy-MM`), deleted ones included; the job preloads them, publishes one notification each and commits. A second instance waits for the lock and then finds every user already reminded. See [Month-end close](month-end-close.md).
+
+`MonthlyDigestJob` takes `AppLock.MonthlyDigest` (`738192443`) inside each member's own transaction, the way the budget scan holds its lock per user, because each member's work runs in its own `RunAsUserAsync` scope. Inside the lock it checks again that the member has no `MonthlyDigest` notification for the month, reads the review, publishes and commits, so a second instance waits and then skips the member. See [Monthly digest](monthly-digest.md).
 
 The bill reminder scan takes its lock once for the whole pass because it reads every user's bills in one query. The budget alert scan takes `AppLock.BudgetAlerts` inside each user's own transaction instead, since the work is already split per user; the read of what has already been raised and the insert of what has not are both inside that lock, which is what makes a second pass, a restart or a second instance unable to write the same alert twice.

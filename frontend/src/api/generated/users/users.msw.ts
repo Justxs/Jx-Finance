@@ -191,6 +191,30 @@ export const getUpdateMyEmailNotificationsMockHandler = (
   );
 };
 
+export const getUpdateMyLanguageMockHandler = (
+  overrideResponse?:
+    | UserProfileResponse
+    | ((
+        info: Parameters<Parameters<typeof http.put>[1]>[0],
+      ) => Promise<UserProfileResponse> | UserProfileResponse),
+  options?: RequestHandlerOptions,
+) => {
+  return http.put(
+    "*/api/users/me/language",
+    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : undefined,
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
 export const getDeactivateUserMockHandler = (
   overrideResponse?:
     | void
@@ -285,6 +309,7 @@ export const getUsersMock = () => [
   getUpdateMyDiscordMockHandler(),
   getTestMyDiscordMockHandler(),
   getUpdateMyEmailNotificationsMockHandler(),
+  getUpdateMyLanguageMockHandler(),
   getDeactivateUserMockHandler(),
   getReactivateUserMockHandler(),
   getResetUserPasswordMockHandler(),

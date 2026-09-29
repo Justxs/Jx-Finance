@@ -17,6 +17,10 @@ export function setAuthenticated(value: boolean) {
   authenticatedCache = value;
 }
 
+export function hasSession() {
+  return authenticatedCache === true;
+}
+
 export function endSession(
   queryClient: QueryClient,
   navigate: (options: { to: "/login" }) => unknown,

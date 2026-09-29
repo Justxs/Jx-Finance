@@ -105,8 +105,10 @@ export const LoginResponse = zod.object({
           "unusualAmounts",
           "recurringPriceRise",
           "monthReadyToClose",
+          "monthlyDigest",
         ]),
       ),
+      language: zod.string().nullable(),
     }),
   ]),
 });
@@ -138,8 +140,10 @@ export const MeResponse = zod.object({
       "unusualAmounts",
       "recurringPriceRise",
       "monthReadyToClose",
+      "monthlyDigest",
     ]),
   ),
+  language: zod.string().nullable(),
 });
 
 /**

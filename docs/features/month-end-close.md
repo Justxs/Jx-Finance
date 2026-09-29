@@ -128,6 +128,10 @@ The account lines answer whether each account's statement for the month is in. `
 
 For each it publishes one `MonthReadyToClose` through `INotificationPublisher`, with the month's name in the installation language as the title ("August 2026", "2026 m. rugpjūtis"), the month as `yyyy-MM` in `Message` and its first day in `Payload.Month`. The deduplication is per user and month: `Message` is the key the job looks for, so hourly passes over five days remind each user once. The bell says "{month} has ended and is ready to close" and links to `/?month=yyyy-MM` while the feature is on; Discord receives the same sentence and link when the user ticked the kind. See [Notifications](notifications.md).
 
+## The monthly digest
+
+The [monthly digest](monthly-digest.md) is the review sent out. On the same days 1 to 5, `MonthlyDigestJob` calls `GetMonthAsync` for last month as each member who opted in, in the "Everything" scope, and mails or posts its figures, the three expense categories that moved most against the month before, the checklist's open items (uncategorised, unusual, unconfirmed recurring entries, and accounts that `differs` or are `behind`) and whether the month is closed, with a link to `/?month=yyyy-MM`. It reads nothing the review does not, so the digest and the dashboard cannot disagree. It is independent of the reminder: both can arrive on the same day.
+
 ## Endpoints
 
 | Route | What it does |

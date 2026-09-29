@@ -7,7 +7,7 @@ import {
   useRouterState,
 } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
-import { useMe } from "@/api/generated";
+import { getMeSuspenseQueryOptions, useMe } from "@/api/generated";
 import { AccountMenu } from "@/components/account-menu/account-menu";
 import {
   AppSidebar,
@@ -37,6 +37,7 @@ import { checkIsAuthenticated, checkSetupNeeded } from "@/lib/auth-gate";
 import { PUBLIC_PATHS } from "@/lib/navigation";
 import type { RouterContext } from "@/lib/route-prefetch";
 import { cn } from "@/lib/utils";
+import { saveChosenLocale } from "@/stores/app-store";
 
 export const Route = createRootRouteWithContext<RouterContext>()({
   beforeLoad: async ({ context: { queryClient }, location }) => {
@@ -69,6 +70,7 @@ export const Route = createRootRouteWithContext<RouterContext>()({
       return;
     }
     warmAppShell(queryClient);
+    void queryClient.query(getMeSuspenseQueryOptions()).then(saveChosenLocale, () => undefined);
   },
   component: RootLayout,
   pendingComponent: Splash,

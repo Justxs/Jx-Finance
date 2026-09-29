@@ -131,6 +131,7 @@ public static class EmailTexts
         string? siteUrl,
         string product)
     {
+        var title = NotificationTexts.Title(language, notification);
         var sentence = NotificationTexts.Sentence(language, notification);
         var url = NotificationTexts.PageUrl(notification, siteUrl);
         return Compose(
@@ -138,16 +139,52 @@ public static class EmailTexts
             toAddress,
             toName,
             product,
-            (notification.Title,
+            (title,
                 Paragraphs(
                     sentence,
                     url is null ? null : $"Atidaryti {product}: {url}",
                     "Kuriuos pranešimus gauti el. paštu, galite pasirinkti savo profilyje.")),
-            (notification.Title,
+            (title,
                 Paragraphs(
                     sentence,
                     url is null ? null : $"Open it in {product}: {url}",
                     "You can choose which notifications are emailed on your profile.")));
+    }
+
+    public static OutgoingEmail MonthlyDigest(
+        string language,
+        string toAddress,
+        string toName,
+        Notification notification,
+        string? siteUrl,
+        string product)
+    {
+        var title = NotificationTexts.Title(language, notification);
+        var parts = NotificationTexts.DigestDetails(language, notification)
+            .Prepend(NotificationTexts.Sentence(language, notification))
+            .ToList();
+        var url = NotificationTexts.PageUrl(notification, siteUrl);
+        return Compose(
+            language,
+            toAddress,
+            toName,
+            product,
+            ($"mėnesio suvestinė, {title}",
+                Paragraphs(
+                    [
+                        "štai kaip jums sekėsi praėjusį mėnesį.",
+                        .. parts,
+                        url is null ? null : $"Peržiūrėti ir uždaryti mėnesį {product}: {url}",
+                        "Suvestinę galite išjungti savo profilyje.",
+                    ])),
+            ($"your {title}",
+                Paragraphs(
+                    [
+                        "here is how last month went.",
+                        .. parts,
+                        url is null ? null : $"Review and close the month in {product}: {url}",
+                        "You can switch the digest off on your profile.",
+                    ])));
     }
 
     public static OutgoingEmail Test(string language, string toAddress, string toName, string product) =>

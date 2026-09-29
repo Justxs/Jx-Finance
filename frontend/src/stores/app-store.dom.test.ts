@@ -91,3 +91,45 @@ describe("initLocale", () => {
     expect(i18n.language).toBe("en");
   });
 });
+
+describe("the language on the server", () => {
+  const updateMyLanguage = vi.fn(() => Promise.resolve({}));
+  let signedIn = false;
+
+  async function loadWithServer() {
+    vi.doMock("@/api/generated", () => ({ updateMyLanguage }));
+    vi.doMock("@/lib/auth-gate", () => ({ hasSession: () => signedIn }));
+    return loadStore();
+  }
+
+  afterEach(() => {
+    vi.doUnmock("@/api/generated");
+    vi.doUnmock("@/lib/auth-gate");
+    updateMyLanguage.mockClear();
+    signedIn = false;
+  });
+
+  test("a pick is saved only while signed in", async () => {
+    const store = await loadWithServer();
+
+    store.setLocale("lt");
+    expect(updateMyLanguage).not.toHaveBeenCalled();
+
+    signedIn = true;
+    store.setLocale("en");
+    expect(updateMyLanguage).toHaveBeenCalledWith({ language: "en" });
+  });
+
+  test("an earlier pick is sent once when the profile has none", async () => {
+    seedPreferences({ locale: "lt" });
+    signedIn = true;
+    const store = await loadWithServer();
+
+    store.saveChosenLocale({ id: "u1", language: null });
+    store.saveChosenLocale({ id: "u1", language: null });
+    store.saveChosenLocale({ id: "u2", language: "en" });
+
+    expect(updateMyLanguage).toHaveBeenCalledTimes(1);
+    expect(updateMyLanguage).toHaveBeenCalledWith({ language: "lt" });
+  });
+});

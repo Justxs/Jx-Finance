@@ -23,6 +23,7 @@ public sealed class NotificationPublisher(
 {
     private readonly Dictionary<Guid, IReadOnlySet<NotificationType>> discordTypes = [];
     private readonly Dictionary<Guid, EmailRecipient> emailRecipients = [];
+    private readonly Dictionary<Guid, string?> languages = [];
     private readonly HashSet<string> queuedKeys = new(StringComparer.Ordinal);
     private readonly HashSet<string> queuedEmailKeys = new(StringComparer.Ordinal);
 
@@ -46,7 +47,7 @@ public sealed class NotificationPublisher(
         }
 
         var since = clock.StartOfDay(clock.Today);
-        await PreloadEmailAsync(missing, since, cancellationToken);
+        await PreloadUsersAsync(missing, since, cancellationToken);
         if (store.Current.DiscordEnabled)
         {
             await PreloadDiscordAsync(missing, since, cancellationToken);
@@ -79,15 +80,20 @@ public sealed class NotificationPublisher(
         }
     }
 
-    private async Task PreloadEmailAsync(List<Guid> userIds, DateTimeOffset since, CancellationToken cancellationToken)
+    private async Task PreloadUsersAsync(List<Guid> userIds, DateTimeOffset since, CancellationToken cancellationToken)
     {
         var users = await db.Users
             .AsNoTracking()
             .Where(AppUser.IsActive)
-            .Where(u => userIds.Contains(u.Id) && u.EmailConfirmed && u.Email != null)
-            .Select(u => new { u.Id, u.Email, u.DisplayName, u.EmailNotificationTypes })
+            .Where(u => userIds.Contains(u.Id))
+            .Select(u => new { u.Id, u.Email, u.EmailConfirmed, u.DisplayName, u.EmailNotificationTypes, u.Language })
             .ToListAsync(cancellationToken);
-        var recipients = users.Where(u => u.EmailNotificationTypes.Count > 0).ToList();
+        foreach (var user in users)
+        {
+            languages[user.Id] = user.Language;
+        }
+
+        var recipients = users.Where(u => u.EmailConfirmed && u.Email != null && u.EmailNotificationTypes.Count > 0).ToList();
         if (recipients.Count == 0)
         {
             return;
@@ -135,7 +141,7 @@ public sealed class NotificationPublisher(
         {
             UserId = notification.UserId,
             NotificationType = notification.Type,
-            Content = NotificationTexts.Discord(store.Current.DefaultLanguage, notification, options.Value.SiteUrl),
+            Content = NotificationTexts.Discord(LanguageOf(notification.UserId), notification, options.Value.SiteUrl),
             DedupeKey = key,
             CreatedAt = now,
             NextAttemptAt = now,
@@ -144,35 +150,43 @@ public sealed class NotificationPublisher(
 
     private void QueueEmail(Notification notification, EmailRecipient recipient, string key)
     {
-        var settings = store.Current;
-        var product = EmailTexts.Product(settings.InstanceName);
-        if (notification is { Type: NotificationType.BillDue, Payload.DueDate: { } due })
+        var language = LanguageOf(notification.UserId);
+        var product = EmailTexts.Product(store.Current.InstanceName);
+        var (kind, email) = notification switch
         {
-            outbox.Enqueue(
+            { Type: NotificationType.BillDue, Payload.DueDate: { } due } => (
                 EmailKind.BillReminder,
                 EmailTexts.BillReminder(
-                    settings.DefaultLanguage,
+                    language,
                     recipient.Address,
                     recipient.DisplayName,
                     notification.Title,
                     due,
                     notification.Payload.Shape,
-                    product),
-                key);
-            return;
-        }
-
-        outbox.Enqueue(
-            EmailKind.Notification,
-            EmailTexts.Notification(
-                settings.DefaultLanguage,
-                recipient.Address,
-                recipient.DisplayName,
-                notification,
-                options.Value.SiteUrl,
-                product),
-            key);
+                    product)),
+            { Type: NotificationType.MonthlyDigest, Payload.Digest: not null } => (
+                EmailKind.Notification,
+                EmailTexts.MonthlyDigest(
+                    language,
+                    recipient.Address,
+                    recipient.DisplayName,
+                    notification,
+                    options.Value.SiteUrl,
+                    product)),
+            _ => (
+                EmailKind.Notification,
+                EmailTexts.Notification(
+                    language,
+                    recipient.Address,
+                    recipient.DisplayName,
+                    notification,
+                    options.Value.SiteUrl,
+                    product)),
+        };
+        outbox.Enqueue(kind, email, key);
     }
+
+    private string LanguageOf(Guid userId) => languages.GetValueOrDefault(userId) ?? store.Current.DefaultLanguage;
 
     private sealed record EmailRecipient(string Address, string DisplayName, IReadOnlySet<NotificationType> Types);
 }

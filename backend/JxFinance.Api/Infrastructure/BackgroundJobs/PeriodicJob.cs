@@ -51,6 +51,20 @@ public abstract class PeriodicJob(IServiceScopeFactory scopes, ILogger logger) :
         }
     }
 
+    protected async Task RunAsUserAsync(Guid userId, Func<IServiceProvider, Task> work)
+    {
+        try
+        {
+            await using var scope = scopes.CreateAsyncScope();
+            scope.ServiceProvider.GetRequiredService<JobUser>().User = new FixedUser(userId);
+            await work(scope.ServiceProvider);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            logger.LogError(ex, "{Job} for user {UserId} failed.", Name, userId);
+        }
+    }
+
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         using var timer = new PeriodicTimer(Interval);

@@ -130,7 +130,8 @@ public sealed class AuthService(
         user.TwoFactorEnabled,
         !user.IsDeactivated,
         user.EmailConfirmed,
-        user.EmailNotificationTypes);
+        user.EmailNotificationTypes,
+        user.Language);
 
     public async Task<UserProfileResponse?> GetCurrentProfileAsync(CancellationToken cancellationToken) =>
         await CurrentAsync(cancellationToken) is { } user ? await ToProfileAsync(user) : null;

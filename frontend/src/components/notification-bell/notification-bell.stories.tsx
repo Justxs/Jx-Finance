@@ -9,6 +9,7 @@ import {
   expenseDueNotification,
   incomeDueNotification,
   monthReadyNotification,
+  monthlyDigestNotification,
   notifications,
   priceRiseNotification,
   transferDueNotification,
@@ -130,6 +131,19 @@ export const UnusualAmountsPriceRisesAndMonthClose: Story = {
     await expect(entries[2]).toHaveTextContent(/Charged €27\.99, expected €24\.99/u);
     await expect(entries[3]).toHaveTextContent("August 2026 has ended and is ready to close");
     await expect(entries[3]).toHaveAttribute("href", expect.stringContaining("month=2026-08"));
+  },
+};
+
+export const MonthlyDigest: Story = {
+  parameters: withHandlers(notificationsHandler([monthlyDigestNotification])),
+  play: async ({ canvas }) => {
+    await userEvent.click(canvas.getByRole("button", { name: /1 unread/i }));
+
+    const entry = await within(await openedDialog()).findByRole("link");
+
+    await expect(entry).toHaveTextContent("August 2026");
+    await expect(entry).toHaveTextContent(/Income €3,200\.00, expenses €2,450\.00, net €750\.00/u);
+    await expect(entry).toHaveAttribute("href", expect.stringContaining("month=2026-08"));
   },
 };
 

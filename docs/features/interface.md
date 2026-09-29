@@ -21,6 +21,8 @@ flowchart TD
     Views[("savedFiltersCollection, key jx-saved-filters<br/>transactionTemplatesCollection, key jx-transaction-templates")] --> Rows["one row per saved filter or template, not one row per browser"]
 ```
 
+The language is read from `locale` in this row, per browser, and falls back to the installation default. Since 2026-09-29 `setLocale` also saves a signed-in member's pick on the server with `PUT /api/users/me/language`, ignoring a failure, so that email and Discord messages reach them in the language they read; the root route's loader sends an earlier pick once when the profile has no language yet. The server copy is never read back into the interface. See [Monthly digest](monthly-digest.md#the-members-language).
+
 Two more collections sit beside the preferences row and follow the same rules: a zod schema per row, an explicit storage key, the same in-memory fallback, and the same cross-tab updates. They hold the saved ledger filters and the transaction templates described in [Transactions](transactions.md). Unlike `jx-preferences` they are lists, so each row carries its own id and name; nothing in them ever reaches the server.
 
 ## Navigation

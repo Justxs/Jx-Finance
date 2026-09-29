@@ -2068,6 +2068,10 @@ namespace JxFinance.Infrastructure.Data.Migrations
                         .HasColumnType("jsonb")
                         .HasDefaultValueSql("'[]'::jsonb");
 
+                    b.Property<string>("Language")
+                        .HasMaxLength(5)
+                        .HasColumnType("character varying(5)");
+
                     b.Property<bool>("LockoutEnabled")
                         .HasColumnType("boolean");
 

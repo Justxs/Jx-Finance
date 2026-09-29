@@ -28,7 +28,6 @@ These come from the release checklist and block calling the current release veri
 | Investments | Only Interactive Brokers; no other broker and no generic trade CSV | M |
 | Households | Budgets, goals, assets, debts and recurring entries cannot be shared | L |
 | Users | No forced password change after an administrator reset (rejected on 2026-09-19 unless done completely) | M |
-| Settings | The interface language is per browser and emails and Discord messages use the installation language, so a member who reads Lithuanian gets English mail | S |
 | Settings | Installation-wide only; no per-user reporting currency or page size | L for currency, S for page size |
 | Exchange rates | ECB only; no manual rate, no currencies outside the ECB list | S |
 | Backups | On demand only; a scheduler and offsite copies were removed on 2026-09-05 and stay a deliberate decision | M, needs the decision reopened |
@@ -48,7 +47,6 @@ Ordered by how much they would help daily use for the effort. Following the prod
 
 | Idea | Why | Where | Size |
 | --- | --- | --- | --- |
-| Monthly digest | On the first of the month, one email or Discord message with last month's income, expense, savings rate, the categories that moved most and the open close items, built from the month-close review and sent through `INotificationPublisher` | Notifications section of Settings | S |
 | Refunds | Record money coming back as a negative expense in the category it was spent in, optionally linked to the original row, so a returned purchase lowers spending instead of raising income; the import's reversal chip can propose it | Transaction form, import review | M |
 | Generic CSV import | The user maps columns once per bank and the mapping is stored; covers Revolut, Wise and card statements without code per bank | Import dialog | M |
 | Household settle-up | Mark an expense as paid for the household and split it between members; the household card shows who owes whom and a settlement is recorded as a transfer | Households | L |
@@ -60,14 +58,13 @@ Ordered by how much they would help daily use for the effort. Following the prod
 ## Suggested order
 
 1. Section 1, because the release is not verified without it; the daily-use trial is also where the ideas above get confirmed or dropped.
-2. The small helper that reuses what exists: the monthly digest.
-3. Refunds and a generic CSV import, once a real month of imports shows how often each is needed.
-4. Per-user language for mail and Discord before a second member relies on either channel.
+2. Refunds and a generic CSV import, once a real month of imports shows how often each is needed.
 
 ## Done
 
 | Date | Item | Where it is described |
 | --- | --- | --- |
+| 2026-09-29 | Monthly digest and the member's language: a member who ticks "Monthly digest" for email or Discord in Settings › Personal › Notifications receives, in the first days of a month, one message about the month that ended, read from the month-close review as that member in the "Everything" scope: income, expenses, net and the share kept, the three expense categories that moved most, the open close items or "Nothing left to do", whether the month is closed and a link to it on the dashboard, with a bell row beside it and nothing for an empty month. The language picked in the interface is saved on the server and used for every email and Discord message to that member, the installation's while none is saved | [Monthly digest](features/monthly-digest.md) |
 | 2026-09-29 | Reconciliation by hand: every account row has a Reconcile action that takes a statement's date and balance and shows the ledger balance on that date, the difference as it is typed and the rows since the previous reconciliation, saving the balance even when it differs; earlier reconciliations are listed with today's difference, which follows later edits, and can be deleted. A camt.053 import keeps its closing balance as a reconciliation by itself, and the month-close checklist has one line per account, reconciled, differs, imported or behind, with a Reconcile link that opens the dialog on the accounts page | [Reconciliation](features/reconciliation.md) |
 | 2026-09-29 | Cash-flow forecast: the accounts page, under the table, and the recurring entries page, in place of the six-month bar chart, project each account's main-currency balance over the next 30, 60 or 90 days from today's balance, the rows dated ahead and the caller's active entries of every shape and kind, variable ones estimated from the median of their matching rows, with a dashed line for usual everyday spending, a sentence for each account that goes below zero, the entries and what could not be counted; a Cash flow dashboard card shows each account's lowest point on the current month, and "Matches bank text" is offered on income and transfer entries too | [Cash-flow forecast](features/cash-flow-forecast.md) |
 | 2026-09-29 | Spending by payee: the reports page breaks expenses down by payee, the normalized description stored on every transaction as `PayeeKey`, with the eight largest and Show all for up to fifty, earlier amounts and change badges under a comparison, and "No description" as one row; each payee opens the ledger filtered to it by the new `payee` filter, whose totals and CSV and PDF export equal the report's amount. Suggested rules read the stored key | [Reports](features/reports.md#expense-by-payee) |

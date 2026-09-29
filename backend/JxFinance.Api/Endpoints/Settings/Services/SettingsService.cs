@@ -162,7 +162,7 @@ public sealed class SettingsService(
         var settings = store.Current;
         var sent = await emails.SendAsync(
             EmailTexts.Test(
-                settings.DefaultLanguage,
+                administrator.Language ?? settings.DefaultLanguage,
                 address,
                 administrator.DisplayName,
                 EmailTexts.Product(settings.InstanceName)),

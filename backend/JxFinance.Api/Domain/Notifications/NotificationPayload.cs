@@ -29,4 +29,6 @@ public sealed record NotificationPayload
     public Currency? Currency { get; init; }
 
     public DateOnly? Month { get; init; }
+
+    public MonthlyDigestPayload? Digest { get; init; }
 }

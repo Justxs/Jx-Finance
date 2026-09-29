@@ -770,7 +770,9 @@
       "discordNotAllowed": "Discord is unavailable: an administrator has not allowed it on this installation.",
       "discordNotConnected": "Connect a Discord channel below to use the Discord column.",
       "discordPaused": "Discord is paused. Tick “Send notifications to this channel” below to resume.",
-      "saved": "Notification settings saved"
+      "saved": "Notification settings saved",
+      "digestOnlyOutside": "Only sent by email or Discord",
+      "digestNote": "The monthly digest arrives in the first days of each month and sums up the month that ended: income and expenses, the categories that moved most and what is still open before you close it. Tick Email or Discord to receive it."
     },
     "discord": {
       "title": "Discord channel",
@@ -1662,7 +1664,8 @@
       "unusualAmount": "An expense is far above its usual amount",
       "unusualAmounts": "Several unusual expenses at once",
       "recurringPriceRise": "A subscription is charged more than expected",
-      "monthReadyToClose": "A finished month is ready to close"
+      "monthReadyToClose": "A finished month is ready to close",
+      "monthlyDigest": "Monthly digest"
     },
     "unusualAmount": "{{amount}}: {{factor}}× the usual {{typical}}",
     "unusualAmounts_one": "{{count}} expense is well above its usual amount",
@@ -1677,7 +1680,8 @@
     "budgetExceeded": "{{period}} limit reached",
     "titleWithCount": "Notifications, {{count}} unread",
     "unavailable": "Notifications could not be loaded",
-    "monthReadyToClose": "{{month}} has ended and is ready to close"
+    "monthReadyToClose": "{{month}} has ended and is ready to close",
+    "monthlyDigest": "Income {{income}}, expenses {{expense}}, net {{net}}"
   },
   "households": {
     "name": "Household name",

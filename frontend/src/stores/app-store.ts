@@ -1,4 +1,7 @@
 import { Store, useSelector } from "@tanstack/react-store";
+import { updateMyLanguage } from "@/api/generated";
+import type { UserProfileResponse } from "@/api/generated/model";
+import { hasSession } from "@/lib/auth-gate";
 import { i18n } from "@/lib/i18n";
 import {
   type Preferences,
@@ -16,6 +19,8 @@ export const localeNames: Record<Locale, string> = { en: "English", lt: "Lietuvi
 export const nextLocale: Record<Locale, Locale> = { en: "lt", lt: "en" };
 
 const fallbackLocale = new Store<Locale>("en");
+
+let savedForUser: string | undefined;
 
 function isLocale(value: unknown): value is Locale {
   return locales.some((locale) => locale === value);
@@ -37,9 +42,25 @@ function applyChosenLocale() {
 
 onPreferencesChange(applyChosenLocale);
 
+function saveOnServer(next: Locale) {
+  if (hasSession()) {
+    void updateMyLanguage({ language: next }).catch(() => undefined);
+  }
+}
+
 export function setLocale(next: Locale) {
   savePreferences({ locale: next });
   applyLocale(next);
+  saveOnServer(next);
+}
+
+export function saveChosenLocale(profile: Pick<UserProfileResponse, "id" | "language">) {
+  const chosen = readPreferences().locale;
+  if (profile.language || !chosen || savedForUser === profile.id) {
+    return;
+  }
+  savedForUser = profile.id;
+  saveOnServer(chosen);
 }
 
 export async function initLocale(loadDefault: () => Promise<string | null | undefined>) {

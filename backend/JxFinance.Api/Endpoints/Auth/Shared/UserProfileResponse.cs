@@ -10,4 +10,5 @@ public sealed record UserProfileResponse(
     bool TwoFactorEnabled,
     bool IsActive,
     bool EmailConfirmed,
-    IReadOnlyList<NotificationType> EmailNotificationTypes);
+    IReadOnlyList<NotificationType> EmailNotificationTypes,
+    string? Language);

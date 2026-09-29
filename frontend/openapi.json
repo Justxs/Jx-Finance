@@ -14652,6 +14652,79 @@
         ]
       }
     },
+    "/api/users/me/language": {
+      "put": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Save your language",
+        "description": "Saves the language you picked in the interface, en or lt, so that every email and Discord message the server sends you is written in it. Until you save one, messages use the installation's default language. The interface itself keeps its language per browser.",
+        "operationId": "UpdateMyLanguage",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateMyLanguageRequest"
+              },
+              "example": {
+                "language": "lt"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Your profile with the saved language.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserProfileResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed: the language is not en or lt.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many changes from this client; wait and retry."
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      }
+    },
     "/api/users/{id}/deactivate": {
       "post": {
         "tags": [
@@ -19749,6 +19822,93 @@
           }
         }
       },
+      "MonthlyDigestMover": {
+        "required": [
+          "name",
+          "amount",
+          "previous"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "string"
+          },
+          "previous": {
+            "type": "string"
+          }
+        }
+      },
+      "MonthlyDigestPayload": {
+        "required": [
+          "currency",
+          "income",
+          "expense",
+          "net",
+          "keptPercent",
+          "movers",
+          "uncategorized",
+          "unusual",
+          "unconfirmedRecurring",
+          "accountsNeedingAttention",
+          "closed"
+        ],
+        "type": "object",
+        "properties": {
+          "currency": {
+            "$ref": "#/components/schemas/Currency"
+          },
+          "income": {
+            "type": "string"
+          },
+          "expense": {
+            "type": "string"
+          },
+          "net": {
+            "type": "string"
+          },
+          "keptPercent": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "movers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MonthlyDigestMover"
+            }
+          },
+          "uncategorized": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "unusual": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "unconfirmedRecurring": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "accountsNeedingAttention": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "closed": {
+            "type": "boolean"
+          }
+        }
+      },
       "MonthlyTrendItem": {
         "required": [
           "year",
@@ -20080,6 +20240,16 @@
                 "$ref": "#/components/schemas/NullableOfDateOnly"
               }
             ]
+          },
+          "digest": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/MonthlyDigestPayload"
+              }
+            ]
           }
         }
       },
@@ -20147,7 +20317,8 @@
           "unusualAmount",
           "unusualAmounts",
           "recurringPriceRise",
-          "monthReadyToClose"
+          "monthReadyToClose",
+          "monthlyDigest"
         ],
         "type": "string"
       },
@@ -23477,6 +23648,21 @@
           ]
         }
       },
+      "UpdateMyLanguageRequest": {
+        "required": [
+          "language"
+        ],
+        "type": "object",
+        "properties": {
+          "language": {
+            "type": "string",
+            "example": "lt"
+          }
+        },
+        "example": {
+          "language": "lt"
+        }
+      },
       "UpdateMyProfileRequest": {
         "required": [
           "displayName",
@@ -24031,7 +24217,8 @@
           "twoFactorEnabled",
           "isActive",
           "emailConfirmed",
-          "emailNotificationTypes"
+          "emailNotificationTypes",
+          "language"
         ],
         "type": "object",
         "properties": {
@@ -24062,6 +24249,12 @@
             "items": {
               "$ref": "#/components/schemas/NotificationType"
             }
+          },
+          "language": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },

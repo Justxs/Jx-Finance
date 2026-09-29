@@ -16,6 +16,8 @@ public sealed class AppUser : IdentityUser<Guid>
 
     public List<NotificationType> EmailNotificationTypes { get; set; } = [];
 
+    public string? Language { get; set; }
+
     public DashboardLayout? DashboardLayout { get; set; }
 
     public bool IsDeactivated => LockoutEnd >= DeactivatedUntil;

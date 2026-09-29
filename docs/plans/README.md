@@ -6,7 +6,6 @@ The table is in the suggested build order. Each plan's `Status:` line names what
 
 | Plan | Size | Where it lives | Build after |
 | --- | --- | --- | --- |
-| [Monthly digest](monthly-digest.md) | M | Notifications section of Settings | |
 | [Refunds](refunds.md) | M | Transaction form, import review | |
 | [Generic CSV import](generic-csv-import.md) | M | Import dialog | |
 | [Receipt reading and automatic splits](receipt-ocr.md) | L | Transaction form | |
@@ -23,9 +22,9 @@ Several plans touch the same code. Whichever lands second adapts to the first:
 - `ImportService.ConfirmAsync` and the import preview, which already match hand-entered rows and, since [reconciliation](../features/reconciliation.md) shipped on 2026-09-29, record a camt.053 closing balance: refunds, generic CSV.
 - `Common/Statistics.cs` (the median and spread moved out of `UnusualAmountRule`, shipped with [budget limits from history](../features/budgets.md#limits-from-history)), reused by the [cash-flow forecast](../features/cash-flow-forecast.md) since it shipped on 2026-09-29.
 - `Transaction.PayeeKey`, shipped with [spending by payee](../features/reports.md#expense-by-payee) and already read by `SuggestedRuleService`: machine-learned categorization reads it too. The cash-flow forecast's usual spending groups by it too. Unusual amounts, subscription detection, price rises and the forecast's matching rows (through `PriceRiseMatcher.LoadChargesAsync`) still normalize in memory; moving them to the column is a follow-up that only removes code.
-- The month-close checklist's `checklist.accounts`, which replaced `checklist.imports` when [reconciliation](../features/reconciliation.md#in-the-month-end-close) shipped: the monthly digest counts its `differs` and `behind` lines as accounts not reconciled.
+- The month-close checklist's `checklist.accounts`, which replaced `checklist.imports` when [reconciliation](../features/reconciliation.md#in-the-month-end-close) shipped: the [monthly digest](../features/monthly-digest.md), shipped on 2026-09-29, counts its `differs` and `behind` lines as accounts not reconciled, so a change to the states changes the digest too.
 - `AccountMovements`, which gained `LedgerBalanceOnAsync` and `ListAsync` with [reconciliation](../features/reconciliation.md); `ListAsync` has its own union of the five sources beside the summing one, so refunds, which change how a transaction is signed, adapt both.
-- `ICurrentUser` registration gains a job user for the monthly digest.
+- `ICurrentUser`, which since the [monthly digest](../features/monthly-digest.md) shipped on 2026-09-29 resolves to a scoped `JobUser` inside `PeriodicJob.RunAsUserAsync` and to `HttpCurrentUser` everywhere else: a plan whose background work needs a service as one member sees it uses that scope rather than composing the service by hand.
 - The Security section of Settings: passkeys and personal API tokens.
 
 A new plan is a kebab-case file here, starting with `# Plan: <name>` and a `Status:` line, and gets a row in this table.

@@ -30,6 +30,7 @@ import type {
   ResetUserPasswordRequest,
   UpdateMyDiscordRequest,
   UpdateMyEmailNotificationsRequest,
+  UpdateMyLanguageRequest,
   UpdateMyProfileRequest,
   UpdateUserRoleRequest,
   UserProfileResponse,
@@ -831,6 +832,112 @@ export const useUpdateMyEmailNotifications = <
   TContext
 > => {
   return useMutation(getUpdateMyEmailNotificationsMutationOptions(options), queryClient);
+};
+export const getUpdateMyLanguageUrl = () => {
+  return `/api/users/me/language`;
+};
+
+/**
+ * Saves the language you picked in the interface, en or lt, so that every email and Discord message the server sends you is written in it. Until you save one, messages use the installation's default language. The interface itself keeps its language per browser.
+ * @summary Save your language
+ */
+export const updateMyLanguage = async (
+  updateMyLanguageRequest: UpdateMyLanguageRequest,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<UserProfileResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return customFetch<UserProfileResponse>(getUpdateMyLanguageUrl(), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(updateMyLanguageRequest),
+  });
+};
+
+export const getUpdateMyLanguageMutationKey = () => ["updateMyLanguage"] as const;
+
+export const getUpdateMyLanguageMutationOptions = <
+  TError = ErrorType<ProblemDetails | void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateMyLanguage>>,
+    TError,
+    UpdateMyLanguageMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateMyLanguage>>,
+  TError,
+  UpdateMyLanguageMutationVariables,
+  TContext
+> => {
+  const mutationKey = getUpdateMyLanguageMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateMyLanguage>>,
+    UpdateMyLanguageMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return updateMyLanguage(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateMyLanguageMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateMyLanguage>>
+>;
+export type UpdateMyLanguageMutationBody = UpdateMyLanguageRequest;
+export type UpdateMyLanguageMutationError = ErrorType<ProblemDetails | void>;
+export type UpdateMyLanguageMutationVariables = { data: UpdateMyLanguageRequest };
+
+/**
+ * @summary Save your language
+ */
+export const useUpdateMyLanguage = <TError = ErrorType<ProblemDetails | void>, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof updateMyLanguage>>,
+      TError,
+      UpdateMyLanguageMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof updateMyLanguage>>,
+  TError,
+  UpdateMyLanguageMutationVariables,
+  TContext
+> => {
+  return useMutation(getUpdateMyLanguageMutationOptions(options), queryClient);
 };
 export const getDeactivateUserUrl = (id: string) => {
   return `/api/users/${id}/deactivate`;

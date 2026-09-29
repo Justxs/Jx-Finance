@@ -11,6 +11,7 @@ import {
   getUpdateMyDiscordMockHandler,
   getUsersMockHandler,
   getUpdateMyEmailNotificationsMockHandler,
+  getUpdateMyLanguageMockHandler,
   getUpdateMyProfileMockHandler,
   getUpdateUserRoleMockHandler,
 } from "@/api/generated/users/users.msw";
@@ -90,6 +91,10 @@ export const userHandlers = [
       ),
     };
   }),
+  getUpdateMyLanguageMockHandler(async ({ request }) => ({
+    ...currentUser,
+    language: text((await readBody(request)).language) ?? null,
+  })),
   getDeactivateUserMockHandler(),
   getReactivateUserMockHandler(),
   getResetUserPasswordMockHandler(async ({ params, request }) => {

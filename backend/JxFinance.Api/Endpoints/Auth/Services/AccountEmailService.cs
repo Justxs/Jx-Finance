@@ -47,7 +47,7 @@ public sealed class AccountEmailService(
         await outbox.EnqueueAndSaveAsync(
             EmailKind.PasswordReset,
             EmailTexts.PasswordReset(
-                settings.DefaultLanguage,
+                user.Language ?? settings.DefaultLanguage,
                 user.Email!,
                 user.DisplayName,
                 links.PasswordReset(user.Email!, token),
@@ -114,7 +114,7 @@ public sealed class AccountEmailService(
         await outbox.EnqueueAndSaveAsync(
             EmailKind.EmailVerification,
             EmailTexts.Verification(
-                settings.DefaultLanguage,
+                user.Language ?? settings.DefaultLanguage,
                 user.Email,
                 user.DisplayName,
                 links.EmailVerification(user.Email, token),

@@ -1,4 +1,4 @@
-import { Check, Info, Send, Trash2 } from "lucide-react";
+import { Check, Info, Minus, Send, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -177,11 +177,21 @@ export function NotificationsForm({ profile, discord }: Readonly<Props>) {
                                     <TableRow key={kind}>
                                       <TableCell className="whitespace-normal">{name}</TableCell>
                                       <TableCell>
-                                        <Check
-                                          role="img"
-                                          aria-label={t("profile.notifications.alwaysInApp")}
-                                          className="mx-auto size-4 text-muted-foreground"
-                                        />
+                                        {kind === NotificationType.monthlyDigest ? (
+                                          <Minus
+                                            role="img"
+                                            aria-label={t(
+                                              "profile.notifications.digestOnlyOutside",
+                                            )}
+                                            className="mx-auto size-4 text-muted-foreground"
+                                          />
+                                        ) : (
+                                          <Check
+                                            role="img"
+                                            aria-label={t("profile.notifications.alwaysInApp")}
+                                            className="mx-auto size-4 text-muted-foreground"
+                                          />
+                                        )}
                                       </TableCell>
                                       <TableCell>
                                         <Checkbox
@@ -224,16 +234,16 @@ export function NotificationsForm({ profile, discord }: Readonly<Props>) {
                     )}
                   </form.Field>
 
-                  {emailNote || discordNote ? (
-                    <ul className="mt-4 max-w-prose space-y-1.5 text-sm text-muted-foreground">
-                      {[emailNote, discordNote].filter(Boolean).map((note) => (
+                  <ul className="mt-4 max-w-prose space-y-1.5 text-sm text-muted-foreground">
+                    {[t("profile.notifications.digestNote"), emailNote, discordNote]
+                      .filter(Boolean)
+                      .map((note) => (
                         <li key={String(note)} className="flex gap-2">
                           <Info aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
                           {note}
                         </li>
                       ))}
-                    </ul>
-                  ) : null}
+                  </ul>
                 </>
               );
             }}
