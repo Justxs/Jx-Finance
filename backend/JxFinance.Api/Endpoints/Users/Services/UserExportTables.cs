@@ -65,6 +65,9 @@ public static class UserExportTables
         ["InstanceSettings"] = new Excluded("installation settings"),
         ["ExchangeRates"] = new Excluded("installation-wide market data"),
         ["SecurityPrices"] = new Excluded("installation-wide market data"),
+        ["SharedExpenses"] = new Owned(),
+        ["SharedExpenseShares"] = new ChildOf("SharedExpenses", "SharedExpenseId"),
+        ["Settlements"] = new Owned(),
     };
 
     public static string? Condition(string table) =>

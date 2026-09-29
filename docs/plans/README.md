@@ -6,7 +6,6 @@ The table is in the suggested build order. Each plan's `Status:` line names what
 
 | Plan | Size | Where it lives | Build after |
 | --- | --- | --- | --- |
-| [Household settle-up](household-settle-up.md) | L | Households | |
 | [Machine-learned categorization](machine-learned-categorization.md) | L, gated | Import review, transaction form, ledger | Six months of real data |
 
 ## Changes to shared code
@@ -21,6 +20,7 @@ Several plans touch the same code. Whichever lands second adapts to the first:
 - `ICurrentUser`, which since the [monthly digest](../features/monthly-digest.md) shipped on 2026-09-29 resolves to a scoped `JobUser` inside `PeriodicJob.RunAsUserAsync` and to `HttpCurrentUser` everywhere else: a plan whose background work needs a service as one member sees it uses that scope rather than composing the service by hand.
 - The Security section of Settings, which since [passkeys](../features/passkeys.md) and [personal API tokens](../features/personal-api-tokens.md) shipped on 2026-09-29 holds two-factor authentication, the passkey list and the token list under the nav label Security; `PasswordPrompt` (`features/profile/password-prompt`) is the shared password confirmation to reuse.
 - `ApiGroup`, which since [personal API tokens](../features/personal-api-tokens.md) shipped on 2026-09-29 takes `tokenReadable`: a plan that adds a `GET` route to a readable group (Accounts, Transactions, Transfers, Conversions, Categories, Tags, Reports, Dashboard, Budgets, Goals, Net worth, Investments, Recurring entries, Currencies, Households) either adds it to the list in `TokenReadableTests` or opts it out with `TokenReadable.No`; a new group is not readable unless it says so. The [data export per user](../features/data-export-per-user.md), shipped on 2026-09-29, stays out of reach through `UsersGroup`.
-- `UserExportTables`, which since the [data export per user](../features/data-export-per-user.md) shipped on 2026-09-29 classifies every table of the EF model for the member export: a plan that adds a table (household settle-up adds three) gives it a rule there, or `UserExportTablesTests` fails. `BackupDatabase.WriteTableAsync` is the one writer of the backup's table format, shared by the backup and that export.
+- `AppDbContext.OwnerFilter`, which since [household settle-up](../features/household-settle-up.md) shipped on 2026-09-29 has an `IHouseholdScoped` branch for records that belong to a household rather than to an account or a person: a plan that adds such a record implements the marker instead of checking membership per read path, and gives it an `AuditCollector` entry routed by the row's household. The same change added `ownerId` to `AccountResponse`, which account pickers that need "whose account is this" can read.
+- `UserExportTables`, which since the [data export per user](../features/data-export-per-user.md) shipped on 2026-09-29 classifies every table of the EF model for the member export: a plan that adds a table gives it a rule there, as [household settle-up](../features/household-settle-up.md) did for its three on 2026-09-29, or `UserExportTablesTests` fails. `BackupDatabase.WriteTableAsync` is the one writer of the backup's table format, shared by the backup and that export.
 
 A new plan is a kebab-case file here, starting with `# Plan: <name>` and a `Status:` line, and gets a row in this table.

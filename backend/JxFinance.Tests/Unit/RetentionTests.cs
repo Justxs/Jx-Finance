@@ -126,6 +126,8 @@ public sealed class RetentionTests
                 "InvestmentTransactions",
                 "CategorizationRules",
                 "CsvImportMappings",
+                "SharedExpenses",
+                "Settlements",
             ],
             tables);
         Assert.All(

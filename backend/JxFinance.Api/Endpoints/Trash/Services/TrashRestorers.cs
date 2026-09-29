@@ -74,6 +74,18 @@ public static class TrashRestorers
         ErrorCodes.AttachmentLimitReached,
         $"The transaction already has {TransactionAttachment.MaxPerTransaction} files. Remove one first.");
 
+    private static readonly DomainError NotHouseholdMember =
+        new(ErrorCodes.HouseholdNotMember, "You are no longer a member of the household this belonged to.");
+
+    private static readonly DomainError SplitTransactionGone =
+        new(ErrorCodes.RestoreReferenceMissing, "The transaction this split belonged to is deleted. Restore the transaction first.");
+
+    private static readonly DomainError SplitAgain =
+        new(ErrorCodes.SettleUpAlreadySplit, "The transaction has been split again since. Delete that split first.");
+
+    private static readonly DomainError TransferSettledAgain =
+        new(ErrorCodes.SettleUpTransferTaken, "The transfer of this payment settles another payment now.");
+
     private static readonly DomainError NotHouseholdOwner =
         new(ErrorCodes.AccessForbidden, "Only an owner of this household can restore it.");
 
@@ -138,6 +150,16 @@ public static class TrashRestorers
         [TrashKind.CsvImportMapping] = Owned<CsvImportMapping, CsvImportMappingId>(
             Feature.Import,
             (db, id) => db.CsvImportMappings.Where(m => m.Id == id)),
+        [TrashKind.SharedExpense] = Owned<SharedExpense, SharedExpenseId>(
+            Feature.Households,
+            (db, id) => db.SharedExpenses.Where(e => e.Id == id),
+            check: (r, e) => MemberOfAsync(r, e.HouseholdId),
+            restore: RestoreSharedExpenseAsync),
+        [TrashKind.Settlement] = Stored<Settlement, SettlementId>(
+            Feature.Households,
+            (db, id) => db.Settlements.Where(s => s.Id == id),
+            check: (r, s) => MemberOfAsync(r, s.HouseholdId),
+            restore: RestoreSettlementAsync),
     }.ToFrozenDictionary();
 
     public static TrashRestorer? Of(TrashKind kind) => All.GetValueOrDefault(kind);
@@ -500,6 +522,36 @@ public static class TrashRestorers
         }
 
         return Result.Success();
+    }
+
+    private static async Task<Result> MemberOfAsync(TrashRestore r, HouseholdId householdId) =>
+        await r.IsLiveMemberAsync(householdId, r.UserId) ? Result.Success() : NotHouseholdMember;
+
+    private static async Task<Result> RestoreSharedExpenseAsync(TrashRestore r, SharedExpense expense)
+    {
+        var transactionId = expense.TransactionId;
+        if (!await r.Db.Transactions.IgnoreQueryFilters(QueryFilters.OwnerOnly).AnyAsync(t => t.Id == transactionId, r.CancellationToken))
+        {
+            return SplitTransactionGone;
+        }
+
+        var splitAgain = await r.Db.SharedExpenses
+            .IgnoreQueryFilters(QueryFilters.OwnerOnly)
+            .AnyAsync(e => e.TransactionId == transactionId && e.Id != expense.Id, r.CancellationToken);
+        return splitAgain ? SplitAgain : Result.Success();
+    }
+
+    private static async Task<Result> RestoreSettlementAsync(TrashRestore r, Settlement settlement)
+    {
+        if (settlement.TransferId is not { } transferId)
+        {
+            return Result.Success();
+        }
+
+        var settledAgain = await r.Db.Settlements
+            .IgnoreQueryFilters(QueryFilters.OwnerOnly)
+            .AnyAsync(s => s.TransferId == transferId && s.Id != settlement.Id, r.CancellationToken);
+        return settledAgain ? TransferSettledAgain : Result.Success();
     }
 
     private static async Task<Result> CheckAttachmentTransactionAsync(TrashRestore r, TransactionAttachment attachment) =>

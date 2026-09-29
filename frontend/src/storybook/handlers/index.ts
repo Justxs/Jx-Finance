@@ -22,7 +22,12 @@ import {
   getMonthlyTrendMockHandler,
 } from "@/api/generated/dashboard/dashboard.msw";
 import { getGoalsMockHandler } from "@/api/generated/goals/goals.msw";
-import { getHouseholdsMockHandler } from "@/api/generated/households/households.msw";
+import {
+  getHouseholdsMockHandler,
+  getSettleUpMockHandler,
+  getSettlementsMockHandler,
+  getSharedExpensesMockHandler,
+} from "@/api/generated/households/households.msw";
 import {
   getImportPreviewMockHandler,
   getListCsvMappingsMockHandler,
@@ -56,6 +61,7 @@ import {
   emptyNetWorth,
   emptyReportSummary,
   emptyTransactionsSummary,
+  evenSettleUp,
   importPreview,
   serverErrorProblem,
   setupStatus,
@@ -162,6 +168,9 @@ export const emptyHandlers: RequestHandler[] = [
   getDebtsMockHandler([]),
   getGoalsMockHandler([]),
   getHouseholdsMockHandler([]),
+  getSettleUpMockHandler(evenSettleUp),
+  getSharedExpensesMockHandler(emptyPage),
+  getSettlementsMockHandler(emptyPage),
   getNotificationsMockHandler([]),
   getRecurringBillsMockHandler([]),
   getSubscriptionCandidatesMockHandler([]),

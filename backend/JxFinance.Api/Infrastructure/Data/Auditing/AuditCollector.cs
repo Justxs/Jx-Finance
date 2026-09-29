@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Text.Json;
 using JxFinance.Common;
 using JxFinance.Common.Formats;
+using JxFinance.Common.SettleUp;
 using JxFinance.Common.Trash;
 using JxFinance.Domain.Accounts;
 using JxFinance.Domain.Audit;
@@ -23,6 +24,7 @@ internal sealed class AuditCollector(AppDbContext db, Guid actorId, DateTimeOffs
 {
     private const string TagsField = "tags";
     private const string SplitField = "split";
+    private const string SharesField = "shares";
     private const string IdProperty = "Id";
 
     private static readonly Dictionary<Type, Audited> Registry = new[]
@@ -76,6 +78,24 @@ internal sealed class AuditCollector(AppDbContext db, Guid actorId, DateTimeOffs
             (collector, a) => collector.attachedTo.TryGetValue(a.TransactionId, out var transaction)
                 ? $"{a.FileName}, {transaction.Description}"
                 : a.FileName),
+        Audited.Of<SharedExpense>(
+            AuditEntityKind.SharedExpense,
+            Route.HouseholdScoped,
+            (collector, e) => SettleUpText.Split(
+                e.Description,
+                e.Date,
+                e.Amount,
+                collector.shareEntries[e.Id].Count(s => s.State != EntityState.Deleted)),
+            nameof(SharedExpense.Date), nameof(SharedExpense.Amount), nameof(SharedExpense.Description),
+            nameof(SharedExpense.Method)),
+        Audited.Of<Settlement>(
+            AuditEntityKind.Settlement,
+            Route.HouseholdScoped,
+            (collector, s) => SettleUpText.Paid(
+                collector.users.GetValueOrDefault(s.FromUserId) ?? "",
+                collector.users.GetValueOrDefault(s.ToUserId) ?? "",
+                s.Amount),
+            nameof(Settlement.Amount), nameof(Settlement.Date), nameof(Settlement.Note)),
     }.ToDictionary(a => a.Type);
 
     private readonly Dictionary<AccountId, AccountInfo> accounts = [];
@@ -90,6 +110,7 @@ internal sealed class AuditCollector(AppDbContext db, Guid actorId, DateTimeOffs
 
     private ILookup<TransactionId, EntityEntry> tagChanges = Array.Empty<EntityEntry>().ToLookup(_ => default(TransactionId));
     private ILookup<TransactionId, EntityEntry> lineChanges = Array.Empty<EntityEntry>().ToLookup(_ => default(TransactionId));
+    private ILookup<SharedExpenseId, EntityEntry> shareEntries = Array.Empty<EntityEntry>().ToLookup(_ => default(SharedExpenseId));
 
     private enum Route
     {
@@ -98,6 +119,7 @@ internal sealed class AuditCollector(AppDbContext db, Guid actorId, DateTimeOffs
         Household,
         Member,
         Attachment,
+        HouseholdScoped,
     }
 
     internal static IReadOnlyCollection<Type> AuditedTypes => Registry.Keys;
@@ -114,6 +136,7 @@ internal sealed class AuditCollector(AppDbContext db, Guid actorId, DateTimeOffs
 
         tagChanges = entries.Where(e => e.Entity is TransactionTag).ToLookup(e => ((TransactionTag)e.Entity).TransactionId);
         lineChanges = entries.Where(e => e.Entity is TransactionLine).ToLookup(e => ((TransactionLine)e.Entity).TransactionId);
+        shareEntries = db.ChangeTracker.Entries<SharedExpenseShare>().ToLookup(e => e.Entity.SharedExpenseId, e => (EntityEntry)e);
 
         var scoped = ScopedEntries(entries);
         var attachments = entries.Where(e => RouteOf(e) == Route.Attachment).ToList();
@@ -146,6 +169,11 @@ internal sealed class AuditCollector(AppDbContext db, Guid actorId, DateTimeOffs
             AddAttachment(entry);
         }
 
+        foreach (var entry in HouseholdScopedEntries(entries))
+        {
+            AddHouseholdScoped(entry);
+        }
+
         return summary is null
             ? await DetailedAsync(cancellationToken)
             : Summarised(summary);
@@ -173,6 +201,29 @@ internal sealed class AuditCollector(AppDbContext db, Guid actorId, DateTimeOffs
                 .DistinctBy(e => e.Entity, ReferenceEqualityComparer.Instance)
                 .Where(e => e.Entity is not Transaction transaction || !feeIds.Contains(transaction.Id)),
         ];
+    }
+
+    private List<EntityEntry> HouseholdScopedEntries(List<EntityEntry> entries)
+    {
+        var touchedByShares = db.ChangeTracker.Entries<SharedExpense>()
+            .Where(e => shareEntries[e.Entity.Id].Any(s => s.State != EntityState.Unchanged))
+            .Select(e => (EntityEntry)e);
+
+        return
+        [
+            .. entries
+                .Where(e => RouteOf(e) == Route.HouseholdScoped)
+                .Concat(touchedByShares)
+                .DistinctBy(e => e.Entity, ReferenceEqualityComparer.Instance),
+        ];
+    }
+
+    private void AddHouseholdScoped(EntityEntry entry)
+    {
+        if (Lifecycle(entry) is { } action)
+        {
+            drafts.Add(new Draft(((IHouseholdScoped)entry.Entity).HouseholdId, action, KindOf(entry), IdOf(entry), entry));
+        }
     }
 
     private async Task LoadAccountsAsync(List<EntityEntry> scoped, AuditSummary? summary, CancellationToken cancellationToken)
@@ -510,8 +561,13 @@ internal sealed class AuditCollector(AppDbContext db, Guid actorId, DateTimeOffs
             cancellationToken);
 
         var userIds = entries
-            .Where(e => e.Entity is HouseholdMembership)
-            .Select(e => ((HouseholdMembership)e.Entity).UserId)
+            .SelectMany(e => e.Entity switch
+            {
+                HouseholdMembership membership => new[] { membership.UserId },
+                Settlement settlement => new[] { settlement.FromUserId, settlement.ToUserId },
+                SharedExpense expense => shareEntries[expense.Id].Select(s => ((SharedExpenseShare)s.Entity).UserId),
+                _ => [],
+            })
             .Distinct()
             .ToList();
         await FillNamesAsync(
@@ -568,6 +624,11 @@ internal sealed class AuditCollector(AppDbContext db, Guid actorId, DateTimeOffs
             {
                 changes.Add(lineChange);
             }
+        }
+
+        if (entry.Entity is SharedExpense expense && ShareChange(expense.Id) is { } shareChange)
+        {
+            changes.Add(shareChange);
         }
 
         return changes;
@@ -630,6 +691,24 @@ internal sealed class AuditCollector(AppDbContext db, Guid actorId, DateTimeOffs
         var from = summarise(stored);
         var to = summarise(stored.Where(item => !removed.Contains(keyOf(item))).Concat(added).ToList());
         return from == to ? null : new AuditChange(field, from, to);
+    }
+
+    private AuditChange? ShareChange(SharedExpenseId expenseId)
+    {
+        var entries = shareEntries[expenseId].ToList();
+        var from = ShareSummary(entries.Where(e => e.State != EntityState.Added), true);
+        var to = ShareSummary(entries.Where(e => e.State != EntityState.Deleted), false);
+        return from == to ? null : new AuditChange(SharesField, from, to);
+    }
+
+    private string? ShareSummary(IEnumerable<EntityEntry> entries, bool original)
+    {
+        var parts = entries
+            .Select(e => $"{users.GetValueOrDefault(((SharedExpenseShare)e.Entity).UserId) ?? ""} "
+                + ((decimal)Read(e, nameof(SharedExpenseShare.Amount), original)!).ToString("0.00", CultureInfo.InvariantCulture))
+            .Order(StringComparer.Ordinal)
+            .ToList();
+        return parts.Count == 0 ? null : string.Join("; ", parts);
     }
 
     private string? TagNames(IEnumerable<TagId> ids)

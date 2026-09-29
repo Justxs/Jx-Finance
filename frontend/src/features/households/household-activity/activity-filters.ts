@@ -8,6 +8,8 @@ export const KINDS = [
   "conversion",
   "investmentTransaction",
   "attachment",
+  "sharedExpense",
+  "settlement",
   "account",
   "category",
   "tag",

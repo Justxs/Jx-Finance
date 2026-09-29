@@ -587,7 +587,9 @@
       "categorizationRule": "Categorization rule",
       "household": "Household",
       "attachment": "File",
-      "csvImportMapping": "CSV mapping"
+      "csvImportMapping": "CSV mapping",
+      "sharedExpense": "Split expense",
+      "settlement": "Household payment"
     }
   },
   "theme": {
@@ -1809,6 +1811,68 @@
     "scope": {
       "label": "Active household",
       "everything": "Everything"
+    },
+    "settleUp": {
+      "title": "Balances",
+      "description": "Who owes whom for split expenses, per currency. Balances never enter reports, budgets or net worth.",
+      "empty": "Everyone is even.",
+      "owes": "{{name}} owes {{amount}}",
+      "isOwed": "{{name}} is owed {{amount}}",
+      "youOwe": "You owe {{amount}}",
+      "youAreOwed": "You are owed {{amount}}",
+      "formerMember": "Former member",
+      "suggestions": "To settle up",
+      "pays": "{{from}} pays {{to}} {{amount}}",
+      "record": "Record payment",
+      "showShared": "Show shared expenses",
+      "hideShared": "Hide shared expenses"
+    },
+    "shared": {
+      "title": "Shared expenses",
+      "splits": "Splits",
+      "payments": "Payments",
+      "emptySplits": "Nothing has been split in this household yet.",
+      "emptyPayments": "No payments have been recorded yet.",
+      "paidBy": "Paid by {{name}}",
+      "yourShare": "Your share {{amount}}",
+      "notCounted": "Not counted while the transaction is deleted",
+      "paid": "{{from}} paid {{to}}",
+      "withTransfer": "With a transfer"
+    },
+    "split": {
+      "action": "Split with household",
+      "edit": "Edit split",
+      "household": "Household",
+      "method": "Split",
+      "methods": {
+        "equal": "Equally",
+        "shares": "By shares",
+        "exact": "Exact amounts"
+      },
+      "members": "Who takes part",
+      "include": "{{name}} takes part",
+      "weight": "Shares of {{name}}",
+      "amount": "Amount of {{name}}",
+      "preview": "{{name}} pays {{amount}}",
+      "mismatch": "The amounts add up to {{assigned}}, not {{total}}.",
+      "nobody": "Choose who takes part.",
+      "mark": "Split with {{household}}, your share {{amount}}",
+      "differs": "The amount changed since it was split.",
+      "update": "Update split"
+    },
+    "settlement": {
+      "title": "Record payment",
+      "from": "Paid by",
+      "to": "Paid to",
+      "amount": "Amount",
+      "currency": "Currency",
+      "date": "Date",
+      "note": "Note",
+      "withTransfer": "Also record a transfer",
+      "withTransferHint": "Writes an ordinary transfer from an account of the payer to an account of the payee.",
+      "fromAccount": "From account",
+      "toAccount": "To account",
+      "noAccount": "No account of {{name}} in {{currency}} is visible to you, so only the payment can be recorded."
     }
   },
   "audit": {
@@ -1839,7 +1903,9 @@
       "tag": "Tag",
       "household": "Household",
       "member": "Member",
-      "attachment": "File"
+      "attachment": "File",
+      "sharedExpense": "Split expense",
+      "settlement": "Payment"
     },
     "sentences": {
       "created": "{{actor}} added {{description}}",
@@ -1884,7 +1950,10 @@
       "startingBalance": "starting balance",
       "tags": "tags",
       "split": "split",
-      "role": "role"
+      "role": "role",
+      "method": "split method",
+      "shares": "shares",
+      "note": "note"
     }
   },
   "sharing": {
@@ -2424,6 +2493,17 @@
       "notAllowed": "An API token can only read the ledger.",
       "limitReached": "You already have 10 tokens. Revoke one first.",
       "rateLimited": "Too many requests with this token. Wait a minute."
+    },
+    "settleUp": {
+      "notPayer": "Only an expense paid from an account you own can be split.",
+      "notExpense": "Only an expense can be split.",
+      "alreadySplit": "This expense is already split.",
+      "noOtherMember": "Split with at least one other member.",
+      "sharesMismatch": "The amounts must add up to the expense.",
+      "samePerson": "A payment needs two different members.",
+      "accountOwner": "The money must leave an account of the payer and arrive in an account of the payee.",
+      "currencyMismatch": "Both accounts must be held in the payment's currency.",
+      "transferTaken": "That transfer already settles another payment."
     }
   },
   "export": {

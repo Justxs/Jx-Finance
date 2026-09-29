@@ -9,6 +9,7 @@ import { EMPTY_VALUE, useIsoDate } from "@/hooks/use-formatters";
 import { CategoryIcon } from "@/lib/category-icons";
 import { DebtPaymentMarker } from "../debt-payment/debt-payment";
 import { RefundMark } from "../refund-mark/refund-mark";
+import { SharedExpenseMark } from "../shared-expense/shared-expense";
 import { TransactionAmount, isOptimistic, transactionName } from "../transaction-amount";
 import { TransactionRowActions } from "../transaction-row-actions/transaction-row-actions";
 import { CategoryCell } from "./category-cell";
@@ -89,6 +90,7 @@ export function useTransactionColumns({
             />
             <DebtPaymentMarker transaction={info.row.original} className="mt-0.5" />
             <RefundMark transaction={info.row.original} className="mt-0.5" />
+            <SharedExpenseMark transaction={info.row.original} className="mt-0.5" />
           </span>
         );
       },

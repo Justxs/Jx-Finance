@@ -1,16 +1,32 @@
 import {
   getAddMemberMockHandler,
   getCreateHouseholdMockHandler,
+  getCreateSettlementMockHandler,
+  getCreateSharedExpenseMockHandler,
   getDeleteHouseholdMockHandler,
+  getDeleteSettlementMockHandler,
+  getDeleteSharedExpenseMockHandler,
   getHouseholdAuditMockHandler,
   getHouseholdMockHandler,
   getHouseholdsMockHandler,
   getRemoveMemberMockHandler,
+  getSettleUpMockHandler,
+  getSettlementsMockHandler,
+  getSharedExpensesMockHandler,
   getUpdateHouseholdMockHandler,
   getUpdateMemberRoleMockHandler,
+  getUpdateSharedExpenseMockHandler,
 } from "@/api/generated/households/households.msw";
 import type { AuditEventResponse, HouseholdResponse } from "@/api/generated/model";
-import { familyHousehold, householdAuditEvents, households, users } from "@/storybook/fixtures";
+import {
+  familyHousehold,
+  householdAuditEvents,
+  householdSettlements,
+  households,
+  settleUp,
+  sharedExpenses,
+  users,
+} from "@/storybook/fixtures";
 import { found, query, readBody, text } from "./http";
 import type { Body } from "./http";
 import { NEW_ID, NEW_USER_ID } from "./ids";
@@ -84,6 +100,14 @@ export const householdHandlers = [
       ),
     };
   }),
+  getSettleUpMockHandler(settleUp),
+  getSharedExpensesMockHandler(({ request }) => paginate(sharedExpenses, query(request))),
+  getSettlementsMockHandler(({ request }) => paginate(householdSettlements, query(request))),
+  getCreateSharedExpenseMockHandler(sharedExpenses[0]),
+  getUpdateSharedExpenseMockHandler(sharedExpenses[0]),
+  getDeleteSharedExpenseMockHandler(),
+  getCreateSettlementMockHandler(householdSettlements[0]),
+  getDeleteSettlementMockHandler(),
   getRemoveMemberMockHandler(({ params }) => {
     const household = found(byId(households, params.id));
     return {

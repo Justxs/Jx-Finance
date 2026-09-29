@@ -12,9 +12,47 @@ Accounts, Categories and Tags only; record owner controls scope; account owner c
 
 Other owners' account histories disappear even if the removed member entered transactions; the removed member's own shared accounts and categories become personal again; personally owned records remain accessible
 
+### Settle-up
+
+Splits and payments are household rows (`IHouseholdScoped`) with their own query filter; a split copies the transaction's date, description and amount and stores each member's amount once, by largest remainder; balances are derived on read per household and per currency and never converted; a payment writes a transfer only through `ITransferService` between accounts the recorder can see; reports, budgets, net worth and the month-end close are unchanged; the payer changes a split, either party a payment; removing a member is never refused over an open balance
+
 ## Log
 
 Newest first. Each entry is a choice between real alternatives: what was chosen, what was rejected, and why.
+
+- **2026-09-29.** Two open questions of the settle-up plan were decided while the owner was away and should be reviewed: the first release has no "my share" view of reports, budgets and the dashboard, and open balances stay out of net worth
+  - Rejected: Counting only each member's share in reports, budgets and the dashboard from the first release; showing money owed to you and money you owe as an asset and a liability in net worth
+  - Why: Both were the plan's conservative answer. A per-person lens touches `ReportService`, `CategoryBreakdownBuilder`, `BudgetUsageCalculator`, the dashboard and the month-close snapshot at once and is a plan of its own; until then a payer who is paid back records the money as a refund of the split expense, which lowers their spending to their share. Net worth moves when a payment is made, which is when money actually changes hands; an open balance is a claim between people in the same household, not an asset the installation can value. Review both after the daily-use trial
+- **2026-09-29.** A split expense is a household row (`SharedExpense`, one `SharedExpenseShare` per member) with its own copy of the transaction's date, description and amount; the link to the transaction is answered to the payer only
+  - Rejected: Columns on `Transaction`; sharing the transaction itself
+  - Why: The transaction may sit on a personal account the other members must not see, so a household-level row with a snapshot is what they read. The payer-only link is the rule `DebtPayment` already follows
+- **2026-09-29.** Split and payment rows implement `IHouseholdScoped`, a branch of `AppDbContext.OwnerFilter`: visible while the caller is a current member of the row's household, the household is not deleted and, while one is active, it is that household
+  - Rejected: The owner filter; no filter and a membership check on each read path, as `AuditEvent` does
+  - Why: The owner filter would hide the rows from the other members. A check per read path is what the 2026-09-20 scope decision refused, because the next endpoint would forget it
+- **2026-09-29.** Only an expense with a positive amount on an account the caller owns can be split, whole, once; each member's amount is computed when the split is saved (Equal, Shares with whole weights 1 to 100, Exact) by largest remainder with ties in the listed order, and stored
+  - Rejected: Any visible expense, including a housemate's row on a shared account; percentages; recomputing on every read
+  - Why: "I paid" has to be true of the caller, so nobody can put a debt on someone else's payment. Weights cover percentages without a rounding rule of their own. Stored amounts keep the history readable when someone joins or leaves later, and largest remainder makes the shares add up to the amount exactly
+- **2026-09-29.** A split keeps its snapshot when the transaction changes; the payer's ledger row shows that the amount differs and "Update split" saves again from the current transaction. A deleted transaction makes its split stop counting, derived on read
+  - Rejected: Following the live amount; a hook in the transaction delete path
+  - Why: A live amount would break exact shares the moment the payer corrects a typo. Deriving "counted" needs no hook, the same reasoning as debt payments, and a restore of the transaction brings the split back by itself
+- **2026-09-29.** Balances are derived on read per household and per currency and never converted; the suggestions match the largest creditor with the largest debtor, at most one payment fewer than there are members
+  - Rejected: Stored running balances; converting everything to the reporting currency at the expense's date
+  - Why: Derivation keeps edits, trash restores, a deleted transaction and a removed member correct without keeping a total in step. A rate chosen by the application is not what people repay, and nearly every household settles in one currency, so per-currency lines cost them nothing
+- **2026-09-29.** A payment is a `Settlement` row; with a transfer it is written through `ITransferService.CreateAsync` in the same database transaction, from an account of the payer to an account of the payee, both visible to the recorder and in the payment's currency, or an existing transfer is linked under the same checks
+  - Rejected: Writing an expense on the debtor's account and an income on the creditor's; writing the other person's side automatically
+  - Why: Every write goes through the rules that exist, and a record the caller cannot see is never touched. An income row would inflate the creditor's income, and writing into a housemate's personal account breaks ownership
+- **2026-09-29.** Reports, budgets, the dashboard, net worth and the month-end close are unchanged by splits and payments
+  - Rejected: Counting only each member's share in reports
+  - Why: Reports are views of a scope, not of a person; a household-scoped report already sums every shared account, so subtracting shares there would count them twice
+- **2026-09-29.** The payer creates, edits and deletes their splits; either party records or deletes a payment; a party must be a current member or a former member with an open balance; removing a member is not refused while they have one
+  - Rejected: Owner-only moderation; refusing removal while a balance is open
+  - Why: It mirrors the account rule that the person whose money it is decides, and removal is an owner's safety tool that must not be blocked by a debt the owner cannot clear alone
+- **2026-09-29.** Splits and payments are soft-deleted with a trash entry and the undo toast, purged after 30 days, and logged for the household (created, updated, deleted, restored, with the shares folded into their split); deleting a payment leaves its transfer. No feature switch of its own: `Households` gates it. The three `GET` routes are token-readable
+  - Rejected: A hard delete; no logging; a switch of its own; keeping the routes away from personal API tokens
+  - Why: Undo is the rule for every record since 2026-09-21, and "who changed what I owe" is exactly the question the activity log answers. It has no job and no notification and means nothing without households. The routes are pure read views of a household, which is a token-readable group
+- **2026-09-29.** The ledger's split marker carries the split's method and shares, not only its id, household and the payer's share, so "Edit split" and "Update split" open the dialog prefilled without another request; the member removal shows no open balance, because removing a member has no confirmation step to put it in and the Balances block sits on the same card
+  - Rejected: A `GET` of one split; adding a confirmation to member removal for this
+  - Why: The marker is filled for the payer only in the batched query that already loads it, so it costs one more query per page and no endpoint; a confirmation dialog would change the member list's behaviour for everyone to show a figure that is already on screen
 
 - **2026-09-21.** A file download started from a plain link carries the active household as an `activeHousehold` query parameter, read by `ActiveHouseholdMiddleware` on the three export routes only and put through the membership check the `X-Active-Household` header gets; a request that sends both must name the same household, and two different ones answer 400 `household.scopeMismatch`
   - Rejected: Fetching the CSV through the API client like the PDF, so the header carries it; letting the header win and ignoring the parameter, or the other way round; accepting the parameter on every route; a short-lived signed download token naming the scope

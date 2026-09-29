@@ -26,7 +26,7 @@ Fill from receipt in the form of an expense reads one receipt photo with Tessera
 
 ## Trash and undo
 
-Deleting a transaction, transfer, currency conversion, budget, goal, asset, debt, recurring entry, investment entry, category, tag, categorization rule or household shows a toast with Undo, and the same delete stays in the Trash section of Settings for 30 days with a Restore button; a restored transaction brings its split lines, tags and attachments with it and counts again in balances, budgets and reports, a restored conversion brings back its fee transaction, and a restored category, tag, rule or household puts back the rows its delete rewrote where they are still sound. Restoring is refused, with a reason, when the account was archived, the category is gone, a conversion's fee was deleted on its own, another budget took the category and period, a tag's name was taken again or a restored investment entry would oversell a holding. Archiving an account is still its own operation, undone from the accounts page. After the 30 days a nightly job removes the record for good, so a delete really is a delete in the end
+Deleting a transaction, transfer, currency conversion, budget, goal, asset, debt, recurring entry, investment entry, category, tag, categorization rule, household, split expense or settle-up payment shows a toast with Undo, and the same delete stays in the Trash section of Settings for 30 days with a Restore button; a restored transaction brings its split lines, tags and attachments with it and counts again in balances, budgets and reports, a restored conversion brings back its fee transaction, and a restored category, tag, rule or household puts back the rows its delete rewrote where they are still sound. Restoring is refused, with a reason, when the account was archived, the category is gone, a conversion's fee was deleted on its own, another budget took the category and period, a tag's name was taken again or a restored investment entry would oversell a holding. Archiving an account is still its own operation, undone from the accounts page. After the 30 days a nightly job removes the record for good, so a delete really is a delete in the end
 
 ## Tags
 
@@ -79,7 +79,7 @@ A shared in-app channel any feature can write to, listed and cleared whatever is
 
 ## Households
 
-Household/member management; Accounts, Categories and Tags shareable; transactions follow their account; a global switcher narrows the whole application to one household or shows everything, with personal records visible in every scope
+Household/member management; Accounts, Categories and Tags shareable; transactions follow their account; a global switcher narrows the whole application to one household or shows everything, with personal records visible in every scope; an expense you paid can be split with a household equally, by shares or by exact amounts, and each household card shows who owes whom per currency, the fewest payments that settle everyone and a "Record payment" that can also write the transfer between the two members' accounts, without changing reports, budgets or net worth (see [Household settle-up](features/household-settle-up.md))
 
 ## Reports
 

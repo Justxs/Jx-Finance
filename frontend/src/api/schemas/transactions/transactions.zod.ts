@@ -94,6 +94,12 @@ export const createTransactionResponseUnusualTwoTypicalAmountRegExp = new RegExp
   "^-?\\d+(\\.\\d{1,8})?$",
 );
 export const createTransactionResponseRefundedAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const createTransactionResponseSharedExpenseTwoSharesItemAmountRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const createTransactionResponseSharedExpenseTwoMyShareRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
 
 export const CreateTransactionResponse = zod.object({
   id: zod.uuid(),
@@ -187,6 +193,33 @@ export const CreateTransactionResponse = zod.object({
   refundedAmount: zod
     .stringFormat("decimal", createTransactionResponseRefundedAmountRegExp)
     .nullish(),
+  sharedExpense: zod
+    .union([
+      zod.null(),
+      zod.object({
+        id: zod.uuid(),
+        householdId: zod.uuid(),
+        householdName: zod.string(),
+        method: zod.enum(["equal", "shares", "exact"]).describe("Equal, Shares or Exact."),
+        shares: zod.array(
+          zod.object({
+            userId: zod.uuid(),
+            name: zod.string(),
+            weight: zod.int().nullable(),
+            amount: zod.stringFormat(
+              "decimal",
+              createTransactionResponseSharedExpenseTwoSharesItemAmountRegExp,
+            ),
+          }),
+        ),
+        myShare: zod.stringFormat(
+          "decimal",
+          createTransactionResponseSharedExpenseTwoMyShareRegExp,
+        ),
+        amountDiffers: zod.boolean(),
+      }),
+    ])
+    .optional(),
 });
 
 /**
@@ -204,6 +237,12 @@ export const transactionsResponseItemsItemUnusualTwoTypicalAmountRegExp = new Re
   "^-?\\d+(\\.\\d{1,8})?$",
 );
 export const transactionsResponseItemsItemRefundedAmountRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const transactionsResponseItemsItemSharedExpenseTwoSharesItemAmountRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const transactionsResponseItemsItemSharedExpenseTwoMyShareRegExp = new RegExp(
   "^-?\\d+(\\.\\d{1,8})?$",
 );
 
@@ -304,6 +343,33 @@ export const TransactionsResponse = zod.object({
       refundedAmount: zod
         .stringFormat("decimal", transactionsResponseItemsItemRefundedAmountRegExp)
         .nullish(),
+      sharedExpense: zod
+        .union([
+          zod.null(),
+          zod.object({
+            id: zod.uuid(),
+            householdId: zod.uuid(),
+            householdName: zod.string(),
+            method: zod.enum(["equal", "shares", "exact"]).describe("Equal, Shares or Exact."),
+            shares: zod.array(
+              zod.object({
+                userId: zod.uuid(),
+                name: zod.string(),
+                weight: zod.int().nullable(),
+                amount: zod.stringFormat(
+                  "decimal",
+                  transactionsResponseItemsItemSharedExpenseTwoSharesItemAmountRegExp,
+                ),
+              }),
+            ),
+            myShare: zod.stringFormat(
+              "decimal",
+              transactionsResponseItemsItemSharedExpenseTwoMyShareRegExp,
+            ),
+            amountDiffers: zod.boolean(),
+          }),
+        ])
+        .optional(),
     }),
   ),
   page: zod.int(),
@@ -389,6 +455,12 @@ export const transactionResponseUnusualTwoTypicalAmountRegExp = new RegExp(
   "^-?\\d+(\\.\\d{1,8})?$",
 );
 export const transactionResponseRefundedAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const transactionResponseSharedExpenseTwoSharesItemAmountRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const transactionResponseSharedExpenseTwoMyShareRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
 
 export const TransactionResponse = zod.object({
   id: zod.uuid(),
@@ -477,6 +549,30 @@ export const TransactionResponse = zod.object({
     ])
     .optional(),
   refundedAmount: zod.stringFormat("decimal", transactionResponseRefundedAmountRegExp).nullish(),
+  sharedExpense: zod
+    .union([
+      zod.null(),
+      zod.object({
+        id: zod.uuid(),
+        householdId: zod.uuid(),
+        householdName: zod.string(),
+        method: zod.enum(["equal", "shares", "exact"]).describe("Equal, Shares or Exact."),
+        shares: zod.array(
+          zod.object({
+            userId: zod.uuid(),
+            name: zod.string(),
+            weight: zod.int().nullable(),
+            amount: zod.stringFormat(
+              "decimal",
+              transactionResponseSharedExpenseTwoSharesItemAmountRegExp,
+            ),
+          }),
+        ),
+        myShare: zod.stringFormat("decimal", transactionResponseSharedExpenseTwoMyShareRegExp),
+        amountDiffers: zod.boolean(),
+      }),
+    ])
+    .optional(),
 });
 
 /**
@@ -558,6 +654,12 @@ export const updateTransactionResponseUnusualTwoTypicalAmountRegExp = new RegExp
   "^-?\\d+(\\.\\d{1,8})?$",
 );
 export const updateTransactionResponseRefundedAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const updateTransactionResponseSharedExpenseTwoSharesItemAmountRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const updateTransactionResponseSharedExpenseTwoMyShareRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
 
 export const UpdateTransactionResponse = zod.object({
   id: zod.uuid(),
@@ -651,6 +753,33 @@ export const UpdateTransactionResponse = zod.object({
   refundedAmount: zod
     .stringFormat("decimal", updateTransactionResponseRefundedAmountRegExp)
     .nullish(),
+  sharedExpense: zod
+    .union([
+      zod.null(),
+      zod.object({
+        id: zod.uuid(),
+        householdId: zod.uuid(),
+        householdName: zod.string(),
+        method: zod.enum(["equal", "shares", "exact"]).describe("Equal, Shares or Exact."),
+        shares: zod.array(
+          zod.object({
+            userId: zod.uuid(),
+            name: zod.string(),
+            weight: zod.int().nullable(),
+            amount: zod.stringFormat(
+              "decimal",
+              updateTransactionResponseSharedExpenseTwoSharesItemAmountRegExp,
+            ),
+          }),
+        ),
+        myShare: zod.stringFormat(
+          "decimal",
+          updateTransactionResponseSharedExpenseTwoMyShareRegExp,
+        ),
+        amountDiffers: zod.boolean(),
+      }),
+    ])
+    .optional(),
 });
 
 /**

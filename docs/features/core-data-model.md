@@ -20,6 +20,11 @@ erDiagram
     Household ||--o{ HouseholdMembership : has
     Household ||--o{ Account : "shared scope"
     Household ||--o{ Category : "shared scope"
+    Household ||--o{ SharedExpense : "split, visible to members"
+    Transaction ||--o| SharedExpense : "split by its payer"
+    SharedExpense ||--o{ SharedExpenseShare : "one stored amount per member"
+    Household ||--o{ Settlement : "payment between two members"
+    Settlement }o--o| Transfer : "optional transfer"
     Account ||--o{ Transaction : holds
     Account ||--o{ AccountReconciliation : "statement balance, one per date"
     Transaction ||--o{ TransactionLine : "optional split"

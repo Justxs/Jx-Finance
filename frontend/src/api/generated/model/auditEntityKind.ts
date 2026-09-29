@@ -19,4 +19,6 @@ export const AuditEntityKind = {
   household: "household",
   member: "member",
   attachment: "attachment",
+  sharedExpense: "sharedExpense",
+  settlement: "settlement",
 } as const;

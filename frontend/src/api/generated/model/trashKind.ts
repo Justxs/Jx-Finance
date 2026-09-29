@@ -27,4 +27,6 @@ export const TrashKind = {
   household: "household",
   attachment: "attachment",
   csvImportMapping: "csvImportMapping",
+  sharedExpense: "sharedExpense",
+  settlement: "settlement",
 } as const;

@@ -7,7 +7,15 @@
  */
 import { HttpResponse, http } from "msw";
 import type { RequestHandlerOptions } from "msw";
-import type { HouseholdResponse, PagedResponseOfAuditEventResponse } from "../model";
+import type {
+  HouseholdResponse,
+  HouseholdSettlementResponse,
+  PagedResponseOfAuditEventResponse,
+  PagedResponseOfHouseholdSettlementResponse,
+  PagedResponseOfSharedExpenseResponse,
+  SettleUpResponse,
+  SharedExpenseResponse,
+} from "../model";
 
 export const getCreateHouseholdMockHandler = (
   overrideResponse?:
@@ -219,6 +227,190 @@ export const getUpdateMemberRoleMockHandler = (
     options,
   );
 };
+
+export const getSettleUpMockHandler = (
+  overrideResponse?:
+    | SettleUpResponse
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<SettleUpResponse> | SettleUpResponse),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/households/:id/settle-up",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : undefined,
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getCreateSettlementMockHandler = (
+  overrideResponse?:
+    | HouseholdSettlementResponse
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<HouseholdSettlementResponse> | HouseholdSettlementResponse),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/households/:id/settlements",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : undefined,
+        { status: 201 },
+      );
+    },
+    options,
+  );
+};
+
+export const getSettlementsMockHandler = (
+  overrideResponse?:
+    | PagedResponseOfHouseholdSettlementResponse
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) =>
+        | Promise<PagedResponseOfHouseholdSettlementResponse>
+        | PagedResponseOfHouseholdSettlementResponse),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/households/:id/settlements",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : undefined,
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getDeleteSettlementMockHandler = (
+  overrideResponse?:
+    | void
+    | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<void> | void),
+  options?: RequestHandlerOptions,
+) => {
+  return http.delete(
+    "*/api/households/:id/settlements/:settlementId",
+    async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+      if (typeof overrideResponse === "function") {
+        await overrideResponse(info);
+      }
+
+      return new HttpResponse(null, { status: 204 });
+    },
+    options,
+  );
+};
+
+export const getCreateSharedExpenseMockHandler = (
+  overrideResponse?:
+    | SharedExpenseResponse
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<SharedExpenseResponse> | SharedExpenseResponse),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/households/:id/shared-expenses",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : undefined,
+        { status: 201 },
+      );
+    },
+    options,
+  );
+};
+
+export const getSharedExpensesMockHandler = (
+  overrideResponse?:
+    | PagedResponseOfSharedExpenseResponse
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<PagedResponseOfSharedExpenseResponse> | PagedResponseOfSharedExpenseResponse),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/households/:id/shared-expenses",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : undefined,
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getDeleteSharedExpenseMockHandler = (
+  overrideResponse?:
+    | void
+    | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<void> | void),
+  options?: RequestHandlerOptions,
+) => {
+  return http.delete(
+    "*/api/households/:id/shared-expenses/:expenseId",
+    async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+      if (typeof overrideResponse === "function") {
+        await overrideResponse(info);
+      }
+
+      return new HttpResponse(null, { status: 204 });
+    },
+    options,
+  );
+};
+
+export const getUpdateSharedExpenseMockHandler = (
+  overrideResponse?:
+    | SharedExpenseResponse
+    | ((
+        info: Parameters<Parameters<typeof http.put>[1]>[0],
+      ) => Promise<SharedExpenseResponse> | SharedExpenseResponse),
+  options?: RequestHandlerOptions,
+) => {
+  return http.put(
+    "*/api/households/:id/shared-expenses/:expenseId",
+    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : undefined,
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
 export const getHouseholdsMock = () => [
   getCreateHouseholdMockHandler(),
   getHouseholdsMockHandler(),
@@ -229,4 +421,12 @@ export const getHouseholdsMock = () => [
   getAddMemberMockHandler(),
   getRemoveMemberMockHandler(),
   getUpdateMemberRoleMockHandler(),
+  getSettleUpMockHandler(),
+  getCreateSettlementMockHandler(),
+  getSettlementsMockHandler(),
+  getDeleteSettlementMockHandler(),
+  getCreateSharedExpenseMockHandler(),
+  getSharedExpensesMockHandler(),
+  getDeleteSharedExpenseMockHandler(),
+  getUpdateSharedExpenseMockHandler(),
 ];

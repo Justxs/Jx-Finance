@@ -1,10 +1,11 @@
-import { History, Plus } from "lucide-react";
+import { History, Plus, ReceiptText } from "lucide-react";
 import { useState, useDeferredValue } from "react";
 import { useTranslation } from "react-i18next";
 import { useDeleteHousehold, useRemoveMember } from "@/api/generated";
 import type { HouseholdResponse } from "@/api/generated/model";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog/confirm-delete-dialog";
 import { Modal } from "@/components/modal";
+import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { RowActions } from "@/components/row-actions/row-actions";
 import { Button } from "@/components/ui/button/button";
 import { Rows } from "@/components/ui/rows/rows";
@@ -13,6 +14,8 @@ import { useConfirmedDelete } from "@/hooks/use-confirmed-delete";
 import { useActiveHouseholdId } from "@/stores/active-household-store";
 import { CreateHouseholdForm } from "../create-household-form/create-household-form";
 import { HouseholdActivity } from "../household-activity/household-activity";
+import { SettleUpSection, SettleUpSkeleton } from "../settle-up/settle-up";
+import { SharedExpenses } from "../shared-expenses/shared-expenses";
 import { AddMemberForm } from "./add-member-form";
 import { MemberRow } from "./member-row";
 
@@ -26,6 +29,7 @@ export function HouseholdCard({ household }: Readonly<Props>) {
   const [renaming, setRenaming] = useState(false);
   const [addMemberOpen, setAddMemberOpen] = useState(false);
   const [activityOpen, setActivityOpen] = useState(false);
+  const [sharedOpen, setSharedOpen] = useState(false);
   const activeHouseholdId = useActiveHouseholdId();
   const activityVisible = !activeHouseholdId || activeHouseholdId === household.id;
 
@@ -67,7 +71,26 @@ export function HouseholdCard({ household }: Readonly<Props>) {
         ))}
       </Rows>
 
+      {activityVisible ? (
+        <div className="pt-4">
+          <QueryBoundary fallback={<SettleUpSkeleton />}>
+            <SettleUpSection household={household} />
+          </QueryBoundary>
+        </div>
+      ) : null}
+
       <div className="flex flex-wrap justify-end gap-2 pt-3">
+        {activityVisible ? (
+          <Button
+            variant="outline"
+            size="sm"
+            aria-expanded={sharedOpen}
+            onClick={() => setSharedOpen(!sharedOpen)}
+          >
+            <ReceiptText />
+            {sharedOpen ? t("households.settleUp.hideShared") : t("households.settleUp.showShared")}
+          </Button>
+        ) : null}
         {activityVisible ? (
           <Button
             variant="outline"
@@ -86,6 +109,12 @@ export function HouseholdCard({ household }: Readonly<Props>) {
           </Button>
         ) : null}
       </div>
+
+      {activityVisible && sharedOpen ? (
+        <div className="pt-4">
+          <SharedExpenses householdId={household.id} />
+        </div>
+      ) : null}
 
       {activityVisible && activityOpen ? (
         <div className="pt-4">

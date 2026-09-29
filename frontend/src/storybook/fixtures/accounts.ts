@@ -6,7 +6,7 @@ type BaseAccount = Omit<
   "currentBalance" | "reportingBalance" | "holdingsValue" | "balances"
 >;
 
-type Defaulted = "scope" | "currency" | "householdId";
+type Defaulted = "scope" | "currency" | "householdId" | "ownerId";
 
 interface AccountSeed extends Omit<BaseAccount, Defaulted>, Partial<Pick<BaseAccount, Defaulted>> {
   balance: string;
@@ -23,7 +23,10 @@ export function withBalance(base: BaseAccount, amount: string): AccountResponse 
 }
 
 function account({ balance, ...seed }: AccountSeed): AccountResponse {
-  return withBalance({ scope: "personal", currency: "eur", householdId: null, ...seed }, balance);
+  return withBalance(
+    { scope: "personal", currency: "eur", householdId: null, ownerId: ids.users.ruta, ...seed },
+    balance,
+  );
 }
 
 export const checkingAccount = account({
@@ -92,6 +95,7 @@ export const brokerAccount: AccountResponse = {
   reportingBalance: "15987.62",
   holdingsValue: "10574.99",
   householdId: null,
+  ownerId: ids.users.ruta,
 };
 
 export const accounts: AccountResponse[] = [

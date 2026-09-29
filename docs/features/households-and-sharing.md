@@ -2,7 +2,7 @@
 
 Back to the [feature walkthrough](README.md). See also [decisions](../decisions/households-and-sharing.md), [architecture: Sharing and households](../architecture/sharing.md).
 
-Backend `Households`, page `/households`, listed as Households under Shared on the one Settings page while the switch is on (see [Installation settings](installation-settings.md#one-settings-page)), with its title and a small outline "Create household" button in a section header. Household roles (Owner, Member) are independent of application roles (Admin, Member). Only accounts, categories and tags can be shared.
+Backend `Households`, page `/households`, listed as Households under Shared on the one Settings page while the switch is on (see [Installation settings](installation-settings.md#one-settings-page)), with its title and a small outline "Create household" button in a section header. Household roles (Owner, Member) are independent of application roles (Admin, Member). Only accounts, categories and tags can be shared; since 2026-09-29 a member can also split an expense they paid with the household, which the other members see as a household record even when the account behind it is personal (see [Settling up](#settling-up)).
 
 ## Who sees what
 
@@ -15,6 +15,7 @@ flowchart TD
     Scoped["IAccountScoped: transactions, conversions, investment entries"] --> ViaAcc["visible when the account is visible"]
     Transfer["Transfer"] --> Either["visible through either account,<br/>edit and delete need both"]
     Personal["Budgets, goals, assets, debts, bills, notifications, snapshots"] --> OwnerOnly["owner only"]
+    Household["IHouseholdScoped: split expenses, settle-up payments"] --> Members["visible to current members<br/>of a living household"]
 ```
 
 ## The active household
@@ -53,6 +54,10 @@ The narrowing happens in one place, the shareable branch of `ApplyQueryFilters` 
 - Background jobs, the reminder and alert jobs, the broker sync, the snapshotter, backup and restore and the administrator recovery command run outside a request and keep the unscoped view. `ICurrentUser.ActiveHouseholdId` defaults to "no household", so anything that is not an HTTP request is unscoped by construction.
 - Every export answers the scope of the screen it was started from. The CSV exports stay plain browser downloads and carry the scope in the URL; the PDF export goes through the API client and carries it in the header as well. The backup download is not scoped: a backup is the whole installation, taken by an administrator, and it is written and read outside the query filter exactly as the background jobs are.
 - The [data export per user](data-export-per-user.md) is not scoped either: it answers "what is mine", not "what am I looking at", so it ignores the header and takes no `activeHousehold` parameter. An own account shared into a household other than the active one is still in it, and a partner's shared account never is.
+
+## Settling up
+
+Since 2026-09-29 each household card has a Balances block: who owes whom for split expenses, per currency, and the fewest payments that would settle everyone, each with "Record payment". An expense is split from its row in the ledger ("Split with household"), equally, by shares or by exact amounts; the split keeps a copy of the date, description and amount, so the other members see it even when it was paid from a personal account they cannot see, while the link to the transaction stays with the payer. "Show shared expenses" lists the splits and the payments. The balances never enter reports, budgets or net worth. A removed member stops seeing all of it, and the others keep seeing their balance and can still record a payment with them. The details are in [Household settle-up](household-settle-up.md).
 
 ## Deleting and restoring a household
 

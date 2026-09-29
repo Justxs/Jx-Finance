@@ -26,12 +26,22 @@ import type { ErrorType } from "../../client";
 import type {
   AddMemberRequest,
   CreateHouseholdRequest,
+  CreateSettlementRequest,
+  CreateSharedExpenseRequest,
   HouseholdAuditParams,
   HouseholdResponse,
+  HouseholdSettlementResponse,
   PagedResponseOfAuditEventResponse,
+  PagedResponseOfHouseholdSettlementResponse,
+  PagedResponseOfSharedExpenseResponse,
   ProblemDetails,
+  SettleUpResponse,
+  SettlementsParams,
+  SharedExpenseResponse,
+  SharedExpensesParams,
   UpdateHouseholdRequest,
   UpdateMemberRoleRequest,
+  UpdateSharedExpenseRequest,
 } from "../model";
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
@@ -1004,4 +1014,891 @@ export const useUpdateMemberRole = <TError = ErrorType<ProblemDetails>, TContext
   TContext
 > => {
   return useMutation(getUpdateMemberRoleMutationOptions(options), queryClient);
+};
+export const getSettleUpUrl = (id: string) => {
+  return `/api/households/${id}/settle-up`;
+};
+
+/**
+ * Returns each member's open balance per currency and the fewest payments that would settle them. A positive balance is owed to the member, a negative one is owed by them. A balance is what the member paid for others in splits, minus what others paid for them, plus the payments they made, minus the payments they received. A split whose transaction is deleted stops counting until the transaction is restored. Currencies are never converted. A former member with an open balance is still listed. Nothing here enters reports, budgets or net worth.
+ * @summary Who owes whom in a household
+ */
+export const settleUp = async (
+  id: string,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<SettleUpResponse> => {
+  return customFetch<SettleUpResponse>(getSettleUpUrl(id), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getSettleUpQueryKey = (id: string) => {
+  return [`/api/households/${id}/settle-up`] as const;
+};
+
+export const getSettleUpSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof settleUp>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  id: string,
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof settleUp>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getSettleUpQueryKey(id);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof settleUp>>> = ({ signal }) =>
+    settleUp(id, { signal, ...requestOptions });
+
+  return queryOptionsBuilder({
+    queryKey,
+    ...queryOptions,
+    queryFn: queryOptions?.queryFn ?? queryFn,
+  }) as UseSuspenseQueryOptions<Awaited<ReturnType<typeof settleUp>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  } & {
+    throwOnError?: ((this: never, error: TError) => boolean) & { readonly __inferenceOnly: never };
+  };
+};
+
+export type SettleUpSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof settleUp>>>;
+export type SettleUpSuspenseQueryError = ErrorType<ProblemDetails>;
+
+export function useSettleUpSuspense<
+  TData = Awaited<ReturnType<typeof settleUp>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  id: string,
+  options: {
+    query: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof settleUp>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useSettleUpSuspense<
+  TData = Awaited<ReturnType<typeof settleUp>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  id: string,
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof settleUp>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useSettleUpSuspense<
+  TData = Awaited<ReturnType<typeof settleUp>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  id: string,
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof settleUp>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Who owes whom in a household
+ */
+
+export function useSettleUpSuspense<
+  TData = Awaited<ReturnType<typeof settleUp>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  id: string,
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof settleUp>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getSettleUpSuspenseQueryOptions(id, options);
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export const getCreateSettlementUrl = (id: string) => {
+  return `/api/households/${id}/settlements`;
+};
+
+/**
+ * Records a payment between two members, which settles that much of their balance in the payment's currency. You must be one of the two. Each must be a member of the household, or a former member who still has an open balance there. With transfer, the ordinary transfer from an account of the payer to an account of the payee is written in the same database transaction; both accounts must be visible to you, owned by the right member and held in the payment's currency. transferId links a transfer that already exists instead, under the same checks. Without either, only the payment is stored and no account changes.
+ * @summary Record that one member paid another
+ */
+export const createSettlement = async (
+  id: string,
+  createSettlementRequest: CreateSettlementRequest,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<HouseholdSettlementResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return customFetch<HouseholdSettlementResponse>(getCreateSettlementUrl(id), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(createSettlementRequest),
+  });
+};
+
+export const getCreateSettlementMutationKey = () => ["createSettlement"] as const;
+
+export const getCreateSettlementMutationOptions = <
+  TError = ErrorType<ProblemDetails>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createSettlement>>,
+    TError,
+    CreateSettlementMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createSettlement>>,
+  TError,
+  CreateSettlementMutationVariables,
+  TContext
+> => {
+  const mutationKey = getCreateSettlementMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createSettlement>>,
+    CreateSettlementMutationVariables
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return createSettlement(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateSettlementMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createSettlement>>
+>;
+export type CreateSettlementMutationBody = CreateSettlementRequest;
+export type CreateSettlementMutationError = ErrorType<ProblemDetails>;
+export type CreateSettlementMutationVariables = { id: string; data: CreateSettlementRequest };
+
+/**
+ * @summary Record that one member paid another
+ */
+export const useCreateSettlement = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof createSettlement>>,
+      TError,
+      CreateSettlementMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof createSettlement>>,
+  TError,
+  CreateSettlementMutationVariables,
+  TContext
+> => {
+  return useMutation(getCreateSettlementMutationOptions(options), queryClient);
+};
+export const getSettlementsUrl = (id: string, params: SettlementsParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/households/${id}/settlements?${stringifiedParams}`
+    : `/api/households/${id}/settlements`;
+};
+
+/**
+ * Returns a page of the payments members recorded to settle up, newest first. hasTransfer says whether an ordinary transfer between the two members' accounts was recorded with it.
+ * @summary List a household's recorded payments
+ */
+export const settlements = async (
+  id: string,
+  params: SettlementsParams,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<PagedResponseOfHouseholdSettlementResponse> => {
+  return customFetch<PagedResponseOfHouseholdSettlementResponse>(getSettlementsUrl(id, params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getSettlementsQueryKey = (id: string, params?: SettlementsParams) => {
+  return [`/api/households/${id}/settlements`, ...(params ? [params] : [])] as const;
+};
+
+export const getSettlementsSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof settlements>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  id: string,
+  params: SettlementsParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof settlements>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getSettlementsQueryKey(id, params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof settlements>>> = ({ signal }) =>
+    settlements(id, params, { signal, ...requestOptions });
+
+  return queryOptionsBuilder({
+    queryKey,
+    ...queryOptions,
+    queryFn: queryOptions?.queryFn ?? queryFn,
+  }) as UseSuspenseQueryOptions<Awaited<ReturnType<typeof settlements>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  } & {
+    throwOnError?: ((this: never, error: TError) => boolean) & { readonly __inferenceOnly: never };
+  };
+};
+
+export type SettlementsSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof settlements>>>;
+export type SettlementsSuspenseQueryError = ErrorType<ProblemDetails>;
+
+export function useSettlementsSuspense<
+  TData = Awaited<ReturnType<typeof settlements>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  id: string,
+  params: SettlementsParams,
+  options: {
+    query: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof settlements>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useSettlementsSuspense<
+  TData = Awaited<ReturnType<typeof settlements>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  id: string,
+  params: SettlementsParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof settlements>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useSettlementsSuspense<
+  TData = Awaited<ReturnType<typeof settlements>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  id: string,
+  params: SettlementsParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof settlements>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List a household's recorded payments
+ */
+
+export function useSettlementsSuspense<
+  TData = Awaited<ReturnType<typeof settlements>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  id: string,
+  params: SettlementsParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof settlements>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getSettlementsSuspenseQueryOptions(id, params, options);
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export const getDeleteSettlementUrl = (id: string, settlementId: string) => {
+  return `/api/households/${id}/settlements/${settlementId}`;
+};
+
+/**
+ * Removes the payment from the balances. Either of the two members can delete it. A transfer recorded with it stays, because it is a fact of the ledger with its own delete. The payment is listed in your trash, from where POST /api/trash/restore brings it back.
+ * @summary Delete a recorded payment
+ */
+export const deleteSettlement = async (
+  id: string,
+  settlementId: string,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<void> => {
+  return customFetch<void>(getDeleteSettlementUrl(id, settlementId), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getDeleteSettlementMutationKey = () => ["deleteSettlement"] as const;
+
+export const getDeleteSettlementMutationOptions = <
+  TError = ErrorType<ProblemDetails>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteSettlement>>,
+    TError,
+    DeleteSettlementMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteSettlement>>,
+  TError,
+  DeleteSettlementMutationVariables,
+  TContext
+> => {
+  const mutationKey = getDeleteSettlementMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteSettlement>>,
+    DeleteSettlementMutationVariables
+  > = (props) => {
+    const { id, settlementId } = props ?? {};
+
+    return deleteSettlement(id, settlementId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteSettlementMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteSettlement>>
+>;
+
+export type DeleteSettlementMutationError = ErrorType<ProblemDetails>;
+export type DeleteSettlementMutationVariables = { id: string; settlementId: string };
+
+/**
+ * @summary Delete a recorded payment
+ */
+export const useDeleteSettlement = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof deleteSettlement>>,
+      TError,
+      DeleteSettlementMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof deleteSettlement>>,
+  TError,
+  DeleteSettlementMutationVariables,
+  TContext
+> => {
+  return useMutation(getDeleteSettlementMutationOptions(options), queryClient);
+};
+export const getCreateSharedExpenseUrl = (id: string) => {
+  return `/api/households/${id}/shared-expenses`;
+};
+
+/**
+ * Splits an expense you paid from one of your own accounts between members of the household. The split keeps a copy of the transaction's date, description and amount, which is what the other members see, even when the account is personal and they cannot see the transaction itself. Each member's amount is computed once, now, and stored: Equal divides the amount evenly, Shares by whole weights from 1 to 100, and Exact takes the amounts given, which must add up to the expense. Cents left over by a division go to the largest remainders, ties in the order the members are listed, so the shares always add up to the amount. A transaction can be split once. Income, transfers, refunds and a housemate's payment on a shared account cannot be split.
+ * @summary Split an expense with the household
+ */
+export const createSharedExpense = async (
+  id: string,
+  createSharedExpenseRequest: CreateSharedExpenseRequest,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<SharedExpenseResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return customFetch<SharedExpenseResponse>(getCreateSharedExpenseUrl(id), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(createSharedExpenseRequest),
+  });
+};
+
+export const getCreateSharedExpenseMutationKey = () => ["createSharedExpense"] as const;
+
+export const getCreateSharedExpenseMutationOptions = <
+  TError = ErrorType<ProblemDetails>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createSharedExpense>>,
+    TError,
+    CreateSharedExpenseMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createSharedExpense>>,
+  TError,
+  CreateSharedExpenseMutationVariables,
+  TContext
+> => {
+  const mutationKey = getCreateSharedExpenseMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createSharedExpense>>,
+    CreateSharedExpenseMutationVariables
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return createSharedExpense(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateSharedExpenseMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createSharedExpense>>
+>;
+export type CreateSharedExpenseMutationBody = CreateSharedExpenseRequest;
+export type CreateSharedExpenseMutationError = ErrorType<ProblemDetails>;
+export type CreateSharedExpenseMutationVariables = { id: string; data: CreateSharedExpenseRequest };
+
+/**
+ * @summary Split an expense with the household
+ */
+export const useCreateSharedExpense = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof createSharedExpense>>,
+      TError,
+      CreateSharedExpenseMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof createSharedExpense>>,
+  TError,
+  CreateSharedExpenseMutationVariables,
+  TContext
+> => {
+  return useMutation(getCreateSharedExpenseMutationOptions(options), queryClient);
+};
+export const getSharedExpensesUrl = (id: string, params: SharedExpensesParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/households/${id}/shared-expenses?${stringifiedParams}`
+    : `/api/households/${id}/shared-expenses`;
+};
+
+/**
+ * Returns a page of the household's splits, newest first, with the payer, the copied date, description and amount, every member's share and your own. counted is false while the split's transaction is deleted. transactionId and amountDiffers are filled only for the member who paid, because the transaction may sit on an account the others cannot see.
+ * @summary List a household's split expenses
+ */
+export const sharedExpenses = async (
+  id: string,
+  params: SharedExpensesParams,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<PagedResponseOfSharedExpenseResponse> => {
+  return customFetch<PagedResponseOfSharedExpenseResponse>(getSharedExpensesUrl(id, params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getSharedExpensesQueryKey = (id: string, params?: SharedExpensesParams) => {
+  return [`/api/households/${id}/shared-expenses`, ...(params ? [params] : [])] as const;
+};
+
+export const getSharedExpensesSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof sharedExpenses>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  id: string,
+  params: SharedExpensesParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof sharedExpenses>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getSharedExpensesQueryKey(id, params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof sharedExpenses>>> = ({ signal }) =>
+    sharedExpenses(id, params, { signal, ...requestOptions });
+
+  return queryOptionsBuilder({
+    queryKey,
+    ...queryOptions,
+    queryFn: queryOptions?.queryFn ?? queryFn,
+  }) as UseSuspenseQueryOptions<Awaited<ReturnType<typeof sharedExpenses>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  } & {
+    throwOnError?: ((this: never, error: TError) => boolean) & { readonly __inferenceOnly: never };
+  };
+};
+
+export type SharedExpensesSuspenseQueryResult = NonNullable<
+  Awaited<ReturnType<typeof sharedExpenses>>
+>;
+export type SharedExpensesSuspenseQueryError = ErrorType<ProblemDetails>;
+
+export function useSharedExpensesSuspense<
+  TData = Awaited<ReturnType<typeof sharedExpenses>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  id: string,
+  params: SharedExpensesParams,
+  options: {
+    query: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof sharedExpenses>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useSharedExpensesSuspense<
+  TData = Awaited<ReturnType<typeof sharedExpenses>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  id: string,
+  params: SharedExpensesParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof sharedExpenses>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useSharedExpensesSuspense<
+  TData = Awaited<ReturnType<typeof sharedExpenses>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  id: string,
+  params: SharedExpensesParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof sharedExpenses>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List a household's split expenses
+ */
+
+export function useSharedExpensesSuspense<
+  TData = Awaited<ReturnType<typeof sharedExpenses>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  id: string,
+  params: SharedExpensesParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof sharedExpenses>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getSharedExpensesSuspenseQueryOptions(id, params, options);
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export const getDeleteSharedExpenseUrl = (id: string, expenseId: string) => {
+  return `/api/households/${id}/shared-expenses/${expenseId}`;
+};
+
+/**
+ * Removes the split from the balances. Only the member who paid can delete it. The transaction itself is not touched, and the split is listed in the payer's trash, from where POST /api/trash/restore brings it back.
+ * @summary Delete a split
+ */
+export const deleteSharedExpense = async (
+  id: string,
+  expenseId: string,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<void> => {
+  return customFetch<void>(getDeleteSharedExpenseUrl(id, expenseId), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getDeleteSharedExpenseMutationKey = () => ["deleteSharedExpense"] as const;
+
+export const getDeleteSharedExpenseMutationOptions = <
+  TError = ErrorType<ProblemDetails>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteSharedExpense>>,
+    TError,
+    DeleteSharedExpenseMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteSharedExpense>>,
+  TError,
+  DeleteSharedExpenseMutationVariables,
+  TContext
+> => {
+  const mutationKey = getDeleteSharedExpenseMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteSharedExpense>>,
+    DeleteSharedExpenseMutationVariables
+  > = (props) => {
+    const { id, expenseId } = props ?? {};
+
+    return deleteSharedExpense(id, expenseId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteSharedExpenseMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteSharedExpense>>
+>;
+
+export type DeleteSharedExpenseMutationError = ErrorType<ProblemDetails>;
+export type DeleteSharedExpenseMutationVariables = { id: string; expenseId: string };
+
+/**
+ * @summary Delete a split
+ */
+export const useDeleteSharedExpense = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof deleteSharedExpense>>,
+      TError,
+      DeleteSharedExpenseMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof deleteSharedExpense>>,
+  TError,
+  DeleteSharedExpenseMutationVariables,
+  TContext
+> => {
+  return useMutation(getDeleteSharedExpenseMutationOptions(options), queryClient);
+};
+export const getUpdateSharedExpenseUrl = (id: string, expenseId: string) => {
+  return `/api/households/${id}/shared-expenses/${expenseId}`;
+};
+
+/**
+ * Replaces the members and their amounts. Only the member who paid can change it. With refreshFromTransaction the split first copies the transaction's current amount, date and description, which is how a split follows a corrected transaction; otherwise it keeps its copy.
+ * @summary Change a split
+ */
+export const updateSharedExpense = async (
+  id: string,
+  expenseId: string,
+  updateSharedExpenseRequest: UpdateSharedExpenseRequest,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<SharedExpenseResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return customFetch<SharedExpenseResponse>(getUpdateSharedExpenseUrl(id, expenseId), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(updateSharedExpenseRequest),
+  });
+};
+
+export const getUpdateSharedExpenseMutationKey = () => ["updateSharedExpense"] as const;
+
+export const getUpdateSharedExpenseMutationOptions = <
+  TError = ErrorType<ProblemDetails>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateSharedExpense>>,
+    TError,
+    UpdateSharedExpenseMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateSharedExpense>>,
+  TError,
+  UpdateSharedExpenseMutationVariables,
+  TContext
+> => {
+  const mutationKey = getUpdateSharedExpenseMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateSharedExpense>>,
+    UpdateSharedExpenseMutationVariables
+  > = (props) => {
+    const { id, expenseId, data } = props ?? {};
+
+    return updateSharedExpense(id, expenseId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateSharedExpenseMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateSharedExpense>>
+>;
+export type UpdateSharedExpenseMutationBody = UpdateSharedExpenseRequest;
+export type UpdateSharedExpenseMutationError = ErrorType<ProblemDetails>;
+export type UpdateSharedExpenseMutationVariables = {
+  id: string;
+  expenseId: string;
+  data: UpdateSharedExpenseRequest;
+};
+
+/**
+ * @summary Change a split
+ */
+export const useUpdateSharedExpense = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof updateSharedExpense>>,
+      TError,
+      UpdateSharedExpenseMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof updateSharedExpense>>,
+  TError,
+  UpdateSharedExpenseMutationVariables,
+  TContext
+> => {
+  return useMutation(getUpdateSharedExpenseMutationOptions(options), queryClient);
 };

@@ -17,4 +17,6 @@ public enum TrashKind
     Household,
     Attachment,
     CsvImportMapping,
+    SharedExpense,
+    Settlement,
 }

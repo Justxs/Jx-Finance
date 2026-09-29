@@ -53,7 +53,7 @@ const rules: readonly Rule[] = [
       api.getBulkTagTransactionsMutationKey,
     ],
     deleted: [api.getDeleteTransactionMutationKey],
-    refresh: [...ledger, api.getSuggestedRulesQueryKey],
+    refresh: [...ledger, api.getSuggestedRulesQueryKey, api.getHouseholdsQueryKey],
   },
   {
     after: [api.getUploadAttachmentMutationKey],
@@ -187,6 +187,23 @@ const rules: readonly Rule[] = [
       api.getTransfersQueryKey,
       api.getConversionsQueryKey,
       api.getRecurringBillsQueryKey,
+    ],
+  },
+  {
+    after: [api.getCreateSharedExpenseMutationKey, api.getUpdateSharedExpenseMutationKey],
+    deleted: [api.getDeleteSharedExpenseMutationKey],
+    refresh: [api.getHouseholdsQueryKey, api.getTransactionsQueryKey],
+  },
+  {
+    after: [api.getCreateSettlementMutationKey],
+    deleted: [api.getDeleteSettlementMutationKey],
+    refresh: [
+      api.getHouseholdsQueryKey,
+      api.getTransfersQueryKey,
+      api.getAccountsQueryKey,
+      api.getDashboardSummaryQueryKey,
+      api.getNetWorthQueryKey,
+      api.getMonthCloseYearQueryKey,
     ],
   },
   {

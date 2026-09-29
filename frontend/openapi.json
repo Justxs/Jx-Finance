@@ -8417,6 +8417,810 @@
         ]
       }
     },
+    "/api/households/{id}/settle-up": {
+      "get": {
+        "tags": [
+          "Households"
+        ],
+        "summary": "Who owes whom in a household",
+        "description": "Returns each member's open balance per currency and the fewest payments that would settle them. A positive balance is owed to the member, a negative one is owed by them. A balance is what the member paid for others in splits, minus what others paid for them, plus the payments they made, minus the payments they received. A split whose transaction is deleted stops counting until the transaction is restored. Currencies are never converted. A former member with an open balance is still listed. Nothing here enters reports, budgets or net worth.",
+        "operationId": "GetSettleUp",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The household id.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The non-zero balances and the suggested payments.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SettleUpResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such household, or the signed-in user is not a member.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          },
+          {
+            "PersonalApiToken": [ ]
+          }
+        ]
+      }
+    },
+    "/api/households/{id}/settlements": {
+      "post": {
+        "tags": [
+          "Households"
+        ],
+        "summary": "Record that one member paid another",
+        "description": "Records a payment between two members, which settles that much of their balance in the payment's currency. You must be one of the two. Each must be a member of the household, or a former member who still has an open balance there. With transfer, the ordinary transfer from an account of the payer to an account of the payee is written in the same database transaction; both accounts must be visible to you, owned by the right member and held in the payment's currency. transferId links a transfer that already exists instead, under the same checks. Without either, only the payment is stored and no account changes.",
+        "operationId": "CreateSettlement",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The household id.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "example": "00000000-0000-0000-0000-000000000000"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSettlementRequest"
+              },
+              "example": {
+                "fromUserId": "00000000-0000-0000-0000-000000000000",
+                "toUserId": "00000000-0000-0000-0000-000000000000",
+                "amount": "30.00",
+                "currency": "eur",
+                "date": "2026-09-29",
+                "note": "September groceries",
+                "transfer": null,
+                "transferId": null
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "The recorded payment.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HouseholdSettlementResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed, a party is not a member, or an account is not visible, not owned by the right member or in another currency.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "You are neither the payer nor the payee.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such household, or the signed-in user is not a member.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "That transfer already settles another payment.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      },
+      "get": {
+        "tags": [
+          "Households"
+        ],
+        "summary": "List a household's recorded payments",
+        "description": "Returns a page of the payments members recorded to settle up, newest first. hasTransfer says whether an ordinary transfer between the two members' accounts was recorded with it.",
+        "operationId": "GetSettlements",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The household id.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "One-based page number. Defaults to 1.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "description": "Rows per page. Defaults to 20.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A page of payments with the total row count.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResponseOfHouseholdSettlementResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such household, or the signed-in user is not a member.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          },
+          {
+            "PersonalApiToken": [ ]
+          }
+        ]
+      }
+    },
+    "/api/households/{id}/settlements/{settlementId}": {
+      "delete": {
+        "tags": [
+          "Households"
+        ],
+        "summary": "Delete a recorded payment",
+        "description": "Removes the payment from the balances. Either of the two members can delete it. A transfer recorded with it stays, because it is a fact of the ledger with its own delete. The payment is listed in your trash, from where POST /api/trash/restore brings it back.",
+        "operationId": "DeleteSettlement",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The household id.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "settlementId",
+            "in": "path",
+            "description": "The payment id.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "The payment is deleted."
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "You are neither the payer nor the payee.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such payment in a household you are a member of.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      }
+    },
+    "/api/households/{id}/shared-expenses": {
+      "post": {
+        "tags": [
+          "Households"
+        ],
+        "summary": "Split an expense with the household",
+        "description": "Splits an expense you paid from one of your own accounts between members of the household. The split keeps a copy of the transaction's date, description and amount, which is what the other members see, even when the account is personal and they cannot see the transaction itself. Each member's amount is computed once, now, and stored: Equal divides the amount evenly, Shares by whole weights from 1 to 100, and Exact takes the amounts given, which must add up to the expense. Cents left over by a division go to the largest remainders, ties in the order the members are listed, so the shares always add up to the amount. A transaction can be split once. Income, transfers, refunds and a housemate's payment on a shared account cannot be split.",
+        "operationId": "CreateSharedExpense",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The household id.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "example": "00000000-0000-0000-0000-000000000000"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSharedExpenseRequest"
+              },
+              "example": {
+                "transactionId": "00000000-0000-0000-0000-000000000000",
+                "method": "shares",
+                "shares": [
+                  {
+                    "userId": "00000000-0000-0000-0000-000000000000",
+                    "weight": 2,
+                    "amount": null
+                  },
+                  {
+                    "userId": "00000000-0000-0000-0000-000000000000",
+                    "weight": 1,
+                    "amount": null
+                  }
+                ]
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "The split, with every member's amount.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SharedExpenseResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed, the transaction is not visible, not yours or not an expense, a member is not in the household, nobody but you takes part, or the exact amounts do not add up.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such household, or the signed-in user is not a member.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The transaction is already split.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      },
+      "get": {
+        "tags": [
+          "Households"
+        ],
+        "summary": "List a household's split expenses",
+        "description": "Returns a page of the household's splits, newest first, with the payer, the copied date, description and amount, every member's share and your own. counted is false while the split's transaction is deleted. transactionId and amountDiffers are filled only for the member who paid, because the transaction may sit on an account the others cannot see.",
+        "operationId": "GetSharedExpenses",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The household id.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "One-based page number. Defaults to 1.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "description": "Rows per page. Defaults to 20.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A page of splits with the total row count.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResponseOfSharedExpenseResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such household, or the signed-in user is not a member.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          },
+          {
+            "PersonalApiToken": [ ]
+          }
+        ]
+      }
+    },
+    "/api/households/{id}/shared-expenses/{expenseId}": {
+      "delete": {
+        "tags": [
+          "Households"
+        ],
+        "summary": "Delete a split",
+        "description": "Removes the split from the balances. Only the member who paid can delete it. The transaction itself is not touched, and the split is listed in the payer's trash, from where POST /api/trash/restore brings it back.",
+        "operationId": "DeleteSharedExpense",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The household id.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "expenseId",
+            "in": "path",
+            "description": "The split id.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "The split is deleted."
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Only the member who paid can delete the split.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such split in a household you are a member of.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "Households"
+        ],
+        "summary": "Change a split",
+        "description": "Replaces the members and their amounts. Only the member who paid can change it. With refreshFromTransaction the split first copies the transaction's current amount, date and description, which is how a split follows a corrected transaction; otherwise it keeps its copy.",
+        "operationId": "UpdateSharedExpense",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The household id.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "expenseId",
+            "in": "path",
+            "description": "The split id.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSharedExpenseRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "The split as it is now.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SharedExpenseResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed, a member is not in the household, nobody but you takes part, the exact amounts do not add up, or the transaction is no longer visible.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Only the member who paid can change the split.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such split in a household you are a member of.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      }
+    },
     "/api/import/confirm": {
       "post": {
         "tags": [
@@ -16821,7 +17625,8 @@
           "currency",
           "balances",
           "reportingBalance",
-          "holdingsValue"
+          "holdingsValue",
+          "ownerId"
         ],
         "type": "object",
         "properties": {
@@ -16885,6 +17690,10 @@
           "holdingsValue": {
             "type": "string",
             "format": "decimal"
+          },
+          "ownerId": {
+            "type": "string",
+            "format": "uuid"
           }
         }
       },
@@ -17273,7 +18082,9 @@
           "tag",
           "household",
           "member",
-          "attachment"
+          "attachment",
+          "sharedExpense",
+          "settlement"
         ],
         "type": "string"
       },
@@ -19133,6 +19944,135 @@
           "debtId": null
         }
       },
+      "CreateSettlementRequest": {
+        "required": [
+          "fromUserId",
+          "toUserId",
+          "amount",
+          "currency",
+          "date"
+        ],
+        "type": "object",
+        "properties": {
+          "fromUserId": {
+            "minLength": 1,
+            "type": "string",
+            "format": "uuid",
+            "example": "00000000-0000-0000-0000-000000000000"
+          },
+          "toUserId": {
+            "minLength": 1,
+            "type": "string",
+            "format": "uuid",
+            "example": "00000000-0000-0000-0000-000000000000"
+          },
+          "amount": {
+            "type": "string",
+            "description": "Decimal string with at most two decimal places, greater than zero.",
+            "format": "decimal",
+            "example": "30.00"
+          },
+          "currency": {
+            "$ref": "#/components/schemas/Currency"
+          },
+          "date": {
+            "$ref": "#/components/schemas/DateOnly"
+          },
+          "note": {
+            "maxLength": 200,
+            "minLength": 0,
+            "type": [
+              "null",
+              "string"
+            ],
+            "example": "September groceries"
+          },
+          "transfer": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/SettlementTransferRequest"
+              }
+            ],
+            "description": "Also write a transfer between these two accounts."
+          },
+          "transferId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Link this existing transfer instead of writing one.",
+            "format": "uuid"
+          }
+        },
+        "example": {
+          "fromUserId": "00000000-0000-0000-0000-000000000000",
+          "toUserId": "00000000-0000-0000-0000-000000000000",
+          "amount": "30.00",
+          "currency": "eur",
+          "date": "2026-09-29",
+          "note": "September groceries",
+          "transfer": null,
+          "transferId": null
+        }
+      },
+      "CreateSharedExpenseRequest": {
+        "required": [
+          "transactionId",
+          "method",
+          "shares"
+        ],
+        "type": "object",
+        "properties": {
+          "transactionId": {
+            "minLength": 1,
+            "type": "string",
+            "description": "The expense to split. It must be on an account you own.",
+            "format": "uuid",
+            "example": "00000000-0000-0000-0000-000000000000"
+          },
+          "method": {
+            "$ref": "#/components/schemas/SplitMethod"
+          },
+          "shares": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ShareRequest"
+            },
+            "description": "One entry per member taking part, the payer included when they keep a share: a weight for Shares, an amount for Exact.",
+            "example": [
+              {
+                "userId": "00000000-0000-0000-0000-000000000000",
+                "weight": 2,
+                "amount": null
+              },
+              {
+                "userId": "00000000-0000-0000-0000-000000000000",
+                "weight": 1,
+                "amount": null
+              }
+            ]
+          }
+        },
+        "example": {
+          "transactionId": "00000000-0000-0000-0000-000000000000",
+          "method": "shares",
+          "shares": [
+            {
+              "userId": "00000000-0000-0000-0000-000000000000",
+              "weight": 2,
+              "amount": null
+            },
+            {
+              "userId": "00000000-0000-0000-0000-000000000000",
+              "weight": 1,
+              "amount": null
+            }
+          ]
+        }
+      },
       "CreateTagRequest": {
         "required": [
           "name",
@@ -20367,6 +21307,15 @@
           "restore.slotTaken",
           "security.notHeld",
           "session.current",
+          "settleUp.accountOwner",
+          "settleUp.alreadySplit",
+          "settleUp.currencyMismatch",
+          "settleUp.noOtherMember",
+          "settleUp.notExpense",
+          "settleUp.notPayer",
+          "settleUp.samePerson",
+          "settleUp.sharesMismatch",
+          "settleUp.transferTaken",
           "setup.alreadyCompleted",
           "text.invalidFormat",
           "text.tooLong",
@@ -20843,6 +21792,60 @@
         ],
         "type": "string",
         "description": "Owner may manage the household and its members; Member may not."
+      },
+      "HouseholdSettlementResponse": {
+        "required": [
+          "id",
+          "fromUserId",
+          "fromName",
+          "toUserId",
+          "toName",
+          "amount",
+          "currency",
+          "date",
+          "note",
+          "hasTransfer"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "fromUserId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "fromName": {
+            "type": "string"
+          },
+          "toUserId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "toName": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "string",
+            "format": "decimal"
+          },
+          "currency": {
+            "$ref": "#/components/schemas/Currency"
+          },
+          "date": {
+            "$ref": "#/components/schemas/DateOnly"
+          },
+          "note": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "hasTransfer": {
+            "type": "boolean"
+          }
+        }
       },
       "ImportBrokerReportRequest": {
         "type": "object",
@@ -21622,6 +22625,35 @@
                 "$ref": "#/components/schemas/UserProfileResponse"
               }
             ]
+          }
+        }
+      },
+      "MemberBalanceResponse": {
+        "required": [
+          "userId",
+          "name",
+          "isMember",
+          "currency",
+          "amount"
+        ],
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "isMember": {
+            "type": "boolean"
+          },
+          "currency": {
+            "$ref": "#/components/schemas/Currency"
+          },
+          "amount": {
+            "type": "string",
+            "format": "decimal"
           }
         }
       },
@@ -22507,6 +23539,35 @@
           }
         }
       },
+      "PagedResponseOfHouseholdSettlementResponse": {
+        "required": [
+          "items",
+          "page",
+          "pageSize",
+          "total"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HouseholdSettlementResponse"
+            }
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "total": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
       "PagedResponseOfInvestmentTransactionResponse": {
         "required": [
           "items",
@@ -22520,6 +23581,35 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/InvestmentTransactionResponse"
+            }
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "total": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "PagedResponseOfSharedExpenseResponse": {
+        "required": [
+          "items",
+          "page",
+          "pageSize",
+          "total"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SharedExpenseResponse"
             }
           },
           "page": {
@@ -24313,6 +25403,44 @@
           }
         }
       },
+      "SettlementTransferRequest": {
+        "required": [
+          "fromAccountId",
+          "toAccountId"
+        ],
+        "type": "object",
+        "properties": {
+          "fromAccountId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "toAccountId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
+      "SettleUpResponse": {
+        "required": [
+          "balances",
+          "payments"
+        ],
+        "type": "object",
+        "properties": {
+          "balances": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MemberBalanceResponse"
+            }
+          },
+          "payments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SuggestedPaymentResponse"
+            }
+          }
+        }
+      },
       "SetupRequest": {
         "required": [
           "email",
@@ -24356,6 +25484,140 @@
         "properties": {
           "needsSetup": {
             "type": "boolean"
+          }
+        }
+      },
+      "SharedExpenseResponse": {
+        "required": [
+          "id",
+          "payerId",
+          "payerName",
+          "date",
+          "description",
+          "amount",
+          "currency",
+          "method",
+          "shares",
+          "myShare",
+          "counted",
+          "transactionId",
+          "amountDiffers"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "payerId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "payerName": {
+            "type": "string"
+          },
+          "date": {
+            "$ref": "#/components/schemas/DateOnly"
+          },
+          "description": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "amount": {
+            "type": "string",
+            "format": "decimal"
+          },
+          "currency": {
+            "$ref": "#/components/schemas/Currency"
+          },
+          "method": {
+            "$ref": "#/components/schemas/SplitMethod"
+          },
+          "shares": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ShareResponse"
+            }
+          },
+          "myShare": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "decimal"
+          },
+          "counted": {
+            "type": "boolean"
+          },
+          "transactionId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "amountDiffers": {
+            "type": [
+              "null",
+              "boolean"
+            ]
+          }
+        }
+      },
+      "ShareRequest": {
+        "required": [
+          "userId"
+        ],
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "weight": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "amount": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "decimal"
+          }
+        }
+      },
+      "ShareResponse": {
+        "required": [
+          "userId",
+          "name",
+          "weight",
+          "amount"
+        ],
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "weight": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "amount": {
+            "type": "string",
+            "format": "decimal"
           }
         }
       },
@@ -24454,6 +25716,15 @@
         ],
         "type": "string"
       },
+      "SplitMethod": {
+        "enum": [
+          "equal",
+          "shares",
+          "exact"
+        ],
+        "type": "string",
+        "description": "Equal, Shares or Exact."
+      },
       "StatementFormat": {
         "enum": [
           "swedbankCsv",
@@ -24504,6 +25775,40 @@
           },
           "nextExpectedDate": {
             "$ref": "#/components/schemas/DateOnly"
+          }
+        }
+      },
+      "SuggestedPaymentResponse": {
+        "required": [
+          "fromUserId",
+          "fromName",
+          "toUserId",
+          "toName",
+          "currency",
+          "amount"
+        ],
+        "type": "object",
+        "properties": {
+          "fromUserId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "fromName": {
+            "type": "string"
+          },
+          "toUserId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "toName": {
+            "type": "string"
+          },
+          "currency": {
+            "$ref": "#/components/schemas/Currency"
+          },
+          "amount": {
+            "type": "string",
+            "format": "decimal"
           }
         }
       },
@@ -25200,6 +26505,57 @@
               "string"
             ],
             "format": "decimal"
+          },
+          "sharedExpense": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/TransactionSharedExpenseResponse"
+              }
+            ]
+          }
+        }
+      },
+      "TransactionSharedExpenseResponse": {
+        "required": [
+          "id",
+          "householdId",
+          "householdName",
+          "method",
+          "shares",
+          "myShare",
+          "amountDiffers"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "householdId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "householdName": {
+            "type": "string"
+          },
+          "method": {
+            "$ref": "#/components/schemas/SplitMethod"
+          },
+          "shares": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ShareResponse"
+            }
+          },
+          "myShare": {
+            "type": "string",
+            "format": "decimal"
+          },
+          "amountDiffers": {
+            "type": "boolean"
           }
         }
       },
@@ -25352,7 +26708,9 @@
           "categorizationRule",
           "household",
           "attachment",
-          "csvImportMapping"
+          "csvImportMapping",
+          "sharedExpense",
+          "settlement"
         ],
         "type": "string",
         "description": "Which kind of record to bring back, as listed by GET /api/trash."
@@ -26529,6 +27887,29 @@
           "supportLinkEnabled": {
             "type": "boolean",
             "description": "Shows the Support on Ko-fi link in every user's sidebar. It is a plain external link, so turning it on makes no outbound request."
+          }
+        }
+      },
+      "UpdateSharedExpenseRequest": {
+        "required": [
+          "method",
+          "shares"
+        ],
+        "type": "object",
+        "properties": {
+          "method": {
+            "$ref": "#/components/schemas/SplitMethod"
+          },
+          "shares": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ShareRequest"
+            }
+          },
+          "refreshFromTransaction": {
+            "type": "boolean",
+            "description": "Copy the transaction's current amount, date and description first.",
+            "default": false
           }
         }
       },

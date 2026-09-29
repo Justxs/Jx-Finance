@@ -1,6 +1,8 @@
 using JxFinance.Common.Json;
 using JxFinance.Domain.Common;
+using JxFinance.Domain.Households;
 using JxFinance.Domain.Transactions;
+using JxFinance.Endpoints.Households.Shared;
 
 namespace JxFinance.Endpoints.Transactions.Shared;
 
@@ -24,8 +26,18 @@ public sealed record TransactionResponse(
     bool UnusualDismissed,
     TransactionDebtPaymentResponse? DebtPayment = null,
     TransactionRefundOfResponse? RefundOf = null,
-    [property: Money] decimal? RefundedAmount = null);
+    [property: Money] decimal? RefundedAmount = null,
+    TransactionSharedExpenseResponse? SharedExpense = null);
 
 public sealed record TransactionDebtPaymentResponse(Guid Id, Guid DebtId, string DebtName);
+
+public sealed record TransactionSharedExpenseResponse(
+    Guid Id,
+    Guid HouseholdId,
+    string HouseholdName,
+    SplitMethod Method,
+    IReadOnlyList<ShareResponse> Shares,
+    [property: Money] decimal MyShare,
+    bool AmountDiffers);
 
 public sealed record TransactionRefundOfResponse(Guid Id, DateOnly Date, string? Description);

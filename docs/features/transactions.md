@@ -64,6 +64,11 @@ How each part of the application treats a refund. Totals net it, and the checks 
 | Rule suggestions, `SuggestedRuleService` | Ignored as evidence |
 | Categorization rules, `RuleMatcher` | A rule with an amount range never matches a refund, because the range compares the signed amount; a rule without one can categorize an uncategorized refund like any expense |
 | Validation | `amount` of an expense must be non-zero (`money.nonZero`); income and split lines stay positive (`money.positive`); an import row's `amount` stays positive, because it is the bank's size |
+| Household settle-up, `SettleUpService` | A refund cannot be split with a household (`settleUp.notExpense`); money a housemate pays back can be recorded as a refund of the split expense |
+
+## Splitting with the household
+
+Since 2026-09-29 a purchase on an account the signed-in member owns has "Split with household" among its row actions while the member belongs to a household and `Households` is on; it opens the split dialog of [Household settle-up](household-settle-up.md). This is a different thing from a split transaction: split lines divide one payment between categories, a household split divides it between people, and the two combine. `GET /api/transactions` answers `sharedExpense` on a split row for the payer only, in its own batched query beside the debt payment marker: the split's id, household, method, shares, the payer's own share and `amountDiffers`, true when the transaction's amount no longer equals the split's copy. The ledger shows it as a people icon whose accessible name is "Split with Home, your share €30.00", and, when the amount differs, an "Update split" button that opens the dialog prefilled; on an already split row the row action reads "Edit split". Another member who sees the row on a shared account gets no marker.
 
 ## Active filters and the header
 

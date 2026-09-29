@@ -13,6 +13,7 @@ const account: AccountResponse = {
   createdAt: "2026-01-01T00:00:00Z",
   scope: "personal",
   householdId: null,
+  ownerId: "u",
   currency: "eur",
   balances: [
     { currency: "eur", amount: "10.00" },

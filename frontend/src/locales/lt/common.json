@@ -619,7 +619,9 @@
       "categorizationRule": "Kategorizavimo taisyklė",
       "household": "Namų ūkis",
       "attachment": "Failas",
-      "csvImportMapping": "CSV susiejimas"
+      "csvImportMapping": "CSV susiejimas",
+      "sharedExpense": "Padalinta išlaida",
+      "settlement": "Namų ūkio mokėjimas"
     }
   },
   "theme": {
@@ -1873,6 +1875,68 @@
     "scope": {
       "label": "Aktyvus namų ūkis",
       "everything": "Viskas"
+    },
+    "settleUp": {
+      "title": "Balansai",
+      "description": "Kas kam skolingas už padalintas išlaidas, pagal valiutą. Balansai nepatenka į ataskaitas, biudžetus ir grynąją vertę.",
+      "empty": "Visi atsiskaitę.",
+      "owes": "{{name}} skolingas {{amount}}",
+      "isOwed": "{{name}} turi gauti {{amount}}",
+      "youOwe": "Jūs skolingi {{amount}}",
+      "youAreOwed": "Jūs turite gauti {{amount}}",
+      "formerMember": "Buvęs narys",
+      "suggestions": "Kad atsiskaitytumėte",
+      "pays": "{{from}} sumoka {{to}} {{amount}}",
+      "record": "Įrašyti mokėjimą",
+      "showShared": "Rodyti bendras išlaidas",
+      "hideShared": "Slėpti bendras išlaidas"
+    },
+    "shared": {
+      "title": "Bendros išlaidos",
+      "splits": "Padalintos išlaidos",
+      "payments": "Mokėjimai",
+      "emptySplits": "Šiame namų ūkyje dar niekas nepadalinta.",
+      "emptyPayments": "Mokėjimų dar neįrašyta.",
+      "paidBy": "Sumokėjo {{name}}",
+      "yourShare": "Jūsų dalis {{amount}}",
+      "notCounted": "Neskaičiuojama, kol operacija ištrinta",
+      "paid": "{{from}} sumokėjo {{to}}",
+      "withTransfer": "Su pervedimu"
+    },
+    "split": {
+      "action": "Padalinti su namų ūkiu",
+      "edit": "Keisti padalijimą",
+      "household": "Namų ūkis",
+      "method": "Dalyti",
+      "methods": {
+        "equal": "Po lygiai",
+        "shares": "Dalimis",
+        "exact": "Tikslios sumos"
+      },
+      "members": "Kas dalyvauja",
+      "include": "{{name}} dalyvauja",
+      "weight": "{{name}} dalys",
+      "amount": "{{name}} suma",
+      "preview": "{{name}} moka {{amount}}",
+      "mismatch": "Sumos sudaro {{assigned}}, o ne {{total}}.",
+      "nobody": "Pasirinkite, kas dalyvauja.",
+      "mark": "Padalinta su {{household}}, jūsų dalis {{amount}}",
+      "differs": "Suma pasikeitė po padalijimo.",
+      "update": "Atnaujinti padalijimą"
+    },
+    "settlement": {
+      "title": "Įrašyti mokėjimą",
+      "from": "Sumokėjo",
+      "to": "Gavo",
+      "amount": "Suma",
+      "currency": "Valiuta",
+      "date": "Data",
+      "note": "Pastaba",
+      "withTransfer": "Taip pat įrašyti pervedimą",
+      "withTransferHint": "Įrašo įprastą pervedimą iš mokėtojo sąskaitos į gavėjo sąskaitą.",
+      "fromAccount": "Iš sąskaitos",
+      "toAccount": "Į sąskaitą",
+      "noAccount": "Jums nematoma jokia {{name}} sąskaita valiuta {{currency}}, todėl galima įrašyti tik mokėjimą."
     }
   },
   "audit": {
@@ -1903,7 +1967,9 @@
       "tag": "Žyma",
       "household": "Namų ūkis",
       "member": "Narys",
-      "attachment": "Failas"
+      "attachment": "Failas",
+      "sharedExpense": "Padalinta išlaida",
+      "settlement": "Mokėjimas"
     },
     "sentences": {
       "created": "{{actor}} pridėjo: {{description}}",
@@ -1948,7 +2014,10 @@
       "startingBalance": "pradinis likutis",
       "tags": "žymos",
       "split": "išskaidymas",
-      "role": "vaidmuo"
+      "role": "vaidmuo",
+      "method": "dalijimo būdas",
+      "shares": "dalys",
+      "note": "pastaba"
     }
   },
   "sharing": {
@@ -2504,6 +2573,17 @@
       "notAllowed": "API raktu galima tik skaityti apskaitą.",
       "limitReached": "Jau turite 10 raktų. Pirmiausia atšaukite vieną.",
       "rateLimited": "Per daug užklausų su šiuo raktu. Palaukite minutę."
+    },
+    "settleUp": {
+      "notPayer": "Padalinti galima tik išlaidą, sumokėtą iš jūsų sąskaitos.",
+      "notExpense": "Padalinti galima tik išlaidą.",
+      "alreadySplit": "Ši išlaida jau padalinta.",
+      "noOtherMember": "Dalinkitės bent su vienu kitu nariu.",
+      "sharesMismatch": "Sumos turi sudaryti visą išlaidą.",
+      "samePerson": "Mokėjimui reikia dviejų skirtingų narių.",
+      "accountOwner": "Pinigai turi išeiti iš mokėtojo sąskaitos ir ateiti į gavėjo sąskaitą.",
+      "currencyMismatch": "Abiejose sąskaitose turi būti mokėjimo valiuta.",
+      "transferTaken": "Šis pervedimas jau padengia kitą mokėjimą."
     }
   },
   "export": {

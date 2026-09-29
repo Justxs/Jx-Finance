@@ -11,6 +11,7 @@ import type { FlowType } from "./flowType";
 import type { TransactionDebtPaymentResponse } from "./transactionDebtPaymentResponse";
 import type { TransactionLineResponse } from "./transactionLineResponse";
 import type { TransactionRefundOfResponse } from "./transactionRefundOfResponse";
+import type { TransactionSharedExpenseResponse } from "./transactionSharedExpenseResponse";
 import type { TransactionSource } from "./transactionSource";
 import type { UnusualAmountResponse } from "./unusualAmountResponse";
 
@@ -39,4 +40,5 @@ export interface TransactionResponse {
   refundOf?: null | TransactionRefundOfResponse;
   /** @nullable */
   refundedAmount?: string | null;
+  sharedExpense?: null | TransactionSharedExpenseResponse;
 }

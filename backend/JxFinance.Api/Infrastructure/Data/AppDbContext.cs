@@ -85,6 +85,9 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, ICurren
     public DbSet<MonthClose> MonthCloses => Set<MonthClose>();
     public DbSet<Household> Households => Set<Household>();
     public DbSet<HouseholdMembership> HouseholdMemberships => Set<HouseholdMembership>();
+    public DbSet<SharedExpense> SharedExpenses => Set<SharedExpense>();
+    public DbSet<SharedExpenseShare> SharedExpenseShares => Set<SharedExpenseShare>();
+    public DbSet<Settlement> Settlements => Set<Settlement>();
     public DbSet<UserSession> UserSessions => Set<UserSession>();
     public DbSet<PersonalApiToken> PersonalApiTokens => Set<PersonalApiToken>();
     public DbSet<EmailMessage> EmailMessages => Set<EmailMessage>();
@@ -266,6 +269,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, ICurren
         var ownableFilterFactory = GetType().GetMethod(nameof(OwnableFilter), BindingFlags.NonPublic | BindingFlags.Instance)!;
         var shareableFilterFactory = GetType().GetMethod(nameof(ShareableFilter), BindingFlags.NonPublic | BindingFlags.Instance)!;
         var accountScopedFilterFactory = GetType().GetMethod(nameof(AccountScopedFilter), BindingFlags.NonPublic | BindingFlags.Instance)!;
+        var householdScopedFilterFactory = GetType().GetMethod(nameof(HouseholdScopedFilter), BindingFlags.NonPublic | BindingFlags.Instance)!;
 
         foreach (var entityType in builder.Model.GetEntityTypes())
         {
@@ -276,7 +280,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, ICurren
             }
 
             entityType.SetQueryFilter(QueryFilters.SoftDelete, NotDeletedFilter(clrType));
-            var owner = OwnerFilter(clrType, ownableFilterFactory, shareableFilterFactory, accountScopedFilterFactory);
+            var owner = OwnerFilter(clrType, ownableFilterFactory, shareableFilterFactory, accountScopedFilterFactory, householdScopedFilterFactory);
             if (owner is not null)
             {
                 entityType.SetQueryFilter(QueryFilters.Owner, owner);
@@ -288,7 +292,8 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, ICurren
         Type clrType,
         MethodInfo ownableFilterFactory,
         MethodInfo shareableFilterFactory,
-        MethodInfo accountScopedFilterFactory)
+        MethodInfo accountScopedFilterFactory,
+        MethodInfo householdScopedFilterFactory)
     {
         if (typeof(IAccountScoped).IsAssignableFrom(clrType))
         {
@@ -313,6 +318,11 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, ICurren
         if (clrType == typeof(HouseholdMembership))
         {
             return HouseholdMembershipFilter();
+        }
+
+        if (typeof(IHouseholdScoped).IsAssignableFrom(clrType))
+        {
+            return (LambdaExpression)householdScopedFilterFactory.MakeGenericMethod(clrType).Invoke(this, null)!;
         }
 
         if (typeof(IShareable).IsAssignableFrom(clrType) && typeof(OwnableEntity).IsAssignableFrom(clrType))
@@ -344,6 +354,9 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, ICurren
 
     private Expression<Func<T, bool>> AccountScopedFilter<T>() where T : EntityBase, IAccountScoped =>
         entity => Accounts.Any(a => a.Id == entity.AccountId);
+
+    private Expression<Func<T, bool>> HouseholdScopedFilter<T>() where T : EntityBase, IHouseholdScoped =>
+        entity => Households.Any(h => h.Id == entity.HouseholdId) && (!HasActiveHousehold || entity.HouseholdId == ActiveHouseholdId);
 
     private Expression<Func<TransactionAttachment, bool>> AttachmentFilter() =>
         a => Transactions.Any(t => t.Id == a.TransactionId);

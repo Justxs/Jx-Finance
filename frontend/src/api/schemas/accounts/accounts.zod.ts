@@ -175,6 +175,7 @@ export const CreateAccountResponse = zod.object({
   ),
   reportingBalance: zod.stringFormat("decimal", createAccountResponseReportingBalanceRegExp),
   holdingsValue: zod.stringFormat("decimal", createAccountResponseHoldingsValueRegExp),
+  ownerId: zod.uuid(),
 });
 
 /**
@@ -271,6 +272,7 @@ export const AccountsResponseItem = zod.object({
   ),
   reportingBalance: zod.stringFormat("decimal", accountsResponseReportingBalanceRegExp),
   holdingsValue: zod.stringFormat("decimal", accountsResponseHoldingsValueRegExp),
+  ownerId: zod.uuid(),
 });
 export const AccountsResponse = zod.array(AccountsResponseItem);
 
@@ -537,6 +539,7 @@ export const AccountResponse = zod.object({
   ),
   reportingBalance: zod.stringFormat("decimal", accountResponseReportingBalanceRegExp),
   holdingsValue: zod.stringFormat("decimal", accountResponseHoldingsValueRegExp),
+  ownerId: zod.uuid(),
 });
 
 /**
@@ -694,6 +697,7 @@ export const UpdateAccountResponse = zod.object({
   ),
   reportingBalance: zod.stringFormat("decimal", updateAccountResponseReportingBalanceRegExp),
   holdingsValue: zod.stringFormat("decimal", updateAccountResponseHoldingsValueRegExp),
+  ownerId: zod.uuid(),
 });
 
 /**
@@ -1025,4 +1029,5 @@ export const RestoreAccountResponse = zod.object({
   ),
   reportingBalance: zod.stringFormat("decimal", restoreAccountResponseReportingBalanceRegExp),
   holdingsValue: zod.stringFormat("decimal", restoreAccountResponseHoldingsValueRegExp),
+  ownerId: zod.uuid(),
 });

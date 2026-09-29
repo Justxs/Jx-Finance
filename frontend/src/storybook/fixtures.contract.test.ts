@@ -296,6 +296,13 @@ const contracts: Record<string, Contract> = {
   fullAttachments: { schema: schemas.AttachmentsResponse },
   recordedTrashEntries: { schema: schemas.TrashResponse, toResponse: asPage },
   householdAuditEvents: { schema: schemas.HouseholdAuditResponse, toResponse: asPage },
+  settleUp: { schema: schemas.SettleUpResponse },
+  evenSettleUp: { schema: schemas.SettleUpResponse },
+  sharedExpenses: { schema: schemas.SharedExpensesResponse, toResponse: asPage },
+  householdSettlements: { schema: schemas.SettlementsResponse, toResponse: asPage },
+  partnerSharedAccount: { schema: schemas.AccountResponse },
+  sharedPurchase: { schema: schemas.TransactionResponse },
+  outdatedSharedPurchase: { schema: schemas.TransactionResponse },
 };
 
 function buildSummary() {

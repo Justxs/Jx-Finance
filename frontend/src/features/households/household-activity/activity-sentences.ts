@@ -24,6 +24,9 @@ const FIELDS = [
   "tags",
   "split",
   "role",
+  "method",
+  "shares",
+  "note",
 ] as const;
 
 type AuditField = (typeof FIELDS)[number];

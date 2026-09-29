@@ -15,7 +15,9 @@ public sealed class AuditCollectorTests
         var expected = typeof(IShareable).Assembly.GetTypes()
             .Where(type => type is { IsClass: true, IsAbstract: false }
                 && type != typeof(AccountReconciliation)
-                && (typeof(IShareable).IsAssignableFrom(type) || typeof(IAccountScoped).IsAssignableFrom(type)))
+                && (typeof(IShareable).IsAssignableFrom(type)
+                    || typeof(IAccountScoped).IsAssignableFrom(type)
+                    || typeof(IHouseholdScoped).IsAssignableFrom(type)))
             .Concat([typeof(Transfer), typeof(Household), typeof(HouseholdMembership), typeof(TransactionAttachment)]);
 
         var missing = expected.Except(AuditCollector.AuditedTypes).Select(type => type.Name).ToList();

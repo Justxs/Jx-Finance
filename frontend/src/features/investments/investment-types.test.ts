@@ -20,6 +20,7 @@ function account(id: string, type: AccountType): AccountResponse {
     createdAt: "2026-01-01T00:00:00Z",
     scope: "personal",
     householdId: null,
+    ownerId: "u",
     currency: "eur",
     balances: [],
     reportingBalance: "0.00",

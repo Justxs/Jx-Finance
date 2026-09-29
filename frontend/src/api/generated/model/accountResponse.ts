@@ -28,4 +28,5 @@ export interface AccountResponse {
   balances: CurrencyBalance[];
   reportingBalance: string;
   holdingsValue: string;
+  ownerId: string;
 }

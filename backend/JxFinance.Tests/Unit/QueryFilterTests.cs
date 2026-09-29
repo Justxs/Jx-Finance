@@ -94,5 +94,30 @@ public sealed class QueryFilterTests
         Assert.Contains(NotDeleted("s"), capture.OnlyStatement, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public async Task A_household_scoped_set_is_visible_through_a_living_household_of_the_caller()
+    {
+        await using var capture = new SqlCapture();
+
+        await capture.Db.SharedExpenses.ToListAsync(TestContext.Current.CancellationToken);
+
+        Assert.Contains("\"Households\"", capture.OnlyStatement, StringComparison.Ordinal);
+        Assert.Contains("HouseholdMemberships", capture.OnlyStatement, StringComparison.Ordinal);
+        Assert.Contains(NotDeleted("s"), capture.OnlyStatement, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task A_household_scoped_set_drops_its_household_reach_with_the_owner_filter()
+    {
+        await using var capture = new SqlCapture();
+
+        await capture.Db.Settlements
+            .IgnoreQueryFilters(QueryFilters.OwnerOnly)
+            .ToListAsync(TestContext.Current.CancellationToken);
+
+        Assert.DoesNotContain("Households", capture.OnlyStatement, StringComparison.Ordinal);
+        Assert.Contains(NotDeleted("s"), capture.OnlyStatement, StringComparison.Ordinal);
+    }
+
     private static string NotDeleted(string alias) => $"NOT ({alias}.\"IsDeleted\")";
 }

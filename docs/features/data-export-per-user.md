@@ -43,9 +43,9 @@ It can be taken three times an hour from one client (`Throttle(3, 3600)`, 429 be
 
 | Kind of row | Tables |
 | --- | --- |
-| Every row the member owns (`"UserId"` is the member) | `Accounts` (personal, shared and archived), `Assets`, `Budgets`, `BrokerConnections` without the token, `CategorizationRules`, `CsvImportMappings`, `DebtPayments`, `Debts`, `DeletionEntries`, `Goals`, `MonthCloses`, `NetWorthSnapshots`, `Notifications`, `ReceiptItemCategories`, `ReceiptReadings`, `RecurringBills`, `SubscriptionDismissals`, `SuggestedRuleDismissals`, and the member's own `Categories` and `Tags` |
+| Every row the member owns (`"UserId"` is the member) | `Accounts` (personal, shared and archived), `Assets`, `Budgets`, `BrokerConnections` without the token, `CategorizationRules`, `CsvImportMappings`, `DebtPayments`, `Debts`, `DeletionEntries`, `Goals`, `MonthCloses`, `NetWorthSnapshots`, `Notifications`, `ReceiptItemCategories`, `ReceiptReadings`, `RecurringBills`, `SubscriptionDismissals`, `SuggestedRuleDismissals`, the `SharedExpenses` the member paid for and the `Settlements` the member recorded (since 2026-09-29), and the member's own `Categories` and `Tags` |
 | Everything on the member's own accounts, whoever entered it | `Transactions`, `AccountReconciliations`, `CurrencyConversions`, `InvestmentTransactions`, `TransferImports` |
-| Rows that belong to an exported row | `TransactionLines`, `TransactionTags` and `TransactionAttachments` of the exported transactions; `AssetValuations`, `CategorizationRuleTags` and `DeletionChanges` of their parents |
+| Rows that belong to an exported row | `TransactionLines`, `TransactionTags` and `TransactionAttachments` of the exported transactions; `AssetValuations`, `CategorizationRuleTags`, `DeletionChanges` and `SharedExpenseShares` of their parents |
 | Every transfer with one side on the member's accounts | `Transfers` |
 | Rows the member does not own but that their rows point at | a housemate's category used on a transaction or split line of theirs, a housemate's tag on one of their transactions, and the `Securities` of their investment entries |
 | The member's own user row, eight columns only | `AspNetUsers`: `Id`, `Email`, `UserName`, `DisplayName`, `EmailConfirmed`, `EmailNotificationTypes`, `DashboardLayout` and `Language` |
@@ -54,7 +54,7 @@ It can be taken three times an hour from one client (`Throttle(3, 3600)`, 429 be
 | --- | --- |
 | Secrets and credentials | the password hash, security and concurrency stamps and every other `AspNetUsers` column; `AspNetUserTokens` (authenticator key, recovery codes); `AspNetUserPasskeys`; `PersonalApiTokens`; `BrokerConnections.ProtectedToken`; `DiscordWebhooks` (the webhook URL) |
 | Sign-in and roles | `UserSessions`, `AspNetUserLogins`, `AspNetUserClaims`, `AspNetUserRoles`, `AspNetRoles`, `AspNetRoleClaims` |
-| What belongs to the household | `Households`, `HouseholdMemberships`, `AuditEvents` |
+| What belongs to the household | `Households`, `HouseholdMemberships`, `AuditEvents`; a split another member paid for, or a payment another member recorded, even when the member is a party to it |
 | Work in flight | `EmailMessages`, `DiscordMessages` |
 | The installation | `InstanceSettings` (with the SMTP password), `ExchangeRates`, `SecurityPrices` |
 | Other members' data | their accounts and everything on them, including rows the member entered there; their budgets, goals and every other row they own that no row of the member points at |

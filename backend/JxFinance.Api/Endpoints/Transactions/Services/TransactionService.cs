@@ -16,6 +16,7 @@ using JxFinance.Domain.Settings;
 using JxFinance.Domain.Tags;
 using JxFinance.Domain.Transactions;
 using JxFinance.Domain.Trash;
+using JxFinance.Endpoints.Households.Shared;
 using JxFinance.Endpoints.Transactions.BulkCategorizeTransactions;
 using JxFinance.Endpoints.Transactions.BulkTagTransactions;
 using JxFinance.Endpoints.Transactions.CreateTransaction;
@@ -25,6 +26,7 @@ using JxFinance.Endpoints.Transactions.Interfaces;
 using JxFinance.Endpoints.Transactions.Mappers;
 using JxFinance.Endpoints.Transactions.Shared;
 using JxFinance.Endpoints.Transactions.UpdateTransaction;
+using JxFinance.Infrastructure.Auth;
 using JxFinance.Infrastructure.Configuration;
 using JxFinance.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
@@ -58,12 +60,16 @@ public sealed class TransactionService(
         var attachmentCounts = await CountAttachmentsAsync(page.Items.Select(t => t.Id), cancellationToken);
         var debtPayments = await DebtPaymentsOfAsync(page.Items.Select(t => t.Id), cancellationToken);
         var refunds = await RefundMarksAsync(page.Items, cancellationToken);
+        var splits = await SharedExpensesOfAsync(page.Items, cancellationToken);
 
         return page.Map(t => Shown(refunds.Apply(t, t.ToResponse(
             linesByTransaction.GetValueOrDefault(t.Id),
             tagsByTransaction.GetValueOrDefault(t.Id),
             attachmentCounts.GetValueOrDefault(t.Id)) with
-        { DebtPayment = debtPayments.GetValueOrDefault(t.Id) })));
+        {
+            DebtPayment = debtPayments.GetValueOrDefault(t.Id),
+            SharedExpense = splits.GetValueOrDefault(t.Id),
+        })));
     }
 
     public async IAsyncEnumerable<TransactionResponse> StreamExportAsync(
@@ -584,6 +590,51 @@ public sealed class TransactionService(
             .Where(p => ids.Contains(p.TransactionId))
             .Join(db.Debts, p => p.DebtId, d => d.Id, (p, d) => new { p.TransactionId, Marker = new TransactionDebtPaymentResponse(p.Id.Value, d.Id.Value, d.Name) })
             .ToDictionaryAsync(x => x.TransactionId, x => x.Marker, cancellationToken);
+    }
+
+    private async Task<Dictionary<TransactionId, TransactionSharedExpenseResponse>> SharedExpensesOfAsync(
+        IReadOnlyCollection<Transaction> transactions,
+        CancellationToken cancellationToken)
+    {
+        if (!settings.Current.IsEnabled(Feature.Households))
+        {
+            return [];
+        }
+
+        var ids = transactions.Select(t => t.Id).ToList();
+        var payerId = currentUser.Id;
+        var splits = await db.SharedExpenses
+            .Where(e => ids.Contains(e.TransactionId) && e.UserId == payerId)
+            .Join(db.Households, e => e.HouseholdId, h => h.Id, (e, h) => new
+            {
+                e.Id,
+                e.TransactionId,
+                e.Amount,
+                e.Method,
+                HouseholdId = h.Id,
+                HouseholdName = h.Name,
+            })
+            .ToListAsync(cancellationToken);
+        var splitIds = splits.Select(s => s.Id).ToList();
+        var shares = (await db.SharedExpenseShares
+                .Where(s => splitIds.Contains(s.SharedExpenseId))
+                .Join(db.Users, s => s.UserId, u => u.Id, (s, u) => new { s.SharedExpenseId, s.UserId, s.Weight, s.Amount, u.DisplayName, u.Email })
+                .ToListAsync(cancellationToken))
+            .ToLookup(
+                s => s.SharedExpenseId,
+                s => new ShareResponse(s.UserId, AppUser.DisplayNameOrEmail(s.DisplayName, s.Email), s.Weight, s.Amount));
+        var amounts = transactions.ToDictionary(t => t.Id, t => t.Amount);
+
+        return splits.ToDictionary(
+            s => s.TransactionId,
+            s => new TransactionSharedExpenseResponse(
+                s.Id.Value,
+                s.HouseholdId.Value,
+                s.HouseholdName,
+                s.Method,
+                [.. shares[s.Id].OrderBy(share => share.Name, StringComparer.CurrentCultureIgnoreCase)],
+                shares[s.Id].FirstOrDefault(share => share.UserId == payerId)?.Amount ?? 0m,
+                s.Amount != amounts[s.TransactionId]));
     }
 
     private async Task<RefundMarks> RefundMarksAsync(

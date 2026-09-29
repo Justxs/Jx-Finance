@@ -151,6 +151,8 @@ export const HouseholdAuditResponse = zod.object({
         "household",
         "member",
         "attachment",
+        "sharedExpense",
+        "settlement",
       ]),
       entityId: zod.uuid().nullable(),
       description: zod.string(),
@@ -256,4 +258,516 @@ export const UpdateMemberRoleResponse = zod.object({
         .describe("Owner may manage the household and its members; Member may not."),
     }),
   ),
+});
+
+/**
+ * Returns each member's open balance per currency and the fewest payments that would settle them. A positive balance is owed to the member, a negative one is owed by them. A balance is what the member paid for others in splits, minus what others paid for them, plus the payments they made, minus the payments they received. A split whose transaction is deleted stops counting until the transaction is restored. Currencies are never converted. A former member with an open balance is still listed. Nothing here enters reports, budgets or net worth.
+ * @summary Who owes whom in a household
+ */
+export const settleUpResponseBalancesItemAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const settleUpResponsePaymentsItemAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+
+export const SettleUpResponse = zod.object({
+  balances: zod.array(
+    zod.object({
+      userId: zod.uuid(),
+      name: zod.string(),
+      isMember: zod.boolean(),
+      currency: zod.enum([
+        "eur",
+        "usd",
+        "gbp",
+        "chf",
+        "pln",
+        "sek",
+        "nok",
+        "dkk",
+        "czk",
+        "huf",
+        "ron",
+        "isk",
+        "try",
+        "jpy",
+        "cny",
+        "hkd",
+        "sgd",
+        "krw",
+        "inr",
+        "idr",
+        "myr",
+        "php",
+        "thb",
+        "aud",
+        "nzd",
+        "cad",
+        "mxn",
+        "brl",
+        "ils",
+        "zar",
+      ]),
+      amount: zod.stringFormat("decimal", settleUpResponseBalancesItemAmountRegExp),
+    }),
+  ),
+  payments: zod.array(
+    zod.object({
+      fromUserId: zod.uuid(),
+      fromName: zod.string(),
+      toUserId: zod.uuid(),
+      toName: zod.string(),
+      currency: zod.enum([
+        "eur",
+        "usd",
+        "gbp",
+        "chf",
+        "pln",
+        "sek",
+        "nok",
+        "dkk",
+        "czk",
+        "huf",
+        "ron",
+        "isk",
+        "try",
+        "jpy",
+        "cny",
+        "hkd",
+        "sgd",
+        "krw",
+        "inr",
+        "idr",
+        "myr",
+        "php",
+        "thb",
+        "aud",
+        "nzd",
+        "cad",
+        "mxn",
+        "brl",
+        "ils",
+        "zar",
+      ]),
+      amount: zod.stringFormat("decimal", settleUpResponsePaymentsItemAmountRegExp),
+    }),
+  ),
+});
+
+/**
+ * Records a payment between two members, which settles that much of their balance in the payment's currency. You must be one of the two. Each must be a member of the household, or a former member who still has an open balance there. With transfer, the ordinary transfer from an account of the payer to an account of the payee is written in the same database transaction; both accounts must be visible to you, owned by the right member and held in the payment's currency. transferId links a transfer that already exists instead, under the same checks. Without either, only the payment is stored and no account changes.
+ * @summary Record that one member paid another
+ */
+
+export const createSettlementBodyAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const createSettlementBodyNoteMin = 0;
+export const createSettlementBodyNoteMax = 200;
+
+export const CreateSettlementBody = zod.object({
+  fromUserId: zod.uuid().min(1),
+  toUserId: zod.uuid().min(1),
+  amount: zod
+    .stringFormat("decimal", createSettlementBodyAmountRegExp)
+    .describe("Decimal string with at most two decimal places, greater than zero."),
+  currency: zod.enum([
+    "eur",
+    "usd",
+    "gbp",
+    "chf",
+    "pln",
+    "sek",
+    "nok",
+    "dkk",
+    "czk",
+    "huf",
+    "ron",
+    "isk",
+    "try",
+    "jpy",
+    "cny",
+    "hkd",
+    "sgd",
+    "krw",
+    "inr",
+    "idr",
+    "myr",
+    "php",
+    "thb",
+    "aud",
+    "nzd",
+    "cad",
+    "mxn",
+    "brl",
+    "ils",
+    "zar",
+  ]),
+  date: zod.iso.date(),
+  note: zod.string().min(createSettlementBodyNoteMin).max(createSettlementBodyNoteMax).nullish(),
+  transfer: zod
+    .union([
+      zod.null(),
+      zod.object({
+        fromAccountId: zod.uuid(),
+        toAccountId: zod.uuid(),
+      }),
+    ])
+    .optional()
+    .describe("Also write a transfer between these two accounts."),
+  transferId: zod.uuid().nullish().describe("Link this existing transfer instead of writing one."),
+});
+
+export const createSettlementResponseAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+
+export const CreateSettlementResponse = zod.object({
+  id: zod.uuid(),
+  fromUserId: zod.uuid(),
+  fromName: zod.string(),
+  toUserId: zod.uuid(),
+  toName: zod.string(),
+  amount: zod.stringFormat("decimal", createSettlementResponseAmountRegExp),
+  currency: zod.enum([
+    "eur",
+    "usd",
+    "gbp",
+    "chf",
+    "pln",
+    "sek",
+    "nok",
+    "dkk",
+    "czk",
+    "huf",
+    "ron",
+    "isk",
+    "try",
+    "jpy",
+    "cny",
+    "hkd",
+    "sgd",
+    "krw",
+    "inr",
+    "idr",
+    "myr",
+    "php",
+    "thb",
+    "aud",
+    "nzd",
+    "cad",
+    "mxn",
+    "brl",
+    "ils",
+    "zar",
+  ]),
+  date: zod.iso.date(),
+  note: zod.string().nullable(),
+  hasTransfer: zod.boolean(),
+});
+
+/**
+ * Returns a page of the payments members recorded to settle up, newest first. hasTransfer says whether an ordinary transfer between the two members' accounts was recorded with it.
+ * @summary List a household's recorded payments
+ */
+export const settlementsResponseItemsItemAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+
+export const SettlementsResponse = zod.object({
+  items: zod.array(
+    zod.object({
+      id: zod.uuid(),
+      fromUserId: zod.uuid(),
+      fromName: zod.string(),
+      toUserId: zod.uuid(),
+      toName: zod.string(),
+      amount: zod.stringFormat("decimal", settlementsResponseItemsItemAmountRegExp),
+      currency: zod.enum([
+        "eur",
+        "usd",
+        "gbp",
+        "chf",
+        "pln",
+        "sek",
+        "nok",
+        "dkk",
+        "czk",
+        "huf",
+        "ron",
+        "isk",
+        "try",
+        "jpy",
+        "cny",
+        "hkd",
+        "sgd",
+        "krw",
+        "inr",
+        "idr",
+        "myr",
+        "php",
+        "thb",
+        "aud",
+        "nzd",
+        "cad",
+        "mxn",
+        "brl",
+        "ils",
+        "zar",
+      ]),
+      date: zod.iso.date(),
+      note: zod.string().nullable(),
+      hasTransfer: zod.boolean(),
+    }),
+  ),
+  page: zod.int(),
+  pageSize: zod.int(),
+  total: zod.int(),
+});
+
+/**
+ * Removes the payment from the balances. Either of the two members can delete it. A transfer recorded with it stays, because it is a fact of the ledger with its own delete. The payment is listed in your trash, from where POST /api/trash/restore brings it back.
+ * @summary Delete a recorded payment
+ */
+export const DeleteSettlementResponse = zod.void();
+
+/**
+ * Splits an expense you paid from one of your own accounts between members of the household. The split keeps a copy of the transaction's date, description and amount, which is what the other members see, even when the account is personal and they cannot see the transaction itself. Each member's amount is computed once, now, and stored: Equal divides the amount evenly, Shares by whole weights from 1 to 100, and Exact takes the amounts given, which must add up to the expense. Cents left over by a division go to the largest remainders, ties in the order the members are listed, so the shares always add up to the amount. A transaction can be split once. Income, transfers, refunds and a housemate's payment on a shared account cannot be split.
+ * @summary Split an expense with the household
+ */
+
+export const createSharedExpenseBodySharesItemAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+
+export const CreateSharedExpenseBody = zod.object({
+  transactionId: zod
+    .uuid()
+    .min(1)
+    .describe("The expense to split. It must be on an account you own."),
+  method: zod.enum(["equal", "shares", "exact"]).describe("Equal, Shares or Exact."),
+  shares: zod
+    .array(
+      zod.object({
+        userId: zod.uuid(),
+        weight: zod.int().nullish(),
+        amount: zod
+          .stringFormat("decimal", createSharedExpenseBodySharesItemAmountRegExp)
+          .nullish(),
+      }),
+    )
+    .describe(
+      "One entry per member taking part, the payer included when they keep a share: a weight for Shares, an amount for Exact.",
+    ),
+});
+
+export const createSharedExpenseResponseAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const createSharedExpenseResponseSharesItemAmountRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const createSharedExpenseResponseMyShareRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+
+export const CreateSharedExpenseResponse = zod.object({
+  id: zod.uuid(),
+  payerId: zod.uuid(),
+  payerName: zod.string(),
+  date: zod.iso.date(),
+  description: zod.string().nullable(),
+  amount: zod.stringFormat("decimal", createSharedExpenseResponseAmountRegExp),
+  currency: zod.enum([
+    "eur",
+    "usd",
+    "gbp",
+    "chf",
+    "pln",
+    "sek",
+    "nok",
+    "dkk",
+    "czk",
+    "huf",
+    "ron",
+    "isk",
+    "try",
+    "jpy",
+    "cny",
+    "hkd",
+    "sgd",
+    "krw",
+    "inr",
+    "idr",
+    "myr",
+    "php",
+    "thb",
+    "aud",
+    "nzd",
+    "cad",
+    "mxn",
+    "brl",
+    "ils",
+    "zar",
+  ]),
+  method: zod.enum(["equal", "shares", "exact"]).describe("Equal, Shares or Exact."),
+  shares: zod.array(
+    zod.object({
+      userId: zod.uuid(),
+      name: zod.string(),
+      weight: zod.int().nullable(),
+      amount: zod.stringFormat("decimal", createSharedExpenseResponseSharesItemAmountRegExp),
+    }),
+  ),
+  myShare: zod.stringFormat("decimal", createSharedExpenseResponseMyShareRegExp).nullable(),
+  counted: zod.boolean(),
+  transactionId: zod.uuid().nullable(),
+  amountDiffers: zod.boolean().nullable(),
+});
+
+/**
+ * Returns a page of the household's splits, newest first, with the payer, the copied date, description and amount, every member's share and your own. counted is false while the split's transaction is deleted. transactionId and amountDiffers are filled only for the member who paid, because the transaction may sit on an account the others cannot see.
+ * @summary List a household's split expenses
+ */
+export const sharedExpensesResponseItemsItemAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const sharedExpensesResponseItemsItemSharesItemAmountRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const sharedExpensesResponseItemsItemMyShareRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+
+export const SharedExpensesResponse = zod.object({
+  items: zod.array(
+    zod.object({
+      id: zod.uuid(),
+      payerId: zod.uuid(),
+      payerName: zod.string(),
+      date: zod.iso.date(),
+      description: zod.string().nullable(),
+      amount: zod.stringFormat("decimal", sharedExpensesResponseItemsItemAmountRegExp),
+      currency: zod.enum([
+        "eur",
+        "usd",
+        "gbp",
+        "chf",
+        "pln",
+        "sek",
+        "nok",
+        "dkk",
+        "czk",
+        "huf",
+        "ron",
+        "isk",
+        "try",
+        "jpy",
+        "cny",
+        "hkd",
+        "sgd",
+        "krw",
+        "inr",
+        "idr",
+        "myr",
+        "php",
+        "thb",
+        "aud",
+        "nzd",
+        "cad",
+        "mxn",
+        "brl",
+        "ils",
+        "zar",
+      ]),
+      method: zod.enum(["equal", "shares", "exact"]).describe("Equal, Shares or Exact."),
+      shares: zod.array(
+        zod.object({
+          userId: zod.uuid(),
+          name: zod.string(),
+          weight: zod.int().nullable(),
+          amount: zod.stringFormat(
+            "decimal",
+            sharedExpensesResponseItemsItemSharesItemAmountRegExp,
+          ),
+        }),
+      ),
+      myShare: zod.stringFormat("decimal", sharedExpensesResponseItemsItemMyShareRegExp).nullable(),
+      counted: zod.boolean(),
+      transactionId: zod.uuid().nullable(),
+      amountDiffers: zod.boolean().nullable(),
+    }),
+  ),
+  page: zod.int(),
+  pageSize: zod.int(),
+  total: zod.int(),
+});
+
+/**
+ * Removes the split from the balances. Only the member who paid can delete it. The transaction itself is not touched, and the split is listed in the payer's trash, from where POST /api/trash/restore brings it back.
+ * @summary Delete a split
+ */
+export const DeleteSharedExpenseResponse = zod.void();
+
+/**
+ * Replaces the members and their amounts. Only the member who paid can change it. With refreshFromTransaction the split first copies the transaction's current amount, date and description, which is how a split follows a corrected transaction; otherwise it keeps its copy.
+ * @summary Change a split
+ */
+export const updateSharedExpenseBodySharesItemAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const updateSharedExpenseBodyRefreshFromTransactionDefault = false;
+
+export const UpdateSharedExpenseBody = zod.object({
+  method: zod.enum(["equal", "shares", "exact"]).describe("Equal, Shares or Exact."),
+  shares: zod.array(
+    zod.object({
+      userId: zod.uuid(),
+      weight: zod.int().nullish(),
+      amount: zod.stringFormat("decimal", updateSharedExpenseBodySharesItemAmountRegExp).nullish(),
+    }),
+  ),
+  refreshFromTransaction: zod
+    .boolean()
+    .default(updateSharedExpenseBodyRefreshFromTransactionDefault)
+    .describe("Copy the transaction's current amount, date and description first."),
+});
+
+export const updateSharedExpenseResponseAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const updateSharedExpenseResponseSharesItemAmountRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const updateSharedExpenseResponseMyShareRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+
+export const UpdateSharedExpenseResponse = zod.object({
+  id: zod.uuid(),
+  payerId: zod.uuid(),
+  payerName: zod.string(),
+  date: zod.iso.date(),
+  description: zod.string().nullable(),
+  amount: zod.stringFormat("decimal", updateSharedExpenseResponseAmountRegExp),
+  currency: zod.enum([
+    "eur",
+    "usd",
+    "gbp",
+    "chf",
+    "pln",
+    "sek",
+    "nok",
+    "dkk",
+    "czk",
+    "huf",
+    "ron",
+    "isk",
+    "try",
+    "jpy",
+    "cny",
+    "hkd",
+    "sgd",
+    "krw",
+    "inr",
+    "idr",
+    "myr",
+    "php",
+    "thb",
+    "aud",
+    "nzd",
+    "cad",
+    "mxn",
+    "brl",
+    "ils",
+    "zar",
+  ]),
+  method: zod.enum(["equal", "shares", "exact"]).describe("Equal, Shares or Exact."),
+  shares: zod.array(
+    zod.object({
+      userId: zod.uuid(),
+      name: zod.string(),
+      weight: zod.int().nullable(),
+      amount: zod.stringFormat("decimal", updateSharedExpenseResponseSharesItemAmountRegExp),
+    }),
+  ),
+  myShare: zod.stringFormat("decimal", updateSharedExpenseResponseMyShareRegExp).nullable(),
+  counted: zod.boolean(),
+  transactionId: zod.uuid().nullable(),
+  amountDiffers: zod.boolean().nullable(),
 });

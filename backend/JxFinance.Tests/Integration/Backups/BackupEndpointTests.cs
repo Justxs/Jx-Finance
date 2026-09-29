@@ -108,6 +108,18 @@ public sealed class BackupEndpointTests(ApiFixture fixture) : IntegrationTestBas
         var category = await CreateCategoryAsync();
         var transaction = await CreateTransactionAsync(Client, account, category, "expense", "4.20", "2026-06-07");
         (await Client.DeleteAsync($"/api/categories/{category}", TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
+        var partner = await CreateUserAsync();
+        var household = await CreateHouseholdAsync(partner);
+        var me = await Client.GetFromJsonAsync<IdDto>("/api/auth/me", TestContext.Current.CancellationToken);
+        var split = await PostAsync<IdDto>(
+            Client,
+            $"/api/households/{household}/shared-expenses",
+            new { transactionId = transaction.Id, method = "equal", shares = new[] { new { userId = me!.Id }, new { userId = partner.Id } } });
+        var payment = await PostAsync<IdDto>(
+            Client,
+            $"/api/households/{household}/settlements",
+            new { fromUserId = partner.Id, toUserId = me.Id, amount = "1.00", currency = "eur", date = "2026-06-10" });
+        (await Client.DeleteAsync($"/api/households/{household}/settlements/{payment.Id}", TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
         var backup = await CreateBackupAsync();
 
         try
@@ -124,6 +136,14 @@ public sealed class BackupEndpointTests(ApiFixture fixture) : IntegrationTestBas
 
         Assert.Equal(HttpStatusCode.NoContent, undo.StatusCode);
         Assert.Equal(category, back!.CategoryId);
+
+        var undoPayment = await Client.PostAsJsonAsync("/api/trash/restore", new { kind = "settlement", entityId = payment.Id }, TestContext.Current.CancellationToken);
+        var splits = await Client.GetFromJsonAsync<PageDto<IdDto>>($"/api/households/{household}/shared-expenses", TestContext.Current.CancellationToken);
+        var balances = await Client.GetStringAsync($"/api/households/{household}/settle-up", TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.NoContent, undoPayment.StatusCode);
+        Assert.Equal([split.Id], splits!.Items.Select(s => s.Id));
+        Assert.Contains("\"1.10\"", balances, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -536,6 +556,9 @@ public sealed class BackupEndpointTests(ApiFixture fixture) : IntegrationTestBas
         Assert.Contains("ReceiptItemCategories", tables);
         Assert.Contains("AspNetUserPasskeys", tables);
         Assert.Contains("PersonalApiTokens", tables);
+        Assert.Contains("SharedExpenses", tables);
+        Assert.Contains("SharedExpenseShares", tables);
+        Assert.Contains("Settlements", tables);
         Assert.DoesNotContain("UserSessions", tables);
         Assert.DoesNotContain("EmailMessages", tables);
     }

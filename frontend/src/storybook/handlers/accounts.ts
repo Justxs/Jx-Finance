@@ -101,6 +101,9 @@ export const accountHandlers = [
   getDeleteReconciliationMockHandler(),
   getRestoreAccountMockHandler(({ params }) => {
     const archived = found(byId(archivedAccounts, params.id));
-    return withBalance({ ...archived, createdAt: CREATED_AT }, archived.startingBalance);
+    return withBalance(
+      { ...archived, createdAt: CREATED_AT, ownerId: checkingAccount.ownerId },
+      archived.startingBalance,
+    );
   }),
 ];

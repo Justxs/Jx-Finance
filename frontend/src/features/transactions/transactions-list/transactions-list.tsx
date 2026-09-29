@@ -11,6 +11,7 @@ import { useIsoDate } from "@/hooks/use-formatters";
 import { cn, metaLine } from "@/lib/utils";
 import { DebtPaymentMarker } from "../debt-payment/debt-payment";
 import { RefundMark } from "../refund-mark/refund-mark";
+import { SharedExpenseMark } from "../shared-expense/shared-expense";
 import {
   TransactionAmount,
   isOptimistic,
@@ -86,6 +87,7 @@ export function TransactionsList({
                   dismissed={row.unusualDismissed}
                 />
                 <DebtPaymentMarker transaction={row} />
+                <SharedExpenseMark transaction={row} />
                 <TransactionAmount
                   transaction={row}
                   showReporting

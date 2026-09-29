@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import type { TransactionResponse } from "@/api/generated/model";
 import { RowActions } from "@/components/row-actions/row-actions";
 import { useDebtPaymentAction } from "../debt-payment/debt-payment";
+import { useSharedExpenseAction } from "../shared-expense/shared-expense";
 import { isOptimistic, isPurchase } from "../transaction-amount";
 
 interface Props {
@@ -29,6 +30,7 @@ export function TransactionRowActions({
   const { t } = useTranslation();
   const optimistic = isOptimistic(transaction);
   const debt = useDebtPaymentAction(transaction);
+  const split = useSharedExpenseAction(transaction);
   const duplicate = {
     icon: Copy,
     label: t("transactions.duplicate"),
@@ -51,7 +53,12 @@ export function TransactionRowActions({
       <RowActions
         label={label}
         className={className}
-        actions={[...(debt.action ? [debt.action] : []), duplicate, ...refund]}
+        actions={[
+          ...(debt.action ? [debt.action] : []),
+          ...(split.action ? [split.action] : []),
+          duplicate,
+          ...refund,
+        ]}
         onEdit={() => onEdit(transaction)}
         editDisabled={optimistic}
         onDelete={() => onDelete(transaction.id)}
@@ -59,6 +66,7 @@ export function TransactionRowActions({
         deleteDisabled={optimistic || deletingId !== null}
       />
       {debt.dialog}
+      {split.dialog}
     </>
   );
 }

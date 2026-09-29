@@ -55,6 +55,15 @@ public static class ErrorCodes
     public const string HouseholdNotMember = "household.notMember";
     public const string HouseholdLastOwner = "household.lastOwner";
     public const string HouseholdScopeMismatch = "household.scopeMismatch";
+    public const string SettleUpNotPayer = "settleUp.notPayer";
+    public const string SettleUpNotExpense = "settleUp.notExpense";
+    public const string SettleUpAlreadySplit = "settleUp.alreadySplit";
+    public const string SettleUpNoOtherMember = "settleUp.noOtherMember";
+    public const string SettleUpSharesMismatch = "settleUp.sharesMismatch";
+    public const string SettleUpSamePerson = "settleUp.samePerson";
+    public const string SettleUpAccountOwner = "settleUp.accountOwner";
+    public const string SettleUpCurrencyMismatch = "settleUp.currencyMismatch";
+    public const string SettleUpTransferTaken = "settleUp.transferTaken";
     public const string CategoryWrongType = "category.wrongType";
     public const string CurrencyDisabled = "currency.disabled";
     public const string ExchangeRateUnavailable = "exchangeRate.unavailable";
@@ -143,7 +152,7 @@ public static class ErrorCodes
         ResourceNotFound or FeatureDisabled => StatusCodes.Status404NotFound,
         ConflictDuplicate or ConflictStale or ConflictBusy or SetupAlreadyCompleted or RestoreSlotTaken
             or RestoreNameTaken or AttachmentLimitReached or MonthCloseNotEnded or DebtPaymentTaken or PasskeyLimitReached
-            or TokenLimitReached => StatusCodes.Status409Conflict,
+            or TokenLimitReached or SettleUpAlreadySplit or SettleUpTransferTaken => StatusCodes.Status409Conflict,
         AccessForbidden or UserSelfChange or UserLastAdministrator or SecurityNotHeld or SessionCurrent
             or TokenNotAllowed => StatusCodes.Status403Forbidden,
         CredentialsInvalid or TokenInvalid => StatusCodes.Status401Unauthorized,

@@ -17,6 +17,7 @@ Only what is shared into a household. The rule is the one the query filters alre
 | File attached to a transaction | the household of the transaction's account | created (read as "attached"), deleted, restored; see [Attachments](attachments.md) |
 | Household | itself | created, `renamed`, deleted, restored |
 | Membership | its household | `memberAdded`, `memberRemoved`, `memberRoleChanged` |
+| Split expense, settle-up payment | the household on the row (`IHouseholdScoped`), whatever account the expense sits on | created, updated, deleted, restored; a change to the members or their amounts is one `shares` field on the split, see [Household settle-up](household-settle-up.md) |
 | A bank statement import (Swedbank CSV or camt.053 XML), an Interactive Brokers statement | the household of the account imported into, and of any other account a transfer row touched | one `imported` row with the number of entries |
 | A bulk category or bulk tag edit, a categorization-rule run | the household of every account whose transactions it touched | one `updated` row with no entity id and the number of transactions |
 
@@ -40,7 +41,7 @@ erDiagram
         uuid ActorUserId FK "who did it, restrict"
         timestamptz OccurredAt "the save's clock"
         string Action "created ... memberRoleChanged, renamed"
-        string EntityKind "account ... household, member"
+        string EntityKind "account ... member, sharedExpense, settlement"
         uuid EntityId "null for a bulk edit"
         string Description "how it read then, max 200"
         int Count "rows an import or bulk edit touched"
@@ -95,8 +96,10 @@ An update lists only the fields a member can see, in this order, and only when t
 | Tag | `name` |
 | Household (`renamed`) | `name` |
 | Membership (`memberRoleChanged`) | `role` |
+| Split expense | `date`, `amount`, `description`, `method`, then `shares` |
+| Settle-up payment | `amount`, `date`, `note` (payments are never edited, so these only matter for completeness) |
 
-The table lives in one place in code, the registry of audited types in `AuditCollector`: one entry per entity type with its kind, how it is described, how it is routed (account-scoped, shareable, household, membership or attachment) and the fields above. A type without an entry is not audited, and a unit test checks that every shareable and account-scoped entity, transfers, households, memberships and attachments have one.
+The table lives in one place in code, the registry of audited types in `AuditCollector`: one entry per entity type with its kind, how it is described, how it is routed (account-scoped, shareable, household, membership, attachment or household-scoped) and the fields above. A type without an entry is not audited, and a unit test checks that every shareable, account-scoped and household-scoped entity, transfers, households, memberships and attachments have one. A household-scoped row takes its household from the row itself; a split whose tracked share rows changed is logged as updated even when the split row did not change, the way a transaction is when only its tags or lines did, and the shares read `Rūta 45.00; Šarūnas 45.00`.
 
 Values are stored as display text as they read at the time: money as `42.18 EUR`, dates as ISO, quantities without trailing zeros, enums as the camel-case name the API publishes (`expense`, `owner`), references by name (the category, account and security symbol), tags as a sorted comma list and split lines as `Food 10.00; Travel 5.00`. An empty value is `null` and the screen says "none". Nothing else is stored: the IBAN, notes, import references, external broker ids, reporting amounts, owners, timestamps and every secret field of the installation are outside the list, and the entity kinds that hold secrets — users, sessions, broker connections, SMTP settings — are not audited at all. A list holds at most `AuditEvent.MaxChanges` (12) entries, each value is cut to `AuditEvent.ValueMaxLength` (120) characters with an ellipsis, and the description to 200, so one row is bounded at a few kilobytes whatever is edited.
 
