@@ -31,6 +31,10 @@ import type {
   CashFlowForecastResponse,
   CreateAccountRequest,
   ProblemDetails,
+  ReconciliationPreviewParams,
+  ReconciliationPreviewResponse,
+  ReconciliationResponse,
+  RecordReconciliationRequest,
   UpdateAccountRequest,
 } from "../model";
 
@@ -824,6 +828,471 @@ export const useUpdateAccount = <TError = ErrorType<ProblemDetails>, TContext = 
   TContext
 > => {
   return useMutation(getUpdateAccountMutationOptions(options), queryClient);
+};
+export const getReconciliationsUrl = (id: string) => {
+  return `/api/accounts/${id}/reconciliations`;
+};
+
+/**
+ * Returns the newest 24 statement balances recorded for the account, typed by hand or taken from a camt.053 import, newest date first. Only the statement's balance is stored: the ledger balance on each date and the difference (statement minus ledger) are computed on every read, so an edit dated on or before a statement date changes its difference.
+ * @summary List the reconciliations of an account
+ */
+export const reconciliations = async (
+  id: string,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<ReconciliationResponse[]> => {
+  return customFetch<ReconciliationResponse[]>(getReconciliationsUrl(id), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getReconciliationsQueryKey = (id: string) => {
+  return [`/api/accounts/${id}/reconciliations`] as const;
+};
+
+export const getReconciliationsSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof reconciliations>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  id: string,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof reconciliations>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getReconciliationsQueryKey(id);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof reconciliations>>> = ({ signal }) =>
+    reconciliations(id, { signal, ...requestOptions });
+
+  return queryOptionsBuilder({
+    queryKey,
+    ...queryOptions,
+    queryFn: queryOptions?.queryFn ?? queryFn,
+  }) as UseSuspenseQueryOptions<Awaited<ReturnType<typeof reconciliations>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  } & {
+    throwOnError?: ((this: never, error: TError) => boolean) & { readonly __inferenceOnly: never };
+  };
+};
+
+export type ReconciliationsSuspenseQueryResult = NonNullable<
+  Awaited<ReturnType<typeof reconciliations>>
+>;
+export type ReconciliationsSuspenseQueryError = ErrorType<ProblemDetails>;
+
+export function useReconciliationsSuspense<
+  TData = Awaited<ReturnType<typeof reconciliations>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  id: string,
+  options: {
+    query: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof reconciliations>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useReconciliationsSuspense<
+  TData = Awaited<ReturnType<typeof reconciliations>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  id: string,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof reconciliations>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useReconciliationsSuspense<
+  TData = Awaited<ReturnType<typeof reconciliations>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  id: string,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof reconciliations>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List the reconciliations of an account
+ */
+
+export function useReconciliationsSuspense<
+  TData = Awaited<ReturnType<typeof reconciliations>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  id: string,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof reconciliations>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getReconciliationsSuspenseQueryOptions(id, options);
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export const getRecordReconciliationUrl = (id: string) => {
+  return `/api/accounts/${id}/reconciliations`;
+};
+
+/**
+ * Saves the balance a bank statement printed for the account on a date, in the account's main currency, whether or not it agrees with the ledger. A balance already recorded for that date, typed or imported, is replaced, and its source becomes manual. Anyone who can see the account can record one.
+ * @summary Record a statement balance for an account
+ */
+export const recordReconciliation = async (
+  id: string,
+  recordReconciliationRequest: RecordReconciliationRequest,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<ReconciliationResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return customFetch<ReconciliationResponse>(getRecordReconciliationUrl(id), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(recordReconciliationRequest),
+  });
+};
+
+export const getRecordReconciliationMutationKey = () => ["recordReconciliation"] as const;
+
+export const getRecordReconciliationMutationOptions = <
+  TError = ErrorType<ProblemDetails>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof recordReconciliation>>,
+    TError,
+    RecordReconciliationMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof recordReconciliation>>,
+  TError,
+  RecordReconciliationMutationVariables,
+  TContext
+> => {
+  const mutationKey = getRecordReconciliationMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof recordReconciliation>>,
+    RecordReconciliationMutationVariables
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return recordReconciliation(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type RecordReconciliationMutationResult = NonNullable<
+  Awaited<ReturnType<typeof recordReconciliation>>
+>;
+export type RecordReconciliationMutationBody = RecordReconciliationRequest;
+export type RecordReconciliationMutationError = ErrorType<ProblemDetails>;
+export type RecordReconciliationMutationVariables = {
+  id: string;
+  data: RecordReconciliationRequest;
+};
+
+/**
+ * @summary Record a statement balance for an account
+ */
+export const useRecordReconciliation = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof recordReconciliation>>,
+      TError,
+      RecordReconciliationMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof recordReconciliation>>,
+  TError,
+  RecordReconciliationMutationVariables,
+  TContext
+> => {
+  return useMutation(getRecordReconciliationMutationOptions(options), queryClient);
+};
+export const getReconciliationPreviewUrl = (id: string, params: ReconciliationPreviewParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/accounts/${id}/reconciliations/preview?${stringifiedParams}`
+    : `/api/accounts/${id}/reconciliations/preview`;
+};
+
+/**
+ * Answers what the ledger holds on a statement date, before the balance printed on the statement is saved: the ledger balance on that date in the account's main currency (the starting balance plus every transaction, transfer, conversion and investment entry dated on or before it), the latest reconciliation dated before it, and the rows in the main currency dated after that reconciliation, or from the beginning when there is none, up to the date, newest first, at most 100, with their count. Nothing is stored.
+ * @summary Preview a reconciliation of an account
+ */
+export const reconciliationPreview = async (
+  id: string,
+  params: ReconciliationPreviewParams,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<ReconciliationPreviewResponse> => {
+  return customFetch<ReconciliationPreviewResponse>(getReconciliationPreviewUrl(id, params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getReconciliationPreviewQueryKey = (
+  id: string,
+  params?: ReconciliationPreviewParams,
+) => {
+  return [`/api/accounts/${id}/reconciliations/preview`, ...(params ? [params] : [])] as const;
+};
+
+export const getReconciliationPreviewSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof reconciliationPreview>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  id: string,
+  params: ReconciliationPreviewParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof reconciliationPreview>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getReconciliationPreviewQueryKey(id, params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof reconciliationPreview>>> = ({ signal }) =>
+    reconciliationPreview(id, params, { signal, ...requestOptions });
+
+  return queryOptionsBuilder({
+    queryKey,
+    ...queryOptions,
+    queryFn: queryOptions?.queryFn ?? queryFn,
+  }) as UseSuspenseQueryOptions<
+    Awaited<ReturnType<typeof reconciliationPreview>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> } & {
+    throwOnError?: ((this: never, error: TError) => boolean) & { readonly __inferenceOnly: never };
+  };
+};
+
+export type ReconciliationPreviewSuspenseQueryResult = NonNullable<
+  Awaited<ReturnType<typeof reconciliationPreview>>
+>;
+export type ReconciliationPreviewSuspenseQueryError = ErrorType<ProblemDetails>;
+
+export function useReconciliationPreviewSuspense<
+  TData = Awaited<ReturnType<typeof reconciliationPreview>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  id: string,
+  params: ReconciliationPreviewParams,
+  options: {
+    query: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof reconciliationPreview>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useReconciliationPreviewSuspense<
+  TData = Awaited<ReturnType<typeof reconciliationPreview>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  id: string,
+  params: ReconciliationPreviewParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof reconciliationPreview>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useReconciliationPreviewSuspense<
+  TData = Awaited<ReturnType<typeof reconciliationPreview>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  id: string,
+  params: ReconciliationPreviewParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof reconciliationPreview>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Preview a reconciliation of an account
+ */
+
+export function useReconciliationPreviewSuspense<
+  TData = Awaited<ReturnType<typeof reconciliationPreview>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  id: string,
+  params: ReconciliationPreviewParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof reconciliationPreview>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getReconciliationPreviewSuspenseQueryOptions(id, params, options);
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export const getDeleteReconciliationUrl = (id: string, reconciliationId: string) => {
+  return `/api/accounts/${id}/reconciliations/${reconciliationId}`;
+};
+
+/**
+ * Removes a recorded statement balance for good. It does not go to the trash and is not audited, because it moves no money and can be typed again.
+ * @summary Delete a reconciliation of an account
+ */
+export const deleteReconciliation = async (
+  id: string,
+  reconciliationId: string,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<void> => {
+  return customFetch<void>(getDeleteReconciliationUrl(id, reconciliationId), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getDeleteReconciliationMutationKey = () => ["deleteReconciliation"] as const;
+
+export const getDeleteReconciliationMutationOptions = <
+  TError = ErrorType<ProblemDetails>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteReconciliation>>,
+    TError,
+    DeleteReconciliationMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteReconciliation>>,
+  TError,
+  DeleteReconciliationMutationVariables,
+  TContext
+> => {
+  const mutationKey = getDeleteReconciliationMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteReconciliation>>,
+    DeleteReconciliationMutationVariables
+  > = (props) => {
+    const { id, reconciliationId } = props ?? {};
+
+    return deleteReconciliation(id, reconciliationId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteReconciliationMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteReconciliation>>
+>;
+
+export type DeleteReconciliationMutationError = ErrorType<ProblemDetails>;
+export type DeleteReconciliationMutationVariables = { id: string; reconciliationId: string };
+
+/**
+ * @summary Delete a reconciliation of an account
+ */
+export const useDeleteReconciliation = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof deleteReconciliation>>,
+      TError,
+      DeleteReconciliationMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof deleteReconciliation>>,
+  TError,
+  DeleteReconciliationMutationVariables,
+  TContext
+> => {
+  return useMutation(getDeleteReconciliationMutationOptions(options), queryClient);
 };
 export const getRestoreAccountUrl = (id: string) => {
   return `/api/accounts/${id}/restore`;

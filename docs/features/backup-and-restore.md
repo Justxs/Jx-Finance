@@ -10,7 +10,7 @@ Three tables are transient and never exported: `UserSessions`, `EmailMessages` a
 
 `AssetValuations` needs no code of its own either: like every table of the model it is included automatically, and the depreciation terms are ordinary columns of `Assets`. `BackupEndpointTests` checks that a restore brings back an asset's valuations and depreciation.
 
-`MonthCloses` is an ordinary table and travels with no code of its own: its `Snapshot` is a `jsonb` value, and `column::text` carries it exactly. A restored installation keeps every close with its note, snapshot and `ClosedAt`, and because the transactions keep their `UpdatedAt`, drift reads the same after a restore as before it. `BackupEndpointTests` restores a backup and checks that a close survives beside the Discord webhook while the queued Discord posts are dropped. See [Month-end close](month-end-close.md).
+`MonthCloses` is an ordinary table and travels with no code of its own: its `Snapshot` is a `jsonb` value, and `column::text` carries it exactly. A restored installation keeps every close with its note, snapshot and `ClosedAt`, and because the transactions keep their `UpdatedAt`, drift reads the same after a restore as before it. `BackupEndpointTests` restores a backup and checks that a close and an account's [reconciliation](reconciliation.md) survive beside the Discord webhook while the queued Discord posts are dropped; `AccountReconciliations` is another ordinary table. See [Month-end close](month-end-close.md).
 
 ## Taking and uploading
 

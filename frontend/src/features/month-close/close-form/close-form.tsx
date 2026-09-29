@@ -31,7 +31,7 @@ export function CloseForm({ month, review }: Readonly<Props>) {
   const [editing, setEditing] = useState<"close" | "note" | null>(null);
   const [confirmingReopen, setConfirmingReopen] = useState(false);
   const closed = isClosedStatus(review.status);
-  const attention = attentionCount(review.checklist, review.monthEnd);
+  const attention = attentionCount(review.checklist);
   const openItems = openItemCount(review.checklist);
   const marker = statusMarkers[review.status];
 

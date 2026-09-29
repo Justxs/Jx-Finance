@@ -175,7 +175,42 @@
       "ownerOnly": "Only its owner can restore it"
     },
     "shareOfTotal": "Share of total",
-    "total": "Total"
+    "total": "Total",
+    "reconcile": {
+      "action": "Reconcile",
+      "title": "Reconcile {{account}}",
+      "description": "Type the balance printed on the bank statement. It is saved even when it differs from the ledger.",
+      "date": "Statement date",
+      "balance": "Balance on the statement ({{currency}})",
+      "ledger": "Ledger balance on {{date}}: {{amount}}",
+      "matches": "Matches the statement",
+      "more": "{{amount}} more on the statement",
+      "less": "{{amount}} less on the statement",
+      "rowsSince": "Rows since the reconciliation on {{date}}",
+      "rowsAll": "Rows up to {{date}}",
+      "noRows": "No rows in this period.",
+      "moreRows_one": "and {{count}} more row",
+      "moreRows_other": "and {{count}} more rows",
+      "openLedger": "Open in the ledger",
+      "save": "Save reconciliation",
+      "saved": "Reconciliation saved",
+      "earlier": "Earlier reconciliations",
+      "noEarlier": "No statement balance is recorded for this account yet.",
+      "previewFailed": "The ledger balance could not be loaded.",
+      "source": {
+        "manual": "Typed",
+        "statement": "From a camt.053 statement"
+      },
+      "kinds": {
+        "transaction": "Transaction",
+        "transferOut": "Transfer out",
+        "transferIn": "Transfer in",
+        "conversion": "Currency exchange",
+        "investmentEntry": "Investment entry"
+      },
+      "deleteTitle": "Delete this reconciliation?",
+      "deleteDescription": "The statement balance is removed. The ledger stays as it is."
+    }
   },
   "transfers": {
     "title": "Transfer money",
@@ -1902,7 +1937,9 @@
       "duplicates": "Duplicates",
       "search": "Search descriptions",
       "empty": "No rows match this view."
-    }
+    },
+    "resultReconciled": "Balance matches the statement on {{date}}.",
+    "resultDiffers": "The statement differs by {{difference}} on {{date}}."
   },
   "errors": {
     "generic": "Something went wrong. Please try again.",
@@ -2152,6 +2189,9 @@
     "monthClose": {
       "invalidMonth": "That is not a month this page can show.",
       "notEnded": "Only a month that has ended can be closed."
+    },
+    "reconciliation": {
+      "futureDate": "The statement date cannot be after today."
     }
   },
   "export": {
@@ -2173,11 +2213,14 @@
       "noUnusual": "No unusual expenses",
       "noRecurring": "No recurring entry is waiting",
       "importCovered": "{{account}} imported through {{date}}",
-      "importBehind": "{{account}}: last import {{date}}, before the month ends",
       "review": "Review",
       "categorize": "Categorize",
       "confirm": "Confirm",
-      "import": "Import"
+      "import": "Import",
+      "reconciled": "{{account}} reconciled on {{date}}",
+      "differs": "{{account}}: the statement differs by {{difference}} on {{date}}",
+      "behind": "{{account}}: last statement {{date}}, before the month ends",
+      "reconcile": "Reconcile"
     },
     "drift": {
       "title": "Changed since the close",

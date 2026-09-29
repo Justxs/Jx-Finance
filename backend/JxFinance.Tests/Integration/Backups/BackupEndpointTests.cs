@@ -376,7 +376,7 @@ public sealed class BackupEndpointTests(ApiFixture fixture) : IntegrationTestBas
     }
 
     [Fact]
-    public async Task Restore_keeps_discord_webhooks_and_month_closes_and_drops_queued_discord_messages()
+    public async Task Restore_keeps_discord_webhooks_month_closes_and_reconciliations_and_drops_queued_discord_messages()
     {
         const string discordUrl = "/api/users/me/discord";
         const string closeUrl = "/api/month-close/2025-05";
@@ -401,9 +401,14 @@ public sealed class BackupEndpointTests(ApiFixture fixture) : IntegrationTestBas
         var account = await CreateAccountAsync("100.00", client: memberClient);
         await CreateTransactionAsync(memberClient, account, null, "expense", "12.00", "2025-05-03");
         (await memberClient.PostAsJsonAsync(closeUrl, new { note = "Kept" }, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
+        var reconciliation = await PostAsync<ReconciliationDto>(
+            memberClient,
+            $"/api/accounts/{account}/reconciliations",
+            new { date = "2025-05-31", balance = "90.00" });
         var backup = await CreateBackupAsync();
         (await memberClient.DeleteAsync(discordUrl, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
         (await memberClient.DeleteAsync(closeUrl, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
+        (await memberClient.DeleteAsync($"/api/accounts/{account}/reconciliations/{reconciliation.Id}", TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
 
         try
         {
@@ -423,6 +428,11 @@ public sealed class BackupEndpointTests(ApiFixture fixture) : IntegrationTestBas
         Assert.Equal("closed", review!["status"]!.GetValue<string>());
         Assert.Equal("Kept", review["note"]!.GetValue<string>());
         Assert.Equal("12.00", review["drift"]!["totals"]!["closedExpense"]!.GetValue<string>());
+        var reconciled = await restoredClient.GetFromJsonAsync<List<ReconciliationDto>>(
+            $"/api/accounts/{account}/reconciliations",
+            TestContext.Current.CancellationToken);
+        var restored = Assert.Single(reconciled!);
+        Assert.Equal((reconciliation.Id, "90.00", "2.00"), (restored.Id, restored.Balance, restored.Difference));
     }
 
     private sealed record RestoredLayoutDto(List<string> Order, List<string> Hidden, bool IsDefault);

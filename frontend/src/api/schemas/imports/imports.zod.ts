@@ -8,11 +8,14 @@
 import * as zod from "zod";
 
 /**
- * Writes the rows the user kept from a preview into the ledger. Rows the preview flagged as already present are skipped rather than duplicated, and the response reports how many were imported and how many were skipped. A row's tagIds are written as they arrive, whether a rule suggested them in the preview or the user picked them, so an empty list imports the row with no tags. A row with existingTransactionId adds nothing: the bank entry is linked to that transaction, which keeps its date, category, tags and description and is then treated as imported, so the same entry is a duplicate next time. The audit entry names the format the rows came from.
+ * Writes the rows the user kept from a preview into the ledger. Rows the preview flagged as already present are skipped rather than duplicated, and the response reports how many were imported and how many were skipped. A row's tagIds are written as they arrive, whether a rule suggested them in the preview or the user picked them, so an empty list imports the row with no tags. A row with existingTransactionId adds nothing: the bank entry is linked to that transaction, which keeps its date, category, tags and description and is then treated as imported, so the same entry is a duplicate next time. The audit entry names the format the rows came from. For a camt.053 file, statement echoes the preview's closing date, balance and currency; when the currency is the account's, that balance is recorded as a reconciliation of the account after the rows are written, replacing one on the same date, and returned with its difference from the ledger.
  * @summary Commit previewed statement rows
  */
 
 export const importConfirmBodyRowsItemAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const importConfirmBodyStatementTwoClosingBalanceRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
 
 export const ImportConfirmBody = zod.object({
   accountId: zod.uuid().min(1).describe("The account the rows post to; must be the one previewed."),
@@ -76,12 +79,119 @@ export const ImportConfirmBody = zod.object({
     .describe(
       "The statement format: swedbankCsv for a Swedbank CSV export or camt053 for an ISO 20022 camt.053 XML statement.",
     ),
+  statement: zod
+    .union([
+      zod.null(),
+      zod.object({
+        closingDate: zod.iso.date(),
+        closingBalance: zod.stringFormat(
+          "decimal",
+          importConfirmBodyStatementTwoClosingBalanceRegExp,
+        ),
+        closingCurrency: zod.enum([
+          "eur",
+          "usd",
+          "gbp",
+          "chf",
+          "pln",
+          "sek",
+          "nok",
+          "dkk",
+          "czk",
+          "huf",
+          "ron",
+          "isk",
+          "try",
+          "jpy",
+          "cny",
+          "hkd",
+          "sgd",
+          "krw",
+          "inr",
+          "idr",
+          "myr",
+          "php",
+          "thb",
+          "aud",
+          "nzd",
+          "cad",
+          "mxn",
+          "brl",
+          "ils",
+          "zar",
+        ]),
+      }),
+    ])
+    .optional()
+    .describe(
+      "Optional. The closing balance the camt.053 preview answered; ignored for other formats.",
+    ),
 });
+
+export const importConfirmResponseReconciliationTwoBalanceRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const importConfirmResponseReconciliationTwoLedgerBalanceRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const importConfirmResponseReconciliationTwoDifferenceRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
 
 export const ImportConfirmResponse = zod.object({
   imported: zod.int(),
   skippedDuplicates: zod.int(),
   linked: zod.int(),
+  reconciliation: zod.union([
+    zod.null(),
+    zod.object({
+      id: zod.uuid(),
+      date: zod.iso.date(),
+      balance: zod.stringFormat("decimal", importConfirmResponseReconciliationTwoBalanceRegExp),
+      currency: zod.enum([
+        "eur",
+        "usd",
+        "gbp",
+        "chf",
+        "pln",
+        "sek",
+        "nok",
+        "dkk",
+        "czk",
+        "huf",
+        "ron",
+        "isk",
+        "try",
+        "jpy",
+        "cny",
+        "hkd",
+        "sgd",
+        "krw",
+        "inr",
+        "idr",
+        "myr",
+        "php",
+        "thb",
+        "aud",
+        "nzd",
+        "cad",
+        "mxn",
+        "brl",
+        "ils",
+        "zar",
+      ]),
+      source: zod.enum(["manual", "statement"]),
+      ledgerBalance: zod.stringFormat(
+        "decimal",
+        importConfirmResponseReconciliationTwoLedgerBalanceRegExp,
+      ),
+      difference: zod.stringFormat(
+        "decimal",
+        importConfirmResponseReconciliationTwoDifferenceRegExp,
+      ),
+      createdAt: zod.iso.datetime({ offset: true }),
+    }),
+  ]),
 });
 
 /**

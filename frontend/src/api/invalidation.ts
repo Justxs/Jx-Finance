@@ -120,6 +120,10 @@ const rules: readonly Rule[] = [
     ],
   },
   {
+    after: [api.getRecordReconciliationMutationKey, api.getDeleteReconciliationMutationKey],
+    refresh: [api.getAccountsQueryKey, api.getMonthCloseYearQueryKey],
+  },
+  {
     after: [api.getCreateTransferMutationKey, api.getUpdateTransferMutationKey],
     deleted: [api.getDeleteTransferMutationKey],
     refresh: [

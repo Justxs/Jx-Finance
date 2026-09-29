@@ -1,0 +1,30 @@
+# Reconciliation: decisions
+
+Related: feature page [Reconciliation](../features/reconciliation.md); [Month-end close](month-end-close.md); [Imports](swedbank-csv-import.md).
+
+## Current
+
+Implemented 2026-09-29 without a feature switch. A statement balance on a date is one `AccountReconciliation` row per account and date, in the account's main currency, typed in the Reconcile dialog of the accounts page or recorded by a camt.053 confirm from the closing balance the preview answered; saving again on a date replaces it. Only the bank's number is stored: the ledger balance and the difference are computed on every read through `AccountMovements`. Rows follow the account's visibility, are hard-deleted and are neither in the trash nor in the audit log. The month-close checklist lists every account with a reconciliation or an imported row as reconciled, differs, imported or behind for the month, from the earliest reconciliation on or after the month's last day and then the latest import; differs and behind are hints that count toward "things need attention", never toward the close confirmation
+
+## Log
+
+Newest first. Each entry is a choice between real alternatives: what was chosen, what was rejected, and why.
+
+- **2026-09-29.** Open questions of the plan, decided while the owner was away and to be reviewed: a reconciliation is in the account's main currency only, and the dialog's statement date starts on the last day of the previous month
+  - Rejected: A currency picker in the dialog and one reconciliation per held currency; today as the default date
+  - Why: Both were the plan's recommended and the more conservative answers. The camt.053 check already compares the main currency only, a bank statement covers one currency, and a second currency would change the unique key, the checklist line and the coverage query for accounts such as Revolut that the trial has not shown to need it. Statements close at a month end, and the checklist asks about the month that just ended, so the previous month's last day is the date most people type; today would be wrong for nearly every paper statement. Adding a currency later is a new column in the key and a select in the form
+- **2026-09-29.** The future-date rule sits in the preview and record validators and answers `reconciliation.futureDate`; a camt.053 closing date is recorded whatever it is
+  - Rejected: Checking the date in `RecordAsync` for both sources
+  - Why: A statement's closing date is the bank's fact, and in another time zone it can be tomorrow here. Refusing it would silently drop the evidence the import was meant to keep. The validator puts the typed date's error on its field like every other validation
+- **2026-09-29.** A `behind` line carries the later of the latest import and the latest reconciliation before the month end, and reads "last statement" rather than "last import"
+  - Rejected: The latest import date only, as the plan's example text
+  - Why: An account can be listed only because of an older typed reconciliation, and without the import feature there is no import date at all. Both dates come from a statement, so one sentence covers both
+- **2026-09-29.** `ImportConfirmResponse.reconciliation` is the ordinary `ReconciliationResponse`, and the client sends `statement` whenever the preview has a closing date, balance and currency
+  - Rejected: A smaller record with only the date and the difference; checking the format and the currency in the client as well
+  - Why: Reusing the response type costs nothing and gives the result line the currency it formats the difference in. The server records only a camt.053 closing balance in the account's currency, so a second copy of that rule in the browser would only be able to disagree with it
+- **2026-09-29.** `AuditCollectorTests` names reconciliations as the one account-scoped type that is not audited
+  - Rejected: An audit entry per reconciliation, which the test would otherwise demand of every `IAccountScoped` entity
+  - Why: A reconciliation moves no money and can be typed again in seconds, the choice `MonthClose` made when it is reopened; the exception is written into the test so a new account-scoped entity still fails it
+- **2026-09-28.** As planned: one table for both sources, the ledger side computed on read, one row per account and date, the earliest reconciliation on or after the month end deciding the month, hints rather than blocks, account visibility, hard deletes, no switch and no accounts-table column
+  - Rejected: A reconciled flag on `MonthClose`; parsing stored statement files again; storing the ledger balance or a "matched" flag; keeping every attempt on a date; only a reconciliation dated exactly on the last day; refusing to close; owner-only access; a trash entry and an audit event; a feature switch; a "Reconciled" column
+  - Why: A statement is a fact about the account, not a personal close in one scope, and one table lets a camt.053 closing balance and a typed balance be the same evidence for one query. A stored "matched" would turn false after an edit dated before the statement, the same reason balances are never stored. Banks end statements on different days, and a balance that agrees after the month end means the month's rows are in. It is a hint about the statement, like the import hint before it, not a row to fix. Either partner may hold the statement. A column would cost a balance query per account on every list for a question the checklist asks once a month

@@ -1,6 +1,6 @@
 # Plan: Monthly digest
 
-Status: planned 2026-09-28. Size M. Build it after [Reconciliation by hand](reconciliation-by-hand.md), whose account lines become open items here. It also closes the per-user language gap of the Settings row in section 2 of the [backlog](../backlog.md), because the digest is the first long message a member reads outside the application.
+Status: planned 2026-09-28. Size M. [Reconciliation](../features/reconciliation.md), whose account lines become open items here, has shipped. It also closes the per-user language gap of the Settings row in section 2 of the [backlog](../backlog.md), because the digest is the first long message a member reads outside the application.
 
 ## Outcome
 
@@ -51,7 +51,7 @@ Status: planned 2026-09-28. Size M. Build it after [Reconciliation by hand](reco
    - In `Infrastructure/DependencyInjection.cs`, register `ICurrentUser` as `sp => sp.GetRequiredService<JobUser>().User ?? sp.GetRequiredService<HttpCurrentUser>()`, with `HttpCurrentUser` registered as itself.
    - Add `PeriodicJob.RunAsUserAsync(Guid userId, Func<IServiceProvider, Task> work)`. It opens a scope, sets `JobUser.User = new FixedUser(userId)` before anything else is resolved, runs `work`, and logs and isolates failures like `ForEachActiveUserAsync`.
    - Existing jobs stay as they are.
-3. **Pure builder.** `Common/Notifications/MonthlyDigest.cs` has `From(MonthReviewResponse review)`, which returns a `MonthlyDigestPayload?`: null for an empty month. It picks the movers, computes the kept percentage (null without income) and counts accounts in `Differs` or `Behind` from the reconciliation plan's `checklist.accounts`.
+3. **Pure builder.** `Common/Notifications/MonthlyDigest.cs` has `From(MonthReviewResponse review)`, which returns a `MonthlyDigestPayload?`: null for an empty month. It picks the movers, computes the kept percentage (null without income) and counts accounts in `Differs` or `Behind` from the review's `checklist.accounts` (see [Reconciliation](../features/reconciliation.md#in-the-month-end-close)).
 4. **Job.** `Infrastructure/BackgroundJobs/MonthlyDigestJob : PeriodicJob` runs hourly, with `RequiredFeature = Feature.MonthClose` and `LastDigestDay = 5`.
    - It picks the active users who ticked `MonthlyDigest` in `EmailNotificationTypes`, or who have an enabled webhook with it in `Types` while Discord is allowed. The two lists are read and filtered in memory, because the user table is small.
    - It leaves out users who already have a digest notification for the month.

@@ -8,6 +8,7 @@ using JxFinance.Domain.Investments;
 using JxFinance.Domain.MonthCloses;
 using JxFinance.Domain.Settings;
 using JxFinance.Domain.Transactions;
+using JxFinance.Endpoints.Accounts.Interfaces;
 using JxFinance.Endpoints.Budgets.Interfaces;
 using JxFinance.Endpoints.Dashboard.Shared;
 using JxFinance.Endpoints.MonthCloses.Interfaces;
@@ -32,7 +33,8 @@ public sealed class MonthCloseService(
     ITransactionService transactions,
     IBudgetService budgetService,
     INetWorthService netWorth,
-    IInvestmentCashFlowService investmentCashFlows) : IMonthCloseService
+    IInvestmentCashFlowService investmentCashFlows,
+    IReconciliationService reconciliations) : IMonthCloseService
 {
     public const int MaxDriftRows = 100;
 
@@ -254,20 +256,41 @@ public sealed class MonthCloseService(
             recurring = await db.RecurringBills.CountAsync(b => b.IsActive && b.NextDueDate <= lastDay, cancellationToken);
         }
 
-        IReadOnlyList<MonthImportCoverage>? imports = null;
-        if (IsEnabled(Feature.Import))
-        {
-            imports = await db.Transactions
+        return new MonthChecklist(uncategorized.Count, recurring, unusual, await AccountCoverageAsync(window.InclusiveEnd, cancellationToken));
+    }
+
+    private async Task<IReadOnlyList<MonthAccountCoverage>> AccountCoverageAsync(DateOnly monthEnd, CancellationToken cancellationToken)
+    {
+        var reconciled = (await reconciliations.CoverageAsync(monthEnd, cancellationToken)).ToDictionary(c => c.AccountId);
+        var imports = IsEnabled(Feature.Import)
+            ? await db.Transactions
                 .Where(t => t.Source == TransactionSource.Imported)
                 .GroupBy(t => t.AccountId)
                 .Select(g => new { AccountId = g.Key, Latest = g.Max(t => t.Date) })
-                .Join(db.Accounts, l => l.AccountId, a => a.Id, (l, a) => new { a.Id, a.Name, l.Latest })
-                .OrderBy(l => l.Name)
-                .Select(l => new MonthImportCoverage(l.Id.Value, l.Name, l.Latest))
-                .ToListAsync(cancellationToken);
-        }
+                .Join(db.Accounts, l => l.AccountId, a => a.Id, (l, a) => new { a.Id, a.Name, a.StartingBalance.Currency, l.Latest })
+                .ToListAsync(cancellationToken)
+            : [];
+        var imported = imports.ToDictionary(i => i.Id.Value, i => i.Latest);
 
-        return new MonthChecklist(uncategorized.Count, recurring, unusual, imports);
+        return reconciled.Values
+            .Select(r => (r.AccountId, r.AccountName, r.Currency))
+            .Concat(imports.Select(i => (AccountId: i.Id.Value, AccountName: i.Name, i.Currency)))
+            .DistinctBy(a => a.AccountId)
+            .OrderBy(a => a.AccountName, StringComparer.CurrentCultureIgnoreCase)
+            .Select(a =>
+            {
+                var check = reconciled.GetValueOrDefault(a.AccountId);
+                var latestImport = imported.TryGetValue(a.AccountId, out var latest) ? latest : (DateOnly?)null;
+                var state = MonthAccountCoverage.StateOf(monthEnd, check?.Difference, latestImport);
+                var date = state switch
+                {
+                    MonthAccountState.Reconciled or MonthAccountState.Differs => check?.Date,
+                    MonthAccountState.Imported => latestImport,
+                    _ => new[] { latestImport, check?.Date }.Max(),
+                };
+                return new MonthAccountCoverage(a.AccountId, a.AccountName, state, date, check?.Difference, a.Currency);
+            })
+            .ToList();
     }
 
     private async Task<MonthCloseSnapshot> SnapshotAsync(DateOnly start, CancellationToken cancellationToken)

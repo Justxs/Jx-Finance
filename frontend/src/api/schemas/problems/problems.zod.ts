@@ -110,6 +110,7 @@ export const ProblemDetailsResponse = zod
                 "quantity.nonNegative",
                 "quantity.positive",
                 "range.invalid",
+                "reconciliation.futureDate",
                 "recurringBill.debtShape",
                 "recurringBill.inactive",
                 "reference.notFound",

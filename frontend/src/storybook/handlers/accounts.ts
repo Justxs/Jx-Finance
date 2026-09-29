@@ -3,6 +3,10 @@ import {
   getCashFlowForecastMockHandler,
   getCreateAccountMockHandler,
   getDeleteAccountMockHandler,
+  getDeleteReconciliationMockHandler,
+  getReconciliationPreviewMockHandler,
+  getReconciliationsMockHandler,
+  getRecordReconciliationMockHandler,
   getAccountMockHandler,
   getAccountsMockHandler,
   getRestoreAccountMockHandler,
@@ -15,9 +19,12 @@ import {
   archivedAccounts,
   cashFlowForecast,
   checkingAccount,
+  matchedReconciliation,
+  reconciliationPreview,
+  reconciliations,
   withBalance,
 } from "@/storybook/fixtures";
-import { found, mergeScoped, query, readBody } from "./http";
+import { found, mergeScoped, query, readBody, text } from "./http";
 import { CREATED_AT, NEW_ID } from "./ids";
 import { applyDirection, byId, byIdFrom, compareText, includesText, updateFrom } from "./lists";
 
@@ -72,6 +79,26 @@ export const accountHandlers = [
   getAccountMockHandler(byIdFrom(accounts)),
   getUpdateAccountMockHandler(updateFrom(accounts, mergeScoped)),
   getDeleteAccountMockHandler(),
+  getReconciliationsMockHandler(reconciliations),
+  getReconciliationPreviewMockHandler(({ request }) => ({
+    ...reconciliationPreview,
+    date: query(request).get("date") ?? reconciliationPreview.date,
+  })),
+  getRecordReconciliationMockHandler(async ({ request }) => {
+    const body = await readBody(request);
+    const balance = text(body.balance) ?? matchedReconciliation.balance;
+    return {
+      ...matchedReconciliation,
+      id: NEW_ID,
+      date: text(body.date) ?? matchedReconciliation.date,
+      balance,
+      ledgerBalance: reconciliationPreview.ledgerBalance,
+      difference: ((toCents(balance) - toCents(reconciliationPreview.ledgerBalance)) / 100).toFixed(
+        2,
+      ),
+    };
+  }),
+  getDeleteReconciliationMockHandler(),
   getRestoreAccountMockHandler(({ params }) => {
     const archived = found(byId(archivedAccounts, params.id));
     return withBalance({ ...archived, createdAt: CREATED_AT }, archived.startingBalance);

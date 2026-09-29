@@ -14,11 +14,15 @@ public sealed class ImportConfirmSummary : Summary<ImportConfirmEndpoint, Import
             + "empty list imports the row with no tags. A row with existingTransactionId adds nothing: "
             + "the bank entry is linked to that transaction, which keeps its date, category, tags and "
             + "description and is then treated as imported, so the same entry is a duplicate next time. "
-            + "The audit entry names the format the rows came from.";
+            + "The audit entry names the format the rows came from. For a camt.053 file, statement echoes the "
+            + "preview's closing date, balance and currency; when the currency is the account's, that balance is "
+            + "recorded as a reconciliation of the account after the rows are written, replacing one on the same date, "
+            + "and returned with its difference from the ledger.";
         RequestParam(r => r.AccountId, "The account the rows post to; must be the one previewed.");
         RequestParam(r => r.Rows, "The rows to import, as returned by preview, with any category and tag corrections applied.");
         RequestParam(r => r.Format, "The statement format: swedbankCsv for a Swedbank CSV export or camt053 for an ISO 20022 camt.053 XML statement.");
-        Responses[200] = "Counts of imported, linked and skipped rows.";
+        RequestParam(r => r.Statement, "Optional. The closing balance the camt.053 preview answered; ignored for other formats.");
+        Responses[200] = "Counts of imported, linked and skipped rows, and the recorded reconciliation when there is one.";
         Responses[400] = "Validation failed, a tag is not visible to you, the account is not visible to the signed-in user, "
             + "or a transaction to link no longer matches its bank entry or is already linked (import.entryMismatch).";
     }

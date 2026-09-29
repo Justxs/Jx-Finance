@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { ids } from "@/storybook/fixtures";
+import { expect } from "storybook/test";
+import { differingReconciliation, ids, matchedReconciliation } from "@/storybook/fixtures";
 import { ImportResultLine } from "./import-result";
 
 const result = {
@@ -29,3 +30,21 @@ export const WithSkippedDuplicates: Story = { args: { result: { ...result, skipp
 export const WithLinkedEntries: Story = { args: { result: { ...result, linked: 2 } } };
 
 export const OnlyDuplicates: Story = { args: { result: { ...result, imported: 0, skipped: 3 } } };
+
+export const StatementMatches: Story = {
+  args: {
+    result: { ...result, reconciliation: { ...matchedReconciliation, source: "statement" } },
+  },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText(/^Balance matches the statement on/)).toBeVisible();
+  },
+};
+
+export const StatementDiffers: Story = {
+  args: { result: { ...result, reconciliation: differingReconciliation } },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText(/^The statement differs by €12.30 on/)).toHaveClass(
+      "text-expense",
+    );
+  },
+};

@@ -85,16 +85,22 @@ export function monthReviewOf(month: string, patch: Partial<MonthReviewResponse>
       uncategorized: 3,
       unconfirmedRecurring: 2,
       unusual: 1,
-      imports: [
+      accounts: [
         {
           accountId: ids.accounts.checking,
           accountName: accountName(ids.accounts.checking),
-          latestImportedDate: lastDayOf(month),
+          state: "reconciled",
+          date: lastDayOf(month),
+          difference: "0.00",
+          currency: "eur",
         },
         {
           accountId: ids.accounts.shared,
           accountName: accountName(ids.accounts.shared),
-          latestImportedDate: `${month}-24`,
+          state: "behind",
+          date: `${month}-24`,
+          difference: null,
+          currency: "eur",
         },
       ],
     },
@@ -111,11 +117,14 @@ const clearChecklist: MonthReviewResponse["checklist"] = {
   uncategorized: 0,
   unconfirmedRecurring: 0,
   unusual: 0,
-  imports: [
+  accounts: [
     {
       accountId: ids.accounts.checking,
       accountName: accountName(ids.accounts.checking),
-      latestImportedDate: "2026-08-31",
+      state: "imported",
+      date: "2026-08-31",
+      difference: null,
+      currency: "eur",
     },
   ],
 };
@@ -250,7 +259,7 @@ export const notEndedMonthReview = monthReviewOf(MONTH_CLOSE_RUNNING_MONTH, {
 });
 
 export const emptyMonthReview = monthReviewOf(MONTH_CLOSE_MONTH, {
-  checklist: { uncategorized: 0, unconfirmedRecurring: 0, unusual: 0, imports: [] },
+  checklist: { uncategorized: 0, unconfirmedRecurring: 0, unusual: 0, accounts: [] },
   figures: { ...emptyReportSummary, periodStart: "2026-08-01", periodEnd: "2026-08-31" },
   budgets: [],
   netWorthStart: null,

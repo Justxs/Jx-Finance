@@ -305,6 +305,26 @@ public sealed class ImportEndpointTests(ApiFixture fixture) : IntegrationTestBas
     }
 
     [Fact]
+    public async Task A_camt_confirm_records_its_closing_balance_in_the_account_currency_only()
+    {
+        var (account, _) = await CreateAccountWithIbanAsync("100.00");
+
+        var camt = await ConfirmWithStatementAsync(account, "camt053", "JUNE-1", new DateOnly(2025, 6, 2), "2025-06-30", "84.23", "eur");
+        var dollars = await ConfirmWithStatementAsync(account, "camt053", "JULY-1", new DateOnly(2025, 7, 2), "2025-07-31", "70.00", "usd");
+        var csv = await ConfirmWithStatementAsync(account, "swedbankCsv", "AUG-1", new DateOnly(2025, 8, 2), "2025-08-31", "60.00", "eur");
+
+        Assert.Equal(
+            (new DateOnly(2025, 6, 30), "statement", "84.23", "0.00"),
+            (camt.Reconciliation!.Date, camt.Reconciliation.Source, camt.Reconciliation.Balance, camt.Reconciliation.Difference));
+        Assert.Null(dollars.Reconciliation);
+        Assert.Null(csv.Reconciliation);
+        var listed = await Client.GetFromJsonAsync<List<ReconciliationDto>>(
+            $"/api/accounts/{account}/reconciliations",
+            TestContext.Current.CancellationToken);
+        Assert.Equal(camt.Reconciliation.Id, Assert.Single(listed!).Id);
+    }
+
+    [Fact]
     public async Task A_camt_row_is_offered_a_hand_entered_row_but_never_an_imported_one()
     {
         var (account, iban) = await CreateAccountWithIbanAsync("100.00");
@@ -374,6 +394,22 @@ public sealed class ImportEndpointTests(ApiFixture fixture) : IntegrationTestBas
     private Task<ConfirmDto> ConfirmAsync(Guid accountId, params object[] rows) =>
         PostAsync<ConfirmDto>(Client, "/api/import/confirm", new { accountId, rows });
 
+    private Task<ReconciledConfirmDto> ConfirmWithStatementAsync(
+        Guid accountId,
+        string format,
+        string importRef,
+        DateOnly date,
+        string closingDate,
+        string closingBalance,
+        string closingCurrency) =>
+        PostAsync<ReconciledConfirmDto>(Client, "/api/import/confirm", new
+        {
+            accountId,
+            format,
+            rows = new[] { Row(importRef, "15.77", date: date) },
+            statement = new { closingDate, closingBalance, closingCurrency },
+        });
+
     private static object Row(
         string importRef,
         string amount = "10.00",
@@ -423,4 +459,6 @@ public sealed class ImportEndpointTests(ApiFixture fixture) : IntegrationTestBas
     private sealed record CamtPreviewDto(List<CamtRowDto> Rows, StatementDto Statement);
 
     private sealed record ConfirmDto(int Imported, int SkippedDuplicates, int Linked);
+
+    private sealed record ReconciledConfirmDto(int Imported, ReconciliationDto? Reconciliation);
 }

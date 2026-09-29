@@ -21,6 +21,7 @@ erDiagram
     Household ||--o{ Account : "shared scope"
     Household ||--o{ Category : "shared scope"
     Account ||--o{ Transaction : holds
+    Account ||--o{ AccountReconciliation : "statement balance, one per date"
     Transaction ||--o{ TransactionLine : "optional split"
     Category ||--o{ Transaction : categorizes
     Category ||--o{ TransactionLine : categorizes

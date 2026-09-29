@@ -109,6 +109,7 @@ public static class ErrorCodes
     public const string DiscordSendFailed = "discord.sendFailed";
     public const string MonthCloseInvalidMonth = "monthClose.invalidMonth";
     public const string MonthCloseNotEnded = "monthClose.notEnded";
+    public const string ReconciliationFutureDate = "reconciliation.futureDate";
 
     public static IReadOnlyList<string> All { get; } = typeof(ErrorCodes)
         .GetFields(BindingFlags.Public | BindingFlags.Static)

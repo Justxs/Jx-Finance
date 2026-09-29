@@ -177,7 +177,44 @@
       "ownerOnly": "Atkurti gali tik sąskaitos savininkas"
     },
     "shareOfTotal": "Dalis nuo visų",
-    "total": "Iš viso"
+    "total": "Iš viso",
+    "reconcile": {
+      "action": "Suderinti",
+      "title": "Suderinti: {{account}}",
+      "description": "Įveskite banko išraše nurodytą likutį. Jis išsaugomas, net jei skiriasi nuo apskaitos likučio.",
+      "date": "Išrašo data",
+      "balance": "Likutis išraše ({{currency}})",
+      "ledger": "Apskaitos likutis {{date}}: {{amount}}",
+      "matches": "Sutampa su išrašu",
+      "more": "Išraše {{amount}} daugiau",
+      "less": "Išraše {{amount}} mažiau",
+      "rowsSince": "Eilutės nuo suderinimo {{date}}",
+      "rowsAll": "Eilutės iki {{date}}",
+      "noRows": "Šiuo laikotarpiu eilučių nėra.",
+      "moreRows_one": "ir dar {{count}} eilutė",
+      "moreRows_few": "ir dar {{count}} eilutės",
+      "moreRows_many": "ir dar {{count}} eilutės",
+      "moreRows_other": "ir dar {{count}} eilučių",
+      "openLedger": "Atidaryti operacijose",
+      "save": "Išsaugoti suderinimą",
+      "saved": "Suderinimas išsaugotas",
+      "earlier": "Ankstesni suderinimai",
+      "noEarlier": "Šiai sąskaitai išrašo likutis dar neįrašytas.",
+      "previewFailed": "Nepavyko įkelti apskaitos likučio.",
+      "source": {
+        "manual": "Įvestas ranka",
+        "statement": "Iš camt.053 išrašo"
+      },
+      "kinds": {
+        "transaction": "Operacija",
+        "transferOut": "Išeinantis pervedimas",
+        "transferIn": "Gaunamas pervedimas",
+        "conversion": "Valiutos keitimas",
+        "investmentEntry": "Investicijų įrašas"
+      },
+      "deleteTitle": "Ištrinti šį suderinimą?",
+      "deleteDescription": "Išrašo likutis pašalinamas. Apskaita lieka nepakitusi."
+    }
   },
   "transfers": {
     "title": "Pervesti pinigus",
@@ -1978,7 +2015,9 @@
       "duplicates": "Dublikatai",
       "search": "Ieškoti aprašymuose",
       "empty": "Šiame rodinyje atitinkančių eilučių nėra."
-    }
+    },
+    "resultReconciled": "Likutis sutampa su išrašu {{date}}.",
+    "resultDiffers": "Išrašas skiriasi {{difference}} ({{date}})."
   },
   "errors": {
     "generic": "Kažkas nepavyko. Bandykite dar kartą.",
@@ -2228,6 +2267,9 @@
     "monthClose": {
       "invalidMonth": "Šio mėnesio šiame puslapyje parodyti negalima.",
       "notEnded": "Uždaryti galima tik pasibaigusį mėnesį."
+    },
+    "reconciliation": {
+      "futureDate": "Išrašo data negali būti vėlesnė nei šiandien."
     }
   },
   "export": {
@@ -2255,11 +2297,14 @@
       "noUnusual": "Neįprastų išlaidų nėra",
       "noRecurring": "Laukiančių periodinių įrašų nėra",
       "importCovered": "{{account}}: importuota iki {{date}}",
-      "importBehind": "{{account}}: paskutinis importas {{date}}, anksčiau nei mėnesio pabaiga",
       "review": "Peržiūrėti",
       "categorize": "Priskirti kategorijas",
       "confirm": "Patvirtinti",
-      "import": "Importuoti"
+      "import": "Importuoti",
+      "reconciled": "{{account}}: suderinta {{date}}",
+      "differs": "{{account}}: išrašas skiriasi {{difference}} ({{date}})",
+      "behind": "{{account}}: paskutinis išrašas {{date}}, anksčiau nei mėnesio pabaiga",
+      "reconcile": "Suderinti"
     },
     "drift": {
       "title": "Pakeista po uždarymo",

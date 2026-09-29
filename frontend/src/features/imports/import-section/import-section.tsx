@@ -27,7 +27,7 @@ import {
 } from "../import-preview-table/preview-rows";
 import { recallParams } from "../import-queries";
 import { ImportPreviewError } from "./import-preview-error";
-import { type ImportResult, ImportResultLine } from "./import-result";
+import { type ImportResult, ImportResultLine, useReconciliationText } from "./import-result";
 import { IMPORT_FILE_INPUT_ID, ImportUploadForm, importFormats } from "./import-upload-form";
 
 const uploadProblemKeys = {
@@ -52,6 +52,7 @@ export function ImportSection({
   confirmDiscard,
 }: Readonly<Props>) {
   const { t } = useTranslation();
+  const reconciliationText = useReconciliationText();
   const fileField = useFileField(
     IMPORT_FILE_INPUT_ID,
     importFormats[format].maxBytes,
@@ -100,12 +101,16 @@ export function ImportSection({
             linked: data.linked,
             skipped: data.skippedDuplicates,
           }),
+          {
+            description: data.reconciliation ? reconciliationText(data.reconciliation) : undefined,
+          },
         );
         setResult({
           imported: data.imported,
           linked: data.linked,
           skipped: data.skippedDuplicates,
           accountId: variables.data.accountId,
+          reconciliation: data.reconciliation,
           ...importDateRange(confirmed),
         });
         replaceRows(null);
@@ -145,10 +150,15 @@ export function ImportSection({
       return;
     }
     const selectedRows = rows.filter((row) => row.selected);
+    const { closingDate, closingBalance, closingCurrency } = statement ?? {};
     confirmMutation.mutate({
       data: {
         accountId,
         format,
+        statement:
+          closingDate && closingBalance && closingCurrency
+            ? { closingDate, closingBalance, closingCurrency }
+            : null,
         rows: selectedRows.map((row) => ({
           importRef: row.importRef,
           currency: row.currency,

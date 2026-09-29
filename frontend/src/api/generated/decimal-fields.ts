@@ -4,6 +4,8 @@
  */
 export const decimalFields: ReadonlySet<string> = new Set([
   "amount",
+  "balance",
+  "closingBalance",
   "currentAmount",
   "currentValue",
   "fee",

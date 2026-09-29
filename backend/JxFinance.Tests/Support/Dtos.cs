@@ -22,6 +22,15 @@ public sealed record PageDto<T>(List<T> Items, int Page, int PageSize, int Total
 
 public sealed record BalanceDto(string Currency, string Amount);
 
+public sealed record ReconciliationDto(
+    Guid Id,
+    DateOnly Date,
+    string Balance,
+    string Currency,
+    string Source,
+    string LedgerBalance,
+    string Difference);
+
 public sealed record AccountDto(
     Guid Id,
     string Name,

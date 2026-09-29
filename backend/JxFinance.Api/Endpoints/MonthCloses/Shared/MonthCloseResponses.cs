@@ -50,9 +50,32 @@ public sealed record MonthChecklist(
     int Uncategorized,
     int? UnconfirmedRecurring,
     int? Unusual,
-    IReadOnlyList<MonthImportCoverage>? Imports);
+    IReadOnlyList<MonthAccountCoverage> Accounts);
 
-public sealed record MonthImportCoverage(Guid AccountId, string AccountName, DateOnly LatestImportedDate);
+public enum MonthAccountState
+{
+    Reconciled,
+    Differs,
+    Imported,
+    Behind,
+}
+
+public sealed record MonthAccountCoverage(
+    Guid AccountId,
+    string AccountName,
+    MonthAccountState State,
+    DateOnly? Date,
+    [property: Money] decimal? Difference,
+    Currency Currency)
+{
+    public static MonthAccountState StateOf(DateOnly monthEnd, decimal? difference, DateOnly? latestImport) =>
+        difference switch
+        {
+            0m => MonthAccountState.Reconciled,
+            not null => MonthAccountState.Differs,
+            _ => latestImport >= monthEnd ? MonthAccountState.Imported : MonthAccountState.Behind,
+        };
+}
 
 public sealed record MonthDrift(
     bool CurrencyChanged,

@@ -50,6 +50,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, ICurren
     private bool HasActiveHousehold => currentUser.ActiveHouseholdId is not null;
 
     public DbSet<Account> Accounts => Set<Account>();
+    public DbSet<AccountReconciliation> AccountReconciliations => Set<AccountReconciliation>();
     public DbSet<Category> Categories => Set<Category>();
     public DbSet<Tag> Tags => Set<Tag>();
     public DbSet<CategorizationRule> CategorizationRules => Set<CategorizationRule>();

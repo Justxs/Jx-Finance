@@ -60,7 +60,9 @@ The preview also answers `statement`, which the statement bar above the rows sho
 
 - the statement's IBAN, and when it is not the IBAN recorded for the chosen account, a warning. When the IBAN belongs to another account you can see, `otherAccountId` names it and "Switch to …" re-runs the preview for that account with the same file. A user who has recorded no IBANs can still import.
 - how many pending or informational entries were skipped and how many entries could not be read.
-- the closing balance next to the ledger. `ledgerBalanceAtClose` is the account's balance on the closing date — starting balance plus every movement in the account's currency up to that date — and is filled only when the account's currency is the statement's. The bar adds the selected rows to it and says in words whether the result matches the closing balance or by how much it differs.
+- the closing balance next to the ledger. `ledgerBalanceAtClose` is the account's balance on the closing date — starting balance plus every movement in the account's currency up to that date — and is filled only when the account's currency is the statement's, through `AccountMovements.LedgerBalanceOnAsync`, the call the [Reconcile dialog](reconciliation.md) uses. The bar adds the selected rows to it and says in words whether the result matches the closing balance or by how much it differs.
+
+The closing balance is kept after the import. Confirm sends it back as `statement` (`closingDate`, `closingBalance`, `closingCurrency`, as the preview answered them), and when the format is `camt053` and the currency is the account's, `ConfirmAsync` records it as a `statement` [reconciliation](reconciliation.md#from-a-camt053-import) of the account after the rows are written, inside the same transaction and account lock, replacing one on the same date. It is recorded whether or not it matches. `reconciliation` in the response carries it with its difference from the ledger, and the result line and the toast say "Balance matches the statement on …" or "The statement differs by … on …". A Swedbank CSV has no closing balance, and a statement in another currency records nothing. The month-close checklist then reads the account as reconciled or differing for the month instead of judging it by the date of its latest imported row.
 
 ```mermaid
 sequenceDiagram
@@ -80,14 +82,15 @@ sequenceDiagram
     Dlg->>Dlg: duplicates never selected, suspected transfers start unselected,<br/>rows matching your own entry start selected and linked
     Dlg->>Dlg: where no rule matched, category recall:<br/>exact description and type among the latest 200
     User->>Dlg: per row: income or expense with category and tags,<br/>new transfer with another account,<br/>match an existing transfer, or link your own entry
-    Dlg->>Api: POST /api/import/confirm with format, selected rows only
+    Dlg->>Api: POST /api/import/confirm with format, selected rows only,<br/>and the closing balance as statement
     Api->>Db: begin transaction, advisory lock on the account id
     Api->>Api: matching verifies date, amount and direction
     alt transfer already holds a receipt for this account
         Api-->>Dlg: import.transferAlreadyMatched, nothing written
     else ok
         Api->>Db: transactions, transfers, TransferImport receipts,<br/>references on linked entries, one audit row naming the format
-        Api-->>Dlg: result, link to the imported rows
+        Api->>Db: camt.053 with statement in the account's currency:<br/>the closing balance as a reconciliation
+        Api-->>Dlg: result, link to the imported rows, the reconciliation's difference
     end
 ```
 

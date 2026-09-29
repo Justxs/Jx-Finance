@@ -25,5 +25,11 @@ public sealed class ImportConfirmValidator : Validator<ImportConfirmRequest>
             row.RuleFor(r => r.Amount).IsPositiveMoney();
             row.RuleFor(r => r.TagIds).HasAtMostTags();
         });
+        RuleFor(r => r.Statement!).ChildRules(statement =>
+        {
+            statement.RuleFor(s => s.ClosingDate).IsRequired();
+            statement.RuleFor(s => s.ClosingBalance).IsMoney();
+            statement.RuleFor(s => s.ClosingCurrency).IsKnownEnum();
+        });
     }
 }

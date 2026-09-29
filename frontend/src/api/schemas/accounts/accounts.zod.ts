@@ -697,6 +697,241 @@ export const UpdateAccountResponse = zod.object({
 });
 
 /**
+ * Returns the newest 24 statement balances recorded for the account, typed by hand or taken from a camt.053 import, newest date first. Only the statement's balance is stored: the ledger balance on each date and the difference (statement minus ledger) are computed on every read, so an edit dated on or before a statement date changes its difference.
+ * @summary List the reconciliations of an account
+ */
+export const reconciliationsResponseBalanceRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const reconciliationsResponseLedgerBalanceRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const reconciliationsResponseDifferenceRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+
+export const ReconciliationsResponseItem = zod.object({
+  id: zod.uuid(),
+  date: zod.iso.date(),
+  balance: zod.stringFormat("decimal", reconciliationsResponseBalanceRegExp),
+  currency: zod.enum([
+    "eur",
+    "usd",
+    "gbp",
+    "chf",
+    "pln",
+    "sek",
+    "nok",
+    "dkk",
+    "czk",
+    "huf",
+    "ron",
+    "isk",
+    "try",
+    "jpy",
+    "cny",
+    "hkd",
+    "sgd",
+    "krw",
+    "inr",
+    "idr",
+    "myr",
+    "php",
+    "thb",
+    "aud",
+    "nzd",
+    "cad",
+    "mxn",
+    "brl",
+    "ils",
+    "zar",
+  ]),
+  source: zod.enum(["manual", "statement"]),
+  ledgerBalance: zod.stringFormat("decimal", reconciliationsResponseLedgerBalanceRegExp),
+  difference: zod.stringFormat("decimal", reconciliationsResponseDifferenceRegExp),
+  createdAt: zod.iso.datetime({ offset: true }),
+});
+export const ReconciliationsResponse = zod.array(ReconciliationsResponseItem);
+
+/**
+ * Saves the balance a bank statement printed for the account on a date, in the account's main currency, whether or not it agrees with the ledger. A balance already recorded for that date, typed or imported, is replaced, and its source becomes manual. Anyone who can see the account can record one.
+ * @summary Record a statement balance for an account
+ */
+export const recordReconciliationBodyBalanceRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+
+export const RecordReconciliationBody = zod.object({
+  date: zod.iso.date(),
+  balance: zod
+    .stringFormat("decimal", recordReconciliationBodyBalanceRegExp)
+    .describe(
+      "The balance on the statement, a signed decimal string with at most two decimal places.",
+    ),
+});
+
+export const recordReconciliationResponseBalanceRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const recordReconciliationResponseLedgerBalanceRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const recordReconciliationResponseDifferenceRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+
+export const RecordReconciliationResponse = zod.object({
+  id: zod.uuid(),
+  date: zod.iso.date(),
+  balance: zod.stringFormat("decimal", recordReconciliationResponseBalanceRegExp),
+  currency: zod.enum([
+    "eur",
+    "usd",
+    "gbp",
+    "chf",
+    "pln",
+    "sek",
+    "nok",
+    "dkk",
+    "czk",
+    "huf",
+    "ron",
+    "isk",
+    "try",
+    "jpy",
+    "cny",
+    "hkd",
+    "sgd",
+    "krw",
+    "inr",
+    "idr",
+    "myr",
+    "php",
+    "thb",
+    "aud",
+    "nzd",
+    "cad",
+    "mxn",
+    "brl",
+    "ils",
+    "zar",
+  ]),
+  source: zod.enum(["manual", "statement"]),
+  ledgerBalance: zod.stringFormat("decimal", recordReconciliationResponseLedgerBalanceRegExp),
+  difference: zod.stringFormat("decimal", recordReconciliationResponseDifferenceRegExp),
+  createdAt: zod.iso.datetime({ offset: true }),
+});
+
+/**
+ * Answers what the ledger holds on a statement date, before the balance printed on the statement is saved: the ledger balance on that date in the account's main currency (the starting balance plus every transaction, transfer, conversion and investment entry dated on or before it), the latest reconciliation dated before it, and the rows in the main currency dated after that reconciliation, or from the beginning when there is none, up to the date, newest first, at most 100, with their count. Nothing is stored.
+ * @summary Preview a reconciliation of an account
+ */
+export const reconciliationPreviewResponseLedgerBalanceRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const reconciliationPreviewResponsePreviousTwoBalanceRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const reconciliationPreviewResponsePreviousTwoLedgerBalanceRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const reconciliationPreviewResponsePreviousTwoDifferenceRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const reconciliationPreviewResponseRowsItemAmountRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+
+export const ReconciliationPreviewResponse = zod.object({
+  date: zod.iso.date(),
+  currency: zod.enum([
+    "eur",
+    "usd",
+    "gbp",
+    "chf",
+    "pln",
+    "sek",
+    "nok",
+    "dkk",
+    "czk",
+    "huf",
+    "ron",
+    "isk",
+    "try",
+    "jpy",
+    "cny",
+    "hkd",
+    "sgd",
+    "krw",
+    "inr",
+    "idr",
+    "myr",
+    "php",
+    "thb",
+    "aud",
+    "nzd",
+    "cad",
+    "mxn",
+    "brl",
+    "ils",
+    "zar",
+  ]),
+  ledgerBalance: zod.stringFormat("decimal", reconciliationPreviewResponseLedgerBalanceRegExp),
+  previous: zod.union([
+    zod.null(),
+    zod.object({
+      id: zod.uuid(),
+      date: zod.iso.date(),
+      balance: zod.stringFormat("decimal", reconciliationPreviewResponsePreviousTwoBalanceRegExp),
+      currency: zod.enum([
+        "eur",
+        "usd",
+        "gbp",
+        "chf",
+        "pln",
+        "sek",
+        "nok",
+        "dkk",
+        "czk",
+        "huf",
+        "ron",
+        "isk",
+        "try",
+        "jpy",
+        "cny",
+        "hkd",
+        "sgd",
+        "krw",
+        "inr",
+        "idr",
+        "myr",
+        "php",
+        "thb",
+        "aud",
+        "nzd",
+        "cad",
+        "mxn",
+        "brl",
+        "ils",
+        "zar",
+      ]),
+      source: zod.enum(["manual", "statement"]),
+      ledgerBalance: zod.stringFormat(
+        "decimal",
+        reconciliationPreviewResponsePreviousTwoLedgerBalanceRegExp,
+      ),
+      difference: zod.stringFormat(
+        "decimal",
+        reconciliationPreviewResponsePreviousTwoDifferenceRegExp,
+      ),
+      createdAt: zod.iso.datetime({ offset: true }),
+    }),
+  ]),
+  rows: zod.array(
+    zod.object({
+      kind: zod.enum(["transaction", "transferOut", "transferIn", "conversion", "investmentEntry"]),
+      id: zod.uuid(),
+      date: zod.iso.date(),
+      description: zod.string().nullable(),
+      amount: zod.stringFormat("decimal", reconciliationPreviewResponseRowsItemAmountRegExp),
+    }),
+  ),
+  rowCount: zod.int(),
+});
+
+/**
+ * Removes a recorded statement balance for good. It does not go to the trash and is not audited, because it moves no money and can be typed again.
+ * @summary Delete a reconciliation of an account
+ */
+export const DeleteReconciliationResponse = zod.void();
+
+/**
  * Brings an archived account back into listings, pickers and totals. Archiving only hid the account, so everything posted to it (transactions, transfers, conversions, investment entries, recurring entries, goals funded from it) reappears with it unchanged. An account that is still shared into a household its owner no longer belongs to comes back personal. Only the owner can restore. Restoring an account that is already active changes nothing and still answers 200, so it is safe to repeat.
  * @summary Restore an archived account
  */

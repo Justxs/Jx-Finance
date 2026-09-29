@@ -85,6 +85,7 @@ export const ErrorCode = {
   quantitynonNegative: "quantity.nonNegative",
   quantitypositive: "quantity.positive",
   rangeinvalid: "range.invalid",
+  reconciliationfutureDate: "reconciliation.futureDate",
   recurringBilldebtShape: "recurringBill.debtShape",
   recurringBillinactive: "recurringBill.inactive",
   referencenotFound: "reference.notFound",

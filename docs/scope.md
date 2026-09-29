@@ -10,7 +10,7 @@ Create users, change roles, deactivate (after a confirmation that explains the c
 
 ## Accounts
 
-Create/edit/archive accounts and restore an archived one from a collapsed list on the same page; exact computed balances; personal or shared scope
+Create/edit/archive accounts and restore an archived one from a collapsed list on the same page; exact computed balances; personal or shared scope; reconcile an account against the balance printed on a bank statement, with the ledger balance on that date, the difference and the rows since the previous reconciliation, the earlier ones kept with today's difference
 
 ## Transactions
 
@@ -51,7 +51,7 @@ Interactive Brokers Flex Query import by file upload or daily through the Flex W
 
 ## Bank statement import
 
-Swedbank CSV and ISO 20022 camt.053 XML statements, chosen from a provider list, in any supported currency; for camt.053 an IBAN check against the account with a switch to the account it belongs to, the counterparty IBAN proposing a transfer to another own account, and the closing balance compared with the ledger; preview, row selection, category and tag selection per row with a categorization rule filling both in before the user confirms, an "Unusual amount" mark on an expense far above its usual amount, explicit transfer creation/matching, duplicate detection including deleted imports, and a row that matches a transaction entered by hand within three days linked to it instead of imported a second time
+Swedbank CSV and ISO 20022 camt.053 XML statements, chosen from a provider list, in any supported currency; for camt.053 an IBAN check against the account with a switch to the account it belongs to, the counterparty IBAN proposing a transfer to another own account, and the closing balance compared with the ledger and kept as a reconciliation of the account on confirm; preview, row selection, category and tag selection per row with a categorization rule filling both in before the user confirms, an "Unusual amount" mark on an expense far above its usual amount, explicit transfer creation/matching, duplicate detection including deleted imports, and a row that matches a transaction entered by hand within three days linked to it instead of imported a second time
 
 ## Budgets
 
@@ -103,7 +103,7 @@ A background job checks every new or edited non-split expense once against the 1
 
 ## Month-end close
 
-A page per calendar month that walks the bookkeeping session to its end: what still needs attention (uncategorized rows, recurring entries due by the month's end and, while that feature is on, unusual expenses, each linking to the rows, plus the latest imported date per account); what the month looked like (income, expense, net and savings rate against the previous month, the five categories that moved most, monthly budgets as of the month's last day, and the net worth change between two snapshots); and a Close button with an optional note. Only a month that has ended can be closed. Closing freezes a snapshot of the report figures and of the rows dated in the month; nothing is locked. A later change to a row dated in that month, or moved out of it, marks the month "changed after close", and the page shows the figures at close against today's, the categories that moved and up to 100 changed rows; the month can be re-closed to accept the change or reopened. The edit dialogs of transactions and conversions say when their date falls in a closed month but never refuse to save. Closes are personal and kept per active household scope. Users who have closed a month before are reminded on days 1 to 5 of the next month. Behind its own feature switch, on by default
+A page per calendar month that walks the bookkeeping session to its end: what still needs attention (uncategorized rows, recurring entries due by the month's end and, while that feature is on, unusual expenses, each linking to the rows, plus a line per account saying whether its statement balance was reconciled, differs, was imported through the month's end or is behind); what the month looked like (income, expense, net and savings rate against the previous month, the five categories that moved most, monthly budgets as of the month's last day, and the net worth change between two snapshots); and a Close button with an optional note. Only a month that has ended can be closed. Closing freezes a snapshot of the report figures and of the rows dated in the month; nothing is locked. A later change to a row dated in that month, or moved out of it, marks the month "changed after close", and the page shows the figures at close against today's, the categories that moved and up to 100 changed rows; the month can be re-closed to accept the change or reopened. The edit dialogs of transactions and conversions say when their date falls in a closed month but never refuse to save. Closes are personal and kept per active household scope. Users who have closed a month before are reminded on days 1 to 5 of the next month. Behind its own feature switch, on by default
 
 ## UI
 

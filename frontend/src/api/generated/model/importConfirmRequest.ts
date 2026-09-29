@@ -6,6 +6,7 @@
  * OpenAPI spec version: v1
  */
 import type { ImportConfirmRow } from "./importConfirmRow";
+import type { ImportStatementBalance } from "./importStatementBalance";
 import type { StatementFormat } from "./statementFormat";
 
 export interface ImportConfirmRequest {
@@ -17,4 +18,6 @@ export interface ImportConfirmRequest {
   /** The rows to import, as returned by preview, with any category and tag corrections applied. */
   rows: ImportConfirmRow[];
   format: StatementFormat;
+  /** Optional. The closing balance the camt.053 preview answered; ignored for other formats. */
+  statement?: null | ImportStatementBalance;
 }

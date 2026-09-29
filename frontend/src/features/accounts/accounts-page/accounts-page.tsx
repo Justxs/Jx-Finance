@@ -20,6 +20,7 @@ import { AccountsTable } from "../accounts-table/accounts-table";
 import { ArchivedAccounts } from "../archived-accounts/archived-accounts";
 import { CashFlowForecast } from "../cash-flow-forecast/cash-flow-forecast";
 import { ConversionsSection } from "../conversions-section/conversions-section";
+import { ReconcileDialog } from "../reconcile-dialog/reconcile-dialog";
 import { TransfersSection } from "../transfers-section/transfers-section";
 import { MovementsSkeleton } from "./accounts-page-pending";
 
@@ -27,7 +28,7 @@ export function AccountsPage() {
   const { t } = useTranslation();
   const { features } = useSettings();
 
-  const { new: creating, ...filters } = useSearch({ from: "/accounts" });
+  const { new: creating, reconcile, ...filters } = useSearch({ from: "/accounts" });
   const navigate = useNavigate({ from: "/accounts" });
   const [shown, stale] = useDeferredParams(filters);
   const accounts = useAccountsSuspense(accountListParams(shown));
@@ -38,6 +39,10 @@ export function AccountsPage() {
 
   function setCreating(next: "account" | "transfer" | undefined) {
     void navigate({ search: (prev) => ({ ...prev, new: next }), replace: next === undefined });
+  }
+
+  function setReconcileId(id: string | undefined) {
+    void navigate({ search: (prev) => ({ ...prev, reconcile: id }), replace: id === undefined });
   }
 
   function setCreateOpen(open: boolean) {
@@ -87,6 +92,7 @@ export function AccountsPage() {
           onDelete={remove.request}
           onConvert={features.multiCurrency ? setConvertAccountId : undefined}
           onImport={features.import ? setImportAccountId : undefined}
+          onReconcile={setReconcileId}
           onCreate={() => setCreateOpen(true)}
           positiveTotal={allAccountList.reduce(
             (sum, account) => sum + Math.max(0, Number(account.reportingBalance)),
@@ -131,6 +137,11 @@ export function AccountsPage() {
           initialAccountId={importAccountId ?? undefined}
         />
       ) : null}
+
+      <ReconcileDialog
+        account={allAccountList.find((account) => account.id === reconcile) ?? null}
+        onClose={() => setReconcileId(undefined)}
+      />
 
       <ConfirmDeleteDialog
         {...remove.dialogProps}

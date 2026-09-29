@@ -14,6 +14,7 @@ using JxFinance.Domain.Common;
 using JxFinance.Domain.Settings;
 using JxFinance.Domain.Transactions;
 using JxFinance.Domain.Transfers;
+using JxFinance.Endpoints.Accounts.Interfaces;
 using JxFinance.Endpoints.Accounts.Shared;
 using JxFinance.Endpoints.CategorizationRules.Interfaces;
 using JxFinance.Endpoints.CategorizationRules.Shared;
@@ -38,7 +39,8 @@ public sealed class ImportService(
     IReferenceGuard references,
     ICategorizationRuleService rules,
     IUnusualAmountService unusualAmounts,
-    IInstanceSettingsStore settings) : IImportService
+    IInstanceSettingsStore settings,
+    IReconciliationService reconciliations) : IImportService
 {
     private static readonly string[] TransferKeywords =
     [
@@ -103,8 +105,12 @@ public sealed class ImportService(
         decimal? ledger = null;
         if (closing?.Currency == account.Currency && statement.ClosingDate is { } closingDate)
         {
-            var moved = await AccountMovements.SumAsync(db, [typedAccountId], closingDate, cancellationToken);
-            ledger = account.Amount + moved.Where(m => m.Currency == account.Currency).Sum(m => m.Amount);
+            ledger = await AccountMovements.LedgerBalanceOnAsync(
+                db,
+                typedAccountId,
+                new Money(account.Amount, account.Currency),
+                closingDate,
+                cancellationToken);
         }
 
         var matches = statement.Iban is not null && statement.Iban == account.Iban;
@@ -168,8 +174,18 @@ public sealed class ImportService(
 
         await db.SaveChangesAsync(cancellationToken);
 
+        var reconciliation = request is { Format: StatementFormat.Camt053, Statement: { } closing }
+            && closing.ClosingCurrency == accountCurrency
+                ? (await reconciliations.RecordAsync(
+                    request.AccountId,
+                    closing.ClosingDate,
+                    closing.ClosingBalance,
+                    ReconciliationSource.Statement,
+                    cancellationToken)).Value
+                : null;
+
         await transaction.CommitAsync(cancellationToken);
-        return new ImportConfirmResponse(totals.Imported, totals.Skipped, totals.Linked);
+        return new ImportConfirmResponse(totals.Imported, totals.Skipped, totals.Linked, reconciliation);
     }
 
     private async Task<Result<ConfirmLookups>> LoadConfirmLookupsAsync(

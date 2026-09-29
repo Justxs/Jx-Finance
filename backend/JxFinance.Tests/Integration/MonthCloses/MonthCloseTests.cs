@@ -341,6 +341,56 @@ public sealed class MonthCloseTests(ApiFixture fixture) : IntegrationTestBase(fi
         Assert.Equal("2026-09", reminder.Message);
     }
 
+    [Fact]
+    public async Task Each_account_with_a_statement_or_an_import_is_reconciled_differs_imported_or_behind()
+    {
+        using var member = await CreateUserClientAsync();
+        var reconciled = await CreateAccountAsync("100.00", client: member);
+        var differs = await CreateAccountAsync("100.00", client: member);
+        var imported = await CreateAccountAsync("100.00", client: member);
+        var behind = await CreateAccountAsync("100.00", client: member);
+        var untouched = await CreateAccountAsync("100.00", client: member);
+        await ReconcileAsync(member, reconciled, "2025-04-02", "100.00");
+        await ReconcileAsync(member, reconciled, "2025-04-30", "1.00");
+        await ReconcileAsync(member, reconciled, "2025-03-15", "5.00");
+        await ReconcileAsync(member, differs, "2025-03-31", "112.30");
+        await ImportRowAsync(member, differs, "2025-03-31");
+        await ImportRowAsync(member, imported, "2025-03-31");
+        await ImportRowAsync(member, behind, "2025-03-20");
+        await ReconcileAsync(member, behind, "2025-03-25", "90.00");
+
+        var accounts = (await ReviewAsync(member, March)).Checklist.Accounts;
+
+        Assert.DoesNotContain(accounts, a => a.AccountId == untouched);
+        Assert.Equal(("reconciled", new DateOnly(2025, 4, 2), "0.00"), State(accounts, reconciled));
+        Assert.Equal(("differs", new DateOnly(2025, 3, 31), "22.30"), State(accounts, differs));
+        Assert.Equal(("imported", new DateOnly(2025, 3, 31), (string?)null), State(accounts, imported));
+        Assert.Equal(("behind", new DateOnly(2025, 3, 25), (string?)null), State(accounts, behind));
+
+        await using (await FeatureOffAsync("import"))
+        {
+            var withoutImport = (await ReviewAsync(member, March)).Checklist.Accounts;
+            Assert.Equal(new[] { differs, behind, reconciled }.Order(), withoutImport.Select(a => a.AccountId).Order());
+            Assert.Equal(("behind", new DateOnly(2025, 3, 25), (string?)null), State(withoutImport, behind));
+        }
+    }
+
+    private static (string, DateOnly?, string?) State(List<AccountCoverageDto> accounts, Guid id)
+    {
+        var account = accounts.Single(a => a.AccountId == id);
+        return (account.State, account.Date, account.Difference);
+    }
+
+    private static Task<ReconciliationDto> ReconcileAsync(HttpClient client, Guid account, string date, string balance) =>
+        PostAsync<ReconciliationDto>(client, $"/api/accounts/{account}/reconciliations", new { date, balance });
+
+    private static Task<object> ImportRowAsync(HttpClient client, Guid account, string date) =>
+        PostAsync<object>(client, "/api/import/confirm", new
+        {
+            accountId = account,
+            rows = new[] { new { importRef = $"ROW-{Guid.NewGuid():N}", date, amount = "10.00", type = "expense" } },
+        });
+
     private static async Task<ReviewDto> CloseAsync(HttpClient client, string month, string? note = null) =>
         await ReadOkAsync<ReviewDto>(
             await client.PostAsJsonAsync($"/api/month-close/{month}", new { note }, TestContext.Current.CancellationToken));
@@ -376,7 +426,9 @@ public sealed class MonthCloseTests(ApiFixture fixture) : IntegrationTestBase(fi
 
     private sealed record FiguresDto(string TotalIncome, string TotalExpense, string Net, ComparisonDto? Comparison);
 
-    private sealed record ChecklistDto(int Uncategorized, int? UnconfirmedRecurring, int? Unusual);
+    private sealed record ChecklistDto(int Uncategorized, int? UnconfirmedRecurring, int? Unusual, List<AccountCoverageDto> Accounts);
+
+    private sealed record AccountCoverageDto(Guid AccountId, string State, DateOnly? Date, string? Difference);
 
     private sealed record BudgetDto(string Spent, string CarriedAmount, string WindowStart, string WindowEnd);
 

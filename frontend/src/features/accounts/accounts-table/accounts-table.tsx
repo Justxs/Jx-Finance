@@ -1,5 +1,5 @@
 import { useNavigate, useSearch } from "@tanstack/react-router";
-import { ArrowLeftRight, FileUp, Plus } from "lucide-react";
+import { ArrowLeftRight, FileUp, Plus, Scale } from "lucide-react";
 import { type ReactNode, ViewTransition } from "react";
 import { useTranslation } from "react-i18next";
 import { useHouseholdsSuspense } from "@/api/generated";
@@ -39,6 +39,7 @@ interface Props {
   onDelete: (id: string) => void;
   onConvert?: (id: string) => void;
   onImport?: (id: string) => void;
+  onReconcile: (id: string) => void;
   onCreate?: () => void;
   positiveTotal: number;
 }
@@ -55,6 +56,7 @@ export function AccountsTable({
   onDelete,
   onConvert,
   onImport,
+  onReconcile,
   onCreate,
   positiveTotal,
 }: Readonly<Props>) {
@@ -115,6 +117,11 @@ export function AccountsTable({
         onSelect: () => onImport(account.id),
       });
     }
+    extra.push({
+      icon: Scale,
+      label: t("accounts.reconcile.action"),
+      onSelect: () => onReconcile(account.id),
+    });
     if (onConvert) {
       extra.push({
         icon: ArrowLeftRight,

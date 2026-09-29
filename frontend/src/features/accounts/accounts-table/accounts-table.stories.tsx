@@ -15,6 +15,7 @@ const meta = {
     deletingId: null,
     onDelete: fn(),
     onConvert: fn(),
+    onReconcile: fn(),
     positiveTotal: accounts.reduce(
       (sum, account) => sum + Math.max(0, Number(account.reportingBalance)),
       0,

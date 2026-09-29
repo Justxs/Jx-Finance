@@ -1,4 +1,5 @@
 using JxFinance.Domain.Accounts;
+using JxFinance.Domain.Common;
 using JxFinance.Endpoints.Accounts.Shared;
 
 namespace JxFinance.Tests.Unit;
@@ -42,6 +43,28 @@ public sealed class AccountMovementsTests
         Assert.Equal(5, Occurrences(sql, "UNION ALL"));
         Assert.Contains("GROUP BY", sql, StringComparison.Ordinal);
         Assert.Contains("\"Date\"", sql, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Rows_are_listed_newest_first_and_a_page_that_is_not_full_is_its_own_count()
+    {
+        await using var capture = new SqlCapture();
+
+        var (rows, count) = await AccountMovements.ListAsync(
+            capture.Db,
+            new AccountId(Guid.NewGuid()),
+            Currency.Eur,
+            new DateOnly(2027, 1, 1),
+            new DateOnly(2027, 1, 31),
+            100,
+            TestContext.Current.CancellationToken);
+
+        var sql = capture.OnlyStatement;
+        Assert.Equal(5, Occurrences(sql, "UNION ALL"));
+        Assert.Contains("ORDER BY", sql, StringComparison.Ordinal);
+        Assert.Contains("DESC", sql, StringComparison.Ordinal);
+        Assert.Contains("LIMIT", sql, StringComparison.Ordinal);
+        Assert.Equal((0, 0), (rows.Count, count));
     }
 
     private static int Occurrences(string text, string needle) =>

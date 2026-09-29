@@ -575,6 +575,346 @@
         ]
       }
     },
+    "/api/accounts/{id}/reconciliations": {
+      "get": {
+        "tags": [
+          "Accounts"
+        ],
+        "summary": "List the reconciliations of an account",
+        "description": "Returns the newest 24 statement balances recorded for the account, typed by hand or taken from a camt.053 import, newest date first. Only the statement's balance is stored: the ledger balance on each date and the difference (statement minus ledger) are computed on every read, so an edit dated on or before a statement date changes its difference.",
+        "operationId": "GetReconciliations",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The account id.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The reconciliations, newest date first.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ReconciliationResponse"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such account is visible to the signed-in user.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Accounts"
+        ],
+        "summary": "Record a statement balance for an account",
+        "description": "Saves the balance a bank statement printed for the account on a date, in the account's main currency, whether or not it agrees with the ledger. A balance already recorded for that date, typed or imported, is replaced, and its source becomes manual. Anyone who can see the account can record one.",
+        "operationId": "RecordReconciliation",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The account id.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecordReconciliationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "The saved reconciliation with today's ledger balance and difference.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReconciliationResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such account is visible to the signed-in user.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      }
+    },
+    "/api/accounts/{id}/reconciliations/preview": {
+      "get": {
+        "tags": [
+          "Accounts"
+        ],
+        "summary": "Preview a reconciliation of an account",
+        "description": "Answers what the ledger holds on a statement date, before the balance printed on the statement is saved: the ledger balance on that date in the account's main currency (the starting balance plus every transaction, transfer, conversion and investment entry dated on or before it), the latest reconciliation dated before it, and the rows in the main currency dated after that reconciliation, or from the beginning when there is none, up to the date, newest first, at most 100, with their count. Nothing is stored.",
+        "operationId": "GetReconciliationPreview",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The account id.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "date",
+            "in": "query",
+            "description": "The statement date, as yyyy-MM-dd. Not after today.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The ledger balance, the previous reconciliation and the rows since it.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReconciliationPreviewResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The date is missing, or after today (reconciliation.futureDate).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such account is visible to the signed-in user.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      }
+    },
+    "/api/accounts/{id}/reconciliations/{reconciliationId}": {
+      "delete": {
+        "tags": [
+          "Accounts"
+        ],
+        "summary": "Delete a reconciliation of an account",
+        "description": "Removes a recorded statement balance for good. It does not go to the trash and is not audited, because it moves no money and can be typed again.",
+        "operationId": "DeleteReconciliation",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The account id.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "reconciliationId",
+            "in": "path",
+            "description": "The reconciliation id.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Deleted."
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such reconciliation is recorded on an account visible to the signed-in user.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      }
+    },
     "/api/accounts/{id}/restore": {
       "post": {
         "tags": [
@@ -7244,7 +7584,7 @@
           "Imports"
         ],
         "summary": "Commit previewed statement rows",
-        "description": "Writes the rows the user kept from a preview into the ledger. Rows the preview flagged as already present are skipped rather than duplicated, and the response reports how many were imported and how many were skipped. A row's tagIds are written as they arrive, whether a rule suggested them in the preview or the user picked them, so an empty list imports the row with no tags. A row with existingTransactionId adds nothing: the bank entry is linked to that transaction, which keeps its date, category, tags and description and is then treated as imported, so the same entry is a duplicate next time. The audit entry names the format the rows came from.",
+        "description": "Writes the rows the user kept from a preview into the ledger. Rows the preview flagged as already present are skipped rather than duplicated, and the response reports how many were imported and how many were skipped. A row's tagIds are written as they arrive, whether a rule suggested them in the preview or the user picked them, so an empty list imports the row with no tags. A row with existingTransactionId adds nothing: the bank entry is linked to that transaction, which keeps its date, category, tags and description and is then treated as imported, so the same entry is a duplicate next time. The audit entry names the format the rows came from. For a camt.053 file, statement echoes the preview's closing date, balance and currency; when the currency is the account's, that balance is recorded as a reconciliation of the account after the rows are written, replacing one on the same date, and returned with its difference from the ledger.",
         "operationId": "ImportConfirm",
         "requestBody": {
           "content": {
@@ -7258,7 +7598,7 @@
         },
         "responses": {
           "200": {
-            "description": "Counts of imported, linked and skipped rows.",
+            "description": "Counts of imported, linked and skipped rows, and the recorded reconciliation when there is one.",
             "content": {
               "application/json": {
                 "schema": {
@@ -14771,6 +15111,48 @@
           }
         }
       },
+      "AccountMovementKind": {
+        "enum": [
+          "transaction",
+          "transferOut",
+          "transferIn",
+          "conversion",
+          "investmentEntry"
+        ],
+        "type": "string"
+      },
+      "AccountMovementRow": {
+        "required": [
+          "kind",
+          "id",
+          "date",
+          "description",
+          "amount"
+        ],
+        "type": "object",
+        "properties": {
+          "kind": {
+            "$ref": "#/components/schemas/AccountMovementKind"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "date": {
+            "$ref": "#/components/schemas/DateOnly"
+          },
+          "description": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "amount": {
+            "type": "string",
+            "format": "decimal"
+          }
+        }
+      },
       "AccountResponse": {
         "required": [
           "id",
@@ -17932,6 +18314,7 @@
           "quantity.nonNegative",
           "quantity.positive",
           "range.invalid",
+          "reconciliation.futureDate",
           "recurringBill.debtShape",
           "recurringBill.inactive",
           "reference.notFound",
@@ -18458,6 +18841,17 @@
           },
           "format": {
             "$ref": "#/components/schemas/StatementFormat"
+          },
+          "statement": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ImportStatementBalance"
+              }
+            ],
+            "description": "Optional. The closing balance the camt.053 preview answered; ignored for other formats."
           }
         }
       },
@@ -18465,7 +18859,8 @@
         "required": [
           "imported",
           "skippedDuplicates",
-          "linked"
+          "linked",
+          "reconciliation"
         ],
         "type": "object",
         "properties": {
@@ -18480,6 +18875,16 @@
           "linked": {
             "type": "integer",
             "format": "int32"
+          },
+          "reconciliation": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ReconciliationResponse"
+              }
+            ]
           }
         }
       },
@@ -18731,6 +19136,26 @@
                 "$ref": "#/components/schemas/ImportMatchedTransaction"
               }
             ]
+          }
+        }
+      },
+      "ImportStatementBalance": {
+        "required": [
+          "closingDate",
+          "closingBalance",
+          "closingCurrency"
+        ],
+        "type": "object",
+        "properties": {
+          "closingDate": {
+            "$ref": "#/components/schemas/DateOnly"
+          },
+          "closingBalance": {
+            "type": "string",
+            "format": "decimal"
+          },
+          "closingCurrency": {
+            "$ref": "#/components/schemas/Currency"
           }
         }
       },
@@ -19004,12 +19429,64 @@
           }
         }
       },
+      "MonthAccountCoverage": {
+        "required": [
+          "accountId",
+          "accountName",
+          "state",
+          "date",
+          "difference",
+          "currency"
+        ],
+        "type": "object",
+        "properties": {
+          "accountId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "accountName": {
+            "type": "string"
+          },
+          "state": {
+            "$ref": "#/components/schemas/MonthAccountState"
+          },
+          "date": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/NullableOfDateOnly"
+              }
+            ]
+          },
+          "difference": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "decimal"
+          },
+          "currency": {
+            "$ref": "#/components/schemas/Currency"
+          }
+        }
+      },
+      "MonthAccountState": {
+        "enum": [
+          "reconciled",
+          "differs",
+          "imported",
+          "behind"
+        ],
+        "type": "string"
+      },
       "MonthChecklist": {
         "required": [
           "uncategorized",
           "unconfirmedRecurring",
           "unusual",
-          "imports"
+          "accounts"
         ],
         "type": "object",
         "properties": {
@@ -19031,13 +19508,10 @@
             ],
             "format": "int32"
           },
-          "imports": {
-            "type": [
-              "null",
-              "array"
-            ],
+          "accounts": {
+            "type": "array",
             "items": {
-              "$ref": "#/components/schemas/MonthImportCoverage"
+              "$ref": "#/components/schemas/MonthAccountCoverage"
             }
           }
         }
@@ -19272,26 +19746,6 @@
           "currentCount": {
             "type": "integer",
             "format": "int32"
-          }
-        }
-      },
-      "MonthImportCoverage": {
-        "required": [
-          "accountId",
-          "accountName",
-          "latestImportedDate"
-        ],
-        "type": "object",
-        "properties": {
-          "accountId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "accountName": {
-            "type": "string"
-          },
-          "latestImportedDate": {
-            "$ref": "#/components/schemas/DateOnly"
           }
         }
       },
@@ -20145,6 +20599,117 @@
         },
         "example": {
           "password": "correct horse battery staple"
+        }
+      },
+      "ReconciliationPreviewResponse": {
+        "required": [
+          "date",
+          "currency",
+          "ledgerBalance",
+          "previous",
+          "rows",
+          "rowCount"
+        ],
+        "type": "object",
+        "properties": {
+          "date": {
+            "$ref": "#/components/schemas/DateOnly"
+          },
+          "currency": {
+            "$ref": "#/components/schemas/Currency"
+          },
+          "ledgerBalance": {
+            "type": "string",
+            "format": "decimal"
+          },
+          "previous": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ReconciliationResponse"
+              }
+            ]
+          },
+          "rows": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AccountMovementRow"
+            }
+          },
+          "rowCount": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "ReconciliationResponse": {
+        "required": [
+          "id",
+          "date",
+          "balance",
+          "currency",
+          "source",
+          "ledgerBalance",
+          "difference",
+          "createdAt"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "date": {
+            "$ref": "#/components/schemas/DateOnly"
+          },
+          "balance": {
+            "type": "string",
+            "format": "decimal"
+          },
+          "currency": {
+            "$ref": "#/components/schemas/Currency"
+          },
+          "source": {
+            "$ref": "#/components/schemas/ReconciliationSource"
+          },
+          "ledgerBalance": {
+            "type": "string",
+            "format": "decimal"
+          },
+          "difference": {
+            "type": "string",
+            "format": "decimal"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "ReconciliationSource": {
+        "enum": [
+          "manual",
+          "statement"
+        ],
+        "type": "string"
+      },
+      "RecordReconciliationRequest": {
+        "required": [
+          "date",
+          "balance"
+        ],
+        "type": "object",
+        "properties": {
+          "date": {
+            "$ref": "#/components/schemas/DateOnly"
+          },
+          "balance": {
+            "type": "string",
+            "description": "The balance on the statement, a signed decimal string with at most two decimal places.",
+            "format": "decimal"
+          }
         }
       },
       "RecurringBillCadence": {

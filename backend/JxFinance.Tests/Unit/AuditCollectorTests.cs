@@ -10,10 +10,11 @@ namespace JxFinance.Tests.Unit;
 public sealed class AuditCollectorTests
 {
     [Fact]
-    public void Every_shared_record_type_is_audited()
+    public void Every_shared_record_type_except_reconciliations_is_audited()
     {
         var expected = typeof(IShareable).Assembly.GetTypes()
             .Where(type => type is { IsClass: true, IsAbstract: false }
+                && type != typeof(AccountReconciliation)
                 && (typeof(IShareable).IsAssignableFrom(type) || typeof(IAccountScoped).IsAssignableFrom(type)))
             .Concat([typeof(Transfer), typeof(Household), typeof(HouseholdMembership), typeof(TransactionAttachment)]);
 

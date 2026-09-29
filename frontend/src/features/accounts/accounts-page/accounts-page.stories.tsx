@@ -1,6 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { expect } from "storybook/test";
 import { getCreateAccountMockHandler } from "@/api/generated/accounts/accounts.msw";
 import { withPageFrame } from "@/storybook/decorators";
+import { ids } from "@/storybook/fixtures";
 import {
   emptyHandlers,
   errorHandlers,
@@ -8,6 +10,7 @@ import {
   pending,
   withHandlers,
 } from "@/storybook/handlers";
+import { openedDialog } from "@/storybook/interactions";
 import { AccountsPage } from "./accounts-page";
 
 const meta = {
@@ -40,4 +43,12 @@ export const ServerError: Story = { parameters: { msw: { handlers: errorHandlers
 
 export const CreatePending: Story = {
   parameters: withHandlers(getCreateAccountMockHandler(pending)),
+};
+
+export const ReconcileFromLink: Story = {
+  parameters: { route: `/accounts?reconcile=${ids.accounts.checking}` },
+  play: async () => {
+    const dialog = await openedDialog();
+    await expect(dialog).toHaveAccessibleName("Reconcile Swedbank einamoji");
+  },
 };

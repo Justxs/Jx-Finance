@@ -27,7 +27,7 @@ export const AtRisk: Story = {
     await expect(
       await canvas.findByText(/Swedbank einamoji goes below zero on Oct 1, after Buto nuoma/u),
     ).toBeVisible();
-    await expect(canvas.queryByText(/With usual spending/u)).toBeNull();
+    await expect(canvas.queryByText(/With usual spending, /u)).toBeNull();
     const table = canvas.getByRole("table", { name: /Entries of Swedbank einamoji/u });
     await expect(within(table).getByText("Overdue")).toBeVisible();
   },

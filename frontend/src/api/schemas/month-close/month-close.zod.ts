@@ -38,6 +38,9 @@ export const CloseMonthBody = zod.object({
     .describe("At most 1000 characters."),
 });
 
+export const closeMonthResponseChecklistAccountsItemDifferenceRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
 export const closeMonthResponseFiguresTotalIncomeRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 export const closeMonthResponseFiguresTotalExpenseRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 export const closeMonthResponseFiguresNetRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
@@ -128,15 +131,49 @@ export const CloseMonthResponse = zod.object({
     uncategorized: zod.int(),
     unconfirmedRecurring: zod.int().nullable(),
     unusual: zod.int().nullable(),
-    imports: zod
-      .array(
-        zod.object({
-          accountId: zod.uuid(),
-          accountName: zod.string(),
-          latestImportedDate: zod.iso.date(),
-        }),
-      )
-      .nullable(),
+    accounts: zod.array(
+      zod.object({
+        accountId: zod.uuid(),
+        accountName: zod.string(),
+        state: zod.enum(["reconciled", "differs", "imported", "behind"]),
+        date: zod.union([zod.null(), zod.iso.date()]),
+        difference: zod
+          .stringFormat("decimal", closeMonthResponseChecklistAccountsItemDifferenceRegExp)
+          .nullable(),
+        currency: zod.enum([
+          "eur",
+          "usd",
+          "gbp",
+          "chf",
+          "pln",
+          "sek",
+          "nok",
+          "dkk",
+          "czk",
+          "huf",
+          "ron",
+          "isk",
+          "try",
+          "jpy",
+          "cny",
+          "hkd",
+          "sgd",
+          "krw",
+          "inr",
+          "idr",
+          "myr",
+          "php",
+          "thb",
+          "aud",
+          "nzd",
+          "cad",
+          "mxn",
+          "brl",
+          "ils",
+          "zar",
+        ]),
+      }),
+    ),
   }),
   figures: zod.object({
     periodStart: zod.iso.date(),
@@ -418,6 +455,9 @@ export const CloseMonthResponse = zod.object({
  * Everything the month-end close page shows for one calendar month. checklist counts what still needs attention: uncategorized transactions dated in the month (the same rows as the ledger with uncategorized=true), active recurring entries due on or before the month's last day while the recurringBills feature is on, unusual expenses not marked "not unusual" while the unusualAmounts feature is on, and per account the date of the latest imported transaction while the import feature is on; a disabled feature answers null. figures is the report summary of the month compared with the previous month. budgets holds the monthly budgets with their usage as of the month's last day, measured against today's limits, and is null while the budgets feature is off. netWorthStart and netWorthEnd hold the last net worth snapshots before the month and on or before its last day; both are null while the netWorth feature is off. drift is null until the month is closed. Once closed it holds the totals frozen at the close, every category whose amount moved, and up to 100 of the transactions and investment entries created, edited, deleted or moved out of the month since, newest first; rowCount gives the full number. When the totals and categories match today's figures, the listed changes left the month's figures as they were. After a change of reporting currency every figure moves, so drift only says currencyChanged and lists nothing. Tags, attachments and notes are not part of the figures and never count as drift.
  * @summary Review one month for closing
  */
+export const monthReviewResponseChecklistAccountsItemDifferenceRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
 export const monthReviewResponseFiguresTotalIncomeRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 export const monthReviewResponseFiguresTotalExpenseRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 export const monthReviewResponseFiguresNetRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
@@ -512,15 +552,49 @@ export const MonthReviewResponse = zod.object({
     uncategorized: zod.int(),
     unconfirmedRecurring: zod.int().nullable(),
     unusual: zod.int().nullable(),
-    imports: zod
-      .array(
-        zod.object({
-          accountId: zod.uuid(),
-          accountName: zod.string(),
-          latestImportedDate: zod.iso.date(),
-        }),
-      )
-      .nullable(),
+    accounts: zod.array(
+      zod.object({
+        accountId: zod.uuid(),
+        accountName: zod.string(),
+        state: zod.enum(["reconciled", "differs", "imported", "behind"]),
+        date: zod.union([zod.null(), zod.iso.date()]),
+        difference: zod
+          .stringFormat("decimal", monthReviewResponseChecklistAccountsItemDifferenceRegExp)
+          .nullable(),
+        currency: zod.enum([
+          "eur",
+          "usd",
+          "gbp",
+          "chf",
+          "pln",
+          "sek",
+          "nok",
+          "dkk",
+          "czk",
+          "huf",
+          "ron",
+          "isk",
+          "try",
+          "jpy",
+          "cny",
+          "hkd",
+          "sgd",
+          "krw",
+          "inr",
+          "idr",
+          "myr",
+          "php",
+          "thb",
+          "aud",
+          "nzd",
+          "cad",
+          "mxn",
+          "brl",
+          "ils",
+          "zar",
+        ]),
+      }),
+    ),
   }),
   figures: zod.object({
     periodStart: zod.iso.date(),
@@ -820,6 +894,9 @@ export const UpdateMonthNoteBody = zod.object({
     .describe("At most 1000 characters."),
 });
 
+export const updateMonthNoteResponseChecklistAccountsItemDifferenceRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
 export const updateMonthNoteResponseFiguresTotalIncomeRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 export const updateMonthNoteResponseFiguresTotalExpenseRegExp = new RegExp(
   "^-?\\d+(\\.\\d{1,8})?$",
@@ -936,15 +1013,49 @@ export const UpdateMonthNoteResponse = zod.object({
     uncategorized: zod.int(),
     unconfirmedRecurring: zod.int().nullable(),
     unusual: zod.int().nullable(),
-    imports: zod
-      .array(
-        zod.object({
-          accountId: zod.uuid(),
-          accountName: zod.string(),
-          latestImportedDate: zod.iso.date(),
-        }),
-      )
-      .nullable(),
+    accounts: zod.array(
+      zod.object({
+        accountId: zod.uuid(),
+        accountName: zod.string(),
+        state: zod.enum(["reconciled", "differs", "imported", "behind"]),
+        date: zod.union([zod.null(), zod.iso.date()]),
+        difference: zod
+          .stringFormat("decimal", updateMonthNoteResponseChecklistAccountsItemDifferenceRegExp)
+          .nullable(),
+        currency: zod.enum([
+          "eur",
+          "usd",
+          "gbp",
+          "chf",
+          "pln",
+          "sek",
+          "nok",
+          "dkk",
+          "czk",
+          "huf",
+          "ron",
+          "isk",
+          "try",
+          "jpy",
+          "cny",
+          "hkd",
+          "sgd",
+          "krw",
+          "inr",
+          "idr",
+          "myr",
+          "php",
+          "thb",
+          "aud",
+          "nzd",
+          "cad",
+          "mxn",
+          "brl",
+          "ils",
+          "zar",
+        ]),
+      }),
+    ),
   }),
   figures: zod.object({
     periodStart: zod.iso.date(),

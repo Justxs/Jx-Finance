@@ -34,7 +34,7 @@ function PromptPanel({ month, review }: Readonly<PanelProps>) {
   const monthName = useMonthName()(month);
   const closer = useMonthCloser(month, review);
   const changed = review.status === "closedChanged";
-  const attention = attentionCount(review.checklist, review.monthEnd);
+  const attention = attentionCount(review.checklist);
   const marker = statusMarkers[review.status];
   const rate = savingsRate(review.figures.totalIncome, review.figures.net);
 

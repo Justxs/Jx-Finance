@@ -3,6 +3,7 @@ export * from "./users";
 export * from "./households";
 export * from "./audit";
 export * from "./accounts";
+export * from "./reconciliations";
 export * from "./cash-flow";
 export * from "./categories";
 export * from "./tags";

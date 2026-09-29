@@ -24,6 +24,7 @@ export const accountsSearchSchema = z.object({
   type: optionalParam(z.enum(accountTypes)),
   ...sortParams(AccountSortField),
   new: optionalParam(z.enum(["account", "transfer"])),
+  reconcile: optionalParam(z.uuid()),
 });
 
 export const Route = createFileRoute("/accounts")({

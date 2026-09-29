@@ -1,10 +1,11 @@
 import { type LinkOptions, linkOptions } from "@tanstack/react-router";
 import { CircleAlert, CircleCheck } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import type { MonthChecklist } from "@/api/generated/model";
+import type { MonthAccountCoverage, MonthChecklist } from "@/api/generated/model";
 import { Rows } from "@/components/ui/rows/rows";
 import { TextLink } from "@/components/ui/text-link/text-link";
-import { useIsoDate } from "@/hooks/use-formatters";
+import { useIsoDate, useMoney } from "@/hooks/use-formatters";
+import { useFeature } from "@/hooks/use-settings";
 import { monthBounds } from "@/lib/calendar";
 import { EXPENSE_TONE, INCOME_TONE } from "@/lib/tone";
 import { cn } from "@/lib/utils";
@@ -14,23 +15,30 @@ export function openItemCount(checklist: MonthChecklist) {
   return checklist.uncategorized + (checklist.unusual ?? 0) + (checklist.unconfirmedRecurring ?? 0);
 }
 
-function importsBehind(checklist: MonthChecklist, monthEnd: string) {
-  return (checklist.imports ?? []).filter((entry) => entry.latestImportedDate < monthEnd);
+function needsReconciling(entry: MonthAccountCoverage) {
+  return entry.state === "differs" || entry.state === "behind";
 }
 
-export function attentionCount(checklist: MonthChecklist, monthEnd: string) {
+export function attentionCount(checklist: MonthChecklist) {
   const counts = [checklist.uncategorized, checklist.unusual, checklist.unconfirmedRecurring];
   return (
-    counts.filter((count) => (count ?? 0) > 0).length + importsBehind(checklist, monthEnd).length
+    counts.filter((count) => (count ?? 0) > 0).length +
+    checklist.accounts.filter(needsReconciling).length
   );
 }
+
+const accountTexts = {
+  reconciled: "monthClose.checklist.reconciled",
+  differs: "monthClose.checklist.differs",
+  imported: "monthClose.checklist.importCovered",
+  behind: "monthClose.checklist.behind",
+} as const;
 
 interface Item {
   key: string;
   done: boolean;
   label: string;
-  action: string;
-  link: LinkOptions;
+  actions: { label: string; link: LinkOptions }[];
 }
 
 interface Props {
@@ -43,6 +51,8 @@ interface Props {
 export function CloseChecklist({ month, checklist, openOnly = false, className }: Readonly<Props>) {
   const { t } = useTranslation();
   const isoDate = useIsoDate();
+  const money = useMoney();
+  const importEnabled = useFeature("import");
   const range = monthBounds(monthDate(month));
   const review = t("monthClose.checklist.review");
 
@@ -54,11 +64,15 @@ export function CloseChecklist({ month, checklist, openOnly = false, className }
         checklist.uncategorized === 0
           ? t("monthClose.checklist.noUncategorized")
           : t("monthClose.checklist.uncategorized", { count: checklist.uncategorized }),
-      action: t("monthClose.checklist.categorize"),
-      link: linkOptions({
-        to: "/transactions",
-        search: { page: 1, ...range, uncategorized: true },
-      }),
+      actions: [
+        {
+          label: t("monthClose.checklist.categorize"),
+          link: linkOptions({
+            to: "/transactions",
+            search: { page: 1, ...range, uncategorized: true },
+          }),
+        },
+      ],
     },
   ];
 
@@ -70,8 +84,12 @@ export function CloseChecklist({ month, checklist, openOnly = false, className }
         checklist.unusual === 0
           ? t("monthClose.checklist.noUnusual")
           : t("monthClose.checklist.unusual", { count: checklist.unusual }),
-      action: review,
-      link: linkOptions({ to: "/transactions", search: { page: 1, ...range, unusual: true } }),
+      actions: [
+        {
+          label: review,
+          link: linkOptions({ to: "/transactions", search: { page: 1, ...range, unusual: true } }),
+        },
+      ],
     });
   }
 
@@ -83,25 +101,34 @@ export function CloseChecklist({ month, checklist, openOnly = false, className }
         checklist.unconfirmedRecurring === 0
           ? t("monthClose.checklist.noRecurring")
           : t("monthClose.checklist.recurring", { count: checklist.unconfirmedRecurring }),
-      action: t("monthClose.checklist.confirm"),
-      link: linkOptions({ to: "/recurring-bills" }),
+      actions: [
+        { label: t("monthClose.checklist.confirm"), link: linkOptions({ to: "/recurring-bills" }) },
+      ],
     });
   }
 
-  for (const entry of checklist.imports ?? []) {
-    const behind = entry.latestImportedDate < range.dateTo;
+  for (const entry of checklist.accounts) {
+    const actions: Item["actions"] = [
+      {
+        label: t("monthClose.checklist.reconcile"),
+        link: linkOptions({ to: "/accounts", search: { reconcile: entry.accountId } }),
+      },
+    ];
+    if (entry.state === "behind" && importEnabled) {
+      actions.push({
+        label: t("monthClose.checklist.import"),
+        link: linkOptions({ to: "/profile", search: { section: "import" } }),
+      });
+    }
     items.push({
-      key: `import-${entry.accountId}`,
-      done: !behind,
-      label: t(
-        behind ? "monthClose.checklist.importBehind" : "monthClose.checklist.importCovered",
-        {
-          account: entry.accountName,
-          date: isoDate(entry.latestImportedDate),
-        },
-      ),
-      action: t("monthClose.checklist.import"),
-      link: linkOptions({ to: "/profile", search: { section: "import" } }),
+      key: `account-${entry.accountId}`,
+      done: !needsReconciling(entry),
+      label: t(accountTexts[entry.state], {
+        account: entry.accountName,
+        date: entry.date ? isoDate(entry.date) : "",
+        difference: money.format(Math.abs(Number(entry.difference ?? 0)), entry.currency),
+      }),
+      actions,
     });
   }
 
@@ -131,9 +158,13 @@ export function CloseChecklist({ month, checklist, openOnly = false, className }
               </span>
             </span>
             {item.done ? null : (
-              <TextLink {...item.link} className="ml-auto">
-                {item.action}
-              </TextLink>
+              <span className="ml-auto flex gap-x-4">
+                {item.actions.map((action) => (
+                  <TextLink key={action.label} {...action.link}>
+                    {action.label}
+                  </TextLink>
+                ))}
+              </span>
             )}
           </li>
         );

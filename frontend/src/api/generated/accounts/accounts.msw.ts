@@ -7,7 +7,13 @@
  */
 import { HttpResponse, http } from "msw";
 import type { RequestHandlerOptions } from "msw";
-import type { AccountResponse, ArchivedAccountResponse, CashFlowForecastResponse } from "../model";
+import type {
+  AccountResponse,
+  ArchivedAccountResponse,
+  CashFlowForecastResponse,
+  ReconciliationPreviewResponse,
+  ReconciliationResponse,
+} from "../model";
 
 export const getCreateAccountMockHandler = (
   overrideResponse?:
@@ -172,6 +178,97 @@ export const getUpdateAccountMockHandler = (
   );
 };
 
+export const getReconciliationsMockHandler = (
+  overrideResponse?:
+    | ReconciliationResponse[]
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<ReconciliationResponse[]> | ReconciliationResponse[]),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/accounts/:id/reconciliations",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : undefined,
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getRecordReconciliationMockHandler = (
+  overrideResponse?:
+    | ReconciliationResponse
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<ReconciliationResponse> | ReconciliationResponse),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/accounts/:id/reconciliations",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : undefined,
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getReconciliationPreviewMockHandler = (
+  overrideResponse?:
+    | ReconciliationPreviewResponse
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<ReconciliationPreviewResponse> | ReconciliationPreviewResponse),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/accounts/:id/reconciliations/preview",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : undefined,
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getDeleteReconciliationMockHandler = (
+  overrideResponse?:
+    | void
+    | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<void> | void),
+  options?: RequestHandlerOptions,
+) => {
+  return http.delete(
+    "*/api/accounts/:id/reconciliations/:reconciliationId",
+    async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+      if (typeof overrideResponse === "function") {
+        await overrideResponse(info);
+      }
+
+      return new HttpResponse(null, { status: 204 });
+    },
+    options,
+  );
+};
+
 export const getRestoreAccountMockHandler = (
   overrideResponse?:
     | AccountResponse
@@ -203,5 +300,9 @@ export const getAccountsMock = () => [
   getDeleteAccountMockHandler(),
   getAccountMockHandler(),
   getUpdateAccountMockHandler(),
+  getReconciliationsMockHandler(),
+  getRecordReconciliationMockHandler(),
+  getReconciliationPreviewMockHandler(),
+  getDeleteReconciliationMockHandler(),
   getRestoreAccountMockHandler(),
 ];
