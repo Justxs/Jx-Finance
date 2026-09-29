@@ -8,6 +8,7 @@ import { UnusualAmountBadge } from "@/features/transactions/unusual-amount/unusu
 import { EMPTY_VALUE, useIsoDate } from "@/hooks/use-formatters";
 import { CategoryIcon } from "@/lib/category-icons";
 import { DebtPaymentMarker } from "../debt-payment/debt-payment";
+import { RefundMark } from "../refund-mark/refund-mark";
 import { TransactionAmount, isOptimistic, transactionName } from "../transaction-amount";
 import { TransactionRowActions } from "../transaction-row-actions/transaction-row-actions";
 import { CategoryCell } from "./category-cell";
@@ -33,6 +34,7 @@ export interface TransactionRowHandlers {
   tagById: ReadonlyMap<string, TagResponse>;
   onEdit: (transaction: TransactionResponse) => void;
   onDuplicate: (transaction: TransactionResponse) => void;
+  onRefund: (transaction: TransactionResponse) => void;
   onDelete: (id: string) => void;
   deletingId: string | null;
 }
@@ -43,6 +45,7 @@ export function useTransactionColumns({
   tagById,
   onEdit,
   onDuplicate,
+  onRefund,
   onDelete,
   deletingId,
 }: TransactionRowHandlers) {
@@ -85,6 +88,7 @@ export function useTransactionColumns({
               className="mt-0.5"
             />
             <DebtPaymentMarker transaction={info.row.original} className="mt-0.5" />
+            <RefundMark transaction={info.row.original} className="mt-0.5" />
           </span>
         );
       },
@@ -164,6 +168,7 @@ export function useTransactionColumns({
           deletingId={deletingId}
           onEdit={onEdit}
           onDuplicate={onDuplicate}
+          onRefund={onRefund}
           onDelete={onDelete}
           className="justify-end"
         />

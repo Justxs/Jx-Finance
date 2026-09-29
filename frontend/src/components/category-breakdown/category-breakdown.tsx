@@ -36,7 +36,7 @@ export function CategoryBreakdown({ items, type = "expense", dateFrom, dateTo }:
       filter: item.syntheticGroup || !item.categoryId ? undefined : { categoryId: item.categoryId },
       icon: item.categoryIcon,
     })),
-    ...(restTotal > 0 || restEarlier > 0
+    ...(restTotal !== 0 || restEarlier !== 0
       ? [
           {
             key: "other",

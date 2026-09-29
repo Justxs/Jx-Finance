@@ -17,7 +17,7 @@ Every feature the current code implements, one page per feature under `features/
 | 4 | [User management and password reset by an administrator](user-management.md) | always on, Admin | `Users` | `users` (Users under Installation in Settings) |
 | 5 | [Accounts with computed balances](accounts.md) | always on | `Accounts` | `accounts` |
 | 6 | [Categories](categories.md) | always on | `Categories` | `categories` |
-| 7 | [Transactions, splits, filters, bulk recategorize](transactions.md) | always on | `Transactions` | `transactions` |
+| 7 | [Transactions, splits, refunds, filters, bulk recategorize](transactions.md) | always on | `Transactions` | `transactions` |
 | 8 | [Transfers](transfers.md) | always on | `Transfers` | `accounts` (Transfers section) |
 | 9 | [Multi-currency, conversions, exchange rates](multi-currency.md) | `MultiCurrency` | `Conversions`, `Currencies`, `Infrastructure/ExchangeRates` | `accounts` (Currency conversions section) |
 | 10 | [Bank statement import](bank-statement-import.md) | `Import` | `Imports` | `imports` (dialog from Settings › Personal › Import data) |
@@ -50,7 +50,7 @@ Every feature the current code implements, one page per feature under `features/
 | 37 | [Reconciliation against a statement balance](reconciliation.md) | always on; recording from a camt.053 import follows `Import` | `Accounts` (`accounts/{id}/reconciliations`, `ReconciliationService`, `AccountMovements`), the closing-balance hook of `Imports`, the account lines of `MonthCloses` | `accounts` (`reconcile-dialog`, Reconcile row action, `?reconcile=`), `imports` (result line), `month-close` (checklist account lines) |
 | 38 | [Monthly digest and the member's language](monthly-digest.md) | `MonthClose`; each member opts in per channel | `MonthlyDigestJob`, `Common/Notifications` (`MonthlyDigest`, texts), `Users` (`users/me/language`) | `profile` (`notifications-section`: the digest row), notification bell, `stores/app-store.ts` (language saved on the server) |
 
-Not implemented: live prices, per-user reporting currency, manual exchange rates, credit-card statements, refunds as negative expenses, PWA/offline, bank APIs, scheduled or offsite backups and sharing of budgets, goals, assets, debts and bills. See [Features and scope](../scope.md) and, for what is planned next, [Backlog and ideas](../backlog.md).
+Not implemented: live prices, per-user reporting currency, manual exchange rates, credit-card statements, PWA/offline, bank APIs, scheduled or offsite backups and sharing of budgets, goals, assets, debts and bills. See [Features and scope](../scope.md) and, for what is planned next, [Backlog and ideas](../backlog.md).
 
 ## Where to read more
 

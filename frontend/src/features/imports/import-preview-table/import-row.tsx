@@ -13,7 +13,7 @@ import { INCOME_TONE } from "@/lib/tone";
 import { cn, metaLine } from "@/lib/utils";
 import { ImportTagPicker } from "./import-tag-picker";
 import { ImportTransferPicker } from "./import-transfer-picker";
-import { type PreviewRowState, takesCategory } from "./preview-rows";
+import { type PreviewRowState, categoryType, takesCategory } from "./preview-rows";
 
 interface Props {
   row: PreviewRowState;
@@ -42,16 +42,20 @@ export function ImportRow({
   const [transferOpen, setTransferOpen] = useState(false);
   const unusualSentence = useUnusualSentence();
 
-  const rowCategories = categories.filter((category) => category.type === row.type);
+  const linked = Boolean(row.existingTransactionId);
+  const rowCategories = linked
+    ? categories
+    : categories.filter((category) => category.type === categoryType(row));
   const name = row.payee || row.description || EMPTY_VALUE;
   const rowName = metaLine(formatDate(row.date), row.payee || row.description);
-  const linked = Boolean(row.existingTransactionId);
   const editable = takesCategory(row);
   const showTransfer =
     transferOpen ||
     row.looksLikeTransfer ||
     Boolean(row.transferAccountId) ||
-    Boolean(row.matchedTransaction);
+    Boolean(row.matchedTransaction) ||
+    Boolean(row.refundCandidate) ||
+    row.asRefund;
   const filledByRule = Boolean(row.ruleName) && editable;
   const recalled = row.categorySuggested && !row.ruleName && editable;
   const unusual = !row.isDuplicate && !linked && row.unusual ? unusualSentence(row.unusual) : null;
@@ -65,6 +69,7 @@ export function ImportRow({
     linked ||
     row.isDuplicate ||
     row.isReversal ||
+    row.asRefund ||
     row.looksLikeTransfer ||
     filledByRule ||
     recalled ||
@@ -138,6 +143,7 @@ export function ImportRow({
         </HintTag>
       ) : null}
       {row.isReversal ? <Tag>{t("imports.reversal")}</Tag> : null}
+      {row.asRefund ? <Tag tone="accent">{t("imports.refund")}</Tag> : null}
       {filledByRule ? (
         <HintTag tone="accent" hint={t("imports.ruleFilledHint", { rule: row.ruleName ?? "" })}>
           {t("imports.ruleFilled")}

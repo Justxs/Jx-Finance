@@ -318,9 +318,9 @@ public sealed class NetWorthService(
             return new DomainError(ErrorCodes.ReferenceNotFound, "Transaction does not exist.");
         }
 
-        if (transaction.Type != FlowType.Expense)
+        if (transaction.Type != FlowType.Expense || transaction.Amount.Amount < 0)
         {
-            return new DomainError(ErrorCodes.DebtPaymentWrongType, "Only an expense can pay a debt.");
+            return new DomainError(ErrorCodes.DebtPaymentWrongType, "Only an expense, not a refund, can pay a debt.");
         }
 
         if (transaction.IsSplit)
@@ -410,7 +410,7 @@ public sealed class NetWorthService(
             : debt.MonthlyPayment;
         var candidates = await db.Transactions
             .AsNoTracking()
-            .Where(t => t.Type == FlowType.Expense && !t.IsSplit && t.Date >= from && !LiveDebtPayments().Any(p => p.TransactionId == t.Id))
+            .Where(t => t.Type == FlowType.Expense && !t.IsSplit && t.Amount.Amount > 0 && t.Date >= from && !LiveDebtPayments().Any(p => p.TransactionId == t.Id))
             .OrderByDescending(t => t.Date)
             .Take(200)
             .ToListAsync(cancellationToken);
@@ -509,7 +509,7 @@ public sealed class NetWorthService(
     private async Task<DebtResponse> ToResponseAsync(Debt debt, CancellationToken cancellationToken) =>
         debt.ToResponse((await TrackAsync([debt], cancellationToken)).GetValueOrDefault(debt.Id));
 
-    private static bool PaysDebt(Transaction? transaction) => transaction is { Type: FlowType.Expense, IsSplit: false };
+    private static bool PaysDebt(Transaction? transaction) => transaction is { Type: FlowType.Expense, IsSplit: false, Amount.Amount: > 0 };
 
     private IQueryable<DebtPayment> LiveDebtPayments() =>
         db.DebtPayments.Where(p => db.Debts.Any(d => d.Id == p.DebtId));

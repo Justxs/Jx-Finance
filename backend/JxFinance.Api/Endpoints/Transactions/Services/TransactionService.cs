@@ -4,6 +4,7 @@ using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Common.ExchangeRates;
 using JxFinance.Common.References;
+using JxFinance.Common.Refunds;
 using JxFinance.Common.Settings;
 using JxFinance.Common.Subscriptions;
 using JxFinance.Common.Trash;
@@ -56,12 +57,13 @@ public sealed class TransactionService(
         var tagsByTransaction = await LoadTagsAsync(page.Items.Select(t => t.Id), cancellationToken);
         var attachmentCounts = await CountAttachmentsAsync(page.Items.Select(t => t.Id), cancellationToken);
         var debtPayments = await DebtPaymentsOfAsync(page.Items.Select(t => t.Id), cancellationToken);
+        var refunds = await RefundMarksAsync(page.Items, cancellationToken);
 
-        return page.Map(t => Shown(t.ToResponse(
+        return page.Map(t => Shown(refunds.Apply(t, t.ToResponse(
             linesByTransaction.GetValueOrDefault(t.Id),
             tagsByTransaction.GetValueOrDefault(t.Id),
             attachmentCounts.GetValueOrDefault(t.Id)) with
-        { DebtPayment = debtPayments.GetValueOrDefault(t.Id) }));
+        { DebtPayment = debtPayments.GetValueOrDefault(t.Id) })));
     }
 
     public async IAsyncEnumerable<TransactionResponse> StreamExportAsync(
@@ -233,8 +235,9 @@ public sealed class TransactionService(
             : [];
         var tagIds = await TagIdsOfAsync(transactionId, cancellationToken);
         var attachmentCount = await db.TransactionAttachments.CountAsync(a => a.TransactionId == transactionId, cancellationToken);
+        var refunds = await RefundMarksAsync([transaction], cancellationToken);
 
-        return Shown(transaction.ToResponse(lines, tagIds, attachmentCount));
+        return Shown(refunds.Apply(transaction, transaction.ToResponse(lines, tagIds, attachmentCount)));
     }
 
     public async Task<Result<Guid>> SetUnusualDismissedAsync(
@@ -255,7 +258,7 @@ public sealed class TransactionService(
         CreateTransactionRequest request,
         CancellationToken cancellationToken)
     {
-        if (await ValidateInputAsync(request, cancellationToken) is { } inputError)
+        if (await ValidateInputAsync(request, null, cancellationToken) is { } inputError)
         {
             return inputError;
         }
@@ -272,8 +275,9 @@ public sealed class TransactionService(
         db.Transactions.Add(transaction);
         var (lines, tagIds) = AddChildren(request, transaction.Id, currency);
         await db.SaveChangesAsync(cancellationToken);
+        var refunds = await RefundMarksAsync([transaction], cancellationToken);
 
-        return Shown(transaction.ToResponse(lines, tagIds));
+        return Shown(refunds.Apply(transaction, transaction.ToResponse(lines, tagIds)));
     }
 
     public async Task<Result<TransactionResponse>> UpdateAsync(
@@ -286,7 +290,7 @@ public sealed class TransactionService(
             return NotFound;
         }
 
-        if (await ValidateInputAsync(request, cancellationToken) is { } inputError)
+        if (await ValidateInputAsync(request, transactionId, cancellationToken) is { } inputError)
         {
             return inputError;
         }
@@ -315,8 +319,9 @@ public sealed class TransactionService(
 
         await db.SaveChangesAsync(cancellationToken);
         var attachmentCount = await db.TransactionAttachments.CountAsync(a => a.TransactionId == transactionId, cancellationToken);
+        var refunds = await RefundMarksAsync([transaction], cancellationToken);
 
-        return Shown(transaction.ToResponse(lines, tagIds, attachmentCount));
+        return Shown(refunds.Apply(transaction, transaction.ToResponse(lines, tagIds, attachmentCount)));
     }
 
     public async Task<Result<int>> BulkCategorizeAsync(
@@ -450,10 +455,14 @@ public sealed class TransactionService(
         return value.Map(valued => (valued.Amount.Currency, valued.ReportingAmount));
     }
 
-    private async Task<DomainError?> ValidateInputAsync(ITransactionInput input, CancellationToken cancellationToken) =>
+    private async Task<DomainError?> ValidateInputAsync(
+        ITransactionInput input,
+        TransactionId? transactionId,
+        CancellationToken cancellationToken) =>
         await ValidateReferencesAsync(input.AccountId, input.CategoryId, input.Type, cancellationToken)
         ?? await references.TagsExistAsync(input.TagIds ?? [], cancellationToken)
-        ?? (input.Lines is { Count: > 0 } lines ? await ValidateLinesAsync(lines, input.Type, cancellationToken) : null);
+        ?? (input.Lines is { Count: > 0 } lines ? await ValidateLinesAsync(lines, input.Type, cancellationToken) : null)
+        ?? await RefundOriginal.CheckAsync(db.Transactions, input.RefundOfTransactionId, transactionId, cancellationToken);
 
     private (List<TransactionLine> Lines, List<TagId> TagIds) AddChildren(
         ITransactionInput input,
@@ -575,6 +584,44 @@ public sealed class TransactionService(
             .Where(p => ids.Contains(p.TransactionId))
             .Join(db.Debts, p => p.DebtId, d => d.Id, (p, d) => new { p.TransactionId, Marker = new TransactionDebtPaymentResponse(p.Id.Value, d.Id.Value, d.Name) })
             .ToDictionaryAsync(x => x.TransactionId, x => x.Marker, cancellationToken);
+    }
+
+    private async Task<RefundMarks> RefundMarksAsync(
+        IReadOnlyCollection<Transaction> transactions,
+        CancellationToken cancellationToken)
+    {
+        var originalIds = transactions.Select(t => t.RefundOfTransactionId).OfType<TransactionId>().Distinct().ToList();
+        var originals = originalIds.Count == 0
+            ? []
+            : await db.Transactions
+                .Where(t => originalIds.Contains(t.Id))
+                .Select(t => new { t.Id, t.Date, t.Description })
+                .ToDictionaryAsync(t => t.Id, t => new TransactionRefundOfResponse(t.Id.Value, t.Date, t.Description), cancellationToken);
+
+        var purchaseIds = transactions
+            .Where(t => t.Type == FlowType.Expense && t.Amount.Amount > 0)
+            .Select(t => (TransactionId?)t.Id)
+            .ToList();
+        var refunded = purchaseIds.Count == 0
+            ? []
+            : await db.Transactions
+                .Where(t => purchaseIds.Contains(t.RefundOfTransactionId))
+                .GroupBy(t => t.RefundOfTransactionId)
+                .Select(g => new { g.Key, Total = g.Sum(t => t.ReportingAmount) })
+                .ToDictionaryAsync(g => g.Key!.Value, g => Money.Round(-g.Total), cancellationToken);
+
+        return new RefundMarks(originals, refunded);
+    }
+
+    private sealed record RefundMarks(
+        Dictionary<TransactionId, TransactionRefundOfResponse> Originals,
+        Dictionary<TransactionId, decimal> Refunded)
+    {
+        public TransactionResponse Apply(Transaction transaction, TransactionResponse response) => response with
+        {
+            RefundOf = transaction.RefundOfTransactionId is { } id ? Originals.GetValueOrDefault(id) : null,
+            RefundedAmount = Refunded.TryGetValue(transaction.Id, out var total) ? total : null,
+        };
     }
 
     private async Task<Dictionary<TransactionId, List<TagId>>> LoadTagsOfFilteredAsync(

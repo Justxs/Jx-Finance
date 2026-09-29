@@ -1,6 +1,6 @@
 # Plan: Receipt reading and automatic splits
 
-Status: planned 2026-09-28. Size L. A transaction started from a receipt is a hand-entered row, so the existing [match to hand-entered rows](../features/bank-statement-import.md#entries-you-already-made-by-hand) links it to the next bank import rather than importing it twice. It does not depend on [Refunds](refunds.md) or [Machine-learned categorization](machine-learned-categorization.md); a return receipt stays out until refunds exist.
+Status: planned 2026-09-28. Size L. A transaction started from a receipt is a hand-entered row, so the existing [match to hand-entered rows](../features/bank-statement-import.md#entries-you-already-made-by-hand) links it to the next bank import rather than importing it twice. It does not depend on [Machine-learned categorization](machine-learned-categorization.md); a return receipt stays out, because a [refund](../features/transactions.md#refunds) cannot be split.
 
 ## Outcome
 
@@ -39,7 +39,7 @@ Status: planned 2026-09-28. Size L. A transaction started from a receipt is a ha
 | Retention | A reading lives while its file exists. `AttachmentPurgeJob` deletes readings whose SHA-256 is no longer the hash of any attachment row uploaded by that user, trashed ones included, once the reading is older than 24 hours; failed readings go after 24 hours too. The dictionary stays until the user changes an entry. Nothing here enters the trash | Keeping readings forever; deleting a reading as soon as the file goes to the trash | Item lists can hold pharmacy purchases. They should not outlive the file they came from, but must survive a removal that is undone. 24 hours gives the create flow time to attach the file |
 | Backups | `ReceiptReadings`, `ReceiptItemCategories` and `ReceiptReadingUsage` are exported tables. The API key is stored with Data Protection purpose `JxFinance.Receipts.ApiKey`, travels as ciphertext and answers `receipt.keyUnreadable` under another key ring, like the SMTP password | Leaving readings out as transient | A reading cost money and is part of the household's record next to its file, which the backup already carries |
 | Provider address | The base address is fixed in code to Anthropic's API. It is not a setting | A configurable base URL | A configurable address would let whoever holds an administrator session send the stored key and the receipts to a server of their choice |
-| Returns | A receipt the model marks as a return ("Grąžinimas") is shown with "Return receipts cannot be split yet", and Apply is disabled | Recording it as income or as a negative split | Negative lines do not exist, and a return as income is the problem [Refunds](refunds.md) solves |
+| Returns | A receipt the model marks as a return ("Grąžinimas") is shown with "Return receipts cannot be split yet", and Apply is disabled | Recording it as income or as a negative split | A refund cannot be split, so negative lines do not exist, and a return belongs in a [refund](../features/transactions.md#refunds), not in income |
 
 ## Data model
 
@@ -200,7 +200,7 @@ Read 20 real receipts from the household's own shops, Maxima, Rimi, Iki, Lidl an
 - A per-item spending report ("how much did toothpaste cost this year") with a `ReceiptItem` table backfilled from `Result`.
 - Cutting a very tall screenshot of an e-receipt from a shop app into overlapping parts, because a 1170 × 8000 px screenshot shrinks to about 377 × 2576 px and becomes hard to read.
 - A local provider behind `IReceiptReader` for installations that do not want receipts to leave.
-- Return receipts, once [Refunds](refunds.md) exist.
+- Return receipts read into a [refund](../features/transactions.md#refunds) rather than a split.
 - Managing the learned dictionary (list and forget) under Categories.
 
 ## Open questions

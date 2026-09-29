@@ -12,7 +12,10 @@ public sealed class CreateTransactionSummary : Summary<CreateTransactionEndpoint
         Description = "Posts income or an expense to an account. Leave lines empty for an ordinary "
             + "transaction. To split one payment across several categories, send the lines instead: they "
             + "must add up to the transaction amount, and the top-level categoryId is then ignored. Tags "
-            + "belong to the whole payment and are sent as tagIds, split or not.";
+            + "belong to the whole payment and are sent as tagIds, split or not. "
+            + "A refund is an expense with a negative amount: it lowers that category's spending and raises the "
+            + "balance. It takes an expense category, cannot be split, and may name the purchase it refunds in "
+            + "refundOfTransactionId, which must be an expense you can see and not itself a refund.";
         ExampleRequest = new CreateTransactionRequest(
             Guid.Empty,
             Guid.Empty,
@@ -24,11 +27,13 @@ public sealed class CreateTransactionSummary : Summary<CreateTransactionEndpoint
         RequestParam(r => r.AccountId, "The account the money moved on; must be visible to you.");
         RequestParam(r => r.CategoryId, "Optional category. Ignored when lines are supplied.");
         RequestParam(r => r.Type, SummaryText.FlowType);
-        RequestParam(r => r.Amount, SummaryText.PositiveMoney);
+        RequestParam(r => r.Amount, "Decimal string with at most two decimal places. Greater than zero for income; for an expense, negative for a refund.");
+        RequestParam(r => r.RefundOfTransactionId, "Optional, only on a refund: the expense it refunds.");
         RequestParam(r => r.Date, "The date the money moved, as YYYY-MM-DD.");
         RequestParam(r => r.Lines, "Optional split lines. Their amounts must sum to the transaction amount.");
         RequestParam(r => r.TagIds, "Optional tags for the whole payment, at most ten, each visible to you.");
         Responses[201] = "The transaction was created. The Location header points at it.";
-        Responses[400] = "Validation failed, the split lines do not add up, or the account, category or a tag is not visible to you.";
+        Responses[400] = "Validation failed, the split lines do not add up, a refund has lines (transaction.splitNotAllowed) or names an original that is not a visible purchase "
+            + "(transaction.refundOriginalInvalid), or the account, category or a tag is not visible to you.";
     }
 }

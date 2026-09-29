@@ -21,6 +21,8 @@ public sealed class TransactionConfiguration : IEntityTypeConfiguration<Transact
             .HasFilter("\"UnusualCheckedAt\" IS NULL");
         builder.HasIndex(t => t.Id, "IX_Transactions_PayeeKeyPending")
             .HasFilter("\"PayeeKey\" IS NULL");
+        builder.HasOne<Transaction>().WithMany().HasForeignKey(t => t.RefundOfTransactionId).OnDelete(DeleteBehavior.SetNull);
+        builder.HasIndex(t => t.RefundOfTransactionId).HasFilter("\"RefundOfTransactionId\" IS NOT NULL");
         builder.HasIndex(t => new { t.UserId, t.Date });
         builder.HasIndex(t => new { t.AccountId, t.Date });
         builder.HasIndex(t => new { t.AccountId, t.ImportRef })

@@ -3,19 +3,25 @@ using JxFinance.Domain.Transactions;
 
 namespace JxFinance.Endpoints.Imports.Matching;
 
-public sealed record StatementLine(DateOnly Date, FlowType Type, Money Amount);
+public sealed record StatementLine(DateOnly Date, FlowType Type, Money Amount)
+{
+    public Money MoneyIn => ManualEntryMatcher.MoneyIn(Type, Amount);
+}
 
 public sealed record ManualEntry(TransactionId Id, DateOnly Date, FlowType Type, Money Amount)
 {
     public int DaysFrom(StatementLine line) => Math.Abs(Date.DayNumber - line.Date.DayNumber);
 
     public bool Fits(StatementLine line) =>
-        Type == line.Type && Amount == line.Amount && DaysFrom(line) <= ManualEntryMatcher.MaxDays;
+        ManualEntryMatcher.MoneyIn(Type, Amount) == line.MoneyIn && DaysFrom(line) <= ManualEntryMatcher.MaxDays;
 }
 
 public static class ManualEntryMatcher
 {
     public const int MaxDays = 3;
+
+    public static Money MoneyIn(FlowType type, Money amount) =>
+        type == FlowType.Income ? amount : new Money(-amount.Amount, amount.Currency);
 
     public static IReadOnlyList<ManualEntry?> Match(IReadOnlyList<StatementLine?> lines, IReadOnlyList<ManualEntry> entries)
     {

@@ -10,6 +10,7 @@ import {
   categoryTargetCount,
   importDateRange,
   recallCategoryId,
+  refundPatch,
   selectAllPatch,
   summarizeSelection,
   toPreviewRows,
@@ -231,6 +232,85 @@ describe("initial state", () => {
     expect(viewCounts(rows).attention).toBe(0);
     expect(categoryTargetCount(rows, food)).toBe(0);
     expect(applyCategory(rows, food)[0]?.categoryId).toBe("");
+  });
+});
+
+describe("refunds", () => {
+  const candidate = { id: "boots", date: "2026-09-01", description: "Boots", categoryId: "food" };
+
+  test("an incoming row with a refund candidate or a reversal starts as a refund, selected", () => {
+    const rows = toPreviewRows(
+      [
+        row("1", "Boots", "income", "20.00", {
+          refundCandidate: candidate,
+          matchedRuleName: "Pay",
+        }),
+        row("2", "Bolt", "income", "7.40", { isReversal: true, looksLikeTransfer: true }),
+        row("3", "Salary", "income", "900.00"),
+        row("4", "Boots", "income", "20.00", { refundCandidate: candidate, isDuplicate: true }),
+        row("5", "Boots", "income", "20.00", {
+          refundCandidate: candidate,
+          suggestedTransferAccountId: "savings",
+        }),
+      ],
+      [],
+      categories,
+    );
+
+    expect(
+      rows.map((item) => [
+        item.asRefund,
+        item.refundOfTransactionId,
+        item.categoryId,
+        item.selected,
+      ]),
+    ).toEqual([
+      [true, "boots", "food", true],
+      [true, "", "", true],
+      [false, "", "", true],
+      [false, "", "", false],
+      [false, "", "", true],
+    ]);
+    expect(rows[0]?.ruleName).toBeNull();
+    expect(categoryTargetCount(rows, food)).toBe(2);
+    expect(applyCategory(rows, food).map((item) => item.categoryId)).toEqual([
+      "food",
+      "food",
+      "",
+      "",
+      "",
+    ]);
+  });
+
+  test("choosing a refund links the candidate and takes its category, and a plain refund keeps its own", () => {
+    const [income] = toPreviewRows(
+      [
+        row("1", "Boots", "income", "20.00", {
+          refundCandidate: candidate,
+          looksLikeTransfer: true,
+        }),
+      ],
+      [],
+      categories,
+    );
+    if (!income) {
+      throw new Error("expected a row");
+    }
+    const plain = { ...income, asRefund: false, refundOfTransactionId: "", categoryId: "salary" };
+
+    expect(refundPatch(plain, true)).toMatchObject({
+      asRefund: true,
+      refundOfTransactionId: "boots",
+      categoryId: "food",
+    });
+    expect(refundPatch(plain, false)).toMatchObject({
+      asRefund: true,
+      refundOfTransactionId: "",
+      categoryId: "",
+    });
+    expect(refundPatch({ ...income, categoryId: "transport" }, false)).toMatchObject({
+      categoryId: "transport",
+    });
   });
 });
 

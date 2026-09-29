@@ -11,6 +11,14 @@ export function isOptimistic(row: Pick<TransactionResponse, "id">) {
   return row.id.startsWith(OPTIMISTIC_PREFIX);
 }
 
+export function isRefund(row: Pick<TransactionResponse, "type" | "amount">) {
+  return row.type === "expense" && Number(row.amount) < 0;
+}
+
+export function isPurchase(row: Pick<TransactionResponse, "type" | "amount">) {
+  return row.type === "expense" && Number(row.amount) > 0;
+}
+
 export function transactionCategoryLabel(
   row: Pick<TransactionResponse, "isSplit" | "categoryId">,
   categoryById: ReadonlyMap<string | undefined, CategoryResponse | undefined>,

@@ -68,7 +68,7 @@ Two other cases show the other bars binding. Four coffees at 2.90 to 3.20 have a
 
 ## Which rows, and as of when
 
-Only expenses that are not split are evaluated, and only such rows count as history, because a split has no per-line reporting amount stored. Income is never flagged: a bonus is rarely a problem to catch. Transfers, currency conversions and investment entries are not transactions and are never looked at. A conversion fee is an ordinary expense transaction and is evaluated like one.
+Only expenses that are not split are evaluated, and only such rows count as history, because a split has no per-line reporting amount stored. Income is never flagged: a bonus is rarely a problem to catch. A [refund](transactions.md#refunds), an expense with a negative amount, is neither judged nor counted as history, because it is not a charge and would drag a payee's median down: the job marks it checked with no verdict, an edit that turns a row into a refund clears its verdict, and the price-rise check skips it too. Transfers, currency conversions and investment entries are not transactions and are never looked at. A conversion fee is an ordinary expense transaction and is evaluated like one.
 
 A verdict means "unusual compared with the 12 months before its date, as of when it was recorded or last edited". It is computed once and stored, and later changes to the history do not re-flag or clear old rows, so a flag does not flicker as new rows arrive. Rows imported together are judged against each other, because the job reads the history after they are stored.
 

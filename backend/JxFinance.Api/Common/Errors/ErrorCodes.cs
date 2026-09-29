@@ -15,6 +15,7 @@ public static class ErrorCodes
     public const string MoneyInvalid = "money.invalid";
     public const string MoneyPositive = "money.positive";
     public const string MoneyNonNegative = "money.nonNegative";
+    public const string MoneyNonZero = "money.nonZero";
     public const string QuantityPositive = "quantity.positive";
     public const string QuantityNonNegative = "quantity.nonNegative";
     public const string RangeInvalid = "range.invalid";
@@ -54,6 +55,7 @@ public static class ErrorCodes
     public const string TransferAmountMismatch = "transfer.amountMismatch";
     public const string TransactionLinesMismatch = "transaction.linesMismatch";
     public const string TransactionSplitNotAllowed = "transaction.splitNotAllowed";
+    public const string TransactionRefundOriginalInvalid = "transaction.refundOriginalInvalid";
     public const string RecurringBillInactive = "recurringBill.inactive";
     public const string RecurringBillDebtShape = "recurringBill.debtShape";
     public const string HoldingOversold = "holding.oversold";
@@ -64,6 +66,7 @@ public static class ErrorCodes
     public const string ImportTransferMismatch = "import.transferMismatch";
     public const string ImportTransferAlreadyMatched = "import.transferAlreadyMatched";
     public const string ImportEntryMismatch = "import.entryMismatch";
+    public const string ImportRefundInvalid = "import.refundInvalid";
     public const string RestoreExpired = "restore.expired";
     public const string RestoreReferenceMissing = "restore.referenceMissing";
     public const string RestoreCompanionDeleted = "restore.companionDeleted";

@@ -36,6 +36,8 @@ The CSV carries `Date,Description,Account,Category,Tags,Type,Amount,Currency`. T
 
 Tags are the one column whose names the streamed row does not carry, so the CSV export loads the tag map of the filtered set in one query before it starts writing. A join row is two uuids, so that map is far smaller than the ledger it describes, and the rows themselves are still streamed one at a time. The PDF is capped at `App:PdfExportMaxRows` anyway, so it loads the tags of its own result. Tags are described on [Tags](tags.md).
 
+A [refund](transactions.md#refunds) is exported as it is stored: type `Expense` with a negative amount, so a spreadsheet sum of the Expense rows is net spending. The PDF's totals are net as well, its type cell reads "Refund" for such a row, and the amount keeps its minus sign.
+
 ## The yearly investment tax summary
 
 Since 2026-09-21 there is a second CSV, `GET /api/investments/tax-summary/export?year&accountIds`, described on [Investments](investments.md). It writes its rows the same way — a `StreamWriter` over the response body, no `Content-Length`, the same leading-quote guard for a text cell that begins with `= + - @`, a tab or a carriage return — through the shared `Common/CsvCell` helper that the transaction export now also uses. Only text cells are guarded; a date, a number, a currency code or a section name is written as it is, so a negative amount keeps its minus sign.

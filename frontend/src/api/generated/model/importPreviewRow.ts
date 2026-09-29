@@ -33,4 +33,5 @@ export interface ImportPreviewRow {
   suggestedTransferAccountId: string | null;
   unusual?: null | UnusualAmountResponse;
   matchedTransaction?: null | ImportMatchedTransaction;
+  refundCandidate?: null | ImportMatchedTransaction;
 }

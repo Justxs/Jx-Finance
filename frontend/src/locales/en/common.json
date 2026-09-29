@@ -480,6 +480,13 @@
     "savedFilterSaved": "Filter saved",
     "savedFilterStale": "Names something that no longer exists",
     "duplicate": "Duplicate",
+    "refund": "Refund",
+    "recordRefund": "Record refund",
+    "refundOf": "Refund of {{description}}, {{date}}",
+    "refundOfShow": "Show the purchase this refunds",
+    "refundOfClear": "Unlink the purchase",
+    "refunded": "Refunded {{amount}}",
+    "refundedHint": "Refunds that name this purchase add up to {{amount}}.",
     "templates": "Templates",
     "templatesEmpty": "No templates yet. Open the add form and save its shape as a template.",
     "useTemplate": "New transaction from template",
@@ -1840,6 +1847,8 @@
     "matched": "Matches your entry",
     "matchedHint": "You entered this on {{date}}: {{description}}. Importing links the bank entry to it instead of adding a copy, and your category, tags and description stay.",
     "linkEntry": "Your entry of {{date}}",
+    "refund": "Refund",
+    "refundOf": "Refund of {{date}} {{description}}",
     "looksLikeTransfer": "Looks like a transfer",
     "unusual": "Unusual amount",
     "recordAs": "Record as",
@@ -2109,12 +2118,14 @@
       "noStatementForAccount": "The file holds statements only for {{reason}}. Record this account's IBAN, or choose the account the statement belongs to.",
       "transferAlreadyMatched": "The chosen transfer is already matched to another bank entry of this account.",
       "transferMismatch": "The chosen transfer does not match this row.",
-      "entryMismatch": "The entry you chose no longer matches this row or is already linked to another bank entry. Preview the file again."
+      "entryMismatch": "The entry you chose no longer matches this row or is already linked to another bank entry. Preview the file again.",
+      "refundInvalid": "Only an incoming row recorded as a transaction can be a refund. Preview the file again."
     },
     "money": {
       "invalid": "Enter a valid amount, e.g. 12.34.",
       "nonNegative": "Enter an amount of 0 or more, e.g. 12.34.",
-      "positive": "Enter an amount greater than 0, e.g. 12.34."
+      "positive": "Enter an amount greater than 0, e.g. 12.34.",
+      "nonZero": "Enter an amount other than 0, e.g. 12.34."
     },
     "password": {
       "incorrect": "The current password is wrong.",
@@ -2171,7 +2182,8 @@
     },
     "transaction": {
       "linesMismatch": "Split lines must add up to the transaction amount.",
-      "splitNotAllowed": "This cannot be done with a split transaction."
+      "splitNotAllowed": "This cannot be done with a split transaction.",
+      "refundOriginalInvalid": "The purchase this refund names is not an expense you can see. Unlink it or choose another purchase."
     },
     "transfer": {
       "amountMismatch": "Sent and received amounts must match in the same currency.",

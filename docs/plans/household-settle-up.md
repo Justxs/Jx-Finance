@@ -1,6 +1,6 @@
 # Plan: Household settle-up
 
-Status: planned 2026-09-28. Size L. Independent of the other plans. [Refunds](refunds.md) defines money back in an expense category. Once it has shipped, a payer who receives a settlement on their own account can record it as a refund of the split expense, which lowers their spending to their share without a second mechanism. The later "my share" view named under Decisions should build on that, not replace it.
+Status: planned 2026-09-28. Size L. Independent of the other plans. [Refunds](../features/transactions.md#refunds), shipped on 2026-09-29, record money back in an expense category, so a payer who receives a settlement on their own account can record it as a refund of the split expense, which lowers their spending to their share without a second mechanism. The later "my share" view named under Decisions should build on that, not replace it.
 
 ## Outcome
 

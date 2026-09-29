@@ -27,4 +27,7 @@ export interface ImportConfirmRow {
   tagIds?: string[] | null;
   /** @nullable */
   existingTransactionId?: string | null;
+  asRefund?: boolean;
+  /** @nullable */
+  refundOfTransactionId?: string | null;
 }

@@ -196,6 +196,8 @@ flowchart TD
 
 A suggested rule, once created, is an ordinary rule: it goes last, suggests in the import preview and touches old rows only through **Run over existing transactions**. When the caller already has 100 rules the list is empty, because the create would be refused. Both routes sit in the `CategorizationRules` group and answer `feature.disabled` while the switch is off.
 
+Suggestions read only rows with a positive amount: a [refund](transactions.md#refunds) is never evidence for a rule, and never a conflicting row. A rule with an amount range never matches a refund, because the range is compared with the signed amount; a rule without one can file an uncategorized refund like any expense.
+
 ## The screen
 
 `/categorization-rules` follows `/tags`: a list, a dialog to add, a dialog to edit, and the confirm dialog every delete in the product uses. The [suggested rules](#suggested-rules), when there are any, come first. Each row shows its position, its name, its condition in words, and its action as chips, with **Move up** and **Move down** buttons on the right. There is no drag and drop: a list of a handful of rules is reordered a step at a time, the buttons work with a keyboard and a screen reader without any extra code, and each press is one request whose answer is the new order.

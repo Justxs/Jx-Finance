@@ -22,6 +22,10 @@ public sealed record TransactionResponse(
     int AttachmentCount,
     UnusualAmountResponse? Unusual,
     bool UnusualDismissed,
-    TransactionDebtPaymentResponse? DebtPayment = null);
+    TransactionDebtPaymentResponse? DebtPayment = null,
+    TransactionRefundOfResponse? RefundOf = null,
+    [property: Money] decimal? RefundedAmount = null);
 
 public sealed record TransactionDebtPaymentResponse(Guid Id, Guid DebtId, string DebtName);
+
+public sealed record TransactionRefundOfResponse(Guid Id, DateOnly Date, string? Description);

@@ -1,3 +1,4 @@
+import { X } from "lucide-react";
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type {
@@ -8,18 +9,24 @@ import type {
 } from "@/api/generated/model";
 import { MoneyPairField } from "@/components/form";
 import { FormError } from "@/components/form-error/form-error";
+import { Button } from "@/components/ui/button/button";
 import { FormGrid } from "@/components/ui/form-grid/form-grid";
 import { Label } from "@/components/ui/label/label";
 import { heldCurrencies } from "@/features/accounts/held-currencies";
 import { ClosedMonthHint } from "@/features/month-close/closed-month-hint/closed-month-hint";
 import { TagPicker } from "@/features/tags/tag-picker/tag-picker";
+import { EMPTY_VALUE, useIsoDate } from "@/hooks/use-formatters";
 import { namedOptions } from "@/lib/options";
 import { emptyLine } from "./line-form-value";
 import { SaveTemplateControl } from "./save-template-control";
 import { SplitLinesEditor } from "./split-lines-editor";
 import type { TransactionDraft } from "./transaction-draft";
 import { TransactionFormActions } from "./transaction-form-actions";
-import { type TransactionFormValues, toSubmittedValues } from "./transaction-schema";
+import {
+  type TransactionFormValues,
+  categoryTypeOf,
+  toSubmittedValues,
+} from "./transaction-schema";
 import {
   type SubmitIntent,
   type TransactionFormApi,
@@ -48,6 +55,37 @@ interface Props {
   onCancel?: () => void;
 }
 
+function RefundOfLine({ form }: Readonly<{ form: TransactionFormApi }>) {
+  const { t } = useTranslation();
+  const formatDate = useIsoDate();
+
+  return (
+    <form.Subscribe
+      selector={(state) => (state.values.type === "refund" ? state.values.refundOf : null)}
+    >
+      {(original) =>
+        original ? (
+          <p className="col-span-full flex items-center gap-1 text-sm text-muted-foreground">
+            {t("transactions.refundOf", {
+              description: original.description || EMPTY_VALUE,
+              date: formatDate(original.date),
+            })}
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-sm"
+              aria-label={t("transactions.refundOfClear")}
+              onClick={() => form.setFieldValue("refundOf", null)}
+            >
+              <X />
+            </Button>
+          </p>
+        ) : null
+      }
+    </form.Subscribe>
+  );
+}
+
 function CategoryField({ form, categories }: Readonly<CategoryFieldProps>) {
   const { t } = useTranslation();
 
@@ -61,7 +99,7 @@ function CategoryField({ form, categories }: Readonly<CategoryFieldProps>) {
               kind="search"
               label={t("transactions.category")}
               options={namedOptions(
-                categories.filter((c) => c.type === typeField.value),
+                categories.filter((c) => c.type === categoryTypeOf(typeField.value)),
                 t("transactions.uncategorized"),
               )}
             />
@@ -124,16 +162,23 @@ export function TransactionForm({
               options={[
                 { value: "expense", label: t("transactions.expense") },
                 { value: "income", label: t("transactions.income") },
+                { value: "refund", label: t("transactions.refund") },
               ]}
               onValueChange={(next) => {
                 const categoryId = form.getFieldValue("categoryId");
-                if (categoryId && !categories.some((c) => c.id === categoryId && c.type === next)) {
+                const type = categoryTypeOf(next);
+                if (categoryId && !categories.some((c) => c.id === categoryId && c.type === type)) {
                   form.setFieldValue("categoryId", "");
+                }
+                if (next === "refund") {
+                  form.setFieldValue("isSplit", false);
                 }
               }}
             />
           )}
         </form.Field>
+
+        <RefundOfLine form={form} />
 
         <form.Field name="accountId">
           {(field) => (
@@ -221,21 +266,27 @@ export function TransactionForm({
           </form.Field>
         ) : null}
 
-        <form.Field name="isSplit">
-          {(field) => (
-            <field.CheckboxField
-              id="tx-split"
-              label={t("transactions.splitTransaction")}
-              tone="muted"
-              className="col-span-full"
-              onCheckedChange={(next) => {
-                if (next && form.getFieldValue("lines").length === 0) {
-                  form.setFieldValue("lines", [emptyLine()]);
-                }
-              }}
-            />
-          )}
-        </form.Field>
+        <form.Subscribe selector={(state) => state.values.type === "refund"}>
+          {(refund) =>
+            refund ? null : (
+              <form.Field name="isSplit">
+                {(field) => (
+                  <field.CheckboxField
+                    id="tx-split"
+                    label={t("transactions.splitTransaction")}
+                    tone="muted"
+                    className="col-span-full"
+                    onCheckedChange={(next) => {
+                      if (next && form.getFieldValue("lines").length === 0) {
+                        form.setFieldValue("lines", [emptyLine()]);
+                      }
+                    }}
+                  />
+                )}
+              </form.Field>
+            )
+          }
+        </form.Subscribe>
 
         <SplitLinesEditor
           form={form}

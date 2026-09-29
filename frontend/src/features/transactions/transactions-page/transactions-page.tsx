@@ -36,6 +36,7 @@ import {
   type TransactionDraft,
   type TransactionFormValues,
   duplicateDraft,
+  refundDraft,
   templateValuesFromFormValues,
 } from "../transaction-form";
 import { TransactionFormSection } from "../transaction-form-section/transaction-form-section";
@@ -155,6 +156,7 @@ export function TransactionsPage() {
     tagById,
     onEdit: startEditing,
     onDuplicate: (transaction) => startFromDraft(duplicateDraft(transaction)),
+    onRefund: (transaction) => startFromDraft(refundDraft(transaction)),
     onDelete: remove.request,
     deletingId: remove.pendingId,
   };

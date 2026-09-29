@@ -21,7 +21,9 @@ public sealed class ImportPreviewSummary : Summary<ImportPreviewEndpoint, Import
             + "decided. A row that is not a duplicate and has the same flow type, amount and currency "
             + "as a transaction entered by hand on the account within three days of it carries that "
             + "transaction in matchedTransaction, each transaction offered to one row at most, the "
-            + "closest date first. Nothing is written: this call only reads the file. Send the file as "
+            + "closest date first. An incoming row that is neither a duplicate nor matched carries refundCandidate when an expense on the "
+            + "account, not a refund, in the same currency, of at least the row's amount and dated at most 90 days before it has the "
+            + "same normalized payee or description as the row; the most recent such expense wins. Nothing is written: this call only reads the file. Send the file as "
             + "multipart/form-data.";
         Params["file"] = "The statement file, at most 5 MB for a CSV file and 20 MB for an XML file.";
         Params["accountId"] = "The account the statement belongs to.";

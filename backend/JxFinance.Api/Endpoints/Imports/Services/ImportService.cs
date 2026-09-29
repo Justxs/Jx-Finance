@@ -3,7 +3,9 @@ using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Common.ExchangeRates;
 using JxFinance.Common.References;
+using JxFinance.Common.Refunds;
 using JxFinance.Common.Settings;
+using JxFinance.Common.Subscriptions;
 using JxFinance.Common.Transfers;
 using JxFinance.Common.Trash;
 using JxFinance.Common.Unusual;
@@ -80,6 +82,7 @@ public sealed class ImportService(
         var suggestions = await SuggestionsAsync(typedAccountId, parsedRows, cancellationToken);
         var unusualVerdicts = await UnusualAsync(typedAccountId, parsedRows, suggestions, cancellationToken);
         var matchedEntries = await ManualMatchesAsync(typedAccountId, parsedRows, duplicates, cancellationToken);
+        var refundCandidates = await RefundCandidatesAsync(typedAccountId, parsedRows, duplicates, matchedEntries, cancellationToken);
 
         var rows = parsedRows
             .Select((r, index) => new ImportPreviewRow(
@@ -98,7 +101,8 @@ public sealed class ImportService(
                 r.IsReversal,
                 OtherAccount(r.CounterpartyIban),
                 unusualVerdicts[index].ToResponse(),
-                matchedEntries[index]))
+                matchedEntries[index],
+                refundCandidates[index]))
             .ToList();
 
         var closing = statement.ClosingBalance;
@@ -245,9 +249,14 @@ public sealed class ImportService(
                 .Where(t => entryIds.Contains(t.Id))
                 .ToDictionaryAsync(t => t.Id, cancellationToken);
 
+        var refundOriginals = await RefundOriginal.ValidAsync(
+            db.Transactions,
+            rows.Select(r => r.RefundOfTransactionId).OfType<Guid>().Distinct().Select(id => new TransactionId(id)).ToList(),
+            cancellationToken);
+
         await PreloadRatesAsync(accountCurrency, rows, cancellationToken);
 
-        return new ConfirmLookups(existingRefs, categoryTypes, otherCurrencies, candidates, alreadyImported, entries);
+        return new ConfirmLookups(existingRefs, categoryTypes, otherCurrencies, candidates, alreadyImported, entries, refundOriginals);
     }
 
     private async Task PreloadRatesAsync(
@@ -299,8 +308,9 @@ public sealed class ImportService(
                 continue;
             }
 
+            var type = row.AsRefund ? FlowType.Expense : row.Type;
             var categoryId = row.CategoryId is { } id ? new CategoryId(id) : (CategoryId?)null;
-            if (categoryId is { } chosen && lookups.CategoryTypes.GetValueOrDefault(chosen) != row.Type)
+            if (categoryId is { } chosen && lookups.CategoryTypes.GetValueOrDefault(chosen) != type)
             {
                 return new DomainError(ErrorCodes.CategoryWrongType, "Category does not exist or has the wrong type.");
             }
@@ -322,7 +332,13 @@ public sealed class ImportService(
                 return new DomainError(ErrorCodes.Required, "Choose the other account before matching a transfer.");
             }
 
-            var value = await valuations.ValueAsync(accountId, row.Amount, currency, row.Date, [], cancellationToken);
+            var refundOf = row.RefundOfTransactionId is { } originalId ? new TransactionId(originalId) : (TransactionId?)null;
+            if (refundOf is { } original && !lookups.RefundOriginals.Contains(original))
+            {
+                return RefundOriginal.Invalid;
+            }
+
+            var value = await valuations.ValueAsync(accountId, row.AsRefund ? -row.Amount : row.Amount, currency, row.Date, [], cancellationToken);
             if (!value.TryGetValue(out var valued))
             {
                 return value.Error;
@@ -332,7 +348,8 @@ public sealed class ImportService(
             {
                 AccountId = accountId,
                 CategoryId = categoryId,
-                Type = row.Type,
+                Type = type,
+                RefundOfTransactionId = refundOf,
                 Amount = valued.Amount,
                 ReportingAmount = valued.ReportingAmount,
                 Date = row.Date,
@@ -445,7 +462,8 @@ public sealed class ImportService(
         IReadOnlyDictionary<AccountId, Currency> OtherCurrencies,
         IReadOnlyDictionary<TransferId, Transfer> Candidates,
         IReadOnlySet<TransferId> AlreadyImported,
-        IReadOnlyDictionary<TransactionId, Transaction> Entries);
+        IReadOnlyDictionary<TransactionId, Transaction> Entries,
+        IReadOnlySet<TransactionId> RefundOriginals);
 
     private sealed record ImportTotals(int Imported, int Skipped, int Linked);
 
@@ -483,6 +501,60 @@ public sealed class ImportService(
                 ? null
                 : new ImportMatchedTransaction(found.Id.Value, found.Date, found.Description, found.CategoryId?.Value))
             .ToList();
+    }
+
+    private async Task<IReadOnlyList<ImportMatchedTransaction?>> RefundCandidatesAsync(
+        AccountId accountId,
+        IReadOnlyList<ParsedRow> parsedRows,
+        List<bool> duplicates,
+        IReadOnlyList<ImportMatchedTransaction?> matchedEntries,
+        CancellationToken cancellationToken)
+    {
+        var found = new ImportMatchedTransaction?[parsedRows.Count];
+        var incoming = parsedRows
+            .Select((row, index) => (Row: row, Index: index))
+            .Where(entry => entry.Row.Type == FlowType.Income && !duplicates[entry.Index] && matchedEntries[entry.Index] is null)
+            .ToList();
+        if (incoming.Count == 0)
+        {
+            return found;
+        }
+
+        var from = incoming.Min(entry => entry.Row.Date).AddDays(-RefundOriginal.CandidateLookBackDays);
+        var to = incoming.Max(entry => entry.Row.Date);
+        var purchases = (await db.Transactions
+            .AsNoTracking()
+            .Where(t => t.AccountId == accountId
+                && t.Type == FlowType.Expense
+                && t.Amount.Amount > 0
+                && t.PayeeKey != null
+                && t.PayeeKey != string.Empty
+                && t.Date >= from
+                && t.Date <= to)
+            .Select(t => new { t.Id, t.Date, t.Description, t.CategoryId, t.Amount.Amount, t.Amount.Currency, t.PayeeKey, t.CreatedAt })
+            .ToListAsync(cancellationToken))
+            .ToLookup(t => t.PayeeKey!);
+
+        foreach (var (row, index) in incoming)
+        {
+            var candidate = new[] { row.Payee, row.Description }
+                .Select(SubscriptionDescription.Normalize)
+                .Where(key => key.Length > 0)
+                .Distinct()
+                .SelectMany(key => purchases[key])
+                .Where(t => t.Currency == row.Currency
+                    && t.Amount >= row.Amount
+                    && t.Date <= row.Date
+                    && t.Date >= row.Date.AddDays(-RefundOriginal.CandidateLookBackDays))
+                .OrderByDescending(t => t.Date)
+                .ThenByDescending(t => t.CreatedAt)
+                .FirstOrDefault();
+            found[index] = candidate is null
+                ? null
+                : new ImportMatchedTransaction(candidate.Id.Value, candidate.Date, candidate.Description, candidate.CategoryId?.Value);
+        }
+
+        return found;
     }
 
     private async Task<IReadOnlyList<RuleSuggestion?>> SuggestionsAsync(

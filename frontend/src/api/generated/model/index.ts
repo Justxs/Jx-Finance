@@ -241,6 +241,7 @@ export * from "./testCategorizationRuleResponse";
 export * from "./transactionDebtPaymentResponse";
 export * from "./transactionLineRequest";
 export * from "./transactionLineResponse";
+export * from "./transactionRefundOfResponse";
 export * from "./transactionResponse";
 export * from "./transactionSortField";
 export * from "./transactionSource";

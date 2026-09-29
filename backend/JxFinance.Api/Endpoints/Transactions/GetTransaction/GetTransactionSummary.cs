@@ -8,7 +8,8 @@ public sealed class GetTransactionSummary : Summary<GetTransactionEndpoint>
     {
         Summary = "Get one transaction";
         Description = "Returns a single transaction, including its split lines when it has any and the "
-            + "ids of the tags it carries. A transaction you cannot see is reported as missing rather "
+            + "ids of the tags it carries, and for a refund the purchase it refunds (refundOf) or for a purchase the total refunded "
+            + "(refundedAmount). A transaction you cannot see is reported as missing rather "
             + "than forbidden.";
         Params["id"] = "The transaction id.";
         Responses[200] = "The transaction.";

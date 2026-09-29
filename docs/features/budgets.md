@@ -39,6 +39,8 @@ The check runs in `BudgetService` against the budgets the caller can see, not as
 
 Spend comes from `ICategoryAttributionService`, the single projection that budgets, the dashboard breakdown and the reports share: an unsplit expense contributes its own category and reporting amount, a split expense contributes each line's category and its share. Each attribution now carries the transaction's date, so one query over the whole span the budgets need can be bucketed per window instead of asking the database once per window. Investment income, taxes and fees are never attributed to a category and therefore never reach a budget.
 
+A [refund](transactions.md#refunds) counts in the window it is dated in and lowers `spent` there, so a rollover budget carries the difference to the next window. A refund never raises an alert, and an alert already raised stays. Limits from history read the same attributions, so each window's spending is net of refunds too.
+
 ## Rollover
 
 Rollover is a switch on the budget. When it is off, the effective limit is the base limit and nothing older than the current window is read: that is the behaviour every budget had before this feature, and the migration leaves existing rows with the switch off. When it is on, the remainder of the previous window is added to the current limit, and an overspend is subtracted. The remainder of that previous window includes what it carried in turn, so the carry is a walk backwards over whole windows.

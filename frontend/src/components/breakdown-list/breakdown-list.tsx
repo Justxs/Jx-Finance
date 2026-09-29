@@ -38,8 +38,8 @@ export function BreakdownList({ rows, type = "expense", dateFrom, dateTo }: Read
   const money = useMoney();
   const percent = usePercent();
 
-  const maximum = Math.max(...rows.map((row) => row.amount));
-  const total = rows.reduce((sum, row) => sum + row.amount, 0);
+  const maximum = Math.max(0, ...rows.map((row) => row.amount));
+  const total = rows.reduce((sum, row) => sum + Math.max(0, row.amount), 0);
 
   return (
     <ul className="space-y-3.5">
@@ -76,8 +76,8 @@ export function BreakdownList({ rows, type = "expense", dateFrom, dateTo }: Read
               </span>
             )
           }
-          share={percent.format(total > 0 ? row.amount / total : 0)}
-          amount={money.format(row.amount)}
+          share={row.amount > 0 ? percent.format(row.amount / total) : null}
+          amount={row.amount < 0 ? money.formatSigned(row.amount) : money.format(row.amount)}
           value={row.amount}
           max={maximum}
         >

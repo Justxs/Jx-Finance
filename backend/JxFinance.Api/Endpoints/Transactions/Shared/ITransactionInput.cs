@@ -13,4 +13,5 @@ public interface ITransactionInput
     IReadOnlyList<TransactionLineRequest>? Lines { get; }
     IReadOnlyList<Guid>? TagIds { get; }
     Currency? Currency { get; }
+    Guid? RefundOfTransactionId { get; }
 }

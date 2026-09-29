@@ -4,8 +4,10 @@ import {
   draftFromTemplate,
   draftFromTransaction,
   duplicateDraft,
+  refundDraft,
   templateValuesFromFormValues,
 } from "./transaction-draft";
+import { defaultFormFields, toSubmittedValues } from "./transaction-schema";
 
 const split: TransactionResponse = {
   id: "tx-1",
@@ -46,6 +48,7 @@ describe("draftFromTransaction", () => {
         { categoryId: "category-1", amount: "74.15", description: "Food" },
         { categoryId: null, amount: "54.25", description: null },
       ],
+      refundOf: null,
     });
   });
 
@@ -75,6 +78,7 @@ describe("templates", () => {
     description: "Maxima",
     tagIds: ["tag-1"],
     lines: [{ categoryId: "category-1", amount: "128.40", description: null }],
+    refundOfTransactionId: null,
   };
 
   test("a comma typed into the amount is normalized before it is stored", () => {
@@ -121,5 +125,56 @@ describe("templates", () => {
     );
 
     expect(draft.accountId).toBeUndefined();
+  });
+});
+
+describe("refunds", () => {
+  const purchase: TransactionResponse = {
+    ...split,
+    isSplit: false,
+    lines: null,
+    categoryId: "category-1",
+  };
+
+  test("a refund draft copies the purchase, negates the full amount and links it", () => {
+    expect(refundDraft(purchase)).toEqual({
+      accountId: "account-1",
+      categoryId: "category-1",
+      type: "expense",
+      amount: "-128.40",
+      currency: "eur",
+      description: "Maxima",
+      tagIds: ["tag-1", "tag-2"],
+      refundOf: { id: "tx-1", date: "2026-09-13", description: "Maxima" },
+    });
+    expect(refundDraft(split).categoryId).toBeNull();
+  });
+
+  test("a negative expense opens as a refund of the positive size and saves negated with its link", () => {
+    const fields = defaultFormFields(refundDraft(purchase), undefined, "2026-09-20");
+
+    expect(fields).toMatchObject({
+      type: "refund",
+      amount: "128.40",
+      isSplit: false,
+      date: "2026-09-20",
+    });
+    expect(toSubmittedValues({ ...fields, amount: "12,50" })).toMatchObject({
+      type: "expense",
+      amount: "-12.50",
+      categoryId: "category-1",
+      refundOfTransactionId: "tx-1",
+      lines: null,
+    });
+  });
+
+  test("a refund without a link, or turned back into an expense, sends no link", () => {
+    const fields = defaultFormFields(refundDraft(purchase), undefined, "2026-09-20");
+
+    expect(toSubmittedValues({ ...fields, refundOf: null }).refundOfTransactionId).toBeNull();
+    expect(toSubmittedValues({ ...fields, type: "expense" })).toMatchObject({
+      amount: "128.40",
+      refundOfTransactionId: null,
+    });
   });
 });

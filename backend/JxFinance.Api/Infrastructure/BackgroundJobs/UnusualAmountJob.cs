@@ -252,7 +252,7 @@ public sealed class UnusualAmountJob(
         public async Task ComparePricesAsync(List<PageRow> rows, CancellationToken ct)
         {
             var charges = rows
-                .Where(row => Notifies(row) && row.Description != null)
+                .Where(row => Notifies(row) && row.Description != null && row.Amount > 0)
                 .Select(row => new BankCharge(
                     row.Id.Value,
                     row.AccountId,

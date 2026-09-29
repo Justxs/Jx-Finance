@@ -27,13 +27,49 @@ Since 2026-09-26 an expense far above what its payee or its category usually cos
 
 Since 2026-09-27 an expense can pay one of the signed-in user's debts that track payments. Rows of `GET /api/transactions` carry `debtPayment` (the link id, the debt id and the debt name) only for the owner of the link; a housemate who sees the same row on a shared account gets null. The ledger shows a small debt mark beside the badges that opens the debt's page, and the row's actions menu offers "Link to debt" on an unlinked, unsplit expense when some debt tracks payments (a dialog with the debt, the kind and an optional principal from the statement) and "Unlink from debt" on a linked one. The row itself stays an ordinary expense everywhere. See [Debt amortization](debt-amortization.md#tracking-payments).
 
+## Refunds
+
+Since 2026-09-29 a returned purchase is recorded as a refund: money back, in an expense category. A refund is an expense with a negative amount. `Type` stays `Expense`, and `Amount` and `ReportingAmount` are stored negative, so every total that sums expenses nets it without a line of its own: it lowers that category's spending, the month's expenses and the budget, and raises the account balance, while income stays what was earned. The API carries the same signed number: `amount` is negative for a refund, income stays positive, and the client reads a refund as `type === "expense" && amount < 0`. A refund is dated when the money came back, in the period it arrives in, and it is not capped at the purchase's amount, because shipping refunds, goodwill credits and currency differences exceed it legitimately.
+
+The transaction form has a third choice beside Expense and Income: Refund. It takes a positive amount, which the form sends negated, shows the expense categories, and has no split switch, because a refund cannot be split (`transaction.splitNotAllowed`). Loading a negative expense, a template or a duplicate of one selects Refund with the positive amount.
+
+An expense row with a positive amount has a "Record refund" action in its menu. It opens the create form as a refund with the same account, category (none for a split purchase), tags, currency and description, and the full amount, ready to lower. The description is the purchase's own rather than "Refund: …", so the refund carries the shop's payee key and nets in [spending by payee](reports.md#expense-by-payee) the same way it nets in the category. The refund is linked to the row through `refundOfTransactionId`, shown in the form as "Refund of {description}, {date}" with a button that unlinks it. The link is optional, one refund names at most one purchase, and a purchase may have several refunds. It must name an expense you can see that is not itself a refund and not the row itself, or the save answers `transaction.refundOriginalInvalid`; only a refund may carry it. It is checked when the refund is written, not when the purchase is edited later.
+
+In the ledger a refund's amount reads "+€12.00" in ink rather than the income colour, with a neutral "Refund" tag before it, and a linked refund shows "Refund of {description}, {date}", a link that opens the ledger searched for that description on that date. The purchase shows a "Refunded €12.00" tag, the reporting-currency total of the visible refunds that name it, carried by text and not by colour alone. `GET /api/transactions` and `GET /api/transactions/{id}` answer `refundOf` (`id`, `date`, `description`; null when the purchase is deleted or no longer visible) and `refundedAmount`. The ledger's type filter has no separate value for refunds: "Expense" lists them with their Refund tag. Sorting by amount sorts a refund by its negative reporting amount. A soft-deleted purchase hides the link, and the retention purge sets it to null through the foreign key's `SET NULL`.
+
+The import review can record an incoming bank row as a refund, linked or not, and proposes one when the bank entry looks like money back for a purchase on that account; see [Bank statement import](bank-statement-import.md#refunds). A refund typed in by hand matches the bank's credit of the same size like any hand-entered row.
+
+How each part of the application treats a refund. Totals net it, and the checks that look for unusual charges, subscriptions, price rises and loan payments ignore it, because a refund is not a charge:
+
+| Place | Treats a refund |
+| --- | --- |
+| Account balance, `AccountMovements.SumAsync` and `ListAsync` | Raises it: `-Amount` of a negative expense is positive. Reconciliation (`ReconciliationService`) and the statement's ledger balance use the same movements |
+| Ledger summary, `TransactionService.GetSummaryAsync` | Nets the expense total |
+| Reports: totals, trend, category, tag and payee breakdowns (`ReportService`, `CategoryAttributionService`, `CategoryBreakdownBuilder`) | Nets. A category, tag or payee whose refunds exceed its spending keeps its negative net and sorts last. A payee's count includes its refunds |
+| Payee ledger filter (`PayeeKey`) | Lists the refund when its description normalizes to the payee's key |
+| Dashboard month totals, trend and category breakdown (`DashboardService`) | Nets |
+| Budgets, `BudgetUsageCalculator` | `spent` is net in the refund's window; a rollover carries the difference. A refund never raises a budget notification, and one already raised stays |
+| Budget limits from history, `BudgetSuggestionService` | Nets each window's spending, since it reads the same attributions |
+| Month-end close, `MonthCloseService` | Snapshot totals and drift net it; a refund dated in a closed month is drift like any late edit |
+| Monthly digest | Reads the month-close review, so its totals and category movers are net |
+| Cash-flow forecast, `CashFlowForecastService` | Usual spending nets the refunds of the three months; the recurring entries' matching rows and variable estimates ignore them (through `PriceRiseMatcher.LoadChargesAsync`) |
+| CSV export | The amount column holds the signed amount with type `Expense`, so a spreadsheet sum of Expense rows is net spending |
+| PDF export | Totals are net; the type cell reads "Refund" and the amount keeps its sign |
+| Unusual amounts, `UnusualAmountService`, `UnusualAmountJob` | Ignored as history and as a candidate: the job marks a refund checked with no verdict, and an edit that makes a row a refund clears its verdict (`AppDbContext.ApplyEntityRules`) |
+| Subscription detection, `SubscriptionDetectionService` | Ignored |
+| Price rises, `PriceRiseMatcher` and the job's comparison | Ignored |
+| Debt payments, `NetWorthService` | Never offered as a candidate; linking one answers `debt.paymentWrongType` |
+| Rule suggestions, `SuggestedRuleService` | Ignored as evidence |
+| Categorization rules, `RuleMatcher` | A rule with an amount range never matches a refund, because the range compares the signed amount; a rule without one can categorize an uncategorized refund like any expense |
+| Validation | `amount` of an expense must be non-zero (`money.nonZero`); income and split lines stay positive (`money.positive`); an import row's `amount` stays positive, because it is the bank's size |
+
 ## Active filters and the header
 
 While a column filter is active its button names the value in its tooltip and accessible name, such as "Filter by Account (now: Swedbank einamoji)", besides the tint. Above the rows, one line lists every active filter as a removable chip, labelled with its column, and ends with "Clear filters", which keeps the sort. A date range that covers exactly one calendar month reads as the month, such as "September 2026"; otherwise it reads as a range, or "From" or "Until" one date. The search text is quoted, the payee chip shows the key it filters on, and the category chip can read "Uncategorized". The phone filters dialog writes the same search params, so the line shows on phones too. It replaced the "Clear filters" button that sat in the page header. `useFilterSummaries` builds the chip texts, and the column buttons read the same texts.
 
 While the `Import` switch is on, the header also holds "Import bank statement" beside "Add transaction"; it opens the dialog described in [Bank statement import](bank-statement-import.md).
 
-In the transaction form, Type is an Expense / Income segmented control, and Category, like the category of each split line, is a searchable combobox.
+In the transaction form, Type is an Expense / Income / Refund segmented control, and Category, like the category of each split line, is a searchable combobox.
 
 When a filter leaves no rows, the empty table and the phone list say so and offer "Clear filters", which runs the same reset as the chip line. Without an account the page says so and links to the accounts page with the create dialog open. Below the rows, the pager shows the range and the total, such as "51–100 of 438", and from five pages on a page number field, where typing a number and Enter jumps to it, clamped to the last page.
 

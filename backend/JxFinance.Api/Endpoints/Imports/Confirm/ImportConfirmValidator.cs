@@ -2,6 +2,7 @@ using FastEndpoints;
 using FluentValidation;
 using JxFinance.Common.Errors;
 using JxFinance.Common.Validation;
+using JxFinance.Domain.Common;
 
 namespace JxFinance.Endpoints.Imports.Confirm;
 
@@ -24,6 +25,13 @@ public sealed class ImportConfirmValidator : Validator<ImportConfirmRequest>
             row.RuleFor(r => r.Description).HasMaxLength(500);
             row.RuleFor(r => r.Amount).IsPositiveMoney();
             row.RuleFor(r => r.TagIds).HasAtMostTags();
+            row.RuleFor(r => r)
+                .Must(r => r.AsRefund
+                    ? r is { Type: FlowType.Income, TransferAccountId: null, ExistingTransferId: null, ExistingTransactionId: null }
+                    : r.RefundOfTransactionId is null)
+                .WithErrorCode(ErrorCodes.ImportRefundInvalid)
+                .WithMessage("Only an incoming row recorded as a transaction can be a refund, and only a refund can name the purchase it refunds.")
+                .WithName(nameof(ImportConfirmRow.AsRefund));
         });
         RuleFor(r => r.Statement!).ChildRules(statement =>
         {

@@ -49,6 +49,7 @@ public static class PriceRiseMatcher
             .Where(t => accountIds.Contains(t.AccountId)
                 && t.Type == type
                 && !t.IsSplit
+                && t.Amount.Amount > 0
                 && t.Description != null
                 && t.Date >= from)
             .OrderByDescending(t => t.Date)

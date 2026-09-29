@@ -22,7 +22,7 @@ export interface CreateTransactionRequest {
    */
   categoryId: string | null;
   type: FlowType;
-  /** Decimal string with at most two decimal places, greater than zero. */
+  /** Decimal string with at most two decimal places. Greater than zero for income; for an expense, negative for a refund. */
   amount: string;
   date: DateOnly;
   /**
@@ -39,4 +39,9 @@ export interface CreateTransactionRequest {
   /** @nullable */
   tagIds: string[] | null;
   currency?: null | Currency;
+  /**
+   * Optional, only on a refund: the expense it refunds.
+   * @nullable
+   */
+  refundOfTransactionId?: string | null;
 }

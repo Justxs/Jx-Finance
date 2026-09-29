@@ -7,14 +7,16 @@ import { withWidth } from "@/storybook/decorators";
 import {
   accounts,
   categories,
+  linkedRefund,
   longDescriptionTransaction,
   splitTransaction,
   tags,
   transactions,
   uncategorisedTransaction,
+  unlinkedRefund,
 } from "@/storybook/fixtures";
 import type { Canvas } from "@/storybook/interactions";
-import { duplicateDraft } from "./transaction-draft";
+import { duplicateDraft, refundDraft } from "./transaction-draft";
 import { TransactionForm } from "./transaction-form";
 
 const splitLineProblem = new ApiError({
@@ -182,5 +184,54 @@ export const ServerLineError: Story = {
     const alert = await canvas.findByRole("alert");
     await expect(alert).toHaveTextContent("The month is closed for this account.");
     await expect(alert).not.toHaveTextContent("Enter an amount greater than 0, e.g. 12.34.");
+  },
+};
+
+export const RecordRefundOfAPurchase: Story = {
+  args: { prefill: refundDraft(transactions[0] ?? linkedRefund) },
+  play: async ({ canvas, args }) => {
+    await expect(await canvas.findByRole("radio", { name: "Refund" })).toBeChecked();
+    await expect(canvas.getByLabelText("Amount")).toHaveValue("42.18");
+    await expect(canvas.getByText(/^Refund of Maxima X, Ukmergės g\., /u)).toBeInTheDocument();
+    await expect(
+      canvas.queryByRole("checkbox", { name: "Split into categories" }),
+    ).not.toBeInTheDocument();
+
+    await fireEvent.change(canvas.getByLabelText("Amount"), { target: { value: "10,00" } });
+    await submitForm(canvas);
+
+    await waitFor(() => expect(args.onSubmit).toHaveBeenCalledTimes(1));
+    await expect(args.onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: "expense",
+        amount: "-10.00",
+        refundOfTransactionId: transactions[0]?.id,
+        lines: null,
+      }),
+    );
+  },
+};
+
+export const EditLinkedRefund: Story = {
+  args: { initial: linkedRefund },
+  play: async ({ canvas, args }) => {
+    await expect(await canvas.findByRole("radio", { name: "Refund" })).toBeChecked();
+    await userEvent.click(canvas.getByRole("button", { name: "Unlink the purchase" }));
+    await expect(canvas.queryByText(/^Refund of /u)).not.toBeInTheDocument();
+    await submitForm(canvas);
+
+    await waitFor(() => expect(args.onSubmit).toHaveBeenCalledTimes(1));
+    await expect(args.onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({ amount: "-29.95", refundOfTransactionId: null }),
+    );
+  },
+};
+
+export const EditUnlinkedRefund: Story = {
+  args: { initial: unlinkedRefund },
+  play: async ({ canvas }) => {
+    await expect(await canvas.findByRole("radio", { name: "Refund" })).toBeChecked();
+    await expect(canvas.getByLabelText("Amount")).toHaveValue("5.00");
+    await expect(canvas.queryByText(/^Refund of /u)).not.toBeInTheDocument();
   },
 };

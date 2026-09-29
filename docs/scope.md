@@ -14,7 +14,7 @@ Create/edit/archive accounts and restore an archived one from a collapsed list o
 
 ## Transactions
 
-Create/edit/delete; optional category splits; text/account/category/tag/type/date filters, uncategorized rows only (a row without a category or a split with a line without one) and, while the feature is on, unusual rows only; paginated list; set one category, or a whole set of tags, on many selected rows at once; the current filter can be named and reopened later, and a row can be duplicated or its shape saved as a named template that starts a new entry, all three kept in the browser rather than on the server
+Create/edit/delete; optional category splits; text/account/category/tag/type/date filters, uncategorized rows only (a row without a category or a split with a line without one) and, while the feature is on, unusual rows only; paginated list; set one category, or a whole set of tags, on many selected rows at once; the current filter can be named and reopened later, and a row can be duplicated or its shape saved as a named template that starts a new entry, all three kept in the browser rather than on the server; a refund recorded as money back in an expense category, a negative expense that lowers that category's spending, optionally linked to the purchase it returns, with "Record refund" on an expense row
 
 ## Receipts and attachments
 
@@ -51,7 +51,7 @@ Interactive Brokers Flex Query import by file upload or daily through the Flex W
 
 ## Bank statement import
 
-Swedbank CSV and ISO 20022 camt.053 XML statements, chosen from a provider list, in any supported currency; for camt.053 an IBAN check against the account with a switch to the account it belongs to, the counterparty IBAN proposing a transfer to another own account, and the closing balance compared with the ledger and kept as a reconciliation of the account on confirm; preview, row selection, category and tag selection per row with a categorization rule filling both in before the user confirms, an "Unusual amount" mark on an expense far above its usual amount, explicit transfer creation/matching, duplicate detection including deleted imports, and a row that matches a transaction entered by hand within three days linked to it instead of imported a second time
+Swedbank CSV and ISO 20022 camt.053 XML statements, chosen from a provider list, in any supported currency; for camt.053 an IBAN check against the account with a switch to the account it belongs to, the counterparty IBAN proposing a transfer to another own account, and the closing balance compared with the ledger and kept as a reconciliation of the account on confirm; preview, row selection, category and tag selection per row with a categorization rule filling both in before the user confirms, an "Unusual amount" mark on an expense far above its usual amount, explicit transfer creation/matching, duplicate detection including deleted imports, and a row that matches a transaction entered by hand within three days linked to it instead of imported a second time; an incoming row recorded as a refund, proposed when it is a reversal or follows a purchase from the same payee in the last 90 days
 
 ## Budgets
 

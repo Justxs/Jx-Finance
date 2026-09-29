@@ -53,6 +53,8 @@ Closing asks `ReportService.GetSummaryAsync` for the month, the same call the re
 
 The snapshot stores the figures and the row ids, nothing per row. The ids are what tell an edited row from a new one and a row moved out of the month from one that was never in it. Re-closing replaces the whole snapshot and `ClosedAt`; a close without a note keeps the stored note, and an empty note clears it.
 
+A [refund](transactions.md#refunds) is an expense with a negative amount, so the snapshot's totals and breakdowns are net of refunds, and the monthly digest's movers can show a category that went below zero. A refund is dated when the money came back: one that arrives after the month was closed and is dated in the next month lowers that month only, while one dated in a closed month is drift like any late edit.
+
 ## Drift
 
 A row has drifted when its `UpdatedAt` is later than `ClosedAt` and it is either dated in the month now or its id is in `RowIds`. The query reads transactions and investment entries through the ordinary visibility filter with soft deletion lifted (`IgnoreQueryFilters(QueryFilters.SoftDeleteOnly)`), so deleted rows are found and rows the scope cannot see are not.

@@ -134,6 +134,8 @@ A buy moves money into a holding and a sell moves it back, so neither is income 
 
 With the feature off the service returns nothing and every figure equals the sum of the transactions alone.
 
+A [refund](transactions.md#refunds) is an expense with a negative amount, so every figure here is net of refunds: the totals, the trend, and the category, tag and payee breakdowns. A category, tag or payee whose refunds exceed its spending in the range keeps its negative net and is ordered last; the lists draw only positive items, give a negative one an empty bar and no share, and still add up to the total; past the first five categories it folds into Other like any category. A payee's `count` includes its refunds.
+
 Visibility needs no code in the report. `InvestmentTransaction` is `IAccountScoped`, so the global query filter in `AppDbContext` shows a caller only entries on accounts visible to them, the same filter that scopes `Transaction`. The report has no account filter of its own.
 
 ## Category breakdown and the synthetic groups

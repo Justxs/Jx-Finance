@@ -2,10 +2,22 @@ import { useTranslation } from "react-i18next";
 import { useTransfers } from "@/api/generated";
 import type { AccountResponse } from "@/api/generated/model";
 import { SelectField } from "@/components/select-field/select-field";
-import { useIsoDate, useMoney } from "@/hooks/use-formatters";
-import type { PreviewRowState } from "./preview-rows";
+import { EMPTY_VALUE, useIsoDate, useMoney } from "@/hooks/use-formatters";
+import { type PreviewRowState, refundPatch } from "./preview-rows";
 
 const LINK_ENTRY = "entry";
+const REFUND = "refund";
+const REFUND_OF = "refund-of";
+
+function recordedAs(row: PreviewRowState) {
+  if (row.existingTransactionId) {
+    return LINK_ENTRY;
+  }
+  if (row.asRefund) {
+    return row.refundOfTransactionId ? REFUND_OF : REFUND;
+  }
+  return row.transferAccountId;
+}
 
 export function ImportTransferPicker({
   row,
@@ -23,6 +35,7 @@ export function ImportTransferPicker({
   const formatDate = useIsoDate();
   const receiving = row.type === "income";
   const matched = row.matchedTransaction;
+  const candidate = row.refundCandidate;
   const transfers = useTransfers(
     { date: row.date, page: 1, pageSize: 200 },
     { query: { enabled: Boolean(row.transferAccountId) } },
@@ -40,18 +53,38 @@ export function ImportTransferPicker({
         Number(amount) === Number(row.amount) &&
         currency === row.currency,
     );
+
+  function choose(value: string) {
+    if (value === REFUND || value === REFUND_OF) {
+      onChange(refundPatch(row, value === REFUND_OF));
+      return;
+    }
+    const leftRefund = row.asRefund
+      ? { asRefund: false, refundOfTransactionId: "", categoryId: "" }
+      : {};
+    onChange(
+      value === LINK_ENTRY && matched
+        ? {
+            ...leftRefund,
+            existingTransactionId: matched.id,
+            transferAccountId: "",
+            existingTransferId: "",
+          }
+        : {
+            ...leftRefund,
+            existingTransactionId: "",
+            transferAccountId: value,
+            existingTransferId: "",
+          },
+    );
+  }
+
   return (
     <div className="min-w-44 space-y-2">
       <SelectField
         aria-label={t("imports.recordAs")}
-        value={row.existingTransactionId ? LINK_ENTRY : row.transferAccountId}
-        onChange={(value) =>
-          onChange(
-            value === LINK_ENTRY && matched
-              ? { existingTransactionId: matched.id, transferAccountId: "", existingTransferId: "" }
-              : { existingTransactionId: "", transferAccountId: value, existingTransferId: "" },
-          )
-        }
+        value={recordedAs(row)}
+        onChange={choose}
         options={[
           ...(matched
             ? [
@@ -61,6 +94,18 @@ export function ImportTransferPicker({
                 },
               ]
             : []),
+          ...(receiving && candidate
+            ? [
+                {
+                  value: REFUND_OF,
+                  label: t("imports.refundOf", {
+                    date: formatDate(candidate.date),
+                    description: candidate.description || EMPTY_VALUE,
+                  }),
+                },
+              ]
+            : []),
+          ...(receiving ? [{ value: REFUND, label: t("imports.refund") }] : []),
           { value: "", label: t("imports.transaction") },
           ...accounts
             .filter((a) => a.id !== accountId)

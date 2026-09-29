@@ -5,6 +5,7 @@ import {
   accounts,
   categories,
   longDescriptionTransaction,
+  refundTransactions,
   splitTransaction,
   tags,
   transactions,
@@ -28,6 +29,7 @@ const meta = {
     filtered: false,
     onEdit: fn(),
     onDuplicate: fn(),
+    onRefund: fn(),
     onDelete: fn(),
     deletingId: null,
   },
@@ -82,3 +84,5 @@ export const OptimisticRow: Story = {
       ),
   },
 };
+
+export const Refunds: Story = { args: { data: refundTransactions } };

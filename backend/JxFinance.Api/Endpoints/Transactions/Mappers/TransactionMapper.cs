@@ -29,6 +29,7 @@ public static class TransactionMapper
         transaction.Date = input.Date;
         transaction.Description = OptionalText.Normalize(input.Description);
         transaction.IsSplit = isSplit;
+        transaction.RefundOfTransactionId = input.RefundOfTransactionId is { } original ? new TransactionId(original) : null;
     }
 
     public static List<TransactionLine> ToLines(

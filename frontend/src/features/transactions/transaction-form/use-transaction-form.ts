@@ -69,6 +69,7 @@ export function useTransactionForm({
           accountId: value.accountId,
           currency: value.currency,
           date: value.date,
+          refundOf: null,
         });
         amountInput.current?.focus();
       }

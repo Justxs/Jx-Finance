@@ -789,6 +789,9 @@ export const debtPaymentCandidatesResponseReportingAmountRegExp = new RegExp(
 export const debtPaymentCandidatesResponseUnusualTwoTypicalAmountRegExp = new RegExp(
   "^-?\\d+(\\.\\d{1,8})?$",
 );
+export const debtPaymentCandidatesResponseRefundedAmountRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
 
 export const DebtPaymentCandidatesResponseItem = zod.object({
   id: zod.uuid(),
@@ -869,6 +872,19 @@ export const DebtPaymentCandidatesResponseItem = zod.object({
       }),
     ])
     .optional(),
+  refundOf: zod
+    .union([
+      zod.null(),
+      zod.object({
+        id: zod.uuid(),
+        date: zod.iso.date(),
+        description: zod.string().nullable(),
+      }),
+    ])
+    .optional(),
+  refundedAmount: zod
+    .stringFormat("decimal", debtPaymentCandidatesResponseRefundedAmountRegExp)
+    .nullish(),
 });
 export const DebtPaymentCandidatesResponse = zod.array(DebtPaymentCandidatesResponseItem);
 

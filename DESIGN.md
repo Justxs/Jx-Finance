@@ -126,7 +126,7 @@ The names below are the frontmatter names; the CSS variable each one maps to is 
 ### Named Rules
 **The Semantic Color Rule.** A color means the same thing everywhere. Category lists, charts and meters never use a rainbow to tell rows apart; position, label and amount do that.
 
-**The Signed Money Rule.** Direction is never color alone. Signed amounts carry "+" or "−" as well as the income color; plain expenses stay ink.
+**The Signed Money Rule.** Direction is never color alone. Signed amounts carry "+" or "−" as well as the income color; plain expenses stay ink. A refund is money back but not income: it reads "+" in ink with a neutral "Refund" tag, and a negative category in a breakdown keeps its "−" amount with an empty bar.
 
 ## Typography
 
@@ -241,6 +241,7 @@ Rows in the review carry tags for what the product found or filled in:
 - A neutral "Suggested category" tag, with a tooltip, until the user changes the category.
 - An accent "Filled by a rule" tag.
 - An accent "Looks like a transfer" tag.
+- An accent "Refund" tag on an incoming row recorded as a refund.
 - A neutral "Duplicate" tag.
 
 Below the `md` breakpoint a wide table becomes a ledger list:

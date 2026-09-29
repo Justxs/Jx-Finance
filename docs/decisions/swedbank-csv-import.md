@@ -4,11 +4,21 @@ Related: feature page [Bank statement import](../features/bank-statement-import.
 
 ## Current
 
-Two statement formats, Swedbank CSV and ISO 20022 camt.053 XML, chosen explicitly from the provider list and sharing one preview and one confirm; duplicate references skipped, including deleted imports, with camt.053 references stored unprefixed; a row matching a hand-entered transaction of the same type, amount and currency within three days is proposed as a link that stamps the bank reference on that transaction and adds nothing; strict Swedbank columns with any supported currency; tolerant camt.053 reading that counts unreadable entries; an IBAN mismatch is a warning, not a refusal; explicit transfer matching; no automatic money movement; counted review views and a search that only change what is shown; an edited review asks before it is discarded and is not resumable
+Two statement formats, Swedbank CSV and ISO 20022 camt.053 XML, chosen explicitly from the provider list and sharing one preview and one confirm; duplicate references skipped, including deleted imports, with camt.053 references stored unprefixed; a row matching a hand-entered transaction of the same signed money and currency within three days is proposed as a link that stamps the bank reference on that transaction and adds nothing; strict Swedbank columns with any supported currency; tolerant camt.053 reading that counts unreadable entries; an IBAN mismatch is a warning, not a refusal; explicit transfer matching; no automatic money movement; counted review views and a search that only change what is shown; an edited review asks before it is discarded and is not resumable; an incoming row with a refund candidate from the same payee in the last 90 days, or a camt.053 reversal, starts as a refund for review
 
 ## Log
 
 Newest first. Each entry is a choice between real alternatives: what was chosen, what was rejected, and why.
+
+- **2026-09-29.** An incoming row starts as a refund, selected, when the preview found a refund candidate or the row is a camt.053 reversal; the candidate is proposed in the same "Record as" picker as transfers and hand-entered links, and confirm writes an expense with the negated amount
+  - Rejected: Keeping reversals as income; linking a refund to its purchase automatically without review
+  - Why: The reversal chip already said what the row is, and income would inflate earnings and leave the category's spending too high; making the default match it is what the chip promised. A proposal the user sees and can change keeps the rule that nothing is recorded behind their back, as with transfers and hand-entered links
+- **2026-09-29.** A refund candidate is an expense, not a refund, on the same account and in the same currency, dated on the row's day or at most 90 days before, of at least the row's amount, whose stored `PayeeKey` equals the normalized payee or the normalized description of the row; the most recent wins
+  - Rejected: A fuzzy text match; any account; the plan's "payee first, else description" key for the row
+  - Why: The normalizer is what subscription detection, unusual amounts and spending by payee already trust for "same payee", and money comes back to the card it left. A stored transaction keeps only its description, which is the bank's explanation text for an imported one, so comparing only the row's payee would miss the purchases imported from the same bank; accepting either key of the row costs one more lookup and still requires the account, currency, amount and date to agree
+- **2026-09-29.** A hand-entered refund matches the bank's incoming row of the same size: the matcher compares signed money in rather than flow type and amount
+  - Rejected: Leaving refunds out of the hand-entered matching
+  - Why: Otherwise the refund typed at the till would be imported a second time as income, and the ledger would count the money back twice
 
 - **2026-09-28.** A bank row with the same flow type, amount and currency as a hand-entered transaction on the account, dated within three days, is offered as a link and starts linked; confirming writes the bank reference onto the transaction and marks it imported, leaving its date, category, tags and description as entered
   - Rejected: Flagging the match as a duplicate and leaving it unselected; replacing the hand-entered transaction with the imported row; taking the bank's date or description onto the linked transaction; matching on description text as well; a wider window

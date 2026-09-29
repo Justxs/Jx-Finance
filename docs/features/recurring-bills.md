@@ -146,6 +146,8 @@ Creating goes through `RecurringBillForm` and `POST /api/recurring-bills`, the s
 
 The suggestions sit in their own section at the **bottom** of the page, under the entries and the forecast. The entries somebody already keeps are what the page is for and stay first; a suggestion is an offer, and an offer that pushed the list down every time the ledger grew a pattern would be the wrong way round. The section always renders, with its own empty state, so the count is a stable place on the page rather than a block that appears and disappears.
 
+Detection reads expenses with a positive amount only: a [refund](transactions.md#refunds) is not a payment of the subscription and would otherwise break the steady amount of its group.
+
 ## Matching bank text and price rises
 
 Since 2026-09-26 an entry can say which bank rows pay it. `MatchKey`, "Matches bank text" in the form, is shown for every shape since 2026-09-29, because the [cash-flow forecast](cash-flow-forecast.md) estimates a variable income or transfer from the bank rows it matches; it is filled with the candidate's normalized description when the entry is created from a suggestion, can be typed or cleared by hand, and is normalized again on the server. Empty means the entry's name is used instead, as the coverage check always did.

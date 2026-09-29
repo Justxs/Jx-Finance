@@ -1,9 +1,9 @@
-import { Copy } from "lucide-react";
+import { Copy, Undo2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import type { TransactionResponse } from "@/api/generated/model";
 import { RowActions } from "@/components/row-actions/row-actions";
 import { useDebtPaymentAction } from "../debt-payment/debt-payment";
-import { isOptimistic } from "../transaction-amount";
+import { isOptimistic, isPurchase } from "../transaction-amount";
 
 interface Props {
   transaction: TransactionResponse;
@@ -11,6 +11,7 @@ interface Props {
   deletingId: string | null;
   onEdit: (transaction: TransactionResponse) => void;
   onDuplicate: (transaction: TransactionResponse) => void;
+  onRefund: (transaction: TransactionResponse) => void;
   onDelete: (id: string) => void;
   className?: string;
 }
@@ -21,6 +22,7 @@ export function TransactionRowActions({
   deletingId,
   onEdit,
   onDuplicate,
+  onRefund,
   onDelete,
   className,
 }: Readonly<Props>) {
@@ -33,13 +35,23 @@ export function TransactionRowActions({
     disabled: optimistic,
     onSelect: () => onDuplicate(transaction),
   };
+  const refund = isPurchase(transaction)
+    ? [
+        {
+          icon: Undo2,
+          label: t("transactions.recordRefund"),
+          disabled: optimistic,
+          onSelect: () => onRefund(transaction),
+        },
+      ]
+    : [];
 
   return (
     <>
       <RowActions
         label={label}
         className={className}
-        actions={debt.action ? [debt.action, duplicate] : [duplicate]}
+        actions={[...(debt.action ? [debt.action] : []), duplicate, ...refund]}
         onEdit={() => onEdit(transaction)}
         editDisabled={optimistic}
         onDelete={() => onDelete(transaction.id)}

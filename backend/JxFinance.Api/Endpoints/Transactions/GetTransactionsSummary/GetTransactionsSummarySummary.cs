@@ -10,7 +10,7 @@ public sealed class GetTransactionsSummarySummary : Summary<GetTransactionsSumma
         Summary = "Total the filtered transactions";
         Description = "Returns the row count and the income and expense totals of every transaction the "
             + "list endpoint would return for the same filters, across all pages. Transfers are not "
-            + "transactions and are never counted.";
+            + "transactions and are never counted. A refund is an expense with a negative amount, so the expense total is net of refunds.";
         this.DescribeTransactionFilter();
         Responses[200] = "The count and totals of the matching transactions.";
     }

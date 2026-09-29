@@ -1,4 +1,9 @@
-import type { Currency, FlowType, TransactionResponse } from "@/api/generated/model";
+import type {
+  Currency,
+  FlowType,
+  TransactionRefundOfResponse,
+  TransactionResponse,
+} from "@/api/generated/model";
 import { normalizeMoney } from "@/lib/validation";
 import type { TransactionTemplateValues } from "@/stores/transaction-views";
 import type { TransactionFormValues } from "./transaction-schema";
@@ -20,6 +25,7 @@ export interface TransactionDraft {
   isSplit?: boolean;
   tagIds?: string[];
   lines?: TransactionDraftLine[] | null;
+  refundOf?: TransactionRefundOfResponse | null;
 }
 
 export function draftFromTransaction(transaction: TransactionResponse): TransactionDraft {
@@ -39,12 +45,26 @@ export function draftFromTransaction(transaction: TransactionResponse): Transact
         amount: line.amount,
         description: line.description,
       })) ?? null,
+    refundOf: transaction.refundOf ?? null,
   };
 }
 
 export function duplicateDraft(transaction: TransactionResponse): TransactionDraft {
   const { date: _date, ...rest } = draftFromTransaction(transaction);
   return rest;
+}
+
+export function refundDraft(purchase: TransactionResponse): TransactionDraft {
+  return {
+    accountId: purchase.accountId,
+    categoryId: purchase.isSplit ? null : purchase.categoryId,
+    type: "expense",
+    amount: `-${purchase.amount}`,
+    currency: purchase.currency,
+    description: purchase.description,
+    tagIds: purchase.tagIds,
+    refundOf: { id: purchase.id, date: purchase.date, description: purchase.description },
+  };
 }
 
 export function templateValuesFromFormValues(

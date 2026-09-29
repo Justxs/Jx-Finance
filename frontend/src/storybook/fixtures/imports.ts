@@ -3,7 +3,7 @@ import type {
   ImportPreviewRow,
   ImportStatementSummary,
 } from "@/api/generated/model";
-import { ids } from "./base";
+import { ids, uid } from "./base";
 import { statusProblem } from "./problems";
 
 const noSuggestion = {
@@ -196,6 +196,12 @@ export const camtPreviewRows: ImportPreviewRow[] = [
     amount: "7.40",
     type: "income",
     isReversal: true,
+    refundCandidate: {
+      id: uid("55555555", 2),
+      date: "2026-09-16",
+      description: "Bolt pavėžėjimas",
+      categoryId: ids.categories.transport,
+    },
   },
   {
     ...camtRow,

@@ -1,6 +1,7 @@
 import type {
   CategoryResponse,
   Currency,
+  FlowType,
   ImportPreviewRow,
   TransactionResponse,
 } from "@/api/generated/model";
@@ -10,6 +11,8 @@ export interface PreviewRowState extends ImportPreviewRow {
   transferAccountId: string;
   existingTransferId: string;
   existingTransactionId: string;
+  asRefund: boolean;
+  refundOfTransactionId: string;
   selected: boolean;
   categoryId: string;
   categorySuggested: boolean;
@@ -43,6 +46,25 @@ function isTransferRow(row: PreviewRowState) {
 
 export function takesCategory(row: PreviewRowState) {
   return !row.transferAccountId && !row.existingTransactionId;
+}
+
+export function categoryType(row: PreviewRowState): FlowType {
+  return row.asRefund ? "expense" : row.type;
+}
+
+export function refundPatch(row: PreviewRowState, linked: boolean): Partial<PreviewRowState> {
+  const kept = row.asRefund ? row.categoryId : "";
+  const categoryId = linked ? (row.refundCandidate?.categoryId ?? kept) : kept;
+  return {
+    asRefund: true,
+    refundOfTransactionId: linked ? (row.refundCandidate?.id ?? "") : "",
+    existingTransactionId: "",
+    transferAccountId: "",
+    existingTransferId: "",
+    categoryId,
+    categorySuggested: false,
+    ruleName: null,
+  };
 }
 
 function needsAttention(row: PreviewRowState) {
@@ -114,8 +136,32 @@ export function toPreviewRows(
     const ruleCategoryId = ruleName ? (row.suggestedCategoryId ?? "") : "";
     const categoryId = ruleCategoryId || recallCategoryId(row, transactions, categories);
     const matchedId = row.isDuplicate ? "" : (row.matchedTransaction?.id ?? "");
+    const refund =
+      !row.isDuplicate &&
+      !matchedId &&
+      row.type === "income" &&
+      !row.suggestedTransferAccountId &&
+      (Boolean(row.refundCandidate) || row.isReversal);
+    if (refund) {
+      const refundCategoryId = row.refundCandidate?.categoryId ?? "";
+      return {
+        ...row,
+        selected: true,
+        transferAccountId: "",
+        existingTransferId: "",
+        existingTransactionId: "",
+        asRefund: true,
+        refundOfTransactionId: row.refundCandidate?.id ?? "",
+        categoryId: refundCategoryId,
+        categorySuggested: Boolean(refundCategoryId),
+        ruleName: null,
+        tagIds: [],
+      };
+    }
     return {
       ...row,
+      asRefund: false,
+      refundOfTransactionId: "",
       selected: !row.isDuplicate && (Boolean(matchedId) || !row.looksLikeTransfer),
       transferAccountId: matchedId ? "" : (row.suggestedTransferAccountId ?? ""),
       existingTransferId: "",
@@ -173,15 +219,16 @@ export function applyCategory(
   category: CategoryResponse,
 ): PreviewRowState[] {
   return rows.map((row) =>
-    row.selected && row.type === category.type && takesCategory(row)
+    row.selected && categoryType(row) === category.type && takesCategory(row)
       ? { ...row, categoryId: category.id, categorySuggested: false }
       : row,
   );
 }
 
 export function categoryTargetCount(rows: PreviewRowState[], category: CategoryResponse) {
-  return rows.filter((row) => row.selected && row.type === category.type && takesCategory(row))
-    .length;
+  return rows.filter(
+    (row) => row.selected && categoryType(row) === category.type && takesCategory(row),
+  ).length;
 }
 
 export function importDateRange(rows: PreviewRowState[]) {

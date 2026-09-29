@@ -1,16 +1,18 @@
+import { useTranslation } from "react-i18next";
 import type { TransactionResponse } from "@/api/generated/model";
 import { ApproximateAmount } from "@/components/approximate-amount/approximate-amount";
+import { Tag } from "@/components/ui/tag/tag";
 import { useMoney, useReportingCurrency } from "@/hooks/use-formatters";
 import { INCOME_TONE } from "@/lib/tone";
 import { cn } from "@/lib/utils";
-import { isOptimistic } from "./transaction-row";
+import { isOptimistic, isRefund } from "./transaction-row";
 
 type Transaction = Pick<TransactionResponse, "amount" | "type" | "currency">;
 
 export function signedAmount(money: ReturnType<typeof useMoney>, transaction: Transaction) {
   return money.formatSigned(
     Number(transaction.amount),
-    transaction.type === "income" ? "+" : "−",
+    transaction.type === "income" || isRefund(transaction) ? "+" : "−",
     transaction.currency,
   );
 }
@@ -26,6 +28,7 @@ export function TransactionAmount({
   showReporting = false,
   className,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const money = useMoney();
   const reportingCurrency = useReportingCurrency();
   const isIncome = transaction.type === "income";
@@ -40,6 +43,9 @@ export function TransactionAmount({
         className,
       )}
     >
+      {isRefund(transaction) ? (
+        <Tag className="mr-1.5 align-text-bottom">{t("transactions.refund")}</Tag>
+      ) : null}
       {signedAmount(money, transaction)}
       {reportingVisible ? (
         <ApproximateAmount

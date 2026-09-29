@@ -32,7 +32,7 @@ public sealed class UnusualAmountService(AppDbContext db) : IUnusualAmountServic
 
         var rows = await db.Transactions
             .AsNoTracking()
-            .Where(t => t.Type == FlowType.Expense && !t.IsSplit && t.Date >= earliest && t.Date < latest)
+            .Where(t => t.Type == FlowType.Expense && !t.IsSplit && t.ReportingAmount > 0 && t.Date >= earliest && t.Date < latest)
             .Where(t => accountIds.Contains(t.AccountId) || categoryIds.Contains(t.CategoryId))
             .OrderByDescending(t => t.Date)
             .Take(MaxHistoryRows)
@@ -55,6 +55,11 @@ public sealed class UnusualAmountService(AppDbContext db) : IUnusualAmountServic
         ILookup<(AccountId AccountId, string Key), HistoryRow> byPayee,
         ILookup<CategoryId, HistoryRow> byCategory)
     {
+        if (candidate.ReportingAmount <= 0)
+        {
+            return null;
+        }
+
         var key = SubscriptionDescription.Normalize(candidate.Description);
         if (key.Length > 0)
         {

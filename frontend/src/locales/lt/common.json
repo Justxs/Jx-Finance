@@ -506,6 +506,13 @@
     "savedFilterSaved": "Filtras išsaugotas",
     "savedFilterStale": "Nurodo nebeegzistuojantį įrašą",
     "duplicate": "Dubliuoti",
+    "refund": "Grąžinimas",
+    "recordRefund": "Įrašyti grąžinimą",
+    "refundOf": "Grąžinimas už {{description}}, {{date}}",
+    "refundOfShow": "Rodyti pirkinį, už kurį grąžinta",
+    "refundOfClear": "Atsieti pirkinį",
+    "refunded": "Grąžinta {{amount}}",
+    "refundedHint": "Šį pirkinį nurodantys grąžinimai iš viso sudaro {{amount}}.",
     "templates": "Šablonai",
     "templatesEmpty": "Šablonų dar nėra. Atverkite operacijos pridėjimo formą ir išsaugokite jos laukus kaip šabloną.",
     "useTemplate": "Nauja operacija pagal šabloną",
@@ -1904,6 +1911,8 @@
     "matched": "Atitinka jūsų įrašą",
     "matchedHint": "Šį įrašą įvedėte {{date}}: {{description}}. Importuojant banko įrašas susiejamas su juo, o ne pridedamas antrą kartą, o jūsų kategorija, žymos ir aprašymas lieka.",
     "linkEntry": "Jūsų įrašas, {{date}}",
+    "refund": "Grąžinimas",
+    "refundOf": "Grąžinimas už {{date}} {{description}}",
     "looksLikeTransfer": "Panašu į pervedimą",
     "unusual": "Neįprasta suma",
     "recordAs": "Įrašyti kaip",
@@ -2187,12 +2196,14 @@
       "noStatementForAccount": "Faile yra tik šių sąskaitų išrašai: {{reason}}. Įrašykite šios sąskaitos IBAN arba pasirinkite sąskaitą, kuriai išrašas priklauso.",
       "transferAlreadyMatched": "Pasirinktas pervedimas jau susietas su kitu šios sąskaitos banko įrašu.",
       "transferMismatch": "Pasirinktas pervedimas neatitinka šios eilutės.",
-      "entryMismatch": "Pasirinktas įrašas nebeatitinka šios eilutės arba jau susietas su kitu banko įrašu. Peržiūrėkite failą dar kartą."
+      "entryMismatch": "Pasirinktas įrašas nebeatitinka šios eilutės arba jau susietas su kitu banko įrašu. Peržiūrėkite failą dar kartą.",
+      "refundInvalid": "Grąžinimu gali būti tik gaunama eilutė, įrašoma kaip operacija. Peržiūrėkite failą dar kartą."
     },
     "money": {
       "invalid": "Įveskite teisingą sumą, pvz., 12,34.",
       "nonNegative": "Įveskite 0 arba didesnę sumą, pvz., 12,34.",
-      "positive": "Įveskite sumą, didesnę už 0, pvz., 12,34."
+      "positive": "Įveskite sumą, didesnę už 0, pvz., 12,34.",
+      "nonZero": "Įveskite sumą, kuri nėra 0, pvz., 12,34."
     },
     "password": {
       "incorrect": "Dabartinis slaptažodis neteisingas.",
@@ -2249,7 +2260,8 @@
     },
     "transaction": {
       "linesMismatch": "Išskaidymo eilučių suma turi sutapti su operacijos suma.",
-      "splitNotAllowed": "Išskaidytai operacijai to atlikti negalima."
+      "splitNotAllowed": "Išskaidytai operacijai to atlikti negalima.",
+      "refundOriginalInvalid": "Šio grąžinimo nurodytas pirkinys nėra jums matomos išlaidos. Atsiekite jį arba pasirinkite kitą pirkinį."
     },
     "transfer": {
       "amountMismatch": "Kai valiuta ta pati, išsiųsta ir gauta sumos turi sutapti.",

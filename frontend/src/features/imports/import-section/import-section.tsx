@@ -171,6 +171,8 @@ export function ImportSection({
           transferAccountId: row.transferAccountId || null,
           existingTransferId: row.existingTransferId || null,
           existingTransactionId: row.existingTransactionId || null,
+          asRefund: row.asRefund,
+          refundOfTransactionId: row.refundOfTransactionId || null,
         })),
       },
     });

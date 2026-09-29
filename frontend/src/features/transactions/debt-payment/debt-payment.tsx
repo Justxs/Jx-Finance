@@ -10,7 +10,7 @@ import type { RowAction } from "@/components/row-actions/row-actions";
 import { buttonVariants } from "@/components/ui/button/button";
 import { DebtPaymentForm } from "@/features/net-worth/debt-payments/debt-payments";
 import { useFeature } from "@/hooks/use-settings";
-import { isOptimistic } from "../transaction-amount";
+import { isOptimistic, isPurchase } from "../transaction-amount";
 
 interface Props {
   transaction: TransactionResponse;
@@ -64,7 +64,7 @@ export function useDebtPaymentAction(transaction: TransactionResponse): {
     };
   }
 
-  if (tracking.length === 0 || transaction.type !== "expense" || transaction.isSplit) {
+  if (tracking.length === 0 || !isPurchase(transaction) || transaction.isSplit) {
     return { dialog: null };
   }
 

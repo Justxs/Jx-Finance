@@ -29,4 +29,6 @@ export interface UpdateTransactionRequest {
   /** @nullable */
   tagIds: string[] | null;
   currency?: null | Currency;
+  /** @nullable */
+  refundOfTransactionId?: string | null;
 }

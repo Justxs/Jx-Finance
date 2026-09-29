@@ -1,6 +1,6 @@
 # Plan: Generic CSV import
 
-Status: planned 2026-09-28. Size M. Rows from a mapped CSV go through the existing [match to hand-entered rows](../features/bank-statement-import.md#entries-you-already-made-by-hand), so they are matched to hand-entered ones from the start. It is independent of [Refunds](refunds.md). The backlog puts it after a real month of imports, to see how often it is needed.
+Status: planned 2026-09-28. Size M. Rows from a mapped CSV go through the existing [match to hand-entered rows](../features/bank-statement-import.md#entries-you-already-made-by-hand), so they are matched to hand-entered ones from the start. Since [refunds](../features/transactions.md#refunds) shipped on 2026-09-29, a mapped incoming row goes through the same review and can be recorded as a refund, proposed like a Swedbank or camt.053 row. The backlog puts it after a real month of imports, to see how often it is needed.
 
 ## Outcome
 

@@ -8,7 +8,7 @@
 import * as zod from "zod";
 
 /**
- * Posts income or an expense to an account. Leave lines empty for an ordinary transaction. To split one payment across several categories, send the lines instead: they must add up to the transaction amount, and the top-level categoryId is then ignored. Tags belong to the whole payment and are sent as tagIds, split or not.
+ * Posts income or an expense to an account. Leave lines empty for an ordinary transaction. To split one payment across several categories, send the lines instead: they must add up to the transaction amount, and the top-level categoryId is then ignored. Tags belong to the whole payment and are sent as tagIds, split or not. A refund is an expense with a negative amount: it lowers that category's spending and raises the balance. It takes an expense category, cannot be split, and may name the purchase it refunds in refundOfTransactionId, which must be an expense you can see and not itself a refund.
  * @summary Record a transaction
  */
 
@@ -24,7 +24,9 @@ export const CreateTransactionBody = zod.object({
   type: zod.enum(["income", "expense"]),
   amount: zod
     .stringFormat("decimal", createTransactionBodyAmountRegExp)
-    .describe("Decimal string with at most two decimal places, greater than zero."),
+    .describe(
+      "Decimal string with at most two decimal places. Greater than zero for income; for an expense, negative for a refund.",
+    ),
   date: zod.iso.date(),
   description: zod
     .string()
@@ -79,6 +81,10 @@ export const CreateTransactionBody = zod.object({
       ]),
     ])
     .optional(),
+  refundOfTransactionId: zod
+    .uuid()
+    .nullish()
+    .describe("Optional, only on a refund: the expense it refunds."),
 });
 
 export const createTransactionResponseAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
@@ -87,6 +93,7 @@ export const createTransactionResponseReportingAmountRegExp = new RegExp("^-?\\d
 export const createTransactionResponseUnusualTwoTypicalAmountRegExp = new RegExp(
   "^-?\\d+(\\.\\d{1,8})?$",
 );
+export const createTransactionResponseRefundedAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 
 export const CreateTransactionResponse = zod.object({
   id: zod.uuid(),
@@ -167,10 +174,23 @@ export const CreateTransactionResponse = zod.object({
       }),
     ])
     .optional(),
+  refundOf: zod
+    .union([
+      zod.null(),
+      zod.object({
+        id: zod.uuid(),
+        date: zod.iso.date(),
+        description: zod.string().nullable(),
+      }),
+    ])
+    .optional(),
+  refundedAmount: zod
+    .stringFormat("decimal", createTransactionResponseRefundedAmountRegExp)
+    .nullish(),
 });
 
 /**
- * Returns a page of the ledger, newest first, restricted to what you can see: your own transactions plus those on the shared accounts of your households. Every filter is optional and they combine with AND.
+ * Returns a page of the ledger, newest first, restricted to what you can see: your own transactions plus those on the shared accounts of your households. Every filter is optional and they combine with AND. A refund is an expense with a negative amount; it carries refundOf (the purchase it refunds, null when that is not visible), and a purchase carries refundedAmount, the reporting-currency total of the visible refunds that name it.
  * @summary List transactions
  */
 export const transactionsResponseItemsItemAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
@@ -181,6 +201,9 @@ export const transactionsResponseItemsItemReportingAmountRegExp = new RegExp(
   "^-?\\d+(\\.\\d{1,8})?$",
 );
 export const transactionsResponseItemsItemUnusualTwoTypicalAmountRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const transactionsResponseItemsItemRefundedAmountRegExp = new RegExp(
   "^-?\\d+(\\.\\d{1,8})?$",
 );
 
@@ -268,6 +291,19 @@ export const TransactionsResponse = zod.object({
           }),
         ])
         .optional(),
+      refundOf: zod
+        .union([
+          zod.null(),
+          zod.object({
+            id: zod.uuid(),
+            date: zod.iso.date(),
+            description: zod.string().nullable(),
+          }),
+        ])
+        .optional(),
+      refundedAmount: zod
+        .stringFormat("decimal", transactionsResponseItemsItemRefundedAmountRegExp)
+        .nullish(),
     }),
   ),
   page: zod.int(),
@@ -324,7 +360,7 @@ export const ExportTransactionsResponse = zod.unknown();
 export const ExportTransactionsPdfResponse = zod.unknown();
 
 /**
- * Returns the row count and the income and expense totals of every transaction the list endpoint would return for the same filters, across all pages. Transfers are not transactions and are never counted.
+ * Returns the row count and the income and expense totals of every transaction the list endpoint would return for the same filters, across all pages. Transfers are not transactions and are never counted. A refund is an expense with a negative amount, so the expense total is net of refunds.
  * @summary Total the filtered transactions
  */
 export const transactionsSummaryResponseTotalIncomeRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
@@ -343,7 +379,7 @@ export const TransactionsSummaryResponse = zod.object({
 export const DeleteTransactionResponse = zod.void();
 
 /**
- * Returns a single transaction, including its split lines when it has any and the ids of the tags it carries. A transaction you cannot see is reported as missing rather than forbidden.
+ * Returns a single transaction, including its split lines when it has any and the ids of the tags it carries, and for a refund the purchase it refunds (refundOf) or for a purchase the total refunded (refundedAmount). A transaction you cannot see is reported as missing rather than forbidden.
  * @summary Get one transaction
  */
 export const transactionResponseAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
@@ -352,6 +388,7 @@ export const transactionResponseReportingAmountRegExp = new RegExp("^-?\\d+(\\.\
 export const transactionResponseUnusualTwoTypicalAmountRegExp = new RegExp(
   "^-?\\d+(\\.\\d{1,8})?$",
 );
+export const transactionResponseRefundedAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 
 export const TransactionResponse = zod.object({
   id: zod.uuid(),
@@ -429,10 +466,21 @@ export const TransactionResponse = zod.object({
       }),
     ])
     .optional(),
+  refundOf: zod
+    .union([
+      zod.null(),
+      zod.object({
+        id: zod.uuid(),
+        date: zod.iso.date(),
+        description: zod.string().nullable(),
+      }),
+    ])
+    .optional(),
+  refundedAmount: zod.stringFormat("decimal", transactionResponseRefundedAmountRegExp).nullish(),
 });
 
 /**
- * Replaces the transaction. Split lines are replaced wholesale rather than merged: send the full set you want to keep, or omit lines to turn a split back into a plain transaction. Tags are replaced the same way: send the full set, and an empty list or an absent tagIds clears them. Moving it to another account adjusts both balances.
+ * Replaces the transaction. Split lines are replaced wholesale rather than merged: send the full set you want to keep, or omit lines to turn a split back into a plain transaction. Tags are replaced the same way: send the full set, and an empty list or an absent tagIds clears them. Moving it to another account adjusts both balances. A refund is an expense with a negative amount: it lowers that category's spending and raises the balance. It takes an expense category, cannot be split, and may name the purchase it refunds in refundOfTransactionId, which must be an expense you can see and not itself a refund.
  * @summary Update a transaction
  */
 
@@ -500,6 +548,7 @@ export const UpdateTransactionBody = zod.object({
       ]),
     ])
     .optional(),
+  refundOfTransactionId: zod.uuid().nullish(),
 });
 
 export const updateTransactionResponseAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
@@ -508,6 +557,7 @@ export const updateTransactionResponseReportingAmountRegExp = new RegExp("^-?\\d
 export const updateTransactionResponseUnusualTwoTypicalAmountRegExp = new RegExp(
   "^-?\\d+(\\.\\d{1,8})?$",
 );
+export const updateTransactionResponseRefundedAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 
 export const UpdateTransactionResponse = zod.object({
   id: zod.uuid(),
@@ -588,6 +638,19 @@ export const UpdateTransactionResponse = zod.object({
       }),
     ])
     .optional(),
+  refundOf: zod
+    .union([
+      zod.null(),
+      zod.object({
+        id: zod.uuid(),
+        date: zod.iso.date(),
+        description: zod.string().nullable(),
+      }),
+    ])
+    .optional(),
+  refundedAmount: zod
+    .stringFormat("decimal", updateTransactionResponseRefundedAmountRegExp)
+    .nullish(),
 });
 
 /**

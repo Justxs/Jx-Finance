@@ -62,7 +62,7 @@ export const getCreateTransactionUrl = () => {
 };
 
 /**
- * Posts income or an expense to an account. Leave lines empty for an ordinary transaction. To split one payment across several categories, send the lines instead: they must add up to the transaction amount, and the top-level categoryId is then ignored. Tags belong to the whole payment and are sent as tagIds, split or not.
+ * Posts income or an expense to an account. Leave lines empty for an ordinary transaction. To split one payment across several categories, send the lines instead: they must add up to the transaction amount, and the top-level categoryId is then ignored. Tags belong to the whole payment and are sent as tagIds, split or not. A refund is an expense with a negative amount: it lowers that category's spending and raises the balance. It takes an expense category, cannot be split, and may name the purchase it refunds in refundOfTransactionId, which must be an expense you can see and not itself a refund.
  * @summary Record a transaction
  */
 export const createTransaction = async (
@@ -180,7 +180,7 @@ export const getTransactionsUrl = (params: TransactionsParams) => {
 };
 
 /**
- * Returns a page of the ledger, newest first, restricted to what you can see: your own transactions plus those on the shared accounts of your households. Every filter is optional and they combine with AND.
+ * Returns a page of the ledger, newest first, restricted to what you can see: your own transactions plus those on the shared accounts of your households. Every filter is optional and they combine with AND. A refund is an expense with a negative amount; it carries refundOf (the purchase it refunds, null when that is not visible), and a purchase carries refundedAmount, the reporting-currency total of the visible refunds that name it.
  * @summary List transactions
  */
 export const transactions = async (
@@ -803,7 +803,7 @@ export const getTransactionsSummaryUrl = (params?: TransactionsSummaryParams) =>
 };
 
 /**
- * Returns the row count and the income and expense totals of every transaction the list endpoint would return for the same filters, across all pages. Transfers are not transactions and are never counted.
+ * Returns the row count and the income and expense totals of every transaction the list endpoint would return for the same filters, across all pages. Transfers are not transactions and are never counted. A refund is an expense with a negative amount, so the expense total is net of refunds.
  * @summary Total the filtered transactions
  */
 export const transactionsSummary = async (
@@ -1011,7 +1011,7 @@ export const getTransactionUrl = (id: string) => {
 };
 
 /**
- * Returns a single transaction, including its split lines when it has any and the ids of the tags it carries. A transaction you cannot see is reported as missing rather than forbidden.
+ * Returns a single transaction, including its split lines when it has any and the ids of the tags it carries, and for a refund the purchase it refunds (refundOf) or for a purchase the total refunded (refundedAmount). A transaction you cannot see is reported as missing rather than forbidden.
  * @summary Get one transaction
  */
 export const transaction = async (
@@ -1130,7 +1130,7 @@ export const getUpdateTransactionUrl = (id: string) => {
 };
 
 /**
- * Replaces the transaction. Split lines are replaced wholesale rather than merged: send the full set you want to keep, or omit lines to turn a split back into a plain transaction. Tags are replaced the same way: send the full set, and an empty list or an absent tagIds clears them. Moving it to another account adjusts both balances.
+ * Replaces the transaction. Split lines are replaced wholesale rather than merged: send the full set you want to keep, or omit lines to turn a split back into a plain transaction. Tags are replaced the same way: send the full set, and an empty list or an absent tagIds clears them. Moving it to another account adjusts both balances. A refund is an expense with a negative amount: it lowers that category's spending and raises the balance. It takes an expense category, cannot be split, and may name the purchase it refunds in refundOfTransactionId, which must be an expense you can see and not itself a refund.
  * @summary Update a transaction
  */
 export const updateTransaction = async (

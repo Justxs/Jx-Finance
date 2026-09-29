@@ -14,4 +14,5 @@ public sealed record UpdateTransactionRequest(
     string? Description,
     IReadOnlyList<TransactionLineRequest>? Lines,
     IReadOnlyList<Guid>? TagIds = null,
-    Currency? Currency = null) : ITransactionInput;
+    Currency? Currency = null,
+    Guid? RefundOfTransactionId = null) : ITransactionInput;

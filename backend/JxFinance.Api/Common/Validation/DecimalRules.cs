@@ -21,6 +21,9 @@ public static class DecimalRules
     public static IRuleBuilderOptions<T, decimal?> IsPositiveMoney<T>(this IRuleBuilder<T, decimal?> rule) =>
         rule.Must(value => value is null || (value > 0 && FitsMoney(value.Value))).WithErrorCode(ErrorCodes.MoneyPositive);
 
+    public static IRuleBuilderOptions<T, decimal> IsNonZeroMoney<T>(this IRuleBuilder<T, decimal> rule) =>
+        rule.Must(value => value != 0 && FitsMoney(value)).WithErrorCode(ErrorCodes.MoneyNonZero);
+
     public static IRuleBuilderOptions<T, decimal> IsNonNegativeMoney<T>(this IRuleBuilder<T, decimal> rule) =>
         rule.Must(value => value >= 0 && FitsMoney(value)).WithErrorCode(ErrorCodes.MoneyNonNegative);
 

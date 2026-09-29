@@ -11,7 +11,10 @@ import {
   debts,
   foreignCurrencyTransactions,
   linkedPaymentTransaction,
+  linkedRefund,
   longDescriptionTransaction,
+  refundedPurchase,
+  refundTransactions,
   splitTransaction,
   tags,
   trackedMortgage,
@@ -51,6 +54,7 @@ function TransactionsTableHarness({
     onEdit: (transaction) => toast.message(`Edit ${transaction.description ?? transaction.id}`),
     onDuplicate: (transaction) =>
       toast.message(`Duplicate ${transaction.description ?? transaction.id}`),
+    onRefund: (transaction) => toast.message(`Refund ${transaction.description ?? transaction.id}`),
     onDelete: (id) => toast.message(`Delete ${id}`),
     deletingId,
   });
@@ -202,5 +206,28 @@ export const PaysADebt: Story = {
       canvas.getByRole("button", { name: `Actions: ${transactions[0]?.description ?? ""}` }),
     );
     await expect(await screen.findByRole("menuitem", { name: "Link to debt" })).toBeVisible();
+  },
+};
+
+export const Refunds: Story = {
+  args: { data: refundTransactions },
+  play: async ({ canvas }) => {
+    await expect(canvas.getAllByText("Refund")).toHaveLength(2);
+    await expect(canvas.getByText("+€29.95")).toBeInTheDocument();
+    await expect(canvas.getByText("−€89.95")).toBeInTheDocument();
+    await expect(canvas.getByText("Refunded €29.95")).toBeInTheDocument();
+    await expect(
+      canvas.getByRole("link", { name: /^Refund of Zara, Akropolis, / }),
+    ).toBeInTheDocument();
+    await userEvent.click(
+      canvas.getByRole("button", { name: `Actions: ${refundedPurchase.description ?? ""}` }),
+    );
+    await expect(await screen.findByRole("menuitem", { name: "Record refund" })).toBeVisible();
+    await userEvent.keyboard("{Escape}");
+    await userEvent.click(
+      canvas.getByRole("button", { name: `Actions: ${linkedRefund.description ?? ""}` }),
+    );
+    await expect(await screen.findByRole("menuitem", { name: "Duplicate" })).toBeVisible();
+    await expect(screen.queryByRole("menuitem", { name: "Record refund" })).toBeNull();
   },
 };

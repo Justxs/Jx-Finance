@@ -67,3 +67,17 @@ export const Income: Story = {
     ],
   },
 };
+
+export const CategoryBelowZero: Story = {
+  args: {
+    rows: [
+      { key: "groceries", name: "Groceries", amount: 100, earlier: null, icon: "shopping-cart" },
+      { key: "clothes", name: "Clothes", amount: -60, earlier: null, icon: "shirt" },
+    ],
+  },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText("100%")).toBeInTheDocument();
+    await expect(canvas.getByText("−€60.00")).toBeInTheDocument();
+    await expect(canvas.queryByText("-60%")).not.toBeInTheDocument();
+  },
+};

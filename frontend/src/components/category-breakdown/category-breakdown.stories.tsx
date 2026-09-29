@@ -124,3 +124,16 @@ export const ComparedWithAnEarlierPeriod: Story = {
     await expect(canvas.getAllByText(/the earlier period|ankstesni/i)).toHaveLength(3);
   },
 };
+
+export const RefundsAboveSpending: Story = {
+  args: {
+    items: [
+      { categoryId: "food", categoryName: "Food", categoryIcon: "utensils", amount: "80.00" },
+      { categoryId: "clothes", categoryName: "Clothes", categoryIcon: "shirt", amount: "-35.00" },
+    ],
+  },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText("−€35.00")).toBeInTheDocument();
+    await expect(canvas.getByText("100%")).toBeInTheDocument();
+  },
+};

@@ -29,7 +29,7 @@ The format is chosen from the list, never sniffed from the file. A file that doe
 | `Ntry/Amt/@Ccy`, `Ntry/CdtDbtInd` (`CRDT`/`DBIT`) | Amount, currency and direction |
 | `Ntry/Sts` (or `Sts/Cd` from 001.08) | Only `BOOK` is imported; `PDNG` and `INFO` are counted and skipped |
 | `Ntry/BookgDt/Dt` or `DtTm`, else `ValDt` | Date. A `DtTm` is converted to the installation time zone; one without an offset is already local and keeps its date |
-| `Ntry/RvslInd` | Shown as a "Reversal" chip; the direction still comes from `CdtDbtInd` |
+| `Ntry/RvslInd` | Shown as a "Reversal" chip; the direction still comes from `CdtDbtInd`, and an incoming reversal starts as a [refund](#refunds) |
 | `TxDtls/Refs/AcctSvcrRef`, `Ntry/AcctSvcrRef`, `Ntry/NtryRef`, `TxDtls/Refs/EndToEndId` | Import reference, see below |
 | `TxDtls/RltdPties/Cdtr` or `Dbtr` (`Nm`, or `Pty/Nm` from 001.08) | Payee: the creditor for a debit, the debtor for a credit |
 | `TxDtls/RltdPties/CdtrAcct` or `DbtrAcct` `/Id/IBAN` | Counterparty IBAN for transfer detection |
@@ -103,14 +103,33 @@ Every confirmed row goes through the paths the manual forms use. A transaction r
 Since 2026-09-28 the preview also looks for a transaction you entered yourself before the statement arrived, such as a card payment typed in on the day. `ManualEntryMatcher` (`Endpoints/Imports/Matching`) is a pure function. A row that is not a duplicate matches a transaction on the same account when the transaction:
 
 - was entered by hand (`Source` manual) and has no import reference;
-- has the same flow type, amount and currency;
+- moves the same money in or out of the account in the same currency: an expense matches an outgoing row of its amount, and an income or a [refund](transactions.md#refunds) entered by hand matches an incoming row of its size;
 - is dated at most three days before or after the bank entry.
 
 Each transaction goes to one row at most. All pairs are ranked by the number of days between them, then by row order, so two equal payments on different days each find the closest one. The preview reads the candidates with one query over the statement's date range widened by three days, and answers the transaction's id, date, description and category as `matchedTransaction`.
 
 In the review such a row starts selected and linked, even when it looks like a transfer. It shows "Matches your entry" with the date and description of your entry in the tooltip. Its "Record as" picker starts on "Your entry of 16 Sep", and choosing "Income / expense" or a transfer instead imports it the ordinary way. A linked row shows your entry's category and cannot take a category or tags from the review: it is not in Needs attention and "Set category for selected" skips it. The statement bar does not add it to the ledger balance, because your entry is already counted there.
 
+A refund typed in at the till is offered as the bank's credit the same way, so it is not imported a second time as income; the review shows your entry's expense category on the linked row.
+
 Confirm sends `existingTransactionId`. Instead of adding a transaction, the import writes the bank's reference onto yours and marks it imported, and nothing else about it changes: its date, category, tags, splits, description and attachments stay as you entered them. The confirm checks the same rule again under the account lock and answers `import.entryMismatch` when the transaction is gone, belongs to another account, already carries a reference, no longer fits or is named by two rows; as with every confirm error, nothing is written. The response counts `linked` beside `imported` and `skippedDuplicates`, and the household log's summary row names them. Because the reference is now stored, the same statement line is a duplicate on the next import. A linked row counts toward the month-close import coverage, and a link to a row dated in a closed month shows as an edit in its drift.
+
+## Refunds
+
+Since 2026-09-29 an incoming bank row can be recorded as a [refund](transactions.md#refunds): money back into an expense category instead of income. The row's "Record as" picker offers "Refund" for every incoming row, and "Refund of {date} {description}" when the preview found a purchase it probably refunds. Choosing either switches the row's category list to the expense categories and adds a "Refund" mark to its flags; the linked choice also takes the purchase's category. Going back to "Income / expense" or a transfer clears the category, because an expense category does not fit income.
+
+The preview answers `refundCandidate` (`id`, `date`, `description`, `categoryId`, the shape of `matchedTransaction`) on an incoming row that is neither a duplicate nor matched to your own entry, when the account has an expense that:
+
+- is not itself a refund and is in the row's currency;
+- is dated on the row's date or at most 90 days before (`RefundOriginal.CandidateLookBackDays`);
+- has a stored `PayeeKey` equal to the `SubscriptionDescription.Normalize` key of the row's payee or of its description;
+- is at least the row's amount.
+
+Of those the most recent wins. One query reads the account's purchases from 90 days before the earliest row to the latest one, grouped by key in memory.
+
+The review starts a row as a refund, selected, when it carries a candidate or is a camt.053 reversal, unless it is a duplicate, matches your own entry or names another of your accounts by IBAN. A candidate's category is filled in, the rule and recall suggestions are dropped, and the row starts without tags. The selection summary and the statement bar are unchanged, because the bank's amount and direction are what moved.
+
+Confirm sends `asRefund` and, for the linked choice, `refundOfTransactionId`; `type` and `amount` stay the bank's. `ImportService` writes the row as an `Expense` with the negated amount, valued the usual way, in the chosen category, which must be an expense category (`category.wrongType`). The purchase is checked by `RefundOriginal`, the helper the transaction form's save uses: a visible expense that is not a refund, or `transaction.refundOriginalInvalid`. `asRefund` on an outgoing row, a transfer or a linked row, and `refundOfTransactionId` without `asRefund`, answer `import.refundInvalid`. As with every confirm error, nothing is written.
 
 ## Views, search and leaving a review
 

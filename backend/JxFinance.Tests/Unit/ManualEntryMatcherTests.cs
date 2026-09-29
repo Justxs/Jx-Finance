@@ -48,6 +48,15 @@ public sealed class ManualEntryMatcherTests
     }
 
     [Fact]
+    public void A_refund_entered_by_hand_matches_the_incoming_line_of_the_same_size()
+    {
+        var refund = new ManualEntry(TransactionId.New(), Day, FlowType.Expense, new Money(-12.5m, Currency.Eur));
+        var incoming = new StatementLine(Day, FlowType.Income, new Money(12.5m, Currency.Eur));
+
+        Assert.Equal([null, refund], ManualEntryMatcher.Match([Line(Day), incoming], [refund]));
+    }
+
+    [Fact]
     public void A_skipped_line_is_never_matched()
     {
         var entry = Entry(Day);

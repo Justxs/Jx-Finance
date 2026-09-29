@@ -2,10 +2,17 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import { expect } from "storybook/test";
 import type { ImportPreviewRow } from "@/api/generated/model";
-import { accounts, checkingAccount, ids, importPreviewRows } from "@/storybook/fixtures";
+import {
+  accounts,
+  camtPreviewRows,
+  checkingAccount,
+  ids,
+  importPreviewRows,
+} from "@/storybook/fixtures";
 import { errorHandlers, loadingHandlers } from "@/storybook/handlers";
+import { chooseOption } from "@/storybook/interactions";
 import { ImportTransferPicker } from "./import-transfer-picker";
-import type { PreviewRowState } from "./preview-rows";
+import { type PreviewRowState, toPreviewRows } from "./preview-rows";
 
 interface HarnessProps {
   row: PreviewRowState;
@@ -45,6 +52,8 @@ function toState(
     transferAccountId: "",
     existingTransferId: "",
     existingTransactionId: "",
+    asRefund: false,
+    refundOfTransactionId: "",
     categoryId: "",
     categorySuggested: false,
     ruleName: null,
@@ -132,4 +141,20 @@ export const MatchesLoading: Story = {
 export const MatchesError: Story = {
   args: { row: toState(savingsRow, { transferAccountId: ids.accounts.savings }) },
   parameters: { msw: { handlers: errorHandlers } },
+};
+
+const reversalRow = camtPreviewRows.find((row) => row.isReversal);
+
+export const ProposedAsRefund: Story = {
+  args: {
+    row: toPreviewRows(reversalRow ? [reversalRow] : [], [], [])[0] ?? toState(undefined, {}),
+  },
+  play: async ({ canvas }) => {
+    const recordAs = canvas.getByRole("combobox", { name: "Record as" });
+    await expect(recordAs).toHaveTextContent("Refund of");
+    await chooseOption(recordAs, "Refund");
+    await expect(recordAs).not.toHaveTextContent("Refund of");
+    await chooseOption(recordAs, "Income / expense");
+    await expect(recordAs).toHaveTextContent("Income / expense");
+  },
 };

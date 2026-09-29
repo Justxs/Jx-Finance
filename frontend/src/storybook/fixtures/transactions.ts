@@ -139,6 +139,36 @@ export const uncategorisedTransaction: TransactionResponse = manual(
   null,
 );
 
+export const refundedPurchase: TransactionResponse = {
+  ...imported(27, "09-03", checking, shopping, -89.95, "Zara, Akropolis", [children]),
+  refundedAmount: "29.95",
+};
+
+export const linkedRefund: TransactionResponse = {
+  ...manual(28, "09-09", checking, shopping, -29.95, "Zara, Akropolis – grąžinta striukė", [
+    children,
+  ]),
+  amount: "-29.95",
+  reportingAmount: "-29.95",
+  refundOf: {
+    id: refundedPurchase.id,
+    date: refundedPurchase.date,
+    description: refundedPurchase.description,
+  },
+};
+
+export const unlinkedRefund: TransactionResponse = {
+  ...imported(29, "09-11", checking, telecom, -5, "Telia – kompensacija už sutrikimą"),
+  amount: "-5.00",
+  reportingAmount: "-5.00",
+};
+
+export const refundTransactions: TransactionResponse[] = [
+  unlinkedRefund,
+  linkedRefund,
+  refundedPurchase,
+];
+
 export const foreignCurrencyTransactions: TransactionResponse[] = [
   {
     ...manual(801, "09-15", broker, null, 42.5, "VUSA dividendai"),

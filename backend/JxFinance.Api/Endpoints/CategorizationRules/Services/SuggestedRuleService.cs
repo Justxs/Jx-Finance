@@ -148,7 +148,7 @@ public sealed class SuggestedRuleService(
 
         var rows = await db.Transactions
             .AsNoTracking()
-            .Where(t => t.UserId == userId && !t.IsSplit && t.Description != null && t.Date >= from)
+            .Where(t => t.UserId == userId && !t.IsSplit && t.Amount.Amount > 0 && t.Description != null && t.Date >= from)
             .OrderByDescending(t => t.Date)
             .ThenByDescending(t => t.CreatedAt)
             .Take(UnusualAmountService.MaxHistoryRows)

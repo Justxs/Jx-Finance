@@ -154,7 +154,7 @@ public sealed class TransactionsPdfDocument(
             var tagsParagraph = row.Cells[4].AddParagraph(names.TagLabel(transaction.TagIds));
             tagsParagraph.Format.Font.Color = MutedColor;
 
-            row.Cells[5].AddParagraph(transaction.Type.ToString());
+            row.Cells[5].AddParagraph(transaction is { Type: FlowType.Expense, Amount: < 0 } ? "Refund" : transaction.Type.ToString());
 
             var amountParagraph = row.Cells[6].AddParagraph(FormatAmount(amount, transaction.Currency));
             amountParagraph.Format.Alignment = ParagraphAlignment.Right;

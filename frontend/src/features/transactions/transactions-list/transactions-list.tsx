@@ -10,6 +10,7 @@ import { UnusualAmountBadge } from "@/features/transactions/unusual-amount/unusu
 import { useIsoDate } from "@/hooks/use-formatters";
 import { cn, metaLine } from "@/lib/utils";
 import { DebtPaymentMarker } from "../debt-payment/debt-payment";
+import { RefundMark } from "../refund-mark/refund-mark";
 import {
   TransactionAmount,
   isOptimistic,
@@ -36,6 +37,7 @@ export function TransactionsList({
   onClearFilters,
   onEdit,
   onDuplicate,
+  onRefund,
   onDelete,
   deletingId,
 }: Readonly<Props>) {
@@ -91,6 +93,7 @@ export function TransactionsList({
                 />
               </div>
               <TagChips tagIds={row.tagIds} tagById={tagById} className="mt-1" />
+              <RefundMark transaction={row} className="mt-1" />
               <div className="flex items-center gap-2">
                 <p
                   className="min-w-0 flex-1 truncate text-xs text-muted-foreground tabular-nums"
@@ -104,6 +107,7 @@ export function TransactionsList({
                   deletingId={deletingId}
                   onEdit={onEdit}
                   onDuplicate={onDuplicate}
+                  onRefund={onRefund}
                   onDelete={onDelete}
                   className="-mr-2 gap-0"
                 />

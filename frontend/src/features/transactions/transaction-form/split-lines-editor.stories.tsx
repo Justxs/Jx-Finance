@@ -1,13 +1,14 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, userEvent } from "storybook/test";
-import type { CategoryResponse, Currency, FlowType } from "@/api/generated/model";
+import type { CategoryResponse, Currency } from "@/api/generated/model";
 import { useAppForm } from "@/components/form";
 import { categories, splitTransactionLines } from "@/storybook/fixtures";
 import type { LineFormValue } from "./line-form-value";
 import { SplitLinesEditor } from "./split-lines-editor";
+import type { TransactionFormType } from "./transaction-schema";
 
 interface HarnessProps {
-  type?: FlowType;
+  type?: TransactionFormType;
   amount?: string;
   isSplit?: boolean;
   lines?: LineFormValue[];

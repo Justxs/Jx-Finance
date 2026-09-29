@@ -1673,6 +1673,9 @@ namespace JxFinance.Infrastructure.Data.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
+                    b.Property<Guid?>("RefundOfTransactionId")
+                        .HasColumnType("uuid");
+
                     b.Property<decimal>("ReportingAmount")
                         .HasPrecision(18, 2)
                         .HasColumnType("numeric(18,2)");
@@ -1729,6 +1732,9 @@ namespace JxFinance.Infrastructure.Data.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("CategoryId");
+
+                    b.HasIndex("RefundOfTransactionId")
+                        .HasFilter("\"RefundOfTransactionId\" IS NOT NULL");
 
                     b.HasIndex("UnusualCheckedAt")
                         .HasFilter("\"UnusualCheckedAt\" IS NULL");
@@ -2663,6 +2669,11 @@ namespace JxFinance.Infrastructure.Data.Migrations
                         .WithMany()
                         .HasForeignKey("CategoryId")
                         .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("JxFinance.Domain.Transactions.Transaction", null)
+                        .WithMany()
+                        .HasForeignKey("RefundOfTransactionId")
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.HasOne("JxFinance.Infrastructure.Auth.AppUser", null)
                         .WithMany()

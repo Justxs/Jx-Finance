@@ -10,6 +10,7 @@ import type { DateOnly } from "./dateOnly";
 import type { FlowType } from "./flowType";
 import type { TransactionDebtPaymentResponse } from "./transactionDebtPaymentResponse";
 import type { TransactionLineResponse } from "./transactionLineResponse";
+import type { TransactionRefundOfResponse } from "./transactionRefundOfResponse";
 import type { TransactionSource } from "./transactionSource";
 import type { UnusualAmountResponse } from "./unusualAmountResponse";
 
@@ -35,4 +36,7 @@ export interface TransactionResponse {
   unusual: null | UnusualAmountResponse;
   unusualDismissed: boolean;
   debtPayment?: null | TransactionDebtPaymentResponse;
+  refundOf?: null | TransactionRefundOfResponse;
+  /** @nullable */
+  refundedAmount?: string | null;
 }

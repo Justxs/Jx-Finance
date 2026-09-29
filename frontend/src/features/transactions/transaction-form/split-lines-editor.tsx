@@ -1,6 +1,6 @@
 import { Plus, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import type { CategoryResponse, Currency, FlowType } from "@/api/generated/model";
+import type { CategoryResponse, Currency } from "@/api/generated/model";
 import { defineAppFieldGroup } from "@/components/form";
 import { Button } from "@/components/ui/button/button";
 import { FieldError } from "@/components/ui/field-error";
@@ -11,9 +11,10 @@ import { namedOptions } from "@/lib/options";
 import { EXPENSE_TONE } from "@/lib/tone";
 import { cn } from "@/lib/utils";
 import { emptyLine, type LineFormValue, type SplitBalance, splitBalance } from "./line-form-value";
+import { type TransactionFormType, categoryTypeOf } from "./transaction-schema";
 
 const splitLinesFieldGroup = defineAppFieldGroup(({ strict }) => ({
-  type: strict<FlowType>(),
+  type: strict<TransactionFormType>(),
   amount: strict<string>(),
   currency: strict<Currency>(),
   isSplit: strict<boolean>(),
@@ -196,7 +197,9 @@ function SplitLinesGroup({ fields, categories }: Readonly<Props>) {
                     {(currencyField) => (
                       <SplitLineList
                         fields={fields}
-                        categories={categories.filter((c) => c.type === typeField.value)}
+                        categories={categories.filter(
+                          (c) => c.type === categoryTypeOf(typeField.value),
+                        )}
                         amount={amountField.value}
                         currency={currencyField.value}
                       />
