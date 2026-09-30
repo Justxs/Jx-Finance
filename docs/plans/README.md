@@ -6,8 +6,7 @@ The table is in the suggested build order. Each plan's `Status:` line names what
 
 | Plan | Size | Where it lives | Build after |
 | --- | --- | --- | --- |
-| [Privacy mode](privacy-mode.md) | S, frontend only | Account menu, Appearance, command palette, the `p` key; every formatted amount | Nothing |
-| [Sankey diagram](sankey-diagram.md) | S, frontend only | Reports | Nothing; uses the privacy mask if that landed first |
+| [Sankey diagram](sankey-diagram.md) | S, frontend only | Reports | Nothing; its labels are masked by the formatter hooks like every other amount |
 | [Spreading a payment across months](spread-over-months.md) | M | Transaction form, ledger chip; reports, dashboard, budgets and month close read the slices | Nothing |
 | [Double-entry journal](double-entry-journal.md) | M, an export rather than a storage rewrite | The member export zip (`ledger.beancount`) | Nothing |
 | [Transaction locations](transaction-locations.md) | M for places; L and gated for the map | Transaction form, receipt reading, ledger filters, Reports | Stripping of attachment metadata on upload; two months of places for the map |

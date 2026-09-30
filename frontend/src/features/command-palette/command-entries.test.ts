@@ -29,6 +29,7 @@ function sources(overrides: Partial<CommandSources> = {}): CommandSources {
     isAdmin: false,
     theme: "light",
     locale: "en",
+    amountsHidden: false,
     activeHouseholdId: undefined,
     accounts,
     categories,
@@ -37,6 +38,12 @@ function sources(overrides: Partial<CommandSources> = {}): CommandSources {
     lastMonth: "2026-08",
     ...overrides,
   };
+}
+
+function amountsEntry(amountsHidden: boolean) {
+  return buildCommandEntries(sources({ amountsHidden })).find(
+    (entry) => entry.id === "action-amounts",
+  );
 }
 
 function ids(entries: readonly CommandEntry[]) {
@@ -139,6 +146,12 @@ describe("buildCommandEntries", () => {
       "commandPalette.theme.light",
     );
     expect(dark.find((entry) => entry.id === "action-locale")?.label).toBe("English");
+  });
+
+  test("the amounts entry names the choice it would make", () => {
+    expect(amountsEntry(false)?.label).toBe("commandPalette.hideAmounts");
+    expect(amountsEntry(true)?.label).toBe("commandPalette.showAmounts");
+    expect(amountsEntry(true)?.target).toEqual({ kind: "amounts" });
   });
 
   test("a record entry opens the ledger filtered by that record", () => {

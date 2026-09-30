@@ -2,8 +2,10 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, screen, userEvent, waitFor } from "storybook/test";
 import { getMeMockHandler } from "@/api/generated/auth/auth.msw";
 import { i18n } from "@/lib/i18n";
+import { AMOUNT_MASK } from "@/lib/mask-amount";
+import { readPreferences } from "@/stores/preferences";
 import { isShortcutsHelpOpen, setShortcutsHelpOpen } from "@/stores/shortcuts-help-store";
-import { withWidth } from "@/storybook/decorators";
+import { SAMPLE_AMOUNT, withSampleAmount, withWidth } from "@/storybook/decorators";
 import { longNameUser } from "@/storybook/fixtures";
 import { withHandlers } from "@/storybook/handlers";
 import { AccountMenu } from "./account-menu";
@@ -47,6 +49,7 @@ export const Open: Story = {
       "Your profile",
       "LanguageEnglish",
       "ThemeLight",
+      "AmountsShown",
       "Keyboard shortcuts?",
       "Log out",
     ]);
@@ -67,6 +70,34 @@ export const SwitchesLanguageAndTheme: Story = {
     await expect(theme).toHaveTextContent("Dark");
     await userEvent.click(theme);
     await expect(document.documentElement).not.toHaveClass("dark");
+  },
+};
+
+export const HidesAmounts: Story = {
+  decorators: [withSampleAmount],
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText(SAMPLE_AMOUNT)).toBeInTheDocument();
+    await userEvent.click(canvas.getByRole("button", { name: triggerName }));
+    const amounts = await screen.findByRole("menuitem", { name: /^Amounts/ });
+    await expect(amounts).toHaveTextContent("Shown");
+    await userEvent.click(amounts);
+    await expect(amounts).toHaveTextContent("Hidden");
+    await expect(readPreferences().amountsHidden).toBe(true);
+    await expect(await canvas.findByText(`−€${AMOUNT_MASK}`)).toBeInTheDocument();
+  },
+};
+
+export const ShowsHiddenAmounts: Story = {
+  globals: { amounts: "hidden" },
+  decorators: [withSampleAmount],
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText(`−€${AMOUNT_MASK}`)).toBeInTheDocument();
+    await userEvent.click(canvas.getByRole("button", { name: triggerName }));
+    const amounts = await screen.findByRole("menuitem", { name: /^Amounts/ });
+    await expect(amounts).toHaveTextContent("Hidden");
+    await userEvent.click(amounts);
+    await expect(amounts).toHaveTextContent("Shown");
+    await expect(await canvas.findByText(SAMPLE_AMOUNT)).toBeInTheDocument();
   },
 };
 

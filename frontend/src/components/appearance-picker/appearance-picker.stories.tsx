@@ -1,8 +1,10 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, userEvent } from "storybook/test";
 import { i18n } from "@/lib/i18n";
+import { AMOUNT_MASK } from "@/lib/mask-amount";
 import { locales, pageSizes, readPreferences } from "@/stores/preferences";
 import { fonts, palettes, textSizes, themes } from "@/stores/theme-store";
+import { SAMPLE_AMOUNT, withSampleAmount } from "@/storybook/decorators";
 import { AppearancePicker } from "./appearance-picker";
 
 const meta = {
@@ -20,6 +22,7 @@ export const Default: Story = {
       canvas.getByRole("radiogroup", { name: "Theme" }),
       canvas.getByRole("radiogroup", { name: "Colors" }),
       canvas.getByRole("radiogroup", { name: "Language" }),
+      canvas.getByRole("radiogroup", { name: "Amounts" }),
       canvas.getByRole("radiogroup", { name: "Typeface" }),
       canvas.getByRole("radiogroup", { name: "Text size" }),
       canvas.getByRole("radiogroup", { name: "Rows per page" }),
@@ -28,6 +31,7 @@ export const Default: Story = {
       themes.length +
         palettes.length +
         locales.length +
+        2 +
         fonts.length +
         textSizes.length +
         pageSizes.length +
@@ -35,6 +39,7 @@ export const Default: Story = {
     );
     await expect(canvas.getByRole("radio", { name: "Light" })).toBeChecked();
     await expect(canvas.getByRole("radio", { name: "English" })).toBeChecked();
+    await expect(canvas.getByRole("radio", { name: "Shown" })).toBeChecked();
     await expect(canvas.getByRole("radio", { name: "Ledger navy" })).toBeChecked();
     await expect(canvas.getByRole("radio", { name: "Classic" })).toBeChecked();
     await expect(canvas.getByRole("radio", { name: "Default" })).toBeChecked();
@@ -79,6 +84,29 @@ export const ChooseThemeAndLanguage: Story = {
     await expect(document.documentElement).not.toHaveClass("dark");
     await userEvent.click(canvas.getByRole("radio", { name: "English" }));
     await expect(i18n.language).toBe("en");
+  },
+};
+
+export const HideAmounts: Story = {
+  decorators: [withSampleAmount],
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText(SAMPLE_AMOUNT)).toBeInTheDocument();
+    await userEvent.click(canvas.getByRole("radio", { name: "Hidden" }));
+    await expect(canvas.getByRole("radio", { name: "Hidden" })).toBeChecked();
+    await expect(readPreferences().amountsHidden).toBe(true);
+    await expect(await canvas.findByText(`−€${AMOUNT_MASK}`)).toBeInTheDocument();
+  },
+};
+
+export const ShowHiddenAmounts: Story = {
+  globals: { amounts: "hidden" },
+  decorators: [withSampleAmount],
+  play: async ({ canvas }) => {
+    await expect(canvas.getByRole("radio", { name: "Hidden" })).toBeChecked();
+    await expect(canvas.getByText(`−€${AMOUNT_MASK}`)).toBeInTheDocument();
+    await userEvent.click(canvas.getByRole("radio", { name: "Shown" }));
+    await expect(readPreferences().amountsHidden).toBe(false);
+    await expect(await canvas.findByText(SAMPLE_AMOUNT)).toBeInTheDocument();
   },
 };
 

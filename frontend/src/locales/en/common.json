@@ -650,7 +650,7 @@
   },
   "appearance": {
     "title": "Appearance",
-    "hint": "Theme, colors and language apply to this browser only. Theme and language can also be switched from the account menu at the foot of the sidebar.",
+    "hint": "Theme, colors, language and hidden amounts apply to this browser only. Theme, language and amounts can also be switched from the account menu at the foot of the sidebar.",
     "theme": "Theme",
     "themes": {
       "light": "Light",
@@ -658,6 +658,11 @@
     },
     "palette": "Colors",
     "language": "Language",
+    "amounts": "Amounts",
+    "amountsStates": {
+      "shown": "Shown",
+      "hidden": "Hidden"
+    },
     "palettes": {
       "ledger": "Ledger navy",
       "plum": "Plum",
@@ -1145,7 +1150,8 @@
     "then": "then",
     "newTransaction": "New transaction",
     "search": "Search transactions",
-    "help": "Show keyboard shortcuts"
+    "help": "Show keyboard shortcuts",
+    "privacy": "Hide or show amounts"
   },
   "commandPalette": {
     "title": "Command palette",
@@ -1164,7 +1170,9 @@
       "dark": "Switch to the dark theme",
       "light": "Switch to the light theme"
     },
-    "closeLastMonth": "Close last month"
+    "closeLastMonth": "Close last month",
+    "hideAmounts": "Hide amounts",
+    "showAmounts": "Show amounts"
   },
   "goals": {
     "title": "Goals",

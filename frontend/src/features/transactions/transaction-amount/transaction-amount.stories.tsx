@@ -21,6 +21,8 @@ export const Expense: Story = {};
 
 export const Income: Story = { args: { transaction: income } };
 
+export const Hidden: Story = { globals: { amounts: "hidden" } };
+
 export const ForeignCurrency: Story = { args: { transaction: foreign, showReporting: true } };
 
 export const ForeignCurrencyWithoutReporting: Story = { args: { transaction: foreign } };

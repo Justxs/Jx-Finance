@@ -13,6 +13,7 @@ flowchart TD
     Pref --> Recent["commandRecents: the last 8 command palette entries, newest first"]
     Pref --> Prompt["monthClosePromptHidden: the yyyy-MM month whose dashboard close prompt was put off"]
     Pref --> Size["pageSize: 10, 20, 50 or 100 ledger rows, absent means the installation default"]
+    Pref --> Amounts["amountsHidden: money amounts shown as •••••"]
     Init["public/theme-init.js, before the bundle"] --> Html["class dark and data-* attributes on html, no flash"]
     Theme --> Html
     Palette --> Html
@@ -27,6 +28,34 @@ Since 2026-09-30 `pageSize` in this row sets how many rows a ledger page holds. 
 The language is read from `locale` in this row, per browser, and falls back to the installation default. Since 2026-09-29 `setLocale` also saves a signed-in member's pick on the server with `PUT /api/users/me/language`, ignoring a failure, so that email and Discord messages reach them in the language they read; the root route's loader sends an earlier pick once when the profile has no language yet. The server copy is never read back into the interface. See [Monthly digest](monthly-digest.md#the-members-language).
 
 Two more collections sit beside the preferences row and follow the same rules: a zod schema per row, an explicit storage key, the same in-memory fallback, and the same cross-tab updates. They hold the saved ledger filters and the transaction templates described in [Transactions](transactions.md). Unlike `jx-preferences` they are lists, so each row carries its own id and name; nothing in them ever reaches the server.
+
+## Hide amounts
+
+```mermaid
+flowchart TD
+    Menu["Account menu: Amounts, Shown or Hidden"] --> Toggle["amountsHidden in jx-preferences"]
+    Appearance["Settings › Personal › Appearance: Amounts"] --> Toggle
+    Palette["Command palette: Hide amounts or Show amounts"] --> Toggle
+    Key["p, outside fields and dialogs"] --> Toggle
+    Toggle --> Hooks["useMoney, useAxisMoney, usePriceFormat, useQuantityFormat, useMaskedNumber"]
+    Hooks --> Parts["formatToParts, then maskParts: the digits become •••••, the sign and the currency stay"]
+    Bell["Notification bell: the server's own message as a fallback"] --> Digits["maskDigits: every digit run becomes •••••"]
+    Toggle --> Bell
+```
+
+Since 2026-09-30 a member can hide every money amount on screen, for a café, a shared screen or a screen share. The switch has four places: the Amounts row of the account menu, which names its current value like the language and theme rows and stays open when pressed; the Amounts choice under Appearance in Settings (`/profile?section=appearance`); the command palette entry, which reads Hide amounts or Show amounts; and the `p` key. `p` is a bare key like `n` and `/`, so it is ignored while a field has focus or a dialog is open. The choice is `amountsHidden` in `jx-preferences`, kept per browser like the theme, so a laptop can keep it on while the desktop at home does not. The collection reads local storage when its module loads, so a reload renders hidden from the first paint.
+
+While it is on, an amount keeps its currency sign and its plus or minus sign and loses its digits: `€•••••` or `−€•••••` in English and `−••••• €` in Lithuanian. A compact chart axis loses its magnitude too, so `€1.2K` becomes `€•••••`. Investment prices and quantities are hidden as well, because together they give away a holding. The amounts inside translated sentences are hidden with them, because every one of them is formatted by the same hooks: the bell's texts, the unusual-amount badge, the refund mark, the "was" line of a comparison and the amount range chip of the ledger filters. When the bell falls back to the server's own message, because a notification carries no structured payload, every digit in it is masked, a date included.
+
+What stays visible:
+
+- percentages, exchange rates and the ratio of an investment split, because a ratio does not say how much money there is;
+- budget and goal meters and the shapes of charts, for the same reason;
+- form inputs, which keep their real values: opening an edit dialog is a deliberate look at one row, and a masked input cannot be edited;
+- raw text that the application does not format: bank descriptions, notes, the sample rows of the CSV column mapping and of the broker trade import, and the unread lines of a receipt review;
+- everything that leaves the screen on purpose: exports, emails, Discord messages and the monthly digest.
+
+The mode never turns itself on; only the member switches it.
 
 ## Navigation
 
@@ -50,7 +79,7 @@ Every page in the main navigation is a row of `navPages` in `lib/navigation.ts`,
 | Wealth | `/net-worth`, `/investments` | yes |
 | Settings | `/profile`, `/households`, `/users` (administrators), `/settings` (administrators, labelled "Installation") | no |
 
-`navEntries` in `lib/navigation.ts` folds the visible pages into one entry per hub, in the order of the table. The entry links to the hub's first visible page and is marked current when the path is inside any of its pages (`isPathIn`, so `/net-worth/debts/…` keeps Wealth current). A tabbed hub with a single visible page, such as Wealth with investments switched off, shows that page's own name and icon instead of the hub's. For a user the sidebar reads Dashboard, Transactions, Accounts, Categories, Plan, Wealth and Reports, with Settings at the bottom (`mt-auto`); the phone header and navigation strip, `MobileNav` in `components/app-sidebar/mobile-nav.tsx`, are built from the same entries. `useVisibleNav` in `src/hooks` gives both the pages the user may see, and `isPageEnabled` in `lib/navigation.ts` is the one feature-switch check that the sidebar and the hub tabs share. The user tile in the sidebar foot opens `AccountMenu` (`components/account-menu`): the profile, language and theme with their current values, keyboard shortcuts and sign-out. The phone header shows the same menu behind the initials.
+`navEntries` in `lib/navigation.ts` folds the visible pages into one entry per hub, in the order of the table. The entry links to the hub's first visible page and is marked current when the path is inside any of its pages (`isPathIn`, so `/net-worth/debts/…` keeps Wealth current). A tabbed hub with a single visible page, such as Wealth with investments switched off, shows that page's own name and icon instead of the hub's. For a user the sidebar reads Dashboard, Transactions, Accounts, Categories, Plan, Wealth and Reports, with Settings at the bottom (`mt-auto`); the phone header and navigation strip, `MobileNav` in `components/app-sidebar/mobile-nav.tsx`, are built from the same entries. `useVisibleNav` in `src/hooks` gives both the pages the user may see, and `isPageEnabled` in `lib/navigation.ts` is the one feature-switch check that the sidebar and the hub tabs share. The user tile in the sidebar foot opens `AccountMenu` (`components/account-menu`): the profile, the language, the theme and whether amounts are hidden with their current values, keyboard shortcuts and sign-out. The phone header shows the same menu behind the initials.
 
 `useHubTabs` in `components/hub-tabs` looks up the current path. When it is exactly a page of a tabbed hub and the hub has more than one visible page, `PageHeader` shows the hub's name in the `h1` instead of the page title, draws `HubTabs` (links with the page icons, `aria-current="page"` on the current one, `preload="render"` so the sibling tabs' code and queries load as soon as the strip appears) under the title row and drops the page's description line. Sub-routes such as `/net-worth/debts/$debtId` are not pages of a hub and keep their own title. Settings is not tabbed: its pages share `SettingsLayout` and a grouped section nav, described in [Installation settings](installation-settings.md#one-settings-page).
 
@@ -72,13 +101,14 @@ flowchart TD
     Which -->|"n"| New["/transactions?new=true opens the add dialog"]
     Which -->|"/"| Search["click data-shortcut=search, else go to transactions"]
     Which -->|"?"| Help["toggle the help dialog"]
+    Which -->|"p"| Privacy["hide or show amounts"]
     Which -->|"Mod+K"| Palette["open the command palette, or close it again"]
     Which -->|"g then a letter within 1.2 s"| Go["d dashboard, t transactions, a accounts, c categories, u rules,<br/>b budgets, o goals, l bills, w net worth, v investments, r reports,<br/>m month-end close, h households"]
 ```
 
 The go-to letters come from `navPages` in `lib/navigation.ts`, the table the sidebar is drawn from, so a page behind a switched-off feature has neither a navigation entry nor a working letter. A letter opens its page, not its hub: `g o` opens Goals directly on the Goals tab of Plan. `/profile`, `/users` and `/settings` have no letter.
 
-Saved filters, templates and Duplicate got no shortcut, and they are not in the help list. The scheme knows four actions — go to a route, focus the search box, toggle the help, open the palette — and every one of them is global. Duplicate needs a row the keyboard has no way to point at, because the ledger has no row cursor, and a saved filter or a template is a popover on one page rather than a destination with a URL. A shortcut for either would have to invent a fifth action kind and a page-local registry for two menus.
+Saved filters, templates and Duplicate got no shortcut, and they are not in the help list. The scheme knows five actions — go to a route, focus the search box, toggle the help, open the palette, hide or show amounts — and every one of them is global. Duplicate needs a row the keyboard has no way to point at, because the ledger has no row cursor, and a saved filter or a template is a popover on one page rather than a destination with a URL. A shortcut for either would have to invent another action kind and a page-local registry for two menus.
 
 Every signed-out screen is now excluded, not only `/login` and `/setup`: the password reset and address confirmation pages were pressing keys that would have bounced the reader off the page they arrived at from an email, and the palette in particular must not leave itself open behind a sign-in it never saw.
 
@@ -112,7 +142,7 @@ Pages come from one table in `frontend/src/features/command-palette/command-entr
 
 Records are the accounts, the categories and the tags the caller can see; choosing one opens the ledger filtered to it, which is the ledger's own `accountId`, `categoryId` and `tagIds` parameters and not a new screen. There is no server-side search: the three lists are the complete, already-paged-free lists the ledger page loads anyway, they are filtered in the browser, and an installation would have to reach thousands of accounts before that stopped being instant. Transactions are deliberately not searchable from here — that is a paged, filtered query the ledger already answers far better than a fifty-row list could.
 
-Actions are the ones that exist today and that the caller may run: a new transaction, a new transfer, a new account, "Close last month" while the `MonthClose` switch is on, a backup for an administrator, signing out, switching the theme, switching the language, and switching the active household. "Close last month" opens the dashboard on the latest ended month (`/?month=yyyy-MM`), where the [Month-end close](month-end-close.md) panel sits above the cards. The three create actions travel through the URL — `/transactions?new=true`, `/accounts?new=transfer` and `/accounts?new=account` — so the back button undoes them and the palette needs no handle on a dialog it does not own; the accounts page gained that `new` parameter for this, the way the transactions page already had one. The household entries are listed only while the switch is on and the caller has a membership, and the scope the caller is already in is left out rather than listed as a choice that would do nothing.
+Actions are the ones that exist today and that the caller may run: a new transaction, a new transfer, a new account, "Close last month" while the `MonthClose` switch is on, a backup for an administrator, signing out, switching the theme, switching the language, hiding or showing amounts, and switching the active household. "Close last month" opens the dashboard on the latest ended month (`/?month=yyyy-MM`), where the [Month-end close](month-end-close.md) panel sits above the cards. The three create actions travel through the URL — `/transactions?new=true`, `/accounts?new=transfer` and `/accounts?new=account` — so the back button undoes them and the palette needs no handle on a dialog it does not own; the accounts page gained that `new` parameter for this, the way the transactions page already had one. The household entries are listed only while the switch is on and the caller has a membership, and the scope the caller is already in is left out rather than listed as a choice that would do nothing.
 
 ```mermaid
 flowchart TD
@@ -121,7 +151,7 @@ flowchart TD
     Close --> Kind{"What was chosen"}
     Kind -->|"a page or a record"| Nav["Navigate to its route and search parameters"]
     Kind -->|"a create action"| Url["The same navigation with new=true, new=transfer or new=account"]
-    Kind -->|"theme or language"| Pref["savePreferences, the same call the account menu and Appearance make"]
+    Kind -->|"theme, language or amounts"| Pref["savePreferences, the same call the account menu and Appearance make"]
     Kind -->|"active household"| Scope["setActiveHousehold, then every query is invalidated"]
     Kind -->|"back up now"| Backup["POST /api/backups, with a toast"]
     Kind -->|"sign out"| Out["POST /api/auth/logout, clear the cache, go to /login"]

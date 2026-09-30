@@ -6,7 +6,7 @@ Related: feature page [Interface](../features/interface.md); architecture [Visua
 
 ### Design
 
-Neutral surfaces, compact controls, readable typography, semantic colors, mobile navigation; no external fonts. Two-way choices are segmented controls and category pickers are searchable comboboxes. Active ledger filters show as removable chips above the rows. Statement import opens from the ledger header and account rows as well as Settings
+Neutral surfaces, compact controls, readable typography, semantic colors, mobile navigation; no external fonts. Two-way choices are segmented controls and category pickers are searchable comboboxes. Active ledger filters show as removable chips above the rows. Statement import opens from the ledger header and account rows as well as Settings. Amounts can be hidden per browser: the formatter hooks replace the digits with `•••••` and keep the sign and the currency, while inputs and raw text keep their values
 
 ### Navigation
 
@@ -19,6 +19,10 @@ One dialog on `Mod+K` over every page: the pages and sections from a table besid
 ## Log
 
 Newest first. Each entry is a choice between real alternatives: what was chosen, what was rejected, and why.
+
+- **2026-09-30.** Hide amounts masks the formatted parts inside the formatter hooks (`useCurrencyFormat`, `usePriceFormat`, `useQuantityFormat`), keeps the sign and the currency, reads as plain bullets, and is a per-browser preference, `amountsHidden` in `jx-preferences`, switched by `p`
+  - Rejected: A CSS blur on amount elements; a `<Money>` wrapper at every call site; formatting `0` and masking that; an `aria-label` or visually hidden text per amount; a per-user setting on the server; the key `h` or a `Mod+` chord; masked form inputs with a reveal button; switching on by itself after a period without input
+  - Why: A blur leaves the number in the DOM, in copy and paste, in screen readers and in a screenshot at low blur, while every amount already goes through these hooks, translated sentences included, so one change covers them all. Formatting zero drops the minus sign, which `Intl` puts in a part of its own, and merging the run from the first to the last number part keeps Lithuanian compact output such as `1,2 tūkst. €` to one mask. `aria-label` on a generic `<span>` fails axe's `aria-prohibited-attr`, and hidden text in every amount component would touch dozens of cells for a mode meant for the screen. It protects a screen, not a person, like the theme and the rows per page. `h` is the second key of `g h`, and `Mod+K` stays the only chord. Editing is looking, and a timer would be the first in the interface where signing out serves a shared computer better
 
 - **2026-09-30.** A member's ledger page size is a per-browser preference, `pageSize` in `jx-preferences`, over the installation's `DefaultPageSize`
   - Rejected: A column on the user row with `PUT /api/users/me/page-size`, like the language; one page size per list across the whole application

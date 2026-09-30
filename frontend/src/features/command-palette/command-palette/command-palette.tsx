@@ -38,6 +38,7 @@ import {
   useCommandPaletteOpen,
   useCommandRecents,
 } from "@/stores/command-palette-store";
+import { toggleAmountsHidden, useAmountsHidden } from "@/stores/privacy-store";
 import { setTheme, useTheme } from "@/stores/theme-store";
 
 const PALETTE_STALE_MS = 5 * 60 * 1000;
@@ -69,6 +70,7 @@ function CommandPaletteContent({ onClose }: Readonly<ContentProps>) {
   const { features } = useSettings();
   const { theme } = useTheme();
   const { locale } = useLocale();
+  const amountsHidden = useAmountsHidden();
   const activeHouseholdId = useActiveHouseholdId();
   const recents = useCommandRecents();
 
@@ -96,6 +98,7 @@ function CommandPaletteContent({ onClose }: Readonly<ContentProps>) {
     isAdmin: me.data?.role === UserRole.admin,
     theme,
     locale,
+    amountsHidden,
     activeHouseholdId,
     accounts: accounts.data ?? [],
     categories: categories.data ?? [],
@@ -120,6 +123,10 @@ function CommandPaletteContent({ onClose }: Readonly<ContentProps>) {
       }
       case "locale": {
         setLocale(target.locale);
+        break;
+      }
+      case "amounts": {
+        toggleAmountsHidden();
         break;
       }
       case "household": {

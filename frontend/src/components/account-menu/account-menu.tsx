@@ -1,6 +1,16 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { ChevronsUpDown, Keyboard, Languages, LogOut, Moon, Sun, UserRound } from "lucide-react";
+import {
+  ChevronsUpDown,
+  Eye,
+  EyeOff,
+  Keyboard,
+  Languages,
+  LogOut,
+  Moon,
+  Sun,
+  UserRound,
+} from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useLogout, useMeSuspense } from "@/api/generated";
 import {
@@ -14,6 +24,7 @@ import {
 import { endSession } from "@/lib/auth-gate";
 import { cn } from "@/lib/utils";
 import { localeNames, nextLocale, useLocale } from "@/stores/app-store";
+import { toggleAmountsHidden, useAmountsHidden } from "@/stores/privacy-store";
 import { setShortcutsHelpOpen } from "@/stores/shortcuts-help-store";
 import { useTheme } from "@/stores/theme-store";
 
@@ -49,6 +60,7 @@ export function AccountMenu({
   const me = useMeSuspense();
   const { locale, setLocale } = useLocale();
   const { theme, toggleTheme } = useTheme();
+  const amountsHidden = useAmountsHidden();
   const name = me.data?.displayName || t("nav.profile");
   const email = me.data?.email;
 
@@ -111,6 +123,15 @@ export function AccountMenu({
           {t("appearance.theme")}
           <span className="ml-auto text-xs text-muted-foreground">
             {t(`appearance.themes.${theme}`)}
+          </span>
+        </MenuItem>
+        <MenuItem closeOnClick={false} onClick={toggleAmountsHidden}>
+          {amountsHidden ? <EyeOff /> : <Eye />}
+          {t("appearance.amounts")}
+          <span className="ml-auto text-xs text-muted-foreground">
+            {t(
+              amountsHidden ? "appearance.amountsStates.hidden" : "appearance.amountsStates.shown",
+            )}
           </span>
         </MenuItem>
         <MenuItem className="pointer-coarse:hidden" onClick={() => setShortcutsHelpOpen(true)}>

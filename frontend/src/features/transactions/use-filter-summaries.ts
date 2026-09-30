@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import type { TagResponse } from "@/api/generated/model";
-import { useDate, useIsoDate, useMonthName, useNumberFormat } from "@/hooks/use-formatters";
+import { useDate, useIsoDate, useMaskedNumber, useMonthName } from "@/hooks/use-formatters";
 import { monthBounds, parseIso } from "@/lib/calendar";
 import { nameById } from "@/lib/options";
 import type { TransactionFilters } from "./use-transaction-filters";
@@ -24,7 +24,7 @@ export function useFilterSummaries(
   const date = useDate();
   const formatIso = useIsoDate();
   const formatMonth = useMonthName();
-  const amount = useNumberFormat({ minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const amount = useMaskedNumber({ minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const tagNames = nameById(tags);
 
   function dateValue() {

@@ -17,6 +17,7 @@ import { RoutePending } from "@/components/route-pending/route-pending";
 import { Skeleton } from "@/components/ui/skeleton/skeleton";
 import { Toaster } from "@/components/ui/sonner/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip/tooltip";
+import { TransactionAmount } from "@/features/transactions/transaction-amount/transaction-amount";
 import { transactionsSearchSchema } from "@/features/transactions/transaction-queries";
 import { clearTransactionViews } from "@/features/transactions/transaction-views";
 import { setAuthenticated, setSetupNeeded } from "@/lib/auth-gate";
@@ -31,6 +32,7 @@ import { profileSearchSchema } from "@/routes/profile";
 import { reportsSearchSchema } from "@/routes/reports";
 import { settingsSearchSchema } from "@/routes/settings";
 import { usersSearchSchema } from "@/routes/users";
+import { longDescriptionTransaction } from "@/storybook/fixtures";
 
 const STORY_ROUTES = [
   { path: "/", validateSearch: dashboardSearchSchema },
@@ -86,6 +88,17 @@ export function withWidth(size: StoryWidth | (string & {})): Decorator {
       </div>
     );
   };
+}
+
+export const SAMPLE_AMOUNT = "−€249.00";
+
+export function withSampleAmount(...[Story]: Parameters<Decorator>) {
+  return (
+    <div className="flex flex-col items-start gap-4">
+      <TransactionAmount transaction={longDescriptionTransaction} />
+      <Story />
+    </div>
+  );
 }
 
 export function withPageFrame(...[Story]: Parameters<Decorator>) {

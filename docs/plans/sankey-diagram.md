@@ -1,6 +1,6 @@
 # Plan: Sankey diagram of the report period
 
-Status: planned 2026-09-30, reviewed against the code the same day. Size S. Frontend only: no endpoint, no migration and no feature switch, because every number it draws is already in `GET /api/reports/summary`. Build after nothing; if [privacy mode](privacy-mode.md) lands first, the labels go through the masked formatter like every other amount.
+Status: planned 2026-09-30, reviewed against the code the same day. Size S. Frontend only: no endpoint, no migration and no feature switch, because every number it draws is already in `GET /api/reports/summary`. Build after nothing; [Hide amounts](../features/interface.md#hide-amounts) shipped on 2026-09-30, so the labels go through the masked formatter like every other amount.
 
 ## Outcome
 

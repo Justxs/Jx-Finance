@@ -9,6 +9,7 @@ import {
 import type { TranslationKey } from "@/lib/i18n";
 import { PUBLIC_PATHS, type RoutePath, navPages } from "@/lib/navigation";
 import type { FeatureKey } from "@/lib/settings";
+import { toggleAmountsHidden } from "@/stores/privacy-store";
 
 export const PREFIX_TIMEOUT_MS = 1200;
 
@@ -25,7 +26,8 @@ type ShortcutAction =
   | { type: "navigate"; to: RoutePath; search?: Record<string, unknown> }
   | { type: "search" }
   | { type: "help" }
-  | { type: "palette" };
+  | { type: "palette" }
+  | { type: "privacy" };
 
 export interface Shortcut {
   id: string;
@@ -80,6 +82,13 @@ export const shortcuts: readonly Shortcut[] = [
     labelKey: "shortcuts.help",
     group: "actions",
     action: { type: "help" },
+  },
+  {
+    id: "privacy",
+    keys: ["p"],
+    labelKey: "shortcuts.privacy",
+    group: "actions",
+    action: { type: "privacy" },
   },
   ...navPages.flatMap((page) =>
     "shortcut" in page
@@ -201,6 +210,11 @@ export function registerShortcuts(target: ShortcutRouter, runtime: Partial<Short
 
     if (isHelpOpen()) {
       runtime.toggleHelp?.();
+    }
+
+    if (action.type === "privacy") {
+      toggleAmountsHidden();
+      return;
     }
 
     if (action.type === "palette") {

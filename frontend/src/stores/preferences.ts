@@ -39,6 +39,7 @@ const preferencesSchema = z.object({
   activeHouseholdId: z.uuid().optional().catch(undefined),
   commandRecents: z.array(z.string()).max(COMMAND_RECENTS_MAX).optional().catch(undefined),
   supportLinkHidden: z.boolean().catch(false),
+  amountsHidden: z.boolean().catch(false),
   pageSize: z
     .union(pageSizes.map((size) => z.literal(size)))
     .optional()

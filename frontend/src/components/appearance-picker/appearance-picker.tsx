@@ -1,4 +1,4 @@
-import { Moon, Sun } from "lucide-react";
+import { Eye, EyeOff, Moon, Sun } from "lucide-react";
 import { type ComponentProps, type ReactNode, useId } from "react";
 import { useTranslation } from "react-i18next";
 import { TitledSection } from "@/components/ui/section/section";
@@ -6,6 +6,7 @@ import { useSettings } from "@/hooks/use-settings";
 import { cn } from "@/lib/utils";
 import { localeNames, useLocale } from "@/stores/app-store";
 import { locales, pageSizes, savePreferences, usePreferences } from "@/stores/preferences";
+import { useAmountsHidden } from "@/stores/privacy-store";
 import {
   fonts,
   palettes,
@@ -18,6 +19,8 @@ import {
 } from "@/stores/theme-store";
 
 const sampleSizes = { small: "text-xs", default: "text-base", large: "text-xl" };
+
+const amountStates = ["shown", "hidden"] as const;
 
 interface ChoiceGroupProps<T extends string> extends Pick<
   ComponentProps<"div">,
@@ -130,6 +133,7 @@ export function AppearancePicker() {
   const { palette, setPalette } = usePalette();
   const { font, setFont } = useFont();
   const { textSize, setTextSize } = useTextSize();
+  const amountsHidden = useAmountsHidden();
 
   return (
     <>
@@ -183,6 +187,22 @@ export function AppearancePicker() {
               {option}
             </span>
           )}
+        />
+        <ChoiceGroup
+          name="amounts"
+          heading={t("appearance.amounts")}
+          className="mt-6"
+          options={amountStates}
+          value={amountsHidden ? "hidden" : "shown"}
+          onChange={(option) => savePreferences({ amountsHidden: option === "hidden" })}
+          optionLabel={(option) => t(`appearance.amountsStates.${option}`)}
+          renderSample={(option) =>
+            option === "hidden" ? (
+              <EyeOff aria-hidden="true" className="size-4 shrink-0" />
+            ) : (
+              <Eye aria-hidden="true" className="size-4 shrink-0" />
+            )
+          }
         />
       </TitledSection>
       <TitledSection title={t("typography.title")} description={t("typography.hint")}>

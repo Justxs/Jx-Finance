@@ -1,6 +1,7 @@
 import { createSequenceMatcher } from "@tanstack/react-hotkeys";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, test, vi } from "vitest";
+import { readPreferences, savePreferences } from "@/stores/preferences";
 import type { FeatureKey } from "./settings";
 import {
   PREFIX_TIMEOUT_MS,
@@ -35,6 +36,7 @@ describe("key map", () => {
       "new-transaction": ["N"],
       search: ["/"],
       help: [{ key: "?", shift: true }],
+      privacy: ["P"],
     });
   });
 
@@ -160,6 +162,7 @@ describe("registerShortcuts", () => {
     unregister?.();
     unregister = undefined;
     document.body.innerHTML = "";
+    savePreferences({ amountsHidden: false });
   });
 
   test("n opens the new transaction dialog through the URL", async () => {
@@ -268,6 +271,33 @@ describe("registerShortcuts", () => {
     await user.keyboard("/");
 
     expect(navigate).toHaveBeenCalledExactlyOnceWith({ to: "/transactions" });
+  });
+
+  test("p hides amounts and shows them again", async () => {
+    const { navigate, user } = setup();
+
+    await user.keyboard("p");
+    expect(readPreferences().amountsHidden).toBe(true);
+
+    await user.keyboard("p");
+    expect(readPreferences().amountsHidden).toBe(false);
+    expect(navigate).not.toHaveBeenCalled();
+  });
+
+  test("p is ignored in a field and while a dialog is open", async () => {
+    const { user } = setup();
+    const input = document.createElement("input");
+    document.body.replaceChildren(input);
+    await user.click(input);
+    await user.keyboard("p");
+
+    expect(readPreferences().amountsHidden).toBe(false);
+    expect(input).toHaveValue("p");
+
+    document.body.innerHTML = '<div role="dialog"></div>';
+    await user.keyboard("p");
+
+    expect(readPreferences().amountsHidden).toBe(false);
   });
 
   test("typing in a field is left alone", async () => {

@@ -3,6 +3,8 @@ import { enUS, lt } from "react-day-picker/locale";
 import { afterEach, describe, expect, test } from "vitest";
 import { type CurrenciesResponse, Currency } from "@/api/generated/model";
 import { i18n } from "@/lib/i18n";
+import { AMOUNT_MASK } from "@/lib/mask-amount";
+import { savePreferences } from "@/stores/preferences";
 import { createQueryWrapper, plain } from "@/test/query";
 import { settingsFixture } from "@/test/settings";
 import { useReportingCurrency, useUsableCurrencies } from "./use-currencies";
@@ -15,6 +17,7 @@ import {
   useDateTime,
   useIsoDate,
   signed,
+  useMaskedNumber,
   useDateFormat,
   useMoney,
   useNumberFormat,
@@ -215,5 +218,85 @@ describe("short formats", () => {
   test("useNumberFormat groups digits and caps decimals on request", () => {
     expect(hook(() => useNumberFormat()).format(12345)).toBe("12,345");
     expect(hook(() => useNumberFormat({ maximumFractionDigits: 1 })).format(1.26)).toBe("1.3");
+  });
+});
+
+function hideAmounts(hidden = true) {
+  savePreferences({ amountsHidden: hidden });
+}
+
+function masks(text: string) {
+  return text.split(AMOUNT_MASK).length - 1;
+}
+
+describe("hidden amounts", () => {
+  afterEach(() => {
+    hideAmounts(false);
+  });
+
+  test("English keeps the currency before the mask and the minus sign", () => {
+    hideAmounts();
+    const money = hook(() => useMoney());
+
+    expect(money.format(1234.5)).toBe(`€${AMOUNT_MASK}`);
+    expect(money.format(-1234.5)).toBe(`-€${AMOUNT_MASK}`);
+    expect(money.format(10, "usd")).toBe(`$${AMOUNT_MASK}`);
+    expect(money.formatSigned(12)).toBe(`+€${AMOUNT_MASK}`);
+    expect(money.formatSigned(-12)).toBe(`−€${AMOUNT_MASK}`);
+  });
+
+  test("Lithuanian keeps the currency after the mask and the minus sign", async () => {
+    await i18n.changeLanguage("lt");
+    hideAmounts();
+    const money = hook(() => useMoney());
+
+    expect(plain(money.format(1234.5))).toBe(`${AMOUNT_MASK} €`);
+    expect(plain(money.format(-1234.5))).toBe(`−${AMOUNT_MASK} €`);
+    expect(plain(money.formatSigned(-12))).toBe(`−${AMOUNT_MASK} €`);
+  });
+
+  test("compact values give exactly one mask and lose their suffix", async () => {
+    hideAmounts();
+    const english = hook(() => useAxisMoney());
+
+    expect(english.format(1500)).toBe(`€${AMOUNT_MASK}`);
+    expect(english.format(-2_000_000)).toBe(`-€${AMOUNT_MASK}`);
+
+    await i18n.changeLanguage("lt");
+    const lithuanian = hook(() => useAxisMoney());
+
+    for (const value of [1500, -1500, 2_000_000]) {
+      const text = plain(lithuanian.format(value));
+      expect(masks(text)).toBe(1);
+      expect(text).toMatch(/ €$/u);
+      expect(text).not.toMatch(/tūkst|mln/u);
+    }
+  });
+
+  test("prices, quantities and masked numbers are hidden", () => {
+    hideAmounts();
+
+    expect(hook(() => usePriceFormat())(98.4, "eur")).toBe(`€${AMOUNT_MASK}`);
+    expect(hook(() => useQuantityFormat()).format(1200)).toBe(AMOUNT_MASK);
+    expect(hook(() => useMaskedNumber()).format(-3.5)).toBe(`-${AMOUNT_MASK}`);
+  });
+
+  test("ratios, percentages and plain numbers stay visible", () => {
+    hideAmounts();
+
+    expect(hook(() => usePercent()).format(0.456)).toBe("46%");
+    expect(hook(() => useRatePercent())(3.5)).toBe("3.5%");
+    expect(hook(() => useNumberFormat()).format(12345)).toBe("12,345");
+  });
+
+  test("with the mode off every output is what it was", () => {
+    hideAmounts();
+    hideAmounts(false);
+
+    expect(hook(() => useMoney()).format(-1234.5)).toBe("-€1,234.50");
+    expect(hook(() => useAxisMoney()).format(1500)).toBe("€1.5K");
+    expect(hook(() => usePriceFormat())(0.12345, "usd")).toBe("$0.1235");
+    expect(hook(() => useQuantityFormat()).format(0.123456789)).toBe("0.12345679");
+    expect(hook(() => useMaskedNumber({ minimumFractionDigits: 2 })).format(5)).toBe("5.00");
   });
 });

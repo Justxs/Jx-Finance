@@ -29,11 +29,13 @@ import { useDate, useMoney, useMonthName, useNumberFormat } from "@/hooks/use-fo
 import { useSettings } from "@/hooks/use-settings";
 import { unreadParams } from "@/lib/app-shell";
 import { monthKeyOfIso, parseIso } from "@/lib/calendar";
+import { maskDigits } from "@/lib/mask-amount";
 import { pendingId } from "@/lib/mutations";
 import { sidebarRowClass } from "@/lib/navigation";
 import { optimisticRemoval, optimisticUpdate } from "@/lib/optimistic";
 import type { FeatureKey } from "@/lib/settings";
 import { cn } from "@/lib/utils";
+import { useAmountsHidden } from "@/stores/privacy-store";
 
 type SidebarState = "expanded" | "collapsed";
 
@@ -131,6 +133,7 @@ export function NotificationBell({ sidebar }: Readonly<Props>) {
   const factorFormat = useNumberFormat({ maximumFractionDigits: 1 });
   const monthName = useMonthName();
   const features = useSettings().features;
+  const amountsHidden = useAmountsHidden();
   const [open, setOpen] = useState(false);
 
   const unreadKey = getNotificationsQueryKey(unreadParams);
@@ -152,10 +155,14 @@ export function NotificationBell({ sidebar }: Readonly<Props>) {
     }),
   });
 
+  function serverMessage(notification: NotificationResponse) {
+    return amountsHidden ? maskDigits(notification.message) : notification.message;
+  }
+
   function describeBudget(notification: NotificationResponse) {
     const { thresholdPercent, period } = notification.payload;
     if (!period) {
-      return notification.message;
+      return serverMessage(notification);
     }
 
     const periodName = t(`budgets.periods.${period}`);
@@ -174,7 +181,7 @@ export function NotificationBell({ sidebar }: Readonly<Props>) {
         const due = dueDate ? parseIso(dueDate) : null;
         return due
           ? t(`notifications.billDue.${shape ?? "expense"}`, { date: date.format(due) })
-          : notification.message;
+          : serverMessage(notification);
       }
       case "unusualAmount":
         return amount && typicalAmount && factor
@@ -183,25 +190,25 @@ export function NotificationBell({ sidebar }: Readonly<Props>) {
               typical: money.format(Number(typicalAmount), inCurrency),
               factor: factorFormat.format(factor),
             })
-          : notification.message;
+          : serverMessage(notification);
       case "unusualAmounts":
-        return count ? t("notifications.unusualAmounts", { count }) : notification.message;
+        return count ? t("notifications.unusualAmounts", { count }) : serverMessage(notification);
       case "recurringPriceRise":
         return amount && typicalAmount
           ? t("notifications.recurringPriceRise", {
               amount: money.format(Number(amount), inCurrency),
               expected: money.format(Number(typicalAmount), inCurrency),
             })
-          : notification.message;
+          : serverMessage(notification);
       case "monthReadyToClose":
         return month
           ? t("notifications.monthReadyToClose", { month: monthName(month) })
-          : notification.message;
+          : serverMessage(notification);
       case "warrantyExpiring": {
         const warrantyUntil = dueDate ? parseIso(dueDate) : null;
         return warrantyUntil
           ? t("notifications.warrantyExpiring", { date: date.format(warrantyUntil) })
-          : notification.message;
+          : serverMessage(notification);
       }
       case "lowBalance": {
         const belowZeroOn = dueDate ? parseIso(dueDate) : null;
@@ -210,7 +217,7 @@ export function NotificationBell({ sidebar }: Readonly<Props>) {
               date: date.format(belowZeroOn),
               amount: money.format(Number(amount), inCurrency),
             })
-          : notification.message;
+          : serverMessage(notification);
       }
       case "monthlyDigest":
         return digest
@@ -219,7 +226,7 @@ export function NotificationBell({ sidebar }: Readonly<Props>) {
               expense: money.format(Number(digest.expense), digest.currency),
               net: money.format(Number(digest.net), digest.currency),
             })
-          : notification.message;
+          : serverMessage(notification);
       default:
         return describeBudget(notification);
     }

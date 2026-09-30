@@ -682,7 +682,7 @@
   },
   "appearance": {
     "title": "Išvaizda",
-    "hint": "Tema, spalvos ir kalba taikomos tik šioje naršyklėje. Temą ir kalbą taip pat galima perjungti paskyros meniu šoninės juostos apačioje.",
+    "hint": "Tema, spalvos, kalba ir paslėptos sumos taikomos tik šioje naršyklėje. Temą, kalbą ir sumas taip pat galima perjungti paskyros meniu šoninės juostos apačioje.",
     "theme": "Tema",
     "themes": {
       "light": "Šviesi",
@@ -690,6 +690,11 @@
     },
     "palette": "Spalvos",
     "language": "Kalba",
+    "amounts": "Sumos",
+    "amountsStates": {
+      "shown": "Rodomos",
+      "hidden": "Paslėptos"
+    },
     "palettes": {
       "ledger": "Tamsiai mėlyna",
       "plum": "Slyvinė",
@@ -1181,7 +1186,8 @@
     "then": "tada",
     "newTransaction": "Nauja operacija",
     "search": "Ieškoti operacijų",
-    "help": "Rodyti sparčiuosius klavišus"
+    "help": "Rodyti sparčiuosius klavišus",
+    "privacy": "Slėpti arba rodyti sumas"
   },
   "commandPalette": {
     "title": "Komandų paletė",
@@ -1200,7 +1206,9 @@
       "dark": "Perjungti į tamsią temą",
       "light": "Perjungti į šviesią temą"
     },
-    "closeLastMonth": "Uždaryti praėjusį mėnesį"
+    "closeLastMonth": "Uždaryti praėjusį mėnesį",
+    "hideAmounts": "Slėpti sumas",
+    "showAmounts": "Rodyti sumas"
   },
   "goals": {
     "title": "Tikslai",

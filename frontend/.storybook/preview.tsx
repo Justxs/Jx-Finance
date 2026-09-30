@@ -4,6 +4,7 @@ import type { Preview } from "@storybook/react-vite";
 import { I18nextProvider } from "react-i18next";
 import { configure } from "storybook/test";
 import { i18n } from "../src/lib/i18n";
+import { savePreferences } from "../src/stores/preferences";
 import { disposeStoryState, withAppProviders } from "../src/storybook/decorators";
 import { handlers } from "../src/storybook/handlers";
 import { mockWorkerLoader } from "./mock-worker";
@@ -18,6 +19,10 @@ const preview: Preview = {
         await i18n.changeLanguage(context.globals.locale);
       }
       return {};
+    },
+    function amountsLoader(context) {
+      savePreferences({ amountsHidden: context.globals.amounts === "hidden" });
+      return Promise.resolve({});
     },
   ],
   beforeEach() {
@@ -35,8 +40,19 @@ const preview: Preview = {
         dynamicTitle: true,
       },
     },
+    amounts: {
+      description: "Amounts",
+      toolbar: {
+        icon: "eye",
+        items: [
+          { value: "shown", title: "Amounts shown" },
+          { value: "hidden", title: "Amounts hidden" },
+        ],
+        dynamicTitle: true,
+      },
+    },
   },
-  initialGlobals: { locale: "en" },
+  initialGlobals: { locale: "en", amounts: "shown" },
   parameters: {
     layout: "centered",
     a11y: { test: "error" },

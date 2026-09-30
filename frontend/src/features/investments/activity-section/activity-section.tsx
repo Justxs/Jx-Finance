@@ -18,7 +18,13 @@ import { ACTIVITY_PAGE_SIZE, activityParams } from "@/features/investments/inves
 import { entryTypes, isTrade } from "@/features/investments/investment-types";
 import { useConfirmedDelete } from "@/hooks/use-confirmed-delete";
 import { useDeferredParams } from "@/hooks/use-deferred-params";
-import { useIsoDate, useMoney, usePriceFormat, useQuantityFormat } from "@/hooks/use-formatters";
+import {
+  useIsoDate,
+  useMoney,
+  useNumberFormat,
+  usePriceFormat,
+  useQuantityFormat,
+} from "@/hooks/use-formatters";
 import { usePageClamp } from "@/hooks/use-paged-list";
 import { nameById, optionsOf } from "@/lib/options";
 import { INCOME_TONE } from "@/lib/tone";
@@ -35,6 +41,7 @@ export function ActivitySection({ accounts, accountId }: Readonly<Props>) {
   const formatDate = useIsoDate();
   const formatPrice = usePriceFormat();
   const quantityFormat = useQuantityFormat();
+  const ratioFormat = useNumberFormat({ minimumFractionDigits: 0, maximumFractionDigits: 8 });
 
   const [type, setType] = useState<InvestmentTransactionType | "">("");
   const [page, setPage] = useState(1);
@@ -62,7 +69,7 @@ export function ActivitySection({ accounts, accountId }: Readonly<Props>) {
 
     return entry.type === "split"
       ? t("investments.activity.splitRatio", {
-          ratio: quantityFormat.format(Number(entry.quantity)),
+          ratio: ratioFormat.format(Number(entry.quantity)),
         })
       : null;
   }

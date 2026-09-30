@@ -17,6 +17,7 @@ export type CommandTarget =
   | { kind: "navigate"; link: LinkOptions }
   | { kind: "theme"; theme: Theme }
   | { kind: "locale"; locale: Locale }
+  | { kind: "amounts" }
   | { kind: "household"; householdId: string | undefined }
   | { kind: "backup" }
   | { kind: "signOut" };
@@ -156,6 +157,7 @@ export interface CommandSources {
   isAdmin: boolean;
   theme: Theme;
   locale: Locale;
+  amountsHidden: boolean;
   activeHouseholdId: string | undefined;
   accounts: readonly AccountResponse[];
   categories: readonly CategoryResponse[];
@@ -186,7 +188,17 @@ function pageEntries({ t, features, isAdmin }: CommandSources): CommandEntry[] {
 }
 
 function actionEntries(sources: CommandSources): CommandEntry[] {
-  const { t, features, isAdmin, theme, locale, activeHouseholdId, households, lastMonth } = sources;
+  const {
+    t,
+    features,
+    isAdmin,
+    theme,
+    locale,
+    amountsHidden,
+    activeHouseholdId,
+    households,
+    lastMonth,
+  } = sources;
   const run = t("commandPalette.run");
 
   function action(
@@ -225,6 +237,13 @@ function actionEntries(sources: CommandSources): CommandEntry[] {
       t("commandPalette.language"),
       { kind: "locale", locale: nextLocale[locale] },
       t("commandPalette.language"),
+    ),
+    action(
+      "amounts",
+      t(amountsHidden ? "commandPalette.showAmounts" : "commandPalette.hideAmounts"),
+      t("appearance.amounts"),
+      { kind: "amounts" },
+      t("appearance.amounts"),
     ),
   ];
 
