@@ -6,6 +6,12 @@ The table is in the suggested build order. Each plan's `Status:` line names what
 
 | Plan | Size | Where it lives | Build after |
 | --- | --- | --- | --- |
+| [Privacy mode](privacy-mode.md) | S, frontend only | Account menu, Appearance, command palette, the `p` key; every formatted amount | Nothing |
+| [Sankey diagram](sankey-diagram.md) | S, frontend only | Reports | Nothing; uses the privacy mask if that landed first |
+| [Spreading a payment across months](spread-over-months.md) | M | Transaction form, ledger chip; reports, dashboard, budgets and month close read the slices | Nothing |
+| [Double-entry journal](double-entry-journal.md) | M, an export rather than a storage rewrite | The member export zip (`ledger.beancount`) | Nothing |
+| [Transaction locations](transaction-locations.md) | M for places; L and gated for the map | Transaction form, receipt reading, ledger filters, Reports | Stripping of attachment metadata on upload; two months of places for the map |
+| [Transaction groups](transaction-groups.md) | M to L, gated | Ledger, through a new ledger endpoint | The daily-use trial showing that tags and splits do not cover it |
 | [Machine-learned categorization](machine-learned-categorization.md) | L, gated; model and `--evaluate-categorizer` built, gate not measured yet | Import review, transaction form, ledger | Six months of real data, then running the evaluation on the owner's ledger |
 
 ## Changes to shared code
