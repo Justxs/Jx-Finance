@@ -13,4 +13,8 @@ export interface ReceiptReadingResponse {
   cached: boolean;
   result: ReceiptResultResponse;
   candidates: ReceiptCandidateResponse[];
+  /** @nullable */
+  photoLatitude?: number | null;
+  /** @nullable */
+  photoLongitude?: number | null;
 }

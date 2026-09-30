@@ -462,7 +462,7 @@ public sealed class NetWorthService(
             (known.Contains(t.Description, StringComparer.OrdinalIgnoreCase) ? 2 : 0)
             + (regular is { } amount && t.Amount.Currency == debt.Currency && Math.Abs(t.Amount.Amount - amount) <= amount * 0.05m ? 1 : 0);
 
-        return candidates.OrderByDescending(Score).Take(50).Select(t => t.ToResponse(null).WithoutUnusual()).ToList();
+        return candidates.OrderByDescending(Score).Take(50).Select(t => t.ToResponse(null).WithoutUnusual().WithoutPlace()).ToList();
     }
 
     public async Task<NetWorthResponse> GetCurrentAsync(CancellationToken cancellationToken)

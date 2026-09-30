@@ -9,6 +9,7 @@ import {
 import {
   createTransactionBodyDescriptionMax,
   createTransactionBodyNoteMax,
+  createTransactionBodyPlaceMax,
 } from "@/api/schemas/transactions/transactions.zod";
 import {
   isSpreadValid,
@@ -51,6 +52,9 @@ interface TransactionFormFields {
   date: string;
   description: string;
   note: string;
+  place: string;
+  latitude: number | null;
+  longitude: number | null;
   isSplit: boolean;
   lines: LineFormValue[];
   tagIds: string[];
@@ -72,6 +76,9 @@ export function transactionSchema(t: Translate, formatMoney: FormatMoney) {
       date: requiredValue(t),
       description: optionalText(t, createTransactionBodyDescriptionMax),
       note: optionalText(t, createTransactionBodyNoteMax),
+      place: optionalText(t, createTransactionBodyPlaceMax),
+      latitude: z.number().nullable(),
+      longitude: z.number().nullable(),
       isSplit: z.boolean(),
       tagIds: z.array(z.string()),
       refundOf: z.custom<TransactionRefundOfResponse | null>(),
@@ -136,6 +143,9 @@ export function defaultFormFields(
     date: source.date ?? today,
     description: source.description ?? "",
     note: source.note ?? "",
+    place: source.place ?? "",
+    latitude: source.latitude ?? null,
+    longitude: source.longitude ?? null,
     isSplit: !refund && (source.isSplit ?? false),
     tagIds: source.tagIds ?? [],
     refundOf: refund ? (source.refundOf ?? null) : null,
@@ -163,6 +173,9 @@ export function toSubmittedValues(value: TransactionFormFields): TransactionForm
     date: value.date,
     description: value.description.trim() || null,
     note: value.note.trim() || null,
+    place: value.place.trim() || null,
+    latitude: value.latitude,
+    longitude: value.longitude,
     tagIds: value.tagIds,
     refundOfTransactionId: refund ? (value.refundOf?.id ?? null) : null,
     spreadMonths: spreads(value) ? spreadMonthsOf(value) : null,

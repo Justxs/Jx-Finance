@@ -11,5 +11,6 @@ public sealed record SpreadSlice(
     FlowType Type,
     CategoryId? CategoryId,
     string? PayeeKey,
+    string? Place,
     IReadOnlyList<TagId> TagIds,
     decimal Amount);

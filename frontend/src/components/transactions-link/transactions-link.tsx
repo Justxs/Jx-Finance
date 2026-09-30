@@ -9,6 +9,7 @@ interface TransactionsFilter {
   categoryId?: string;
   tagIds?: string;
   payee?: string;
+  place?: string;
   type?: FlowType;
   dateFrom?: string;
   dateTo?: string;

@@ -62,7 +62,7 @@ public sealed class ReceiptService(
 
         if (!source.Force && await StoredReadingAsync(file.Sha256, cancellationToken) is { } stored)
         {
-            return await ToResponseAsync(stored, cached: true, source, cancellationToken);
+            return await ToResponseAsync(stored, cached: true, source, file.Position, cancellationToken);
         }
 
         var prepared = ReceiptImage.Prepare(file.Content, file.ContentType);
@@ -104,7 +104,7 @@ public sealed class ReceiptService(
             .Where(r => r.Sha256 == file.Sha256 && r.Status == ReceiptReadingStatus.Read && r.Id != reading.Id)
             .ExecuteDeleteAsync(cancellationToken);
 
-        return await ToResponseAsync(reading, cached: false, source, cancellationToken);
+        return await ToResponseAsync(reading, cached: false, source, file.Position, cancellationToken);
     }
 
     public async Task<Result> UpdateCategoriesAsync(
@@ -240,12 +240,13 @@ public sealed class ReceiptService(
             return contentType.Error;
         }
 
+        var position = PhotoLocation.Read(bytes, detected);
         if (!AttachmentImage.WithoutMetadata(bytes, detected).TryGetValue(out var file))
         {
             return ReceiptErrors.Unsupported;
         }
 
-        return new ReceiptFile(file.Content, file.ContentType, Convert.ToHexStringLower(SHA256.HashData(file.Content)));
+        return new ReceiptFile(file.Content, file.ContentType, Convert.ToHexStringLower(SHA256.HashData(file.Content)), position);
     }
 
     private Task<ReceiptReading?> StoredReadingAsync(string sha256, CancellationToken cancellationToken) =>
@@ -322,14 +323,16 @@ public sealed class ReceiptService(
         ReceiptReading reading,
         bool cached,
         ReceiptSource source,
+        PhotoPosition? position,
         CancellationToken cancellationToken)
     {
         var result = reading.Result!;
+        var shown = store.Current.IsEnabled(Feature.Locations) ? position : null;
         IReadOnlyList<ReceiptCandidateResponse> candidates = source.AttachmentId is null
             && result is { Total: > 0 and var total, Date: { } date }
             ? await CandidatesAsync(total, result.Currency, date, cancellationToken)
             : [];
-        return new ReceiptReadingResponse(reading.Id.Value, cached, result.ToResponse(), candidates);
+        return new ReceiptReadingResponse(reading.Id.Value, cached, result.ToResponse(), candidates, shown?.Latitude, shown?.Longitude);
     }
 
     private async Task<IReadOnlyList<ReceiptCandidateResponse>> CandidatesAsync(
@@ -360,5 +363,5 @@ public sealed class ReceiptService(
         ];
     }
 
-    private sealed record ReceiptFile(byte[] Content, string ContentType, string Sha256);
+    private sealed record ReceiptFile(byte[] Content, string ContentType, string Sha256, PhotoPosition? Position = null);
 }

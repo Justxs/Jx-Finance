@@ -21,4 +21,5 @@ export interface FeatureFlags {
   monthClose: boolean;
   receiptReading: boolean;
   apiTokens: boolean;
+  locations: boolean;
 }

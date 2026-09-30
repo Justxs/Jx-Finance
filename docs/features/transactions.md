@@ -6,7 +6,7 @@ Backend `Transactions`, page `/transactions`. One `Filtered` method builds the q
 
 ```mermaid
 flowchart TD
-    Url["Search params<br/>text, payee, account, category, tags, type, dateFrom, dateTo, amountMin, amountMax, unusual, uncategorized, spreadOverlap, sort, direction, page"] --> Defer["useDeferredParams"]
+    Url["Search params<br/>text, payee, place, account, category, tags, type, dateFrom, dateTo, amountMin, amountMax, unusual, uncategorized, spreadOverlap, sort, direction, page"] --> Defer["useDeferredParams"]
     Defer --> List["GET /api/transactions"]
     Defer --> Summary["GET /api/transactions/summary"]
     Url --> Csv["GET /api/transactions/export"]
@@ -107,6 +107,10 @@ While `MonthClose` is on, the create and edit dialogs of a transaction and a cur
 Since 2026-09-30 a transaction carries `Note` beside `Description`: up to 1000 characters of the member's own words, such as "Tom's birthday gift", where the description holds what the bank printed. Create and update bodies take `note`, trimmed and stored as null when blank; an update replaces it like every other field, so an update without it clears it. Nothing else writes it: an import fills only the description of the rows it adds, and linking a statement row to a hand-entered transaction keeps the note with the rest of that transaction. The `search` filter matches the note as well as the description, both `ILIKE`, so the ledger's search placeholder reads "Search description or note". The CSV has a `Note` column at the end, which the member export's `transactions.csv` shares, the PDF leaves it out, and an edit to it is a visible field in the household activity log.
 
 The transaction form has a Note field under the description, with the hint "Your own words, kept beside the bank's description. Imports never change it.". Since the same day a row whose payee the member named reads that name instead of the description, with the bank's text in the tooltip, and `search` matches the name too; see [Payee names](payee-names.md). The desktop ledger shows the note as a muted line under the description, cut to one line with the whole text in its tooltip, and the phone list shows it under the name. Duplicate copies the note with the rest of the row; a template leaves it out, because a template is a shape and a note is about one payment.
+
+## Places
+
+Since 2026-10-01, while the `Locations` switch is on, a transaction can carry `place`, up to 120 characters of the member's own, such as "Maxima, Ozo g. 18, Vilnius", and `latitude` and `longitude`, which come together, within range and are kept to five decimals, or `transaction.locationInvalid`. Create and update bodies take all three, through the browser and a read-and-write [token](personal-api-tokens.md#writing-with-a-token) alike; an update replaces them like every other field while the switch is on, and keeps the stored values while it is off. The form has a Place field under the note with suggestions of earlier places and, over HTTPS, **Use my location**; `search` matches the place too, and `place` is a substring filter on the same four endpoints, under the Description column's filter on the desktop and in the phone filters dialog, with a "Place" chip. The table gains no column. Duplicate and Record refund copy the place but not the coordinates, and a template keeps the place. The CSV has a `Place` column after `Spread months`, and a change of the place, not of the coordinates, is a visible field ("place") in the household activity log. Everything about it, receipts and the map included, is on [Transaction locations](transaction-locations.md).
 
 ## Spreading over months
 

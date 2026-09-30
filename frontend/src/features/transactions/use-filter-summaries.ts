@@ -71,6 +71,14 @@ export function useFilterSummaries(
       clear: () => fields.search.set(""),
     });
   }
+  if (fields.place.enabled && fields.place.value) {
+    summaries.push({
+      key: "place",
+      label: fields.place.label,
+      value: `“${fields.place.value}”`,
+      clear: () => fields.place.set(""),
+    });
+  }
   if (fields.payee.value) {
     summaries.push({
       key: "payee",

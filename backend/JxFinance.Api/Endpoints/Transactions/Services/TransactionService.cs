@@ -78,7 +78,7 @@ public sealed class TransactionService(
 
         await foreach (var transaction in rows)
         {
-            yield return transaction.ToResponse(null, tagsByTransaction.GetValueOrDefault(transaction.Id));
+            yield return Placed(transaction.ToResponse(null, tagsByTransaction.GetValueOrDefault(transaction.Id)));
         }
     }
 
@@ -100,7 +100,7 @@ public sealed class TransactionService(
 
         var tagsByTransaction = await LoadTagsAsync(items.Select(t => t.Id), cancellationToken);
 
-        return items.Select(t => t.ToResponse(null, tagsByTransaction.GetValueOrDefault(t.Id))).ToList();
+        return items.Select(t => Placed(t.ToResponse(null, tagsByTransaction.GetValueOrDefault(t.Id)))).ToList();
     }
 
     public async Task<TransactionsSummaryResponse> GetSummaryAsync(
@@ -186,10 +186,18 @@ public sealed class TransactionService(
         if (!string.IsNullOrWhiteSpace(request.Search))
         {
             var pattern = LikePattern.Contains(request.Search);
+            var searchesPlace = LocationsEnabled;
             query = query.Where(t =>
                 (t.Description != null && EF.Functions.ILike(t.Description, pattern, LikePattern.Escape))
                 || (t.Note != null && EF.Functions.ILike(t.Note, pattern, LikePattern.Escape))
+                || (searchesPlace && t.Place != null && EF.Functions.ILike(t.Place, pattern, LikePattern.Escape))
                 || db.PayeeNames.Any(p => p.PayeeKey == t.PayeeKey && EF.Functions.ILike(p.Name, pattern, LikePattern.Escape)));
+        }
+
+        if (!string.IsNullOrWhiteSpace(request.Place) && LocationsEnabled)
+        {
+            var placePattern = LikePattern.Contains(request.Place.Trim());
+            query = query.Where(t => t.Place != null && EF.Functions.ILike(t.Place, placePattern, LikePattern.Escape));
         }
 
         if (SubscriptionDescription.Normalize(request.Payee) is { Length: > 0 } payeeKey)
@@ -242,8 +250,13 @@ public sealed class TransactionService(
 
     private bool UnusualEnabled => settings.Current.IsEnabled(Feature.UnusualAmounts);
 
+    private bool LocationsEnabled => settings.Current.IsEnabled(Feature.Locations);
+
     private TransactionResponse Shown(TransactionResponse response) =>
-        UnusualEnabled ? response : response.WithoutUnusual();
+        Placed(UnusualEnabled ? response : response.WithoutUnusual());
+
+    private TransactionResponse Placed(TransactionResponse response) =>
+        LocationsEnabled ? response : response.WithoutPlace();
 
     public async Task<Result<TransactionResponse>> GetByIdAsync(Guid id, CancellationToken cancellationToken)
     {
@@ -287,6 +300,11 @@ public sealed class TransactionService(
 
         var (currency, reportingAmount) = valuation.Value;
         var transaction = request.ToEntity(currency, reportingAmount);
+        if (LocationsEnabled)
+        {
+            request.ApplyPlaceTo(transaction);
+        }
+
         if (currentUser.TokenName is not null)
         {
             transaction.Source = TransactionSource.Api;
@@ -334,6 +352,11 @@ public sealed class TransactionService(
             await db.TransactionTags.Where(x => x.TransactionId == transactionId).ToListAsync(cancellationToken));
 
         request.ApplyTo(transaction, currency, reportingAmount);
+        if (LocationsEnabled)
+        {
+            request.ApplyPlaceTo(transaction);
+        }
+
         AddChildren(request, transactionId, currency);
 
         await db.SaveChangesAsync(cancellationToken);

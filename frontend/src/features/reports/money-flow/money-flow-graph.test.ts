@@ -37,6 +37,7 @@ function summaryOf(
     trendBucket: "day",
     expenseByTag: [],
     expenseByPayee: [],
+    expenseByPlace: [],
   };
 }
 

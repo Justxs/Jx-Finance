@@ -34,7 +34,7 @@ export type ExportTransactionsParams = {
    */
   type?: FlowType;
   /**
-   * Case-insensitive match against the description, the note or your name for the payee.
+   * Case-insensitive match against the description, the note, your name for the payee or, while the locations feature is on, the place.
    * @nullable
    */
   search?: string | null;
@@ -43,6 +43,11 @@ export type ExportTransactionsParams = {
    * @nullable
    */
   payee?: string | null;
+  /**
+   * Keep only transactions whose place contains this text, ignoring case, at most 120 characters. Ignored while the locations feature is off.
+   * @nullable
+   */
+  place?: string | null;
   /**
    * Inclusive start date as YYYY-MM-DD.
    * @nullable

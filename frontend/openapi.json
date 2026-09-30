@@ -12814,7 +12814,7 @@
           "Receipts"
         ],
         "summary": "Read a receipt and propose its items by category",
-        "description": "Reads one receipt photo or PDF on this server and answers its merchant, date, total and items for review; nothing leaves the installation and nothing in the ledger changes. Send multipart/form-data with exactly one of attachmentId, a file already attached to a transaction the caller can see, or file, a new JPEG, PNG, WebP, HEIC or PDF of at most 10 MB that is read but never stored. Photos are turned upright, stripped of their metadata and read with Tesseract (Lithuanian and English); a PDF is read from the text of its first 3 pages, and a PDF without text answers receipt.pdfWithoutText. Lines that look like part of the receipt but cannot be read as an item come back in unreadLines. Each item gets the category the caller chose for that name before (remembered), otherwise the category of the caller's first matching categorization rule, otherwise none. A reading is kept per user and file content: reading the same file again answers the stored reading with cached true, unless force is true. For an uploaded file, candidates lists up to three visible unsplit expenses with the receipt's total, within three days of its date. Needs the ReceiptReading feature switch. Rate limited to 30 calls per five minutes per client.",
+        "description": "Reads one receipt photo or PDF on this server and answers its merchant, date, total and items for review; nothing leaves the installation and nothing in the ledger changes. Send multipart/form-data with exactly one of attachmentId, a file already attached to a transaction the caller can see, or file, a new JPEG, PNG, WebP, HEIC or PDF of at most 10 MB that is read but never stored. Photos are turned upright, stripped of their metadata and read with Tesseract (Lithuanian and English); a PDF is read from the text of its first 3 pages, and a PDF without text answers receipt.pdfWithoutText. Lines that look like part of the receipt but cannot be read as an item come back in unreadLines. Each item gets the category the caller chose for that name before (remembered), otherwise the category of the caller's first matching categorization rule, otherwise none. A reading is kept per user and file content: reading the same file again answers the stored reading with cached true, unless force is true. For an uploaded file, candidates lists up to three visible unsplit expenses with the receipt's total, within three days of its date. result.address is the shop's address line from the receipt's header, when one has a street number and a postcode or a known city. While the locations feature is on, an uploaded photo whose EXIF carries a GPS position answers it as photoLatitude and photoLongitude, read before the metadata is stripped and never stored with the reading; a PDF or an attached file answers null. Needs the ReceiptReading feature switch. Rate limited to 30 calls per five minutes per client.",
         "operationId": "ReadReceipt",
         "requestBody": {
           "content": {
@@ -13695,7 +13695,7 @@
           "Reports"
         ],
         "summary": "Summarise income and expenses over a range",
-        "description": "Returns income, expense, and net totals for an arbitrary date range, with the per-category split. Unlike the dashboard endpoints, the window is yours to choose rather than being pinned to calendar months. While the investments feature is on, dividends and interest from the investment ledger count as income and withholding tax and standalone fees as expense; buys, sells and splits never do. Those amounts have no category: they arrive as one entry per list with categoryId null and syntheticGroup set (investmentIncome or investmentTaxesAndFees), which a client should localize and not link to a category. Entries of real categories, and the uncategorized entry, have syntheticGroup null. expenseByTag splits the same expense total by tag, with one entry per tag the period touches and a final entry with tagId null for the expenses that carry no tag. A transaction can carry several tags and then counts once under each of them, so the tag entries can add up to more than totalExpense; only the untagged entry is disjoint from the rest. Investment entries carry no tag and are left out of this list. expenseByPayee splits the expenses by payee, the normalized description: lowercase words with punctuation and tokens of three or more digits dropped, so reference numbers do not split one shop. It counts whole transactions, a split one once under its own description, and holds at most 50 entries ordered by the larger of the two amounts. label is the newest description of that payee in the range, count the number of its transactions in the range, and payeeKey matches the payee filter of the transaction list, whose totals then equal the amount. The expenses without a description are one entry with payeeKey and label null. Investment entries are left out. Ask for a comparison and every figure gains its counterpart from an earlier period: comparison holds that period's own dates and totals, every category, synthetic group, tag and payee entry gains comparisonAmount, and every trend point gains comparisonBucketStart, comparisonIncome and comparisonExpense. A category, group, tag or payee that only one of the two periods touched is still one entry, with zero on the side that has nothing. Trend points are paired by position, so the first bucket of the range meets the first bucket of the earlier one; a bucket with no counterpart compares against zero. Without the parameter every comparison field is null and the response is the one it always was. The difference and its percentage are the client's to compute, because a change from zero has no percentage to show.",
+        "description": "Returns income, expense, and net totals for an arbitrary date range, with the per-category split. Unlike the dashboard endpoints, the window is yours to choose rather than being pinned to calendar months. While the investments feature is on, dividends and interest from the investment ledger count as income and withholding tax and standalone fees as expense; buys, sells and splits never do. Those amounts have no category: they arrive as one entry per list with categoryId null and syntheticGroup set (investmentIncome or investmentTaxesAndFees), which a client should localize and not link to a category. Entries of real categories, and the uncategorized entry, have syntheticGroup null. expenseByTag splits the same expense total by tag, with one entry per tag the period touches and a final entry with tagId null for the expenses that carry no tag. A transaction can carry several tags and then counts once under each of them, so the tag entries can add up to more than totalExpense; only the untagged entry is disjoint from the rest. Investment entries carry no tag and are left out of this list. expenseByPayee splits the expenses by payee, the normalized description: lowercase words with punctuation and tokens of three or more digits dropped, so reference numbers do not split one shop. It counts whole transactions, a split one once under its own description, and holds at most 50 entries ordered by the larger of the two amounts. label is the newest description of that payee in the range, count the number of its transactions in the range, and payeeKey matches the payee filter of the transaction list, whose totals then equal the amount. The expenses without a description are one entry with payeeKey and label null. Investment entries are left out. expenseByPlace, empty while the locations feature is off, splits the expenses the same way by place: places that differ only in case are one entry named by the newest spelling in the range, with the average of its stored coordinates (null when none has any), and the expenses without a place are one entry with place null. At most 50 entries. The place filter of the transaction list matches by substring, so its totals equal the amount unless the name is part of another place's name. Ask for a comparison and every figure gains its counterpart from an earlier period: comparison holds that period's own dates and totals, every category, synthetic group, tag and payee entry gains comparisonAmount, and every trend point gains comparisonBucketStart, comparisonIncome and comparisonExpense. A category, group, tag or payee that only one of the two periods touched is still one entry, with zero on the side that has nothing. Trend points are paired by position, so the first bucket of the range meets the first bucket of the earlier one; a bucket with no counterpart compares against zero. Without the parameter every comparison field is null and the response is the one it always was. The difference and its percentage are the client's to compute, because a change from zero has no percentage to show.",
         "operationId": "GetReportSummary",
         "parameters": [
           {
@@ -15025,7 +15025,10 @@
                 "currency": null,
                 "refundOfTransactionId": null,
                 "note": null,
-                "spreadMonths": null
+                "spreadMonths": null,
+                "place": null,
+                "latitude": null,
+                "longitude": null
               }
             }
           },
@@ -15043,7 +15046,7 @@
             }
           },
           "400": {
-            "description": "Validation failed, the split lines do not add up, a refund has lines (transaction.splitNotAllowed) or names an original that is not a visible purchase (transaction.refundOriginalInvalid), a split is spread (transaction.splitNotAllowed) or a refund is spread (transaction.spreadRefund), or the account, category or a tag is not visible to you.",
+            "description": "Validation failed, the split lines do not add up, a refund has lines (transaction.splitNotAllowed) or names an original that is not a visible purchase (transaction.refundOriginalInvalid), a split is spread (transaction.splitNotAllowed) or a refund is spread (transaction.spreadRefund), coordinates are out of range or come without their pair (transaction.locationInvalid), or the account, category or a tag is not visible to you.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -15170,7 +15173,7 @@
           {
             "name": "search",
             "in": "query",
-            "description": "Case-insensitive match against the description, the note or your name for the payee.",
+            "description": "Case-insensitive match against the description, the note, your name for the payee or, while the locations feature is on, the place.",
             "schema": {
               "type": [
                 "null",
@@ -15182,6 +15185,17 @@
             "name": "payee",
             "in": "query",
             "description": "Keep only transactions whose normalized description equals the normalized value: lowercase words, punctuation dropped and tokens with three or more digits dropped. Send a payeeKey from the report's expenseByPayee or a raw description. A value with nothing left after normalizing is ignored.",
+            "schema": {
+              "type": [
+                "null",
+                "string"
+              ]
+            }
+          },
+          {
+            "name": "place",
+            "in": "query",
+            "description": "Keep only transactions whose place contains this text, ignoring case, at most 120 characters. Ignored while the locations feature is off.",
             "schema": {
               "type": [
                 "null",
@@ -15584,7 +15598,7 @@
           {
             "name": "search",
             "in": "query",
-            "description": "Case-insensitive match against the description, the note or your name for the payee.",
+            "description": "Case-insensitive match against the description, the note, your name for the payee or, while the locations feature is on, the place.",
             "schema": {
               "type": [
                 "null",
@@ -15596,6 +15610,17 @@
             "name": "payee",
             "in": "query",
             "description": "Keep only transactions whose normalized description equals the normalized value: lowercase words, punctuation dropped and tokens with three or more digits dropped. Send a payeeKey from the report's expenseByPayee or a raw description. A value with nothing left after normalizing is ignored.",
+            "schema": {
+              "type": [
+                "null",
+                "string"
+              ]
+            }
+          },
+          {
+            "name": "place",
+            "in": "query",
+            "description": "Keep only transactions whose place contains this text, ignoring case, at most 120 characters. Ignored while the locations feature is off.",
             "schema": {
               "type": [
                 "null",
@@ -15825,7 +15850,7 @@
           {
             "name": "search",
             "in": "query",
-            "description": "Case-insensitive match against the description, the note or your name for the payee.",
+            "description": "Case-insensitive match against the description, the note, your name for the payee or, while the locations feature is on, the place.",
             "schema": {
               "type": [
                 "null",
@@ -15837,6 +15862,17 @@
             "name": "payee",
             "in": "query",
             "description": "Keep only transactions whose normalized description equals the normalized value: lowercase words, punctuation dropped and tokens with three or more digits dropped. Send a payeeKey from the report's expenseByPayee or a raw description. A value with nothing left after normalizing is ignored.",
+            "schema": {
+              "type": [
+                "null",
+                "string"
+              ]
+            }
+          },
+          {
+            "name": "place",
+            "in": "query",
+            "description": "Keep only transactions whose place contains this text, ignoring case, at most 120 characters. Ignored while the locations feature is off.",
             "schema": {
               "type": [
                 "null",
@@ -15979,6 +16015,106 @@
         ]
       }
     },
+    "/api/transactions/places": {
+      "get": {
+        "tags": [
+          "Transactions"
+        ],
+        "summary": "Suggest places used before",
+        "description": "Answers up to 20 distinct places of the transactions you can see, narrowed by the active household, most used first. Places that differ only in case or surrounding spaces are one entry, named by the newest spelling, with the number of transactions and the average of the coordinates stored with them (null when none has any). With lat and lon, the nearest place within 150 metres comes first with nearby true, so a position taken in a shop can be named after the shop. Nothing is looked up outside the installation. Needs the locations feature.",
+        "operationId": "GetPlaces",
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "description": "Optional text the place must contain, ignoring case, at most 120 characters.",
+            "schema": {
+              "type": [
+                "null",
+                "string"
+              ]
+            }
+          },
+          {
+            "name": "lat",
+            "in": "query",
+            "description": "Optional latitude from -90 to 90, sent together with lon.",
+            "schema": {
+              "type": [
+                "null",
+                "number"
+              ],
+              "format": "decimal"
+            }
+          },
+          {
+            "name": "lon",
+            "in": "query",
+            "description": "Optional longitude from -180 to 180, sent together with lat.",
+            "schema": {
+              "type": [
+                "null",
+                "number"
+              ],
+              "format": "decimal"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The suggested places.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PlaceSuggestionResponse"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed, or lat and lon are out of range or come alone (transaction.locationInvalid).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          },
+          {
+            "PersonalApiToken": [ ]
+          }
+        ]
+      }
+    },
     "/api/transactions/summary": {
       "get": {
         "tags": [
@@ -16034,7 +16170,7 @@
           {
             "name": "search",
             "in": "query",
-            "description": "Case-insensitive match against the description, the note or your name for the payee.",
+            "description": "Case-insensitive match against the description, the note, your name for the payee or, while the locations feature is on, the place.",
             "schema": {
               "type": [
                 "null",
@@ -16046,6 +16182,17 @@
             "name": "payee",
             "in": "query",
             "description": "Keep only transactions whose normalized description equals the normalized value: lowercase words, punctuation dropped and tokens with three or more digits dropped. Send a payeeKey from the report's expenseByPayee or a raw description. A value with nothing left after normalizing is ignored.",
+            "schema": {
+              "type": [
+                "null",
+                "string"
+              ]
+            }
+          },
+          {
+            "name": "place",
+            "in": "query",
+            "description": "Keep only transactions whose place contains this text, ignoring case, at most 120 characters. Ignored while the locations feature is off.",
             "schema": {
               "type": [
                 "null",
@@ -16344,7 +16491,7 @@
           "Transactions"
         ],
         "summary": "Update a transaction",
-        "description": "Replaces the transaction. Split lines are replaced wholesale rather than merged: send the full set you want to keep, or omit lines to turn a split back into a plain transaction. Tags are replaced the same way: send the full set, and an empty list or an absent tagIds clears them. The note and spreadMonths are replaced too, so leaving one out clears it. Moving it to another account adjusts both balances. A refund is an expense with a negative amount: it lowers that category's spending and raises the balance. It takes an expense category, cannot be split, and may name the purchase it refunds in refundOfTransactionId, which must be an expense you can see and not itself a refund.",
+        "description": "Replaces the transaction. Split lines are replaced wholesale rather than merged: send the full set you want to keep, or omit lines to turn a split back into a plain transaction. Tags are replaced the same way: send the full set, and an empty list or an absent tagIds clears them. The note and spreadMonths are replaced too, so leaving one out clears it. So are place, latitude and longitude while the locations feature is on; while it is off they are ignored and the stored values kept. Moving it to another account adjusts both balances. A refund is an expense with a negative amount: it lowers that category's spending and raises the balance. It takes an expense category, cannot be split, and may name the purchase it refunds in refundOfTransactionId, which must be an expense you can see and not itself a refund.",
         "operationId": "UpdateTransaction",
         "parameters": [
           {
@@ -16377,7 +16524,10 @@
                 "currency": null,
                 "refundOfTransactionId": null,
                 "note": null,
-                "spreadMonths": null
+                "spreadMonths": null,
+                "place": null,
+                "latitude": null,
+                "longitude": null
               }
             }
           },
@@ -16395,7 +16545,7 @@
             }
           },
           "400": {
-            "description": "Validation failed, the split lines do not add up, a refund has lines (transaction.splitNotAllowed) or names an original that is not a visible purchase (transaction.refundOriginalInvalid), a split is spread (transaction.splitNotAllowed) or a refund is spread (transaction.spreadRefund), or the account, category or a tag is not visible to you.",
+            "description": "Validation failed, the split lines do not add up, a refund has lines (transaction.splitNotAllowed) or names an original that is not a visible purchase (transaction.refundOriginalInvalid), a split is spread (transaction.splitNotAllowed) or a refund is spread (transaction.spreadRefund), coordinates are out of range or come without their pair (transaction.locationInvalid), or the account, category or a tag is not visible to you.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -21757,6 +21907,31 @@
             ],
             "description": "Optional, from 2 to 36: count the amount in equal monthly slices over this many months, starting with the month of the date. Not allowed on a split or a refund.",
             "format": "int32"
+          },
+          "place": {
+            "maxLength": 120,
+            "minLength": 0,
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Optional place of your own, such as a shop and its address, at most 120 characters. Stored only while the locations feature is on."
+          },
+          "latitude": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "description": "Optional latitude from -90 to 90, sent together with longitude and kept to five decimals. Stored only while the locations feature is on.",
+            "format": "double"
+          },
+          "longitude": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "description": "Optional longitude from -180 to 180, sent together with latitude and kept to five decimals.",
+            "format": "double"
           }
         },
         "example": {
@@ -21771,7 +21946,10 @@
           "currency": null,
           "refundOfTransactionId": null,
           "note": null,
-          "spreadMonths": null
+          "spreadMonths": null,
+          "place": null,
+          "latitude": null,
+          "longitude": null
         }
       },
       "CreateTransferRequest": {
@@ -22912,6 +23090,7 @@
           "token.notAllowed",
           "token.rateLimited",
           "transaction.linesMismatch",
+          "transaction.locationInvalid",
           "transaction.refundOriginalInvalid",
           "transaction.splitNotAllowed",
           "transaction.spreadRefund",
@@ -22990,7 +23169,8 @@
           "unusualAmounts",
           "monthClose",
           "receiptReading",
-          "apiTokens"
+          "apiTokens",
+          "locations"
         ],
         "type": "object",
         "properties": {
@@ -23034,6 +23214,9 @@
             "type": "boolean"
           },
           "apiTokens": {
+            "type": "boolean"
+          },
+          "locations": {
             "type": "boolean"
           }
         }
@@ -25630,6 +25813,90 @@
           }
         }
       },
+      "PlaceBreakdownItem": {
+        "required": [
+          "place",
+          "amount",
+          "comparisonAmount",
+          "count",
+          "latitude",
+          "longitude"
+        ],
+        "type": "object",
+        "properties": {
+          "place": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "amount": {
+            "type": "string",
+            "format": "decimal"
+          },
+          "comparisonAmount": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "decimal"
+          },
+          "count": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "latitude": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "longitude": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          }
+        }
+      },
+      "PlaceSuggestionResponse": {
+        "required": [
+          "name",
+          "count",
+          "latitude",
+          "longitude",
+          "nearby"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "count": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "latitude": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "longitude": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "nearby": {
+            "type": "boolean"
+          }
+        }
+      },
       "PortfolioResponse": {
         "required": [
           "reportingCurrency",
@@ -26211,6 +26478,20 @@
             "items": {
               "$ref": "#/components/schemas/ReceiptCandidateResponse"
             }
+          },
+          "photoLatitude": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "photoLongitude": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
           }
         }
       },
@@ -26290,6 +26571,12 @@
             "items": {
               "type": "string"
             }
+          },
+          "address": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -26649,7 +26936,8 @@
           "trend",
           "trendBucket",
           "expenseByTag",
-          "expenseByPayee"
+          "expenseByPayee",
+          "expenseByPlace"
         ],
         "type": "object",
         "properties": {
@@ -26702,6 +26990,12 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/PayeeBreakdownItem"
+            }
+          },
+          "expenseByPlace": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PlaceBreakdownItem"
             }
           },
           "comparison": {
@@ -28595,6 +28889,26 @@
                 "$ref": "#/components/schemas/NullableOfDateOnly"
               }
             ]
+          },
+          "place": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "latitude": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "longitude": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
           }
         }
       },
@@ -30327,6 +30641,31 @@
             ],
             "description": "Optional, from 2 to 36: count the amount in equal monthly slices over this many months, starting with the month of the date. Not allowed on a split or a refund.",
             "format": "int32"
+          },
+          "place": {
+            "maxLength": 120,
+            "minLength": 0,
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Optional place of your own, such as a shop and its address, at most 120 characters. Stored only while the locations feature is on."
+          },
+          "latitude": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "description": "Optional latitude from -90 to 90, sent together with longitude and kept to five decimals. Stored only while the locations feature is on.",
+            "format": "double"
+          },
+          "longitude": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "description": "Optional longitude from -180 to 180, sent together with latitude and kept to five decimals.",
+            "format": "double"
           }
         },
         "example": {
@@ -30341,7 +30680,10 @@
           "currency": null,
           "refundOfTransactionId": null,
           "note": null,
-          "spreadMonths": null
+          "spreadMonths": null,
+          "place": null,
+          "latitude": null,
+          "longitude": null
         }
       },
       "UpdateTransferRequest": {

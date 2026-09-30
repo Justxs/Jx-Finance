@@ -39,6 +39,13 @@ public static partial class ReceiptTextParser
 
     private static readonly string[] DepositWords = Loose("uzstat", "deposit", "depozit", "pfand");
 
+    private static readonly HashSet<string> Cities = new(StringComparer.Ordinal)
+    {
+        "vilnius", "kaunas", "klaipeda", "siauliai", "panevezys", "alytus", "marijampole", "mazeikiai", "jonava", "utena",
+        "kedainiai", "telsiai", "taurage", "ukmerge", "visaginas", "palanga", "plunge", "kretinga", "silute", "radviliskis",
+        "druskininkai", "gargzdai", "rokiskis", "birzai", "elektrenai", "trakai", "neringa", "riga", "tallinn", "warszawa",
+    };
+
     public static Result<ReceiptResult> Parse(string text)
     {
         var lines = text.Split('\n').Select(Clean).Where(line => line.Length > 0).ToList();
@@ -57,8 +64,9 @@ public static partial class ReceiptTextParser
             return ReceiptErrors.Unreadable;
         }
 
+        var head = lines.Take(MerchantLines).ToList();
         return new ReceiptResult(
-            MerchantOf(lines),
+            MerchantOf(head),
             DateOf(lines),
             CurrencyOf(lines),
             reading.Total,
@@ -67,7 +75,8 @@ public static partial class ReceiptTextParser
             1,
             reading.Items,
             reading.Adjustments,
-            reading.Unread);
+            reading.Unread,
+            AddressOf(head));
     }
 
     private static string Clean(string line)
@@ -128,13 +137,23 @@ public static partial class ReceiptTextParser
         return new Priced(Clean(match.Groups["label"].Value), amount, match.Groups["minus"].Success);
     }
 
-    private static string? MerchantOf(List<string> lines)
+    private static int MerchantIndex(List<string> head)
     {
-        var head = lines.Take(MerchantLines).ToList();
-        var merchant = head.Find(line => Loose(line).Split(' ', ',', '"', '.').Intersect(Chains).Any())
-            ?? head.Find(line => Letters(line) >= 3);
-        return merchant is null ? null : TextLimit.Cut(merchant, ReceiptResult.TextMaxLength);
+        var chain = head.FindIndex(line => Loose(line).Split(' ', ',', '"', '.').Intersect(Chains).Any());
+        return chain >= 0 ? chain : head.FindIndex(line => Letters(line) >= 3);
     }
+
+    private static string? MerchantOf(List<string> head) =>
+        MerchantIndex(head) is >= 0 and var index ? TextLimit.Cut(head[index], ReceiptResult.TextMaxLength) : null;
+
+    private static string? AddressOf(List<string> head) =>
+        head.Skip(MerchantIndex(head) + 1).FirstOrDefault(IsAddress) is { } address
+            ? TextLimit.Cut(address, ReceiptResult.TextMaxLength)
+            : null;
+
+    private static bool IsAddress(string line) =>
+        StreetNumber().IsMatch(line)
+        && (PostCode().IsMatch(line) || NotLetter().Split(ReceiptItemKey.Fold(line)).Any(Cities.Contains));
 
     private static DateOnly? DateOf(List<string> lines)
     {
@@ -191,6 +210,15 @@ public static partial class ReceiptTextParser
 
     [GeneratedRegex(@"\s[A-E]$")]
     private static partial Regex EndsWithTaxLetter();
+
+    [GeneratedRegex(@"\p{L}\.?\s+\d{1,4}[A-Za-z]?(?!\d|[.,]\d)")]
+    private static partial Regex StreetNumber();
+
+    [GeneratedRegex(@"(?<![A-Za-z])LT-\d{5}(?!\d)")]
+    private static partial Regex PostCode();
+
+    [GeneratedRegex(@"[^\p{L}]+")]
+    private static partial Regex NotLetter();
 
     [GeneratedRegex("[OoIl]")]
     private static partial Regex DigitLike();

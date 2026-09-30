@@ -31,7 +31,10 @@ public sealed record TransactionResponse(
     string? Note = null,
     string? PayeeName = null,
     int? SpreadMonths = null,
-    DateOnly? SpreadUntil = null);
+    DateOnly? SpreadUntil = null,
+    string? Place = null,
+    decimal? Latitude = null,
+    decimal? Longitude = null);
 
 public sealed record TransactionDebtPaymentResponse(Guid Id, Guid DebtId, string DebtName);
 

@@ -9,6 +9,7 @@ import {
   getExportTransactionsMockHandler,
   getRestoreUnusualAmountMockHandler,
   getExportTransactionsPdfMockHandler,
+  getPlacesMockHandler,
   getTransactionMockHandler,
   getTransactionsMockHandler,
   getTransactionsSummaryMockHandler,
@@ -20,6 +21,7 @@ import {
   accounts,
   buildTransactionsSummary,
   checkingAccount,
+  placeSuggestions,
   transactions,
   transactionsCsv,
 } from "@/storybook/fixtures";
@@ -78,6 +80,7 @@ function filterTransactions(params: URLSearchParams): TransactionResponse[] {
   const tagIds = params.get("tagIds");
   const type = params.get("type");
   const search = params.get("search");
+  const place = params.get("place");
   const dateFrom = params.get("dateFrom");
   const dateTo = params.get("dateTo");
   const unusualOnly = params.get("unusual") === "true";
@@ -88,7 +91,8 @@ function filterTransactions(params: URLSearchParams): TransactionResponse[] {
       (!categoryId || matchesCategory(item, categoryId)) &&
       (!tagIds || matchesTags(item, tagIds)) &&
       (!type || item.type === type) &&
-      (!search || includesText(item.description, search)) &&
+      (!search || includesText(item.description, search) || includesText(item.place, search)) &&
+      (!place || includesText(item.place, place)) &&
       (!dateFrom || item.date >= dateFrom) &&
       (!dateTo || item.date <= dateTo) &&
       (!unusualOnly || (item.unusual !== null && !item.unusualDismissed)) &&
@@ -174,6 +178,10 @@ export const transactionHandlers = [
       unusualDismissed: false,
     };
     return mergeTransaction(base, await readBody(request));
+  }),
+  getPlacesMockHandler(({ request }) => {
+    const search = query(request).get("search");
+    return placeSuggestions.filter((item) => !search || includesText(item.name, search));
   }),
   getTransactionMockHandler(byIdFrom(transactions)),
   getUpdateTransactionMockHandler(updateFrom(transactions, mergeTransaction)),

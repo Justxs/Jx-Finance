@@ -8,7 +8,9 @@ public sealed record ReceiptReadingResponse(
     Guid Id,
     bool Cached,
     ReceiptResultResponse Result,
-    IReadOnlyList<ReceiptCandidateResponse> Candidates);
+    IReadOnlyList<ReceiptCandidateResponse> Candidates,
+    decimal? PhotoLatitude = null,
+    decimal? PhotoLongitude = null);
 
 public sealed record ReceiptResultResponse(
     string? Merchant,
@@ -20,7 +22,8 @@ public sealed record ReceiptResultResponse(
     int PageCount,
     IReadOnlyList<ReceiptItemResponse> Items,
     IReadOnlyList<ReceiptAdjustmentResponse> Adjustments,
-    IReadOnlyList<string> UnreadLines);
+    IReadOnlyList<string> UnreadLines,
+    string? Address = null);
 
 public sealed record ReceiptItemResponse(
     string Name,

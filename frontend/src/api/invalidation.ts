@@ -58,6 +58,7 @@ const rules: readonly Rule[] = [
       api.getSuggestedRulesQueryKey,
       api.getHouseholdsQueryKey,
       api.getBillsCalendarQueryKey,
+      api.getPlacesQueryKey,
     ],
   },
   {

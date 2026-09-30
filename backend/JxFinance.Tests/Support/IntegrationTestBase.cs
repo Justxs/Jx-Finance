@@ -199,6 +199,9 @@ public abstract class IntegrationTestBase(ApiFixture fixture)
     protected Task<IAsyncDisposable> ApiTokensOnAsync() =>
         OverrideSettingsAsync(settings => settings["features"]!["apiTokens"] = true);
 
+    protected Task<IAsyncDisposable> LocationsOnAsync() =>
+        OverrideSettingsAsync(settings => settings["features"]!["locations"] = true);
+
     protected HttpClient TokenClient(string token)
     {
         var client = CreateClient(handleCookies: false);

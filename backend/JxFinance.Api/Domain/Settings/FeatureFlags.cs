@@ -14,11 +14,12 @@ public sealed record FeatureFlags(
     bool UnusualAmounts,
     bool MonthClose,
     bool ReceiptReading,
-    bool ApiTokens)
+    bool ApiTokens,
+    bool Locations)
 {
-    public static FeatureFlags All { get; } = new(true, true, true, true, true, true, true, true, true, true, true, true, true, true);
+    public static FeatureFlags All { get; } = new(true, true, true, true, true, true, true, true, true, true, true, true, true, true, true);
 
-    public static FeatureFlags Default { get; } = All with { ApiTokens = false };
+    public static FeatureFlags Default { get; } = All with { ApiTokens = false, Locations = false };
 
     public bool IsEnabled(Feature feature) => feature switch
     {
@@ -36,6 +37,7 @@ public sealed record FeatureFlags(
         Feature.MonthClose => MonthClose,
         Feature.ReceiptReading => ReceiptReading,
         Feature.ApiTokens => ApiTokens,
+        Feature.Locations => Locations,
         _ => true,
     };
 }

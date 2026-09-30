@@ -5,6 +5,7 @@ import { optionalParam, sortParams } from "@/lib/search-schema";
 export const transactionFilterSchema = z.object({
   search: optionalParam(z.string()),
   payee: optionalParam(z.string()),
+  place: optionalParam(z.string()),
   accountId: optionalParam(z.uuid()),
   categoryId: optionalParam(z.uuid()),
   tagIds: optionalParam(

@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/column-filter/column-filter";
 import { ColumnHeader } from "@/components/ui/column-header/column-header";
 import { DateRangePicker } from "@/components/ui/date-range-picker/date-range-picker";
+import { Input } from "@/components/ui/input/input";
 import { AmountRangeFields } from "@/features/transactions/amount-range-fields/amount-range-fields";
 import type {
   AmountRangeDraft,
@@ -59,13 +60,41 @@ export function useTransactionColumnHeaders(filters: TransactionFilters, tags: T
     ),
     description: header(
       "description",
-      <TextColumnFilter
-        label={fields.search.label}
-        value={fields.search.value}
-        placeholder={fields.search.placeholder}
-        shortcut={SEARCH_SHORTCUT_TARGET}
-        onChange={fields.search.set}
-      />,
+      fields.place.enabled ? (
+        <ColumnFilter<{ search: string; place: string }>
+          label={fields.search.label}
+          value={{ search: fields.search.value, place: fields.place.value }}
+          empty={{ search: "", place: "" }}
+          shortcut={SEARCH_SHORTCUT_TARGET}
+          summary={valueOf("search", "place")}
+          onApply={(next) => fields.place.setWithSearch(next.search, next.place)}
+        >
+          {(draft, setDraft) => (
+            <>
+              <Input
+                aria-label={fields.search.label}
+                placeholder={fields.search.placeholder}
+                value={draft.search}
+                onChange={(event) => setDraft({ ...draft, search: event.target.value })}
+              />
+              <Input
+                aria-label={fields.place.label}
+                placeholder={fields.place.label}
+                value={draft.place}
+                onChange={(event) => setDraft({ ...draft, place: event.target.value })}
+              />
+            </>
+          )}
+        </ColumnFilter>
+      ) : (
+        <TextColumnFilter
+          label={fields.search.label}
+          value={fields.search.value}
+          placeholder={fields.search.placeholder}
+          shortcut={SEARCH_SHORTCUT_TARGET}
+          onChange={fields.search.set}
+        />
+      ),
     ),
     categoryId: header(
       "category",

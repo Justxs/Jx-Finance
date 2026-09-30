@@ -49,4 +49,10 @@ export interface TransactionResponse {
   /** @nullable */
   spreadMonths?: number | null;
   spreadUntil?: null | NullableOfDateOnly;
+  /** @nullable */
+  place?: string | null;
+  /** @nullable */
+  latitude?: number | null;
+  /** @nullable */
+  longitude?: number | null;
 }

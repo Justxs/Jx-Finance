@@ -17,6 +17,8 @@ flowchart LR
     Tags --> TagDrill["Tag row links to /transactions<br/>with the tag, type and date range"]
     Api --> Payees["Expense by payee<br/>grouped by the stored Transaction.PayeeKey"]
     Payees --> PayeeDrill["Payee row links to /transactions<br/>with payee, type and date range"]
+    Api --> Places["Expense by place<br/>only while Locations is on"]
+    Places --> PlaceDrill["Place row or map dot links to /transactions<br/>with place, type and date range"]
     Inv["IInvestmentCashFlowService<br/>only while Investments is on"] --> Totals
     Inv --> Trend
     Inv --> Groups["Synthetic groups, no link:<br/>Investment income, Investment taxes and fees"]
@@ -123,6 +125,10 @@ The list covers expenses only. Tags in practice mark spending themes, the untagg
 **Drill-through.** Each named row links to `/transactions` with `payee` set to the key, `type=expense` and the range. The ledger's `payee` filter keeps `PayeeKey == Normalize(value)`, so its list, its totals and both exports hold exactly the rows behind the amount; see [Transactions](transactions.md#payee-filter). The list itself is not exported, like the other breakdowns (see [What is not exported](#what-is-not-exported)).
 
 The month-end review's `figures` are this same report summary, so they carry the list as well; the month-end page does not show it.
+
+## Expense by place
+
+Since 2026-10-01, while the [`Locations`](transaction-locations.md) switch is on, `expenseByPlace` answers "how much did the Maxima on Ozo street cost" for the same range and comparison. It holds at most `PlaceBreakdownItem.MaxItems`, 50 `PlaceBreakdownItem`s with `place`, `amount`, `comparisonAmount`, `count`, `latitude` and `longitude`, and is empty while the switch is off. It is built like expense by payee: expenses only, whole transactions except that a spread payment counts by the monthly slices that fall in each period (`SpreadSlice` carries the place), grouped by the trimmed, lower-cased place, ordered by the larger of the two amounts. The name is the newest spelling in the range, read with the average of the stored coordinates by `PlaceSpellings` from the same rows. The expenses without a place are one entry with `place` null, shown muted as "No place" without a link. The page shows the list as "Expense by place" after the payee list, eight rows and **Show all**; each named row links to the ledger with `place`, `type=expense` and the range. The ledger's `place` filter matches by substring, so its totals equal the amount unless the name is part of a longer place's name. When the map tile file is on the server, a List and Map switch shows the same entries as dots on a map of Lithuania; see [Transaction locations](transaction-locations.md#the-map).
 
 ## Year in review
 

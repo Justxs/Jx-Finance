@@ -8,6 +8,7 @@
 import type { CategoryBreakdownItem } from "./categoryBreakdownItem";
 import type { DateOnly } from "./dateOnly";
 import type { PayeeBreakdownItem } from "./payeeBreakdownItem";
+import type { PlaceBreakdownItem } from "./placeBreakdownItem";
 import type { ReportComparisonTotals } from "./reportComparisonTotals";
 import type { ReportTrendPoint } from "./reportTrendPoint";
 import type { TagBreakdownItem } from "./tagBreakdownItem";
@@ -24,5 +25,6 @@ export interface ReportSummaryResponse {
   trendBucket: string;
   expenseByTag: TagBreakdownItem[];
   expenseByPayee: PayeeBreakdownItem[];
+  expenseByPlace: PlaceBreakdownItem[];
   comparison?: null | ReportComparisonTotals;
 }

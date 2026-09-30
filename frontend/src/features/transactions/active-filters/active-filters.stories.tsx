@@ -1,7 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, userEvent, waitFor } from "storybook/test";
+import { getSettingsMockHandler } from "@/api/generated/settings/settings.msw";
 import { useTransactionFilters } from "@/features/transactions/use-transaction-filters";
-import { accounts, categories, ids, tags } from "@/storybook/fixtures";
+import { accounts, categories, ids, settingsWith, tags } from "@/storybook/fixtures";
+import { withHandlers } from "@/storybook/handlers";
 import { ActiveFilters } from "./active-filters";
 
 function ActiveFiltersHarness() {
@@ -42,6 +44,27 @@ export const PayeeFromTheReport: Story = {
     await userEvent.click(chip);
     await waitFor(() => expect(chip).not.toBeInTheDocument());
     await expect(canvas.getByText("Expense")).toBeVisible();
+  },
+};
+
+export const PlaceFromTheReport: Story = {
+  parameters: {
+    route: "/transactions?place=Ozo%20g.&type=expense",
+    ...withHandlers(getSettingsMockHandler(settingsWith({ features: { locations: true } }))),
+  },
+  play: async ({ canvas }) => {
+    const chip = await canvas.findByRole("button", { name: "Remove filter Place: “Ozo g.”" });
+    await userEvent.click(chip);
+    await waitFor(() => expect(chip).not.toBeInTheDocument());
+    await expect(canvas.getByText("Expense")).toBeVisible();
+  },
+};
+
+export const PlaceIgnoredWhileTheSwitchIsOff: Story = {
+  parameters: { route: "/transactions?place=Ozo%20g.&type=expense" },
+  play: async ({ canvas }) => {
+    await expect(await canvas.findByText("Expense")).toBeVisible();
+    await expect(canvas.queryByText(/Ozo g\./u)).toBeNull();
   },
 };
 

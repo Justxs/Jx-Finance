@@ -37,6 +37,10 @@ describe("isEmptyFilter", () => {
     expect(isEmptyFilter(transactionFilterParams({ payee: "maxima lt uab" }))).toBe(false);
   });
 
+  test("a place alone is a filter", () => {
+    expect(isEmptyFilter(transactionFilterParams({ place: "ozo g." }))).toBe(false);
+  });
+
   test("one chosen value is enough", () => {
     expect(isEmptyFilter(transactionFilterParams({ type: "income" }))).toBe(false);
   });

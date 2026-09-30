@@ -32,6 +32,8 @@ import type {
   ExportTransactionsParams,
   ExportTransactionsPdfParams,
   PagedResponseOfTransactionResponse,
+  PlaceSuggestionResponse,
+  PlacesParams,
   ProblemDetails,
   TransactionResponse,
   TransactionsParams,
@@ -786,6 +788,129 @@ export function useExportTransactionsPdfSuspense<
   return withQueryKey(query, queryOptions.queryKey);
 }
 
+export const getPlacesUrl = (params?: PlacesParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/transactions/places?${stringifiedParams}`
+    : `/api/transactions/places`;
+};
+
+/**
+ * Answers up to 20 distinct places of the transactions you can see, narrowed by the active household, most used first. Places that differ only in case or surrounding spaces are one entry, named by the newest spelling, with the number of transactions and the average of the coordinates stored with them (null when none has any). With lat and lon, the nearest place within 150 metres comes first with nearby true, so a position taken in a shop can be named after the shop. Nothing is looked up outside the installation. Needs the locations feature.
+ * @summary Suggest places used before
+ */
+export const places = async (
+  params?: PlacesParams,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<PlaceSuggestionResponse[]> => {
+  return customFetch<PlaceSuggestionResponse[]>(getPlacesUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getPlacesQueryKey = (params?: PlacesParams) => {
+  return [`/api/transactions/places`, ...(params ? [params] : [])] as const;
+};
+
+export const getPlacesSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof places>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  params?: PlacesParams,
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof places>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getPlacesQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof places>>> = ({ signal }) =>
+    places(params, { signal, ...requestOptions });
+
+  return queryOptionsBuilder({
+    queryKey,
+    ...queryOptions,
+    queryFn: queryOptions?.queryFn ?? queryFn,
+  }) as UseSuspenseQueryOptions<Awaited<ReturnType<typeof places>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  } & {
+    throwOnError?: ((this: never, error: TError) => boolean) & { readonly __inferenceOnly: never };
+  };
+};
+
+export type PlacesSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof places>>>;
+export type PlacesSuspenseQueryError = ErrorType<ProblemDetails>;
+
+export function usePlacesSuspense<
+  TData = Awaited<ReturnType<typeof places>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  params: undefined | PlacesParams,
+  options: {
+    query: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof places>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function usePlacesSuspense<
+  TData = Awaited<ReturnType<typeof places>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  params?: PlacesParams,
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof places>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function usePlacesSuspense<
+  TData = Awaited<ReturnType<typeof places>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  params?: PlacesParams,
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof places>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Suggest places used before
+ */
+
+export function usePlacesSuspense<
+  TData = Awaited<ReturnType<typeof places>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  params?: PlacesParams,
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof places>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getPlacesSuspenseQueryOptions(params, options);
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
 export const getTransactionsSummaryUrl = (params?: TransactionsSummaryParams) => {
   const normalizedParams = new URLSearchParams();
 
@@ -1130,7 +1255,7 @@ export const getUpdateTransactionUrl = (id: string) => {
 };
 
 /**
- * Replaces the transaction. Split lines are replaced wholesale rather than merged: send the full set you want to keep, or omit lines to turn a split back into a plain transaction. Tags are replaced the same way: send the full set, and an empty list or an absent tagIds clears them. The note and spreadMonths are replaced too, so leaving one out clears it. Moving it to another account adjusts both balances. A refund is an expense with a negative amount: it lowers that category's spending and raises the balance. It takes an expense category, cannot be split, and may name the purchase it refunds in refundOfTransactionId, which must be an expense you can see and not itself a refund.
+ * Replaces the transaction. Split lines are replaced wholesale rather than merged: send the full set you want to keep, or omit lines to turn a split back into a plain transaction. Tags are replaced the same way: send the full set, and an empty list or an absent tagIds clears them. The note and spreadMonths are replaced too, so leaving one out clears it. So are place, latitude and longitude while the locations feature is on; while it is off they are ignored and the stored values kept. Moving it to another account adjusts both balances. A refund is an expense with a negative amount: it lowers that category's spending and raises the balance. It takes an expense category, cannot be split, and may name the purchase it refunds in refundOfTransactionId, which must be an expense you can see and not itself a refund.
  * @summary Update a transaction
  */
 export const updateTransaction = async (

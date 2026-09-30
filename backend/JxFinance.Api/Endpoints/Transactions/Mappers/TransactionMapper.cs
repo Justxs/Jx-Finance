@@ -34,6 +34,13 @@ public static class TransactionMapper
         transaction.RefundOfTransactionId = input.RefundOfTransactionId is { } original ? new TransactionId(original) : null;
     }
 
+    public static void ApplyPlaceTo(this ITransactionInput input, Transaction transaction)
+    {
+        transaction.Place = OptionalText.Normalize(input.Place);
+        transaction.Latitude = TransactionPlace.Round(input.Latitude);
+        transaction.Longitude = TransactionPlace.Round(input.Longitude);
+    }
+
     public static List<TransactionLine> ToLines(
         this IReadOnlyList<TransactionLineRequest> lines,
         TransactionId transactionId,
@@ -84,13 +91,19 @@ public static class TransactionMapper
         transaction.Unusual is not null && transaction.UnusualDismissedAt is not null,
         Note: transaction.Note,
         SpreadMonths: transaction.SpreadMonths,
-        SpreadUntil: transaction.SpreadUntil);
+        SpreadUntil: transaction.SpreadUntil,
+        Place: transaction.Place,
+        Latitude: transaction.Latitude,
+        Longitude: transaction.Longitude);
 
     public static UnusualAmountResponse? ToResponse(this UnusualVerdict? verdict) =>
         verdict is null ? null : new(verdict.Basis, verdict.TypicalAmount, verdict.Factor, verdict.SampleSize);
 
     public static TransactionResponse WithoutUnusual(this TransactionResponse response) =>
         response with { Unusual = null, UnusualDismissed = false };
+
+    public static TransactionResponse WithoutPlace(this TransactionResponse response) =>
+        response with { Place = null, Latitude = null, Longitude = null };
 
     private static CategoryId? ResolveCategoryId(Guid? categoryId, bool isSplit)
     {

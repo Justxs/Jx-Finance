@@ -2015,6 +2015,9 @@ namespace JxFinance.Infrastructure.Data.Migrations
                             b1.Property<bool>("Investments")
                                 .HasColumnType("boolean");
 
+                            b1.Property<bool>("Locations")
+                                .HasColumnType("boolean");
+
                             b1.Property<bool>("MonthClose")
                                 .ValueGeneratedOnAdd()
                                 .HasColumnType("boolean")
@@ -2120,6 +2123,14 @@ namespace JxFinance.Infrastructure.Data.Migrations
                     b.Property<bool>("IsSplit")
                         .HasColumnType("boolean");
 
+                    b.Property<decimal?>("Latitude")
+                        .HasPrecision(7, 5)
+                        .HasColumnType("numeric(7,5)");
+
+                    b.Property<decimal?>("Longitude")
+                        .HasPrecision(8, 5)
+                        .HasColumnType("numeric(8,5)");
+
                     b.Property<string>("Note")
                         .HasMaxLength(1000)
                         .HasColumnType("character varying(1000)");
@@ -2127,6 +2138,10 @@ namespace JxFinance.Infrastructure.Data.Migrations
                     b.Property<string>("PayeeKey")
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
+
+                    b.Property<string>("Place")
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)");
 
                     b.Property<Guid?>("RefundOfTransactionId")
                         .HasColumnType("uuid");
@@ -2219,6 +2234,9 @@ namespace JxFinance.Infrastructure.Data.Migrations
                     b.HasIndex(new[] { "Id" }, "IX_Transactions_PayeeKeyPending")
                         .HasFilter("\"PayeeKey\" IS NULL");
 
+                    b.HasIndex(new[] { "AccountId", "Place" }, "IX_Transactions_Place")
+                        .HasFilter("\"Place\" IS NOT NULL");
+
                     b.HasIndex(new[] { "AccountId", "SpreadUntil" }, "IX_Transactions_Spread")
                         .HasFilter("\"SpreadMonths\" IS NOT NULL");
 
@@ -2227,6 +2245,8 @@ namespace JxFinance.Infrastructure.Data.Migrations
 
                     b.ToTable("Transactions", t =>
                         {
+                            t.HasCheckConstraint("CK_Transactions_Coordinates", "(\"Latitude\" IS NULL) = (\"Longitude\" IS NULL)");
+
                             t.HasCheckConstraint("CK_Transactions_SpreadMonths", "\"SpreadMonths\" IS NULL OR \"SpreadMonths\" BETWEEN 2 AND 36");
 
                             t.HasCheckConstraint("CK_Transactions_SpreadUntil", "(\"SpreadMonths\" IS NULL) = (\"SpreadUntil\" IS NULL)");

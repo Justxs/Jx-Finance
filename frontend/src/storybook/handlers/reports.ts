@@ -1,6 +1,8 @@
+import { HttpResponse, http } from "msw";
 import type { ReportSummaryResponse } from "@/api/generated/model";
 import { ReportComparisonMode } from "@/api/generated/model";
 import { getReportSummaryMockHandler } from "@/api/generated/reports/reports.msw";
+import { MAP_TILES_PATH } from "@/features/reports/place-map/map-tiles";
 import { monthBounds, parseIso, previousMonth } from "@/lib/calendar";
 import {
   FIXTURE_MONTH_END,
@@ -56,6 +58,12 @@ function resolveReport(params: URLSearchParams): ReportSummaryResponse {
   return withComparison(summary, mode, periodStart, periodEnd);
 }
 
+export const mapTilesPresentHandler = http.head(
+  MAP_TILES_PATH,
+  () => new HttpResponse(null, { headers: { "Content-Type": "application/octet-stream" } }),
+);
+
 export const reportHandlers = [
   getReportSummaryMockHandler(({ request }) => resolveReport(query(request))),
+  http.head(MAP_TILES_PATH, () => new HttpResponse(null, { status: 404 })),
 ];

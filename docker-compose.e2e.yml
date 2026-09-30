@@ -16,6 +16,8 @@ services:
   frontend:
     ports: !override
       - "127.0.0.1:8089:80"
+    volumes: !override
+      - ./frontend/e2e/fixtures/maps:/srv/maps:ro
     environment:
       TRUSTED_PROXIES: private_ranges
 

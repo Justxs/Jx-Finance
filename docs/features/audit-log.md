@@ -88,7 +88,7 @@ An update lists only the fields a member can see, in this order, and only when t
 
 | Kind | Fields |
 | --- | --- |
-| Transaction | `date`, `amount`, `type`, `description`, `category`, `account`, then `tags` and `split` |
+| Transaction | `date`, `amount`, `type`, `description`, `note`, `spreadMonths`, `place`, `category`, `account`, then `tags` and `split` |
 | Transfer | `date`, `amount`, `receivedAmount`, `fromAccount`, `toAccount`, `description` |
 | Currency conversion | `date`, `fromAmount`, `toAmount`, `description`, `account` |
 | Investment entry | `date`, `type`, `security`, `quantity`, `price`, `fee`, `cashAmount`, `description`, `account` |
@@ -102,7 +102,7 @@ An update lists only the fields a member can see, in this order, and only when t
 
 The table lives in one place in code, the registry of audited types in `AuditCollector`: one entry per entity type with its kind, how it is described, how it is routed (account-scoped, shareable, household, membership, attachment or household-scoped) and the fields above. A type without an entry is not audited, and a unit test checks that every shareable, account-scoped and household-scoped entity, transfers, households, memberships and attachments have one. A household-scoped row takes its household from the row itself; a split whose tracked share rows changed is logged as updated even when the split row did not change, the way a transaction is when only its tags or lines did, and the shares read `Rūta 45.00; Šarūnas 45.00`.
 
-Values are stored as display text as they read at the time: money as `42.18 EUR`, dates as ISO, quantities without trailing zeros, enums as the camel-case name the API publishes (`expense`, `owner`), references by name (the category, account and security symbol), tags as a sorted comma list and split lines as `Food 10.00; Travel 5.00`. An empty value is `null` and the screen says "none". Nothing else is stored: the IBAN, notes, import references, external broker ids, reporting amounts, owners, timestamps and every secret field of the installation are outside the list, and the entity kinds that hold secrets — users, sessions, broker connections, SMTP settings — are not audited at all. A list holds at most `AuditEvent.MaxChanges` (12) entries, each value is cut to `AuditEvent.ValueMaxLength` (120) characters with an ellipsis, and the description to 200, so one row is bounded at a few kilobytes whatever is edited.
+Values are stored as display text as they read at the time: money as `42.18 EUR`, dates as ISO, quantities without trailing zeros, enums as the camel-case name the API publishes (`expense`, `owner`), references by name (the category, account and security symbol), tags as a sorted comma list and split lines as `Food 10.00; Travel 5.00`. An empty value is `null` and the screen says "none". Nothing else is stored: the IBAN, notes, import references, a transaction's latitude and longitude, external broker ids, reporting amounts, owners, timestamps and every secret field of the installation are outside the list, and the entity kinds that hold secrets — users, sessions, broker connections, SMTP settings — are not audited at all. A list holds at most `AuditEvent.MaxChanges` (12) entries, each value is cut to `AuditEvent.ValueMaxLength` (120) characters with an ellipsis, and the description to 200, so one row is bounded at a few kilobytes whatever is edited.
 
 An edit that changes nothing a member can see — saving a form unchanged, a change of the reporting amount alone — writes no row.
 

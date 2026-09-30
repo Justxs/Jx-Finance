@@ -17,4 +17,7 @@ public sealed record UpdateTransactionRequest(
     Currency? Currency = null,
     Guid? RefundOfTransactionId = null,
     string? Note = null,
-    int? SpreadMonths = null) : ITransactionInput;
+    int? SpreadMonths = null,
+    string? Place = null,
+    decimal? Latitude = null,
+    decimal? Longitude = null) : ITransactionInput;

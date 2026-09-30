@@ -16,4 +16,5 @@ public enum Feature
     MonthClose,
     ReceiptReading,
     ApiTokens,
+    Locations,
 }

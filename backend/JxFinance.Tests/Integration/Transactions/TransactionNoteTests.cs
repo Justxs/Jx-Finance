@@ -21,8 +21,8 @@ public sealed class TransactionNoteTests(ApiFixture fixture) : IntegrationTestBa
         Assert.Equal("Tom's birthday gift", created.Note);
         Assert.Equal([created.Id], found.Items.Select(t => t.Id));
         var lines = csv.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-        Assert.EndsWith(",Note,Spread months", lines[0]);
-        Assert.EndsWith(",EUR,Tom's birthday gift,", lines[1]);
+        Assert.EndsWith(",Note,Spread months,Place", lines[0]);
+        Assert.EndsWith(",EUR,Tom's birthday gift,,", lines[1]);
         Assert.Null(updated.Note);
     }
 

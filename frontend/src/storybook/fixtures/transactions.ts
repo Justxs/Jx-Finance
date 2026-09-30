@@ -1,5 +1,7 @@
 import type {
   PayeeBreakdownItem,
+  PlaceBreakdownItem,
+  PlaceSuggestionResponse,
   TagBreakdownItem,
   TransactionLineResponse,
   TransactionResponse,
@@ -67,6 +69,74 @@ function transactionFrom(source: TransactionResponse["source"]) {
 
 const imported = transactionFrom("imported");
 const manual = transactionFrom("manual");
+
+const maximaPlace: PlaceSuggestionResponse = {
+  name: "Maxima X, Ukmergės g. 282, Vilnius",
+  count: 14,
+  latitude: 54.72381,
+  longitude: 25.23612,
+  nearby: false,
+};
+
+const lidlPlace: PlaceSuggestionResponse = {
+  name: "Lidl Žirmūnai, Žirmūnų g. 64, Vilnius",
+  count: 9,
+  latitude: 54.71293,
+  longitude: 25.30118,
+  nearby: false,
+};
+
+const rimiPlace: PlaceSuggestionResponse = {
+  name: "Rimi Hyper, Ozo g. 25, Vilnius",
+  count: 6,
+  latitude: 54.71612,
+  longitude: 25.27794,
+  nearby: false,
+};
+
+const caffeinePlace: PlaceSuggestionResponse = {
+  name: "Caffeine, Gedimino pr. 9, Vilnius",
+  count: 4,
+  latitude: null,
+  longitude: null,
+  nearby: false,
+};
+
+const ikiPlace: PlaceSuggestionResponse = {
+  name: "IKI Antakalnis, Antakalnio g. 40, Vilnius",
+  count: 3,
+  latitude: 54.70281,
+  longitude: 25.31907,
+  nearby: false,
+};
+
+export const placeSuggestions: PlaceSuggestionResponse[] = [
+  maximaPlace,
+  lidlPlace,
+  rimiPlace,
+  caffeinePlace,
+  ikiPlace,
+];
+
+export const nearbyPlaceSuggestions: PlaceSuggestionResponse[] = [
+  { ...rimiPlace, nearby: true },
+  maximaPlace,
+  lidlPlace,
+  caffeinePlace,
+  ikiPlace,
+];
+
+function placed(
+  transaction: TransactionResponse,
+  suggestion: PlaceSuggestionResponse,
+): TransactionResponse {
+  return {
+    ...transaction,
+    place: suggestion.name,
+    latitude: suggestion.latitude,
+    longitude: suggestion.longitude,
+  };
+}
 
 export const splitTransactionLines: TransactionLineResponse[] = [
   {
@@ -194,15 +264,18 @@ export const foreignCurrencyTransactions: TransactionResponse[] = [
 
 export const transactions: TransactionResponse[] = [
   {
-    ...imported(1, "09-17", shared, food, -42.18, "Maxima X, Ukmergės g.", [], 1),
+    ...placed(
+      imported(1, "09-17", shared, food, -42.18, "Maxima X, Ukmergės g.", [], 1),
+      maximaPlace,
+    ),
     payeeName: "Maxima",
   },
   imported(2, "09-16", checking, transport, -7.4, "Bolt pavėžėjimas", [car]),
   imported(3, "09-15", shared, utilities, -68.93, "Ignitis – elektra už rugpjūtį"),
   imported(4, "09-15", checking, telecom, -24.99, "Telia – mobilusis ryšys ir internetas"),
-  imported(5, "09-14", shared, food, -56.72, "Lidl Žirmūnai"),
+  placed(imported(5, "09-14", shared, food, -56.72, "Lidl Žirmūnai"), lidlPlace),
   splitTransaction,
-  manual(7, "09-12", cash, cafes, -4.8, "Caffeine – kava išsinešti"),
+  placed(manual(7, "09-12", cash, cafes, -4.8, "Caffeine – kava išsinešti"), caffeinePlace),
   {
     ...imported(8, "09-11", checking, entertainment, -18, "Forum Cinemas Vingis", [
       holiday,
@@ -214,7 +287,7 @@ export const transactions: TransactionResponse[] = [
   manual(10, "09-10", shared, salary, 2140, "Šarūno atlyginimas"),
   imported(11, "09-09", checking, transport, -61.35, "Circle K – degalai", [car]),
   imported(12, "09-08", checking, health, -23.47, "Eurovaistinė", [reimbursable]),
-  imported(13, "09-07", shared, food, -31.06, "Rimi Hyper"),
+  placed(imported(13, "09-07", shared, food, -31.06, "Rimi Hyper"), rimiPlace),
   imported(14, "09-06", shared, utilities, -19.84, "Vilniaus vandenys"),
   imported(15, "09-05", shared, housing, -612, "Būsto paskolos įmoka"),
   longDescriptionTransaction,
@@ -223,7 +296,7 @@ export const transactions: TransactionResponse[] = [
   imported(19, "09-02", shared, utilities, -12.38, "Vilniaus šilumos tinklai"),
   imported(20, "09-01", checking, entertainment, -10.99, "Spotify Premium"),
   uncategorisedTransaction,
-  imported(22, "08-30", shared, food, -27.63, "IKI Antakalnis"),
+  placed(imported(22, "08-30", shared, food, -27.63, "IKI Antakalnis"), ikiPlace),
   manual(23, "08-28", cash, gifts, 100, "Gimtadienio dovana nuo močiutės"),
   imported(24, "08-25", checking, shopping, -89.95, "Zara, Akropolis", [children]),
   manual(25, "08-20", checking, transport, -29, "Trafi – mėnesinis viešojo transporto bilietas"),
@@ -362,6 +435,24 @@ function payeeKeyOf(description: string | null): string {
     .split(/[^\p{L}\p{N}]+/u)
     .filter((token) => token !== "" && !/^\d+$/.test(token) && token.replace(/\D/g, "").length < 3)
     .join(" ");
+}
+
+export function buildPlaceBreakdownItems(items: TransactionResponse[]): PlaceBreakdownItem[] {
+  const byPlace = new Map<string, PlaceBreakdownItem>();
+  for (const item of items.filter((entry) => entry.type === "expense")) {
+    const key = item.place?.toLowerCase() ?? "";
+    const entry = byPlace.get(key);
+    byPlace.set(key, {
+      place: item.place ?? null,
+      amount: fromCents(toCents(entry?.amount ?? "0.00") + toCents(item.reportingAmount)),
+      comparisonAmount: null,
+      count: (entry?.count ?? 0) + 1,
+      latitude: item.latitude ?? null,
+      longitude: item.longitude ?? null,
+    });
+  }
+
+  return [...byPlace.values()].toSorted((a, b) => Number(b.amount) - Number(a.amount));
 }
 
 export function buildPayeeBreakdownItems(items: TransactionResponse[]): PayeeBreakdownItem[] {

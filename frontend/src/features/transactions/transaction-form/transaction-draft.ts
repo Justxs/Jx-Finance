@@ -18,6 +18,9 @@ export interface TransactionDraft {
   date?: string;
   description?: string | null;
   note?: string | null;
+  place?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
   isSplit?: boolean;
   tagIds?: string[];
   lines?: TransactionLineRequest[] | null;
@@ -35,6 +38,9 @@ export function draftFromTransaction(transaction: TransactionResponse): Transact
     date: transaction.date,
     description: transaction.description,
     note: transaction.note,
+    place: transaction.place,
+    latitude: transaction.latitude,
+    longitude: transaction.longitude,
     isSplit: transaction.isSplit,
     tagIds: transaction.tagIds,
     lines:
@@ -49,7 +55,12 @@ export function draftFromTransaction(transaction: TransactionResponse): Transact
 }
 
 export function duplicateDraft(transaction: TransactionResponse): TransactionDraft {
-  const { date: _date, ...rest } = draftFromTransaction(transaction);
+  const {
+    date: _date,
+    latitude: _latitude,
+    longitude: _longitude,
+    ...rest
+  } = draftFromTransaction(transaction);
   return rest;
 }
 
@@ -61,6 +72,7 @@ export function refundDraft(purchase: TransactionResponse): TransactionDraft {
     amount: `-${purchase.amount}`,
     currency: purchase.currency,
     description: purchase.description,
+    place: purchase.place,
     tagIds: purchase.tagIds,
     refundOf: { id: purchase.id, date: purchase.date, description: purchase.description },
   };
@@ -76,6 +88,7 @@ export function templateValuesFromFormValues(
     amount: normalizeMoney(values.amount),
     currency: values.currency,
     description: values.description,
+    place: values.place,
     tagIds: values.tagIds,
     lines: values.lines?.map((line) => ({ ...line, amount: normalizeMoney(line.amount) })) ?? null,
     spreadMonths: values.spreadMonths,
@@ -90,6 +103,7 @@ export function draftFromTemplate(values: TransactionTemplateValues): Transactio
     amount: values.amount,
     currency: values.currency,
     description: values.description,
+    place: values.place,
     isSplit: (values.lines?.length ?? 0) > 0,
     tagIds: values.tagIds,
     lines: values.lines,

@@ -218,7 +218,9 @@ The individual charts:
 - **Debt payment split:** stacked yearly bars, principal navy, interest red, extra green.
 - **Money flow (reports):** a Sankey from income categories through one "Money in" node to expense categories and Saved, hidden below `md`. Nodes are 8px navy bars, 28px apart; Other, Money back, From savings and Saved are muted ink. Links carry no rainbow: into the hub green, out of the hub red, and those of Money back, From savings and Saved muted ink, all at 25% opacity. Left-column labels sit left of their bar and right-column labels right of it, the name in ink (cut to 24 characters with an ellipsis) over the amount in muted tabular figures; the hub's label is centred above it. Hovering a node shows the popover tooltip with its name and amount, and for Money back one row per category; category nodes show a pointer and open the ledger.
 
-Charts do not animate, do not take keyboard focus and never show a focus outline; each is wrapped as a labelled image (`role="img"`). Series labels come from translations, never from data keys.
+- **Spending by place (reports):** a map of Lithuania behind a List and Map switch, offered only when the installation has its tile file. Land is paper, water `accent`, main roads hairline, the country border a dashed `input` line and city names muted ink in Source Sans 3. One navy dot per place at 45% with a 1px navy stroke, its area proportional to the amount, the largest drawn first; a dot shows a pointer and opens the ledger. The list stays the default view.
+
+Charts do not animate, do not take keyboard focus and never show a focus outline; each is wrapped as a labelled image (`role="img"`). The place map is the exception: its canvas takes focus for panning and zooming. Series labels come from translations, never from data keys.
 
 ### Ledger tools
 A list that can be filtered shows a totals line above it: the count, then signed income (`+`, green) and expense (`−`, ink), both semibold, in tabular figures with muted labels.

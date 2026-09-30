@@ -3,12 +3,14 @@ import { useMutation } from "@tanstack/react-query";
 import type { ComponentProps } from "react";
 import { expect, fireEvent, fn, userEvent, waitFor } from "storybook/test";
 import { ApiError } from "@/api/client";
+import { getSettingsMockHandler } from "@/api/generated/settings/settings.msw";
 import { withWidth } from "@/storybook/decorators";
 import {
   accounts,
   categories,
   linkedRefund,
   longDescriptionTransaction,
+  settingsWith,
   splitTransaction,
   spreadRefundProblem,
   spreadTransaction,
@@ -17,6 +19,7 @@ import {
   uncategorisedTransaction,
   unlinkedRefund,
 } from "@/storybook/fixtures";
+import { withHandlers } from "@/storybook/handlers";
 import { type Canvas, chooseOption } from "@/storybook/interactions";
 import { duplicateDraft, refundDraft } from "./transaction-draft";
 import { TransactionForm } from "./transaction-form";
@@ -172,6 +175,35 @@ export const EditingANote: Story = {
         expect.objectContaining({ note: "Tomo gimtadienis", description: "Forum Cinemas Vingis" }),
       ),
     );
+  },
+};
+
+export const EditingAPlace: Story = {
+  args: { initial: transactions[0] },
+  parameters: withHandlers(getSettingsMockHandler(settingsWith({ features: { locations: true } }))),
+  play: async ({ canvas, args }) => {
+    const place = await canvas.findByRole("combobox", { name: "Place" });
+    await expect(place).toHaveValue("Maxima X, Ukmergės g. 282, Vilnius");
+    await expect(canvas.getByText(/Location saved/u)).toBeVisible();
+    await fireEvent.change(place, { target: { value: "  Maxima X, Ukmergės g. 282  " } });
+    await submitForm(canvas);
+    await waitFor(() =>
+      expect(args.onSubmit).toHaveBeenCalledWith(
+        expect.objectContaining({
+          place: "Maxima X, Ukmergės g. 282",
+          latitude: 54.72381,
+          longitude: 25.23612,
+        }),
+      ),
+    );
+  },
+};
+
+export const PlaceHiddenWhileTheSwitchIsOff: Story = {
+  args: { initial: transactions[0] },
+  play: async ({ canvas }) => {
+    await expect(await canvas.findByLabelText("Note")).toBeVisible();
+    await expect(canvas.queryByRole("combobox", { name: "Place" })).toBeNull();
   },
 };
 

@@ -28,6 +28,7 @@ export const SettingsResponse = zod.object({
     monthClose: zod.boolean(),
     receiptReading: zod.boolean(),
     apiTokens: zod.boolean(),
+    locations: zod.boolean(),
   }),
   reportingCurrency: zod.enum([
     "eur",
@@ -135,6 +136,7 @@ export const UpdateSettingsBody = zod.object({
     monthClose: zod.boolean(),
     receiptReading: zod.boolean(),
     apiTokens: zod.boolean(),
+    locations: zod.boolean(),
   }),
   reportingCurrency: zod.enum([
     "eur",
@@ -237,6 +239,7 @@ export const UpdateSettingsResponse = zod.object({
     monthClose: zod.boolean(),
     receiptReading: zod.boolean(),
     apiTokens: zod.boolean(),
+    locations: zod.boolean(),
   }),
   reportingCurrency: zod.enum([
     "eur",

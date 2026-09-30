@@ -65,6 +65,66 @@ describe("duplicateDraft", () => {
     expect(draft.tagIds).toEqual(["tag-1", "tag-2"]);
     expect(draft.lines).toHaveLength(2);
   });
+
+  test("copies the place but not the coordinates, which record where one payment was made", () => {
+    const draft = duplicateDraft({
+      ...split,
+      place: "Maxima, Ozo g. 18, Vilnius",
+      latitude: 54.71234,
+      longitude: 25.28765,
+    });
+
+    expect(draft.place).toBe("Maxima, Ozo g. 18, Vilnius");
+    expect(draft).not.toHaveProperty("latitude");
+    expect(draft).not.toHaveProperty("longitude");
+    expect(defaultFormFields(draft, undefined, "2026-09-20")).toMatchObject({
+      place: "Maxima, Ozo g. 18, Vilnius",
+      latitude: null,
+      longitude: null,
+    });
+  });
+});
+
+describe("places", () => {
+  test("the edit form keeps the stored place and coordinates and sends them back", () => {
+    const fields = defaultFormFields(
+      draftFromTransaction({ ...split, place: "Rimi Ozas", latitude: 54.7, longitude: 25.3 }),
+      undefined,
+      "2026-09-20",
+    );
+
+    expect(toSubmittedValues({ ...fields, place: "  Rimi Ozas  " })).toMatchObject({
+      place: "Rimi Ozas",
+      latitude: 54.7,
+      longitude: 25.3,
+    });
+    expect(toSubmittedValues({ ...fields, place: " " }).place).toBeNull();
+  });
+
+  test("a refund copies the place of the purchase without its coordinates", () => {
+    const draft = refundDraft({ ...split, place: "Lidl", latitude: 54.7, longitude: 25.3 });
+
+    expect(draft.place).toBe("Lidl");
+    expect(draft).not.toHaveProperty("latitude");
+  });
+
+  test("a template keeps the place", () => {
+    const stored = templateValuesFromFormValues({
+      accountId: "account-1",
+      categoryId: null,
+      type: "expense",
+      amount: "3.20",
+      currency: "eur",
+      date: "2026-09-13",
+      description: "Coffee",
+      place: "Caffeine Roasters",
+      tagIds: [],
+      lines: null,
+      refundOfTransactionId: null,
+    });
+
+    expect(draftFromTemplate(stored).place).toBe("Caffeine Roasters");
+  });
 });
 
 describe("templates", () => {

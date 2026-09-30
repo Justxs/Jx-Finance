@@ -46,6 +46,7 @@ export const maximaReceipt: ReceiptResultResponse = {
   ],
   adjustments: [{ kind: "discount", label: "AČIŪ kortelės nuolaida", amount: "-0.50" }],
   unreadLines: [],
+  address: "Savanorių pr. 247, LT-02300 Vilnius",
 };
 
 export const receiptReading: ReceiptReadingResponse = {
@@ -67,6 +68,12 @@ export const receiptReadingWithCandidate: ReceiptReadingResponse = {
       currency: "eur",
     },
   ],
+};
+
+export const receiptReadingWithPhotoLocation: ReceiptReadingResponse = {
+  ...receiptReading,
+  photoLatitude: 54.70962,
+  photoLongitude: 25.24533,
 };
 
 export const receiptReadingMisread: ReceiptReadingResponse = {

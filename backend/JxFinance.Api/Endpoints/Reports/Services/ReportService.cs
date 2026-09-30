@@ -3,8 +3,11 @@ using JxFinance.Common;
 using JxFinance.Common.CategoryAttributions;
 using JxFinance.Common.InvestmentCashFlows;
 using JxFinance.Common.Payees;
+using JxFinance.Common.Places;
+using JxFinance.Common.Settings;
 using JxFinance.Common.Spreads;
 using JxFinance.Domain.Common;
+using JxFinance.Domain.Settings;
 using JxFinance.Endpoints.Dashboard.Shared;
 using JxFinance.Endpoints.Reports.Interfaces;
 using JxFinance.Endpoints.Reports.Shared;
@@ -18,7 +21,8 @@ public sealed class ReportService(
     AppDbContext db,
     IClock clock,
     ICategoryAttributionService attributions,
-    IInvestmentCashFlowService investmentCashFlows) : IReportService
+    IInvestmentCashFlowService investmentCashFlows,
+    IInstanceSettingsStore settings) : IReportService
 {
     private sealed record Bucket(DateOnly Start, decimal Income, decimal Expense);
 
@@ -61,6 +65,9 @@ public sealed class ReportService(
             .ToList();
         var expenseByTag = await BuildTagBreakdownAsync(period, earlier, expenseSlices, cancellationToken);
         var expenseByPayee = await BuildPayeeBreakdownAsync(period, earlier, expenseSlices, cancellationToken);
+        var expenseByPlace = settings.Current.IsEnabled(Feature.Locations)
+            ? await BuildPlaceBreakdownAsync(period, earlier, expenseSlices, cancellationToken)
+            : [];
 
         var (totalIncome, totalExpense) = Totals(everything, period);
 
@@ -76,6 +83,7 @@ public sealed class ReportService(
             trendBucket,
             expenseByTag,
             expenseByPayee,
+            expenseByPlace,
             earlier is null ? null : ComparisonTotals(comparison, earlier.Value, everything));
     }
 
@@ -217,6 +225,63 @@ public sealed class ReportService(
                 {
                     Name = names.GetValueOrDefault(item.Key),
                 })
+            .ToList();
+    }
+
+    private async Task<IReadOnlyList<PlaceBreakdownItem>> BuildPlaceBreakdownAsync(
+        DateWindow period,
+        DateWindow? comparison,
+        IReadOnlyList<SpreadSlice> slices,
+        CancellationToken cancellationToken)
+    {
+        var start = period.Start;
+        var end = period.ExclusiveEnd;
+        var expenses = db.Transactions.Within(period, comparison).Where(t => t.Type == FlowType.Expense);
+
+        var grouped = (await expenses
+            .Where(t => t.SpreadMonths == null)
+            .GroupBy(t => new { t.Place, Current = t.Date >= start && t.Date < end })
+            .Select(group => new
+            {
+                group.Key.Place,
+                group.Key.Current,
+                Amount = group.Sum(t => t.ReportingAmount),
+                Count = group.Count(),
+            })
+            .ToListAsync(cancellationToken))
+            .Select(entry => (entry.Place, entry.Current, entry.Amount, entry.Count))
+            .Concat(slices
+                .GroupBy(slice => (slice.Place, Current: period.Contains(slice.Date)))
+                .Select(group => (group.Key.Place, group.Key.Current, Amount: group.Sum(slice => slice.Amount), Count: group.Select(slice => slice.Id).Distinct().Count())))
+            .ToList();
+
+        var totals = grouped
+            .GroupBy(entry => entry.Place is { } place ? PlaceSpellings.KeyOf(place) : string.Empty)
+            .Select(group => new
+            {
+                group.Key,
+                Amount = Money.Round(group.Where(entry => entry.Current).Sum(entry => entry.Amount)),
+                Earlier = comparison is null
+                    ? null
+                    : (decimal?)Money.Round(group.Where(entry => !entry.Current).Sum(entry => entry.Amount)),
+                Count = group.Where(entry => entry.Current).Sum(entry => entry.Count),
+            })
+            .OrderByDescending(item => item.Earlier is { } earlier ? Math.Max(item.Amount, earlier) : item.Amount)
+            .ThenBy(item => item.Key, StringComparer.Ordinal)
+            .Take(PlaceBreakdownItem.MaxItems)
+            .ToList();
+
+        var spreadIds = slices.Select(slice => slice.Id).Distinct().ToList();
+        var places = PlaceSpellings.Fold(await db.Transactions
+                .Where(t => t.Type == FlowType.Expense)
+                .Where(t => spreadIds.Contains(t.Id) || expenses.Any(e => e.Id == t.Id))
+                .SpellingsAsync(cancellationToken))
+            .ToDictionary(place => place.Key);
+
+        return totals
+            .Select(item => places.GetValueOrDefault(item.Key) is { } place
+                ? new PlaceBreakdownItem(place.Name, item.Amount, item.Earlier, item.Count, place.Latitude, place.Longitude)
+                : new PlaceBreakdownItem(null, item.Amount, item.Earlier, item.Count, null, null))
             .ToList();
     }
 

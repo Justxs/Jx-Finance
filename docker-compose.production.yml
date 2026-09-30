@@ -16,6 +16,8 @@ services:
     volumes:
       - caddy_data:/data
       - caddy_config:/config
+      - maps:/srv/maps:ro
 volumes:
   caddy_data:
   caddy_config:
+  maps:

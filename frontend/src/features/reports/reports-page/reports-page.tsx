@@ -16,6 +16,7 @@ import { StaleRegion } from "@/components/ui/stale-region/stale-region";
 import { MoneyFlow } from "@/features/reports/money-flow/money-flow";
 import { NetWorthChangeCard } from "@/features/reports/net-worth-change-card/net-worth-change-card";
 import { PayeeBreakdown } from "@/features/reports/payee-breakdown/payee-breakdown";
+import { PlaceBreakdown } from "@/features/reports/place-breakdown/place-breakdown";
 import { ReceiptItems } from "@/features/reports/receipt-items/receipt-items";
 import { detectPreset } from "@/features/reports/report-filters/date-range-presets";
 import { ReportFilters } from "@/features/reports/report-filters/report-filters";
@@ -33,6 +34,7 @@ export function ReportsPage() {
   const { t } = useTranslation();
   const netWorthEnabled = useFeature("netWorth");
   const receiptsEnabled = useFeature("receiptReading");
+  const locationsEnabled = useFeature("locations");
   const navigate = useNavigate({ from: "/reports" });
   const search = useSearch({ from: "/reports" });
   const isoDate = useIsoDate();
@@ -138,6 +140,15 @@ export function ReportsPage() {
                   dateTo={shown.dateTo}
                 />
               </TitledSection>
+              {locationsEnabled ? (
+                <TitledSection title={t("reports.expenseByPlace.title")} bodyGap="md">
+                  <PlaceBreakdown
+                    items={summary.data.expenseByPlace}
+                    dateFrom={shown.dateFrom}
+                    dateTo={shown.dateTo}
+                  />
+                </TitledSection>
+              ) : null}
               {receiptsEnabled ? (
                 <ReceiptItems dateFrom={shown.dateFrom} dateTo={shown.dateTo} />
               ) : null}

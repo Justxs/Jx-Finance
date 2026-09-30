@@ -101,6 +101,7 @@ import { trashHandlers } from "./trash";
 import { userHandlers } from "./users";
 
 export { failWith, failWithStatus, onRouteOf, pending, problem } from "./http";
+export { mapTilesPresentHandler } from "./reports";
 export { discordOffHandler, emailEnabledHandler, passkeysOffHandler } from "./settings";
 
 export const handlers: RequestHandler[] = [

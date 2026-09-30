@@ -59,6 +59,7 @@ public sealed class TokenReadableTests
         "GET /api/transactions",
         "GET /api/transactions/export",
         "GET /api/transactions/export/pdf",
+        "GET /api/transactions/places",
         "GET /api/transactions/summary",
         "GET /api/transactions/{id}",
         "GET /api/transfers",

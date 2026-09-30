@@ -25,6 +25,9 @@ public sealed class Transaction : OwnableEntity, IAccountScoped, IDated
     public DateTimeOffset? UnusualDismissedAt { get; set; }
     public short? SpreadMonths { get; set; }
     public DateOnly? SpreadUntil { get; set; }
+    public string? Place { get; set; }
+    public decimal? Latitude { get; set; }
+    public decimal? Longitude { get; set; }
     public List<TransactionTag> Tags { get; set; } = [];
 
     public void RecheckUnusual()

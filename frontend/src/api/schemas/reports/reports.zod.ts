@@ -8,7 +8,7 @@
 import * as zod from "zod";
 
 /**
- * Returns income, expense, and net totals for an arbitrary date range, with the per-category split. Unlike the dashboard endpoints, the window is yours to choose rather than being pinned to calendar months. While the investments feature is on, dividends and interest from the investment ledger count as income and withholding tax and standalone fees as expense; buys, sells and splits never do. Those amounts have no category: they arrive as one entry per list with categoryId null and syntheticGroup set (investmentIncome or investmentTaxesAndFees), which a client should localize and not link to a category. Entries of real categories, and the uncategorized entry, have syntheticGroup null. expenseByTag splits the same expense total by tag, with one entry per tag the period touches and a final entry with tagId null for the expenses that carry no tag. A transaction can carry several tags and then counts once under each of them, so the tag entries can add up to more than totalExpense; only the untagged entry is disjoint from the rest. Investment entries carry no tag and are left out of this list. expenseByPayee splits the expenses by payee, the normalized description: lowercase words with punctuation and tokens of three or more digits dropped, so reference numbers do not split one shop. It counts whole transactions, a split one once under its own description, and holds at most 50 entries ordered by the larger of the two amounts. label is the newest description of that payee in the range, count the number of its transactions in the range, and payeeKey matches the payee filter of the transaction list, whose totals then equal the amount. The expenses without a description are one entry with payeeKey and label null. Investment entries are left out. Ask for a comparison and every figure gains its counterpart from an earlier period: comparison holds that period's own dates and totals, every category, synthetic group, tag and payee entry gains comparisonAmount, and every trend point gains comparisonBucketStart, comparisonIncome and comparisonExpense. A category, group, tag or payee that only one of the two periods touched is still one entry, with zero on the side that has nothing. Trend points are paired by position, so the first bucket of the range meets the first bucket of the earlier one; a bucket with no counterpart compares against zero. Without the parameter every comparison field is null and the response is the one it always was. The difference and its percentage are the client's to compute, because a change from zero has no percentage to show.
+ * Returns income, expense, and net totals for an arbitrary date range, with the per-category split. Unlike the dashboard endpoints, the window is yours to choose rather than being pinned to calendar months. While the investments feature is on, dividends and interest from the investment ledger count as income and withholding tax and standalone fees as expense; buys, sells and splits never do. Those amounts have no category: they arrive as one entry per list with categoryId null and syntheticGroup set (investmentIncome or investmentTaxesAndFees), which a client should localize and not link to a category. Entries of real categories, and the uncategorized entry, have syntheticGroup null. expenseByTag splits the same expense total by tag, with one entry per tag the period touches and a final entry with tagId null for the expenses that carry no tag. A transaction can carry several tags and then counts once under each of them, so the tag entries can add up to more than totalExpense; only the untagged entry is disjoint from the rest. Investment entries carry no tag and are left out of this list. expenseByPayee splits the expenses by payee, the normalized description: lowercase words with punctuation and tokens of three or more digits dropped, so reference numbers do not split one shop. It counts whole transactions, a split one once under its own description, and holds at most 50 entries ordered by the larger of the two amounts. label is the newest description of that payee in the range, count the number of its transactions in the range, and payeeKey matches the payee filter of the transaction list, whose totals then equal the amount. The expenses without a description are one entry with payeeKey and label null. Investment entries are left out. expenseByPlace, empty while the locations feature is off, splits the expenses the same way by place: places that differ only in case are one entry named by the newest spelling in the range, with the average of its stored coordinates (null when none has any), and the expenses without a place are one entry with place null. At most 50 entries. The place filter of the transaction list matches by substring, so its totals equal the amount unless the name is part of another place's name. Ask for a comparison and every figure gains its counterpart from an earlier period: comparison holds that period's own dates and totals, every category, synthetic group, tag and payee entry gains comparisonAmount, and every trend point gains comparisonBucketStart, comparisonIncome and comparisonExpense. A category, group, tag or payee that only one of the two periods touched is still one entry, with zero on the side that has nothing. Trend points are paired by position, so the first bucket of the range meets the first bucket of the earlier one; a bucket with no counterpart compares against zero. Without the parameter every comparison field is null and the response is the one it always was. The difference and its percentage are the client's to compute, because a change from zero has no percentage to show.
  * @summary Summarise income and expenses over a range
  */
 export const reportSummaryResponseTotalIncomeRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
@@ -44,6 +44,12 @@ export const reportSummaryResponseExpenseByPayeeItemAmountRegExp = new RegExp(
   "^-?\\d+(\\.\\d{1,8})?$",
 );
 export const reportSummaryResponseExpenseByPayeeItemComparisonAmountRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const reportSummaryResponseExpenseByPlaceItemAmountRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const reportSummaryResponseExpenseByPlaceItemComparisonAmountRegExp = new RegExp(
   "^-?\\d+(\\.\\d{1,8})?$",
 );
 export const reportSummaryResponseComparisonTwoTotalIncomeRegExp = new RegExp(
@@ -129,6 +135,18 @@ export const ReportSummaryResponse = zod.object({
         .nullable(),
       count: zod.int(),
       name: zod.string().nullish(),
+    }),
+  ),
+  expenseByPlace: zod.array(
+    zod.object({
+      place: zod.string().nullable(),
+      amount: zod.stringFormat("decimal", reportSummaryResponseExpenseByPlaceItemAmountRegExp),
+      comparisonAmount: zod
+        .stringFormat("decimal", reportSummaryResponseExpenseByPlaceItemComparisonAmountRegExp)
+        .nullable(),
+      count: zod.int(),
+      latitude: zod.number().nullable(),
+      longitude: zod.number().nullable(),
     }),
   ),
   comparison: zod

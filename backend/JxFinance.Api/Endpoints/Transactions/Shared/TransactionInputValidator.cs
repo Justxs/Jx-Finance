@@ -25,6 +25,11 @@ public abstract class TransactionInputValidator<TRequest> : Validator<TRequest>
         RuleFor(r => r.Date).IsRequired();
         RuleFor(r => r.Description).HasMaxLength(500);
         RuleFor(r => r.Note).HasMaxLength(TransactionNote.MaxLength);
+        RuleFor(r => r.Place).HasMaxLength(TransactionPlace.MaxLength);
+        RuleFor(r => r.Latitude)
+            .Must((r, latitude) => TransactionPlace.IsValidPair(latitude, r.Longitude))
+            .WithErrorCode(ErrorCodes.TransactionLocationInvalid)
+            .WithMessage("Send a latitude from -90 to 90 and a longitude from -180 to 180 together, or neither.");
         RuleFor(r => r.TagIds).HasAtMostTags();
         RuleForEach(r => r.TagIds).IsRequired();
         RuleFor(r => r.Lines)

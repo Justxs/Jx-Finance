@@ -18,7 +18,11 @@ public sealed class ReadReceiptSummary : Summary<ReadReceiptEndpoint, ReadReceip
             + "first matching categorization rule, otherwise none. A reading is kept per user and file content: "
             + "reading the same file again answers the stored reading with cached true, unless force is true. For an "
             + "uploaded file, candidates lists up to three visible unsplit expenses with the receipt's total, within "
-            + "three days of its date. Needs the ReceiptReading feature switch. Rate limited to 30 calls per five "
+            + "three days of its date. result.address is the shop's address line from the receipt's header, when one "
+            + "has a street number and a postcode or a known city. While the locations feature is on, an uploaded photo "
+            + "whose EXIF carries a GPS position answers it as photoLatitude and photoLongitude, read before the metadata "
+            + "is stripped and never stored with the reading; a PDF or an attached file answers null. "
+            + "Needs the ReceiptReading feature switch. Rate limited to 30 calls per five "
             + "minutes per client.";
         Params["attachmentId"] = "An attached file to read; leave empty when sending file.";
         Params["file"] = "A new file to read, at most 10 MB; leave empty when sending attachmentId.";

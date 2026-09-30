@@ -34,6 +34,7 @@ const templateSchema = z.object({
     amount: z.string().catch(""),
     currency: z.enum(Currency).catch(DEFAULT_CURRENCY),
     description: z.string().nullable().catch(null),
+    place: z.string().nullable().catch(null).optional(),
     tagIds: z.array(z.string()).catch([]),
     lines: z.array(templateLineSchema).nullable().catch(null),
     spreadMonths: z.number().int().nullable().catch(null).optional(),

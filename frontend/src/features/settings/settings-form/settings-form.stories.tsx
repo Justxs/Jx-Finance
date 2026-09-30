@@ -27,6 +27,17 @@ export const General: Story = {};
 
 export const Features: Story = { args: { section: "features" } };
 
+export const PlacesSwitch: Story = {
+  args: { section: "features" },
+  play: async ({ canvas }) => {
+    const places = await canvas.findByRole("checkbox", { name: "Places" });
+    await expect(places).not.toBeChecked();
+    await expect(canvas.getByText(/Positions stay on this server/u)).toBeVisible();
+    await userEvent.click(places);
+    await expect(places).toBeChecked();
+  },
+};
+
 export const Currencies: Story = { args: { section: "currencies" } };
 
 export const Regional: Story = { args: { section: "regional" } };

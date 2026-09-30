@@ -31,6 +31,7 @@ export const defaultSettings: SettingsResponse = {
     monthClose: true,
     receiptReading: true,
     apiTokens: true,
+    locations: true,
   },
   reportingCurrency: DEFAULT_CURRENCY,
   enabledCurrencies: [DEFAULT_CURRENCY],

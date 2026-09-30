@@ -23,4 +23,6 @@ export interface ReceiptResultResponse {
   items: ReceiptItemResponse[];
   adjustments: ReceiptAdjustmentResponse[];
   unreadLines: string[];
+  /** @nullable */
+  address?: string | null;
 }

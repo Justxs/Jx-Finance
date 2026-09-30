@@ -34,9 +34,12 @@ public sealed class CreateTransactionSummary : Summary<CreateTransactionEndpoint
         RequestParam(r => r.TagIds, "Optional tags for the whole payment, at most ten, each visible to you.");
         RequestParam(r => r.Note, "Optional note of your own, at most 1000 characters, kept beside the bank's description and never changed by an import.");
         RequestParam(r => r.SpreadMonths, "Optional, from 2 to 36: count the amount in equal monthly slices over this many months, starting with the month of the date. Not allowed on a split or a refund.");
+        RequestParam(r => r.Place, "Optional place of your own, such as a shop and its address, at most 120 characters. Stored only while the locations feature is on.");
+        RequestParam(r => r.Latitude, "Optional latitude from -90 to 90, sent together with longitude and kept to five decimals. Stored only while the locations feature is on.");
+        RequestParam(r => r.Longitude, "Optional longitude from -180 to 180, sent together with latitude and kept to five decimals.");
         Responses[201] = "The transaction was created. The Location header points at it.";
         Responses[400] = "Validation failed, the split lines do not add up, a refund has lines (transaction.splitNotAllowed) or names an original that is not a visible purchase "
             + "(transaction.refundOriginalInvalid), a split is spread (transaction.splitNotAllowed) or a refund is spread (transaction.spreadRefund), "
-            + "or the account, category or a tag is not visible to you.";
+            + "coordinates are out of range or come without their pair (transaction.locationInvalid), or the account, category or a tag is not visible to you.";
     }
 }

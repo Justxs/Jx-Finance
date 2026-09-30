@@ -552,6 +552,18 @@
       "chip": "Spread · {{months}} months",
       "tooltip": "Counts {{amount}} a month in reports and budgets, {{from}} to {{to}}",
       "tooltipInRange": "Counts {{amount}} a month in reports and budgets, {{from}} to {{to}}. {{part}} of it falls in the dates shown."
+    },
+    "place": {
+      "label": "Place",
+      "useMyLocation": "Use my location",
+      "locating": "Finding your location…",
+      "locationSaved": "Location saved",
+      "remove": "Remove",
+      "removeLabel": "Remove the saved location",
+      "denied": "The browser was not allowed to share your location. Allow it in the site settings, or type the place.",
+      "timeout": "Your location could not be found in time. Try again, or type the place.",
+      "unavailable": "Your location is not available right now. Type the place instead.",
+      "usePhotoLocation": "Use the photo's location"
     }
   },
   "receipts": {
@@ -1023,6 +1035,10 @@
         "apiTokens": {
           "name": "Personal API tokens",
           "hint": "Members can create tokens for their own scripts, spreadsheets and home automation, read only or also for recording entries. Off suspends every token until it is on again."
+        },
+        "locations": {
+          "name": "Places",
+          "hint": "A place for each payment and, on request, where it was made, with suggestions, a place filter and spending by place. Positions stay on this server, though the browser may ask its own location service."
         }
       }
     },
@@ -2132,7 +2148,8 @@
       "interestRate": "interest rate",
       "tracksPayments": "track payments",
       "valuations": "valuations",
-      "payments": "linked payments"
+      "payments": "linked payments",
+      "place": "place"
     }
   },
   "sharing": {
@@ -2224,6 +2241,20 @@
       "noReceipts": "No receipts read in this range. Use Fill from receipt on an expense with an attached receipt.",
       "noMatches": "No item matches.",
       "table": "Items by amount"
+    },
+    "expenseByPlace": {
+      "title": "Expense by place",
+      "noPlace": "No place",
+      "empty": "No place spending in this period.",
+      "hint": "Places that differ only in capital letters are one place, named as you typed it last.",
+      "showAll": "Show all",
+      "view": "View",
+      "list": "List",
+      "map": "Map",
+      "mapLabel": "Map of spending by place: {{places}}",
+      "mapLabelEmpty": "Map of spending by place; no place has a location yet",
+      "noCoordinates": "None of these places has a location yet. Use my location in the transaction form saves one.",
+      "mapFailed": "The map could not be drawn in this browser. The list has the same places."
     }
   },
   "imports": {
@@ -2701,7 +2732,8 @@
       "linesMismatch": "Split lines must add up to the transaction amount.",
       "splitNotAllowed": "This cannot be done with a split transaction.",
       "refundOriginalInvalid": "The purchase this refund names is not an expense you can see. Unlink it or choose another purchase.",
-      "spreadRefund": "A refund cannot be spread over months."
+      "spreadRefund": "A refund cannot be spread over months.",
+      "locationInvalid": "The location is not valid: latitude and longitude go together and must be within range."
     },
     "transfer": {
       "amountMismatch": "Sent and received amounts must match in the same currency.",

@@ -25,6 +25,7 @@ public sealed class FeatureGateTests
         (ApiRoutes.InvestmentsPath, Feature.Investments),
         (ApiRoutes.CategorizationRulesPath, Feature.CategorizationRules),
         (ApiRoutes.TransactionsPath + "/{id}/unusual", Feature.UnusualAmounts),
+        (ApiRoutes.TransactionsPath + "/places", Feature.Locations),
         (ApiRoutes.MonthClosePath, Feature.MonthClose),
         (ApiRoutes.AccountsPath + "/forecast", Feature.RecurringBills),
         (ApiRoutes.ReceiptsPath, Feature.ReceiptReading),

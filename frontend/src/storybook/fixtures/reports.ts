@@ -1,6 +1,7 @@
 import type {
   CategoryBreakdownItem,
   PayeeBreakdownItem,
+  PlaceBreakdownItem,
   ReportComparisonMode,
   ReportSummaryResponse,
   ReportTrendPoint,
@@ -13,6 +14,7 @@ import { buildCategoryBreakdownItems, monthlyTrendItems } from "./dashboard";
 import { tags } from "./tags";
 import {
   buildPayeeBreakdownItems,
+  buildPlaceBreakdownItems,
   buildTagBreakdownItems,
   countedBetween,
   sumByType,
@@ -88,6 +90,7 @@ export function buildReportSummary(dateFrom: string, dateTo: string): ReportSumm
     trendBucket: "day",
     expenseByTag: buildTagBreakdownItems(items),
     expenseByPayee: buildPayeeBreakdownItems(items),
+    expenseByPlace: buildPlaceBreakdownItems(items),
   };
 }
 
@@ -164,6 +167,34 @@ function yearPayeeShare([payeeKey, label, share, count]: [
   };
 }
 
+const YEAR_PLACES: [string | null, number, number, number | null, number | null][] = [
+  ["Maxima X, Ukmergės g. 282, Vilnius", 0.08, 41, 54.72381, 25.23612],
+  ["Lidl Žirmūnai, Žirmūnų g. 64, Vilnius", 0.05, 30, 54.71293, 25.30118],
+  ["Rimi Hyper, Ozo g. 25, Vilnius", 0.04, 22, 54.71612, 25.27794],
+  ["Circle K, Kalvarijų g. 129, Vilnius", 0.03, 18, 54.71966, 25.29016],
+  ["IKI Antakalnis, Antakalnio g. 40, Vilnius", 0.02, 15, 54.70281, 25.31907],
+  ["Caffeine, Gedimino pr. 9, Vilnius", 0.01, 36, null, null],
+  ["Akropolis, Ozo g. 25, Vilnius", 0.02, 7, 54.71031, 25.26335],
+  [null, 0.75, 402, null, null],
+];
+
+function yearPlaceShare([place, share, count, latitude, longitude]: [
+  string | null,
+  number,
+  number,
+  number | null,
+  number | null,
+]): PlaceBreakdownItem {
+  return {
+    place,
+    amount: fromCents(Math.round(yearExpenseCents * share)),
+    comparisonAmount: null,
+    count,
+    latitude,
+    longitude,
+  };
+}
+
 export const reportSummaryYear: ReportSummaryResponse = {
   periodStart: FIXTURE_YEAR_START,
   periodEnd: FIXTURE_MONTH_END,
@@ -206,6 +237,7 @@ export const reportSummaryYear: ReportSummaryResponse = {
     { tagId: null, tagName: "Untagged", amount: fromCents(Math.round(yearExpenseCents * 0.58)) },
   ],
   expenseByPayee: YEAR_PAYEES.map(yearPayeeShare),
+  expenseByPlace: YEAR_PLACES.map(yearPlaceShare),
 };
 
 function payeeWeight(item: PayeeBreakdownItem): number {
@@ -281,6 +313,10 @@ export function withComparison(
       count: 0,
     },
   ].toSorted((a, b) => payeeWeight(b) - payeeWeight(a));
+  const expenseByPlace: PlaceBreakdownItem[] = summary.expenseByPlace.map((item, index) => ({
+    ...item,
+    comparisonAmount: scaled(item.amount, earlierFactor(index + 4)),
+  }));
   const trend: ReportTrendPoint[] = summary.trend.map((point, index) => ({
     ...point,
     comparisonBucketStart: addDays(point.bucketStart, -shift),
@@ -297,6 +333,7 @@ export function withComparison(
     incomeByCategory,
     expenseByTag,
     expenseByPayee,
+    expenseByPlace,
     trend,
     comparison: {
       mode,
@@ -328,4 +365,5 @@ export const emptyReportSummary: ReportSummaryResponse = {
   trendBucket: "day",
   expenseByTag: [],
   expenseByPayee: [],
+  expenseByPlace: [],
 };

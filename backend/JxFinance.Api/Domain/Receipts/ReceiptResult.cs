@@ -12,7 +12,8 @@ public sealed record ReceiptResult(
     int PageCount,
     IReadOnlyList<ReceiptItem> Items,
     IReadOnlyList<ReceiptAdjustment> Adjustments,
-    IReadOnlyList<string> UnreadLines)
+    IReadOnlyList<string> UnreadLines,
+    string? Address = null)
 {
     public const int MaxItems = 200;
     public const int MaxAdjustments = 20;

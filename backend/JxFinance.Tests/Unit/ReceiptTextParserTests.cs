@@ -109,6 +109,7 @@ public sealed class ReceiptTextParserTests
             """).Value!;
 
         Assert.Equal(("CORNER SHOP", new DateOnly(2026, 9, 29), Currency.Gbp, 3.10m), (result.Merchant, result.Date, result.Currency, result.Total));
+        Assert.Null(result.Address);
         Assert.Equal([("Milk 1l", 1.20m, 0m), ("Bread", 2.10m, 0.20m)], result.Items.Select(i => (i.Name, i.Amount, i.Discount)));
     }
 
@@ -140,6 +141,29 @@ public sealed class ReceiptTextParserTests
 
         Assert.Equal(["Duona", "Pienas"], result.Items.Select(i => i.Name));
         Assert.Equal(["Sūris su"], result.UnreadLines);
+    }
+
+    [Theory]
+    [InlineData(FakeReceiptReader.Maxima, "Savanorių pr. 247, LT-02300 Vilnius")]
+    [InlineData(FakeReceiptReader.MaximaNoisy, "a Savanoriu pr. 247, LT-02300 Vilnius")]
+    [InlineData(FakeReceiptReader.Rimi, "Rimi Ozas, Ozo g. 18, Vilnius")]
+    [InlineData(FakeReceiptReader.Iki, "Žirmūnų g. 64, Vilnius")]
+    [InlineData(FakeReceiptReader.Lidl, "Ukmergės g. 369, Vilnius")]
+    [InlineData(FakeReceiptReader.Return, "Savanorių pr. 247, LT-02300 Vilnius")]
+    public void The_address_is_the_first_header_line_after_the_merchant_with_a_street_number_and_a_postcode_or_city(string fixture, string address) =>
+        Assert.Equal(address, Parse(fixture).Address);
+
+    [Fact]
+    public void A_header_line_with_a_number_but_no_postcode_or_city_is_not_an_address()
+    {
+        var result = ReceiptTextParser.Parse("""
+            MAXIMA LT, UAB
+            Kasa 3 Kvitas 0457
+            Duona 1,89 A
+            MOKĖTI EUR 1,89
+            """).Value!;
+
+        Assert.Null(result.Address);
     }
 
     [Theory]

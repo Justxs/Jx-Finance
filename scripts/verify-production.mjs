@@ -8,6 +8,8 @@ const host = "finance.internal";
 const port = Number(process.env.VERIFY_HTTPS_PORT ?? 8443);
 const compose = ["compose", "-p", "jx-verify", "-f", "docker-compose.yml", "-f", "docker-compose.production.yml"];
 const environment = { SITE_ADDRESS: host, BIND_ADDRESS: "127.0.0.1", HTTPS_PORT: String(port) };
+const sitePolicy =
+  "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'";
 const admin = { email: "verify@example.com", password: "Verify-production-1!", displayName: "Verify" };
 
 function docker(args, options = {}) {
@@ -55,6 +57,10 @@ async function main() {
       .map(([name]) => name);
     check(`the ${volume} volume is mounted only into api`, users.join(",") === "api", users.join(","));
   }
+  const mapMounts = Object.entries(services).flatMap(([name, service]) =>
+    (service.volumes ?? []).filter((mount) => mount.source === "maps").map((mount) => `${name}:${mount.read_only ? "ro" : "rw"}`),
+  );
+  check("the maps volume is mounted only into frontend, read-only", mapMounts.join(",") === "frontend:ro", mapMounts.join(","));
 
   docker(["down", "--volumes", "--remove-orphans"]);
   docker(["up", "-d", "--build", "--wait"]);
@@ -65,9 +71,13 @@ async function main() {
   const page = await request("GET", "/");
   check("the site answers 200 over HTTPS", page.status === 200, `status ${page.status}`);
   check("HSTS is sent", /max-age=\d+/.test(page.headers["strict-transport-security"] ?? ""), page.headers["strict-transport-security"]);
-  check("the site sends its Content-Security-Policy", (page.headers["content-security-policy"] ?? "").includes("script-src 'self'"));
+  check("the site sends its Content-Security-Policy unchanged", page.headers["content-security-policy"] === sitePolicy, page.headers["content-security-policy"]);
   check("Permissions-Policy is sent", Boolean(page.headers["permissions-policy"]));
+  check("Permissions-Policy lets only the site itself ask for the position", /(^|[ ,])geolocation=\(self\)/.test(page.headers["permissions-policy"] ?? ""), page.headers["permissions-policy"]);
   check("Referrer-Policy is sent", Boolean(page.headers["referrer-policy"]));
+
+  const tiles = await request("HEAD", "/maps/lithuania.pmtiles");
+  check("a missing map tile file answers 404, not the page", tiles.status === 404, `status ${tiles.status}`);
 
   const status = await request("GET", "/api/setup/status");
   check("the API answers through Caddy", status.status === 200, `status ${status.status}`);

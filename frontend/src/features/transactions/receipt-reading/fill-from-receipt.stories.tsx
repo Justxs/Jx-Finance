@@ -11,6 +11,7 @@ import {
   ids,
   receiptEngineUnavailableProblem,
   receiptReadingWithCandidate,
+  receiptReadingWithPhotoLocation,
   receiptUnreadableProblem,
   receiptUnsupportedFileProblem,
   settingsWith,
@@ -79,6 +80,33 @@ export const ReadsTheAttachedReceipt: Story = {
     await waitFor(() =>
       expect(canvas.getByRole("checkbox", { name: "Split into categories" })).toBeChecked(),
     );
+  },
+};
+
+export const FillsThePlaceAndOffersThePhotoLocation: Story = {
+  parameters: withHandlers(
+    getSettingsMockHandler(
+      settingsWith({
+        receiptReadingReady: true,
+        features: { receiptReading: true, locations: true },
+      }),
+    ),
+    getReadReceiptMockHandler(receiptReadingWithPhotoLocation),
+  ),
+  play: async ({ canvas }) => {
+    await pickReceipt();
+    await openedDialog();
+    await userEvent.click(screen.getByRole("button", { name: "Use these lines" }));
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+
+    await expect(canvas.getByRole("combobox", { name: "Place" })).toHaveValue(
+      "MAXIMA LT, UAB, Savanorių pr. 247, LT-02300 Vilnius",
+    );
+    await expect(canvas.queryByText(/Location saved/u)).toBeNull();
+
+    await userEvent.click(canvas.getByRole("button", { name: "Use the photo's location" }));
+    await expect(await canvas.findByText(/Location saved/u)).toBeVisible();
+    await expect(canvas.queryByRole("button", { name: "Use the photo's location" })).toBeNull();
   },
 };
 

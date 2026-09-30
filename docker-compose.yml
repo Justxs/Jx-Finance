@@ -60,6 +60,8 @@ services:
       dockerfile: frontend/Dockerfile
     ports:
       - "${BIND_ADDRESS:-127.0.0.1}:8081:80"
+    volumes:
+      - maps:/srv/maps:ro
     depends_on:
       api:
         condition: service_healthy
@@ -88,3 +90,4 @@ volumes:
   auth_keys:
   backups:
   attachments:
+  maps:

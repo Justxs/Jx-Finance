@@ -76,6 +76,12 @@ export const closeMonthResponseFiguresExpenseByPayeeItemAmountRegExp = new RegEx
 export const closeMonthResponseFiguresExpenseByPayeeItemComparisonAmountRegExp = new RegExp(
   "^-?\\d+(\\.\\d{1,8})?$",
 );
+export const closeMonthResponseFiguresExpenseByPlaceItemAmountRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const closeMonthResponseFiguresExpenseByPlaceItemComparisonAmountRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
 export const closeMonthResponseFiguresComparisonTwoTotalIncomeRegExp = new RegExp(
   "^-?\\d+(\\.\\d{1,8})?$",
 );
@@ -268,6 +274,24 @@ export const CloseMonthResponse = zod.object({
           .nullable(),
         count: zod.int(),
         name: zod.string().nullish(),
+      }),
+    ),
+    expenseByPlace: zod.array(
+      zod.object({
+        place: zod.string().nullable(),
+        amount: zod.stringFormat(
+          "decimal",
+          closeMonthResponseFiguresExpenseByPlaceItemAmountRegExp,
+        ),
+        comparisonAmount: zod
+          .stringFormat(
+            "decimal",
+            closeMonthResponseFiguresExpenseByPlaceItemComparisonAmountRegExp,
+          )
+          .nullable(),
+        count: zod.int(),
+        latitude: zod.number().nullable(),
+        longitude: zod.number().nullable(),
       }),
     ),
     comparison: zod
@@ -505,6 +529,12 @@ export const monthReviewResponseFiguresExpenseByPayeeItemAmountRegExp = new RegE
 export const monthReviewResponseFiguresExpenseByPayeeItemComparisonAmountRegExp = new RegExp(
   "^-?\\d+(\\.\\d{1,8})?$",
 );
+export const monthReviewResponseFiguresExpenseByPlaceItemAmountRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const monthReviewResponseFiguresExpenseByPlaceItemComparisonAmountRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
 export const monthReviewResponseFiguresComparisonTwoTotalIncomeRegExp = new RegExp(
   "^-?\\d+(\\.\\d{1,8})?$",
 );
@@ -699,6 +729,24 @@ export const MonthReviewResponse = zod.object({
           .nullable(),
         count: zod.int(),
         name: zod.string().nullish(),
+      }),
+    ),
+    expenseByPlace: zod.array(
+      zod.object({
+        place: zod.string().nullable(),
+        amount: zod.stringFormat(
+          "decimal",
+          monthReviewResponseFiguresExpenseByPlaceItemAmountRegExp,
+        ),
+        comparisonAmount: zod
+          .stringFormat(
+            "decimal",
+            monthReviewResponseFiguresExpenseByPlaceItemComparisonAmountRegExp,
+          )
+          .nullable(),
+        count: zod.int(),
+        latitude: zod.number().nullable(),
+        longitude: zod.number().nullable(),
       }),
     ),
     comparison: zod
@@ -958,6 +1006,12 @@ export const updateMonthNoteResponseFiguresExpenseByPayeeItemAmountRegExp = new 
 export const updateMonthNoteResponseFiguresExpenseByPayeeItemComparisonAmountRegExp = new RegExp(
   "^-?\\d+(\\.\\d{1,8})?$",
 );
+export const updateMonthNoteResponseFiguresExpenseByPlaceItemAmountRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const updateMonthNoteResponseFiguresExpenseByPlaceItemComparisonAmountRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
 export const updateMonthNoteResponseFiguresComparisonTwoTotalIncomeRegExp = new RegExp(
   "^-?\\d+(\\.\\d{1,8})?$",
 );
@@ -1176,6 +1230,24 @@ export const UpdateMonthNoteResponse = zod.object({
           .nullable(),
         count: zod.int(),
         name: zod.string().nullish(),
+      }),
+    ),
+    expenseByPlace: zod.array(
+      zod.object({
+        place: zod.string().nullable(),
+        amount: zod.stringFormat(
+          "decimal",
+          updateMonthNoteResponseFiguresExpenseByPlaceItemAmountRegExp,
+        ),
+        comparisonAmount: zod
+          .stringFormat(
+            "decimal",
+            updateMonthNoteResponseFiguresExpenseByPlaceItemComparisonAmountRegExp,
+          )
+          .nullable(),
+        count: zod.int(),
+        latitude: zod.number().nullable(),
+        longitude: zod.number().nullable(),
       }),
     ),
     comparison: zod

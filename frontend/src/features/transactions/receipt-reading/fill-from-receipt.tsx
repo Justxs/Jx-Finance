@@ -1,5 +1,5 @@
 import { useMutation } from "@tanstack/react-query";
-import { ScanText } from "lucide-react";
+import { LocateFixed, ScanText } from "lucide-react";
 import { useId, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -16,6 +16,7 @@ import type {
   ReceiptReadingResponse,
   ReceiptResultResponse,
 } from "@/api/generated/model";
+import { createTransactionBodyPlaceMax } from "@/api/schemas/transactions/transactions.zod";
 import { FormError } from "@/components/form-error/form-error";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { SelectField } from "@/components/select-field/select-field";
@@ -26,6 +27,7 @@ import { ACCEPT_ATTRIBUTE } from "@/features/transactions/transaction-attachment
 import type { TransactionDraft } from "@/features/transactions/transaction-form/transaction-draft";
 import type { TransactionFormApi } from "@/features/transactions/transaction-form/use-transaction-form";
 import { useUsableCurrencies } from "@/hooks/use-currencies";
+import { useFeature } from "@/hooks/use-settings";
 import { silentMutation } from "@/lib/mutations";
 import { ReceiptReview } from "./receipt-review";
 import { type CategoryChoice, type ReceiptFill, linesFromReceipt } from "./receipt-split";
@@ -47,6 +49,25 @@ interface Props {
   transactionId?: string;
   onReceiptFile?: (file: File) => void;
   onSplitCandidate?: (split: ReceiptCandidateSplit) => void;
+}
+
+interface PhotoPosition {
+  latitude: number;
+  longitude: number;
+}
+
+function photoPositionOf(reading: ReceiptReadingResponse): PhotoPosition | null {
+  const { photoLatitude, photoLongitude } = reading;
+  return photoLatitude != null && photoLongitude != null
+    ? { latitude: photoLatitude, longitude: photoLongitude }
+    : null;
+}
+
+function placeOf(result: ReceiptResultResponse): string {
+  return [result.merchant, result.address]
+    .filter(Boolean)
+    .join(", ")
+    .slice(0, createTransactionBodyPlaceMax);
 }
 
 interface FilePickerProps {
@@ -152,9 +173,11 @@ export function FillFromReceipt({
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const usableCurrencies = useUsableCurrencies();
+  const locationsEnabled = useFeature("locations");
   const abort = useRef<AbortController | null>(null);
   const [source, setSource] = useState<ReceiptSource | null>(null);
   const [reading, setReading] = useState<ReceiptReadingResponse | null>(null);
+  const [photo, setPhoto] = useState<PhotoPosition | null>(null);
 
   const readMutation = useMutation({
     mutationKey: getReadReceiptMutationKey(),
@@ -172,7 +195,12 @@ export function FillFromReceipt({
     setSource(next);
     readMutation.mutate(
       { attachmentId: next.attachmentId ?? null, file: next.file ?? null, force },
-      { onSuccess: setReading },
+      {
+        onSuccess: (answered) => {
+          setReading(answered);
+          setPhoto(photoPositionOf(answered));
+        },
+      },
     );
   }
 
@@ -210,6 +238,19 @@ export function FillFromReceipt({
     }
   }
 
+  function fillPlace(result: ReceiptResultResponse) {
+    const place = placeOf(result);
+    if (locationsEnabled && place && !form.getFieldValue("place").trim()) {
+      form.setFieldValue("place", place);
+    }
+  }
+
+  function applyPhotoPosition(position: PhotoPosition) {
+    form.setFieldValue("latitude", position.latitude);
+    form.setFieldValue("longitude", position.longitude);
+    setPhoto(null);
+  }
+
   function fillLines(fill: ReceiptFill) {
     if ("lines" in fill) {
       form.setFieldValue("categoryId", "");
@@ -242,6 +283,7 @@ export function FillFromReceipt({
       if (!transactionId) {
         fillDetails(current.result);
       }
+      fillPlace(current.result);
       fillLines(linesFromReceipt(current.result, choices, form.getFieldValue("amount")));
     });
   }
@@ -298,6 +340,12 @@ export function FillFromReceipt({
         </p>
       ) : null}
       {reading ? null : <FormError error={readMutation.error ?? uploadMutation.error} />}
+      {photo && !reading ? (
+        <Button type="button" variant="outline" size="sm" onClick={() => applyPhotoPosition(photo)}>
+          <LocateFixed />
+          {t("transactions.place.usePhotoLocation")}
+        </Button>
+      ) : null}
 
       {reading ? (
         <form.Subscribe selector={(state) => [state.values.amount, state.values.currency] as const}>

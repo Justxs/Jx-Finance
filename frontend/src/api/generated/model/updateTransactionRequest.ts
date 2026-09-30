@@ -44,4 +44,21 @@ export interface UpdateTransactionRequest {
    * @nullable
    */
   spreadMonths?: number | null;
+  /**
+   * Optional place of your own, such as a shop and its address, at most 120 characters. Stored only while the locations feature is on.
+   * @minLength 0
+   * @maxLength 120
+   * @nullable
+   */
+  place?: string | null;
+  /**
+   * Optional latitude from -90 to 90, sent together with longitude and kept to five decimals. Stored only while the locations feature is on.
+   * @nullable
+   */
+  latitude?: number | null;
+  /**
+   * Optional longitude from -180 to 180, sent together with latitude and kept to five decimals.
+   * @nullable
+   */
+  longitude?: number | null;
 }

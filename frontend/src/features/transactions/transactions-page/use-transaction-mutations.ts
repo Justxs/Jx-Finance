@@ -59,6 +59,9 @@ function optimisticTransaction(
     unusualDismissed: false,
     spreadMonths: data.spreadMonths,
     spreadUntil: data.spreadMonths ? spreadUntil(data.date, data.spreadMonths) : null,
+    place: data.place,
+    latitude: data.latitude,
+    longitude: data.longitude,
   };
 }
 

@@ -23,6 +23,9 @@ export const createTransactionBodyNoteMax = 1000;
 export const createTransactionBodySpreadMonthsMin = 2;
 export const createTransactionBodySpreadMonthsMax = 36;
 
+export const createTransactionBodyPlaceMin = 0;
+export const createTransactionBodyPlaceMax = 120;
+
 export const CreateTransactionBody = zod.object({
   accountId: zod.uuid().min(1).describe("The account the money moved on; must be visible to you."),
   categoryId: zod.uuid().nullable().describe("Optional category. Ignored when lines are supplied."),
@@ -105,6 +108,26 @@ export const CreateTransactionBody = zod.object({
     .nullish()
     .describe(
       "Optional, from 2 to 36: count the amount in equal monthly slices over this many months, starting with the month of the date. Not allowed on a split or a refund.",
+    ),
+  place: zod
+    .string()
+    .min(createTransactionBodyPlaceMin)
+    .max(createTransactionBodyPlaceMax)
+    .nullish()
+    .describe(
+      "Optional place of your own, such as a shop and its address, at most 120 characters. Stored only while the locations feature is on.",
+    ),
+  latitude: zod
+    .number()
+    .nullish()
+    .describe(
+      "Optional latitude from -90 to 90, sent together with longitude and kept to five decimals. Stored only while the locations feature is on.",
+    ),
+  longitude: zod
+    .number()
+    .nullish()
+    .describe(
+      "Optional longitude from -180 to 180, sent together with latitude and kept to five decimals.",
     ),
 });
 
@@ -245,6 +268,9 @@ export const CreateTransactionResponse = zod.object({
   payeeName: zod.string().nullish(),
   spreadMonths: zod.int().nullish(),
   spreadUntil: zod.union([zod.null(), zod.iso.date()]).optional(),
+  place: zod.string().nullish(),
+  latitude: zod.number().nullish(),
+  longitude: zod.number().nullish(),
 });
 
 /**
@@ -399,6 +425,9 @@ export const TransactionsResponse = zod.object({
       payeeName: zod.string().nullish(),
       spreadMonths: zod.int().nullish(),
       spreadUntil: zod.union([zod.null(), zod.iso.date()]).optional(),
+      place: zod.string().nullish(),
+      latitude: zod.number().nullish(),
+      longitude: zod.number().nullish(),
     }),
   ),
   page: zod.int(),
@@ -453,6 +482,19 @@ export const ExportTransactionsResponse = zod.unknown();
  * @summary Export transactions as PDF
  */
 export const ExportTransactionsPdfResponse = zod.unknown();
+
+/**
+ * Answers up to 20 distinct places of the transactions you can see, narrowed by the active household, most used first. Places that differ only in case or surrounding spaces are one entry, named by the newest spelling, with the number of transactions and the average of the coordinates stored with them (null when none has any). With lat and lon, the nearest place within 150 metres comes first with nearby true, so a position taken in a shop can be named after the shop. Nothing is looked up outside the installation. Needs the locations feature.
+ * @summary Suggest places used before
+ */
+export const PlacesResponseItem = zod.object({
+  name: zod.string(),
+  count: zod.int(),
+  latitude: zod.number().nullable(),
+  longitude: zod.number().nullable(),
+  nearby: zod.boolean(),
+});
+export const PlacesResponse = zod.array(PlacesResponseItem);
 
 /**
  * Returns the row count and the income and expense totals of every transaction the list endpoint would return for the same filters, across all pages. Transfers are not transactions and are never counted. A refund is an expense with a negative amount, so the expense total is net of refunds.
@@ -606,10 +648,13 @@ export const TransactionResponse = zod.object({
   payeeName: zod.string().nullish(),
   spreadMonths: zod.int().nullish(),
   spreadUntil: zod.union([zod.null(), zod.iso.date()]).optional(),
+  place: zod.string().nullish(),
+  latitude: zod.number().nullish(),
+  longitude: zod.number().nullish(),
 });
 
 /**
- * Replaces the transaction. Split lines are replaced wholesale rather than merged: send the full set you want to keep, or omit lines to turn a split back into a plain transaction. Tags are replaced the same way: send the full set, and an empty list or an absent tagIds clears them. The note and spreadMonths are replaced too, so leaving one out clears it. Moving it to another account adjusts both balances. A refund is an expense with a negative amount: it lowers that category's spending and raises the balance. It takes an expense category, cannot be split, and may name the purchase it refunds in refundOfTransactionId, which must be an expense you can see and not itself a refund.
+ * Replaces the transaction. Split lines are replaced wholesale rather than merged: send the full set you want to keep, or omit lines to turn a split back into a plain transaction. Tags are replaced the same way: send the full set, and an empty list or an absent tagIds clears them. The note and spreadMonths are replaced too, so leaving one out clears it. So are place, latitude and longitude while the locations feature is on; while it is off they are ignored and the stored values kept. Moving it to another account adjusts both balances. A refund is an expense with a negative amount: it lowers that category's spending and raises the balance. It takes an expense category, cannot be split, and may name the purchase it refunds in refundOfTransactionId, which must be an expense you can see and not itself a refund.
  * @summary Update a transaction
  */
 
@@ -623,6 +668,9 @@ export const updateTransactionBodyNoteMax = 1000;
 
 export const updateTransactionBodySpreadMonthsMin = 2;
 export const updateTransactionBodySpreadMonthsMax = 36;
+
+export const updateTransactionBodyPlaceMin = 0;
+export const updateTransactionBodyPlaceMax = 120;
 
 export const UpdateTransactionBody = zod.object({
   accountId: zod.uuid().min(1),
@@ -691,6 +739,26 @@ export const UpdateTransactionBody = zod.object({
     .nullish()
     .describe(
       "Optional, from 2 to 36: count the amount in equal monthly slices over this many months, starting with the month of the date. Not allowed on a split or a refund.",
+    ),
+  place: zod
+    .string()
+    .min(updateTransactionBodyPlaceMin)
+    .max(updateTransactionBodyPlaceMax)
+    .nullish()
+    .describe(
+      "Optional place of your own, such as a shop and its address, at most 120 characters. Stored only while the locations feature is on.",
+    ),
+  latitude: zod
+    .number()
+    .nullish()
+    .describe(
+      "Optional latitude from -90 to 90, sent together with longitude and kept to five decimals. Stored only while the locations feature is on.",
+    ),
+  longitude: zod
+    .number()
+    .nullish()
+    .describe(
+      "Optional longitude from -180 to 180, sent together with latitude and kept to five decimals.",
     ),
 });
 
@@ -831,6 +899,9 @@ export const UpdateTransactionResponse = zod.object({
   payeeName: zod.string().nullish(),
   spreadMonths: zod.int().nullish(),
   spreadUntil: zod.union([zod.null(), zod.iso.date()]).optional(),
+  place: zod.string().nullish(),
+  latitude: zod.number().nullish(),
+  longitude: zod.number().nullish(),
 });
 
 /**

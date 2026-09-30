@@ -16,7 +16,8 @@ public static class ReceiptMappers
         result.PageCount,
         [.. result.Items.Select(i => new ReceiptItemResponse(i.Name, i.Quantity, i.Amount, i.Discount, i.Deposit, i.CategoryId, i.Remembered))],
         [.. result.Adjustments.Select(a => new ReceiptAdjustmentResponse(a.Kind, a.Label, a.Amount))],
-        result.UnreadLines ?? []);
+        result.UnreadLines ?? [],
+        result.Address);
 
     public static ReceiptCandidateResponse ToCandidate(this Transaction transaction) => new(
         transaction.Id.Value,

@@ -37,10 +37,12 @@ export function useTransactionFilters({ accounts, categories }: Args) {
   }
   const table = useSearchTable(search, patchSearch);
   const unusualEnabled = useFeature("unusualAmounts");
+  const locationsEnabled = useFeature("locations");
 
   const activeCount = [
     search.search,
     search.payee,
+    locationsEnabled && search.place,
     search.type,
     search.dateFrom || search.dateTo,
     search.amountMin !== undefined || search.amountMax !== undefined,
@@ -80,6 +82,15 @@ export function useTransactionFilters({ accounts, categories }: Args) {
       value: search.search ?? "",
       debounceMs: SEARCH_DEBOUNCE_MS,
       set: (next: string) => patchSearch({ search: next || undefined }),
+    },
+    place: {
+      label: t("transactions.place.label"),
+      enabled: locationsEnabled,
+      value: search.place ?? "",
+      debounceMs: SEARCH_DEBOUNCE_MS,
+      set: (next: string) => patchSearch({ place: next || undefined }),
+      setWithSearch: (nextSearch: string, nextPlace: string) =>
+        patchSearch({ search: nextSearch || undefined, place: nextPlace || undefined }),
     },
     payee: {
       label: t("filters.payee"),

@@ -584,6 +584,18 @@
       "chip": "Paskirstyta · {{months}} mėn.",
       "tooltip": "Ataskaitose ir biudžetuose skaičiuojama po {{amount}} per mėnesį: {{from}} – {{to}}",
       "tooltipInRange": "Ataskaitose ir biudžetuose skaičiuojama po {{amount}} per mėnesį: {{from}} – {{to}}. Rodomoms datoms tenka {{part}}."
+    },
+    "place": {
+      "label": "Vieta",
+      "useMyLocation": "Naudoti mano vietą",
+      "locating": "Nustatoma jūsų vieta…",
+      "locationSaved": "Vieta išsaugota",
+      "remove": "Pašalinti",
+      "removeLabel": "Pašalinti išsaugotą vietą",
+      "denied": "Naršyklei neleista pranešti jūsų vietos. Leiskite tai svetainės nustatymuose arba įrašykite vietą.",
+      "timeout": "Nepavyko laiku nustatyti jūsų vietos. Bandykite dar kartą arba įrašykite vietą.",
+      "unavailable": "Jūsų vieta dabar nepasiekiama. Įrašykite vietą.",
+      "usePhotoLocation": "Naudoti nuotraukos vietą"
     }
   },
   "receipts": {
@@ -1055,6 +1067,10 @@
         "apiTokens": {
           "name": "Asmeniniai API raktai",
           "hint": "Nariai gali kurti raktus savo scenarijams, skaičiuoklėms ir namų automatikai: tik skaitymui arba ir įrašams. Išjungus visi raktai sustabdomi, kol funkcija vėl įjungiama."
+        },
+        "locations": {
+          "name": "Vietos",
+          "hint": "Kiekvieno mokėjimo vieta ir, paprašius, padėtis, kur jis atliktas, su pasiūlymais, vietos filtru ir išlaidomis pagal vietą. Padėtys lieka šiame serveryje, nors naršyklė gali kreiptis į savo vietos nustatymo paslaugą."
         }
       }
     },
@@ -2198,7 +2214,8 @@
       "interestRate": "palūkanų norma",
       "tracksPayments": "sekti įmokas",
       "valuations": "įvertinimai",
-      "payments": "susietos įmokos"
+      "payments": "susietos įmokos",
+      "place": "vieta"
     }
   },
   "sharing": {
@@ -2294,6 +2311,20 @@
       "noReceipts": "Šiuo laikotarpiu čekių nenuskaityta. Išlaidai su pridėtu čekiu pasirinkite „Užpildyti iš čekio“.",
       "noMatches": "Nė viena prekė neatitinka.",
       "table": "Prekės pagal sumą"
+    },
+    "expenseByPlace": {
+      "title": "Išlaidos pagal vietą",
+      "noPlace": "Be vietos",
+      "empty": "Šiuo laikotarpiu išlaidų pagal vietas nėra.",
+      "hint": "Vietos, kurios skiriasi tik didžiosiomis raidėmis, laikomos viena vieta ir vadinamos taip, kaip įrašėte paskutinį kartą.",
+      "showAll": "Rodyti visas",
+      "view": "Rodinys",
+      "list": "Sąrašas",
+      "map": "Žemėlapis",
+      "mapLabel": "Išlaidų pagal vietą žemėlapis: {{places}}",
+      "mapLabelEmpty": "Išlaidų pagal vietą žemėlapis; nė viena vieta dar neturi padėties",
+      "noCoordinates": "Nė viena iš šių vietų dar neturi padėties. Ją išsaugo „Naudoti mano vietą“ operacijos formoje.",
+      "mapFailed": "Šioje naršyklėje žemėlapio nupiešti nepavyko. Tos pačios vietos yra sąraše."
     }
   },
   "imports": {
@@ -2787,7 +2818,8 @@
       "linesMismatch": "Išskaidymo eilučių suma turi sutapti su operacijos suma.",
       "splitNotAllowed": "Išskaidytai operacijai to atlikti negalima.",
       "refundOriginalInvalid": "Šio grąžinimo nurodytas pirkinys nėra jums matomos išlaidos. Atsiekite jį arba pasirinkite kitą pirkinį.",
-      "spreadRefund": "Grąžinimo negalima paskirstyti per kelis mėnesius."
+      "spreadRefund": "Grąžinimo negalima paskirstyti per kelis mėnesius.",
+      "locationInvalid": "Vieta netinkama: platuma ir ilguma nurodomos kartu ir turi neviršyti ribų."
     },
     "transfer": {
       "amountMismatch": "Kai valiuta ta pati, išsiųsta ir gauta sumos turi sutapti.",

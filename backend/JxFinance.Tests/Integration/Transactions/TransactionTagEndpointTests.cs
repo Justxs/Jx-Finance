@@ -225,7 +225,7 @@ public sealed class TransactionTagEndpointTests(ApiFixture fixture) : Integratio
         var csv = await member.GetStringAsync($"/api/transactions/export?accountId={account}&sort=date&direction=asc", TestContext.Current.CancellationToken);
         var lines = csv.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
-        Assert.Equal("Date,Description,Account,Category,Tags,Type,Amount,Currency,Note,Spread months", lines[0]);
+        Assert.Equal("Date,Description,Account,Category,Tags,Type,Amount,Currency,Note,Spread months,Place", lines[0]);
         Assert.Contains("Alpha holiday; Beta reimbursable", lines[1]);
         Assert.DoesNotContain("Alpha holiday", lines[2]);
     }

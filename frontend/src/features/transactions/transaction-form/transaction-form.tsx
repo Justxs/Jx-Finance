@@ -15,13 +15,14 @@ import { FormGrid } from "@/components/ui/form-grid/form-grid";
 import { Label } from "@/components/ui/label/label";
 import { heldCurrencies } from "@/features/accounts/held-currencies";
 import { ClosedMonthHint } from "@/features/month-close/closed-month-hint/closed-month-hint";
+import { PlaceField } from "@/features/transactions/place-field/place-field";
 import {
   FillFromReceipt,
   type ReceiptCandidateSplit,
 } from "@/features/transactions/receipt-reading/fill-from-receipt";
 import { SpreadFields } from "@/features/transactions/spread-fields/spread-fields";
 import { EMPTY_VALUE, useIsoDate } from "@/hooks/use-formatters";
-import { useSettings } from "@/hooks/use-settings";
+import { useFeature, useSettings } from "@/hooks/use-settings";
 import { namedOptions } from "@/lib/options";
 import { emptyLine } from "./line-form-value";
 import { SaveTemplateControl } from "./save-template-control";
@@ -135,6 +136,7 @@ export function TransactionForm({
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const { receiptReadingReady } = useSettings();
+  const locationsEnabled = useFeature("locations");
   const intent = useRef<SubmitIntent>("save");
   const amountInput = useRef<HTMLInputElement>(null);
   const [anotherPending, setAnotherPending] = useState(false);
@@ -285,6 +287,15 @@ export function TransactionForm({
             />
           )}
         </form.Field>
+
+        {locationsEnabled ? (
+          <PlaceField
+            form={form}
+            fields={{ place: "place", latitude: "latitude", longitude: "longitude" }}
+            idPrefix="tx"
+            className="col-span-full"
+          />
+        ) : null}
 
         {tags.length > 0 ? (
           <form.Field name="tagIds">

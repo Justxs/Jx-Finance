@@ -44,6 +44,7 @@ export function TransactionsFiltersDialog({ filters, tags, className }: Readonly
   const { fields, activeCount } = filters;
   const [open, setOpen] = useState(false);
   const text = useDebouncedDraft(fields.search.value, fields.search.set, fields.search.debounceMs);
+  const place = useDebouncedDraft(fields.place.value, fields.place.set, fields.place.debounceMs);
   const rangeKey = JSON.stringify(fields.amountRange.draft);
   const [range, setRange] = useState(fields.amountRange.draft);
   const [lastRangeKey, setLastRangeKey] = useState(rangeKey);
@@ -54,6 +55,7 @@ export function TransactionsFiltersDialog({ filters, tags, className }: Readonly
 
   function clearAll() {
     text.cancel();
+    place.cancel();
     filters.clearFilters();
   }
 
@@ -82,6 +84,17 @@ export function TransactionsFiltersDialog({ filters, tags, className }: Readonly
               onChange={(event) => text.change(event.target.value)}
             />
           </FieldShell>
+
+          {fields.place.enabled ? (
+            <FieldShell id="tx-filter-place" label={fields.place.label}>
+              <Input
+                id="tx-filter-place"
+                type="search"
+                value={place.draft}
+                onChange={(event) => place.change(event.target.value)}
+              />
+            </FieldShell>
+          ) : null}
 
           <FilterSelect id="tx-filter-type" field={fields.type} />
 

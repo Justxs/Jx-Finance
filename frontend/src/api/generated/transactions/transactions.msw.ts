@@ -11,6 +11,7 @@ import type {
   BulkCategorizeTransactionsResponse,
   BulkTagTransactionsResponse,
   PagedResponseOfTransactionResponse,
+  PlaceSuggestionResponse,
   TransactionResponse,
   TransactionsSummaryResponse,
 } from "../model";
@@ -159,6 +160,30 @@ export const getExportTransactionsPdfMockHandler = (
   );
 };
 
+export const getPlacesMockHandler = (
+  overrideResponse?:
+    | PlaceSuggestionResponse[]
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<PlaceSuggestionResponse[]> | PlaceSuggestionResponse[]),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/transactions/places",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : undefined,
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
 export const getTransactionsSummaryMockHandler = (
   overrideResponse?:
     | TransactionsSummaryResponse
@@ -294,6 +319,7 @@ export const getTransactionsMock = () => [
   getBulkTagTransactionsMockHandler(),
   getExportTransactionsMockHandler(),
   getExportTransactionsPdfMockHandler(),
+  getPlacesMockHandler(),
   getTransactionsSummaryMockHandler(),
   getDeleteTransactionMockHandler(),
   getTransactionMockHandler(),

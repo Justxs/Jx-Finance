@@ -14,8 +14,14 @@ public sealed class TransactionConfiguration : IEntityTypeConfiguration<Transact
         builder.Property(t => t.Note).HasMaxLength(TransactionNote.MaxLength);
         builder.Property(t => t.ImportRef).HasMaxLength(64);
         builder.Property(t => t.PayeeKey).HasMaxLength(SubscriptionDescription.MaxLength);
+        builder.Property(t => t.Place).HasMaxLength(TransactionPlace.MaxLength);
+        builder.Property(t => t.Latitude).HasPrecision(7, TransactionPlace.CoordinateDecimals);
+        builder.Property(t => t.Longitude).HasPrecision(8, TransactionPlace.CoordinateDecimals);
         builder.ToTable(table =>
         {
+            table.HasCheckConstraint(
+                "CK_Transactions_Coordinates",
+                """("Latitude" IS NULL) = ("Longitude" IS NULL)""");
             table.HasCheckConstraint(
                 "CK_Transactions_SpreadMonths",
                 $"""
@@ -27,6 +33,8 @@ public sealed class TransactionConfiguration : IEntityTypeConfiguration<Transact
         });
         builder.HasIndex(t => new { t.AccountId, t.SpreadUntil }, "IX_Transactions_Spread")
             .HasFilter("\"SpreadMonths\" IS NOT NULL");
+        builder.HasIndex(t => new { t.AccountId, t.Place }, "IX_Transactions_Place")
+            .HasFilter("\"Place\" IS NOT NULL");
         builder.ComplexProperty(t => t.Unusual, unusual =>
         {
             unusual.Property(u => u.Basis).HasColumnName("UnusualBasis").HasConversion<string>().HasMaxLength(20);

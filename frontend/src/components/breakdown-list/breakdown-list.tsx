@@ -13,7 +13,7 @@ export interface BreakdownRow {
   name: string;
   amount: number;
   comparisonAmount?: string | number | null;
-  filter?: { categoryId?: string; tagIds?: string; payee?: string };
+  filter?: { categoryId?: string; tagIds?: string; payee?: string; place?: string };
   icon?: string | null;
   muted?: boolean;
 }

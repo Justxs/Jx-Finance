@@ -27,12 +27,13 @@ public static class SpreadRows
                 t.ReportingAmount,
                 Months = (int)t.SpreadMonths!.Value,
                 t.PayeeKey,
+                t.Place,
                 TagIds = t.Tags.Select(x => x.TagId).ToList(),
             })
             .ToListAsync(cancellationToken);
 
         return [.. rows.SelectMany(row => SpreadSlices.Of(row.Date, row.ReportingAmount, row.Months)
             .Where(slice => window.Contains(slice.Date) || (comparison is { } other && other.Contains(slice.Date)))
-            .Select(slice => new SpreadSlice(row.Id, slice.Date, row.Type, row.CategoryId, row.PayeeKey, row.TagIds, slice.Amount)))];
+            .Select(slice => new SpreadSlice(row.Id, slice.Date, row.Type, row.CategoryId, row.PayeeKey, row.Place, row.TagIds, slice.Amount)))];
     }
 }

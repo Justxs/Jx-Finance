@@ -78,6 +78,8 @@ The market prices of 2026-09-30 (`AddMarketPrices`) add `PriceSyncEnabled` (defa
 
 `FeatureFlags` gained `ApiTokens` in the `AddPersonalApiTokens` migration of 2026-09-29, the column `Features_ApiTokens` with a database default of false, so an upgraded installation has the feature off; a new installation starts from `FeatureFlags.Default`, which has it off too.
 
+`FeatureFlags` gained `Locations` in the `AddTransactionLocations` migration of 2026-10-01, the column `Features_Locations` with a database default of false, off for an upgraded installation and in `FeatureFlags.Default` alike.
+
 `FeatureFlags` gained `UnusualAmounts` on 2026-09-26, the column `Features_UnusualAmounts` with a database default of true, so an upgraded installation has the feature on. It gained `MonthClose` in the `AddMonthClose` migration, the column `Features_MonthClose`, also with a database default of true.
 
 ## Email
@@ -113,6 +115,10 @@ The market prices of 2026-09-30 (`AddMarketPrices`) add `PriceSyncEnabled` (defa
 `PayeeNames`, added by the `AddPayeeNames` migration of 2026-09-30, holds a member's own display name for a payee: an `OwnableEntity` with its own id type `PayeeNameId`, `PayeeKey` (varchar 200) and `Name` (varchar 100), unique on (`UserId`, `PayeeKey`) among the rows not deleted. Nothing references it; it meets `Transactions` through the key at read time. Soft-deleted names are purged after 30 days by the retention job, the member export carries the table as owned, and backups carry it like any other. See [Payee names](features/payee-names.md).
 
 `Transactions.Note` (varchar 1000, nullable) was added by the `AddTransactionNote` migration of 2026-09-30: the member's own words beside the bank's `Description`, written only by the transaction create and update bodies. See [Transactions](features/transactions.md#notes).
+
+## Places
+
+The `AddTransactionLocations` migration of 2026-10-01 added `Transactions.Place` (varchar 120, nullable, `TransactionPlace.MaxLength`), `Transactions.Latitude` (`numeric(7,5)`, nullable) and `Transactions.Longitude` (`numeric(8,5)`, nullable), five decimals being about a metre, with the check constraint `CK_Transactions_Coordinates` requiring that both coordinates are null or neither is, and the partial index `IX_Transactions_Place` on (AccountId, Place) where `Place` is not null, which serves the grouping of suggestions and the report per visible account. Only the transaction create and update bodies write them, and only while the `Locations` switch is on; no import and no recurring confirmation does. `Place` is an audited field, the coordinates are not. Backups and the member export's `data.json` carry all three like any other column. See [Transaction locations](features/transaction-locations.md).
 
 ## Spreading over months
 

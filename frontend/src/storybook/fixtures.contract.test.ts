@@ -80,6 +80,9 @@ const contracts: Record<string, Contract> = {
   receiptReadingReturn: { schema: schemas.ReadReceiptResponse },
   receiptReadingPdf: { schema: schemas.ReadReceiptResponse },
   receiptReadingUnreadLines: { schema: schemas.ReadReceiptResponse },
+  receiptReadingWithPhotoLocation: { schema: schemas.ReadReceiptResponse },
+  placeSuggestions: { schema: schemas.PlacesResponse },
+  nearbyPlaceSuggestions: { schema: schemas.PlacesResponse },
   maximaReceipt: { schema: schemas.ReadReceiptResponse, toResponse: asReceiptReading },
   myDiscord: { schema: schemas.MyDiscordResponse },
   myDiscordEmpty: { schema: schemas.MyDiscordResponse },
@@ -361,6 +364,13 @@ function buildPayees() {
   };
 }
 
+function buildPlaces() {
+  return {
+    ...fixtures.emptyReportSummary,
+    expenseByPlace: fixtures.buildPlaceBreakdownItems(fixtures.transactions),
+  };
+}
+
 function buildReport() {
   return fixtures.buildReportSummary("2026-08-01", "2026-09-30");
 }
@@ -397,6 +407,10 @@ const builtResponses: Record<string, { schema: ZodType; build: () => unknown }> 
   buildPayeeBreakdownItems: {
     schema: schemas.ReportSummaryResponse,
     build: buildPayees,
+  },
+  buildPlaceBreakdownItems: {
+    schema: schemas.ReportSummaryResponse,
+    build: buildPlaces,
   },
 };
 

@@ -16,4 +16,7 @@ public interface ITransactionInput
     Guid? RefundOfTransactionId { get; }
     string? Note { get; }
     int? SpreadMonths { get; }
+    string? Place { get; }
+    decimal? Latitude { get; }
+    decimal? Longitude { get; }
 }
