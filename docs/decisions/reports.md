@@ -6,6 +6,10 @@ Related: feature page [Reports](../features/reports.md).
 
 Newest first. Each entry is a choice between real alternatives: what was chosen, what was rejected, and why.
 
+- **2026-09-30.** The money flow Sankey is built in the browser from the report summary the page already loads, with Recharts' `Sankey`, and a category whose refunds outweighed its spending feeds a "Money back" node on the income side, so Saved always equals the net
+  - Rejected: A `flow` field computed by `ReportService`; `d3-sankey` with hand-drawn SVG or a second chart library; leaving refund-heavy categories out under a "not drawn" line; moving them into the income categories; clamping them to zero; a colour per category; drawing the earlier period beside it; leaf categories under their groups; six rows plus Other
+  - Why: The breakdown items already carry split proration, refunds and parents and add up to the totals to the cent, so a server field would repeat the response. Recharts is already the only chart library and exports a typed `Sankey`. A link cannot be negative, and leaving such a category out would make Saved differ from the Net stat and the year review on the same page, while calling money back income contradicts the refunds decision. Colour follows direction as the semantic colour rule asks, two Sankeys cannot be compared by eye, and two levels would double the height. The chart and the lists share one cut (`breakdownCut`), so every node has a list row above it with the same name
+
 - **2026-09-30.** The year in review is a section of the reports page on the two year presets, computed in the browser from the report summary the page already loads
   - Rejected: A yearly close beside the month-end close with its own snapshot; a `GET /api/reports/year` endpoint; a dashboard card
   - Why: The report already answers a year's totals, its months as trend buckets and every category against the year before, so an endpoint would repeat those queries, and a snapshot would freeze figures the month closes already guard. A page the member already opens for the year keeps the navigation as it is

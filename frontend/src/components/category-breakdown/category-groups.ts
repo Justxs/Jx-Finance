@@ -1,4 +1,7 @@
 import type { CategoryBreakdownItem } from "@/api/generated/model";
+import { breakdownWeight } from "@/lib/comparison";
+
+const MAX_ROWS = 5;
 
 function sum(a: string | null | undefined, b: string | null | undefined) {
   if (a == null && b == null) {
@@ -37,4 +40,9 @@ export function rollUpToGroups(items: readonly CategoryBreakdownItem[]): Categor
   }
 
   return [...groups.values()];
+}
+
+export function breakdownCut(items: readonly CategoryBreakdownItem[]) {
+  const sorted = rollUpToGroups(items).toSorted((a, b) => breakdownWeight(b) - breakdownWeight(a));
+  return { rows: sorted.slice(0, MAX_ROWS), rest: sorted.slice(MAX_ROWS) };
 }

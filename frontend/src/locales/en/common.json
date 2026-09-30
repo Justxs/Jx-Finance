@@ -2098,6 +2098,16 @@
       "noChanges": "No expense category changed from the year before.",
       "compare": "Compare with the year before"
     },
+    "moneyFlow": {
+      "title": "Money flow",
+      "moneyIn": "Money in",
+      "saved": "Saved",
+      "fromSavings": "From savings",
+      "moneyBack": "Money back",
+      "ariaLabel_one": "{{moneyIn}} in: {{spent}} spent in {{count}} category, {{saved}} saved",
+      "ariaLabel_other": "{{moneyIn}} in: {{spent}} spent in {{count}} categories, {{saved}} saved",
+      "moneyBackLine": "Money back: {{items}} (more refunded than spent)"
+    },
     "receiptItems": {
       "title": "Receipt items",
       "hint": "What the items on your read receipts cost, for the attachments of transactions in this range.",

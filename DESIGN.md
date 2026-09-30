@@ -216,6 +216,7 @@ The individual charts:
 - **Investment value:** market value navy, cost basis muted ink.
 - **Debt balance:** navy, with extra payments in green.
 - **Debt payment split:** stacked yearly bars, principal navy, interest red, extra green.
+- **Money flow (reports):** a Sankey from income categories through one "Money in" node to expense categories and Saved, hidden below `md`. Nodes are 8px navy bars, 28px apart; Other, Money back, From savings and Saved are muted ink. Links carry no rainbow: into the hub green, out of the hub red, and those of Money back, From savings and Saved muted ink, all at 25% opacity. Left-column labels sit left of their bar and right-column labels right of it, the name in ink (cut to 24 characters with an ellipsis) over the amount in muted tabular figures; the hub's label is centred above it. Hovering a node shows the popover tooltip with its name and amount, and for Money back one row per category; category nodes show a pointer and open the ledger.
 
 Charts do not animate, do not take keyboard focus and never show a focus outline; each is wrapped as a labelled image (`role="img"`). Series labels come from translations, never from data keys.
 

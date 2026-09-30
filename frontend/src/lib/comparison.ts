@@ -40,3 +40,11 @@ function directionOf(amount: number): ChangeDirection {
   }
   return amount < 0 ? "down" : "flat";
 }
+
+export function breakdownWeight(
+  item: Readonly<{ amount: string; comparisonAmount?: string | null }>,
+) {
+  return item.comparisonAmount == null
+    ? Number(item.amount)
+    : Math.max(Number(item.amount), Number(item.comparisonAmount));
+}

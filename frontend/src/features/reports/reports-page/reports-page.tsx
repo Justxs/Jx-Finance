@@ -13,6 +13,7 @@ import { PageHeader } from "@/components/page-header/page-header";
 import { TitledSection } from "@/components/ui/section/section";
 import { SplitColumns } from "@/components/ui/split-columns/split-columns";
 import { StaleRegion } from "@/components/ui/stale-region/stale-region";
+import { MoneyFlow } from "@/features/reports/money-flow/money-flow";
 import { NetWorthChangeCard } from "@/features/reports/net-worth-change-card/net-worth-change-card";
 import { PayeeBreakdown } from "@/features/reports/payee-breakdown/payee-breakdown";
 import { ReceiptItems } from "@/features/reports/receipt-items/receipt-items";
@@ -145,6 +146,8 @@ export function ReportsPage() {
               <ReportTrendChart items={summary.data.trend} bucket={summary.data.trendBucket} />
             </TitledSection>
           </SplitColumns>
+
+          <MoneyFlow summary={summary.data} />
         </StaleRegion>
       </ViewTransition>
     </div>

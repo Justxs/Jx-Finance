@@ -12,6 +12,8 @@ flowchart LR
     Api --> Tags["Expense by tag<br/>join over TransactionTags plus an untagged total"]
     Api --> Trend["Trend over the range"]
     Break --> Drill["Category row links to /transactions<br/>with category, type and date range"]
+    Break --> Flow["Money flow Sankey<br/>moneyFlowGraph in the browser"]
+    Totals --> Flow
     Tags --> TagDrill["Tag row links to /transactions<br/>with the tag, type and date range"]
     Api --> Payees["Expense by payee<br/>grouped by the stored Transaction.PayeeKey"]
     Payees --> PayeeDrill["Payee row links to /transactions<br/>with payee, type and date range"]
@@ -125,6 +127,26 @@ The month-end review's `figures` are this same report summary, so they carry the
 ## Year in review
 
 Since 2026-09-30 the page adds a "Year in review" section, after the net worth change, whenever the range is "This year" or "Last year". It needs no endpoint: `year-review-rows.ts` reads the report the page already has. A table lists each month of the trend with its income, expenses, net and the share of income kept, "—" for a month without income. Under it "Biggest changes from the year before" lists the five expense categories whose amount moved most against the comparison, either way, with "€4,200.00, was €3,900.00" and the change badge that calls a fall better; without the "Same period last year" comparison it offers "Compare with the year before", which turns that comparison on. Investment groups and unchanged categories are left out. The year's totals, the net worth change and the breakdowns are the ones the page shows for any range.
+
+## Money flow
+
+Since 2026-09-30 the page ends with a "Money flow" section, full width under the breakdowns and the trend, for any range. It is a Sankey diagram built in the browser by `moneyFlowGraph` (`features/reports/money-flow/money-flow-graph.ts`) from the report the page already has; there is no endpoint of its own.
+
+- **Left:** the income categories, then **Money back** and **From savings** when they apply.
+- **Middle:** one **Money in** node, the sum of the left side.
+- **Right:** the expense categories, then **Saved** when the period ended with money left.
+
+The two extra left-hand nodes keep both sides of the hub equal, so the chart never invents money. Amounts are summed in cents with `toCents`, so the hub balances exactly.
+
+- **Saved** is `max(0, totalIncome − totalExpense)`: always the Net stat above and the year review's Kept column, even when there is money back.
+- **From savings** is `max(0, totalExpense − totalIncome)`, joining when the period spent more than it earned; a period with only expenses is paid from savings in full.
+- **Money back** gathers every expense category, after the roll-up to its group, whose [refunds](transactions.md#refunds) outweighed its spending, as a positive amount. Its tooltip names each category, and one line under the chart repeats them: "Money back: Electronics €40.00 (more refunded than spent)". A refund-heavy sub-category inside a group that still spent stays inside the group. Income categories below zero, which the report does not produce today, are left out rather than drawn as money back.
+
+Each side shows the rows of the list above it: `breakdownCut` in `components/category-breakdown/category-groups.ts` rolls sub-categories up to their group with `rollUpToGroups`, sorts by `breakdownWeight` and keeps five rows with the rest in **Other**, and `CategoryBreakdown` calls the same function. With a comparison on, the chart keeps the lists' comparison-aware choice of rows, but every amount is the chosen period's and the earlier period is not drawn. Money back is taken out before the cut, so a refund-heavy category never takes one of the five places in the chart; a category with no amount in the period has no node.
+
+Clicking an income or expense category, or a group, opens `/transactions` with the same search the list row's link builds: `categoryId`, `type` and the range. A group's id includes its sub-categories, as the ledger's category filter already does. Investment income, investment taxes and fees, Uncategorized, Other, Money in, Money back, From savings and Saved are not clickable. The chart stays out of the tab order like every chart; keyboard users reach the same ledger views through the lists. Names come from `useCategoryName` and amounts from `useMoney`, so Hide amounts masks the labels, the tooltip and the Money back line.
+
+Below `md` the section is hidden and the lists stay the view: a horizontal flow of long Lithuanian names does not fit a phone. When both totals are zero the section shows "Nothing recorded in this period." instead of the chart. The month-end review does not show it yet; the component takes a report summary, so it can be reused there without change.
 
 ## What counts as income and expense
 

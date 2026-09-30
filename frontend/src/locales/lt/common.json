@@ -2162,6 +2162,18 @@
       "noChanges": "Nė viena išlaidų kategorija nepasikeitė, palyginti su praėjusiais metais.",
       "compare": "Palyginti su praėjusiais metais"
     },
+    "moneyFlow": {
+      "title": "Pinigų srautas",
+      "moneyIn": "Įplaukos",
+      "saved": "Sutaupyta",
+      "fromSavings": "Iš santaupų",
+      "moneyBack": "Grąžinta",
+      "ariaLabel_one": "Įplaukos {{moneyIn}}: išleista {{spent}} ({{count}} kategorija), sutaupyta {{saved}}",
+      "ariaLabel_few": "Įplaukos {{moneyIn}}: išleista {{spent}} ({{count}} kategorijos), sutaupyta {{saved}}",
+      "ariaLabel_many": "Įplaukos {{moneyIn}}: išleista {{spent}} ({{count}} kategorijos), sutaupyta {{saved}}",
+      "ariaLabel_other": "Įplaukos {{moneyIn}}: išleista {{spent}} ({{count}} kategorijų), sutaupyta {{saved}}",
+      "moneyBackLine": "Grąžinta: {{items}} (grąžinta daugiau, nei išleista)"
+    },
     "receiptItems": {
       "title": "Čekių prekės",
       "hint": "Kiek kainavo nuskaitytų čekių prekės šio laikotarpio operacijų prieduose.",

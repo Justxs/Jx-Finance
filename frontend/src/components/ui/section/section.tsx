@@ -54,6 +54,7 @@ interface TitledSectionProps {
   description?: ReactNode;
   bodyGap?: keyof typeof bodyGaps;
   hidden?: boolean;
+  className?: string;
   children: ReactNode;
 }
 
@@ -63,13 +64,14 @@ export function TitledSection({
   description,
   bodyGap,
   hidden,
+  className,
   children,
 }: Readonly<TitledSectionProps>) {
   const generatedId = useId();
   const id = titleId ?? generatedId;
 
   return (
-    <Section aria-labelledby={id} hidden={hidden}>
+    <Section aria-labelledby={id} hidden={hidden} className={className}>
       <SectionTitle id={id}>{title}</SectionTitle>
       {description ? (
         <p id={`${id}-description`} className="mt-1 max-w-prose text-sm text-muted-foreground">

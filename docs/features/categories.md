@@ -14,7 +14,7 @@ What a group changes:
 | --- | --- |
 | Ledger | `categoryId` of a parent also keeps the rows and split lines filed under its sub-categories, so the list, totals and both exports answer "all Transport" |
 | Budgets | A budget on a parent counts its own spending plus every sub-category's; a sub-category can still carry its own budget |
-| Reports and dashboard | Breakdown items carry `parentId`, `parentName` and `parentIcon`; `rollUpToGroups` in `components/category-breakdown` merges each sub-category into its parent's row, whose link opens the ledger filtered by the parent |
+| Reports and dashboard | Breakdown items carry `parentId`, `parentName` and `parentIcon`; `rollUpToGroups` in `components/category-breakdown` merges each sub-category into its parent's row, whose link opens the ledger filtered by the parent; the reports' money flow chart draws the same rows |
 | Categories page | Sub-categories are listed under their parent, their icon indented |
 
 The category form has "Group under" with "No group (top level)" and the top-level categories of the same type, hidden while the category has sub-categories of its own. Deleting a parent makes its sub-categories top-level and records them beside the trash entry, and restoring it groups again each one that is still top-level, of the same type and without sub-categories of its own. Month-end movers, the monthly digest and the category comparison stay per category.

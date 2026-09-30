@@ -5,6 +5,7 @@ import { ShareRowsSkeleton } from "@/components/share-row/share-row";
 import { SummaryStatsSkeleton } from "@/components/summary-stats/summary-stats";
 import { SectionSkeleton, Skeleton, TextSkeleton } from "@/components/ui/skeleton/skeleton";
 import { SplitColumns } from "@/components/ui/split-columns/split-columns";
+import { MONEY_FLOW_HEIGHT } from "@/features/reports/money-flow/money-flow-graph";
 import { cn } from "@/lib/utils";
 
 const filterWidths = ["sm:w-44", "sm:w-64", "sm:w-52"] as const;
@@ -48,6 +49,9 @@ export function ReportsPending() {
           <ChartSkeleton height={280} legend />
         </SectionSkeleton>
       </SplitColumns>
+      <SectionSkeleton className="hidden md:block">
+        <ChartSkeleton height={MONEY_FLOW_HEIGHT} />
+      </SectionSkeleton>
     </PagePending>
   );
 }

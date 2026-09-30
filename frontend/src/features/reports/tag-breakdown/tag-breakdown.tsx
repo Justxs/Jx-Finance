@@ -1,7 +1,8 @@
 import { useTranslation } from "react-i18next";
 import type { TagBreakdownItem } from "@/api/generated/model";
-import { BreakdownList, breakdownWeight } from "@/components/breakdown-list/breakdown-list";
+import { BreakdownList } from "@/components/breakdown-list/breakdown-list";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
+import { breakdownWeight } from "@/lib/comparison";
 
 const MAX_ROWS = 8;
 

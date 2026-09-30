@@ -1,15 +1,9 @@
 import { useTranslation } from "react-i18next";
 import type { CategoryBreakdownItem } from "@/api/generated/model";
-import {
-  type BreakdownRow,
-  BreakdownList,
-  breakdownWeight,
-} from "@/components/breakdown-list/breakdown-list";
+import { type BreakdownRow, BreakdownList } from "@/components/breakdown-list/breakdown-list";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { useCategoryName } from "@/hooks/use-category-name";
-import { rollUpToGroups } from "./category-groups";
-
-const MAX_ROWS = 5;
+import { breakdownCut } from "./category-groups";
 
 interface Props {
   items: CategoryBreakdownItem[];
@@ -22,13 +16,12 @@ export function CategoryBreakdown({ items, type = "expense", dateFrom, dateTo }:
   const { t } = useTranslation();
   const nameOf = useCategoryName();
 
-  const sorted = rollUpToGroups(items).toSorted((a, b) => breakdownWeight(b) - breakdownWeight(a));
-  const rest = sorted.slice(MAX_ROWS);
+  const { rows: shown, rest } = breakdownCut(items);
   const restTotal = rest.reduce((sum, item) => sum + Number(item.amount), 0);
   const restEarlier = rest.reduce((sum, item) => sum + Number(item.comparisonAmount ?? 0), 0);
 
   const rows: BreakdownRow[] = [
-    ...sorted.slice(0, MAX_ROWS).map((item) => ({
+    ...shown.map((item) => ({
       key: item.categoryId ?? item.syntheticGroup ?? "uncategorized",
       name: nameOf(item),
       amount: Number(item.amount),

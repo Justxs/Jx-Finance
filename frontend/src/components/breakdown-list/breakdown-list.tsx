@@ -25,14 +25,6 @@ interface Props {
   dateTo?: string;
 }
 
-export function breakdownWeight(
-  item: Readonly<{ amount: string; comparisonAmount?: string | null }>,
-) {
-  return item.comparisonAmount == null
-    ? Number(item.amount)
-    : Math.max(Number(item.amount), Number(item.comparisonAmount));
-}
-
 export function BreakdownList({ rows, type = "expense", dateFrom, dateTo }: Readonly<Props>) {
   const { t } = useTranslation();
   const money = useMoney();

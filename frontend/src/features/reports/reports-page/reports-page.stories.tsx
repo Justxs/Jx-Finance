@@ -71,6 +71,15 @@ export const ChoosesAComparison: Story = {
   },
 };
 
+export const ShowsTheMoneyFlow: Story = {
+  play: async ({ canvas }) => {
+    const heading = await canvas.findByRole("heading", { name: /^(money flow|pinigų srautas)$/i });
+    const section = within(heading.closest("section")!);
+
+    await expect(section.getByRole("img", { name: /saved|sutaupyta/i })).toBeInTheDocument();
+  },
+};
+
 export const Empty: Story = { parameters: { msw: { handlers: emptyHandlers } } };
 
 export const EmptyYearWithoutNetWorthHistory: Story = {

@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { PayeeBreakdownItem } from "@/api/generated/model";
-import { BreakdownList, breakdownWeight } from "@/components/breakdown-list/breakdown-list";
+import { BreakdownList } from "@/components/breakdown-list/breakdown-list";
 import { Button } from "@/components/ui/button/button";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
+import { breakdownWeight } from "@/lib/comparison";
 
 const SHOWN_ROWS = 8;
 
