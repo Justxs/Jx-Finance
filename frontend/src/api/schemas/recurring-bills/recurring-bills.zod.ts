@@ -173,6 +173,82 @@ export const RecurringBillsResponseItem = zod.object({
 export const RecurringBillsResponse = zod.array(RecurringBillsResponseItem);
 
 /**
+ * Answers every occurrence of your active recurring entries that falls in the month, walking each schedule forward from its next due date and back from it, never before the entry was created. Each occurrence has a status: paid when a ledger row with the entry's match key or name, on its account, lies within 5 days of the date (2 for a weekly entry), each row paying at most one occurrence; overdue when it is before today and not yet confirmed; noMatch for an earlier past date with no matching row; and due otherwise. A paid occurrence carries the row's amount and transactionId (null for a transfer), and unconfirmed when the entry still waits for that confirmation. Other occurrences carry the entry's amount, or the median of its newest six matching rows within 13 months for a variable entry, marked estimated, in the account's currency; without an account, or with one you cannot see (accountNotVisible), the amount is null. expectedOut and expectedIn add up every expense and income occurrence in the reporting currency at the newest exchange rate, paidOut the matched expense rows at their own reporting amounts; transfers count in none of them. partial is true when an estimate or an amount without a fresh rate is inside a figure, and unpriced counts the expense and income entries left out for want of an amount. Nothing is stored. Needs the recurringBills feature.
+ * @summary Lay out one month of recurring entries
+ */
+export const billsCalendarResponseExpectedOutRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const billsCalendarResponseExpectedInRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const billsCalendarResponsePaidOutRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const billsCalendarResponseOccurrencesItemAmountRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+
+export const BillsCalendarResponse = zod.object({
+  from: zod.iso.date(),
+  to: zod.iso.date(),
+  expectedOut: zod.stringFormat("decimal", billsCalendarResponseExpectedOutRegExp),
+  expectedIn: zod.stringFormat("decimal", billsCalendarResponseExpectedInRegExp),
+  paidOut: zod.stringFormat("decimal", billsCalendarResponsePaidOutRegExp),
+  partial: zod.boolean(),
+  unpriced: zod.int(),
+  occurrences: zod.array(
+    zod.object({
+      date: zod.iso.date(),
+      billId: zod.uuid(),
+      name: zod.string(),
+      shape: zod
+        .enum(["expense", "income", "transfer"])
+        .describe("Expense, Income, or Transfer. Decides what a confirmation writes."),
+      amount: zod
+        .stringFormat("decimal", billsCalendarResponseOccurrencesItemAmountRegExp)
+        .nullable(),
+      currency: zod.union([
+        zod.null(),
+        zod.enum([
+          "eur",
+          "usd",
+          "gbp",
+          "chf",
+          "pln",
+          "sek",
+          "nok",
+          "dkk",
+          "czk",
+          "huf",
+          "ron",
+          "isk",
+          "try",
+          "jpy",
+          "cny",
+          "hkd",
+          "sgd",
+          "krw",
+          "inr",
+          "idr",
+          "myr",
+          "php",
+          "thb",
+          "aud",
+          "nzd",
+          "cad",
+          "mxn",
+          "brl",
+          "ils",
+          "zar",
+        ]),
+      ]),
+      estimated: zod.boolean(),
+      status: zod.enum(["due", "overdue", "paid", "noMatch"]),
+      isNextDue: zod.boolean(),
+      unconfirmed: zod.boolean(),
+      accountNotVisible: zod.boolean(),
+      accountId: zod.uuid().nullable(),
+      transactionId: zod.uuid().nullable(),
+    }),
+  ),
+});
+
+/**
  * Reads the expenses you can see from the last 24 months, groups them by a normalized description and account, and answers the groups that look like a subscription: at least 3 occurrences, a gap between them that fits one cadence, and amounts within a tolerance of their median. Call it to offer a ready-made recurring entry. Groups an active recurring entry already covers and groups you dismissed are left out. Nothing is written.
  * @summary Suggest subscriptions found in the ledger
  */

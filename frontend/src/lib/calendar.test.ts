@@ -6,6 +6,7 @@ import {
   monthBounds,
   monthDate,
   monthKeyOfIso,
+  monthWeeks,
   parseIso,
   safeTimeZone,
   shiftMonth,
@@ -126,5 +127,33 @@ describe("month keys", () => {
     expect(MONTH_KEY_PATTERN.test("2026-13")).toBe(false);
     expect(MONTH_KEY_PATTERN.test("2026-8")).toBe(false);
     expect(MONTH_KEY_PATTERN.test("1999-12")).toBe(false);
+  });
+});
+
+describe("monthWeeks", () => {
+  test("starts each week on the configured day with the neighbouring months' days", () => {
+    const monday = monthWeeks("2026-09", 1);
+    const sunday = monthWeeks("2026-09", 0);
+
+    expect(monday[0]?.[0]).toBe("2026-08-31");
+    expect(monday.at(-1)?.at(-1)).toBe("2026-10-04");
+    expect(sunday[0]?.[0]).toBe("2026-08-30");
+    expect(sunday.at(-1)?.at(-1)).toBe("2026-10-03");
+    expect(monday.every((week) => week.length === 7)).toBe(true);
+  });
+
+  test("gives a month that spans six weeks all six", () => {
+    const weeks = monthWeeks("2026-08", 1);
+
+    expect(weeks).toHaveLength(6);
+    expect(weeks[0]?.[5]).toBe("2026-08-01");
+    expect(weeks[5]?.[0]).toBe("2026-08-31");
+  });
+
+  test("covers February of a leap year and one that fits four weeks", () => {
+    expect(monthWeeks("2028-02", 1).flat()).toContain("2028-02-29");
+    expect(monthWeeks("2028-02", 1).at(-1)?.at(-1)).toBe("2028-03-05");
+    expect(monthWeeks("2026-02", 0)).toHaveLength(4);
+    expect(monthWeeks("2026-02", 1)).toHaveLength(5);
   });
 });

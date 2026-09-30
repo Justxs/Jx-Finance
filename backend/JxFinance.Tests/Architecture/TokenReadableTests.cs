@@ -51,6 +51,7 @@ public sealed class TokenReadableTests
         "GET /api/payees",
         "GET /api/ping",
         "GET /api/recurring-bills",
+        "GET /api/recurring-bills/calendar",
         "GET /api/recurring-bills/suggestions",
         "GET /api/recurring-bills/{id}",
         "GET /api/reports/summary",

@@ -4,7 +4,7 @@ Back to the [feature walkthrough](README.md). See also [decisions](../decisions/
 
 Backend `RecurringBills`, page `/recurring-bills`. A recurring entry is a schedule, not a posting: nothing reaches the ledger until somebody confirms an occurrence.
 
-The page lists active entries under three headings by next due date against today in the installation time zone: Overdue (before today), Due this week (today and the six days after) and Later. Each heading is shown only when it has entries, and each keeps the API's due-date order. Inactive entries sit in a closed "Inactive (n)" disclosure below. An active entry that is overdue or due within the week adds a relative day after its date, such as "(tomorrow)" or "(3 days ago)", formatted by `Intl.RelativeTimeFormat` in the interface language. The grouping is `groupBills` in `features/recurring-bills/bill-groups.ts`, and the row reads the same `urgencyOf` to decide on the "Overdue" tag and the relative day. The page looks up account and category names in maps built once per render, not per row. `bill-row-layout.tsx` holds the row grid for entries and suggestions and the `BillRowsSkeleton` the pending page draws with the same classes.
+The page opens on its List view, described here; the [Calendar](#calendar) view shows one month as a grid. The list shows active entries under three headings by next due date against today in the installation time zone: Overdue (before today), Due this week (today and the six days after) and Later. Each heading is shown only when it has entries, and each keeps the API's due-date order. Inactive entries sit in a closed "Inactive (n)" disclosure below. An active entry that is overdue or due within the week adds a relative day after its date, such as "(tomorrow)" or "(3 days ago)", formatted by `Intl.RelativeTimeFormat` in the interface language. The grouping is `groupBills` in `features/recurring-bills/bill-groups.ts`, and the row reads the same `urgencyOf` to decide on the "Overdue" tag and the relative day. The page looks up account and category names in maps built once per render, not per row. `bill-row-layout.tsx` holds the row grid for entries and suggestions and the `BillRowsSkeleton` the pending page draws with the same classes.
 
 Two properties describe an entry. Its **shape** says what a confirmation writes — an expense, an income, or a transfer between two of your own accounts — and its **kind** says whether the amount is always the same (fixed, carried on the entry) or changes each time (variable, typed at confirmation). Every combination is allowed, so a variable transfer is as ordinary as a fixed expense.
 
@@ -78,6 +78,77 @@ flowchart TD
     W --> Next
     Upd["Update that changes NextDueDate"] --> Reset["AnchorDay reset"]
 ```
+
+## Calendar
+
+Since 2026-09-30 the page header has a **List | Calendar** switch. List is the page described above. Calendar shows one month as a grid of weeks that start on the installation's first day of the week, with Today, Previous and Next beside the month's name; Previous and Next stop 12 months either side of the current month. The view and the month live in the address (`/recurring-bills?view=calendar&month=2026-10`, the month left out for the current one), so the back button and a bookmark keep them. In Calendar view the cash-flow forecast, the entry groups and the inactive disclosure give way to the calendar, while **Add recurring entry**, the subscription suggestions and every dialog stay. The route loader warms the forecast only for the list and the calendar's month only for the calendar.
+
+Backend `RecurringBills` (`GetBillsCalendar`, `RecurringBillService.GetCalendarAsync`) with the helpers it shares with the [cash-flow forecast](cash-flow-forecast.md) in `Common/RecurringBills/`; frontend `recurring-bills/bills-calendar` and `recurring-bills/bill-chip`, with `monthWeeks` in `lib/calendar.ts`. One read-only route, `GET /api/recurring-bills/calendar?month=YYYY-MM`, under the same switch and readable with a personal API token. Nothing is stored.
+
+```mermaid
+flowchart TD
+    Month["GET /api/recurring-bills/calendar?month=2026-10"] --> Range{"within 12 months<br/>of the current one?"}
+    Range -->|"no"| Refuse["400 range.invalid"]
+    Range -->|"yes"| Bills["active entries the caller can see,<br/>narrowed by the active household"]
+    Bills --> Walk["RecurringOccurrences: Before walks back from NextDueDate,<br/>never before the entry was created;<br/>After walks forward from it; 64 each at most"]
+    Walk --> Rows["RecurringHistory.LoadAsync: matching expenses, income<br/>and transfers from the month minus 5 days<br/>(or 13 months back) to the month plus 5 days (or today)"]
+    Rows --> Assign["RecurringMatch.Assign: each row pays its nearest occurrence"]
+    Assign --> Paid{"a row paid it?"}
+    Paid -->|"yes"| P["Paid, with the row's amount;<br/>not confirmed when on or after NextDueDate"]
+    Paid -->|"no"| Today{"on or after today?"}
+    Today -->|"yes"| D["Due"]
+    Today -->|"no"| Next{"on or after NextDueDate?"}
+    Next -->|"yes"| O["Overdue"]
+    Next -->|"no"| N["No match, muted"]
+```
+
+### The four states
+
+- **Due**: on or after today and not paid.
+- **Overdue**: before today and on or after the entry's next due date, so it has not been confirmed. Every such occurrence is overdue, as in the forecast; only the one on the next due date carries `isNextDue`.
+- **Paid**: a ledger row paid it, and the chip shows that row's amount in its own currency. When the occurrence is on or after the next due date the entry itself still waits for the confirmation, and the chip adds "Not confirmed".
+- **No match**: before today and before the next due date, so it was confirmed or skipped, but no row matched. It is drawn muted rather than as missed, because bank-text matching can miss a row whose text changed.
+
+A past month shows only what an entry was expected to do after it was created: walking back stops at the creation date in the installation time zone, so an entry set up today shows nothing in last year's months.
+
+### Which row pays an occurrence
+
+The rows are the ones the forecast reads, from `RecurringHistory.LoadAsync`: non-split expenses and income with a positive amount whose stored `PayeeKey` equals one of the entries' keys, and transfers with a description, normalized the same way. A row pays an occurrence of an entry of the same shape when its key is one of the entry's two keys (`PriceRiseMatcher.KeysOf`: the normalized match key or name, and the normalized name), it is on the entry's account when the entry has one (and a transfer arrives in the entry's destination), and it is dated within 5 days of the occurrence, 2 for a weekly entry. That is the forecast's paid-but-not-confirmed tolerance, so the two views agree on what counts as paid. Each row pays at most one occurrence: the nearest by date, ties going to the lower entry id. When two rows reach the same occurrence the nearer one pays it and the other pays nothing. `RecurringMatch.Assign` is the whole rule and has its own unit tests.
+
+### Amounts and totals
+
+An occurrence that is not paid carries the entry's amount in its account's currency, or for a variable entry the median of its newest six matching rows of the last 13 months in the account's currency, marked estimated and shown as "≈ €41.20". An entry without an account has no currency, so its chips show "No amount". A household entry whose account the caller can no longer see shows "No amount" and "Account not visible", as the forecast leaves it out with that reason.
+
+Above the grid three figures sum the month in the reporting currency: **Expected out**, every expense occurrence at its expected amount; **Expected in**, every income occurrence; and **Paid out**, the `ReportingAmount` of the rows that paid an expense occurrence. Expected amounts are converted with the newest exchange rate (`IExchangeRateService.GetLatestAsync`); a missing or stale rate leaves that amount out and, like a variable estimate inside a figure, adds the note "Partly estimated". Expense and income entries without an amount are counted in a note such as "2 entries without an amount". Transfers move money between your own accounts and count in none of the figures, although their chips show their amount.
+
+### The grid and the phone
+
+The body is a `<table>` with the month as its caption, a header row of weekday names from `Intl` (short, with the long name as `abbr`) and one row per week from `monthWeeks(month, weekStartsOn)`, including the days of the neighbouring months, which stay empty. Today's number is filled in navy and carries `aria-current="date"`. Each day lists its occurrences as chips: a shape mark (an arrow out for an expense, in for an income, both ways for a transfer, named for screen readers), the name, the amount, a tag for Overdue, Paid or No match, and the "Not confirmed" or "Account not visible" note. Income amounts carry "+" in the income colour. There are no page hotkeys; the month buttons are two Tab stops away.
+
+On a phone the same month is an agenda: only the days that have occurrences, one per row, with the same chips. Both bodies are rendered and the breakpoint picks one (`hidden md:table` and `md:hidden`), since there is no breakpoint hook and effects are not allowed; story `play` functions query inside the table.
+
+### Clicking a chip
+
+- The occurrence on the next due date, due or overdue, opens the ordinary confirm dialog for that entry.
+- Any other chip that is not paid opens the entry's edit form, through the page's `useEditableList`.
+- A paid chip's name is a `TransactionsLink` to the ledger filtered to that account and that day.
+
+The chip finds its entry in the entries the page already loaded, by `billId`.
+
+### Cache
+
+The query key starts with `/api/recurring-bills/calendar`, under `/api/recurring-bills`. `invalidation.ts` also lists `getBillsCalendarQueryKey` by name in the recurring-entry rules and in the transaction, transfer, conversion, import and broker rules, because a new ledger row can pay an occurrence and those rules did not reach `/api/recurring-bills` before.
+
+### No calendar subscription
+
+There is no iCal (`webcal://`) feed. Calendar apps cannot send an `Authorization` header, and a token in the query string was rejected on 2026-09-29 because query strings end up in logs; a feed needs its own decision about a secret address. Reminders already reach email and Discord.
+
+### Tests
+
+- `RecurringOccurrencesTests`: `After` and `Before` for each cadence with month-end and leap-day anchors, a range across the next due date, no date before creation, and the cap of 64.
+- `RecurringMatchTests`: the 5 and 2 day tolerances, another account or text, the nearest occurrence, a tie between two entries going to the lower id, two rows for one occurrence, and an entry without an account.
+- `BillsCalendarTests` (integration): a monthly entry once and a weekly one every week, a variable estimate, an overdue occurrence paid by a bank row and left unconfirmed, a past occurrence with no row and a confirmed one, nothing before creation, inactive entries left out, a foreign currency without a rate, an entry without an account, transfers outside the totals, a household entry for the partner and under the active household, an account the partner cannot see, `month.invalid`, `range.invalid` 13 months away and `feature.disabled`.
+- `calendar.test.ts` for `monthWeeks`, `invalidation.test.ts` for the calendar key, and the stories of `BillsCalendar`, `BillChip` and the Upcoming bills card.
 
 ## Finding a subscription
 
@@ -166,4 +237,4 @@ Detection's 15% `AmountTolerance` is unchanged and still absorbs a rise: a subsc
 
 Since 2026-09-20 the same pass can also queue an email. It does so only for the owner of the entry, only when that person switched "Email me about a due recurring entry" on in their profile, only when their address is confirmed and only while the installation has a mail server. The email row is written in the same transaction and under the same lock as the notification, with the dedupe key `bill:{id}:{local date}`, so the two are raised together or not at all and a second pass on the same day raises neither. The job never talks to SMTP itself: `EmailOutboxJob` drains the rows a minute later, so a dead mail server cannot slow the scan or delay another household's reminder. The sentence follows the shape as well — "due to be paid", "due to arrive", "due to be transferred". See [Email](email.md).
 
-Since 2026-09-29 the page opens with the [cash-flow forecast](cash-flow-forecast.md) section instead of the six-month bar chart of fixed expenses: the balance of each account over the next 30 to 90 days with every shape and kind of entry, a dashed line with the account's usual spending, the dates an account goes below zero, and one line with the scheduled expenses and income, "Scheduled in the next 90 days: €1,240.00 out, €3,100.00 in". The price-rise check still reads only expense entries.
+Since 2026-09-29 the List view opens with the [cash-flow forecast](cash-flow-forecast.md) section instead of the six-month bar chart of fixed expenses: the balance of each account over the next 30 to 90 days with every shape and kind of entry, a dashed line with the account's usual spending, the dates an account goes below zero, and one line with the scheduled expenses and income, "Scheduled in the next 90 days: €1,240.00 out, €3,100.00 in". The price-rise check still reads only expense entries.

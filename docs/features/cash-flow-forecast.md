@@ -2,7 +2,7 @@
 
 Back to the [feature walkthrough](README.md). See also [decisions](../decisions/cash-flow-forecast.md), [Recurring entries](recurring-bills.md) and [Accounts](accounts.md).
 
-Backend `Accounts` (`GetCashFlowForecast`, `Services/CashFlowForecastService.cs`, the pure `Shared/CashFlowProjection.cs`), frontend `accounts/cash-flow-forecast` and `dashboard/cash-flow-card`. One read-only route, `GET /api/accounts/forecast?days=`, behind the `RecurringBills` switch through `RequiresFeature` metadata on the endpoint, although the rest of `/api/accounts` is ungated. Nothing is stored: the forecast is computed on every read.
+Backend `Accounts` (`GetCashFlowForecast`, `Services/CashFlowForecastService.cs`, the pure `Shared/CashFlowProjection.cs`, and the schedule, estimate and history it shares with the [bills calendar](recurring-bills.md#calendar) in `Common/RecurringBills/`), frontend `accounts/cash-flow-forecast` and `dashboard/cash-flow-card`. One read-only route, `GET /api/accounts/forecast?days=`, behind the `RecurringBills` switch through `RequiresFeature` metadata on the endpoint, although the rest of `/api/accounts` is ungated. Nothing is stored: the forecast is computed on every read.
 
 The forecast answers one question: will one of my accounts go below zero before the money I expect arrives? It projects every visible account from today's balance to the end of a 30, 60 or 90 day horizon, one step per scheduled occurrence of the caller's recurring entries, and draws a second, dashed line that also takes the account's usual everyday spending off day by day.
 
@@ -17,7 +17,7 @@ flowchart TD
     Amount -->|"fixed"| Fixed["the entry's amount"]
     Amount -->|"variable"| Est["median of the newest 6 matching rows<br/>within 13 months, marked estimated"]
     Est -->|"no matching row"| NC3["notCounted: noHistory"]
-    Fixed --> Occ["Occurrences: RecurringBill.Advance from NextDueDate,<br/>before today placed on today as overdue,<br/>first one skipped when a matching row already paid it"]
+    Fixed --> Occ["Occurrences: RecurringOccurrences.After from NextDueDate,<br/>before today placed on today as overdue,<br/>first one skipped when a matching row already paid it"]
     Est --> Occ
     Occ --> Changes["signed entries per account:<br/>expense minus, income plus,<br/>transfer out of the source and into a visible destination"]
     Occ -->|"transfer into another currency<br/>with no rate within 5 days"| NC4["out of the source only,<br/>notCounted: noExchangeRate"]
@@ -70,8 +70,8 @@ Only the main currency is projected. A bill leaves the EUR side of an account, a
 Only the caller's own active entries count: recurring entries are personal and cannot be shared yet, so a shared account is projected with the caller's entries only, even when a household partner has entries of their own on it.
 
 - **Fixed** amounts are the entry's amount, in the account's currency, as confirmation would post it.
-- **Variable** amounts are the median of the newest six matching rows within 13 months, rounded to cents and marked estimated. A row matches when it is on the entry's account, in the account's currency, of the same flow (a transaction of the same type, or a transfer to the same destination), and its normalized description equals the entry's key: the normalized match key when there is one, or the normalized name. The name always matches as well, so an occurrence confirmed from an entry that also has a match key still counts. Income and expense rows come through `PriceRiseMatcher.LoadChargesAsync`, which now takes the flow type; transfers from the caller's accounts in the last 13 months come in one query over `db.Transfers`, normalized the same way.
-- **Occurrences** walk `RecurringBill.Advance` from `NextDueDate` to the end of the horizon, the end included, at most 64 per entry. An occurrence before today is placed on today and marked overdue: until it is confirmed or matched the payment is still expected. Every overdue occurrence is placed, not only the first.
+- **Variable** amounts are the median of the newest six matching rows within 13 months, rounded to cents and marked estimated. A row matches when it is on the entry's account, in the account's currency, of the same flow (a transaction of the same type, or a transfer to the same destination), and its normalized description equals the entry's key: the normalized match key when there is one, or the normalized name. The name always matches as well, so an occurrence confirmed from an entry that also has a match key still counts. The rows come from `RecurringHistory.LoadAsync`, which the [bills calendar](recurring-bills.md#calendar) reads too, from 13 months back to the end of the horizon: non-split expenses and income with a positive amount whose stored `PayeeKey` equals one of the entries' keys, in one query, and transfers with a description in another, normalized in memory. The estimate is `RecurringEstimate.Of`.
+- **Occurrences** walk `RecurringOccurrences.After` (which steps with `RecurringBill.Advance`) from `NextDueDate` to the end of the horizon, the end included, at most 64 per entry. An occurrence before today is placed on today and marked overdue: until it is confirmed or matched the payment is still expected. Every overdue occurrence is placed, not only the first.
 - **Paid but not confirmed.** The first occurrence is skipped when a matching row is dated from 5 days before `NextDueDate` (2 for a weekly entry) up to today. Imported payments are often never confirmed, and the forecast must not charge them twice; the month-close checklist chases the confirmation.
 - **Transfers** leave the source account. They arrive in the destination when the caller can see it, converted at the newest exchange rate when the two currencies differ, and the converted side is then marked estimated.
 
@@ -81,7 +81,7 @@ Entries of one day are applied income first, and a day counts as below zero when
 
 Per account, the median over the last three complete calendar months of that month's expenses in the account's currency, divided by the days in that month, rounded to cents. Rows whose stored `PayeeKey` equals the key or name of one of the caller's active expense entries on that account are left out, because the schedule already counts them; the grouping runs in SQL by account, currency, month and `PayeeKey`. An account whose first transaction is later than the first day of those three months has no usual spending and no dashed line. The median ignores one large purchase, and a separate line keeps the scheduled one exact.
 
-A [refund](transactions.md#refunds) on the account lowers its month's expenses, so usual spending is net of refunds. The rows matched to a recurring entry, which place a variable entry's estimate, are read by `PriceRiseMatcher.LoadChargesAsync` and never include a refund.
+A [refund](transactions.md#refunds) on the account lowers its month's expenses, so usual spending is net of refunds. The rows matched to a recurring entry, which place a variable entry's estimate, are read by `RecurringHistory.LoadAsync` and never include a refund.
 
 ### The response
 
@@ -89,16 +89,16 @@ A [refund](transactions.md#refunds) on the account lowers its month's expenses, 
 
 ### The numbers
 
-Every constant lives in `CashFlowProjection`.
+The schedule, estimate and tolerance constants live in `Common/RecurringBills/`, shared with the bills calendar; usual spending's stays in `CashFlowProjection`.
 
 | Constant | Value | Why |
 | --- | --- | --- |
-| `MaxOccurrences` | 64 | The cap the old bar chart used; a weekly entry fills 13 in 90 days, so only a long-overdue weekly entry reaches it. |
-| `EstimateSampleSize` | 6 | Half a year of a monthly entry: recent enough to follow a tariff change, long enough that one odd month does not move the median. |
-| `EstimateLookBackMonths` | 13 | The window the price-rise check already reads, so a yearly entry finds last year's payment. |
-| `PaidToleranceDays` | 5 | A bank books a payment a few days early or late around a weekend; five days covers that without reaching the previous month's occurrence. |
-| `WeeklyPaidToleranceDays` | 2 | A week is too short for five days: last week's confirmed occurrence would count as this week's payment. |
-| `UsualSpendingMonths` | 3 | Three complete months smooth one unusual month and still follow a change in habits. |
+| `RecurringOccurrences.MaxOccurrences` | 64 | The cap the old bar chart used; a weekly entry fills 13 in 90 days, so only a long-overdue weekly entry reaches it. |
+| `RecurringEstimate.SampleSize` | 6 | Half a year of a monthly entry: recent enough to follow a tariff change, long enough that one odd month does not move the median. |
+| `RecurringEstimate.LookBackMonths` | 13 | The window the price-rise check already reads, so a yearly entry finds last year's payment. |
+| `RecurringMatch.PaidToleranceDays` | 5 | A bank books a payment a few days early or late around a weekend; five days covers that without reaching the previous month's occurrence. |
+| `RecurringMatch.WeeklyPaidToleranceDays` | 2 | A week is too short for five days: last week's confirmed occurrence would count as this week's payment. |
+| `CashFlowProjection.UsualSpendingMonths` | 3 | Three complete months smooth one unusual month and still follow a change in habits. |
 
 ## Cache and invalidation
 

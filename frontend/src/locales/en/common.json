@@ -82,6 +82,7 @@
     "otherAccounts_one": "{{count}} other account",
     "otherAccounts_other": "{{count}} other accounts",
     "upcomingBills": "Upcoming bills",
+    "billsCalendar": "Calendar",
     "noBills": "No active bills.",
     "billsCurrentOnly": "Upcoming bills are shown on the current month.",
     "overdue": "Overdue",
@@ -1778,6 +1779,28 @@
       "thisWeek": "Due this week",
       "later": "Later",
       "inactive": "Inactive ({{count}})"
+    },
+    "calendar": {
+      "view": "View",
+      "list": "List",
+      "calendar": "Calendar",
+      "previous": "Previous month",
+      "today": "Today",
+      "next": "Next month",
+      "expectedOut": "Expected out",
+      "expectedIn": "Expected in",
+      "paidOut": "Paid out",
+      "partial": "Partly estimated",
+      "unpriced_one": "{{count}} entry without an amount",
+      "unpriced_other": "{{count}} entries without an amount",
+      "due": "Due",
+      "overdue": "Overdue",
+      "paid": "Paid",
+      "noMatch": "No match",
+      "unconfirmed": "Not confirmed",
+      "accountNotVisible": "Account not visible",
+      "amountUnknown": "No amount",
+      "empty": "No recurring entries fall in this month."
     }
   },
   "forecast": {

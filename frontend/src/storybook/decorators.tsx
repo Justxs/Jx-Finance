@@ -29,6 +29,7 @@ import { accountsSearchSchema } from "@/routes/accounts";
 import { dashboardSearchSchema } from "@/routes/index";
 import { investmentsSearchSchema } from "@/routes/investments";
 import { profileSearchSchema } from "@/routes/profile";
+import { recurringBillsSearchSchema } from "@/routes/recurring-bills";
 import { reportsSearchSchema } from "@/routes/reports";
 import { settingsSearchSchema } from "@/routes/settings";
 import { usersSearchSchema } from "@/routes/users";
@@ -51,7 +52,7 @@ const STORY_ROUTES = [
   { path: "/net-worth/assets/$assetId" },
   { path: "/net-worth/debts/$debtId" },
   { path: "/profile", validateSearch: profileSearchSchema },
-  { path: "/recurring-bills" },
+  { path: "/recurring-bills", validateSearch: recurringBillsSearchSchema },
   { path: "/settings", validateSearch: settingsSearchSchema },
   { path: "/login" },
   { path: "/setup" },

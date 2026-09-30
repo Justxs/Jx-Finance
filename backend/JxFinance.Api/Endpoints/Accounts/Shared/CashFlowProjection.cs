@@ -1,4 +1,5 @@
 using JxFinance.Common;
+using JxFinance.Common.RecurringBills;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.RecurringBills;
 using JxFinance.Endpoints.Accounts.GetCashFlowForecast;
@@ -16,11 +17,7 @@ public sealed record ForecastProjection(
 
 public static class CashFlowProjection
 {
-    public const int MaxOccurrences = 64;
-    public const int EstimateSampleSize = 6;
-    public const int EstimateLookBackMonths = 13;
-    public const int PaidToleranceDays = 5;
-    public const int WeeklyPaidToleranceDays = 2;
+    public const int MaxOccurrences = RecurringOccurrences.MaxOccurrences;
     public const int UsualSpendingMonths = 3;
 
     public static IReadOnlyList<ForecastOccurrence> Occurrences(
@@ -29,31 +26,18 @@ public static class CashFlowProjection
         DateOnly end,
         IEnumerable<DateOnly> matchedDates)
     {
-        var tolerance = bill.Cadence == RecurringBillCadence.Weekly ? WeeklyPaidToleranceDays : PaidToleranceDays;
-        var paidFrom = bill.NextDueDate.AddDays(-tolerance);
-        var date = matchedDates.Any(matched => matched >= paidFrom && matched <= today)
+        var paidFrom = bill.NextDueDate.AddDays(-RecurringMatch.ToleranceDays(bill.Cadence));
+        var start = matchedDates.Any(matched => matched >= paidFrom && matched <= today)
             ? RecurringBill.Advance(bill.NextDueDate, bill.Cadence, bill.AnchorDay)
             : bill.NextDueDate;
 
-        var occurrences = new List<ForecastOccurrence>();
-        while (date <= end && occurrences.Count < MaxOccurrences)
-        {
-            occurrences.Add(date < today ? new ForecastOccurrence(today, true) : new ForecastOccurrence(date, false));
-            date = RecurringBill.Advance(date, bill.Cadence, bill.AnchorDay);
-        }
-
-        return occurrences;
-    }
-
-    public static decimal? Estimate(IEnumerable<(DateOnly Date, decimal Amount)> matches)
-    {
-        var newest = matches
-            .OrderByDescending(match => match.Date)
-            .Take(EstimateSampleSize)
-            .Select(match => match.Amount)
+        return RecurringOccurrences.After(bill, start, end)
+            .Select(date => date < today ? new ForecastOccurrence(today, true) : new ForecastOccurrence(date, false))
             .ToList();
-        return newest.Count > 0 ? Money.Round(Statistics.Median(newest)) : null;
     }
+
+    public static decimal? Estimate(IEnumerable<(DateOnly Date, decimal Amount)> matches) =>
+        RecurringEstimate.Of(matches);
 
     public static decimal? UsualDailySpending(IReadOnlyList<(DateOnly Month, decimal Total)> monthTotals) =>
         monthTotals.Count < UsualSpendingMonths

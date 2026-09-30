@@ -33,23 +33,28 @@ export function UpcomingBills() {
   }
 
   return (
-    <Rows>
-      {rows.map((bill) => {
-        const overdue = bill.nextDueDate < todayIso;
-        return (
-          <TimelineRow
-            key={bill.id}
-            day={formatDay(bill.nextDueDate)}
-            title={bill.name}
-            badge={overdue ? <Tag tone="negative">{t("dashboard.overdue")}</Tag> : null}
-            amount={
-              <span className="shrink-0 text-right font-medium tabular-nums">
-                {bill.amount === null ? EMPTY_VALUE : money.format(Number(bill.amount))}
-              </span>
-            }
-          />
-        );
-      })}
-    </Rows>
+    <>
+      <Rows>
+        {rows.map((bill) => {
+          const overdue = bill.nextDueDate < todayIso;
+          return (
+            <TimelineRow
+              key={bill.id}
+              day={formatDay(bill.nextDueDate)}
+              title={bill.name}
+              badge={overdue ? <Tag tone="negative">{t("dashboard.overdue")}</Tag> : null}
+              amount={
+                <span className="shrink-0 text-right font-medium tabular-nums">
+                  {bill.amount === null ? EMPTY_VALUE : money.format(Number(bill.amount))}
+                </span>
+              }
+            />
+          );
+        })}
+      </Rows>
+      <TextLink to="/recurring-bills" search={{ view: "calendar" }} className="mt-3 inline-block">
+        {t("dashboard.billsCalendar")}
+      </TextLink>
+    </>
   );
 }

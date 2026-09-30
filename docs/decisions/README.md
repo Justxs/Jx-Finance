@@ -20,7 +20,7 @@ Before changing behaviour that a page here covers, read that page. When you choo
 | [Imports](swedbank-csv-import.md) | Imports | 5 | [Bank statement import](../features/bank-statement-import.md) |
 | [Budgets](budgets.md) | Budgets | 8 | [Budgets](../features/budgets.md) |
 | [Goals](goals.md) | none | 3 | [Goals](../features/goals.md) |
-| [Recurring entries and subscription detection](recurring-bills.md) | Recurring entries, Subscription detection, Dismissing a suggestion | 4 | [Recurring entries](../features/recurring-bills.md) |
+| [Recurring entries and subscription detection](recurring-bills.md) | Recurring entries, Bills calendar, Subscription detection, Dismissing a suggestion | 11 | [Recurring entries](../features/recurring-bills.md) |
 | [Cash-flow forecast](cash-flow-forecast.md) | Cash-flow forecast | 12 | [Cash-flow forecast](../features/cash-flow-forecast.md) |
 | [Notifications](notifications.md) | none | 2 | [Notifications](../features/notifications.md) |
 | [Net worth](net-worth.md) | Net worth, Snapshot schedule, Asset value | 8 | [Net worth](../features/net-worth.md) |

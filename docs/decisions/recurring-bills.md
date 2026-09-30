@@ -8,6 +8,10 @@ Related: feature page [Recurring entries](../features/recurring-bills.md); archi
 
 Three shapes — expense, income and transfer between two of your own accounts — each fixed or variable; no auto-posting; expected occurrence date required for confirmation; inactive entries reject confirmation; repeats notify once per day; a transfer confirmation goes through the ordinary transfer create path, so the cross-currency rules are the same ones; stored as `RecurringBill` under `/api/recurring-bills` although the user-facing name changed
 
+### Bills calendar
+
+A Calendar view of the recurring entries page, not a page of its own, fed by `GET /api/recurring-bills/calendar?month=` for one month within a year of the current one. One schedule walks each entry both ways from its next due date (`Common/RecurringBills/RecurringOccurrences`), never before the entry was created, and the forecast walks forward with the same code. An occurrence is paid when a ledger row with the entry's match keys lies within the forecast's own tolerance of it, each row paying at most one occurrence; nothing is stored. Expected amounts are converted to the reporting currency at the newest rate, and a missing rate or an estimate is said aloud as "Partly estimated". There is no iCal feed
+
 ### Subscription detection
 
 A read-only analysis over the caller's visible expenses of the last 24 months, grouped by account and by a description normalized in one tested pure function; a group needs three occurrences, consecutive gaps that all fit one cadence (7 ± 2, 30 ± 5, 91 ± 12 or 365 ± 30 days) and every amount within 15% of the median, which is what it reports as the typical amount. Groups covered by an **active** recurring entry of the same normalized name, and groups the caller dismissed, are left out. The query is bounded — the window, the newest 4000 rows and a five-column projection — and the grouping is one in-memory pass, because bank noise means no two occurrences of one subscription carry the same text and a SQL `GROUP BY` would find nothing. Creating an entry from a candidate goes through the ordinary create form and `POST /api/recurring-bills`; there is no second write path
@@ -19,6 +23,22 @@ Stored per user and per group — the account and the normalized description —
 ## Log
 
 Newest first. Each entry is a choice between real alternatives: what was chosen, what was rejected, and why.
+
+- **2026-09-30.** The bills calendar decides "paid" by matching bank text when it is read: a row with the entry's match keys (`PriceRiseMatcher.KeysOf`), on its account when it has one, within 5 days of the date (2 for a weekly entry), each row paying only its nearest occurrence, ties going to the lower entry id
+  - Rejected: A stored confirmation table linking each occurrence to its row; counting only confirmed occurrences as paid
+  - Why: Imported payments are often never confirmed, and a stored link would have to be written on every import, edit and delete and would still miss rows entered by hand. The tolerance is the forecast's paid-but-not-confirmed window, so the two views agree on what counts as paid. Matching can miss a row whose text changed, so a past date with no row is shown muted as "No match" rather than as missed
+- **2026-09-30.** The forecast and the calendar share one schedule, one estimate and one history loader in `Common/RecurringBills/` (`RecurringOccurrences`, `RecurringEstimate`, `RecurringHistory`, `RecurringMatch`), moved out of `Endpoints/Accounts`
+  - Rejected: A second enumerator for the calendar; calling `Endpoints/Accounts/Shared/CashFlowProjection` from the recurring-bills service; reusing `PriceRiseMatcher.LoadChargesAsync` as it was
+  - Why: Two walks of one cadence would drift at month ends and leap days, and one endpoint tag should not reach into another tag's shared folder. `LoadChargesAsync` reads one flow type, looks 13 months back with no upper bound and caps at 5000 rows, while the calendar needs a bounded window over expenses, income and transfers. The loader filters transactions by the stored `PayeeKey` in SQL and normalizes transfer descriptions in memory; the forecast asks it for 13 months back to the end of its horizon. Walking back stops at the entry's creation date, so a past month shows what was expected of that entry, not a schedule invented backwards
+- **2026-09-30.** The calendar converts due amounts to the reporting currency at the newest exchange rate; a missing or stale rate leaves the amount out of the totals and marks them "Partly estimated", and paid amounts use the row's own `ReportingAmount`
+  - Rejected: Converting at the rate on the due date; keeping account currencies as the forecast does
+  - Why: A future date has no rate yet, so the newest one is the honest estimate, and a month total split by currency cannot be read at a glance. A variable estimate marks the totals the same way, so "Partly estimated" means one thing
+- **2026-09-30.** No calendar subscription (iCal) feed
+  - Rejected: A `webcal://` feed per member
+  - Why: Calendar apps cannot send an `Authorization` header, and the [authentication decisions](authentication.md) of 2026-09-29 rejected tokens in query strings because query strings end up in logs. A feed would need its own decision on a secret URL, and reminders already reach email and Discord
+- **2026-09-30.** The calendar grid is a `<table>` with a caption and weekday headers, and the phone gets an agenda of the days that have occurrences; both are rendered and the breakpoint decides which shows
+  - Rejected: A `div` grid with ARIA grid roles and roving focus; `[` and `]` as page hotkeys for the month; a breakpoint hook that renders one body
+  - Why: A table is read correctly by screen readers with nothing extra to write, a month switch is two Tab stops away, and global shortcuts live only in `lib/shortcuts.ts`. Effects are not allowed and no breakpoint hook exists; the duplicate matters only to tests, which query inside the table
 
 - **2026-09-29.** A recurring entry's bank charges are the rows whose normalized description equals its match key or its normalized name, everywhere: the latest match, price-rise alerts and the cash flow forecast share `PriceRiseMatcher.KeysOf`
   - Rejected: The match key alone for the latest match and price rises, while the forecast also took the name

@@ -2,6 +2,7 @@ using FastEndpoints;
 using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Common.ExchangeRates;
+using JxFinance.Common.RecurringBills;
 using JxFinance.Common.References;
 using JxFinance.Common.Settings;
 using JxFinance.Common.Sharing;
@@ -11,6 +12,7 @@ using JxFinance.Common.Validation;
 using JxFinance.Domain.Accounts;
 using JxFinance.Domain.Categories;
 using JxFinance.Domain.Common;
+using JxFinance.Domain.ExchangeRates;
 using JxFinance.Domain.NetWorth;
 using JxFinance.Domain.Notifications;
 using JxFinance.Domain.RecurringBills;
@@ -19,6 +21,7 @@ using JxFinance.Domain.Transactions;
 using JxFinance.Domain.Trash;
 using JxFinance.Endpoints.RecurringBills.ConfirmRecurringBill;
 using JxFinance.Endpoints.RecurringBills.CreateRecurringBill;
+using JxFinance.Endpoints.RecurringBills.GetBillsCalendar;
 using JxFinance.Endpoints.RecurringBills.Interfaces;
 using JxFinance.Endpoints.RecurringBills.Mappers;
 using JxFinance.Endpoints.RecurringBills.Shared;
@@ -40,8 +43,11 @@ public sealed class RecurringBillService(
     IInstanceSettingsStore settings,
     ISharingGuard sharing,
     ICurrentUser currentUser,
+    IExchangeRateService rates,
     IClock clock) : IRecurringBillService
 {
+    private const int CalendarMonthsAway = 12;
+
     private static readonly DomainError NotFound = EntityLookup.NotFound("Recurring entry not found.");
 
     private static readonly DomainError CategoryGone =
@@ -222,6 +228,151 @@ public sealed class RecurringBillService(
         await dbTransaction.CommitAsync(cancellationToken);
         return new ConfirmRecurringBillResponse(await ResponseAsync(bill, cancellationToken), transactionId, transferId);
     }
+
+    public async Task<Result<BillsCalendarResponse>> GetCalendarAsync(string? month, CancellationToken cancellationToken)
+    {
+        var parsed = MonthKey.Parse(month);
+        if (!parsed.TryGetValue(out var first))
+        {
+            return parsed.Error;
+        }
+
+        var today = clock.Today;
+        if (Math.Abs(((first.Year - today.Year) * 12) + first.Month - today.Month) > CalendarMonthsAway)
+        {
+            return new DomainError(ErrorCodes.RangeInvalid, $"Choose a month at most {CalendarMonthsAway} months from the current one.");
+        }
+
+        var last = first.AddMonths(1).AddDays(-1);
+        var bills = await db.RecurringBills.AsNoTracking().Where(b => b.IsActive).ToListAsync(cancellationToken);
+        var currencies = await db.Accounts
+            .AsNoTracking()
+            .Select(a => new { a.Id, a.StartingBalance.Currency })
+            .ToDictionaryAsync(a => a.Id, a => a.Currency, cancellationToken);
+        var occurrences = bills.SelectMany(bill => Scheduled(bill, first, last)).ToList();
+        var lookBack = today.AddMonths(-RecurringEstimate.LookBackMonths);
+        var loadFrom = first.AddDays(-RecurringMatch.PaidToleranceDays);
+        var loadTo = last.AddDays(RecurringMatch.PaidToleranceDays);
+        var rows = await RecurringHistory.LoadAsync(
+            db,
+            bills,
+            loadFrom < lookBack ? loadFrom : lookBack,
+            loadTo > today ? loadTo : today,
+            cancellationToken);
+        var paid = RecurringMatch.Assign(occurrences, rows);
+        var latest = await rates.GetLatestAsync(cancellationToken);
+        var table = rates.IsFresh(latest, today) ? latest : RateTable.Empty;
+        var expected = bills.ToDictionary(bill => bill, bill => Expected(bill, currencies, rows, lookBack, today));
+
+        decimal expectedOut = 0m, expectedIn = 0m, paidOut = 0m;
+        var partial = false;
+        var unpriced = new HashSet<RecurringBillId>();
+        var result = new List<BillOccurrence>(occurrences.Count);
+        foreach (var occurrence in occurrences)
+        {
+            var bill = occurrence.Bill;
+            var amount = expected[bill];
+            var row = paid.GetValueOrDefault(occurrence);
+            var scheduled = occurrence.Date >= bill.NextDueDate;
+            if (bill.Shape != RecurringBillShape.Transfer)
+            {
+                var converted = amount is null ? null : table.Convert(amount.Amount, amount.Currency, rates.ReportingCurrency);
+                if (amount is null)
+                {
+                    unpriced.Add(bill.Id);
+                }
+                else if (converted is not { } reporting)
+                {
+                    partial = true;
+                }
+                else
+                {
+                    partial |= amount.Estimated;
+                    expectedOut += bill.Shape == RecurringBillShape.Expense ? reporting : 0m;
+                    expectedIn += bill.Shape == RecurringBillShape.Income ? reporting : 0m;
+                }
+
+                paidOut += bill.Shape == RecurringBillShape.Expense ? row?.ReportingAmount ?? 0m : 0m;
+            }
+
+            result.Add(new BillOccurrence(
+                occurrence.Date,
+                bill.Id.Value,
+                bill.Name,
+                bill.Shape,
+                row?.Amount ?? amount?.Amount,
+                row?.Currency ?? amount?.Currency,
+                row is null && amount is { Estimated: true },
+                StatusOf(occurrence, row, scheduled, today),
+                occurrence.Date == bill.NextDueDate,
+                row is not null && scheduled,
+                bill.AccountId is { } accountId && !currencies.ContainsKey(accountId),
+                (row?.AccountId ?? bill.AccountId)?.Value,
+                row?.TransactionId));
+        }
+
+        return new BillsCalendarResponse(
+            first,
+            last,
+            expectedOut,
+            expectedIn,
+            paidOut,
+            partial,
+            unpriced.Count,
+            [.. result
+                .OrderBy(o => o.Date)
+                .ThenBy(o => o.Name, StringComparer.CurrentCultureIgnoreCase)
+                .ThenBy(o => o.BillId)]);
+    }
+
+    private IEnumerable<ScheduledOccurrence> Scheduled(RecurringBill bill, DateOnly first, DateOnly last)
+    {
+        var createdOn = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(bill.CreatedAt, clock.TimeZone).DateTime);
+        return RecurringOccurrences.Before(bill, first, last, createdOn)
+            .Concat(RecurringOccurrences.After(bill, first, last))
+            .Select(date => new ScheduledOccurrence(bill, date));
+    }
+
+    private static ExpectedAmount? Expected(
+        RecurringBill bill,
+        Dictionary<AccountId, Currency> currencies,
+        List<RecurringRow> rows,
+        DateOnly lookBack,
+        DateOnly today)
+    {
+        if (bill.AccountId is not { } accountId || !currencies.TryGetValue(accountId, out var currency))
+        {
+            return null;
+        }
+
+        if (bill.Kind == RecurringBillKind.Fixed)
+        {
+            return bill.Amount is { } amount ? new ExpectedAmount(amount, currency, false) : null;
+        }
+
+        var keys = PriceRiseMatcher.KeysOf(bill);
+        var estimate = RecurringEstimate.Of(rows
+            .Where(row => row.Date >= lookBack && row.Date <= today && row.Currency == currency && RecurringMatch.Pays(bill, keys, row))
+            .Select(row => (row.Date, row.Amount)));
+        return estimate is { } value ? new ExpectedAmount(value, currency, true) : null;
+    }
+
+    private static BillOccurrenceStatus StatusOf(ScheduledOccurrence occurrence, RecurringRow? row, bool scheduled, DateOnly today)
+    {
+        if (row is not null)
+        {
+            return BillOccurrenceStatus.Paid;
+        }
+
+        if (occurrence.Date >= today)
+        {
+            return BillOccurrenceStatus.Due;
+        }
+
+        return scheduled ? BillOccurrenceStatus.Overdue : BillOccurrenceStatus.NoMatch;
+    }
+
+    private sealed record ExpectedAmount(decimal Amount, Currency Currency, bool Estimated);
 
     private Task<RecurringBill?> FindAsync(Guid id, CancellationToken cancellationToken)
     {

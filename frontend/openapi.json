@@ -12918,6 +12918,79 @@
         ]
       }
     },
+    "/api/recurring-bills/calendar": {
+      "get": {
+        "tags": [
+          "RecurringBills"
+        ],
+        "summary": "Lay out one month of recurring entries",
+        "description": "Answers every occurrence of your active recurring entries that falls in the month, walking each schedule forward from its next due date and back from it, never before the entry was created. Each occurrence has a status: paid when a ledger row with the entry's match key or name, on its account, lies within 5 days of the date (2 for a weekly entry), each row paying at most one occurrence; overdue when it is before today and not yet confirmed; noMatch for an earlier past date with no matching row; and due otherwise. A paid occurrence carries the row's amount and transactionId (null for a transfer), and unconfirmed when the entry still waits for that confirmation. Other occurrences carry the entry's amount, or the median of its newest six matching rows within 13 months for a variable entry, marked estimated, in the account's currency; without an account, or with one you cannot see (accountNotVisible), the amount is null. expectedOut and expectedIn add up every expense and income occurrence in the reporting currency at the newest exchange rate, paidOut the matched expense rows at their own reporting amounts; transfers count in none of them. partial is true when an estimate or an amount without a fresh rate is inside a figure, and unpriced counts the expense and income entries left out for want of an amount. Nothing is stored. Needs the recurringBills feature.",
+        "operationId": "GetBillsCalendar",
+        "parameters": [
+          {
+            "name": "month",
+            "in": "query",
+            "description": "The month to lay out as YYYY-MM, at most 12 months before or after the current one.",
+            "schema": {
+              "type": [
+                "null",
+                "string"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The month's occurrences, by date and name, with the month totals.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BillsCalendarResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "month.invalid when the month is missing or not YYYY-MM, range.invalid when it is more than 12 months away.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          },
+          {
+            "PersonalApiToken": [ ]
+          }
+        ]
+      }
+    },
     "/api/recurring-bills/suggestions": {
       "get": {
         "tags": [
@@ -18904,6 +18977,140 @@
           },
           "restorable": {
             "type": "boolean"
+          }
+        }
+      },
+      "BillOccurrence": {
+        "required": [
+          "date",
+          "billId",
+          "name",
+          "shape",
+          "amount",
+          "currency",
+          "estimated",
+          "status",
+          "isNextDue",
+          "unconfirmed",
+          "accountNotVisible",
+          "accountId",
+          "transactionId"
+        ],
+        "type": "object",
+        "properties": {
+          "date": {
+            "$ref": "#/components/schemas/DateOnly"
+          },
+          "billId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "shape": {
+            "$ref": "#/components/schemas/RecurringBillShape"
+          },
+          "amount": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "decimal"
+          },
+          "currency": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Currency"
+              }
+            ]
+          },
+          "estimated": {
+            "type": "boolean"
+          },
+          "status": {
+            "$ref": "#/components/schemas/BillOccurrenceStatus"
+          },
+          "isNextDue": {
+            "type": "boolean"
+          },
+          "unconfirmed": {
+            "type": "boolean"
+          },
+          "accountNotVisible": {
+            "type": "boolean"
+          },
+          "accountId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "transactionId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          }
+        }
+      },
+      "BillOccurrenceStatus": {
+        "enum": [
+          "due",
+          "overdue",
+          "paid",
+          "noMatch"
+        ],
+        "type": "string"
+      },
+      "BillsCalendarResponse": {
+        "required": [
+          "from",
+          "to",
+          "expectedOut",
+          "expectedIn",
+          "paidOut",
+          "partial",
+          "unpriced",
+          "occurrences"
+        ],
+        "type": "object",
+        "properties": {
+          "from": {
+            "$ref": "#/components/schemas/DateOnly"
+          },
+          "to": {
+            "$ref": "#/components/schemas/DateOnly"
+          },
+          "expectedOut": {
+            "type": "string",
+            "format": "decimal"
+          },
+          "expectedIn": {
+            "type": "string",
+            "format": "decimal"
+          },
+          "paidOut": {
+            "type": "string",
+            "format": "decimal"
+          },
+          "partial": {
+            "type": "boolean"
+          },
+          "unpriced": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "occurrences": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BillOccurrence"
+            }
           }
         }
       },

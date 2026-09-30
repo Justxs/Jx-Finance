@@ -19,6 +19,7 @@ export * from "./currencies";
 export * from "./budgets";
 export * from "./goals";
 export * from "./recurring-bills";
+export * from "./bills-calendar";
 export * from "./subscriptions";
 export * from "./notifications";
 export * from "./net-worth";

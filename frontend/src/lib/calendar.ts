@@ -86,3 +86,16 @@ export function shiftMonth(key: string, delta: number) {
 export function latestEndedMonth(today: Date) {
   return monthKeyOfIso(toIso(previousMonth(today)));
 }
+
+export function monthWeeks(month: string, weekStartsOn: 0 | 1) {
+  const first = monthDate(month);
+  const lead = (first.getDay() - weekStartsOn + 7) % 7;
+  const days = new Date(first.getFullYear(), first.getMonth() + 1, 0).getDate();
+  const weeks = Math.ceil((lead + days) / 7);
+
+  return Array.from({ length: weeks }, (_week, week) =>
+    Array.from({ length: 7 }, (_day, day) =>
+      toIso(new Date(first.getFullYear(), first.getMonth(), 1 - lead + week * 7 + day)),
+    ),
+  );
+}

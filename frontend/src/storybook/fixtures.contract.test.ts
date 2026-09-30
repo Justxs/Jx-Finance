@@ -51,6 +51,10 @@ function asForecast(fixture: unknown) {
   return { ...fixtures.emptyCashFlowForecast, accounts: [fixture] };
 }
 
+function asCalendar(fixture: unknown) {
+  return { ...fixtures.emptyBillsCalendar, occurrences: [fixture] };
+}
+
 function asPortfolio(fixture: unknown) {
   return { ...fixtures.emptyPortfolio, holdings: [fixture] };
 }
@@ -174,6 +178,19 @@ const contracts: Record<string, Contract> = {
   crossCurrencyTransferBill: { schema: schemas.RecurringBillResponse },
   mortgageBill: { schema: schemas.RecurringBillResponse },
   recurringBills: { schema: schemas.RecurringBillsResponse },
+  paidOccurrence: { schema: schemas.BillsCalendarResponse, toResponse: asCalendar },
+  paidIncomeOccurrence: { schema: schemas.BillsCalendarResponse, toResponse: asCalendar },
+  noMatchOccurrence: { schema: schemas.BillsCalendarResponse, toResponse: asCalendar },
+  overdueOccurrence: { schema: schemas.BillsCalendarResponse, toResponse: asCalendar },
+  dueOccurrence: { schema: schemas.BillsCalendarResponse, toResponse: asCalendar },
+  estimatedOccurrence: { schema: schemas.BillsCalendarResponse, toResponse: asCalendar },
+  unconfirmedOccurrence: { schema: schemas.BillsCalendarResponse, toResponse: asCalendar },
+  unpricedOccurrence: { schema: schemas.BillsCalendarResponse, toResponse: asCalendar },
+  hiddenAccountOccurrence: { schema: schemas.BillsCalendarResponse, toResponse: asCalendar },
+  billsCalendar: { schema: schemas.BillsCalendarResponse },
+  unconfirmedBillsCalendar: { schema: schemas.BillsCalendarResponse },
+  unpricedBillsCalendar: { schema: schemas.BillsCalendarResponse },
+  emptyBillsCalendar: { schema: schemas.BillsCalendarResponse },
   spotifyCandidate: { schema: schemas.SubscriptionCandidatesResponseItem },
   gymCandidate: { schema: schemas.SubscriptionCandidatesResponseItem },
   domainCandidate: { schema: schemas.SubscriptionCandidatesResponseItem },

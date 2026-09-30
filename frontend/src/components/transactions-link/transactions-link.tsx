@@ -5,6 +5,7 @@ import { Tooltip } from "@/components/ui/tooltip/tooltip";
 import { cn } from "@/lib/utils";
 
 interface TransactionsFilter {
+  accountId?: string;
   categoryId?: string;
   tagIds?: string;
   payee?: string;

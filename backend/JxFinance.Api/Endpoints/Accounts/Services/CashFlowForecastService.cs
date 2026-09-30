@@ -1,6 +1,6 @@
 using FastEndpoints;
 using JxFinance.Common.ExchangeRates;
-using JxFinance.Common.Subscriptions;
+using JxFinance.Common.RecurringBills;
 using JxFinance.Common.Unusual;
 using JxFinance.Domain.Accounts;
 using JxFinance.Domain.Common;
@@ -35,7 +35,7 @@ public sealed class CashFlowForecastService(AppDbContext db, IExchangeRateServic
 
         var held = await AccountMovements.SumAsync(db, ids, today, cancellationToken);
         var future = await AccountMovements.SumByDateAsync(db, ids, today, end, cancellationToken);
-        var history = await HistoryAsync(ids, today, cancellationToken);
+        var history = await RecurringHistory.LoadAsync(db, bills, today.AddMonths(-RecurringEstimate.LookBackMonths), end, cancellationToken);
         var usual = await UsualDailySpendingAsync(accounts.Values, bills, today, cancellationToken);
         var table = await rates.GetLatestAsync(cancellationToken);
         var fresh = rates.IsFresh(table, today);
@@ -63,10 +63,10 @@ public sealed class CashFlowForecastService(AppDbContext db, IExchangeRateServic
             }
 
             var keys = PriceRiseMatcher.KeysOf(bill);
-            var matches = history.Where(row => Matches(bill, keys, account.Currency, row)).ToList();
+            var matches = history.Where(row => RecurringMatch.Pays(bill, keys, row) && row.Currency == account.Currency).ToList();
             var amount = bill.Kind == RecurringBillKind.Fixed
                 ? bill.Amount
-                : CashFlowProjection.Estimate(matches.Select(row => (row.Date, row.Amount)));
+                : RecurringEstimate.Of(matches.Select(row => (row.Date, row.Amount)));
             if (amount is not { } value)
             {
                 notCounted.Add(new ForecastSkippedEntry(bill.Id.Value, bill.Name, ForecastSkipReason.NoHistory));
@@ -154,41 +154,6 @@ public sealed class CashFlowForecastService(AppDbContext db, IExchangeRateServic
         return (toAccountId, table.Convert(amount, source.Currency, destination.Currency), destination.Currency != source.Currency);
     }
 
-    private static bool Matches(RecurringBill bill, IReadOnlyList<string> keys, Currency currency, HistoryRow row) =>
-        row.Shape == bill.Shape
-        && row.AccountId == bill.AccountId
-        && row.ToAccountId == (bill.Shape == RecurringBillShape.Transfer ? bill.ToAccountId : null)
-        && row.Currency == currency
-        && keys.Contains(row.Key);
-
-
-    private async Task<List<HistoryRow>> HistoryAsync(
-        IReadOnlyList<AccountId> ids,
-        DateOnly today,
-        CancellationToken cancellationToken)
-    {
-        var expenses = await PriceRiseMatcher.LoadChargesAsync(db.Transactions, ids, today, FlowType.Expense, cancellationToken);
-        var income = await PriceRiseMatcher.LoadChargesAsync(db.Transactions, ids, today, FlowType.Income, cancellationToken);
-        var from = today.AddMonths(-CashFlowProjection.EstimateLookBackMonths);
-        var transfers = await db.Transfers
-            .AsNoTracking()
-            .Where(t => ids.Contains(t.FromAccountId) && t.Description != null && t.Date >= from)
-            .Select(t => new { t.FromAccountId, t.ToAccountId, t.Date, t.Amount.Amount, t.Amount.Currency, t.Description })
-            .ToListAsync(cancellationToken);
-
-        return expenses.Select(c => HistoryRow.Of(RecurringBillShape.Expense, c))
-            .Concat(income.Select(c => HistoryRow.Of(RecurringBillShape.Income, c)))
-            .Concat(transfers.Select(t => new HistoryRow(
-                RecurringBillShape.Transfer,
-                t.FromAccountId,
-                t.ToAccountId,
-                t.Date,
-                t.Amount,
-                t.Currency,
-                SubscriptionDescription.Normalize(t.Description))))
-            .ToList();
-    }
-
     private async Task<Dictionary<AccountId, decimal?>> UsualDailySpendingAsync(
         IEnumerable<Account> accounts,
         IReadOnlyList<RecurringBill> bills,
@@ -234,18 +199,5 @@ public sealed class CashFlowForecastService(AppDbContext db, IExchangeRateServic
                     .ToList();
                 return CashFlowProjection.UsualDailySpending(totals);
             });
-    }
-
-    private sealed record HistoryRow(
-        RecurringBillShape Shape,
-        AccountId AccountId,
-        AccountId? ToAccountId,
-        DateOnly Date,
-        decimal Amount,
-        Currency Currency,
-        string Key)
-    {
-        public static HistoryRow Of(RecurringBillShape shape, BankCharge charge) =>
-            new(shape, charge.AccountId, null, charge.Date, charge.Amount, charge.Currency, charge.Key);
     }
 }

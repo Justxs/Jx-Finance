@@ -1,3 +1,4 @@
+import { useNavigate, useSearch } from "@tanstack/react-router";
 import { useDeferredValue, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -18,8 +19,10 @@ import { PageHeader } from "@/components/page-header/page-header";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { Rows } from "@/components/ui/rows/rows";
 import { Section } from "@/components/ui/section/section";
+import { SegmentedControl } from "@/components/ui/segmented-control/segmented-control";
 import { CashFlowForecast } from "@/features/accounts/cash-flow-forecast/cash-flow-forecast";
 import { billUrgencies, groupBills } from "@/features/recurring-bills/bill-groups";
+import { BillsCalendar } from "@/features/recurring-bills/bills-calendar/bills-calendar";
 import { RecurringBillConfirmForm } from "@/features/recurring-bills/recurring-bill-confirm-form/recurring-bill-confirm-form";
 import { RecurringBillForm } from "@/features/recurring-bills/recurring-bill-form/recurring-bill-form";
 import { RecurringBillRow } from "@/features/recurring-bills/recurring-bill-row/recurring-bill-row";
@@ -30,8 +33,12 @@ import { notify, pendingId } from "@/lib/mutations";
 import { optimisticRemoval } from "@/lib/optimistic";
 import { byId, nameById } from "@/lib/options";
 
+type BillsView = "list" | "calendar";
+
 export function RecurringBillsPage() {
   const { t } = useTranslation();
+  const navigate = useNavigate({ from: "/recurring-bills" });
+  const view: BillsView = useSearch({ from: "/recurring-bills" }).view ?? "list";
   const [confirming, setConfirming] = useState<RecurringBillResponse | null>(null);
 
   const accounts = useAccountsSuspense();
@@ -67,6 +74,9 @@ export function RecurringBillsPage() {
         isActive: bill.isActive,
         matchKey: bill.matchKey,
         debtId: bill.debtId,
+        scope: bill.scope,
+        householdId: bill.householdId,
+        spreadMonths: bill.spreadMonths,
       },
     });
   }
@@ -95,9 +105,24 @@ export function RecurringBillsPage() {
     );
   }
 
+  function chooseView(next: BillsView) {
+    void navigate({
+      search: (previous) => ({ ...previous, view: next === "list" ? undefined : next }),
+    });
+  }
+
   return (
     <div className="space-y-5">
       <PageHeader title={t("recurringBills.title")}>
+        <SegmentedControl
+          aria-label={t("recurringBills.calendar.view")}
+          value={view}
+          onChange={chooseView}
+          options={[
+            { value: "list", label: t("recurringBills.calendar.list") },
+            { value: "calendar", label: t("recurringBills.calendar.calendar") },
+          ]}
+        />
         <CreateDialog label={t("recurringBills.add")} title={t("recurringBills.add")}>
           {(close) => (
             <RecurringBillForm accounts={accountList} categories={categoryList} onClose={close} />
@@ -105,9 +130,14 @@ export function RecurringBillsPage() {
         </CreateDialog>
       </PageHeader>
 
-      {billList.length > 0 ? <CashFlowForecast totals /> : null}
-      {billList.length === 0 ? <EmptyText>{t("recurringBills.empty")}</EmptyText> : null}
-      {billList.length > inactive.length ? (
+      {view === "calendar" ? (
+        <BillsCalendar onConfirm={setConfirming} onEdit={(bill) => bills.rowProps(bill).onEdit()} />
+      ) : null}
+      {view === "list" && billList.length > 0 ? <CashFlowForecast totals /> : null}
+      {view === "list" && billList.length === 0 ? (
+        <EmptyText>{t("recurringBills.empty")}</EmptyText>
+      ) : null}
+      {view === "list" && billList.length > inactive.length ? (
         <Section className="space-y-4">
           {billUrgencies.map((urgency) =>
             groups[urgency].length > 0 ? (
@@ -121,7 +151,7 @@ export function RecurringBillsPage() {
           )}
         </Section>
       ) : null}
-      {inactive.length > 0 ? (
+      {view === "list" && inactive.length > 0 ? (
         <Section>
           <Disclosure summary={t("recurringBills.groups.inactive", { count: inactive.length })}>
             <Rows>{inactive.map(billRow)}</Rows>

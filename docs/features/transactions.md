@@ -54,7 +54,7 @@ How each part of the application treats a refund. Totals net it, and the checks 
 | Budget limits from history, `BudgetSuggestionService` | Nets each window's spending, since it reads the same attributions |
 | Month-end close, `MonthCloseService` | Snapshot totals and drift net it; a refund dated in a closed month is drift like any late edit |
 | Monthly digest | Reads the month-close review, so its totals and category movers are net |
-| Cash-flow forecast, `CashFlowForecastService` | Usual spending nets the refunds of the three months; the recurring entries' matching rows and variable estimates ignore them (through `PriceRiseMatcher.LoadChargesAsync`) |
+| Cash-flow forecast, `CashFlowForecastService` | Usual spending nets the refunds of the three months; the recurring entries' matching rows and variable estimates ignore them (through `RecurringHistory.LoadAsync`, which the bills calendar shares, so a refund never pays an occurrence) |
 | CSV export | The amount column holds the signed amount with type `Expense`, so a spreadsheet sum of Expense rows is net spending |
 | PDF export | Totals are net; the type cell reads "Refund" and the amount keeps its sign |
 | Unusual amounts, `UnusualAmountService`, `UnusualAmountJob` | Ignored as history and as a candidate: the job marks a refund checked with no verdict, and an edit that makes a row a refund clears its verdict (`AppDbContext.ApplyEntityRules`) |

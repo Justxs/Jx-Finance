@@ -1,4 +1,5 @@
 import {
+  getBillsCalendarMockHandler,
   getConfirmRecurringBillMockHandler,
   getCreateRecurringBillMockHandler,
   getDeleteRecurringBillMockHandler,
@@ -8,13 +9,19 @@ import {
   getSubscriptionCandidatesMockHandler,
   getUpdateRecurringBillMockHandler,
 } from "@/api/generated/recurring-bills/recurring-bills.msw";
-import { dueSoonBill, recurringBills, subscriptionCandidates } from "@/storybook/fixtures";
+import {
+  billsCalendar,
+  dueSoonBill,
+  recurringBills,
+  subscriptionCandidates,
+} from "@/storybook/fixtures";
 import { found, readBody } from "./http";
 import { NEW_ID, NEW_TRANSACTION_ID, NEW_TRANSFER_ID } from "./ids";
 import { byId, byIdFrom, updateFrom } from "./lists";
 
 export const recurringBillHandlers = [
   getRecurringBillsMockHandler(recurringBills),
+  getBillsCalendarMockHandler(billsCalendar),
   getSubscriptionCandidatesMockHandler(subscriptionCandidates),
   getDismissSubscriptionCandidateMockHandler(),
   getCreateRecurringBillMockHandler(async ({ request }) => ({

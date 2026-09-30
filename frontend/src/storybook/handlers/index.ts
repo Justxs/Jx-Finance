@@ -41,6 +41,7 @@ import {
 import { getNotificationsMockHandler } from "@/api/generated/notifications/notifications.msw";
 import { getPayeeNamesMockHandler } from "@/api/generated/payees/payees.msw";
 import {
+  getBillsCalendarMockHandler,
   getRecurringBillsMockHandler,
   getSubscriptionCandidatesMockHandler,
 } from "@/api/generated/recurring-bills/recurring-bills.msw";
@@ -56,6 +57,7 @@ import { getTrashMockHandler } from "@/api/generated/trash/trash.msw";
 import { getUsersMockHandler } from "@/api/generated/users/users.msw";
 import {
   currentUser,
+  emptyBillsCalendar,
   emptyCashFlowForecast,
   emptyCategoryBreakdown,
   emptyDashboardSummary,
@@ -176,6 +178,7 @@ export const emptyHandlers: RequestHandler[] = [
   getSettlementsMockHandler(emptyPage),
   getNotificationsMockHandler([]),
   getRecurringBillsMockHandler([]),
+  getBillsCalendarMockHandler(emptyBillsCalendar),
   getSubscriptionCandidatesMockHandler([]),
   getTagsMockHandler([]),
   getPayeeNamesMockHandler([]),

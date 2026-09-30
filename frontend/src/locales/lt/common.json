@@ -84,6 +84,7 @@
     "otherAccounts_many": "Dar {{count}} sąskaitos",
     "otherAccounts_other": "Dar {{count}} sąskaitų",
     "upcomingBills": "Artėjantys mokėjimai",
+    "billsCalendar": "Kalendorius",
     "noBills": "Aktyvių mokėjimų nėra.",
     "billsCurrentOnly": "Artėjantys mokėjimai rodomi einamajame mėnesyje.",
     "overdue": "Vėluoja",
@@ -1838,6 +1839,30 @@
       "thisWeek": "Šią savaitę",
       "later": "Vėliau",
       "inactive": "Neaktyvūs ({{count}})"
+    },
+    "calendar": {
+      "view": "Rodinys",
+      "list": "Sąrašas",
+      "calendar": "Kalendorius",
+      "previous": "Ankstesnis mėnuo",
+      "today": "Šiandien",
+      "next": "Kitas mėnuo",
+      "expectedOut": "Laukiamos išlaidos",
+      "expectedIn": "Laukiamos pajamos",
+      "paidOut": "Sumokėta",
+      "partial": "Iš dalies apytiksliai",
+      "unpriced_one": "{{count}} įrašas be sumos",
+      "unpriced_few": "{{count}} įrašai be sumos",
+      "unpriced_many": "{{count}} įrašo be sumos",
+      "unpriced_other": "{{count}} įrašų be sumos",
+      "due": "Laukiama",
+      "overdue": "Vėluoja",
+      "paid": "Sumokėta",
+      "noMatch": "Nerasta",
+      "unconfirmed": "Nepatvirtinta",
+      "accountNotVisible": "Sąskaita nematoma",
+      "amountUnknown": "Suma nežinoma",
+      "empty": "Šį mėnesį periodinių įrašų nėra."
     }
   },
   "forecast": {

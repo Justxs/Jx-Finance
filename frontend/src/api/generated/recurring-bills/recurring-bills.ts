@@ -24,6 +24,8 @@ import type {
 import { customFetch } from "../../client";
 import type { ErrorType } from "../../client";
 import type {
+  BillsCalendarParams,
+  BillsCalendarResponse,
   ConfirmRecurringBillRequest,
   ConfirmRecurringBillResponse,
   CreateRecurringBillRequest,
@@ -263,6 +265,141 @@ export function useRecurringBillsSuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
   const queryOptions = getRecurringBillsSuspenseQueryOptions(options);
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export const getBillsCalendarUrl = (params?: BillsCalendarParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/recurring-bills/calendar?${stringifiedParams}`
+    : `/api/recurring-bills/calendar`;
+};
+
+/**
+ * Answers every occurrence of your active recurring entries that falls in the month, walking each schedule forward from its next due date and back from it, never before the entry was created. Each occurrence has a status: paid when a ledger row with the entry's match key or name, on its account, lies within 5 days of the date (2 for a weekly entry), each row paying at most one occurrence; overdue when it is before today and not yet confirmed; noMatch for an earlier past date with no matching row; and due otherwise. A paid occurrence carries the row's amount and transactionId (null for a transfer), and unconfirmed when the entry still waits for that confirmation. Other occurrences carry the entry's amount, or the median of its newest six matching rows within 13 months for a variable entry, marked estimated, in the account's currency; without an account, or with one you cannot see (accountNotVisible), the amount is null. expectedOut and expectedIn add up every expense and income occurrence in the reporting currency at the newest exchange rate, paidOut the matched expense rows at their own reporting amounts; transfers count in none of them. partial is true when an estimate or an amount without a fresh rate is inside a figure, and unpriced counts the expense and income entries left out for want of an amount. Nothing is stored. Needs the recurringBills feature.
+ * @summary Lay out one month of recurring entries
+ */
+export const billsCalendar = async (
+  params?: BillsCalendarParams,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<BillsCalendarResponse> => {
+  return customFetch<BillsCalendarResponse>(getBillsCalendarUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getBillsCalendarQueryKey = (params?: BillsCalendarParams) => {
+  return [`/api/recurring-bills/calendar`, ...(params ? [params] : [])] as const;
+};
+
+export const getBillsCalendarSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof billsCalendar>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  params?: BillsCalendarParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof billsCalendar>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getBillsCalendarQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof billsCalendar>>> = ({ signal }) =>
+    billsCalendar(params, { signal, ...requestOptions });
+
+  return queryOptionsBuilder({
+    queryKey,
+    ...queryOptions,
+    queryFn: queryOptions?.queryFn ?? queryFn,
+  }) as UseSuspenseQueryOptions<Awaited<ReturnType<typeof billsCalendar>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  } & {
+    throwOnError?: ((this: never, error: TError) => boolean) & { readonly __inferenceOnly: never };
+  };
+};
+
+export type BillsCalendarSuspenseQueryResult = NonNullable<
+  Awaited<ReturnType<typeof billsCalendar>>
+>;
+export type BillsCalendarSuspenseQueryError = ErrorType<ProblemDetails>;
+
+export function useBillsCalendarSuspense<
+  TData = Awaited<ReturnType<typeof billsCalendar>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  params: undefined | BillsCalendarParams,
+  options: {
+    query: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof billsCalendar>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useBillsCalendarSuspense<
+  TData = Awaited<ReturnType<typeof billsCalendar>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  params?: BillsCalendarParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof billsCalendar>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useBillsCalendarSuspense<
+  TData = Awaited<ReturnType<typeof billsCalendar>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  params?: BillsCalendarParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof billsCalendar>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Lay out one month of recurring entries
+ */
+
+export function useBillsCalendarSuspense<
+  TData = Awaited<ReturnType<typeof billsCalendar>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  params?: BillsCalendarParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof billsCalendar>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getBillsCalendarSuspenseQueryOptions(params, options);
 
   const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
     TData,

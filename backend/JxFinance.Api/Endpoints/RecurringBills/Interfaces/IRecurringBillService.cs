@@ -1,6 +1,7 @@
 using JxFinance.Domain.Common;
 using JxFinance.Endpoints.RecurringBills.ConfirmRecurringBill;
 using JxFinance.Endpoints.RecurringBills.CreateRecurringBill;
+using JxFinance.Endpoints.RecurringBills.GetBillsCalendar;
 using JxFinance.Endpoints.RecurringBills.Shared;
 using JxFinance.Endpoints.RecurringBills.UpdateRecurringBill;
 
@@ -25,4 +26,6 @@ public interface IRecurringBillService
     Task<Result<ConfirmRecurringBillResponse>> ConfirmAsync(
         ConfirmRecurringBillRequest request,
         CancellationToken cancellationToken);
+
+    Task<Result<BillsCalendarResponse>> GetCalendarAsync(string? month, CancellationToken cancellationToken);
 }

@@ -44,6 +44,15 @@ public sealed class RecurringBill : OwnableEntity, IShareable
         _ => throw new ArgumentOutOfRangeException(nameof(cadence)),
     };
 
+    public static DateOnly Retreat(DateOnly date, RecurringBillCadence cadence, int anchorDay) => cadence switch
+    {
+        RecurringBillCadence.Weekly => date.AddDays(-7),
+        RecurringBillCadence.Monthly => Anchor(date.AddMonths(-1), anchorDay),
+        RecurringBillCadence.Quarterly => Anchor(date.AddMonths(-3), anchorDay),
+        RecurringBillCadence.Yearly => Anchor(date.AddYears(-1), anchorDay),
+        _ => throw new ArgumentOutOfRangeException(nameof(cadence)),
+    };
+
     private static DateOnly Anchor(DateOnly date, int anchorDay) =>
         new(date.Year, date.Month, Math.Clamp(anchorDay, 1, DateTime.DaysInMonth(date.Year, date.Month)));
 }

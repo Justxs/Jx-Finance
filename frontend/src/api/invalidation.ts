@@ -53,7 +53,12 @@ const rules: readonly Rule[] = [
       api.getBulkTagTransactionsMutationKey,
     ],
     deleted: [api.getDeleteTransactionMutationKey],
-    refresh: [...ledger, api.getSuggestedRulesQueryKey, api.getHouseholdsQueryKey],
+    refresh: [
+      ...ledger,
+      api.getSuggestedRulesQueryKey,
+      api.getHouseholdsQueryKey,
+      api.getBillsCalendarQueryKey,
+    ],
   },
   {
     after: [api.getSetPayeeNameMutationKey],
@@ -116,13 +121,19 @@ const rules: readonly Rule[] = [
   },
   {
     after: [api.getImportConfirmMutationKey],
-    refresh: [...ledger, api.getTransfersQueryKey, api.getSuggestedRulesQueryKey],
+    refresh: [
+      ...ledger,
+      api.getTransfersQueryKey,
+      api.getSuggestedRulesQueryKey,
+      api.getBillsCalendarQueryKey,
+    ],
   },
   {
     after: [api.getConfirmRecurringBillMutationKey],
     refresh: [
       ...ledger,
       api.getRecurringBillsQueryKey,
+      api.getBillsCalendarQueryKey,
       api.getNotificationsQueryKey,
       api.getTransfersQueryKey,
     ],
@@ -151,6 +162,7 @@ const rules: readonly Rule[] = [
     deleted: [api.getDeleteTransferMutationKey],
     refresh: [
       api.getTransfersQueryKey,
+      api.getBillsCalendarQueryKey,
       api.getAccountsQueryKey,
       api.getDashboardSummaryQueryKey,
       api.getNetWorthQueryKey,
@@ -160,7 +172,7 @@ const rules: readonly Rule[] = [
   {
     after: [api.getCreateConversionMutationKey, api.getUpdateConversionMutationKey],
     deleted: [api.getDeleteConversionMutationKey],
-    refresh: [...ledger, api.getConversionsQueryKey],
+    refresh: [...ledger, api.getConversionsQueryKey, api.getBillsCalendarQueryKey],
   },
   {
     after: [api.getCreateBudgetMutationKey, api.getUpdateBudgetMutationKey],
@@ -252,6 +264,7 @@ const rules: readonly Rule[] = [
     deleted: [api.getDeleteRecurringBillMutationKey],
     refresh: [
       api.getRecurringBillsQueryKey,
+      api.getBillsCalendarQueryKey,
       api.getSubscriptionCandidatesQueryKey,
       api.getAccountsQueryKey,
     ],
@@ -284,6 +297,7 @@ const rules: readonly Rule[] = [
       api.getBrokerConnectionsQueryKey,
       api.getTransfersQueryKey,
       api.getConversionsQueryKey,
+      api.getBillsCalendarQueryKey,
     ],
   },
   {
