@@ -1,14 +1,40 @@
 import { Copy, Undo2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import type { TransactionResponse } from "@/api/generated/model";
-import { RowActions } from "@/components/row-actions/row-actions";
-import { useDebtPaymentAction } from "../debt-payment/debt-payment";
-import { useSharedExpenseAction } from "../shared-expense/shared-expense";
-import { isOptimistic, isPurchase } from "../transaction-amount";
+import { type RowAction, RowActions } from "@/components/row-actions/row-actions";
+import { useDebtPaymentLinks } from "@/features/transactions/debt-payment/debt-payment";
+import { useSharedExpenseSplits } from "@/features/transactions/shared-expense/shared-expense";
+import {
+  isOptimistic,
+  isPurchase,
+} from "@/features/transactions/transaction-amount/transaction-row";
+
+export function useTransactionRowDialogs() {
+  const debt = useDebtPaymentLinks();
+  const split = useSharedExpenseSplits();
+
+  function moreActions(transaction: TransactionResponse) {
+    return [debt.actionFor(transaction), split.actionFor(transaction)].filter(
+      (action) => action !== undefined,
+    );
+  }
+
+  return {
+    moreActions,
+    onUpdateSplit: split.open,
+    dialogs: (
+      <>
+        {debt.dialog}
+        {split.dialog}
+      </>
+    ),
+  };
+}
 
 interface Props {
   transaction: TransactionResponse;
   label: string;
+  moreActions: RowAction[];
   deletingId: string | null;
   onEdit: (transaction: TransactionResponse) => void;
   onDuplicate: (transaction: TransactionResponse) => void;
@@ -20,6 +46,7 @@ interface Props {
 export function TransactionRowActions({
   transaction,
   label,
+  moreActions,
   deletingId,
   onEdit,
   onDuplicate,
@@ -29,8 +56,6 @@ export function TransactionRowActions({
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const optimistic = isOptimistic(transaction);
-  const debt = useDebtPaymentAction(transaction);
-  const split = useSharedExpenseAction(transaction);
   const duplicate = {
     icon: Copy,
     label: t("transactions.duplicate"),
@@ -49,24 +74,15 @@ export function TransactionRowActions({
     : [];
 
   return (
-    <>
-      <RowActions
-        label={label}
-        className={className}
-        actions={[
-          ...(debt.action ? [debt.action] : []),
-          ...(split.action ? [split.action] : []),
-          duplicate,
-          ...refund,
-        ]}
-        onEdit={() => onEdit(transaction)}
-        editDisabled={optimistic}
-        onDelete={() => onDelete(transaction.id)}
-        deletePending={deletingId === transaction.id}
-        deleteDisabled={optimistic || deletingId !== null}
-      />
-      {debt.dialog}
-      {split.dialog}
-    </>
+    <RowActions
+      label={label}
+      className={className}
+      actions={[...moreActions, duplicate, ...refund]}
+      onEdit={() => onEdit(transaction)}
+      editDisabled={optimistic}
+      onDelete={() => onDelete(transaction.id)}
+      deletePending={deletingId === transaction.id}
+      deleteDisabled={optimistic || deletingId !== null}
+    />
   );
 }

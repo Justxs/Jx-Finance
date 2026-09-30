@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useSecurities, useSetSecurityPrice } from "@/api/generated";
 import type {
   AccountResponse,
   Currency,
@@ -13,9 +12,8 @@ import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { RecordRowsSkeleton } from "@/components/record-row/record-row";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { Section, SectionTitle } from "@/components/ui/section/section";
-import { silent, silentQuery } from "@/lib/mutations";
+import { PriceHistory } from "@/features/investments/price-history/price-history";
 import { nameById } from "@/lib/options";
-import { PriceHistory } from "../price-history/price-history";
 import { PositionsTable } from "./positions-table";
 import { PriceForm } from "./price-form";
 
@@ -44,22 +42,12 @@ function sharedSecurities(holdings: readonly HoldingResponse[]) {
 
 export function PositionsSection({ holdings, reportingCurrency, accounts }: Readonly<Props>) {
   const { t } = useTranslation();
-  const [priceTarget, setPriceTarget] = useState<SecurityResponse | null>(null);
-  const securities = useSecurities(undefined, { query: silentQuery });
+  const [priceTargetId, setPriceTargetId] = useState<string | null>(null);
   const priceSecurity =
-    priceTarget === null
-      ? null
-      : (securities.data?.find((security) => security.id === priceTarget.id) ?? priceTarget);
-
-  const priceMutation = useSetSecurityPrice(
-    silent({
-      onSuccess: () => setPriceTarget(null),
-    }),
-  );
+    holdings.find((holding) => holding.security.id === priceTargetId)?.security ?? null;
 
   function editPrice(security: SecurityResponse) {
-    priceMutation.reset();
-    setPriceTarget(security);
+    setPriceTargetId(security.id);
   }
 
   const open = holdings.filter(isOpen);
@@ -102,19 +90,13 @@ export function PositionsSection({ holdings, reportingCurrency, accounts }: Read
 
       <EditModal
         item={priceSecurity}
-        onClose={() => setPriceTarget(null)}
+        onClose={() => setPriceTargetId(null)}
         title={t("investments.price.update")}
         description={(security) => `${security.symbol} · ${security.name}`}
       >
-        {(security) => (
+        {(security, close) => (
           <>
-            <PriceForm
-              security={security}
-              pending={priceMutation.isPending}
-              error={priceMutation.error}
-              onSubmit={(values) => priceMutation.mutateAsync({ id: security.id, data: values })}
-              onCancel={() => setPriceTarget(null)}
-            />
+            <PriceForm security={security} onClose={close} />
             <div className="mt-5 border-t border-border pt-4">
               <h3 className="text-sm font-semibold">{t("investments.priceHistory.title")}</h3>
               <p className="mt-1 text-xs text-muted-foreground">

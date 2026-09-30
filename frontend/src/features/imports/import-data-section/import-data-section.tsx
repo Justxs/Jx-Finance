@@ -7,8 +7,8 @@ import { Button } from "@/components/ui/button/button";
 import { TitledSection } from "@/components/ui/section/section";
 import { ButtonSkeleton } from "@/components/ui/skeleton/skeleton";
 import { TextLink } from "@/components/ui/text-link/text-link";
+import { ImportDialog } from "@/features/imports/import-dialog/import-dialog";
 import { useSettings } from "@/hooks/use-settings";
-import { ImportDialog } from "../import-dialog/import-dialog";
 
 function ImportActions() {
   const { t } = useTranslation();

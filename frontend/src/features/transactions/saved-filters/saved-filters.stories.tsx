@@ -1,36 +1,56 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, screen, userEvent } from "storybook/test";
-import { readSavedFilters, saveFilter } from "@/stores/transaction-views";
+import { savedFilters } from "@/features/transactions/transaction-views";
+import { useTransactionFilters } from "@/features/transactions/use-transaction-filters";
 import { withWidth } from "@/storybook/decorators";
 import { accounts, categories, tags } from "@/storybook/fixtures";
+import type { Canvas } from "@/storybook/interactions";
 import { SavedFilters } from "./saved-filters";
+
+function SavedFiltersHarness() {
+  const filters = useTransactionFilters({ accounts, categories });
+  return <SavedFilters filters={filters} accounts={accounts} categories={categories} tags={tags} />;
+}
 
 const meta = {
   title: "Features/Transactions/SavedFilters",
-  component: SavedFilters,
-  args: { accounts, categories, tags },
+  component: SavedFiltersHarness,
   parameters: { route: "/transactions" },
   decorators: [withWidth("field")],
-} satisfies Meta<typeof SavedFilters>;
+} satisfies Meta<typeof SavedFiltersHarness>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Empty: Story = { args: { defaultOpen: true } };
+async function openMenu(canvas: Canvas) {
+  await userEvent.click(await canvas.findByRole("button", { name: /^Saved filters/ }));
+}
+
+export const Closed: Story = {};
+
+export const Empty: Story = {
+  play: async ({ canvas }) => {
+    await openMenu(canvas);
+  },
+};
 
 export const WithSavedFilters: Story = {
-  args: { defaultOpen: true },
   beforeEach: () => {
-    saveFilter("Groceries this month", { search: "lidl", type: "expense" });
+    savedFilters.save("Groceries this month", { filter: { search: "lidl", type: "expense" } });
+  },
+  play: async ({ canvas }) => {
+    await openMenu(canvas);
   },
 };
 
 export const NamesADeletedCategory: Story = {
-  args: { defaultOpen: true },
   beforeEach: () => {
-    saveFilter("Renovation", { categoryId: "44444444-0000-4000-8000-000000000099" });
+    savedFilters.save("Renovation", {
+      filter: { categoryId: "44444444-0000-4000-8000-000000000099" },
+    });
   },
-  play: async () => {
+  play: async ({ canvas }) => {
+    await openMenu(canvas);
     await expect(await screen.findByText("Names something that no longer exists")).toBeVisible();
     await expect(
       screen.getByRole("button", { name: "Apply saved filter: Renovation" }),
@@ -39,28 +59,20 @@ export const NamesADeletedCategory: Story = {
 };
 
 export const SavingTheCurrentFilter: Story = {
-  args: { defaultOpen: true },
   parameters: { route: "/transactions?type=expense&search=lidl" },
-  play: async () => {
+  play: async ({ canvas }) => {
+    await openMenu(canvas);
     await userEvent.type(await screen.findByRole("textbox", { name: "Save filter" }), "September");
     await userEvent.click(screen.getByRole("button", { name: "Save filter" }));
 
-    await expect(readSavedFilters().map((row) => row.name)).toEqual(["September"]);
-    await expect(readSavedFilters()[0]?.filter).toEqual({
-      search: "lidl",
-      type: "expense",
-      accountId: undefined,
-      categoryId: undefined,
-      tagIds: undefined,
-      dateFrom: undefined,
-      dateTo: undefined,
-    });
+    await expect(savedFilters.read().map((row) => row.name)).toEqual(["September"]);
+    await expect(savedFilters.read()[0]?.filter).toEqual({ search: "lidl", type: "expense" });
   },
 };
 
 export const NothingToSave: Story = {
-  args: { defaultOpen: true },
-  play: async () => {
+  play: async ({ canvas }) => {
+    await openMenu(canvas);
     await expect(
       await screen.findByText("Filter the list first; sorting and the page number are not saved."),
     ).toBeVisible();

@@ -2,8 +2,8 @@ import { useTranslation } from "react-i18next";
 import type { FeatureFlags } from "@/api/generated/model";
 import { defineAppFieldGroup } from "@/components/form";
 import { Rows } from "@/components/ui/rows/rows";
-import type { FeatureKey } from "@/hooks/use-settings";
 import type { TranslationKey } from "@/lib/i18n";
+import type { FeatureKey } from "@/lib/settings";
 
 const featuresFieldGroup = defineAppFieldGroup(({ strict }) => ({
   features: strict<FeatureFlags>(),
@@ -46,7 +46,7 @@ function isFeatureKey(value: string): value is FeatureKey {
 
 const featureKeys = Object.keys(groupOf).filter(isFeatureKey);
 
-const featureGroups = groupOrder.map((group) => ({
+export const featureGroups = groupOrder.map((group) => ({
   titleKey: groupTitles[group],
   features: featureKeys.filter((feature) => groupOf[feature] === group),
 }));

@@ -1,12 +1,9 @@
 import { ChartSkeleton } from "@/components/chart/chart-skeleton";
 import { RecordRowsSkeleton } from "@/components/record-row/record-row";
+import { SummaryStatsSkeleton } from "@/components/summary-stats/summary-stats";
 import { Section } from "@/components/ui/section/section";
 import { ButtonSkeleton, SectionSkeleton, TextSkeleton } from "@/components/ui/skeleton/skeleton";
-import {
-  DetailPagePending,
-  DetailStatsSkeleton,
-  DetailSummarySkeleton,
-} from "../detail-page-pending/detail-page-pending";
+import { DetailPagePending } from "@/features/net-worth/detail-page/detail-page";
 
 export function ValuationsSkeleton() {
   return (
@@ -24,9 +21,7 @@ export function ValuationsSkeleton() {
 export function AssetPending() {
   return (
     <DetailPagePending>
-      <DetailSummarySkeleton>
-        <DetailStatsSkeleton count={3} details={2} />
-      </DetailSummarySkeleton>
+      <SummaryStatsSkeleton items={3} />
       <SectionSkeleton>
         <ChartSkeleton legend />
       </SectionSkeleton>

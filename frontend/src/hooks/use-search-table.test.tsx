@@ -16,14 +16,14 @@ function setup(search: Search) {
 
 test("sorts ascending first and flips the active column", () => {
   const fresh = setup({});
-  fresh.table.toggleSort("name");
+  fresh.table.sortProps("name").onSort("name");
   expect(fresh.patch).toHaveBeenCalledWith({ sort: "name", direction: "asc" });
 
   const sorted = setup({ sort: "name", direction: "asc" });
-  sorted.table.toggleSort("name");
+  sorted.table.sortProps("name").onSort("name");
   expect(sorted.patch).toHaveBeenCalledWith({ sort: "name", direction: "desc" });
 
-  sorted.table.toggleSort("balance");
+  sorted.table.sortProps("balance").onSort("balance");
   expect(sorted.patch).toHaveBeenLastCalledWith({ sort: "balance", direction: "asc" });
 });
 

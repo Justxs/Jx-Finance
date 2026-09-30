@@ -8,10 +8,10 @@ import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { RecordRow, RecordRowsSkeleton } from "@/components/record-row/record-row";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { Rows } from "@/components/ui/rows/rows";
-import { useConfirmedDelete } from "@/hooks/use-confirmed-delete";
+import { childDelete, useConfirmedDelete } from "@/hooks/use-confirmed-delete";
 import { useIsoDate, useMoney } from "@/hooks/use-formatters";
 import { toCents } from "@/lib/money";
-import { silent } from "@/lib/mutations";
+import { silentMutation } from "@/lib/mutations";
 import { INCOME_TONE } from "@/lib/tone";
 import { ReconcileForm } from "./reconcile-form";
 
@@ -20,7 +20,7 @@ function EarlierReconciliations({ account }: Readonly<{ account: AccountResponse
   const money = useMoney();
   const formatDate = useIsoDate();
   const reconciliations = useReconciliationsSuspense(account.id).data;
-  const deleteMutation = useDeleteReconciliation(silent());
+  const deleteMutation = useDeleteReconciliation({ mutation: silentMutation });
 
   function label(reconciliation: ReconciliationResponse) {
     return `${formatDate(reconciliation.date)}, ${money.format(Number(reconciliation.balance), reconciliation.currency)}`;
@@ -41,13 +41,11 @@ function EarlierReconciliations({ account }: Readonly<{ account: AccountResponse
   }
 
   const remove = useConfirmedDelete(
-    {
-      mutate: ({ id }) => deleteMutation.mutate({ id: account.id, reconciliationId: id }),
-      isPending: deleteMutation.isPending,
-      variables: deleteMutation.variables
-        ? { id: deleteMutation.variables.reconciliationId }
-        : undefined,
-    },
+    childDelete(
+      deleteMutation,
+      (reconciliationId) => ({ id: account.id, reconciliationId }),
+      (variables) => variables.reconciliationId,
+    ),
     reconciliations,
     label,
   );

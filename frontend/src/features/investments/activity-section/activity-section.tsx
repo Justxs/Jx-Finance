@@ -13,6 +13,9 @@ import { RowTransition } from "@/components/row-transition/row-transition";
 import { SelectField } from "@/components/select-field/select-field";
 import { Section, SectionHeader } from "@/components/ui/section/section";
 import { HintTag } from "@/components/ui/tag/tag";
+import { InvestmentEntryModal } from "@/features/investments/investment-entry-form/investment-entry-modal";
+import { ACTIVITY_PAGE_SIZE, activityParams } from "@/features/investments/investment-queries";
+import { entryTypes, isTrade } from "@/features/investments/investment-types";
 import { useConfirmedDelete } from "@/hooks/use-confirmed-delete";
 import { useDeferredParams } from "@/hooks/use-deferred-params";
 import { useIsoDate, useMoney, usePriceFormat, useQuantityFormat } from "@/hooks/use-formatters";
@@ -20,9 +23,6 @@ import { usePageClamp } from "@/hooks/use-paged-list";
 import { nameById, optionsOf } from "@/lib/options";
 import { INCOME_TONE } from "@/lib/tone";
 import { cn, metaLine } from "@/lib/utils";
-import { InvestmentEntryModal } from "../investment-entry-form";
-import { ACTIVITY_PAGE_SIZE, activityParams } from "../investment-queries";
-import { entryTypes, isTrade } from "../investment-types";
 
 interface Props {
   accounts: readonly AccountResponse[];
@@ -38,11 +38,6 @@ export function ActivitySection({ accounts, accountId }: Readonly<Props>) {
 
   const [type, setType] = useState<InvestmentTransactionType | "">("");
   const [page, setPage] = useState(1);
-  const [filterKey, setFilterKey] = useState(accountId);
-  if (filterKey !== accountId) {
-    setFilterKey(accountId);
-    setPage(1);
-  }
 
   const [shown, stale] = useDeferredParams({ page, type });
   const transactions = useInvestmentTransactionsSuspense(

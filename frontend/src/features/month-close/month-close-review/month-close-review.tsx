@@ -1,9 +1,9 @@
 import { useTranslation } from "react-i18next";
 import { useMonthReviewSuspense } from "@/api/generated";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
+import { CloseForm } from "@/features/month-close/close-form/close-form";
+import { DriftPanel } from "@/features/month-close/drift-panel/drift-panel";
 import { useFeature } from "@/hooks/use-settings";
-import { CloseForm } from "../close-form/close-form";
-import { DriftPanel } from "../drift-panel/drift-panel";
 import { MonthCloseReviewSkeleton } from "./month-close-review-skeleton";
 
 interface Props {

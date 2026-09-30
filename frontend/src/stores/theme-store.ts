@@ -1,4 +1,7 @@
 import {
+  DEFAULT_FONT,
+  DEFAULT_PALETTE,
+  DEFAULT_TEXT_SIZE,
   type Preferences,
   fonts,
   onPreferencesChange,
@@ -45,9 +48,9 @@ function applyAppearance() {
     "dark",
     (preferences.theme ?? systemTheme()) === "dark",
   );
-  setDataAttribute("palette", preferences.palette, "ledger");
-  setDataAttribute("font", preferences.font, "ledger");
-  setDataAttribute("textSize", preferences.textSize, "default");
+  setDataAttribute("palette", preferences.palette, DEFAULT_PALETTE);
+  setDataAttribute("font", preferences.font, DEFAULT_FONT);
+  setDataAttribute("textSize", preferences.textSize, DEFAULT_TEXT_SIZE);
   syncThemeColor();
 }
 

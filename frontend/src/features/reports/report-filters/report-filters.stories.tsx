@@ -4,7 +4,7 @@ import { expect, fn, waitFor } from "storybook/test";
 import type { ReportComparisonMode } from "@/api/generated/model";
 import { withWidth } from "@/storybook/decorators";
 import { chooseOption } from "@/storybook/interactions";
-import { presetRange } from "./date-range-presets";
+import { detectPreset, presetRange } from "./date-range-presets";
 import { ReportFilters } from "./report-filters";
 
 const today = new Date();
@@ -25,6 +25,7 @@ function StatefulFilters({
     <ReportFilters
       dateFrom={range.dateFrom}
       dateTo={range.dateTo}
+      preset={detectPreset(range.dateFrom, range.dateTo, today)}
       comparison={mode}
       onChange={(next) => {
         setRange(next);
@@ -44,6 +45,7 @@ const meta = {
   parameters: { route: "/reports" },
   args: {
     ...presetRange("thisMonth", today),
+    preset: "thisMonth",
     comparison: "none",
     onChange: fn(),
     onComparisonChange: fn(),

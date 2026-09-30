@@ -1,6 +1,6 @@
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
 import { XIcon } from "lucide-react";
-import * as React from "react";
+import type { ComponentProps } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button/button";
 import { cn } from "@/lib/utils";
@@ -54,7 +54,7 @@ function DialogContent({
   );
 }
 
-function DialogHeader({ className, ...props }: React.ComponentProps<"div">) {
+function DialogHeader({ className, ...props }: ComponentProps<"div">) {
   return (
     <div data-slot="dialog-header" className={cn("flex flex-col gap-2", className)} {...props} />
   );

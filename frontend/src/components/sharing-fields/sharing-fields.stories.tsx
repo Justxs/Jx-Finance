@@ -1,9 +1,10 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect } from "storybook/test";
+import { expect, waitFor } from "storybook/test";
+import { getHouseholdsMockHandler } from "@/api/generated/households/households.msw";
 import type { Scope } from "@/api/generated/model";
 import { useAppForm } from "@/components/form";
 import { FormGrid } from "@/components/ui/form-grid/form-grid";
-import { familyHousehold, gardenHousehold } from "@/storybook/fixtures";
+import { withHandlers } from "@/storybook/handlers";
 import { chooseOption } from "@/storybook/interactions";
 import { SharingFields } from "./sharing-fields";
 
@@ -26,7 +27,6 @@ function Demo({ scope }: Readonly<DemoProps>) {
         form={form}
         fields={{ scope: "scope", householdId: "householdId" }}
         idPrefix="demo"
-        households={[familyHousehold, gardenHousehold]}
       />
     </FormGrid>
   );
@@ -43,7 +43,7 @@ type Story = StoryObj<typeof meta>;
 
 export const Personal: Story = {
   play: async ({ canvas }) => {
-    const visibility = canvas.getByRole("combobox", { name: "Visibility" });
+    const visibility = await canvas.findByRole("combobox", { name: "Visibility" });
     await expect(visibility).toHaveAttribute("id", "demo-scope");
     await expect(canvas.queryByRole("combobox", { name: "Household" })).toBeNull();
 
@@ -57,3 +57,12 @@ export const Personal: Story = {
 };
 
 export const Shared: Story = { args: { scope: "shared" } };
+
+export const NoHouseholds: Story = {
+  parameters: withHandlers(getHouseholdsMockHandler([])),
+  play: async ({ canvasElement }) => {
+    await waitFor(() =>
+      expect(canvasElement.querySelector("[data-slot=form-grid]")).toBeEmptyDOMElement(),
+    );
+  },
+};

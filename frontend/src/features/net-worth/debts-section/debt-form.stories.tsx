@@ -5,12 +5,11 @@ import { withWidth } from "@/storybook/decorators";
 import {
   debtPaymentTooSmallProblem,
   debts,
-  ids,
   trackedMortgage,
   zeroRateDebt,
 } from "@/storybook/fixtures";
 import { failWith, pending, withHandlers } from "@/storybook/handlers";
-import { DebtForm, debtFormValues } from "./debt-form";
+import { DebtForm } from "./debt-form";
 
 const [mortgage] = debts;
 
@@ -57,12 +56,12 @@ export const SubmitPending: Story = {
 
 export const EditingWithSchedule: Story = {
   args: {
-    editing: { id: ids.debts.mortgage, values: debtFormValues(mortgage ?? zeroRateDebt) },
+    editing: mortgage ?? zeroRateDebt,
   },
 };
 
 export const EditingZeroRate: Story = {
-  args: { editing: { id: zeroRateDebt.id, values: debtFormValues(zeroRateDebt) } },
+  args: { editing: zeroRateDebt },
 };
 
 export const TermAndPaymentTogether: Story = {
@@ -95,7 +94,7 @@ export const PaymentTooSmall: Story = {
 };
 
 export const TracksPayments: Story = {
-  args: { editing: { id: trackedMortgage.id, values: debtFormValues(trackedMortgage) } },
+  args: { editing: trackedMortgage },
   play: async ({ canvas }) => {
     await expect(
       canvas.getByRole("checkbox", { name: /track payments|sekti įmokas/i }),

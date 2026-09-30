@@ -4,12 +4,12 @@ import { PageHeader } from "@/components/page-header/page-header";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { SummaryStatsSkeleton } from "@/components/summary-stats/summary-stats";
 import { TitledSection } from "@/components/ui/section/section";
-import { AssetsSection } from "../assets-section";
-import { DebtsSection } from "../debts-section";
-import { NetWorthCompositionChart } from "../net-worth-composition-chart";
-import { NetWorthHistoryChart } from "../net-worth-history-chart";
-import { NetWorthStats } from "../net-worth-stats/net-worth-stats";
-import { HoldingsSectionSkeleton } from "./net-worth-page-pending";
+import { AssetsSection } from "@/features/net-worth/assets-section/assets-section";
+import { DebtsSection } from "@/features/net-worth/debts-section/debts-section";
+import { NetWorthCompositionChart } from "@/features/net-worth/net-worth-composition-chart";
+import { NetWorthHistoryChart } from "@/features/net-worth/net-worth-history-chart";
+import { NetWorthStats } from "@/features/net-worth/net-worth-stats/net-worth-stats";
+import { BalanceItemsSkeleton } from "./net-worth-page-pending";
 
 export function NetWorthPage() {
   const { t } = useTranslation();
@@ -39,10 +39,10 @@ export function NetWorthPage() {
       </div>
 
       <div className="grid gap-5 lg:grid-cols-2">
-        <QueryBoundary fallback={<HoldingsSectionSkeleton />}>
+        <QueryBoundary fallback={<BalanceItemsSkeleton />}>
           <AssetsSection />
         </QueryBoundary>
-        <QueryBoundary fallback={<HoldingsSectionSkeleton />}>
+        <QueryBoundary fallback={<BalanceItemsSkeleton />}>
           <DebtsSection />
         </QueryBoundary>
       </div>

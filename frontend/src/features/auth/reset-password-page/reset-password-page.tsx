@@ -3,11 +3,15 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { z } from "zod";
 import { useResetPassword } from "@/api/generated";
-import { resetPasswordBodyNewPasswordMin } from "@/api/schemas/auth/auth.zod";
+import {
+  resetPasswordBodyNewPasswordMax,
+  resetPasswordBodyNewPasswordMin,
+} from "@/api/schemas/auth/auth.zod";
 import { useServerForm } from "@/components/form";
 import { FormError } from "@/components/form-error/form-error";
-import { silent } from "@/lib/mutations";
-import { AuthCard, BackToSignIn } from "../auth-card/auth-card";
+import { AuthCard, BackToSignIn } from "@/features/auth/auth-card/auth-card";
+import { silentMutation } from "@/lib/mutations";
+import { password } from "@/lib/validation";
 
 interface FormValues {
   newPassword: string;
@@ -18,22 +22,18 @@ export function ResetPasswordPage() {
   const navigate = useNavigate();
   const { email, token } = useSearch({ from: "/reset-password" });
 
-  const resetMutation = useResetPassword(
-    silent({
+  const resetMutation = useResetPassword({
+    mutation: {
+      ...silentMutation,
       onSuccess: () => {
         toast.success(t("auth.resetDone"));
         void navigate({ to: "/login" });
       },
-    }),
-  );
+    },
+  });
 
   const schema = z.object({
-    newPassword: z
-      .string()
-      .min(
-        resetPasswordBodyNewPasswordMin,
-        t("validation.minLength", { min: resetPasswordBodyNewPasswordMin }),
-      ),
+    newPassword: password(t, resetPasswordBodyNewPasswordMin, resetPasswordBodyNewPasswordMax),
   });
 
   const defaultValues: FormValues = { newPassword: "" };

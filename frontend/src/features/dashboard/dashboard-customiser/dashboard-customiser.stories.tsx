@@ -122,6 +122,16 @@ export const ResetToDefault: Story = {
   },
 };
 
+export const ResetRestoresTheDraft: Story = {
+  args: { layout: customDashboardLayout, onDone: undefined },
+  play: async ({ canvas }) => {
+    await userEvent.click(
+      canvas.getByRole("button", { name: /reset to default|atkurti numatytąjį/i }),
+    );
+    await waitFor(() => expect(listedTitles(canvas)[0]).toMatch(/total balance|bendras likutis/i));
+  },
+};
+
 export const Saving: Story = {
   parameters: withHandlers(getSaveDashboardLayoutMockHandler(pending)),
   play: async ({ canvas }) => {

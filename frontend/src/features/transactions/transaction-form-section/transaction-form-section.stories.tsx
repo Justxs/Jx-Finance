@@ -1,58 +1,42 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { useState } from "react";
-import { toast } from "sonner";
-import { expect, within } from "storybook/test";
-import type { TransactionResponse } from "@/api/generated/model";
+import { expect, fireEvent, fn, userEvent, waitFor, within } from "storybook/test";
+import { getTransactionsQueryKey } from "@/api/generated";
+import {
+  getCreateTransactionMockHandler,
+  getUpdateTransactionMockHandler,
+} from "@/api/generated/transactions/transactions.msw";
 import { Button } from "@/components/ui/button/button";
+import { useTransactionMutations } from "@/features/transactions/transactions-page/use-transaction-mutations";
 import { accounts, categories, splitTransaction, tags, transactions } from "@/storybook/fixtures";
+import { pending, withHandlers } from "@/storybook/handlers";
 import { openedDialog } from "@/storybook/interactions";
-import { TransactionFormSection } from "./transaction-form-section";
+import { useTransactionFormSection } from "./transaction-form-section";
 
-interface HarnessProps {
-  initialCreateOpen?: boolean;
-  initialEditing?: TransactionResponse | null;
-  createPending?: boolean;
-  updatePending?: boolean;
-}
+const offerRule = fn();
 
-function FormSectionHarness({
-  initialCreateOpen = false,
-  initialEditing = null,
-  createPending = false,
-  updatePending = false,
-}: Readonly<HarnessProps>) {
-  const [createOpen, setCreateOpen] = useState(initialCreateOpen);
-  const [editing, setEditing] = useState<TransactionResponse | null>(initialEditing);
+function FormSectionHarness() {
+  const mutations = useTransactionMutations({
+    listKey: getTransactionsQueryKey(),
+    onBulkApplied: fn(),
+  });
+  const section = useTransactionFormSection({
+    accounts,
+    categories,
+    tags,
+    mutations,
+    onCategorized: offerRule,
+  });
 
   return (
     <div className="flex gap-2">
-      <Button onClick={() => setCreateOpen(true)}>Add transaction</Button>
-      <Button variant="outline" onClick={() => setEditing(splitTransaction)}>
+      <Button onClick={section.startBlank}>Add transaction</Button>
+      <Button variant="outline" onClick={() => section.startEditing(transactions[0]!)}>
+        Edit transaction
+      </Button>
+      <Button variant="outline" onClick={() => section.startEditing(splitTransaction)}>
         Edit split transaction
       </Button>
-      <TransactionFormSection
-        accounts={accounts}
-        categories={categories}
-        tags={tags}
-        createOpen={createOpen}
-        onCreateOpenChange={setCreateOpen}
-        editing={editing}
-        onCancelEdit={() => setEditing(null)}
-        createPending={createPending}
-        updatePending={updatePending}
-        onCreate={() => {
-          toast.success("Created");
-          setCreateOpen(false);
-        }}
-        onCreateAnother={async () => {
-          toast.success("Created");
-          return true;
-        }}
-        onUpdate={() => {
-          toast.success("Updated");
-          setEditing(null);
-        }}
-      />
+      {section.dialogs}
     </div>
   );
 }
@@ -60,6 +44,7 @@ function FormSectionHarness({
 const meta = {
   title: "Features/Transactions/TransactionFormSection",
   component: FormSectionHarness,
+  parameters: { route: "/transactions" },
 } satisfies Meta<typeof FormSectionHarness>;
 
 export default meta;
@@ -67,21 +52,49 @@ type Story = StoryObj<typeof meta>;
 
 export const Closed: Story = {};
 
-export const CreateOpen: Story = { args: { initialCreateOpen: true } };
+export const CreateOpen: Story = {
+  play: async ({ canvas }) => {
+    await userEvent.click(canvas.getByRole("button", { name: "Add transaction" }));
+    await expect(await openedDialog()).toHaveTextContent("Add transaction");
+  },
+};
 
 export const EditOpen: Story = {
-  args: { initialEditing: transactions[0] },
-  play: async () => {
+  play: async ({ canvas }) => {
+    await userEvent.click(canvas.getByRole("button", { name: "Edit transaction" }));
     const dialog = within(await openedDialog());
     await expect(await dialog.findByRole("heading", { name: "Receipts and files" })).toBeVisible();
     await expect(await dialog.findByText("maxima-kvitas.jpg")).toBeVisible();
   },
 };
 
-export const EditSplitOpen: Story = { args: { initialEditing: splitTransaction } };
+export const EditSplitOpen: Story = {
+  play: async ({ canvas }) => {
+    await userEvent.click(canvas.getByRole("button", { name: "Edit split transaction" }));
+    await expect(await openedDialog()).toHaveTextContent("Split into categories");
+  },
+};
 
-export const CreatePending: Story = { args: { initialCreateOpen: true, createPending: true } };
+export const CreatePending: Story = {
+  parameters: withHandlers(getCreateTransactionMockHandler(pending)),
+  play: async ({ canvas }) => {
+    await userEvent.click(canvas.getByRole("button", { name: "Add transaction" }));
+    const dialog = within(await openedDialog());
+    await fireEvent.change(await dialog.findByLabelText("Amount"), { target: { value: "12,50" } });
+    const add = dialog.getByRole("button", { name: "Add" });
+    await waitFor(() => expect(add).toBeEnabled());
+    await userEvent.click(add);
+    await waitFor(() => expect(add).toHaveAttribute("aria-busy", "true"));
+  },
+};
 
 export const UpdatePending: Story = {
-  args: { initialEditing: transactions[0], updatePending: true },
+  parameters: withHandlers(getUpdateTransactionMockHandler(pending)),
+  play: async ({ canvas }) => {
+    await userEvent.click(canvas.getByRole("button", { name: "Edit transaction" }));
+    const dialog = within(await openedDialog());
+    const save = await dialog.findByRole("button", { name: "Save" });
+    await userEvent.click(save);
+    await waitFor(() => expect(save).toHaveAttribute("aria-busy", "true"));
+  },
 };

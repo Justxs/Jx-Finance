@@ -4,14 +4,14 @@ import { useTranslation } from "react-i18next";
 import { useVerifyEmail } from "@/api/generated";
 import { FormError } from "@/components/form-error/form-error";
 import { Button } from "@/components/ui/button/button";
-import { silent } from "@/lib/mutations";
-import { AuthCard, AuthNotice, BackToSignIn } from "../auth-card/auth-card";
+import { AuthCard, AuthNotice, BackToSignIn } from "@/features/auth/auth-card/auth-card";
+import { silentMutation } from "@/lib/mutations";
 
 export function VerifyEmailPage() {
   const { t } = useTranslation();
   const { email, token } = useSearch({ from: "/verify-email" });
 
-  const verifyMutation = useVerifyEmail(silent());
+  const verifyMutation = useVerifyEmail({ mutation: silentMutation });
   const link = email && token ? { email, token } : null;
   const done = verifyMutation.isSuccess;
 

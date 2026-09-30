@@ -4,6 +4,8 @@ Back to the [feature walkthrough](README.md). See also [decisions](../decisions/
 
 Backend `Investments` (`InvestmentService`, `HoldingsValuation`, `BrokerImportService`, `StatementImport`), `Infrastructure/Brokers/InteractiveBrokers` (`FlexParser`, `FlexClient`), page `/investments`.
 
+The page has two views of one route. The portfolio view carries the account filter, the new entry, import and securities dialogs; the tax summary (`view=taxSummary`) has its own header with only the way back. The account filter is the `accountId` search parameter, and the route checks it before the page loads: an id that is not one of the caller's accounts redirects to all accounts, so the page uses the parameter as it is. Choosing another account starts the activity list over, with its type filter cleared and the first page shown. The entry, security and price forms each own their save, close themselves when it succeeds and show its error in place.
+
 ## Positions by replay
 
 ```mermaid
@@ -60,6 +62,8 @@ flowchart TD
 ```
 
 Deleting a point of the price history is allowed under the same rule as setting a price.
+
+The price dialog opens from a position's price and reads the security from the portfolio's holdings. Setting or deleting a price refreshes the portfolio, so the dialog shows the new last price without loading the list of securities.
 
 ## Price history
 

@@ -15,9 +15,10 @@ import { useServerForm } from "@/components/form";
 import { FormError } from "@/components/form-error/form-error";
 import { SharingFields } from "@/components/sharing-fields/sharing-fields";
 import { FormGrid } from "@/components/ui/form-grid/form-grid";
-import { useReportingCurrency } from "@/hooks/use-formatters";
+import { accountTypes } from "@/features/accounts/account-types";
+import { useReportingCurrency } from "@/hooks/use-currencies";
 import { useFeature } from "@/hooks/use-settings";
-import { silent, upsert } from "@/lib/mutations";
+import { silentMutation, upsert } from "@/lib/mutations";
 import { optionsOf } from "@/lib/options";
 import {
   isIban,
@@ -25,11 +26,10 @@ import {
   optionalText,
   refineSharing,
   requiredText,
-  sharedHouseholdId,
+  sharingPayload,
   sharingShape,
 } from "@/lib/validation";
 import { useSharingDefaults } from "@/stores/active-household-store";
-import { accountTypes } from "../account-types";
 
 interface FormValues {
   name: string;
@@ -53,17 +53,15 @@ function buildValues(value: FormValues) {
     name: value.name.trim(),
     description: value.description.trim() || null,
     iban: value.iban.trim() || null,
-    householdId: sharedHouseholdId(value),
+    ...sharingPayload(value),
   };
 }
 
 export function AccountForm({ initial, onClose }: Readonly<Props>) {
   const { t } = useTranslation();
-  const households = useHouseholdsSuspense();
-  const householdList = households.data;
   const reportingCurrency = useReportingCurrency();
   const multiCurrency = useFeature("multiCurrency");
-  const sharing = useSharingDefaults(householdList, initial);
+  const sharing = useSharingDefaults(useHouseholdsSuspense().data, initial);
 
   const schema = refineSharing(
     z.object({
@@ -79,8 +77,8 @@ export function AccountForm({ initial, onClose }: Readonly<Props>) {
   );
 
   const { create, update, pending, error } = upsert(
-    useCreateAccount(silent({ onSuccess: onClose })),
-    useUpdateAccount(silent({ onSuccess: onClose })),
+    useCreateAccount({ mutation: { ...silentMutation, onSuccess: onClose } }),
+    useUpdateAccount({ mutation: { ...silentMutation, onSuccess: onClose } }),
   );
 
   const form = useServerForm({
@@ -167,14 +165,11 @@ export function AccountForm({ initial, onClose }: Readonly<Props>) {
           )}
         </form.Field>
 
-        {householdList.length > 0 ? (
-          <SharingFields
-            form={form}
-            fields={{ scope: "scope", householdId: "householdId" }}
-            idPrefix="account"
-            households={householdList}
-          />
-        ) : null}
+        <SharingFields
+          form={form}
+          fields={{ scope: "scope", householdId: "householdId" }}
+          idPrefix="account"
+        />
 
         <FormError error={error} />
 

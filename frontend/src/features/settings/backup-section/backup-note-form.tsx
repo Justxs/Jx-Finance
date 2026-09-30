@@ -5,7 +5,7 @@ import type { BackupResponse } from "@/api/generated/model";
 import { updateBackupBodyNoteMax } from "@/api/schemas/backups/backups.zod";
 import { useServerForm } from "@/components/form";
 import { FormError } from "@/components/form-error/form-error";
-import { silent } from "@/lib/mutations";
+import { silentMutation } from "@/lib/mutations";
 import { optionalText } from "@/lib/validation";
 
 interface Props {
@@ -18,7 +18,7 @@ export function BackupNoteForm({ backup, onSaved, onCancel }: Readonly<Props>) {
   const { t } = useTranslation();
   const schema = z.object({ note: optionalText(t, updateBackupBodyNoteMax) });
 
-  const updateMutation = useUpdateBackup(silent({ onSuccess: onSaved }));
+  const updateMutation = useUpdateBackup({ mutation: { ...silentMutation, onSuccess: onSaved } });
 
   const form = useServerForm({
     defaultValues: { note: backup.note ?? "" },

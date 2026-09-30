@@ -27,7 +27,7 @@ const longNameBill = recurringBills.find((bill) => bill.accountId === null) ?? d
 const meta = {
   title: "Features/RecurringBills/RecurringBillForm/Edit",
   component: RecurringBillForm,
-  args: { bill: dueSoonBill, accounts, categories, onClose: fn() },
+  args: { initial: dueSoonBill, accounts, categories, onClose: fn() },
   decorators: [withWidth("form")],
 } satisfies Meta<typeof RecurringBillForm>;
 
@@ -46,15 +46,15 @@ export const Dark: Story = { globals: { theme: "dark" } };
 
 export const Lithuanian: Story = { globals: { locale: "lt" } };
 
-export const Variable: Story = { args: { bill: variableBill } };
+export const Variable: Story = { args: { initial: variableBill } };
 
-export const Inactive: Story = { args: { bill: inactiveBill } };
+export const Inactive: Story = { args: { initial: inactiveBill } };
 
-export const LongName: Story = { args: { bill: longNameBill } };
+export const LongName: Story = { args: { initial: longNameBill } };
 
-export const Income: Story = { args: { bill: incomeBill } };
+export const Income: Story = { args: { initial: incomeBill } };
 
-export const Transfer: Story = { args: { bill: transferBill } };
+export const Transfer: Story = { args: { initial: transferBill } };
 
 export const SwitchesAnExpenseToATransfer: Story = {
   play: async ({ canvas, args }) => {
@@ -73,7 +73,7 @@ export const SwitchesAnExpenseToATransfer: Story = {
 };
 
 export const SwitchesATransferToAnIncome: Story = {
-  args: { bill: transferBill },
+  args: { initial: transferBill },
   play: async ({ canvas, args }) => {
     await userEvent.click(canvas.getByRole("radio", { name: "Income" }));
 
@@ -155,8 +155,30 @@ export const BillNoLongerExists: Story = {
   },
 };
 
+const sent = fn();
+
+export const KeepsTheDebtWhileDebtsLoad: Story = {
+  args: { initial: mortgageBill },
+  parameters: withHandlers(
+    getDebtsMockHandler(pending),
+    getUpdateRecurringBillMockHandler(async ({ request }) => {
+      sent(await request.json());
+      return mortgageBill;
+    }),
+  ),
+  play: async ({ canvas, args }) => {
+    await fireEvent.change(canvas.getByLabelText("Name"), { target: { value: "Mortgage" } });
+    await userEvent.click(canvas.getByRole("button", { name: "Save" }));
+
+    await waitFor(() => expect(args.onClose).toHaveBeenCalled());
+    await expect(sent).toHaveBeenCalledWith(
+      expect.objectContaining({ name: "Mortgage", debtId: mortgageBill.debtId }),
+    );
+  },
+};
+
 export const PaysADebt: Story = {
-  args: { bill: mortgageBill },
+  args: { initial: mortgageBill },
   parameters: withHandlers(getDebtsMockHandler([trackedMortgage])),
   play: async ({ canvas, args }) => {
     const debt = await canvas.findByRole("combobox", { name: "Pays debt" });

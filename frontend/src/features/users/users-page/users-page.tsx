@@ -1,39 +1,18 @@
 import { useSearch } from "@tanstack/react-router";
-import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  useDeactivateUser,
-  useReactivateUser,
-  useUsersSuspense,
-  useMeSuspense,
-  useUpdateUserRole,
-} from "@/api/generated";
-import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog/confirm-delete-dialog";
+import { useUsersSuspense } from "@/api/generated";
 import { CreateDialog } from "@/components/create-dialog/create-dialog";
+import { SettingsLayout } from "@/components/settings-layout/settings-layout";
 import { Section, SectionHeader } from "@/components/ui/section/section";
-import { SettingsLayout } from "@/features/settings/settings-nav/settings-nav";
-import { useConfirmedDelete } from "@/hooks/use-confirmed-delete";
+import { CreateUserForm } from "@/features/users/create-user-form/create-user-form";
+import { userListParams } from "@/features/users/user-queries";
+import { UsersTable } from "@/features/users/users-table/users-table";
 import { useDeferredParams } from "@/hooks/use-deferred-params";
-import { notify, pendingId } from "@/lib/mutations";
-import { CreateUserForm } from "../create-user-form/create-user-form";
-import { ResetPasswordDialog } from "../reset-password-dialog/reset-password-dialog";
-import { userListParams, userName } from "../user-queries";
-import { UsersTable } from "../users-table/users-table";
 
 export function UsersPage() {
   const { t } = useTranslation();
-  const [resetId, setResetId] = useState<string | null>(null);
-
-  const me = useMeSuspense();
   const [shown, stale] = useDeferredParams(useSearch({ from: "/users" }));
   const users = useUsersSuspense(userListParams(shown));
-
-  const roleMutation = useUpdateUserRole(notify(t("users.roleUpdated")));
-  const deactivateMutation = useDeactivateUser(notify(t("users.deactivated_toast")));
-  const reactivateMutation = useReactivateUser(notify(t("users.reactivated_toast")));
-
-  const list = users.data;
-  const deactivate = useConfirmedDelete(deactivateMutation, list, userName);
 
   return (
     <SettingsLayout current="users">
@@ -43,31 +22,8 @@ export function UsersPage() {
             {(close) => <CreateUserForm onClose={close} />}
           </CreateDialog>
         </SectionHeader>
-        <UsersTable
-          users={list}
-          stale={stale}
-          currentUserId={me.data.id}
-          onRoleChange={(id, role) => roleMutation.mutate({ id, data: { role } })}
-          rolePendingId={pendingId(roleMutation)}
-          onDeactivate={deactivate.request}
-          deactivatePendingId={deactivate.pendingId}
-          onReactivate={(id) => reactivateMutation.mutate({ id })}
-          reactivatePendingId={pendingId(reactivateMutation)}
-          onResetPassword={setResetId}
-        />
+        <UsersTable users={users.data} stale={stale} />
       </Section>
-
-      <ConfirmDeleteDialog
-        {...deactivate.dialogProps}
-        title={t("users.deactivateConfirm.title")}
-        description={t("users.deactivateConfirm.description")}
-        confirmLabel={t("users.deactivate")}
-      />
-
-      <ResetPasswordDialog
-        user={list.find((user) => user.id === resetId) ?? null}
-        onClose={() => setResetId(null)}
-      />
     </SettingsLayout>
   );
 }

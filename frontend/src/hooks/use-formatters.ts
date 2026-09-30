@@ -1,30 +1,14 @@
 import { enUS, lt } from "react-day-picker/locale";
 import { useTranslation } from "react-i18next";
-import { useCurrencies } from "@/api/generated";
-import type { Currency } from "@/api/generated/model";
+import { useReportingCurrency } from "@/hooks/use-currencies";
 import { useSettings } from "@/hooks/use-settings";
 import { splitBytes } from "@/lib/bytes";
 import { parseIso, safeTimeZone } from "@/lib/calendar";
-import { ALL_CURRENCIES, DEFAULT_CURRENCY } from "@/lib/currency";
-import { silentQuery } from "@/lib/mutations";
-
-const currenciesQuery = { staleTime: 5 * 60 * 1000, ...silentQuery } as const;
-
-export function useReportingCurrency(): Currency {
-  const currencies = useCurrencies({ query: currenciesQuery });
-
-  return currencies.data?.reportingCurrency ?? DEFAULT_CURRENCY;
-}
-
-export function useUsableCurrencies(): readonly Currency[] {
-  const currencies = useCurrencies({ query: currenciesQuery });
-
-  return currencies.data?.currencies ?? ALL_CURRENCIES;
-}
 
 const numberFormats = new Map<string, Intl.NumberFormat>();
 const dateFormats = new Map<string, Intl.DateTimeFormat>();
 const relativeFormats = new Map<string, Intl.RelativeTimeFormat>();
+const displayNames = new Map<string, Intl.DisplayNames>();
 
 function cached<TFormat>(
   cache: Map<string, TFormat>,
@@ -125,7 +109,12 @@ export function useAxisMoney() {
 
 export function useCurrencyName() {
   const { i18n } = useTranslation();
-  const names = new Intl.DisplayNames(i18n.language, { type: "currency" });
+  const names = cached(
+    displayNames,
+    i18n.language,
+    { type: "currency" },
+    () => new Intl.DisplayNames(i18n.language, { type: "currency" }),
+  );
 
   return function currencyName(currency: string) {
     return names.of(currency.toUpperCase()) ?? currency.toUpperCase();

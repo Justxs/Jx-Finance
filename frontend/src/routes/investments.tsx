@@ -47,12 +47,7 @@ export const Route = createFileRoute("/investments")({
       throw redirect({ to: "/investments", search: {}, replace: true });
     }
   },
-  loaderDeps: ({ search }) => ({
-    accountId: search.accountId,
-    view: search.view,
-    taxYear: search.taxYear,
-    taxAccounts: search.taxAccounts,
-  }),
+  loaderDeps: ({ search }) => search,
   loader: ({ context: { queryClient }, deps }) => {
     warm(queryClient, getAccountsSuspenseQueryOptions());
     if (deps.view === "taxSummary") {

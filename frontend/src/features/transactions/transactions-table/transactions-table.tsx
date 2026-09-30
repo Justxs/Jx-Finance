@@ -14,8 +14,8 @@ import {
   TableEmptyRow,
 } from "@/components/ui/table/table";
 import { Tooltip } from "@/components/ui/tooltip/tooltip";
+import { isOptimistic } from "@/features/transactions/transaction-amount/transaction-row";
 import { cn } from "@/lib/utils";
-import { isOptimistic } from "../transaction-amount";
 import { transactionTableFeatures } from "./table-features";
 import {
   isSelectableTransaction,

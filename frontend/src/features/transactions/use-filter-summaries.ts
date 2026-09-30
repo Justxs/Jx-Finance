@@ -1,11 +1,11 @@
 import { useTranslation } from "react-i18next";
-import type { AccountResponse, CategoryResponse, TagResponse } from "@/api/generated/model";
+import type { TagResponse } from "@/api/generated/model";
 import { useDate, useIsoDate, useMonthName } from "@/hooks/use-formatters";
 import { monthBounds, parseIso } from "@/lib/calendar";
 import { nameById } from "@/lib/options";
-import { useTransactionFilters } from "./use-transaction-filters";
+import type { TransactionFilters } from "./use-transaction-filters";
 
-export interface FilterSummary {
+interface FilterSummary {
   key: string;
   label: string;
   value: string;
@@ -16,15 +16,11 @@ function optionLabel(options: { value: string; label: string }[], value: string)
   return options.find((option) => option.value === value)?.label ?? value;
 }
 
-interface Args {
-  accounts: AccountResponse[];
-  categories: CategoryResponse[];
-  tags: TagResponse[];
-}
-
-export function useFilterSummaries({ accounts, categories, tags }: Args) {
+export function useFilterSummaries(
+  { fields, columnLabels, clearFilters }: TransactionFilters,
+  tags: TagResponse[],
+) {
   const { t } = useTranslation();
-  const { fields, columnLabels, clearFilters } = useTransactionFilters({ accounts, categories });
   const date = useDate();
   const formatIso = useIsoDate();
   const formatMonth = useMonthName();

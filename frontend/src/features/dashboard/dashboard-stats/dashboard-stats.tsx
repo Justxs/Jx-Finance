@@ -2,9 +2,9 @@ import { useTranslation } from "react-i18next";
 import { useDashboardSummarySuspense } from "@/api/generated";
 import { useMoney, usePercent } from "@/hooks/use-formatters";
 import { useTodayDate } from "@/hooks/use-settings";
+import { currentMonthKey } from "@/lib/calendar";
 import { EXPENSE_TONE, gainTone } from "@/lib/tone";
 import { cn } from "@/lib/utils";
-import { currentMonthKey } from "../dashboard-queries";
 
 const NEUTRAL_TONE = "text-foreground";
 const RING_RADIUS = 44;

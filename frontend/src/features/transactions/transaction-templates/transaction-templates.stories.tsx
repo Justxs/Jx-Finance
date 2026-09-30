@@ -1,8 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, fn, screen, userEvent } from "storybook/test";
-import { saveTransactionTemplate } from "@/stores/transaction-views";
+import { transactionTemplates } from "@/features/transactions/transaction-views";
 import { withWidth } from "@/storybook/decorators";
 import { ids } from "@/storybook/fixtures";
+import type { Canvas } from "@/storybook/interactions";
 import { TransactionTemplates } from "./transaction-templates";
 
 const weeklyShop = {
@@ -26,22 +27,36 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Empty: Story = { args: { defaultOpen: true } };
+async function openMenu(canvas: Canvas) {
+  await userEvent.click(canvas.getByRole("button", { name: /^Templates/ }));
+}
+
+export const Closed: Story = {};
+
+export const Empty: Story = {
+  play: async ({ canvas }) => {
+    await openMenu(canvas);
+  },
+};
 
 export const WithTemplates: Story = {
-  args: { defaultOpen: true },
   beforeEach: () => {
-    saveTransactionTemplate("Weekly shop", weeklyShop);
-    saveTransactionTemplate("Rent", { ...weeklyShop, amount: "560.00", description: "Rent" });
+    transactionTemplates.save("Weekly shop", { values: weeklyShop });
+    transactionTemplates.save("Rent", {
+      values: { ...weeklyShop, amount: "560.00", description: "Rent" },
+    });
+  },
+  play: async ({ canvas }) => {
+    await openMenu(canvas);
   },
 };
 
 export const StartingFromATemplate: Story = {
-  args: { defaultOpen: true },
   beforeEach: () => {
-    saveTransactionTemplate("Weekly shop", weeklyShop);
+    transactionTemplates.save("Weekly shop", { values: weeklyShop });
   },
-  play: async ({ args }) => {
+  play: async ({ args, canvas }) => {
+    await openMenu(canvas);
     await userEvent.click(
       await screen.findByRole("button", { name: "New transaction from template: Weekly shop" }),
     );

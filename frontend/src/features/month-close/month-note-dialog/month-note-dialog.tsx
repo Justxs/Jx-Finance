@@ -1,10 +1,10 @@
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
+import { closeMonthBodyNoteMax } from "@/api/schemas/month-close/month-close.zod";
 import { useServerForm } from "@/components/form";
 import { FormError } from "@/components/form-error/form-error";
 import { Modal } from "@/components/modal/modal";
-
-const NOTE_MAX_LENGTH = 1000;
+import { optionalText } from "@/lib/validation";
 
 interface FormProps {
   note: string;
@@ -19,7 +19,7 @@ function NoteForm({ note, submitLabel, pending, error, onSubmit, onClose }: Read
   const { t } = useTranslation();
   const form = useServerForm({
     defaultValues: { note },
-    schema: z.object({ note: z.string().max(NOTE_MAX_LENGTH) }),
+    schema: z.object({ note: optionalText(t, closeMonthBodyNoteMax) }),
     submit: (value) => onSubmit(value.note),
   });
 
@@ -32,7 +32,7 @@ function NoteForm({ note, submitLabel, pending, error, onSubmit, onClose }: Read
               id="month-close-note"
               label={t("monthClose.form.note")}
               hint={t("monthClose.form.noteHint")}
-              maxLength={NOTE_MAX_LENGTH}
+              maxLength={closeMonthBodyNoteMax}
               autoComplete="off"
             />
           )}

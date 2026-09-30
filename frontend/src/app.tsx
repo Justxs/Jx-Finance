@@ -2,18 +2,16 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { RouterProvider, createRouter } from "@tanstack/react-router";
 import { I18nextProvider } from "react-i18next";
 import { onSessionExpired } from "@/api/client";
-import { getSettingsQueryKey } from "@/api/generated";
-import type { SettingsResponse } from "@/api/generated/model";
 import { RouteError } from "@/components/route-error/route-error";
 import { RoutePending } from "@/components/route-pending/route-pending";
 import { Toaster } from "@/components/ui/sonner/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip/tooltip";
-import { type FeatureKey, publicSettingsQueryOptions } from "@/hooks/use-settings";
 import { endSession } from "@/lib/auth-gate";
 import { i18n } from "@/lib/i18n";
 import { pageViewTransition } from "@/lib/page-transition";
 import { queryClient } from "@/lib/query-client";
-import { registerShortcuts } from "@/lib/shortcuts";
+import { type FeatureKey, publicSettingsQueryOptions, settingsQueryOptions } from "@/lib/settings";
+import { type ShortcutRouter, registerShortcuts } from "@/lib/shortcuts";
 import { initLocale } from "@/stores/app-store";
 import { isCommandPaletteOpen, toggleCommandPalette } from "@/stores/command-palette-store";
 import { isShortcutsHelpOpen, toggleShortcutsHelp } from "@/stores/shortcuts-help-store";
@@ -44,7 +42,7 @@ function handleSessionExpired() {
 onSessionExpired(handleSessionExpired);
 
 function isFeatureOn(feature: FeatureKey) {
-  const settings = queryClient.getQueryData<SettingsResponse>(getSettingsQueryKey());
+  const settings = queryClient.getQueryData(settingsQueryOptions().queryKey);
   return settings?.features[feature] ?? true;
 }
 
@@ -53,7 +51,7 @@ async function loadDefaultLanguage() {
   return settings.defaultLanguage;
 }
 
-registerShortcuts(router, {
+registerShortcuts(router as ShortcutRouter, {
   toggleHelp: toggleShortcutsHelp,
   isHelpOpen: isShortcutsHelpOpen,
   togglePalette: toggleCommandPalette,

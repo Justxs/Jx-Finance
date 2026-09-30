@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, fireEvent, waitFor } from "storybook/test";
 import { z } from "zod";
-import { useAppForm } from "../app-form";
+import { useAppForm } from "@/components/form/app-form";
 
 interface DemoProps {
   pending?: boolean;

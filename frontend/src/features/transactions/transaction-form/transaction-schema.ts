@@ -1,32 +1,27 @@
 import { z } from "zod";
 import {
   type AccountResponse,
+  type CreateTransactionRequest,
   Currency,
   FlowType,
   type TransactionRefundOfResponse,
 } from "@/api/generated/model";
+import { createTransactionBodyDescriptionMax } from "@/api/schemas/transactions/transactions.zod";
 import { DEFAULT_CURRENCY } from "@/lib/currency";
 import type { Translate } from "@/lib/i18n";
 import { toCents } from "@/lib/money";
-import { isPositiveMoney, normalizeMoney, positiveMoney, requiredValue } from "@/lib/validation";
+import {
+  isPositiveMoney,
+  normalizeMoney,
+  optionalText,
+  positiveMoney,
+  requiredValue,
+} from "@/lib/validation";
 import type { LineFormValue } from "./line-form-value";
 import type { TransactionDraft } from "./transaction-draft";
 
-interface TransactionLineFormValues {
-  categoryId: string | null;
-  amount: string;
-  description: string | null;
-}
-
-export interface TransactionFormValues {
-  accountId: string;
-  categoryId: string | null;
-  type: FlowType;
-  amount: string;
+export interface TransactionFormValues extends CreateTransactionRequest {
   currency: Currency;
-  date: string;
-  description: string | null;
-  lines: TransactionLineFormValues[] | null;
   tagIds: string[];
   refundOfTransactionId: string | null;
 }
@@ -62,7 +57,7 @@ export function transactionSchema(t: Translate, formatMoney: FormatMoney) {
       amount: positiveMoney(t),
       currency: z.enum(Currency),
       date: requiredValue(t),
-      description: z.string(),
+      description: optionalText(t, createTransactionBodyDescriptionMax),
       isSplit: z.boolean(),
       tagIds: z.array(z.string()),
       refundOf: z.custom<TransactionRefundOfResponse | null>(),
@@ -71,7 +66,7 @@ export function transactionSchema(t: Translate, formatMoney: FormatMoney) {
           id: z.string(),
           categoryId: z.string(),
           amount: z.string(),
-          description: z.string(),
+          description: optionalText(t, createTransactionBodyDescriptionMax),
         }),
       ),
     })

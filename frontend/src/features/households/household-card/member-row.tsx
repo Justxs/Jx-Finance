@@ -5,9 +5,9 @@ import { RowActions } from "@/components/row-actions/row-actions";
 import { RowTransition } from "@/components/row-transition/row-transition";
 import { SelectField } from "@/components/select-field/select-field";
 import { Tag } from "@/components/ui/tag/tag";
-import { userName } from "@/features/users/user-queries";
+import { householdRoleOptions } from "@/features/households/household-roles";
+import { userName } from "@/lib/user-name";
 import { cn } from "@/lib/utils";
-import { householdRoleOptions } from "../household-roles";
 
 interface Props {
   householdId: string;

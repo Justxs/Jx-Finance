@@ -1,18 +1,23 @@
 import { createColumnHelper } from "@tanstack/react-table";
 import { useTranslation } from "react-i18next";
 import type { CategoryResponse, TagResponse, TransactionResponse } from "@/api/generated/model";
+import type { RowAction } from "@/components/row-actions/row-actions";
+import { TagChips } from "@/components/tag-chips/tag-chips";
 import { Tag } from "@/components/ui/tag/tag";
-import { TagChips } from "@/features/tags/tag-chips/tag-chips";
+import { DebtPaymentMarker } from "@/features/transactions/debt-payment/debt-payment";
+import { RefundMark } from "@/features/transactions/refund-mark/refund-mark";
+import { SharedExpenseMark } from "@/features/transactions/shared-expense/shared-expense";
+import { TransactionAmount } from "@/features/transactions/transaction-amount/transaction-amount";
+import {
+  isOptimistic,
+  transactionName,
+} from "@/features/transactions/transaction-amount/transaction-row";
 import { AttachmentCount } from "@/features/transactions/transaction-attachments/attachment-count";
+import { TransactionRowActions } from "@/features/transactions/transaction-row-actions/transaction-row-actions";
 import { UnusualAmountBadge } from "@/features/transactions/unusual-amount/unusual-amount-badge";
 import { EMPTY_VALUE, useIsoDate } from "@/hooks/use-formatters";
 import { CategoryIcon } from "@/lib/category-icons";
-import { DebtPaymentMarker } from "../debt-payment/debt-payment";
-import { RefundMark } from "../refund-mark/refund-mark";
-import { SharedExpenseMark } from "../shared-expense/shared-expense";
-import { TransactionAmount, isOptimistic, transactionName } from "../transaction-amount";
-import { TransactionRowActions } from "../transaction-row-actions/transaction-row-actions";
-import { CategoryCell } from "./category-cell";
+import { CategoryCell, type useInlineCategory } from "./category-cell";
 import type { transactionTableFeatures } from "./table-features";
 
 const columnHelper = createColumnHelper<typeof transactionTableFeatures, TransactionResponse>();
@@ -38,6 +43,13 @@ export interface TransactionRowHandlers {
   onRefund: (transaction: TransactionResponse) => void;
   onDelete: (id: string) => void;
   deletingId: string | null;
+  moreActions: (transaction: TransactionResponse) => RowAction[];
+  onUpdateSplit: (transaction: TransactionResponse) => void;
+}
+
+interface ColumnArgs extends TransactionRowHandlers {
+  categories: CategoryResponse[];
+  inlineCategory: ReturnType<typeof useInlineCategory>;
 }
 
 export function useTransactionColumns({
@@ -49,11 +61,13 @@ export function useTransactionColumns({
   onRefund,
   onDelete,
   deletingId,
-}: TransactionRowHandlers) {
+  moreActions,
+  onUpdateSplit,
+  categories,
+  inlineCategory,
+}: ColumnArgs) {
   const { t } = useTranslation();
   const formatDate = useIsoDate();
-
-  const categories = [...categoryById.values()].filter((category) => category !== undefined);
 
   function rowName(row: TransactionResponse) {
     return transactionName(row, categoryById, t);
@@ -90,7 +104,11 @@ export function useTransactionColumns({
             />
             <DebtPaymentMarker transaction={info.row.original} className="mt-0.5" />
             <RefundMark transaction={info.row.original} className="mt-0.5" />
-            <SharedExpenseMark transaction={info.row.original} className="mt-0.5" />
+            <SharedExpenseMark
+              transaction={info.row.original}
+              onUpdate={onUpdateSplit}
+              className="mt-0.5"
+            />
           </span>
         );
       },
@@ -111,7 +129,15 @@ export function useTransactionColumns({
         }
 
         if (!isOptimistic(row)) {
-          return <CategoryCell transaction={row} categories={categories} label={rowName(row)} />;
+          return (
+            <CategoryCell
+              transaction={row}
+              categories={categories}
+              label={rowName(row)}
+              pendingCategoryId={inlineCategory.pendingCategoryIds.get(row.id)}
+              onChange={(categoryId) => inlineCategory.categorize(row, categoryId)}
+            />
+          );
         }
 
         const category = categoryById.get(info.getValue() ?? "");
@@ -167,6 +193,7 @@ export function useTransactionColumns({
         <TransactionRowActions
           transaction={info.row.original}
           label={rowName(info.row.original)}
+          moreActions={moreActions(info.row.original)}
           deletingId={deletingId}
           onEdit={onEdit}
           onDuplicate={onDuplicate}

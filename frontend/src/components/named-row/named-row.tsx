@@ -6,10 +6,12 @@ import { SharedScopeTag } from "@/components/shared-scope-tag/shared-scope-tag";
 import { Rows } from "@/components/ui/rows/rows";
 import { IconButtonSkeleton, TextSkeleton, rowWidth } from "@/components/ui/skeleton/skeleton";
 
+const rowClass = "flex items-center justify-between gap-2 py-1.5";
+
 interface Props extends DeleteProps {
   name: string;
   scope: Scope;
-  householdName: string | undefined;
+  householdId: string | null;
   leading?: ReactNode;
   onEdit: () => void;
 }
@@ -17,19 +19,19 @@ interface Props extends DeleteProps {
 export function NamedRow({
   name,
   scope,
-  householdName,
+  householdId,
   leading,
   onEdit,
   ...deleteProps
 }: Readonly<Props>) {
   return (
     <RowTransition>
-      <li className="flex items-center justify-between gap-2 py-1.5">
+      <li className={rowClass}>
         <div className="flex min-w-0 items-center gap-3">
           {leading}
           <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
             <span className="min-w-0 text-sm font-medium wrap-break-word">{name}</span>
-            <SharedScopeTag scope={scope} householdName={householdName} />
+            <SharedScopeTag scope={scope} householdId={householdId} />
           </div>
         </div>
         <RowActions label={name} onEdit={onEdit} {...deleteProps} />
@@ -42,7 +44,7 @@ export function NamedRowsSkeleton({ rows = 5 }: Readonly<{ rows?: number }>) {
   return (
     <Rows data-slot="named-rows-skeleton" aria-hidden="true">
       {Array.from({ length: rows }, (_, index) => (
-        <li key={index} className="flex items-center justify-between gap-2 py-1.5">
+        <li key={index} className={rowClass}>
           <TextSkeleton size="sm" className="flex-1" width={rowWidth(index)} />
           <div className="flex items-center gap-1">
             <IconButtonSkeleton />

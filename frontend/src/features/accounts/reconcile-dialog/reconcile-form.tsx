@@ -17,7 +17,7 @@ import { useIsoDate, useMoney } from "@/hooks/use-formatters";
 import { useToday, useTodayDate } from "@/hooks/use-settings";
 import { monthBounds, parseIso, previousMonth, toIso } from "@/lib/calendar";
 import { toCents } from "@/lib/money";
-import { silent, silentQuery } from "@/lib/mutations";
+import { silentQuery } from "@/lib/query-client";
 import { INCOME_TONE } from "@/lib/tone";
 import { cn } from "@/lib/utils";
 import { isMoney, money, normalizeMoney, requiredValue } from "@/lib/validation";
@@ -154,9 +154,12 @@ export function ReconcileForm({ account, onClose }: Readonly<Props>) {
   const { t } = useTranslation();
   const today = useToday();
   const statementDate = monthBounds(previousMonth(useTodayDate())).dateTo;
-  const mutation = useRecordReconciliation(
-    silent({ onSuccess: onClose, meta: { success: t("accounts.reconcile.saved") } }),
-  );
+  const mutation = useRecordReconciliation({
+    mutation: {
+      onSuccess: onClose,
+      meta: { silent: true, success: t("accounts.reconcile.saved") },
+    },
+  });
 
   const schema = z.object({
     date: requiredValue(t).refine(

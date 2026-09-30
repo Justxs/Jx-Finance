@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { shellAria } from "@/components/form/field-shell/field-shell";
+import { shellAria } from "@/lib/field-aria";
 import type { TranslationKey } from "@/lib/i18n";
 import { type UploadProblem, validateUpload } from "@/lib/upload-file";
 

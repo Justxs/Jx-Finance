@@ -31,19 +31,19 @@ describe("checkSetupNeeded", () => {
   test("asks the API once and caches the answer", async () => {
     const gate = await loadGate();
     fetchMock.mockResolvedValue(json({ needsSetup: true }));
+    const client = queryClient();
 
-    await expect(gate.checkSetupNeeded()).resolves.toBe(true);
-    await expect(gate.checkSetupNeeded()).resolves.toBe(true);
-    expect(fetchMock).toHaveBeenCalledExactlyOnceWith("/api/setup/status", {
-      credentials: "include",
-    });
+    await expect(gate.checkSetupNeeded(client)).resolves.toBe(true);
+    await expect(gate.checkSetupNeeded(client)).resolves.toBe(true);
+    expect(requestedUrls()).toEqual(["/api/setup/status"]);
   });
 
   test("a known answer skips the request", async () => {
     const gate = await loadGate();
-    gate.setSetupNeeded(false);
+    const client = queryClient();
+    gate.setSetupNeeded(client, false);
 
-    await expect(gate.checkSetupNeeded()).resolves.toBe(false);
+    await expect(gate.checkSetupNeeded(client)).resolves.toBe(false);
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
@@ -51,9 +51,10 @@ describe("checkSetupNeeded", () => {
     const gate = await loadGate();
     fetchMock.mockRejectedValueOnce(new TypeError("offline"));
     fetchMock.mockResolvedValueOnce(json({ needsSetup: true }));
+    const client = queryClient();
 
-    await expect(gate.checkSetupNeeded()).resolves.toBe(false);
-    await expect(gate.checkSetupNeeded()).resolves.toBe(true);
+    await expect(gate.checkSetupNeeded(client)).resolves.toBe(false);
+    await expect(gate.checkSetupNeeded(client)).resolves.toBe(true);
   });
 });
 

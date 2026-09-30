@@ -5,7 +5,7 @@ import type { HouseholdResponse } from "@/api/generated/model";
 import { createHouseholdBodyNameMax } from "@/api/schemas/households/households.zod";
 import { useServerForm } from "@/components/form";
 import { FormError } from "@/components/form-error/form-error";
-import { silent, upsert } from "@/lib/mutations";
+import { silentMutation, upsert } from "@/lib/mutations";
 import { requiredText } from "@/lib/validation";
 
 interface FormValues {
@@ -25,8 +25,8 @@ export function CreateHouseholdForm({ initial, onClose }: Readonly<Props>) {
   });
 
   const { create, update, pending, error } = upsert(
-    useCreateHousehold(silent({ onSuccess: onClose })),
-    useUpdateHousehold(silent({ onSuccess: onClose })),
+    useCreateHousehold({ mutation: { ...silentMutation, onSuccess: onClose } }),
+    useUpdateHousehold({ mutation: { ...silentMutation, onSuccess: onClose } }),
   );
 
   const form = useServerForm({

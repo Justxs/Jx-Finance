@@ -5,7 +5,7 @@ import type {
   PagedResponseOfTransactionResponse,
   TransactionsSummaryResponse,
 } from "@/api/generated/model";
-import { setAuthenticated, setSetupNeeded } from "@/lib/auth-gate";
+import { setAuthenticated } from "@/lib/auth-gate";
 import { currentUser } from "@/storybook/fixtures";
 import { APP_TEST_TIMEOUT, appWait, mountApp, settled } from "@/test/app-router";
 import { settingsFixture } from "@/test/settings";
@@ -78,7 +78,6 @@ function requestsTo(pathname: string) {
 beforeEach(() => {
   requested = [];
   failing = new Set();
-  setSetupNeeded(false);
   setAuthenticated(true);
   vi.stubGlobal("fetch", vi.fn(respond));
 });

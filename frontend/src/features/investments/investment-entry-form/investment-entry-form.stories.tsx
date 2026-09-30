@@ -1,21 +1,25 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, fn, userEvent, waitFor, within } from "storybook/test";
+import {
+  getCreateInvestmentTransactionMockHandler,
+  getSecuritiesMockHandler,
+} from "@/api/generated/investments/investments.msw";
 import { withWidth } from "@/storybook/decorators";
-import { accounts, brokerAccount, securities, usStock, worldEtf } from "@/storybook/fixtures";
+import {
+  accounts,
+  brokerAccount,
+  investmentTransactions,
+  usStock,
+  worldEtf,
+} from "@/storybook/fixtures";
+import { pending, withHandlers } from "@/storybook/handlers";
 import { type Canvas, chooseOption, openedDialog } from "@/storybook/interactions";
 import { InvestmentEntryForm } from "./investment-entry-form";
 
 const meta = {
   title: "Features/Investments/InvestmentEntryForm",
   component: InvestmentEntryForm,
-  args: {
-    accounts,
-    securities,
-    accountId: brokerAccount.id,
-    pending: false,
-    onSubmit: fn(),
-    onCancel: fn(),
-  },
+  args: { accounts, accountId: brokerAccount.id, onClose: fn() },
   decorators: [withWidth("dialog")],
 } satisfies Meta<typeof InvestmentEntryForm>;
 
@@ -26,27 +30,46 @@ async function choose(canvas: Canvas, label: string | RegExp, option: string | R
   await chooseOption(await canvas.findByLabelText(label), option);
 }
 
+function ofType(label: string): Story {
+  return { play: ({ canvas }) => choose(canvas, "Entry type", label) };
+}
+
+async function fillBuy(canvas: Canvas) {
+  await choose(canvas, "Security", new RegExp(`^${worldEtf.symbol}`));
+  await userEvent.type(await canvas.findByLabelText("Quantity"), "10");
+  await userEvent.type(await canvas.findByLabelText("Price per share (EUR)"), "98,40");
+}
+
 export const Buy: Story = {};
 
-export const Sell: Story = { args: { initialType: "sell" } };
+export const Sell: Story = ofType("Sell");
 
-export const Dividend: Story = { args: { initialType: "dividend" } };
+export const Dividend: Story = ofType("Dividend");
 
-export const WithholdingTax: Story = { args: { initialType: "withholdingTax" } };
+export const WithholdingTax: Story = ofType("Withholding tax");
 
-export const Interest: Story = { args: { initialType: "interest" } };
+export const Interest: Story = ofType("Interest");
 
-export const Fee: Story = { args: { initialType: "fee" } };
+export const Fee: Story = ofType("Fee");
 
-export const Split: Story = { args: { initialType: "split" } };
+export const Split: Story = ofType("Split");
 
-export const Pending: Story = { args: { pending: true } };
+export const Pending: Story = {
+  parameters: withHandlers(getCreateInvestmentTransactionMockHandler(pending)),
+  play: async ({ canvas, args }) => {
+    await fillBuy(canvas);
+    const submit = canvas.getByRole("button", { name: "Add entry" });
+    await userEvent.click(submit);
+    await waitFor(() => expect(submit).toHaveAttribute("aria-busy", "true"));
+    await expect(args.onClose).not.toHaveBeenCalled();
+  },
+};
 
 export const Dark: Story = { globals: { theme: "dark" } };
 
 export const Lithuanian: Story = { globals: { locale: "lt" } };
 
-export const NoSecurities: Story = { args: { securities: [] } };
+export const NoSecurities: Story = { parameters: withHandlers(getSecuritiesMockHandler([])) };
 
 export const DefaultsToInvestmentAccount: Story = {
   args: { accountId: undefined },
@@ -74,23 +97,30 @@ export const SwitchingTypeChangesFields: Story = {
   },
 };
 
+const sent = fn();
+
 export const BuyShowsCashEffect: Story = {
+  parameters: withHandlers(
+    getCreateInvestmentTransactionMockHandler(async ({ request }) => {
+      sent(await request.json());
+      return investmentTransactions[0]!;
+    }),
+  ),
   play: async ({ canvas, args }) => {
-    await choose(canvas, "Security", new RegExp(`^${worldEtf.symbol}`));
-    await userEvent.type(await canvas.findByLabelText("Quantity"), "10");
-    await userEvent.type(await canvas.findByLabelText("Price per share (EUR)"), "98,40");
+    await fillBuy(canvas);
     await userEvent.type(canvas.getByLabelText("Fee (optional)"), "1,25");
     await expect(await canvas.findByText("−€985.25")).toBeInTheDocument();
 
     await userEvent.click(canvas.getByRole("button", { name: "Add entry" }));
-    await expect(args.onSubmit).toHaveBeenCalledWith(
+    await waitFor(() => expect(args.onClose).toHaveBeenCalled());
+    await expect(sent).toHaveBeenCalledWith(
       expect.objectContaining({
         type: "buy",
         accountId: brokerAccount.id,
         securityId: worldEtf.id,
         quantity: "10",
-        price: "98,40",
-        fee: "1,25",
+        price: "98.40",
+        fee: "1.25",
         amount: null,
       }),
     );
@@ -98,8 +128,8 @@ export const BuyShowsCashEffect: Story = {
 };
 
 export const DividendUsesSecurityCurrency: Story = {
-  args: { initialType: "dividend" },
   play: async ({ canvas }) => {
+    await choose(canvas, "Entry type", "Dividend");
     await choose(canvas, "Security", new RegExp(`^${usStock.symbol}`));
     await userEvent.type(await canvas.findByLabelText("Amount (USD)"), "9.96");
     await expect(await canvas.findByText("+$9.96")).toBeInTheDocument();
@@ -109,8 +139,8 @@ export const DividendUsesSecurityCurrency: Story = {
 export const ValidationErrors: Story = {
   play: async ({ canvas, args }) => {
     await userEvent.click(await canvas.findByRole("button", { name: "Add entry" }));
-    await expect(args.onSubmit).not.toHaveBeenCalled();
     await expect(await canvas.findByText("Choose a security.")).toBeInTheDocument();
+    await expect(args.onClose).not.toHaveBeenCalled();
   },
 };
 

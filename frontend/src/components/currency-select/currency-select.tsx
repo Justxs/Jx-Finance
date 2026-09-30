@@ -2,7 +2,8 @@ import type { FocusEventHandler } from "react";
 import { useTranslation } from "react-i18next";
 import type { Currency } from "@/api/generated/model";
 import { SelectField } from "@/components/select-field/select-field";
-import { useCurrencyName, useUsableCurrencies } from "@/hooks/use-formatters";
+import { useUsableCurrencies } from "@/hooks/use-currencies";
+import { useCurrencyName } from "@/hooks/use-formatters";
 import { ALL_CURRENCIES } from "@/lib/currency";
 
 interface Props {

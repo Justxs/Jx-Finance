@@ -2,7 +2,7 @@ import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, expect, test, vi } from "vitest";
 import type { DashboardLayoutResponse, FeatureFlags } from "@/api/generated/model";
 import { DashboardLayoutResponse as layoutSchema } from "@/api/schemas/dashboard/dashboard.zod";
-import { setAuthenticated, setSetupNeeded } from "@/lib/auth-gate";
+import { setAuthenticated } from "@/lib/auth-gate";
 import { memberUser } from "@/storybook/fixtures";
 import { APP_TEST_TIMEOUT, appWait, mountApp, settled } from "@/test/app-router";
 import { settingsFixture } from "@/test/settings";
@@ -86,7 +86,6 @@ beforeEach(() => {
     netWorth: true,
     reports: true,
   };
-  setSetupNeeded(false);
   setAuthenticated(true);
   vi.stubGlobal("fetch", vi.fn(respond));
 });

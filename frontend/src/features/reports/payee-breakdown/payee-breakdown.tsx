@@ -17,12 +17,11 @@ export function PayeeBreakdown({ items, dateFrom, dateTo }: Readonly<Props>) {
   const { t } = useTranslation();
   const [showAll, setShowAll] = useState(false);
 
-  const compared = items.some((item) => item.comparisonAmount != null);
   const rows = items.filter((item) => breakdownWeight(item) > 0);
   const shown = showAll ? rows : rows.slice(0, SHOWN_ROWS);
 
   if (rows.length === 0) {
-    return <EmptyText>{t("tags.noSpending")}</EmptyText>;
+    return <EmptyText>{t("reports.noPayeeSpending")}</EmptyText>;
   }
 
   return (
@@ -32,7 +31,7 @@ export function PayeeBreakdown({ items, dateFrom, dateTo }: Readonly<Props>) {
           key: row.payeeKey ?? "",
           name: row.payeeKey ? (row.label ?? row.payeeKey) : t("reports.noDescription"),
           amount: Number(row.amount),
-          earlier: compared ? Number(row.comparisonAmount ?? 0) : null,
+          comparisonAmount: row.comparisonAmount,
           filter: row.payeeKey ? { payee: row.payeeKey } : undefined,
           muted: !row.payeeKey,
         }))}

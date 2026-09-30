@@ -1,7 +1,7 @@
 import type { ComponentProps } from "react";
 import type { Currency } from "@/api/generated/model";
-import { defineAppFieldGroup } from "../app-form";
-import type { MoneyAmountField } from "../money-amount-field/money-amount-field";
+import { defineAppFieldGroup } from "@/components/form/app-form";
+import type { MoneyAmountField } from "@/components/form/money-amount-field/money-amount-field";
 
 const moneyPairFieldGroup = defineAppFieldGroup(({ strict }) => ({
   amount: strict<string>(),

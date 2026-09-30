@@ -14,8 +14,8 @@ import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { Rows } from "@/components/ui/rows/rows";
 import { TextSkeleton } from "@/components/ui/skeleton/skeleton";
 import { Tag } from "@/components/ui/tag/tag";
+import { SettlementForm } from "@/features/households/settlement-dialog/settlement-dialog";
 import { useMoney } from "@/hooks/use-formatters";
-import { SettlementForm } from "../settlement-dialog/settlement-dialog";
 
 interface Props {
   household: HouseholdResponse;

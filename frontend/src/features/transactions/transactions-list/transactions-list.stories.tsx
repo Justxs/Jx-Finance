@@ -32,6 +32,8 @@ const meta = {
     onRefund: fn(),
     onDelete: fn(),
     deletingId: null,
+    moreActions: () => [],
+    onUpdateSplit: fn(),
   },
   parameters: { layout: "fullscreen" },
   decorators: [withWidth("mx-auto w-full max-w-[23.4375rem] px-4 py-4")],

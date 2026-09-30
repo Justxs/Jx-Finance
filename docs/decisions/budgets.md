@@ -10,6 +10,9 @@ Weekly, monthly, quarterly or yearly limit per expense category, one budget per 
 
 Newest first. Each entry is a choice between real alternatives: what was chosen, what was rejected, and why.
 
+- **2026-09-30.** The add form refills the limit from a listener on the limit field that watches the category and the period, and skips the refill once the field is dirty; this replaces the 2026-09-29 comparison with the previous suggestion
+  - Rejected: Keeping the comparison, which needed the cached suggestion of the previous category and period, both previous values from the select handlers and a period type guard; `form.getFieldMeta`, which TanStack Form 2 keeps off the typed form API
+  - Why: A field listener receives its own field, so the dirty flag the earlier entry could not reach from the select handlers is right there, and the refill already opts out of marking the field dirty. Only typing, pasting or a change event on the field sets the flag, so a typed limit wins even when it happens to equal the suggestion, and the form no longer reads the query cache
 - **2026-09-29.** Open questions of the limits-from-history plan, decided while the owner was away and to be reviewed: steady candidates cannot be dismissed, and the steady thresholds stay at a median of at least 20 reporting units and a spread of at most 25% of the median until the daily-use trial says otherwise
   - Rejected: Stored per-user dismissals like `SubscriptionDismissals`; other thresholds picked without real data
   - Why: This was the plan's recommendation and the conservative choice: it adds no table, no migration and no endpoint, a category already leaves the list when it gets a monthly budget or stops being steady, and five rows at the bottom of the page are quiet. The thresholds are guesses either way, and changing a constant in `BudgetHistory` later costs nothing, while a dismissal table would have to be migrated away if it proved unnecessary

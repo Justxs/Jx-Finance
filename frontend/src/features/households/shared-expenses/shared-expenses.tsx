@@ -10,7 +10,7 @@ import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog/confirm-
 import { PagedRows } from "@/components/paged-rows/paged-rows";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { RecordRow, RecordRowsSkeleton } from "@/components/record-row/record-row";
-import { type DeleteMutation, useConfirmedDelete } from "@/hooks/use-confirmed-delete";
+import { childDelete, useConfirmedDelete } from "@/hooks/use-confirmed-delete";
 import { EMPTY_VALUE, useIsoDate, useMoney } from "@/hooks/use-formatters";
 import { usePagedItems, usePagedList } from "@/hooks/use-paged-list";
 import { metaLine } from "@/lib/utils";
@@ -19,24 +19,6 @@ const PAGE_SIZE = 10;
 
 interface Props {
   householdId: string;
-}
-
-interface RowMutation<TVariables> {
-  mutate: (variables: TVariables, options?: { onSuccess?: () => void }) => void;
-  isPending: boolean;
-  variables?: TVariables;
-}
-
-function byRowId<TVariables>(
-  mutation: RowMutation<TVariables>,
-  variablesOf: (rowId: string) => TVariables,
-  rowIdOf: (variables: TVariables) => string,
-): DeleteMutation {
-  return {
-    mutate: (variables, options) => mutation.mutate(variablesOf(variables.id), options),
-    isPending: mutation.isPending,
-    variables: mutation.variables === undefined ? undefined : { id: rowIdOf(mutation.variables) },
-  };
 }
 
 function SplitList({ householdId }: Readonly<Props>) {
@@ -52,7 +34,7 @@ function SplitList({ householdId }: Readonly<Props>) {
   const { items, pages, range } = usePagedItems(paging, data, PAGE_SIZE);
   const removeSplit = useDeleteSharedExpense();
   const remove = useConfirmedDelete(
-    byRowId(
+    childDelete(
       removeSplit,
       (expenseId) => ({ id: householdId, expenseId }),
       (variables) => variables.expenseId,
@@ -108,7 +90,7 @@ function PaymentList({ householdId }: Readonly<Props>) {
   const { items, pages, range } = usePagedItems(paging, data, PAGE_SIZE);
   const removePayment = useDeleteSettlement();
   const remove = useConfirmedDelete(
-    byRowId(
+    childDelete(
       removePayment,
       (settlementId) => ({ id: householdId, settlementId }),
       (variables) => variables.settlementId,

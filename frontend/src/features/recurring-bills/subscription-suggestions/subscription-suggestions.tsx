@@ -8,8 +8,8 @@ import type {
 } from "@/api/generated/model";
 import { ListSection } from "@/components/list-section/list-section";
 import { EditModal } from "@/components/modal";
-import { silent } from "@/lib/mutations";
-import { RecurringBillForm } from "../recurring-bill-form/recurring-bill-form";
+import { RecurringBillForm } from "@/features/recurring-bills/recurring-bill-form/recurring-bill-form";
+import { nameById } from "@/lib/options";
 import { SubscriptionSuggestionRow, suggestedName } from "./subscription-suggestion-row";
 
 function candidateKey(accountId: string, description: string) {
@@ -31,12 +31,14 @@ export function SubscriptionSuggestions({ candidates, accounts, categories }: Re
   const { t } = useTranslation();
   const [creating, setCreating] = useState<Selected | null>(null);
 
-  const dismiss = useDismissSubscriptionCandidate(
-    silent({ meta: { success: t("subscriptions.dismissed") } }),
-  );
+  const dismiss = useDismissSubscriptionCandidate({
+    mutation: { meta: { silent: true, success: t("subscriptions.dismissed") } },
+  });
 
   const pending = dismiss.isPending ? dismiss.variables?.data : undefined;
   const pendingKey = pending ? candidateKey(pending.accountId, pending.description) : null;
+  const accountNames = nameById(accounts);
+  const categoryNames = nameById(categories);
 
   return (
     <>
@@ -52,8 +54,8 @@ export function SubscriptionSuggestions({ candidates, accounts, categories }: Re
             <SubscriptionSuggestionRow
               key={key}
               candidate={candidate}
-              accounts={accounts}
-              categories={categories}
+              accountNames={accountNames}
+              categoryNames={categoryNames}
               onCreate={() => setCreating({ id: key, candidate })}
               onDismiss={() =>
                 dismiss.mutate({

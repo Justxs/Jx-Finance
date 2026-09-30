@@ -49,7 +49,9 @@ export const ServerError: Story = { parameters: { msw: { handlers: errorHandlers
 export const FilledWithIcon: Story = {
   play: async ({ canvas }) => {
     await userEvent.type(await canvas.findByRole("textbox"), "Pets and veterinary care");
-    await userEvent.click(canvas.getByRole("button", { name: "Coffee" }));
+    await userEvent.click(canvas.getByRole("radio", { name: "Coffee" }));
+    await expect(canvas.getByRole("radiogroup", { name: "Icon" })).toBeVisible();
+    await expect(canvas.getByRole("radio", { name: "Coffee" })).toBeChecked();
   },
 };
 

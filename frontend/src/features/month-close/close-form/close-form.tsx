@@ -9,13 +9,17 @@ import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog/confirm-
 import { FormError } from "@/components/form-error/form-error";
 import { Button } from "@/components/ui/button/button";
 import { Section, SectionTitle } from "@/components/ui/section/section";
+import {
+  CloseChecklist,
+  attentionCount,
+  openItemCount,
+} from "@/features/month-close/close-checklist/close-checklist";
+import { MonthNoteDialog } from "@/features/month-close/month-note-dialog/month-note-dialog";
+import { isClosedStatus, statusMarkers } from "@/features/month-close/status-markers";
 import { useDateTime, useMonthName } from "@/hooks/use-formatters";
-import { silent } from "@/lib/mutations";
+import { silentMutation } from "@/lib/mutations";
+import { EXPENSE_TONE } from "@/lib/tone";
 import { cn } from "@/lib/utils";
-import { CloseChecklist, attentionCount, openItemCount } from "../close-checklist/close-checklist";
-import { isClosedStatus } from "../month-key";
-import { MonthNoteDialog } from "../month-note-dialog/month-note-dialog";
-import { statusMarkers } from "../status-markers";
 import { useMonthCloser } from "./use-month-closer";
 
 interface Props {
@@ -36,19 +40,21 @@ export function CloseForm({ month, review }: Readonly<Props>) {
   const marker = statusMarkers[review.status];
 
   const closer = useMonthCloser(month, review);
-  const noteMutation = useUpdateMonthNote(
-    silent({
+  const noteMutation = useUpdateMonthNote({
+    mutation: {
+      ...silentMutation,
       onSuccess: () => {
         toast.success(t("monthClose.form.noteSaved"));
         setEditing(null);
       },
-    }),
-  );
-  const reopenMutation = useReopenMonth(
-    silent({
+    },
+  });
+  const reopenMutation = useReopenMonth({
+    mutation: {
+      ...silentMutation,
       onSuccess: () => toast.success(t("monthClose.form.reopened", { month: monthName })),
-    }),
-  );
+    },
+  });
 
   const summary = {
     notEnded: t("monthClose.panel.notEnded"),
@@ -86,7 +92,7 @@ export function CloseForm({ month, review }: Readonly<Props>) {
                 className={cn(
                   "mt-0.5 text-sm",
                   review.status === "closedChanged"
-                    ? "font-medium text-expense"
+                    ? ["font-medium", EXPENSE_TONE]
                     : "text-muted-foreground",
                 )}
               >
@@ -155,9 +161,11 @@ export function CloseForm({ month, review }: Readonly<Props>) {
         }
         note={review.note ?? ""}
         submitLabel={closeLabel}
-        pending={closer.pending}
+        pending={closer.isPending}
         error={closer.error}
-        onSubmit={(note) => closer.close(note).then(() => setEditing(null))}
+        onSubmit={(note) =>
+          closer.mutateAsync({ month, data: { note } }).then(() => setEditing(null))
+        }
         onClose={stopEditing}
       />
       <MonthNoteDialog

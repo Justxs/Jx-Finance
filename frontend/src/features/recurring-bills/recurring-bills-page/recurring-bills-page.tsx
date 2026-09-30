@@ -19,29 +19,36 @@ import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { Rows } from "@/components/ui/rows/rows";
 import { Section } from "@/components/ui/section/section";
 import { CashFlowForecast } from "@/features/accounts/cash-flow-forecast/cash-flow-forecast";
-import { useConfirmedDelete } from "@/hooks/use-confirmed-delete";
+import { billUrgencies, groupBills } from "@/features/recurring-bills/bill-groups";
+import { RecurringBillConfirmForm } from "@/features/recurring-bills/recurring-bill-confirm-form/recurring-bill-confirm-form";
+import { RecurringBillForm } from "@/features/recurring-bills/recurring-bill-form/recurring-bill-form";
+import { RecurringBillRow } from "@/features/recurring-bills/recurring-bill-row/recurring-bill-row";
+import { SubscriptionSuggestions } from "@/features/recurring-bills/subscription-suggestions/subscription-suggestions";
+import { useEditableList } from "@/hooks/use-editable-list";
 import { useToday } from "@/hooks/use-settings";
 import { notify, pendingId } from "@/lib/mutations";
 import { optimisticRemoval } from "@/lib/optimistic";
-import { billUrgencies, groupBills } from "../bill-groups";
-import { RecurringBillForm } from "../recurring-bill-form/recurring-bill-form";
-import { RecurringBillConfirmForm, RecurringBillRow } from "../recurring-bill-row";
-import { SubscriptionSuggestions } from "../subscription-suggestions/subscription-suggestions";
+import { byId, nameById } from "@/lib/options";
 
 export function RecurringBillsPage() {
   const { t } = useTranslation();
-  const [editing, setEditing] = useState<RecurringBillResponse | null>(null);
   const [confirming, setConfirming] = useState<RecurringBillResponse | null>(null);
 
   const accounts = useAccountsSuspense();
   const categories = useCategoriesSuspense();
-  const bills = useRecurringBillsSuspense();
   const candidates = useSubscriptionCandidatesSuspense();
 
-  const deleteMutation = useDeleteRecurringBill({
-    mutation: optimisticRemoval<RecurringBillResponse>(getRecurringBillsQueryKey()),
+  const bills = useEditableList(
+    useRecurringBillsSuspense().data,
+    useDeleteRecurringBill({
+      mutation: optimisticRemoval<RecurringBillResponse>(getRecurringBillsQueryKey()),
+    }),
+    (bill) => bill.name,
+    "recurringBill",
+  );
+  const updateMutation = useUpdateRecurringBill({
+    mutation: notify(t("recurringBills.expectedUpdated")),
   });
-  const updateMutation = useUpdateRecurringBill(notify(t("recurringBills.expectedUpdated")));
 
   function updateExpected(bill: RecurringBillResponse, amount: string) {
     updateMutation.mutate({
@@ -66,9 +73,10 @@ export function RecurringBillsPage() {
 
   const accountList = accounts.data;
   const categoryList = categories.data;
-  const billList = useDeferredValue(bills.data);
+  const accountById = byId(accountList);
+  const categoryNames = nameById(categoryList);
+  const billList = bills.list;
   const candidateList = useDeferredValue(candidates.data);
-  const remove = useConfirmedDelete(deleteMutation, billList, (bill) => bill.name, "recurringBill");
   const today = useToday();
   const { groups, inactive } = groupBills(billList, today);
 
@@ -77,13 +85,12 @@ export function RecurringBillsPage() {
       <RecurringBillRow
         key={bill.id}
         bill={bill}
-        accounts={accountList}
-        categories={categoryList}
-        onEdit={() => setEditing(bill)}
+        accountById={accountById}
+        categoryNames={categoryNames}
         onConfirm={() => setConfirming(bill)}
         onUpdateAmount={(amount) => updateExpected(bill, amount)}
         updatePending={pendingId(updateMutation) === bill.id}
-        {...remove.deleteProps(bill.id)}
+        {...bills.rowProps(bill)}
       />
     );
   }
@@ -127,14 +134,13 @@ export function RecurringBillsPage() {
         categories={categoryList}
       />
       <EditModal
-        item={editing}
-        onClose={() => setEditing(null)}
+        {...bills.editProps}
         title={t("recurringBills.editTitle")}
         description={(bill) => bill.name}
       >
         {(bill, close) => (
           <RecurringBillForm
-            bill={bill}
+            initial={bill}
             accounts={accountList}
             categories={categoryList}
             onClose={close}
@@ -150,7 +156,7 @@ export function RecurringBillsPage() {
           <RecurringBillConfirmForm bill={bill} accounts={accountList} onClose={close} />
         )}
       </EditModal>
-      <ConfirmDeleteDialog {...remove.dialogProps} />
+      <ConfirmDeleteDialog {...bills.dialogProps} />
     </div>
   );
 }

@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, fireEvent } from "storybook/test";
 import type { Currency } from "@/api/generated/model";
-import { useAppForm } from "../app-form";
+import { useAppForm } from "@/components/form/app-form";
 import { MoneyPairField } from "./money-pair-field";
 
 interface DemoProps {

@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, screen, userEvent, within } from "storybook/test";
+import { expect, screen, userEvent, waitFor, within } from "storybook/test";
 import {
   getRemoveMemberMockHandler,
   getUpdateHouseholdMockHandler,
@@ -76,6 +76,20 @@ export const DeleteOffersUndo: Story = {
     await userEvent.click(undo);
 
     await expect(await screen.findByText(/brought back|įrašas grąžintas/i)).toBeInTheDocument();
+  },
+};
+
+export const RemoveMemberAsksFirst: Story = {
+  play: async ({ canvas }) => {
+    const name = householdMembers[1]!.displayName;
+    await userEvent.click(canvas.getByRole("button", { name: `Delete: ${name}` }));
+
+    const dialog = await openedDialog("alertdialog");
+    await expect(within(dialog).getByText("Remove this member?")).toBeVisible();
+    await expect(within(dialog).getByText(name)).toBeVisible();
+    await userEvent.click(within(dialog).getByRole("button", { name: "Remove" }));
+
+    await waitFor(() => expect(screen.queryByRole("alertdialog")).toBeNull());
   },
 };
 

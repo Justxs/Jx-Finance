@@ -5,10 +5,14 @@ import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { SelectField } from "@/components/select-field/select-field";
 import { Section, SectionHeader } from "@/components/ui/section/section";
 import { StaleRegion } from "@/components/ui/stale-region/stale-region";
+import {
+  VALUE_RANGES,
+  type ValueRange,
+  valueHistoryParams,
+} from "@/features/investments/investment-queries";
 import { useDeferredParams } from "@/hooks/use-deferred-params";
 import { useTodayDate } from "@/hooks/use-settings";
 import { optionsOf } from "@/lib/options";
-import { VALUE_RANGES, type ValueRange, valueHistoryParams } from "../investment-queries";
 import { ValueChart } from "./index";
 
 interface Props {

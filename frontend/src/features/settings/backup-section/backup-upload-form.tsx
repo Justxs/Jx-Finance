@@ -6,7 +6,7 @@ import { FieldShell } from "@/components/form/field-shell/field-shell";
 import { Button } from "@/components/ui/button/button";
 import { FileInput } from "@/components/ui/file-input/file-input";
 import { useFileField } from "@/hooks/use-file-field";
-import { silent } from "@/lib/mutations";
+import { silentMutation } from "@/lib/mutations";
 
 const MAX_FILE_BYTES = 2 * 1024 * 1024 * 1024;
 
@@ -20,14 +20,15 @@ export function BackupUploadForm() {
   const { t } = useTranslation();
   const fileField = useFileField("backup-file", MAX_FILE_BYTES, uploadProblemKeys);
 
-  const uploadMutation = useUploadBackup(
-    silent({
+  const uploadMutation = useUploadBackup({
+    mutation: {
+      ...silentMutation,
       onSuccess: () => {
         toast.success(t("backup.uploaded"));
         fileField.reset();
       },
-    }),
-  );
+    },
+  });
 
   function handleUpload() {
     const file = fileField.take();

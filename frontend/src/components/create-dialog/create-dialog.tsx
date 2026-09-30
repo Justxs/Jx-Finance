@@ -1,4 +1,4 @@
-import { Plus } from "lucide-react";
+import { type LucideIcon, Plus } from "lucide-react";
 import { type ReactNode, useState } from "react";
 import { Modal } from "@/components/modal";
 import { Button } from "@/components/ui/button/button";
@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button/button";
 interface Props {
   label: string;
   title: string;
+  icon?: LucideIcon;
   className?: string;
   secondary?: boolean;
   children: (close: () => void) => ReactNode;
@@ -14,6 +15,7 @@ interface Props {
 export function CreateDialog({
   label,
   title,
+  icon: Icon = Plus,
   className,
   secondary = false,
   children,
@@ -31,7 +33,7 @@ export function CreateDialog({
         size={secondary ? "sm" : "default"}
         onClick={() => setOpen(true)}
       >
-        <Plus />
+        <Icon />
         {label}
       </Button>
       <Modal open={open} onOpenChange={setOpen} title={title} className={className}>

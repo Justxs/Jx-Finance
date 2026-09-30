@@ -3,7 +3,6 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { useRestoreDeleted } from "@/api/generated";
 import type { TrashKind } from "@/api/generated/model";
-import type { DeleteProps } from "@/components/row-actions/row-actions";
 import { pendingId } from "@/lib/mutations";
 
 interface DeleteOptions {
@@ -14,6 +13,24 @@ export interface DeleteMutation {
   mutate: (variables: { id: string }, options?: DeleteOptions) => void;
   isPending: boolean;
   variables?: { id: string };
+}
+
+interface ChildMutation<TVariables> {
+  mutate: (variables: TVariables, options?: DeleteOptions) => void;
+  isPending: boolean;
+  variables?: TVariables;
+}
+
+export function childDelete<TVariables>(
+  mutation: ChildMutation<TVariables>,
+  variablesOf: (rowId: string) => TVariables,
+  rowIdOf: (variables: TVariables) => string,
+): DeleteMutation {
+  return {
+    mutate: (variables, options) => mutation.mutate(variablesOf(variables.id), options),
+    isPending: mutation.isPending,
+    variables: mutation.variables === undefined ? undefined : { id: rowIdOf(mutation.variables) },
+  };
 }
 
 export function useConfirmedDelete<T extends { id: string }>(
@@ -55,7 +72,7 @@ export function useConfirmedDelete<T extends { id: string }>(
     request: (id: string) => setTarget(id),
     pendingId: pending,
     busy: mutation.isPending,
-    deleteProps: (id: string): DeleteProps => ({
+    deleteProps: (id: string) => ({
       onDelete: () => setTarget(id),
       deletePending: pending === id,
       deleteDisabled: mutation.isPending,

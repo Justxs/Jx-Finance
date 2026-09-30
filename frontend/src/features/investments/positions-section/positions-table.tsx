@@ -11,17 +11,18 @@ import {
   TableRow,
   ScrollRegion,
 } from "@/components/ui/table/table";
+import { PriceWithDate } from "@/features/investments/security-identity/price-with-date";
+import { SecurityIdentity } from "@/features/investments/security-identity/security-identity";
 import {
   EMPTY_VALUE,
   signed,
   useMoney,
-  useNumberFormat,
   usePriceFormat,
   useQuantityFormat,
+  useRatePercent,
 } from "@/hooks/use-formatters";
 import { gainTone } from "@/lib/tone";
 import { cn, metaLine } from "@/lib/utils";
-import { PriceWithDate, SecurityIdentity } from "../security-identity";
 
 interface Props {
   label: string;
@@ -40,6 +41,16 @@ function rowKey(holding: HoldingResponse) {
   return `${holding.accountId}:${holding.security.id}`;
 }
 
+function realized(holding: HoldingResponse) {
+  return (
+    <DualCurrencyAmount
+      value={Number(holding.realizedGain)}
+      currency={holding.security.currency}
+      signed
+    />
+  );
+}
+
 export function PositionsTable({
   label,
   holdings,
@@ -53,11 +64,7 @@ export function PositionsTable({
   const money = useMoney();
   const formatPrice = usePriceFormat();
   const quantityFormat = useQuantityFormat();
-  const percent = useNumberFormat({
-    style: "percent",
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
+  const formatRate = useRatePercent();
 
   function accountName(holding: HoldingResponse) {
     return sharedSecurityIds.has(holding.security.id)
@@ -121,21 +128,9 @@ export function PositionsTable({
         {money.formatSigned(gain, "auto", holding.security.currency)}
         {holding.unrealizedPercent === null ? null : (
           <span className="block text-xs">
-            {signed(Number(holding.unrealizedPercent), (magnitude) =>
-              percent.format(magnitude / 100),
-            )}
+            {signed(Number(holding.unrealizedPercent), formatRate)}
           </span>
         )}
-      </span>
-    );
-  }
-
-  function signedGain(value: string, currency: Currency) {
-    const gain = Number(value);
-
-    return (
-      <span className={cn("whitespace-nowrap tabular-nums", gainTone(gain))}>
-        {money.formatSigned(gain, "auto", currency)}
       </span>
     );
   }
@@ -197,9 +192,7 @@ export function PositionsTable({
                       <TableCell numeric>{unrealized(holding)}</TableCell>
                     </>
                   )}
-                  <TableCell numeric>
-                    {signedGain(holding.realizedGain, security.currency)}
-                  </TableCell>
+                  <TableCell numeric>{realized(holding)}</TableCell>
                   <TableCell numeric>
                     {money.format(Number(holding.dividends), security.currency)}
                   </TableCell>
@@ -223,9 +216,7 @@ export function PositionsTable({
                   <SecurityIdentity security={security} meta={secondary} />
                 </div>
                 <div className="shrink-0 text-right">
-                  {closed
-                    ? signedGain(holding.realizedGain, security.currency)
-                    : marketValue(holding)}
+                  {closed ? realized(holding) : marketValue(holding)}
                 </div>
               </div>
               {closed ? (
@@ -252,9 +243,7 @@ export function PositionsTable({
                     <dt className="text-muted-foreground">
                       {t("investments.holdings.realizedGain")}
                     </dt>
-                    <dd className="text-right">
-                      {signedGain(holding.realizedGain, security.currency)}
-                    </dd>
+                    <dd className="text-right">{realized(holding)}</dd>
                     <dt className="text-muted-foreground">{t("investments.holdings.dividends")}</dt>
                     <dd className="text-right whitespace-nowrap tabular-nums">
                       {money.format(Number(holding.dividends), security.currency)}

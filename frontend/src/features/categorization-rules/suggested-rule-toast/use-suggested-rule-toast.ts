@@ -7,10 +7,11 @@ import {
   useDismissSuggestedRule,
 } from "@/api/generated";
 import type { CategoryResponse } from "@/api/generated/model";
+import { ruleFromSuggestion } from "@/features/categorization-rules/rule-form/rule-summary";
 import { useFeature } from "@/hooks/use-settings";
 import { notify } from "@/lib/mutations";
 import { nameById } from "@/lib/options";
-import { ruleFromSuggestion } from "../suggested-rules/suggested-rules";
+import { silentQuery } from "@/lib/query-client";
 
 const QUESTION_DURATION = 12_000;
 
@@ -18,7 +19,9 @@ export function useSuggestedRuleToast(categories: readonly CategoryResponse[]) {
   const { t } = useTranslation();
   const enabled = useFeature("categorizationRules");
   const queryClient = useQueryClient();
-  const create = useCreateCategorizationRule(notify(t("categorizationRules.suggested.created")));
+  const create = useCreateCategorizationRule({
+    mutation: notify(t("categorizationRules.suggested.created")),
+  });
   const dismiss = useDismissSuggestedRule();
   const categoryNames = nameById(categories);
 
@@ -29,7 +32,7 @@ export function useSuggestedRuleToast(categories: readonly CategoryResponse[]) {
     const [suggestion] = await queryClient
       .query({
         ...getSuggestedRulesSuspenseQueryOptions({ transactionId }),
-        meta: { silent: true },
+        ...silentQuery,
       })
       .catch(() => []);
     if (!suggestion) {

@@ -1,5 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { ScanText } from "lucide-react";
 import { useState } from "react";
+import { expect, fireEvent } from "storybook/test";
 import { withWidth } from "@/storybook/decorators";
 import { FileInput } from "./file-input";
 
@@ -42,7 +44,26 @@ export const LongPlaceholder: Story = {
   },
 };
 
-export const Compact: Story = { args: { className: "h-16" } };
+export const Compact: Story = { args: { className: "min-h-16" } };
+
+export const ButtonVariant: Story = {
+  args: { variant: "button", icon: ScanText, placeholder: "Fill from receipt" },
+};
+
+export const DisabledButton: Story = {
+  args: { variant: "button", icon: ScanText, placeholder: "Fill from receipt", disabled: true },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByLabelText("Fill from receipt")).toBeDisabled();
+  },
+};
+
+export const DraggingOver: Story = {
+  args: { dropPlaceholder: "Drop to attach" },
+  play: async ({ canvas }) => {
+    await fireEvent.dragEnter(canvas.getByLabelText("Choose a Swedbank CSV export"));
+    await expect(canvas.getByText("Drop to attach")).toBeVisible();
+  },
+};
 
 export const NarrowContainer: Story = {
   decorators: [withWidth("w-40")],

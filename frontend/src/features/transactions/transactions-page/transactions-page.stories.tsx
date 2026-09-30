@@ -1,12 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, fireEvent, screen, userEvent, waitFor, within } from "storybook/test";
 import { getCreateTransactionMockHandler } from "@/api/generated/transactions/transactions.msw";
-import {
-  readSavedFilters,
-  readTransactionTemplates,
-  saveFilter,
-  saveTransactionTemplate,
-} from "@/stores/transaction-views";
+import { savedFilters, transactionTemplates } from "@/features/transactions/transaction-views";
 import { withPageFrame } from "@/storybook/decorators";
 import { ids, splitTransaction } from "@/storybook/fixtures";
 import {
@@ -32,6 +27,15 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 
 export const SecondPage: Story = { parameters: { route: "/transactions?page=2" } };
+
+export const PastTheLastPage: Story = {
+  parameters: { route: "/transactions?page=999" },
+  play: async ({ canvas }) => {
+    await expect(await canvas.findAllByRole("button", { name: /^Actions: / })).not.toHaveLength(0);
+    await expect(canvas.getByRole("button", { name: "Next" })).toBeDisabled();
+    await expect(canvas.getByRole("button", { name: "Previous" })).toBeEnabled();
+  },
+};
 
 export const FilteredExpenses: Story = {
   parameters: { route: "/transactions?type=expense&sort=amount&direction=desc" },
@@ -80,8 +84,8 @@ export const SavingAndApplyingAFilter: Story = {
       "Lidl expenses",
     );
     await userEvent.click(screen.getByRole("button", { name: "Save filter" }));
-    await waitFor(() => expect(readSavedFilters()).toHaveLength(1));
-    await expect(readSavedFilters()[0]?.filter).toEqual(
+    await waitFor(() => expect(savedFilters.read()).toHaveLength(1));
+    await expect(savedFilters.read()[0]?.filter).toEqual(
       expect.objectContaining({ search: "lidl", type: "expense" }),
     );
 
@@ -118,7 +122,9 @@ export const RemovingOneActiveFilter: Story = {
 
 export const SavedFilterNamingADeletedCategory: Story = {
   beforeEach: () => {
-    saveFilter("Renovation", { categoryId: "44444444-0000-4000-8000-000000000099" });
+    savedFilters.save("Renovation", {
+      filter: { categoryId: "44444444-0000-4000-8000-000000000099" },
+    });
   },
   play: async ({ canvas }) => {
     await userEvent.click(await canvas.findByRole("button", { name: /^Saved filters/ }));
@@ -149,15 +155,17 @@ export const DuplicatingASplitRow: Story = {
 
 export const CreatingFromATemplate: Story = {
   beforeEach: () => {
-    saveTransactionTemplate("Weekly shop", {
-      accountId: ids.accounts.shared,
-      categoryId: ids.categories.food,
-      type: "expense",
-      amount: "42.18",
-      currency: "eur",
-      description: "Maxima",
-      tagIds: [ids.tags.car],
-      lines: null,
+    transactionTemplates.save("Weekly shop", {
+      values: {
+        accountId: ids.accounts.shared,
+        categoryId: ids.categories.food,
+        type: "expense",
+        amount: "42.18",
+        currency: "eur",
+        description: "Maxima",
+        tagIds: [ids.tags.car],
+        lines: null,
+      },
     });
   },
   play: async ({ canvas }) => {
@@ -184,23 +192,25 @@ export const SavingATemplateFromTheForm: Story = {
     await userEvent.click(dialog.getByRole("button", { name: "Save template" }));
 
     await waitFor(() =>
-      expect(readTransactionTemplates().map((row) => row.name)).toEqual(["Weekly shop"]),
+      expect(transactionTemplates.read().map((row) => row.name)).toEqual(["Weekly shop"]),
     );
-    await expect(readTransactionTemplates()[0]?.values.amount).toBe("42.18");
+    await expect(transactionTemplates.read()[0]?.values.amount).toBe("42.18");
   },
 };
 
 export const TemplateStillValidates: Story = {
   beforeEach: () => {
-    saveTransactionTemplate("Empty shape", {
-      accountId: ids.accounts.shared,
-      categoryId: null,
-      type: "expense",
-      amount: "",
-      currency: "eur",
-      description: null,
-      tagIds: [],
-      lines: null,
+    transactionTemplates.save("Empty shape", {
+      values: {
+        accountId: ids.accounts.shared,
+        categoryId: null,
+        type: "expense",
+        amount: "",
+        currency: "eur",
+        description: null,
+        tagIds: [],
+        lines: null,
+      },
     });
   },
   play: async ({ canvas }) => {

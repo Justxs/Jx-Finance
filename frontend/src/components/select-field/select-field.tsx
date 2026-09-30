@@ -1,4 +1,4 @@
-import { type FocusEventHandler, Fragment, type ReactNode } from "react";
+import { type FocusEventHandler, Fragment } from "react";
 import {
   Select,
   SelectContent,
@@ -8,14 +8,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select/select";
+import type { SelectOption } from "@/lib/options";
 import { cn } from "@/lib/utils";
-
-export interface SelectOption<T extends string = string> {
-  value: T;
-  label: ReactNode;
-  disabled?: boolean;
-  group?: string;
-}
 
 function optionGroups<T extends string>(options: SelectOption<T>[]) {
   const groups: { label?: string; options: SelectOption<T>[] }[] = [];
@@ -30,7 +24,7 @@ function optionGroups<T extends string>(options: SelectOption<T>[]) {
   return groups;
 }
 
-interface Props<T extends string> {
+export interface ChoiceFieldProps<T extends string> {
   id?: string;
   value: T;
   onChange: (value: T) => void;
@@ -62,7 +56,7 @@ export function SelectField<T extends string>({
   "aria-describedby": ariaDescribedBy,
   "aria-busy": ariaBusy,
   onBlur,
-}: Readonly<Props<T>>) {
+}: Readonly<ChoiceFieldProps<T>>) {
   return (
     <div className="min-w-0">
       <Select

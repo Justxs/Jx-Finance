@@ -3,8 +3,8 @@ import type { HouseholdMemberResponse } from "@/api/generated/model";
 import { FieldShell } from "@/components/form/field-shell/field-shell";
 import { SelectField } from "@/components/select-field/select-field";
 import { DateRangePicker } from "@/components/ui/date-range-picker/date-range-picker";
-import { userName } from "@/features/users/user-queries";
 import { optionsOf } from "@/lib/options";
+import { userName } from "@/lib/user-name";
 import { ALL, type ActivityFilters, KINDS } from "./activity-filters";
 
 interface FilterProps {

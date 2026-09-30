@@ -1,7 +1,11 @@
 import { useNavigate, useSearch } from "@tanstack/react-router";
 import { ViewTransition } from "react";
 import { useTranslation } from "react-i18next";
-import { useReportSummarySuspense } from "@/api/generated";
+import {
+  getExportTransactionsPdfUrl,
+  getExportTransactionsUrl,
+  useReportSummarySuspense,
+} from "@/api/generated";
 import type { ReportComparisonMode } from "@/api/generated/model";
 import { CategoryBreakdown } from "@/components/category-breakdown/category-breakdown";
 import { ExportMenu } from "@/components/export-menu/export-menu";
@@ -9,18 +13,18 @@ import { PageHeader } from "@/components/page-header/page-header";
 import { TitledSection } from "@/components/ui/section/section";
 import { SplitColumns } from "@/components/ui/split-columns/split-columns";
 import { StaleRegion } from "@/components/ui/stale-region/stale-region";
+import { NetWorthChangeCard } from "@/features/reports/net-worth-change-card/net-worth-change-card";
+import { PayeeBreakdown } from "@/features/reports/payee-breakdown/payee-breakdown";
+import { detectPreset } from "@/features/reports/report-filters/date-range-presets";
+import { ReportFilters } from "@/features/reports/report-filters/report-filters";
+import { reportComparison, reportParams, reportRange } from "@/features/reports/report-queries";
+import { ReportStats } from "@/features/reports/report-stats/report-stats";
+import { ReportTrendChart } from "@/features/reports/report-trend-chart/report-trend-chart";
+import { TagBreakdown } from "@/features/reports/tag-breakdown/tag-breakdown";
 import { useDeferredParams } from "@/hooks/use-deferred-params";
 import { useExportUrl } from "@/hooks/use-export-url";
 import { useIsoDate } from "@/hooks/use-formatters";
 import { useFeature, useTodayDate } from "@/hooks/use-settings";
-import { TRANSACTIONS_EXPORT_CSV_PATH, TRANSACTIONS_EXPORT_PDF_PATH } from "@/lib/export-url";
-import { NetWorthChangeCard } from "../net-worth-change-card/net-worth-change-card";
-import { PayeeBreakdown } from "../payee-breakdown/payee-breakdown";
-import { detectPreset, ReportFilters } from "../report-filters";
-import { reportComparison, reportParams, reportRange } from "../report-queries";
-import { ReportStats } from "../report-stats/report-stats";
-import { ReportTrendChart } from "../report-trend-chart/report-trend-chart";
-import { TagBreakdown } from "../tag-breakdown/tag-breakdown";
 
 export function ReportsPage() {
   const { t } = useTranslation();
@@ -34,8 +38,9 @@ export function ReportsPage() {
   const comparison = reportComparison(search);
   const preset = detectPreset(dateFrom, dateTo, today);
 
-  const csvUrl = useExportUrl(TRANSACTIONS_EXPORT_CSV_PATH, { dateFrom, dateTo });
-  const pdfUrl = useExportUrl(TRANSACTIONS_EXPORT_PDF_PATH, { dateFrom, dateTo });
+  const exportParams = { dateFrom, dateTo, page: 1, pageSize: 1 };
+  const csvUrl = useExportUrl(getExportTransactionsUrl(exportParams));
+  const pdfUrl = useExportUrl(getExportTransactionsPdfUrl(exportParams));
 
   const [shown, stale] = useDeferredParams(reportParams(search, today));
   const summary = useReportSummarySuspense(shown);
@@ -67,6 +72,7 @@ export function ReportsPage() {
       <ReportFilters
         dateFrom={dateFrom}
         dateTo={dateTo}
+        preset={preset}
         comparison={comparison}
         onChange={handleRangeChange}
         onComparisonChange={handleComparisonChange}

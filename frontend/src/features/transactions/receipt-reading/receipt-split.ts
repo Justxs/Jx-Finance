@@ -1,19 +1,18 @@
 import type { ReceiptItemResponse, ReceiptResultResponse } from "@/api/generated/model";
+import { createTransactionBodyDescriptionMax } from "@/api/schemas/transactions/transactions.zod";
+import type { LineFormValue } from "@/features/transactions/transaction-form/line-form-value";
 import { fromCents, toCents } from "@/lib/money";
 import { isPositiveMoney } from "@/lib/validation";
-import type { LineFormValue } from "../transaction-form/line-form-value";
-
-export const LINE_DESCRIPTION_MAX_LENGTH = 500;
 
 export type CategoryChoice = string | null;
 
-export interface ReceiptGroup {
+interface ReceiptGroup {
   categoryId: CategoryChoice;
   items: number[];
   weightCents: number;
 }
 
-export interface ReceiptTotals {
+interface ReceiptTotals {
   itemsCents: number;
   printedCents: number | null;
   amountCents: number | null;
@@ -82,7 +81,7 @@ function describe(items: readonly ReceiptItemResponse[], indexes: readonly numbe
       return item ? [shortName(item.name)] : [];
     })
     .join(", ")
-    .slice(0, LINE_DESCRIPTION_MAX_LENGTH);
+    .slice(0, createTransactionBodyDescriptionMax);
 }
 
 export function linesFromReceipt(

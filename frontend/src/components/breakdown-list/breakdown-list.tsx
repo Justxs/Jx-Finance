@@ -1,18 +1,18 @@
-import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { ChangeBadge } from "@/components/change-badge/change-badge";
-import { Tooltip } from "@/components/ui/tooltip/tooltip";
+import { ShareRow } from "@/components/share-row/share-row";
+import { TransactionsLink } from "@/components/transactions-link/transactions-link";
 import { useMoney, usePercent } from "@/hooks/use-formatters";
 import { CategoryIcon } from "@/lib/category-icons";
 import { changeOf } from "@/lib/comparison";
+import { shareOf } from "@/lib/share";
 import { cn } from "@/lib/utils";
-import { ShareRow } from "./share-row";
 
 export interface BreakdownRow {
   key: string;
   name: string;
   amount: number;
-  earlier: number | null;
+  comparisonAmount?: string | number | null;
   filter?: { categoryId?: string; tagIds?: string; payee?: string };
   icon?: string | null;
   muted?: boolean;
@@ -38,8 +38,11 @@ export function BreakdownList({ rows, type = "expense", dateFrom, dateTo }: Read
   const money = useMoney();
   const percent = usePercent();
 
-  const maximum = Math.max(0, ...rows.map((row) => row.amount));
-  const total = rows.reduce((sum, row) => sum + Math.max(0, row.amount), 0);
+  const shares = shareOf(
+    rows.map((row) => Math.max(0, row.amount)),
+    (fraction) => percent.format(fraction),
+  );
+  const compared = rows.some((row) => row.comparisonAmount != null);
 
   return (
     <ul className="space-y-3.5">
@@ -56,15 +59,11 @@ export function BreakdownList({ rows, type = "expense", dateFrom, dateTo }: Read
           }
           name={
             row.filter ? (
-              <Tooltip content={t("dashboard.showTransactions", { category: row.name })}>
-                <Link
-                  to="/transactions"
-                  search={{ page: 1, ...row.filter, type, dateFrom, dateTo }}
-                  className="min-w-0 flex-1 wrap-break-word underline-offset-4 hover:underline"
-                >
-                  {row.name}
-                </Link>
-              </Tooltip>
+              <TransactionsLink
+                name={row.name}
+                filter={{ ...row.filter, type, dateFrom, dateTo }}
+                className="min-w-0 flex-1 wrap-break-word"
+              />
             ) : (
               <span
                 className={cn(
@@ -76,22 +75,24 @@ export function BreakdownList({ rows, type = "expense", dateFrom, dateTo }: Read
               </span>
             )
           }
-          share={row.amount > 0 ? percent.format(row.amount / total) : null}
+          share={shares.share(row.amount)}
           amount={row.amount < 0 ? money.formatSigned(row.amount) : money.format(row.amount)}
           value={row.amount}
-          max={maximum}
+          max={shares.max}
         >
-          {row.earlier === null ? null : (
+          {compared ? (
             <div className="mt-1 flex items-baseline justify-end gap-2">
               <span className="text-xs text-muted-foreground tabular-nums">
-                {t("reports.comparison.was", { amount: money.format(row.earlier) })}
+                {t("reports.comparison.was", {
+                  amount: money.format(Number(row.comparisonAmount ?? 0)),
+                })}
               </span>
               <ChangeBadge
-                change={changeOf(row.amount, row.earlier)}
+                change={changeOf(row.amount, row.comparisonAmount ?? 0)}
                 good={type === "income" ? "up" : "down"}
               />
             </div>
-          )}
+          ) : null}
         </ShareRow>
       ))}
     </ul>

@@ -2,11 +2,11 @@ import { useTranslation } from "react-i18next";
 import { useUpdateDebt } from "@/api/generated";
 import type { DebtResponse, DebtScheduleResponse } from "@/api/generated/model";
 import { FormError } from "@/components/form-error/form-error";
+import { SummaryStats } from "@/components/summary-stats/summary-stats";
 import { Button } from "@/components/ui/button/button";
-import { Section } from "@/components/ui/section/section";
+import { debtFormValues, debtRequest } from "@/features/net-worth/debts-section/debt-form";
 import { useIsoDate, useMoney, useRatePercent } from "@/hooks/use-formatters";
-import { silent } from "@/lib/mutations";
-import { debtFormValues, debtRequest } from "../debts-section/debt-form";
+import { EXPENSE_TONE } from "@/lib/tone";
 
 interface Props {
   debt: DebtResponse;
@@ -19,9 +19,11 @@ export function DebtScheduleSummary({ debt, schedule }: Readonly<Props>) {
   const formatDate = useIsoDate();
   const formatRate = useRatePercent();
   const scheduled = money.format(Number(schedule.scheduledBalance), debt.currency);
-  const update = useUpdateDebt(
-    silent({ meta: { success: t("netWorth.schedule.balanceUpdated", { amount: scheduled }) } }),
-  );
+  const update = useUpdateDebt({
+    mutation: {
+      meta: { silent: true, success: t("netWorth.schedule.balanceUpdated", { amount: scheduled }) },
+    },
+  });
   const differs =
     Number(schedule.scheduledBalance) !== Number(debt.trackedBalance ?? debt.outstandingAmount);
 
@@ -38,85 +40,54 @@ export function DebtScheduleSummary({ debt, schedule }: Readonly<Props>) {
 
   const stats = [
     {
-      label: t("netWorth.schedule.regularPayment"),
-      value: money.format(Number(schedule.regularPayment), debt.currency),
+      label: t("netWorth.schedule.payoffDate"),
+      value: undefined,
+      text: formatDate(schedule.plan.payoffDate),
+      detail: `${t(`netWorth.repayment.amortizationTypes.${schedule.amortizationType}`)} · ${t(
+        "netWorth.schedule.paymentsMade",
+        { made: schedule.paymentsMade, count: schedule.plan.payments },
+      )}`,
     },
-    { label: t("netWorth.interestRate"), value: formatRate(schedule.interestRate) },
+    { label: t("netWorth.schedule.regularPayment"), value: schedule.regularPayment },
     {
-      label: t("netWorth.schedule.totalInterest"),
-      value: money.format(Number(schedule.plan.totalInterest), debt.currency),
+      label: t("netWorth.interestRate"),
+      value: undefined,
+      text: formatRate(schedule.interestRate),
     },
+    { label: t("netWorth.schedule.totalInterest"), value: schedule.plan.totalInterest },
+    { label: t("netWorth.schedule.totalPaid"), value: schedule.plan.totalPaid },
     {
-      label: t("netWorth.schedule.totalPaid"),
-      value: money.format(Number(schedule.plan.totalPaid), debt.currency),
+      label: t("netWorth.schedule.scheduledBalance"),
+      value: schedule.scheduledBalance,
+      tone: EXPENSE_TONE,
+      detail: t("netWorth.schedule.recorded", {
+        amount: money.format(Number(debt.outstandingAmount), debt.currency),
+        date: formatDate(debt.asOf),
+      }),
+      note: differs ? (
+        <div className="space-y-2">
+          <Button
+            variant="outline"
+            size="sm"
+            pending={update.isPending}
+            onClick={applyScheduledBalance}
+          >
+            {t("netWorth.schedule.useScheduled")}
+          </Button>
+          <FormError error={update.error} />
+        </div>
+      ) : undefined,
     },
+    ...(debt.trackedBalance === null
+      ? []
+      : [
+          {
+            label: t("netWorth.schedule.trackedBalance"),
+            value: debt.trackedBalance,
+            tone: EXPENSE_TONE,
+          },
+        ]),
   ];
 
-  return (
-    <Section
-      as="div"
-      className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)] lg:items-end"
-    >
-      <dl className="min-w-0">
-        <dt className="text-sm text-muted-foreground">{t("netWorth.schedule.payoffDate")}</dt>
-        <dd className="mt-1 font-serif text-stat font-semibold lining-nums tabular-nums">
-          {formatDate(schedule.plan.payoffDate)}
-        </dd>
-        <dd className="mt-1.5 text-sm text-muted-foreground">
-          {t(`netWorth.repayment.amortizationTypes.${schedule.amortizationType}`)} ·{" "}
-          {t("netWorth.schedule.paymentsMade", {
-            made: schedule.paymentsMade,
-            count: schedule.plan.payments,
-          })}
-        </dd>
-      </dl>
-      <div className="grid min-w-0 gap-6">
-        <dl className="grid grid-cols-2 gap-x-8 gap-y-4 sm:grid-cols-4">
-          {stats.map((stat) => (
-            <div key={stat.label} className="min-w-0">
-              <dt className="text-sm text-muted-foreground">{stat.label}</dt>
-              <dd className="mt-0.5 text-xl font-semibold wrap-break-word tabular-nums">
-                {stat.value}
-              </dd>
-            </div>
-          ))}
-        </dl>
-        <div className="flex flex-wrap items-end justify-between gap-3 border-t pt-4">
-          <dl className="min-w-0">
-            <dt className="text-sm text-muted-foreground">
-              {t("netWorth.schedule.scheduledBalance")}
-            </dt>
-            <dd className="mt-0.5 text-xl font-semibold text-expense tabular-nums">{scheduled}</dd>
-            <dd className="mt-1 text-xs text-muted-foreground tabular-nums">
-              {t("netWorth.schedule.recorded", {
-                amount: money.format(Number(debt.outstandingAmount), debt.currency),
-                date: formatDate(debt.asOf),
-              })}
-            </dd>
-          </dl>
-          {debt.trackedBalance === null ? null : (
-            <dl className="min-w-0">
-              <dt className="text-sm text-muted-foreground">
-                {t("netWorth.schedule.trackedBalance")}
-              </dt>
-              <dd className="mt-0.5 text-xl font-semibold text-expense tabular-nums">
-                {money.format(Number(debt.trackedBalance), debt.currency)}
-              </dd>
-            </dl>
-          )}
-          {differs ? (
-            <Button
-              variant="outline"
-              size="sm"
-              pending={update.isPending}
-              onClick={applyScheduledBalance}
-            >
-              {t("netWorth.schedule.useScheduled")}
-            </Button>
-          ) : null}
-        </div>
-        <FormError error={update.error} />
-      </div>
-    </Section>
-  );
+  return <SummaryStats items={stats} currency={debt.currency} />;
 }

@@ -10,20 +10,20 @@ import { SelectField } from "@/components/select-field/select-field";
 import { Button, buttonVariants } from "@/components/ui/button/button";
 import { TitledSection } from "@/components/ui/section/section";
 import { StaleRegion } from "@/components/ui/stale-region/stale-region";
+import { ActivitySection } from "@/features/investments/activity-section/activity-section";
+import { AllocationSection } from "@/features/investments/allocation-section/allocation-section";
+import { BrokerImportDialog } from "@/features/investments/broker-import-dialog/broker-import-dialog";
+import { IncomeByYear } from "@/features/investments/income-by-year/income-by-year";
+import { InvestmentEntryModal } from "@/features/investments/investment-entry-form/investment-entry-modal";
+import { portfolioParams } from "@/features/investments/investment-queries";
+import { PortfolioSummary } from "@/features/investments/portfolio-summary/portfolio-summary";
+import { PositionsSection } from "@/features/investments/positions-section/positions-section";
+import { SecuritiesDialog } from "@/features/investments/securities-dialog/securities-dialog";
+import { TaxSummarySection } from "@/features/investments/tax-summary/tax-summary-section";
+import { ValueChartSection } from "@/features/investments/value-chart/value-chart-section";
 import { useDeferredParams } from "@/hooks/use-deferred-params";
 import { namedOptions } from "@/lib/options";
 import { cn } from "@/lib/utils";
-import { ActivitySection } from "../activity-section/activity-section";
-import { AllocationSection } from "../allocation-section/allocation-section";
-import { BrokerImportDialog } from "../broker-import-dialog/broker-import-dialog";
-import { IncomeByYear } from "../income-by-year/income-by-year";
-import { InvestmentEntryModal } from "../investment-entry-form";
-import { portfolioParams } from "../investment-queries";
-import { PortfolioSummary } from "../portfolio-summary/portfolio-summary";
-import { PositionsSection } from "../positions-section";
-import { SecuritiesDialog } from "../securities-dialog/securities-dialog";
-import { TaxSummarySection } from "../tax-summary/tax-summary-section";
-import { ValueChartSection } from "../value-chart/value-chart-section";
 import { ActivitySkeleton, InvestmentsBodySkeleton } from "./investments-page-pending";
 
 interface OverviewProps {
@@ -86,75 +86,81 @@ function InvestmentsOverview({
       />
       <IncomeByYear years={portfolio.data.years} currency={portfolio.data.reportingCurrency} />
       <QueryBoundary fallback={<ActivitySkeleton />}>
-        <ActivitySection accounts={accounts} accountId={shownAccountId} />
+        <ActivitySection key={shownAccountId} accounts={accounts} accountId={shownAccountId} />
       </QueryBoundary>
     </StaleRegion>
   );
 }
 
-export function InvestmentsPage() {
-  const { t } = useTranslation();
-  const search = useSearch({ from: "/investments" });
-  const navigate = useNavigate({ from: "/investments" });
-  const accounts = useAccountsSuspense();
-  const accountList = accounts.data;
-  const accountId = accountList.find((account) => account.id === search.accountId)?.id;
+interface ViewProps {
+  accounts: readonly AccountResponse[];
+  accountId?: string;
+}
 
-  const [entryOpen, setEntryOpen] = useState(false);
-  const [importOpen, setImportOpen] = useState(false);
-  const [securitiesOpen, setSecuritiesOpen] = useState(false);
-  const noAccounts = accountList.length === 0;
-  const taxView = search.view === "taxSummary";
+function TaxSummaryView({ accounts, accountId }: Readonly<ViewProps>) {
+  const { t } = useTranslation();
 
   return (
     <div className="space-y-5">
-      <PageHeader
-        title={taxView ? t("investments.tax.title") : t("investments.title")}
-        description={taxView ? t("investments.tax.description") : t("investments.description")}
+      <PageHeader title={t("investments.tax.title")} description={t("investments.tax.description")}>
+        <Link
+          to="/investments"
+          search={{ accountId }}
+          className={cn(buttonVariants({ variant: "outline", size: "sm" }), "print:hidden")}
+        >
+          <ArrowLeft />
+          {t("investments.tax.back")}
+        </Link>
+      </PageHeader>
+      <QueryBoundary
+        errorSubject={t("investments.tax.title")}
+        fallback={<InvestmentsBodySkeleton taxView />}
       >
-        {taxView ? (
-          <Link
-            key="portfolio"
-            to="/investments"
-            search={{ accountId }}
-            className={cn(buttonVariants({ variant: "outline", size: "sm" }), "print:hidden")}
-          >
-            <ArrowLeft />
-            {t("investments.tax.back")}
-          </Link>
-        ) : (
-          <>
-            <Link
-              key="tax-summary"
-              to="/investments"
-              search={{ view: "taxSummary" }}
-              className={buttonVariants({ variant: "outline", size: "sm" })}
-            >
-              <ReceiptText />
-              {t("investments.tax.open")}
-            </Link>
-            <Button variant="outline" size="sm" onClick={() => setSecuritiesOpen(true)}>
-              <Library />
-              {t("investments.securities.title")}
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={noAccounts}
-              onClick={() => setImportOpen(true)}
-            >
-              <FileUp />
-              {t("investments.import.open")}
-            </Button>
-            <Button disabled={noAccounts} onClick={() => setEntryOpen(true)}>
-              <Plus />
-              {t("investments.entry.add")}
-            </Button>
-          </>
-        )}
+        <TaxSummarySection accounts={accounts} />
+      </QueryBoundary>
+    </div>
+  );
+}
+
+function PortfolioView({ accounts, accountId }: Readonly<ViewProps>) {
+  const { t } = useTranslation();
+  const navigate = useNavigate({ from: "/investments" });
+  const [entryOpen, setEntryOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
+  const [securitiesOpen, setSecuritiesOpen] = useState(false);
+  const noAccounts = accounts.length === 0;
+
+  return (
+    <div className="space-y-5">
+      <PageHeader title={t("investments.title")} description={t("investments.description")}>
+        <Link
+          to="/investments"
+          search={{ view: "taxSummary" }}
+          className={buttonVariants({ variant: "outline", size: "sm" })}
+        >
+          <ReceiptText />
+          {t("investments.tax.open")}
+        </Link>
+        <Button variant="outline" size="sm" onClick={() => setSecuritiesOpen(true)}>
+          <Library />
+          {t("investments.securities.title")}
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          disabled={noAccounts}
+          onClick={() => setImportOpen(true)}
+        >
+          <FileUp />
+          {t("investments.import.open")}
+        </Button>
+        <Button disabled={noAccounts} onClick={() => setEntryOpen(true)}>
+          <Plus />
+          {t("investments.entry.add")}
+        </Button>
       </PageHeader>
 
-      {!taxView && accountList.length > 1 ? (
+      {accounts.length > 1 ? (
         <div className="mb-4 w-full sm:w-56">
           <SelectField
             aria-label={t("investments.accountFilter")}
@@ -162,40 +168,47 @@ export function InvestmentsPage() {
             onChange={(value) =>
               void navigate({ search: { accountId: value || undefined }, replace: true })
             }
-            options={namedOptions(accountList, t("investments.allAccounts"))}
+            options={namedOptions(accounts, t("investments.allAccounts"))}
           />
         </div>
       ) : null}
 
       <QueryBoundary
-        errorSubject={taxView ? t("investments.tax.title") : t("investments.title")}
-        fallback={<InvestmentsBodySkeleton taxView={taxView} />}
+        errorSubject={t("investments.title")}
+        fallback={<InvestmentsBodySkeleton taxView={false} />}
       >
-        {taxView ? (
-          <TaxSummarySection accounts={accountList} />
-        ) : (
-          <InvestmentsOverview
-            accounts={accountList}
-            accountId={accountId}
-            onAddEntry={() => setEntryOpen(true)}
-            onImport={() => setImportOpen(true)}
-          />
-        )}
+        <InvestmentsOverview
+          accounts={accounts}
+          accountId={accountId}
+          onAddEntry={() => setEntryOpen(true)}
+          onImport={() => setImportOpen(true)}
+        />
       </QueryBoundary>
 
       <InvestmentEntryModal
         open={entryOpen}
         onOpenChange={setEntryOpen}
-        accounts={accountList}
+        accounts={accounts}
         accountId={accountId}
       />
       <BrokerImportDialog
         open={importOpen}
         onOpenChange={setImportOpen}
-        accounts={accountList}
+        accounts={accounts}
         accountId={accountId}
       />
       <SecuritiesDialog open={securitiesOpen} onOpenChange={setSecuritiesOpen} />
     </div>
+  );
+}
+
+export function InvestmentsPage() {
+  const search = useSearch({ from: "/investments" });
+  const accounts = useAccountsSuspense().data;
+
+  return search.view === "taxSummary" ? (
+    <TaxSummaryView accounts={accounts} accountId={search.accountId} />
+  ) : (
+    <PortfolioView accounts={accounts} accountId={search.accountId} />
   );
 }

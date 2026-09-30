@@ -3,10 +3,10 @@ import type { GoalResponse } from "@/api/generated/model";
 import { ProgressAmount, ProgressRow } from "@/components/progress-row/progress-row";
 import type { DeleteProps } from "@/components/row-actions/row-actions";
 import { Tag } from "@/components/ui/tag/tag";
+import { monthlyToReach } from "@/features/goals/goal-pace";
 import { useIsoDate, useMoney, usePercent } from "@/hooks/use-formatters";
 import { useToday } from "@/hooks/use-settings";
 import { metaLine } from "@/lib/utils";
-import { monthlyToReach } from "../goal-pace";
 
 interface Props extends DeleteProps {
   goal: GoalResponse;

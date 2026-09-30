@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { Copy, EllipsisVertical, Pencil, Trash2 } from "lucide-react";
-import { Button } from "../button/button";
+import { Button } from "@/components/ui/button/button";
 import { Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger } from "./menu";
 
 const meta = {

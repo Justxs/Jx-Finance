@@ -22,12 +22,12 @@ interface Props {
   groups: readonly SectionNavGroup[];
 }
 
-export function useNavSections<TSection extends string>(
+export function pickSection<TSection extends string>(
   all: readonly TSection[],
   requested: TSection | undefined,
   fallback: TSection,
 ) {
-  return { section: all.find((item) => item === requested) ?? fallback };
+  return all.find((item) => item === requested) ?? fallback;
 }
 
 export function SectionNav({ labelKey, current, groups }: Readonly<Props>) {

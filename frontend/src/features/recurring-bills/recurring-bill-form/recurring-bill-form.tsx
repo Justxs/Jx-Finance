@@ -25,8 +25,8 @@ import { FormError } from "@/components/form-error/form-error";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { FormGrid } from "@/components/ui/form-grid/form-grid";
 import { useFeature, useToday } from "@/hooks/use-settings";
-import { silent, upsert } from "@/lib/mutations";
-import { namedOptions } from "@/lib/options";
+import { silentMutation, upsert } from "@/lib/mutations";
+import { namedOptions, optionsOf } from "@/lib/options";
 import {
   isPositiveMoney,
   optionalText,
@@ -54,19 +54,26 @@ interface FormValues {
 type RecurringBillDraft = Partial<Omit<RecurringBillResponse, "id">>;
 
 interface Props {
-  bill?: RecurringBillResponse;
+  initial?: RecurringBillResponse;
   draft?: RecurringBillDraft;
   accounts: AccountResponse[];
   categories: CategoryResponse[];
   onClose: () => void;
 }
 
-export function RecurringBillForm({ bill, draft, accounts, categories, onClose }: Readonly<Props>) {
+export function RecurringBillForm({
+  initial,
+  draft,
+  accounts,
+  categories,
+  onClose,
+}: Readonly<Props>) {
   const { t } = useTranslation();
   const today = useToday();
   const netWorth = useFeature("netWorth");
-  const debts = useQuery({ ...getDebtsSuspenseQueryOptions(), enabled: netWorth }).data ?? [];
-  const fieldId = bill ? `bill-${bill.id}` : "bill";
+  const debtsQuery = useQuery({ ...getDebtsSuspenseQueryOptions(), enabled: netWorth });
+  const debts = debtsQuery.data ?? [];
+  const fieldId = initial ? `bill-${initial.id}` : "bill";
 
   const schema = z
     .object({
@@ -110,11 +117,11 @@ export function RecurringBillForm({ bill, draft, accounts, categories, onClose }
     });
 
   const { create, update, pending, error } = upsert(
-    useCreateRecurringBill(silent({ onSuccess: onClose })),
-    useUpdateRecurringBill(silent({ onSuccess: onClose })),
+    useCreateRecurringBill({ mutation: { ...silentMutation, onSuccess: onClose } }),
+    useUpdateRecurringBill({ mutation: { ...silentMutation, onSuccess: onClose } }),
   );
 
-  const seed: RecurringBillDraft = bill ?? draft ?? {};
+  const seed: RecurringBillDraft = initial ?? draft ?? {};
   const defaultValues: FormValues = {
     name: seed.name ?? "",
     shape: seed.shape ?? "expense",
@@ -128,7 +135,10 @@ export function RecurringBillForm({ bill, draft, accounts, categories, onClose }
     remindDaysBefore: String(seed.remindDaysBefore ?? 3),
     isActive: seed.isActive ?? true,
     matchKey: seed.matchKey ?? "",
-    debtId: netWorth && !debts.some((debt) => debt.id === seed.debtId) ? "" : (seed.debtId ?? ""),
+    debtId:
+      netWorth && debtsQuery.isSuccess && !debts.some((debt) => debt.id === seed.debtId)
+        ? ""
+        : (seed.debtId ?? ""),
   };
   const payableDebts = debts.filter((debt) => debt.tracksPayments || debt.id === seed.debtId);
 
@@ -152,13 +162,13 @@ export function RecurringBillForm({ bill, draft, accounts, categories, onClose }
         debtId: value.shape === "expense" ? value.debtId || null : null,
       };
 
-      return bill
-        ? update({ id: bill.id, data: { ...data, isActive: value.isActive } })
+      return initial
+        ? update({ id: initial.id, data: { ...data, isActive: value.isActive } })
         : create({ data });
     },
   });
 
-  if (!bill && accounts.length === 0) {
+  if (!initial && accounts.length === 0) {
     return <EmptyText size="sm">{t("recurringBills.needAccount")}</EmptyText>;
   }
 
@@ -179,7 +189,7 @@ export function RecurringBillForm({ bill, draft, accounts, categories, onClose }
             <field.TextField
               id={`${fieldId}-name`}
               label={t("recurringBills.name")}
-              placeholder={bill ? undefined : t("recurringBills.namePlaceholder")}
+              placeholder={initial ? undefined : t("recurringBills.namePlaceholder")}
             />
           )}
         </form.Field>
@@ -190,11 +200,9 @@ export function RecurringBillForm({ bill, draft, accounts, categories, onClose }
               id={`${fieldId}-shape`}
               kind="segments"
               label={t("recurringBills.shape")}
-              options={[
-                { value: "expense", label: t("recurringBills.shapes.expense") },
-                { value: "income", label: t("recurringBills.shapes.income") },
-                { value: "transfer", label: t("recurringBills.shapes.transfer") },
-              ]}
+              options={optionsOf(Object.values(RecurringBillShape), (shape) =>
+                t(`recurringBills.shapes.${shape}`),
+              )}
             />
           )}
         </form.Field>
@@ -204,10 +212,9 @@ export function RecurringBillForm({ bill, draft, accounts, categories, onClose }
             <field.SelectFieldControl
               id={`${fieldId}-kind`}
               label={t("recurringBills.kind")}
-              options={[
-                { value: "fixed", label: t("recurringBills.kinds.fixed") },
-                { value: "variable", label: t("recurringBills.kinds.variable") },
-              ]}
+              options={optionsOf(Object.values(RecurringBillKind), (kind) =>
+                t(`recurringBills.kinds.${kind}`),
+              )}
             />
           )}
         </form.Field>
@@ -236,12 +243,9 @@ export function RecurringBillForm({ bill, draft, accounts, categories, onClose }
             <field.SelectFieldControl
               id={`${fieldId}-cadence`}
               label={t("recurringBills.cadence")}
-              options={[
-                { value: "weekly", label: t("recurringBills.cadences.weekly") },
-                { value: "monthly", label: t("recurringBills.cadences.monthly") },
-                { value: "quarterly", label: t("recurringBills.cadences.quarterly") },
-                { value: "yearly", label: t("recurringBills.cadences.yearly") },
-              ]}
+              options={optionsOf(Object.values(RecurringBillCadence), (cadence) =>
+                t(`recurringBills.cadences.${cadence}`),
+              )}
             />
           )}
         </form.Field>
@@ -341,7 +345,7 @@ export function RecurringBillForm({ bill, draft, accounts, categories, onClose }
           )}
         </form.Field>
 
-        {bill ? (
+        {initial ? (
           <form.Field name="isActive">
             {(field) => (
               <field.CheckboxField
@@ -359,7 +363,7 @@ export function RecurringBillForm({ bill, draft, accounts, categories, onClose }
         <form.FormActions
           span
           pending={pending}
-          submitLabel={bill ? t("actions.save") : t("recurringBills.add")}
+          submitLabel={initial ? t("actions.save") : t("recurringBills.add")}
           onCancel={onClose}
         />
       </form.FormShell>

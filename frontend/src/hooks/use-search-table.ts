@@ -33,5 +33,5 @@ export function useSearchTable<TSearch extends SortSearch>(
     };
   }
 
-  return { search, setSort, toggleSort, sortProps };
+  return { setSort, sortProps };
 }

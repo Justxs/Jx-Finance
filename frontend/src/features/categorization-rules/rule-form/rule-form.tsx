@@ -1,5 +1,3 @@
-import type { ReactNode } from "react";
-import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
 import { useCreateCategorizationRule, useUpdateCategorizationRule } from "@/api/generated";
@@ -11,19 +9,21 @@ import {
   DescriptionMatch,
   type TagResponse,
 } from "@/api/generated/model";
-import { createCategorizationRuleBodyNameMax } from "@/api/schemas/categorization-rules/categorization-rules.zod";
+import {
+  createCategorizationRuleBodyNameMax,
+  createCategorizationRuleBodyPatternMax,
+} from "@/api/schemas/categorization-rules/categorization-rules.zod";
 import { useServerForm } from "@/components/form";
 import { FormError } from "@/components/form-error/form-error";
 import { FieldShell } from "@/components/form/field-shell/field-shell";
+import { FormSection } from "@/components/form/form-section/form-section";
+import { TagPicker } from "@/components/tag-picker/tag-picker";
 import { FormGrid } from "@/components/ui/form-grid/form-grid";
-import { TagPicker } from "@/features/tags/tag-picker/tag-picker";
-import { silent, upsert } from "@/lib/mutations";
+import { silentMutation, upsert } from "@/lib/mutations";
 import { nameById, namedOptions, optionsOf } from "@/lib/options";
 import { normalizeMoney, optionalNonNegativeMoney, requiredText } from "@/lib/validation";
 import { actionText, ruleActionNames } from "./rule-summary";
 import { RuleTester } from "./rule-tester";
-
-const PATTERN_MAX = 200;
 
 interface FormValues {
   name: string;
@@ -45,25 +45,16 @@ interface Props {
   onClose: () => void;
 }
 
-function FormSection({ title, children }: Readonly<{ title: string; children: ReactNode }>) {
-  return (
-    <fieldset className="space-y-3 border-t border-rule pt-4 *:clear-both">
-      <legend className="float-left -mt-1 mb-2 w-full text-sm font-semibold">{title}</legend>
-      {children}
-    </fieldset>
-  );
-}
-
 export function RuleForm({ accounts, categories, tags, initial, draft, onClose }: Readonly<Props>) {
   const { t } = useTranslation();
-  const [sample, setSample] = useState("");
-  const [sampleAmount, setSampleAmount] = useState("");
+  const categoryNames = nameById(categories);
+  const tagNames = nameById(tags);
 
   const schema = z
     .object({
       name: requiredText(t, createCategorizationRuleBodyNameMax),
       match: z.enum(DescriptionMatch),
-      pattern: requiredText(t, PATTERN_MAX),
+      pattern: requiredText(t, createCategorizationRuleBodyPatternMax),
       accountId: z.string(),
       minAmount: optionalNonNegativeMoney(t),
       maxAmount: optionalNonNegativeMoney(t),
@@ -83,8 +74,8 @@ export function RuleForm({ accounts, categories, tags, initial, draft, onClose }
     );
 
   const { create, update, pending, error } = upsert(
-    useCreateCategorizationRule(silent({ onSuccess: onClose })),
-    useUpdateCategorizationRule(silent({ onSuccess: onClose })),
+    useCreateCategorizationRule({ mutation: { ...silentMutation, onSuccess: onClose } }),
+    useUpdateCategorizationRule({ mutation: { ...silentMutation, onSuccess: onClose } }),
   );
 
   const seed = initial ?? draft;
@@ -117,13 +108,6 @@ export function RuleForm({ accounts, categories, tags, initial, draft, onClose }
       return initial?.id ? update({ id: initial.id, data }) : create({ data });
     },
   });
-
-  const values = form.state.values;
-  const names = ruleActionNames(
-    { categoryId: values.categoryId || null, tagIds: values.tagIds },
-    nameById(categories),
-    nameById(tags),
-  );
 
   return (
     <form.AppForm>
@@ -229,17 +213,24 @@ export function RuleForm({ accounts, categories, tags, initial, draft, onClose }
           </p>
         </FormSection>
 
-        <RuleTester
-          match={values.match}
-          pattern={values.pattern}
-          action={actionText(t, names.categoryName, names.tagNames)}
-          sample={sample}
-          sampleAmount={sampleAmount}
-          minAmount={values.minAmount}
-          maxAmount={values.maxAmount}
-          onSampleChange={setSample}
-          onSampleAmountChange={setSampleAmount}
-        />
+        <form.Subscribe selector={(state) => state.values}>
+          {(values) => {
+            const names = ruleActionNames(
+              { categoryId: values.categoryId || null, tagIds: values.tagIds },
+              categoryNames,
+              tagNames,
+            );
+            return (
+              <RuleTester
+                match={values.match}
+                pattern={values.pattern}
+                minAmount={values.minAmount}
+                maxAmount={values.maxAmount}
+                action={actionText(t, names.categoryName, names.tagNames)}
+              />
+            );
+          }}
+        </form.Subscribe>
 
         <FormError error={error} />
 

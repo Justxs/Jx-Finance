@@ -1,10 +1,10 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect } from "storybook/test";
 import { getCashFlowForecastMockHandler } from "@/api/generated/accounts/accounts.msw";
+import { DashboardCard } from "@/features/dashboard/dashboard-card/dashboard-card";
 import { withWidth } from "@/storybook/decorators";
 import { calmCashFlowForecast, usualSpendingCashFlowForecast } from "@/storybook/fixtures";
 import { emptyHandlers, errorHandlers, loadingHandlers, withHandlers } from "@/storybook/handlers";
-import { DashboardCard } from "../dashboard-card/dashboard-card";
 import { CashFlowCard } from "./cash-flow-card";
 
 const meta = {

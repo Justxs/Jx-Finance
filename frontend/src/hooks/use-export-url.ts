@@ -1,17 +1,10 @@
 import { useActiveHouseholdId } from "@/stores/active-household-store";
 
-type ExportParams = Record<string, string | number | boolean | undefined>;
-
-export function useExportUrl(path: string, params: ExportParams) {
+export function useExportUrl(url: string) {
   const activeHouseholdId = useActiveHouseholdId();
-  const search = new URLSearchParams();
-  for (const [key, value] of Object.entries(params)) {
-    if (value) {
-      search.set(key, String(value));
-    }
+  if (!activeHouseholdId) {
+    return url;
   }
-  if (activeHouseholdId) {
-    search.set("activeHousehold", activeHouseholdId);
-  }
-  return `${path}?${search.toString()}`;
+  const search = new URLSearchParams({ activeHousehold: activeHouseholdId });
+  return `${url}${url.includes("?") ? "&" : "?"}${search.toString()}`;
 }

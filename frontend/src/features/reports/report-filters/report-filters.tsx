@@ -5,11 +5,12 @@ import { DateRangePicker } from "@/components/ui/date-range-picker/date-range-pi
 import { Label } from "@/components/ui/label/label";
 import { useTodayDate } from "@/hooks/use-settings";
 import { optionsOf } from "@/lib/options";
-import { detectPreset, presetRange, type ReportPreset } from "./date-range-presets";
+import { presetRange, type ReportPreset } from "./date-range-presets";
 
 interface Props {
   dateFrom: string;
   dateTo: string;
+  preset: ReportPreset;
   comparison: ReportComparisonMode;
   onChange: (range: { dateFrom: string; dateTo: string }) => void;
   onComparisonChange: (comparison: ReportComparisonMode) => void;
@@ -27,13 +28,13 @@ const COMPARISONS: ReportComparisonMode[] = [
 export function ReportFilters({
   dateFrom,
   dateTo,
+  preset,
   comparison,
   onChange,
   onComparisonChange,
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const today = useTodayDate();
-  const preset = detectPreset(dateFrom, dateTo, today);
 
   function handlePresetChange(next: ReportPreset) {
     if (next === "custom") {

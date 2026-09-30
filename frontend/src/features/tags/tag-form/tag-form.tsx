@@ -6,9 +6,8 @@ import { createTagBodyNameMax } from "@/api/schemas/tags/tags.zod";
 import { useServerForm } from "@/components/form";
 import { FormError } from "@/components/form-error/form-error";
 import { SharingFields } from "@/components/sharing-fields/sharing-fields";
-import { FormGrid } from "@/components/ui/form-grid/form-grid";
-import { silent, upsert } from "@/lib/mutations";
-import { refineSharing, requiredText, sharedHouseholdId, sharingShape } from "@/lib/validation";
+import { silentMutation, upsert } from "@/lib/mutations";
+import { refineSharing, requiredText, sharingPayload, sharingShape } from "@/lib/validation";
 import { useSharingDefaults } from "@/stores/active-household-store";
 
 interface FormValues {
@@ -24,9 +23,7 @@ interface Props {
 
 export function TagForm({ initial, onClose }: Readonly<Props>) {
   const { t } = useTranslation();
-  const households = useHouseholdsSuspense();
-  const householdList = households.data;
-  const sharing = useSharingDefaults(householdList, initial);
+  const sharing = useSharingDefaults(useHouseholdsSuspense().data, initial);
 
   const schema = refineSharing(
     z.object({
@@ -37,8 +34,8 @@ export function TagForm({ initial, onClose }: Readonly<Props>) {
   );
 
   const { create, update, pending, error } = upsert(
-    useCreateTag(silent({ onSuccess: onClose })),
-    useUpdateTag(silent({ onSuccess: onClose })),
+    useCreateTag({ mutation: { ...silentMutation, onSuccess: onClose } }),
+    useUpdateTag({ mutation: { ...silentMutation, onSuccess: onClose } }),
   );
 
   const defaultValues: FormValues = {
@@ -52,8 +49,7 @@ export function TagForm({ initial, onClose }: Readonly<Props>) {
     submit: (value) => {
       const data = {
         name: value.name.trim(),
-        scope: value.scope,
-        householdId: sharedHouseholdId(value),
+        ...sharingPayload(value),
       };
       return initial ? update({ id: initial.id, data }) : create({ data });
     },
@@ -73,16 +69,12 @@ export function TagForm({ initial, onClose }: Readonly<Props>) {
           )}
         </form.Field>
 
-        {householdList.length > 0 ? (
-          <FormGrid>
-            <SharingFields
-              form={form}
-              fields={{ scope: "scope", householdId: "householdId" }}
-              idPrefix="tag"
-              households={householdList}
-            />
-          </FormGrid>
-        ) : null}
+        <SharingFields
+          form={form}
+          fields={{ scope: "scope", householdId: "householdId" }}
+          idPrefix="tag"
+          grid
+        />
 
         <FormError error={error} />
 

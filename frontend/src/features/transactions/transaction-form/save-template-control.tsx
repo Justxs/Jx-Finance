@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button/button";
 import { Input } from "@/components/ui/input/input";
 import { Label } from "@/components/ui/label/label";
-import { SAVED_NAME_MAX_LENGTH } from "@/stores/transaction-views";
+import { SAVED_NAME_MAX_LENGTH } from "@/features/transactions/transaction-views";
 
 interface Props {
   onSave: (name: string) => void;

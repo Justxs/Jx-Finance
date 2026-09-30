@@ -278,9 +278,31 @@
         "shadcn/no-arbitrary-values": "off",
         "shadcn/require-static-classes": "off",
         "no-shadow": "off",
-        "no-restricted-imports": "off",
         "react/no-unstable-nested-components": "off",
         "jsx-a11y/label-has-associated-control": "off"
+      }
+    },
+    {
+      "files": ["src/components/**", "src/lib/**", "src/hooks/**", "src/stores/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "name": "react",
+                "importNames": ["useEffect", "useLayoutEffect", "useMemo", "useCallback"],
+                "message": "The React Compiler memoizes; derive during render, use event handlers, TanStack Query, Hotkeys or Pacer instead of effects."
+              }
+            ],
+            "patterns": [
+              {
+                "group": ["@/features/**"],
+                "message": "Shared code in components, lib, hooks and stores must not depend on a feature; move the shared piece out of the feature instead."
+              }
+            ]
+          }
+        ]
       }
     },
     {

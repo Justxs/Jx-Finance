@@ -10,7 +10,9 @@ import {
   TableHead,
   TableHeader,
   TableRow,
+  ScrollRegion,
 } from "@/components/ui/table/table";
+import { chargeSign } from "@/features/investments/investment-types";
 import { useMoney } from "@/hooks/use-formatters";
 import { gainTone } from "@/lib/tone";
 import { cn } from "@/lib/utils";
@@ -26,8 +28,7 @@ export function IncomeByYear({ years, currency }: Readonly<Props>) {
   const rows = years.toSorted((left, right) => right.year - left.year);
 
   function charge(value: string) {
-    const amount = Number(value);
-    return amount > 0 ? money.formatSigned(amount, "−", currency) : money.format(amount, currency);
+    return money.formatSigned(Number(value), chargeSign(value), currency);
   }
 
   return (
@@ -36,7 +37,7 @@ export function IncomeByYear({ years, currency }: Readonly<Props>) {
         <EmptyText>{t("investments.years.empty")}</EmptyText>
       ) : (
         <>
-          <div className="-mx-3 hidden sm:block">
+          <ScrollRegion className="-mx-3 hidden sm:block" aria-label={t("investments.years.table")}>
             <Table>
               <TableHeader>
                 <TableRow>
@@ -65,7 +66,7 @@ export function IncomeByYear({ years, currency }: Readonly<Props>) {
                 ))}
               </TableBody>
             </Table>
-          </div>
+          </ScrollRegion>
           <Rows className="sm:hidden">
             {rows.map((row) => (
               <li key={row.year} className="py-2.5 text-sm">

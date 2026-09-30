@@ -1,25 +1,29 @@
+import { useQueryClient } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
 import { z } from "zod";
+import { getSettingsQueryKey, useUpdateSettings } from "@/api/generated";
 import {
   type AccountResponse,
   Currency,
   type FeatureFlags,
   FirstDayOfWeek,
   type SettingsResponse,
-  type UpdateSettingsRequest,
 } from "@/api/generated/model";
 import {
   UpdateSettingsBody,
   updateSettingsBodyInstanceNameMax,
 } from "@/api/schemas/settings/settings.zod";
 import { useServerForm } from "@/components/form";
+import { FormError } from "@/components/form-error/form-error";
+import type { SettingsSection } from "@/components/settings-layout/settings-layout";
 import { Button } from "@/components/ui/button/button";
 import { FormGrid } from "@/components/ui/form-grid/form-grid";
 import { TitledSection } from "@/components/ui/section/section";
+import { silentMutation } from "@/lib/mutations";
 import { namedOptions } from "@/lib/options";
 import { optionalText, requiredValue } from "@/lib/validation";
-import type { SettingsSection } from "../settings-nav/settings-nav";
 import { CurrenciesFields } from "./currencies-fields";
 import { FeaturesFields } from "./features-fields";
 import { RegionalFields } from "./regional-fields";
@@ -28,9 +32,7 @@ interface Props {
   section: SettingsSection;
   settings: SettingsResponse;
   accounts: AccountResponse[];
-  pending: boolean;
   exchangeRates: ReactNode;
-  onSubmit: (values: UpdateSettingsRequest, onSaved: () => void) => Promise<unknown> | void;
 }
 
 interface FormValues {
@@ -48,15 +50,21 @@ interface FormValues {
 }
 
 const pageSizes = ["10", "20", "50", "100"];
-export function SettingsForm({
-  section,
-  settings,
-  accounts,
-  pending,
-  exchangeRates,
-  onSubmit,
-}: Readonly<Props>) {
+
+export function SettingsForm({ section, settings, accounts, exchangeRates }: Readonly<Props>) {
   const { t } = useTranslation();
+  const queryClient = useQueryClient();
+
+  const updateMutation = useUpdateSettings({
+    mutation: {
+      ...silentMutation,
+      onSuccess: (saved) => {
+        queryClient.setQueryData(getSettingsQueryKey(), saved);
+        toast.success(t("settings.savedToast"));
+      },
+    },
+  });
+  const pending = updateMutation.isPending;
 
   const schema = z.object({
     instanceName: optionalText(t, updateSettingsBodyInstanceNameMax),
@@ -89,23 +97,17 @@ export function SettingsForm({
   const form = useServerForm({
     defaultValues,
     schema,
-    submit: (value, formApi) =>
-      onSubmit(
-        {
+    submit: async (value, formApi) => {
+      await updateMutation.mutateAsync({
+        data: {
+          ...value,
           instanceName: value.instanceName.trim() || null,
-          features: value.features,
-          reportingCurrency: value.reportingCurrency,
-          enabledCurrencies: value.enabledCurrencies,
-          exchangeRateSyncEnabled: value.exchangeRateSyncEnabled,
-          defaultLanguage: value.defaultLanguage,
-          timeZone: value.timeZone,
-          firstDayOfWeek: value.firstDayOfWeek,
           defaultAccountId: value.defaultAccountId || null,
           defaultPageSize: Number(value.defaultPageSize),
-          supportLinkEnabled: value.supportLinkEnabled,
         },
-        () => formApi.reset(value),
-      ),
+      });
+      formApi.reset(value);
+    },
   });
 
   return (
@@ -226,6 +228,7 @@ export function SettingsForm({
                 <Button type="submit" pending={pending} disabled={!canSubmit}>
                   {t("actions.save")}
                 </Button>
+                <FormError error={updateMutation.error} className="basis-full" />
               </div>
             ) : null
           }

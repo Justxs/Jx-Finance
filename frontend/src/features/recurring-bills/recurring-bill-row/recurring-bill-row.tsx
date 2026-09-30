@@ -2,19 +2,19 @@ import { TrendingUp } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import type {
   AccountResponse,
-  CategoryResponse,
   RecurringBillResponse,
   RecurringBillShape,
 } from "@/api/generated/model";
 import { type DeleteProps, RowActions } from "@/components/row-actions/row-actions";
 import { Button } from "@/components/ui/button/button";
 import { Tag } from "@/components/ui/tag/tag";
+import { urgencyOf } from "@/features/recurring-bills/bill-groups";
+import { BillRowLayout } from "@/features/recurring-bills/bill-row-layout";
 import { useIsoDate, useMoney, useRelativeDays } from "@/hooks/use-formatters";
 import { useToday } from "@/hooks/use-settings";
+import { daysBetween } from "@/lib/calendar";
 import { EXPENSE_TONE } from "@/lib/tone";
 import { cn, metaLine } from "@/lib/utils";
-import { daysUntil } from "../bill-groups";
-import { BillRowLayout } from "../bill-row-layout";
 
 const shapeTone = {
   expense: "negative",
@@ -24,8 +24,8 @@ const shapeTone = {
 
 interface Props extends DeleteProps {
   bill: RecurringBillResponse;
-  accounts: AccountResponse[];
-  categories: CategoryResponse[];
+  accountById: ReadonlyMap<string, AccountResponse>;
+  categoryNames: ReadonlyMap<string, string>;
   onEdit: () => void;
   onConfirm: () => void;
   onUpdateAmount?: (amount: string) => void;
@@ -34,8 +34,8 @@ interface Props extends DeleteProps {
 
 export function RecurringBillRow({
   bill,
-  accounts,
-  categories,
+  accountById,
+  categoryNames,
   onEdit,
   onConfirm,
   onUpdateAmount,
@@ -47,14 +47,14 @@ export function RecurringBillRow({
   const formatDate = useIsoDate();
   const relativeDays = useRelativeDays();
 
-  const category = categories.find((c) => c.id === bill.categoryId);
-  const account = accounts.find((a) => a.id === bill.accountId);
-  const toAccount = accounts.find((a) => a.id === bill.toAccountId);
+  const account = accountById.get(bill.accountId ?? "");
+  const toAccount = accountById.get(bill.toAccountId ?? "");
 
   const today = useToday();
-  const days = daysUntil(bill.nextDueDate, today);
-  const overdue = bill.isActive && days !== null && days < 0;
-  const soon = bill.isActive && days !== null && days < 7 ? relativeDays(days) : null;
+  const days = daysBetween(today, bill.nextDueDate);
+  const urgency = urgencyOf(bill, today);
+  const overdue = bill.isActive && urgency === "overdue";
+  const soon = bill.isActive && days !== null && urgency !== "later" ? relativeDays(days) : null;
   const isTransfer = bill.shape === "transfer";
   const rise = bill.latestMatch?.isPriceRise && bill.latestMatch.expected ? bill.latestMatch : null;
   const currency = account?.currency;
@@ -62,7 +62,7 @@ export function RecurringBillRow({
   const meta = metaLine(
     t(`recurringBills.cadences.${bill.cadence}`),
     bill.amount ? t(`recurringBills.kinds.${bill.kind}`) : null,
-    category?.name,
+    categoryNames.get(bill.categoryId ?? ""),
     isTransfer && account && toAccount ? `${account.name} → ${toAccount.name}` : account?.name,
   );
 

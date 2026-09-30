@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { Info } from "lucide-react";
-import { Checkbox } from "../checkbox/checkbox";
-import { Input } from "../input/input";
+import { Checkbox } from "@/components/ui/checkbox/checkbox";
+import { Input } from "@/components/ui/input/input";
 import { Label } from "./label";
 
 const meta = {

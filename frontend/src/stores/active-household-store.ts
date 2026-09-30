@@ -1,3 +1,4 @@
+import type { QueryClient } from "@tanstack/react-query";
 import type { Scope } from "@/api/generated/model";
 import { readPreferences, savePreferences, usePreferences } from "./preferences";
 
@@ -12,6 +13,11 @@ export function readActiveHouseholdId(): string | undefined {
 
 export function setActiveHousehold(activeHouseholdId: string | undefined) {
   savePreferences({ activeHouseholdId });
+}
+
+export function switchHousehold(queryClient: QueryClient, activeHouseholdId: string | undefined) {
+  setActiveHousehold(activeHouseholdId);
+  void queryClient.invalidateQueries();
 }
 
 export function useActiveHouseholdId(): string | undefined {

@@ -10,18 +10,19 @@ import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { Rows } from "@/components/ui/rows/rows";
 import { RowsSkeleton } from "@/components/ui/skeleton/skeleton";
 import { TextLink } from "@/components/ui/text-link/text-link";
+import { recentTransactionsParams } from "@/features/dashboard/dashboard-queries";
+import { DashboardSection } from "@/features/dashboard/dashboard-section/dashboard-section";
+import { TransactionAmount } from "@/features/transactions/transaction-amount/transaction-amount";
 import {
-  TransactionAmount,
   transactionCategoryLabel,
   transactionName,
-} from "@/features/transactions/transaction-amount";
+} from "@/features/transactions/transaction-amount/transaction-row";
 import { UnusualAmountBadge } from "@/features/transactions/unusual-amount/unusual-amount-badge";
 import { useShortDayIso } from "@/hooks/use-formatters";
 import { useTodayDate } from "@/hooks/use-settings";
+import { currentMonthKey } from "@/lib/calendar";
 import { byId, nameById } from "@/lib/options";
 import { metaLine } from "@/lib/utils";
-import { currentMonthKey, recentTransactionsParams } from "../dashboard-queries";
-import { DashboardSection } from "../dashboard-section/dashboard-section";
 
 function FirstRunSteps() {
   const { t } = useTranslation();

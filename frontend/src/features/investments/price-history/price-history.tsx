@@ -7,9 +7,9 @@ import { RecordRow } from "@/components/record-row/record-row";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { Rows } from "@/components/ui/rows/rows";
 import { ScrollRegion } from "@/components/ui/table/table";
-import { useConfirmedDelete } from "@/hooks/use-confirmed-delete";
+import { childDelete, useConfirmedDelete } from "@/hooks/use-confirmed-delete";
 import { useIsoDate, usePriceFormat } from "@/hooks/use-formatters";
-import { silent } from "@/lib/mutations";
+import { silentMutation } from "@/lib/mutations";
 
 interface Props {
   security: SecurityResponse;
@@ -20,7 +20,7 @@ export function PriceHistory({ security }: Readonly<Props>) {
   const formatDate = useIsoDate();
   const formatPrice = usePriceFormat();
   const prices = useSecurityPricesSuspense(security.id);
-  const deleteMutation = useDeleteSecurityPrice(silent());
+  const deleteMutation = useDeleteSecurityPrice({ mutation: silentMutation });
 
   const points = prices.data.map((point) => ({ ...point, id: point.date }));
 
@@ -29,11 +29,11 @@ export function PriceHistory({ security }: Readonly<Props>) {
   }
 
   const remove = useConfirmedDelete(
-    {
-      mutate: ({ id }) => deleteMutation.mutate({ id: security.id, date: id }),
-      isPending: deleteMutation.isPending,
-      variables: deleteMutation.variables ? { id: deleteMutation.variables.date } : undefined,
-    },
+    childDelete(
+      deleteMutation,
+      (date) => ({ id: security.id, date }),
+      (variables) => variables.date,
+    ),
     points,
     (point) => `${security.symbol} · ${label(point)}`,
   );

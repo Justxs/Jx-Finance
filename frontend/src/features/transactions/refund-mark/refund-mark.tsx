@@ -4,7 +4,8 @@ import type { TransactionResponse } from "@/api/generated/model";
 import { buttonVariants } from "@/components/ui/button/button";
 import { HintTag } from "@/components/ui/tag/tag";
 import { Tooltip } from "@/components/ui/tooltip/tooltip";
-import { EMPTY_VALUE, useIsoDate, useMoney, useReportingCurrency } from "@/hooks/use-formatters";
+import { useReportingCurrency } from "@/hooks/use-currencies";
+import { EMPTY_VALUE, useIsoDate, useMoney } from "@/hooks/use-formatters";
 import { cn } from "@/lib/utils";
 
 interface Props {

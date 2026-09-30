@@ -1,10 +1,11 @@
 import { useTranslation } from "react-i18next";
 import type { Currency, DebtScheduleParams, DebtScheduleResponse } from "@/api/generated/model";
-import { FieldShell, shellAria } from "@/components/form/field-shell/field-shell";
+import { FieldShell } from "@/components/form/field-shell/field-shell";
 import { DatePicker } from "@/components/ui/date-picker/date-picker";
 import { Input } from "@/components/ui/input/input";
 import { useDebouncedDraft } from "@/hooks/use-debounced-draft";
 import { useIsoDate, useMoney } from "@/hooks/use-formatters";
+import { shellAria } from "@/lib/field-aria";
 import { isPositiveMoney, normalizeMoney } from "@/lib/validation";
 
 export interface ExtraPaymentDraft {

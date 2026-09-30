@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 import type { AccountResponse, AccountType } from "@/api/generated/model";
 import {
+  chargeSign,
   defaultInvestmentAccount,
   entryTypes,
   isTrade,
@@ -66,5 +67,16 @@ describe("defaultInvestmentAccount", () => {
   test("falls back to the first account, then nothing", () => {
     expect(defaultInvestmentAccount([account("bank", "checking")])?.id).toBe("bank");
     expect(defaultInvestmentAccount([])).toBeUndefined();
+  });
+});
+
+describe("chargeSign", () => {
+  test("a positive charge reads as money going out", () => {
+    expect(chargeSign("1.25")).toBe("−");
+  });
+
+  test("no charge or a refund keeps its own sign", () => {
+    expect(chargeSign("0")).toBe("auto");
+    expect(chargeSign("-3")).toBe("auto");
   });
 });

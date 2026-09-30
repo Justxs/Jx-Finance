@@ -5,7 +5,6 @@ import { useDismissSuggestedRule } from "@/api/generated";
 import type {
   AccountResponse,
   CategoryResponse,
-  CreateCategorizationRuleRequest,
   SuggestedRuleResponse,
   TagResponse,
 } from "@/api/generated/model";
@@ -13,25 +12,13 @@ import { ListSection } from "@/components/list-section/list-section";
 import { EditModal } from "@/components/modal";
 import { Button } from "@/components/ui/button/button";
 import { Tag } from "@/components/ui/tag/tag";
-import { silent } from "@/lib/mutations";
+import { RuleForm } from "@/features/categorization-rules/rule-form/rule-form";
+import {
+  conditionText,
+  ruleFromSuggestion,
+} from "@/features/categorization-rules/rule-form/rule-summary";
+import { silentMutation } from "@/lib/mutations";
 import { nameById } from "@/lib/options";
-import { RuleForm } from "../rule-form/rule-form";
-import { conditionText } from "../rule-form/rule-summary";
-
-export function ruleFromSuggestion(
-  suggestion: SuggestedRuleResponse,
-): CreateCategorizationRuleRequest {
-  return {
-    name: suggestion.name,
-    match: suggestion.match,
-    pattern: suggestion.pattern,
-    categoryId: suggestion.categoryId,
-    tagIds: [],
-    accountId: null,
-    minAmount: null,
-    maxAmount: null,
-  };
-}
 
 function suggestionKey(suggestion: { key: string; categoryId: string }) {
   return `${suggestion.categoryId}:${suggestion.key}`;
@@ -52,7 +39,7 @@ interface Props {
 export function SuggestedRules({ suggestions, accounts, categories, tags }: Readonly<Props>) {
   const { t } = useTranslation();
   const [reviewing, setReviewing] = useState<Reviewing | null>(null);
-  const dismiss = useDismissSuggestedRule(silent());
+  const dismiss = useDismissSuggestedRule({ mutation: silentMutation });
   const categoryNames = nameById(categories);
 
   const pending = dismiss.isPending ? dismiss.variables?.data : undefined;

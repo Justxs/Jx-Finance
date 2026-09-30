@@ -5,10 +5,10 @@ import { useAccountsSuspense } from "@/api/generated";
 import { getAccountsMockHandler } from "@/api/generated/accounts/accounts.msw";
 import { ErrorState } from "@/components/error-state/error-state";
 import { Card } from "@/components/ui/card/card";
+import { Skeleton } from "@/components/ui/skeleton/skeleton";
 import { withWidth } from "@/storybook/decorators";
 import { checkingAccount, serverErrorProblem } from "@/storybook/fixtures";
 import { errorHandlers, failWith, loadingHandlers, withHandlers } from "@/storybook/handlers";
-import { Skeleton } from "../ui/skeleton/skeleton";
 import { QueryBoundary } from "./query-boundary";
 
 function AccountNames() {

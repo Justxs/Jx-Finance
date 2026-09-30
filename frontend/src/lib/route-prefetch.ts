@@ -1,8 +1,8 @@
 import type { QueryClient, QueryExecuteOptions, QueryKey } from "@tanstack/react-query";
 import { noop } from "@tanstack/react-query";
 import type { SettingsResponse } from "@/api/generated/model";
-import { settingsQueryOptions } from "@/hooks/use-settings";
 import { parseIso, todayInZone } from "@/lib/calendar";
+import { settingsQueryOptions } from "@/lib/settings";
 
 export interface RouterContext {
   queryClient: QueryClient;

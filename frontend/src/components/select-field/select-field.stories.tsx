@@ -1,8 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
+import { Label } from "@/components/ui/label/label";
+import type { SelectOption } from "@/lib/options";
 import { accounts } from "@/storybook/fixtures";
-import { Label } from "../ui/label/label";
-import { SelectField, type SelectOption } from "./select-field";
+import { SelectField } from "./select-field";
 
 const accountOptions: SelectOption[] = accounts.map((account) => ({
   value: account.id,

@@ -31,7 +31,7 @@ Every feature the current code implements, one page per feature under `features/
 | 18 | [Reports](reports.md) | `Reports` | `Reports` | `reports` |
 | 19 | [CSV and PDF export](exports.md) | always on | `Transactions` (`export`, `export/pdf`), `Investments` (`tax-summary/export`) | `transactions` (`ExportMenu`), `investments` |
 | 20 | [Investments, the yearly tax summary and the Interactive Brokers import](investments.md) | `Investments` | `Investments`, `Infrastructure/Brokers` | `investments` |
-| 21 | [Installation settings and feature switches](installation-settings.md) | always on, Admin | `Settings` | `settings` (`SettingsLayout`, the Installation sections of Settings) |
+| 21 | [Installation settings and feature switches](installation-settings.md) | always on, Admin | `Settings` | `settings` (the Installation sections of Settings), `components/settings-layout` |
 | 22 | [Backup and restore](backup-and-restore.md) | always on, Admin | `Backups` | `settings` (Backups section) |
 | 23 | [Background jobs](background-jobs.md) | per job | `Infrastructure/BackgroundJobs` | none |
 | 24 | [Interface: navigation, languages, themes, palettes, typefaces, shortcuts, phone layout](interface.md) | always on | none | `components` (`app-sidebar`, `hub-tabs`, `section-nav`), `stores`, `lib/navigation.ts`, `lib/shortcuts.ts` |

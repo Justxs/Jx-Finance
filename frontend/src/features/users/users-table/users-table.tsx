@@ -1,7 +1,7 @@
-import { useNavigate, useSearch } from "@tanstack/react-router";
 import { type ReactNode, ViewTransition } from "react";
 import { useTranslation } from "react-i18next";
 import type { UserProfileResponse } from "@/api/generated/model";
+import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog/confirm-delete-dialog";
 import { SelectColumnFilter, TextColumnFilter } from "@/components/ui/column-filter/column-filter";
 import { SortableTableHead } from "@/components/ui/column-header/column-header";
 import {
@@ -14,39 +14,29 @@ import {
   TableEmptyRow,
   ScrollRegion,
 } from "@/components/ui/table/table";
+import { ResetPasswordDialog } from "@/features/users/reset-password-dialog/reset-password-dialog";
 import { useSearchTable } from "@/hooks/use-search-table";
 import { cn } from "@/lib/utils";
-import { roleOptions } from "../user-queries";
-import {
-  type UserRowControls,
-  UserRoleSelect,
-  UserRowActions,
-  UserStatusTag,
-} from "./user-row-parts";
+import { useUserRowControls } from "./use-user-row-controls";
+import { UsersFilterBar, useUserFilters } from "./user-filters";
+import { UserRoleSelect, UserRowActions, UserStatusTag } from "./user-row-parts";
 import { UsersMobileList } from "./users-mobile-list";
 
-interface Props extends UserRowControls {
+interface Props {
   users: UserProfileResponse[];
   stale: boolean;
 }
 
-export function UsersTable({ users, stale, ...controls }: Readonly<Props>) {
+export function UsersTable({ users, stale }: Readonly<Props>) {
   const { t } = useTranslation();
-  const search = useSearch({ from: "/users" });
-  const navigate = useNavigate({ from: "/users" });
-
-  function patchSearch(patch: Partial<typeof search>) {
-    void navigate({ search: (prev) => ({ ...prev, ...patch }) });
-  }
-  const table = useSearchTable(search, patchSearch);
-
-  const filtered = Boolean(search.search) || Boolean(search.role) || search.isActive !== undefined;
-  const options = roleOptions(t);
+  const filters = useUserFilters();
+  const table = useSearchTable(filters.search, filters.patchSearch);
+  const { controls, deactivateDialogProps, resetUser, closeReset } = useUserRowControls(users);
 
   let body: ReactNode;
   if (users.length === 0) {
     body = (
-      <TableEmptyRow colSpan={4} filtered={filtered}>
+      <TableEmptyRow colSpan={4} filtered={filters.filtered}>
         {t("users.empty")}
       </TableEmptyRow>
     );
@@ -76,7 +66,13 @@ export function UsersTable({ users, stale, ...controls }: Readonly<Props>) {
 
   return (
     <>
-      <UsersMobileList users={users} stale={stale} filtered={filtered} controls={controls} />
+      <UsersFilterBar filters={filters} className="mb-2 md:hidden" />
+      <UsersMobileList
+        users={users}
+        stale={stale}
+        filtered={filters.filtered}
+        controls={controls}
+      />
       <section className="-mx-3 hidden md:block">
         <ViewTransition name="users-rows" enter="none" exit="none">
           <ScrollRegion aria-label={t("users.title")}>
@@ -89,8 +85,8 @@ export function UsersTable({ users, stale, ...controls }: Readonly<Props>) {
                     filter={
                       <TextColumnFilter
                         label={t("users.displayName")}
-                        value={search.search ?? ""}
-                        onChange={(value) => patchSearch({ search: value || undefined })}
+                        value={filters.text.value}
+                        onChange={filters.text.set}
                       />
                     }
                   />
@@ -100,9 +96,9 @@ export function UsersTable({ users, stale, ...controls }: Readonly<Props>) {
                     filter={
                       <SelectColumnFilter
                         label={t("users.role")}
-                        value={search.role ?? ""}
-                        onChange={(role) => patchSearch({ role: role || undefined })}
-                        options={[{ value: "", label: t("users.allRoles") }, ...options]}
+                        value={filters.role.value}
+                        onChange={filters.role.set}
+                        options={filters.role.options}
                       />
                     }
                   />
@@ -112,15 +108,9 @@ export function UsersTable({ users, stale, ...controls }: Readonly<Props>) {
                     filter={
                       <SelectColumnFilter
                         label={t("users.status")}
-                        value={search.isActive === undefined ? "" : String(search.isActive)}
-                        onChange={(value) =>
-                          patchSearch({ isActive: value === "" ? undefined : value === "true" })
-                        }
-                        options={[
-                          { value: "", label: t("users.allStatuses") },
-                          { value: "true", label: t("users.active") },
-                          { value: "false", label: t("users.deactivated") },
-                        ]}
+                        value={filters.status.value}
+                        onChange={filters.status.set}
+                        options={filters.status.options}
                       />
                     }
                   />
@@ -134,6 +124,15 @@ export function UsersTable({ users, stale, ...controls }: Readonly<Props>) {
           </ScrollRegion>
         </ViewTransition>
       </section>
+
+      <ConfirmDeleteDialog
+        {...deactivateDialogProps}
+        title={t("users.deactivateConfirm.title")}
+        description={t("users.deactivateConfirm.description")}
+        confirmLabel={t("users.deactivate")}
+      />
+
+      <ResetPasswordDialog user={resetUser} onClose={closeReset} />
     </>
   );
 }

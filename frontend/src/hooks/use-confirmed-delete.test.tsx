@@ -1,7 +1,7 @@
 import { act, renderHook } from "@testing-library/react";
 import { expect, test, vi } from "vitest";
 import { createQueryWrapper } from "@/test/query";
-import { useConfirmedDelete } from "./use-confirmed-delete";
+import { childDelete, useConfirmedDelete } from "./use-confirmed-delete";
 
 const goals = [
   { id: "g1", name: "Holiday" },
@@ -75,4 +75,20 @@ test("a restorable kind offers an undo toast once the delete succeeded", () => {
   act(() => result.current.dialogProps.onConfirm("g1"));
 
   expect(mutate).toHaveBeenCalledWith({ id: "g1" }, { onSuccess: expect.any(Function) });
+});
+
+test("child delete maps the row id onto the parent's route and back", () => {
+  const mutate = vi.fn();
+  const onSuccess = vi.fn();
+  const mutation = childDelete(
+    { mutate, isPending: true, variables: { id: "a1", date: "2026-09-01" } },
+    (date) => ({ id: "a1", date }),
+    (variables) => variables.date,
+  );
+
+  mutation.mutate({ id: "2026-09-02" }, { onSuccess });
+
+  expect(mutate).toHaveBeenCalledWith({ id: "a1", date: "2026-09-02" }, { onSuccess });
+  expect(mutation.variables).toEqual({ id: "2026-09-01" });
+  expect(mutation.isPending).toBe(true);
 });

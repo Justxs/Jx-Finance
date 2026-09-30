@@ -1,6 +1,8 @@
 import { useTranslation } from "react-i18next";
-import type { HouseholdResponse, Scope } from "@/api/generated/model";
+import { useHouseholdsSuspense } from "@/api/generated";
+import type { Scope } from "@/api/generated/model";
 import { defineAppFieldGroup } from "@/components/form";
+import { FormGrid } from "@/components/ui/form-grid/form-grid";
 import { namedOptions } from "@/lib/options";
 
 const sharingFieldGroup = defineAppFieldGroup(({ strict }) => ({
@@ -11,13 +13,18 @@ const sharingFieldGroup = defineAppFieldGroup(({ strict }) => ({
 interface Props {
   fields: typeof sharingFieldGroup.fields;
   idPrefix: string;
-  households: readonly HouseholdResponse[];
+  grid?: boolean;
 }
 
-function SharingFieldsGroup({ fields, idPrefix, households }: Readonly<Props>) {
+function SharingFieldsGroup({ fields, idPrefix, grid = false }: Readonly<Props>) {
   const { t } = useTranslation();
+  const households = useHouseholdsSuspense().data;
 
-  return (
+  if (households.length === 0) {
+    return null;
+  }
+
+  const group = (
     <fields.Field name="scope">
       {(scopeField) => (
         <>
@@ -45,6 +52,8 @@ function SharingFieldsGroup({ fields, idPrefix, households }: Readonly<Props>) {
       )}
     </fields.Field>
   );
+
+  return grid ? <FormGrid>{group}</FormGrid> : group;
 }
 
 export const SharingFields = sharingFieldGroup.bindComponent(SharingFieldsGroup, "fields");

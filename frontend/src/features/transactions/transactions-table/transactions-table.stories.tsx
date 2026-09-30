@@ -5,6 +5,8 @@ import { expect, fn, screen, userEvent, waitFor } from "storybook/test";
 import type { TransactionResponse } from "@/api/generated/model";
 import { getDebtsMockHandler } from "@/api/generated/net-worth/net-worth.msw";
 import { getBulkCategorizeTransactionsMockHandler } from "@/api/generated/transactions/transactions.msw";
+import { useTransactionRowDialogs } from "@/features/transactions/transaction-row-actions/transaction-row-actions";
+import { useTransactionFilters } from "@/features/transactions/use-transaction-filters";
 import {
   accounts,
   categories,
@@ -22,6 +24,8 @@ import {
   uncategorisedTransaction,
 } from "@/storybook/fixtures";
 import { withHandlers } from "@/storybook/handlers";
+import { openedDialog } from "@/storybook/interactions";
+import { useInlineCategory } from "./category-cell";
 import { TransactionsTable } from "./transactions-table";
 import { useTransactionColumnHeaders } from "./use-transaction-column-headers";
 import { isSelectableTransaction, useTransactionColumns } from "./use-transaction-columns";
@@ -46,7 +50,10 @@ function TransactionsTableHarness({
 }: Readonly<HarnessProps>) {
   const [selectedIds, setSelectedIds] = useState<ReadonlySet<string>>(new Set(initialSelectedIds));
   const selectableIds = data.filter(isSelectableTransaction).map((item) => item.id);
-  const columnHeaders = useTransactionColumnHeaders({ accounts, categories, tags });
+  const filters = useTransactionFilters({ accounts, categories });
+  const columnHeaders = useTransactionColumnHeaders(filters, tags);
+  const rowDialogs = useTransactionRowDialogs();
+  const inlineCategory = useInlineCategory((id) => toast.message(`Categorized ${id}`));
   const columns = useTransactionColumns({
     accountNames,
     categoryById,
@@ -57,6 +64,10 @@ function TransactionsTableHarness({
     onRefund: (transaction) => toast.message(`Refund ${transaction.description ?? transaction.id}`),
     onDelete: (id) => toast.message(`Delete ${id}`),
     deletingId,
+    moreActions: rowDialogs.moreActions,
+    onUpdateSplit: rowDialogs.onUpdateSplit,
+    categories,
+    inlineCategory,
   });
 
   return (
@@ -84,6 +95,7 @@ function TransactionsTableHarness({
           onTogglePage: (selected) => setSelectedIds(new Set(selected ? selectableIds : [])),
         }}
       />
+      {rowDialogs.dialogs}
     </div>
   );
 }
@@ -205,7 +217,8 @@ export const PaysADebt: Story = {
     await userEvent.click(
       canvas.getByRole("button", { name: `Actions: ${transactions[0]?.description ?? ""}` }),
     );
-    await expect(await screen.findByRole("menuitem", { name: "Link to debt" })).toBeVisible();
+    await userEvent.click(await screen.findByRole("menuitem", { name: "Link to debt" }));
+    await expect(await openedDialog()).toHaveTextContent("Link to debt");
   },
 };
 

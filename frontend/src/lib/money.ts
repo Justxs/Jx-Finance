@@ -1,4 +1,4 @@
-import { normalizeMoney } from "./validation.ts";
+import { normalizeMoney } from "@/lib/validation";
 
 export function toCents(value: string): number {
   return Math.round(Number(normalizeMoney(value)) * 100);

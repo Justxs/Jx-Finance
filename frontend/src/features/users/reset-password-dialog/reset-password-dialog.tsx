@@ -12,9 +12,9 @@ import { useServerForm } from "@/components/form";
 import { FormError } from "@/components/form-error/form-error";
 import { EditModal } from "@/components/modal";
 import { clearingWrongPassword } from "@/lib/form-server-errors";
-import { silent } from "@/lib/mutations";
+import { silentMutation } from "@/lib/mutations";
+import { userName } from "@/lib/user-name";
 import { password, requiredMax } from "@/lib/validation";
-import { userName } from "../user-queries";
 
 interface FormProps {
   user: UserProfileResponse;
@@ -40,14 +40,15 @@ function ResetPasswordForm({ user, onClose }: Readonly<FormProps>) {
     currentPassword: requiredMax(t, resetUserPasswordBodyCurrentPasswordMax),
   });
 
-  const resetMutation = useResetUserPassword(
-    silent({
+  const resetMutation = useResetUserPassword({
+    mutation: {
+      ...silentMutation,
       onSuccess: () => {
         toast.success(t("users.resetPassword.done", { name }));
         onClose();
       },
-    }),
-  );
+    },
+  });
 
   const form = useServerForm({
     defaultValues: { newPassword: "", resetTwoFactor: false, currentPassword: "" },

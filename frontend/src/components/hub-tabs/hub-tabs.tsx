@@ -1,7 +1,7 @@
 import { Link, useLocation } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { useSettings } from "@/hooks/use-settings";
-import { navHubs, navPages } from "@/lib/navigation";
+import { isPageEnabled, navHubs, navPages } from "@/lib/navigation";
 import { cn } from "@/lib/utils";
 
 type HubPage = Extract<(typeof navPages)[number], { hub: string }>;
@@ -21,7 +21,7 @@ export function useHubTabs() {
   }
 
   const pages = hubPages.filter(
-    (page) => page.hub === current.hub && (!("feature" in page) || features[page.feature]),
+    (page) => page.hub === current.hub && isPageEnabled(page, features),
   );
   return pages.length > 1 ? { titleKey: navHubs[current.hub].key, current, pages } : undefined;
 }

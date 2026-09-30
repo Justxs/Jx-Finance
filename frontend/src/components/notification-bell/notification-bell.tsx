@@ -25,14 +25,14 @@ import {
 import { Rows } from "@/components/ui/rows/rows";
 import { IconButtonSkeleton, Skeleton } from "@/components/ui/skeleton/skeleton";
 import { Tooltip } from "@/components/ui/tooltip/tooltip";
-import { monthKeyOfIso } from "@/features/month-close/month-key";
 import { useDate, useMoney, useMonthName, useNumberFormat } from "@/hooks/use-formatters";
-import { type FeatureKey, useSettings } from "@/hooks/use-settings";
+import { useSettings } from "@/hooks/use-settings";
 import { unreadParams } from "@/lib/app-shell";
-import { parseIso } from "@/lib/calendar";
+import { monthKeyOfIso, parseIso } from "@/lib/calendar";
 import { pendingId } from "@/lib/mutations";
 import { sidebarRowClass } from "@/lib/navigation";
 import { optimisticRemoval, optimisticUpdate } from "@/lib/optimistic";
+import type { FeatureKey } from "@/lib/settings";
 import { cn } from "@/lib/utils";
 
 type SidebarState = "expanded" | "collapsed";
@@ -49,7 +49,7 @@ function sidebarTriggerClass(sidebar: SidebarState) {
   );
 }
 
-export function NotificationBellUnavailable({ sidebar }: Readonly<Props>) {
+function NotificationBellUnavailable({ sidebar }: Readonly<Props>) {
   const { t } = useTranslation();
 
   if (sidebar) {

@@ -80,7 +80,7 @@ export const AllOverLimit: Story = {
   play: async ({ canvas }) => {
     const label = await canvas.findByText(/^(over by|viršyta)$/i);
     await expect(label.nextElementSibling).toHaveClass("text-expense");
-    const rowFigure = canvas.getByText(/88\.40 over budget/u);
+    const rowFigure = canvas.getByText(/88\.40 over$/u);
     await expect(rowFigure).toHaveClass("text-expense");
     await expect(canvas.getByText(/98\.40 spent of .*10\.00/u)).toBeVisible();
   },
@@ -133,7 +133,9 @@ export const EditDialogOpen: Story = {
   play: async ({ canvas }) => {
     const editButtons = await canvas.findAllByRole("button", { name: /^(edit|redaguoti):/i });
     await userEvent.click(editButtons[0]!);
-    await openedDialog();
+    const dialog = await openedDialog();
+    await expect(dialog).toHaveAccessibleName("Edit budget");
+    await expect(dialog).toHaveAccessibleDescription(budgets[0]!.categoryName);
   },
 };
 

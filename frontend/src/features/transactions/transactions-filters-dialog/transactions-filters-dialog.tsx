@@ -1,17 +1,18 @@
 import { ListFilter } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import type { AccountResponse, CategoryResponse, TagResponse } from "@/api/generated/model";
+import type { TagResponse } from "@/api/generated/model";
 import { FieldShell } from "@/components/form/field-shell/field-shell";
 import { Modal } from "@/components/modal";
-import { SelectField, type SelectOption } from "@/components/select-field/select-field";
+import { SelectField } from "@/components/select-field/select-field";
+import { TagPicker } from "@/components/tag-picker/tag-picker";
 import { Button } from "@/components/ui/button/button";
 import { Checkbox } from "@/components/ui/checkbox/checkbox";
 import { DateRangePicker } from "@/components/ui/date-range-picker/date-range-picker";
 import { Input } from "@/components/ui/input/input";
-import { TagPicker } from "@/features/tags/tag-picker/tag-picker";
+import type { TransactionFilters } from "@/features/transactions/use-transaction-filters";
 import { useDebouncedDraft } from "@/hooks/use-debounced-draft";
-import { useTransactionFilters } from "../use-transaction-filters";
+import type { SelectOption } from "@/lib/options";
 
 interface SelectFilter<T extends string> {
   label: string;
@@ -32,24 +33,15 @@ function FilterSelect<T extends string>({
 }
 
 interface Props {
-  accounts: AccountResponse[];
-  categories: CategoryResponse[];
+  filters: TransactionFilters;
   tags: TagResponse[];
   className?: string;
-  defaultOpen?: boolean;
 }
 
-export function TransactionsFiltersDialog({
-  accounts,
-  categories,
-  tags,
-  className,
-  defaultOpen = false,
-}: Readonly<Props>) {
+export function TransactionsFiltersDialog({ filters, tags, className }: Readonly<Props>) {
   const { t } = useTranslation();
-  const filters = useTransactionFilters({ accounts, categories });
   const { fields, activeCount } = filters;
-  const [open, setOpen] = useState(defaultOpen);
+  const [open, setOpen] = useState(false);
   const text = useDebouncedDraft(fields.search.value, fields.search.set, fields.search.debounceMs);
 
   function clearAll() {

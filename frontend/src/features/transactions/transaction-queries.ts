@@ -1,19 +1,34 @@
-import type { FlowType, SortDirection, TransactionSortField } from "@/api/generated/model";
+import { z } from "zod";
+import { FlowType, TransactionSortField } from "@/api/generated/model";
+import { optionalParam, sortParams } from "@/lib/search-schema";
 
-interface TransactionsView {
-  page: number;
-  search?: string;
-  payee?: string;
-  accountId?: string;
-  categoryId?: string;
-  tagIds?: string;
-  type?: FlowType;
-  dateFrom?: string;
-  dateTo?: string;
-  unusual?: boolean;
-  uncategorized?: boolean;
-  sort?: TransactionSortField;
-  direction?: SortDirection;
+export const transactionFilterSchema = z.object({
+  search: optionalParam(z.string()),
+  payee: optionalParam(z.string()),
+  accountId: optionalParam(z.uuid()),
+  categoryId: optionalParam(z.uuid()),
+  tagIds: optionalParam(
+    z.string().refine((value) => value.split(",").every((id) => z.uuid().safeParse(id).success)),
+  ),
+  type: optionalParam(z.enum(FlowType)),
+  dateFrom: optionalParam(z.iso.date()),
+  dateTo: optionalParam(z.iso.date()),
+  unusual: optionalParam(z.literal(true)),
+  uncategorized: optionalParam(z.literal(true)),
+});
+
+export const transactionsSearchSchema = transactionFilterSchema.extend({
+  page: z.coerce.number().int().min(1).optional().default(1).catch(1),
+  ...sortParams(TransactionSortField),
+  new: optionalParam(z.boolean()),
+});
+
+export type TransactionFilter = z.infer<typeof transactionFilterSchema>;
+
+type TransactionsView = Omit<z.infer<typeof transactionsSearchSchema>, "new">;
+
+export function transactionFilterParams(view: TransactionFilter): TransactionFilter {
+  return transactionFilterSchema.parse(view);
 }
 
 export function transactionView(search: TransactionsView): TransactionsView {
@@ -29,39 +44,8 @@ export function transactionListParams(view: TransactionsView, pageSize: number) 
   return { ...transactionView(view), pageSize };
 }
 
-export interface TransactionFilter {
-  [key: string]: string | boolean | undefined;
-  search?: string;
-  payee?: string;
-  accountId?: string;
-  categoryId?: string;
-  tagIds?: string;
-  type?: FlowType;
-  dateFrom?: string;
-  dateTo?: string;
-  unusual?: boolean;
-  uncategorized?: boolean;
-}
-
-export function transactionFilterParams(view: TransactionsView): TransactionFilter {
-  return {
-    search: view.search,
-    payee: view.payee,
-    accountId: view.accountId,
-    categoryId: view.categoryId,
-    tagIds: view.tagIds,
-    type: view.type,
-    dateFrom: view.dateFrom,
-    dateTo: view.dateTo,
-    unusual: view.unusual || undefined,
-    uncategorized: view.uncategorized || undefined,
-  };
-}
-
 export function isEmptyFilter(filter: TransactionFilter) {
-  return Object.values(filter).every(
-    (value) => value === undefined || value === "" || value === false,
-  );
+  return Object.values(filter).every((value) => value === undefined || value === "");
 }
 
 interface KnownEntities {

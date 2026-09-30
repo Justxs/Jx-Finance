@@ -1,5 +1,17 @@
 import { afterEach, describe, expect, test, vi } from "vitest";
-import { monthBounds, parseIso, safeTimeZone, todayInZone, toIso } from "./calendar";
+import {
+  daysBetween,
+  latestEndedMonth,
+  MONTH_KEY_PATTERN,
+  monthBounds,
+  monthDate,
+  monthKeyOfIso,
+  parseIso,
+  safeTimeZone,
+  shiftMonth,
+  todayInZone,
+  toIso,
+} from "./calendar";
 
 afterEach(() => {
   vi.useRealTimers();
@@ -30,6 +42,19 @@ describe("parseIso", () => {
       expect(parseIso(value)).toBeNull();
     },
   );
+});
+
+describe("daysBetween", () => {
+  test("counts calendar days across a month end and a daylight-saving change", () => {
+    expect(daysBetween("2026-09-30", "2026-10-01")).toBe(1);
+    expect(daysBetween("2026-09-30", "2026-09-28")).toBe(-2);
+    expect(daysBetween("2026-09-30", "2026-09-30")).toBe(0);
+    expect(daysBetween("2026-03-01", "2026-04-01")).toBe(31);
+  });
+
+  test("answers null for a date it cannot read", () => {
+    expect(daysBetween("", "2026-09-30")).toBeNull();
+  });
 });
 
 describe("safeTimeZone", () => {
@@ -78,5 +103,28 @@ describe("monthBounds", () => {
       dateFrom: "2026-12-01",
       dateTo: "2026-12-31",
     });
+  });
+});
+
+describe("month keys", () => {
+  test("takes the year and month of an ISO date", () => {
+    expect(monthKeyOfIso("2026-01-31")).toBe("2026-01");
+  });
+
+  test("shifts across year boundaries", () => {
+    expect(shiftMonth("2026-01", -1)).toBe("2025-12");
+    expect(shiftMonth("2025-12", 1)).toBe("2026-01");
+    expect(monthDate("2025-12")).toEqual(new Date(2025, 11, 1));
+  });
+
+  test("names the month before today as the latest ended one", () => {
+    expect(latestEndedMonth(new Date(2026, 0, 15))).toBe("2025-12");
+  });
+
+  test("accepts only a year and a month", () => {
+    expect(MONTH_KEY_PATTERN.test("2026-08")).toBe(true);
+    expect(MONTH_KEY_PATTERN.test("2026-13")).toBe(false);
+    expect(MONTH_KEY_PATTERN.test("2026-8")).toBe(false);
+    expect(MONTH_KEY_PATTERN.test("1999-12")).toBe(false);
   });
 });

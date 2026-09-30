@@ -10,24 +10,17 @@ export function budgetFigures(budget: Pick<BudgetResponse, "spent" | "effectiveL
   return { spent, limit, over: spent > limit };
 }
 
-interface Props {
-  spent: number;
-  limit: number;
+interface Props extends ReturnType<typeof budgetFigures> {
   className?: string;
 }
 
-export function BudgetRemaining({ spent, limit, className }: Readonly<Props>) {
+export function BudgetRemaining({ spent, limit, over, className }: Readonly<Props>) {
   const { t } = useTranslation();
   const money = useMoney();
-  const over = spent > limit;
 
   return (
     <span
-      className={cn(
-        "text-xs tabular-nums",
-        over ? EXPENSE_TONE : "text-muted-foreground",
-        className,
-      )}
+      className={cn("text-xs text-muted-foreground tabular-nums", className, over && EXPENSE_TONE)}
     >
       {over
         ? t("budgets.over", { amount: money.format(spent - limit) })

@@ -10,6 +10,9 @@ Separate `InvestmentTransaction` ledger on ordinary accounts; FIFO cost basis; a
 
 Newest first. Each entry is a choice between real alternatives: what was chosen, what was rejected, and why.
 
+- **2026-09-30.** The investments page renders the portfolio and the tax summary as two views, each with its own header, body and dialogs
+  - Rejected: One page component that branches on the view for the title, the description, the header actions, the account filter, the error subject and the body; splitting out only the header actions
+  - Why: Every part of the page differed between the two views, and the entry, import and securities dialogs open only from the portfolio. Two views hold one branch instead of six, and the dialog state lives where the buttons are
 - **2026-09-21.** The yearly investment tax summary is printed from the page under a print stylesheet; there is no second PDF
   - Rejected: A MigraDoc PDF beside the transaction one; an HTML-to-PDF renderer in the backend
   - Why: MigraDoc lays the whole document out in memory, which is why the transaction PDF needs `App:PdfExportMaxRows`; a second MigraDoc document would mean laying the same tables out a second time, a second row cap and English-only text, because the PDF is written in the backend while this page is translated in the browser and formats money in the viewer's locale. Printing the page reuses the tables, the locale, the currency formatting and the frozen amounts already on screen, and is bounded by what one year of one caller's entries already put there. A second renderer would add a browser-sized dependency to the API image for one page

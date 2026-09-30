@@ -2,12 +2,11 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { CategoryResponse, TagResponse, TransactionResponse } from "@/api/generated/model";
 import { ComboboxField } from "@/components/combobox-field/combobox-field";
+import { TagPicker } from "@/components/tag-picker/tag-picker";
 import { Button } from "@/components/ui/button/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover/popover";
-import { TagPicker } from "@/features/tags/tag-picker/tag-picker";
+import { UNCATEGORIZED_OPTION } from "@/features/transactions/transaction-amount/transaction-row";
 import { namedOptions } from "@/lib/options";
-
-const UNCATEGORIZED = "none";
 
 interface Props {
   selected: TransactionResponse[];
@@ -41,7 +40,7 @@ export function SelectionToolbar({
   const options = namedOptions(
     categories.filter((category) => category.type === type),
     t("transactions.uncategorized"),
-    UNCATEGORIZED,
+    UNCATEGORIZED_OPTION,
   );
   const value = !mixed && options.some((option) => option.value === choice) ? choice : "";
 
@@ -70,7 +69,7 @@ export function SelectionToolbar({
         variant="outline"
         pending={pending}
         disabled={mixed || value === ""}
-        onClick={() => onApply(value === UNCATEGORIZED ? null : value)}
+        onClick={() => onApply(value === UNCATEGORIZED_OPTION ? null : value)}
       >
         {t("transactions.setCategory")}
       </Button>

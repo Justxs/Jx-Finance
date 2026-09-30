@@ -2,9 +2,9 @@ import { useTranslation } from "react-i18next";
 import { useTransactionsSummarySuspense } from "@/api/generated";
 import type { TransactionsSummaryParams } from "@/api/generated/model";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
+import { TransactionsTotalsSkeleton } from "@/features/transactions/transactions-page/transactions-page-pending";
 import { useMoney } from "@/hooks/use-formatters";
 import { cn } from "@/lib/utils";
-import { TransactionsTotalsSkeleton } from "../transactions-page/transactions-page-pending";
 
 interface LineProps {
   count: number;

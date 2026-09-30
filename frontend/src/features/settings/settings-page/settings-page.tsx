@@ -1,40 +1,24 @@
-import { useQueryClient } from "@tanstack/react-query";
 import { useSearch } from "@tanstack/react-router";
 import { RefreshCw } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
-import {
-  getSettingsQueryKey,
-  useAccountsSuspense,
-  useSyncExchangeRates,
-  useUpdateSettings,
-} from "@/api/generated";
+import { useAccountsSuspense, useSyncExchangeRates } from "@/api/generated";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
+import { type SettingsSection, SettingsLayout } from "@/components/settings-layout/settings-layout";
 import { Button } from "@/components/ui/button/button";
+import { BackupSection } from "@/features/settings/backup-section/backup-section";
+import { DiscordSection } from "@/features/settings/discord-section/discord-section";
+import { SettingsForm } from "@/features/settings/settings-form/settings-form";
+import { SmtpSection } from "@/features/settings/smtp-section/smtp-section";
 import { useIsoDate } from "@/hooks/use-formatters";
 import { useSettingsSuspense } from "@/hooks/use-settings";
-import { BackupSection } from "../backup-section/backup-section";
-import { DiscordSection } from "../discord-section/discord-section";
-import { SettingsForm } from "../settings-form/settings-form";
-import { type SettingsSection, SettingsLayout } from "../settings-nav/settings-nav";
-import { SmtpSection } from "../smtp-section/smtp-section";
 import { SettingsFormSkeleton } from "./settings-page-pending";
 
 function SettingsContent({ section }: Readonly<{ section: SettingsSection }>) {
   const { t } = useTranslation();
-  const queryClient = useQueryClient();
   const formatDate = useIsoDate();
   const settings = useSettingsSuspense();
   const accounts = useAccountsSuspense();
-
-  const updateMutation = useUpdateSettings({
-    mutation: {
-      onSuccess: (saved) => {
-        queryClient.setQueryData(getSettingsQueryKey(), saved);
-        toast.success(t("settings.savedToast"));
-      },
-    },
-  });
 
   const syncMutation = useSyncExchangeRates({
     mutation: {
@@ -70,31 +54,12 @@ function SettingsContent({ section }: Readonly<{ section: SettingsSection }>) {
     </div>
   );
 
-  const editable = {
-    instanceName: settings.instanceName,
-    features: settings.features,
-    reportingCurrency: settings.reportingCurrency,
-    enabledCurrencies: settings.enabledCurrencies,
-    exchangeRateSyncEnabled: settings.exchangeRateSyncEnabled,
-    defaultLanguage: settings.defaultLanguage,
-    timeZone: settings.timeZone,
-    firstDayOfWeek: settings.firstDayOfWeek,
-    defaultAccountId: settings.defaultAccountId,
-    defaultPageSize: settings.defaultPageSize,
-    supportLinkEnabled: settings.supportLinkEnabled,
-  };
-
   return (
     <SettingsForm
       section={section}
-      key={JSON.stringify(editable)}
       settings={settings}
       accounts={accounts.data}
-      pending={updateMutation.isPending}
       exchangeRates={exchangeRates}
-      onSubmit={(values, onSaved) =>
-        updateMutation.mutateAsync({ data: values }, { onSuccess: onSaved })
-      }
     />
   );
 }

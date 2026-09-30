@@ -17,6 +17,8 @@ import { RoutePending } from "@/components/route-pending/route-pending";
 import { Skeleton } from "@/components/ui/skeleton/skeleton";
 import { Toaster } from "@/components/ui/sonner/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip/tooltip";
+import { transactionsSearchSchema } from "@/features/transactions/transaction-queries";
+import { clearTransactionViews } from "@/features/transactions/transaction-views";
 import { setAuthenticated, setSetupNeeded } from "@/lib/auth-gate";
 import { pageViewTransition } from "@/lib/page-transition";
 import { createMutationCache } from "@/lib/query-client";
@@ -28,9 +30,7 @@ import { investmentsSearchSchema } from "@/routes/investments";
 import { profileSearchSchema } from "@/routes/profile";
 import { reportsSearchSchema } from "@/routes/reports";
 import { settingsSearchSchema } from "@/routes/settings";
-import { transactionsSearchSchema } from "@/routes/transactions";
 import { usersSearchSchema } from "@/routes/users";
-import { clearTransactionViews } from "@/stores/transaction-views";
 
 const STORY_ROUTES = [
   { path: "/", validateSearch: dashboardSearchSchema },
@@ -203,7 +203,7 @@ export function AppAt({
 }: Readonly<{ path: string; authenticated?: boolean; needsSetup?: boolean }>) {
   const [queryClient] = useState(createStoryQueryClient);
   const [router] = useState(() => {
-    setSetupNeeded(needsSetup);
+    setSetupNeeded(queryClient, needsSetup);
     setAuthenticated(authenticated);
     return createRouter({
       routeTree,

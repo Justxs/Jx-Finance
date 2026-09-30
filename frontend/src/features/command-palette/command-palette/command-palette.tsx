@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useRouter } from "@tanstack/react-router";
+import { useNavigate } from "@tanstack/react-router";
 import { Search } from "lucide-react";
 import { type KeyboardEvent, useId, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -18,14 +18,20 @@ import {
   DialogDescription,
   DialogTitle,
 } from "@/components/ui/dialog/dialog";
-import { latestEndedMonth } from "@/features/month-close/month-key";
+import {
+  type CommandEntry,
+  type CommandTarget,
+  buildCommandEntries,
+} from "@/features/command-palette/command-entries";
+import { filterCommandEntries } from "@/features/command-palette/command-search";
 import { useSettings, useTodayDate } from "@/hooks/use-settings";
 import { endSession } from "@/lib/auth-gate";
+import { latestEndedMonth } from "@/lib/calendar";
 import { notify } from "@/lib/mutations";
-import type { ShortcutRouter } from "@/lib/shortcuts";
+import { silentQuery } from "@/lib/query-client";
 import { UserRole } from "@/lib/user-role";
 import { cn } from "@/lib/utils";
-import { setActiveHousehold, useActiveHouseholdId } from "@/stores/active-household-store";
+import { switchHousehold, useActiveHouseholdId } from "@/stores/active-household-store";
 import { setLocale, useLocale } from "@/stores/app-store";
 import {
   rememberCommand,
@@ -33,14 +39,12 @@ import {
   useCommandRecents,
 } from "@/stores/command-palette-store";
 import { setTheme, useTheme } from "@/stores/theme-store";
-import { type CommandEntry, type CommandTarget, buildCommandEntries } from "../command-entries";
-import { filterCommandEntries } from "../command-search";
 
 const PALETTE_STALE_MS = 5 * 60 * 1000;
 
 const RESULT_LIMIT = 50;
 
-const listQuery = { staleTime: PALETTE_STALE_MS, throwOnError: false, meta: { silent: true } };
+const listQuery = { staleTime: PALETTE_STALE_MS, ...silentQuery };
 
 function wrapIndex(index: number, step: number, length: number) {
   return length === 0 ? 0 : (index + step + length) % length;
@@ -52,7 +56,7 @@ interface ContentProps {
 
 function CommandPaletteContent({ onClose }: Readonly<ContentProps>) {
   const { t } = useTranslation();
-  const router = useRouter();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const listId = useId();
   const optionPrefix = useId();
@@ -79,11 +83,11 @@ function CommandPaletteContent({ onClose }: Readonly<ContentProps>) {
 
   const logoutMutation = useLogout({
     mutation: {
-      onSuccess: () => endSession(queryClient, (router as ShortcutRouter).navigate),
+      onSuccess: () => endSession(queryClient, navigate),
     },
   });
 
-  const backupMutation = useCreateBackup(notify(t("backup.created")));
+  const backupMutation = useCreateBackup({ mutation: notify(t("backup.created")) });
 
   const lastMonth = latestEndedMonth(useTodayDate());
   const entries = buildCommandEntries({
@@ -107,7 +111,7 @@ function CommandPaletteContent({ onClose }: Readonly<ContentProps>) {
   function run(target: CommandTarget) {
     switch (target.kind) {
       case "navigate": {
-        void (router as ShortcutRouter).navigate({ to: target.to, search: target.search });
+        void navigate(target.link);
         break;
       }
       case "theme": {
@@ -119,8 +123,7 @@ function CommandPaletteContent({ onClose }: Readonly<ContentProps>) {
         break;
       }
       case "household": {
-        setActiveHousehold(target.householdId);
-        void queryClient.invalidateQueries();
+        switchHousehold(queryClient, target.householdId);
         break;
       }
       case "backup": {

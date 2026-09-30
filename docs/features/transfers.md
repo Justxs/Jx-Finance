@@ -22,4 +22,4 @@ flowchart TD
     Need --> Save
 ```
 
-The response carries `fromAccountImported` and `toAccountImported`; the form disables the fixed fields with the hint "Fixed by the import."
+The response carries `fromAccountImported` and `toAccountImported`; the form disables the fixed fields with the hint "Fixed by the import." The form refuses a description longer than the 500 characters the API accepts before sending it, as the conversion form does.

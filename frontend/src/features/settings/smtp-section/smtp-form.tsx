@@ -1,14 +1,25 @@
 import { Send } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
 import { z } from "zod";
+import { useSendTestEmail, useUpdateSmtpSettings } from "@/api/generated";
 import { SmtpEncryption } from "@/api/generated/model";
-import type { SmtpSettingsResponse, UpdateSmtpSettingsRequest } from "@/api/generated/model";
+import type { SmtpSettingsResponse } from "@/api/generated/model";
+import {
+  updateSmtpSettingsBodyFromAddressMax,
+  updateSmtpSettingsBodyFromNameMax,
+  updateSmtpSettingsBodyHostMax,
+  updateSmtpSettingsBodyPasswordMax,
+  updateSmtpSettingsBodyPortMax,
+  updateSmtpSettingsBodyUserNameMax,
+} from "@/api/schemas/settings/settings.zod";
 import { useServerForm } from "@/components/form";
 import { FormError } from "@/components/form-error/form-error";
 import { Button } from "@/components/ui/button/button";
 import { FormGrid } from "@/components/ui/form-grid/form-grid";
+import { silentMutation } from "@/lib/mutations";
 import { optionsOf } from "@/lib/options";
-import { optionalText, requiredValue } from "@/lib/validation";
+import { optionalText, wholeNumberBetween } from "@/lib/validation";
 
 interface FormValues {
   enabled: boolean;
@@ -21,41 +32,34 @@ interface FormValues {
   fromName: string;
 }
 
-interface Props {
-  settings: SmtpSettingsResponse;
-  pending: boolean;
-  testPending: boolean;
-  testError: unknown;
-  onSubmit: (values: UpdateSmtpSettingsRequest, onSaved: () => void) => Promise<unknown> | void;
-  onTest: () => void;
-}
-
 const encryptions: SmtpEncryption[] = ["none", "startTls", "sslOnConnect"];
 
-export function SmtpForm({
-  settings,
-  pending,
-  testPending,
-  testError,
-  onSubmit,
-  onTest,
-}: Readonly<Props>) {
+export function SmtpForm({ settings }: Readonly<{ settings: SmtpSettingsResponse }>) {
   const { t } = useTranslation();
+
+  const saveMutation = useUpdateSmtpSettings({
+    mutation: { meta: { silent: true, success: t("settings.smtp.saved") } },
+  });
+
+  const testMutation = useSendTestEmail({
+    mutation: {
+      ...silentMutation,
+      onSuccess: (result) => {
+        toast.success(t("settings.smtp.testSent", { email: result.sentTo }));
+      },
+    },
+  });
 
   const schema = z
     .object({
       enabled: z.boolean(),
-      host: optionalText(t, 255),
-      port: requiredValue(t),
+      host: optionalText(t, updateSmtpSettingsBodyHostMax),
+      port: wholeNumberBetween(t, 1, updateSmtpSettingsBodyPortMax),
       encryption: z.enum(SmtpEncryption),
-      userName: optionalText(t, 255),
-      password: optionalText(t, 255),
-      fromAddress: optionalText(t, 320),
-      fromName: optionalText(t, 100),
-    })
-    .refine((value) => Number(value.port) >= 1 && Number(value.port) <= 65535, {
-      message: t("validation.required"),
-      path: ["port"],
+      userName: optionalText(t, updateSmtpSettingsBodyUserNameMax),
+      password: optionalText(t, updateSmtpSettingsBodyPasswordMax),
+      fromAddress: optionalText(t, updateSmtpSettingsBodyFromAddressMax),
+      fromName: optionalText(t, updateSmtpSettingsBodyFromNameMax),
     })
     .refine((value) => !value.enabled || value.host.trim() !== "", {
       message: t("validation.required"),
@@ -80,9 +84,10 @@ export function SmtpForm({
   const form = useServerForm({
     defaultValues,
     schema,
-    submit: (value, formApi) =>
-      onSubmit(
-        {
+    submit: async (value, formApi) => {
+      testMutation.reset();
+      await saveMutation.mutateAsync({
+        data: {
           enabled: value.enabled,
           host: value.host.trim() || null,
           port: Number(value.port),
@@ -92,9 +97,15 @@ export function SmtpForm({
           fromAddress: value.fromAddress.trim() || null,
           fromName: value.fromName.trim() || null,
         },
-        () => formApi.reset({ ...value, password: "" }),
-      ),
+      });
+      formApi.reset({ ...value, password: "" });
+    },
   });
+
+  function sendTest() {
+    saveMutation.reset();
+    testMutation.mutate();
+  }
 
   return (
     <form.AppForm>
@@ -187,21 +198,21 @@ export function SmtpForm({
           </form.Field>
         </FormGrid>
 
-        <FormError error={testError} />
+        <FormError error={testMutation.error ?? saveMutation.error} />
 
         <div className="flex flex-wrap items-center gap-3">
           <Button
             type="button"
             variant="outline"
-            pending={testPending}
+            pending={testMutation.isPending}
             disabled={!settings.enabled}
-            onClick={onTest}
+            onClick={sendTest}
           >
             <Send />
             {t("settings.smtp.test")}
           </Button>
           <p className="text-sm text-muted-foreground">{t("settings.smtp.testHint")}</p>
-          <form.SubmitButton pending={pending} className="ml-auto">
+          <form.SubmitButton pending={saveMutation.isPending} className="ml-auto">
             {t("actions.save")}
           </form.SubmitButton>
         </div>

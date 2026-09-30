@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
-import type { AccountResponse, CategoryResponse, TagResponse } from "@/api/generated/model";
+import type { TagResponse } from "@/api/generated/model";
 import { SelectField } from "@/components/select-field/select-field";
+import { TagPicker } from "@/components/tag-picker/tag-picker";
 import { Checkbox } from "@/components/ui/checkbox/checkbox";
 import {
   ColumnFilter,
@@ -9,23 +10,15 @@ import {
 } from "@/components/ui/column-filter/column-filter";
 import { ColumnHeader } from "@/components/ui/column-header/column-header";
 import { DateRangePicker } from "@/components/ui/date-range-picker/date-range-picker";
-import { TagPicker } from "@/features/tags/tag-picker/tag-picker";
+import type { TransactionTypeFilter } from "@/features/transactions/transaction-filter-fields";
+import { useFilterSummaries } from "@/features/transactions/use-filter-summaries";
+import type { TransactionFilters } from "@/features/transactions/use-transaction-filters";
 import { SEARCH_SHORTCUT_TARGET } from "@/lib/shortcuts";
 import { type AriaSort, ariaSortFor } from "@/lib/sort";
-import type { TransactionTypeFilter } from "../transaction-filter-fields";
-import { useFilterSummaries } from "../use-filter-summaries";
-import { useTransactionFilters } from "../use-transaction-filters";
 
-interface Args {
-  accounts: AccountResponse[];
-  categories: CategoryResponse[];
-  tags: TagResponse[];
-}
-
-export function useTransactionColumnHeaders({ accounts, categories, tags }: Args) {
-  const filters = useTransactionFilters({ accounts, categories });
+export function useTransactionColumnHeaders(filters: TransactionFilters, tags: TagResponse[]) {
   const { search, fields, columnLabels } = filters;
-  const { valueOf } = useFilterSummaries({ accounts, categories, tags });
+  const { valueOf } = useFilterSummaries(filters, tags);
 
   type SortKey = NonNullable<typeof search.sort>;
 

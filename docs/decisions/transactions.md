@@ -12,6 +12,13 @@ A refund is an expense with a negative amount, the same signed number in the dat
 
 Newest first. Each entry is a choice between real alternatives: what was chosen, what was rejected, and why.
 
+- **2026-09-30.** The ledger's inline category change runs through one page-level `useInlineCategory` with its own bulk-category mutation, and shows a cell's pending choice from `useMutationState`
+  - Rejected: A mutation and a suggested-rule hook in every category cell; sending the cells through the selection toolbar's bulk mutation
+  - Why: Per-cell hooks put a mutation observer and two more in every row of a page that is rendered twice (table and phone list). The toolbar's mutation raises a "recategorized" toast and clears the selection on success, neither of which a single-cell change may do, and per-call callbacks only fire for the latest call, so a quick run of changes would lose all but the last suggested-rule offer. `useMutationState` over the shared mutation key keeps every cell's own pending choice even when several requests run at once
+- **2026-09-30.** The create and edit dialogs and their state live in `useTransactionFormSection`, a hook that returns `startBlank`, `startFromDraft`, `startEditing` and the dialogs
+  - Rejected: The 19-prop `TransactionFormSection` component the page fed; inlining both dialogs into the page
+  - Why: The component only forwarded props, and the page kept the prefill, receipt and edit state it could not own. Inlining would have kept all of that in an already long page. A hook moves the state beside the dialogs and leaves the page three calls, and a menu, a row action or a template can still start a dialog without a handle on it
+
 - **2026-09-29.** The open question of the refunds plan, decided while the owner was away and to be reviewed: the ledger's type filter gets no separate "Refunds" value; "Expense" lists refunds with their Refund tag
   - Rejected: A `refund` value of the type filter, served by an `Amount < 0` condition in `Filtered`
   - Why: It was the plan's recommendation and the conservative choice: no new filter value in the contract, the saved filters, the chips and the export links, and a refund is an expense by definition, so the expense filter showing it keeps the list and the expense total in agreement. A reader who wants only refunds can sort the expense list by amount

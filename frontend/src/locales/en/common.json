@@ -1075,6 +1075,7 @@
     "title": "Budgets",
     "subtitle": "One limit per category and period, each counted inside its own window.",
     "add": "Add budget",
+    "editTitle": "Edit budget",
     "category": "Category",
     "limit": "Limit",
     "period": "Period",
@@ -1097,7 +1098,6 @@
     "budgeted": "Budgeted",
     "remaining": "Remaining",
     "overBy": "Over by",
-    "overBudget": "{{amount}} over budget",
     "spentOf": "{{spent}} spent of {{limit}}",
     "historyHint": {
       "weekly": "Median of the last {{number}} weeks: {{amount}}",
@@ -1146,6 +1146,7 @@
   "goals": {
     "title": "Goals",
     "add": "Add goal",
+    "editTitle": "Edit goal",
     "name": "Name",
     "namePlaceholder": "e.g. Emergency fund",
     "targetAmount": "Target amount",
@@ -1401,6 +1402,7 @@
     },
     "years": {
       "title": "Income by year",
+      "table": "Yearly totals",
       "empty": "No income or realised gains yet.",
       "year": "Year",
       "dividends": "Dividends",
@@ -1805,6 +1807,11 @@
     "empty": "You're not part of any household yet.",
     "addMember": "Add",
     "memberEmailPlaceholder": "Member's email",
+    "removeMember": {
+      "title": "Remove this member?",
+      "description": "They stop seeing this household and everything shared in it. Their own records stay theirs.",
+      "confirm": "Remove"
+    },
     "roles": {
       "owner": "Owner",
       "member": "Member"
@@ -1985,6 +1992,7 @@
     "payeeHint": "Whole transactions are counted, and descriptions that differ only in reference numbers are one payee.",
     "noDescription": "No description",
     "showAllPayees": "Show all",
+    "noPayeeSpending": "No payee spending in this period.",
     "noIncome": "No income recorded in this period.",
     "syntheticGroups": {
       "investmentIncome": "Investment income",
@@ -2250,6 +2258,7 @@
     "ofPages": "of {{pages}}"
   },
   "filters": {
+    "label": "Filters",
     "filterBy": "Filter by {{column}}",
     "clear": "Clear",
     "apply": "Apply",

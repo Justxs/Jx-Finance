@@ -1,8 +1,7 @@
 import { Link, useLocation } from "@tanstack/react-router";
-import { ChevronLeft, ChevronRight, type LucideIcon } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useMeSuspense } from "@/api/generated";
-import type { FeatureFlags } from "@/api/generated/model";
 import { AccountMenu } from "@/components/account-menu/account-menu";
 import { Brand } from "@/components/brand/brand";
 import { HouseholdSwitcher } from "@/components/household-switcher/household-switcher";
@@ -12,67 +11,11 @@ import { SupportLink } from "@/components/support-link/support-link";
 import { Button } from "@/components/ui/button/button";
 import { Skeleton } from "@/components/ui/skeleton/skeleton";
 import { Tooltip } from "@/components/ui/tooltip/tooltip";
-import { useSettings } from "@/hooks/use-settings";
-import type { TranslationKey } from "@/lib/i18n";
-import { type NavHub, adminNavPages, isPathIn, navHubs, navPages } from "@/lib/navigation";
-import { UserRole } from "@/lib/user-role";
+import { useVisibleNav } from "@/hooks/use-visible-nav";
+import { isEntryActive, navEntries } from "@/lib/navigation";
 import { cn } from "@/lib/utils";
 import { useSidebarCollapsed } from "@/stores/sidebar-store";
-
-export type NavItem = (typeof navPages)[number] | (typeof adminNavPages)[number];
-
-export interface NavEntry {
-  to: NavItem["to"];
-  key: TranslationKey;
-  icon: LucideIcon;
-  group: NavItem["group"];
-  hub: NavHub | undefined;
-  pages: NavItem[];
-}
-
-export function visibleNav(features: FeatureFlags, isAdmin: boolean): readonly NavItem[] {
-  const enabled = navPages.filter((item) => !("feature" in item) || features[item.feature]);
-  return isAdmin ? [...enabled, ...adminNavPages] : enabled;
-}
-
-export function navEntries(pages: readonly NavItem[]): NavEntry[] {
-  const entries: NavEntry[] = [];
-  for (const page of pages) {
-    const hub = "hub" in page ? page.hub : undefined;
-    const existing = hub ? entries.find((entry) => entry.hub === hub) : undefined;
-    if (existing) {
-      existing.pages.push(page);
-      continue;
-    }
-    entries.push({
-      to: page.to,
-      key: hub ? navHubs[hub].key : page.key,
-      icon: hub ? navHubs[hub].icon : page.icon,
-      group: page.group,
-      hub,
-      pages: [page],
-    });
-  }
-  return entries.map((entry) => {
-    const [only] = entry.pages;
-    return entry.hub && navHubs[entry.hub].tabs && only && entry.pages.length === 1
-      ? { ...entry, key: only.key, icon: only.icon }
-      : entry;
-  });
-}
-
-export function isEntryActive(entry: NavEntry, pathname: string) {
-  return entry.pages.some((page) => isPathIn(pathname, page.to));
-}
-
-export function useVisibleNav(role: string | undefined, enabled = true) {
-  return visibleNav(useSettings({ enabled }).features, role === UserRole.admin);
-}
-
-export const navLinkClass =
-  "nav-link rounded-md border border-transparent text-sm text-muted-foreground transition-all duration-200 ease-out-expo hover:text-foreground";
-
-export const navLinkActiveClass = "border-border! bg-background font-semibold text-foreground!";
+import { navLinkActiveClass, navLinkClass } from "./nav-link-class";
 
 export function AppSidebarSkeleton() {
   const { collapsed } = useSidebarCollapsed();

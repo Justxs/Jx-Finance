@@ -23,15 +23,15 @@ import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { Rows } from "@/components/ui/rows/rows";
 import { TitledSection } from "@/components/ui/section/section";
 import { Tag } from "@/components/ui/tag/tag";
+import { PasswordPrompt } from "@/features/profile/password-prompt/password-prompt";
 import { useConfirmedDelete } from "@/hooks/use-confirmed-delete";
 import { useDate } from "@/hooks/use-formatters";
 import { usePasskeysAvailable } from "@/hooks/use-settings";
 import type { TranslationKey } from "@/lib/i18n";
-import { silent } from "@/lib/mutations";
+import { notify, silentMutation } from "@/lib/mutations";
 import { type PasskeyFailure, createPasskey, passkeysSupported } from "@/lib/passkeys";
+import { browserLabel } from "@/lib/user-agent";
 import { requiredText } from "@/lib/validation";
-import { PasswordPrompt } from "../password-prompt/password-prompt";
-import { useBrowserLabel } from "../sessions-section/sessions-section";
 
 const failureText: Record<Exclude<PasskeyFailure, "cancelled">, TranslationKey> = {
   alreadyRegistered: "profile.passkeys.alreadyRegistered",
@@ -83,7 +83,7 @@ function RenameForm({
   onClose,
 }: Readonly<{ passkey: PasskeyResponse; onClose: () => void }>) {
   const { t } = useTranslation();
-  const rename = useRenamePasskey(silent({ onSuccess: onClose }));
+  const rename = useRenamePasskey({ mutation: { ...silentMutation, onSuccess: onClose } });
 
   const form = useServerForm({
     defaultValues: { name: passkey.name },
@@ -117,10 +117,7 @@ function PasskeyList() {
   const [removedOne, setRemovedOne] = useState(false);
 
   const removeMutation = useRemovePasskey({
-    mutation: {
-      meta: { success: t("profile.passkeys.removed") },
-      onSuccess: () => setRemovedOne(true),
-    },
+    mutation: { ...notify(t("profile.passkeys.removed")), onSuccess: () => setRemovedOne(true) },
   });
   const remove = useConfirmedDelete(removeMutation, passkeys, (passkey) => passkey.name);
 
@@ -173,10 +170,11 @@ function PasskeyList() {
 
 function AddPasskey() {
   const { t } = useTranslation();
-  const browserLabel = useBrowserLabel();
   const [failure, setFailure] = useState<PasskeyFailure | null>(null);
-  const begin = useBeginPasskeyRegistration(silent());
-  const add = useAddPasskey(silent({ meta: { success: t("profile.passkeys.added") } }));
+  const begin = useBeginPasskeyRegistration({ mutation: silentMutation });
+  const add = useAddPasskey({
+    mutation: { meta: { silent: true, success: t("profile.passkeys.added") } },
+  });
 
   async function register(password: string) {
     setFailure(null);
@@ -190,7 +188,7 @@ function AddPasskey() {
     await add.mutateAsync({
       data: {
         credentialJson: created.credentialJson,
-        name: browserLabel(navigator.userAgent) ?? t("profile.passkeys.defaultName"),
+        name: browserLabel(t, navigator.userAgent) ?? t("profile.passkeys.defaultName"),
       },
     });
   }

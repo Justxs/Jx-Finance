@@ -19,14 +19,14 @@ import type {
 import { FormError } from "@/components/form-error/form-error";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { SelectField } from "@/components/select-field/select-field";
-import { Button, buttonVariants } from "@/components/ui/button/button";
+import { Button } from "@/components/ui/button/button";
+import { FileInput } from "@/components/ui/file-input/file-input";
 import { ButtonSkeleton } from "@/components/ui/skeleton/skeleton";
-import { useUsableCurrencies } from "@/hooks/use-formatters";
-import { silent } from "@/lib/mutations";
-import { cn } from "@/lib/utils";
-import { ACCEPT_ATTRIBUTE } from "../transaction-attachments/attachment-files";
-import type { TransactionDraft } from "../transaction-form/transaction-draft";
-import type { TransactionFormApi } from "../transaction-form/use-transaction-form";
+import { ACCEPT_ATTRIBUTE } from "@/features/transactions/transaction-attachments/attachment-files";
+import type { TransactionDraft } from "@/features/transactions/transaction-form/transaction-draft";
+import type { TransactionFormApi } from "@/features/transactions/transaction-form/use-transaction-form";
+import { useUsableCurrencies } from "@/hooks/use-currencies";
+import { silentMutation } from "@/lib/mutations";
 import { ReceiptReview } from "./receipt-review";
 import { type CategoryChoice, type ReceiptFill, linesFromReceipt } from "./receipt-split";
 
@@ -80,31 +80,21 @@ function FilePicker({ label, busy, onPick }: Readonly<FilePickerProps>) {
   const id = useId();
 
   return (
-    <label
-      htmlFor={id}
-      className={cn(
-        buttonVariants({ variant: "outline", size: "sm" }),
-        "cursor-pointer has-focus-visible:border-ring has-focus-visible:ring-3 has-focus-visible:ring-ring/50",
-        busy && "pointer-events-none opacity-50",
-      )}
-    >
-      <ScanText />
-      {label}
-      <input
-        id={id}
-        type="file"
-        accept={ACCEPT_ATTRIBUTE}
-        className="sr-only"
-        disabled={busy}
-        onChange={(event) => {
-          const file = event.target.files?.[0];
-          event.target.value = "";
-          if (file) {
-            onPick(file);
-          }
-        }}
-      />
-    </label>
+    <FileInput
+      id={id}
+      variant="button"
+      icon={ScanText}
+      placeholder={label}
+      accept={ACCEPT_ATTRIBUTE}
+      disabled={busy}
+      onChange={(event) => {
+        const file = event.target.files?.[0];
+        event.target.value = "";
+        if (file) {
+          onPick(file);
+        }
+      }}
+    />
   );
 }
 
@@ -168,14 +158,14 @@ export function FillFromReceipt({
 
   const readMutation = useMutation({
     mutationKey: getReadReceiptMutationKey(),
-    meta: { silent: true },
+    ...silentMutation,
     mutationFn: (request: ReadReceiptRequest) => {
       abort.current = new AbortController();
       return readReceipt(request, { signal: abort.current.signal });
     },
   });
-  const uploadMutation = useUploadAttachment(silent());
-  const categoriesMutation = useUpdateReceiptCategories(silent());
+  const uploadMutation = useUploadAttachment({ mutation: silentMutation });
+  const categoriesMutation = useUpdateReceiptCategories({ mutation: silentMutation });
   const busy = readMutation.isPending || uploadMutation.isPending;
 
   function read(next: ReceiptSource, force = false) {

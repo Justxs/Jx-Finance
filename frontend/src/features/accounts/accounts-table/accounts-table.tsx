@@ -23,13 +23,14 @@ import {
   TableEmptyRow,
   ScrollRegion,
 } from "@/components/ui/table/table";
-import { EMPTY_VALUE, useMoney, usePercent, useUsableCurrencies } from "@/hooks/use-formatters";
+import { accountTypes } from "@/features/accounts/account-types";
+import { useUsableCurrencies } from "@/hooks/use-currencies";
+import { EMPTY_VALUE, useMoney, usePercent } from "@/hooks/use-formatters";
 import { useSearchTable } from "@/hooks/use-search-table";
 import { AccountTypeIcon } from "@/lib/account-icons";
 import { nameById, optionsOf } from "@/lib/options";
 import { EXPENSE_TONE } from "@/lib/tone";
 import { cn, metaLine } from "@/lib/utils";
-import { accountTypes } from "../account-types";
 
 interface Props {
   accounts: AccountResponse[];
@@ -196,7 +197,7 @@ export function AccountsTable({
               ) : null}
               <SharedScopeTag
                 scope={account.scope}
-                householdName={householdNames.get(account.householdId ?? "")}
+                householdId={account.householdId}
                 className="mt-1"
               />
             </div>
@@ -261,7 +262,7 @@ export function AccountsTable({
           </Rows>
         )}
       </StaleRegion>
-      <section className="-mx-3 hidden md:block">
+      <div className="-mx-3 hidden md:block">
         <ViewTransition name="accounts-rows" enter="none" exit="none">
           <ScrollRegion aria-label={t("accounts.title")}>
             <Table className={cn("min-w-160", stale && "stale")} aria-busy={stale}>
@@ -344,7 +345,7 @@ export function AccountsTable({
             </Table>
           </ScrollRegion>
         </ViewTransition>
-      </section>
+      </div>
     </>
   );
 }

@@ -1,27 +1,23 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, fn, userEvent } from "storybook/test";
+import { expect, userEvent, waitFor, within } from "storybook/test";
+import { getMeMockHandler } from "@/api/generated/auth/auth.msw";
+import {
+  getDeactivateUserMockHandler,
+  getReactivateUserMockHandler,
+  getUpdateUserRoleMockHandler,
+} from "@/api/generated/users/users.msw";
 import { UserRole } from "@/lib/user-role";
 import { withWidth } from "@/storybook/decorators";
 import { currentUser, inactiveUser, longNameUser, memberUser, users } from "@/storybook/fixtures";
-import { first } from "@/storybook/interactions";
+import { pending, withHandlers } from "@/storybook/handlers";
+import { chooseOption, first, openedDialog } from "@/storybook/interactions";
 import { UsersTable } from "./users-table";
 
 const meta = {
   title: "Features/Users/UsersTable",
   component: UsersTable,
   parameters: { layout: "padded", route: "/users" },
-  args: {
-    users,
-    stale: false,
-    currentUserId: currentUser.id,
-    onRoleChange: fn(),
-    rolePendingId: null,
-    onDeactivate: fn(),
-    deactivatePendingId: null,
-    onReactivate: fn(),
-    reactivatePendingId: null,
-    onResetPassword: fn(),
-  },
+  args: { users, stale: false },
 } satisfies Meta<typeof UsersTable>;
 
 export default meta;
@@ -33,7 +29,9 @@ export const SelfRow: Story = { args: { users: [currentUser] } };
 
 export const OtherRow: Story = { args: { users: [memberUser] } };
 
-export const ViewedByAnotherAdmin: Story = { args: { currentUserId: memberUser.id } };
+export const ViewedByAnotherAdmin: Story = {
+  parameters: withHandlers(getMeMockHandler({ ...memberUser, role: UserRole.admin })),
+};
 
 export const InactiveUser: Story = { args: { users: [inactiveUser] } };
 
@@ -57,42 +55,76 @@ export const FilteredAndSorted: Story = {
 
 export const Stale: Story = { args: { stale: true } };
 
-export const RoleChangePending: Story = { args: { rolePendingId: memberUser.id ?? null } };
+export const RoleChangePending: Story = {
+  parameters: withHandlers(getUpdateUserRoleMockHandler(pending)),
+  play: async ({ canvas }) => {
+    const role = first(
+      await canvas.findAllByRole("combobox", {
+        name: new RegExp(`${memberUser.displayName}$`, "u"),
+      }),
+    );
+    await chooseOption(role, "Admin");
+    await waitFor(() => expect(role).toHaveAttribute("aria-busy", "true"));
+  },
+};
 
-export const DeactivatePending: Story = { args: { deactivatePendingId: memberUser.id ?? null } };
+export const DeactivatePending: Story = {
+  parameters: withHandlers(getDeactivateUserMockHandler(pending)),
+  play: async ({ canvas }) => {
+    const deactivate = first(
+      await canvas.findAllByRole("button", { name: `Deactivate: ${memberUser.displayName}` }),
+    );
+    await userEvent.click(deactivate);
+    const confirm = within(await openedDialog("alertdialog"));
+    await userEvent.click(confirm.getByRole("button", { name: "Deactivate" }));
+    await waitFor(() => expect(deactivate).toHaveAttribute("aria-busy", "true"));
+  },
+};
 
 export const ReactivatePending: Story = {
-  args: { users: [inactiveUser], reactivatePendingId: inactiveUser.id },
+  args: { users: [inactiveUser] },
+  parameters: withHandlers(getReactivateUserMockHandler(pending)),
+  play: async ({ canvas }) => {
+    const reactivate = first(
+      await canvas.findAllByRole("button", { name: `Reactivate: ${inactiveUser.displayName}` }),
+    );
+    await userEvent.click(reactivate);
+    await waitFor(() => expect(reactivate).toHaveAttribute("aria-busy", "true"));
+  },
 };
 
 export const OffersActionsPerRow: Story = {
-  play: async ({ args, canvas }) => {
+  play: async ({ canvas }) => {
+    await canvas.findAllByRole("button", { name: `Reset password: ${memberUser.displayName}` });
     const own = new RegExp(`: ${currentUser.displayName}$`, "u");
     await expect(canvas.queryAllByRole("button", { name: own })).toHaveLength(0);
 
-    const reactivate = first(
-      canvas.getAllByRole("button", {
-        name: `Reactivate: ${inactiveUser.displayName}`,
-      }),
+    await userEvent.click(
+      first(canvas.getAllByRole("button", { name: `Deactivate: ${memberUser.displayName}` })),
     );
-    await userEvent.click(reactivate);
-    await expect(args.onReactivate).toHaveBeenCalledWith(inactiveUser.id);
+    const confirm = within(await openedDialog("alertdialog"));
+    await expect(confirm.getByText(memberUser.displayName)).toBeVisible();
+    await userEvent.click(confirm.getByRole("button", { name: "Cancel" }));
 
-    const deactivate = first(
-      canvas.getAllByRole("button", {
-        name: `Deactivate: ${memberUser.displayName}`,
-      }),
+    await userEvent.click(
+      first(canvas.getAllByRole("button", { name: `Reset password: ${memberUser.displayName}` })),
     );
-    await userEvent.click(deactivate);
-    await expect(args.onDeactivate).toHaveBeenCalledWith(memberUser.id);
+    await expect(
+      within(await openedDialog()).getByText("Set a temporary password"),
+    ).toBeInTheDocument();
+  },
+};
 
-    const reset = first(
-      canvas.getAllByRole("button", {
-        name: `Reset password: ${memberUser.displayName}`,
-      }),
-    );
-    await userEvent.click(reset);
-    await expect(args.onResetPassword).toHaveBeenCalledWith(memberUser.id);
+export const FiltersWithoutTheTableHeader: Story = {
+  play: async ({ canvas }) => {
+    const filters = within(await canvas.findByRole("group", { name: "Filters" }));
+    const role = filters.getByRole("combobox", { name: "Role" });
+    await chooseOption(role, "Admin");
+    await waitFor(() => expect(role).toHaveTextContent("Admin"));
+
+    const status = filters.getByRole("combobox", { name: "Status" });
+    await chooseOption(status, "Deactivated");
+    await waitFor(() => expect(status).toHaveTextContent("Deactivated"));
   },
 };
 

@@ -21,7 +21,6 @@ export function CategoryBreakdown({ items, type = "expense", dateFrom, dateTo }:
   const { t } = useTranslation();
   const nameOf = useCategoryName();
 
-  const compared = items.some((item) => item.comparisonAmount != null);
   const sorted = items.toSorted((a, b) => breakdownWeight(b) - breakdownWeight(a));
   const rest = sorted.slice(MAX_ROWS);
   const restTotal = rest.reduce((sum, item) => sum + Number(item.amount), 0);
@@ -32,7 +31,7 @@ export function CategoryBreakdown({ items, type = "expense", dateFrom, dateTo }:
       key: item.categoryId ?? item.syntheticGroup ?? "uncategorized",
       name: nameOf(item),
       amount: Number(item.amount),
-      earlier: compared ? Number(item.comparisonAmount ?? 0) : null,
+      comparisonAmount: item.comparisonAmount,
       filter: item.syntheticGroup || !item.categoryId ? undefined : { categoryId: item.categoryId },
       icon: item.categoryIcon,
     })),
@@ -42,7 +41,9 @@ export function CategoryBreakdown({ items, type = "expense", dateFrom, dateTo }:
             key: "other",
             name: t("dashboard.other"),
             amount: restTotal,
-            earlier: compared ? restEarlier : null,
+            comparisonAmount: rest.some((item) => item.comparisonAmount != null)
+              ? restEarlier
+              : null,
             icon: "shapes",
           },
         ]

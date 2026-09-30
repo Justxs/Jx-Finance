@@ -3,6 +3,7 @@ import {
   InvestmentTransactionType,
   SecurityType,
 } from "@/api/generated/model";
+import type { MoneySign } from "@/hooks/use-formatters";
 
 export const entryTypes = Object.values(InvestmentTransactionType);
 export const securityTypes = Object.values(SecurityType);
@@ -32,4 +33,8 @@ export function defaultInvestmentAccount(
     accounts.find((account) => account.type === "investment") ??
     accounts[0]
   );
+}
+
+export function chargeSign(value: string): MoneySign {
+  return Number(value) > 0 ? "−" : "auto";
 }

@@ -1,18 +1,16 @@
-import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useSearch } from "@tanstack/react-router";
 import { FileUp, Plus } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { toast } from "sonner";
 import {
-  getTransactionSuspenseQueryOptions,
+  getExportTransactionsPdfUrl,
+  getExportTransactionsUrl,
   getTransactionsQueryKey,
   useAccountsSuspense,
   useCategoriesSuspense,
   useTagsSuspense,
   useTransactionsSuspense,
 } from "@/api/generated";
-import type { TransactionResponse } from "@/api/generated/model";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog/confirm-delete-dialog";
 import { PageHeader } from "@/components/page-header/page-header";
 import { Pagination } from "@/components/pagination/pagination";
@@ -22,39 +20,42 @@ import { Section } from "@/components/ui/section/section";
 import { TextLink } from "@/components/ui/text-link/text-link";
 import { useSuggestedRuleToast } from "@/features/categorization-rules/suggested-rule-toast/use-suggested-rule-toast";
 import { ImportDialog } from "@/features/imports/import-dialog/import-dialog";
+import { ActiveFilters } from "@/features/transactions/active-filters/active-filters";
+import { SelectionToolbar } from "@/features/transactions/selection-toolbar/selection-toolbar";
+import { signedAmount } from "@/features/transactions/transaction-amount/transaction-amount";
+import { transactionName } from "@/features/transactions/transaction-amount/transaction-row";
+import { useTransactionFormSection } from "@/features/transactions/transaction-form-section/transaction-form-section";
+import {
+  duplicateDraft,
+  refundDraft,
+} from "@/features/transactions/transaction-form/transaction-draft";
+import {
+  transactionFilterParams,
+  transactionListParams,
+  transactionView,
+} from "@/features/transactions/transaction-queries";
+import { useTransactionRowDialogs } from "@/features/transactions/transaction-row-actions/transaction-row-actions";
+import { TransactionsFiltersDialog } from "@/features/transactions/transactions-filters-dialog/transactions-filters-dialog";
+import { TransactionsList } from "@/features/transactions/transactions-list/transactions-list";
+import { useInlineCategory } from "@/features/transactions/transactions-table/category-cell";
+import { TransactionsTable } from "@/features/transactions/transactions-table/transactions-table";
+import { useTransactionColumnHeaders } from "@/features/transactions/transactions-table/use-transaction-column-headers";
+import {
+  type TransactionRowHandlers,
+  isSelectableTransaction,
+  useTransactionColumns,
+} from "@/features/transactions/transactions-table/use-transaction-columns";
+import { TransactionsToolbar } from "@/features/transactions/transactions-toolbar/transactions-toolbar";
+import { TransactionsTotals } from "@/features/transactions/transactions-totals/transactions-totals";
+import { useTransactionFilters } from "@/features/transactions/use-transaction-filters";
 import { useConfirmedDelete } from "@/hooks/use-confirmed-delete";
 import { useDeferredParams } from "@/hooks/use-deferred-params";
 import { useExportUrl } from "@/hooks/use-export-url";
 import { useIsoDate, useMoney } from "@/hooks/use-formatters";
+import { usePageClamp } from "@/hooks/use-paged-list";
 import { useSettingsSuspense } from "@/hooks/use-settings";
-import { TRANSACTIONS_EXPORT_CSV_PATH, TRANSACTIONS_EXPORT_PDF_PATH } from "@/lib/export-url";
 import { byId, nameById } from "@/lib/options";
 import { metaLine } from "@/lib/utils";
-import { saveTransactionTemplate } from "@/stores/transaction-views";
-import { ActiveFilters } from "../active-filters/active-filters";
-import type { ReceiptCandidateSplit } from "../receipt-reading/fill-from-receipt";
-import { SelectionToolbar } from "../selection-toolbar/selection-toolbar";
-import { signedAmount, transactionName } from "../transaction-amount";
-import {
-  type TransactionDraft,
-  type TransactionFormValues,
-  duplicateDraft,
-  refundDraft,
-  templateValuesFromFormValues,
-} from "../transaction-form";
-import { TransactionFormSection } from "../transaction-form-section/transaction-form-section";
-import { transactionFilterParams, transactionListParams } from "../transaction-queries";
-import { TransactionsFiltersDialog } from "../transactions-filters-dialog/transactions-filters-dialog";
-import { TransactionsList } from "../transactions-list/transactions-list";
-import {
-  type TransactionRowHandlers,
-  TransactionsTable,
-  isSelectableTransaction,
-  useTransactionColumns,
-  useTransactionColumnHeaders,
-} from "../transactions-table";
-import { TransactionsToolbar } from "../transactions-toolbar/transactions-toolbar";
-import { TransactionsTotals } from "../transactions-totals/transactions-totals";
 import { useTransactionMutations } from "./use-transaction-mutations";
 import { useTransactionSelection } from "./use-transaction-selection";
 
@@ -64,85 +65,44 @@ export function TransactionsPage() {
   const money = useMoney();
   const formatDate = useIsoDate();
 
-  const { new: createOpen = false, ...view } = useSearch({ from: "/transactions" });
-  const viewKey = JSON.stringify(view);
+  const view = transactionView(useSearch({ from: "/transactions" }));
   const [shown, stale] = useDeferredParams(view);
-
-  const { page } = shown;
   const navigate = useNavigate({ from: "/transactions" });
-  const [editing, setEditing] = useState<TransactionResponse | null>(null);
   const [importOpen, setImportOpen] = useState(false);
-  const [prefill, setPrefill] = useState<{ key: string; draft: TransactionDraft } | null>(null);
-  const [editPrefill, setEditPrefill] = useState<TransactionDraft | undefined>(undefined);
-  const [receiptFile, setReceiptFile] = useState<File | null>(null);
-  const queryClient = useQueryClient();
-  const selection = useTransactionSelection(viewKey);
-
-  function setCreateOpen(open: boolean) {
-    createMutation.reset();
-    if (!open) {
-      setPrefill(null);
-      setReceiptFile(null);
-    }
-    void navigate({
-      search: (prev) => ({ ...prev, new: open ? true : undefined }),
-      replace: !open,
-    });
-  }
-
-  function startFromDraft(draft: TransactionDraft) {
-    setPrefill({ key: crypto.randomUUID(), draft });
-    setCreateOpen(true);
-  }
-
-  function startBlank() {
-    setPrefill(null);
-    setCreateOpen(true);
-  }
-
-  function startEditing(transaction: TransactionResponse, draft?: TransactionDraft) {
-    updateMutation.reset();
-    setEditPrefill(draft);
-    setEditing(transaction);
-  }
+  const selection = useTransactionSelection(JSON.stringify(view));
 
   const listParams = transactionListParams(shown, pageSize);
   const listKey = getTransactionsQueryKey(listParams);
-  const filterParams = transactionFilterParams(shown);
-  const exportCsvUrl = useExportUrl(TRANSACTIONS_EXPORT_CSV_PATH, filterParams);
-  const exportPdfUrl = useExportUrl(TRANSACTIONS_EXPORT_PDF_PATH, filterParams);
+  const exportCsvUrl = useExportUrl(getExportTransactionsUrl(listParams));
+  const exportPdfUrl = useExportUrl(getExportTransactionsPdfUrl(listParams));
 
-  const accounts = useAccountsSuspense();
-  const categories = useCategoriesSuspense();
-  const tags = useTagsSuspense();
-  const transactions = useTransactionsSuspense(listParams);
-  const suggestedRule = useSuggestedRuleToast(categories.data);
-
+  const { data: accounts } = useAccountsSuspense();
+  const { data: categories } = useCategoriesSuspense();
+  const { data: tags } = useTagsSuspense();
   const {
-    create: createMutation,
-    update: updateMutation,
-    remove: deleteMutation,
-    bulkTag: bulkTagMutation,
-    bulkCategory: bulkCategoryMutation,
-    attachReceipt,
-  } = useTransactionMutations({
-    listKey,
-    onUpdated: () => setEditing(null),
-    onBulkApplied: selection.clear,
+    data: { items, total },
+  } = useTransactionsSuspense(listParams);
+  const suggestedRule = useSuggestedRuleToast(categories);
+  const filters = useTransactionFilters({ accounts, categories });
+  const columnHeaders = useTransactionColumnHeaders(filters, tags);
+  const rowDialogs = useTransactionRowDialogs();
+  const inlineCategory = useInlineCategory(suggestedRule.offerAfterSave);
+
+  const mutations = useTransactionMutations({ listKey, onBulkApplied: selection.clear });
+  const formSection = useTransactionFormSection({
+    accounts,
+    categories,
+    tags,
+    mutations,
+    onCategorized: suggestedRule.offerAfterSave,
   });
 
-  const accountList = accounts.data;
-  const categoryList = categories.data;
-  const accountNames = nameById(accountList);
-  const categoryById = byId(categoryList);
-  const tagList = tags.data;
-  const tagById = byId(tagList);
-
-  const items = transactions.data.items;
+  const categoryById = byId(categories);
   const selectableIds = items.filter(isSelectableTransaction).map((item) => item.id);
   const selectedItems = items.filter((item) => selection.selectedIds.has(item.id));
+  const selectedIds = selectedItems.map((item) => item.id);
   const remove = useConfirmedDelete(
-    deleteMutation,
+    mutations.remove,
     items,
     (item) =>
       metaLine(
@@ -153,88 +113,38 @@ export function TransactionsPage() {
     "transaction",
   );
 
-  const columnHeaders = useTransactionColumnHeaders({
-    accounts: accountList,
-    categories: categoryList,
-    tags: tagList,
-  });
+  const pages = usePageClamp(
+    {
+      page: shown.page,
+      setPage: (page) => void navigate({ search: (prev) => ({ ...prev, page }), replace: true }),
+    },
+    total,
+    pageSize,
+  );
 
   const rowHandlers: TransactionRowHandlers = {
-    accountNames,
+    accountNames: nameById(accounts),
     categoryById,
-    tagById,
-    onEdit: (transaction) => startEditing(transaction),
-    onDuplicate: (transaction) => startFromDraft(duplicateDraft(transaction)),
-    onRefund: (transaction) => startFromDraft(refundDraft(transaction)),
+    tagById: byId(tags),
+    onEdit: (transaction) => formSection.startEditing(transaction),
+    onDuplicate: (transaction) => formSection.startFromDraft(duplicateDraft(transaction)),
+    onRefund: (transaction) => formSection.startFromDraft(refundDraft(transaction)),
     onDelete: remove.request,
     deletingId: remove.pendingId,
+    moreActions: rowDialogs.moreActions,
+    onUpdateSplit: rowDialogs.onUpdateSplit,
   };
-  const columns = useTransactionColumns(rowHandlers);
-
-  const total = transactions.data.total;
-  const pageCount = Math.max(1, Math.ceil(total / pageSize));
-
-  function offerRule(saved: TransactionResponse, previousCategoryId: string | null = null) {
-    if (saved.categoryId && saved.categoryId !== previousCategoryId) {
-      void suggestedRule.offerAfterSave(saved.id);
-    }
-  }
-
-  function handleCreate(values: TransactionFormValues) {
-    return createMutation.mutateAsync(
-      { data: values },
-      {
-        onSuccess: (created) => {
-          offerRule(created);
-          if (receiptFile) {
-            void attachReceipt(created.id, receiptFile);
-          }
-          setCreateOpen(false);
-        },
-      },
-    );
-  }
-
-  async function handleCreateAnother(values: TransactionFormValues) {
-    const created = await createMutation.mutateAsync({ data: values });
-    offerRule(created);
-    if (receiptFile) {
-      setReceiptFile(null);
-      void attachReceipt(created.id, receiptFile);
-    }
-    return true;
-  }
-
-  async function splitCandidate({ candidateId, draft, file }: ReceiptCandidateSplit) {
-    await attachReceipt(candidateId, file);
-    const candidate = await queryClient.query(getTransactionSuspenseQueryOptions(candidateId));
-    setCreateOpen(false);
-    startEditing(candidate, draft);
-  }
-
-  function handleSaveAsTemplate(name: string, values: TransactionFormValues) {
-    saveTransactionTemplate(name, templateValuesFromFormValues(values));
-    toast.success(t("transactions.templateSaved"));
-  }
-
-  async function handleUpdate(values: TransactionFormValues) {
-    if (!editing) {
-      return;
-    }
-    offerRule(
-      await updateMutation.mutateAsync({ id: editing.id, data: values }),
-      editing.categoryId,
-    );
-  }
+  const columns = useTransactionColumns({ ...rowHandlers, categories, inlineCategory });
 
   return (
     <div className="space-y-6">
       <PageHeader title={t("transactions.title")}>
         <TransactionsToolbar
-          accounts={accountList}
-          categories={categoryList}
-          tags={tagList}
-          onUseTemplate={startFromDraft}
+          filters={filters}
+          accounts={accounts}
+          categories={categories}
+          tags={tags}
+          onUseTemplate={formSection.startFromDraft}
           exportUrl={exportCsvUrl}
           exportPdfUrl={exportPdfUrl}
         />
@@ -242,19 +152,19 @@ export function TransactionsPage() {
           <Button
             variant="outline"
             onClick={() => setImportOpen(true)}
-            disabled={accountList.length === 0}
+            disabled={accounts.length === 0}
           >
             <FileUp />
             {t("imports.open")}
           </Button>
         ) : null}
-        <Button onClick={startBlank} disabled={accountList.length === 0}>
+        <Button onClick={formSection.startBlank} disabled={accounts.length === 0}>
           <Plus />
           {t("transactions.add")}
         </Button>
       </PageHeader>
 
-      {accountList.length === 0 ? (
+      {accounts.length === 0 ? (
         <EmptyText
           size="sm"
           action={
@@ -267,64 +177,27 @@ export function TransactionsPage() {
         </EmptyText>
       ) : null}
 
-      <TransactionFormSection
-        accounts={accountList}
-        categories={categoryList}
-        tags={tagList}
-        createOpen={createOpen && accountList.length > 0}
-        onCreateOpenChange={setCreateOpen}
-        prefill={prefill ?? undefined}
-        editing={editing}
-        editPrefill={editPrefill}
-        onCancelEdit={() => setEditing(null)}
-        updatePending={updateMutation.isPending}
-        createPending={createMutation.isPending}
-        createError={createMutation.error}
-        updateError={updateMutation.error}
-        onCreate={handleCreate}
-        onCreateAnother={handleCreateAnother}
-        onSaveAsTemplate={handleSaveAsTemplate}
-        onUpdate={handleUpdate}
-        onReceiptFile={setReceiptFile}
-        onSplitCandidate={splitCandidate}
-      />
-
       <Section className="space-y-2">
-        <ActiveFilters accounts={accountList} categories={categoryList} tags={tagList} />
+        <ActiveFilters filters={filters} tags={tags} />
         {selectedItems.length > 0 ? (
           <SelectionToolbar
             selected={selectedItems}
-            categories={categoryList}
-            tags={tagList}
-            pending={bulkCategoryMutation.isPending}
-            tagPending={bulkTagMutation.isPending}
-            onApply={(nextCategoryId) =>
-              bulkCategoryMutation.mutate({
-                data: {
-                  transactionIds: selectedItems.map((item) => item.id),
-                  categoryId: nextCategoryId,
-                },
-              })
+            categories={categories}
+            tags={tags}
+            pending={mutations.bulkCategory.isPending}
+            tagPending={mutations.bulkTag.isPending}
+            onApply={(categoryId) =>
+              mutations.bulkCategory.mutate({ data: { transactionIds: selectedIds, categoryId } })
             }
-            onApplyTags={(nextTagIds) =>
-              bulkTagMutation.mutate({
-                data: {
-                  transactionIds: selectedItems.map((item) => item.id),
-                  tagIds: nextTagIds,
-                },
-              })
+            onApplyTags={(tagIds) =>
+              mutations.bulkTag.mutate({ data: { transactionIds: selectedIds, tagIds } })
             }
             onClear={selection.clear}
           />
         ) : (
           <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
-            <TransactionsTotals params={filterParams} stale={stale} />
-            <TransactionsFiltersDialog
-              accounts={accountList}
-              categories={categoryList}
-              tags={tagList}
-              className="md:hidden"
-            />
+            <TransactionsTotals params={transactionFilterParams(shown)} stale={stale} />
+            <TransactionsFiltersDialog filters={filters} tags={tags} className="md:hidden" />
           </div>
         )}
 
@@ -357,16 +230,18 @@ export function TransactionsPage() {
         </div>
 
         <Pagination
-          page={page}
-          pages={pageCount}
+          page={shown.page}
+          pages={pages}
           range={{ total, pageSize }}
-          onPageChange={(nextPage) => navigate({ search: (prev) => ({ ...prev, page: nextPage }) })}
+          onPageChange={(page) => navigate({ search: (prev) => ({ ...prev, page }) })}
         />
       </Section>
 
+      {formSection.dialogs}
+      {rowDialogs.dialogs}
       <ConfirmDeleteDialog {...remove.dialogProps} />
       {features.import ? (
-        <ImportDialog open={importOpen} onOpenChange={setImportOpen} accounts={accountList} />
+        <ImportDialog open={importOpen} onOpenChange={setImportOpen} accounts={accounts} />
       ) : null}
     </div>
   );

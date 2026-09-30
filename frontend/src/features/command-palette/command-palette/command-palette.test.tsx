@@ -4,7 +4,7 @@ import { setupServer } from "msw/node";
 import { afterAll, afterEach, beforeAll, beforeEach, expect, test, vi } from "vitest";
 import { getMeMockHandler } from "@/api/generated/auth/auth.msw";
 import { getSettingsMockHandler } from "@/api/generated/settings/settings.msw";
-import { setAuthenticated, setSetupNeeded } from "@/lib/auth-gate";
+import { setAuthenticated } from "@/lib/auth-gate";
 import { setCommandPaletteOpen, toggleCommandPalette } from "@/stores/command-palette-store";
 import { categories, ids, memberUser } from "@/storybook/fixtures";
 import { handlers } from "@/storybook/handlers";
@@ -66,7 +66,6 @@ beforeAll(() => {
 
 beforeEach(() => {
   requested = [];
-  setSetupNeeded(false);
   setAuthenticated(true);
   setCommandPaletteOpen(false);
   resetPreferences();

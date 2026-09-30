@@ -5,6 +5,7 @@ import { type CurrenciesResponse, Currency } from "@/api/generated/model";
 import { i18n } from "@/lib/i18n";
 import { createQueryWrapper, plain } from "@/test/query";
 import { settingsFixture } from "@/test/settings";
+import { useReportingCurrency, useUsableCurrencies } from "./use-currencies";
 import {
   useAxisDateTick,
   useAxisMoney,
@@ -21,10 +22,8 @@ import {
   usePriceFormat,
   useQuantityFormat,
   useRatePercent,
-  useReportingCurrency,
   useShortDayIso,
   useShortMonth,
-  useUsableCurrencies,
 } from "./use-formatters";
 
 function fixed(magnitude: number) {

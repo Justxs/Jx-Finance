@@ -10,6 +10,12 @@ import {
 } from "@/components/ui/skeleton/skeleton";
 import { cn } from "@/lib/utils";
 
+const gridClass =
+  "grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-1 sm:grid-cols-[minmax(0,1fr)_auto_auto]";
+const amountClass =
+  "col-span-2 row-start-2 min-w-0 text-sm sm:col-span-1 sm:col-start-2 sm:row-start-1";
+const actionsClass = "col-start-2 row-start-1 sm:col-start-3";
+
 interface ProgressMeter {
   value: number;
   max: number;
@@ -52,7 +58,7 @@ export function ProgressRow({
   return (
     <RowTransition>
       <li className="py-3">
-        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-1 sm:grid-cols-[minmax(0,1fr)_auto_auto]">
+        <div className={gridClass}>
           <div className="min-w-0">
             <p
               className={cn("min-w-0 font-medium wrap-break-word", titleHint && "line-clamp-2")}
@@ -62,7 +68,7 @@ export function ProgressRow({
             </p>
             {meta}
           </div>
-          <div className="col-span-2 row-start-2 min-w-0 text-sm sm:col-span-1 sm:col-start-2 sm:row-start-1 sm:text-right">
+          <div className={cn(amountClass, "sm:text-right")}>
             <p className="whitespace-nowrap tabular-nums">{primary}</p>
             {secondary}
           </div>
@@ -71,7 +77,7 @@ export function ProgressRow({
             onEdit={onEdit}
             {...deleteProps}
             size="icon"
-            className="col-start-2 row-start-1 gap-0 sm:col-start-3"
+            className={cn(actionsClass, "gap-0")}
           />
         </div>
         {meter ? (
@@ -94,16 +100,16 @@ export function ProgressRowsSkeleton({ rows = 4 }: Readonly<{ rows?: number }>) 
     <>
       {Array.from({ length: rows }, (_, index) => (
         <li key={index} aria-hidden="true" className="py-3">
-          <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-1 sm:grid-cols-[minmax(0,1fr)_auto_auto]">
+          <div className={gridClass}>
             <div className="min-w-0">
               <TextSkeleton width={rowWidth(index)} />
               <TextSkeleton size="xs" width="w-40" />
             </div>
-            <div className="col-span-2 row-start-2 min-w-0 text-sm sm:col-span-1 sm:col-start-2 sm:row-start-1">
+            <div className={amountClass}>
               <TextSkeleton size="sm" className="sm:justify-end" width="w-32" />
               <TextSkeleton size="xs" className="sm:justify-end" width="w-24" />
             </div>
-            <div className="col-start-2 row-start-1 flex sm:col-start-3">
+            <div className={cn(actionsClass, "flex")}>
               <IconButtonSkeleton size="md" />
               <IconButtonSkeleton size="md" />
             </div>

@@ -1,15 +1,12 @@
 import { ChartSkeleton } from "@/components/chart/chart-skeleton";
 import { PaginationSkeleton } from "@/components/pagination/pagination";
 import { RecordRowsSkeleton } from "@/components/record-row/record-row";
+import { SummaryStatsSkeleton } from "@/components/summary-stats/summary-stats";
 import { FormGridSkeleton } from "@/components/ui/form-grid/form-grid";
 import { Section } from "@/components/ui/section/section";
 import { ButtonSkeleton, SectionSkeleton, TextSkeleton } from "@/components/ui/skeleton/skeleton";
 import { TableSkeleton } from "@/components/ui/table/table";
-import {
-  DetailPagePending,
-  DetailStatsSkeleton,
-  DetailSummarySkeleton,
-} from "../detail-page-pending/detail-page-pending";
+import { DetailPagePending } from "@/features/net-worth/detail-page/detail-page";
 
 function DebtPaymentsSkeleton() {
   return (
@@ -30,16 +27,7 @@ function DebtPaymentsSkeleton() {
 export function DebtScheduleSkeleton({ tracked = false }: Readonly<{ tracked?: boolean }>) {
   return (
     <div className="space-y-5">
-      <DetailSummarySkeleton>
-        <div className="grid min-w-0 gap-6">
-          <DetailStatsSkeleton count={4} />
-          <div className="border-t pt-4">
-            <TextSkeleton size="sm" width="w-36" />
-            <TextSkeleton size="xl" className="mt-0.5" />
-            <TextSkeleton size="xs" className="mt-1" width="w-48" />
-          </div>
-        </div>
-      </DetailSummarySkeleton>
+      <SummaryStatsSkeleton items={6} />
       <SectionSkeleton description>
         <div className="space-y-4">
           <FormGridSkeleton

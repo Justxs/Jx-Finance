@@ -1,18 +1,20 @@
+import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
 import { useSetup } from "@/api/generated";
 import {
   setupBodyDisplayNameMax,
+  setupBodyEmailMax,
   setupBodyPasswordMax,
   setupBodyPasswordMin,
 } from "@/api/schemas/setup/setup.zod";
 import { useServerForm } from "@/components/form";
 import { FormError } from "@/components/form-error/form-error";
+import { AuthCard } from "@/features/auth/auth-card/auth-card";
 import { setSetupNeeded } from "@/lib/auth-gate";
-import { silent } from "@/lib/mutations";
+import { silentMutation } from "@/lib/mutations";
 import { password, requiredEmail, requiredText } from "@/lib/validation";
-import { AuthCard } from "../auth-card/auth-card";
 
 interface FormValues {
   email: string;
@@ -23,21 +25,23 @@ interface FormValues {
 export function SetupPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const schema = z.object({
-    email: requiredEmail(t),
+    email: requiredEmail(t, setupBodyEmailMax),
     password: password(t, setupBodyPasswordMin, setupBodyPasswordMax),
     displayName: requiredText(t, setupBodyDisplayNameMax),
   });
 
-  const setupMutation = useSetup(
-    silent({
+  const setupMutation = useSetup({
+    mutation: {
+      ...silentMutation,
       onSuccess: () => {
-        setSetupNeeded(false);
+        setSetupNeeded(queryClient, false);
         void navigate({ to: "/login" });
       },
-    }),
-  );
+    },
+  });
 
   const defaultValues: FormValues = { email: "", password: "", displayName: "" };
 

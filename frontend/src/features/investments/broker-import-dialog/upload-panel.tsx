@@ -6,6 +6,7 @@ import { SelectField } from "@/components/select-field/select-field";
 import { Button } from "@/components/ui/button/button";
 import { FileInput } from "@/components/ui/file-input/file-input";
 import { useFileField } from "@/hooks/use-file-field";
+import { shellAria } from "@/lib/field-aria";
 import { namedOptions } from "@/lib/options";
 import { BrokerImportStatus } from "./import-result";
 import type { BrokerImportMutations } from "./use-broker-import-mutations";
@@ -37,6 +38,7 @@ export function UploadPanel({ accounts, accountId, mutations }: Readonly<Props>)
   const failure = ownsImport ? importMutation.error : null;
 
   const funding = fundingAccountId === accountId ? "" : fundingAccountId;
+  const fundingHint = t("investments.import.fundingHint");
 
   function handleImport() {
     const file = fileField.take();
@@ -61,13 +63,13 @@ export function UploadPanel({ accounts, accountId, mutations }: Readonly<Props>)
       <FieldShell
         id="broker-upload-funding"
         label={t("investments.import.fundingAccount")}
-        hint={t("investments.import.fundingHint")}
+        hint={fundingHint}
       >
         <SelectField
           id="broker-upload-funding"
           value={funding}
           disabled={mutations.busy}
-          aria-describedby="broker-upload-funding-hint"
+          {...shellAria({ id: "broker-upload-funding", hint: fundingHint })}
           onChange={setFundingAccountId}
           options={namedOptions(
             accounts.filter((account) => account.id !== accountId),

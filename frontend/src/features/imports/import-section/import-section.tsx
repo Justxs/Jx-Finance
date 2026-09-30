@@ -13,25 +13,27 @@ import {
 import type {
   AccountResponse,
   CsvMappingResponse,
-  ImportPreviewResponse,
   ImportStatementSummary,
   InspectCsvResponse,
   StatementFormat,
 } from "@/api/generated/model";
 import { Button } from "@/components/ui/button/button";
 import { Section, SectionTitle } from "@/components/ui/section/section";
-import { useFileField } from "@/hooks/use-file-field";
-import { silent } from "@/lib/mutations";
-import { CsvMappingForm, type ReadOptions } from "../csv-mapping-form/csv-mapping-form";
-import { ImportPreviewTable } from "../import-preview-table/import-preview-table";
-import { ImportStatementBar } from "../import-preview-table/import-statement-bar";
+import {
+  CsvMappingForm,
+  type ReadOptions,
+} from "@/features/imports/csv-mapping-form/csv-mapping-form";
+import { ImportPreviewTable } from "@/features/imports/import-preview-table/import-preview-table";
+import { ImportStatementBar } from "@/features/imports/import-preview-table/import-statement-bar";
 import {
   importDateRange,
   type PreviewRowState,
   takesCategory,
   toPreviewRows,
-} from "../import-preview-table/preview-rows";
-import { recallParams } from "../import-queries";
+} from "@/features/imports/import-preview-table/preview-rows";
+import { recallParams } from "@/features/imports/import-queries";
+import { useFileField } from "@/hooks/use-file-field";
+import { silentMutation } from "@/lib/mutations";
 import { ImportPreviewError, problemDetail } from "./import-preview-error";
 import { type ImportResult, ImportResultLine, useReconciliationText } from "./import-result";
 import { IMPORT_FILE_INPUT_ID, ImportUploadForm, importFormats } from "./import-upload-form";
@@ -94,16 +96,19 @@ export function ImportSection({
     onEditedChange(true);
   }
 
-  const previewMutation = useImportPreview(
-    silent({
-      onSuccess: (data: ImportPreviewResponse) => {
+  const previewMutation = useImportPreview({
+    mutation: {
+      ...silentMutation,
+      onSuccess: (data) => {
         replaceRows(toPreviewRows(data.rows, history.data.items, categoryList));
         setStatement(data.statement);
       },
-    }),
-  );
+    },
+  });
 
-  const inspectMutation = useInspectCsv(silent({ onSuccess: setInspection }));
+  const inspectMutation = useInspectCsv({
+    mutation: { ...silentMutation, onSuccess: setInspection },
+  });
 
   const confirmMutation = useImportConfirm({
     mutation: {

@@ -9,19 +9,19 @@ import { PageHeader } from "@/components/page-header/page-header";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { Button } from "@/components/ui/button/button";
 import { Section } from "@/components/ui/section/section";
+import { AccountForm } from "@/features/accounts/account-form/account-form";
+import { accountListParams } from "@/features/accounts/account-queries";
+import { AccountsTable } from "@/features/accounts/accounts-table/accounts-table";
+import { ArchivedAccounts } from "@/features/accounts/archived-accounts/archived-accounts";
+import { CashFlowForecast } from "@/features/accounts/cash-flow-forecast/cash-flow-forecast";
+import { ConversionsSection } from "@/features/accounts/conversions-section/conversions-section";
+import { ReconcileDialog } from "@/features/accounts/reconcile-dialog/reconcile-dialog";
+import { TransfersSection } from "@/features/accounts/transfers-section/transfers-section";
 import { ImportDialog } from "@/features/imports/import-dialog/import-dialog";
 import { useConfirmedDelete } from "@/hooks/use-confirmed-delete";
 import { useDeferredParams } from "@/hooks/use-deferred-params";
 import { useSettings } from "@/hooks/use-settings";
 import { notify } from "@/lib/mutations";
-import { AccountForm } from "../account-form/account-form";
-import { accountListParams } from "../account-queries";
-import { AccountsTable } from "../accounts-table/accounts-table";
-import { ArchivedAccounts } from "../archived-accounts/archived-accounts";
-import { CashFlowForecast } from "../cash-flow-forecast/cash-flow-forecast";
-import { ConversionsSection } from "../conversions-section/conversions-section";
-import { ReconcileDialog } from "../reconcile-dialog/reconcile-dialog";
-import { TransfersSection } from "../transfers-section/transfers-section";
 import { MovementsSkeleton } from "./accounts-page-pending";
 
 export function AccountsPage() {
@@ -55,7 +55,7 @@ export function AccountsPage() {
 
   const createOpen = creating === "account";
 
-  const deleteMutation = useDeleteAccount(notify(t("accounts.archived")));
+  const deleteMutation = useDeleteAccount({ mutation: notify(t("accounts.archived")) });
 
   const accountList = accounts.data;
   const remove = useConfirmedDelete(deleteMutation, accountList, (account) => account.name);

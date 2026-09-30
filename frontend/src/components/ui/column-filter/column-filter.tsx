@@ -1,11 +1,12 @@
 import { ListFilter } from "lucide-react";
 import { type ReactNode, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { SelectField, type SelectOption } from "@/components/select-field/select-field";
+import { SelectField } from "@/components/select-field/select-field";
 import { Button } from "@/components/ui/button/button";
 import { Input } from "@/components/ui/input/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover/popover";
 import { Tooltip } from "@/components/ui/tooltip/tooltip";
+import type { SelectOption } from "@/lib/options";
 import { cn } from "@/lib/utils";
 
 function sameValue(a: unknown, b: unknown) {

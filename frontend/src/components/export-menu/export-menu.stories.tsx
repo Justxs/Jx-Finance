@@ -1,15 +1,17 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, screen, userEvent, waitFor } from "storybook/test";
+import { getExportTransactionsPdfUrl, getExportTransactionsUrl } from "@/api/generated";
 import { getExportTransactionsPdfMockHandler } from "@/api/generated/transactions/transactions.msw";
-import { TRANSACTIONS_EXPORT_CSV_PATH, TRANSACTIONS_EXPORT_PDF_PATH } from "@/lib/export-url";
 import { exportTooManyRowsProblem } from "@/storybook/fixtures";
 import { onRouteOf, problem, withHandlers } from "@/storybook/handlers";
 import { ExportMenu } from "./export-menu";
 
+const csvUrl = getExportTransactionsUrl({ page: 1, pageSize: 20 });
+
 const meta = {
   title: "Components/ExportMenu",
   component: ExportMenu,
-  args: { csvUrl: TRANSACTIONS_EXPORT_CSV_PATH, pdfUrl: TRANSACTIONS_EXPORT_PDF_PATH },
+  args: { csvUrl, pdfUrl: getExportTransactionsPdfUrl({ page: 1, pageSize: 20 }) },
 } satisfies Meta<typeof ExportMenu>;
 
 export default meta;
@@ -20,10 +22,7 @@ export const Default: Story = {};
 export const Open: Story = {
   play: async ({ canvas }) => {
     await userEvent.click(canvas.getByRole("button"));
-    await expect(await screen.findByRole("link", { name: /csv/i })).toHaveAttribute(
-      "href",
-      TRANSACTIONS_EXPORT_CSV_PATH,
-    );
+    await expect(await screen.findByRole("link", { name: /csv/i })).toHaveAttribute("href", csvUrl);
     await expect(screen.getByRole("button", { name: /pdf/i })).toBeEnabled();
   },
 };

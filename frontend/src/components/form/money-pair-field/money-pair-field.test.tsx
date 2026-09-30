@@ -2,8 +2,8 @@ import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { expect, test } from "vitest";
 import type { CurrenciesResponse, Currency } from "@/api/generated/model";
+import { useAppForm } from "@/components/form/app-form";
 import { renderWithQuery } from "@/test/query";
-import { useAppForm } from "../app-form";
 import { MoneyPairField } from "./money-pair-field";
 
 const currencies: CurrenciesResponse = {

@@ -32,6 +32,10 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+async function openSyncTab() {
+  await userEvent.click(await screen.findByRole("tab", { name: "Automatic sync" }));
+}
+
 async function uploadReport() {
   const submit = await screen.findByRole("button", { name: "Import" });
   const fileInput = document.querySelector<HTMLInputElement>(`#${BROKER_UPLOAD_FILE_INPUT_ID}`);
@@ -90,9 +94,9 @@ export const UploadWhileDatabaseBusy: Story = {
 };
 
 export const SyncWhileDatabaseBusy: Story = {
-  args: { initialTab: "sync" },
   parameters: withHandlers(getSyncBrokerConnectionMockHandler(failWith(databaseBusyProblem))),
   play: async () => {
+    await openSyncTab();
     const dialog = within(await openedDialog());
     await userEvent.click(await dialog.findByRole("button", { name: "Sync now" }));
     await expect(
@@ -118,8 +122,8 @@ export const UploadWithoutFile: Story = {
 };
 
 export const ConnectionExisting: Story = {
-  args: { initialTab: "sync" },
   play: async () => {
+    await openSyncTab();
     await expect(await screen.findByLabelText("Query ID")).toHaveValue("1284467");
     await expect(screen.getByLabelText("Flex token")).toHaveValue("");
     await expect(screen.getByRole("button", { name: "Sync now" })).toBeEnabled();
@@ -127,8 +131,8 @@ export const ConnectionExisting: Story = {
 };
 
 export const ConnectionSavedClearsToken: Story = {
-  args: { initialTab: "sync" },
   play: async () => {
+    await openSyncTab();
     const token = await screen.findByLabelText("Flex token");
     await userEvent.type(token, "482913007755");
     await expect(token).toHaveValue("482913007755");
@@ -155,17 +159,17 @@ export const UploadPending: Story = {
 };
 
 export const ConnectionNew: Story = {
-  args: { initialTab: "sync" },
   parameters: withHandlers(getBrokerConnectionsMockHandler([])),
+  play: openSyncTab,
 };
 
 export const ConnectionError: Story = {
-  args: { initialTab: "sync" },
   parameters: withHandlers(
     getBrokerConnectionsMockHandler([failedBrokerConnection]),
     getSyncBrokerConnectionMockHandler(failWith(brokerSyncProblem)),
   ),
   play: async () => {
+    await openSyncTab();
     await expect(await screen.findByText("Last sync failed")).toBeInTheDocument();
     await expect(screen.getAllByText(/token has expired/)).toHaveLength(1);
 
@@ -176,17 +180,17 @@ export const ConnectionError: Story = {
 };
 
 export const SyncPending: Story = {
-  args: { initialTab: "sync" },
   parameters: withHandlers(getSyncBrokerConnectionMockHandler(pending)),
   play: async () => {
+    await openSyncTab();
     await userEvent.click(await screen.findByRole("button", { name: "Sync now" }));
     await expect(await screen.findByText(/can take up to a minute/)).toBeInTheDocument();
   },
 };
 
 export const SyncResult: Story = {
-  args: { initialTab: "sync" },
   play: async () => {
+    await openSyncTab();
     await userEvent.click(await screen.findByRole("button", { name: "Sync now" }));
     await expect(await screen.findByText("Import finished.")).toBeInTheDocument();
   },

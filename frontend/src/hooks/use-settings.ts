@@ -1,58 +1,14 @@
 import {
-  getPublicSettingsQueryOptions,
-  getSettingsQueryOptions,
   usePublicSettings as usePublicSettingsQuery,
   useSettings as useSettingsQuery,
   useSettingsSuspense as useSettingsSuspenseQuery,
 } from "@/api/generated";
-import type { FeatureFlags, SettingsResponse } from "@/api/generated/model";
+import type { SettingsResponse } from "@/api/generated/model";
 import { parseIso, todayInZone } from "@/lib/calendar";
-import { DEFAULT_CURRENCY } from "@/lib/currency";
-import { silentQuery } from "@/lib/mutations";
+import { silentQuery } from "@/lib/query-client";
+import { type FeatureKey, defaultSettings, settingsQuery } from "@/lib/settings";
 
-export type FeatureKey = keyof FeatureFlags;
-
-const settingsQuery = { staleTime: 5 * 60 * 1000, retry: false } as const;
 const quietSettingsQuery = { ...settingsQuery, ...silentQuery } as const;
-
-export function settingsQueryOptions() {
-  return getSettingsQueryOptions({ query: settingsQuery });
-}
-
-export function publicSettingsQueryOptions() {
-  return getPublicSettingsQueryOptions({ query: settingsQuery });
-}
-
-const defaultSettings: SettingsResponse = {
-  instanceName: null,
-  features: {
-    budgets: true,
-    goals: true,
-    recurringBills: true,
-    netWorth: true,
-    reports: true,
-    import: true,
-    households: true,
-    multiCurrency: true,
-    investments: true,
-    categorizationRules: true,
-    unusualAmounts: true,
-    monthClose: true,
-    receiptReading: true,
-    apiTokens: true,
-  },
-  reportingCurrency: DEFAULT_CURRENCY,
-  enabledCurrencies: [DEFAULT_CURRENCY],
-  exchangeRateSyncEnabled: true,
-  ratesAsOf: null,
-  defaultLanguage: "en",
-  timeZone: "UTC",
-  firstDayOfWeek: "monday",
-  defaultAccountId: null,
-  defaultPageSize: 20,
-  supportLinkEnabled: true,
-  receiptReadingReady: false,
-};
 
 interface SettingsOptions {
   enabled?: boolean;

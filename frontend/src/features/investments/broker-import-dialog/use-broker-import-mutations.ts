@@ -9,7 +9,7 @@ import {
   useSaveBrokerConnection,
   useSyncBrokerConnection,
 } from "@/api/generated";
-import { silent } from "@/lib/mutations";
+import { silentMutation } from "@/lib/mutations";
 
 const brokerImportMutationNames = new Set<unknown>([
   getImportBrokerReportMutationKey()[0],
@@ -19,12 +19,12 @@ const brokerImportMutationNames = new Set<unknown>([
 ]);
 
 export function useBrokerImportMutations() {
-  const importReport = useImportBrokerReport(silent());
+  const importReport = useImportBrokerReport({ mutation: silentMutation });
   const saveConnection = useSaveBrokerConnection({
     mutation: { gcTime: 0 },
   });
   const deleteConnection = useDeleteBrokerConnection();
-  const syncConnection = useSyncBrokerConnection(silent());
+  const syncConnection = useSyncBrokerConnection({ mutation: silentMutation });
 
   const busy = useBrokerImportBusy();
 

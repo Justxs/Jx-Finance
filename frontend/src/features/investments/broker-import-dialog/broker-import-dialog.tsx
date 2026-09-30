@@ -10,8 +10,9 @@ import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { FormGridSkeleton } from "@/components/ui/form-grid/form-grid";
 import { TextSkeleton } from "@/components/ui/skeleton/skeleton";
 import { Tabs, TabsList, TabsPanel, TabsTab } from "@/components/ui/tabs/tabs";
+import { defaultInvestmentAccount } from "@/features/investments/investment-types";
+import { shellAria } from "@/lib/field-aria";
 import { namedOptions } from "@/lib/options";
-import { defaultInvestmentAccount } from "../investment-types";
 import { ConnectionPanel } from "./connection-panel";
 import { FlexQueryHelp } from "./flex-query-help";
 import { UploadPanel } from "./upload-panel";
@@ -28,39 +29,36 @@ interface Props {
   onOpenChange: (open: boolean) => void;
   accounts: readonly AccountResponse[];
   accountId?: string;
-  initialTab?: BrokerImportTab;
 }
 
-type ContentProps = Pick<Props, "accounts" | "accountId" | "initialTab">;
+type ContentProps = Pick<Props, "accounts" | "accountId">;
 
-function BrokerImportContent({
-  accounts,
-  accountId,
-  initialTab = "upload",
-}: Readonly<ContentProps>) {
+function BrokerImportContent({ accounts, accountId }: Readonly<ContentProps>) {
   const { t } = useTranslation();
   const mutations = useBrokerImportMutations();
   const [selectedAccountId, setSelectedAccountId] = useState(
     () => defaultInvestmentAccount(accounts, accountId)?.id ?? "",
   );
-  const [tab, setTab] = useState<BrokerImportTab>(initialTab);
+  const [tab, setTab] = useState<BrokerImportTab>("upload");
 
   if (accounts.length === 0) {
     return <EmptyText size="sm">{t("investments.import.noAccounts")}</EmptyText>;
   }
+
+  const accountHint = t("investments.import.accountHint");
 
   return (
     <>
       <FieldShell
         id="broker-import-account"
         label={t("investments.import.account")}
-        hint={t("investments.import.accountHint")}
+        hint={accountHint}
       >
         <SelectField
           id="broker-import-account"
           value={selectedAccountId}
           disabled={mutations.busy}
-          aria-describedby="broker-import-account-hint"
+          {...shellAria({ id: "broker-import-account", hint: accountHint })}
           onChange={setSelectedAccountId}
           options={namedOptions(accounts)}
         />
@@ -116,13 +114,7 @@ function BrokerImportContent({
   );
 }
 
-export function BrokerImportDialog({
-  open,
-  onOpenChange,
-  accounts,
-  accountId,
-  initialTab,
-}: Readonly<Props>) {
+export function BrokerImportDialog({ open, onOpenChange, accounts, accountId }: Readonly<Props>) {
   const { t } = useTranslation();
   const busy = useBrokerImportBusy();
 
@@ -138,7 +130,7 @@ export function BrokerImportDialog({
       description={t("investments.import.description")}
       className="sm:max-w-xl"
     >
-      <BrokerImportContent accounts={accounts} accountId={accountId} initialTab={initialTab} />
+      <BrokerImportContent accounts={accounts} accountId={accountId} />
     </Modal>
   );
 }

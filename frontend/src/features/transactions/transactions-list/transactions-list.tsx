@@ -2,24 +2,24 @@ import { useDeferredValue } from "react";
 import { useTranslation } from "react-i18next";
 import type { TransactionResponse } from "@/api/generated/model";
 import { RowTransition } from "@/components/row-transition/row-transition";
+import { TagChips } from "@/components/tag-chips/tag-chips";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { Rows } from "@/components/ui/rows/rows";
-import { TagChips } from "@/features/tags/tag-chips/tag-chips";
-import { AttachmentCount } from "@/features/transactions/transaction-attachments/attachment-count";
-import { UnusualAmountBadge } from "@/features/transactions/unusual-amount/unusual-amount-badge";
-import { useIsoDate } from "@/hooks/use-formatters";
-import { cn, metaLine } from "@/lib/utils";
-import { DebtPaymentMarker } from "../debt-payment/debt-payment";
-import { RefundMark } from "../refund-mark/refund-mark";
-import { SharedExpenseMark } from "../shared-expense/shared-expense";
+import { DebtPaymentMarker } from "@/features/transactions/debt-payment/debt-payment";
+import { RefundMark } from "@/features/transactions/refund-mark/refund-mark";
+import { SharedExpenseMark } from "@/features/transactions/shared-expense/shared-expense";
+import { TransactionAmount } from "@/features/transactions/transaction-amount/transaction-amount";
 import {
-  TransactionAmount,
   isOptimistic,
   transactionCategoryLabel,
   transactionName,
-} from "../transaction-amount";
-import { TransactionRowActions } from "../transaction-row-actions/transaction-row-actions";
-import type { TransactionRowHandlers } from "../transactions-table/use-transaction-columns";
+} from "@/features/transactions/transaction-amount/transaction-row";
+import { AttachmentCount } from "@/features/transactions/transaction-attachments/attachment-count";
+import { TransactionRowActions } from "@/features/transactions/transaction-row-actions/transaction-row-actions";
+import type { TransactionRowHandlers } from "@/features/transactions/transactions-table/use-transaction-columns";
+import { UnusualAmountBadge } from "@/features/transactions/unusual-amount/unusual-amount-badge";
+import { useIsoDate } from "@/hooks/use-formatters";
+import { cn, metaLine } from "@/lib/utils";
 
 interface Props extends TransactionRowHandlers {
   data: TransactionResponse[];
@@ -41,6 +41,8 @@ export function TransactionsList({
   onRefund,
   onDelete,
   deletingId,
+  moreActions,
+  onUpdateSplit,
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const formatDate = useIsoDate();
@@ -87,7 +89,7 @@ export function TransactionsList({
                   dismissed={row.unusualDismissed}
                 />
                 <DebtPaymentMarker transaction={row} />
-                <SharedExpenseMark transaction={row} />
+                <SharedExpenseMark transaction={row} onUpdate={onUpdateSplit} />
                 <TransactionAmount
                   transaction={row}
                   showReporting
@@ -106,6 +108,7 @@ export function TransactionsList({
                 <TransactionRowActions
                   transaction={row}
                   label={name}
+                  moreActions={moreActions(row)}
                   deletingId={deletingId}
                   onEdit={onEdit}
                   onDuplicate={onDuplicate}

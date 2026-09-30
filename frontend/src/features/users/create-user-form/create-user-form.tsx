@@ -9,10 +9,10 @@ import {
 import { useServerForm } from "@/components/form";
 import { FormError } from "@/components/form-error/form-error";
 import { FormGrid } from "@/components/ui/form-grid/form-grid";
-import { silent } from "@/lib/mutations";
+import { roleOptions, userRoles } from "@/features/users/user-queries";
+import { silentMutation } from "@/lib/mutations";
 import { UserRole } from "@/lib/user-role";
 import { password, requiredEmail, requiredText } from "@/lib/validation";
-import { roleOptions, userRoles } from "../user-queries";
 
 interface FormValues {
   email: string;
@@ -35,7 +35,7 @@ export function CreateUserForm({ onClose }: Readonly<Props>) {
     password: password(t, createUserBodyPasswordMin, createUserBodyPasswordMax),
   });
 
-  const createMutation = useCreateUser(silent({ onSuccess: onClose }));
+  const createMutation = useCreateUser({ mutation: { ...silentMutation, onSuccess: onClose } });
 
   const defaultValues: FormValues = {
     email: "",

@@ -5,11 +5,11 @@ import { useTranslation } from "react-i18next";
 import { getDebtsQueryKey, useDeleteDebt, useDebtsSuspense } from "@/api/generated";
 import type { DebtResponse } from "@/api/generated/model";
 import { buttonVariants } from "@/components/ui/button/button";
+import { BalanceItemsSection } from "@/features/net-worth/balance-items-section/balance-items-section";
 import { useIsoDate, useRatePercent } from "@/hooks/use-formatters";
 import { optimisticRemoval } from "@/lib/optimistic";
 import { metaLine } from "@/lib/utils";
-import { HoldingsSection } from "../holdings-section";
-import { DebtForm, type DebtFormValues, debtFormValues } from "./debt-form";
+import { DebtForm } from "./debt-form";
 
 export function DebtsSection() {
   const { t } = useTranslation();
@@ -43,14 +43,14 @@ export function DebtsSection() {
   }
 
   return (
-    <HoldingsSection<DebtFormValues>
+    <BalanceItemsSection
       title={t("netWorth.debts")}
       addLabel={t("netWorth.addDebt")}
       emptyLabel={t("netWorth.noDebts")}
       tone="expense"
       items={debtList.map((debt) => ({
         id: debt.id,
-        name: debt.name ?? "",
+        name: debt.name,
         details: metaLine(
           t(`netWorth.debtTypes.${debt.type}`),
           formatDate(debt.asOf),
@@ -61,7 +61,7 @@ export function DebtsSection() {
         ),
         amount: Number(debt.trackedBalance ?? debt.outstandingAmount),
         currency: debt.currency,
-        values: debtFormValues(debt),
+        record: debt,
         action: scheduleLink(debt),
       }))}
       deleteMutation={deleteMutation}

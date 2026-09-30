@@ -3,9 +3,9 @@ import type { Ref } from "react";
 import { useTranslation } from "react-i18next";
 import type { Currency } from "@/api/generated/model";
 import { CurrencySelect } from "@/components/currency-select/currency-select";
+import { FieldShell, fieldAria } from "@/components/form/field-shell/field-shell";
 import { FieldError } from "@/components/ui/field-error";
 import { Input } from "@/components/ui/input/input";
-import { FieldShell, fieldAria } from "../field-shell/field-shell";
 
 interface Props {
   field: FieldWithValue<string>;

@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
+import { TextColumnFilter } from "@/components/ui/column-filter/column-filter";
 import type { SortDirection } from "@/lib/sort";
 import { withWidth } from "@/storybook/decorators";
-import { TextColumnFilter } from "../column-filter/column-filter";
 import { ColumnHeader } from "./column-header";
 
 function SortableExample({ withFilter }: Readonly<{ withFilter?: boolean }>) {

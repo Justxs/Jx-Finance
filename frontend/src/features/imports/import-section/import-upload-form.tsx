@@ -1,13 +1,14 @@
 import { type RefObject, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { AccountResponse, StatementFormat } from "@/api/generated/model";
-import { FieldShell, shellAria } from "@/components/form/field-shell/field-shell";
+import { FieldShell } from "@/components/form/field-shell/field-shell";
 import { SelectField } from "@/components/select-field/select-field";
 import { Button } from "@/components/ui/button/button";
 import { FileInput } from "@/components/ui/file-input/file-input";
 import { FormGrid } from "@/components/ui/form-grid/form-grid";
 import { Section, SectionTitle } from "@/components/ui/section/section";
 import { ButtonSkeleton, Skeleton, TextSkeleton } from "@/components/ui/skeleton/skeleton";
+import { shellAria } from "@/lib/field-aria";
 import { namedOptions } from "@/lib/options";
 
 export const IMPORT_FILE_INPUT_ID = "import-file";

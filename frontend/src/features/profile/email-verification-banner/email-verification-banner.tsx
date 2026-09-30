@@ -3,16 +3,16 @@ import { useTranslation } from "react-i18next";
 import { useMe, useSendVerificationEmail } from "@/api/generated";
 import { Button } from "@/components/ui/button/button";
 import { useEmailEnabled } from "@/hooks/use-settings";
-import { silent } from "@/lib/mutations";
+import { silentQuery } from "@/lib/query-client";
 
 export function EmailVerificationBanner() {
   const { t } = useTranslation();
   const emailEnabled = useEmailEnabled();
-  const me = useMe({ query: { throwOnError: false, meta: { silent: true } } });
+  const me = useMe({ query: silentQuery });
 
-  const resendMutation = useSendVerificationEmail(
-    silent({ meta: { success: t("profile.verificationSent") } }),
-  );
+  const resendMutation = useSendVerificationEmail({
+    mutation: { meta: { silent: true, success: t("profile.verificationSent") } },
+  });
 
   const profile = me.data;
   if (!emailEnabled || !profile || profile.emailConfirmed) {

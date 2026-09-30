@@ -1,8 +1,8 @@
 import { useMonthlyTrendSuspense } from "@/api/generated";
 import { IncomeExpenseChart } from "@/components/chart";
+import { monthlyTrendParams } from "@/features/dashboard/dashboard-queries";
 import { useShortMonth } from "@/hooks/use-formatters";
 import { useTodayDate } from "@/hooks/use-settings";
-import { monthlyTrendParams } from "../dashboard-queries";
 
 interface Props {
   month: string;

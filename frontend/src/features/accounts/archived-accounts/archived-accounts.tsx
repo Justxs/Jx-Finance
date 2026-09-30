@@ -1,10 +1,6 @@
 import { Undo2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import {
-  useArchivedAccountsSuspense,
-  useHouseholdsSuspense,
-  useRestoreAccount,
-} from "@/api/generated";
+import { useArchivedAccountsSuspense, useRestoreAccount } from "@/api/generated";
 import type { ArchivedAccountResponse } from "@/api/generated/model";
 import { Disclosure } from "@/components/disclosure/disclosure";
 import { RowTransition } from "@/components/row-transition/row-transition";
@@ -15,22 +11,15 @@ import { Section } from "@/components/ui/section/section";
 import { useDate, useMoney } from "@/hooks/use-formatters";
 import { AccountTypeIcon } from "@/lib/account-icons";
 import { notify, pendingId } from "@/lib/mutations";
-import { nameById } from "@/lib/options";
 import { metaLine } from "@/lib/utils";
 
 interface ListProps {
   accounts: readonly ArchivedAccountResponse[];
-  householdNames: ReadonlyMap<string, string>;
   restoringId: string | null;
   onRestore: (id: string) => void;
 }
 
-function ArchivedAccountsList({
-  accounts,
-  householdNames,
-  restoringId,
-  onRestore,
-}: Readonly<ListProps>) {
+function ArchivedAccountsList({ accounts, restoringId, onRestore }: Readonly<ListProps>) {
   const { t } = useTranslation();
   const money = useMoney();
   const date = useDate();
@@ -58,10 +47,7 @@ function ArchivedAccountsList({
                 <div className="min-w-0 space-y-1">
                   <p className="flex flex-wrap items-center gap-2 text-sm font-medium wrap-break-word">
                     {account.name}
-                    <SharedScopeTag
-                      scope={account.scope}
-                      householdName={householdNames.get(account.householdId ?? "")}
-                    />
+                    <SharedScopeTag scope={account.scope} householdId={account.householdId} />
                   </p>
                   <p className="text-xs wrap-break-word text-muted-foreground tabular-nums">
                     {details}
@@ -97,8 +83,7 @@ function ArchivedAccountsList({
 export function ArchivedAccounts() {
   const { t } = useTranslation();
   const archived = useArchivedAccountsSuspense();
-  const households = useHouseholdsSuspense();
-  const restoreMutation = useRestoreAccount(notify(t("accounts.restored")));
+  const restoreMutation = useRestoreAccount({ mutation: notify(t("accounts.restored")) });
   const restoringId = pendingId(restoreMutation);
   const accounts = archived.data;
 
@@ -111,7 +96,6 @@ export function ArchivedAccounts() {
       <Disclosure summary={t("accounts.archivedList.summary", { count: accounts.length })}>
         <ArchivedAccountsList
           accounts={accounts}
-          householdNames={nameById(households.data)}
           restoringId={restoringId}
           onRestore={(id) => restoreMutation.mutate({ id })}
         />

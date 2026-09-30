@@ -6,10 +6,9 @@ import {
   normalizeRegisterableHotkey,
   type RegisterableHotkey,
 } from "@tanstack/react-hotkeys";
-import type { RegisteredRouter } from "@tanstack/react-router";
-import type { FeatureKey } from "@/hooks/use-settings";
 import type { TranslationKey } from "@/lib/i18n";
 import { PUBLIC_PATHS, type RoutePath, navPages } from "@/lib/navigation";
+import type { FeatureKey } from "@/lib/settings";
 
 export const PREFIX_TIMEOUT_MS = 1200;
 
@@ -167,11 +166,7 @@ function alwaysTrue() {
 
 const HOTKEY_OPTIONS = { preventDefault: false, stopPropagation: false } as const;
 
-export function registerShortcuts(
-  router: RegisteredRouter | ShortcutRouter,
-  runtime: Partial<ShortcutRuntime> = {},
-) {
-  const target = router as ShortcutRouter;
+export function registerShortcuts(target: ShortcutRouter, runtime: Partial<ShortcutRuntime> = {}) {
   const isHelpOpen = runtime.isHelpOpen ?? alwaysFalse;
   const isPaletteOpen = runtime.isPaletteOpen ?? alwaysFalse;
   const isFeatureEnabled = runtime.isFeatureEnabled ?? alwaysTrue;

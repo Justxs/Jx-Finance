@@ -12,6 +12,7 @@ interface SummaryStat {
   tone?: string;
   lead?: boolean;
   sign?: MoneySign;
+  detail?: string;
   note?: ReactNode;
 }
 
@@ -59,6 +60,9 @@ export function SummaryStats({ items, currency }: Readonly<Props>) {
           >
             {formatValue(lead)}
           </dd>
+          {lead.detail ? (
+            <dd className="mt-1.5 text-sm text-muted-foreground">{lead.detail}</dd>
+          ) : null}
           {lead.note ? <dd className="mt-1.5">{lead.note}</dd> : null}
         </dl>
       ) : null}
@@ -71,6 +75,9 @@ export function SummaryStats({ items, currency }: Readonly<Props>) {
             >
               {formatValue(item)}
             </dd>
+            {item.detail ? (
+              <dd className="mt-0.5 text-xs text-muted-foreground tabular-nums">{item.detail}</dd>
+            ) : null}
             {item.note ? <dd className="mt-1">{item.note}</dd> : null}
           </div>
         ))}

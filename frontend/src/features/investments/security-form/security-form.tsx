@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
+import { useCreateSecurity, useUpdateSecurity } from "@/api/generated";
 import { Currency, type SecurityResponse, SecurityType } from "@/api/generated/model";
 import {
   createSecurityBodyExchangeMax,
@@ -9,21 +10,11 @@ import {
 import { useServerForm } from "@/components/form";
 import { FormError } from "@/components/form-error/form-error";
 import { FormGrid } from "@/components/ui/form-grid/form-grid";
-import { useReportingCurrency } from "@/hooks/use-formatters";
+import { securityTypes } from "@/features/investments/investment-types";
+import { useReportingCurrency } from "@/hooks/use-currencies";
+import { silentMutation, upsert } from "@/lib/mutations";
 import { optionsOf } from "@/lib/options";
 import { optionalQuantity, optionalText, requiredText } from "@/lib/validation";
-import { securityTypes } from "../investment-types";
-
-interface SecurityFormValues {
-  symbol: string;
-  name: string;
-  type: SecurityType;
-  currency: Currency;
-  isin: string | null;
-  exchange: string | null;
-  lastPrice: string | null;
-  lastPriceDate: string | null;
-}
 
 interface FormValues {
   symbol: string;
@@ -38,17 +29,25 @@ interface FormValues {
 
 interface Props {
   initial?: SecurityResponse;
-  pending: boolean;
-  error?: unknown;
-  onSubmit: (values: SecurityFormValues) => Promise<unknown> | void;
-  onCancel?: () => void;
+  onClose: () => void;
+  onSaved?: (security: SecurityResponse) => void;
 }
 
 const ISIN_PATTERN = /^[A-Za-z]{2}[A-Za-z0-9]{9}\d$/;
 
-export function SecurityForm({ initial, pending, error, onSubmit, onCancel }: Readonly<Props>) {
+export function SecurityForm({ initial, onClose, onSaved }: Readonly<Props>) {
   const { t } = useTranslation();
   const reportingCurrency = useReportingCurrency();
+
+  function handleSaved(saved: SecurityResponse) {
+    onSaved?.(saved);
+    onClose();
+  }
+
+  const { create, update, pending, error } = upsert(
+    useCreateSecurity({ mutation: { ...silentMutation, onSuccess: handleSaved } }),
+    useUpdateSecurity({ mutation: { ...silentMutation, onSuccess: handleSaved } }),
+  );
 
   const schema = z.object({
     symbol: requiredText(t, createSecurityBodySymbolMax),
@@ -83,7 +82,7 @@ export function SecurityForm({ initial, pending, error, onSubmit, onCancel }: Re
     submit: (value) => {
       const hasPrice = value.lastPrice.trim() !== "";
 
-      return onSubmit({
+      const data = {
         symbol: value.symbol.trim().toUpperCase(),
         name: value.name.trim(),
         type: value.type,
@@ -92,7 +91,9 @@ export function SecurityForm({ initial, pending, error, onSubmit, onCancel }: Re
         exchange: value.exchange.trim() || null,
         lastPrice: hasPrice ? value.lastPrice : null,
         lastPriceDate: hasPrice && value.lastPriceDate ? value.lastPriceDate : null,
-      });
+      };
+
+      return initial ? update({ id: initial.id, data }) : create({ data });
     },
   });
 
@@ -196,7 +197,7 @@ export function SecurityForm({ initial, pending, error, onSubmit, onCancel }: Re
           span
           pending={pending}
           submitLabel={initial ? t("actions.save") : t("investments.securities.add")}
-          onCancel={onCancel}
+          onCancel={onClose}
         />
       </form.FormShell>
     </form.AppForm>

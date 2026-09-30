@@ -1,3 +1,5 @@
+import { Radio } from "@base-ui/react/radio";
+import { RadioGroup } from "@base-ui/react/radio-group";
 import { useTranslation } from "react-i18next";
 import { Tooltip } from "@/components/ui/tooltip/tooltip";
 import { CategoryIcon, categoryIconNames, isCategoryIconName } from "@/lib/category-icons";
@@ -6,13 +8,15 @@ import { cn } from "@/lib/utils";
 interface Props {
   value: string | null;
   onChange: (icon: string | null) => void;
+  "aria-labelledby": string;
 }
 
-const tileClass =
-  "flex h-8 items-center justify-center rounded-md border text-muted-foreground transition-colors outline-none hover:bg-accent hover:text-accent-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 pointer-coarse:h-11";
-const selectedClass = "border-primary bg-primary/10 text-primary";
+const NO_ICON = "";
 
-export function IconPicker({ value, onChange }: Readonly<Props>) {
+const tileClass =
+  "flex h-8 items-center justify-center rounded-md border text-muted-foreground transition-colors outline-none hover:bg-accent hover:text-accent-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 data-checked:border-primary data-checked:bg-primary/10 data-checked:text-primary pointer-coarse:h-11";
+
+export function IconPicker({ value, onChange, "aria-labelledby": labelledBy }: Readonly<Props>) {
   const { t } = useTranslation();
 
   function iconName(name: string) {
@@ -20,36 +24,34 @@ export function IconPicker({ value, onChange }: Readonly<Props>) {
   }
 
   return (
-    <div role="group" aria-label={t("categories.icon")} className="space-y-2">
+    <div className="space-y-2">
       <p className="flex items-center gap-2 text-sm text-muted-foreground">
         {value ? <CategoryIcon icon={value} className="text-foreground" /> : null}
         {value
           ? t("categories.iconSelected", { name: iconName(value) })
           : t("categories.noIconSelected")}
       </p>
-      <div className="flex flex-wrap gap-1.5">
-        <button
-          type="button"
-          aria-pressed={value === null}
-          onClick={() => onChange(null)}
-          className={cn(tileClass, "px-2.5 text-xs", value === null && selectedClass)}
-        >
+      <RadioGroup
+        aria-labelledby={labelledBy}
+        value={value ?? NO_ICON}
+        onValueChange={(next: string) => onChange(next === NO_ICON ? null : next)}
+        className="flex flex-wrap gap-1.5"
+      >
+        <Radio.Root value={NO_ICON} className={cn(tileClass, "px-2.5 text-xs")}>
           {t("categories.noIcon")}
-        </button>
+        </Radio.Root>
         {categoryIconNames.map((name) => (
           <Tooltip key={name} content={iconName(name)}>
-            <button
-              type="button"
+            <Radio.Root
+              value={name}
               aria-label={iconName(name)}
-              aria-pressed={value === name}
-              onClick={() => onChange(name)}
-              className={cn(tileClass, "w-8 pointer-coarse:w-11", value === name && selectedClass)}
+              className={cn(tileClass, "w-8 pointer-coarse:w-11")}
             >
               <CategoryIcon icon={name} />
-            </button>
+            </Radio.Root>
           </Tooltip>
         ))}
-      </div>
+      </RadioGroup>
     </div>
   );
 }

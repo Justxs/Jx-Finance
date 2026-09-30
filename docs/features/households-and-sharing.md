@@ -76,7 +76,11 @@ flowchart LR
     Row --> Card["Activity on the household card, members only"]
 ```
 
-## Removing a member
+## Adding and removing members
+
+An owner adds a member from the household card by email and role. When the server refuses, for example because no user has that address, the reason stays under the form in a `FormError` and the form stays open; it used to appear only as a toast.
+
+Since 2026-09-29 the owner confirms a removal first: the member's delete action on the household card opens a dialog that names the member and says they will stop seeing the household, and only "Remove" sends the request. Before that the row removed the member at once. There is no undo, because a membership does not go to the trash.
 
 ```mermaid
 sequenceDiagram

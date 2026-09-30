@@ -4,7 +4,7 @@ Back to the [feature walkthrough](README.md). See also [architecture: Sharing an
 
 Backend `Categories`, page `/categories`. Income or expense type, personal or shared. New users get starter categories from `StarterCategories.SeedAsync`.
 
-The icon picker names every icon in the interface language (`categories.icons.*`), both in its tooltip and in its accessible name. A line above the tiles shows the chosen icon and its name, or "No icon selected". A "No icon" tile clears the choice, and clicking the chosen icon again keeps it. The stored value is still the Lucide name, such as `shopping-bag`.
+The icon picker names every icon in the interface language (`categories.icons.*`), both in its tooltip and in its accessible name. A line above the tiles shows the chosen icon and its name, or "No icon selected". A "No icon" tile clears the choice, and clicking the chosen icon again keeps it. The tiles are one radio group (Base UI `RadioGroup`) named by the "Icon" label above it through `aria-labelledby`, so the whole picker is one tab stop: Tab lands on the chosen tile and the arrow keys move and choose. The stored value is still the Lucide name, such as `shopping-bag`.
 
 ```mermaid
 flowchart TD

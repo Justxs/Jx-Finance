@@ -1,6 +1,5 @@
-import { Fragment, type ReactNode } from "react";
+import { Fragment } from "react";
 import { useTranslation } from "react-i18next";
-import { z } from "zod";
 import { useCreateCsvMapping, useUpdateCsvMapping } from "@/api/generated";
 import {
   CsvAmountStyle,
@@ -9,10 +8,10 @@ import {
   type CsvMappingResponse,
   type InspectCsvResponse,
 } from "@/api/generated/model";
-import { createCsvMappingBodyNameMax } from "@/api/schemas/imports/imports.zod";
+import { createCsvMappingBodySkipLinesMax } from "@/api/schemas/imports/imports.zod";
 import { useServerForm } from "@/components/form";
 import { FormError } from "@/components/form-error/form-error";
-import type { SelectOption } from "@/components/select-field/select-field";
+import { FormSection } from "@/components/form/form-section/form-section";
 import { Button } from "@/components/ui/button/button";
 import { FormGrid } from "@/components/ui/form-grid/form-grid";
 import {
@@ -24,26 +23,28 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table/table";
-import { useCurrencyName, useUsableCurrencies } from "@/hooks/use-formatters";
-import { silent, upsert } from "@/lib/mutations";
-import { optionsOf } from "@/lib/options";
-import { requiredText } from "@/lib/validation";
+import { useUsableCurrencies } from "@/hooks/use-currencies";
+import { useCurrencyName } from "@/hooks/use-formatters";
+import { silentMutation, upsert } from "@/lib/mutations";
+import { optionsOf, type SelectOption } from "@/lib/options";
 import {
-  type ColumnRole,
-  columnsSchema,
   DATE_FORMATS,
-  DELIMITER_NAMES,
-  DELIMITERS,
+  type MappingColumns,
   type MappingSource,
   dateFormatsFor,
   draftOf,
-  missingColumns,
+  mappingSchema,
   sourceOf,
   toRequest,
 } from "./csv-mapping";
 
 const SAMPLE_ROWS = 5;
-const MAX_SKIP_LINES = 20;
+const DELIMITERS = [
+  ["comma", ","],
+  ["semicolon", ";"],
+  ["tab", "\t"],
+  ["pipe", "|"],
+] as const;
 const optionalRoles = ["description", "payee", "reference", "balance"] as const;
 const noMappings: CsvMappingResponse[] = [];
 
@@ -62,15 +63,6 @@ interface Props {
   onUse?: (mapping: CsvMappingResponse) => void;
   onSaved: (mapping: CsvMappingResponse) => void;
   onCancel: () => void;
-}
-
-function FormSection({ title, children }: Readonly<{ title: string; children: ReactNode }>) {
-  return (
-    <fieldset className="space-y-3 border-t border-rule pt-4 *:clear-both">
-      <legend className="float-left -mt-1 mb-2 w-full text-sm font-semibold">{title}</legend>
-      {children}
-    </fieldset>
-  );
 }
 
 function columnOptions(source: MappingSource, blank?: string): SelectOption[] {
@@ -102,34 +94,15 @@ export function CsvMappingForm({
   const currencies = useUsableCurrencies();
   const source = sourceOf(inspection, initial);
   const none = t("imports.mapping.none");
-  const required = t("imports.mapping.required");
 
   const { create, update, pending, error } = upsert(
-    useCreateCsvMapping(silent({ onSuccess: onSaved })),
-    useUpdateCsvMapping(silent({ onSuccess: onSaved })),
+    useCreateCsvMapping({ mutation: { ...silentMutation, onSuccess: onSaved } }),
+    useUpdateCsvMapping({ mutation: { ...silentMutation, onSuccess: onSaved } }),
   );
-
-  const schema = z
-    .object({
-      name: requiredText(t, createCsvMappingBodyNameMax),
-      encoding: z.enum(CsvEncoding),
-      delimiter: z.string(),
-      skipLines: z.string(),
-      amountStyle: z.enum(CsvAmountStyle),
-      dateFormat: z.string(),
-      decimalSeparator: z.enum(CsvDecimalSeparator),
-      currency: z.string(),
-      columns: columnsSchema,
-    })
-    .superRefine((value, ctx) => {
-      for (const role of missingColumns(value)) {
-        ctx.addIssue({ code: "custom", message: required, path: ["columns", role] });
-      }
-    });
 
   const form = useServerForm({
     defaultValues: draftOf(source, initial),
-    schema,
+    schema: mappingSchema(t),
     submit: (value) => {
       const data = toRequest(value);
       return initial ? update({ id: initial.id, data }) : create({ data });
@@ -144,7 +117,7 @@ export function CsvMappingForm({
     });
   }
 
-  function columnField(role: ColumnRole, label: string, hint?: string) {
+  function columnField(role: keyof MappingColumns, label: string, hint?: string) {
     return (
       <form.Field name={`columns.${role}`}>
         {(field) => (
@@ -223,8 +196,8 @@ export function CsvMappingForm({
                 <field.SelectFieldControl
                   id="csv-delimiter"
                   label={t("imports.mapping.delimiter")}
-                  options={DELIMITER_NAMES.map((name) => ({
-                    value: DELIMITERS[name],
+                  options={DELIMITERS.map(([name, value]) => ({
+                    value,
                     label: t(`imports.mapping.delimiters.${name}`),
                   }))}
                   disabled={readPending}
@@ -237,10 +210,13 @@ export function CsvMappingForm({
                 <field.SelectFieldControl
                   id="csv-skip-lines"
                   label={t("imports.mapping.skipLines")}
-                  options={Array.from({ length: MAX_SKIP_LINES + 1 }, (_, lines) => ({
-                    value: String(lines),
-                    label: String(lines),
-                  }))}
+                  options={Array.from(
+                    { length: createCsvMappingBodySkipLinesMax + 1 },
+                    (_, lines) => ({
+                      value: String(lines),
+                      label: String(lines),
+                    }),
+                  )}
                   disabled={readPending}
                   onValueChange={reread}
                 />

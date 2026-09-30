@@ -3,9 +3,11 @@ import { expect, fireEvent, userEvent, waitFor } from "storybook/test";
 import {
   getSendTestEmailMockHandler,
   getSmtpSettingsMockHandler,
+  getUpdateSmtpSettingsMockHandler,
 } from "@/api/generated/settings/settings.msw";
 import {
   emailNotConfiguredProblem,
+  serverErrorProblem,
   smtpSendFailedProblem,
   smtpSettingsOff,
 } from "@/storybook/fixtures";
@@ -93,6 +95,26 @@ export const SavingAPassword: Story = {
     await fireEvent.change(canvas.getByLabelText("Password"), { target: { value: "s3cret" } });
     await userEvent.click(canvas.getByRole("button", { name: "Save" }));
     await waitFor(() => expect(canvas.getByLabelText("Password")).toHaveValue(""));
+  },
+};
+
+export const PortOutOfRange: Story = {
+  play: async ({ canvas }) => {
+    await fireEvent.change(await canvas.findByLabelText("Port"), { target: { value: "70000" } });
+    await expect(
+      await canvas.findByText("Enter a whole number from 1 to 65535."),
+    ).toBeInTheDocument();
+  },
+};
+
+export const SaveFails: Story = {
+  parameters: withHandlers(getUpdateSmtpSettingsMockHandler(failWith(serverErrorProblem))),
+  play: async ({ canvas }) => {
+    await fireEvent.change(await canvas.findByLabelText("Sender name"), {
+      target: { value: "Household finance" },
+    });
+    await userEvent.click(canvas.getByRole("button", { name: "Save" }));
+    await expect(await canvas.findByRole("alert")).toBeInTheDocument();
   },
 };
 

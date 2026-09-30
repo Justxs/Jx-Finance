@@ -7,17 +7,16 @@ import {
   type HouseholdResponse,
   type SuggestedPaymentResponse,
 } from "@/api/generated/model";
+import { createSettlementBodyNoteMax } from "@/api/schemas/households/households.zod";
 import { useServerForm } from "@/components/form";
 import { FormError } from "@/components/form-error/form-error";
 import { FormGrid } from "@/components/ui/form-grid/form-grid";
-import { userName } from "@/features/users/user-queries";
-import { useReportingCurrency } from "@/hooks/use-formatters";
+import { useReportingCurrency } from "@/hooks/use-currencies";
 import { useToday } from "@/hooks/use-settings";
-import { silent } from "@/lib/mutations";
+import { silentMutation } from "@/lib/mutations";
 import { namedOptions } from "@/lib/options";
-import { normalizeMoney, optionalText, positiveMoney } from "@/lib/validation";
-
-const NOTE_MAX = 200;
+import { userName } from "@/lib/user-name";
+import { normalizeMoney, optionalText, positiveMoney, requiredValue } from "@/lib/validation";
 
 interface Props {
   household: HouseholdResponse;
@@ -34,7 +33,7 @@ export function SettlementForm({ household, payment, onClose }: Readonly<Props>)
   const accounts = useAccountsSuspense().data;
   const today = useToday();
   const reportingCurrency = useReportingCurrency();
-  const record = useCreateSettlement(silent({ onSuccess: onClose }));
+  const record = useCreateSettlement({ mutation: { ...silentMutation, onSuccess: onClose } });
   const people = [
     ...household.members.map((member) => ({ id: member.userId, name: userName(member) })),
     ...(payment
@@ -51,12 +50,12 @@ export function SettlementForm({ household, payment, onClose }: Readonly<Props>)
 
   const schema = z
     .object({
-      fromUserId: z.string().min(1, t("validation.required")),
-      toUserId: z.string().min(1, t("validation.required")),
+      fromUserId: requiredValue(t),
+      toUserId: requiredValue(t),
       amount: positiveMoney(t),
       currency: z.enum(Currency),
-      date: z.string().min(1, t("validation.required")),
-      note: optionalText(t, NOTE_MAX),
+      date: requiredValue(t),
+      note: optionalText(t, createSettlementBodyNoteMax),
       withTransfer: z.boolean(),
       fromAccountId: z.string(),
       toAccountId: z.string(),

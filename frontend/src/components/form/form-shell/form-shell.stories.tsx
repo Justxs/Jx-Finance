@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, fn, userEvent, waitFor } from "storybook/test";
+import { useAppForm } from "@/components/form/app-form";
 import { FormGrid } from "@/components/ui/form-grid/form-grid";
-import { useAppForm } from "../app-form";
 
 interface DemoProps {
   grid?: boolean;

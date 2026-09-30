@@ -4,6 +4,7 @@ import type { AccountResponse, CategoryResponse } from "@/api/generated/model";
 import { useSearchTable } from "@/hooks/use-search-table";
 import { useFeature } from "@/hooks/use-settings";
 import { namedOptions } from "@/lib/options";
+import { UNCATEGORIZED_OPTION } from "./transaction-amount/transaction-row";
 import {
   SEARCH_DEBOUNCE_MS,
   type TransactionSortValue,
@@ -18,8 +19,6 @@ import {
   parseTagIds,
   transactionFilterParams,
 } from "./transaction-queries";
-
-const UNCATEGORIZED = "uncategorized";
 
 interface Args {
   accounts: AccountResponse[];
@@ -54,7 +53,7 @@ export function useTransactionFilters({ accounts, categories }: Args) {
   const sorts = sortOptions(t);
   const categoryOptions = [
     { value: "", label: t("transactions.allCategories") },
-    { value: UNCATEGORIZED, label: t("transactions.uncategorized") },
+    { value: UNCATEGORIZED_OPTION, label: t("transactions.uncategorized") },
     ...namedOptions(categories),
   ];
   const sortValue: TransactionSortValue = `${search.sort ?? "date"}:${search.direction ?? "desc"}`;
@@ -99,11 +98,11 @@ export function useTransactionFilters({ accounts, categories }: Args) {
     },
     category: {
       label: columnLabels.category,
-      value: search.uncategorized ? UNCATEGORIZED : (search.categoryId ?? ""),
+      value: search.uncategorized ? UNCATEGORIZED_OPTION : (search.categoryId ?? ""),
       options: categoryOptions,
       set: (next: string) =>
         patchSearch(
-          next === UNCATEGORIZED
+          next === UNCATEGORIZED_OPTION
             ? { categoryId: undefined, uncategorized: true }
             : { categoryId: next || undefined, uncategorized: undefined },
         ),
@@ -161,6 +160,7 @@ export function useTransactionFilters({ accounts, categories }: Args) {
 
   return {
     ...table,
+    search,
     currentFilter: transactionFilterParams(search),
     applyFilter,
     fields,
@@ -170,3 +170,5 @@ export function useTransactionFilters({ accounts, categories }: Args) {
     clearAll,
   };
 }
+
+export type TransactionFilters = ReturnType<typeof useTransactionFilters>;

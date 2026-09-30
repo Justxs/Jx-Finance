@@ -1,3 +1,5 @@
+import type { Translate } from "@/lib/i18n";
+
 interface UserAgentLabel {
   browser: string | null;
   os: string | null;
@@ -34,4 +36,12 @@ export function describeUserAgent(userAgent: string | null | undefined): UserAge
   }
   const os = systems.find(([, pattern]) => pattern.test(value))?.[0] ?? null;
   return { browser, os };
+}
+
+export function browserLabel(t: Translate, userAgent: string | null | undefined) {
+  const { browser, os } = describeUserAgent(userAgent);
+  if (browser && os) {
+    return t("profile.sessions.browserOn", { browser, os });
+  }
+  return browser ?? os;
 }

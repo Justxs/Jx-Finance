@@ -14,7 +14,6 @@ interface Props {
 export function TagBreakdown({ items, dateFrom, dateTo }: Readonly<Props>) {
   const { t } = useTranslation();
 
-  const compared = items.some((item) => item.comparisonAmount != null);
   const rows = items
     .filter((item) => breakdownWeight(item) > 0)
     .toSorted((a, b) => breakdownWeight(b) - breakdownWeight(a))
@@ -31,7 +30,7 @@ export function TagBreakdown({ items, dateFrom, dateTo }: Readonly<Props>) {
           key: row.tagId ?? "untagged",
           name: row.tagId ? row.tagName : t("tags.untagged"),
           amount: Number(row.amount),
-          earlier: compared ? Number(row.comparisonAmount ?? 0) : null,
+          comparisonAmount: row.comparisonAmount,
           filter: row.tagId ? { tagIds: row.tagId } : undefined,
           muted: !row.tagId,
         }))}

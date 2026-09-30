@@ -16,7 +16,6 @@ const meta = {
         key: "groceries",
         name: "Groceries",
         amount: 412.3,
-        earlier: null,
         filter: { categoryId: "00000000-0000-4000-8000-000000000001" },
         icon: "shopping-cart",
       },
@@ -24,11 +23,10 @@ const meta = {
         key: "transport",
         name: "Transport",
         amount: 128.9,
-        earlier: null,
         filter: { categoryId: "00000000-0000-4000-8000-000000000002" },
         icon: "car",
       },
-      { key: "other", name: "Other", amount: 64.5, earlier: null, icon: "shapes" },
+      { key: "other", name: "Other", amount: 64.5, icon: "shapes" },
     ],
   },
 } satisfies Meta<typeof BreakdownList>;
@@ -50,10 +48,10 @@ export const Compared: Story = {
         key: "holiday",
         name: "Holiday",
         amount: 820,
-        earlier: 400,
+        comparisonAmount: 400,
         filter: { tagIds: "00000000-0000-4000-8000-000000000003" },
       },
-      { key: "untagged", name: "Untagged", amount: 120, earlier: 180, muted: true },
+      { key: "untagged", name: "Untagged", amount: 120, comparisonAmount: 180, muted: true },
     ],
   },
 };
@@ -62,8 +60,8 @@ export const Income: Story = {
   args: {
     type: "income",
     rows: [
-      { key: "salary", name: "Salary", amount: 3200, earlier: 3000, icon: "banknote" },
-      { key: "interest", name: "Interest", amount: 42.5, earlier: 50, icon: "piggy-bank" },
+      { key: "salary", name: "Salary", amount: 3200, comparisonAmount: 3000, icon: "banknote" },
+      { key: "interest", name: "Interest", amount: 42.5, comparisonAmount: 50, icon: "piggy-bank" },
     ],
   },
 };
@@ -71,8 +69,8 @@ export const Income: Story = {
 export const CategoryBelowZero: Story = {
   args: {
     rows: [
-      { key: "groceries", name: "Groceries", amount: 100, earlier: null, icon: "shopping-cart" },
-      { key: "clothes", name: "Clothes", amount: -60, earlier: null, icon: "shirt" },
+      { key: "groceries", name: "Groceries", amount: 100, icon: "shopping-cart" },
+      { key: "clothes", name: "Clothes", amount: -60, icon: "shirt" },
     ],
   },
   play: async ({ canvas }) => {

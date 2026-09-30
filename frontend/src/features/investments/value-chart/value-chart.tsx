@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { useValueHistorySuspense } from "@/api/generated";
 import type { ValueHistoryParams } from "@/api/generated/model";
-import { CHART_COLOR_PRIMARY, type ChartSeries } from "@/components/chart";
+import { CHART_COLOR_MUTED, CHART_COLOR_PRIMARY, type ChartSeries } from "@/components/chart";
 import { TimeSeriesLineChart } from "@/components/chart/time-series-line-chart";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
 
@@ -28,7 +28,7 @@ export function ValueChart({ params }: Readonly<Props>) {
     {
       key: "cost",
       label: t("investments.valueChart.cost"),
-      color: "var(--muted-foreground)",
+      color: CHART_COLOR_MUTED,
       shape: "line",
     },
   ];

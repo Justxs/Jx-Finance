@@ -1,9 +1,9 @@
 import { useTranslation } from "react-i18next";
 import type { TagResponse } from "@/api/generated/model";
+import { TagChips } from "@/components/tag-chips/tag-chips";
+import { TagPicker } from "@/components/tag-picker/tag-picker";
 import { Button } from "@/components/ui/button/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover/popover";
-import { TagChips } from "@/features/tags/tag-chips/tag-chips";
-import { TagPicker } from "@/features/tags/tag-picker/tag-picker";
 import { byId } from "@/lib/options";
 
 interface Props {

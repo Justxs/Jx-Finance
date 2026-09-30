@@ -1,14 +1,17 @@
 import { z } from "zod";
 import {
   type CreateCsvMappingRequest,
-  type CsvAmountStyle,
-  type CsvDecimalSeparator,
-  type CsvEncoding,
+  CsvAmountStyle,
+  CsvDecimalSeparator,
+  CsvEncoding,
   type CsvMappingResponse,
   Currency,
   type InspectCsvColumn,
   type InspectCsvResponse,
 } from "@/api/generated/model";
+import { createCsvMappingBodyNameMax } from "@/api/schemas/imports/imports.zod";
+import type { Translate } from "@/lib/i18n";
+import { requiredText } from "@/lib/validation";
 
 export const DATE_FORMATS = [
   "yyyy-MM-dd",
@@ -21,26 +24,7 @@ export const DATE_FORMATS = [
   "d.M.yyyy",
 ] as const;
 
-export const DELIMITERS = { comma: ",", semicolon: ";", tab: "\t", pipe: "|" } as const;
-
-export const DELIMITER_NAMES = ["comma", "semicolon", "tab", "pipe"] as const;
-
-export const COLUMN_ROLES = [
-  "date",
-  "description",
-  "payee",
-  "amount",
-  "debit",
-  "credit",
-  "direction",
-  "currency",
-  "reference",
-  "balance",
-  "fee",
-  "status",
-] as const;
-
-export const columnsSchema = z.object({
+const columnsSchema = z.object({
   date: z.string(),
   description: z.string(),
   payee: z.string(),
@@ -57,20 +41,36 @@ export const columnsSchema = z.object({
   bookedValues: z.string(),
 });
 
-export type ColumnRole = (typeof COLUMN_ROLES)[number];
+const VALUE_FIELDS: ReadonlySet<string> = new Set(["expenseValue", "bookedValues"]);
+
+const mappingFields = z.object({
+  name: z.string(),
+  encoding: z.enum(CsvEncoding),
+  delimiter: z.string(),
+  skipLines: z.string(),
+  amountStyle: z.enum(CsvAmountStyle),
+  dateFormat: z.string(),
+  decimalSeparator: z.enum(CsvDecimalSeparator),
+  currency: z.string(),
+  columns: columnsSchema,
+});
 
 export type MappingColumns = z.infer<typeof columnsSchema>;
 
-export interface MappingValues {
-  name: string;
-  encoding: CsvEncoding;
-  delimiter: string;
-  skipLines: string;
-  amountStyle: CsvAmountStyle;
-  dateFormat: string;
-  decimalSeparator: CsvDecimalSeparator;
-  currency: string;
-  columns: MappingColumns;
+type MappingValues = z.infer<typeof mappingFields>;
+
+export function mappingSchema(t: Translate) {
+  return mappingFields
+    .extend({ name: requiredText(t, createCsvMappingBodyNameMax) })
+    .superRefine((value, ctx) => {
+      for (const role of missingColumns(value)) {
+        ctx.addIssue({
+          code: "custom",
+          message: t("imports.mapping.required"),
+          path: ["columns", role],
+        });
+      }
+    });
 }
 
 export interface MappingSource {
@@ -95,9 +95,11 @@ export function sourceOf(
   if (inspection) {
     return inspection;
   }
-  const names = COLUMN_ROLES.map((role) => initial?.columns[role]).filter((name): name is string =>
-    Boolean(name),
-  );
+  const names = columnsSchema
+    .keyof()
+    .options.filter((role) => !VALUE_FIELDS.has(role))
+    .map((role) => initial?.columns[role])
+    .filter((name): name is string => Boolean(name));
   return {
     encoding: initial?.encoding ?? "utf8",
     delimiter: initial?.delimiter ?? ",",

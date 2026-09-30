@@ -11,12 +11,13 @@ import { createConversionBodyDescriptionMax } from "@/api/schemas/conversions/co
 import { MoneyPairField, useServerForm } from "@/components/form";
 import { FormError } from "@/components/form-error/form-error";
 import { FormGrid } from "@/components/ui/form-grid/form-grid";
+import { heldCurrencies } from "@/features/accounts/held-currencies";
 import { ClosedMonthHint } from "@/features/month-close/closed-month-hint/closed-month-hint";
-import { useUsableCurrencies } from "@/hooks/use-formatters";
+import { useUsableCurrencies } from "@/hooks/use-currencies";
 import { useToday } from "@/hooks/use-settings";
 import { DEFAULT_CURRENCY } from "@/lib/currency";
 import { hasServerErrorCode } from "@/lib/form-server-errors";
-import { silent, upsert } from "@/lib/mutations";
+import { silentMutation, upsert } from "@/lib/mutations";
 import { namedOptions, withMissingOption } from "@/lib/options";
 import {
   optionalPositiveMoney,
@@ -24,7 +25,6 @@ import {
   positiveMoney,
   requiredValue,
 } from "@/lib/validation";
-import { heldCurrencies } from "../held-currencies";
 import { ConversionRate } from "./conversion-rate";
 import {
   type ConversionFieldValues,
@@ -99,8 +99,8 @@ export function ConversionForm({
   );
 
   const { create, update, pending, error } = upsert(
-    useCreateConversion(silent({ onSuccess: onClose })),
-    useUpdateConversion(silent({ onSuccess: onClose })),
+    useCreateConversion({ mutation: { ...silentMutation, onSuccess: onClose } }),
+    useUpdateConversion({ mutation: { ...silentMutation, onSuccess: onClose } }),
   );
 
   const form = useServerForm({

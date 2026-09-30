@@ -3,6 +3,7 @@ import { expect, fn, screen, userEvent, waitFor } from "storybook/test";
 import type { ProblemDetails } from "@/api/generated/model";
 import { getReadReceiptMockHandler } from "@/api/generated/receipts/receipts.msw";
 import { getSettingsMockHandler } from "@/api/generated/settings/settings.msw";
+import { TransactionForm } from "@/features/transactions/transaction-form/transaction-form";
 import { withWidth } from "@/storybook/decorators";
 import {
   accounts,
@@ -18,7 +19,6 @@ import {
 } from "@/storybook/fixtures";
 import { failWith, pending, withHandlers } from "@/storybook/handlers";
 import { first, openedDialog } from "@/storybook/interactions";
-import { TransactionForm } from "../transaction-form/transaction-form";
 
 const readySettings = getSettingsMockHandler(
   settingsWith({ receiptReadingReady: true, features: { receiptReading: true } }),

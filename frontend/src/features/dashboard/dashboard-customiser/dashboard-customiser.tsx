@@ -18,11 +18,16 @@ import { Button } from "@/components/ui/button/button";
 import { Checkbox } from "@/components/ui/checkbox/checkbox";
 import { Rows } from "@/components/ui/rows/rows";
 import { Section, SectionTitle } from "@/components/ui/section/section";
+import { dashboardCardTitle } from "@/features/dashboard/dashboard-card/dashboard-card";
+import {
+  type LayoutDraft,
+  availableCards,
+  moveCard,
+  setCardShown,
+} from "@/features/dashboard/dashboard-layout";
 import { useSettingsSuspense } from "@/hooks/use-settings";
-import { silent } from "@/lib/mutations";
+import { silentMutation } from "@/lib/mutations";
 import type { MoveDirection } from "@/lib/reorder";
-import { dashboardCardTitle } from "../dashboard-card/dashboard-card";
-import { type LayoutDraft, availableCards, moveCard, setCardShown } from "../dashboard-layout";
 import { DashboardLayoutSkeleton } from "./dashboard-layout-skeleton";
 
 interface Props {
@@ -40,20 +45,23 @@ export function DashboardCustomiser({ layout, features, onDone }: Readonly<Props
 
   function finish(saved: DashboardLayoutResponse, message: string) {
     queryClient.setQueryData(getDashboardLayoutQueryKey(), saved);
+    setDraft({ order: saved.order, hidden: saved.hidden });
     toast.success(message);
     onDone?.();
   }
 
-  const saveMutation = useSaveDashboardLayout(
-    silent({
-      onSuccess: (saved: DashboardLayoutResponse) => finish(saved, t("dashboard.layout.saved")),
-    }),
-  );
-  const resetMutation = useResetDashboardLayout(
-    silent({
-      onSuccess: (saved: DashboardLayoutResponse) => finish(saved, t("dashboard.layout.resetDone")),
-    }),
-  );
+  const saveMutation = useSaveDashboardLayout({
+    mutation: {
+      ...silentMutation,
+      onSuccess: (saved) => finish(saved, t("dashboard.layout.saved")),
+    },
+  });
+  const resetMutation = useResetDashboardLayout({
+    mutation: {
+      ...silentMutation,
+      onSuccess: (saved) => finish(saved, t("dashboard.layout.resetDone")),
+    },
+  });
   const busy = saveMutation.isPending || resetMutation.isPending;
 
   const cards = availableCards(draft, features);
@@ -155,7 +163,7 @@ function SavedLayoutCustomiser() {
   const layout = useDashboardLayoutSuspense().data;
   const { features } = useSettingsSuspense();
 
-  return <DashboardCustomiser key={JSON.stringify(layout)} layout={layout} features={features} />;
+  return <DashboardCustomiser layout={layout} features={features} />;
 }
 
 export function DashboardLayoutSection() {

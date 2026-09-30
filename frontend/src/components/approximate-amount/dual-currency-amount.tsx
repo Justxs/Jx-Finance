@@ -7,7 +7,7 @@ interface Props {
   value: number;
   currency: string;
   secondaryValue?: number | null;
-  secondaryCurrency: string;
+  secondaryCurrency?: string;
   approximate?: boolean;
   signed?: boolean;
   strong?: boolean;
@@ -17,7 +17,7 @@ export function DualCurrencyAmount({
   value,
   currency,
   secondaryValue = null,
-  secondaryCurrency,
+  secondaryCurrency = currency,
   approximate = false,
   signed = false,
   strong = false,

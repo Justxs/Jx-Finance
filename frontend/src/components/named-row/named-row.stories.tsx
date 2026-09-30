@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { fn } from "storybook/test";
 import { Rows } from "@/components/ui/rows/rows";
 import { CategoryIcon } from "@/lib/category-icons";
+import { familyHousehold } from "@/storybook/fixtures";
 import { NamedRow } from "./named-row";
 
 const meta = {
@@ -10,7 +11,7 @@ const meta = {
   args: {
     name: "Atostogos",
     scope: "personal",
-    householdName: undefined,
+    householdId: null,
     onEdit: fn(),
     onDelete: fn(),
     deletePending: false,
@@ -30,10 +31,10 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
 
-export const Shared: Story = { args: { scope: "shared", householdName: "Šeima" } };
+export const Shared: Story = { args: { scope: "shared", householdId: familyHousehold.id } };
 
 export const SharedHouseholdMissing: Story = {
-  args: { scope: "shared", householdName: undefined },
+  args: { scope: "shared", householdId: null },
 };
 
 export const WithIcon: Story = {

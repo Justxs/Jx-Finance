@@ -146,8 +146,7 @@ describe("buildCommandEntries", () => {
 
     expect(entries.find((entry) => entry.id === tagEntry)?.target).toEqual({
       kind: "navigate",
-      to: "/transactions",
-      search: { tagIds: fixtureIds.tags.holiday },
+      link: { to: "/transactions", search: { tagIds: fixtureIds.tags.holiday } },
     });
   });
 });
@@ -182,11 +181,10 @@ describe("matchScore", () => {
 function plainEntry(id: string, label: string, keywords = ""): CommandEntry {
   return {
     id,
-    group: "pages",
     label,
     hint: "hint",
     keywords,
-    target: { kind: "navigate", to: "/" },
+    target: { kind: "navigate", link: { to: "/" } },
   };
 }
 

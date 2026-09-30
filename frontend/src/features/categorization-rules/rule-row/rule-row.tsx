@@ -4,8 +4,12 @@ import { MoveButtons } from "@/components/move-buttons/move-buttons";
 import { type DeleteProps, RowActions } from "@/components/row-actions/row-actions";
 import { RowTransition } from "@/components/row-transition/row-transition";
 import { Tag } from "@/components/ui/tag/tag";
+import {
+  actionText,
+  conditionText,
+  ruleActionNames,
+} from "@/features/categorization-rules/rule-form/rule-summary";
 import type { MoveDirection } from "@/lib/reorder";
-import { actionText, conditionText, ruleActionNames } from "../rule-form/rule-summary";
 
 interface Props extends DeleteProps {
   rule: CategorizationRuleResponse;

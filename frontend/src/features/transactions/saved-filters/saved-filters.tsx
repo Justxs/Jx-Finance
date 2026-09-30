@@ -2,34 +2,24 @@ import { Bookmark } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import type { AccountResponse, CategoryResponse, TagResponse } from "@/api/generated/model";
+import { SavedListMenu } from "@/features/transactions/saved-list-menu/saved-list-menu";
 import {
-  deleteSavedFilter,
-  renameSavedFilter,
-  saveFilter,
-  useSavedFilters,
-} from "@/stores/transaction-views";
-import { SavedListMenu } from "../saved-list-menu/saved-list-menu";
-import { isEmptyFilter, missingFilterReferences } from "../transaction-queries";
-import { useTransactionFilters } from "../use-transaction-filters";
+  isEmptyFilter,
+  missingFilterReferences,
+} from "@/features/transactions/transaction-queries";
+import { savedFilters } from "@/features/transactions/transaction-views";
+import type { TransactionFilters } from "@/features/transactions/use-transaction-filters";
 
 interface Props {
+  filters: TransactionFilters;
   accounts: AccountResponse[];
   categories: CategoryResponse[];
   tags: TagResponse[];
-  className?: string;
-  defaultOpen?: boolean;
 }
 
-export function SavedFilters({
-  accounts,
-  categories,
-  tags,
-  className,
-  defaultOpen,
-}: Readonly<Props>) {
+export function SavedFilters({ filters, accounts, categories, tags }: Readonly<Props>) {
   const { t } = useTranslation();
-  const filters = useTransactionFilters({ accounts, categories });
-  const saved = useSavedFilters();
+  const saved = savedFilters.useRows();
 
   const known = {
     accountIds: new Set(accounts.map((account) => account.id)),
@@ -49,8 +39,6 @@ export function SavedFilters({
   return (
     <SavedListMenu
       icon={Bookmark}
-      className={className}
-      defaultOpen={defaultOpen}
       label={t("transactions.savedFilters")}
       items={items}
       emptyText={t("transactions.savedFiltersEmpty")}
@@ -60,7 +48,7 @@ export function SavedFilters({
       saveHint={t("transactions.saveFilterNeedsFilter")}
       canSave={!isEmptyFilter(filters.currentFilter)}
       onSave={(name) => {
-        saveFilter(name, filters.currentFilter);
+        savedFilters.save(name, { filter: filters.currentFilter });
         toast.success(t("transactions.savedFilterSaved"));
       }}
       onApply={(id) => {
@@ -69,8 +57,8 @@ export function SavedFilters({
           filters.applyFilter(row.filter);
         }
       }}
-      onRename={renameSavedFilter}
-      onDelete={deleteSavedFilter}
+      onRename={savedFilters.rename}
+      onDelete={savedFilters.remove}
     />
   );
 }

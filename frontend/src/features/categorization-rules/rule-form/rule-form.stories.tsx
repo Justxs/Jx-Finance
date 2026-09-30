@@ -79,6 +79,31 @@ export const SampleDoesNotMatch: Story = {
   },
 };
 
+export const TesterFollowsThePattern: Story = {
+  args: { initial: categorizationRules[0] },
+  play: async ({ canvas }) => {
+    const tryIt = canvas.getByRole("button", { name: /^(try it|išbandyti)$/i });
+    await fireEvent.change(
+      await canvas.findByLabelText(/sample description|pavyzdinis paaiškinimas/i),
+      { target: { value: "Pirkinys MAXIMA X-123" } },
+    );
+    await userEvent.click(tryIt);
+    await expect(
+      await canvas.findByText(/would set|nustatytų/i, { selector: "p" }),
+    ).toBeInTheDocument();
+
+    const pattern = canvas.getByLabelText(/^(text|tekstas)$/i);
+    await fireEvent.change(pattern, { target: { value: "LIDL" } });
+    await userEvent.click(tryIt);
+    await expect(
+      await canvas.findByText(/would not match|nesutaptų/i, { selector: "p" }),
+    ).toBeInTheDocument();
+
+    await fireEvent.change(pattern, { target: { value: "" } });
+    await waitFor(() => expect(tryIt).toBeDisabled());
+  },
+};
+
 export const SampleFailsOnTheAmount: Story = {
   args: { initial: categorizationRules[1] },
   parameters: withHandlers(getTestCategorizationRuleMockHandler(ruleTestAmountOnly)),

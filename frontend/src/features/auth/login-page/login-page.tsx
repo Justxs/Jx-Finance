@@ -4,17 +4,16 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
 import { useBeginPasskeySignIn, useLogin, usePasskeySignIn } from "@/api/generated";
-import type { LoginResponse } from "@/api/generated/model";
 import { useServerForm } from "@/components/form";
 import { FormError } from "@/components/form-error/form-error";
 import { Button } from "@/components/ui/button/button";
+import { AuthCard } from "@/features/auth/auth-card/auth-card";
 import { useEmailEnabled, usePasskeysAvailable } from "@/hooks/use-settings";
 import { loadAppShell } from "@/lib/app-shell";
 import { setAuthenticated } from "@/lib/auth-gate";
-import { silent } from "@/lib/mutations";
+import { silentMutation } from "@/lib/mutations";
 import { type PasskeyFailure, getPasskey, passkeysSupported } from "@/lib/passkeys";
 import { requiredEmail, requiredValue } from "@/lib/validation";
-import { AuthCard } from "../auth-card/auth-card";
 
 interface FormValues {
   email: string;
@@ -32,8 +31,8 @@ interface PasskeySignInProps {
 function PasskeySignIn({ label, rememberMe, onSignedIn }: Readonly<PasskeySignInProps>) {
   const { t } = useTranslation();
   const [failure, setFailure] = useState<PasskeyFailure | null>(null);
-  const begin = useBeginPasskeySignIn(silent());
-  const signIn = usePasskeySignIn(silent({ onSuccess: onSignedIn }));
+  const begin = useBeginPasskeySignIn({ mutation: silentMutation });
+  const signIn = usePasskeySignIn({ mutation: { ...silentMutation, onSuccess: onSignedIn } });
 
   function start() {
     setFailure(null);
@@ -93,17 +92,18 @@ export function LoginPage() {
     twoFactorCode: twoFactorRequired ? requiredValue(t) : z.string(),
   });
 
-  const loginMutation = useLogin(
-    silent({
-      onSuccess: async (data: LoginResponse) => {
+  const loginMutation = useLogin({
+    mutation: {
+      ...silentMutation,
+      onSuccess: async (data) => {
         if (data.twoFactorRequired) {
           setTwoFactorRequired(true);
           return;
         }
         await enterApp();
       },
-    }),
-  );
+    },
+  });
 
   const defaultValues: FormValues = {
     email: "",

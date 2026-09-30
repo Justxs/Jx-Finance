@@ -2,11 +2,12 @@ import { MailCheck } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
 import { useForgotPassword } from "@/api/generated";
+import { forgotPasswordBodyEmailMax } from "@/api/schemas/auth/auth.zod";
 import { useServerForm } from "@/components/form";
 import { FormError } from "@/components/form-error/form-error";
-import { silent } from "@/lib/mutations";
+import { AuthCard, AuthNotice, BackToSignIn } from "@/features/auth/auth-card/auth-card";
+import { silentMutation } from "@/lib/mutations";
 import { requiredEmail } from "@/lib/validation";
-import { AuthCard, AuthNotice, BackToSignIn } from "../auth-card/auth-card";
 
 interface FormValues {
   email: string;
@@ -15,13 +16,13 @@ interface FormValues {
 export function ForgotPasswordPage() {
   const { t } = useTranslation();
 
-  const askMutation = useForgotPassword(silent());
+  const askMutation = useForgotPassword({ mutation: silentMutation });
 
   const defaultValues: FormValues = { email: "" };
 
   const form = useServerForm({
     defaultValues,
-    schema: z.object({ email: requiredEmail(t) }),
+    schema: z.object({ email: requiredEmail(t, forgotPasswordBodyEmailMax) }),
     submit: (value) => askMutation.mutateAsync({ data: { email: value.email.trim() } }),
   });
 

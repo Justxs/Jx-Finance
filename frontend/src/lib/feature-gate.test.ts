@@ -1,9 +1,9 @@
 import { isRedirect } from "@tanstack/react-router";
 import { afterEach, expect, test, vi } from "vitest";
-import { settingsQueryOptions } from "@/hooks/use-settings";
 import { settingsFixture } from "@/test/settings";
 import { requireFeature } from "./feature-gate";
 import { queryClient } from "./query-client";
+import { settingsQueryOptions } from "./settings";
 
 const gateArgs = { context: { queryClient } };
 

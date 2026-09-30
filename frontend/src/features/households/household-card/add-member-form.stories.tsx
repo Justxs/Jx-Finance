@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { fn } from "storybook/test";
+import { expect, fireEvent, fn, userEvent } from "storybook/test";
 import { getAddMemberMockHandler } from "@/api/generated/households/households.msw";
 import { Modal } from "@/components/modal";
 import { Card } from "@/components/ui/card/card";
@@ -46,6 +46,16 @@ export const UnknownEmailAfterSubmit: Story = {
       failWith({ ...notFoundProblem, detail: "No user with this email exists." }),
     ),
   ),
+  play: async ({ args, canvas }) => {
+    await fireEvent.change(canvas.getByPlaceholderText("Member's email"), {
+      target: { value: "nobody@example.lt" },
+    });
+    await userEvent.click(canvas.getByRole("button", { name: "Add" }));
+    await expect(await canvas.findByRole("alert")).toHaveTextContent(
+      "No user with this email exists.",
+    );
+    await expect(args.onClose).not.toHaveBeenCalled();
+  },
 };
 
 export const PendingAfterSubmit: Story = {

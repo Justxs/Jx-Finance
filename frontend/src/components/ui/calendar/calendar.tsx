@@ -1,5 +1,5 @@
 import { ChevronLeftIcon, ChevronRightIcon, ChevronDownIcon } from "lucide-react";
-import * as React from "react";
+import type { ComponentProps } from "react";
 import { DayPicker, getDefaultClassNames, type DayButton, type Locale } from "react-day-picker";
 import { Button, buttonVariants } from "@/components/ui/button/button";
 import { useToday, useWeekStartsOn } from "@/hooks/use-settings";
@@ -18,8 +18,8 @@ function Calendar({
   weekStartsOn,
   today,
   ...props
-}: React.ComponentProps<typeof DayPicker> & {
-  buttonVariant?: React.ComponentProps<typeof Button>["variant"];
+}: ComponentProps<typeof DayPicker> & {
+  buttonVariant?: ComponentProps<typeof Button>["variant"];
 }) {
   const defaultClassNames = getDefaultClassNames();
   const defaultWeekStartsOn = useWeekStartsOn();
@@ -152,7 +152,7 @@ function CalendarDayButton({
   modifiers,
   locale,
   ...props
-}: React.ComponentProps<typeof DayButton> & { locale?: Partial<Locale> }) {
+}: ComponentProps<typeof DayButton> & { locale?: Partial<Locale> }) {
   const defaultClassNames = getDefaultClassNames();
 
   return (

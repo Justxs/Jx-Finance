@@ -9,7 +9,7 @@ import {
   PopoverTitle,
   PopoverTrigger,
 } from "@/components/ui/popover/popover";
-import { SAVED_NAME_MAX_LENGTH } from "@/stores/transaction-views";
+import { SAVED_NAME_MAX_LENGTH } from "@/features/transactions/transaction-views";
 
 interface SavedListItem {
   id: string;
@@ -31,8 +31,6 @@ interface Props {
   onApply: (id: string) => void;
   onRename: (id: string, name: string) => void;
   onDelete: (id: string) => void;
-  className?: string;
-  defaultOpen?: boolean;
 }
 
 export function SavedListMenu({
@@ -49,11 +47,9 @@ export function SavedListMenu({
   onApply,
   onRename,
   onDelete,
-  className,
-  defaultOpen = false,
 }: Readonly<Props>) {
   const { t } = useTranslation();
-  const [open, setOpen] = useState(defaultOpen);
+  const [open, setOpen] = useState(false);
   const [renamingId, setRenamingId] = useState<string | null>(null);
 
   function confirmRename(id: string, name: string) {
@@ -69,9 +65,7 @@ export function SavedListMenu({
         setRenamingId(null);
       }}
     >
-      <PopoverTrigger
-        render={<Button type="button" variant="outline" size="sm" className={className} />}
-      >
+      <PopoverTrigger render={<Button type="button" variant="outline" size="sm" />}>
         <Icon />
         {label}
         {items.length > 0 ? <span className="tabular-nums">· {items.length}</span> : null}

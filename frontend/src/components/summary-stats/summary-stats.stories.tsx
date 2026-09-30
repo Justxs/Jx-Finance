@@ -33,6 +33,16 @@ export const Skeleton: Story = { render: () => <SummaryStatsSkeleton /> };
 
 export const SkeletonFourItems: Story = { render: () => <SummaryStatsSkeleton items={4} /> };
 
+export const WithDetails: Story = {
+  args: {
+    items: [
+      { label: "Value today", value: "16875", detail: "Vehicle" },
+      { label: "Last valuation", value: "18000", detail: "Mar 1, 2026" },
+      { label: "Fully depreciated on", value: undefined, text: "Aug 2033" },
+    ],
+  },
+};
+
 export const SingleItem: Story = { args: { items: [{ label: "Net worth", value: "84210.07" }] } };
 
 export const ZeroAndNegative: Story = {

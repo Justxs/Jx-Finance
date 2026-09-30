@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { Pencil, Trash2 } from "lucide-react";
-import { Button } from "../button/button";
+import { Button } from "@/components/ui/button/button";
 import { Tooltip, TooltipProvider } from "./tooltip";
 
 const sides = ["top", "right", "bottom", "left"] as const;

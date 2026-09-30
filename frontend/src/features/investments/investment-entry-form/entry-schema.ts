@@ -7,6 +7,12 @@ import {
   InvestmentTransactionType,
 } from "@/api/generated/model";
 import { createInvestmentTransactionBodyDescriptionMax } from "@/api/schemas/investments/investments.zod";
+import {
+  defaultInvestmentAccount,
+  isTrade,
+  requiresSecurity,
+  usesAmount,
+} from "@/features/investments/investment-types";
 import { DEFAULT_CURRENCY } from "@/lib/currency";
 import type { Translate } from "@/lib/i18n";
 import {
@@ -17,12 +23,6 @@ import {
   optionalText,
   requiredValue,
 } from "@/lib/validation";
-import {
-  defaultInvestmentAccount,
-  isTrade,
-  requiresSecurity,
-  usesAmount,
-} from "../investment-types";
 
 interface EntryFormValues {
   type: InvestmentTransactionType;
@@ -40,7 +40,6 @@ interface EntryFormValues {
 interface DefaultsInput {
   accounts: readonly AccountResponse[];
   accountId?: string;
-  initialType: InvestmentTransactionType;
   editing?: InvestmentTransactionResponse;
   today: string;
 }
@@ -90,7 +89,6 @@ export function entrySchema(t: Translate) {
 export function entryDefaults({
   accounts,
   accountId,
-  initialType,
   editing,
   today,
 }: DefaultsInput): EntryFormValues {
@@ -112,7 +110,7 @@ export function entryDefaults({
   const initialAccount = defaultInvestmentAccount(accounts, accountId);
 
   return {
-    type: initialType,
+    type: "buy",
     accountId: initialAccount?.id ?? "",
     date: today,
     securityId: "",

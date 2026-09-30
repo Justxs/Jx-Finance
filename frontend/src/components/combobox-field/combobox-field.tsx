@@ -1,28 +1,13 @@
 import { Combobox } from "@base-ui/react/combobox";
 import { CheckIcon, ChevronDownIcon, Search } from "lucide-react";
-import type { FocusEventHandler } from "react";
 import { useTranslation } from "react-i18next";
-import type { SelectOption } from "@/components/select-field/select-field";
+import type { ChoiceFieldProps } from "@/components/select-field/select-field";
+import { selectItemClass, selectTriggerClass } from "@/components/ui/select/select";
+import type { SelectOption } from "@/lib/options";
 import { cn } from "@/lib/utils";
 
 function optionText(option: SelectOption) {
   return typeof option.label === "string" ? option.label : option.value;
-}
-
-interface Props<T extends string> {
-  id?: string;
-  value: T;
-  onChange: (value: T) => void;
-  options: SelectOption<T>[];
-  placeholder?: string;
-  disabled?: boolean;
-  size?: "sm" | "default";
-  variant?: "default" | "ghost";
-  className?: string;
-  "aria-invalid"?: boolean;
-  "aria-label"?: string;
-  "aria-describedby"?: string;
-  onBlur?: FocusEventHandler<HTMLButtonElement>;
 }
 
 export function ComboboxField<T extends string>({
@@ -38,8 +23,9 @@ export function ComboboxField<T extends string>({
   "aria-invalid": ariaInvalid,
   "aria-label": ariaLabel,
   "aria-describedby": ariaDescribedBy,
+  "aria-busy": ariaBusy,
   onBlur,
-}: Readonly<Props<T>>) {
+}: Readonly<ChoiceFieldProps<T>>) {
   const { t } = useTranslation();
   const selected = options.find((option) => option.value === value) ?? null;
 
@@ -67,11 +53,9 @@ export function ComboboxField<T extends string>({
           aria-invalid={ariaInvalid}
           aria-label={ariaLabel}
           aria-describedby={ariaDescribedBy}
+          aria-busy={ariaBusy}
           onBlur={onBlur}
-          className={cn(
-            "flex h-9 w-full min-w-0 items-center justify-between gap-1.5 rounded-lg border border-input bg-muted/40 py-2 pr-2.5 pl-3 text-left text-base whitespace-nowrap transition-colors outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 data-placeholder:text-muted-foreground data-[size=sm]:h-8 data-[variant=ghost]:border-transparent data-[variant=ghost]:bg-transparent data-[variant=ghost]:pl-2 data-[variant=ghost]:hover:border-input md:text-sm dark:bg-input/30 dark:hover:bg-input/50 dark:data-[variant=ghost]:bg-transparent pointer-coarse:h-11",
-            className,
-          )}
+          className={cn(selectTriggerClass, "w-full min-w-0 text-left", className)}
         >
           <span className="min-w-0 flex-1 truncate">
             <Combobox.Value placeholder={placeholder} />
@@ -106,7 +90,10 @@ export function ComboboxField<T extends string>({
                     key={option.value}
                     value={option}
                     disabled={option.disabled}
-                    className="relative flex w-full cursor-default items-center gap-1.5 rounded-md py-1.5 pr-8 pl-2 text-sm wrap-anywhere outline-hidden select-none data-highlighted:bg-accent data-highlighted:text-accent-foreground"
+                    className={cn(
+                      selectItemClass,
+                      "data-highlighted:bg-accent data-highlighted:text-accent-foreground",
+                    )}
                   >
                     {option.label}
                     <Combobox.ItemIndicator className="pointer-events-none absolute right-2 flex size-4 items-center justify-center">

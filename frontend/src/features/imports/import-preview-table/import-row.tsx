@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button/button";
 import { Checkbox } from "@/components/ui/checkbox/checkbox";
 import { TableCell, TableRow } from "@/components/ui/table/table";
 import { HintTag, Tag } from "@/components/ui/tag/tag";
-import { useUnusualSentence } from "@/features/transactions/unusual-amount/unusual-amount-badge";
+import { useUnusualSentence } from "@/features/transactions/unusual-amount/use-unusual-sentence";
 import { EMPTY_VALUE, useIsoDate, useMoney } from "@/hooks/use-formatters";
 import { namedOptions } from "@/lib/options";
 import { INCOME_TONE } from "@/lib/tone";

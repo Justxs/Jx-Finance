@@ -1,7 +1,7 @@
 import { Button as ButtonPrimitive } from "@base-ui/react/button";
 import { cva, type VariantProps } from "class-variance-authority";
 import { Loader2Icon } from "lucide-react";
-import * as React from "react";
+import type { ComponentProps, ReactNode } from "react";
 import { Tooltip } from "@/components/ui/tooltip/tooltip";
 import { cn } from "@/lib/utils";
 
@@ -53,8 +53,8 @@ function Button({
 }: ButtonPrimitive.Props &
   VariantProps<typeof buttonVariants> & {
     pending?: boolean;
-    tooltip?: React.ReactNode;
-    tooltipSide?: React.ComponentProps<typeof Tooltip>["side"];
+    tooltip?: ReactNode;
+    tooltipSide?: ComponentProps<typeof Tooltip>["side"];
   }) {
   const iconOnly = typeof size === "string" && size.startsWith("icon");
   const hint = tooltip ?? (iconOnly ? props["aria-label"] : undefined);

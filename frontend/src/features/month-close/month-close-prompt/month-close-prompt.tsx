@@ -1,20 +1,25 @@
 import { Link } from "@tanstack/react-router";
-import { useId } from "react";
+import { useId, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useMonthReviewSuspense } from "@/api/generated";
 import type { MonthReviewResponse } from "@/api/generated/model";
+import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog/confirm-delete-dialog";
 import { FormError } from "@/components/form-error/form-error";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { Button, buttonVariants } from "@/components/ui/button/button";
 import { Section, SectionTitle } from "@/components/ui/section/section";
+import {
+  CloseChecklist,
+  attentionCount,
+  openItemCount,
+} from "@/features/month-close/close-checklist/close-checklist";
+import { useMonthCloser } from "@/features/month-close/close-form/use-month-closer";
+import { statusMarkers } from "@/features/month-close/status-markers";
 import { useMoney, useMonthName, usePercent } from "@/hooks/use-formatters";
 import { useFeature, useTodayDate } from "@/hooks/use-settings";
+import { latestEndedMonth } from "@/lib/calendar";
 import { cn } from "@/lib/utils";
 import { hideMonthClosePrompt, useMonthClosePromptHidden } from "@/stores/month-close-prompt-store";
-import { CloseChecklist, attentionCount } from "../close-checklist/close-checklist";
-import { useMonthCloser } from "../close-form/use-month-closer";
-import { latestEndedMonth } from "../month-key";
-import { statusMarkers } from "../status-markers";
 
 function savingsRate(income: string | undefined, net: string | undefined) {
   const earned = Number(income ?? 0);
@@ -33,8 +38,10 @@ function PromptPanel({ month, review }: Readonly<PanelProps>) {
   const percent = usePercent();
   const monthName = useMonthName()(month);
   const closer = useMonthCloser(month, review);
+  const [confirming, setConfirming] = useState(false);
   const changed = review.status === "closedChanged";
   const attention = attentionCount(review.checklist);
+  const openItems = openItemCount(review.checklist);
   const marker = statusMarkers[review.status];
   const rate = savingsRate(review.figures.totalIncome, review.figures.net);
 
@@ -43,6 +50,11 @@ function PromptPanel({ month, review }: Readonly<PanelProps>) {
     summary = t("monthClose.prompt.changed");
   } else if (attention > 0) {
     summary = t("monthClose.panel.attention", { count: attention });
+  }
+
+  function close() {
+    setConfirming(false);
+    closer.mutate({ month, data: { note: "" } });
   }
 
   const reviewLink = (
@@ -110,7 +122,10 @@ function PromptPanel({ month, review }: Readonly<PanelProps>) {
           <div className="flex flex-wrap gap-2">
             {reviewLink}
             {changed ? null : (
-              <Button pending={closer.pending} onClick={() => void closer.request("")}>
+              <Button
+                pending={closer.isPending}
+                onClick={() => (openItems > 0 ? setConfirming(true) : close())}
+              >
                 {t("monthClose.form.closeMonth", { month: monthName })}
               </Button>
             )}
@@ -119,7 +134,15 @@ function PromptPanel({ month, review }: Readonly<PanelProps>) {
       </div>
 
       <FormError error={closer.error} />
-      {closer.dialog}
+      <ConfirmDeleteDialog
+        target={confirming ? true : null}
+        title={t("monthClose.form.confirmTitle")}
+        description={t("monthClose.form.confirmDescription", { count: openItems })}
+        confirmLabel={t("monthClose.form.closeAnyway")}
+        destructive={false}
+        onCancel={() => setConfirming(false)}
+        onConfirm={close}
+      />
     </Section>
   );
 }

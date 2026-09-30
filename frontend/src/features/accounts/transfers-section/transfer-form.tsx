@@ -2,15 +2,16 @@ import { useTranslation } from "react-i18next";
 import { z } from "zod";
 import { useCreateTransfer, useUpdateTransfer } from "@/api/generated";
 import { type AccountResponse, Currency, type TransferResponse } from "@/api/generated/model";
+import { createTransferBodyDescriptionMax } from "@/api/schemas/transfers/transfers.zod";
 import { MoneyPairField, useServerForm } from "@/components/form";
 import { FormError } from "@/components/form-error/form-error";
 import { FormGrid } from "@/components/ui/form-grid/form-grid";
+import { heldCurrencies } from "@/features/accounts/held-currencies";
 import { useFeature, useToday } from "@/hooks/use-settings";
 import { DEFAULT_CURRENCY } from "@/lib/currency";
-import { silent, upsert } from "@/lib/mutations";
+import { silentMutation, upsert } from "@/lib/mutations";
 import { namedOptions, withMissingOption } from "@/lib/options";
-import { isPositiveMoney, positiveMoney, requiredValue } from "@/lib/validation";
-import { heldCurrencies } from "../held-currencies";
+import { isPositiveMoney, optionalText, positiveMoney, requiredValue } from "@/lib/validation";
 
 interface FormValues {
   fromAccountId: string;
@@ -68,7 +69,7 @@ export function TransferForm({ accounts, transfer, onClose }: Readonly<Props>) {
       receivedAmount: z.string(),
       receivedCurrency: z.enum(Currency),
       date: requiredValue(t),
-      description: z.string(),
+      description: optionalText(t, createTransferBodyDescriptionMax),
     })
     .refine((value) => value.fromAccountId !== value.toAccountId, {
       message: t("transfers.sameAccountError"),
@@ -114,8 +115,8 @@ export function TransferForm({ accounts, transfer, onClose }: Readonly<Props>) {
       };
 
   const { create, update, pending, error } = upsert(
-    useCreateTransfer(silent({ onSuccess: onClose })),
-    useUpdateTransfer(silent({ onSuccess: onClose })),
+    useCreateTransfer({ mutation: { ...silentMutation, onSuccess: onClose } }),
+    useUpdateTransfer({ mutation: { ...silentMutation, onSuccess: onClose } }),
   );
 
   const form = useServerForm({

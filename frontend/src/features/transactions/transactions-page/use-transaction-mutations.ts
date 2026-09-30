@@ -16,16 +16,15 @@ import type {
   PagedResponseOfTransactionResponse,
   TransactionResponse,
 } from "@/api/generated/model";
-import { useReportingCurrency } from "@/hooks/use-formatters";
-import { silent } from "@/lib/mutations";
+import { optimisticId } from "@/features/transactions/transaction-amount/transaction-row";
+import { useReportingCurrency } from "@/hooks/use-currencies";
+import { silentMutation } from "@/lib/mutations";
 import { optimisticPagedRemoval, optimisticUpdate } from "@/lib/optimistic";
 import { errorMessage } from "@/lib/query-client";
 import { normalizeMoney } from "@/lib/validation";
-import { optimisticId } from "../transaction-amount";
 
 interface Options {
   listKey: QueryKey;
-  onUpdated: () => void;
   onBulkApplied: () => void;
 }
 
@@ -60,7 +59,7 @@ function optimisticTransaction(
   };
 }
 
-export function useTransactionMutations({ listKey, onUpdated, onBulkApplied }: Readonly<Options>) {
+export function useTransactionMutations({ listKey, onBulkApplied }: Readonly<Options>) {
   const { t } = useTranslation();
   const reportingCurrency = useReportingCurrency();
 
@@ -93,7 +92,7 @@ export function useTransactionMutations({ listKey, onUpdated, onBulkApplied }: R
     },
   });
 
-  const update = useUpdateTransaction(silent({ onSuccess: onUpdated }));
+  const update = useUpdateTransaction({ mutation: silentMutation });
 
   const remove = useDeleteTransaction({ mutation: optimisticDelete });
 
@@ -115,7 +114,7 @@ export function useTransactionMutations({ listKey, onUpdated, onBulkApplied }: R
     },
   });
 
-  const uploadReceipt = useUploadAttachment(silent());
+  const uploadReceipt = useUploadAttachment({ mutation: silentMutation });
 
   async function attachReceipt(transactionId: string, file: File) {
     try {

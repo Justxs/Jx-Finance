@@ -6,10 +6,11 @@ import { createAssetBodyNameMax } from "@/api/schemas/net-worth/net-worth.zod";
 import { useServerForm } from "@/components/form";
 import { FormError } from "@/components/form-error/form-error";
 import { FormGrid } from "@/components/ui/form-grid/form-grid";
+import type { BalanceItemFormProps } from "@/features/net-worth/balance-items-section/balance-items-section";
 import { useMoney, useMonthName } from "@/hooks/use-formatters";
 import { useToday } from "@/hooks/use-settings";
 import { toCents } from "@/lib/money";
-import { silent, upsert } from "@/lib/mutations";
+import { silentMutation, upsert } from "@/lib/mutations";
 import { optionsOf } from "@/lib/options";
 import {
   isNonNegativeMoney,
@@ -21,11 +22,10 @@ import {
   requiredText,
   requiredValue,
 } from "@/lib/validation";
-import type { HoldingFormProps } from "../holdings-section";
 
-export interface AssetFormValues {
+interface AssetFormValues {
   name: string;
-  type: string;
+  type: AssetType;
   amount: string;
   asOf: string;
   depreciates: boolean;
@@ -39,7 +39,7 @@ export interface AssetFormValues {
 const assetTypes = Object.values(AssetType);
 const MAX_LIFE_MONTHS = 600;
 
-export function assetFormValues(asset: AssetResponse): AssetFormValues {
+function assetFormValues(asset: AssetResponse): AssetFormValues {
   const terms = asset.depreciation;
   return {
     name: asset.name,
@@ -103,12 +103,12 @@ function DepreciationPreview({ values }: Readonly<{ values: AssetFormValues }>) 
   );
 }
 
-export function AssetForm({ editing, onClose }: Readonly<HoldingFormProps<AssetFormValues>>) {
+export function AssetForm({ editing, onClose }: Readonly<BalanceItemFormProps<AssetResponse>>) {
   const { t } = useTranslation();
   const today = useToday();
   const { create, update, pending, error } = upsert(
-    useCreateAsset(silent({ onSuccess: onClose })),
-    useUpdateAsset(silent({ onSuccess: onClose })),
+    useCreateAsset({ mutation: { ...silentMutation, onSuccess: onClose } }),
+    useUpdateAsset({ mutation: { ...silentMutation, onSuccess: onClose } }),
   );
   const idPrefix = editing ? "asset-edit" : "asset";
 
@@ -119,7 +119,7 @@ export function AssetForm({ editing, onClose }: Readonly<HoldingFormProps<AssetF
   const schema = z
     .object({
       name: requiredText(t, createAssetBodyNameMax),
-      type: z.string(),
+      type: z.enum(AssetType),
       amount: money(t),
       asOf: requiredValue(t).refine(notFuture, t("netWorth.valuations.dateFuture")),
       depreciates: z.boolean(),
@@ -153,18 +153,20 @@ export function AssetForm({ editing, onClose }: Readonly<HoldingFormProps<AssetF
       { message: t("netWorth.depreciation.residualTooHigh"), path: ["residualValue"] },
     );
 
-  const defaultValues: AssetFormValues = editing?.values ?? {
-    name: "",
-    type: AssetType.other,
-    amount: "",
-    asOf: today,
-    depreciates: false,
-    startDate: today,
-    startValue: "",
-    lifeYears: "",
-    lifeMonths: "",
-    residualValue: "",
-  };
+  const defaultValues: AssetFormValues = editing
+    ? assetFormValues(editing)
+    : {
+        name: "",
+        type: AssetType.other,
+        amount: "",
+        asOf: today,
+        depreciates: false,
+        startDate: today,
+        startValue: "",
+        lifeYears: "",
+        lifeMonths: "",
+        residualValue: "",
+      };
 
   const form = useServerForm({
     defaultValues,
@@ -179,7 +181,7 @@ export function AssetForm({ editing, onClose }: Readonly<HoldingFormProps<AssetF
     submit: (value) => {
       const data = {
         name: value.name.trim(),
-        type: assetTypes.find((type) => type === value.type) ?? AssetType.other,
+        type: value.type,
         currentValue: normalizeMoney(value.amount),
         asOf: value.asOf,
         depreciation: value.depreciates ? termsOf(value) : null,

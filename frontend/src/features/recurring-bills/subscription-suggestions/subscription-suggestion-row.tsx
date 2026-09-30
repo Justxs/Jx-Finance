@@ -1,16 +1,12 @@
 import { Plus, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import type {
-  AccountResponse,
-  CategoryResponse,
-  SubscriptionCandidateResponse,
-} from "@/api/generated/model";
+import type { SubscriptionCandidateResponse } from "@/api/generated/model";
 import { updateRecurringBillBodyNameMax } from "@/api/schemas/recurring-bills/recurring-bills.zod";
 import { Button } from "@/components/ui/button/button";
 import { Tag } from "@/components/ui/tag/tag";
+import { BillRowLayout } from "@/features/recurring-bills/bill-row-layout";
 import { useIsoDate, useMoney } from "@/hooks/use-formatters";
 import { metaLine } from "@/lib/utils";
-import { BillRowLayout } from "../bill-row-layout";
 
 const MAX_LISTED_DATES = 4;
 
@@ -21,8 +17,8 @@ export function suggestedName(description: string) {
 
 interface Props {
   candidate: SubscriptionCandidateResponse;
-  accounts: AccountResponse[];
-  categories: CategoryResponse[];
+  accountNames: ReadonlyMap<string, string>;
+  categoryNames: ReadonlyMap<string, string>;
   onCreate: () => void;
   onDismiss: () => void;
   dismissPending: boolean;
@@ -31,8 +27,8 @@ interface Props {
 
 export function SubscriptionSuggestionRow({
   candidate,
-  accounts,
-  categories,
+  accountNames,
+  categoryNames,
   onCreate,
   onDismiss,
   dismissPending,
@@ -43,8 +39,8 @@ export function SubscriptionSuggestionRow({
   const formatDate = useIsoDate();
 
   const name = suggestedName(candidate.description);
-  const account = accounts.find((item) => item.id === candidate.accountId);
-  const category = categories.find((item) => item.id === candidate.categoryId);
+  const account = accountNames.get(candidate.accountId);
+  const category = categoryNames.get(candidate.categoryId ?? "");
   const listed = metaLine(...candidate.occurrenceDates.slice(-MAX_LISTED_DATES).map(formatDate));
 
   return (
@@ -61,8 +57,8 @@ export function SubscriptionSuggestionRow({
             <span className="text-foreground tabular-nums">
               {t("subscriptions.nextExpected")}: {formatDate(candidate.nextExpectedDate)}
             </span>
-            {account ? ` · ${account.name}` : ""}
-            {category ? ` · ${category.name}` : ""}
+            {account ? ` · ${account}` : ""}
+            {category ? ` · ${category}` : ""}
           </p>
           <p className="text-xs wrap-break-word text-muted-foreground">
             {t("subscriptions.basedOn", { count: candidate.occurrenceDates.length })}

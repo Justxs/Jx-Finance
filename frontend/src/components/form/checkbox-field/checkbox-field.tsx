@@ -1,9 +1,9 @@
 import type { FieldWithValue } from "@tanstack/react-form";
 import type { ReactNode } from "react";
+import { fieldAria } from "@/components/form/field-shell/field-shell";
 import { Checkbox } from "@/components/ui/checkbox/checkbox";
 import { FieldError, Hint } from "@/components/ui/field-error";
 import { cn } from "@/lib/utils";
-import { fieldAria } from "../field-shell/field-shell";
 
 interface Props {
   field: FieldWithValue<boolean>;

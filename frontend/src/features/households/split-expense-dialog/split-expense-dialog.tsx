@@ -10,13 +10,13 @@ import { useServerForm } from "@/components/form";
 import { FormError } from "@/components/form-error/form-error";
 import { FieldError } from "@/components/ui/field-error";
 import { FormGrid } from "@/components/ui/form-grid/form-grid";
-import { userName } from "@/features/users/user-queries";
+import { allocateShares } from "@/features/households/share-allocation";
 import { useMoney } from "@/hooks/use-formatters";
-import { silent, upsert } from "@/lib/mutations";
+import { silentMutation, upsert } from "@/lib/mutations";
 import { namedOptions, optionsOf } from "@/lib/options";
-import { isNonNegativeMoney, normalizeMoney } from "@/lib/validation";
+import { userName } from "@/lib/user-name";
+import { isNonNegativeMoney, normalizeMoney, requiredValue } from "@/lib/validation";
 import { useActiveHouseholdId } from "@/stores/active-household-store";
-import { allocateShares } from "../share-allocation";
 
 const methods = Object.values(SplitMethod);
 const MAX_WEIGHT = 100;
@@ -45,8 +45,8 @@ export function SplitExpenseForm({ transaction, onClose }: Readonly<Props>) {
   const activeHouseholdId = useActiveHouseholdId();
   const existing = transaction.sharedExpense ?? null;
   const { create, update, pending, error } = upsert(
-    useCreateSharedExpense(silent({ onSuccess: onClose })),
-    useUpdateSharedExpense(silent({ onSuccess: onClose })),
+    useCreateSharedExpense({ mutation: { ...silentMutation, onSuccess: onClose } }),
+    useUpdateSharedExpense({ mutation: { ...silentMutation, onSuccess: onClose } }),
   );
   const firstHousehold =
     existing?.householdId ??
@@ -76,7 +76,7 @@ export function SplitExpenseForm({ transaction, onClose }: Readonly<Props>) {
 
   const schema = z
     .object({
-      householdId: z.string().min(1, t("validation.required")),
+      householdId: requiredValue(t),
       method: z.enum(SplitMethod),
       members: z.array(
         z.object({

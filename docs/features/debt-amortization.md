@@ -171,7 +171,7 @@ The page reads the debt from the debts list and the schedule from its own query.
 
 A [refund](transactions.md#refunds), an expense with a negative amount, can never pay a debt: it is not offered as a candidate, its row has no "Link to debt" action, and linking one through the API answers `debt.paymentWrongType`.
 
-Backend `NetWorth` (`GetDebtPayments`, `LinkDebtPayment`, `UpdateDebtPayment`, `UnlinkDebtPayment`, `GetDebtPaymentCandidates`, the tracking fields of the debt endpoints) and `Common/Amortization/DebtBalance`; frontend `net-worth/debt-payments` on the debt page and `transactions/debt-payment` in the ledger. A debt with "Track payments" on keeps its balance current from the payments linked to it instead of from hand edits.
+Backend `NetWorth` (`GetDebtPayments`, `LinkDebtPayment`, `UpdateDebtPayment`, `UnlinkDebtPayment`, `GetDebtPaymentCandidates`, the tracking fields of the debt endpoints) and `Common/Amortization/DebtBalance`; frontend `net-worth/debt-payments` on the debt page, its `net-worth/debt-payment-form` shared with the ledger, and `transactions/debt-payment` in the ledger. A debt with "Track payments" on keeps its balance current from the payments linked to it instead of from hand edits.
 
 ```mermaid
 erDiagram

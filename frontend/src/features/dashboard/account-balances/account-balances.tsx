@@ -2,7 +2,7 @@ import { useTranslation } from "react-i18next";
 import { useAccountsSuspense } from "@/api/generated";
 import { ShareBars } from "@/components/share-bars/share-bars";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
-import { asOfParams } from "../dashboard-queries";
+import { asOfParams } from "@/features/dashboard/dashboard-queries";
 
 interface Props {
   limit?: number;

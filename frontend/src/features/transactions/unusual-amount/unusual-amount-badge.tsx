@@ -11,28 +11,14 @@ import {
   PopoverTitle,
   PopoverTrigger,
 } from "@/components/ui/popover/popover";
-import { useMoney, useNumberFormat } from "@/hooks/use-formatters";
 import { useFeature } from "@/hooks/use-settings";
+import { useUnusualSentence } from "./use-unusual-sentence";
 
 interface Props {
   transactionId: string;
   unusual: UnusualAmountResponse | null;
   dismissed: boolean;
   className?: string;
-}
-
-export function useUnusualSentence() {
-  const { t } = useTranslation();
-  const money = useMoney();
-  const factorFormat = useNumberFormat({ maximumFractionDigits: 1 });
-
-  return function sentence(unusual: UnusualAmountResponse) {
-    const values = {
-      factor: factorFormat.format(unusual.factor),
-      typical: money.format(Number(unusual.typicalAmount)),
-    };
-    return t(`transactions.unusual.${unusual.basis}`, values);
-  };
 }
 
 export function UnusualAmountBadge({

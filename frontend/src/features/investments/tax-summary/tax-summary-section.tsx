@@ -1,24 +1,24 @@
 import { useNavigate, useSearch } from "@tanstack/react-router";
 import { FileSpreadsheet, Printer } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { useTaxSummarySuspense } from "@/api/generated";
+import { getExportTaxSummaryUrl, useTaxSummarySuspense } from "@/api/generated";
 import type { AccountResponse } from "@/api/generated/model";
 import { SelectField } from "@/components/select-field/select-field";
 import { SummaryStats } from "@/components/summary-stats/summary-stats";
 import { Button, buttonVariants } from "@/components/ui/button/button";
 import { Section, SectionHeader } from "@/components/ui/section/section";
 import { StaleRegion } from "@/components/ui/stale-region/stale-region";
-import { useDeferredParams } from "@/hooks/use-deferred-params";
-import { useExportUrl } from "@/hooks/use-export-url";
-import { TAX_SUMMARY_EXPORT_PATH } from "@/lib/export-url";
-import { nameById } from "@/lib/options";
-import { gainTone } from "@/lib/tone";
 import {
   TAX_ACCOUNT_SEPARATOR,
   taxAccountIds,
   taxSummaryParams,
   taxYearOptions,
-} from "../investment-queries";
+} from "@/features/investments/investment-queries";
+import { chargeSign } from "@/features/investments/investment-types";
+import { useDeferredParams } from "@/hooks/use-deferred-params";
+import { useExportUrl } from "@/hooks/use-export-url";
+import { nameById } from "@/lib/options";
+import { gainTone } from "@/lib/tone";
 import { TaxAccountPicker } from "./tax-account-picker";
 import { TaxCashTable } from "./tax-cash-table";
 import { TaxDisposalsTable } from "./tax-disposals-table";
@@ -42,10 +42,12 @@ export function TaxSummarySection({ accounts }: Readonly<Props>) {
   const year = search.taxYear ?? summary.year;
   const years = taxYearOptions(summary.availableYears, year);
   const accountNames = nameById(accounts);
-  const exportUrl = useExportUrl(TAX_SUMMARY_EXPORT_PATH, {
-    year: shown.year ?? summary.year,
-    accountIds: shown.accountIds ?? undefined,
-  });
+  const exportUrl = useExportUrl(
+    getExportTaxSummaryUrl({
+      year: shown.year ?? summary.year,
+      accountIds: shown.accountIds ?? undefined,
+    }),
+  );
 
   const totals = [
     {
@@ -60,12 +62,12 @@ export function TaxSummarySection({ accounts }: Readonly<Props>) {
     {
       key: "investments.tax.withholdingTax",
       value: summary.totals.withholdingTax,
-      sign: Number(summary.totals.withholdingTax) > 0 ? "−" : undefined,
+      sign: chargeSign(summary.totals.withholdingTax),
     },
     {
       key: "investments.tax.fees",
       value: summary.totals.fees,
-      sign: Number(summary.totals.fees) > 0 ? "−" : undefined,
+      sign: chargeSign(summary.totals.fees),
     },
   ] as const;
 

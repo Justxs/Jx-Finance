@@ -5,15 +5,15 @@ import { useUpdateDiscordSettings } from "@/api/generated";
 import { useServerForm } from "@/components/form";
 import { FormError } from "@/components/form-error/form-error";
 import { TitledSection } from "@/components/ui/section/section";
+import { DiscordFormSkeleton } from "@/features/settings/settings-page/settings-page-pending";
 import { usePublicSettings } from "@/hooks/use-settings";
-import { silent } from "@/lib/mutations";
-import { DiscordFormSkeleton } from "../settings-page/settings-page-pending";
+import { silentMutation } from "@/lib/mutations";
 
 function DiscordSettingsForm({ enabled }: Readonly<{ enabled: boolean }>) {
   const { t } = useTranslation();
-  const saveMutation = useUpdateDiscordSettings(
-    silent({ onSuccess: () => toast.success(t("settings.discord.saved")) }),
-  );
+  const saveMutation = useUpdateDiscordSettings({
+    mutation: { ...silentMutation, onSuccess: () => toast.success(t("settings.discord.saved")) },
+  });
 
   const form = useServerForm({
     defaultValues: { enabled },

@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/u
 import { Tooltip } from "@/components/ui/tooltip/tooltip";
 import { namedOptions } from "@/lib/options";
 import { cn } from "@/lib/utils";
-import { setActiveHousehold, useActiveHouseholdId } from "@/stores/active-household-store";
+import { switchHousehold, useActiveHouseholdId } from "@/stores/active-household-store";
 
 const EVERYTHING = "everything";
 
@@ -36,8 +36,7 @@ export function HouseholdSwitcher({ collapsed = false, className }: Readonly<Pro
     if (!chosen) {
       return;
     }
-    setActiveHousehold(chosen.value === EVERYTHING ? undefined : chosen.value);
-    void queryClient.invalidateQueries();
+    switchHousehold(queryClient, chosen.value === EVERYTHING ? undefined : chosen.value);
   }
 
   return (

@@ -39,6 +39,8 @@ The password is the secret, and it is handled the way `BrokerConnection` handles
 
 The stored password is kept only for the server and the account it was typed for. A save that changes the host (compared without case or surrounding spaces, as DNS does) or the user name (compared exactly) and sends no new password answers 400 `email.passwordRequired` and changes nothing. Otherwise an administrator, or anyone who got hold of an administrator session, could point the installation at a server they control and receive the saved password on the next send. The port and the encryption mode may change without it: the credential still goes to the same host, and the encryption rules below make sure it never goes there in plain text. The test send has no settings of its own — it always uses what is stored — so there is no second path around this rule.
 
+The Email section's form (`features/settings/smtp-section/smtp-form.tsx`) owns both the save and the test send. Its length limits come from the generated `updateSmtpSettingsBody*Max` constants, and the port must be a whole number from 1 to 65535, the contract's range, with the matching message. A refused save or test stays under the fields in one `FormError`; starting either clears the other's error. After a save the password field is emptied again, and the hint says a password is stored.
+
 ### Encryption
 
 `encryption` is `startTls`, `sslOnConnect` or `none`, and `startTls` is the default: it is the first value of `SmtpEncryption`, so a request that leaves the field out, a new installation and the migration all land on it. The modes map to MailKit's `SecureSocketOptions` one to one, and none of them is opportunistic:

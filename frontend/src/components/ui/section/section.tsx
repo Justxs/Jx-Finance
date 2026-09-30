@@ -1,8 +1,8 @@
 import { type ComponentProps, type ReactNode, useId } from "react";
+import type { Rows } from "@/components/ui/rows/rows";
+import type { SplitColumns } from "@/components/ui/split-columns/split-columns";
 import { type PolymorphicProps, splitAs } from "@/lib/polymorphic";
 import { cn } from "@/lib/utils";
-import type { Rows } from "../rows/rows";
-import type { SplitColumns } from "../split-columns/split-columns";
 
 const surface =
   "min-w-0 rounded-lg bg-muted/50 p-5 sm:p-6 dark:bg-card [:is([data-surface],[role=dialog])_&]:rounded-none [:is([data-surface],[role=dialog])_&]:bg-transparent [:is([data-surface],[role=dialog])_&]:p-0 dark:[:is([data-surface],[role=dialog])_&]:bg-transparent";

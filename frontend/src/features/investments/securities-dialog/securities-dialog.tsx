@@ -10,10 +10,11 @@ import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { Input } from "@/components/ui/input/input";
 import { Rows } from "@/components/ui/rows/rows";
 import { TextSkeleton, rowWidth } from "@/components/ui/skeleton/skeleton";
+import { SecurityModal } from "@/features/investments/security-form/security-modal";
+import { PriceWithDate } from "@/features/investments/security-identity/price-with-date";
+import { SecurityIdentity } from "@/features/investments/security-identity/security-identity";
 import { UserRole } from "@/lib/user-role";
 import { metaLine } from "@/lib/utils";
-import { SecurityModal } from "../security-form";
-import { PriceWithDate, SecurityIdentity } from "../security-identity";
 
 interface Props {
   open: boolean;

@@ -1,29 +1,22 @@
 import { Link2 } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { z } from "zod";
 import {
   useAccountsSuspense,
   useDebtPaymentCandidatesSuspense,
   useDebtPaymentsSuspense,
   useLinkDebtPayment,
   useUnlinkDebtPayment,
-  useUpdateDebtPayment,
 } from "@/api/generated";
-import {
-  DebtPaymentKind,
-  type DebtPaymentResponse,
-  type DebtResponse,
-} from "@/api/generated/model";
-import { useServerForm } from "@/components/form";
+import type { DebtPaymentResponse, DebtResponse } from "@/api/generated/model";
+import { CreateDialog } from "@/components/create-dialog/create-dialog";
 import { FormError } from "@/components/form-error/form-error";
-import { EditModal, Modal } from "@/components/modal";
+import { EditModal } from "@/components/modal";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { RecordRow } from "@/components/record-row/record-row";
 import { Button } from "@/components/ui/button/button";
 import { Checkbox } from "@/components/ui/checkbox/checkbox";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
-import { FormGrid } from "@/components/ui/form-grid/form-grid";
 import { Rows } from "@/components/ui/rows/rows";
 import { Section, SectionHeader } from "@/components/ui/section/section";
 import {
@@ -32,106 +25,11 @@ import {
   TextSkeleton,
   rowWidth,
 } from "@/components/ui/skeleton/skeleton";
+import { DebtPaymentForm } from "@/features/net-worth/debt-payment-form/debt-payment-form";
 import { EMPTY_VALUE, useIsoDate, useMoney } from "@/hooks/use-formatters";
-import { silent } from "@/lib/mutations";
-import { nameById, namedOptions, optionsOf } from "@/lib/options";
+import { silentMutation } from "@/lib/mutations";
+import { nameById } from "@/lib/options";
 import { metaLine } from "@/lib/utils";
-import { normalizeMoney, optionalPositiveMoney } from "@/lib/validation";
-
-const kinds = Object.values(DebtPaymentKind);
-
-interface PaymentFormProps {
-  debts: DebtResponse[];
-  transactionId?: string;
-  payment?: DebtPaymentResponse;
-  onClose: () => void;
-}
-
-export function DebtPaymentForm({
-  debts,
-  transactionId,
-  payment,
-  onClose,
-}: Readonly<PaymentFormProps>) {
-  const { t } = useTranslation();
-  const link = useLinkDebtPayment(silent({ onSuccess: onClose }));
-  const update = useUpdateDebtPayment(silent({ onSuccess: onClose }));
-  const kindOptions = optionsOf(kinds, (kind) => t(`netWorth.payments.kinds.${kind}`));
-
-  const form = useServerForm({
-    defaultValues: {
-      debtId: debts[0]?.id ?? "",
-      kind: payment?.kind ?? "",
-      principal: payment?.principalTyped ? payment.principal : "",
-    },
-    schema: z.object({ debtId: z.string(), kind: z.string(), principal: optionalPositiveMoney(t) }),
-    submit: (value) => {
-      const kind = kinds.find((item) => item === value.kind) ?? null;
-      const principal = normalizeMoney(value.principal) || null;
-      return payment
-        ? update.mutateAsync({
-            id: value.debtId,
-            paymentId: payment.id,
-            data: { kind: kind ?? DebtPaymentKind.regular, principal },
-          })
-        : link.mutateAsync({
-            id: value.debtId,
-            data: { transactionId: transactionId ?? "", kind, principal },
-          });
-    },
-  });
-
-  return (
-    <form.AppForm>
-      <form.FormShell as={FormGrid}>
-        {payment ? null : (
-          <form.Field name="debtId">
-            {(field) => (
-              <field.SelectFieldControl
-                id="debt-payment-debt"
-                label={t("netWorth.payments.debt")}
-                options={namedOptions(debts)}
-              />
-            )}
-          </form.Field>
-        )}
-
-        <form.Field name="kind">
-          {(field) => (
-            <field.SelectFieldControl
-              id="debt-payment-kind"
-              label={t("netWorth.payments.kind")}
-              options={
-                payment
-                  ? kindOptions
-                  : [{ value: "", label: t("netWorth.payments.kinds.auto") }, ...kindOptions]
-              }
-            />
-          )}
-        </form.Field>
-
-        <form.Field name="principal">
-          {(field) => (
-            <field.MoneyInputField
-              id="debt-payment-principal"
-              label={t("netWorth.payments.principal")}
-              hint={t("netWorth.payments.principalHint")}
-            />
-          )}
-        </form.Field>
-
-        <FormError error={payment ? update.error : link.error} />
-
-        <form.FormActions
-          span
-          pending={link.isPending || update.isPending}
-          submitLabel={t("actions.save")}
-          onCancel={onClose}
-        />
-      </form.FormShell>
-    </form.AppForm>
-  );
-}
 
 interface DebtProps {
   debt: DebtResponse;
@@ -165,7 +63,7 @@ function PaymentCandidates({ debt, onClose }: Readonly<DebtProps & { onClose: ()
   const formatDate = useIsoDate();
   const candidates = useDebtPaymentCandidatesSuspense(debt.id).data;
   const accountNames = nameById(useAccountsSuspense().data);
-  const link = useLinkDebtPayment(silent());
+  const link = useLinkDebtPayment({ mutation: silentMutation });
   const [selected, setSelected] = useState<ReadonlySet<string>>(new Set());
 
   function toggle(id: string, checked: boolean) {
@@ -236,9 +134,8 @@ export function DebtPayments({ debt }: Readonly<DebtProps>) {
   const formatDate = useIsoDate();
   const payments = useDebtPaymentsSuspense(debt.id).data;
   const accountNames = nameById(useAccountsSuspense().data);
-  const unlink = useUnlinkDebtPayment(silent());
+  const unlink = useUnlinkDebtPayment({ mutation: silentMutation });
   const [editId, setEditId] = useState<string | null>(null);
-  const [linking, setLinking] = useState(false);
 
   function format(amount: string) {
     return money.format(Number(amount), debt.currency);
@@ -259,10 +156,21 @@ export function DebtPayments({ debt }: Readonly<DebtProps>) {
   return (
     <Section aria-label={t("netWorth.payments.title")}>
       <SectionHeader title={t("netWorth.payments.title")}>
-        <Button variant="outline" size="sm" onClick={() => setLinking(true)}>
-          <Link2 />
-          {t("netWorth.payments.link")}
-        </Button>
+        <CreateDialog
+          secondary
+          icon={Link2}
+          label={t("netWorth.payments.link")}
+          title={t("netWorth.payments.link")}
+        >
+          {(close) => (
+            <QueryBoundary
+              fallback={<CandidatesSkeleton />}
+              errorSubject={t("netWorth.payments.link")}
+            >
+              <PaymentCandidates debt={debt} onClose={close} />
+            </QueryBoundary>
+          )}
+        </CreateDialog>
       </SectionHeader>
       <p className="text-sm">
         {t("netWorth.payments.balance")}:{" "}
@@ -319,11 +227,6 @@ export function DebtPayments({ debt }: Readonly<DebtProps>) {
       >
         {(payment, close) => <DebtPaymentForm debts={[debt]} payment={payment} onClose={close} />}
       </EditModal>
-      <Modal open={linking} onOpenChange={setLinking} title={t("netWorth.payments.link")}>
-        <QueryBoundary fallback={<CandidatesSkeleton />} errorSubject={t("netWorth.payments.link")}>
-          <PaymentCandidates debt={debt} onClose={() => setLinking(false)} />
-        </QueryBoundary>
-      </Modal>
     </Section>
   );
 }

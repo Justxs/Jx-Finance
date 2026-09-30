@@ -4,6 +4,8 @@ import { RowTransition } from "@/components/row-transition/row-transition";
 import { Rows } from "@/components/ui/rows/rows";
 import { IconButtonSkeleton, TextSkeleton, rowWidth } from "@/components/ui/skeleton/skeleton";
 
+const rowClass = "flex flex-col gap-3 py-2.5 sm:flex-row sm:items-center sm:justify-between";
+
 interface Props extends DeleteProps {
   title: ReactNode;
   subtitle: ReactNode;
@@ -24,7 +26,7 @@ export function RecordRow({
 }: Readonly<Props>) {
   return (
     <RowTransition>
-      <li className="flex flex-col gap-3 py-2.5 sm:flex-row sm:items-center sm:justify-between">
+      <li className={rowClass}>
         <div className="min-w-0 break-words">
           <p className="text-sm font-medium">{title}</p>
           <p className="text-xs text-muted-foreground">{subtitle}</p>
@@ -50,10 +52,7 @@ export function RecordRowsSkeleton({ rows = 3 }: Readonly<{ rows?: number }>) {
   return (
     <Rows data-slot="record-rows-skeleton" aria-hidden="true">
       {Array.from({ length: rows }, (_, index) => (
-        <li
-          key={index}
-          className="flex flex-col gap-3 py-2.5 sm:flex-row sm:items-center sm:justify-between"
-        >
+        <li key={index} className={rowClass}>
           <div className="min-w-0 flex-1">
             <TextSkeleton size="sm" width={rowWidth(index)} />
             <TextSkeleton size="xs" width="w-1/3" />

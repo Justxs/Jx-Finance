@@ -9,31 +9,18 @@ import { Button } from "@/components/ui/button/button";
 import { Rows } from "@/components/ui/rows/rows";
 import { TitledSection } from "@/components/ui/section/section";
 import { Tag } from "@/components/ui/tag/tag";
+import { ActionRow } from "@/features/profile/action-row/action-row";
+import { SessionListSkeleton } from "@/features/profile/profile-page/profile-page-pending";
 import { useConfirmedDelete } from "@/hooks/use-confirmed-delete";
 import { useDateTime } from "@/hooks/use-formatters";
 import { notify } from "@/lib/mutations";
-import { describeUserAgent } from "@/lib/user-agent";
-import { ActionRow } from "../action-row/action-row";
-import { SessionListSkeleton } from "../profile-page/profile-page-pending";
-
-export function useBrowserLabel() {
-  const { t } = useTranslation();
-
-  return function browserLabel(userAgent: string | null | undefined) {
-    const { browser, os } = describeUserAgent(userAgent);
-    if (browser && os) {
-      return t("profile.sessions.browserOn", { browser, os });
-    }
-    return browser ?? os;
-  };
-}
+import { browserLabel } from "@/lib/user-agent";
 
 function useSessionLabel() {
   const { t } = useTranslation();
-  const browserLabel = useBrowserLabel();
 
   return function sessionLabel(session: SessionResponse) {
-    return browserLabel(session.userAgent) ?? t("profile.sessions.unknownBrowser");
+    return browserLabel(t, session.userAgent) ?? t("profile.sessions.unknownBrowser");
   };
 }
 
@@ -90,12 +77,12 @@ function SessionList() {
   const sessionLabel = useSessionLabel();
   const [confirmingOthers, setConfirmingOthers] = useState<true | null>(null);
 
-  const revokeMutation = useRevokeSession(notify(t("profile.sessions.signedOut")));
+  const revokeMutation = useRevokeSession({ mutation: notify(t("profile.sessions.signedOut")) });
   const revoke = useConfirmedDelete(revokeMutation, list, sessionLabel);
 
-  const revokeOthersMutation = useRevokeOtherSessions(
-    notify(t("profile.sessions.othersSignedOut")),
-  );
+  const revokeOthersMutation = useRevokeOtherSessions({
+    mutation: notify(t("profile.sessions.othersSignedOut")),
+  });
 
   const busy = revoke.busy || revokeOthersMutation.isPending;
   const hasOthers = list.some((session) => !session.isCurrent);

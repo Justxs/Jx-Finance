@@ -1,5 +1,5 @@
 import { describe, expect, test, vi } from "vitest";
-import { notify, silent, upsert } from "./mutations";
+import { notify, upsert } from "./mutations";
 
 function mutation(overrides: { isPending?: boolean; error?: Error | null } = {}) {
   return {
@@ -10,23 +10,8 @@ function mutation(overrides: { isPending?: boolean; error?: Error | null } = {})
   };
 }
 
-describe("silent", () => {
-  test("marks the mutation silent and keeps the given options", () => {
-    const onSuccess = vi.fn();
-
-    expect(silent({ onSuccess })).toEqual({ mutation: { meta: { silent: true }, onSuccess } });
-    expect(silent()).toEqual({ mutation: { meta: { silent: true } } });
-  });
-
-  test("keeps a success message next to the silent flag", () => {
-    expect(silent({ meta: { success: "Saved" } })).toEqual({
-      mutation: { meta: { success: "Saved", silent: true } },
-    });
-  });
-});
-
 test("notify carries the success message", () => {
-  expect(notify("Saved")).toEqual({ mutation: { meta: { success: "Saved" } } });
+  expect(notify("Saved")).toEqual({ meta: { success: "Saved" } });
 });
 
 describe("upsert", () => {

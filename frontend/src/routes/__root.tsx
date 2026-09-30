@@ -1,5 +1,4 @@
 import {
-  Link,
   Outlet,
   createRootRouteWithContext,
   redirect,
@@ -8,40 +7,28 @@ import {
 } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { getMeSuspenseQueryOptions, useMe } from "@/api/generated";
-import { AccountMenu } from "@/components/account-menu/account-menu";
-import {
-  AppSidebar,
-  AppSidebarSkeleton,
-  isEntryActive,
-  navEntries,
-  navLinkActiveClass,
-  navLinkClass,
-  useVisibleNav,
-} from "@/components/app-sidebar/app-sidebar";
-import { Brand } from "@/components/brand/brand";
-import { HouseholdSwitcher } from "@/components/household-switcher/household-switcher";
+import { AppSidebar, AppSidebarSkeleton } from "@/components/app-sidebar/app-sidebar";
+import { MobileNav } from "@/components/app-sidebar/mobile-nav";
 import { LanguageToggle } from "@/components/language-toggle/language-toggle";
-import { NotificationBellSlot } from "@/components/notification-bell/notification-bell";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { RouteError } from "@/components/route-error/route-error";
 import { RoutePending } from "@/components/route-pending/route-pending";
 import { ShortcutsHelp } from "@/components/shortcuts-help/shortcuts-help";
 import { Splash } from "@/components/splash/splash";
 import { ThemeToggle } from "@/components/theme-toggle/theme-toggle";
-import { Skeleton } from "@/components/ui/skeleton/skeleton";
 import { CommandPalette } from "@/features/command-palette/command-palette/command-palette";
 import { EmailVerificationBanner } from "@/features/profile/email-verification-banner/email-verification-banner";
 import { usePublicSettings } from "@/hooks/use-settings";
+import { useVisibleNav } from "@/hooks/use-visible-nav";
 import { warmAppShell } from "@/lib/app-shell";
 import { checkIsAuthenticated, checkSetupNeeded } from "@/lib/auth-gate";
 import { PUBLIC_PATHS } from "@/lib/navigation";
 import type { RouterContext } from "@/lib/route-prefetch";
-import { cn } from "@/lib/utils";
 import { saveChosenLocale } from "@/stores/app-store";
 
 export const Route = createRootRouteWithContext<RouterContext>()({
   beforeLoad: async ({ context: { queryClient }, location }) => {
-    const needsSetup = await checkSetupNeeded();
+    const needsSetup = await checkSetupNeeded(queryClient);
     if (needsSetup) {
       if (location.pathname !== "/setup") {
         throw redirect({ to: "/setup" });
@@ -89,7 +76,6 @@ function RootLayout() {
   const instanceName = usePublicSettings()?.instanceName;
 
   const visiblePages = useVisibleNav(me.data?.role, authenticatedArea);
-  const mobileEntries = navEntries(visiblePages);
 
   const currentItem = visiblePages.find((item) => item.to === location.pathname);
   const currentTitle = currentItem ? t(currentItem.key) : undefined;
@@ -131,49 +117,7 @@ function RootLayout() {
       </div>
 
       <div className="flex min-h-screen min-w-0 flex-1 flex-col">
-        <header className="flex h-14 shrink-0 items-center gap-0.5 border-b bg-sidebar px-4 sm:px-6 md:hidden print:hidden">
-          <Link to="/" className="mr-auto flex items-center">
-            <Brand size="sm" />
-          </Link>
-          <QueryBoundary fallback={null} error={null}>
-            <HouseholdSwitcher className="w-28" />
-          </QueryBoundary>
-          <NotificationBellSlot />
-          <QueryBoundary
-            fallback={
-              <div className="p-1.5">
-                <Skeleton className="size-8 rounded-md" />
-              </div>
-            }
-            error={null}
-          >
-            <AccountMenu compact side="bottom" align="end" />
-          </QueryBoundary>
-        </header>
-
-        <nav
-          aria-label={t("nav.main")}
-          className="flex gap-1 overflow-x-auto border-b bg-sidebar px-2 py-1.5 md:hidden print:hidden"
-        >
-          {mobileEntries.map((entry, index) => {
-            const active = isEntryActive(entry, location.pathname);
-            return (
-              <Link
-                key={entry.to}
-                to={entry.to}
-                aria-current={active ? "page" : undefined}
-                className={cn(
-                  navLinkClass,
-                  "shrink-0 px-3 py-2 pointer-coarse:py-3",
-                  active && navLinkActiveClass,
-                )}
-                style={{ "--nav-link": `nav-strip-${index}` }}
-              >
-                {t(entry.key)}
-              </Link>
-            );
-          })}
-        </nav>
+        <MobileNav pages={visiblePages} />
         <main
           id="main-content"
           className="w-full min-w-0 flex-1 space-y-5 px-4 py-6 sm:px-8 sm:py-8 lg:px-10 lg:py-10 2xl:px-14 print:px-0 print:py-0"

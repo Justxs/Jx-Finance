@@ -1,16 +1,21 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, userEvent, waitFor } from "storybook/test";
+import { useTransactionFilters } from "@/features/transactions/use-transaction-filters";
 import { accounts, categories, ids, tags } from "@/storybook/fixtures";
 import { ActiveFilters } from "./active-filters";
 
+function ActiveFiltersHarness() {
+  const filters = useTransactionFilters({ accounts, categories });
+  return <ActiveFilters filters={filters} tags={tags} />;
+}
+
 const meta = {
   title: "Features/Transactions/ActiveFilters",
-  component: ActiveFilters,
-  args: { accounts, categories, tags },
+  component: ActiveFiltersHarness,
   parameters: {
     route: `/transactions?dateFrom=2026-09-01&dateTo=2026-09-30&accountId=${ids.accounts.checking}&uncategorized=true`,
   },
-} satisfies Meta<typeof ActiveFilters>;
+} satisfies Meta<typeof ActiveFiltersHarness>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;

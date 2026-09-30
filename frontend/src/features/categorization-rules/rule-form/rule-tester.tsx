@@ -1,41 +1,30 @@
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useTestCategorizationRule } from "@/api/generated";
 import type { DescriptionMatch } from "@/api/generated/model";
 import { FieldShell } from "@/components/form/field-shell/field-shell";
 import { Button } from "@/components/ui/button/button";
 import { Input } from "@/components/ui/input/input";
-import { silent } from "@/lib/mutations";
+import { silentMutation } from "@/lib/mutations";
 import { normalizeMoney } from "@/lib/validation";
 
 interface Props {
   match: DescriptionMatch;
   pattern: string;
-  action: string;
-  sample: string;
-  sampleAmount: string;
   minAmount: string;
   maxAmount: string;
-  onSampleChange: (value: string) => void;
-  onSampleAmountChange: (value: string) => void;
+  action: string;
 }
 
 function optionalAmount(value: string) {
   return value.trim() ? normalizeMoney(value) : null;
 }
 
-export function RuleTester({
-  match,
-  pattern,
-  action,
-  sample,
-  sampleAmount,
-  minAmount,
-  maxAmount,
-  onSampleChange,
-  onSampleAmountChange,
-}: Readonly<Props>) {
+export function RuleTester({ match, pattern, minAmount, maxAmount, action }: Readonly<Props>) {
   const { t } = useTranslation();
-  const testMutation = useTestCategorizationRule(silent());
+  const [sample, setSample] = useState("");
+  const [sampleAmount, setSampleAmount] = useState("");
+  const testMutation = useTestCategorizationRule({ mutation: silentMutation });
   const result = testMutation.data;
 
   function run() {
@@ -70,7 +59,7 @@ export function RuleTester({
           id="rule-sample"
           value={sample}
           placeholder={t("categorizationRules.samplePlaceholder")}
-          onChange={(event) => onSampleChange(event.target.value)}
+          onChange={(event) => setSample(event.target.value)}
         />
       </FieldShell>
       <div className="flex flex-wrap items-end gap-2">
@@ -83,7 +72,7 @@ export function RuleTester({
             id="rule-sample-amount"
             inputMode="decimal"
             value={sampleAmount}
-            onChange={(event) => onSampleAmountChange(event.target.value)}
+            onChange={(event) => setSampleAmount(event.target.value)}
           />
         </FieldShell>
         <Button

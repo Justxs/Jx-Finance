@@ -4,7 +4,7 @@ import { getCreateAssetMockHandler } from "@/api/generated/net-worth/net-worth.m
 import { withWidth } from "@/storybook/decorators";
 import { assets } from "@/storybook/fixtures";
 import { failWith, pending, withHandlers } from "@/storybook/handlers";
-import { AssetForm, assetFormValues } from "./asset-form";
+import { AssetForm } from "./asset-form";
 
 const car = assets[1]!;
 
@@ -50,7 +50,7 @@ export const WithDepreciation: Story = {
 };
 
 export const EditingDepreciation: Story = {
-  args: { editing: { id: car.id, values: assetFormValues(car) } },
+  args: { editing: car },
 };
 
 export const SubmitPending: Story = {

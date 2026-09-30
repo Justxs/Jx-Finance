@@ -13,13 +13,16 @@ import { PagedRows } from "@/components/paged-rows/paged-rows";
 import { RecordRow } from "@/components/record-row/record-row";
 import { Button } from "@/components/ui/button/button";
 import { Section, SectionHeader } from "@/components/ui/section/section";
+import {
+  MOVEMENTS_PAGE_SIZE as pageSize,
+  movementsPageParams,
+} from "@/features/accounts/account-queries";
 import { useConfirmedDelete } from "@/hooks/use-confirmed-delete";
 import { useIsoDate, useMoney } from "@/hooks/use-formatters";
 import { usePagedItems, usePagedList } from "@/hooks/use-paged-list";
 import { optimisticPagedRemoval } from "@/lib/optimistic";
 import { nameById } from "@/lib/options";
 import { metaLine } from "@/lib/utils";
-import { MOVEMENTS_PAGE_SIZE as pageSize, movementsPageParams } from "../account-queries";
 import { TransferForm } from "./transfer-form";
 
 interface Props {

@@ -37,6 +37,8 @@ declare module "@tanstack/react-query" {
   }
 }
 
+export const silentQuery = { retry: false, throwOnError: false, meta: { silent: true } } as const;
+
 export function createMutationCache() {
   return new MutationCache({
     onSuccess: (_data, _variables, _result, mutation) => {

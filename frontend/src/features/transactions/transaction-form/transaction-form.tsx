@@ -9,16 +9,19 @@ import type {
 } from "@/api/generated/model";
 import { MoneyPairField } from "@/components/form";
 import { FormError } from "@/components/form-error/form-error";
+import { TagPicker } from "@/components/tag-picker/tag-picker";
 import { Button } from "@/components/ui/button/button";
 import { FormGrid } from "@/components/ui/form-grid/form-grid";
 import { Label } from "@/components/ui/label/label";
 import { heldCurrencies } from "@/features/accounts/held-currencies";
 import { ClosedMonthHint } from "@/features/month-close/closed-month-hint/closed-month-hint";
-import { TagPicker } from "@/features/tags/tag-picker/tag-picker";
+import {
+  FillFromReceipt,
+  type ReceiptCandidateSplit,
+} from "@/features/transactions/receipt-reading/fill-from-receipt";
 import { EMPTY_VALUE, useIsoDate } from "@/hooks/use-formatters";
 import { useSettings } from "@/hooks/use-settings";
 import { namedOptions } from "@/lib/options";
-import { FillFromReceipt, type ReceiptCandidateSplit } from "../receipt-reading/fill-from-receipt";
 import { emptyLine } from "./line-form-value";
 import { SaveTemplateControl } from "./save-template-control";
 import { SplitLinesEditor } from "./split-lines-editor";

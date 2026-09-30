@@ -1,7 +1,7 @@
 import { useSearch } from "@tanstack/react-router";
-import { ShareRowsSkeleton } from "@/components/breakdown-list/share-row";
 import { ChartSkeleton } from "@/components/chart/chart-skeleton";
 import { PagePending } from "@/components/route-pending/route-pending";
+import { ShareRowsSkeleton } from "@/components/share-row/share-row";
 import { SummaryStatsSkeleton } from "@/components/summary-stats/summary-stats";
 import { SectionSkeleton, Skeleton, TextSkeleton } from "@/components/ui/skeleton/skeleton";
 import { SplitColumns } from "@/components/ui/split-columns/split-columns";

@@ -6,10 +6,9 @@ import { Rows } from "@/components/ui/rows/rows";
 import { TextLink } from "@/components/ui/text-link/text-link";
 import { useIsoDate, useMoney } from "@/hooks/use-formatters";
 import { useFeature } from "@/hooks/use-settings";
-import { monthBounds } from "@/lib/calendar";
+import { monthBounds, monthDate } from "@/lib/calendar";
 import { EXPENSE_TONE, INCOME_TONE } from "@/lib/tone";
 import { cn } from "@/lib/utils";
-import { monthDate } from "../month-key";
 
 export function openItemCount(checklist: MonthChecklist) {
   return checklist.uncategorized + (checklist.unusual ?? 0) + (checklist.unconfirmedRecurring ?? 0);

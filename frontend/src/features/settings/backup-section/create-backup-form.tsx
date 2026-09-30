@@ -5,14 +5,15 @@ import { useCreateBackup } from "@/api/generated";
 import { createBackupBodyNoteMax } from "@/api/schemas/backups/backups.zod";
 import { useServerForm } from "@/components/form";
 import { FormError } from "@/components/form-error/form-error";
-import { silent } from "@/lib/mutations";
 import { optionalText } from "@/lib/validation";
 
 export function CreateBackupForm() {
   const { t } = useTranslation();
   const schema = z.object({ note: optionalText(t, createBackupBodyNoteMax) });
 
-  const createMutation = useCreateBackup(silent({ meta: { success: t("backup.created") } }));
+  const createMutation = useCreateBackup({
+    mutation: { meta: { silent: true, success: t("backup.created") } },
+  });
 
   const form = useServerForm({
     defaultValues: { note: "" },

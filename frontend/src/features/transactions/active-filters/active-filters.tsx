@@ -1,18 +1,18 @@
 import { X } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import type { AccountResponse, CategoryResponse, TagResponse } from "@/api/generated/model";
+import type { TagResponse } from "@/api/generated/model";
 import { Button } from "@/components/ui/button/button";
-import { useFilterSummaries } from "../use-filter-summaries";
+import { useFilterSummaries } from "@/features/transactions/use-filter-summaries";
+import type { TransactionFilters } from "@/features/transactions/use-transaction-filters";
 
 interface Props {
-  accounts: AccountResponse[];
-  categories: CategoryResponse[];
+  filters: TransactionFilters;
   tags: TagResponse[];
 }
 
-export function ActiveFilters({ accounts, categories, tags }: Readonly<Props>) {
+export function ActiveFilters({ filters, tags }: Readonly<Props>) {
   const { t } = useTranslation();
-  const { summaries, clearFilters } = useFilterSummaries({ accounts, categories, tags });
+  const { summaries, clearFilters } = useFilterSummaries(filters, tags);
 
   if (summaries.length === 0) {
     return null;

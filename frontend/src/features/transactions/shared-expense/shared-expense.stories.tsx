@@ -1,15 +1,26 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, userEvent } from "storybook/test";
+import type { TransactionResponse } from "@/api/generated/model";
 import { outdatedSharedPurchase, sharedPurchase } from "@/storybook/fixtures";
 import { openedDialog } from "@/storybook/interactions";
-import { SharedExpenseMark } from "./shared-expense";
+import { SharedExpenseMark, useSharedExpenseSplits } from "./shared-expense";
+
+function MarkHarness({ transaction }: Readonly<{ transaction: TransactionResponse }>) {
+  const splits = useSharedExpenseSplits();
+  return (
+    <>
+      <SharedExpenseMark transaction={transaction} onUpdate={splits.open} />
+      {splits.dialog}
+    </>
+  );
+}
 
 const meta = {
   title: "Features/Transactions/SharedExpenseMark",
-  component: SharedExpenseMark,
+  component: MarkHarness,
   parameters: { layout: "padded", route: "/transactions" },
   args: { transaction: sharedPurchase },
-} satisfies Meta<typeof SharedExpenseMark>;
+} satisfies Meta<typeof MarkHarness>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;

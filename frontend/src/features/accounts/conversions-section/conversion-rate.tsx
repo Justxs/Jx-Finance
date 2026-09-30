@@ -2,7 +2,7 @@ import { useTranslation } from "react-i18next";
 import { useExchangeRate } from "@/api/generated";
 import type { Currency } from "@/api/generated/model";
 import { EMPTY_VALUE, useIsoDate, useRateFormat } from "@/hooks/use-formatters";
-import { silentQuery } from "@/lib/mutations";
+import { silentQuery } from "@/lib/query-client";
 import { isPositiveMoney, normalizeMoney } from "@/lib/validation";
 
 interface RateProps {

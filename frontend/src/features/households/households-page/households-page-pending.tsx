@@ -1,3 +1,4 @@
+import { SettingsPending } from "@/components/settings-pending/settings-pending";
 import { Rows } from "@/components/ui/rows/rows";
 import { Section } from "@/components/ui/section/section";
 import {
@@ -7,7 +8,6 @@ import {
   TextSkeleton,
   rowWidth,
 } from "@/components/ui/skeleton/skeleton";
-import { SettingsPending } from "@/features/settings/settings-layout/settings-pending";
 
 function HouseholdCardSkeleton() {
   return (

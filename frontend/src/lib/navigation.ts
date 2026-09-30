@@ -19,8 +19,9 @@ import {
   WalletCards,
   type LucideIcon,
 } from "lucide-react";
-import type { FeatureKey } from "@/hooks/use-settings";
+import type { FeatureFlags } from "@/api/generated/model";
 import type { TranslationKey } from "@/lib/i18n";
+import type { FeatureKey } from "@/lib/settings";
 
 export type RoutePath = NonNullable<LinkProps["to"]>;
 
@@ -161,7 +162,57 @@ export const adminNavPages = [
   },
 ] as const satisfies readonly NavPage[];
 
-export function isPathIn(pathname: string, to: string) {
+export type NavItem = (typeof navPages)[number] | (typeof adminNavPages)[number];
+
+export interface NavEntry {
+  to: NavItem["to"];
+  key: TranslationKey;
+  icon: LucideIcon;
+  group: NavItem["group"];
+  hub: NavHub | undefined;
+  pages: NavItem[];
+}
+
+export function isPageEnabled(page: NavItem, features: FeatureFlags) {
+  return !("feature" in page) || features[page.feature];
+}
+
+export function visibleNav(features: FeatureFlags, isAdmin: boolean): readonly NavItem[] {
+  const enabled = navPages.filter((page) => isPageEnabled(page, features));
+  return isAdmin ? [...enabled, ...adminNavPages] : enabled;
+}
+
+export function navEntries(pages: readonly NavItem[]): NavEntry[] {
+  const entries: NavEntry[] = [];
+  for (const page of pages) {
+    const hub = "hub" in page ? page.hub : undefined;
+    const existing = hub ? entries.find((entry) => entry.hub === hub) : undefined;
+    if (existing) {
+      existing.pages.push(page);
+      continue;
+    }
+    entries.push({
+      to: page.to,
+      key: hub ? navHubs[hub].key : page.key,
+      icon: hub ? navHubs[hub].icon : page.icon,
+      group: page.group,
+      hub,
+      pages: [page],
+    });
+  }
+  return entries.map((entry) => {
+    const [only] = entry.pages;
+    return entry.hub && navHubs[entry.hub].tabs && only && entry.pages.length === 1
+      ? { ...entry, key: only.key, icon: only.icon }
+      : entry;
+  });
+}
+
+export function isEntryActive(entry: NavEntry, pathname: string) {
+  return entry.pages.some((page) => isPathIn(pathname, page.to));
+}
+
+function isPathIn(pathname: string, to: string) {
   return to === "/" ? pathname === "/" : pathname === to || pathname.startsWith(`${to}/`);
 }
 

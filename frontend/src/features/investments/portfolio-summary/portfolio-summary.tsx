@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import type { PortfolioResponse } from "@/api/generated/model";
 import { SummaryStats } from "@/components/summary-stats/summary-stats";
+import { chargeSign } from "@/features/investments/investment-types";
 import { gainTone } from "@/lib/tone";
 
 interface Props {
@@ -28,7 +29,7 @@ export function PortfolioSummary({ portfolio }: Readonly<Props>) {
     {
       key: "investments.summary.withholdingTax",
       value: portfolio.withholdingTax,
-      sign: Number(portfolio.withholdingTax) > 0 ? "−" : undefined,
+      sign: chargeSign(portfolio.withholdingTax),
     },
   ] as const;
 

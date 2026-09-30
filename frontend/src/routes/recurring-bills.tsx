@@ -3,6 +3,7 @@ import {
   getAccountsSuspenseQueryOptions,
   getCashFlowForecastSuspenseQueryOptions,
   getCategoriesSuspenseQueryOptions,
+  getDebtsSuspenseQueryOptions,
   getRecurringBillsSuspenseQueryOptions,
   getSubscriptionCandidatesSuspenseQueryOptions,
 } from "@/api/generated";
@@ -10,7 +11,7 @@ import { FORECAST_DAYS } from "@/features/accounts/cash-flow-forecast/forecast-s
 import { RecurringBillsPage } from "@/features/recurring-bills/recurring-bills-page/recurring-bills-page";
 import { RecurringBillsPending } from "@/features/recurring-bills/recurring-bills-page/recurring-bills-page-pending";
 import { requireFeature } from "@/lib/feature-gate";
-import { warm } from "@/lib/route-prefetch";
+import { warm, warmWithSettings } from "@/lib/route-prefetch";
 
 export const Route = createFileRoute("/recurring-bills")({
   beforeLoad: requireFeature("recurringBills"),
@@ -20,6 +21,11 @@ export const Route = createFileRoute("/recurring-bills")({
     warm(queryClient, getRecurringBillsSuspenseQueryOptions());
     warm(queryClient, getSubscriptionCandidatesSuspenseQueryOptions());
     warm(queryClient, getCashFlowForecastSuspenseQueryOptions({ days: FORECAST_DAYS }));
+    warmWithSettings(queryClient, (settings) => {
+      if (settings.features.netWorth) {
+        warm(queryClient, getDebtsSuspenseQueryOptions());
+      }
+    });
   },
   component: RecurringBillsPage,
   pendingComponent: RecurringBillsPending,

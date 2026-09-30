@@ -15,11 +15,12 @@ import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { RowTransition } from "@/components/row-transition/row-transition";
 import { Button, buttonVariants } from "@/components/ui/button/button";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
+import { FileInput } from "@/components/ui/file-input/file-input";
 import { Rows } from "@/components/ui/rows/rows";
 import { Skeleton, TextSkeleton } from "@/components/ui/skeleton/skeleton";
 import { useConfirmedDelete } from "@/hooks/use-confirmed-delete";
 import { useBytes, useDateTime } from "@/hooks/use-formatters";
-import { silent } from "@/lib/mutations";
+import { silentMutation } from "@/lib/mutations";
 import { cn } from "@/lib/utils";
 import {
   ACCEPT_ATTRIBUTE,
@@ -133,7 +134,7 @@ function AttachmentList({ transactionId }: Readonly<{ transactionId: string }>) 
   const inputId = useId();
   const refusalText = useRefusalText();
   const attachments = useAttachmentsSuspense(transactionId).data;
-  const uploadMutation = useUploadAttachment(silent());
+  const uploadMutation = useUploadAttachment({ mutation: silentMutation });
   const removeMutation = useDeleteAttachment();
   const [waiting, setWaiting] = useState(0);
   const [refusals, setRefusals] = useState<{ items: Refusal[]; free: number }>({
@@ -141,7 +142,6 @@ function AttachmentList({ transactionId }: Readonly<{ transactionId: string }>) 
     free: 0,
   });
   const [failure, setFailure] = useState<unknown>(null);
-  const [dragging, setDragging] = useState(false);
 
   const free = Math.max(0, MAX_ATTACHMENTS - attachments.length);
   const uploading = waiting > 0;
@@ -196,36 +196,21 @@ function AttachmentList({ transactionId }: Readonly<{ transactionId: string }>) 
         </Rows>
       )}
 
-      <label
-        htmlFor={inputId}
-        data-dragging={dragging || undefined}
-        className={cn(
-          "relative flex min-h-20 w-full cursor-pointer flex-col items-center justify-center gap-1.5 rounded-lg border border-dashed border-input bg-muted/40 px-3 py-3 text-center text-sm text-muted-foreground transition-colors hover:border-primary hover:bg-accent hover:text-accent-foreground has-focus-visible:border-ring has-focus-visible:ring-3 has-focus-visible:ring-ring/50",
-          dragging && "border-primary bg-accent text-accent-foreground",
-          (full || uploading) && "pointer-events-none opacity-60",
-        )}
-      >
-        <Paperclip className="size-5 shrink-0" aria-hidden="true" />
-        <span className="font-medium">
-          {dragging ? t("transactions.attachments.dropActive") : t("transactions.attachments.drop")}
-        </span>
-        <input
-          id={inputId}
-          type="file"
-          multiple
-          accept={ACCEPT_ATTRIBUTE}
-          className="absolute inset-0 size-full cursor-pointer opacity-0"
-          disabled={full || uploading}
-          onDragEnter={() => setDragging(true)}
-          onDragLeave={() => setDragging(false)}
-          onDrop={() => setDragging(false)}
-          onChange={(event) => {
-            const files = Array.from(event.target.files ?? []);
-            event.target.value = "";
-            void attach(files);
-          }}
-        />
-      </label>
+      <FileInput
+        id={inputId}
+        icon={Paperclip}
+        placeholder={t("transactions.attachments.drop")}
+        dropPlaceholder={t("transactions.attachments.dropActive")}
+        className="min-h-20"
+        multiple
+        accept={ACCEPT_ATTRIBUTE}
+        disabled={full || uploading}
+        onChange={(event) => {
+          const files = Array.from(event.target.files ?? []);
+          event.target.value = "";
+          void attach(files);
+        }}
+      />
 
       {uploading ? (
         <p role="status" className="text-sm text-muted-foreground">

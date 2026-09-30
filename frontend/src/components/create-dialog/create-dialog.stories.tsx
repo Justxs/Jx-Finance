@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { Link2 } from "lucide-react";
 import { expect, screen, userEvent } from "storybook/test";
 import { Button } from "@/components/ui/button/button";
 import { openedDialog } from "@/storybook/interactions";
@@ -23,6 +24,10 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
+
+export const SecondaryWithIcon: Story = {
+  args: { label: "Link payments", title: "Link payments", secondary: true, icon: Link2 },
+};
 
 export const Opened: Story = {
   play: async ({ canvas }) => {

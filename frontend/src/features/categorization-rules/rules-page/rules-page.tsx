@@ -1,5 +1,5 @@
 import { Play } from "lucide-react";
-import { useDeferredValue, useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   getCategorizationRulesQueryKey,
@@ -18,47 +18,45 @@ import { ListSection } from "@/components/list-section/list-section";
 import { EditModal, Modal } from "@/components/modal";
 import { PageHeader } from "@/components/page-header/page-header";
 import { Button } from "@/components/ui/button/button";
-import { useConfirmedDelete } from "@/hooks/use-confirmed-delete";
-import { silent } from "@/lib/mutations";
+import { RuleForm } from "@/features/categorization-rules/rule-form/rule-form";
+import { movedRules } from "@/features/categorization-rules/rule-order";
+import { RuleRow } from "@/features/categorization-rules/rule-row/rule-row";
+import { RunRulesDialog } from "@/features/categorization-rules/run-rules-dialog/run-rules-dialog";
+import { SuggestedRules } from "@/features/categorization-rules/suggested-rules/suggested-rules";
+import { useEditableList } from "@/hooks/use-editable-list";
+import { silentMutation } from "@/lib/mutations";
 import { optimisticRemoval, optimisticUpdate } from "@/lib/optimistic";
 import { nameById } from "@/lib/options";
-import { RuleForm } from "../rule-form/rule-form";
-import { movedRules } from "../rule-order";
-import { RuleRow } from "../rule-row/rule-row";
-import { RunRulesDialog } from "../run-rules-dialog/run-rules-dialog";
-import { SuggestedRules } from "../suggested-rules/suggested-rules";
 
 export function RulesPage() {
   const { t } = useTranslation();
   const [runOpen, setRunOpen] = useState(false);
-  const [editing, setEditing] = useState<CategorizationRuleResponse | null>(null);
 
-  const rules = useCategorizationRulesSuspense();
   const accounts = useAccountsSuspense();
   const categories = useCategoriesSuspense();
   const tags = useTagsSuspense();
   const suggestions = useSuggestedRulesSuspense();
 
-  const deleteMutation = useDeleteCategorizationRule({
-    mutation: optimisticRemoval<CategorizationRuleResponse>(getCategorizationRulesQueryKey()),
-  });
-
-  const moveMutation = useMoveCategorizationRule(
-    silent(
-      optimisticUpdate({
-        queryKey: getCategorizationRulesQueryKey(),
-        apply: movedRules,
-      }),
-    ),
-  );
-
-  const ruleList = useDeferredValue(rules.data);
-  const remove = useConfirmedDelete(
-    deleteMutation,
-    ruleList,
+  const rules = useEditableList(
+    useCategorizationRulesSuspense().data,
+    useDeleteCategorizationRule({
+      mutation: optimisticRemoval<CategorizationRuleResponse>(getCategorizationRulesQueryKey()),
+    }),
     (rule) => rule.name,
     "categorizationRule",
   );
+
+  const moveMutation = useMoveCategorizationRule({
+    mutation: {
+      ...silentMutation,
+      ...optimisticUpdate({
+        queryKey: getCategorizationRulesQueryKey(),
+        apply: movedRules,
+      }),
+    },
+  });
+
+  const ruleList = rules.list;
 
   const accountNames = nameById(accounts.data);
   const categoryNames = nameById(categories.data);
@@ -90,11 +88,7 @@ export function RulesPage() {
         </CreateDialog>
       </PageHeader>
 
-      <EditModal
-        item={editing}
-        title={t("categorizationRules.editTitle")}
-        onClose={() => setEditing(null)}
-      >
+      <EditModal {...rules.editProps} title={t("categorizationRules.editTitle")}>
         {(rule, close) => (
           <RuleForm
             accounts={accounts.data}
@@ -142,13 +136,12 @@ export function RulesPage() {
             tagNames={tagNames}
             movePending={moveMutation.isPending}
             onMove={(direction) => moveMutation.mutate({ id: rule.id, data: { direction } })}
-            onEdit={() => setEditing(rule)}
-            {...remove.deleteProps(rule.id)}
+            {...rules.rowProps(rule)}
           />
         ))}
       </ListSection>
 
-      <ConfirmDeleteDialog {...remove.dialogProps} />
+      <ConfirmDeleteDialog {...rules.dialogProps} />
     </div>
   );
 }

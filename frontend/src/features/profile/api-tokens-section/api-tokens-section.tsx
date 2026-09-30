@@ -26,11 +26,11 @@ import { Label } from "@/components/ui/label/label";
 import { Rows } from "@/components/ui/rows/rows";
 import { TitledSection } from "@/components/ui/section/section";
 import { Tag } from "@/components/ui/tag/tag";
+import { ActionRow } from "@/features/profile/action-row/action-row";
 import { useConfirmedDelete } from "@/hooks/use-confirmed-delete";
 import { useDate, useDateTime } from "@/hooks/use-formatters";
-import { silent } from "@/lib/mutations";
-import { requiredText } from "@/lib/validation";
-import { ActionRow } from "../action-row/action-row";
+import { notify, silentMutation } from "@/lib/mutations";
+import { requiredText, requiredValue } from "@/lib/validation";
 
 const expiryOptions = ["30", "90", "365"] as const;
 
@@ -90,7 +90,7 @@ function TokenList() {
   const { t } = useTranslation();
   const tokens = usePersonalApiTokensSuspense().data;
   const revokeMutation = useRevokePersonalApiToken({
-    mutation: { meta: { success: t("profile.apiTokens.revoked") } },
+    mutation: notify(t("profile.apiTokens.revoked")),
   });
   const revoke = useConfirmedDelete(revokeMutation, tokens, (token) => token.name);
 
@@ -165,14 +165,16 @@ function CreatedToken({
 function CreateTokenForm({ onClose }: Readonly<{ onClose: () => void }>) {
   const { t } = useTranslation();
   const [created, setCreated] = useState<CreatedPersonalApiTokenResponse | null>(null);
-  const create = useCreatePersonalApiToken(silent({ onSuccess: setCreated }));
+  const create = useCreatePersonalApiToken({
+    mutation: { ...silentMutation, onSuccess: setCreated },
+  });
 
   const form = useServerForm({
     defaultValues: { name: "", expiresInDays: "90", password: "" },
     schema: z.object({
       name: requiredText(t, createPersonalApiTokenBodyNameMax),
       expiresInDays: z.enum(expiryOptions),
-      password: z.string().min(1, t("validation.required")),
+      password: requiredValue(t),
     }),
     submit: (value) =>
       create.mutateAsync({

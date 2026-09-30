@@ -3,6 +3,7 @@ import { RouterProvider, createMemoryHistory, createRouter } from "@tanstack/rea
 import { render, waitFor } from "@testing-library/react";
 import { expect } from "vitest";
 import { TooltipProvider } from "@/components/ui/tooltip/tooltip";
+import { setSetupNeeded } from "@/lib/auth-gate";
 import { routeTree } from "@/route-tree.gen";
 
 export const APP_TEST_TIMEOUT = 20_000;
@@ -13,6 +14,7 @@ export function mountApp(path: string) {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false, staleTime: Infinity } },
   });
+  setSetupNeeded(queryClient, false);
   const router = createRouter({
     routeTree,
     context: { queryClient },

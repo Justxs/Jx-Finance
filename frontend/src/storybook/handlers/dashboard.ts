@@ -13,7 +13,7 @@ import {
   type DashboardLayoutResponse,
   type MonthlyTrendResponse,
 } from "@/api/generated/model";
-import { shiftMonth } from "@/features/month-close/month-key";
+import { shiftMonth } from "@/lib/calendar";
 import {
   FIXTURE_MONTH,
   buildCategoryBreakdownItems,

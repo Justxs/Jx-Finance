@@ -22,13 +22,12 @@ import type {
   SettingsResponse,
 } from "@/api/generated/model";
 import { FORECAST_DAYS } from "@/features/accounts/cash-flow-forecast/forecast-series";
-import { latestEndedMonth } from "@/features/month-close/month-key";
-import type { FeatureKey } from "@/hooks/use-settings";
+import { latestEndedMonth, currentMonthKey } from "@/lib/calendar";
 import { type MoveDirection, adjacentIndex, swapItems } from "@/lib/reorder";
 import { todayDateIn, warm, warmWithSettings } from "@/lib/route-prefetch";
+import type { FeatureKey } from "@/lib/settings";
 import {
   asOfParams,
-  currentMonthKey,
   pastMonthEnd,
   monthlyTrendParams,
   recentTransactionsParams,

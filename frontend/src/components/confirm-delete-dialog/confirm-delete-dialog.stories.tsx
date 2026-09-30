@@ -2,8 +2,8 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import { toast } from "sonner";
 import { expect, screen, userEvent, waitFor, within } from "storybook/test";
+import { Button } from "@/components/ui/button/button";
 import { openedDialog } from "@/storybook/interactions";
-import { Button } from "../ui/button/button";
 import { ConfirmDeleteDialog } from "./confirm-delete-dialog";
 
 interface Row {

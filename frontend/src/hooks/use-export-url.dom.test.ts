@@ -1,5 +1,6 @@
 import { act, renderHook } from "@testing-library/react";
 import { expect, test } from "vitest";
+import { getExportTaxSummaryUrl } from "@/api/generated";
 import { freshModuleLoader } from "@/test/fresh-module";
 import { seedPreferences } from "@/test/preferences";
 
@@ -11,23 +12,23 @@ const load = await freshModuleLoader(async () => ({
   setActiveHousehold: (await import("@/stores/active-household-store")).setActiveHousehold,
 }));
 
-function csvLink(useExportUrl: (path: string, params: Record<string, string>) => string) {
-  return renderHook(() => useExportUrl("/api/transactions/export", { dateFrom: "2026-01-01" }));
+const csv = getExportTaxSummaryUrl({ year: 2026 });
+
+function csvLink(useExportUrl: (url: string) => string) {
+  return renderHook(() => useExportUrl(csv));
 }
 
 test("an export link carries no household while the scope is everything", async () => {
   const { useExportUrl } = await load();
 
-  expect(csvLink(useExportUrl).result.current).toBe("/api/transactions/export?dateFrom=2026-01-01");
+  expect(csvLink(useExportUrl).result.current).toBe(csv);
 });
 
 test("an export link carries the active household", async () => {
   seedPreferences({ activeHouseholdId: family });
   const { useExportUrl } = await load();
 
-  expect(csvLink(useExportUrl).result.current).toBe(
-    `/api/transactions/export?dateFrom=2026-01-01&activeHousehold=${family}`,
-  );
+  expect(csvLink(useExportUrl).result.current).toBe(`${csv}&activeHousehold=${family}`);
 });
 
 test("an export link follows the switcher and drops the household again", async () => {
@@ -36,10 +37,17 @@ test("an export link follows the switcher and drops the household again", async 
   const { result } = csvLink(useExportUrl);
 
   act(() => setActiveHousehold(garden));
-  expect(result.current).toBe(
-    `/api/transactions/export?dateFrom=2026-01-01&activeHousehold=${garden}`,
-  );
+  expect(result.current).toBe(`${csv}&activeHousehold=${garden}`);
 
   act(() => setActiveHousehold(undefined));
-  expect(result.current).toBe("/api/transactions/export?dateFrom=2026-01-01");
+  expect(result.current).toBe(csv);
+});
+
+test("an export link without parameters starts its query at the household", async () => {
+  seedPreferences({ activeHouseholdId: family });
+  const { useExportUrl } = await load();
+
+  expect(renderHook(() => useExportUrl(getExportTaxSummaryUrl())).result.current).toBe(
+    `${getExportTaxSummaryUrl()}?activeHousehold=${family}`,
+  );
 });

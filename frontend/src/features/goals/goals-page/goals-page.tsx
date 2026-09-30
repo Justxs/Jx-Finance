@@ -1,4 +1,3 @@
-import { useDeferredValue, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   getGoalsQueryKey,
@@ -12,51 +11,49 @@ import { CreateDialog } from "@/components/create-dialog/create-dialog";
 import { EditModal } from "@/components/modal";
 import { PageHeader } from "@/components/page-header/page-header";
 import { PanelRows } from "@/components/panel-rows/panel-rows";
-import { useConfirmedDelete } from "@/hooks/use-confirmed-delete";
+import { GoalForm } from "@/features/goals/goal-form/goal-form";
+import { GoalRow } from "@/features/goals/goal-row/goal-row";
+import { useEditableList } from "@/hooks/use-editable-list";
 import { optimisticRemoval } from "@/lib/optimistic";
 import { nameById } from "@/lib/options";
-import { CreateGoalForm } from "../create-goal-form/create-goal-form";
-import { GoalRow } from "../goal-row/goal-row";
 
 export function GoalsPage() {
   const { t } = useTranslation();
-  const [editing, setEditing] = useState<GoalResponse | null>(null);
-
-  const accounts = useAccountsSuspense();
-  const goals = useGoalsSuspense();
-
-  const deleteMutation = useDeleteGoal({
-    mutation: optimisticRemoval<GoalResponse>(getGoalsQueryKey()),
-  });
-
-  const accountList = accounts.data;
+  const accountList = useAccountsSuspense().data;
   const accountNames = nameById(accountList);
-  const goalList = useDeferredValue(goals.data);
-  const remove = useConfirmedDelete(deleteMutation, goalList, (goal) => goal.name, "goal");
+  const goals = useEditableList(
+    useGoalsSuspense().data,
+    useDeleteGoal({ mutation: optimisticRemoval<GoalResponse>(getGoalsQueryKey()) }),
+    (goal) => goal.name,
+    "goal",
+  );
 
   return (
     <div className="space-y-5">
       <PageHeader title={t("goals.title")}>
         <CreateDialog label={t("goals.add")} title={t("goals.add")}>
-          {(close) => <CreateGoalForm accounts={accountList} onClose={close} />}
+          {(close) => <GoalForm accounts={accountList} onClose={close} />}
         </CreateDialog>
       </PageHeader>
 
-      <PanelRows count={goalList.length} emptyText={t("goals.empty")}>
-        {goalList.map((goal) => (
+      <PanelRows count={goals.list.length} emptyText={t("goals.empty")}>
+        {goals.list.map((goal) => (
           <GoalRow
             key={goal.id}
             goal={goal}
             accountNames={accountNames}
-            onEdit={() => setEditing(goal)}
-            {...remove.deleteProps(goal.id)}
+            {...goals.rowProps(goal)}
           />
         ))}
       </PanelRows>
-      <EditModal item={editing} title={t("actions.edit")} onClose={() => setEditing(null)}>
-        {(goal, close) => <CreateGoalForm initial={goal} accounts={accountList} onClose={close} />}
+      <EditModal
+        {...goals.editProps}
+        title={t("goals.editTitle")}
+        description={(goal) => goal.name}
+      >
+        {(goal, close) => <GoalForm initial={goal} accounts={accountList} onClose={close} />}
       </EditModal>
-      <ConfirmDeleteDialog {...remove.dialogProps} />
+      <ConfirmDeleteDialog {...goals.dialogProps} />
     </div>
   );
 }

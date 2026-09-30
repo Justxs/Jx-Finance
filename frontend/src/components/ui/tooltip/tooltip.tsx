@@ -1,5 +1,5 @@
 import { Tooltip as TooltipPrimitive } from "@base-ui/react/tooltip";
-import * as React from "react";
+import type { ReactElement, ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 function TooltipProvider({
@@ -50,8 +50,8 @@ function Tooltip({
   ...props
 }: Omit<TooltipPrimitive.Root.Props, "children"> &
   Pick<TooltipPrimitive.Positioner.Props, "align" | "side" | "sideOffset"> & {
-    content: React.ReactNode;
-    children: React.ReactElement<Record<string, unknown>>;
+    content: ReactNode;
+    children: ReactElement<Record<string, unknown>>;
   }) {
   if (content === null || content === undefined || content === false || content === "") {
     return children;

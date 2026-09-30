@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, fn, userEvent } from "storybook/test";
 import { Rows } from "@/components/ui/rows/rows";
+import { byId, nameById } from "@/lib/options";
 import {
   accounts,
   categories,
@@ -23,8 +24,8 @@ const meta = {
   component: RecurringBillRow,
   args: {
     bill: dueSoonBill,
-    accounts,
-    categories,
+    accountById: byId(accounts),
+    categoryNames: nameById(categories),
     onEdit: fn(),
     onConfirm: fn(),
     onDelete: fn(),
@@ -111,7 +112,9 @@ export const NoCategoryNoAccount: Story = {
   args: { bill: { ...dueSoonBill, categoryId: null, accountId: null } },
 };
 
-export const UnknownCategoryAndAccount: Story = { args: { accounts: [], categories: [] } };
+export const UnknownCategoryAndAccount: Story = {
+  args: { accountById: new Map(), categoryNames: new Map() },
+};
 
 export const DeletePending: Story = { args: { deletePending: true, deleteDisabled: true } };
 

@@ -1,7 +1,7 @@
 import { createSequenceMatcher } from "@tanstack/react-hotkeys";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, test, vi } from "vitest";
-import type { FeatureKey } from "@/hooks/use-settings";
+import type { FeatureKey } from "./settings";
 import {
   PREFIX_TIMEOUT_MS,
   SEARCH_SHORTCUT_TARGET,

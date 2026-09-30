@@ -6,17 +6,16 @@ import {
   useReportSummarySuspense,
 } from "@/api/generated";
 import type { ReportTrendPoint } from "@/api/generated/model";
-import { CHART_COLOR_PRIMARY } from "@/components/chart";
+import { CHART_COLOR_MUTED, CHART_COLOR_PRIMARY } from "@/components/chart";
 import {
   type TimeSeriesLine,
   TimeSeriesLineChart,
 } from "@/components/chart/time-series-line-chart";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
-import { monthDate, shiftMonth } from "@/features/month-close/month-key";
+import { spendingPaceRanges } from "@/features/dashboard/dashboard-queries";
 import { useShortMonth } from "@/hooks/use-formatters";
 import { useSettingsSuspense, useTodayDate } from "@/hooks/use-settings";
-import { parseIso } from "@/lib/calendar";
-import { currentMonthKey, spendingPaceRanges } from "../dashboard-queries";
+import { monthDate, shiftMonth, parseIso, currentMonthKey } from "@/lib/calendar";
 import { billsDueAfter, projectedTotals } from "./pace-projection";
 
 function cumulativeByDay(points: readonly ReportTrendPoint[], lastDay: number) {
@@ -115,7 +114,7 @@ export function SpendingPaceChart({ month }: Readonly<Props>) {
     {
       key: "average",
       label: t("dashboard.pace.average", span),
-      color: "var(--muted-foreground)",
+      color: CHART_COLOR_MUTED,
       shape: "line",
       comparison: true,
     },

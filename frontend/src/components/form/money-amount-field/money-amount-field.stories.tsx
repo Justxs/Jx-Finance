@@ -2,8 +2,8 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, fireEvent } from "storybook/test";
 import { z } from "zod";
 import { Currency } from "@/api/generated/model";
+import { useAppForm } from "@/components/form/app-form";
 import { isPositiveMoney } from "@/lib/validation";
-import { useAppForm } from "../app-form";
 
 interface DemoProps {
   hint?: string;

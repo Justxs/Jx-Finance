@@ -11,7 +11,7 @@ import {
   rowWidth,
 } from "@/components/ui/skeleton/skeleton";
 
-export function HoldingsSectionSkeleton() {
+export function BalanceItemsSkeleton() {
   return (
     <Section aria-hidden="true">
       <div className="mb-2 flex flex-wrap items-center gap-x-4 gap-y-2">
@@ -52,8 +52,8 @@ export function NetWorthPending() {
         </SectionSkeleton>
       </div>
       <div className="grid gap-5 lg:grid-cols-2">
-        <HoldingsSectionSkeleton />
-        <HoldingsSectionSkeleton />
+        <BalanceItemsSkeleton />
+        <BalanceItemsSkeleton />
       </div>
     </PagePending>
   );

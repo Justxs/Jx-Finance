@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
-import { Button } from "../button/button";
-import { Input } from "../input/input";
-import { Label } from "../label/label";
+import { Button } from "@/components/ui/button/button";
+import { Input } from "@/components/ui/input/input";
+import { Label } from "@/components/ui/label/label";
 import { Popover, PopoverContent, PopoverTitle, PopoverTrigger } from "./popover";
 
 const sides = ["top", "right", "bottom", "left"] as const;

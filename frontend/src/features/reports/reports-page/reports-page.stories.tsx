@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, waitFor, within } from "storybook/test";
+import { presetRange } from "@/features/reports/report-filters/date-range-presets";
 import { withPageFrame } from "@/storybook/decorators";
 import { emptyHandlers, errorHandlers, loadingHandlers } from "@/storybook/handlers";
 import { chooseOption } from "@/storybook/interactions";
-import { presetRange } from "../report-filters";
 import { ReportsPage } from "./reports-page";
 
 const today = new Date();

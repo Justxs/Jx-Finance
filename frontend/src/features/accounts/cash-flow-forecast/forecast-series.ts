@@ -4,22 +4,19 @@ import type {
   Currency,
   ForecastEntryResponse,
 } from "@/api/generated/model";
-import { parseIso, toIso } from "@/lib/calendar";
+import { daysBetween, parseIso, toIso } from "@/lib/calendar";
 import { toCents } from "@/lib/money";
-
-const DAY_MS = 24 * 60 * 60 * 1000;
 
 export const FORECAST_DAYS = 90;
 
 export function forecastSeries(account: AccountForecastResponse, from: string, to: string) {
   const start = parseIso(from);
-  const end = parseIso(to);
-  if (!start || !end) {
+  const days = daysBetween(from, to);
+  if (!start || days === null) {
     return [];
   }
 
   const usual = account.usualDailySpending === null ? null : toCents(account.usualDailySpending);
-  const days = Math.round((end.getTime() - start.getTime()) / DAY_MS);
   let balance = toCents(account.startBalance);
   let next = 0;
 

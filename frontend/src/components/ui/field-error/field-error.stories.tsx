@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect } from "storybook/test";
+import { Input } from "@/components/ui/input/input";
+import { Label } from "@/components/ui/label/label";
 import { withWidth } from "@/storybook/decorators";
-import { Input } from "../input/input";
-import { Label } from "../label/label";
 import { FieldError } from "./field-error";
 
 const meta = {

@@ -1111,6 +1111,7 @@
     "title": "Biudžetai",
     "subtitle": "Vienas limitas kategorijai ir periodui; kiekvienas skaičiuojamas savo laikotarpio ribose.",
     "add": "Pridėti biudžetą",
+    "editTitle": "Redaguoti biudžetą",
     "category": "Kategorija",
     "limit": "Limitas",
     "period": "Periodiškumas",
@@ -1133,7 +1134,6 @@
     "budgeted": "Suplanuota",
     "remaining": "Liko",
     "overBy": "Viršyta",
-    "overBudget": "Biudžetas viršytas {{amount}}",
     "spentOf": "Išleista {{spent}} iš {{limit}}",
     "historyHint": {
       "weekly": "Paskutinių {{number}} savaičių mediana: {{amount}}",
@@ -1182,6 +1182,7 @@
   "goals": {
     "title": "Tikslai",
     "add": "Pridėti tikslą",
+    "editTitle": "Redaguoti tikslą",
     "name": "Pavadinimas",
     "namePlaceholder": "pvz., Finansinė pagalvė",
     "targetAmount": "Tikslinė suma",
@@ -1443,6 +1444,7 @@
     },
     "years": {
       "title": "Pajamos pagal metus",
+      "table": "Metų sumos",
       "empty": "Pajamų ar realizuoto pelno dar nėra.",
       "year": "Metai",
       "dividends": "Dividendai",
@@ -1869,6 +1871,11 @@
     "empty": "Kol kas nepriklausote nė vienam namų ūkiui.",
     "addMember": "Pridėti",
     "memberEmailPlaceholder": "Nario el. paštas",
+    "removeMember": {
+      "title": "Pašalinti šį narį?",
+      "description": "Narys nebematys šio namų ūkio ir visko, kas jame bendrinama. Jo paties įrašai lieka jam.",
+      "confirm": "Pašalinti"
+    },
     "roles": {
       "owner": "Savininkas",
       "member": "Narys"
@@ -2049,6 +2056,7 @@
     "payeeHint": "Skaičiuojamos visos operacijos, o aprašymai, kurie skiriasi tik nuorodų numeriais, laikomi vienu gavėju.",
     "noDescription": "Be aprašymo",
     "showAllPayees": "Rodyti visus",
+    "noPayeeSpending": "Šiuo laikotarpiu išlaidų pagal gavėjus nėra.",
     "noIncome": "Šiuo laikotarpiu pajamų nėra.",
     "syntheticGroups": {
       "investmentIncome": "Investicijų pajamos",
@@ -2330,6 +2338,7 @@
     "ofPages": "iš {{pages}}"
   },
   "filters": {
+    "label": "Filtrai",
     "filterBy": "Filtruoti pagal: {{column}}",
     "clear": "Išvalyti",
     "apply": "Taikyti",

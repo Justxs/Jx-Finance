@@ -1,11 +1,5 @@
-import { useDeferredValue, useState } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  getCategoriesQueryKey,
-  useCategoriesSuspense,
-  useDeleteCategory,
-  useHouseholdsSuspense,
-} from "@/api/generated";
+import { getCategoriesQueryKey, useCategoriesSuspense, useDeleteCategory } from "@/api/generated";
 import type { CategoryResponse, FlowType } from "@/api/generated/model";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog/confirm-delete-dialog";
 import { CreateDialog } from "@/components/create-dialog/create-dialog";
@@ -13,12 +7,11 @@ import { ListSection } from "@/components/list-section/list-section";
 import { EditModal } from "@/components/modal";
 import { NamedRow } from "@/components/named-row/named-row";
 import { PageHeader } from "@/components/page-header/page-header";
-import { useConfirmedDelete } from "@/hooks/use-confirmed-delete";
+import { CategoryForm } from "@/features/categories/category-form/category-form";
+import { useEditableList } from "@/hooks/use-editable-list";
 import { CategoryIcon } from "@/lib/category-icons";
 import type { TranslationKey } from "@/lib/i18n";
 import { optimisticRemoval } from "@/lib/optimistic";
-import { nameById } from "@/lib/options";
-import { CategoryForm } from "../category-form/category-form";
 
 const groups: readonly { type: FlowType; labelKey: TranslationKey }[] = [
   { type: "income", labelKey: "categories.income" },
@@ -27,19 +20,9 @@ const groups: readonly { type: FlowType; labelKey: TranslationKey }[] = [
 
 export function CategoriesPage() {
   const { t } = useTranslation();
-  const [editing, setEditing] = useState<CategoryResponse | null>(null);
-
-  const categories = useCategoriesSuspense();
-  const householdNames = nameById(useHouseholdsSuspense().data);
-
-  const deleteMutation = useDeleteCategory({
-    mutation: optimisticRemoval<CategoryResponse>(getCategoriesQueryKey()),
-  });
-
-  const categoryList = useDeferredValue(categories.data);
-  const remove = useConfirmedDelete(
-    deleteMutation,
-    categoryList,
+  const categories = useEditableList(
+    useCategoriesSuspense().data,
+    useDeleteCategory({ mutation: optimisticRemoval<CategoryResponse>(getCategoriesQueryKey()) }),
     (category) => category.name,
     "category",
   );
@@ -52,13 +35,13 @@ export function CategoriesPage() {
         </CreateDialog>
       </PageHeader>
 
-      <EditModal item={editing} title={t("categories.editTitle")} onClose={() => setEditing(null)}>
+      <EditModal {...categories.editProps} title={t("categories.editTitle")}>
         {(category, close) => <CategoryForm initial={category} onClose={close} />}
       </EditModal>
 
       <div className="grid gap-5 lg:grid-cols-2">
         {groups.map((group) => {
-          const items = categoryList.filter((category) => category.type === group.type);
+          const items = categories.list.filter((category) => category.type === group.type);
 
           return (
             <ListSection
@@ -72,12 +55,11 @@ export function CategoriesPage() {
                   key={category.id}
                   name={category.name}
                   scope={category.scope}
-                  householdName={householdNames.get(category.householdId ?? "")}
+                  householdId={category.householdId}
                   leading={
                     <CategoryIcon icon={category.icon} className="shrink-0 text-muted-foreground" />
                   }
-                  onEdit={() => setEditing(category)}
-                  {...remove.deleteProps(category.id)}
+                  {...categories.rowProps(category)}
                 />
               ))}
             </ListSection>
@@ -85,7 +67,7 @@ export function CategoriesPage() {
         })}
       </div>
 
-      <ConfirmDeleteDialog {...remove.dialogProps} />
+      <ConfirmDeleteDialog {...categories.dialogProps} />
     </div>
   );
 }

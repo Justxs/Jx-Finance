@@ -1,5 +1,4 @@
-import { ArrowLeft } from "lucide-react";
-import { type ReactNode, useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   useDebtPaymentsSuspense,
@@ -7,24 +6,23 @@ import {
   useDebtsSuspense,
 } from "@/api/generated";
 import type { DebtResponse, DebtScheduleResponse } from "@/api/generated/model";
-import { PageHeader } from "@/components/page-header/page-header";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { Section, SectionTitle, TitledSection } from "@/components/ui/section/section";
 import { StaleRegion } from "@/components/ui/stale-region/stale-region";
-import { TextLink } from "@/components/ui/text-link/text-link";
-import { useDeferredParams } from "@/hooks/use-deferred-params";
-import { DebtBalanceChart } from "../debt-balance-chart";
+import { DebtBalanceChart } from "@/features/net-worth/debt-balance-chart";
 import {
   DebtExtraPayments,
   type ExtraPaymentDraft,
   extraPaymentParams,
   noExtraPayments,
-} from "../debt-extra-payments/debt-extra-payments";
-import { DebtPaymentSplitChart } from "../debt-payment-split-chart";
-import { DebtPayments } from "../debt-payments/debt-payments";
-import { DebtScheduleSummary } from "../debt-schedule-summary/debt-schedule-summary";
-import { DebtScheduleTable } from "../debt-schedule-table/debt-schedule-table";
+} from "@/features/net-worth/debt-extra-payments/debt-extra-payments";
+import { DebtPaymentSplitChart } from "@/features/net-worth/debt-payment-split-chart";
+import { DebtPayments } from "@/features/net-worth/debt-payments/debt-payments";
+import { DebtScheduleSummary } from "@/features/net-worth/debt-schedule-summary/debt-schedule-summary";
+import { DebtScheduleTable } from "@/features/net-worth/debt-schedule-table/debt-schedule-table";
+import { DetailPage } from "@/features/net-worth/detail-page/detail-page";
+import { useDeferredParams } from "@/hooks/use-deferred-params";
 import { DebtScheduleSkeleton } from "./debt-schedule-page-pending";
 
 interface Props {
@@ -33,43 +31,32 @@ interface Props {
 
 export function DebtSchedulePage({ debtId }: Readonly<Props>) {
   const { t } = useTranslation();
-  const debts = useDebtsSuspense();
-  const debt = debts.data.find((item) => item.id === debtId);
-
-  let content: ReactNode;
-  if (debt) {
-    content = (
-      <QueryBoundary
-        fallback={<DebtScheduleSkeleton tracked={debt.tracksPayments} />}
-        errorSubject={t("netWorth.schedule.table")}
-      >
-        <div className="space-y-5">
-          {debt.payoffDate === null ? (
-            <Section>
-              <EmptyText>{t("netWorth.schedule.incomplete")}</EmptyText>
-            </Section>
-          ) : (
-            <DebtScheduleView debt={debt} />
-          )}
-          {debt.tracksPayments ? <DebtPayments debt={debt} /> : null}
-        </div>
-      </QueryBoundary>
-    );
-  } else {
-    content = <EmptyText>{t("netWorth.schedule.notFound")}</EmptyText>;
-  }
+  const debt = useDebtsSuspense().data.find((item) => item.id === debtId);
 
   return (
-    <div className="space-y-5">
-      <p className="flex text-sm">
-        <TextLink to="/net-worth" className="inline-flex items-center">
-          <ArrowLeft className="mr-1 size-4" aria-hidden="true" />
-          {t("netWorth.schedule.back")}
-        </TextLink>
-      </p>
-      <PageHeader title={debt?.name ?? t("netWorth.debts")} />
-      {content}
-    </div>
+    <DetailPage
+      item={debt}
+      fallbackTitle={t("netWorth.debts")}
+      notFound={t("netWorth.schedule.notFound")}
+    >
+      {(found) => (
+        <QueryBoundary
+          fallback={<DebtScheduleSkeleton tracked={found.tracksPayments} />}
+          errorSubject={t("netWorth.schedule.table")}
+        >
+          <div className="space-y-5">
+            {found.payoffDate === null ? (
+              <Section>
+                <EmptyText>{t("netWorth.schedule.incomplete")}</EmptyText>
+              </Section>
+            ) : (
+              <DebtScheduleView debt={found} />
+            )}
+            {found.tracksPayments ? <DebtPayments debt={found} /> : null}
+          </div>
+        </QueryBoundary>
+      )}
+    </DetailPage>
   );
 }
 

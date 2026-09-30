@@ -1,9 +1,9 @@
-import * as React from "react";
+import type { ComponentProps, ReactNode } from "react";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { Skeleton, TextSkeleton, rowWidth } from "@/components/ui/skeleton/skeleton";
 import { cn } from "@/lib/utils";
 
-function Table({ className, ...props }: React.ComponentProps<"table">) {
+function Table({ className, ...props }: ComponentProps<"table">) {
   return (
     <div data-slot="table-container" className="relative w-full">
       <table
@@ -15,7 +15,7 @@ function Table({ className, ...props }: React.ComponentProps<"table">) {
   );
 }
 
-function TableHeader({ className, ...props }: React.ComponentProps<"thead">) {
+function TableHeader({ className, ...props }: ComponentProps<"thead">) {
   return (
     <thead
       data-slot="table-header"
@@ -25,7 +25,7 @@ function TableHeader({ className, ...props }: React.ComponentProps<"thead">) {
   );
 }
 
-function TableBody({ className, ...props }: React.ComponentProps<"tbody">) {
+function TableBody({ className, ...props }: ComponentProps<"tbody">) {
   return (
     <tbody
       data-slot="table-body"
@@ -35,7 +35,7 @@ function TableBody({ className, ...props }: React.ComponentProps<"tbody">) {
   );
 }
 
-function TableRow({ className, ...props }: React.ComponentProps<"tr">) {
+function TableRow({ className, ...props }: ComponentProps<"tr">) {
   return (
     <tr
       data-slot="table-row"
@@ -48,7 +48,7 @@ function TableRow({ className, ...props }: React.ComponentProps<"tr">) {
   );
 }
 
-interface TableHeadProps extends React.ComponentProps<"th"> {
+interface TableHeadProps extends ComponentProps<"th"> {
   numeric?: boolean;
   wrap?: boolean;
 }
@@ -68,7 +68,7 @@ function TableHead({ className, numeric = false, wrap = false, ...props }: Table
   );
 }
 
-interface TableCellProps extends React.ComponentProps<"td"> {
+interface TableCellProps extends ComponentProps<"td"> {
   numeric?: boolean;
 }
 
@@ -89,9 +89,9 @@ function TableCell({ className, numeric = false, ...props }: TableCellProps) {
 interface TableEmptyRowProps {
   colSpan: number;
   filtered?: boolean;
-  action?: React.ReactNode;
+  action?: ReactNode;
   onClearFilters?: () => void;
-  children: React.ReactNode;
+  children: ReactNode;
 }
 
 function TableEmptyRow({
@@ -112,7 +112,7 @@ function TableEmptyRow({
   );
 }
 
-interface ScrollRegionProps extends Omit<React.ComponentProps<"div">, "aria-label"> {
+interface ScrollRegionProps extends Omit<ComponentProps<"div">, "aria-label"> {
   "aria-label": string;
 }
 

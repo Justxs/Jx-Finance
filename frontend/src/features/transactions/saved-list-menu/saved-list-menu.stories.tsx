@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { Bookmark } from "lucide-react";
 import { expect, fn, screen, userEvent } from "storybook/test";
 import { withWidth } from "@/storybook/decorators";
+import type { Canvas } from "@/storybook/interactions";
 import { SavedListMenu } from "./saved-list-menu";
 
 const items = [
@@ -33,19 +34,35 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+async function openMenu(canvas: Canvas, name: string | RegExp = /^Saved filters/) {
+  await userEvent.click(canvas.getByRole("button", { name }));
+}
+
 export const Closed: Story = {};
 
-export const Open: Story = { args: { defaultOpen: true } };
+export const Open: Story = {
+  play: async ({ canvas }) => {
+    await openMenu(canvas);
+  },
+};
 
-export const Empty: Story = { args: { defaultOpen: true, items: [], canSave: false } };
+export const Empty: Story = {
+  args: { items: [], canSave: false },
+  play: async ({ canvas }) => {
+    await openMenu(canvas);
+  },
+};
 
 export const WithoutSaving: Story = {
-  args: { defaultOpen: true, onSave: undefined, label: "Templates" },
+  args: { onSave: undefined, label: "Templates" },
+  play: async ({ canvas }) => {
+    await openMenu(canvas, /^Templates/);
+  },
 };
 
 export const Applying: Story = {
-  args: { defaultOpen: true },
-  play: async ({ args }) => {
+  play: async ({ args, canvas }) => {
+    await openMenu(canvas);
     await userEvent.click(
       await screen.findByRole("button", { name: "Apply saved filter: Groceries this month" }),
     );
@@ -55,8 +72,8 @@ export const Applying: Story = {
 };
 
 export const Renaming: Story = {
-  args: { defaultOpen: true },
-  play: async ({ args }) => {
+  play: async ({ args, canvas }) => {
+    await openMenu(canvas);
     await userEvent.click(await screen.findByRole("button", { name: "Rename: Renovation" }));
     const field = await screen.findByRole("textbox", { name: "Name" });
     await userEvent.clear(field);
@@ -68,8 +85,8 @@ export const Renaming: Story = {
 };
 
 export const Saving: Story = {
-  args: { defaultOpen: true },
-  play: async ({ args }) => {
+  play: async ({ args, canvas }) => {
+    await openMenu(canvas);
     await userEvent.type(await screen.findByRole("textbox", { name: "Save filter" }), "September");
     await userEvent.click(screen.getByRole("button", { name: "Save filter" }));
 
@@ -78,8 +95,8 @@ export const Saving: Story = {
 };
 
 export const RenamingWithEnter: Story = {
-  args: { defaultOpen: true },
-  play: async ({ args }) => {
+  play: async ({ args, canvas }) => {
+    await openMenu(canvas);
     await userEvent.click(await screen.findByRole("button", { name: "Rename: Renovation" }));
     const field = await screen.findByRole("textbox", { name: "Name" });
     await userEvent.clear(field);
@@ -90,8 +107,9 @@ export const RenamingWithEnter: Story = {
 };
 
 export const NothingToSave: Story = {
-  args: { defaultOpen: true, canSave: false },
-  play: async () => {
+  args: { canSave: false },
+  play: async ({ canvas }) => {
+    await openMenu(canvas);
     await expect(await screen.findByText("Filter the list first.")).toBeVisible();
     await expect(screen.getByRole("button", { name: "Save filter" })).toBeDisabled();
   },

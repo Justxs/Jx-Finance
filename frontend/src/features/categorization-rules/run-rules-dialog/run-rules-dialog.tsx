@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { usePreviewCategorizationRun, useRunCategorizationRules } from "@/api/generated";
-import type { AccountResponse, RunRulesResponse } from "@/api/generated/model";
+import type { AccountResponse } from "@/api/generated/model";
 import { FormError } from "@/components/form-error/form-error";
 import { FieldShell } from "@/components/form/field-shell/field-shell";
 import { SelectField } from "@/components/select-field/select-field";
@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button/button";
 import { Checkbox } from "@/components/ui/checkbox/checkbox";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { Rows } from "@/components/ui/rows/rows";
-import { silent } from "@/lib/mutations";
+import { silentMutation } from "@/lib/mutations";
 import { namedOptions } from "@/lib/options";
 
 interface Props {
@@ -23,28 +23,21 @@ export function RunRulesDialog({ accounts, hasRules, onClose }: Readonly<Props>)
   const { t } = useTranslation();
   const [accountId, setAccountId] = useState("");
   const [recategorize, setRecategorize] = useState(false);
-  const [preview, setPreview] = useState<RunRulesResponse | null>(null);
+  const previewMutation = usePreviewCategorizationRun({ mutation: silentMutation });
+  const preview = previewMutation.data;
 
-  const previewMutation = usePreviewCategorizationRun(
-    silent({ onSuccess: (data: RunRulesResponse) => setPreview(data) }),
-  );
-
-  const runMutation = useRunCategorizationRules(
-    silent({
-      onSuccess: (data: RunRulesResponse) => {
+  const runMutation = useRunCategorizationRules({
+    mutation: {
+      ...silentMutation,
+      onSuccess: (data) => {
         toast.success(t("categorizationRules.runDone", { count: data.total }));
         onClose();
       },
-    }),
-  );
+    },
+  });
 
   function request() {
     return { data: { accountId: accountId || null, recategorize } };
-  }
-
-  function clearPreview() {
-    setPreview(null);
-    previewMutation.reset();
   }
 
   const matched = preview?.rules.filter((row) => row.rowCount > 0) ?? [];
@@ -62,7 +55,7 @@ export function RunRulesDialog({ accounts, hasRules, onClose }: Readonly<Props>)
           options={namedOptions(accounts, t("categorizationRules.runEveryAccount"))}
           onChange={(next) => {
             setAccountId(next);
-            clearPreview();
+            previewMutation.reset();
           }}
         />
       </FieldShell>
@@ -73,7 +66,7 @@ export function RunRulesDialog({ accounts, hasRules, onClose }: Readonly<Props>)
             checked={recategorize}
             onCheckedChange={(next) => {
               setRecategorize(next);
-              clearPreview();
+              previewMutation.reset();
             }}
           />
           <span>{t("categorizationRules.recategorize")}</span>
@@ -129,13 +122,13 @@ export function RunRulesDialog({ accounts, hasRules, onClose }: Readonly<Props>)
         </Button>
         <Button
           type="button"
-          disabled={preview === null || preview.total === 0}
+          disabled={!preview || preview.total === 0}
           pending={runMutation.isPending}
           onClick={() => runMutation.mutate(request())}
         >
-          {preview === null
-            ? t("categorizationRules.runApply")
-            : t("categorizationRules.runApplyCount", { count: preview.total })}
+          {preview
+            ? t("categorizationRules.runApplyCount", { count: preview.total })
+            : t("categorizationRules.runApply")}
         </Button>
       </div>
     </div>

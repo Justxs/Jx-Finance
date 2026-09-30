@@ -72,7 +72,9 @@ export const EditDialogOpen: Story = {
     await userEvent.click(
       (await canvas.findAllByRole("button", { name: /^(edit|redaguoti):/i }))[0]!,
     );
-    await openedDialog();
+    const dialog = await openedDialog();
+    await expect(dialog).toHaveAccessibleName("Edit goal");
+    await expect(dialog).toHaveAccessibleDescription(goals[0]!.name);
   },
 };
 

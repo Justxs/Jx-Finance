@@ -2,11 +2,10 @@ import QRCode from "qrcode";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useDisableTwoFactor, useMeSuspense, useSetupTwoFactor } from "@/api/generated";
-import type { TwoFactorSetupResponse } from "@/api/generated/model";
 import { TitledSection } from "@/components/ui/section/section";
+import { PasswordPrompt } from "@/features/profile/password-prompt/password-prompt";
 import type { TranslationKey } from "@/lib/i18n";
-import { silent } from "@/lib/mutations";
-import { PasswordPrompt } from "../password-prompt/password-prompt";
+import { silentMutation } from "@/lib/mutations";
 import { TwoFactorRecoveryCodes } from "./two-factor-recovery-codes";
 import { TwoFactorSetup } from "./two-factor-setup";
 
@@ -32,47 +31,44 @@ export function TwoFactorSettings() {
   const { t } = useTranslation();
   const me = useMeSuspense();
 
-  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
-  const [sharedKey, setSharedKey] = useState<string | null>(null);
+  const [setup, setSetup] = useState<{ qr: string; key: string } | null>(null);
   const [recoveryCodes, setRecoveryCodes] = useState<string[] | null>(null);
 
-  const setupMutation = useSetupTwoFactor(
-    silent({
-      onSuccess: async (data: TwoFactorSetupResponse) => {
-        setSharedKey(data.sharedKey ?? null);
-        setQrDataUrl(await QRCode.toDataURL(data.authenticatorUri ?? ""));
+  const setupMutation = useSetupTwoFactor({
+    mutation: {
+      ...silentMutation,
+      onSuccess: async (data) => {
+        setSetup({
+          qr: await QRCode.toDataURL(data.authenticatorUri ?? ""),
+          key: data.sharedKey ?? "",
+        });
       },
-    }),
-  );
+    },
+  });
 
-  const disableMutation = useDisableTwoFactor(
-    silent({ meta: { success: t("profile.twoFactorDisabled") } }),
-  );
-
-  function cancelSetup() {
-    setQrDataUrl(null);
-    setSharedKey(null);
-  }
+  const disableMutation = useDisableTwoFactor({
+    mutation: { meta: { silent: true, success: t("profile.twoFactorDisabled") } },
+  });
 
   function handleEnabled(codes: string[]) {
     setRecoveryCodes(codes);
-    cancelSetup();
+    setSetup(null);
   }
 
   if (recoveryCodes) {
     return <TwoFactorRecoveryCodes codes={recoveryCodes} onDone={() => setRecoveryCodes(null)} />;
   }
 
-  const mode: PromptMode = me.data?.twoFactorEnabled ? "disable" : "enable";
+  const mode: PromptMode = me.data.twoFactorEnabled ? "disable" : "enable";
   const promptMutation = mode === "disable" ? disableMutation : setupMutation;
 
-  if (mode === "enable" && qrDataUrl && sharedKey) {
+  if (mode === "enable" && setup) {
     return (
       <TwoFactorSetup
-        qrDataUrl={qrDataUrl}
-        sharedKey={sharedKey}
+        qrDataUrl={setup.qr}
+        sharedKey={setup.key}
         onEnabled={handleEnabled}
-        onCancel={cancelSetup}
+        onCancel={() => setSetup(null)}
       />
     );
   }

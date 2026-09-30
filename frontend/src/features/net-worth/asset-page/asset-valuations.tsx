@@ -16,11 +16,11 @@ import { EditModal } from "@/components/modal";
 import { RecordRow } from "@/components/record-row/record-row";
 import { FormGrid } from "@/components/ui/form-grid/form-grid";
 import { Rows } from "@/components/ui/rows/rows";
-import { Section, SectionTitle } from "@/components/ui/section/section";
-import { useConfirmedDelete } from "@/hooks/use-confirmed-delete";
+import { Section, SectionHeader } from "@/components/ui/section/section";
+import { childDelete, useConfirmedDelete } from "@/hooks/use-confirmed-delete";
 import { useIsoDate, useMoney } from "@/hooks/use-formatters";
 import { useToday } from "@/hooks/use-settings";
-import { silent } from "@/lib/mutations";
+import { silentMutation } from "@/lib/mutations";
 import { money, normalizeMoney, optionalText, requiredValue } from "@/lib/validation";
 
 interface Props {
@@ -35,7 +35,7 @@ interface ValuationFormProps extends Props {
 function ValuationForm({ asset, editing, onClose }: Readonly<ValuationFormProps>) {
   const { t } = useTranslation();
   const today = useToday();
-  const mutation = useSetAssetValuation(silent({ onSuccess: onClose }));
+  const mutation = useSetAssetValuation({ mutation: { ...silentMutation, onSuccess: onClose } });
 
   const schema = z.object({
     value: money(t),
@@ -109,7 +109,7 @@ export function AssetValuations({ asset }: Readonly<Props>) {
   const formatDate = useIsoDate();
   const formatMoney = useMoney();
   const valuations = useAssetValuationsSuspense(asset.id).data;
-  const deleteMutation = useDeleteAssetValuation(silent());
+  const deleteMutation = useDeleteAssetValuation({ mutation: silentMutation });
   const [editDate, setEditDate] = useState<string | null>(null);
 
   const points = valuations.map((valuation) => ({ ...valuation, id: valuation.date }));
@@ -120,19 +120,18 @@ export function AssetValuations({ asset }: Readonly<Props>) {
   }
 
   const remove = useConfirmedDelete(
-    {
-      mutate: ({ id }) => deleteMutation.mutate({ id: asset.id, date: id }),
-      isPending: deleteMutation.isPending,
-      variables: deleteMutation.variables ? { id: deleteMutation.variables.date } : undefined,
-    },
+    childDelete(
+      deleteMutation,
+      (date) => ({ id: asset.id, date }),
+      (variables) => variables.date,
+    ),
     points,
     (point) => `${asset.name} · ${label(point)}`,
   );
 
   return (
     <Section>
-      <div className="mb-2 flex flex-wrap items-center gap-x-4 gap-y-2">
-        <SectionTitle className="min-w-0 flex-1">{t("netWorth.valuations.title")}</SectionTitle>
+      <SectionHeader title={t("netWorth.valuations.title")} titleClassName="min-w-0 flex-1">
         <CreateDialog
           label={t("netWorth.valuations.add")}
           title={t("netWorth.valuations.add")}
@@ -140,7 +139,7 @@ export function AssetValuations({ asset }: Readonly<Props>) {
         >
           {(close) => <ValuationForm asset={asset} onClose={close} />}
         </CreateDialog>
-      </div>
+      </SectionHeader>
       <p className="text-xs text-muted-foreground">{t("netWorth.valuations.hint")}</p>
       <FormError error={deleteMutation.error} />
       <Rows>

@@ -5,13 +5,14 @@ import { useUpdateMyProfile } from "@/api/generated";
 import type { UserProfileResponse } from "@/api/generated/model";
 import {
   updateMyProfileBodyDisplayNameMax,
+  updateMyProfileBodyNewPasswordMax,
   updateMyProfileBodyNewPasswordMin,
 } from "@/api/schemas/users/users.zod";
 import { useServerForm } from "@/components/form";
 import { FormError } from "@/components/form-error/form-error";
 import { Section, SectionTitle } from "@/components/ui/section/section";
-import { silent } from "@/lib/mutations";
-import { requiredText } from "@/lib/validation";
+import { silentMutation } from "@/lib/mutations";
+import { optionalText, requiredText } from "@/lib/validation";
 
 interface FormValues {
   displayName: string;
@@ -30,7 +31,7 @@ export function ProfileForm({ profile }: Readonly<Props>) {
     .object({
       displayName: requiredText(t, updateMyProfileBodyDisplayNameMax),
       currentPassword: z.string(),
-      newPassword: z.string(),
+      newPassword: optionalText(t, updateMyProfileBodyNewPasswordMax),
     })
     .refine(
       (value) =>
@@ -45,15 +46,16 @@ export function ProfileForm({ profile }: Readonly<Props>) {
       path: ["currentPassword"],
     });
 
-  const updateMutation = useUpdateMyProfile(
-    silent({
+  const updateMutation = useUpdateMyProfile({
+    mutation: {
+      ...silentMutation,
       onSuccess: () => {
         toast.success(t("profile.updated"));
         form.setFieldValue("currentPassword", "");
         form.setFieldValue("newPassword", "");
       },
-    }),
-  );
+    },
+  });
 
   const defaultValues: FormValues = {
     displayName: profile.displayName ?? "",
@@ -88,6 +90,7 @@ export function ProfileForm({ profile }: Readonly<Props>) {
               id="profile-current-password"
               label={t("profile.currentPassword")}
               type="password"
+              autoComplete="current-password"
             />
           )}
         </form.Field>
@@ -98,6 +101,7 @@ export function ProfileForm({ profile }: Readonly<Props>) {
               id="profile-new-password"
               label={t("profile.newPassword")}
               type="password"
+              autoComplete="new-password"
             />
           )}
         </form.Field>

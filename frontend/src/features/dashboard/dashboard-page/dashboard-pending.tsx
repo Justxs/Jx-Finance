@@ -1,9 +1,9 @@
 import { useSearch } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import type { DashboardCard } from "@/api/generated/model";
-import { ShareRowsSkeleton } from "@/components/breakdown-list/share-row";
 import { ChartSkeleton } from "@/components/chart/chart-skeleton";
 import { PagePending } from "@/components/route-pending/route-pending";
+import { ShareRowsSkeleton } from "@/components/share-row/share-row";
 import { Section } from "@/components/ui/section/section";
 import {
   ButtonSkeleton,

@@ -2,10 +2,10 @@ import { act, fireEvent, render, renderHook, screen, waitFor } from "@testing-li
 import { toast } from "sonner";
 import { afterEach, expect, test, vi } from "vitest";
 import { Toaster } from "@/components/ui/sonner/sonner";
+import { ruleFromSuggestion } from "@/features/categorization-rules/rule-form/rule-summary";
 import { categories, suggestedRules } from "@/storybook/fixtures";
 import { createQueryWrapper } from "@/test/query";
 import { settingsFixture } from "@/test/settings";
-import { ruleFromSuggestion } from "../suggested-rules/suggested-rules";
 import { useSuggestedRuleToast } from "./use-suggested-rule-toast";
 
 const suggestion = suggestedRules[0]!;

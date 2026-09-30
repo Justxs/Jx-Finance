@@ -5,11 +5,11 @@ import { useTranslation } from "react-i18next";
 import { getAssetsQueryKey, useDeleteAsset, useAssetsSuspense } from "@/api/generated";
 import type { AssetResponse } from "@/api/generated/model";
 import { buttonVariants } from "@/components/ui/button/button";
+import { BalanceItemsSection } from "@/features/net-worth/balance-items-section/balance-items-section";
 import { useIsoDate, useMoney } from "@/hooks/use-formatters";
 import { optimisticRemoval } from "@/lib/optimistic";
 import { metaLine } from "@/lib/utils";
-import { HoldingsSection } from "../holdings-section";
-import { AssetForm, type AssetFormValues, assetFormValues } from "./asset-form";
+import { AssetForm } from "./asset-form";
 
 export function AssetsSection() {
   const { t } = useTranslation();
@@ -39,7 +39,7 @@ export function AssetsSection() {
   }
 
   return (
-    <HoldingsSection<AssetFormValues>
+    <BalanceItemsSection
       title={t("netWorth.assets")}
       addLabel={t("netWorth.addAsset")}
       emptyLabel={t("netWorth.noAssets")}
@@ -58,7 +58,7 @@ export function AssetsSection() {
         ),
         amount: Number(asset.value),
         currency: asset.currency,
-        values: assetFormValues(asset),
+        record: asset,
         action: historyLink(asset),
       }))}
       deleteMutation={deleteMutation}

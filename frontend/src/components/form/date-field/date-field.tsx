@@ -1,7 +1,7 @@
 import type { FieldWithValue } from "@tanstack/react-form";
 import type { ReactNode } from "react";
+import { FieldShell, fieldAria } from "@/components/form/field-shell/field-shell";
 import { DatePicker } from "@/components/ui/date-picker/date-picker";
-import { FieldShell, fieldAria } from "../field-shell/field-shell";
 
 interface Props {
   field: FieldWithValue<string>;

@@ -1,5 +1,10 @@
 import { useSearch } from "@tanstack/react-router";
 import type { ReactNode } from "react";
+import {
+  type SettingsSection,
+  settingsSections,
+} from "@/components/settings-layout/settings-layout";
+import { SettingsPending } from "@/components/settings-pending/settings-pending";
 import { FormGridSkeleton } from "@/components/ui/form-grid/form-grid";
 import { Rows } from "@/components/ui/rows/rows";
 import { Section } from "@/components/ui/section/section";
@@ -10,11 +15,8 @@ import {
   TextSkeleton,
 } from "@/components/ui/skeleton/skeleton";
 import { TableSkeleton } from "@/components/ui/table/table";
-import { SettingsPending } from "@/features/settings/settings-layout/settings-pending";
+import { featureGroups } from "@/features/settings/settings-form/features-fields";
 import { ALL_CURRENCIES } from "@/lib/currency";
-import { type SettingsSection, settingsSections } from "../settings-nav/settings-nav";
-
-const featureGroupSizes = { plan: 3, review: 5, ledger: 5 } as const;
 
 interface CheckboxFieldSkeletonProps {
   hintLines?: 1 | 2;
@@ -40,12 +42,12 @@ export function CheckboxFieldSkeleton({
 function FeaturesSkeleton() {
   return (
     <div className="grid gap-x-10 gap-y-6 md:grid-cols-3">
-      {Object.entries(featureGroupSizes).map(([group, size]) => (
-        <div key={group} className="min-w-0">
+      {featureGroups.map((group) => (
+        <div key={group.titleKey} className="min-w-0">
           <TextSkeleton size="sm" width="w-20" />
           <Rows className="mt-1">
-            {Array.from({ length: size }, (_, index) => (
-              <li key={index} className="py-2.5">
+            {group.features.map((feature) => (
+              <li key={feature} className="py-2.5">
                 <CheckboxFieldSkeleton />
               </li>
             ))}

@@ -3,8 +3,8 @@ import userEvent from "@testing-library/user-event";
 import { expect, test } from "vitest";
 import { z } from "zod";
 import { type CurrenciesResponse, Currency } from "@/api/generated/model";
+import { useAppForm } from "@/components/form/app-form";
 import { renderWithQuery } from "@/test/query";
-import { useAppForm } from "../app-form";
 
 const multiCurrency: CurrenciesResponse = {
   reportingCurrency: "eur",

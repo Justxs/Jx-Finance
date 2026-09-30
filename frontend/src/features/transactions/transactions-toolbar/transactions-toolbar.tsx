@@ -1,10 +1,12 @@
 import type { AccountResponse, CategoryResponse, TagResponse } from "@/api/generated/model";
 import { ExportMenu } from "@/components/export-menu/export-menu";
-import { SavedFilters } from "../saved-filters/saved-filters";
-import type { TransactionDraft } from "../transaction-form";
-import { TransactionTemplates } from "../transaction-templates/transaction-templates";
+import { SavedFilters } from "@/features/transactions/saved-filters/saved-filters";
+import type { TransactionDraft } from "@/features/transactions/transaction-form/transaction-draft";
+import { TransactionTemplates } from "@/features/transactions/transaction-templates/transaction-templates";
+import type { TransactionFilters } from "@/features/transactions/use-transaction-filters";
 
 interface Props {
+  filters: TransactionFilters;
   accounts: AccountResponse[];
   categories: CategoryResponse[];
   tags: TagResponse[];
@@ -14,6 +16,7 @@ interface Props {
 }
 
 export function TransactionsToolbar({
+  filters,
   accounts,
   categories,
   tags,
@@ -23,7 +26,7 @@ export function TransactionsToolbar({
 }: Readonly<Props>) {
   return (
     <div className="flex flex-wrap items-center gap-1">
-      <SavedFilters accounts={accounts} categories={categories} tags={tags} />
+      <SavedFilters filters={filters} accounts={accounts} categories={categories} tags={tags} />
       <TransactionTemplates onUse={onUseTemplate} />
       <ExportMenu csvUrl={exportUrl} pdfUrl={exportPdfUrl} />
     </div>

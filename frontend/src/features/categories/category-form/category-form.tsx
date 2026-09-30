@@ -8,11 +8,11 @@ import { FormError } from "@/components/form-error/form-error";
 import { SharingFields } from "@/components/sharing-fields/sharing-fields";
 import { FormGrid } from "@/components/ui/form-grid/form-grid";
 import { Label } from "@/components/ui/label/label";
-import { silent, upsert } from "@/lib/mutations";
+import { IconPicker } from "@/features/categories/icon-picker/icon-picker";
+import { silentMutation, upsert } from "@/lib/mutations";
 import { optionsOf } from "@/lib/options";
-import { refineSharing, requiredText, sharedHouseholdId, sharingShape } from "@/lib/validation";
+import { refineSharing, requiredText, sharingPayload, sharingShape } from "@/lib/validation";
 import { useSharingDefaults } from "@/stores/active-household-store";
-import { IconPicker } from "../icon-picker/icon-picker";
 
 interface FormValues {
   name: string;
@@ -29,9 +29,7 @@ interface Props {
 
 export function CategoryForm({ initial, onClose }: Readonly<Props>) {
   const { t } = useTranslation();
-  const households = useHouseholdsSuspense();
-  const householdList = households.data;
-  const sharing = useSharingDefaults(householdList, initial);
+  const sharing = useSharingDefaults(useHouseholdsSuspense().data, initial);
 
   const schema = refineSharing(
     z.object({
@@ -44,8 +42,8 @@ export function CategoryForm({ initial, onClose }: Readonly<Props>) {
   );
 
   const { create, update, pending, error } = upsert(
-    useCreateCategory(silent({ onSuccess: onClose })),
-    useUpdateCategory(silent({ onSuccess: onClose })),
+    useCreateCategory({ mutation: { ...silentMutation, onSuccess: onClose } }),
+    useUpdateCategory({ mutation: { ...silentMutation, onSuccess: onClose } }),
   );
 
   const defaultValues: FormValues = {
@@ -62,8 +60,7 @@ export function CategoryForm({ initial, onClose }: Readonly<Props>) {
       const data = {
         name: value.name.trim(),
         icon: value.icon,
-        scope: value.scope,
-        householdId: sharedHouseholdId(value),
+        ...sharingPayload(value),
       };
       return initial
         ? update({ id: initial.id, data })
@@ -102,22 +99,22 @@ export function CategoryForm({ initial, onClose }: Readonly<Props>) {
           )}
         </FormGrid>
 
-        {householdList.length > 0 ? (
-          <FormGrid>
-            <SharingFields
-              form={form}
-              fields={{ scope: "scope", householdId: "householdId" }}
-              idPrefix="category"
-              households={householdList}
-            />
-          </FormGrid>
-        ) : null}
+        <SharingFields
+          form={form}
+          fields={{ scope: "scope", householdId: "householdId" }}
+          idPrefix="category"
+          grid
+        />
 
         <form.Field name="icon">
           {(field) => (
             <div className="space-y-1.5">
-              <Label>{t("categories.icon")}</Label>
-              <IconPicker value={field.value} onChange={field.handleChange} />
+              <Label id="category-icon-label">{t("categories.icon")}</Label>
+              <IconPicker
+                aria-labelledby="category-icon-label"
+                value={field.value}
+                onChange={field.handleChange}
+              />
             </div>
           )}
         </form.Field>

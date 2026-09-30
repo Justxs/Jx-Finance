@@ -1,4 +1,4 @@
-import { Check, Info, Minus, Send, Trash2 } from "lucide-react";
+import { Info, Send, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -15,34 +15,20 @@ import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog/confirm-
 import { useServerForm } from "@/components/form";
 import { FormError } from "@/components/form-error/form-error";
 import { Button } from "@/components/ui/button/button";
-import { Checkbox } from "@/components/ui/checkbox/checkbox";
 import { Section, SectionTitle } from "@/components/ui/section/section";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table/table";
 import { useDateTime } from "@/hooks/use-formatters";
 import { useDiscordEnabled, useEmailEnabled } from "@/hooks/use-settings";
-import { silent } from "@/lib/mutations";
+import { silentMutation } from "@/lib/mutations";
+import { NotificationChannelsFields } from "./notification-channels-fields";
 
 const webhookPattern =
   /^https:\/\/(?:discord\.com|discordapp\.com|ptb\.discord\.com|canary\.discord\.com)\/api\/webhooks\/\d{1,20}\/[\w-]{1,100}$/iu;
-
-const kinds = Object.values(NotificationType);
 
 interface FormValues {
   email: NotificationType[];
   discord: NotificationType[];
   webhookUrl: string;
   discordEnabled: boolean;
-}
-
-function toggled(list: readonly NotificationType[], kind: NotificationType, on: boolean) {
-  return kinds.filter((entry) => (entry === kind ? on : list.includes(entry)));
 }
 
 function sameKinds(left: readonly NotificationType[], right: readonly NotificationType[]) {
@@ -61,14 +47,14 @@ export function NotificationsForm({ profile, discord }: Readonly<Props>) {
   const discordAllowed = useDiscordEnabled();
   const [confirmingRemove, setConfirmingRemove] = useState(false);
 
-  const emailMutation = useUpdateMyEmailNotifications(silent());
-  const discordMutation = useUpdateMyDiscord(silent());
-  const testMutation = useTestMyDiscord(
-    silent({ onSuccess: () => toast.success(t("profile.discord.testSent")) }),
-  );
-  const removeMutation = useDeleteMyDiscord(
-    silent({ onSuccess: () => toast.success(t("profile.discord.removed")) }),
-  );
+  const emailMutation = useUpdateMyEmailNotifications({ mutation: silentMutation });
+  const discordMutation = useUpdateMyDiscord({ mutation: silentMutation });
+  const testMutation = useTestMyDiscord({
+    mutation: { ...silentMutation, onSuccess: () => toast.success(t("profile.discord.testSent")) },
+  });
+  const removeMutation = useDeleteMyDiscord({
+    mutation: { ...silentMutation, onSuccess: () => toast.success(t("profile.discord.removed")) },
+  });
 
   const schema = z.object({
     email: z.array(z.enum(NotificationType)),
@@ -146,93 +132,14 @@ export function NotificationsForm({ profile, discord }: Readonly<Props>) {
                 (!discordAllowed && t("profile.notifications.discordNotAllowed")) ||
                 (!discord.hasWebhook && t("profile.notifications.discordNotConnected")) ||
                 (!discordEnabled && t("profile.notifications.discordPaused"));
-              const discordOff = Boolean(discordNote);
 
               return (
                 <>
-                  <form.Field name="email">
-                    {(emailField) => (
-                      <form.Field name="discord">
-                        {(discordField) => (
-                          <div className="-mx-3 mt-4 max-w-3xl">
-                            <Table className="table-fixed">
-                              <TableHeader>
-                                <TableRow>
-                                  <TableHead>{t("profile.notifications.kind")}</TableHead>
-                                  <TableHead className="w-16 text-center sm:w-24">
-                                    {t("profile.notifications.inApp")}
-                                  </TableHead>
-                                  <TableHead className="w-16 text-center sm:w-24">
-                                    {t("profile.notifications.email")}
-                                  </TableHead>
-                                  <TableHead className="w-16 text-center sm:w-24">
-                                    {t("profile.notifications.discord")}
-                                  </TableHead>
-                                </TableRow>
-                              </TableHeader>
-                              <TableBody>
-                                {kinds.map((kind) => {
-                                  const name = t(`notifications.kinds.${kind}`);
-                                  return (
-                                    <TableRow key={kind}>
-                                      <TableCell className="whitespace-normal">{name}</TableCell>
-                                      <TableCell>
-                                        {kind === NotificationType.monthlyDigest ? (
-                                          <Minus
-                                            role="img"
-                                            aria-label={t(
-                                              "profile.notifications.digestOnlyOutside",
-                                            )}
-                                            className="mx-auto size-4 text-muted-foreground"
-                                          />
-                                        ) : (
-                                          <Check
-                                            role="img"
-                                            aria-label={t("profile.notifications.alwaysInApp")}
-                                            className="mx-auto size-4 text-muted-foreground"
-                                          />
-                                        )}
-                                      </TableCell>
-                                      <TableCell>
-                                        <Checkbox
-                                          className="mx-auto"
-                                          aria-label={t("profile.notifications.byEmail", {
-                                            kind: name,
-                                          })}
-                                          disabled={emailOff}
-                                          checked={emailField.value.includes(kind)}
-                                          onCheckedChange={(on) =>
-                                            emailField.handleChange(
-                                              toggled(emailField.value, kind, on),
-                                            )
-                                          }
-                                        />
-                                      </TableCell>
-                                      <TableCell>
-                                        <Checkbox
-                                          className="mx-auto"
-                                          aria-label={t("profile.notifications.byDiscord", {
-                                            kind: name,
-                                          })}
-                                          disabled={discordOff}
-                                          checked={discordField.value.includes(kind)}
-                                          onCheckedChange={(on) =>
-                                            discordField.handleChange(
-                                              toggled(discordField.value, kind, on),
-                                            )
-                                          }
-                                        />
-                                      </TableCell>
-                                    </TableRow>
-                                  );
-                                })}
-                              </TableBody>
-                            </Table>
-                          </div>
-                        )}
-                      </form.Field>
-                    )}
-                  </form.Field>
+                  <NotificationChannelsFields
+                    form={form}
+                    fields={{ email: "email", discord: "discord" }}
+                    off={{ email: emailOff, discord: Boolean(discordNote) }}
+                  />
 
                   <ul className="mt-4 max-w-prose space-y-1.5 text-sm text-muted-foreground">
                     {[t("profile.notifications.digestNote"), emailNote, discordNote]

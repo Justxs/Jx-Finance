@@ -1,18 +1,13 @@
 import type {
   Currency,
   FlowType,
+  TransactionLineRequest,
   TransactionRefundOfResponse,
   TransactionResponse,
 } from "@/api/generated/model";
+import type { TransactionTemplateValues } from "@/features/transactions/transaction-views";
 import { normalizeMoney } from "@/lib/validation";
-import type { TransactionTemplateValues } from "@/stores/transaction-views";
 import type { TransactionFormValues } from "./transaction-schema";
-
-interface TransactionDraftLine {
-  categoryId: string | null;
-  amount: string;
-  description: string | null;
-}
 
 export interface TransactionDraft {
   accountId?: string;
@@ -24,7 +19,7 @@ export interface TransactionDraft {
   description?: string | null;
   isSplit?: boolean;
   tagIds?: string[];
-  lines?: TransactionDraftLine[] | null;
+  lines?: TransactionLineRequest[] | null;
   refundOf?: TransactionRefundOfResponse | null;
 }
 

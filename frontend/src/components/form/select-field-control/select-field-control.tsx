@@ -1,9 +1,10 @@
 import type { FieldWithValue } from "@tanstack/react-form";
 import type { ReactNode } from "react";
 import { ComboboxField } from "@/components/combobox-field/combobox-field";
-import { SelectField, type SelectOption } from "@/components/select-field/select-field";
+import { FieldShell, fieldAria } from "@/components/form/field-shell/field-shell";
+import { SelectField } from "@/components/select-field/select-field";
 import { SegmentedControl } from "@/components/ui/segmented-control/segmented-control";
-import { FieldShell, fieldAria } from "../field-shell/field-shell";
+import type { SelectOption } from "@/lib/options";
 
 interface Props {
   field: FieldWithValue<string>;

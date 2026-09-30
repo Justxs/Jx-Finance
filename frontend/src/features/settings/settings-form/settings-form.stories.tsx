@@ -1,6 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, fireEvent, fn, userEvent, waitFor } from "storybook/test";
-import { accounts, settings } from "@/storybook/fixtures";
+import { getUpdateSettingsMockHandler } from "@/api/generated/settings/settings.msw";
+import { accounts, serverErrorProblem, settings } from "@/storybook/fixtures";
+import { failWith, pending, withHandlers } from "@/storybook/handlers";
 import { SettingsForm } from "./settings-form";
 
 const meta = {
@@ -11,14 +13,15 @@ const meta = {
     section: "general",
     settings,
     accounts,
-    pending: false,
     exchangeRates: null,
-    onSubmit: fn((_values, onSaved: () => void) => onSaved()),
   },
 } satisfies Meta<typeof SettingsForm>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
+
+const instanceName = /installation name|sistemos pavadinimas/i;
+const save = /^(save|išsaugoti)$/i;
 
 export const General: Story = {};
 
@@ -33,45 +36,61 @@ export const Defaults: Story = { args: { section: "defaults" } };
 export const NoAccounts: Story = { args: { section: "defaults", accounts: [] } };
 
 export const Saving: Story = {
-  args: { pending: true, onSubmit: fn() },
+  parameters: withHandlers(getUpdateSettingsMockHandler(pending)),
   play: async ({ canvas }) => {
-    await fireEvent.change(
-      await canvas.findByLabelText(/installation name|sistemos pavadinimas/i),
-      {
-        target: { value: "Kazlauskai" },
-      },
-    );
+    await fireEvent.change(await canvas.findByLabelText(instanceName), {
+      target: { value: "Kazlauskai" },
+    });
+    await userEvent.click(await canvas.findByRole("button", { name: save }));
 
-    await expect(
-      await canvas.findByRole("button", { name: /discard changes|atmesti pakeitimus/i }),
-    ).toBeDisabled();
+    await waitFor(() =>
+      expect(
+        canvas.getByRole("button", { name: /discard changes|atmesti pakeitimus/i }),
+      ).toBeDisabled(),
+    );
   },
 };
 
+const sent = fn();
+
 export const SavesTrimmedName: Story = {
-  play: async ({ args, canvas }) => {
-    await fireEvent.change(
-      await canvas.findByLabelText(/installation name|sistemos pavadinimas/i),
-      {
-        target: { value: "  Kazlauskai  " },
-      },
-    );
-    await userEvent.click(await canvas.findByRole("button", { name: /^(save|išsaugoti)$/i }));
+  parameters: withHandlers(
+    getUpdateSettingsMockHandler(async ({ request }) => {
+      sent(await request.json());
+      return { ...settings, instanceName: "Kazlauskai" };
+    }),
+  ),
+  play: async ({ canvas }) => {
+    sent.mockClear();
+    await fireEvent.change(await canvas.findByLabelText(instanceName), {
+      target: { value: "  Kazlauskai  " },
+    });
+    await userEvent.click(await canvas.findByRole("button", { name: save }));
 
     await waitFor(() =>
-      expect(args.onSubmit).toHaveBeenCalledWith(
-        expect.objectContaining({ instanceName: "Kazlauskai" }),
-        expect.any(Function),
-      ),
+      expect(sent).toHaveBeenCalledWith(expect.objectContaining({ instanceName: "Kazlauskai" })),
     );
-    await expect(args.onSubmit).toHaveBeenCalledTimes(1);
+    await expect(sent).toHaveBeenCalledTimes(1);
     await waitFor(() => expect(canvas.queryByRole("status")).toBeNull());
   },
 };
 
+export const SaveFails: Story = {
+  parameters: withHandlers(getUpdateSettingsMockHandler(failWith(serverErrorProblem))),
+  play: async ({ canvas }) => {
+    await fireEvent.change(await canvas.findByLabelText(instanceName), {
+      target: { value: "Kazlauskai" },
+    });
+    await userEvent.click(await canvas.findByRole("button", { name: save }));
+
+    await expect(await canvas.findByRole("alert")).toBeInTheDocument();
+    await expect(canvas.getByRole("status")).toBeInTheDocument();
+  },
+};
+
 export const DiscardRestoresValues: Story = {
-  play: async ({ args, canvas }) => {
-    const name = await canvas.findByLabelText(/installation name|sistemos pavadinimas/i);
+  play: async ({ canvas }) => {
+    const name = await canvas.findByLabelText(instanceName);
     await fireEvent.change(name, { target: { value: "Something else" } });
     await userEvent.click(
       await canvas.findByRole("button", { name: /discard changes|atmesti pakeitimus/i }),
@@ -79,6 +98,5 @@ export const DiscardRestoresValues: Story = {
 
     await expect(name).toHaveValue(settings.instanceName ?? "");
     await expect(canvas.queryByRole("status")).toBeNull();
-    await expect(args.onSubmit).not.toHaveBeenCalled();
   },
 };

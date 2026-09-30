@@ -4,9 +4,11 @@ import { useAddMember } from "@/api/generated";
 import { HouseholdRole } from "@/api/generated/model";
 import { addMemberBodyEmailMax } from "@/api/schemas/households/households.zod";
 import { useServerForm } from "@/components/form";
+import { FormError } from "@/components/form-error/form-error";
 import { Button } from "@/components/ui/button/button";
+import { householdRoleOptions } from "@/features/households/household-roles";
+import { silentMutation } from "@/lib/mutations";
 import { requiredEmail } from "@/lib/validation";
-import { householdRoleOptions } from "../household-roles";
 
 interface FormValues {
   email: string;
@@ -26,7 +28,7 @@ export function AddMemberForm({ householdId, onClose }: Readonly<Props>) {
     role: z.enum(HouseholdRole),
   });
 
-  const addMutation = useAddMember({ mutation: { onSuccess: onClose } });
+  const addMutation = useAddMember({ mutation: { ...silentMutation, onSuccess: onClose } });
 
   const defaultValues: FormValues = { email: "", role: "member" };
 
@@ -42,7 +44,7 @@ export function AddMemberForm({ householdId, onClose }: Readonly<Props>) {
 
   return (
     <form.AppForm>
-      <form.FormShell className="flex flex-col gap-2 sm:flex-row sm:items-end">
+      <form.FormShell className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-end">
         <form.Field name="email">
           {(field) => (
             <field.TextField
@@ -72,6 +74,8 @@ export function AddMemberForm({ householdId, onClose }: Readonly<Props>) {
         <form.SubmitButton size="sm" pending={addMutation.isPending}>
           {t("households.addMember")}
         </form.SubmitButton>
+
+        <FormError error={addMutation.error} className="sm:basis-full" />
       </form.FormShell>
     </form.AppForm>
   );

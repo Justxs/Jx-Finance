@@ -7,9 +7,9 @@ import { Modal } from "@/components/modal";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { Button } from "@/components/ui/button/button";
 import { RowsSkeleton } from "@/components/ui/skeleton/skeleton";
-import { CsvMappingForm } from "../csv-mapping-form/csv-mapping-form";
-import { ImportSection } from "../import-section/import-section";
-import { ImportUploadFormSkeleton } from "../import-section/import-upload-form";
+import { CsvMappingForm } from "@/features/imports/csv-mapping-form/csv-mapping-form";
+import { ImportSection } from "@/features/imports/import-section/import-section";
+import { ImportUploadFormSkeleton } from "@/features/imports/import-section/import-upload-form";
 import { type ImportProvider, ImportProviders } from "./import-providers";
 
 interface PendingDiscard {

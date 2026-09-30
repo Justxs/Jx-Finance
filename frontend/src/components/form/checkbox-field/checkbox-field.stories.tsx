@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, userEvent } from "storybook/test";
-import { useAppForm } from "../app-form";
+import { useAppForm } from "@/components/form/app-form";
 
 interface DemoProps {
   hint?: string;

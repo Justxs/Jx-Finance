@@ -5,22 +5,25 @@ import type { DashboardCard as DashboardCardId } from "@/api/generated/model";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { Section } from "@/components/ui/section/section";
+import { AccountBalances } from "@/features/dashboard/account-balances/account-balances";
+import { BudgetSnapshot } from "@/features/dashboard/budget-snapshot/budget-snapshot";
+import { CashFlowCard } from "@/features/dashboard/cash-flow-card/cash-flow-card";
+import { CategoryBreakdownChart } from "@/features/dashboard/category-breakdown-chart/category-breakdown-chart";
+import {
+  cardSkeletons,
+  DashboardStatsSkeleton,
+} from "@/features/dashboard/dashboard-page/dashboard-pending";
+import { pastMonthEnd } from "@/features/dashboard/dashboard-queries";
+import { DashboardSection } from "@/features/dashboard/dashboard-section/dashboard-section";
+import { DashboardStats } from "@/features/dashboard/dashboard-stats/dashboard-stats";
+import { MonthlyTrendChart } from "@/features/dashboard/monthly-trend-chart/monthly-trend-chart";
+import { NetWorthMonth } from "@/features/dashboard/net-worth-month/net-worth-month";
+import { RecentTransactionsList } from "@/features/dashboard/recent-transactions-list/recent-transactions-list";
+import { SpendingPaceChart } from "@/features/dashboard/spending-pace-chart";
+import { UpcomingBills } from "@/features/dashboard/upcoming-bills/upcoming-bills";
 import { useTodayDate } from "@/hooks/use-settings";
 import type { Translate, TranslationKey } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
-import { AccountBalances } from "../account-balances/account-balances";
-import { BudgetSnapshot } from "../budget-snapshot/budget-snapshot";
-import { CashFlowCard } from "../cash-flow-card/cash-flow-card";
-import { CategoryBreakdownChart } from "../category-breakdown-chart/category-breakdown-chart";
-import { cardSkeletons, DashboardStatsSkeleton } from "../dashboard-page/dashboard-pending";
-import { pastMonthEnd } from "../dashboard-queries";
-import { DashboardSection } from "../dashboard-section/dashboard-section";
-import { DashboardStats } from "../dashboard-stats/dashboard-stats";
-import { MonthlyTrendChart } from "../monthly-trend-chart/monthly-trend-chart";
-import { NetWorthMonth } from "../net-worth-month/net-worth-month";
-import { RecentTransactionsList } from "../recent-transactions-list/recent-transactions-list";
-import { SpendingPaceChart } from "../spending-pace-chart";
-import { UpcomingBills } from "../upcoming-bills/upcoming-bills";
 
 const third = "lg:col-span-3 xl:col-span-4";
 const wide = "lg:col-span-6 xl:col-span-8";

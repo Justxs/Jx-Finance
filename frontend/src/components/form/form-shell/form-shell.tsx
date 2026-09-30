@@ -1,5 +1,5 @@
 import type { ComponentProps, ComponentType, SyntheticEvent } from "react";
-import { useFormContext } from "../form-context";
+import { useFormContext } from "@/components/form/form-context";
 
 type FormProps = Omit<ComponentProps<"form">, "onSubmit" | "noValidate">;
 

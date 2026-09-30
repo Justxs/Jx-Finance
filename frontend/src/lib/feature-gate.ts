@@ -1,9 +1,8 @@
 import type { QueryClient } from "@tanstack/react-query";
 import { redirect } from "@tanstack/react-router";
-import type { FeatureKey } from "@/hooks/use-settings";
-import { settingsQueryOptions } from "@/hooks/use-settings";
 import { checkIsAdmin } from "@/lib/auth-gate";
 import type { RouterContext } from "@/lib/route-prefetch";
+import { type FeatureKey, settingsQueryOptions } from "@/lib/settings";
 
 async function isFeatureEnabled(queryClient: QueryClient, feature: FeatureKey): Promise<boolean> {
   try {

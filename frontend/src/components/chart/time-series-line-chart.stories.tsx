@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { withWidth } from "@/storybook/decorators";
-import { CHART_COLOR_POSITIVE, CHART_COLOR_PRIMARY } from "./chart-theme";
+import { CHART_COLOR_MUTED, CHART_COLOR_POSITIVE, CHART_COLOR_PRIMARY } from "./chart-theme";
 import { type TimeSeriesLine, TimeSeriesLineChart } from "./time-series-line-chart";
 
 const valueSeries: TimeSeriesLine[] = [
@@ -13,7 +13,7 @@ const paceSeries: TimeSeriesLine[] = [
   {
     key: "previous",
     label: "Last month",
-    color: "var(--muted-foreground)",
+    color: CHART_COLOR_MUTED,
     shape: "line",
     comparison: true,
   },

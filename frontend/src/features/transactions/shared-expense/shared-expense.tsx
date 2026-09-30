@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Users } from "lucide-react";
-import { type ReactNode, useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   getAccountsSuspenseQueryOptions,
@@ -8,76 +8,68 @@ import {
   getMeQueryOptions,
 } from "@/api/generated";
 import type { TransactionResponse } from "@/api/generated/model";
-import { Modal } from "@/components/modal";
+import { EditModal } from "@/components/modal";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import type { RowAction } from "@/components/row-actions/row-actions";
 import { Button } from "@/components/ui/button/button";
 import { TextSkeleton } from "@/components/ui/skeleton/skeleton";
 import { Tooltip } from "@/components/ui/tooltip/tooltip";
 import { SplitExpenseForm } from "@/features/households/split-expense-dialog/split-expense-dialog";
+import {
+  isOptimistic,
+  isPurchase,
+} from "@/features/transactions/transaction-amount/transaction-row";
 import { useMoney } from "@/hooks/use-formatters";
 import { useFeature } from "@/hooks/use-settings";
 import { cn } from "@/lib/utils";
-import { isOptimistic, isPurchase } from "../transaction-amount";
 
-interface DialogProps {
-  transaction: TransactionResponse;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-}
-
-function SplitDialog({ transaction, open, onOpenChange }: Readonly<DialogProps>) {
-  const { t } = useTranslation();
-
-  return (
-    <Modal
-      open={open}
-      onOpenChange={onOpenChange}
-      title={transaction.sharedExpense ? t("households.split.edit") : t("households.split.action")}
-    >
-      <QueryBoundary fallback={<TextSkeleton size="sm" width="w-2/3" />}>
-        <SplitExpenseForm transaction={transaction} onClose={() => onOpenChange(false)} />
-      </QueryBoundary>
-    </Modal>
-  );
-}
-
-export function useSharedExpenseAction(transaction: TransactionResponse): {
-  action?: RowAction;
-  dialog: ReactNode;
-} {
+export function useSharedExpenseSplits() {
   const { t } = useTranslation();
   const enabled = useFeature("households");
   const households = useQuery({ ...getHouseholdsSuspenseQueryOptions(), enabled }).data ?? [];
   const accounts = useQuery({ ...getAccountsSuspenseQueryOptions(), enabled }).data ?? [];
   const me = useQuery({ ...getMeQueryOptions(), enabled }).data;
-  const [open, setOpen] = useState(false);
-  const account = accounts.find((item) => item.id === transaction.accountId);
+  const [splitting, setSplitting] = useState<TransactionResponse | null>(null);
 
-  if (households.length === 0 || !isPurchase(transaction) || !me || account?.ownerId !== me.id) {
-    return { dialog: null };
+  function title(transaction: TransactionResponse) {
+    return transaction.sharedExpense ? t("households.split.edit") : t("households.split.action");
   }
 
-  return {
-    action: {
+  function actionFor(transaction: TransactionResponse): RowAction | undefined {
+    const account = accounts.find((item) => item.id === transaction.accountId);
+    if (households.length === 0 || !isPurchase(transaction) || !me || account?.ownerId !== me.id) {
+      return undefined;
+    }
+    return {
       icon: Users,
-      label: transaction.sharedExpense ? t("households.split.edit") : t("households.split.action"),
+      label: title(transaction),
       disabled: isOptimistic(transaction),
-      onSelect: () => setOpen(true),
-    },
-    dialog: <SplitDialog transaction={transaction} open={open} onOpenChange={setOpen} />,
-  };
+      onSelect: () => setSplitting(transaction),
+    };
+  }
+
+  const dialog = (
+    <EditModal item={splitting} onClose={() => setSplitting(null)} title={title}>
+      {(transaction, close) => (
+        <QueryBoundary fallback={<TextSkeleton size="sm" width="w-2/3" />}>
+          <SplitExpenseForm transaction={transaction} onClose={close} />
+        </QueryBoundary>
+      )}
+    </EditModal>
+  );
+
+  return { actionFor, open: setSplitting, dialog };
 }
 
 interface MarkProps {
   transaction: TransactionResponse;
+  onUpdate: (transaction: TransactionResponse) => void;
   className?: string;
 }
 
-export function SharedExpenseMark({ transaction, className }: Readonly<MarkProps>) {
+export function SharedExpenseMark({ transaction, onUpdate, className }: Readonly<MarkProps>) {
   const { t } = useTranslation();
   const money = useMoney();
-  const [open, setOpen] = useState(false);
   const split = transaction.sharedExpense;
   if (!split) {
     return null;
@@ -100,11 +92,15 @@ export function SharedExpenseMark({ transaction, className }: Readonly<MarkProps
         <>
           <span className="sr-only">{t("households.split.differs")}</span>
           <Tooltip content={t("households.split.differs")}>
-            <Button type="button" variant="link" size="inline" onClick={() => setOpen(true)}>
+            <Button
+              type="button"
+              variant="link"
+              size="inline"
+              onClick={() => onUpdate(transaction)}
+            >
               {t("households.split.update")}
             </Button>
           </Tooltip>
-          <SplitDialog transaction={transaction} open={open} onOpenChange={setOpen} />
         </>
       ) : null}
     </span>

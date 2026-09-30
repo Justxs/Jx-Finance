@@ -1,11 +1,11 @@
 import { useTranslation } from "react-i18next";
 import { useHouseholdsSuspense } from "@/api/generated";
 import { CreateDialog } from "@/components/create-dialog/create-dialog";
+import { SettingsLayout } from "@/components/settings-layout/settings-layout";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { SectionHeader } from "@/components/ui/section/section";
-import { SettingsLayout } from "@/features/settings/settings-nav/settings-nav";
-import { CreateHouseholdForm } from "../create-household-form/create-household-form";
-import { HouseholdCard } from "../household-card/household-card";
+import { CreateHouseholdForm } from "@/features/households/create-household-form/create-household-form";
+import { HouseholdCard } from "@/features/households/household-card/household-card";
 
 export function HouseholdsPage() {
   const { t } = useTranslation();

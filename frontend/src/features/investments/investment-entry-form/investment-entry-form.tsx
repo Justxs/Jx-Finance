@@ -1,37 +1,42 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
+import {
+  useCreateInvestmentTransaction,
+  useSecuritiesSuspense,
+  useUpdateInvestmentTransaction,
+} from "@/api/generated";
 import type {
   AccountResponse,
-  CreateInvestmentTransactionRequest,
   Currency,
   InvestmentTransactionResponse,
-  InvestmentTransactionType,
   SecurityResponse,
 } from "@/api/generated/model";
 import { MoneyPairField, useServerForm } from "@/components/form";
 import { FormError } from "@/components/form-error/form-error";
 import { FormGrid } from "@/components/ui/form-grid/form-grid";
+import { type CashEffectInput, cashEffect } from "@/features/investments/cash-effect";
+import {
+  entryTypes,
+  isTrade,
+  requiresSecurity,
+  usesAmount,
+} from "@/features/investments/investment-types";
+import { SecurityModal } from "@/features/investments/security-form/security-modal";
 import { EMPTY_VALUE, useMoney } from "@/hooks/use-formatters";
 import { useToday } from "@/hooks/use-settings";
+import { silentMutation, upsert } from "@/lib/mutations";
 import { namedOptions, optionsOf } from "@/lib/options";
 import { INCOME_TONE } from "@/lib/tone";
 import { cn } from "@/lib/utils";
-import { type CashEffectInput, cashEffect } from "../cash-effect";
-import { entryTypes, isTrade, requiresSecurity, usesAmount } from "../investment-types";
-import { SecurityModal } from "../security-form";
 import { entryDefaults, entrySchema, toRequest } from "./entry-schema";
 import { SecurityPicker } from "./security-picker";
 
 interface Props {
   accounts: readonly AccountResponse[];
-  securities: readonly SecurityResponse[];
   accountId?: string;
-  initialType?: InvestmentTransactionType;
   editing?: InvestmentTransactionResponse;
-  pending: boolean;
-  serverError?: unknown;
-  onSubmit: (values: CreateInvestmentTransactionRequest) => Promise<unknown> | void;
-  onCancel?: () => void;
+  onClose: () => void;
 }
 
 interface CashEffectProps {
@@ -66,19 +71,24 @@ function CashEffectLine({ input, currency }: Readonly<CashEffectProps>) {
   );
 }
 
-export function InvestmentEntryForm({
-  accounts,
-  securities,
-  accountId,
-  initialType = "buy",
-  editing,
-  pending,
-  serverError,
-  onSubmit,
-  onCancel,
-}: Readonly<Props>) {
+export function InvestmentEntryForm({ accounts, accountId, editing, onClose }: Readonly<Props>) {
   const { t } = useTranslation();
   const today = useToday();
+  const securities = useSecuritiesSuspense().data;
+
+  function closeWith(message: string) {
+    toast.success(message);
+    onClose();
+  }
+
+  const { create, update, pending, error } = upsert(
+    useCreateInvestmentTransaction({
+      mutation: { ...silentMutation, onSuccess: () => closeWith(t("investments.entry.saved")) },
+    }),
+    useUpdateInvestmentTransaction({
+      mutation: { ...silentMutation, onSuccess: () => closeWith(t("investments.entry.corrected")) },
+    }),
+  );
   const [securityOpen, setSecurityOpen] = useState(false);
   const [created, setCreated] = useState<SecurityResponse[]>([]);
 
@@ -86,9 +96,12 @@ export function InvestmentEntryForm({
   const allSecurities = [...securities, ...created.filter((item) => !knownIds.has(item.id))];
 
   const form = useServerForm({
-    defaultValues: entryDefaults({ accounts, accountId, initialType, editing, today }),
+    defaultValues: entryDefaults({ accounts, accountId, editing, today }),
     schema: entrySchema(t),
-    submit: (value) => onSubmit(toRequest(value)),
+    submit: (value) => {
+      const data = toRequest(value);
+      return editing ? update({ id: editing.id, data }) : create({ data });
+    },
   });
 
   function securityCurrency(securityId: string) {
@@ -258,13 +271,13 @@ export function InvestmentEntryForm({
           )}
         </form.Subscribe>
 
-        <FormError error={serverError} />
+        <FormError error={error} />
 
         <form.FormActions
           span
           pending={pending}
           submitLabel={editing ? t("actions.save") : t("investments.entry.submit")}
-          onCancel={onCancel}
+          onCancel={onClose}
         />
 
         <SecurityModal

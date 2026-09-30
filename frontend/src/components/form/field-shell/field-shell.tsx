@@ -2,6 +2,7 @@ import type { AnyFieldApi } from "@tanstack/react-form";
 import type { ReactNode } from "react";
 import { FieldError, Hint } from "@/components/ui/field-error";
 import { Label } from "@/components/ui/label/label";
+import { shellAria } from "@/lib/field-aria";
 import { cn } from "@/lib/utils";
 
 interface Props {
@@ -15,24 +16,10 @@ interface Props {
   children: ReactNode;
 }
 
-interface ShellAriaOptions {
-  id: string;
-  hint?: ReactNode;
-  error?: string;
-}
-
 interface FieldAriaOptions {
   id: string;
   hint?: ReactNode;
   touchedOnly?: boolean;
-}
-
-export function shellAria({ id, hint, error }: ShellAriaOptions) {
-  const describedBy =
-    [hint ? `${id}-hint` : null, error ? `${id}-error` : null].filter(Boolean).join(" ") ||
-    undefined;
-
-  return { "aria-invalid": Boolean(error), "aria-describedby": describedBy };
 }
 
 export function fieldAria(field: AnyFieldApi, { id, hint, touchedOnly }: FieldAriaOptions) {

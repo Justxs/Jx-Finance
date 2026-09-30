@@ -1,21 +1,23 @@
-import { History, Plus, ReceiptText } from "lucide-react";
+import { History, ReceiptText } from "lucide-react";
 import { useState, useDeferredValue } from "react";
 import { useTranslation } from "react-i18next";
 import { useDeleteHousehold, useRemoveMember } from "@/api/generated";
 import type { HouseholdResponse } from "@/api/generated/model";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog/confirm-delete-dialog";
+import { CreateDialog } from "@/components/create-dialog/create-dialog";
 import { Modal } from "@/components/modal";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { RowActions } from "@/components/row-actions/row-actions";
 import { Button } from "@/components/ui/button/button";
 import { Rows } from "@/components/ui/rows/rows";
 import { Section, SectionHeader } from "@/components/ui/section/section";
-import { useConfirmedDelete } from "@/hooks/use-confirmed-delete";
+import { CreateHouseholdForm } from "@/features/households/create-household-form/create-household-form";
+import { HouseholdActivity } from "@/features/households/household-activity/household-activity";
+import { SettleUpSection, SettleUpSkeleton } from "@/features/households/settle-up/settle-up";
+import { SharedExpenses } from "@/features/households/shared-expenses/shared-expenses";
+import { childDelete, useConfirmedDelete } from "@/hooks/use-confirmed-delete";
+import { userName } from "@/lib/user-name";
 import { useActiveHouseholdId } from "@/stores/active-household-store";
-import { CreateHouseholdForm } from "../create-household-form/create-household-form";
-import { HouseholdActivity } from "../household-activity/household-activity";
-import { SettleUpSection, SettleUpSkeleton } from "../settle-up/settle-up";
-import { SharedExpenses } from "../shared-expenses/shared-expenses";
 import { AddMemberForm } from "./add-member-form";
 import { MemberRow } from "./member-row";
 
@@ -27,7 +29,6 @@ export function HouseholdCard({ household }: Readonly<Props>) {
   const members = useDeferredValue(household.members);
   const { t } = useTranslation();
   const [renaming, setRenaming] = useState(false);
-  const [addMemberOpen, setAddMemberOpen] = useState(false);
   const [activityOpen, setActivityOpen] = useState(false);
   const [sharedOpen, setSharedOpen] = useState(false);
   const activeHouseholdId = useActiveHouseholdId();
@@ -37,7 +38,15 @@ export function HouseholdCard({ household }: Readonly<Props>) {
 
   const deleteMutation = useDeleteHousehold();
   const remove = useConfirmedDelete(deleteMutation, [household], (item) => item.name, "household");
-  const removeMutation = useRemoveMember();
+  const removeMember = useConfirmedDelete(
+    childDelete(
+      useRemoveMember(),
+      (userId) => ({ id: household.id, userId }),
+      (variables) => variables.userId,
+    ),
+    members.map((member) => ({ ...member, id: member.userId })),
+    userName,
+  );
 
   return (
     <Section>
@@ -56,17 +65,15 @@ export function HouseholdCard({ household }: Readonly<Props>) {
       </Modal>
 
       <Rows>
-        {members?.map((member) => (
+        {members.map((member) => (
           <MemberRow
             key={member.userId}
             householdId={household.id}
             member={member}
             isOwnerView={isOwner}
-            removePending={
-              removeMutation.isPending && removeMutation.variables?.userId === member.userId
-            }
-            removeDisabled={removeMutation.isPending}
-            onRemove={() => removeMutation.mutate({ id: household.id, userId: member.userId })}
+            removePending={removeMember.pendingId === member.userId}
+            removeDisabled={removeMember.busy}
+            onRemove={() => removeMember.request(member.userId)}
           />
         ))}
       </Rows>
@@ -103,10 +110,13 @@ export function HouseholdCard({ household }: Readonly<Props>) {
           </Button>
         ) : null}
         {isOwner ? (
-          <Button variant="outline" size="sm" onClick={() => setAddMemberOpen(true)}>
-            <Plus />
-            {t("households.addMember")}
-          </Button>
+          <CreateDialog
+            secondary
+            label={t("households.addMember")}
+            title={t("households.addMember")}
+          >
+            {(close) => <AddMemberForm householdId={household.id} onClose={close} />}
+          </CreateDialog>
         ) : null}
       </div>
 
@@ -122,10 +132,13 @@ export function HouseholdCard({ household }: Readonly<Props>) {
         </div>
       ) : null}
 
-      <Modal open={addMemberOpen} onOpenChange={setAddMemberOpen} title={t("households.addMember")}>
-        <AddMemberForm householdId={household.id} onClose={() => setAddMemberOpen(false)} />
-      </Modal>
       <ConfirmDeleteDialog {...remove.dialogProps} />
+      <ConfirmDeleteDialog
+        {...removeMember.dialogProps}
+        title={t("households.removeMember.title")}
+        description={t("households.removeMember.description")}
+        confirmLabel={t("households.removeMember.confirm")}
+      />
     </Section>
   );
 }

@@ -33,7 +33,7 @@ test("empty repayment fields are sent as null and a comma is read as a decimal p
     firstPaymentDate: "",
     termMonths: " ",
     monthlyPayment: "",
-    amortizationType: "unknown",
+    amortizationType: "linear",
     tracksPayments: true,
   });
 
@@ -47,7 +47,7 @@ test("empty repayment fields are sent as null and a comma is read as a decimal p
     firstPaymentDate: null,
     termMonths: null,
     monthlyPayment: null,
-    amortizationType: "annuity",
+    amortizationType: "linear",
     tracksPayments: true,
   });
 });

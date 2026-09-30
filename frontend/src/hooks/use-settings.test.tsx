@@ -1,16 +1,9 @@
 import { renderHook } from "@testing-library/react";
 import { afterEach, describe, expect, test, vi } from "vitest";
+import { publicSettingsQueryOptions, settingsQueryOptions } from "@/lib/settings";
 import { createQueryWrapper } from "@/test/query";
 import { settingsFixture } from "@/test/settings";
-import {
-  publicSettingsQueryOptions,
-  settingsQueryOptions,
-  useFeature,
-  useSettings,
-  useToday,
-  useTodayDate,
-  useWeekStartsOn,
-} from "./use-settings";
+import { useFeature, useSettings, useToday, useTodayDate, useWeekStartsOn } from "./use-settings";
 
 afterEach(() => {
   vi.useRealTimers();

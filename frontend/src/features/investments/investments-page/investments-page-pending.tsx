@@ -15,6 +15,7 @@ import {
   rowWidth,
 } from "@/components/ui/skeleton/skeleton";
 import { TableSkeleton } from "@/components/ui/table/table";
+import { silentQuery } from "@/lib/query-client";
 
 interface TableSectionProps {
   rows: number;
@@ -135,8 +136,7 @@ export function InvestmentsPending() {
   const accountCount = useQuery({
     ...getAccountsSuspenseQueryOptions(),
     select: (accounts) => accounts.length,
-    throwOnError: false,
-    meta: { silent: true },
+    ...silentQuery,
   }).data;
 
   return (

@@ -1,28 +1,23 @@
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
+import { useSetSecurityPrice } from "@/api/generated";
 import type { SecurityResponse } from "@/api/generated/model";
 import { useServerForm } from "@/components/form";
 import { FormError } from "@/components/form-error/form-error";
 import { FormGrid } from "@/components/ui/form-grid/form-grid";
 import { useToday } from "@/hooks/use-settings";
+import { silentMutation } from "@/lib/mutations";
 import { quantity, requiredValue } from "@/lib/validation";
-
-interface PriceFormValues {
-  lastPrice: string;
-  lastPriceDate: string;
-}
 
 interface Props {
   security: SecurityResponse;
-  pending: boolean;
-  error?: unknown;
-  onSubmit: (values: PriceFormValues) => Promise<unknown> | void;
-  onCancel: () => void;
+  onClose: () => void;
 }
 
-export function PriceForm({ security, pending, error, onSubmit, onCancel }: Readonly<Props>) {
+export function PriceForm({ security, onClose }: Readonly<Props>) {
   const { t } = useTranslation();
   const today = useToday();
+  const mutation = useSetSecurityPrice({ mutation: { ...silentMutation, onSuccess: onClose } });
 
   const schema = z.object({
     lastPrice: quantity(t, "investments.validation.price"),
@@ -32,15 +27,10 @@ export function PriceForm({ security, pending, error, onSubmit, onCancel }: Read
     ),
   });
 
-  const defaultValues: PriceFormValues = {
-    lastPrice: security.lastPrice ?? "",
-    lastPriceDate: today,
-  };
-
   const form = useServerForm({
-    defaultValues,
+    defaultValues: { lastPrice: security.lastPrice ?? "", lastPriceDate: today },
     schema,
-    submit: (value) => onSubmit(value),
+    submit: (value) => mutation.mutateAsync({ id: security.id, data: value }),
   });
 
   return (
@@ -62,13 +52,13 @@ export function PriceForm({ security, pending, error, onSubmit, onCancel }: Read
           {(field) => <field.DateField id="price-form-date" label={t("investments.price.date")} />}
         </form.Field>
 
-        <FormError error={error} />
+        <FormError error={mutation.error} />
 
         <form.FormActions
           span
-          pending={pending}
+          pending={mutation.isPending}
           submitLabel={t("actions.save")}
-          onCancel={onCancel}
+          onCancel={onClose}
         />
       </form.FormShell>
     </form.AppForm>

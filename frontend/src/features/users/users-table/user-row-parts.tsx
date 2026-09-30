@@ -4,10 +4,11 @@ import type { UserProfileResponse } from "@/api/generated/model";
 import { SelectField } from "@/components/select-field/select-field";
 import { Button } from "@/components/ui/button/button";
 import { Tag } from "@/components/ui/tag/tag";
-import { roleOptions, userName } from "../user-queries";
+import { roleOptions } from "@/features/users/user-queries";
+import { userName } from "@/lib/user-name";
 
 export interface UserRowControls {
-  currentUserId: string | undefined;
+  currentUserId: string;
   onRoleChange: (id: string, role: string) => void;
   rolePendingId: string | null;
   onDeactivate: (id: string) => void;

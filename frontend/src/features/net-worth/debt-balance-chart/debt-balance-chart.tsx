@@ -8,7 +8,7 @@ import {
 } from "@/components/chart";
 import { TimeSeriesLineChart } from "@/components/chart/time-series-line-chart";
 
-export interface TrackedBalance {
+interface TrackedBalance {
   from: string;
   until: string;
   opening: string;

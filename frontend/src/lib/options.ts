@@ -1,18 +1,22 @@
+import type { ReactNode } from "react";
+
 interface Named {
   id: string;
   name: string;
 }
 
-export interface NamedOption {
-  value: string;
-  label: string;
+export interface SelectOption<T extends string = string, L extends ReactNode = ReactNode> {
+  value: T;
+  label: L;
+  disabled?: boolean;
+  group?: string;
 }
 
 export function namedOptions(
   items: readonly Named[],
   blankLabel?: string,
   blankValue = "",
-): NamedOption[] {
+): SelectOption<string, string>[] {
   const options = items.map((item) => ({ value: item.id, label: item.name }));
 
   return blankLabel === undefined
@@ -29,10 +33,10 @@ export function byId<T extends { id: string }>(items: readonly T[] | undefined) 
 }
 
 export function withMissingOption(
-  options: readonly NamedOption[],
+  options: readonly SelectOption<string, string>[],
   id: string | null | undefined,
   label: string,
-): NamedOption[] {
+): SelectOption<string, string>[] {
   if (!id || options.some((option) => option.value === id)) {
     return [...options];
   }

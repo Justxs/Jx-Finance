@@ -3,14 +3,9 @@ import type {
   ReportSummaryParams,
   TransactionsParams,
 } from "@/api/generated/model";
-import { monthDate, monthKeyOfIso } from "@/features/month-close/month-key";
-import { monthBounds, toIso } from "@/lib/calendar";
+import { currentMonthKey, monthBounds, monthDate } from "@/lib/calendar";
 
 const PACE_BASELINE_MONTHS = 3;
-
-export function currentMonthKey(today: Date) {
-  return monthKeyOfIso(toIso(today));
-}
 
 export function monthlyTrendParams(month: string): MonthlyTrendParams {
   return { months: 6, month };

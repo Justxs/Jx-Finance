@@ -1,12 +1,11 @@
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
 import { useEnableTwoFactor } from "@/api/generated";
-import type { EnableTwoFactorResponse } from "@/api/generated/model";
 import { useServerForm } from "@/components/form";
 import { FormError } from "@/components/form-error/form-error";
 import { Button } from "@/components/ui/button/button";
 import { Section, SectionTitle } from "@/components/ui/section/section";
-import { silent } from "@/lib/mutations";
+import { silentMutation } from "@/lib/mutations";
 
 interface Props {
   qrDataUrl: string;
@@ -18,11 +17,9 @@ interface Props {
 export function TwoFactorSetup({ qrDataUrl, sharedKey, onEnabled, onCancel }: Readonly<Props>) {
   const { t } = useTranslation();
 
-  const enableMutation = useEnableTwoFactor(
-    silent({
-      onSuccess: (data: EnableTwoFactorResponse) => onEnabled(data.recoveryCodes ?? []),
-    }),
-  );
+  const enableMutation = useEnableTwoFactor({
+    mutation: { ...silentMutation, onSuccess: (data) => onEnabled(data.recoveryCodes ?? []) },
+  });
 
   const form = useServerForm({
     defaultValues: { code: "" },

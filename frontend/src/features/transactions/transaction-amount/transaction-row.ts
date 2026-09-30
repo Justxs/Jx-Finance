@@ -37,3 +37,5 @@ export function transactionName(
 ) {
   return row.description || transactionCategoryLabel(row, categoryById, t);
 }
+
+export const UNCATEGORIZED_OPTION = "none";

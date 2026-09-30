@@ -1,6 +1,8 @@
 import { useSearch } from "@tanstack/react-router";
 import { NamedRowsSkeleton } from "@/components/named-row/named-row";
-import { useNavSections } from "@/components/section-nav/section-nav";
+import { pickSection } from "@/components/section-nav/section-nav";
+import { profileSections } from "@/components/settings-layout/settings-layout";
+import { SettingsPending } from "@/components/settings-pending/settings-pending";
 import { Section } from "@/components/ui/section/section";
 import {
   ButtonSkeleton,
@@ -10,10 +12,7 @@ import {
   rowWidth,
 } from "@/components/ui/skeleton/skeleton";
 import { ActionRowsSkeleton } from "@/features/profile/action-row/action-row";
-import { SettingsPending } from "@/features/settings/settings-layout/settings-pending";
-import { profileSections } from "@/features/settings/settings-nav/settings-nav";
-
-const NOTIFICATION_KINDS = 7;
+import { notificationKinds } from "@/features/profile/notifications-section/notification-channels-fields";
 
 function FieldSkeleton() {
   return (
@@ -81,8 +80,8 @@ export function NotificationsSkeleton() {
             <TextSkeleton size="xs" className="w-16 justify-center sm:w-24" width="w-10" />
             <TextSkeleton size="xs" className="w-16 justify-center sm:w-24" width="w-10" />
           </div>
-          {Array.from({ length: NOTIFICATION_KINDS }, (_, index) => (
-            <div key={index} className="flex items-center gap-3 border-b py-2.5 last:border-b-0">
+          {notificationKinds.map((kind, index) => (
+            <div key={kind} className="flex items-center gap-3 border-b py-2.5 last:border-b-0">
               <TextSkeleton size="sm" className="flex-1" width={rowWidth(index)} />
               <Skeleton className="mx-6 size-4 sm:mx-10" />
               <Skeleton className="mx-6 size-4 sm:mx-10" />
@@ -148,7 +147,7 @@ function ProfileSectionSkeleton({
 
 export function ProfilePending() {
   const requested = useSearch({ strict: false, select: (search) => search.section });
-  const { section } = useNavSections(
+  const section = pickSection(
     profileSections,
     profileSections.find((item) => item === requested),
     "account",

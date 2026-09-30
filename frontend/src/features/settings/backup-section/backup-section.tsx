@@ -4,16 +4,16 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { useBackupsSuspense, useDeleteBackup, useRestoreBackup } from "@/api/generated";
-import type { BackupResponse, RestoreBackupResponse } from "@/api/generated/model";
+import type { BackupResponse } from "@/api/generated/model";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog/confirm-delete-dialog";
 import { EditModal } from "@/components/modal";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { TitledSection } from "@/components/ui/section/section";
+import { BackupListSkeleton } from "@/features/settings/settings-page/settings-page-pending";
 import { useConfirmedDelete } from "@/hooks/use-confirmed-delete";
 import { useDateTime } from "@/hooks/use-formatters";
 import { endSession } from "@/lib/auth-gate";
-import { notify, pendingId, silent } from "@/lib/mutations";
-import { BackupListSkeleton } from "../settings-page/settings-page-pending";
+import { notify, pendingId, silentMutation } from "@/lib/mutations";
 import { BackupNoteForm } from "./backup-note-form";
 import { BackupUploadForm } from "./backup-upload-form";
 import { BackupsTable } from "./backups-table";
@@ -25,25 +25,25 @@ function BackupList() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const formatDateTime = useDateTime();
-  const backups = useBackupsSuspense();
-  const list = backups.data ?? [];
+  const list = useBackupsSuspense().data;
   const [editing, setEditing] = useState<BackupResponse | null>(null);
   const [restoring, setRestoring] = useState<BackupResponse | null>(null);
 
-  const deleteMutation = useDeleteBackup(notify(t("backup.deleted")));
+  const deleteMutation = useDeleteBackup({ mutation: notify(t("backup.deleted")) });
 
   const remove = useConfirmedDelete(deleteMutation, list, (backup) =>
     formatDateTime(backup.createdAt),
   );
 
-  const restoreMutation = useRestoreBackup(
-    silent({
-      onSuccess: (restored: RestoreBackupResponse) => {
+  const restoreMutation = useRestoreBackup({
+    mutation: {
+      ...silentMutation,
+      onSuccess: (restored) => {
         toast.success(t("backup.restored", { date: formatDateTime(restored.createdAt) }));
         endSession(queryClient, navigate);
       },
-    }),
-  );
+    },
+  });
 
   const busyId = pendingId(restoreMutation) ?? pendingId(deleteMutation);
 

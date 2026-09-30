@@ -157,6 +157,9 @@ export function refineSharing<TSchema extends z.ZodType<SharingValues>>(
   });
 }
 
-export function sharedHouseholdId(value: SharingValues) {
-  return value.scope === "shared" ? value.householdId : null;
+export function sharingPayload(value: SharingValues) {
+  return {
+    scope: value.scope,
+    householdId: value.scope === "shared" ? value.householdId : null,
+  };
 }

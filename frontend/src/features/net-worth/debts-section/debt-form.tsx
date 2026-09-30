@@ -9,8 +9,9 @@ import {
 import { useServerForm } from "@/components/form";
 import { FormError } from "@/components/form-error/form-error";
 import { FormGrid } from "@/components/ui/form-grid/form-grid";
+import type { BalanceItemFormProps } from "@/features/net-worth/balance-items-section/balance-items-section";
 import { useToday } from "@/hooks/use-settings";
-import { silent, upsert } from "@/lib/mutations";
+import { silentMutation, upsert } from "@/lib/mutations";
 import { optionsOf } from "@/lib/options";
 import {
   isRate,
@@ -20,15 +21,14 @@ import {
   optionalWholeNumberBetween,
   requiredText,
 } from "@/lib/validation";
-import type { HoldingFormProps } from "../holdings-section";
 
 const debtTypes = Object.values(DebtType);
 const amortizationTypes = Object.values(AmortizationType);
 const TERM_MIN = 1;
 
-export interface DebtFormValues {
+interface DebtFormValues {
   name: string;
-  type: string;
+  type: DebtType;
   amount: string;
   interestRate: string;
   asOf: string;
@@ -36,7 +36,7 @@ export interface DebtFormValues {
   firstPaymentDate: string;
   termMonths: string;
   monthlyPayment: string;
-  amortizationType: string;
+  amortizationType: AmortizationType;
   tracksPayments: boolean;
 }
 
@@ -64,7 +64,7 @@ export function debtRequest(values: DebtFormValues) {
 
   return {
     name: values.name.trim(),
-    type: debtTypes.find((type) => type === values.type) ?? DebtType.other,
+    type: values.type,
     outstandingAmount: normalizeMoney(values.amount),
     interestRate: rate ? Number(rate) : null,
     asOf: values.asOf,
@@ -72,26 +72,24 @@ export function debtRequest(values: DebtFormValues) {
     firstPaymentDate: values.firstPaymentDate || null,
     termMonths: termMonths ? Number(termMonths) : null,
     monthlyPayment: monthlyPayment || null,
-    amortizationType:
-      amortizationTypes.find((type) => type === values.amortizationType) ??
-      AmortizationType.annuity,
+    amortizationType: values.amortizationType,
     tracksPayments: values.tracksPayments,
   };
 }
 
-export function DebtForm({ editing, onClose }: Readonly<HoldingFormProps<DebtFormValues>>) {
+export function DebtForm({ editing, onClose }: Readonly<BalanceItemFormProps<DebtResponse>>) {
   const { t } = useTranslation();
   const today = useToday();
   const { create, update, pending, error } = upsert(
-    useCreateDebt(silent({ onSuccess: onClose })),
-    useUpdateDebt(silent({ onSuccess: onClose })),
+    useCreateDebt({ mutation: { ...silentMutation, onSuccess: onClose } }),
+    useUpdateDebt({ mutation: { ...silentMutation, onSuccess: onClose } }),
   );
   const idPrefix = editing ? "debt-edit" : "debt";
 
   const schema = z
     .object({
       name: requiredText(t, createDebtBodyNameMax),
-      type: z.string(),
+      type: z.enum(DebtType),
       amount: money(t),
       interestRate: z.string().refine(isRate, t("validation.rate")),
       asOf: z.string(),
@@ -99,7 +97,7 @@ export function DebtForm({ editing, onClose }: Readonly<HoldingFormProps<DebtFor
       firstPaymentDate: z.string(),
       termMonths: optionalWholeNumberBetween(t, TERM_MIN, createDebtBodyTermMonthsMax),
       monthlyPayment: optionalPositiveMoney(t),
-      amortizationType: z.string(),
+      amortizationType: z.enum(AmortizationType),
       tracksPayments: z.boolean(),
     })
     .refine((value) => !(value.termMonths.trim() && value.monthlyPayment.trim()), {
@@ -111,19 +109,21 @@ export function DebtForm({ editing, onClose }: Readonly<HoldingFormProps<DebtFor
       { message: t("netWorth.repayment.linearNeedsTerm"), path: ["monthlyPayment"] },
     );
 
-  const defaultValues: DebtFormValues = editing?.values ?? {
-    name: "",
-    type: DebtType.other,
-    amount: "",
-    interestRate: "",
-    asOf: today,
-    loanAmount: "",
-    firstPaymentDate: "",
-    termMonths: "",
-    monthlyPayment: "",
-    amortizationType: AmortizationType.annuity,
-    tracksPayments: false,
-  };
+  const defaultValues: DebtFormValues = editing
+    ? debtFormValues(editing)
+    : {
+        name: "",
+        type: DebtType.other,
+        amount: "",
+        interestRate: "",
+        asOf: today,
+        loanAmount: "",
+        firstPaymentDate: "",
+        termMonths: "",
+        monthlyPayment: "",
+        amortizationType: AmortizationType.annuity,
+        tracksPayments: false,
+      };
 
   const form = useServerForm({
     defaultValues,

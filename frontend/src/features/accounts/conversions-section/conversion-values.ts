@@ -1,18 +1,10 @@
-import type { AccountResponse, ConversionResponse, Currency } from "@/api/generated/model";
-import { heldCurrencies } from "../held-currencies";
-
-interface ConversionFormValues {
-  accountId: string;
-  fromAmount: string;
-  fromCurrency: Currency;
-  toAmount: string;
-  toCurrency: Currency;
-  date: string;
-  description: string | null;
-  feeAmount: string | null;
-  feeCurrency: Currency | null;
-  feeCategoryId: string | null;
-}
+import type {
+  AccountResponse,
+  ConversionResponse,
+  CreateConversionRequest,
+  Currency,
+} from "@/api/generated/model";
+import { heldCurrencies } from "@/features/accounts/held-currencies";
 
 export interface ConversionFieldValues {
   accountId: string;
@@ -37,7 +29,7 @@ export function otherCurrency(
   return held ?? usable.find((currency) => currency !== sold) ?? sold;
 }
 
-export function buildValues(value: ConversionFieldValues): ConversionFormValues {
+export function buildValues(value: ConversionFieldValues): CreateConversionRequest {
   const hasFee = value.feeAmount.trim() !== "";
 
   return {

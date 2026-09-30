@@ -11,40 +11,34 @@ const known = {
   tagIds: new Set(["tag-1", "tag-2"]),
 };
 
+const accountId = "33333333-0000-4000-8000-000000000001";
+
 describe("transactionFilterParams", () => {
   test("keeps the filter and drops the page, the sort and its direction", () => {
-    expect(
-      transactionFilterParams({
-        page: 3,
-        search: "lidl",
-        accountId: "account-1",
-        sort: "amount",
-        direction: "desc",
-      }),
-    ).toEqual({
+    const view = {
+      page: 3,
       search: "lidl",
-      payee: undefined,
-      accountId: "account-1",
-      categoryId: undefined,
-      tagIds: undefined,
-      type: undefined,
-      dateFrom: undefined,
-      dateTo: undefined,
-    });
+      accountId,
+      sort: "amount" as const,
+      direction: "desc" as const,
+      new: true,
+    };
+
+    expect(transactionFilterParams(view)).toEqual({ search: "lidl", accountId });
   });
 });
 
 describe("isEmptyFilter", () => {
   test("a view with nothing chosen is empty", () => {
-    expect(isEmptyFilter(transactionFilterParams({ page: 1 }))).toBe(true);
+    expect(isEmptyFilter(transactionFilterParams({}))).toBe(true);
   });
 
   test("a payee alone is a filter", () => {
-    expect(isEmptyFilter(transactionFilterParams({ page: 1, payee: "maxima lt uab" }))).toBe(false);
+    expect(isEmptyFilter(transactionFilterParams({ payee: "maxima lt uab" }))).toBe(false);
   });
 
   test("one chosen value is enough", () => {
-    expect(isEmptyFilter(transactionFilterParams({ page: 1, type: "income" }))).toBe(false);
+    expect(isEmptyFilter(transactionFilterParams({ type: "income" }))).toBe(false);
   });
 });
 

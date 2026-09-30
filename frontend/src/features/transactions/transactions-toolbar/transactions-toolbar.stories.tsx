@@ -1,24 +1,41 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { fn } from "storybook/test";
-import { TRANSACTIONS_EXPORT_CSV_PATH, TRANSACTIONS_EXPORT_PDF_PATH } from "@/lib/export-url";
+import { getExportTransactionsPdfUrl, getExportTransactionsUrl } from "@/api/generated";
+import { useTransactionFilters } from "@/features/transactions/use-transaction-filters";
 import { withWidth } from "@/storybook/decorators";
 import { accounts, categories, tags } from "@/storybook/fixtures";
 import { TransactionsToolbar } from "./transactions-toolbar";
 
+interface HarnessProps {
+  exportUrl: string;
+  exportPdfUrl: string;
+  onUseTemplate: () => void;
+}
+
+function ToolbarHarness(props: Readonly<HarnessProps>) {
+  const filters = useTransactionFilters({ accounts, categories });
+  return (
+    <TransactionsToolbar
+      filters={filters}
+      accounts={accounts}
+      categories={categories}
+      tags={tags}
+      {...props}
+    />
+  );
+}
+
 const meta = {
   title: "Features/Transactions/TransactionsToolbar",
-  component: TransactionsToolbar,
+  component: ToolbarHarness,
   args: {
-    accounts,
-    categories,
-    tags,
-    exportUrl: TRANSACTIONS_EXPORT_CSV_PATH,
-    exportPdfUrl: TRANSACTIONS_EXPORT_PDF_PATH,
+    exportUrl: getExportTransactionsUrl({ page: 1, pageSize: 20 }),
+    exportPdfUrl: getExportTransactionsPdfUrl({ page: 1, pageSize: 20 }),
     onUseTemplate: fn(),
   },
   parameters: { route: "/transactions" },
   decorators: [withWidth("wide")],
-} satisfies Meta<typeof TransactionsToolbar>;
+} satisfies Meta<typeof ToolbarHarness>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
@@ -27,8 +44,8 @@ export const Default: Story = {};
 
 export const Filtered: Story = {
   args: {
-    exportUrl: `${TRANSACTIONS_EXPORT_CSV_PATH}?type=expense`,
-    exportPdfUrl: `${TRANSACTIONS_EXPORT_PDF_PATH}?type=expense`,
+    exportUrl: getExportTransactionsUrl({ page: 1, pageSize: 20, type: "expense" }),
+    exportPdfUrl: getExportTransactionsPdfUrl({ page: 1, pageSize: 20, type: "expense" }),
   },
 };
 

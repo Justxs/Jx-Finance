@@ -1,16 +1,16 @@
 import type { QueryClient } from "@tanstack/react-query";
-import { getMeQueryOptions } from "@/api/generated";
+import {
+  getMeQueryOptions,
+  getSetupStatusQueryKey,
+  getSetupStatusSuspenseQueryOptions,
+} from "@/api/generated";
 import type { UserProfileResponse } from "@/api/generated/model";
-import { SetupStatusResponse } from "@/api/schemas/setup/setup.zod";
 import { UserRole } from "@/lib/user-role";
 
-const baseUrl = import.meta.env.VITE_API_BASE_URL ?? "";
-
-let setupNeededCache: boolean | null = null;
 let authenticatedCache: boolean | null = null;
 
-export function setSetupNeeded(value: boolean) {
-  setupNeededCache = value;
+export function setSetupNeeded(queryClient: QueryClient, needsSetup: boolean) {
+  queryClient.setQueryData(getSetupStatusQueryKey(), { needsSetup });
 }
 
 export function setAuthenticated(value: boolean) {
@@ -30,16 +30,13 @@ export function endSession(
   void navigate({ to: "/login" });
 }
 
-export async function checkSetupNeeded(): Promise<boolean> {
-  if (setupNeededCache !== null) {
-    return setupNeededCache;
-  }
-
+export async function checkSetupNeeded(queryClient: QueryClient): Promise<boolean> {
   try {
-    const response = await fetch(`${baseUrl}/api/setup/status`, { credentials: "include" });
-    const body = SetupStatusResponse.parse(await response.json());
-    setupNeededCache = body.needsSetup;
-    return setupNeededCache;
+    const status = await queryClient.query({
+      ...getSetupStatusSuspenseQueryOptions(),
+      staleTime: "static",
+    });
+    return status.needsSetup;
   } catch {
     return false;
   }
