@@ -215,7 +215,7 @@ export const PaysADebt: Story = {
     await expect(await screen.findByRole("menuitem", { name: "Unlink from debt" })).toBeVisible();
     await userEvent.keyboard("{Escape}");
     await userEvent.click(
-      canvas.getByRole("button", { name: `Actions: ${transactions[0]?.description ?? ""}` }),
+      canvas.getByRole("button", { name: `Actions: ${transactions[0]?.payeeName ?? ""}` }),
     );
     await userEvent.click(await screen.findByRole("menuitem", { name: "Link to debt" }));
     await expect(await openedDialog()).toHaveTextContent("Link to debt");

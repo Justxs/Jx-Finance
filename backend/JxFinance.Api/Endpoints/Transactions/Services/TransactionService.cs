@@ -3,6 +3,7 @@ using FastEndpoints;
 using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Common.ExchangeRates;
+using JxFinance.Common.Payees;
 using JxFinance.Common.References;
 using JxFinance.Common.Refunds;
 using JxFinance.Common.Settings;
@@ -184,7 +185,8 @@ public sealed class TransactionService(
             var pattern = LikePattern.Contains(request.Search);
             query = query.Where(t =>
                 (t.Description != null && EF.Functions.ILike(t.Description, pattern, LikePattern.Escape))
-                || (t.Note != null && EF.Functions.ILike(t.Note, pattern, LikePattern.Escape)));
+                || (t.Note != null && EF.Functions.ILike(t.Note, pattern, LikePattern.Escape))
+                || db.PayeeNames.Any(p => p.PayeeKey == t.PayeeKey && EF.Functions.ILike(p.Name, pattern, LikePattern.Escape)));
         }
 
         if (SubscriptionDescription.Normalize(request.Payee) is { Length: > 0 } payeeKey)
@@ -488,6 +490,7 @@ public sealed class TransactionService(
         var debtPayments = await DebtPaymentsOfAsync(ids, cancellationToken);
         var refunds = await RefundMarksAsync(transactions, cancellationToken);
         var splits = await SharedExpensesOfAsync(transactions, cancellationToken);
+        var payeeNames = await db.PayeeNamesForAsync(transactions.Select(t => t.PayeeKey), cancellationToken);
 
         return t => Shown(refunds.Apply(t, t.ToResponse(
             linesByTransaction.GetValueOrDefault(t.Id),
@@ -496,6 +499,7 @@ public sealed class TransactionService(
         {
             DebtPayment = debtPayments.GetValueOrDefault(t.Id),
             SharedExpense = splits.GetValueOrDefault(t.Id),
+            PayeeName = t.PayeeKey is { } key ? payeeNames.GetValueOrDefault(key) : null,
         }));
     }
 

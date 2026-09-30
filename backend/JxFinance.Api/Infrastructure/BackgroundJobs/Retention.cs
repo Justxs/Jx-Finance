@@ -100,6 +100,7 @@ internal static class Retention
         purged += await PurgeAsync(Expired(db.InvestmentTransactions, cutoff), ct);
         purged += await PurgeAsync(Expired(db.CategorizationRules, cutoff), ct);
         purged += await PurgeAsync(Expired(db.CsvImportMappings, cutoff), ct);
+        purged += await PurgeAsync(Expired(db.PayeeNames, cutoff), ct);
         purged += await PurgeAsync(Expired(db.SharedExpenses, cutoff), ct);
         purged += await PurgeAsync(Expired(db.Settlements, cutoff), ct);
         return purged;

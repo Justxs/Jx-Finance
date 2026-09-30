@@ -17,4 +17,6 @@ export interface SubscriptionCandidateResponse {
   typicalAmount: string;
   occurrenceDates: DateOnly[];
   nextExpectedDate: DateOnly;
+  /** @nullable */
+  name?: string | null;
 }

@@ -231,6 +231,7 @@ export const CreateTransactionResponse = zod.object({
     ])
     .optional(),
   note: zod.string().nullish(),
+  payeeName: zod.string().nullish(),
 });
 
 /**
@@ -382,6 +383,7 @@ export const TransactionsResponse = zod.object({
         ])
         .optional(),
       note: zod.string().nullish(),
+      payeeName: zod.string().nullish(),
     }),
   ),
   page: zod.int(),
@@ -586,6 +588,7 @@ export const TransactionResponse = zod.object({
     ])
     .optional(),
   note: zod.string().nullish(),
+  payeeName: zod.string().nullish(),
 });
 
 /**
@@ -797,6 +800,7 @@ export const UpdateTransactionResponse = zod.object({
     ])
     .optional(),
   note: zod.string().nullish(),
+  payeeName: zod.string().nullish(),
 });
 
 /**

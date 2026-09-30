@@ -2,6 +2,7 @@ using FastEndpoints;
 using JxFinance.Common;
 using JxFinance.Common.CategoryAttributions;
 using JxFinance.Common.InvestmentCashFlows;
+using JxFinance.Common.Payees;
 using JxFinance.Domain.Common;
 using JxFinance.Endpoints.Dashboard.Shared;
 using JxFinance.Endpoints.Reports.Interfaces;
@@ -187,11 +188,15 @@ public sealed class ReportService(
                     .FirstOrDefault(),
             })
             .ToDictionaryAsync(entry => entry.Key, entry => entry.Label, cancellationToken);
+        var names = await db.PayeeNamesForAsync(keys, cancellationToken);
 
         return totals
             .Select(item => item.Key.Length == 0
                 ? new PayeeBreakdownItem(null, null, item.Amount, item.Earlier, item.Count)
-                : new PayeeBreakdownItem(item.Key, labels.GetValueOrDefault(item.Key), item.Amount, item.Earlier, item.Count))
+                : new PayeeBreakdownItem(item.Key, labels.GetValueOrDefault(item.Key), item.Amount, item.Earlier, item.Count)
+                {
+                    Name = names.GetValueOrDefault(item.Key),
+                })
             .ToList();
     }
 

@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import type { TransactionResponse } from "@/api/generated/model";
 import { type RowAction, RowActions } from "@/components/row-actions/row-actions";
 import { useDebtPaymentLinks } from "@/features/transactions/debt-payment/debt-payment";
+import { usePayeeNaming } from "@/features/transactions/payee-naming/payee-naming";
 import { useSharedExpenseSplits } from "@/features/transactions/shared-expense/shared-expense";
 import {
   isOptimistic,
@@ -12,11 +13,14 @@ import {
 export function useTransactionRowDialogs() {
   const debt = useDebtPaymentLinks();
   const split = useSharedExpenseSplits();
+  const payee = usePayeeNaming();
 
   function moreActions(transaction: TransactionResponse) {
-    return [debt.actionFor(transaction), split.actionFor(transaction)].filter(
-      (action) => action !== undefined,
-    );
+    return [
+      debt.actionFor(transaction),
+      split.actionFor(transaction),
+      payee.actionFor(transaction),
+    ].filter((action) => action !== undefined);
   }
 
   return {
@@ -26,6 +30,7 @@ export function useTransactionRowDialogs() {
       <>
         {debt.dialog}
         {split.dialog}
+        {payee.dialog}
       </>
     ),
   };

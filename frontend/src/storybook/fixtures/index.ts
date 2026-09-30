@@ -7,6 +7,7 @@ export * from "./reconciliations";
 export * from "./cash-flow";
 export * from "./categories";
 export * from "./tags";
+export * from "./payees";
 export * from "./categorization-rules";
 export * from "./transactions";
 export * from "./attachments";

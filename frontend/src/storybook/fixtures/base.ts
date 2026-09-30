@@ -65,6 +65,10 @@ export const ids = {
     householdGoods: uid("44444444", 13),
     noIcon: uid("44444444", 14),
   },
+  payeeNames: {
+    maxima: uid("4b4b4b4b", 1),
+    telia: uid("4b4b4b4b", 2),
+  },
   tags: {
     holiday: uid("4a4a4a4a", 1),
     renovation: uid("4a4a4a4a", 2),

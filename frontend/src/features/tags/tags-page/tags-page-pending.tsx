@@ -8,6 +8,9 @@ export function TagsPending() {
       <ListSectionSkeleton description>
         <NamedRowsSkeleton rows={5} />
       </ListSectionSkeleton>
+      <ListSectionSkeleton description>
+        <NamedRowsSkeleton rows={2} />
+      </ListSectionSkeleton>
     </PagePending>
   );
 }

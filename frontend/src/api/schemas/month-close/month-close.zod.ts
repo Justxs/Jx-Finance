@@ -261,6 +261,7 @@ export const CloseMonthResponse = zod.object({
           )
           .nullable(),
         count: zod.int(),
+        name: zod.string().nullish(),
       }),
     ),
     comparison: zod
@@ -682,6 +683,7 @@ export const MonthReviewResponse = zod.object({
           )
           .nullable(),
         count: zod.int(),
+        name: zod.string().nullish(),
       }),
     ),
     comparison: zod
@@ -1149,6 +1151,7 @@ export const UpdateMonthNoteResponse = zod.object({
           )
           .nullable(),
         count: zod.int(),
+        name: zod.string().nullish(),
       }),
     ),
     comparison: zod

@@ -29,7 +29,7 @@ export function PayeeBreakdown({ items, dateFrom, dateTo }: Readonly<Props>) {
       <BreakdownList
         rows={shown.map((row) => ({
           key: row.payeeKey ?? "",
-          name: row.payeeKey ? (row.label ?? row.payeeKey) : t("reports.noDescription"),
+          name: row.payeeKey ? (row.name ?? row.label ?? row.payeeKey) : t("reports.noDescription"),
           amount: Number(row.amount),
           comparisonAmount: row.comparisonAmount,
           filter: row.payeeKey ? { payee: row.payeeKey } : undefined,

@@ -43,4 +43,6 @@ export interface TransactionResponse {
   sharedExpense?: null | TransactionSharedExpenseResponse;
   /** @nullable */
   note?: string | null;
+  /** @nullable */
+  payeeName?: string | null;
 }

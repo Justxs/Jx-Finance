@@ -28,7 +28,8 @@ public sealed record TransactionResponse(
     TransactionRefundOfResponse? RefundOf = null,
     [property: Money] decimal? RefundedAmount = null,
     TransactionSharedExpenseResponse? SharedExpense = null,
-    string? Note = null);
+    string? Note = null,
+    string? PayeeName = null);
 
 public sealed record TransactionDebtPaymentResponse(Guid Id, Guid DebtId, string DebtName);
 

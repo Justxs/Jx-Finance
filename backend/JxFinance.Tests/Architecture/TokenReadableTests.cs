@@ -48,6 +48,7 @@ public sealed class TokenReadableTests
         "GET /api/investments/value-history",
         "GET /api/networth",
         "GET /api/networth/history",
+        "GET /api/payees",
         "GET /api/ping",
         "GET /api/recurring-bills",
         "GET /api/recurring-bills/suggestions",

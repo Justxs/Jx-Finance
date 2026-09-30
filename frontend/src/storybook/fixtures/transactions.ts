@@ -184,7 +184,10 @@ export const foreignCurrencyTransactions: TransactionResponse[] = [
 ];
 
 export const transactions: TransactionResponse[] = [
-  imported(1, "09-17", shared, food, -42.18, "Maxima X, Ukmergės g.", [], 1),
+  {
+    ...imported(1, "09-17", shared, food, -42.18, "Maxima X, Ukmergės g.", [], 1),
+    payeeName: "Maxima",
+  },
   imported(2, "09-16", checking, transport, -7.4, "Bolt pavėžėjimas", [car]),
   imported(3, "09-15", shared, utilities, -68.93, "Ignitis – elektra už rugpjūtį"),
   imported(4, "09-15", checking, telecom, -24.99, "Telia – mobilusis ryšys ir internetas"),

@@ -63,6 +63,16 @@ describe("transactionName", () => {
     ).toBe("Lidl");
   });
 
+  test("prefers your name for the payee over the bank description", () => {
+    expect(
+      transactionName(
+        { description: "MAXIMA LT 1234", payeeName: "Maxima", isSplit: false, categoryId: "food" },
+        categoryById,
+        t,
+      ),
+    ).toBe("Maxima");
+  });
+
   test("falls back to the category label when the description is empty", () => {
     for (const description of [null, ""]) {
       expect(

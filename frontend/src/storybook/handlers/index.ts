@@ -39,6 +39,7 @@ import {
   getNetWorthMockHandler,
 } from "@/api/generated/net-worth/net-worth.msw";
 import { getNotificationsMockHandler } from "@/api/generated/notifications/notifications.msw";
+import { getPayeeNamesMockHandler } from "@/api/generated/payees/payees.msw";
 import {
   getRecurringBillsMockHandler,
   getSubscriptionCandidatesMockHandler,
@@ -85,6 +86,7 @@ import { emptyPage } from "./lists";
 import { monthCloseHandlers } from "./month-close";
 import { assetHandlers, debtHandlers, netWorthHandlers } from "./net-worth";
 import { notificationHandlers } from "./notifications";
+import { payeeHandlers } from "./payees";
 import { receiptHandlers } from "./receipts";
 import { recurringBillHandlers } from "./recurring-bills";
 import { reportHandlers } from "./reports";
@@ -119,6 +121,7 @@ export const handlers: RequestHandler[] = [
   ...monthCloseHandlers,
   ...netWorthHandlers,
   ...notificationHandlers,
+  ...payeeHandlers,
   ...receiptHandlers,
   ...recurringBillHandlers,
   ...reportHandlers,
@@ -175,6 +178,7 @@ export const emptyHandlers: RequestHandler[] = [
   getRecurringBillsMockHandler([]),
   getSubscriptionCandidatesMockHandler([]),
   getTagsMockHandler([]),
+  getPayeeNamesMockHandler([]),
   getUsersMockHandler([currentUser]),
   getTransactionsSummaryMockHandler(emptyTransactionsSummary),
   getTransactionsMockHandler(emptyPage),

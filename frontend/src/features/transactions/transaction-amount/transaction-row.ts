@@ -31,11 +31,12 @@ export function transactionCategoryLabel(
 }
 
 export function transactionName(
-  row: Pick<TransactionResponse, "description" | "isSplit" | "categoryId">,
+  row: Pick<TransactionResponse, "description" | "isSplit" | "categoryId"> &
+    Partial<Pick<TransactionResponse, "payeeName">>,
   categoryById: ReadonlyMap<string | undefined, CategoryResponse | undefined>,
   t: Translate,
 ) {
-  return row.description || transactionCategoryLabel(row, categoryById, t);
+  return row.payeeName || row.description || transactionCategoryLabel(row, categoryById, t);
 }
 
 export const UNCATEGORIZED_OPTION = "none";

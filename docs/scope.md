@@ -36,6 +36,10 @@ Free labels beside the category, owned like a category with personal or shared s
 
 Personal, ordered rules that read a description (contains, starts with or equals, ignoring case) and set a category, a set of tags or both, optionally narrowed to one account and an amount range; the first matching rule decides a row; a rule fills in a suggestion in the import preview that the user can still change, and a separate on-demand run fills only transactions that carry no category, with a per-rule preview and an explicit apply, plus a clearly labelled option that also replaces categories already set
 
+## Payee names
+
+A member names a payee once, from a transaction's menu or the Payee names section of the Tags page, and the name shows instead of the bank's text for every row with the same normalized description, in the ledger, its search, the payee report and the recurring-entry suggestions; names are personal, change no transaction, and exports keep the bank's text (see [Payee names](features/payee-names.md))
+
 ## Transfers
 
 Dedicated ledger movement, excluded from income/expense; paginated history; accessible-account checks; separate sent and received amounts when the two currencies differ; date, amounts, description and both accounts can be edited, except the values a bank or broker import fixed

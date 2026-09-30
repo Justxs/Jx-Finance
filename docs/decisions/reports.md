@@ -6,6 +6,10 @@ Related: feature page [Reports](../features/reports.md).
 
 Newest first. Each entry is a choice between real alternatives: what was chosen, what was rejected, and why.
 
+- **2026-09-30.** A payee name is a personal row keyed by `PayeeKey`, joined to transactions by the key at read time, and managed from the ledger's row menu and a section of the Tags page. Decided while the owner was away, to be reviewed
+  - Rejected: A shareable name owned like a tag, so a household reads one name; writing the name into each transaction's description; a page of its own in the Categories hub
+  - Why: The name is how one person reads their ledger, and two people naming one shop differently is harmless, while a shared name needs scope, a household check and a conflict rule. Rewriting descriptions would lose the bank's text, which the import's duplicate matching and every export rely on, and would not reach tomorrow's rows. A section beside tags keeps the hub at three tabs, and the row menu is where a member meets a messy name
+
 - **2026-09-29.** The payee report does not group a chain's shops: "maxima x vilnius" and "maxima kaunas" stay two payees, and "all of Maxima" is the ledger's text search with its totals. Decided while the owner was away, as the conservative answer to the plan's open question; review it
   - Rejected: Grouping payees by hand in the report; a looser key that keeps only the first word
   - Why: A hand grouping is a new stored entity with its own screen, which the report does not need to answer its question, and the text search already sums any substring. A first-word key would merge different shops that share a word and change the grouping of unusual amounts, subscription detection and suggested rules, which read the same key

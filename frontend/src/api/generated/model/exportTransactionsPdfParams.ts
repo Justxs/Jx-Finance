@@ -34,7 +34,7 @@ export type ExportTransactionsPdfParams = {
    */
   type?: FlowType;
   /**
-   * Case-insensitive match against the description or the note.
+   * Case-insensitive match against the description, the note or your name for the payee.
    * @nullable
    */
   search?: string | null;

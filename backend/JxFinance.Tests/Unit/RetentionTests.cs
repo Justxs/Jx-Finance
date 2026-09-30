@@ -138,6 +138,7 @@ public sealed class RetentionTests
                 "InvestmentTransactions",
                 "CategorizationRules",
                 "CsvImportMappings",
+                "PayeeNames",
                 "SharedExpenses",
                 "Settlements",
             ],

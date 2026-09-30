@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common.Payees;
 using JxFinance.Common.References;
 using JxFinance.Common.Subscriptions;
 using JxFinance.Common.Unusual;
@@ -55,11 +56,13 @@ public sealed class SubscriptionDetectionService(
             }
         }
 
-        return candidates
+        var shown = candidates
             .OrderBy(c => c.NextExpectedDate)
             .ThenBy(c => c.Description, StringComparer.Ordinal)
             .Take(SubscriptionDetection.MaxCandidates)
             .ToList();
+        var names = await db.PayeeNamesForAsync(shown.Select(c => c.Description), cancellationToken);
+        return shown.Select(c => c with { Name = names.GetValueOrDefault(c.Description) }).ToList();
     }
 
     public async Task<Result<Guid>> DismissAsync(

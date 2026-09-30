@@ -2744,5 +2744,16 @@
     "hint": "Išsaugoma šioje naršyklėje, todėl telefone ir kompiuteryje gali būti skirtingai.",
     "rows": "Eilučių puslapyje",
     "installation": "Pagal diegimą ({{size}})"
+  },
+  "payees": {
+    "title": "Gavėjų pavadinimai",
+    "explainer": "Jūsų pavadinimai gavėjams, rodomi vietoj banko teksto operacijų sąraše, ataskaitose ir pasiūlymuose. Pavadinkite gavėją iš operacijos meniu.",
+    "empty": "Gavėjų pavadinimų dar nėra. Operacijos meniu pasirinkite „Pavadinti gavėją“.",
+    "name": "Pavadinimas",
+    "bankText": "Banko tekstas: {{text}}",
+    "nameAction": "Pavadinti gavėją",
+    "rename": "Pervadinti gavėją",
+    "dialogTitle": "Pavadinti šį gavėją",
+    "editTitle": "Pervadinti gavėją"
   }
 }

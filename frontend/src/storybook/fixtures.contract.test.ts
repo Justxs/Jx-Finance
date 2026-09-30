@@ -112,6 +112,7 @@ const contracts: Record<string, Contract> = {
   emptyCashFlowForecast: { schema: schemas.CashFlowForecastResponse },
   categories: { schema: schemas.CategoriesResponse },
   tags: { schema: schemas.TagsResponse },
+  payeeNames: { schema: schemas.PayeeNamesResponse },
   categorizationRules: { schema: schemas.CategorizationRulesResponse },
   rulesRunPreview: { schema: schemas.PreviewCategorizationRunResponse },
   suggestedRules: { schema: schemas.SuggestedRulesResponse },

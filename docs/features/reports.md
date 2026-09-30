@@ -114,6 +114,8 @@ The list covers expenses only. Tags in practice mark spending themes, the untagg
 
 **How many.** The server returns at most `PayeeBreakdownItem.MaxItems`, 50 entries, ordered by the larger of the two amounts like the other breakdowns, so a payee that stopped costing anything keeps its place with `amount` `0.00`. The page shows eight and **Show all** reveals the rest in place; the shares are of the rows shown. Anything below the fifty is one ledger search away.
 
+**The name.** Since 2026-09-30 each item also carries `name`, the member's own name for the key from [Payee names](payee-names.md), and the page shows it before the label.
+
 **The label** is the newest description of the key, read by a second query for the listed keys only. The earlier period always lies before the chosen range, so that is the newest description inside the range when the payee has one there, and the newest of the earlier period otherwise. It reads like the bank text people recognise. `count` is the number of the payee's transactions inside the range.
 
 **Drill-through.** Each named row links to `/transactions` with `payee` set to the key, `type=expense` and the range. The ledger's `payee` filter keeps `PayeeKey == Normalize(value)`, so its list, its totals and both exports hold exactly the rows behind the amount; see [Transactions](transactions.md#payee-filter). The list itself is not exported, like the other breakdowns (see [What is not exported](#what-is-not-exported)).

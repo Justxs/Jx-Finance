@@ -75,6 +75,9 @@ public static class ApiRoutes
     public const string Reports = "reports";
     public const string ReportsPath = Base + "/" + Reports;
 
+    public const string Payees = "payees";
+    public const string PayeesPath = Base + "/" + Payees;
+
     public const string Settings = "settings";
 
     public const string Setup = "setup";

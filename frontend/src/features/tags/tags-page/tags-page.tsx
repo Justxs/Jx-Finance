@@ -1,12 +1,20 @@
 import { useTranslation } from "react-i18next";
-import { getTagsQueryKey, useDeleteTag, useTagsSuspense } from "@/api/generated";
-import type { TagResponse } from "@/api/generated/model";
+import {
+  getPayeeNamesQueryKey,
+  getTagsQueryKey,
+  useDeletePayeeName,
+  useDeleteTag,
+  usePayeeNamesSuspense,
+  useTagsSuspense,
+} from "@/api/generated";
+import type { PayeeNameResponse, TagResponse } from "@/api/generated/model";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog/confirm-delete-dialog";
 import { CreateDialog } from "@/components/create-dialog/create-dialog";
 import { ListSection } from "@/components/list-section/list-section";
 import { EditModal } from "@/components/modal";
 import { NamedRow } from "@/components/named-row/named-row";
 import { PageHeader } from "@/components/page-header/page-header";
+import { PayeeNameForm } from "@/features/payees/payee-name-form/payee-name-form";
 import { TagForm } from "@/features/tags/tag-form/tag-form";
 import { useEditableList } from "@/hooks/use-editable-list";
 import { optimisticRemoval } from "@/lib/optimistic";
@@ -18,6 +26,13 @@ export function TagsPage() {
     useDeleteTag({ mutation: optimisticRemoval<TagResponse>(getTagsQueryKey()) }),
     (tag) => tag.name,
     "tag",
+  );
+  const payees = useEditableList(
+    usePayeeNamesSuspense().data,
+    useDeletePayeeName({
+      mutation: optimisticRemoval<PayeeNameResponse>(getPayeeNamesQueryKey()),
+    }),
+    (payee) => payee.name,
   );
 
   return (
@@ -49,7 +64,32 @@ export function TagsPage() {
         ))}
       </ListSection>
 
+      <EditModal {...payees.editProps} title={t("payees.editTitle")}>
+        {(payee, close) => (
+          <PayeeNameForm payee={payee.payeeKey} initialName={payee.name} onClose={close} />
+        )}
+      </EditModal>
+
+      <ListSection
+        title={t("payees.title")}
+        count={payees.list.length}
+        description={t("payees.explainer")}
+        emptyText={t("payees.empty")}
+      >
+        {payees.list.map((payee) => (
+          <NamedRow
+            key={payee.id}
+            name={payee.name}
+            scope="personal"
+            householdId={null}
+            detail={payee.payeeKey}
+            {...payees.rowProps(payee)}
+          />
+        ))}
+      </ListSection>
+
       <ConfirmDeleteDialog {...tags.dialogProps} />
+      <ConfirmDeleteDialog {...payees.dialogProps} />
     </div>
   );
 }

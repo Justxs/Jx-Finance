@@ -56,6 +56,16 @@ const rules: readonly Rule[] = [
     refresh: [...ledger, api.getSuggestedRulesQueryKey, api.getHouseholdsQueryKey],
   },
   {
+    after: [api.getSetPayeeNameMutationKey],
+    deleted: [api.getDeletePayeeNameMutationKey],
+    refresh: [
+      api.getPayeeNamesQueryKey,
+      api.getTransactionsQueryKey,
+      api.getReportSummaryQueryKey,
+      api.getSubscriptionCandidatesQueryKey,
+    ],
+  },
+  {
     after: [api.getUploadAttachmentMutationKey],
     deleted: [api.getDeleteAttachmentMutationKey],
     refresh: [api.getTransactionsQueryKey],

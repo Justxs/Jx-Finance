@@ -12035,6 +12035,209 @@
         ]
       }
     },
+    "/api/payees": {
+      "get": {
+        "tags": [
+          "Payees"
+        ],
+        "summary": "List your payee names",
+        "description": "Returns the display names you gave to payees, ordered by name. A payee is the normalized description every transaction stores as its payee key; a name is personal and shows in place of the bank's text wherever that key appears for you.",
+        "operationId": "GetPayeeNames",
+        "responses": {
+          "200": {
+            "description": "Your payee names, possibly empty.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PayeeNameResponse"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          },
+          {
+            "PersonalApiToken": [ ]
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "Payees"
+        ],
+        "summary": "Name a payee",
+        "description": "Gives a payee a display name, or renames it. The payee is normalized the way every transaction's payee key is, so a raw bank description such as \"MAXIMA LT 1234 VILNIUS\" and a payeeKey from the report name the same payee. The name is yours alone and changes no transaction.",
+        "operationId": "SetPayeeName",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetPayeeNameRequest"
+              },
+              "example": {
+                "payee": "MAXIMA LT 1234 VILNIUS",
+                "name": "Maxima"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "The payee's name as stored.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PayeeNameResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed, or nothing is left of the payee after normalizing (text.invalidFormat).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      }
+    },
+    "/api/payees/{id}": {
+      "delete": {
+        "tags": [
+          "Payees"
+        ],
+        "summary": "Remove a payee name",
+        "description": "Removes a display name, so the payee reads as the bank's description again. No transaction changes.",
+        "operationId": "DeletePayeeName",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The payee name id.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "The name is gone."
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such payee name belongs to the signed-in user.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      }
+    },
     "/api/ping": {
       "get": {
         "tags": [
@@ -14134,7 +14337,7 @@
           {
             "name": "search",
             "in": "query",
-            "description": "Case-insensitive match against the description or the note.",
+            "description": "Case-insensitive match against the description, the note or your name for the payee.",
             "schema": {
               "type": [
                 "null",
@@ -14531,7 +14734,7 @@
           {
             "name": "search",
             "in": "query",
-            "description": "Case-insensitive match against the description or the note.",
+            "description": "Case-insensitive match against the description, the note or your name for the payee.",
             "schema": {
               "type": [
                 "null",
@@ -14761,7 +14964,7 @@
           {
             "name": "search",
             "in": "query",
-            "description": "Case-insensitive match against the description or the note.",
+            "description": "Case-insensitive match against the description, the note or your name for the payee.",
             "schema": {
               "type": [
                 "null",
@@ -14959,7 +15162,7 @@
           {
             "name": "search",
             "in": "query",
-            "description": "Case-insensitive match against the description or the note.",
+            "description": "Case-insensitive match against the description, the note or your name for the payee.",
             "schema": {
               "type": [
                 "null",
@@ -23872,6 +24075,32 @@
           "count": {
             "type": "integer",
             "format": "int32"
+          },
+          "name": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "PayeeNameResponse": {
+        "required": [
+          "id",
+          "payeeKey",
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "payeeKey": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
           }
         }
       },
@@ -25366,6 +25595,33 @@
           }
         }
       },
+      "SetPayeeNameRequest": {
+        "required": [
+          "payee",
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "payee": {
+            "maxLength": 500,
+            "minLength": 0,
+            "type": "string",
+            "description": "A bank description or a payee key, at most 500 characters.",
+            "example": "MAXIMA LT 1234 VILNIUS"
+          },
+          "name": {
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string",
+            "description": "The display name, at most 100 characters.",
+            "example": "Maxima"
+          }
+        },
+        "example": {
+          "payee": "MAXIMA LT 1234 VILNIUS",
+          "name": "Maxima"
+        }
+      },
       "SetSecurityPriceRequest": {
         "required": [
           "lastPrice"
@@ -25838,6 +26094,12 @@
           },
           "nextExpectedDate": {
             "$ref": "#/components/schemas/DateOnly"
+          },
+          "name": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -26580,6 +26842,12 @@
             ]
           },
           "note": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "payeeName": {
             "type": [
               "null",
               "string"
@@ -28548,6 +28816,9 @@
     {
       "name": "Notifications",
       "description": "In-app notifications raised by background jobs: bill reminders and budget alerts."
+    },
+    {
+      "name": "Payees"
     },
     {
       "name": "Diagnostics",

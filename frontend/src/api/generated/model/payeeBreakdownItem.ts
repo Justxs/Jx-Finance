@@ -15,4 +15,6 @@ export interface PayeeBreakdownItem {
   /** @nullable */
   comparisonAmount: string | null;
   count: number;
+  /** @nullable */
+  name?: string | null;
 }

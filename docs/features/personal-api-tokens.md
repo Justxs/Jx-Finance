@@ -102,7 +102,7 @@ A token reaches only `GET` routes of the groups that opt in with `ApiGroup(…, 
 | --- | --- |
 | Accounts | the list, archived accounts, one account, the cash-flow forecast, reconciliations and the reconciliation preview |
 | Transactions | the ledger, one transaction, the summary, the CSV and PDF exports |
-| Transfers, Conversions, Categories, Tags | their lists |
+| Transfers, Conversions, Categories, Tags, Payees | their lists; payee names since 2026-09-30 |
 | Reports | the summary, spending by payee included |
 | Dashboard | the summary, the monthly trend and the category breakdown; not the dashboard layout, which is a personal setting |
 | Budgets, Goals | the lists and the budget suggestions |

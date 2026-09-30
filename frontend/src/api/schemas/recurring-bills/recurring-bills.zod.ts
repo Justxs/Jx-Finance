@@ -171,6 +171,7 @@ export const SubscriptionCandidatesResponseItem = zod.object({
   typicalAmount: zod.stringFormat("decimal", subscriptionCandidatesResponseTypicalAmountRegExp),
   occurrenceDates: zod.array(zod.iso.date()),
   nextExpectedDate: zod.iso.date(),
+  name: zod.string().nullish(),
 });
 export const SubscriptionCandidatesResponse = zod.array(SubscriptionCandidatesResponseItem);
 

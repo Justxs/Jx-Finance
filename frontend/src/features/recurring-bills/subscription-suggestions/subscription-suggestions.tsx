@@ -80,7 +80,7 @@ export function SubscriptionSuggestions({ candidates, accounts, categories }: Re
         {({ candidate }, close) => (
           <RecurringBillForm
             draft={{
-              name: suggestedName(candidate.description),
+              name: candidate.name ?? suggestedName(candidate.description),
               shape: "expense",
               kind: "fixed",
               amount: candidate.typicalAmount,

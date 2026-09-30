@@ -17,6 +17,7 @@ using JxFinance.Domain.Investments;
 using JxFinance.Domain.MonthCloses;
 using JxFinance.Domain.NetWorth;
 using JxFinance.Domain.Notifications;
+using JxFinance.Domain.Payees;
 using JxFinance.Domain.Receipts;
 using JxFinance.Domain.RecurringBills;
 using JxFinance.Domain.Settings;
@@ -59,6 +60,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, ICurren
     public DbSet<CategorizationRuleTag> CategorizationRuleTags => Set<CategorizationRuleTag>();
     public DbSet<SuggestedRuleDismissal> SuggestedRuleDismissals => Set<SuggestedRuleDismissal>();
     public DbSet<CsvImportMapping> CsvImportMappings => Set<CsvImportMapping>();
+    public DbSet<PayeeName> PayeeNames => Set<PayeeName>();
     public DbSet<Transaction> Transactions => Set<Transaction>();
     public DbSet<TransactionLine> TransactionLines => Set<TransactionLine>();
     public DbSet<TransactionTag> TransactionTags => Set<TransactionTag>();

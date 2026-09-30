@@ -13,6 +13,7 @@ interface Props extends DeleteProps {
   scope: Scope;
   householdId: string | null;
   leading?: ReactNode;
+  detail?: ReactNode;
   onEdit: () => void;
 }
 
@@ -21,6 +22,7 @@ export function NamedRow({
   scope,
   householdId,
   leading,
+  detail,
   onEdit,
   ...deleteProps
 }: Readonly<Props>) {
@@ -32,6 +34,11 @@ export function NamedRow({
           <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
             <span className="min-w-0 text-sm font-medium wrap-break-word">{name}</span>
             <SharedScopeTag scope={scope} householdId={householdId} />
+            {detail ? (
+              <span className="min-w-0 text-xs wrap-break-word text-muted-foreground">
+                {detail}
+              </span>
+            ) : null}
           </div>
         </div>
         <RowActions label={name} onEdit={onEdit} {...deleteProps} />

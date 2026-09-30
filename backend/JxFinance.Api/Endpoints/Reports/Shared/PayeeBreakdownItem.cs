@@ -10,4 +10,6 @@ public sealed record PayeeBreakdownItem(
     int Count)
 {
     public const int MaxItems = 50;
+
+    public string? Name { get; init; }
 }

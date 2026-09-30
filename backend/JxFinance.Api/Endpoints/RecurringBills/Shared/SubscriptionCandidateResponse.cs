@@ -10,4 +10,7 @@ public sealed record SubscriptionCandidateResponse(
     RecurringBillCadence Cadence,
     [property: Money] decimal TypicalAmount,
     IReadOnlyList<DateOnly> OccurrenceDates,
-    DateOnly NextExpectedDate);
+    DateOnly NextExpectedDate)
+{
+    public string? Name { get; init; }
+}

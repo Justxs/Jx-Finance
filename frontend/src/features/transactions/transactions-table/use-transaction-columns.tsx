@@ -85,13 +85,17 @@ export function useTransactionColumns({
     columnHelper.accessor("description", {
       header: t("transactions.description"),
       cell: (info) => {
-        const description = info.getValue();
+        const description = info.row.original.payeeName ?? info.getValue();
+        const bankText = info.getValue();
         const note = info.row.original.note;
         return (
           <span className="flex items-start gap-2">
             <span className="min-w-0">
               {description ? (
-                <span className="line-clamp-2 font-medium wrap-break-word" title={description}>
+                <span
+                  className="line-clamp-2 font-medium wrap-break-word"
+                  title={bankText ?? description}
+                >
                   {description}
                 </span>
               ) : (

@@ -23,6 +23,7 @@ public static class UserExportTables
         ["CategorizationRules"] = new Owned(),
         ["CategorizationRuleTags"] = new ChildOf("CategorizationRules", "RuleId"),
         ["CsvImportMappings"] = new Owned(),
+        ["PayeeNames"] = new Owned(),
         ["CurrencyConversions"] = new OnOwnedAccounts(AccountId),
         ["DebtPayments"] = new Owned(),
         ["Debts"] = new Owned(),

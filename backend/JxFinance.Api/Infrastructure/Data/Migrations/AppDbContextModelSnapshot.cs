@@ -1566,6 +1566,42 @@ namespace JxFinance.Infrastructure.Data.Migrations
                     b.ToTable("Notifications");
                 });
 
+            modelBuilder.Entity("JxFinance.Domain.Payees.PayeeName", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("PayeeKey")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "PayeeKey")
+                        .IsUnique()
+                        .HasFilter("\"IsDeleted\" = false");
+
+                    b.ToTable("PayeeNames");
+                });
+
             modelBuilder.Entity("JxFinance.Domain.Receipts.ReceiptItemCategory", b =>
                 {
                     b.Property<Guid>("Id")
@@ -3053,6 +3089,15 @@ namespace JxFinance.Infrastructure.Data.Migrations
                 });
 
             modelBuilder.Entity("JxFinance.Domain.Notifications.Notification", b =>
+                {
+                    b.HasOne("JxFinance.Infrastructure.Auth.AppUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("JxFinance.Domain.Payees.PayeeName", b =>
                 {
                     b.HasOne("JxFinance.Infrastructure.Auth.AppUser", null)
                         .WithMany()

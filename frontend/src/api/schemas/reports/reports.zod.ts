@@ -122,6 +122,7 @@ export const ReportSummaryResponse = zod.object({
         .stringFormat("decimal", reportSummaryResponseExpenseByPayeeItemComparisonAmountRegExp)
         .nullable(),
       count: zod.int(),
+      name: zod.string().nullish(),
     }),
   ),
   comparison: zod

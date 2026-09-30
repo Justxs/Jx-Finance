@@ -38,7 +38,7 @@ export function SubscriptionSuggestionRow({
   const money = useMoney();
   const formatDate = useIsoDate();
 
-  const name = suggestedName(candidate.description);
+  const name = candidate.name ?? suggestedName(candidate.description);
   const account = accountNames.get(candidate.accountId);
   const category = categoryNames.get(candidate.categoryId ?? "");
   const listed = metaLine(...candidate.occurrenceDates.slice(-MAX_LISTED_DATES).map(formatDate));

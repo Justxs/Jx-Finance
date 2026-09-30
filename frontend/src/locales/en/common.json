@@ -2654,5 +2654,16 @@
     "hint": "Kept in this browser, so a phone and a desktop can show different amounts.",
     "rows": "Rows per page",
     "installation": "Installation default ({{size}})"
+  },
+  "payees": {
+    "title": "Payee names",
+    "explainer": "Your own names for payees, shown instead of the bank's text in the ledger, reports and suggestions. Name a payee from a transaction's menu.",
+    "empty": "No payee names yet. Choose Name payee in a transaction's menu.",
+    "name": "Name",
+    "bankText": "Bank text: {{text}}",
+    "nameAction": "Name payee",
+    "rename": "Rename payee",
+    "dialogTitle": "Name this payee",
+    "editTitle": "Rename payee"
   }
 }
