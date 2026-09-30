@@ -40,6 +40,22 @@ public sealed partial class UserExportTablesTests
     }
 
     [Fact]
+    public void Every_exported_table_is_imported_or_deliberately_left_out()
+    {
+        string[] leftOut =
+        [
+            "AspNetUsers", "BrokerConnections", "DeletionChanges", "DeletionEntries", "MonthCloses", "Notifications",
+            "Settlements", "SharedExpenseShares", "SharedExpenses",
+        ];
+
+        var exported = UserExportTables.Rules.Keys.Where(table => UserExportTables.Condition(table) is not null);
+
+        Assert.Equal(
+            exported.Order(StringComparer.Ordinal),
+            MemberImport.Imported.Concat(leftOut).Order(StringComparer.Ordinal));
+    }
+
+    [Fact]
     public void Every_included_table_is_narrowed_to_the_member()
     {
         var unbound = UserExportTables.Rules.Keys

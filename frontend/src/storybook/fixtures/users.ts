@@ -1,4 +1,4 @@
-import type { UserProfileResponse } from "@/api/generated/model";
+import type { ImportMyDataResponse, UserProfileResponse } from "@/api/generated/model";
 import { UserRole } from "@/lib/user-role";
 import { ids } from "./base";
 import { problemOf } from "./problems";
@@ -89,4 +89,17 @@ export const lastAdministratorProblem = problemOf(
   403,
   "user.lastAdministrator",
   "The installation must keep one active administrator.",
+);
+
+export const memberImportResult: ImportMyDataResponse = {
+  tables: 18,
+  rows: 4812,
+  attachments: 36,
+  removed: 3,
+};
+
+export const importTargetNotEmptyProblem = problemOf(
+  400,
+  "import.targetNotEmpty",
+  "Your ledger already has accounts or tags. Import your data into a new, empty member instead.",
 );

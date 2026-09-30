@@ -6,6 +6,7 @@ import {
   getDeactivateUserMockHandler,
   getDeleteMyDiscordMockHandler,
   getExportMyDataMockHandler,
+  getImportMyDataMockHandler,
   getMyDiscordMockHandler,
   getReactivateUserMockHandler,
   getResetUserPasswordMockHandler,
@@ -20,6 +21,7 @@ import {
 import {
   adminPassword,
   currentUser,
+  memberImportResult,
   myDiscord,
   userProfile,
   users,
@@ -129,6 +131,7 @@ export const userHandlers = [
   }),
   getDeleteMyDiscordMockHandler(),
   getTestMyDiscordMockHandler(),
+  getImportMyDataMockHandler(memberImportResult),
   onRouteOf(getExportMyDataMockHandler(new Blob()), () =>
     HttpResponse.arrayBuffer(
       new Uint8Array([0x50, 0x4b, 0x05, 0x06, ...Array.from({ length: 18 }, () => 0)]).buffer,

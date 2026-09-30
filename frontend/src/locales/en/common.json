@@ -767,9 +767,22 @@
       "navTitle": "Import and export",
       "title": "Export your data",
       "description": "Download everything you own as one zip file: your accounts, personal, shared and archived, with all that is recorded on them, the transfers that touch them, and your categories, tags, rules, budgets, goals, assets, debts, recurring entries and notifications. data.json holds every record, and accounts.csv, transactions.csv and transfers.csv open in a spreadsheet.",
-      "excluded": "Passwords, two-factor secrets, passkeys, API tokens, households and other members' accounts are never included. The file cannot be imported yet.",
+      "excluded": "Passwords, two-factor secrets, passkeys, API tokens, households and other members' accounts are never included.",
       "attachments": "Include attached files",
       "download": "Download my data"
+    },
+    "dataImport": {
+      "title": "Import a download",
+      "description": "Moving from another installation? Load a zip you downloaded there into this member. It works only while you have no accounts or tags, and everything becomes your own, personal data.",
+      "file": "Data export",
+      "fileHint": "The jx-finance-export zip, from the same app version.",
+      "chooseFile": "Choose a zip file",
+      "fileRequired": "Choose the zip file first.",
+      "fileEmpty": "The file is empty.",
+      "fileTooLarge": "The file is larger than 2 GB.",
+      "submit": "Import my data",
+      "done": "Imported {{rows}} records and {{files}} attached files.",
+      "removed": "Records left out because they pointed at data outside the file: {{size}}."
     },
     "qrCodeAlt": "Authenticator QR code",
     "title": "Your profile",
@@ -2478,7 +2491,9 @@
       "refundInvalid": "Only an incoming row recorded as a transaction can be a refund. Preview the file again.",
       "missingColumns": "The file has no column named {{reason}}. Update the mapping from this file, or check that it is the right bank's export.",
       "mappingIncomplete": "Choose the columns this amount style needs, and the booked values when a status column is set.",
-      "invalidDateFormat": "Choose one of the listed date formats."
+      "invalidDateFormat": "Choose one of the listed date formats.",
+      "targetNotEmpty": "You already have accounts or tags. Import into a new, empty member instead.",
+      "alreadyPresent": "Some of these records already exist here, so nothing was imported."
     },
     "money": {
       "invalid": "Enter a valid amount, e.g. 12.34.",

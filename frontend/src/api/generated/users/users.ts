@@ -27,6 +27,8 @@ import type {
   CreateUserRequest,
   DiscordWebhookResponse,
   ExportMyDataParams,
+  ImportMyDataRequest,
+  ImportMyDataResponse,
   ProblemDetails,
   ResetUserPasswordRequest,
   UpdateMyDiscordRequest,
@@ -851,7 +853,7 @@ export const getExportMyDataUrl = (params?: ExportMyDataParams) => {
 };
 
 /**
- * Streams a zip archive named jx-finance-export-<date>.zip with every record you own: data.json in the backup's table format (format jx-finance-user-export, version 1, with your user id), and accounts.csv, transactions.csv and transfers.csv for a spreadsheet. It holds your accounts, personal, shared and archived, with everything recorded on them by anyone, the transfers that touch them, your categories, tags, rules, budgets, goals, assets, debts, recurring entries, notifications, month closes and trash, and the categories, tags and securities your records point at. It never holds passwords, two-factor secrets, passkeys, API tokens, sessions, the broker token, the Discord webhook, households, memberships or the activity log, nor another member's accounts. The active household is ignored. Nothing is kept on the server, and the answer carries no Content-Length. The file cannot be imported yet.
+ * Streams a zip archive named jx-finance-export-<date>.zip with every record you own: data.json in the backup's table format (format jx-finance-user-export, version 1, with your user id), and accounts.csv, transactions.csv and transfers.csv for a spreadsheet. It holds your accounts, personal, shared and archived, with everything recorded on them by anyone, the transfers that touch them, your categories, tags, rules, budgets, goals, assets, debts, recurring entries, notifications, month closes and trash, and the categories, tags and securities your records point at. It never holds passwords, two-factor secrets, passkeys, API tokens, sessions, the broker token, the Discord webhook, households, memberships or the activity log, nor another member's accounts. The active household is ignored. Nothing is kept on the server, and the answer carries no Content-Length. POST /api/users/me/import loads the file into an empty member.
  * @summary Download your own data
  */
 export const exportMyData = async (
@@ -967,6 +969,95 @@ export function useExportMyDataSuspense<
   return withQueryKey(query, queryOptions.queryKey);
 }
 
+export const getImportMyDataUrl = () => {
+  return `/api/users/me/import`;
+};
+
+/**
+ * Loads the zip that GET /api/users/me/export wrote, from this or another installation, into the signed-in member, in one database transaction: either everything is imported or nothing changes. The member must have no accounts or tags yet (import.targetNotEmpty); the starter categories nothing uses are moved to the trash. Every record becomes the member's own and personal: household sharing, households, notifications, shared expenses, settlements, month closes, the trash, the broker connection and preferences are not imported. A security that already exists with the same id is reused, records that point at something the file does not hold are dropped or unlinked, and attached files are written back after their SHA-256 has been checked; an attachment without its file is dropped. The export must come from the same database version (backup.schemaMismatch). Importing records that already exist here, such as the same file twice, answers import.alreadyPresent. Rate limited to 5 imports an hour per client.
+ * @summary Import a download of your data
+ */
+export const importMyData = async (
+  importMyDataRequest: ImportMyDataRequest,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<ImportMyDataResponse> => {
+  const formData = new FormData();
+  if (importMyDataRequest.file !== undefined) {
+    formData.append(`file`, importMyDataRequest.file);
+  }
+
+  return customFetch<ImportMyDataResponse>(getImportMyDataUrl(), {
+    ...options,
+    method: "POST",
+    body: formData,
+  });
+};
+
+export const getImportMyDataMutationKey = () => ["importMyData"] as const;
+
+export const getImportMyDataMutationOptions = <
+  TError = ErrorType<ProblemDetails | void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof importMyData>>,
+    TError,
+    ImportMyDataMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof importMyData>>,
+  TError,
+  ImportMyDataMutationVariables,
+  TContext
+> => {
+  const mutationKey = getImportMyDataMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof importMyData>>,
+    ImportMyDataMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return importMyData(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ImportMyDataMutationResult = NonNullable<Awaited<ReturnType<typeof importMyData>>>;
+export type ImportMyDataMutationBody = ImportMyDataRequest;
+export type ImportMyDataMutationError = ErrorType<ProblemDetails | void>;
+export type ImportMyDataMutationVariables = { data: ImportMyDataRequest };
+
+/**
+ * @summary Import a download of your data
+ */
+export const useImportMyData = <TError = ErrorType<ProblemDetails | void>, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof importMyData>>,
+      TError,
+      ImportMyDataMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof importMyData>>,
+  TError,
+  ImportMyDataMutationVariables,
+  TContext
+> => {
+  return useMutation(getImportMyDataMutationOptions(options), queryClient);
+};
 export const getUpdateMyLanguageUrl = () => {
   return `/api/users/me/language`;
 };

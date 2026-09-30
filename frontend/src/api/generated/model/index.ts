@@ -136,6 +136,8 @@ export * from "./importConfirmRequest";
 export * from "./importConfirmResponse";
 export * from "./importConfirmRow";
 export * from "./importMatchedTransaction";
+export * from "./importMyDataRequest";
+export * from "./importMyDataResponse";
 export * from "./importPreviewRequest";
 export * from "./importPreviewResponse";
 export * from "./importPreviewRow";

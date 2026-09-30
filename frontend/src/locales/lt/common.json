@@ -799,9 +799,22 @@
       "navTitle": "Importas ir eksportas",
       "title": "Jūsų duomenų eksportas",
       "description": "Atsisiųskite viską, kas priklauso jums, vienu zip failu: savo sąskaitas, asmenines, bendras ir archyvuotas, su viskuo, kas jose įrašyta, jas liečiančius pervedimus ir savo kategorijas, žymes, taisykles, biudžetus, tikslus, turtą, skolas, pasikartojančius įrašus bei pranešimus. data.json saugo visus įrašus, o accounts.csv, transactions.csv ir transfers.csv atsidaro skaičiuoklėje.",
-      "excluded": "Slaptažodžiai, dviejų veiksnių autentifikavimo paslaptys, prieigos raktai, API raktai, namų ūkiai ir kitų narių sąskaitos niekada neįtraukiami. Šio failo kol kas negalima importuoti.",
+      "excluded": "Slaptažodžiai, dviejų veiksnių autentifikavimo paslaptys, prieigos raktai, API raktai, namų ūkiai ir kitų narių sąskaitos niekada neįtraukiami.",
       "attachments": "Įtraukti prisegtus failus",
       "download": "Atsisiųsti mano duomenis"
+    },
+    "dataImport": {
+      "title": "Importuoti atsisiųstus duomenis",
+      "description": "Keliatės iš kitos diegties? Įkelkite ten atsisiųstą zip failą į šį narį. Tai veikia tik kol neturite sąskaitų ar žymių, o visi duomenys tampa jūsų asmeniniais.",
+      "file": "Duomenų eksportas",
+      "fileHint": "jx-finance-export zip failas iš tos pačios programos versijos.",
+      "chooseFile": "Pasirinkite zip failą",
+      "fileRequired": "Pirmiausia pasirinkite zip failą.",
+      "fileEmpty": "Failas tuščias.",
+      "fileTooLarge": "Failas didesnis nei 2 GB.",
+      "submit": "Importuoti mano duomenis",
+      "done": "Importuota įrašų: {{rows}}, prisegtų failų: {{files}}.",
+      "removed": "Praleista įrašų, rodžiusių į duomenis, kurių faile nėra: {{size}}."
     },
     "qrCodeAlt": "Autentifikavimo programėlės QR kodas",
     "title": "Jūsų profilis",
@@ -2560,7 +2573,9 @@
       "refundInvalid": "Grąžinimu gali būti tik gaunama eilutė, įrašoma kaip operacija. Peržiūrėkite failą dar kartą.",
       "missingColumns": "Faile nėra stulpelio {{reason}}. Atnaujinkite susiejimą pagal šį failą arba patikrinkite, ar tai tinkamo banko eksportas.",
       "mappingIncomplete": "Pasirinkite šiam sumos būdui reikalingus stulpelius ir, jei nurodytas būsenos stulpelis, įvykdytos būsenos reikšmes.",
-      "invalidDateFormat": "Pasirinkite vieną iš išvardytų datos formatų."
+      "invalidDateFormat": "Pasirinkite vieną iš išvardytų datos formatų.",
+      "targetNotEmpty": "Jau turite sąskaitų ar žymių. Importuokite į naują, tuščią narį.",
+      "alreadyPresent": "Kai kurie šie įrašai čia jau yra, todėl niekas neimportuota."
     },
     "money": {
       "invalid": "Įveskite teisingą sumą, pvz., 12,34.",

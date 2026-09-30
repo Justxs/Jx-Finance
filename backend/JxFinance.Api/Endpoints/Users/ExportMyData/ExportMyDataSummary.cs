@@ -15,7 +15,7 @@ public sealed class ExportMyDataSummary : Summary<ExportMyDataEndpoint, ExportMy
             + "tags and securities your records point at. It never holds passwords, two-factor secrets, passkeys, API tokens, "
             + "sessions, the broker token, the Discord webhook, households, memberships or the activity log, nor another "
             + "member's accounts. The active household is ignored. Nothing is kept on the server, and the answer carries "
-            + "no Content-Length. The file cannot be imported yet.";
+            + "no Content-Length. POST /api/users/me/import loads the file into an empty member.";
         RequestParam(
             r => r.Attachments,
             "true to add the files attached to transactions on your accounts under attachments/<id>. Defaults to false.");

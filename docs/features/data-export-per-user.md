@@ -2,7 +2,7 @@
 
 Back to the [feature walkthrough](README.md). See also [decisions](../decisions/exports.md), [Exports](exports.md), [Backup and restore](backup-and-restore.md) and [architecture: Backup and restore](../architecture/backup-and-restore.md#the-member-export).
 
-Backend `Users/ExportMyData` (`GET /api/users/me/export`), `Users/Services` (`UserExportService`, `UserExportTables`), the shared table writer `BackupDatabase.WriteTableAsync`, `Transactions/Shared/TransactionCsvWriter` and `Common/DeferredWriteStream`. Frontend `profile/export-data-panel` in the Import and export section of Settings › Personal (`/profile?section=import`). Always on; no feature switch.
+Backend `Users/ExportMyData` (`GET /api/users/me/export`), `Users/ImportMyData` (`POST /api/users/me/import`), `Users/Services` (`UserExportService`, `UserExportTables`, `UserImportService`, `MemberImport`), the shared table writer `BackupDatabase.WriteTableAsync`, `Transactions/Shared/TransactionCsvWriter` and `Common/DeferredWriteStream`. Frontend `profile/export-data-panel` in the Import and export section of Settings › Personal (`/profile?section=import`). Always on; no feature switch.
 
 A member takes their own records out of the installation without an administrator: one zip file, streamed straight to the browser, with nothing left on the server. The administrator's [backup](backup-and-restore.md) stays the way to take everything, other members, password hashes and all.
 
@@ -78,7 +78,24 @@ The three CSVs are for a spreadsheet and hold what the ledger would show: live r
 
 With attached files asked for, each file of an exported `TransactionAttachments` row is `attachments/<id>` (the id without dashes, as in a backup), and its file name and SHA-256 are in the row. A row whose file is missing on disk is left out and counted in `missingAttachments`.
 
-The file is not re-importable yet: there is no importer, and a backup restore replaces the whole installation, so it cannot take a partial file. The ids are GUIDs and the ownership column is explicit, so an importer can later rewrite `UserId` and insert.
+## Bringing it back
+
+The zip moves a member to another installation, or back into a fresh member of this one. Below the download, "Import a download" takes the zip and posts it to `POST /api/users/me/import`; the answer counts the rows and files imported and the records left out, and every cached query is refreshed.
+
+The import works only into an empty member: one who owns no accounts and no tags outside the trash, or it answers 400 `import.targetNotEmpty`. The starter categories a new member gets are moved to the trash when nothing uses them, and the member's net-worth snapshots are deleted, so the file's history replaces them. The header must say `jx-finance-user-export` version 1 and the `migration` of the running application, or it answers `import.invalidFile` or `backup.schemaMismatch`.
+
+| From the file | What happens |
+| --- | --- |
+| Accounts, transactions, lines, tags on them, transfers, conversions, reconciliations, bank import history | inserted with their ids |
+| Categories, tags, rules, CSV mappings, payee names, budgets, goals, recurring entries, assets, debts, receipts, dismissals, net-worth snapshots | inserted with their ids |
+| Securities | inserted; one that already exists here is reused, and a security that collides on symbol and currency is replaced by the one already here |
+| Every column that points at a user | the importing member, so a partner's entries on a shared account become the member's |
+| Household id and scope | cleared and personal: households are not in the file |
+| A reference to a row the file does not hold | an optional one is cleared; a required one drops the record, repeated until nothing points outside, and counted in `removed` |
+| Attached files | written back when their SHA-256 matches the row, which otherwise fails the import; a row whose file is not in the zip is dropped |
+| Preferences, notifications, month closes, the trash, the broker connection, shared expenses and settlements | not imported |
+
+It runs as one database transaction with the foreign keys deferred, as a restore does: either everything is imported or nothing changes. Records that already exist here, such as the same file imported twice or a download of a member who is still on this installation, collide on their ids and answer 409 `import.alreadyPresent`. The request takes up to 2 GB and is throttled to five an hour per client.
 
 ## How it differs from a backup
 
@@ -88,7 +105,7 @@ The file is not re-importable yet: there is no importer, and a backup restore re
 | What | the member's rows, secrets left out | every table, secrets included (some encrypted) |
 | Where | streamed to the browser, nothing stored | written to the backup directory, downloaded later |
 | Format | `jx-finance-user-export` 1, plus three CSVs | `jx-finance-backup` 1 |
-| Restore | not yet | replaces everything |
+| Bringing back | into an empty member, records become theirs | replaces everything |
 
 ## Classification and its guard
 
@@ -101,3 +118,5 @@ The route is in `UsersGroup`, which is not token-readable: a [personal API token
 ## Tests
 
 `UserExportTests` (integration, real PostgreSQL) checks that an owner's export holds their personal, shared and archived accounts, a transaction their partner entered on their shared account, a transfer to the partner's account and the partner's shared category used on their transaction, and not the partner's account, the row the owner entered there, the partner's budget or goal, households or the activity log; that the export is the same with and without `X-Active-Household`; that files come only when asked, match the SHA-256 of their rows and that a missing one is counted; that no known secret value (password, hash, stamps, session token hashes, authenticator key, API token hash, broker token, the Discord webhook URL in plain and protected form) appears anywhere in the zip; and that a held lock answers 409 and the fourth request in an hour 429. `data.json` is read back with `BackupReader` in every test.
+
+`UserImportTests` (integration) downloads a member's data with a file, gives every id a new value and imports it into an empty member, then checks the account, the tagged transaction and the file, and that a second import answers `import.targetNotEmpty`; that the unchanged download answers 409 `import.alreadyPresent` and imports nothing; and that a file that is not a zip answers `import.invalidFile`. `UserExportTablesTests` fails when an exported table is neither imported nor named as left out.

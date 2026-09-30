@@ -90,6 +90,8 @@ public static class ErrorCodes
     public const string ImportMissingColumns = "import.missingColumns";
     public const string ImportMappingIncomplete = "import.mappingIncomplete";
     public const string ImportInvalidDateFormat = "import.invalidDateFormat";
+    public const string ImportTargetNotEmpty = "import.targetNotEmpty";
+    public const string ImportAlreadyPresent = "import.alreadyPresent";
     public const string RestoreExpired = "restore.expired";
     public const string RestoreReferenceMissing = "restore.referenceMissing";
     public const string RestoreCompanionDeleted = "restore.companionDeleted";
@@ -157,7 +159,8 @@ public static class ErrorCodes
         ResourceNotFound or FeatureDisabled => StatusCodes.Status404NotFound,
         ConflictDuplicate or ConflictStale or ConflictBusy or SetupAlreadyCompleted or RestoreSlotTaken
             or RestoreNameTaken or AttachmentLimitReached or MonthCloseNotEnded or DebtPaymentTaken or PasskeyLimitReached
-            or TokenLimitReached or SettleUpAlreadySplit or SettleUpTransferTaken or TwoFactorAlreadyEnabled => StatusCodes.Status409Conflict,
+            or TokenLimitReached or SettleUpAlreadySplit or SettleUpTransferTaken or TwoFactorAlreadyEnabled
+            or ImportAlreadyPresent => StatusCodes.Status409Conflict,
         AccessForbidden or UserSelfChange or UserLastAdministrator or SecurityNotHeld or SessionCurrent
             or TokenNotAllowed => StatusCodes.Status403Forbidden,
         CredentialsInvalid or TokenInvalid or TwoFactorInvalidCode => StatusCodes.Status401Unauthorized,

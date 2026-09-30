@@ -75,7 +75,11 @@ const rules: readonly Rule[] = [
     refresh: [api.getTransactionsQueryKey],
   },
   {
-    after: [api.getRestoreDeletedMutationKey, api.getRestoreAccountMutationKey],
+    after: [
+      api.getRestoreDeletedMutationKey,
+      api.getRestoreAccountMutationKey,
+      api.getImportMyDataMutationKey,
+    ],
     refresh: "everything",
   },
   {

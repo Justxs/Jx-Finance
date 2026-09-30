@@ -272,10 +272,25 @@ export const UpdateMyEmailNotificationsResponse = zod.object({
 });
 
 /**
- * Streams a zip archive named jx-finance-export-<date>.zip with every record you own: data.json in the backup's table format (format jx-finance-user-export, version 1, with your user id), and accounts.csv, transactions.csv and transfers.csv for a spreadsheet. It holds your accounts, personal, shared and archived, with everything recorded on them by anyone, the transfers that touch them, your categories, tags, rules, budgets, goals, assets, debts, recurring entries, notifications, month closes and trash, and the categories, tags and securities your records point at. It never holds passwords, two-factor secrets, passkeys, API tokens, sessions, the broker token, the Discord webhook, households, memberships or the activity log, nor another member's accounts. The active household is ignored. Nothing is kept on the server, and the answer carries no Content-Length. The file cannot be imported yet.
+ * Streams a zip archive named jx-finance-export-<date>.zip with every record you own: data.json in the backup's table format (format jx-finance-user-export, version 1, with your user id), and accounts.csv, transactions.csv and transfers.csv for a spreadsheet. It holds your accounts, personal, shared and archived, with everything recorded on them by anyone, the transfers that touch them, your categories, tags, rules, budgets, goals, assets, debts, recurring entries, notifications, month closes and trash, and the categories, tags and securities your records point at. It never holds passwords, two-factor secrets, passkeys, API tokens, sessions, the broker token, the Discord webhook, households, memberships or the activity log, nor another member's accounts. The active household is ignored. Nothing is kept on the server, and the answer carries no Content-Length. POST /api/users/me/import loads the file into an empty member.
  * @summary Download your own data
  */
 export const ExportMyDataResponse = zod.unknown();
+
+/**
+ * Loads the zip that GET /api/users/me/export wrote, from this or another installation, into the signed-in member, in one database transaction: either everything is imported or nothing changes. The member must have no accounts or tags yet (import.targetNotEmpty); the starter categories nothing uses are moved to the trash. Every record becomes the member's own and personal: household sharing, households, notifications, shared expenses, settlements, month closes, the trash, the broker connection and preferences are not imported. A security that already exists with the same id is reused, records that point at something the file does not hold are dropped or unlinked, and attached files are written back after their SHA-256 has been checked; an attachment without its file is dropped. The export must come from the same database version (backup.schemaMismatch). Importing records that already exist here, such as the same file twice, answers import.alreadyPresent. Rate limited to 5 imports an hour per client.
+ * @summary Import a download of your data
+ */
+export const ImportMyDataBody = zod.object({
+  file: zod.instanceof(Blob).optional(),
+});
+
+export const ImportMyDataResponse = zod.object({
+  tables: zod.int(),
+  rows: zod.int(),
+  attachments: zod.int(),
+  removed: zod.int(),
+});
 
 /**
  * Saves the language you picked in the interface, en or lt, so that every email and Discord message the server sends you is written in it. Until you save one, messages use the installation's default language. The interface itself keeps its language per browser.

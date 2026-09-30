@@ -86,6 +86,7 @@ const contracts: Record<string, Contract> = {
   longNameUser: { schema: schemas.UsersResponseItem },
   inactiveUser: { schema: schemas.UsersResponseItem },
   users: { schema: schemas.UsersResponse },
+  memberImportResult: { schema: schemas.ImportMyDataResponse },
   householdMembers: { schema: schemas.HouseholdResponse, toResponse: asHousehold },
   familyHousehold: { schema: schemas.HouseholdResponse },
   gardenHousehold: { schema: schemas.HouseholdResponse },

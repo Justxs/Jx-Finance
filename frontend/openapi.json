@@ -17511,7 +17511,7 @@
           "Users"
         ],
         "summary": "Download your own data",
-        "description": "Streams a zip archive named jx-finance-export-<date>.zip with every record you own: data.json in the backup's table format (format jx-finance-user-export, version 1, with your user id), and accounts.csv, transactions.csv and transfers.csv for a spreadsheet. It holds your accounts, personal, shared and archived, with everything recorded on them by anyone, the transfers that touch them, your categories, tags, rules, budgets, goals, assets, debts, recurring entries, notifications, month closes and trash, and the categories, tags and securities your records point at. It never holds passwords, two-factor secrets, passkeys, API tokens, sessions, the broker token, the Discord webhook, households, memberships or the activity log, nor another member's accounts. The active household is ignored. Nothing is kept on the server, and the answer carries no Content-Length. The file cannot be imported yet.",
+        "description": "Streams a zip archive named jx-finance-export-<date>.zip with every record you own: data.json in the backup's table format (format jx-finance-user-export, version 1, with your user id), and accounts.csv, transactions.csv and transfers.csv for a spreadsheet. It holds your accounts, personal, shared and archived, with everything recorded on them by anyone, the transfers that touch them, your categories, tags, rules, budgets, goals, assets, debts, recurring entries, notifications, month closes and trash, and the categories, tags and securities your records point at. It never holds passwords, two-factor secrets, passkeys, API tokens, sessions, the broker token, the Discord webhook, households, memberships or the activity log, nor another member's accounts. The active household is ignored. Nothing is kept on the server, and the answer carries no Content-Length. POST /api/users/me/import loads the file into an empty member.",
         "operationId": "ExportMyData",
         "parameters": [
           {
@@ -17570,6 +17570,86 @@
           },
           "429": {
             "description": "More than three exports in an hour from this client; wait and retry."
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      }
+    },
+    "/api/users/me/import": {
+      "post": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Import a download of your data",
+        "description": "Loads the zip that GET /api/users/me/export wrote, from this or another installation, into the signed-in member, in one database transaction: either everything is imported or nothing changes. The member must have no accounts or tags yet (import.targetNotEmpty); the starter categories nothing uses are moved to the trash. Every record becomes the member's own and personal: household sharing, households, notifications, shared expenses, settlements, month closes, the trash, the broker connection and preferences are not imported. A security that already exists with the same id is reused, records that point at something the file does not hold are dropped or unlinked, and attached files are written back after their SHA-256 has been checked; an attachment without its file is dropped. The export must come from the same database version (backup.schemaMismatch). Importing records that already exist here, such as the same file twice, answers import.alreadyPresent. Rate limited to 5 imports an hour per client.",
+        "operationId": "ImportMyData",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/ImportMyDataRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "How many tables, rows and files were imported, and how many records were dropped because they pointed at data outside the file.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportMyDataResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The file is not a data export, is damaged or too large, comes from another database version, or the member already has data.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The records already exist here (import.alreadyPresent), or the database was busy (conflict.busy); nothing was changed.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "More than five imports in an hour from this client; wait and retry."
           },
           "500": {
             "description": "Server Error",
@@ -21891,6 +21971,7 @@
           "household.required",
           "household.scopeMismatch",
           "iban.invalid",
+          "import.alreadyPresent",
           "import.entryMismatch",
           "import.invalidDateFormat",
           "import.invalidFile",
@@ -21898,6 +21979,7 @@
           "import.missingColumns",
           "import.noStatementForAccount",
           "import.refundInvalid",
+          "import.targetNotEmpty",
           "import.transferAlreadyMatched",
           "import.transferMismatch",
           "money.invalid",
@@ -22719,6 +22801,42 @@
               "string"
             ],
             "format": "uuid"
+          }
+        }
+      },
+      "ImportMyDataRequest": {
+        "type": "object",
+        "properties": {
+          "file": {
+            "type": "string",
+            "format": "binary"
+          }
+        }
+      },
+      "ImportMyDataResponse": {
+        "required": [
+          "tables",
+          "rows",
+          "attachments",
+          "removed"
+        ],
+        "type": "object",
+        "properties": {
+          "tables": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "rows": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "attachments": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "removed": {
+            "type": "integer",
+            "format": "int32"
           }
         }
       },

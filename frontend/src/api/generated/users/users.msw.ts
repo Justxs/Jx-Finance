@@ -7,7 +7,7 @@
  */
 import { HttpResponse, http } from "msw";
 import type { RequestHandlerOptions } from "msw";
-import type { DiscordWebhookResponse, UserProfileResponse } from "../model";
+import type { DiscordWebhookResponse, ImportMyDataResponse, UserProfileResponse } from "../model";
 
 export const getCreateUserMockHandler = (
   overrideResponse?:
@@ -215,6 +215,30 @@ export const getExportMyDataMockHandler = (
   );
 };
 
+export const getImportMyDataMockHandler = (
+  overrideResponse?:
+    | ImportMyDataResponse
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<ImportMyDataResponse> | ImportMyDataResponse),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/users/me/import",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : undefined,
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
 export const getUpdateMyLanguageMockHandler = (
   overrideResponse?:
     | UserProfileResponse
@@ -334,6 +358,7 @@ export const getUsersMock = () => [
   getTestMyDiscordMockHandler(),
   getUpdateMyEmailNotificationsMockHandler(),
   getExportMyDataMockHandler(),
+  getImportMyDataMockHandler(),
   getUpdateMyLanguageMockHandler(),
   getDeactivateUserMockHandler(),
   getReactivateUserMockHandler(),
