@@ -2,9 +2,10 @@ import { Moon, Sun } from "lucide-react";
 import { type ComponentProps, type ReactNode, useId } from "react";
 import { useTranslation } from "react-i18next";
 import { TitledSection } from "@/components/ui/section/section";
+import { useSettings } from "@/hooks/use-settings";
 import { cn } from "@/lib/utils";
 import { localeNames, useLocale } from "@/stores/app-store";
-import { locales } from "@/stores/preferences";
+import { locales, pageSizes, savePreferences, usePreferences } from "@/stores/preferences";
 import {
   fonts,
   palettes,
@@ -88,6 +89,38 @@ function ChoiceGroup<T extends string>({
       </div>
     </div>
   );
+}
+
+const pageSizeOptions = ["default", ...pageSizes.map(String)] as const;
+
+type PageSizeOption = (typeof pageSizeOptions)[number];
+
+function PageSizeChoice() {
+  const { t } = useTranslation();
+  const { defaultPageSize } = useSettings();
+  const chosen = usePreferences().pageSize;
+
+  return (
+    <TitledSection title={t("pageSize.title")} description={t("pageSize.hint")}>
+      <ChoiceGroup<PageSizeOption>
+        name="page-size"
+        heading={t("pageSize.rows")}
+        options={pageSizeOptions}
+        value={chosen ? String(chosen) : "default"}
+        onChange={(option) =>
+          savePreferences({ pageSize: option === "default" ? undefined : pageSizeOf(option) })
+        }
+        optionLabel={(option) =>
+          option === "default" ? t("pageSize.installation", { size: defaultPageSize }) : option
+        }
+        renderSample={() => null}
+      />
+    </TitledSection>
+  );
+}
+
+function pageSizeOf(option: string) {
+  return pageSizes.find((size) => String(size) === option);
 }
 
 export function AppearancePicker() {
@@ -188,6 +221,7 @@ export function AppearancePicker() {
           )}
         />
       </TitledSection>
+      <PageSizeChoice />
     </>
   );
 }

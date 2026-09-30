@@ -12,6 +12,7 @@ flowchart TD
     Pref --> Hh["activeHouseholdId: absent means everything"]
     Pref --> Recent["commandRecents: the last 8 command palette entries, newest first"]
     Pref --> Prompt["monthClosePromptHidden: the yyyy-MM month whose dashboard close prompt was put off"]
+    Pref --> Size["pageSize: 10, 20, 50 or 100 ledger rows, absent means the installation default"]
     Init["public/theme-init.js, before the bundle"] --> Html["class dark and data-* attributes on html, no flash"]
     Theme --> Html
     Palette --> Html
@@ -20,6 +21,8 @@ flowchart TD
     Blocked["Storage blocked"] --> Mem["in-memory fallback, choices last for the session"]
     Views[("savedFiltersCollection, key jx-saved-filters<br/>transactionTemplatesCollection, key jx-transaction-templates")] --> Rows["one row per saved filter or template, not one row per browser"]
 ```
+
+Since 2026-09-30 `pageSize` in this row sets how many rows a ledger page holds. Settings › Personal › Appearance ends with a "Ledger" section whose "Rows per page" offers "Installation default (20)", with the administrator's number, and 10, 20, 50 and 100; the default removes the key. The ledger page, its pending skeleton and the route loader's prefetch all read `pageSize ?? defaultPageSize`, so the warmed query is the one the page asks for, and any other stored value parses as absent. It is per browser, like the text size, because the right number depends on the screen.
 
 The language is read from `locale` in this row, per browser, and falls back to the installation default. Since 2026-09-29 `setLocale` also saves a signed-in member's pick on the server with `PUT /api/users/me/language`, ignoring a failure, so that email and Discord messages reach them in the language they read; the root route's loader sends an earlier pick once when the profile has no language yet. The server copy is never read back into the interface. See [Monthly digest](monthly-digest.md#the-members-language).
 

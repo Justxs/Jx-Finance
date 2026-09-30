@@ -56,12 +56,14 @@ import { usePageClamp } from "@/hooks/use-paged-list";
 import { useSettingsSuspense } from "@/hooks/use-settings";
 import { byId, nameById } from "@/lib/options";
 import { metaLine } from "@/lib/utils";
+import { usePreferences } from "@/stores/preferences";
 import { useTransactionMutations } from "./use-transaction-mutations";
 import { useTransactionSelection } from "./use-transaction-selection";
 
 export function TransactionsPage() {
   const { t } = useTranslation();
-  const { defaultPageSize: pageSize, features } = useSettingsSuspense();
+  const { defaultPageSize, features } = useSettingsSuspense();
+  const pageSize = usePreferences().pageSize ?? defaultPageSize;
   const money = useMoney();
   const formatDate = useIsoDate();
 

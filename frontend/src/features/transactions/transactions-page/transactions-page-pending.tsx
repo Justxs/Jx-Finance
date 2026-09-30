@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/skeleton/skeleton";
 import { TableSkeleton } from "@/components/ui/table/table";
 import { useSettings } from "@/hooks/use-settings";
+import { usePreferences } from "@/stores/preferences";
 
 export function TransactionsTotalsSkeleton() {
   return (
@@ -40,6 +41,7 @@ function TransactionRowsSkeleton({ rows }: Readonly<{ rows: number }>) {
 
 export function TransactionsPending() {
   const { features, defaultPageSize } = useSettings();
+  const rows = usePreferences().pageSize ?? defaultPageSize;
 
   return (
     <PagePending
@@ -61,13 +63,8 @@ export function TransactionsPending() {
           <TransactionsTotalsSkeleton />
           <ButtonSkeleton size="sm" className="md:hidden" />
         </div>
-        <TableSkeleton
-          rows={defaultPageSize}
-          columns={6}
-          lines={2}
-          className="-mx-3 hidden md:block"
-        />
-        <TransactionRowsSkeleton rows={defaultPageSize} />
+        <TableSkeleton rows={rows} columns={6} lines={2} className="-mx-3 hidden md:block" />
+        <TransactionRowsSkeleton rows={rows} />
         <PaginationSkeleton />
       </Section>
     </PagePending>

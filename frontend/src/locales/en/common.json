@@ -2648,5 +2648,11 @@
     "account": "Account currencies",
     "reporting": "Reporting currency",
     "other": "Other currencies"
+  },
+  "pageSize": {
+    "title": "Ledger",
+    "hint": "Kept in this browser, so a phone and a desktop can show different amounts.",
+    "rows": "Rows per page",
+    "installation": "Installation default ({{size}})"
   }
 }

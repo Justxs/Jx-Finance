@@ -36,6 +36,14 @@ describe("reading", () => {
     expect(preferences.readPreferences()).toEqual({ ...defaults, palette: "plum" });
   });
 
+  test("a page size is kept only when it is one of the offered sizes", async () => {
+    seedPreferences({ pageSize: 50 });
+    expect((await loadPreferences()).readPreferences().pageSize).toBe(50);
+
+    seedPreferences({ pageSize: 37 });
+    expect((await loadPreferences()).readPreferences().pageSize).toBeUndefined();
+  });
+
   test("unreadable JSON gives the defaults", async () => {
     vi.spyOn(console, "warn").mockImplementation(() => {});
     localStorage.setItem(PREFERENCES_STORAGE_KEY, "{not json");

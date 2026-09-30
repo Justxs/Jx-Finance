@@ -2738,5 +2738,11 @@
     "account": "Sąskaitos valiutos",
     "reporting": "Ataskaitų valiuta",
     "other": "Kitos valiutos"
+  },
+  "pageSize": {
+    "title": "Operacijų sąrašas",
+    "hint": "Išsaugoma šioje naršyklėje, todėl telefone ir kompiuteryje gali būti skirtingai.",
+    "rows": "Eilučių puslapyje",
+    "installation": "Pagal diegimą ({{size}})"
   }
 }

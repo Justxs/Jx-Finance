@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, userEvent } from "storybook/test";
 import { i18n } from "@/lib/i18n";
-import { locales } from "@/stores/preferences";
+import { locales, pageSizes, readPreferences } from "@/stores/preferences";
 import { fonts, palettes, textSizes, themes } from "@/stores/theme-store";
 import { AppearancePicker } from "./appearance-picker";
 
@@ -22,9 +22,16 @@ export const Default: Story = {
       canvas.getByRole("radiogroup", { name: "Language" }),
       canvas.getByRole("radiogroup", { name: "Typeface" }),
       canvas.getByRole("radiogroup", { name: "Text size" }),
+      canvas.getByRole("radiogroup", { name: "Rows per page" }),
     ]);
     await expect(canvas.getAllByRole("radio")).toHaveLength(
-      themes.length + palettes.length + locales.length + fonts.length + textSizes.length,
+      themes.length +
+        palettes.length +
+        locales.length +
+        fonts.length +
+        textSizes.length +
+        pageSizes.length +
+        1,
     );
     await expect(canvas.getByRole("radio", { name: "Light" })).toBeChecked();
     await expect(canvas.getByRole("radio", { name: "English" })).toBeChecked();
@@ -72,5 +79,16 @@ export const ChooseThemeAndLanguage: Story = {
     await expect(document.documentElement).not.toHaveClass("dark");
     await userEvent.click(canvas.getByRole("radio", { name: "English" }));
     await expect(i18n.language).toBe("en");
+  },
+};
+
+export const ChooseRowsPerPage: Story = {
+  play: async ({ canvas }) => {
+    await expect(canvas.getByRole("radio", { name: "Installation default (20)" })).toBeChecked();
+    await userEvent.click(canvas.getByRole("radio", { name: "50" }));
+    await expect(canvas.getByRole("radio", { name: "50" })).toBeChecked();
+    await expect(readPreferences().pageSize).toBe(50);
+    await userEvent.click(canvas.getByRole("radio", { name: "Installation default (20)" }));
+    await expect(readPreferences().pageSize).toBeUndefined();
   },
 };

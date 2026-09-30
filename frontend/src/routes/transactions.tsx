@@ -14,6 +14,7 @@ import {
 import { TransactionsPage } from "@/features/transactions/transactions-page/transactions-page";
 import { TransactionsPending } from "@/features/transactions/transactions-page/transactions-page-pending";
 import { warm, warmWithSettings } from "@/lib/route-prefetch";
+import { readPreferences } from "@/stores/preferences";
 
 export const Route = createFileRoute("/transactions")({
   validateSearch: transactionsSearchSchema,
@@ -25,7 +26,9 @@ export const Route = createFileRoute("/transactions")({
     warmWithSettings(queryClient, (settings) => {
       warm(
         queryClient,
-        getTransactionsSuspenseQueryOptions(transactionListParams(deps, settings.defaultPageSize)),
+        getTransactionsSuspenseQueryOptions(
+          transactionListParams(deps, readPreferences().pageSize ?? settings.defaultPageSize),
+        ),
       );
     });
   },

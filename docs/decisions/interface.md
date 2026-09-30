@@ -20,6 +20,10 @@ One dialog on `Mod+K` over every page: the pages and sections from a table besid
 
 Newest first. Each entry is a choice between real alternatives: what was chosen, what was rejected, and why.
 
+- **2026-09-30.** A member's ledger page size is a per-browser preference, `pageSize` in `jx-preferences`, over the installation's `DefaultPageSize`
+  - Rejected: A column on the user row with `PUT /api/users/me/page-size`, like the language; one page size per list across the whole application
+  - Why: How many rows fit depends on the screen, so the phone and the desktop of one person want different numbers, the way they do for the text size. The server never needs it: nothing is sent to the member outside the browser, unlike the language of an email. Only the ledger reads the installation number today, so one preference with the same four sizes covers it without a migration or an endpoint
+
 - **2026-09-28.** Every signed-in route declares a `pendingComponent` that mirrors its page, and `RoutePending` renders the matched route's one for both the router's pending state and the root Suspense fallback; skeletons of rows and blocks live next to the component they mirror
   - Rejected: One generic page skeleton for every route (title, stats, six rows); a few shape variants chosen in `RoutePending` from a field on the navigation entries; making every page render its header outside a boundary so only the body suspends
   - Why: The generic skeleton matched almost no page, so most pages jumped when they loaded. Variants would have put each feature's layout knowledge into a shared component. Restructuring every page was far more code than one small pending module per route, which the router already has a slot for

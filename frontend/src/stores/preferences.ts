@@ -20,6 +20,7 @@ export const fonts = [
 ] as const;
 export const textSizes = ["small", "default", "large"] as const;
 export const locales = ["en", "lt"] as const;
+export const pageSizes = [10, 20, 50, 100] as const;
 
 export const DEFAULT_PALETTE = "ledger";
 export const DEFAULT_FONT = "ledger";
@@ -38,6 +39,10 @@ const preferencesSchema = z.object({
   activeHouseholdId: z.uuid().optional().catch(undefined),
   commandRecents: z.array(z.string()).max(COMMAND_RECENTS_MAX).optional().catch(undefined),
   supportLinkHidden: z.boolean().catch(false),
+  pageSize: z
+    .union(pageSizes.map((size) => z.literal(size)))
+    .optional()
+    .catch(undefined),
   monthClosePromptHidden: z
     .string()
     .regex(/^\d{4}-\d{2}$/)

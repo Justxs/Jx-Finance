@@ -25,7 +25,7 @@ These come from the release checklist and block calling the current release veri
 | Investments | Only Interactive Brokers; no other broker and no generic trade CSV | M |
 | Households | Budgets, goals, assets, debts and recurring entries cannot be shared | L |
 | Users | No forced password change after an administrator reset (rejected on 2026-09-19 unless done completely) | M |
-| Settings | Installation-wide only; no per-user reporting currency or page size | L for currency, S for page size |
+| Settings | Installation-wide only; no per-user reporting currency (the ledger's rows per page became a per-browser choice on 2026-09-30) | L |
 | Exchange rates | ECB only; no manual rate, no currencies outside the ECB list | S |
 | Backups | On demand only; a scheduler and offsite copies were removed on 2026-09-05 and stay a deliberate decision | M, needs the decision reopened |
 
@@ -54,6 +54,7 @@ Ordered by how much they would help daily use for the effort. Following the prod
 
 | Date | Item | Where it is described |
 | --- | --- | --- |
+| 2026-09-30 | Rows per page for yourself: Settings › Personal › Appearance offers 10, 20, 50 or 100 ledger rows or the installation default, kept per browser in `jx-preferences`, and the ledger, its skeleton and the route prefetch read it before the administrator's number | [Interface](features/interface.md) |
 | 2026-09-30 | Low-balance notification: `LowBalanceJob` reads the 30-day cash-flow forecast every six hours while recurring entries are on and raises a `lowBalance` notification for each account the forecast takes below zero, unless it is already overdrawn, once per account and crossing date; the bell reads "Forecast to go below zero on Nov 14, lowest -€200.00" and links to the accounts page, and it can also go by email or Discord like every other kind | [Notifications](features/notifications.md#low-balance-alerts) |
 | 2026-09-30 | Notes on a transaction: an optional note of up to 1000 characters beside the bank's description, set in the transaction form, shown as a muted line in the ledger, matched by the ledger search, exported as the last CSV column and never touched by an import | [Transactions](features/transactions.md#notes) |
 | 2026-09-30 | Amount range filter: `amountMin` and `amountMax` on the ledger's list, summary and both exports keep rows by the size of their amount in their own currency, so a refund matches like the purchase; the amount column's filter and the phone filters dialog offer From and To fields that take a comma or a dot, and the range shows as one "Amount range" chip, travels in the export links and in saved filters | [Transactions](features/transactions.md#amount-range-filter) |
