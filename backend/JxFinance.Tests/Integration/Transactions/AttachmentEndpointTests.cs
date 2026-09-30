@@ -3,6 +3,8 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Security.Cryptography;
 using System.Text;
+using ImageMagick;
+using ImageMagick.Drawing;
 using JxFinance.Domain.Transactions;
 using JxFinance.Infrastructure.BackgroundJobs;
 using JxFinance.Tests.Support;
@@ -15,15 +17,24 @@ public sealed class AttachmentEndpointTests(ApiFixture fixture) : IntegrationTes
 {
     private const string Date = "2026-06-05";
 
+    private const string Landmark = "Gediminas Tower";
+
     private static readonly byte[] PngSignature = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A];
+
+    private static readonly Dictionary<string, MagickFormat> Formats = new()
+    {
+        ["image/jpeg"] = MagickFormat.Jpeg,
+        ["image/png"] = MagickFormat.Png,
+        ["image/webp"] = MagickFormat.WebP,
+    };
 
     private readonly string directory = fixture.AttachmentDirectory;
 
     [Fact]
-    public async Task An_uploaded_receipt_is_listed_counted_and_downloaded_byte_for_byte()
+    public async Task An_uploaded_receipt_is_listed_counted_and_downloaded_as_stored()
     {
         var transaction = await NewTransactionAsync(Client);
-        var png = Png(2048);
+        var png = Png();
 
         var response = await UploadAsync(Client, transaction, png, "receipt.png", "image/png");
 
@@ -31,8 +42,6 @@ public sealed class AttachmentEndpointTests(ApiFixture fixture) : IntegrationTes
         var attachment = (await response.Content.ReadFromJsonAsync<AttachmentDto>(TestContext.Current.CancellationToken))!;
         Assert.Equal("receipt.png", attachment.FileName);
         Assert.Equal("image/png", attachment.ContentType);
-        Assert.Equal(png.Length, attachment.SizeBytes);
-        Assert.Equal(Convert.ToHexStringLower(SHA256.HashData(png)), attachment.Sha256);
         Assert.Equal("Test Admin", attachment.UploadedByName);
 
         var listed = await ListAsync(Client, transaction);
@@ -49,14 +58,43 @@ public sealed class AttachmentEndpointTests(ApiFixture fixture) : IntegrationTes
         Assert.Equal("receipt.png", download.Content.Headers.ContentDisposition?.FileName?.Trim('"'));
         Assert.Equal("nosniff", download.Headers.GetValues("X-Content-Type-Options").Single());
         Assert.Contains("sandbox", download.Headers.GetValues("Content-Security-Policy").Single());
-        Assert.Equal(png, await download.Content.ReadAsByteArrayAsync(TestContext.Current.CancellationToken));
+        var stored = await download.Content.ReadAsByteArrayAsync(TestContext.Current.CancellationToken);
+        Assert.Equal(attachment.SizeBytes, stored.Length);
+        Assert.Equal(Convert.ToHexStringLower(SHA256.HashData(stored)), attachment.Sha256);
+    }
+
+    [Theory]
+    [InlineData("image/jpeg")]
+    [InlineData("image/png")]
+    [InlineData("image/webp")]
+    public async Task A_photo_is_stored_upright_without_its_location_or_other_metadata(string contentType)
+    {
+        var transaction = await NewTransactionAsync(Client);
+        var photo = SidewaysPhotoWithLocation(contentType);
+
+        var attachment = await UploadOkAsync(Client, transaction, photo, "receipt", contentType);
+        var download = await Client.GetByteArrayAsync($"/api/attachments/{attachment.Id}/content", TestContext.Current.CancellationToken);
+
+        using var stored = new MagickImage(download);
+        Assert.Equal(contentType, attachment.ContentType);
+        Assert.Equal(Convert.ToHexStringLower(SHA256.HashData(download)), attachment.Sha256);
+        Assert.Null(stored.GetExifProfile());
+        Assert.Empty(stored.ProfileNames);
+        Assert.Null(stored.Comment);
+        Assert.DoesNotContain(Landmark, Encoding.Latin1.GetString(download), StringComparison.Ordinal);
+        Assert.Equal((400u, 800u), (stored.Width, stored.Height));
+        using var pixels = stored.GetPixels();
+        var marked = pixels.GetPixel(350, 50).ToColor()!;
+        var plain = pixels.GetPixel(50, 50).ToColor()!;
+        Assert.True(marked.R > 200 && marked.G < 80, $"top right is {marked}");
+        Assert.True(plain.R < 160, $"top left is {plain}");
     }
 
     [Fact]
     public async Task A_download_with_the_current_etag_answers_not_modified()
     {
         var transaction = await NewTransactionAsync(Client);
-        var attachment = await UploadOkAsync(Client, transaction, Png(64), "a.png", "image/png");
+        var attachment = await UploadOkAsync(Client, transaction, Png(), "a.png", "image/png");
 
         using var request = new HttpRequestMessage(HttpMethod.Get, $"/api/attachments/{attachment.Id}/content");
         request.Headers.IfNoneMatch.Add(new EntityTagHeaderValue($"\"{attachment.Sha256}\""));
@@ -72,8 +110,8 @@ public sealed class AttachmentEndpointTests(ApiFixture fixture) : IntegrationTes
         var pdf = Encoding.ASCII.GetBytes("%PDF-1.7\n1 0 obj\n<<>>\nendobj\n%%EOF");
 
         var traversal = await UploadOkAsync(Client, transaction, pdf, "..\\..\\etc/pass<wd>.pdf", "application/octet-stream");
-        var disguised = await UploadOkAsync(Client, transaction, Png(32), "invoice.pdf", null);
-        var nameless = await UploadOkAsync(Client, transaction, Png(32), "...", "image/png");
+        var disguised = await UploadOkAsync(Client, transaction, Png(), "invoice.pdf", null);
+        var nameless = await UploadOkAsync(Client, transaction, Png(), "...", "image/png");
 
         Assert.Equal("application/pdf", traversal.ContentType);
         Assert.Equal("passwd.pdf", traversal.FileName);
@@ -106,10 +144,12 @@ public sealed class AttachmentEndpointTests(ApiFixture fixture) : IntegrationTes
         var transaction = await NewTransactionAsync(Client);
 
         var script = await UploadAsync(Client, transaction, Encoding.UTF8.GetBytes("<svg onload=alert(1)>"), "photo.png", "image/png");
-        var pngAsPdf = await UploadAsync(Client, transaction, Png(32), "scan.pdf", "application/pdf");
+        var pngAsPdf = await UploadAsync(Client, transaction, Png(), "scan.pdf", "application/pdf");
+        var broken = await UploadAsync(Client, transaction, [.. PngSignature, 1, 2, 3, 4], "broken.png", "image/png");
 
         await AssertRejectedAsync(script, "attachment.contentMismatch");
         await AssertRejectedAsync(pngAsPdf, "attachment.contentMismatch");
+        await AssertRejectedAsync(broken, "attachment.contentMismatch");
         Assert.Empty(await ListAsync(Client, transaction));
         Assert.Empty(Directory.EnumerateFiles(directory, "*.tmp"));
     }
@@ -122,7 +162,7 @@ public sealed class AttachmentEndpointTests(ApiFixture fixture) : IntegrationTes
         var empty = await UploadAsync(Client, transaction, [], "empty.png", "image/png");
         using var nothing = new MultipartFormDataContent { { new StringContent("x"), "note" } };
         var missing = await Client.PostAsync($"/api/transactions/{transaction}/attachments", nothing, TestContext.Current.CancellationToken);
-        var oversized = await UploadAsync(Client, transaction, Png((int)TransactionAttachment.MaxFileBytes + 1), "big.png", "image/png");
+        var oversized = await UploadAsync(Client, transaction, Oversized(), "big.png", "image/png");
 
         await AssertRejectedAsync(empty, "attachment.empty");
         await AssertValidationErrorAsync(missing, "file");
@@ -136,10 +176,10 @@ public sealed class AttachmentEndpointTests(ApiFixture fixture) : IntegrationTes
         var transaction = await NewTransactionAsync(Client);
         for (var i = 0; i < TransactionAttachment.MaxPerTransaction; i++)
         {
-            await UploadOkAsync(Client, transaction, Png(16), $"{i}.png", "image/png");
+            await UploadOkAsync(Client, transaction, Png(), $"{i}.png", "image/png");
         }
 
-        var response = await UploadAsync(Client, transaction, Png(16), "one-too-many.png", "image/png");
+        var response = await UploadAsync(Client, transaction, Png(), "one-too-many.png", "image/png");
 
         await AssertProblemAsync(response, HttpStatusCode.Conflict, "attachment.limitReached");
     }
@@ -149,7 +189,7 @@ public sealed class AttachmentEndpointTests(ApiFixture fixture) : IntegrationTes
     {
         using var member = await CreateUserClientAsync();
         var transaction = await NewTransactionAsync(member, "Maxima");
-        var attachment = await UploadOkAsync(member, transaction, Png(128), "receipt.png", "image/png");
+        var attachment = await UploadOkAsync(member, transaction, Png(), "receipt.png", "image/png");
 
         var deleted = await member.DeleteAsync($"/api/attachments/{attachment.Id}", TestContext.Current.CancellationToken);
         var afterDelete = await ListAsync(member, transaction);
@@ -173,7 +213,7 @@ public sealed class AttachmentEndpointTests(ApiFixture fixture) : IntegrationTes
     {
         using var member = await CreateUserClientAsync();
         var transaction = await NewTransactionAsync(member);
-        var attachment = await UploadOkAsync(member, transaction, Png(64), "a.png", "image/png");
+        var attachment = await UploadOkAsync(member, transaction, Png(), "a.png", "image/png");
 
         (await member.DeleteAsync($"/api/transactions/{transaction}", TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
         var whileDeleted = await member.GetAsync($"/api/transactions/{transaction}/attachments", TestContext.Current.CancellationToken);
@@ -191,7 +231,7 @@ public sealed class AttachmentEndpointTests(ApiFixture fixture) : IntegrationTes
     {
         using var member = await CreateUserClientAsync();
         var transaction = await NewTransactionAsync(member);
-        var attachment = await UploadOkAsync(member, transaction, Png(64), "a.png", "image/png");
+        var attachment = await UploadOkAsync(member, transaction, Png(), "a.png", "image/png");
         (await member.DeleteAsync($"/api/attachments/{attachment.Id}", TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
         (await member.DeleteAsync($"/api/transactions/{transaction}", TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
 
@@ -204,13 +244,13 @@ public sealed class AttachmentEndpointTests(ApiFixture fixture) : IntegrationTes
     public async Task Another_user_cannot_see_upload_download_or_remove_the_files()
     {
         var transaction = await NewTransactionAsync(Client);
-        var attachment = await UploadOkAsync(Client, transaction, Png(64), "a.png", "image/png");
+        var attachment = await UploadOkAsync(Client, transaction, Png(), "a.png", "image/png");
         using var stranger = await CreateUserClientAsync();
 
         HttpResponseMessage[] responses =
         [
             await stranger.GetAsync($"/api/transactions/{transaction}/attachments", TestContext.Current.CancellationToken),
-            await UploadAsync(stranger, transaction, Png(16), "b.png", "image/png"),
+            await UploadAsync(stranger, transaction, Png(), "b.png", "image/png"),
             await stranger.GetAsync($"/api/attachments/{attachment.Id}/content", TestContext.Current.CancellationToken),
             await stranger.DeleteAsync($"/api/attachments/{attachment.Id}", TestContext.Current.CancellationToken),
             await stranger.PostAsJsonAsync("/api/trash/restore", new { kind = "attachment", entityId = attachment.Id }, TestContext.Current.CancellationToken),
@@ -228,10 +268,10 @@ public sealed class AttachmentEndpointTests(ApiFixture fixture) : IntegrationTes
         var elsewhere = await CreateHouseholdAsync(member);
         var account = await CreateAccountAsync(householdId: household);
         var transaction = (await CreateTransactionAsync(Client, account, null, "expense", "5.00", Date, $"Shared {Guid.NewGuid():N}")).Id;
-        var mine = await UploadOkAsync(Client, transaction, Png(64), "admin.png", "image/png");
+        var mine = await UploadOkAsync(Client, transaction, Png(), "admin.png", "image/png");
         using var memberClient = await LoginAsync(member);
 
-        var theirs = await UploadOkAsync(memberClient, transaction, Png(64), "member.png", "image/png");
+        var theirs = await UploadOkAsync(memberClient, transaction, Png(), "member.png", "image/png");
         var listed = await ListAsync(memberClient, transaction);
         var download = await memberClient.GetAsync($"/api/attachments/{mine.Id}/content", TestContext.Current.CancellationToken);
         var outOfScope = await SendScopedAsync(memberClient, HttpMethod.Get, $"/api/attachments/{mine.Id}/content", elsewhere);
@@ -250,8 +290,8 @@ public sealed class AttachmentEndpointTests(ApiFixture fixture) : IntegrationTes
         var transaction = (await CreateTransactionAsync(Client, account, null, "expense", "9.99", Date, "Rimi")).Id;
         var personal = await NewTransactionAsync(Client);
 
-        var attachment = await UploadOkAsync(Client, transaction, Png(64), "rimi.png", "image/png");
-        await UploadOkAsync(Client, personal, Png(64), "private.png", "image/png");
+        var attachment = await UploadOkAsync(Client, transaction, Png(), "rimi.png", "image/png");
+        await UploadOkAsync(Client, personal, Png(), "private.png", "image/png");
         (await Client.DeleteAsync($"/api/attachments/{attachment.Id}", TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
         (await Client.PostAsJsonAsync("/api/trash/restore", new { kind = "attachment", entityId = attachment.Id }, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
 
@@ -269,11 +309,11 @@ public sealed class AttachmentEndpointTests(ApiFixture fixture) : IntegrationTes
     {
         using var member = await CreateUserClientAsync();
         var transaction = await NewTransactionAsync(member);
-        var kept = await UploadOkAsync(member, transaction, Png(64), "kept.png", "image/png");
-        var recent = await UploadOkAsync(member, transaction, Png(64), "recent.png", "image/png");
-        var expired = await UploadOkAsync(member, transaction, Png(64), "expired.png", "image/png");
+        var kept = await UploadOkAsync(member, transaction, Png(), "kept.png", "image/png");
+        var recent = await UploadOkAsync(member, transaction, Png(), "recent.png", "image/png");
+        var expired = await UploadOkAsync(member, transaction, Png(), "expired.png", "image/png");
         var gone = await NewTransactionAsync(member);
-        var withGone = await UploadOkAsync(member, gone, Png(64), "gone.png", "image/png");
+        var withGone = await UploadOkAsync(member, gone, Png(), "gone.png", "image/png");
         (await member.DeleteAsync($"/api/attachments/{recent.Id}", TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
         (await member.DeleteAsync($"/api/attachments/{expired.Id}", TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
         (await member.DeleteAsync($"/api/transactions/{gone}", TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
@@ -350,12 +390,47 @@ public sealed class AttachmentEndpointTests(ApiFixture fixture) : IntegrationTes
         return created.Id;
     }
 
-    private static byte[] Png(int length)
+    private static byte[] Png()
     {
-        var bytes = new byte[Math.Max(length, PngSignature.Length)];
+        using var image = new MagickImage(
+            new MagickColor((byte)Random.Shared.Next(256), (byte)Random.Shared.Next(256), (byte)Random.Shared.Next(256)),
+            16,
+            16);
+        return image.ToByteArray(MagickFormat.Png);
+    }
+
+    private static byte[] Oversized()
+    {
+        var bytes = new byte[TransactionAttachment.MaxFileBytes + 1];
         Random.Shared.NextBytes(bytes);
         PngSignature.CopyTo(bytes, 0);
-        return length == 0 ? [] : bytes;
+        return bytes;
+    }
+
+    private static byte[] SidewaysPhotoWithLocation(string contentType)
+    {
+        using var photo = new MagickImage(MagickColors.Gray, 800, 400);
+        photo.Draw(new Drawables().FillColor(MagickColors.Red).Rectangle(0, 0, 100, 100));
+        var exif = new ExifProfile();
+        exif.SetValue(ExifTag.Orientation, (ushort)6);
+        exif.SetValue(ExifTag.GPSLatitudeRef, "N");
+        exif.SetValue(ExifTag.GPSLatitude, [new Rational(54, 1), new Rational(41, 1), new Rational(13, 1)]);
+        exif.SetValue(ExifTag.GPSLongitudeRef, "E");
+        exif.SetValue(ExifTag.GPSLongitude, [new Rational(25, 1), new Rational(17, 1), new Rational(21, 1)]);
+        photo.SetProfile(exif);
+        photo.SetProfile(new XmpProfile(Encoding.UTF8.GetBytes(
+            $"<x:xmpmeta xmlns:x=\"adobe:ns:meta/\"><rdf:RDF xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"><rdf:Description xmlns:photoshop=\"http://ns.adobe.com/photoshop/1.0/\" photoshop:City=\"{Landmark}\"/></rdf:RDF></x:xmpmeta>")));
+        var iptc = new IptcProfile();
+        iptc.SetValue(IptcTag.City, Landmark);
+        photo.SetProfile(iptc);
+        photo.Comment = Landmark;
+        photo.Orientation = OrientationType.RightTop;
+        var bytes = photo.ToByteArray(Formats[contentType]);
+
+        using var sent = new MagickImage(bytes);
+        Assert.Equal("N", sent.GetExifProfile()?.GetValue(ExifTag.GPSLatitudeRef)?.Value);
+        Assert.Equal(OrientationType.RightTop, sent.Orientation);
+        return bytes;
     }
 
     private static async Task<List<AttachmentDto>> ListAsync(HttpClient client, Guid transactionId)

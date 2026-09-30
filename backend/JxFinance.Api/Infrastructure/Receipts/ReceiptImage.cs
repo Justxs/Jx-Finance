@@ -3,6 +3,7 @@ using JxFinance.Common.Attachments;
 using JxFinance.Common.Errors;
 using JxFinance.Common.Receipts;
 using JxFinance.Domain.Common;
+using JxFinance.Infrastructure.Attachments;
 using UglyToad.PdfPig;
 using UglyToad.PdfPig.Content;
 using UglyToad.PdfPig.Core;
@@ -14,7 +15,6 @@ public static class ReceiptImage
 {
     public const int MaxPdfPages = 3;
     public const int MinShortEdge = 200;
-    public const int MaxPixelEdge = 16000;
     public const int OcrWidth = 1600;
     public const int OcrMaxHeight = 12000;
 
@@ -25,24 +25,9 @@ public static class ReceiptImage
         ErrorCodes.ReceiptUnsupportedFile,
         $"The photo is too small to read. Use one that is at least {MinShortEdge} pixels on its short side.");
 
-    private static readonly Dictionary<string, MagickFormat> Formats = new(StringComparer.Ordinal)
-    {
-        [AttachmentContent.Jpeg] = MagickFormat.Jpeg,
-        [AttachmentContent.Png] = MagickFormat.Png,
-        [AttachmentContent.Webp] = MagickFormat.WebP,
-        [AttachmentContent.Heic] = MagickFormat.Heic,
-    };
-
-    static ReceiptImage()
-    {
-        ResourceLimits.Width = MaxPixelEdge;
-        ResourceLimits.Height = MaxPixelEdge;
-        ResourceLimits.Memory = 512UL * 1024 * 1024;
-    }
-
     public static Result<ReceiptInput> Prepare(byte[] content, string contentType) =>
         contentType == AttachmentContent.Pdf ? ReadPdf(content)
-        : Formats.TryGetValue(contentType, out var format) ? PrepareImage(content, format)
+        : AttachmentImage.Formats.TryGetValue(contentType, out var format) ? PrepareImage(content, format)
         : ReceiptErrors.Unsupported;
 
     private static Result<ReceiptInput> PrepareImage(byte[] content, MagickFormat format)

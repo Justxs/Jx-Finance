@@ -32,6 +32,15 @@ public sealed class AttachmentStore(IConfiguration configuration, IHostEnvironme
         }
     }
 
+    public Task<byte[]> ReadAsync(StoredAttachment temporary, CancellationToken cancellationToken) =>
+        File.ReadAllBytesAsync(temporary.Path, cancellationToken);
+
+    public async Task<StoredAttachment> ReplaceAsync(StoredAttachment temporary, byte[] content, CancellationToken cancellationToken)
+    {
+        await File.WriteAllBytesAsync(temporary.Path, content, cancellationToken);
+        return temporary with { SizeBytes = content.Length, Sha256 = Convert.ToHexStringLower(SHA256.HashData(content)) };
+    }
+
     public void Keep(StoredAttachment temporary, Guid id) => File.Move(temporary.Path, PathOf(id), overwrite: true);
 
     public void Discard(StoredAttachment temporary) => File.Delete(temporary.Path);

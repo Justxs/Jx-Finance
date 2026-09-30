@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using FastEndpoints;
 using JxFinance.Common;
 using JxFinance.Common.Attachments;
@@ -239,7 +240,12 @@ public sealed class ReceiptService(
             return contentType.Error;
         }
 
-        return new ReceiptFile(bytes, detected, copied.Sha256);
+        if (!AttachmentImage.WithoutMetadata(bytes, detected).TryGetValue(out var file))
+        {
+            return ReceiptErrors.Unsupported;
+        }
+
+        return new ReceiptFile(file.Content, file.ContentType, Convert.ToHexStringLower(SHA256.HashData(file.Content)));
     }
 
     private Task<ReceiptReading?> StoredReadingAsync(string sha256, CancellationToken cancellationToken) =>

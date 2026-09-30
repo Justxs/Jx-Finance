@@ -108,10 +108,32 @@ public sealed class AttachmentService(
                 return contentType.Error;
             }
 
+            var fileName = AttachmentContent.FileName(upload.FileName, detected);
+            if (AttachmentImage.Formats.ContainsKey(detected))
+            {
+                var cleaned = AttachmentImage.WithoutMetadata(await files.ReadAsync(stored, cancellationToken), detected);
+                if (!cleaned.TryGetValue(out var image))
+                {
+                    return cleaned.Error;
+                }
+
+                if (image.Content.Length > TransactionAttachment.MaxFileBytes)
+                {
+                    return AttachmentErrors.TooLarge;
+                }
+
+                stored = await files.ReplaceAsync(stored, image.Content, cancellationToken);
+                if (image.ContentType != detected)
+                {
+                    fileName = AttachmentContent.FileName(Path.ChangeExtension(fileName, null), image.ContentType);
+                    detected = image.ContentType;
+                }
+            }
+
             var attachment = new TransactionAttachment
             {
                 TransactionId = typedId,
-                FileName = AttachmentContent.FileName(upload.FileName, detected),
+                FileName = fileName,
                 ContentType = detected,
                 SizeBytes = stored.SizeBytes,
                 Sha256 = stored.Sha256,

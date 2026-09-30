@@ -3,10 +3,12 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Security.Cryptography;
 using ImageMagick;
+using JxFinance.Common.Attachments;
 using JxFinance.Common.Errors;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Receipts;
 using JxFinance.Domain.Transactions;
+using JxFinance.Infrastructure.Attachments;
 using JxFinance.Infrastructure.BackgroundJobs;
 using JxFinance.Tests.Support;
 using Microsoft.EntityFrameworkCore;
@@ -186,6 +188,21 @@ public sealed class ReceiptReadingTests(ApiFixture fixture) : IntegrationTestBas
             .Select(r => r.Id)
             .ToListAsync(TestContext.Current.CancellationToken));
         Assert.Equal([forced.Id], stored.Select(id => id.Value));
+    }
+
+    [Fact]
+    public async Task A_file_read_before_it_is_attached_is_not_read_again_from_the_attachment()
+    {
+        Reader.Reset();
+        using var member = await CreateUserClientAsync();
+        var file = Jpeg();
+
+        var uploaded = await ReadOkAsync(await ReadUploadAsync(member, file));
+        var attachment = await AttachAsync(member, await NewExpenseAsync(member, "18.21", "2026-09-26"), file);
+        var attached = await ReadOkAsync(await ReadAttachmentAsync(member, attachment));
+
+        Assert.Equal((uploaded.Id, true), (attached.Id, attached.Cached));
+        Assert.Single(Reader.Calls);
     }
 
     [Fact]
@@ -424,7 +441,8 @@ public sealed class ReceiptReadingTests(ApiFixture fixture) : IntegrationTestBas
         return image.ToByteArray(MagickFormat.Jpeg);
     }
 
-    private static string Sha(byte[] file) => Convert.ToHexStringLower(SHA256.HashData(file));
+    private static string Sha(byte[] file) =>
+        Convert.ToHexStringLower(SHA256.HashData(AttachmentImage.WithoutMetadata(file, AttachmentContent.Jpeg).Value!.Content));
 
     private static async Task<ReadyDto> ReadyAsync(HttpClient client) =>
         (await client.GetFromJsonAsync<ReadyDto>("/api/settings", TestContext.Current.CancellationToken))!;
