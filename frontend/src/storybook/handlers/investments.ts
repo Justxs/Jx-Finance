@@ -10,6 +10,7 @@ import {
   getPortfolioMockHandler,
   getSecuritiesMockHandler,
   getImportBrokerReportMockHandler,
+  getImportTradeCsvMockHandler,
   getSaveBrokerConnectionMockHandler,
   getSyncBrokerConnectionMockHandler,
   getUpdateInvestmentTransactionMockHandler,
@@ -177,6 +178,7 @@ export const investmentHandlers = [
       : { ...emptyTaxSummary, year, accounts };
   }),
   getImportBrokerReportMockHandler(brokerImportResult),
+  getImportTradeCsvMockHandler(brokerImportResult),
   getBrokerConnectionsMockHandler(brokerConnections),
   getSaveBrokerConnectionMockHandler(async ({ params, request }) => {
     const body = await readBody(request);

@@ -1599,7 +1599,8 @@
       "noAccounts": "Pirmiausia sukurkite investicinio tipo sąskaitą.",
       "tabs": {
         "upload": "Įkelti ataskaitą",
-        "sync": "Automatinis sinchronizavimas"
+        "sync": "Automatinis sinchronizavimas",
+        "csv": "Kitas brokeris (CSV)"
       },
       "fundingAccount": "Papildymo sąskaita (neprivaloma)",
       "noFundingAccount": "Nėra",
@@ -1688,6 +1689,11 @@
         "brokerQuantity": "Pas brokerį",
         "replayedQuantity": "Pagal jūsų įrašus",
         "mismatchAdvice": "Gali trūkti korporatyvinio veiksmo arba istorija prasideda anksčiau nei pirmasis importuotas laikotarpis. Akcijų skaidymą galima įvesti rankiniu būdu: „Pridėti įrašą“, tipas „Akcijų skaidymas“."
+      },
+      "tradeCsv": {
+        "intro": "Bet kuriam kitam brokeriui: surašykite sandorius į CSV su antraštės eilute. Privalomi stulpeliai Date, Type (buy, sell, dividend, withholdingTax, interest ar fee) ir Currency; pirkimams ir pardavimams reikia Symbol, Quantity ir Price, kitiems – Amount. Fee, Name, Isin, SecurityType (stock, etf ar fund) ir Id neprivalomi.",
+        "fileHint": "CSV failas iki 5 MB. Tos pačios eilutės niekada neimportuojamos du kartus.",
+        "tooLarge": "Failas didesnis nei 5 MB."
       }
     },
     "connection": {

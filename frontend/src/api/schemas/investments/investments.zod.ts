@@ -154,6 +154,55 @@ export const ImportBrokerReportResponse = zod.object({
 });
 
 /**
+ * Reads a CSV with a header row: Date (YYYY-MM-DD), Type (buy, sell, dividend, withholdingTax, interest or fee) and Currency are required; Symbol, Quantity and Price are required for a buy or sell and Amount for the other types; Fee, Name, Isin, SecurityType (stock, etf or fund), Description and Id are optional. The delimiter is detected, and a number may use a decimal point or a decimal comma. Buys and sells become trades whose fee is part of the cost, the other types become cash entries, and a security is matched by ISIN or by symbol and currency, or created. Every row is matched by its Id or, without one, by a hash of the row, so importing the same file twice never duplicates. The import is all or nothing and refuses a sale of more than was held. Rows that cannot be read are counted in skipped.
+ * @summary Import trades from any broker as CSV
+ */
+export const ImportTradeCsvBody = zod.object({
+  file: zod.instanceof(Blob).optional(),
+  accountId: zod.uuid().optional().describe("The account that holds the investments."),
+});
+
+export const importTradeCsvResponsePositionMismatchesItemBrokerQuantityRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const importTradeCsvResponsePositionMismatchesItemReplayedQuantityRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+
+export const ImportTradeCsvResponse = zod.object({
+  trades: zod.int(),
+  cashEntries: zod.int(),
+  conversions: zod.int(),
+  transfers: zod.int(),
+  duplicates: zod.int(),
+  skipped: zod.int(),
+  securitiesCreated: zod.int(),
+  pricesUpdated: zod.int(),
+  splits: zod.int(),
+  skippedCorporateActions: zod.array(
+    zod.object({
+      type: zod.string(),
+      count: zod.int(),
+    }),
+  ),
+  positionMismatches: zod
+    .array(
+      zod.object({
+        symbol: zod.string(),
+        brokerQuantity: zod.stringFormat(
+          "decimal",
+          importTradeCsvResponsePositionMismatchesItemBrokerQuantityRegExp,
+        ),
+        replayedQuantity: zod.stringFormat(
+          "decimal",
+          importTradeCsvResponsePositionMismatchesItemReplayedQuantityRegExp,
+        ),
+      }),
+    )
+    .nullable(),
+});
+
+/**
  * Returns open holdings with first-in-first-out cost basis, market value at the last known price, unrealised gain and dividends in each security's own currency, a dividend paid in another currency converted at the rate on its date. Totals and the per-year income table are in the reporting currency: market value at the newest exchange rate, cost at the rate on each purchase's date, and realised gains, dividends, tax and fees at the rate on each transaction's date. IsComplete is false when a holding has no price or no exchange rate, in which case totals leave it out.
  * @summary Get the investment portfolio
  */
@@ -1027,7 +1076,7 @@ export const CreateInvestmentTransactionResponse = zod.object({
     "zar",
   ]),
   description: zod.string().nullable(),
-  source: zod.enum(["manual", "interactiveBrokers"]),
+  source: zod.enum(["manual", "interactiveBrokers", "tradeCsv"]),
   createdAt: zod.iso.datetime({ offset: true }),
 });
 
@@ -1097,7 +1146,7 @@ export const InvestmentTransactionsResponse = zod.object({
         "zar",
       ]),
       description: zod.string().nullable(),
-      source: zod.enum(["manual", "interactiveBrokers"]),
+      source: zod.enum(["manual", "interactiveBrokers", "tradeCsv"]),
       createdAt: zod.iso.datetime({ offset: true }),
     }),
   ),
@@ -1239,7 +1288,7 @@ export const UpdateInvestmentTransactionResponse = zod.object({
     "zar",
   ]),
   description: zod.string().nullable(),
-  source: zod.enum(["manual", "interactiveBrokers"]),
+  source: zod.enum(["manual", "interactiveBrokers", "tradeCsv"]),
   createdAt: zod.iso.datetime({ offset: true }),
 });
 

@@ -1,4 +1,4 @@
-import { FileUp, RefreshCw } from "lucide-react";
+import { FileSpreadsheet, FileUp, RefreshCw } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { AccountResponse } from "@/api/generated/model";
@@ -15,13 +15,14 @@ import { shellAria } from "@/lib/field-aria";
 import { namedOptions } from "@/lib/options";
 import { ConnectionPanel } from "./connection-panel";
 import { FlexQueryHelp } from "./flex-query-help";
+import { TradeCsvPanel } from "./trade-csv-panel";
 import { UploadPanel } from "./upload-panel";
 import { useBrokerImportBusy, useBrokerImportMutations } from "./use-broker-import-mutations";
 
-type BrokerImportTab = "upload" | "sync";
+type BrokerImportTab = "upload" | "sync" | "csv";
 
 function isBrokerImportTab(value: unknown): value is BrokerImportTab {
-  return value === "upload" || value === "sync";
+  return value === "upload" || value === "sync" || value === "csv";
 }
 
 interface Props {
@@ -82,11 +83,22 @@ function BrokerImportContent({ accounts, accountId }: Readonly<ContentProps>) {
             <RefreshCw aria-hidden="true" className="size-4 shrink-0" />
             {t("investments.import.tabs.sync")}
           </TabsTab>
+          <TabsTab value="csv" disabled={mutations.busy}>
+            <FileSpreadsheet aria-hidden="true" className="size-4 shrink-0" />
+            {t("investments.import.tabs.csv")}
+          </TabsTab>
         </TabsList>
         <TabsPanel value="upload" keepMounted>
           <UploadPanel
             key={selectedAccountId}
             accounts={accounts}
+            accountId={selectedAccountId}
+            mutations={mutations}
+          />
+        </TabsPanel>
+        <TabsPanel value="csv" keepMounted>
+          <TradeCsvPanel
+            key={selectedAccountId}
             accountId={selectedAccountId}
             mutations={mutations}
           />
@@ -109,7 +121,7 @@ function BrokerImportContent({ accounts, accountId }: Readonly<ContentProps>) {
         </TabsPanel>
       </Tabs>
 
-      <FlexQueryHelp />
+      {tab === "csv" ? null : <FlexQueryHelp />}
     </>
   );
 }

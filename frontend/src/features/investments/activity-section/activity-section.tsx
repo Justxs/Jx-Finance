@@ -129,11 +129,11 @@ export function ActivitySection({ accounts, accountId }: Readonly<Props>) {
                   <p className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
                     <span className="font-medium">{t(`investments.types.${entry.type}`)}</span>
                     {entry.symbol ? <span className="font-semibold">{entry.symbol}</span> : null}
-                    {entry.source === "interactiveBrokers" ? (
+                    {entry.source === "manual" ? null : (
                       <HintTag hint={t("investments.activity.importedLocked")}>
                         {t("investments.activity.imported")}
                       </HintTag>
-                    ) : null}
+                    )}
                   </p>
                   <p className="text-xs wrap-break-word text-muted-foreground tabular-nums">
                     {details(entry)}

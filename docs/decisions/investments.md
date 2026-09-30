@@ -8,6 +8,10 @@ Separate `InvestmentTransaction` ledger on ordinary accounts; FIFO cost basis; a
 
 ## Log
 
+- **2026-09-30.** Other brokers are read from one documented trade CSV, parsed into the Interactive Brokers statement model and booked by the same import
+  - Rejected: A column mapping saved per broker like the bank CSV; a parser per broker's own export; a second import pipeline for CSV entries
+  - Why: Broker exports differ in far more than column order (trades and cash in one file or two, signs, fees in their own rows), so a mapping would still need conversion in a spreadsheet, and a parser per broker is unbounded work without real samples. The statement model already carries everything the CSV can say, so one parser reuses security matching, the oversell check and deduplication unchanged
+
 - **2026-09-30.** The portfolio's return is the money-weighted annualized rate over all cash flows of the chosen accounts plus today's value, computed per request by bisection, and allocation is answered per security type and currency by the server
   - Rejected: A time-weighted return; a return per holding; a simple total return without time; computing the slices in the browser
   - Why: A time-weighted return needs the portfolio's value on every flow date, which the price history only has where someone recorded a price, while the money-weighted rate needs only the flows the ledger already has and answers the household's question, what their money earned as it went in. One rate for the chosen accounts keeps the summary readable, a total without time misleads over years, and the security's type and currency are on the server already, so the browser does not repeat the grouping

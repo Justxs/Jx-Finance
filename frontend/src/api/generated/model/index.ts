@@ -141,6 +141,7 @@ export * from "./importPreviewResponse";
 export * from "./importPreviewRow";
 export * from "./importStatementBalance";
 export * from "./importStatementSummary";
+export * from "./importTradeCsvRequest";
 export * from "./inspectCsvColumn";
 export * from "./inspectCsvRequest";
 export * from "./inspectCsvResponse";

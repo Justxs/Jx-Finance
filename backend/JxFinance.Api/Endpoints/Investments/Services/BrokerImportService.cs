@@ -10,6 +10,7 @@ using JxFinance.Endpoints.Investments.Interfaces;
 using JxFinance.Endpoints.Investments.SaveBrokerConnection;
 using JxFinance.Endpoints.Investments.Shared;
 using JxFinance.Infrastructure.Brokers.InteractiveBrokers;
+using JxFinance.Infrastructure.Brokers.TradeCsv;
 using JxFinance.Infrastructure.Data;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
@@ -53,6 +54,27 @@ public sealed class BrokerImportService(
                 "The report covers several Interactive Brokers accounts. Create a Flex Query for one account.");
         }
 
+        return await ImportStatementAsync(statement, accountId, fundingAccountId, InvestmentSource.InteractiveBrokers, cancellationToken);
+    }
+
+    public async Task<Result<BrokerImportResponse>> ImportTradeCsvAsync(
+        Guid accountId,
+        Stream file,
+        CancellationToken cancellationToken)
+    {
+        var parsed = TradeCsvParser.Parse(file);
+        return parsed.IsFailure
+            ? parsed.Error
+            : await ImportStatementAsync(parsed.Value!, accountId, null, InvestmentSource.TradeCsv, cancellationToken);
+    }
+
+    private async Task<Result<BrokerImportResponse>> ImportStatementAsync(
+        FlexStatement statement,
+        Guid accountId,
+        Guid? fundingAccountId,
+        InvestmentSource source,
+        CancellationToken cancellationToken)
+    {
         var account = new AccountId(accountId);
         AccountId? funding = fundingAccountId is { } id ? new AccountId(id) : null;
         if (await AccountErrorAsync(account, funding, cancellationToken) is { } accountError)
@@ -88,7 +110,7 @@ public sealed class BrokerImportService(
         {
             try
             {
-                return await new StatementImport(db, rates, transfers, statement, account, funding is { } fundingAccount ? (fundingAccount, fundingCurrency!.Value) : null).RunAsync(cancellationToken);
+                return await new StatementImport(db, rates, transfers, statement, account, funding is { } fundingAccount ? (fundingAccount, fundingCurrency!.Value) : null, source).RunAsync(cancellationToken);
             }
             catch (DbUpdateException ex) when (IsSecurityCollision(ex))
             {

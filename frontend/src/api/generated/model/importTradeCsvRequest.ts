@@ -6,10 +6,8 @@
  * OpenAPI spec version: v1
  */
 
-export type InvestmentSource = (typeof InvestmentSource)[keyof typeof InvestmentSource];
-
-export const InvestmentSource = {
-  manual: "manual",
-  interactiveBrokers: "interactiveBrokers",
-  tradeCsv: "tradeCsv",
-} as const;
+export interface ImportTradeCsvRequest {
+  file?: Blob | File;
+  /** The account that holds the investments. */
+  accountId?: string;
+}

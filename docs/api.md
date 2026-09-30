@@ -360,6 +360,8 @@ They also take `payee`, since 2026-09-29: the value is normalized like a stored 
 
 Since 2026-09-30 the create and update bodies take an optional `note`, at most 1000 characters (`text.tooLong`), and every transaction response answers it; `search` on the four filtered endpoints matches it as well as the description. See [Transactions](features/transactions.md#notes).
 
+Since 2026-09-30 `POST /api/investments/import/trade-csv` takes `accountId` and a CSV `file` of trades, dividends, taxes, interest and fees and answers the broker import's counts; investment entries it writes carry `source` `tradeCsv`. See [Investments](features/investments.md#trade-csv-from-any-broker).
+
 Since 2026-09-30 `GET /api/receipts/items` takes `dateFrom`, `dateTo` and an optional `search` and answers `{ items: [{ key, name, currency, amount, count, lastBought }], receipts }`, the caller's receipt items summed by normalized name. See [Receipt reading](features/receipt-reading.md#spending-per-item).
 
 Since 2026-09-30 `PUT /api/attachments/{id}/warranty` takes `{ warrantyUntil }` (a date or null) and answers the attachment, whose responses carry `warrantyUntil`; a `warrantyExpiring` notification follows 30 days before. See [Attachments](features/attachments.md#warranty-dates).

@@ -1557,7 +1557,8 @@
       "noAccounts": "Add an account of type Investment first.",
       "tabs": {
         "upload": "Upload report",
-        "sync": "Automatic sync"
+        "sync": "Automatic sync",
+        "csv": "Other broker (CSV)"
       },
       "fundingAccount": "Funding account (optional)",
       "noFundingAccount": "None",
@@ -1628,6 +1629,11 @@
         "brokerQuantity": "At the broker",
         "replayedQuantity": "From your entries",
         "mismatchAdvice": "A corporate action may be missing, or the history starts before the first imported period. A split can be entered by hand with Add entry, type Split."
+      },
+      "tradeCsv": {
+        "intro": "For any other broker: put the trades in a CSV with a header row. Date, Type (buy, sell, dividend, withholdingTax, interest or fee) and Currency are required; buys and sells need Symbol, Quantity and Price, the others Amount. Fee, Name, Isin, SecurityType (stock, etf or fund) and Id are optional.",
+        "fileHint": "A CSV file, up to 5 MB. The same rows are never imported twice.",
+        "tooLarge": "The file is larger than 5 MB."
       }
     },
     "connection": {

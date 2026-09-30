@@ -12,6 +12,11 @@ public interface IBrokerImportService
         Stream report,
         CancellationToken cancellationToken);
 
+    Task<Result<BrokerImportResponse>> ImportTradeCsvAsync(
+        Guid accountId,
+        Stream file,
+        CancellationToken cancellationToken);
+
     Task<IReadOnlyList<BrokerConnectionResponse>> GetConnectionsAsync(CancellationToken cancellationToken);
 
     Task<Result<BrokerConnectionResponse>> SaveConnectionAsync(

@@ -247,6 +247,12 @@ sequenceDiagram
 
 The broker report is not bound by the app's own validators, so `StatementImport` fits its text to the columns instead of letting one long value fail the whole import: a new security's symbol is cut to 32 characters (the same cut is used when looking a security up), its name and exchange are shortened with an ellipsis to 200 and 32, and entry and transfer descriptions to 500.
 
+## Trade CSV from any broker
+
+Since 2026-09-30 the import dialog has a third tab, "Other broker (CSV)", and `POST /api/investments/import/trade-csv` takes an `accountId` and a CSV of at most 5 MB with a header row. Columns are matched by name, ignoring case and spaces: `Date` (YYYY-MM-DD, also YYYY.MM.DD or DD.MM.YYYY), `Type` and `Currency` are required; a `buy` or `sell` needs `Symbol`, `Quantity` and `Price`, a `dividend`, `withholdingTax` (or `tax`), `interest` or `fee` needs `Amount`; `Fee`, `Name`, `Isin`, `SecurityType` (`stock`, `etf` or `fund`), `Description` and `Id` are optional. The delimiter is detected, and in a number whichever of a point and a comma comes last is the decimal mark. A row that cannot be read, or has another type, is counted in `skipped`.
+
+`TradeCsvParser` turns the rows into the same `FlexStatement` the Interactive Brokers import reads, a buy as a trade with negative proceeds and the fee as a negative commission, a cash row as a cash transaction whose type names what it is, and `BrokerImportService` runs the same `StatementImport` with `InvestmentSource.TradeCsv`. So matching a security by ISIN or by symbol and currency, creating one, the first-in-first-out check that refuses an oversold holding, the all-or-nothing transaction and the counts in the answer are those of the broker import. Every row is matched by `csv:` and its `Id`, or a hash of the row with a counter for repeated rows, so importing the same file twice adds nothing. The entries show as Imported and, like broker entries, cannot be edited; a wrong row is deleted and the corrected file imported again. There are no transfers, conversions, splits or prices in the CSV.
+
 ## Automatic sync
 
 ```mermaid

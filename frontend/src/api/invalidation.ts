@@ -269,7 +269,11 @@ const rules: readonly Rule[] = [
     refresh: holdings,
   },
   {
-    after: [api.getImportBrokerReportMutationKey, api.getSyncBrokerConnectionMutationKey],
+    after: [
+      api.getImportBrokerReportMutationKey,
+      api.getSyncBrokerConnectionMutationKey,
+      api.getImportTradeCsvMutationKey,
+    ],
     refresh: [
       ...ledger,
       ...holdings,

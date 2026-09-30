@@ -22,11 +22,17 @@ public sealed class StatementImport(
     ITransferAmountResolver transfers,
     FlexStatement statement,
     AccountId account,
-    (AccountId Account, Currency Currency)? funding)
+    (AccountId Account, Currency Currency)? funding,
+    InvestmentSource source = InvestmentSource.InteractiveBrokers)
 {
-    private const string TradeRefPrefix = "ibkr:t:";
-    private const string CashRefPrefix = "ibkr:c:";
-    private const string ActionRefPrefix = "ibkr:ca:";
+    private readonly string refPrefix = source == InvestmentSource.InteractiveBrokers ? "ibkr:" : "csv:";
+
+    private string TradeRefPrefix => refPrefix + "t:";
+
+    private string CashRefPrefix => refPrefix + "c:";
+
+    private string ActionRefPrefix => refPrefix + "ca:";
+
     private const int MaxRefLength = 64;
     private const int MaxDescriptionLength = 500;
     private const decimal QuantityTolerance = 0.0001m;
@@ -457,7 +463,7 @@ public sealed class StatementImport(
             CashAmount = cash,
             ReportingAmount = reportingAmount,
             Description = TextLimit.Ellipsize(description, MaxDescriptionLength),
-            Source = InvestmentSource.InteractiveBrokers,
+            Source = source,
             ExternalId = reference,
         });
     }

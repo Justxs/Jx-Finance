@@ -4,4 +4,5 @@ public enum InvestmentSource
 {
     Manual,
     InteractiveBrokers,
+    TradeCsv,
 }

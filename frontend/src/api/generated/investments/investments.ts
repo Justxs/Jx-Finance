@@ -35,6 +35,7 @@ import type {
   CreateInvestmentTransactionRequest,
   ExportTaxSummaryParams,
   ImportBrokerReportRequest,
+  ImportTradeCsvRequest,
   InvestmentTransactionResponse,
   InvestmentTransactionsParams,
   PagedResponseOfInvestmentTransactionResponse,
@@ -566,6 +567,98 @@ export const useImportBrokerReport = <TError = ErrorType<ProblemDetails>, TConte
   TContext
 > => {
   return useMutation(getImportBrokerReportMutationOptions(options), queryClient);
+};
+export const getImportTradeCsvUrl = () => {
+  return `/api/investments/import/trade-csv`;
+};
+
+/**
+ * Reads a CSV with a header row: Date (YYYY-MM-DD), Type (buy, sell, dividend, withholdingTax, interest or fee) and Currency are required; Symbol, Quantity and Price are required for a buy or sell and Amount for the other types; Fee, Name, Isin, SecurityType (stock, etf or fund), Description and Id are optional. The delimiter is detected, and a number may use a decimal point or a decimal comma. Buys and sells become trades whose fee is part of the cost, the other types become cash entries, and a security is matched by ISIN or by symbol and currency, or created. Every row is matched by its Id or, without one, by a hash of the row, so importing the same file twice never duplicates. The import is all or nothing and refuses a sale of more than was held. Rows that cannot be read are counted in skipped.
+ * @summary Import trades from any broker as CSV
+ */
+export const importTradeCsv = async (
+  importTradeCsvRequest: ImportTradeCsvRequest,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<BrokerImportResponse> => {
+  const formData = new FormData();
+  if (importTradeCsvRequest.file !== undefined) {
+    formData.append(`file`, importTradeCsvRequest.file);
+  }
+  if (importTradeCsvRequest.accountId !== undefined) {
+    formData.append(`accountId`, importTradeCsvRequest.accountId);
+  }
+
+  return customFetch<BrokerImportResponse>(getImportTradeCsvUrl(), {
+    ...options,
+    method: "POST",
+    body: formData,
+  });
+};
+
+export const getImportTradeCsvMutationKey = () => ["importTradeCsv"] as const;
+
+export const getImportTradeCsvMutationOptions = <
+  TError = ErrorType<ProblemDetails>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof importTradeCsv>>,
+    TError,
+    ImportTradeCsvMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof importTradeCsv>>,
+  TError,
+  ImportTradeCsvMutationVariables,
+  TContext
+> => {
+  const mutationKey = getImportTradeCsvMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof importTradeCsv>>,
+    ImportTradeCsvMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return importTradeCsv(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ImportTradeCsvMutationResult = NonNullable<Awaited<ReturnType<typeof importTradeCsv>>>;
+export type ImportTradeCsvMutationBody = ImportTradeCsvRequest;
+export type ImportTradeCsvMutationError = ErrorType<ProblemDetails>;
+export type ImportTradeCsvMutationVariables = { data: ImportTradeCsvRequest };
+
+/**
+ * @summary Import trades from any broker as CSV
+ */
+export const useImportTradeCsv = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof importTradeCsv>>,
+      TError,
+      ImportTradeCsvMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof importTradeCsv>>,
+  TError,
+  ImportTradeCsvMutationVariables,
+  TContext
+> => {
+  return useMutation(getImportTradeCsvMutationOptions(options), queryClient);
 };
 export const getPortfolioUrl = (params?: PortfolioParams) => {
   const normalizedParams = new URLSearchParams();

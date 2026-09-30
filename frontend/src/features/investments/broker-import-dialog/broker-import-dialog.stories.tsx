@@ -17,6 +17,7 @@ import {
 import { failWith, pending, withHandlers } from "@/storybook/handlers";
 import { openedDialog } from "@/storybook/interactions";
 import { BrokerImportDialog } from "./broker-import-dialog";
+import { TRADE_CSV_FILE_INPUT_ID } from "./trade-csv-panel";
 import { BROKER_UPLOAD_FILE_INPUT_ID } from "./upload-panel";
 
 const sampleReport =
@@ -48,6 +49,29 @@ async function uploadReport() {
 }
 
 export const Upload: Story = {};
+
+export const TradeCsvUpload: Story = {
+  play: async () => {
+    const dialog = within(await openedDialog());
+    await userEvent.click(dialog.getByRole("tab", { name: "Other broker (CSV)" }));
+    await expect(dialog.getByText(/For any other broker/u)).toBeVisible();
+    const fileInput = document.querySelector<HTMLInputElement>(`#${TRADE_CSV_FILE_INPUT_ID}`);
+    if (!fileInput) {
+      throw new Error("The trade CSV input is missing.");
+    }
+    await userEvent.upload(
+      fileInput,
+      new File(
+        [["Date,Type,Symbol,Quantity,Price,Currency", "2026-01-05,buy,AAPL,1,200,USD"].join("\n")],
+        "trades.csv",
+        { type: "text/csv" },
+      ),
+    );
+    const panel = within(dialog.getByRole("tabpanel", { name: "Other broker (CSV)" }));
+    await userEvent.click(panel.getByRole("button", { name: "Import" }));
+    await expect(await dialog.findByText("14 trades imported.")).toBeInTheDocument();
+  },
+};
 
 export const Dark: Story = { globals: { theme: "dark" } };
 

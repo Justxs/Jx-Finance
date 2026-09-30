@@ -134,6 +134,30 @@ export const getImportBrokerReportMockHandler = (
   );
 };
 
+export const getImportTradeCsvMockHandler = (
+  overrideResponse?:
+    | BrokerImportResponse
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<BrokerImportResponse> | BrokerImportResponse),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/investments/import/trade-csv",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : undefined,
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
 export const getPortfolioMockHandler = (
   overrideResponse?:
     | PortfolioResponse
@@ -467,6 +491,7 @@ export const getInvestmentsMock = () => [
   getSaveBrokerConnectionMockHandler(),
   getSyncBrokerConnectionMockHandler(),
   getImportBrokerReportMockHandler(),
+  getImportTradeCsvMockHandler(),
   getPortfolioMockHandler(),
   getSecuritiesMockHandler(),
   getCreateSecurityMockHandler(),

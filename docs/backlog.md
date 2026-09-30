@@ -22,7 +22,6 @@ These come from the release checklist and block calling the current release veri
 | --- | --- | --- |
 | Investments | Corporate actions other than splits are only counted (mergers, spin-offs, symbol changes) | M |
 | Investments | Bonds by hand only; options, futures and short positions out of scope | L |
-| Investments | Only Interactive Brokers; no other broker and no generic trade CSV | M |
 | Households | Budgets, goals, assets, debts and recurring entries cannot be shared | L |
 | Users | No forced password change after an administrator reset (rejected on 2026-09-19 unless done completely) | M |
 | Settings | Installation-wide only; no per-user reporting currency (the ledger's rows per page became a per-browser choice on 2026-09-30) | L |
@@ -54,6 +53,7 @@ Ordered by how much they would help daily use for the effort. Following the prod
 
 | Date | Item | Where it is described |
 | --- | --- | --- |
+| 2026-09-30 | Trade CSV from any broker: a third tab in the investments import reads a documented CSV of buys, sells, dividends, taxes, interest and fees into the same import the Interactive Brokers statement uses, with security matching, the oversell check and deduplication by row | [Investments](features/investments.md#trade-csv-from-any-broker) |
 | 2026-09-30 | Spending per receipt item: the reports page lists what each item on the member's read receipts cost over the range, grouped by the normalized item name, with the times bought and a search, from the readings already stored | [Receipt reading](features/receipt-reading.md#spending-per-item) |
 | 2026-09-30 | Year in review: the reports page, on "This year" or "Last year", adds a month-by-month table with the share of income kept and the five expense categories that moved most against the year before, built from the report the page already loads | [Reports](features/reports.md#year-in-review) |
 | 2026-09-30 | Warranty reminders: each attached receipt can carry a warranty end date, set in the transaction dialog, and the member who attached it gets a `warrantyExpiring` notification 30 days before it, once per date, in the bell, by email or on Discord | [Attachments](features/attachments.md#warranty-dates) |

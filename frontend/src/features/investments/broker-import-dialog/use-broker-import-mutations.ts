@@ -2,10 +2,12 @@ import { useIsMutating } from "@tanstack/react-query";
 import {
   getDeleteBrokerConnectionMutationKey,
   getImportBrokerReportMutationKey,
+  getImportTradeCsvMutationKey,
   getSaveBrokerConnectionMutationKey,
   getSyncBrokerConnectionMutationKey,
   useDeleteBrokerConnection,
   useImportBrokerReport,
+  useImportTradeCsv,
   useSaveBrokerConnection,
   useSyncBrokerConnection,
 } from "@/api/generated";
@@ -16,6 +18,7 @@ const brokerImportMutationNames = new Set<unknown>([
   getSaveBrokerConnectionMutationKey()[0],
   getDeleteBrokerConnectionMutationKey()[0],
   getSyncBrokerConnectionMutationKey()[0],
+  getImportTradeCsvMutationKey()[0],
 ]);
 
 export function useBrokerImportMutations() {
@@ -25,10 +28,11 @@ export function useBrokerImportMutations() {
   });
   const deleteConnection = useDeleteBrokerConnection();
   const syncConnection = useSyncBrokerConnection({ mutation: silentMutation });
+  const importTradeCsv = useImportTradeCsv({ mutation: silentMutation });
 
   const busy = useBrokerImportBusy();
 
-  return { importReport, saveConnection, deleteConnection, syncConnection, busy };
+  return { importReport, saveConnection, deleteConnection, syncConnection, importTradeCsv, busy };
 }
 
 export function useBrokerImportBusy() {
