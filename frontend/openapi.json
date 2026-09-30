@@ -23535,7 +23535,8 @@
           "unusualAmounts",
           "recurringPriceRise",
           "monthReadyToClose",
-          "monthlyDigest"
+          "monthlyDigest",
+          "lowBalance"
         ],
         "type": "string"
       },

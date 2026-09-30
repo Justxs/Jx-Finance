@@ -188,6 +188,19 @@ export const monthlyDigestNotification: NotificationResponse = {
   createdAt: "2026-09-01T07:05:00Z",
 };
 
+export const lowBalanceNotification: NotificationResponse = {
+  id: ids.notifications.everydayLow,
+  type: "lowBalance",
+  title: "Swedbank einamoji",
+  message: "",
+  payload: { dueDate: "2026-10-01", amount: "-361.19", currency: "eur" },
+  relatedType: "Account",
+  relatedId: ids.accounts.checking,
+  channel: "inApp",
+  isRead: false,
+  createdAt: "2026-09-18T09:00:00Z",
+};
+
 export const notifications: NotificationResponse[] = [
   expenseDueNotification,
   budgetExceededNotification,

@@ -45,6 +45,7 @@ export const SetupResponse = zod.object({
       "recurringPriceRise",
       "monthReadyToClose",
       "monthlyDigest",
+      "lowBalance",
     ]),
   ),
   language: zod.string().nullable(),

@@ -36,6 +36,8 @@ flowchart TD
 - **Recurring entries page.** The same section replaces the six-month bar chart of fixed expenses that the page had until 2026-09-29, with one extra line: "Scheduled in the next 90 days: €1,240.00 out, €3,100.00 in". Out is the recurring expenses and in the recurring income of every listed account, per currency; transfers move money between the caller's own accounts and are left out of both. The section shows once there is at least one entry, as the chart did.
 - **Dashboard.** The `cashFlow` card, "Cash flow", lists each account the forecast lists: its name, today's balance, "Lowest -€361.19 on Oct 1" and, in the expense colour, "Below zero on Oct 1" or "May go below zero around Oct 1". It always asks for 90 days. Like upcoming bills it looks forward, so on an earlier month it says "The cash-flow forecast is shown on the current month." and asks for nothing. It links to the accounts page.
 
+- **Notifications.** Since 2026-09-30 `LowBalanceJob` reads the next 30 days every six hours and raises a `lowBalance` notification for each account that the forecast takes below zero, once per account and date, in the bell and, when the member ticked it, by email or Discord. See [Notifications](notifications.md#low-balance-alerts).
+
 ## The section
 
 The title is "Next 30 days", "Next 60 days" or "Next 90 days", with a period select beside it. The period is component state, not a search parameter: changing it keeps the shown forecast, dimmed, until the new one arrives (`useDeferredValue` and `StaleRegion`). A muted line says the forecast is built from today's balance, the rows already dated ahead and the caller's recurring entries.

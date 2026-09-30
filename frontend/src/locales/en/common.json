@@ -1783,7 +1783,8 @@
       "unusualAmounts": "Several unusual expenses at once",
       "recurringPriceRise": "A subscription is charged more than expected",
       "monthReadyToClose": "A finished month is ready to close",
-      "monthlyDigest": "Monthly digest"
+      "monthlyDigest": "Monthly digest",
+      "lowBalance": "An account is forecast to go below zero"
     },
     "unusualAmount": "{{amount}}: {{factor}}× the usual {{typical}}",
     "unusualAmounts_one": "{{count}} expense is well above its usual amount",
@@ -1799,7 +1800,8 @@
     "titleWithCount": "Notifications, {{count}} unread",
     "unavailable": "Notifications could not be loaded",
     "monthReadyToClose": "{{month}} has ended and is ready to close",
-    "monthlyDigest": "Income {{income}}, expenses {{expense}}, net {{net}}"
+    "monthlyDigest": "Income {{income}}, expenses {{expense}}, net {{net}}",
+    "lowBalance": "Forecast to go below zero on {{date}}, lowest {{amount}}"
   },
   "households": {
     "name": "Household name",

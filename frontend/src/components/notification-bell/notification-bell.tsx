@@ -86,6 +86,7 @@ function NotificationBellUnavailable({ sidebar }: Readonly<Props>) {
 const bills = linkOptions({ to: "/recurring-bills" });
 const budgets = linkOptions({ to: "/budgets" });
 const unusual = linkOptions({ to: "/transactions", search: { unusual: true } });
+const accounts = linkOptions({ to: "/accounts" });
 
 function monthLink({ month }: NotificationPayload) {
   return linkOptions({ to: "/", search: { month: month ? monthKeyOfIso(month) : undefined } });
@@ -100,6 +101,7 @@ const producers = {
   recurringPriceRise: { feature: "recurringBills", link: () => bills },
   monthReadyToClose: { feature: "monthClose", link: monthLink },
   monthlyDigest: { feature: "monthClose", link: monthLink },
+  lowBalance: { feature: "recurringBills", link: () => accounts },
 } as const satisfies Record<
   NotificationType,
   { feature: FeatureKey; link: (payload: NotificationPayload) => unknown }
@@ -193,6 +195,15 @@ export function NotificationBell({ sidebar }: Readonly<Props>) {
         return month
           ? t("notifications.monthReadyToClose", { month: monthName(month) })
           : notification.message;
+      case "lowBalance": {
+        const belowZeroOn = dueDate ? parseIso(dueDate) : null;
+        return belowZeroOn && amount
+          ? t("notifications.lowBalance", {
+              date: date.format(belowZeroOn),
+              amount: money.format(Number(amount), inCurrency),
+            })
+          : notification.message;
+      }
       case "monthlyDigest":
         return digest
           ? t("notifications.monthlyDigest", {

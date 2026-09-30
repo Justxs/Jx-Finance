@@ -1845,7 +1845,8 @@
       "unusualAmounts": "Kelios neįprastos išlaidos vienu metu",
       "recurringPriceRise": "Už prenumeratą nuskaičiuota daugiau nei tikėtasi",
       "monthReadyToClose": "Pasibaigusį mėnesį galima uždaryti",
-      "monthlyDigest": "Mėnesio suvestinė"
+      "monthlyDigest": "Mėnesio suvestinė",
+      "lowBalance": "Prognozuojama, kad sąskaitos likutis taps neigiamas"
     },
     "unusualAmount": "{{amount}}: {{factor}}× daugiau nei įprasta ({{typical}})",
     "unusualAmounts_one": "{{count}} išlaida gerokai viršija įprastą sumą",
@@ -1863,7 +1864,8 @@
     "titleWithCount": "Pranešimai, neskaitytų: {{count}}",
     "unavailable": "Nepavyko įkelti pranešimų",
     "monthReadyToClose": "{{month}} baigėsi: peržiūrėkite ir uždarykite mėnesį",
-    "monthlyDigest": "Pajamos {{income}}, išlaidos {{expense}}, grynai {{net}}"
+    "monthlyDigest": "Pajamos {{income}}, išlaidos {{expense}}, grynai {{net}}",
+    "lowBalance": "Pagal prognozę {{date}} likutis taps neigiamas, mažiausias {{amount}}"
   },
   "households": {
     "name": "Namų ūkio pavadinimas",

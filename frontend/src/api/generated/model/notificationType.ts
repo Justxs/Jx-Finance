@@ -17,4 +17,5 @@ export const NotificationType = {
   recurringPriceRise: "recurringPriceRise",
   monthReadyToClose: "monthReadyToClose",
   monthlyDigest: "monthlyDigest",
+  lowBalance: "lowBalance",
 } as const;

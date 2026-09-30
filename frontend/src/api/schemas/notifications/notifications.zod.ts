@@ -22,6 +22,7 @@ export const NotificationsResponseItem = zod.object({
     "recurringPriceRise",
     "monthReadyToClose",
     "monthlyDigest",
+    "lowBalance",
   ]),
   title: zod.string(),
   message: zod.string(),

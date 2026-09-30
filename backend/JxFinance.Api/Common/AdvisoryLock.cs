@@ -16,6 +16,7 @@ public enum AppLock : long
     MonthlyDigest = 738192443,
     ReceiptReadings = 738192444,
     UserExport = 738192445,
+    LowBalanceAlerts = 738192446,
 }
 
 public static class AdvisoryLock

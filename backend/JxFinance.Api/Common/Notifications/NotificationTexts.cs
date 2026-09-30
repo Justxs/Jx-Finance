@@ -26,6 +26,7 @@ public static class NotificationTexts
         NotificationType.UnusualAmount or NotificationType.UnusualAmounts => "/transactions?unusual=true",
         NotificationType.RecurringPriceRise => "/recurring-bills",
         NotificationType.MonthReadyToClose or NotificationType.MonthlyDigest => "/",
+        NotificationType.LowBalance => "/accounts",
         _ => throw new ArgumentOutOfRangeException(nameof(type), type, "This notification type has no page."),
     };
 
@@ -83,6 +84,8 @@ public static class NotificationTexts
                     : $"{MonthTitle(language, month)} has ended and is ready to close",
             NotificationType.MonthlyDigest when payload is { Month: { } month, Digest: { } digest } =>
                 DigestSentence(language, month, digest),
+            NotificationType.LowBalance when payload is { DueDate: { } belowZeroOn, Amount: { } lowest } =>
+                LowBalance(lithuanian, belowZeroOn, Money(lowest, payload.Currency)),
             _ => notification.Message,
         };
     }
@@ -172,6 +175,14 @@ public static class NotificationTexts
 
     private static string Money(string amount, Currency? currency) =>
         currency is { } code ? $"{amount} {code.ToCode()}" : amount;
+
+    private static string LowBalance(bool lithuanian, DateOnly belowZeroOn, string lowest)
+    {
+        var date = belowZeroOn.ToString(DateFormats.IsoDate, CultureInfo.InvariantCulture);
+        return lithuanian
+            ? $"Pagal prognozę {date} likutis taps neigiamas, mažiausias {lowest}"
+            : $"Forecast to go below zero on {date}, lowest {lowest}";
+    }
 
     private static string Factor(decimal factor) => factor.ToString("0.#", CultureInfo.InvariantCulture);
 

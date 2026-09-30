@@ -52,6 +52,7 @@ Each user makes both choices in one place, Settings › Personal › Notificatio
 | `unusualAmounts` | Up to three of the descriptions | `count` | `UnusualAmountJob`, instead of more than three `unusualAmount` rows for one owner in one pass |
 | `recurringPriceRise` | The recurring entry's name | `billId`, `transactionId`, `amount` (charged), `typicalAmount` (expected), `currency` | `UnusualAmountJob` |
 | `monthReadyToClose` | The month in the installation language, "August 2026" or "2026 m. rugpjūtis" | `month` | `MonthCloseReminderJob` |
+| `lowBalance` | The account's name | `dueDate` (the first day the forecast ends below zero), `amount` (the lowest forecast balance), `currency` (the account's) | `LowBalanceJob` |
 | `monthlyDigest` | The month in the installation language | `month`, `digest` (a `MonthlyDigestPayload`: `currency`, `income`, `expense`, `net`, `keptPercent`, up to three `movers` of `{ name, amount, previous }`, `uncategorized`, `unusual`, `unconfirmedRecurring`, `accountsNeedingAttention`, `closed`) | `MonthlyDigestJob`, only for members who ticked it for email or Discord |
 
 The three kinds added on 2026-09-26 carry `currency` beside the amounts, so the bell formats them in the currency they were computed in: the reporting currency for an unusual expense, the account's currency for a price rise. The two unusual kinds link to `/transactions?unusual=true` and belong to `UnusualAmounts`; the price rise links to `/recurring-bills` and belongs to `RecurringBills`. An unusual expense is raised once per transaction and a price rise once per entry and charge, for the account owner and the entry's owner respectively. See [Unusual amounts](unusual-amounts.md).
@@ -65,6 +66,12 @@ Before the payload existed, a bill reminder put the bill name in `Title` and the
 The client never builds a sentence from server text. It reads the kind and the payload and calls `t("notifications.…")`, so the same row reads "Monthly limit: 80% used" in English and "Mėnesinis limitas: panaudota 80%" in Lithuanian.
 
 `billDue` needs more than the date, because a recurring entry can be an expense, an income or a transfer and one sentence cannot cover all three — "Mokėjimo data" is wrong for money that is coming in. The payload therefore carries `shape` beside `dueDate`, and the bell picks `notifications.billDue.expense`, `.income` or `.transfer`. A row written before shapes existed has no `shape` and reads as an expense, which is what every such row was.
+
+## Low-balance alerts
+
+`lowBalance`, added on 2026-09-30, is the [cash-flow forecast](cash-flow-forecast.md) sent to the member instead of waiting on the accounts page. `LowBalanceJob` walks every active user every six hours while `RecurringBills` is on and, in that user's scope with no active household, asks `ICashFlowForecastService` for the next 30 days, the same call the page makes. Every account whose solid line ends a day below zero (`belowZeroOn`) raises one alert, unless it starts today already below zero: a member whose account is overdrawn knows, and the alert is about money that is still there. The dashed line of usual spending never raises one, because it is an estimate. The alert reads "Forecast to go below zero on Nov 14, lowest -€200.00" in the account's currency, and links to `/accounts`, where the forecast names the entry that crosses.
+
+Deduplication is one row per account and per crossing date, among every `lowBalance` row the user has, read or not, held under `AppLock.LowBalanceAlerts` like the budget scan. A later pass that finds the same date says nothing; a date that moves, because an entry was confirmed, edited or added, is news and raises a new row. A shared account is forecast for each member who can see it, so each gets the alert. Thirty days is the shortest horizon the forecast offers and far enough ahead to move money; the six hours match the exchange-rate sync, since the forecast changes only when the ledger or an entry does.
 
 ## A producer that was switched off
 

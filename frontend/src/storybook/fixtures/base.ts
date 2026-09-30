@@ -136,6 +136,7 @@ export const ids = {
     teliaPriceRise: uid("aaaaaaaa", 11),
     augustReady: uid("aaaaaaaa", 12),
     augustDigest: uid("aaaaaaaa", 13),
+    everydayLow: uid("aaaaaaaa", 14),
   },
   assets: {
     apartment: uid("bbbbbbbb", 1),

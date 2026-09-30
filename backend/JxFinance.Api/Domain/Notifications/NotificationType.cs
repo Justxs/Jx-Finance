@@ -10,4 +10,5 @@ public enum NotificationType
     RecurringPriceRise,
     MonthReadyToClose,
     MonthlyDigest,
+    LowBalance,
 }

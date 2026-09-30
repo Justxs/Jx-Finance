@@ -12,6 +12,7 @@ import {
   monthlyDigestNotification,
   notifications,
   priceRiseNotification,
+  lowBalanceNotification,
   transferDueNotification,
   unusualAmountNotification,
   unusualAmountsNotification,
@@ -131,6 +132,21 @@ export const UnusualAmountsPriceRisesAndMonthClose: Story = {
     await expect(entries[2]).toHaveTextContent(/Charged €27\.99, expected €24\.99/u);
     await expect(entries[3]).toHaveTextContent("August 2026 has ended and is ready to close");
     await expect(entries[3]).toHaveAttribute("href", expect.stringContaining("month=2026-08"));
+  },
+};
+
+export const LowBalanceForecast: Story = {
+  parameters: withHandlers(notificationsHandler([lowBalanceNotification])),
+  play: async ({ canvas }) => {
+    await userEvent.click(canvas.getByRole("button", { name: /1 unread/i }));
+
+    const entry = await within(await openedDialog()).findByRole("link");
+
+    await expect(entry).toHaveTextContent("Swedbank einamoji");
+    await expect(entry).toHaveTextContent(
+      /Forecast to go below zero on Oct 1, 2026, lowest -€361.19/u,
+    );
+    await expect(entry).toHaveAttribute("href", expect.stringContaining("/accounts"));
   },
 };
 
