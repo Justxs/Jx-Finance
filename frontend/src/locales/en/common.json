@@ -2271,7 +2271,13 @@
     "since": "From {{date}}",
     "until": "Until {{date}}",
     "clearAll": "Clear filters",
-    "payee": "Payee"
+    "payee": "Payee",
+    "amountRange": "Amount range",
+    "amountFrom": "From",
+    "amountTo": "To",
+    "amountHint": "Compared in each transaction's own currency; a refund matches by its size.",
+    "amountAtLeast": "At least {{amount}}",
+    "amountAtMost": "At most {{amount}}"
   },
   "charts": {
     "income": "Income",

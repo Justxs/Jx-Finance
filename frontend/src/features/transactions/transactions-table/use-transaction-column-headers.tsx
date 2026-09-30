@@ -10,7 +10,11 @@ import {
 } from "@/components/ui/column-filter/column-filter";
 import { ColumnHeader } from "@/components/ui/column-header/column-header";
 import { DateRangePicker } from "@/components/ui/date-range-picker/date-range-picker";
-import type { TransactionTypeFilter } from "@/features/transactions/transaction-filter-fields";
+import { AmountRangeFields } from "@/features/transactions/amount-range-fields/amount-range-fields";
+import type {
+  AmountRangeDraft,
+  TransactionTypeFilter,
+} from "@/features/transactions/transaction-filter-fields";
 import { useFilterSummaries } from "@/features/transactions/use-filter-summaries";
 import type { TransactionFilters } from "@/features/transactions/use-transaction-filters";
 import { SEARCH_SHORTCUT_TARGET } from "@/lib/shortcuts";
@@ -107,12 +111,16 @@ export function useTransactionColumnHeaders(filters: TransactionFilters, tags: T
     ),
     amount: header(
       "amount",
-      <ColumnFilter<{ type: TransactionTypeFilter; unusual: boolean }>
+      <ColumnFilter<{ type: TransactionTypeFilter; unusual: boolean; range: AmountRangeDraft }>
         label={columnLabels.amount}
-        value={{ type: fields.type.value, unusual: fields.unusual.value }}
-        empty={{ type: "", unusual: false }}
-        summary={valueOf("type", "unusual")}
-        onApply={(next) => fields.amount.set(next.type, next.unusual)}
+        value={{
+          type: fields.type.value,
+          unusual: fields.unusual.value,
+          range: fields.amountRange.draft,
+        }}
+        empty={{ type: "", unusual: false, range: { min: "", max: "" } }}
+        summary={valueOf("type", "amountRange", "unusual")}
+        onApply={(next) => fields.amount.set(next.type, next.unusual, next.range)}
       >
         {(draft, setDraft) => (
           <>
@@ -121,6 +129,11 @@ export function useTransactionColumnHeaders(filters: TransactionFilters, tags: T
               value={draft.type}
               onChange={(type) => setDraft({ ...draft, type })}
               options={fields.type.options}
+            />
+            <AmountRangeFields
+              label={fields.amountRange.label}
+              value={draft.range}
+              onChange={(range) => setDraft({ ...draft, range })}
             />
             {fields.unusual.enabled ? (
               <label className="flex items-center gap-2.5 text-sm">

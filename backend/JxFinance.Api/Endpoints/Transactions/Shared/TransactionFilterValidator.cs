@@ -16,5 +16,10 @@ public abstract class TransactionFilterValidator<TRequest> : Validator<TRequest>
             .WithErrorCode(ErrorCodes.TextInvalidFormat)
             .WithMessage($"tagIds must be up to {TagRules.MaxTags} tag ids separated by commas.");
         RuleFor(r => r.Payee).HasMaxLength(500);
+        RuleFor(r => r.AmountMin).IsNonNegativeMoney();
+        RuleFor(r => r.AmountMax).IsNonNegativeMoney();
+        RuleFor(r => r.AmountMax)
+            .IsNotBefore(r => r.AmountMin)
+            .WithMessage("The highest amount cannot be below the lowest one.");
     }
 }

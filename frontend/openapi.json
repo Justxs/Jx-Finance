@@ -14177,6 +14177,30 @@
             }
           },
           {
+            "name": "amountMin",
+            "in": "query",
+            "description": "Inclusive lowest amount, compared with the size of the amount in the transaction's own currency, so a refund of 49.00 matches like a purchase of 49.00.",
+            "schema": {
+              "type": [
+                "null",
+                "number"
+              ],
+              "format": "decimal"
+            }
+          },
+          {
+            "name": "amountMax",
+            "in": "query",
+            "description": "Inclusive highest amount, compared the same way as amountMin.",
+            "schema": {
+              "type": [
+                "null",
+                "number"
+              ],
+              "format": "decimal"
+            }
+          },
+          {
             "name": "unusual",
             "in": "query",
             "description": "true keeps only expenses flagged as unusual and not marked \"not unusual\". Ignored while the unusualAmounts feature is off.",
@@ -14550,6 +14574,30 @@
             }
           },
           {
+            "name": "amountMin",
+            "in": "query",
+            "description": "Inclusive lowest amount, compared with the size of the amount in the transaction's own currency, so a refund of 49.00 matches like a purchase of 49.00.",
+            "schema": {
+              "type": [
+                "null",
+                "number"
+              ],
+              "format": "decimal"
+            }
+          },
+          {
+            "name": "amountMax",
+            "in": "query",
+            "description": "Inclusive highest amount, compared the same way as amountMin.",
+            "schema": {
+              "type": [
+                "null",
+                "number"
+              ],
+              "format": "decimal"
+            }
+          },
+          {
             "name": "unusual",
             "in": "query",
             "description": "true keeps only expenses flagged as unusual and not marked \"not unusual\". Ignored while the unusualAmounts feature is off.",
@@ -14756,6 +14804,30 @@
             }
           },
           {
+            "name": "amountMin",
+            "in": "query",
+            "description": "Inclusive lowest amount, compared with the size of the amount in the transaction's own currency, so a refund of 49.00 matches like a purchase of 49.00.",
+            "schema": {
+              "type": [
+                "null",
+                "number"
+              ],
+              "format": "decimal"
+            }
+          },
+          {
+            "name": "amountMax",
+            "in": "query",
+            "description": "Inclusive highest amount, compared the same way as amountMin.",
+            "schema": {
+              "type": [
+                "null",
+                "number"
+              ],
+              "format": "decimal"
+            }
+          },
+          {
             "name": "unusual",
             "in": "query",
             "description": "true keeps only expenses flagged as unusual and not marked \"not unusual\". Ignored while the unusualAmounts feature is off.",
@@ -14927,6 +14999,30 @@
                 "string"
               ],
               "format": "date"
+            }
+          },
+          {
+            "name": "amountMin",
+            "in": "query",
+            "description": "Inclusive lowest amount, compared with the size of the amount in the transaction's own currency, so a refund of 49.00 matches like a purchase of 49.00.",
+            "schema": {
+              "type": [
+                "null",
+                "number"
+              ],
+              "format": "decimal"
+            }
+          },
+          {
+            "name": "amountMax",
+            "in": "query",
+            "description": "Inclusive highest amount, compared the same way as amountMin.",
+            "schema": {
+              "type": [
+                "null",
+                "number"
+              ],
+              "format": "decimal"
             }
           },
           {

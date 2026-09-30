@@ -200,6 +200,16 @@ public sealed class TransactionService(
             query = query.Where(t => t.Date <= dateTo);
         }
 
+        if (request.AmountMin is { } amountMin)
+        {
+            query = query.Where(t => Math.Abs(t.Amount.Amount) >= amountMin);
+        }
+
+        if (request.AmountMax is { } amountMax)
+        {
+            query = query.Where(t => Math.Abs(t.Amount.Amount) <= amountMax);
+        }
+
         if (request.Unusual == true && UnusualEnabled)
         {
             query = query.Where(t => t.Unusual != null && t.UnusualDismissedAt == null);

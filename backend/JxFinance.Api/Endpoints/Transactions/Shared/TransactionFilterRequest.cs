@@ -20,6 +20,10 @@ public abstract class TransactionFilterRequest
 
     public DateOnly? DateTo { get; init; }
 
+    public decimal? AmountMin { get; init; }
+
+    public decimal? AmountMax { get; init; }
+
     public bool? Unusual { get; init; }
 
     public bool? Uncategorized { get; init; }

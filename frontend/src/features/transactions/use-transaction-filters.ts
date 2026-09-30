@@ -6,10 +6,13 @@ import { useFeature } from "@/hooks/use-settings";
 import { namedOptions } from "@/lib/options";
 import { UNCATEGORIZED_OPTION } from "./transaction-amount/transaction-row";
 import {
+  type AmountRangeDraft,
   SEARCH_DEBOUNCE_MS,
   type TransactionSortValue,
   type TransactionTypeFilter,
   sortFieldLabels,
+  amountRangeDraft,
+  parseAmountRange,
   sortOptions,
   typeOptions,
 } from "./transaction-filter-fields";
@@ -40,6 +43,7 @@ export function useTransactionFilters({ accounts, categories }: Args) {
     search.payee,
     search.type,
     search.dateFrom || search.dateTo,
+    search.amountMin !== undefined || search.amountMax !== undefined,
     search.categoryId || search.uncategorized,
     search.accountId,
     search.tagIds,
@@ -122,8 +126,20 @@ export function useTransactionFilters({ accounts, categories }: Args) {
       clear: () => setTagIds([]),
     },
     amount: {
-      set: (type: TransactionTypeFilter, unusual: boolean) =>
-        patchSearch({ type: type || undefined, unusual: unusual || undefined }),
+      set: (type: TransactionTypeFilter, unusual: boolean, range: AmountRangeDraft) =>
+        patchSearch({
+          type: type || undefined,
+          unusual: unusual || undefined,
+          ...parseAmountRange(range),
+        }),
+    },
+    amountRange: {
+      label: t("filters.amountRange"),
+      value: { amountMin: search.amountMin, amountMax: search.amountMax },
+      draft: amountRangeDraft(search),
+      active: search.amountMin !== undefined || search.amountMax !== undefined,
+      set: (next: AmountRangeDraft) => patchSearch(parseAmountRange(next)),
+      clear: () => patchSearch({ amountMin: undefined, amountMax: undefined }),
     },
     unusual: {
       label: t("transactions.unusual.only"),

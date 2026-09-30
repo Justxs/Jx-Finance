@@ -13,6 +13,8 @@ export const transactionFilterSchema = z.object({
   type: optionalParam(z.enum(FlowType)),
   dateFrom: optionalParam(z.iso.date()),
   dateTo: optionalParam(z.iso.date()),
+  amountMin: optionalParam(z.number().nonnegative()),
+  amountMax: optionalParam(z.number().nonnegative()),
   unusual: optionalParam(z.literal(true)),
   uncategorized: optionalParam(z.literal(true)),
 });

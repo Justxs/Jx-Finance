@@ -34,6 +34,10 @@ public static class TransactionFilterSummary
         summary.Describe(nameof(TransactionFilterRequest.DateFrom), dateFrom);
         summary.Describe(nameof(TransactionFilterRequest.DateTo), dateTo);
         summary.Describe(
+            nameof(TransactionFilterRequest.AmountMin),
+            "Inclusive lowest amount, compared with the size of the amount in the transaction's own currency, so a refund of 49.00 matches like a purchase of 49.00.");
+        summary.Describe(nameof(TransactionFilterRequest.AmountMax), "Inclusive highest amount, compared the same way as amountMin.");
+        summary.Describe(
             nameof(TransactionFilterRequest.Unusual),
             "true keeps only expenses flagged as unusual and not marked \"not unusual\". Ignored while the "
             + "unusualAmounts feature is off.");

@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import type { TagResponse } from "@/api/generated/model";
-import { useDate, useIsoDate, useMonthName } from "@/hooks/use-formatters";
+import { useDate, useIsoDate, useMonthName, useNumberFormat } from "@/hooks/use-formatters";
 import { monthBounds, parseIso } from "@/lib/calendar";
 import { nameById } from "@/lib/options";
 import type { TransactionFilters } from "./use-transaction-filters";
@@ -24,6 +24,7 @@ export function useFilterSummaries(
   const date = useDate();
   const formatIso = useIsoDate();
   const formatMonth = useMonthName();
+  const amount = useNumberFormat({ minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const tagNames = nameById(tags);
 
   function dateValue() {
@@ -39,6 +40,18 @@ export function useFilterSummaries(
     return start
       ? t("filters.since", { date: formatIso(from) })
       : t("filters.until", { date: formatIso(to) });
+  }
+
+  function amountRangeValue() {
+    const { amountMin, amountMax } = fields.amountRange.value;
+    if (amountMin !== undefined && amountMax !== undefined) {
+      return amountMin === amountMax
+        ? amount.format(amountMin)
+        : `${amount.format(amountMin)} – ${amount.format(amountMax)}`;
+    }
+    return amountMin === undefined
+      ? t("filters.amountAtMost", { amount: amount.format(amountMax ?? 0) })
+      : t("filters.amountAtLeast", { amount: amount.format(amountMin) });
   }
 
   const summaries: FilterSummary[] = [];
@@ -96,6 +109,14 @@ export function useFilterSummaries(
       label: fields.type.label,
       value: optionLabel(fields.type.options, fields.type.value),
       clear: () => fields.type.set(""),
+    });
+  }
+  if (fields.amountRange.active) {
+    summaries.push({
+      key: "amountRange",
+      label: fields.amountRange.label,
+      value: amountRangeValue(),
+      clear: fields.amountRange.clear,
     });
   }
   if (fields.unusual.enabled && fields.unusual.value) {

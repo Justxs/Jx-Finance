@@ -54,6 +54,16 @@ export type ExportTransactionsParams = {
    */
   dateTo?: string | null;
   /**
+   * Inclusive lowest amount, compared with the size of the amount in the transaction's own currency, so a refund of 49.00 matches like a purchase of 49.00.
+   * @nullable
+   */
+  amountMin?: number | null;
+  /**
+   * Inclusive highest amount, compared the same way as amountMin.
+   * @nullable
+   */
+  amountMax?: number | null;
+  /**
    * true keeps only expenses flagged as unusual and not marked "not unusual". Ignored while the unusualAmounts feature is off.
    * @nullable
    */

@@ -45,6 +45,24 @@ export const PayeeFromTheReport: Story = {
   },
 };
 
+export const AmountRange: Story = {
+  parameters: { route: "/transactions?amountMin=45&amountMax=50" },
+  play: async ({ canvas }) => {
+    const chip = await canvas.findByRole("button", {
+      name: "Remove filter Amount range: 45.00 – 50.00",
+    });
+    await userEvent.click(chip);
+    await waitFor(() => expect(chip).not.toBeInTheDocument());
+  },
+};
+
+export const AmountAtLeast: Story = {
+  parameters: { route: "/transactions?amountMin=100" },
+  play: async ({ canvas }) => {
+    await expect(await canvas.findByText("At least 100.00")).toBeVisible();
+  },
+};
+
 export const NoFilters: Story = { parameters: { route: "/transactions" } };
 
 export const ClearingAll: Story = {

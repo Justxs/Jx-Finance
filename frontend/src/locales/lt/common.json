@@ -2351,7 +2351,13 @@
     "since": "Nuo {{date}}",
     "until": "Iki {{date}}",
     "clearAll": "Išvalyti filtrus",
-    "payee": "Gavėjas"
+    "payee": "Gavėjas",
+    "amountRange": "Sumos intervalas",
+    "amountFrom": "Nuo",
+    "amountTo": "Iki",
+    "amountHint": "Lyginama kiekvienos operacijos valiuta; grąžinimas atitinka pagal dydį.",
+    "amountAtLeast": "Ne mažiau kaip {{amount}}",
+    "amountAtMost": "Ne daugiau kaip {{amount}}"
   },
   "charts": {
     "income": "Pajamos",

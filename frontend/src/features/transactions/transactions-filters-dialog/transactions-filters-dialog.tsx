@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button/button";
 import { Checkbox } from "@/components/ui/checkbox/checkbox";
 import { DateRangePicker } from "@/components/ui/date-range-picker/date-range-picker";
 import { Input } from "@/components/ui/input/input";
+import { AmountRangeFields } from "@/features/transactions/amount-range-fields/amount-range-fields";
 import type { TransactionFilters } from "@/features/transactions/use-transaction-filters";
 import { useDebouncedDraft } from "@/hooks/use-debounced-draft";
 import type { SelectOption } from "@/lib/options";
@@ -43,6 +44,13 @@ export function TransactionsFiltersDialog({ filters, tags, className }: Readonly
   const { fields, activeCount } = filters;
   const [open, setOpen] = useState(false);
   const text = useDebouncedDraft(fields.search.value, fields.search.set, fields.search.debounceMs);
+  const rangeKey = JSON.stringify(fields.amountRange.draft);
+  const [range, setRange] = useState(fields.amountRange.draft);
+  const [lastRangeKey, setLastRangeKey] = useState(rangeKey);
+  if (rangeKey !== lastRangeKey) {
+    setLastRangeKey(rangeKey);
+    setRange(fields.amountRange.draft);
+  }
 
   function clearAll() {
     text.cancel();
@@ -76,6 +84,13 @@ export function TransactionsFiltersDialog({ filters, tags, className }: Readonly
           </FieldShell>
 
           <FilterSelect id="tx-filter-type" field={fields.type} />
+
+          <AmountRangeFields
+            label={fields.amountRange.label}
+            value={range}
+            onChange={setRange}
+            onBlur={() => fields.amountRange.set(range)}
+          />
 
           {fields.unusual.enabled ? (
             <label className="flex items-center gap-2.5 text-sm font-medium">
