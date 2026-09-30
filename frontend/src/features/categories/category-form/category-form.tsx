@@ -10,7 +10,7 @@ import { FormGrid } from "@/components/ui/form-grid/form-grid";
 import { Label } from "@/components/ui/label/label";
 import { IconPicker } from "@/features/categories/icon-picker/icon-picker";
 import { silentMutation, upsert } from "@/lib/mutations";
-import { optionsOf } from "@/lib/options";
+import { namedOptions, optionsOf } from "@/lib/options";
 import { refineSharing, requiredText, sharingPayload, sharingShape } from "@/lib/validation";
 import { useSharingDefaults } from "@/stores/active-household-store";
 
@@ -18,16 +18,18 @@ interface FormValues {
   name: string;
   type: FlowType;
   icon: string | null;
+  parentId: string;
   scope: Scope;
   householdId: string;
 }
 
 interface Props {
+  categories: readonly CategoryResponse[];
   initial?: CategoryResponse;
   onClose: () => void;
 }
 
-export function CategoryForm({ initial, onClose }: Readonly<Props>) {
+export function CategoryForm({ categories, initial, onClose }: Readonly<Props>) {
   const { t } = useTranslation();
   const sharing = useSharingDefaults(useHouseholdsSuspense().data, initial);
 
@@ -36,6 +38,7 @@ export function CategoryForm({ initial, onClose }: Readonly<Props>) {
       name: requiredText(t, createCategoryBodyNameMax),
       type: z.enum(FlowType),
       icon: z.string().nullable(),
+      parentId: z.string(),
       ...sharingShape(),
     }),
     t,
@@ -50,8 +53,17 @@ export function CategoryForm({ initial, onClose }: Readonly<Props>) {
     name: initial?.name ?? "",
     type: initial?.type ?? "expense",
     icon: initial?.icon ?? null,
+    parentId: initial?.parentId ?? "",
     ...sharing,
   };
+  const hasChildren = initial !== undefined && categories.some((c) => c.parentId === initial.id);
+
+  function parentOptions(type: FlowType) {
+    const parents = categories.filter(
+      (c) => c.type === type && !c.parentId && c.id !== initial?.id,
+    );
+    return namedOptions(parents, t("categories.noParent"));
+  }
 
   const form = useServerForm({
     defaultValues,
@@ -60,6 +72,7 @@ export function CategoryForm({ initial, onClose }: Readonly<Props>) {
       const data = {
         name: value.name.trim(),
         icon: value.icon,
+        parentId: value.parentId || null,
         ...sharingPayload(value),
       };
       return initial
@@ -96,6 +109,23 @@ export function CategoryForm({ initial, onClose }: Readonly<Props>) {
                 />
               )}
             </form.Field>
+          )}
+          {hasChildren ? null : (
+            <form.Subscribe selector={(state) => state.values.type}>
+              {(type) => (
+                <form.Field name="parentId">
+                  {(field) => (
+                    <field.SelectFieldControl
+                      id="category-parent"
+                      kind="search"
+                      label={t("categories.parent")}
+                      hint={t("categories.parentHint")}
+                      options={parentOptions(type)}
+                    />
+                  )}
+                </form.Field>
+              )}
+            </form.Subscribe>
           )}
         </FormGrid>
 

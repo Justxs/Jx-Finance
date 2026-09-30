@@ -4574,7 +4574,8 @@
                 "type": "expense",
                 "icon": "shopping-cart",
                 "scope": "personal",
-                "householdId": null
+                "householdId": null,
+                "parentId": null
               }
             }
           },
@@ -4592,7 +4593,7 @@
             }
           },
           "400": {
-            "description": "Validation failed, the name is taken, or the named household is not one of yours.",
+            "description": "Validation failed, the name is taken, the named household is not one of yours, the parent is of the other flow type (category.wrongType) or not a top-level category (category.nestingInvalid).",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -4775,7 +4776,7 @@
           "Categories"
         ],
         "summary": "Update a category",
-        "description": "Renames a category, changes its icon, or moves it between personal and shared. The flow type is deliberately absent: it cannot be changed after creation.",
+        "description": "Renames a category, changes its icon, or moves it between personal and shared. The flow type is deliberately absent: it cannot be changed after creation. The parent is replaced like every other field, so an update without parentId makes the category top-level again.",
         "operationId": "UpdateCategory",
         "parameters": [
           {
@@ -4800,7 +4801,8 @@
                 "name": "Groceries",
                 "icon": "shopping-cart",
                 "scope": "personal",
-                "householdId": null
+                "householdId": null,
+                "parentId": null
               }
             }
           },
@@ -4818,7 +4820,7 @@
             }
           },
           "400": {
-            "description": "Validation failed, the name is taken, or the named household is not one of yours.",
+            "description": "Validation failed, the name is taken, the named household is not one of yours, the parent is of the other flow type (category.wrongType), or the nesting would go deeper than one level (category.nestingInvalid).",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -4838,7 +4840,7 @@
             }
           },
           "404": {
-            "description": "No such category is visible to the signed-in user.",
+            "description": "No such category, or no such parent, is visible to the signed-in user.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -18980,6 +18982,25 @@
               "string"
             ],
             "format": "decimal"
+          },
+          "parentId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "parentName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "parentIcon": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -19048,6 +19069,13 @@
             "$ref": "#/components/schemas/Scope"
           },
           "householdId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "parentId": {
             "type": [
               "null",
               "string"
@@ -19555,6 +19583,14 @@
             ],
             "description": "Required when Scope is Shared; must be a household you belong to.",
             "format": "uuid"
+          },
+          "parentId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Optional top-level category of the same flow type to group this one under. Categories nest one level: a sub-category cannot have sub-categories of its own. Filtering the ledger, a budget and the reports by the parent include its sub-categories.",
+            "format": "uuid"
           }
         },
         "example": {
@@ -19562,7 +19598,8 @@
           "type": "expense",
           "icon": "shopping-cart",
           "scope": "personal",
-          "householdId": null
+          "householdId": null,
+          "parentId": null
         }
       },
       "CreateConversionRequest": {
@@ -21504,6 +21541,7 @@
           "broker.rejected",
           "broker.tokenRequired",
           "broker.unavailable",
+          "category.nestingInvalid",
           "category.wrongType",
           "collection.invalidSize",
           "conflict.busy",
@@ -27414,13 +27452,21 @@
               "string"
             ],
             "format": "uuid"
+          },
+          "parentId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
           }
         },
         "example": {
           "name": "Groceries",
           "icon": "shopping-cart",
           "scope": "personal",
-          "householdId": null
+          "householdId": null,
+          "parentId": null
         }
       },
       "UpdateConversionRequest": {

@@ -23,7 +23,7 @@ const incomeCategory = categories.find((item) => item.type === "income")!;
 const meta = {
   title: "Features/Categories/CategoryForm",
   component: CategoryForm,
-  args: { onClose: fn() },
+  args: { categories, onClose: fn() },
   decorators: [withWidth("form")],
 } satisfies Meta<typeof CategoryForm>;
 
@@ -33,6 +33,22 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 
 export const Editing: Story = { args: { initial: personalCategory } };
+
+export const GroupUnderAParent: Story = {
+  play: async ({ canvas }) => {
+    const parent = await canvas.findByRole("combobox", { name: "Group under" });
+    await expect(parent).toHaveTextContent("No group (top level)");
+    await expect(canvas.getByText(/include its sub-categories/u)).toBeVisible();
+  },
+};
+
+export const ParentOfOthersHasNoGroupField: Story = {
+  args: { initial: personalCategory },
+  play: async ({ canvas }) => {
+    await canvas.findByRole("textbox", { name: "Name" });
+    await expect(canvas.queryByRole("combobox", { name: "Group under" })).not.toBeInTheDocument();
+  },
+};
 
 export const EditingShared: Story = { args: { initial: sharedCategory } };
 

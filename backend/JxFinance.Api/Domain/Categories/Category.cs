@@ -12,4 +12,5 @@ public sealed class Category : OwnableEntity, IShareable
     public bool IsDefault { get; set; }
     public Scope Scope { get; set; } = Scope.Personal;
     public HouseholdId? HouseholdId { get; set; }
+    public CategoryId? ParentId { get; set; }
 }

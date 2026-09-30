@@ -342,7 +342,7 @@ export const getUpdateCategoryUrl = (id: string) => {
 };
 
 /**
- * Renames a category, changes its icon, or moves it between personal and shared. The flow type is deliberately absent: it cannot be changed after creation.
+ * Renames a category, changes its icon, or moves it between personal and shared. The flow type is deliberately absent: it cannot be changed after creation. The parent is replaced like every other field, so an update without parentId makes the category top-level again.
  * @summary Update a category
  */
 export const updateCategory = async (

@@ -20,6 +20,7 @@ public static class CategoryMapper
         category.Name = input.Name.Trim();
         category.Icon = OptionalText.Normalize(input.Icon);
         category.ApplySharing(input);
+        category.ParentId = input.ParentId is { } parentId ? new CategoryId(parentId) : null;
     }
 
     public static CategoryResponse ToResponse(this Category category) => new(
@@ -29,5 +30,6 @@ public static class CategoryMapper
         category.Icon,
         category.IsDefault,
         category.Scope,
-        category.HouseholdId?.Value);
+        category.HouseholdId?.Value,
+        category.ParentId?.Value);
 }

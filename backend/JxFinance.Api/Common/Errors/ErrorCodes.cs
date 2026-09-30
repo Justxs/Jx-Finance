@@ -67,6 +67,7 @@ public static class ErrorCodes
     public const string SettleUpCurrencyMismatch = "settleUp.currencyMismatch";
     public const string SettleUpTransferTaken = "settleUp.transferTaken";
     public const string CategoryWrongType = "category.wrongType";
+    public const string CategoryNestingInvalid = "category.nestingInvalid";
     public const string CurrencyDisabled = "currency.disabled";
     public const string ExchangeRateUnavailable = "exchangeRate.unavailable";
     public const string TransferSameAccount = "transfer.sameAccount";

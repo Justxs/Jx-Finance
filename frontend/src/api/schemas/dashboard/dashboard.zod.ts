@@ -29,6 +29,9 @@ export const CategoryBreakdownResponse = zod.object({
       comparisonAmount: zod
         .stringFormat("decimal", categoryBreakdownResponseItemsItemComparisonAmountRegExp)
         .nullish(),
+      parentId: zod.uuid().nullish(),
+      parentName: zod.string().nullish(),
+      parentIcon: zod.string().nullish(),
     }),
   ),
   periodStart: zod.iso.date(),

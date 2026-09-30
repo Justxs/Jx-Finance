@@ -14,7 +14,14 @@ public sealed record CategoryBreakdownItem(
     string? CategoryIcon,
     [property: Money] decimal Amount,
     SyntheticCategoryGroup? SyntheticGroup = null,
-    [property: Money] decimal? ComparisonAmount = null);
+    [property: Money] decimal? ComparisonAmount = null)
+{
+    public Guid? ParentId { get; init; }
+
+    public string? ParentName { get; init; }
+
+    public string? ParentIcon { get; init; }
+}
 
 public sealed record CategoryBreakdownResponse(
     IReadOnlyList<CategoryBreakdownItem> Items,

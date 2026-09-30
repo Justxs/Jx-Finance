@@ -72,6 +72,9 @@ export const ReportSummaryResponse = zod.object({
       comparisonAmount: zod
         .stringFormat("decimal", reportSummaryResponseExpenseByCategoryItemComparisonAmountRegExp)
         .nullish(),
+      parentId: zod.uuid().nullish(),
+      parentName: zod.string().nullish(),
+      parentIcon: zod.string().nullish(),
     }),
   ),
   incomeByCategory: zod.array(
@@ -86,6 +89,9 @@ export const ReportSummaryResponse = zod.object({
       comparisonAmount: zod
         .stringFormat("decimal", reportSummaryResponseIncomeByCategoryItemComparisonAmountRegExp)
         .nullish(),
+      parentId: zod.uuid().nullish(),
+      parentName: zod.string().nullish(),
+      parentIcon: zod.string().nullish(),
     }),
   ),
   trend: zod.array(

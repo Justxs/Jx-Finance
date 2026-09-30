@@ -298,7 +298,10 @@
       "tag": "Etiketė",
       "utensils": "Stalo įrankiai",
       "wifi": "Wi-Fi"
-    }
+    },
+    "parent": "Priskirti grupei",
+    "noParent": "Be grupės (viršutinis lygis)",
+    "parentHint": "Grupės biudžetas, operacijų filtras ir ataskaitos suma apima jos subkategorijas."
   },
   "tags": {
     "title": "Žymos",
@@ -2404,7 +2407,8 @@
       "unavailable": "„Interactive Brokers“ šiuo metu nepasiekiama. Bandykite vėliau."
     },
     "category": {
-      "wrongType": "Pasirinkite tinkamo tipo kategoriją."
+      "wrongType": "Pasirinkite tinkamo tipo kategoriją.",
+      "nestingInvalid": "Kategorijos grupuojamos vienu lygiu: grupe pasirinkite viršutinio lygio kategoriją, o kategorija su subkategorijomis negali būti grupėje."
     },
     "collection": {
       "invalidSize": "Per mažai arba per daug elementų."

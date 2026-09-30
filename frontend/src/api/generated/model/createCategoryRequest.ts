@@ -29,4 +29,9 @@ export interface CreateCategoryRequest {
    * @nullable
    */
   householdId: string | null;
+  /**
+   * Optional top-level category of the same flow type to group this one under. Categories nest one level: a sub-category cannot have sub-categories of its own. Filtering the ledger, a budget and the reports by the parent include its sub-categories.
+   * @nullable
+   */
+  parentId?: string | null;
 }

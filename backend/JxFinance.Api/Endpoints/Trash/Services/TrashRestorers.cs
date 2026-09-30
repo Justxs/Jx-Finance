@@ -399,6 +399,16 @@ public static class TrashRestorers
             }
         }
 
+        var childIds = r.Entry.Remembered<CategoryId>(DeletionChangeKind.CategoryParent);
+        if (category.ParentId is null)
+        {
+            await db.Categories
+                .IgnoreQueryFilters()
+                .Where(c => childIds.Contains(c.Id) && c.ParentId == null && c.Type == category.Type
+                    && !db.Categories.Any(grandchild => grandchild.ParentId == c.Id))
+                .ExecuteUpdateAsync(setters => setters.SetProperty(c => c.ParentId, restoredId), r.CancellationToken);
+        }
+
         return Result.Success();
     }
 

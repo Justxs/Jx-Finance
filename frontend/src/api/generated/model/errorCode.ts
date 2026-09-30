@@ -26,6 +26,7 @@ export const ErrorCode = {
   brokerrejected: "broker.rejected",
   brokertokenRequired: "broker.tokenRequired",
   brokerunavailable: "broker.unavailable",
+  categorynestingInvalid: "category.nestingInvalid",
   categorywrongType: "category.wrongType",
   collectioninvalidSize: "collection.invalidSize",
   conflictbusy: "conflict.busy",

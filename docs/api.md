@@ -360,6 +360,8 @@ They also take `payee`, since 2026-09-29: the value is normalized like a stored 
 
 Since 2026-09-30 the create and update bodies take an optional `note`, at most 1000 characters (`text.tooLong`), and every transaction response answers it; `search` on the four filtered endpoints matches it as well as the description. See [Transactions](features/transactions.md#notes).
 
+Since 2026-09-30 category bodies take an optional `parentId` and responses answer it (`category.wrongType` for a parent of the other type, `category.nestingInvalid` for nesting deeper than one level); `categoryId` on the four transaction filters includes the sub-categories of a parent, and category breakdown items answer `parentId`, `parentName` and `parentIcon`. See [Categories](features/categories.md#groups).
+
 Since 2026-09-30 a budget body takes `categoryId` or `tagId`, exactly one (`required` on `categoryId` otherwise), and `BudgetResponse` answers `categoryId`, `tagId` and `name` in place of `categoryName`. See [Budgets](features/budgets.md#budgets-on-a-tag).
 
 Since 2026-09-30 every transaction response answers `payeeName`, the caller's own name for the row's `PayeeKey` or null, and `search` also matches it. `GET /api/payees` lists the caller's payee names (`id`, `payeeKey`, `name`), `PUT /api/payees` takes `{ payee, name }`, normalizes `payee` like a stored key (nothing left answers `text.invalidFormat`) and creates or renames the name, and `DELETE /api/payees/{id}` removes it (204, or 404 `resource.notFound`). The report's `expenseByPayee` items and the recurring-entry suggestions carry the same `name`. See [Payee names](features/payee-names.md).

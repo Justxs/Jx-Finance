@@ -35,6 +35,12 @@ export const CreateCategoryBody = zod.object({
     .uuid()
     .nullable()
     .describe("Required when Scope is Shared; must be a household you belong to."),
+  parentId: zod
+    .uuid()
+    .nullish()
+    .describe(
+      "Optional top-level category of the same flow type to group this one under. Categories nest one level: a sub-category cannot have sub-categories of its own. Filtering the ledger, a budget and the reports by the parent include its sub-categories.",
+    ),
 });
 
 export const CreateCategoryResponse = zod.object({
@@ -45,6 +51,7 @@ export const CreateCategoryResponse = zod.object({
   isDefault: zod.boolean(),
   scope: zod.enum(["personal", "shared"]),
   householdId: zod.uuid().nullable(),
+  parentId: zod.uuid().nullish(),
 });
 
 /**
@@ -59,6 +66,7 @@ export const CategoriesResponseItem = zod.object({
   isDefault: zod.boolean(),
   scope: zod.enum(["personal", "shared"]),
   householdId: zod.uuid().nullable(),
+  parentId: zod.uuid().nullish(),
 });
 export const CategoriesResponse = zod.array(CategoriesResponseItem);
 
@@ -69,7 +77,7 @@ export const CategoriesResponse = zod.array(CategoriesResponseItem);
 export const DeleteCategoryResponse = zod.void();
 
 /**
- * Renames a category, changes its icon, or moves it between personal and shared. The flow type is deliberately absent: it cannot be changed after creation.
+ * Renames a category, changes its icon, or moves it between personal and shared. The flow type is deliberately absent: it cannot be changed after creation. The parent is replaced like every other field, so an update without parentId makes the category top-level again.
  * @summary Update a category
  */
 export const updateCategoryBodyNameMin = 0;
@@ -83,6 +91,7 @@ export const UpdateCategoryBody = zod.object({
   icon: zod.string().min(updateCategoryBodyIconMin).max(updateCategoryBodyIconMax).nullable(),
   scope: zod.enum(["personal", "shared"]),
   householdId: zod.uuid().nullable(),
+  parentId: zod.uuid().nullish(),
 });
 
 export const UpdateCategoryResponse = zod.object({
@@ -93,4 +102,5 @@ export const UpdateCategoryResponse = zod.object({
   isDefault: zod.boolean(),
   scope: zod.enum(["personal", "shared"]),
   householdId: zod.uuid().nullable(),
+  parentId: zod.uuid().nullish(),
 });

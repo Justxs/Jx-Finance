@@ -31,7 +31,10 @@ export const categories: CategoryResponse[] = [
   category(ids.categories.housing, "Būstas", "expense", "home", true),
   category(ids.categories.entertainment, "Pramogos", "expense", "clapperboard", false),
   category(ids.categories.health, "Sveikata", "expense", "heart-pulse", true),
-  category(ids.categories.cafes, "Kavinės ir restoranai", "expense", "coffee", false),
+  {
+    ...category(ids.categories.cafes, "Kavinės ir restoranai", "expense", "coffee", false),
+    parentId: ids.categories.food,
+  },
   category(ids.categories.shopping, "Apsipirkimas", "expense", "shopping-bag", false),
   category(
     ids.categories.householdGoods,

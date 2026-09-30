@@ -3,4 +3,10 @@ using JxFinance.Endpoints.Categories.Shared;
 
 namespace JxFinance.Endpoints.Categories.UpdateCategory;
 
-public sealed record UpdateCategoryRequest(Guid Id, string Name, string? Icon, Scope Scope, Guid? HouseholdId) : ICategoryInput;
+public sealed record UpdateCategoryRequest(
+    Guid Id,
+    string Name,
+    string? Icon,
+    Scope Scope,
+    Guid? HouseholdId,
+    Guid? ParentId = null) : ICategoryInput;

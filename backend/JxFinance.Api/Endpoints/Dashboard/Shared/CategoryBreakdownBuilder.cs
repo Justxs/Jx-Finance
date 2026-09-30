@@ -25,13 +25,19 @@ public static class CategoryBreakdownBuilder
         var items = keys.Select(key =>
         {
             var category = key.HasValue ? categories.GetValueOrDefault(key.Value) : null;
+            var parent = category?.ParentId is { } parentId ? categories.GetValueOrDefault(parentId) : null;
             return new CategoryBreakdownItem(
                 key?.Value,
                 category?.Name ?? "Uncategorized",
                 category?.Icon,
                 Money.Round(AmountOf(current, key)),
                 null,
-                earlier is null ? null : Money.Round(AmountOf(earlier, key)));
+                earlier is null ? null : Money.Round(AmountOf(earlier, key)))
+            {
+                ParentId = parent?.Id.Value,
+                ParentName = parent?.Name,
+                ParentIcon = parent?.Icon,
+            };
         }).ToList();
 
         var investmentTotal = Money.Round(investmentFlows.Where(f => f.Type == type).Sum(f => f.Amount));

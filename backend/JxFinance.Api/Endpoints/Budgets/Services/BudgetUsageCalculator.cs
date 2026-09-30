@@ -3,6 +3,7 @@ using JxFinance.Common;
 using JxFinance.Common.CategoryAttributions;
 using JxFinance.Common.Settings;
 using JxFinance.Domain.Budgets;
+using JxFinance.Domain.Categories;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Settings;
 using JxFinance.Domain.Tags;
@@ -38,10 +39,7 @@ public sealed class BudgetUsageCalculator(
 
         var span = new DateWindow(spanStart, spanEnd);
         var spendByCategory = budgets.Any(b => b.CategoryId is not null)
-            ? (await attributions.GetAttributionsAsync(span, null, FlowType.Expense, cancellationToken))
-                .Where(a => a.CategoryId.HasValue)
-                .GroupBy(a => a.CategoryId!.Value)
-                .ToDictionary(g => g.Key, g => (IReadOnlyList<CategoryAttribution>)[.. g])
+            ? await CategorySpendAsync(span, cancellationToken)
             : [];
         var spendByTag = await TagSpendAsync(budgets, span, cancellationToken);
 
@@ -50,6 +48,24 @@ public sealed class BudgetUsageCalculator(
             b => Usage(b, walks[b.Id], b.TagId is { } tagId
                 ? spendByTag.GetValueOrDefault(tagId, [])
                 : spendByCategory.GetValueOrDefault(b.CategoryId!.Value, [])));
+    }
+
+    private async Task<Dictionary<CategoryId, IReadOnlyList<CategoryAttribution>>> CategorySpendAsync(
+        DateWindow span,
+        CancellationToken cancellationToken)
+    {
+        var parents = await db.Categories
+            .Where(c => c.ParentId != null)
+            .ToDictionaryAsync(c => c.Id, c => c.ParentId!.Value, cancellationToken);
+        var spend = await attributions.GetAttributionsAsync(span, null, FlowType.Expense, cancellationToken);
+
+        return spend
+            .Where(a => a.CategoryId.HasValue)
+            .SelectMany(a => parents.TryGetValue(a.CategoryId!.Value, out var parent)
+                ? new[] { (Key: a.CategoryId.Value, Attribution: a), (Key: parent, Attribution: a) }
+                : [(Key: a.CategoryId.Value, Attribution: a)])
+            .GroupBy(entry => entry.Key)
+            .ToDictionary(g => g.Key, g => (IReadOnlyList<CategoryAttribution>)[.. g.Select(entry => entry.Attribution)]);
     }
 
     private async Task<Dictionary<TagId, IReadOnlyList<CategoryAttribution>>> TagSpendAsync(

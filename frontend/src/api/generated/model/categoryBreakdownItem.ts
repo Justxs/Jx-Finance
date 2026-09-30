@@ -17,4 +17,10 @@ export interface CategoryBreakdownItem {
   syntheticGroup?: null | SyntheticCategoryGroup;
   /** @nullable */
   comparisonAmount?: string | null;
+  /** @nullable */
+  parentId?: string | null;
+  /** @nullable */
+  parentName?: string | null;
+  /** @nullable */
+  parentIcon?: string | null;
 }

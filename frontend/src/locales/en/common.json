@@ -294,7 +294,10 @@
       "tag": "Tag",
       "utensils": "Utensils",
       "wifi": "Wi-Fi"
-    }
+    },
+    "parent": "Group under",
+    "noParent": "No group (top level)",
+    "parentHint": "A group's budget, ledger filter and report total include its sub-categories."
   },
   "tags": {
     "title": "Tags",
@@ -2324,7 +2327,8 @@
       "unavailable": "Interactive Brokers is not available right now. Try again later."
     },
     "category": {
-      "wrongType": "Choose a category of the matching type."
+      "wrongType": "Choose a category of the matching type.",
+      "nestingInvalid": "Categories nest one level: choose a top-level category as the group, and a category with sub-categories cannot join a group."
     },
     "collection": {
       "invalidSize": "Too few or too many items."

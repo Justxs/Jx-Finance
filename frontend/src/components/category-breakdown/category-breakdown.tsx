@@ -7,6 +7,7 @@ import {
 } from "@/components/breakdown-list/breakdown-list";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { useCategoryName } from "@/hooks/use-category-name";
+import { rollUpToGroups } from "./category-groups";
 
 const MAX_ROWS = 5;
 
@@ -21,7 +22,7 @@ export function CategoryBreakdown({ items, type = "expense", dateFrom, dateTo }:
   const { t } = useTranslation();
   const nameOf = useCategoryName();
 
-  const sorted = items.toSorted((a, b) => breakdownWeight(b) - breakdownWeight(a));
+  const sorted = rollUpToGroups(items).toSorted((a, b) => breakdownWeight(b) - breakdownWeight(a));
   const rest = sorted.slice(MAX_ROWS);
   const restTotal = rest.reduce((sum, item) => sum + Number(item.amount), 0);
   const restEarlier = rest.reduce((sum, item) => sum + Number(item.comparisonAmount ?? 0), 0);

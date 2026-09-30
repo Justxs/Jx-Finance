@@ -10,5 +10,6 @@ public sealed class CategoryConfiguration : IEntityTypeConfiguration<Category>
     {
         builder.Property(c => c.Name).HasMaxLength(100);
         builder.Property(c => c.Icon).HasMaxLength(50);
+        builder.HasOne<Category>().WithMany().HasForeignKey(c => c.ParentId).OnDelete(DeleteBehavior.Restrict);
     }
 }

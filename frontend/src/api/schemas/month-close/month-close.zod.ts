@@ -199,6 +199,9 @@ export const CloseMonthResponse = zod.object({
             closeMonthResponseFiguresExpenseByCategoryItemComparisonAmountRegExp,
           )
           .nullish(),
+        parentId: zod.uuid().nullish(),
+        parentName: zod.string().nullish(),
+        parentIcon: zod.string().nullish(),
       }),
     ),
     incomeByCategory: zod.array(
@@ -219,6 +222,9 @@ export const CloseMonthResponse = zod.object({
             closeMonthResponseFiguresIncomeByCategoryItemComparisonAmountRegExp,
           )
           .nullish(),
+        parentId: zod.uuid().nullish(),
+        parentName: zod.string().nullish(),
+        parentIcon: zod.string().nullish(),
       }),
     ),
     trend: zod.array(
@@ -622,6 +628,9 @@ export const MonthReviewResponse = zod.object({
             monthReviewResponseFiguresExpenseByCategoryItemComparisonAmountRegExp,
           )
           .nullish(),
+        parentId: zod.uuid().nullish(),
+        parentName: zod.string().nullish(),
+        parentIcon: zod.string().nullish(),
       }),
     ),
     incomeByCategory: zod.array(
@@ -642,6 +651,9 @@ export const MonthReviewResponse = zod.object({
             monthReviewResponseFiguresIncomeByCategoryItemComparisonAmountRegExp,
           )
           .nullish(),
+        parentId: zod.uuid().nullish(),
+        parentName: zod.string().nullish(),
+        parentIcon: zod.string().nullish(),
       }),
     ),
     trend: zod.array(
@@ -1085,6 +1097,9 @@ export const UpdateMonthNoteResponse = zod.object({
             updateMonthNoteResponseFiguresExpenseByCategoryItemComparisonAmountRegExp,
           )
           .nullish(),
+        parentId: zod.uuid().nullish(),
+        parentName: zod.string().nullish(),
+        parentIcon: zod.string().nullish(),
       }),
     ),
     incomeByCategory: zod.array(
@@ -1105,6 +1120,9 @@ export const UpdateMonthNoteResponse = zod.object({
             updateMonthNoteResponseFiguresIncomeByCategoryItemComparisonAmountRegExp,
           )
           .nullish(),
+        parentId: zod.uuid().nullish(),
+        parentName: zod.string().nullish(),
+        parentIcon: zod.string().nullish(),
       }),
     ),
     trend: zod.array(

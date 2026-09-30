@@ -6,4 +6,5 @@ public interface ICategoryInput : IShareableInput
 {
     string Name { get; }
     string? Icon { get; }
+    Guid? ParentId { get; }
 }

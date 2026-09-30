@@ -28,6 +28,10 @@ Fill from receipt in the form of an expense reads one receipt photo with Tessera
 
 Deleting a transaction, transfer, currency conversion, budget, goal, asset, debt, recurring entry, investment entry, category, tag, categorization rule, household, split expense or settle-up payment shows a toast with Undo, and the same delete stays in the Trash section of Settings for 30 days with a Restore button; a restored transaction brings its split lines, tags and attachments with it and counts again in balances, budgets and reports, a restored conversion brings back its fee transaction, and a restored category, tag, rule or household puts back the rows its delete rewrote where they are still sound. Restoring is refused, with a reason, when the account was archived, the category is gone, a conversion's fee was deleted on its own, another budget took the category and period, a tag's name was taken again or a restored investment entry would oversell a holding. Archiving an account is still its own operation, undone from the accounts page. After the 30 days a nightly job removes the record for good, so a delete really is a delete in the end
 
+## Categories
+
+Income and expense categories, personal or shared, with an icon; since 2026-09-30 a category can sit under one top-level category of the same type, and the ledger filter, a budget on the parent and the report and dashboard breakdowns include its sub-categories (see [Categories](features/categories.md#groups))
+
 ## Tags
 
 Free labels beside the category, owned like a category with personal or shared scope and a name unique per owner, ignoring case; many tags per transaction and none on split lines; the ledger filter keeps a row only when it carries every chosen tag; a report breakdown of expenses by tag with untagged spending as its own group; a tag column in both exports; deleting a tag takes it off its transactions and changes nothing else about them

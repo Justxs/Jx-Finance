@@ -51,6 +51,7 @@ export const ProblemDetailsResponse = zod
                 "broker.rejected",
                 "broker.tokenRequired",
                 "broker.unavailable",
+                "category.nestingInvalid",
                 "category.wrongType",
                 "collection.invalidSize",
                 "conflict.busy",

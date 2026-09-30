@@ -165,8 +165,11 @@ public sealed class TransactionService(
         if (request.CategoryId is { } categoryId)
         {
             var typedCategoryId = new CategoryId(categoryId);
-            query = query.Where(t => t.CategoryId == typedCategoryId ||
-                (t.IsSplit && db.TransactionLines.Any(l => l.TransactionId == t.Id && l.CategoryId == typedCategoryId)));
+            query = query.Where(t => t.CategoryId == typedCategoryId
+                || db.Categories.Any(c => c.Id == t.CategoryId && c.ParentId == typedCategoryId)
+                || (t.IsSplit && db.TransactionLines.Any(l => l.TransactionId == t.Id
+                    && (l.CategoryId == typedCategoryId
+                        || db.Categories.Any(c => c.Id == l.CategoryId && c.ParentId == typedCategoryId)))));
         }
 
         foreach (var tagId in GuidList.Parse(request.TagIds))

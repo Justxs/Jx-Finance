@@ -9,4 +9,5 @@ public sealed record CategoryResponse(
     string? Icon,
     bool IsDefault,
     Scope Scope,
-    Guid? HouseholdId);
+    Guid? HouseholdId,
+    Guid? ParentId = null);

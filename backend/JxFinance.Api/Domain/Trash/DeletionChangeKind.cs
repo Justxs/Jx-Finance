@@ -11,4 +11,5 @@ public enum DeletionChangeKind
     AccountShare,
     CategoryShare,
     TagShare,
+    CategoryParent,
 }
