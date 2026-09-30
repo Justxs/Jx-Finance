@@ -17,6 +17,10 @@ Status: planned 2026-09-30, reviewed against the code the same day. Size S. Fron
   - chart shapes.
 - Form inputs keep their real values. Opening an edit dialog is a deliberate look at one row, and a masked input cannot be edited.
 - Exports, emails, Discord messages and the monthly digest are unchanged. They leave the screen on purpose.
+- Raw text is not parsed for amounts and stays visible, like inputs:
+  - bank descriptions and notes,
+  - the sample rows of the CSV column mapping and of the broker trade CSV,
+  - the receipt review's unread lines.
 - The choice is kept per browser, so a laptop used in a café can keep it on while the desktop at home does not. It is in force on the first render after a reload, because the preference collection reads local storage synchronously.
 
 ## Decisions
@@ -29,7 +33,16 @@ Status: planned 2026-09-30, reviewed against the code the same day. Size S. Fron
 | Scope | Per browser, in `jx-preferences` | Per user on the server | It protects a screen, not a person. The theme, the palette and now the rows per page follow the same rule (`docs/decisions/interface.md`, 2026-09-19) |
 | Key | Bare `p`, ignored while a field has focus like `n`, `/` and `?`; no `g p` sequence exists | `h`; a `Mod+` chord | `h` is the second key of `g h` and would fire on it too. `Mod+K` is deliberately the only chord in the scheme (`docs/decisions/interface.md`, 2026-09-21) |
 | Menu row | The account-menu pattern: a fixed label "Amounts" with its current value, Shown or Hidden, as a badge. The command palette entry reads Hide amounts or Show amounts | A label that flips | The menu names each setting with its current value (`docs/decisions/interface.md`, 2026-09-28). The palette lists actions |
-| Inputs | Real values | Masked, with a reveal button | Editing is looking. A reveal button per field is more code for a case the user starts on purpose |
+| Inputs and raw text | Real values; descriptions, notes and file samples are not scanned for numbers | Masked inputs with a reveal button; masking every digit on screen | Editing is looking, and a reveal button per field is more code for a case the user starts on purpose. Masking every digit would also hide dates, counts and account numbers the reader needs. The mode hides the amounts the app formats |
+| Turning itself on | Never; only the person switches it | Switching on after a period without input | It would be the first timer in the interface, and a shared family computer is better served by signing out |
+
+## Data model
+
+None.
+
+## Backend steps
+
+None. Every masked amount is formatted in the browser.
 
 ## Frontend steps
 
@@ -44,12 +57,12 @@ Status: planned 2026-09-30, reviewed against the code the same day. Size S. Fron
    - `features/transactions/use-filter-summaries.ts` formats the amount-range chips with `useNumberFormat`. It gains a `useMaskedNumber` wrapper next to it, built on `maskParts`.
    - `components/notification-bell/notification-bell.tsx` falls back to the server's `notification.message` in several branches, and that text may hold amounts. While the mode is on, it passes the fallback through `maskDigits`.
 5. **Controls.**
-   - `components/account-menu/account-menu.tsx` gains the Amounts row after Theme, with `closeOnClick={false}` like Language, calling `toggleAmountsHidden`.
-   - `components/appearance-picker` gains a checkbox "Hide amounts".
-   - `features/command-palette/command-entries.ts` gains an `amounts` target. `CommandSources` carries the flag, and the dispatcher in `command-palette.tsx` gains its case.
+   - `components/account-menu/account-menu.tsx` gains the Amounts row after Theme: an `Eye` or `EyeOff` icon, the label and the current value in the muted `<span>` the other rows use. It has `closeOnClick={false}` like Language and calls `toggleAmountsHidden`.
+   - `components/appearance-picker/appearance-picker.tsx` gains a `ChoiceGroup name="amounts"` with Shown and Hidden, like the theme choice.
+   - `features/command-palette/command-entries.ts` gains a `CommandTarget` of `{ kind: "amounts" }`, labelled Hide amounts or Show amounts. `CommandSources` carries the flag, and the dispatcher in `command-palette.tsx` gains its case.
    - `lib/shortcuts.ts` gains `{ id: "privacy", keys: ["p"], labelKey: "shortcuts.privacy", group: "actions", action: { type: "privacy" } }`, and `runAction` handles the new type. The help dialog lists it through `visibleShortcuts()` without further work.
-6. **Text.** English and Lithuanian for the menu row and its two values, the checkbox, the palette entries and the shortcut label.
-7. **Storybook.** `.storybook/preview.tsx` gains a `amounts` global next to `locale`, as a toolbar toggle. Its loader writes `amountsHidden` before every story, so the flag never leaks from one story into the next. The `account-menu` and `appearance-picker` stories cover both states.
+6. **Text.** English and Lithuanian keys, in the `appearance.*` namespace the menu already uses: `appearance.amounts`, `appearance.amountsStates.shown`, `appearance.amountsStates.hidden`, `commandPalette.hideAmounts`, `commandPalette.showAmounts` and `shortcuts.privacy`.
+7. **Storybook.** `.storybook/preview.tsx` gains an `amounts` global next to `locale`, as a toolbar toggle. Its loader writes `amountsHidden` before every story, so the flag never leaks from one story into the next. The `account-menu` and `appearance-picker` stories cover both states, each with a `play` that toggles the choice and finds a masked amount in a rendered `TransactionAmount`.
 
 ## Tests
 
@@ -59,14 +72,20 @@ Status: planned 2026-09-30, reviewed against the code the same day. Size S. Fron
   - Price and quantity are masked.
   - With the mode off, every output is identical to today's.
 - `lib/mask-amount.test.ts`: `maskParts` on hand-built part lists; `maskDigits` on a sentence with a date and an amount (the date is masked too, which is acceptable in the bell).
-- `lib/shortcuts.dom.test.ts`: `p` toggles the preference and is ignored in a field.
+- `lib/shortcuts.dom.test.ts`: `p` toggles the preference, and is ignored in a field and while a dialog is open (`shouldIgnoreShortcut`).
+- `stores/privacy-store.dom.test.ts`, like `sidebar-store.dom.test.ts`: toggling writes the preference and `useAmountsHidden` follows it.
 - `command-entries.test.ts`: the entry label follows the state.
 - `stores/preferences.dom.test.ts`: the defaults gain `amountsHidden: false`.
-- A dom test renders the components that show most amounts with the mode on and checks that no digit sits next to a currency symbol. The components are `TransactionAmount`, `SummaryStats`, `BreakdownList`, `ShareBars`, `ChartTooltip`, the year review table, the positions table and the receipt items list.
+- A dom test renders the components that show most amounts with the mode on and checks that no digit sits next to a currency symbol. The components are:
+  - `TransactionAmount`, `SummaryStats`, `BreakdownList`, `ShareBars` and `ChartTooltip`,
+  - the year review table, the positions table and the receipt items list,
+  - the portfolio's allocation and return,
+  - the forecast with a tried payment,
+  - the month-close drift panel.
 
 ## Docs
 
-- `docs/features/interface.md`: a **Hide amounts** section covering what is hidden, what is not, the key and where the switch lives.
+- `docs/features/interface.md`: a **Hide amounts** section covering what is hidden, what is not (inputs and raw text included), the key and where the switch lives.
 - `docs/decisions/interface.md`: a Log entry for masking the parts in the formatter over a blur or a zero, for plain-text bullets over labels, and for per-browser scope.
 - `docs/architecture/visual-system.md`: the mask glyph, the merged run, and that tables keep their column widths.
 - `docs/architecture/accessibility.md`: screen readers read the bullets in this mode.
@@ -79,4 +98,4 @@ Status: planned 2026-09-30, reviewed against the code the same day. Size S. Fron
 
 ## Open questions
 
-- Should the mode switch itself on after a period without input, for a shared family computer? Not planned. It would be the first timer in the interface.
+None.

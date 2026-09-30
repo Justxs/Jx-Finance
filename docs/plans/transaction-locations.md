@@ -1,6 +1,6 @@
 # Plan: Transaction locations
 
-Status: planned 2026-09-30, reviewed against the code the same day. Size M for part 1; part 2, the map, is L and gated. It adds a place and optional coordinates to a transaction, behind a new `Locations` switch that is off by default. Build part 1 after the attachment metadata stripping that is in progress on 2026-09-30, because the photo-location step reads the upload before that stripping. Build part 2 only when the gate below holds.
+Status: planned 2026-09-30, reviewed against the code the same day. Size M for part 1; part 2, the map, is L and gated. It adds a place and optional coordinates to a transaction, behind a new `Locations` switch that is off by default. Build part 1 after the change "Strip GPS metadata from stored attachments", in progress on 2026-09-30, which adds `AttachmentImage.WithoutMetadata`: the photo-location step reads the upload just before that stripping. Build part 2 only when the gate below holds.
 
 The application itself makes no request to an outside service in either part, in keeping with [PRODUCT.md](../../PRODUCT.md) and its fifth principle ("Private and self-contained"). One caveat has to be written down: when the person presses Use my location, the browser or the operating system may ask its own network location service (Google, Apple or Microsoft) to work out the position. That request is the browser's, outside the application's Content-Security-Policy. The docs say so next to the button's description.
 
@@ -35,14 +35,18 @@ Part 2, the map (gated):
 | Sharing | The place travels with the transaction: a housemate who sees the row on a shared account sees its place and coordinates | Hiding coordinates from housemates | The row is already shared. Hiding one column would be a special case in `TransactionResponse`. The switch and this sentence make it explicit |
 | Audit | `Place` is an audited field; the coordinates are not | Auditing both | The log shows readable values. A pair of numbers is noise there and a position history of a member |
 | Place field control | A text input with a native `<datalist>` of suggestions | Extending `components/combobox-field`, which only selects | A datalist gives free text with suggestions, keyboard support and the phone's own picker with no new component |
+| Other ways a row is written | Duplicate and Record refund copy Place but not the coordinates; templates keep Place; confirming a recurring entry and every bank import leave both empty | Copying the coordinates too | A duplicate is usually the same shop another day, while the coordinates record where one payment was made |
+| Spelling | Suggestions and the report show the newest spelling of a place, grouping by the trimmed, lower-cased text, as the payee labels do | The most frequent spelling | The newest spelling is the one the member typed last, and it matches `ReportService`'s payee labels |
+| Switch off | Reads answer null; an update keeps the stored values instead of clearing them; a create stores nothing | Clearing the columns on update | Turning the switch off must not destroy data a later switch-on would show again, the rule every switch follows |
+| Imports | No import fills Place in this version | Reading OFX `PAYEE` address fields | The address in bank files is usually the registered office, not the shop. OFX addresses are a backlog item |
 
 ## Data model
 
 | Change | Detail |
 | --- | --- |
-| `Transaction.Place` | `string?`, at most 120 characters, trimmed; empty is null |
+| `Transaction.Place` | `string?`, at most `TransactionPlace.MaxLength` = 120 characters (a new `Domain/Transactions/TransactionPlace.cs`, like `TransactionNote`), trimmed through `Common/OptionalText.cs`; empty is null |
 | `Transaction.Latitude`, `Transaction.Longitude` | `decimal?` `numeric(7,5)` and `numeric(8,5)`, both or neither (check constraint); five decimals is about a metre |
-| Index | Partial `(AccountId, Place) WHERE "Place" IS NOT NULL`, matching the account-based visibility |
+| Index | Partial `(AccountId, Place) WHERE "Place" IS NOT NULL`. It serves the distinct-places query of the suggestions and the report, which group by place per visible account. The substring filter scans, as the description search does |
 | `Feature.Locations` | Appended to `Feature`. The positional `FeatureFlags` record gains `Locations`, `FeatureFlags.Default` sets it off like `ApiTokens`, and `IsEnabled` maps it |
 | Migration | `just migrate-add AddTransactionLocations` |
 
@@ -51,25 +55,34 @@ Part 2, the map (gated):
 1. **Fields.** The request, response, mapper and `TransactionInputValidator` carry `Place`, `Latitude` and `Longitude`:
    - latitude from −90 to 90 and longitude from −180 to 180, both or neither → a new `transaction.locationInvalid`,
    - length through the existing text codes,
-   - with the switch off, the fields are ignored on write and null on read.
-2. **Places service.** `Endpoints/Transactions/Interfaces/IPlaceService.cs` and `Endpoints/Transactions/Services/PlaceService.cs`, used by `GET /api/transactions/places?search=&lat=&lon=` in `Endpoints/Transactions/GetPlaces`. It returns up to 20 distinct visible places ordered by use, each with its count and the average of its coordinates. With `lat` and `lon`, it puts the nearest place within 150 m first, found by haversine in memory over the distinct places, which are a few hundred at most. The route is token-readable through `TransactionsGroup` and carries `RequiresFeature(Feature.Locations)`, as `DismissUnusualAmountEndpoint` does.
-3. **Filter.** `TransactionFilterRequest.Place`, matched as a substring ignoring case. The text search in `TransactionService.Filtered` also covers the place. This feeds the list, the summary and the exports.
-4. **Report.** `ReportSummaryResponse.ExpenseByPlace`, built like `ExpenseByPayee` with the comparison amounts, grouping by the trimmed, lower-cased place, and only while the switch is on.
+   - with the switch off, read through `IInstanceSettingsStore.Current.IsEnabled(Feature.Locations)`, the response carries nulls, a create stores nothing and an update keeps the stored values.
+2. **Places service.** `Endpoints/Transactions/Interfaces/IPlaceService.cs` and `Endpoints/Transactions/Services/PlaceService.cs`, used by `GET /api/transactions/places` in `Endpoints/Transactions/GetPlaces`:
+   - **Request:** `GetPlacesRequest(string? Search, decimal? Lat, decimal? Lon)`. `Search` is at most 120 characters (`text.tooLong`). `Lat` and `Lon` are both or neither and in range (`transaction.locationInvalid`).
+   - **Response:** `IReadOnlyList<PlaceSuggestionResponse>`, each `PlaceSuggestionResponse(string Name, int Count, decimal? Latitude, decimal? Longitude, bool Nearby)`. There are up to 20 distinct visible places matching `Search` by substring, ordered by use. Each carries the newest spelling, its count and the average of its coordinates.
+   - **Nearby:** with `Lat` and `Lon`, the nearest place within 150 m comes first with `Nearby = true`. It is found by haversine in memory over the distinct places, which are a few hundred at most.
+   - **Access:** the route is token-readable through `TransactionsGroup`, joins `TokenReadableTests.ReadableRoutes` and carries `RequiresFeature(Feature.Locations)`, as `DismissUnusualAmountEndpoint` does.
+3. **Filter.** `TransactionFilterRequest.Place`, matched as a substring ignoring case, with its validator rule (`text.tooLong`) and its line in `TransactionFilterSummary`, following the payee filter's path. The text search in `TransactionService.Filtered` also covers the place. This feeds the list, the summary and the exports.
+4. **Report.** `ReportSummaryResponse.ExpenseByPlace` is a list of `PlaceBreakdownItem(string? Place, decimal Amount, decimal? ComparisonAmount, int Count)` with `MaxItems = 50`, like `Reports/Shared/PayeeBreakdownItem.cs`. It groups by the trimmed, lower-cased place and shows the newest spelling; a null place is "No place". It is empty while the switch is off.
 5. **Receipts.**
    - `ReceiptTextParser` gains `AddressOf`: the first header line after the merchant (`MerchantOf`, line 131) that has a street number and either an `LT-\d{5}` postcode or a known city. `ReceiptResult.Address` carries it, and the form fills Place as "Merchant, address".
-   - `ReceiptService.LoadUploadAsync` reads the GPS tags before `AttachmentImage.WithoutMetadata`, applying the `Ref` signs, and passes them to the response as `photoLatitude` and `photoLongitude` beside the cached result, never inside it.
+   - `ReceiptService.LoadUploadAsync` reads the GPS tags before `AttachmentImage.WithoutMetadata`, applying the `Ref` signs. It passes them to `ReceiptReadingResponse` (the outer response, not `ReceiptResultResponse`) as `PhotoLatitude` and `PhotoLongitude`, never into the cached result.
+   - A fresh upload that hits the reading cache still reads its own GPS tags. A PDF, or a reading of an attachment stored earlier, carries none.
+   - The coordinates are returned only while both `ReceiptReading` and `Locations` are on.
    - Readings cached before this change have no address until they are read again with `force`.
 6. **Headers.** `frontend/Caddyfile` and `frontend/Caddyfile.production` change `geolocation=()` to `geolocation=(self)`. `scripts/verify-production.mjs`, which today only checks that the header exists, gains a check of that value.
-7. **Audit.** `nameof(Transaction.Place)` joins the allowlist in `AuditCollector`, and the audit field labels gain `place` in both locales.
+7. **Audit.** `nameof(Transaction.Place)` joins the allowlist in `AuditCollector`.
 8. **Exports.**
-   - The CSV gains a `Place` column, empty while the switch is off. `TransactionCsvWriter.Header` is shared with the member export's `transactions.csv`, so the header expectations in `TransactionExportTests` and `TransactionTagEndpointTests` change.
+   - The CSV gains a `Place` column after `Note`, empty while the switch is off. `TransactionCsvWriter.Header` is shared with the member export's `transactions.csv`, so the header expectations in `TransactionExportTests` and `TransactionTagEndpointTests` change.
    - Coordinates stay out of the CSV. They are in the member export's `data.json` and in the backup through the table.
 9. **Error code.** `transaction.locationInvalid`, with English and Lithuanian text.
 
 ## Frontend steps
 
-1. `just gen`.
-2. **Switch.** `lib/settings.ts` `defaultSettings` and `groupOf` in `features-fields.tsx` gain `locations`. `groupOf` is a `satisfies Record<FeatureKey, …>`, so the build fails until the key is added.
+1. `just gen`. The places query joins the transaction invalidation rule in `src/api/invalidation.ts`, so a saved row refreshes the suggestions.
+2. **Switch.**
+   - `lib/settings.ts` `defaultSettings`, `groupOf` in `features/settings/settings-form/features-fields.tsx`, and the settings fixture in `storybook/fixtures/settings.ts` gain `locations`.
+   - `groupOf` is a `satisfies Record<FeatureKey, …>`, so the build fails until the key is added.
+   - `e2e/features.spec.ts` gains the switch if it lists them.
 3. **Place field.** `features/transactions/place-field/place-field.tsx` has an input with a `<datalist>` filled from the places query. The search text is debounced through `hooks/use-debounced-draft.ts`.
    - **Use my location** is shown when `window.isSecureContext`. Its handler:
      1. calls `navigator.geolocation.getCurrentPosition` with `enableHighAccuracy` and a 10-second timeout,
@@ -77,20 +90,31 @@ Part 2, the map (gated):
      3. calls `queryClient.fetchQuery` for the places near them,
      4. fills the name when one comes back.
    - A denied permission or a timeout shows a sentence under the field.
+   - With no earlier places the datalist is empty and the field is a plain text input. On a phone the browser shows the suggestions in its own picker.
    - "Location saved · Remove" shows while coordinates are set.
    - The field appears only while the switch is on.
 4. **Receipt.** `FillFromReceipt` sets Place from the merchant and the address when the field is empty, and shows "Use the photo's location" when the response has photo coordinates.
-5. **Ledger.** The route's `transactionsSearchSchema`, the filters dialog, the active filter chips, and the saved filters and templates in `transaction-views.ts` gain `place`.
-6. **Reports.** `features/reports/place-breakdown/` is modelled on `payee-breakdown`, with rows linking through `TransactionsLink` with `place`.
-7. **Text and stories.** English and Lithuanian for every label and message. Stories cover the field (suggestions, located, denied, insecure context), the breakdown and the switch. `navigator.geolocation` is stubbed in the story.
+5. **Ledger.** `place` joins the route's `transactionsSearchSchema`, `transaction-queries.ts`, the filters dialog, `use-filter-summaries.ts` and the active filter chips (with a case in the active-filters story). It also joins the saved filters and templates in `transaction-views.ts`, the draft, the optimistic row and the fixtures. `duplicateDraft` and `refundDraft` copy Place without the coordinates.
+6. **Reports.** `features/reports/place-breakdown/` is modelled on `payee-breakdown`. `TransactionsLink`'s filter type and `BreakdownRow.filter` gain `place`, so its rows link to the ledger.
+7. **Audit.** `features/households/household-activity/activity-sentences.ts` adds `place` to `FIELDS`, and the locales gain `audit.fields.place`.
+8. **Text.** English and Lithuanian keys under `transactions.place`: `label`, `useMyLocation`, `locationSaved`, `remove`, `denied`, `timeout`, `usePhotoLocation`. Also `reports.expenseByPlace` with `noPlace`, `settings.features.locations`, and `serverErrors.transaction.locationInvalid`.
+9. **Stories.**
+   - The place field: suggestions, no suggestions, located with a nearby name, located with none, denied, timeout, insecure context. `navigator.geolocation` is stubbed in the story.
+   - The place breakdown: default and empty.
+   - The receipt fill with photo coordinates.
+   - The features switch.
 
 ## Part 2: the map
 
 Build it only when the gate below holds.
 
-1. **Tiles.** A `maps` volume in `docker-compose.yml` and `docker-compose.production.yml`, mounted read-only into the Caddy container, with `handle /maps/*` and `file_server`. The administrator makes a Lithuania extract with `pmtiles extract`, step by step in `docs/architecture/deployment.md`. `GET /api/settings` gains `mapAvailable`, true when the file exists.
+1. **Tiles.** A `maps` volume in `docker-compose.yml` and `docker-compose.production.yml`, mounted read-only into the Caddy container, with `handle /maps/*` and `file_server`. The administrator makes a Lithuania extract named `lithuania.pmtiles` with `pmtiles extract`, step by step in `docs/architecture/deployment.md`. The API cannot see Caddy's volume, so the reports page sends one `HEAD /maps/lithuania.pmtiles` and offers the Map view only when it answers 200.
 2. **Chart.** `features/reports/place-map/place-map.tsx` lazy-loads `maplibre-gl` and `pmtiles`, bundles the style, glyphs and worker, and draws one circle layer from the places with coordinates. The map has `role="img"` with a label naming the top places, and the list stays the text equivalent.
 3. **Check.** `verify-production.mjs` asserts that the CSP is unchanged. The browser's network log on the reports page shows only same-origin requests.
+4. **Text, stories and tests.**
+   - English and Lithuanian for the List and Map switch and the map's label.
+   - Stories: the map with places, with no coordinates, and with the tile file missing (the switch hidden).
+   - A unit test for turning places into map features. An e2e check in `just e2e` that the map loads from a fixture tile file.
 
 ## Tests
 
@@ -114,19 +138,24 @@ Build it only when the gate below holds.
   - `AddressOf` on every receipt fixture.
   - GPS reading with north, south, east and west references, on a new image fixture with EXIF.
   - The haversine distance.
-- **Frontend:** the place field's story `play` for a granted and a denied position.
+- **Frontend:** the place field's story `play` for a granted and a denied position, and a unit test that `duplicateDraft` copies Place without coordinates.
+- **More integration:**
+  - An update with the switch off keeps the stored place.
+  - The places endpoint refuses a lone latitude.
+  - A fresh upload that hits the reading cache still returns its photo coordinates.
 
 ## Docs
 
 - A new `docs/features/transaction-locations.md` and a row in `docs/features/README.md`.
-- A new `docs/decisions/transaction-locations.md`:
+- A new `docs/decisions/transaction-locations.md`, with a row in `docs/decisions/README.md`:
   - the rejected hosted geocoding and tile servers,
   - the photo-location rule and why it is kept out of the cache,
   - the browser location-service caveat.
 - Updates:
   - `docs/architecture/deployment.md`: the `Permissions-Policy` change and, for part 2, the tile file.
   - Feature pages: `docs/features/receipt-reading.md`, `docs/features/reports.md`, `docs/features/transactions.md`, `docs/features/installation-settings.md` and `docs/features/exports.md`.
-  - `docs/data-model.md`, `docs/api.md` and `docs/scope.md`.
+  - `docs/data-model.md`, `docs/api.md`, `docs/scope.md`, `docs/user-flows.md` (entering a place) and `docs/features/data-export-per-user.md` (older exports cannot be imported after the migration).
+  - `docs/backlog.md`: a row for filling Place from OFX addresses.
   - `PRODUCT.md` §Capabilities: the geolocation header and the caveat.
 
 ## What must be true to ship
@@ -137,4 +166,4 @@ Build it only when the gate below holds.
 
 ## Open questions
 
-- OFX `PAYEE` can carry `ADDR1`, `CITY` and `POSTALCODE`, and card `MEMO` lines often name the shop's city. Should the OFX import fill Place from them? camt.053 `PstlAdr` and MT940 `:86:` are not worth reading: the first is usually the registered office, and the second has no address field.
+None. OFX addresses are a backlog row (see the Imports decision).

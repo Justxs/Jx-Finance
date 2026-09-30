@@ -39,7 +39,7 @@ These come from the release checklist and block calling the current release veri
 
 ## 4. New ideas
 
-Ordered by how much they would help daily use for the effort. Following the product direction, each one lives on a page that already exists rather than adding a page. The idea below has no plan yet. Machine-learned categorization above, privacy mode, a Sankey diagram, spreading a payment across months, a double-entry journal, transaction locations and transaction groups have written designs in [Plans](plans/README.md).
+Ordered by how much they would help daily use for the effort. Following the product direction, each one lives on a page that already exists rather than adding a page. The idea below has no plan yet. Machine-learned categorization above, privacy mode, a Sankey diagram, spreading a payment across months, a double-entry journal, transaction locations, transaction groups, a bills calendar, sharing assets and debts, live security prices and write access for API tokens have written designs in [Plans](plans/README.md).
 
 | Idea | Why | Where | Size |
 | --- | --- | --- | --- |
