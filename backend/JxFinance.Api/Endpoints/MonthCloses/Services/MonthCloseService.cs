@@ -3,6 +3,7 @@ using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Common.InvestmentCashFlows;
 using JxFinance.Common.Settings;
+using JxFinance.Common.Spreads;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Investments;
 using JxFinance.Domain.MonthCloses;
@@ -49,6 +50,7 @@ public sealed class MonthCloseService(
         public Guid Id { get; set; }
         public MonthDriftRowKind Kind { get; set; }
         public DateOnly Date { get; set; }
+        public DateOnly CountsUntil { get; set; }
         public string? Description { get; set; }
         public decimal Amount { get; set; }
         public Currency Currency { get; set; }
@@ -75,11 +77,11 @@ public sealed class MonthCloseService(
         var changes = closes.Count == 0
             ? []
             : await Changes(closes.Min(c => c.ClosedAt), start, end, closes.SelectMany(c => c.Snapshot.RowIds).ToList())
-                .Select(r => new { r.Id, r.Date, r.UpdatedAt })
+                .Select(r => new { r.Id, r.Date, r.CountsUntil, r.UpdatedAt })
                 .ToListAsync(cancellationToken);
         var reporting = settings.Current.ReportingCurrency;
         var span = new DateWindow(start, end);
-        var totals = (await db.Transactions.Within(span).DailyFlowsAsync(cancellationToken))
+        var totals = (await db.Transactions.DailyFlowsAsync(span, null, cancellationToken))
             .Concat(await investmentCashFlows.GetFlowsAsync(span, null, cancellationToken))
             .ToLookup(f => (DateWindow.MonthOf(f.Date).Start, f.Type), f => f.Amount);
 
@@ -93,7 +95,7 @@ public sealed class MonthCloseService(
                     || close.Snapshot.TotalIncome != totals[(month, FlowType.Income)].Sum()
                     || close.Snapshot.TotalExpense != totals[(month, FlowType.Expense)].Sum()
                     || changes.Any(r => r.UpdatedAt > close.ClosedAt
-                        && (window.Contains(r.Date) || close.Snapshot.RowIds.Contains(r.Id))));
+                        && (Reaches(r.Date, r.CountsUntil, window) || close.Snapshot.RowIds.Contains(r.Id))));
             return new MonthCloseMonthStatus(month, Status(month, close, changed), close?.ClosedAt);
         }).ToList();
 
@@ -297,6 +299,10 @@ public sealed class MonthCloseService(
             .Within(window)
             .Select(t => t.Id.Value)
             .ToListAsync(cancellationToken);
+        var spreadIds = (await db.Transactions.SlicesAsync(window, null, cancellationToken))
+            .Select(slice => slice.Id.Value)
+            .Except(transactionIds)
+            .ToList();
         var entryIds = await db.InvestmentTransactions
             .Within(window)
             .Select(t => t.Id.Value)
@@ -310,7 +316,7 @@ public sealed class MonthCloseService(
             transactionIds.Count,
             summary.IncomeByCategory.Select(Figure).ToList(),
             summary.ExpenseByCategory.Select(Figure).ToList(),
-            [.. transactionIds, .. entryIds]);
+            [.. transactionIds, .. spreadIds, .. entryIds]);
     }
 
     private static MonthCloseFigure Figure(CategoryBreakdownItem item) =>
@@ -353,7 +359,7 @@ public sealed class MonthCloseService(
                 row.Kind,
                 row.IsDeleted ? MonthDriftChange.Deleted
                     : !known.Contains(row.Id) ? MonthDriftChange.Created
-                    : !window.Contains(row.Date) ? MonthDriftChange.MovedOut
+                    : !Reaches(row.Date, row.CountsUntil, window) ? MonthDriftChange.MovedOut
                     : MonthDriftChange.Edited,
                 row.Date,
                 row.Description,
@@ -369,12 +375,16 @@ public sealed class MonthCloseService(
         var knownEntries = knownIds.Select(id => new InvestmentTransactionId(id)).ToList();
         return db.Transactions
             .IgnoreQueryFilters(QueryFilters.SoftDeleteOnly)
-            .Where(t => t.UpdatedAt > since && ((t.Date >= from && t.Date < to) || knownTransactions.Contains(t.Id)))
+            .Where(t => t.UpdatedAt > since
+                && ((t.Date >= from && t.Date < to)
+                    || (t.SpreadMonths != null && t.Date < to && t.SpreadUntil >= from)
+                    || knownTransactions.Contains(t.Id)))
             .Select(t => new ChangedRow
             {
                 Id = (Guid)(object)t.Id,
                 Kind = MonthDriftRowKind.Transaction,
                 Date = t.Date,
+                CountsUntil = t.SpreadUntil ?? t.Date,
                 Description = t.Description,
                 Amount = t.Amount.Amount,
                 Currency = t.Amount.Currency,
@@ -389,6 +399,7 @@ public sealed class MonthCloseService(
                     Id = (Guid)(object)t.Id,
                     Kind = MonthDriftRowKind.InvestmentEntry,
                     Date = t.Date,
+                    CountsUntil = t.Date,
                     Description = t.Description,
                     Amount = t.CashAmount.Amount,
                     Currency = t.CashAmount.Currency,
@@ -396,6 +407,9 @@ public sealed class MonthCloseService(
                     IsDeleted = t.IsDeleted,
                 }));
     }
+
+    private static bool Reaches(DateOnly date, DateOnly countsUntil, DateWindow window) =>
+        countsUntil >= window.Start && date < window.ExclusiveEnd;
 
     private static List<MonthDriftCategory> CategoryDrift(MonthCloseSnapshot snapshot, ReportSummaryResponse current)
     {

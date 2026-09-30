@@ -32,6 +32,17 @@ public abstract class TransactionInputValidator<TRequest> : Validator<TRequest>
             .WithErrorCode(ErrorCodes.TransactionSplitNotAllowed)
             .WithMessage("A refund cannot be split.")
             .When(r => r.Amount < 0);
+        RuleFor(r => r.SpreadMonths).IsWithin(TransactionSpread.MinMonths, TransactionSpread.MaxMonths);
+        RuleFor(r => r.SpreadMonths)
+            .Null()
+            .WithErrorCode(ErrorCodes.TransactionSplitNotAllowed)
+            .WithMessage("A split transaction cannot be spread over months.")
+            .When(r => r.Lines is { Count: > 0 });
+        RuleFor(r => r.SpreadMonths)
+            .Null()
+            .WithErrorCode(ErrorCodes.TransactionSpreadRefund)
+            .WithMessage("A refund cannot be spread over months.")
+            .When(r => r.Type == FlowType.Expense && r.Amount < 0);
         RuleFor(r => r.RefundOfTransactionId)
             .Null()
             .WithErrorCode(ErrorCodes.TransactionRefundOriginalInvalid)

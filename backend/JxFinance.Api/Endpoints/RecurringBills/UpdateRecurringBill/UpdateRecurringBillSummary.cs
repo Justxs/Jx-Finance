@@ -25,6 +25,7 @@ public sealed class UpdateRecurringBillSummary : Summary<UpdateRecurringBillEndp
             new DateOnly(2026, 11, 1),
             3,
             true);
+        RequestParam(r => r.SpreadMonths, "Optional, from 2 to 36, expense and income only: each confirmation writes a transaction spread over this many months.");
         Params["id"] = "The recurring entry id. Takes precedence over the id in the body.";
         Responses[200] = "The updated recurring entry.";
         Responses[400] = "Validation failed, the shape is missing a field it needs, or the account or category is not visible to you.";

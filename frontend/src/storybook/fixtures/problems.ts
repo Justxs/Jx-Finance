@@ -84,6 +84,13 @@ export const exportTooManyRowsProblem = problemOf(
   { instance: "/api/transactions/export/pdf" },
 );
 
+export const spreadRefundProblem = problemOf(
+  400,
+  "transaction.spreadRefund",
+  "A refund cannot be spread over months.",
+  { name: "spreadMonths", instance: "/api/transactions" },
+);
+
 export const duplicateTagProblem = problemOf(
   409,
   "conflict.duplicate",

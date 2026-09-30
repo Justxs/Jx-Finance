@@ -6,7 +6,7 @@ Backend `Transactions`, page `/transactions`. One `Filtered` method builds the q
 
 ```mermaid
 flowchart TD
-    Url["Search params<br/>text, payee, account, category, tags, type, dateFrom, dateTo, amountMin, amountMax, unusual, uncategorized, sort, direction, page"] --> Defer["useDeferredParams"]
+    Url["Search params<br/>text, payee, account, category, tags, type, dateFrom, dateTo, amountMin, amountMax, unusual, uncategorized, spreadOverlap, sort, direction, page"] --> Defer["useDeferredParams"]
     Defer --> List["GET /api/transactions"]
     Defer --> Summary["GET /api/transactions/summary"]
     Url --> Csv["GET /api/transactions/export"]
@@ -108,6 +108,22 @@ Since 2026-09-30 a transaction carries `Note` beside `Description`: up to 1000 c
 
 The transaction form has a Note field under the description, with the hint "Your own words, kept beside the bank's description. Imports never change it.". Since the same day a row whose payee the member named reads that name instead of the description, with the bank's text in the tooltip, and `search` matches the name too; see [Payee names](payee-names.md). The desktop ledger shows the note as a muted line under the description, cut to one line with the whole text in its tooltip, and the phone list shows it under the name. Duplicate copies the note with the rest of the row; a template leaves it out, because a template is a shape and a note is about one payment.
 
+## Spreading over months
+
+Since 2026-09-30 an unsplit expense or income that is not a refund can be spread over months: `SpreadMonths` from 2 to 36, or null for an ordinary row. Yearly car insurance of €360 paid on 15 January and spread over 12 months counts €30 in each month from January to December in reports and budgets, while the ledger, the account balance and everything else about the money that moved still see one row of €360 on 15 January. The slices start with the payment's month, fall on the same day of each following month (clamped to the month's last day, so 31 January goes to 28 or 29 February), and divide `ReportingAmount` into cents by largest remainder, so they add up to the cent and differ by at most one: €100 over 3 months is 33.34, 33.33 and 33.33. The server stores `SpreadUntil`, the date of the last slice, beside the months; see [architecture](../architecture/transactions.md#spread-rows).
+
+Create and update bodies take `spreadMonths`; an update replaces it like every other field, so an update without it stops the spreading. Outside 2 to 36 it is refused with `range.invalid`, on a split with `transaction.splitNotAllowed` and on a refund with `transaction.spreadRefund`. Every transaction response carries `spreadMonths` and `spreadUntil`. The CSV has a `Spread months` column after `Note`, which the member export's `transactions.csv` shares, the PDF prints "Spread over 12 months" under the description, and a change to it is a visible field ("spread over months") in the household activity log. A [recurring entry](recurring-bills.md) can carry the same choice and writes spread transactions when it is confirmed. The import review does not offer it: a row is spread afterwards in the ledger.
+
+These count each slice in its month: the report's totals, trend and category, tag and payee breakdowns (a spread row counts once in a payee's `count` for every period its slices touch), the year review, the dashboard's summary, trend, category and spending-pace cards, category and tag budgets (shared ones and limits from history included), the month-end close and the monthly digest. These see the whole row on its date, because they are about the money that moved: the account balance and reconciliation, the cash-flow forecast, unusual amounts and subscription detection, debt payments, household settle-up, the receipt items report and the ledger's own totals.
+
+The transaction form has a "Spread over" select under the date with Off, 3, 6 and 12 months and Custom, which shows a Months field that takes 2 to 36. It is hidden for a refund and while the split switch is on, and hidden fields send no spreading. Duplicate copies it, Refund does not, and a template keeps it. The ledger shows the chip "Spread · 12 months" beside the refund mark, on the phone under the name; its tooltip reads "Counts €30.00 a month in reports and budgets, January 2026 to December 2026", and when the ledger is filtered by a date range it adds how much of the row falls inside the range. `lib/spread-slices.ts` repeats the server's cut for that, and the amounts go through the same formatters as every other amount, so privacy mode masks them.
+
+### Drill-through
+
+A figure that counts slices still leads to its rows. `spreadOverlap=true` on the four endpoints of `TransactionFilterRequest` keeps, besides the rows dated in the range, the spread rows dated before its end whose `SpreadUntil` reaches its start, so a category, tag or budget link for March lists the January insurance row; the chip's tooltip says how much of it belongs to March. The ledger's own total is still a sum of whole rows, as for tags and splits. The server ignores the flag unless both `dateFrom` and `dateTo` are set. On the client it lives only in the URL: `TransactionsLink` adds it whenever its filter carries both dates, and the money flow's category links add it too; it shows no active-filter chip, changing or removing the date filter clears it, and saved filters leave it out, because it describes where a link came from rather than what the reader wants to keep.
+
+`SpreadSlicesTests` and `lib/spread-slices.test.ts` run the same cases on both sides (sums, a cent at most between slices, 0.10 over 12 months, 31 January in leap and ordinary years, 36 months, the end date), and `AppDbContextTests` covers `SpreadUntil` on insert, on a change of date or months and when the months are cleared. The integration tests are `SpreadReportTests` (a month and a year, totals equal to the categories, the dashboard and report trends, tag and payee breakdowns), `SpreadBudgetTests` (category, tag, rollover and household-shared budgets), `SpreadTransactionTests` (the ledger summary, balance and forecast, the drill-through flag, validation, revaluation, the active household, the trash, debt payments and settle-up), `SpreadMonthCloseTests`, `SpreadRecurringBillTests` and a round trip in `UserImportTests`.
+
 ## Amount range filter
 
 `amountMin` and `amountMax` are filters on the same four endpoints, part of `TransactionFilterRequest`, and belong to no feature; they arrived on 2026-09-30. Each is inclusive and optional, so one bound alone filters from that side. They compare the size of the amount in the transaction's own currency, `abs(Amount)`, not the reporting amount: "that €49 charge" is the number printed on the statement, and a refund of €49 is found beside the purchase of €49. Each bound must be a non-negative amount with at most two decimals (`money.nonNegative`), and `amountMax` below `amountMin` is refused with `range.invalid`.
@@ -163,7 +179,7 @@ A saved filter is a name put on the filter half of the search params. It lives i
 
 ```mermaid
 flowchart TD
-    Url["Search params on /transactions"] --> Part["transactionFilterParams:<br/>search, account, category, tags, type, dateFrom, dateTo, amountMin, amountMax, unusual, uncategorized"]
+    Url["Search params on /transactions"] --> Part["transactionFilterParams:<br/>search, account, category, tags, type, dateFrom, dateTo, amountMin, amountMax, unusual, uncategorized;<br/>spreadOverlap is dropped"]
     Part --> Save["Save filter under a name"]
     Save --> Store[("jx-saved-filters<br/>one row per filter: id, name, filter")]
     Store --> List["Saved filters menu"]

@@ -73,4 +73,9 @@ export type ExportTransactionsPdfParams = {
    * @nullable
    */
   uncategorized?: boolean | null;
+  /**
+   * true also keeps transactions dated before the range that are spread over months with a monthly slice inside it, so a figure from a report or a budget leads to every row that makes it up. Ignored unless both dateFrom and dateTo are set.
+   * @nullable
+   */
+  spreadOverlap?: boolean | null;
 };

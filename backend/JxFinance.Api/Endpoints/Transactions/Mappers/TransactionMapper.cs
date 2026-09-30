@@ -29,6 +29,7 @@ public static class TransactionMapper
         transaction.Date = input.Date;
         transaction.Description = OptionalText.Normalize(input.Description);
         transaction.Note = OptionalText.Normalize(input.Note);
+        transaction.SpreadMonths = (short?)input.SpreadMonths;
         transaction.IsSplit = isSplit;
         transaction.RefundOfTransactionId = input.RefundOfTransactionId is { } original ? new TransactionId(original) : null;
     }
@@ -81,7 +82,9 @@ public static class TransactionMapper
         attachmentCount,
         transaction.Unusual.ToResponse(),
         transaction.Unusual is not null && transaction.UnusualDismissedAt is not null,
-        Note: transaction.Note);
+        Note: transaction.Note,
+        SpreadMonths: transaction.SpreadMonths,
+        SpreadUntil: transaction.SpreadUntil);
 
     public static UnusualAmountResponse? ToResponse(this UnusualVerdict? verdict) =>
         verdict is null ? null : new(verdict.Basis, verdict.TypicalAmount, verdict.Factor, verdict.SampleSize);

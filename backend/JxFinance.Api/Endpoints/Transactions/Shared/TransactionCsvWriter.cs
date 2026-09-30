@@ -1,3 +1,4 @@
+using System.Globalization;
 using JxFinance.Common;
 using JxFinance.Domain.Common;
 using JxFinance.Endpoints.Transactions.ExportTransactions;
@@ -6,7 +7,7 @@ namespace JxFinance.Endpoints.Transactions.Shared;
 
 public static class TransactionCsvWriter
 {
-    public const string Header = "Date,Description,Account,Category,Tags,Type,Amount,Currency,Note";
+    public const string Header = "Date,Description,Account,Category,Tags,Type,Amount,Currency,Note,Spread months";
 
     public static string Row(TransactionResponse transaction, ExportNames names)
     {
@@ -20,6 +21,7 @@ public static class TransactionCsvWriter
             CsvCell.Value(transaction.Type.ToString()),
             CsvCell.Money(transaction.Amount),
             CsvCell.Value(transaction.Currency.ToCode()),
-            CsvCell.Text(transaction.Note));
+            CsvCell.Text(transaction.Note),
+            CsvCell.Value(transaction.SpreadMonths?.ToString(CultureInfo.InvariantCulture)));
     }
 }

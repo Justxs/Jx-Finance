@@ -37,4 +37,6 @@ export interface RecurringBillResponse {
   scope: Scope;
   /** @nullable */
   householdId: string | null;
+  /** @nullable */
+  spreadMonths?: number | null;
 }

@@ -1,3 +1,4 @@
+using JxFinance.Common.Spreads;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Transactions;
 using Microsoft.EntityFrameworkCore;
@@ -6,11 +7,22 @@ namespace JxFinance.Common;
 
 public static class DatedFlows
 {
-    public static Task<List<DatedFlow>> DailyFlowsAsync(this IQueryable<Transaction> transactions, CancellationToken cancellationToken) =>
-        transactions
+    public static async Task<List<DatedFlow>> DailyFlowsAsync(
+        this IQueryable<Transaction> visible,
+        DateWindow window,
+        DateWindow? comparison,
+        CancellationToken cancellationToken)
+    {
+        var flows = await visible
+            .Within(window, comparison)
+            .Where(t => t.SpreadMonths == null)
             .GroupBy(t => new { t.Date, t.Type })
             .Select(g => new DatedFlow(g.Key.Date, g.Key.Type, g.Sum(t => t.ReportingAmount)))
             .ToListAsync(cancellationToken);
+        var slices = await visible.SlicesAsync(window, comparison, cancellationToken);
+
+        return [.. flows, .. slices.Select(slice => new DatedFlow(slice.Date, slice.Type, slice.Amount))];
+    }
 
     public static (decimal Income, decimal Expense) Totals(this IEnumerable<DatedFlow> flows)
     {

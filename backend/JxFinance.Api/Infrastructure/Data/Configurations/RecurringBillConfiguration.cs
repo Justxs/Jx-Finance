@@ -1,6 +1,7 @@
 using JxFinance.Common.Subscriptions;
 using JxFinance.Domain.NetWorth;
 using JxFinance.Domain.RecurringBills;
+using JxFinance.Domain.Transactions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -13,6 +14,11 @@ public sealed class RecurringBillConfiguration : IEntityTypeConfiguration<Recurr
         builder.Property(b => b.Name).HasMaxLength(100);
         builder.Property(b => b.MatchKey).HasMaxLength(SubscriptionDescription.MaxLength);
         builder.Property(b => b.NextDueDate).IsConcurrencyToken();
+        builder.ToTable(table => table.HasCheckConstraint(
+            "CK_RecurringBills_SpreadMonths",
+            $"""
+            "SpreadMonths" IS NULL OR "SpreadMonths" BETWEEN {TransactionSpread.MinMonths} AND {TransactionSpread.MaxMonths}
+            """));
         builder.HasOne<Debt>().WithMany().HasForeignKey(b => b.DebtId).OnDelete(DeleteBehavior.SetNull);
     }
 }

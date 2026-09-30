@@ -19,6 +19,7 @@ import {
   FillFromReceipt,
   type ReceiptCandidateSplit,
 } from "@/features/transactions/receipt-reading/fill-from-receipt";
+import { SpreadFields } from "@/features/transactions/spread-fields/spread-fields";
 import { EMPTY_VALUE, useIsoDate } from "@/hooks/use-formatters";
 import { useSettings } from "@/hooks/use-settings";
 import { namedOptions } from "@/lib/options";
@@ -248,6 +249,20 @@ export function TransactionForm({
             </ClosedMonthHint>
           )}
         </form.Field>
+
+        <form.Subscribe
+          selector={(state) => state.values.type !== "refund" && !state.values.isSplit}
+        >
+          {(spreads) =>
+            spreads ? (
+              <SpreadFields
+                form={form}
+                fields={{ spread: "spread", spreadCustom: "spreadCustom" }}
+                idPrefix="tx"
+              />
+            ) : null
+          }
+        </form.Subscribe>
 
         <form.Field name="description">
           {(field) => (

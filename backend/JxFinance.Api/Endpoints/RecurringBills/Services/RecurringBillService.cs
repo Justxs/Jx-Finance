@@ -288,6 +288,7 @@ public sealed class RecurringBillService(
             Date = bill.NextDueDate,
             Description = bill.Name,
             Source = TransactionSource.Manual,
+            SpreadMonths = bill.SpreadMonths,
         };
         db.Transactions.Add(transaction);
 

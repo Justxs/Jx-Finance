@@ -1772,6 +1772,9 @@ namespace JxFinance.Infrastructure.Data.Migrations
                     b.Property<int>("Shape")
                         .HasColumnType("integer");
 
+                    b.Property<short?>("SpreadMonths")
+                        .HasColumnType("smallint");
+
                     b.Property<Guid?>("ToAccountId")
                         .HasColumnType("uuid");
 
@@ -1795,7 +1798,10 @@ namespace JxFinance.Infrastructure.Data.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("RecurringBills");
+                    b.ToTable("RecurringBills", t =>
+                        {
+                            t.HasCheckConstraint("CK_RecurringBills_SpreadMonths", "\"SpreadMonths\" IS NULL OR \"SpreadMonths\" BETWEEN 2 AND 36");
+                        });
                 });
 
             modelBuilder.Entity("JxFinance.Domain.RecurringBills.SubscriptionDismissal", b =>
@@ -2067,6 +2073,12 @@ namespace JxFinance.Infrastructure.Data.Migrations
                     b.Property<int>("Source")
                         .HasColumnType("integer");
 
+                    b.Property<short?>("SpreadMonths")
+                        .HasColumnType("smallint");
+
+                    b.Property<DateOnly?>("SpreadUntil")
+                        .HasColumnType("date");
+
                     b.Property<int>("Type")
                         .HasColumnType("integer");
 
@@ -2142,10 +2154,18 @@ namespace JxFinance.Infrastructure.Data.Migrations
                     b.HasIndex(new[] { "Id" }, "IX_Transactions_PayeeKeyPending")
                         .HasFilter("\"PayeeKey\" IS NULL");
 
+                    b.HasIndex(new[] { "AccountId", "SpreadUntil" }, "IX_Transactions_Spread")
+                        .HasFilter("\"SpreadMonths\" IS NOT NULL");
+
                     b.HasIndex(new[] { "AccountId", "Date" }, "IX_Transactions_Unusual")
                         .HasFilter("\"UnusualBasis\" IS NOT NULL AND \"UnusualDismissedAt\" IS NULL");
 
-                    b.ToTable("Transactions");
+                    b.ToTable("Transactions", t =>
+                        {
+                            t.HasCheckConstraint("CK_Transactions_SpreadMonths", "\"SpreadMonths\" IS NULL OR \"SpreadMonths\" BETWEEN 2 AND 36");
+
+                            t.HasCheckConstraint("CK_Transactions_SpreadUntil", "(\"SpreadMonths\" IS NULL) = (\"SpreadUntil\" IS NULL)");
+                        });
                 });
 
             modelBuilder.Entity("JxFinance.Domain.Transactions.TransactionAttachment", b =>
@@ -3315,7 +3335,7 @@ namespace JxFinance.Infrastructure.Data.Migrations
                         .IsRequired();
 
                     b.HasOne("JxFinance.Domain.Transactions.Transaction", null)
-                        .WithMany()
+                        .WithMany("Tags")
                         .HasForeignKey("TransactionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -3493,6 +3513,11 @@ namespace JxFinance.Infrastructure.Data.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("JxFinance.Domain.Transactions.Transaction", b =>
+                {
+                    b.Navigation("Tags");
                 });
 
             modelBuilder.Entity("JxFinance.Domain.Trash.DeletionEntry", b =>

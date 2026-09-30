@@ -34,6 +34,11 @@ public static class TransactionFilterSummary
         summary.Describe(nameof(TransactionFilterRequest.DateFrom), dateFrom);
         summary.Describe(nameof(TransactionFilterRequest.DateTo), dateTo);
         summary.Describe(
+            nameof(TransactionFilterRequest.SpreadOverlap),
+            "true also keeps transactions dated before the range that are spread over months with a monthly slice "
+            + "inside it, so a figure from a report or a budget leads to every row that makes it up. Ignored unless "
+            + "both dateFrom and dateTo are set.");
+        summary.Describe(
             nameof(TransactionFilterRequest.AmountMin),
             "Inclusive lowest amount, compared with the size of the amount in the transaction's own currency, so a refund of 49.00 matches like a purchase of 49.00.");
         summary.Describe(nameof(TransactionFilterRequest.AmountMax), "Inclusive highest amount, compared the same way as amountMin.");

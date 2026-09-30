@@ -53,21 +53,23 @@ Closing asks `ReportService.GetSummaryAsync` for the month, the same call the re
 
 The snapshot stores the figures and the row ids, nothing per row. The ids are what tell an edited row from a new one and a row moved out of the month from one that was never in it. Re-closing replaces the whole snapshot and `ClosedAt`; a close without a note keeps the stored note, and an empty note clears it.
 
+A transaction [spread over months](transactions.md#spreading-over-months) counts its month's slice in the snapshot's totals and categories, and its id joins `RowIds` for every month its slices land in, while `TransactionCount` keeps counting only the rows dated in the month.
+
 A [refund](transactions.md#refunds) is an expense with a negative amount, so the snapshot's totals and breakdowns are net of refunds, and the monthly digest's movers can show a category that went below zero. A refund is dated when the money came back: one that arrives after the month was closed and is dated in the next month lowers that month only, while one dated in a closed month is drift like any late edit.
 
 ## Drift
 
-A row has drifted when its `UpdatedAt` is later than `ClosedAt` and it is either dated in the month now or its id is in `RowIds`. The query reads transactions and investment entries through the ordinary visibility filter with soft deletion lifted (`IgnoreQueryFilters(QueryFilters.SoftDeleteOnly)`), so deleted rows are found and rows the scope cannot see are not.
+A row has drifted when its `UpdatedAt` is later than `ClosedAt` and it is either dated in the month now, spread over months with a slice in the month now, or its id is in `RowIds`. The query reads transactions and investment entries through the ordinary visibility filter with soft deletion lifted (`IgnoreQueryFilters(QueryFilters.SoftDeleteOnly)`), so deleted rows are found and rows the scope cannot see are not.
 
 ```mermaid
 flowchart TD
-    Row["Transaction or investment entry<br/>with UpdatedAt after ClosedAt"] --> In{"Dated in the month now,<br/>or its id in RowIds?"}
+    Row["Transaction or investment entry<br/>with UpdatedAt after ClosedAt"] --> In{"Dated in the month now, or a spread row<br/>with a slice in it, or its id in RowIds?"}
     In -->|"no"| Ignore["not drift"]
     In -->|"yes"| Del{"Deleted?"}
     Del -->|"yes"| Deleted["deleted"]
     Del -->|"no"| Known{"Id in RowIds?"}
     Known -->|"no"| Created["created: added, moved in from another month,<br/>or restored from the trash"]
-    Known -->|"yes"| Where{"Still dated in the month?"}
+    Known -->|"yes"| Where{"Still dated in the month,<br/>or a slice still in it?"}
     Where -->|"no"| Moved["movedOut"]
     Where -->|"yes"| Edited["edited"]
 ```
@@ -92,6 +94,7 @@ Drift can only see what stamps `UpdatedAt`, so every writer that rewrites a tran
 | Create, edit or delete a transaction or an investment entry dated in the month, through a form, an import, a recurring confirmation or a broker import | Yes |
 | Restore one from the trash | Yes, as `created` or `edited` |
 | Change a row's date out of the month | Yes, `movedOut` in the old month and `created` in the new one |
+| Create, edit or delete a spread row dated before the month whose slices reach it | Yes, as `created`, `edited` or `deleted` in every month it counts in, never `movedOut` while a slice still lands there; its own month's transaction count is the only one it changes |
 | Bulk recategorize, a categorization rule run, deleting a category, restoring a deleted category | Yes: each stamps `UpdatedAt` on the rows it rewrites |
 | A reporting-currency change | `currencyChanged` only. The revaluation stamps the rows whose `ReportingAmount` it rewrites, but the month is not compared row by row |
 | Tags: `bulk-tags`, deleting a tag | No. They only touch `TransactionTags`, and tags are not in the month's figures |
@@ -193,4 +196,6 @@ An outline "Not now" button, with the tooltip "Hide until next month", hides the
 ## Tests
 
 `MonthCloseTests` covers closing an ended month storing the report's figures and its previous-month comparison, the current month refused with 409 and a malformed month with 400, adding, editing and deleting rows in the month showing as drift with the right changes, totals and category, rows in another month ignored while a row moved out and a row merely renamed are drift, re-closing clearing the drift and reopening twice answering 204, closes kept apart per user and scope while a household partner's edit on a shared account is drift for the owner, a category delete stamping its rows, a reporting-currency change answering `currencyChanged` in the review and in the year, a revaluation stamping the rows it rewrites, the checklist counts matching the ledger filters they link to, the four account states with the earliest reconciliation after the month end winning and the lines without `Import`, monthly budgets measured as of the month's last day with their carry, the feature switched off, and the reminder going once, over two passes on 2 October, to the user who closed before and skipped September, not to a user who never closed or one who closed September, and to nobody on 9 November.
+`SpreadMonthCloseTests` covers a spread row that alone does not make a month drift or change its transaction count, a January row edited after March was closed marking March changed with the row edited, and a spread row created after the close listed as created.
+
 `MonthKeyTests` and `ComparisonWindowTests` are the unit tests, `BackupEndpointTests` has a round trip that keeps a close, `FeatureGateTests` knows the new prefix and `NotificationTextsTests` fails for a kind without text. On the client, `month-key.test.ts` covers the month arithmetic and the latest ended month, and the checklist, drift panel, `month-close-review`, dashboard prompt and dashboard page have stories for their states, including open items, open items only, closing with open items, closing a clear month, a closed and a changed month, more changed rows than shown, figures unchanged, a currency change, a month not ended, a failed close, loading, closing from the prompt, a closed month showing no prompt, a prompt hidden until next month and the dashboard on an ended month showing the close panel.

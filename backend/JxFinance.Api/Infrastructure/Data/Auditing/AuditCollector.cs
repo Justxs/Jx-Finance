@@ -37,7 +37,8 @@ internal sealed class AuditCollector(AppDbContext db, Guid actorId, DateTimeOffs
             Route.Scoped,
             (_, t) => TrashLabel.Dated(t.Description, t.Date, t.Amount),
             nameof(Transaction.Date), nameof(Transaction.Amount), nameof(Transaction.Type),
-            nameof(Transaction.Description), nameof(Transaction.Note), nameof(Transaction.CategoryId), nameof(Transaction.AccountId)),
+            nameof(Transaction.Description), nameof(Transaction.Note), nameof(Transaction.SpreadMonths), nameof(Transaction.CategoryId),
+            nameof(Transaction.AccountId)),
         Audited.Of<Transfer>(
             AuditEntityKind.Transfer,
             Route.Scoped,

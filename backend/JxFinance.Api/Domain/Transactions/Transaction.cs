@@ -23,6 +23,9 @@ public sealed class Transaction : OwnableEntity, IAccountScoped, IDated
     public DateTimeOffset? UnusualCheckedAt { get; set; }
     public UnusualVerdict? Unusual { get; set; }
     public DateTimeOffset? UnusualDismissedAt { get; set; }
+    public short? SpreadMonths { get; set; }
+    public DateOnly? SpreadUntil { get; set; }
+    public List<TransactionTag> Tags { get; set; } = [];
 
     public void RecheckUnusual()
     {

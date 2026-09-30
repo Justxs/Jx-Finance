@@ -44,7 +44,8 @@ public static class RecurringBillMapper
         latestMatch,
         bill.DebtId?.Value,
         bill.Scope,
-        bill.HouseholdId?.Value);
+        bill.HouseholdId?.Value,
+        bill.SpreadMonths);
 
     private static void ApplyShared(IRecurringBillInput input, RecurringBill bill)
     {
@@ -65,6 +66,7 @@ public static class RecurringBillMapper
         var matchKey = SubscriptionDescription.Normalize(input.MatchKey);
         bill.MatchKey = matchKey.Length > 0 ? matchKey : null;
         bill.DebtId = input.DebtId is { } debtId ? new DebtId(debtId) : null;
+        bill.SpreadMonths = (short?)input.SpreadMonths;
         bill.ApplySharing(input);
     }
 }

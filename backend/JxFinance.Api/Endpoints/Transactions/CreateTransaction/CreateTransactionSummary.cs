@@ -33,8 +33,10 @@ public sealed class CreateTransactionSummary : Summary<CreateTransactionEndpoint
         RequestParam(r => r.Lines, "Optional split lines. Their amounts must sum to the transaction amount.");
         RequestParam(r => r.TagIds, "Optional tags for the whole payment, at most ten, each visible to you.");
         RequestParam(r => r.Note, "Optional note of your own, at most 1000 characters, kept beside the bank's description and never changed by an import.");
+        RequestParam(r => r.SpreadMonths, "Optional, from 2 to 36: count the amount in equal monthly slices over this many months, starting with the month of the date. Not allowed on a split or a refund.");
         Responses[201] = "The transaction was created. The Location header points at it.";
         Responses[400] = "Validation failed, the split lines do not add up, a refund has lines (transaction.splitNotAllowed) or names an original that is not a visible purchase "
-            + "(transaction.refundOriginalInvalid), or the account, category or a tag is not visible to you.";
+            + "(transaction.refundOriginalInvalid), a split is spread (transaction.splitNotAllowed) or a refund is spread (transaction.spreadRefund), "
+            + "or the account, category or a tag is not visible to you.";
     }
 }

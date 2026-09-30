@@ -21,4 +21,5 @@ public sealed record RecurringBillResponse(
     RecurringBillMatchResponse? LatestMatch,
     Guid? DebtId,
     Scope Scope,
-    Guid? HouseholdId);
+    Guid? HouseholdId,
+    int? SpreadMonths = null);

@@ -57,6 +57,80 @@ public sealed class AppDbContextTests
         Assert.Equal("kept", transaction.PayeeKey);
     }
 
+    [Fact]
+    public async Task An_added_spread_transaction_gets_the_date_of_its_last_slice()
+    {
+        await using var capture = new SqlCapture();
+        var transaction = NewTransaction("Insurance");
+        transaction.Date = new DateOnly(2026, 1, 31);
+        transaction.SpreadMonths = 12;
+        capture.Db.Transactions.Add(transaction);
+
+        await ApplyRulesAsync(capture);
+
+        Assert.Equal(new DateOnly(2026, 12, 31), transaction.SpreadUntil);
+    }
+
+    [Fact]
+    public async Task An_added_transaction_that_is_not_spread_has_no_end()
+    {
+        await using var capture = new SqlCapture();
+        var transaction = NewTransaction("Lidl");
+        capture.Db.Transactions.Add(transaction);
+
+        await ApplyRulesAsync(capture);
+
+        Assert.Null(transaction.SpreadUntil);
+    }
+
+    [Fact]
+    public async Task Changing_the_date_moves_the_end_of_the_spread()
+    {
+        await using var capture = new SqlCapture();
+        var transaction = Spread(new DateOnly(2026, 1, 10), 3);
+        capture.Db.Transactions.Attach(transaction);
+
+        transaction.Date = new DateOnly(2026, 2, 10);
+        await ApplyRulesAsync(capture);
+
+        Assert.Equal(new DateOnly(2026, 4, 10), transaction.SpreadUntil);
+    }
+
+    [Fact]
+    public async Task Changing_the_months_moves_the_end_of_the_spread()
+    {
+        await using var capture = new SqlCapture();
+        var transaction = Spread(new DateOnly(2026, 1, 10), 3);
+        capture.Db.Transactions.Attach(transaction);
+
+        transaction.SpreadMonths = 6;
+        await ApplyRulesAsync(capture);
+
+        Assert.Equal(new DateOnly(2026, 6, 10), transaction.SpreadUntil);
+    }
+
+    [Fact]
+    public async Task Clearing_the_months_clears_the_end_of_the_spread()
+    {
+        await using var capture = new SqlCapture();
+        var transaction = Spread(new DateOnly(2026, 1, 10), 3);
+        capture.Db.Transactions.Attach(transaction);
+
+        transaction.SpreadMonths = null;
+        await ApplyRulesAsync(capture);
+
+        Assert.Null(transaction.SpreadUntil);
+    }
+
+    private static Transaction Spread(DateOnly date, short months)
+    {
+        var transaction = NewTransaction("Insurance", "insurance");
+        transaction.Date = date;
+        transaction.SpreadMonths = months;
+        transaction.SpreadUntil = date.AddMonths(months - 1);
+        return transaction;
+    }
+
     private static Transaction NewTransaction(string? description, string? payeeKey = null) => new()
     {
         UserId = Guid.NewGuid(),

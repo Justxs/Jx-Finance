@@ -197,14 +197,22 @@ public sealed class TransactionService(
             query = query.Where(t => t.PayeeKey == payeeKey);
         }
 
-        if (request.DateFrom is { } dateFrom)
+        if (request is { SpreadOverlap: true, DateFrom: { } from, DateTo: { } to })
         {
-            query = query.Where(t => t.Date >= dateFrom);
+            query = query.Where(t => (t.Date >= from && t.Date <= to)
+                || (t.SpreadMonths != null && t.Date <= to && t.SpreadUntil >= from));
         }
-
-        if (request.DateTo is { } dateTo)
+        else
         {
-            query = query.Where(t => t.Date <= dateTo);
+            if (request.DateFrom is { } dateFrom)
+            {
+                query = query.Where(t => t.Date >= dateFrom);
+            }
+
+            if (request.DateTo is { } dateTo)
+            {
+                query = query.Where(t => t.Date <= dateTo);
+            }
         }
 
         if (request.AmountMin is { } amountMin)

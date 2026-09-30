@@ -59,6 +59,7 @@ export function MoneyFlow({ summary }: Readonly<Props>) {
         type: node.kind === "income" ? "income" : "expense",
         dateFrom: summary.periodStart,
         dateTo: summary.periodEnd,
+        spreadOverlap: true,
       },
     });
   }

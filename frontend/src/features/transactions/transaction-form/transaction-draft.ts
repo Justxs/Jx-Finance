@@ -22,6 +22,7 @@ export interface TransactionDraft {
   tagIds?: string[];
   lines?: TransactionLineRequest[] | null;
   refundOf?: TransactionRefundOfResponse | null;
+  spreadMonths?: number | null;
 }
 
 export function draftFromTransaction(transaction: TransactionResponse): TransactionDraft {
@@ -43,6 +44,7 @@ export function draftFromTransaction(transaction: TransactionResponse): Transact
         description: line.description,
       })) ?? null,
     refundOf: transaction.refundOf ?? null,
+    spreadMonths: transaction.spreadMonths,
   };
 }
 
@@ -76,6 +78,7 @@ export function templateValuesFromFormValues(
     description: values.description,
     tagIds: values.tagIds,
     lines: values.lines?.map((line) => ({ ...line, amount: normalizeMoney(line.amount) })) ?? null,
+    spreadMonths: values.spreadMonths,
   };
 }
 
@@ -90,5 +93,6 @@ export function draftFromTemplate(values: TransactionTemplateValues): Transactio
     isSplit: (values.lines?.length ?? 0) > 0,
     tagIds: values.tagIds,
     lines: values.lines,
+    spreadMonths: values.spreadMonths,
   };
 }

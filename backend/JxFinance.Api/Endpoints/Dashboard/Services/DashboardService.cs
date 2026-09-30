@@ -29,7 +29,7 @@ public sealed class DashboardService(
         var balanceDate = period.InclusiveEnd < clock.Today ? period.InclusiveEnd : (DateOnly?)null;
         var (totalBalance, isComplete) = await accountService.GetReportingTotalAsync(balanceDate, cancellationToken);
 
-        var (monthIncome, monthExpense) = (await db.Transactions.Within(period).DailyFlowsAsync(cancellationToken))
+        var (monthIncome, monthExpense) = (await db.Transactions.DailyFlowsAsync(period, null, cancellationToken))
             .Concat(await investmentCashFlows.GetFlowsAsync(period, null, cancellationToken))
             .Totals();
 
@@ -91,7 +91,7 @@ public sealed class DashboardService(
         var earliestStart = lastMonth.Start.AddMonths(-(clamped - 1));
 
         var window = new DateWindow(earliestStart, lastMonth.ExclusiveEnd);
-        var byMonth = (await db.Transactions.Within(window).DailyFlowsAsync(cancellationToken))
+        var byMonth = (await db.Transactions.DailyFlowsAsync(window, null, cancellationToken))
             .Concat(await investmentCashFlows.GetFlowsAsync(window, null, cancellationToken))
             .ToLookup(f => DateWindow.MonthOf(f.Date).Start);
 

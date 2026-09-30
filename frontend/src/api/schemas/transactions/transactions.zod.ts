@@ -20,6 +20,9 @@ export const createTransactionBodyLinesItemAmountRegExp = new RegExp("^-?\\d+(\\
 export const createTransactionBodyNoteMin = 0;
 export const createTransactionBodyNoteMax = 1000;
 
+export const createTransactionBodySpreadMonthsMin = 2;
+export const createTransactionBodySpreadMonthsMax = 36;
+
 export const CreateTransactionBody = zod.object({
   accountId: zod.uuid().min(1).describe("The account the money moved on; must be visible to you."),
   categoryId: zod.uuid().nullable().describe("Optional category. Ignored when lines are supplied."),
@@ -94,6 +97,14 @@ export const CreateTransactionBody = zod.object({
     .nullish()
     .describe(
       "Optional note of your own, at most 1000 characters, kept beside the bank's description and never changed by an import.",
+    ),
+  spreadMonths: zod
+    .int()
+    .min(createTransactionBodySpreadMonthsMin)
+    .max(createTransactionBodySpreadMonthsMax)
+    .nullish()
+    .describe(
+      "Optional, from 2 to 36: count the amount in equal monthly slices over this many months, starting with the month of the date. Not allowed on a split or a refund.",
     ),
 });
 
@@ -232,6 +243,8 @@ export const CreateTransactionResponse = zod.object({
     .optional(),
   note: zod.string().nullish(),
   payeeName: zod.string().nullish(),
+  spreadMonths: zod.int().nullish(),
+  spreadUntil: zod.union([zod.null(), zod.iso.date()]).optional(),
 });
 
 /**
@@ -384,6 +397,8 @@ export const TransactionsResponse = zod.object({
         .optional(),
       note: zod.string().nullish(),
       payeeName: zod.string().nullish(),
+      spreadMonths: zod.int().nullish(),
+      spreadUntil: zod.union([zod.null(), zod.iso.date()]).optional(),
     }),
   ),
   page: zod.int(),
@@ -589,10 +604,12 @@ export const TransactionResponse = zod.object({
     .optional(),
   note: zod.string().nullish(),
   payeeName: zod.string().nullish(),
+  spreadMonths: zod.int().nullish(),
+  spreadUntil: zod.union([zod.null(), zod.iso.date()]).optional(),
 });
 
 /**
- * Replaces the transaction. Split lines are replaced wholesale rather than merged: send the full set you want to keep, or omit lines to turn a split back into a plain transaction. Tags are replaced the same way: send the full set, and an empty list or an absent tagIds clears them. The note is replaced too, so an absent note clears it. Moving it to another account adjusts both balances. A refund is an expense with a negative amount: it lowers that category's spending and raises the balance. It takes an expense category, cannot be split, and may name the purchase it refunds in refundOfTransactionId, which must be an expense you can see and not itself a refund.
+ * Replaces the transaction. Split lines are replaced wholesale rather than merged: send the full set you want to keep, or omit lines to turn a split back into a plain transaction. Tags are replaced the same way: send the full set, and an empty list or an absent tagIds clears them. The note and spreadMonths are replaced too, so leaving one out clears it. Moving it to another account adjusts both balances. A refund is an expense with a negative amount: it lowers that category's spending and raises the balance. It takes an expense category, cannot be split, and may name the purchase it refunds in refundOfTransactionId, which must be an expense you can see and not itself a refund.
  * @summary Update a transaction
  */
 
@@ -603,6 +620,9 @@ export const updateTransactionBodyDescriptionMax = 500;
 export const updateTransactionBodyLinesItemAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 export const updateTransactionBodyNoteMin = 0;
 export const updateTransactionBodyNoteMax = 1000;
+
+export const updateTransactionBodySpreadMonthsMin = 2;
+export const updateTransactionBodySpreadMonthsMax = 36;
 
 export const UpdateTransactionBody = zod.object({
   accountId: zod.uuid().min(1),
@@ -664,6 +684,14 @@ export const UpdateTransactionBody = zod.object({
     .optional(),
   refundOfTransactionId: zod.uuid().nullish(),
   note: zod.string().min(updateTransactionBodyNoteMin).max(updateTransactionBodyNoteMax).nullish(),
+  spreadMonths: zod
+    .int()
+    .min(updateTransactionBodySpreadMonthsMin)
+    .max(updateTransactionBodySpreadMonthsMax)
+    .nullish()
+    .describe(
+      "Optional, from 2 to 36: count the amount in equal monthly slices over this many months, starting with the month of the date. Not allowed on a split or a refund.",
+    ),
 });
 
 export const updateTransactionResponseAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
@@ -801,6 +829,8 @@ export const UpdateTransactionResponse = zod.object({
     .optional(),
   note: zod.string().nullish(),
   payeeName: zod.string().nullish(),
+  spreadMonths: zod.int().nullish(),
+  spreadUntil: zod.union([zod.null(), zod.iso.date()]).optional(),
 });
 
 /**

@@ -14,9 +14,9 @@ import { categories } from "./categories";
 import { netWorth } from "./net-worth";
 import {
   categorisedParts,
+  countedBetween,
   monthExpenseCents,
   monthIncomeCents,
-  monthTransactions,
 } from "./transactions";
 
 export function buildCategoryBreakdownItems(
@@ -74,8 +74,9 @@ export const monthlyTrendItems: MonthlyTrendItem[] = [
 
 export const monthlyTrend: MonthlyTrendResponse = { items: monthlyTrendItems };
 
-export const categoryBreakdownItems: CategoryBreakdownItem[] =
-  buildCategoryBreakdownItems(monthTransactions);
+export const categoryBreakdownItems: CategoryBreakdownItem[] = buildCategoryBreakdownItems(
+  countedBetween(FIXTURE_MONTH_START, FIXTURE_MONTH_END),
+);
 
 export const categoryBreakdown: CategoryBreakdownResponse = {
   items: categoryBreakdownItems,

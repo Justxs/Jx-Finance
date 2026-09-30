@@ -920,6 +920,8 @@ export const DebtPaymentCandidatesResponseItem = zod.object({
     .optional(),
   note: zod.string().nullish(),
   payeeName: zod.string().nullish(),
+  spreadMonths: zod.int().nullish(),
+  spreadUntil: zod.union([zod.null(), zod.iso.date()]).optional(),
 });
 export const DebtPaymentCandidatesResponse = zod.array(DebtPaymentCandidatesResponseItem);
 

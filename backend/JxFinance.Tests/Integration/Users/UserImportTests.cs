@@ -77,6 +77,30 @@ public sealed partial class UserImportTests(ApiFixture fixture) : IntegrationTes
         await AssertProblemAsync(response, HttpStatusCode.BadRequest, "import.invalidFile");
     }
 
+    [Fact]
+    public async Task A_spread_transaction_keeps_its_months_through_an_export_and_an_import()
+    {
+        using var source = await CreateUserClientAsync();
+        var account = await CreateAccountAsync(client: source);
+        await RecordTransactionAsync(source, new
+        {
+            accountId = account,
+            type = "expense",
+            amount = "360.00",
+            date = "2026-01-15",
+            description = "Car insurance",
+            spreadMonths = 12,
+        });
+        var export = await DownloadAsync(source);
+        using var target = await CreateUserClientAsync();
+
+        await ReadOkAsync<ImportDto>(await ImportAsync(target, WithNewIds(export)));
+        var entries = (await target.GetFromJsonAsync<PageDto<SpreadEntryDto>>("/api/transactions", TestContext.Current.CancellationToken))!;
+
+        var moved = Assert.Single(entries.Items);
+        Assert.Equal((12, new DateOnly(2026, 12, 15)), (moved.SpreadMonths, moved.SpreadUntil));
+    }
+
     private static async Task<byte[]> DownloadAsync(HttpClient client)
     {
         var response = await client.GetAsync("/api/users/me/export?attachments=true", TestContext.Current.CancellationToken);
@@ -145,4 +169,6 @@ public sealed partial class UserImportTests(ApiFixture fixture) : IntegrationTes
     private sealed record AttachmentDto(Guid Id);
 
     private sealed record EntryDto(Guid Id, List<Guid> TagIds);
+
+    private sealed record SpreadEntryDto(Guid Id, int? SpreadMonths, DateOnly? SpreadUntil);
 }

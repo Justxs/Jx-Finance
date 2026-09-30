@@ -10,12 +10,14 @@ import {
   linkedRefund,
   longDescriptionTransaction,
   splitTransaction,
+  spreadRefundProblem,
+  spreadTransaction,
   tags,
   transactions,
   uncategorisedTransaction,
   unlinkedRefund,
 } from "@/storybook/fixtures";
-import type { Canvas } from "@/storybook/interactions";
+import { type Canvas, chooseOption } from "@/storybook/interactions";
 import { duplicateDraft, refundDraft } from "./transaction-draft";
 import { TransactionForm } from "./transaction-form";
 
@@ -248,5 +250,48 @@ export const EditUnlinkedRefund: Story = {
     await expect(await canvas.findByRole("radio", { name: "Refund" })).toBeChecked();
     await expect(canvas.getByLabelText("Amount")).toHaveValue("5.00");
     await expect(canvas.queryByText(/^Refund of /u)).not.toBeInTheDocument();
+  },
+};
+
+export const SpreadOverTwelveMonths: Story = {
+  play: async ({ canvas, args }) => {
+    await fireEvent.change(await canvas.findByLabelText("Amount"), {
+      target: { value: "360.00" },
+    });
+    await chooseOption(canvas.getByRole("combobox", { name: "Spread over" }), "12 months");
+    await submitForm(canvas);
+
+    await waitFor(() =>
+      expect(args.onSubmit).toHaveBeenCalledWith(
+        expect.objectContaining({ amount: "360.00", spreadMonths: 12 }),
+      ),
+    );
+  },
+};
+
+export const EditSpread: Story = {
+  args: { initial: spreadTransaction },
+  play: async ({ canvas }) => {
+    await expect(await canvas.findByRole("combobox", { name: "Spread over" })).toHaveTextContent(
+      "12 months",
+    );
+    await userEvent.click(canvas.getByRole("checkbox", { name: "Split into categories" }));
+    await expect(canvas.queryByRole("combobox", { name: "Spread over" })).toBeNull();
+  },
+};
+
+export const SpreadRefundRefused: Story = {
+  args: {
+    initial: spreadTransaction,
+    onSubmit: fn(() => Promise.reject(new ApiError(spreadRefundProblem))),
+  },
+  render: (args) => <MutationBackedForm {...args} />,
+  play: async ({ canvas, args }) => {
+    await submitForm(canvas);
+    await waitFor(() => expect(args.onSubmit).toHaveBeenCalledTimes(1));
+
+    await expect(await canvas.findByRole("alert")).toHaveTextContent(
+      "A refund cannot be spread over months.",
+    );
   },
 };

@@ -51,6 +51,8 @@ Since 2026-09-30 a budget on a category that has [sub-categories](categories.md#
 
 Spend comes from `ICategoryAttributionService`, the single projection that budgets, the dashboard breakdown and the reports share: an unsplit expense contributes its own category and reporting amount, a split expense contributes each line's category and its share. Each attribution now carries the transaction's date, so one query over the whole span the budgets need can be bucketed per window instead of asking the database once per window. Investment income, taxes and fees are never attributed to a category and therefore never reach a budget.
 
+A transaction [spread over months](transactions.md#spreading-over-months) counts one slice in each window its slices fall in, for category and tag budgets alike, personal or shared with a household, and in limits from history, so yearly insurance adds a twelfth to each monthly window and a rollover budget carries what each slice left; a budget's link to the ledger lists the spread row under every window it counts in.
+
 A [refund](transactions.md#refunds) counts in the window it is dated in and lowers `spent` there, so a rollover budget carries the difference to the next window. A refund never raises an alert, and an alert already raised stays. Limits from history read the same attributions, so each window's spending is net of refunds too.
 
 ## Rollover

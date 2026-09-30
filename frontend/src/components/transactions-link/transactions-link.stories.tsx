@@ -25,5 +25,14 @@ export const Default: Story = {
     const link = canvas.getByRole("link", { name: "Groceries" });
     await expect(link).toHaveAttribute("href", expect.stringContaining("/transactions?"));
     await expect(link).toHaveAttribute("href", expect.stringContaining("type=expense"));
+    await expect(link).toHaveAttribute("href", expect.stringContaining("spreadOverlap=true"));
+  },
+};
+
+export const WithoutDates: Story = {
+  args: { filter: { payee: "maxima" } },
+  play: async ({ canvas }) => {
+    const link = canvas.getByRole("link", { name: "Groceries" });
+    await expect(link).not.toHaveAttribute("href", expect.stringContaining("spreadOverlap"));
   },
 };

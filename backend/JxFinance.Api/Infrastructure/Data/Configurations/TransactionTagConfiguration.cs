@@ -10,6 +10,6 @@ public sealed class TransactionTagConfiguration : IEntityTypeConfiguration<Trans
     {
         builder.HasKey(t => new { t.TransactionId, t.TagId });
         builder.HasIndex(t => new { t.TagId, t.TransactionId });
-        builder.HasOne<Transaction>().WithMany().HasForeignKey(t => t.TransactionId).OnDelete(DeleteBehavior.Cascade);
+        builder.HasOne<Transaction>().WithMany(t => t.Tags).HasForeignKey(t => t.TransactionId).OnDelete(DeleteBehavior.Cascade);
     }
 }

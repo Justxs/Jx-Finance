@@ -5,6 +5,7 @@ using JxFinance.Common.Sharing;
 using JxFinance.Common.Subscriptions;
 using JxFinance.Common.Validation;
 using JxFinance.Domain.RecurringBills;
+using JxFinance.Domain.Transactions;
 
 namespace JxFinance.Endpoints.RecurringBills.Shared;
 
@@ -31,6 +32,12 @@ public abstract class RecurringBillInputValidator<TRequest> : Validator<TRequest
             .IsAbsent()
             .WithMessage("A variable entry's amount is entered when it's confirmed, not set upfront.")
             .When(r => r.Kind == RecurringBillKind.Variable);
+
+        RuleFor(r => r.SpreadMonths).IsWithin(TransactionSpread.MinMonths, TransactionSpread.MaxMonths);
+        RuleFor(r => r.SpreadMonths)
+            .IsAbsent()
+            .WithMessage("Only a recurring expense or income can be spread over months.")
+            .When(r => r.Shape == RecurringBillShape.Transfer);
 
         RuleFor(r => r.DebtId)
             .IsAbsent()

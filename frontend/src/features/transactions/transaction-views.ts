@@ -36,6 +36,7 @@ const templateSchema = z.object({
     description: z.string().nullable().catch(null),
     tagIds: z.array(z.string()).catch([]),
     lines: z.array(templateLineSchema).nullable().catch(null),
+    spreadMonths: z.number().int().nullable().catch(null).optional(),
   }),
 });
 

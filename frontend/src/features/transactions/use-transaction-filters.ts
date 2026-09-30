@@ -97,8 +97,13 @@ export function useTransactionFilters({ accounts, categories }: Args) {
       value: dateRange,
       active: Boolean(search.dateFrom) || Boolean(search.dateTo),
       set: (range: { from: string; to: string }) =>
-        patchSearch({ dateFrom: range.from || undefined, dateTo: range.to || undefined }),
-      clear: () => patchSearch({ dateFrom: undefined, dateTo: undefined }),
+        patchSearch({
+          dateFrom: range.from || undefined,
+          dateTo: range.to || undefined,
+          spreadOverlap: undefined,
+        }),
+      clear: () =>
+        patchSearch({ dateFrom: undefined, dateTo: undefined, spreadOverlap: undefined }),
     },
     category: {
       label: columnLabels.category,
@@ -174,10 +179,12 @@ export function useTransactionFilters({ accounts, categories }: Args) {
     });
   }
 
+  const { spreadOverlap: _spreadOverlap, ...currentFilter } = transactionFilterParams(search);
+
   return {
     ...table,
     search,
-    currentFilter: transactionFilterParams(search),
+    currentFilter,
     applyFilter,
     fields,
     columnLabels,

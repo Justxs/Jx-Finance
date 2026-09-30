@@ -27,4 +27,6 @@ public abstract class TransactionFilterRequest
     public bool? Unusual { get; init; }
 
     public bool? Uncategorized { get; init; }
+
+    public bool? SpreadOverlap { get; init; }
 }

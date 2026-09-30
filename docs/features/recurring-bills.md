@@ -22,6 +22,8 @@ A recurring entry can be shared with a household when its accounts and category 
 
 The same rules run on create and on update, so a shape change that would leave a required field empty is refused with the field at fault and a published code (`required`, `transfer.sameAccount`, `value.mustBeEmpty`). The form follows the choice: picking Transfer swaps the category select for the destination account, picking Expense or Income swaps it back.
 
+Since 2026-09-30 an expense or income entry can carry `spreadMonths`, 2 to 36 (`range.invalid` outside that, `value.mustBeEmpty` on a transfer), and every confirmation copies it onto the transaction it writes, so yearly insurance set up once as a yearly entry counts a twelfth in each month of reports and budgets; see [Spreading over months](transactions.md#spreading-over-months). The form has the same "Spread over" select as the transaction form on the expense and income shapes and hides it for a transfer.
+
 ## Confirming an occurrence
 
 ```mermaid

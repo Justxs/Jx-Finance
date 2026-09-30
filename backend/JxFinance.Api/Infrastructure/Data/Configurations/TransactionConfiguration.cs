@@ -14,6 +14,19 @@ public sealed class TransactionConfiguration : IEntityTypeConfiguration<Transact
         builder.Property(t => t.Note).HasMaxLength(TransactionNote.MaxLength);
         builder.Property(t => t.ImportRef).HasMaxLength(64);
         builder.Property(t => t.PayeeKey).HasMaxLength(SubscriptionDescription.MaxLength);
+        builder.ToTable(table =>
+        {
+            table.HasCheckConstraint(
+                "CK_Transactions_SpreadMonths",
+                $"""
+                "SpreadMonths" IS NULL OR "SpreadMonths" BETWEEN {TransactionSpread.MinMonths} AND {TransactionSpread.MaxMonths}
+                """);
+            table.HasCheckConstraint(
+                "CK_Transactions_SpreadUntil",
+                """("SpreadMonths" IS NULL) = ("SpreadUntil" IS NULL)""");
+        });
+        builder.HasIndex(t => new { t.AccountId, t.SpreadUntil }, "IX_Transactions_Spread")
+            .HasFilter("\"SpreadMonths\" IS NOT NULL");
         builder.ComplexProperty(t => t.Unusual, unusual =>
         {
             unusual.Property(u => u.Basis).HasColumnName("UnusualBasis").HasConversion<string>().HasMaxLength(20);

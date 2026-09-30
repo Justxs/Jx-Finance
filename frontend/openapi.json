@@ -12801,7 +12801,8 @@
                 "matchKey": null,
                 "debtId": null,
                 "scope": "personal",
-                "householdId": null
+                "householdId": null,
+                "spreadMonths": null
               }
             }
           },
@@ -13230,7 +13231,8 @@
                 "matchKey": null,
                 "debtId": null,
                 "scope": "personal",
-                "householdId": null
+                "householdId": null,
+                "spreadMonths": null
               }
             }
           },
@@ -14507,7 +14509,8 @@
                 "tagIds": null,
                 "currency": null,
                 "refundOfTransactionId": null,
-                "note": null
+                "note": null,
+                "spreadMonths": null
               }
             }
           },
@@ -14525,7 +14528,7 @@
             }
           },
           "400": {
-            "description": "Validation failed, the split lines do not add up, a refund has lines (transaction.splitNotAllowed) or names an original that is not a visible purchase (transaction.refundOriginalInvalid), or the account, category or a tag is not visible to you.",
+            "description": "Validation failed, the split lines do not add up, a refund has lines (transaction.splitNotAllowed) or names an original that is not a visible purchase (transaction.refundOriginalInvalid), a split is spread (transaction.splitNotAllowed) or a refund is spread (transaction.spreadRefund), or the account, category or a tag is not visible to you.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -14731,6 +14734,17 @@
             "name": "uncategorized",
             "in": "query",
             "description": "true keeps only transactions without a category, and split transactions with at least one line without one.",
+            "schema": {
+              "type": [
+                "null",
+                "boolean"
+              ]
+            }
+          },
+          {
+            "name": "spreadOverlap",
+            "in": "query",
+            "description": "true also keeps transactions dated before the range that are spread over months with a monthly slice inside it, so a figure from a report or a budget leads to every row that makes it up. Ignored unless both dateFrom and dateTo are set.",
             "schema": {
               "type": [
                 "null",
@@ -15134,6 +15148,17 @@
                 "boolean"
               ]
             }
+          },
+          {
+            "name": "spreadOverlap",
+            "in": "query",
+            "description": "true also keeps transactions dated before the range that are spread over months with a monthly slice inside it, so a figure from a report or a budget leads to every row that makes it up. Ignored unless both dateFrom and dateTo are set.",
+            "schema": {
+              "type": [
+                "null",
+                "boolean"
+              ]
+            }
           }
         ],
         "responses": {
@@ -15364,6 +15389,17 @@
                 "boolean"
               ]
             }
+          },
+          {
+            "name": "spreadOverlap",
+            "in": "query",
+            "description": "true also keeps transactions dated before the range that are spread over months with a monthly slice inside it, so a figure from a report or a budget leads to every row that makes it up. Ignored unless both dateFrom and dateTo are set.",
+            "schema": {
+              "type": [
+                "null",
+                "boolean"
+              ]
+            }
           }
         ],
         "responses": {
@@ -15556,6 +15592,17 @@
             "name": "uncategorized",
             "in": "query",
             "description": "true keeps only transactions without a category, and split transactions with at least one line without one.",
+            "schema": {
+              "type": [
+                "null",
+                "boolean"
+              ]
+            }
+          },
+          {
+            "name": "spreadOverlap",
+            "in": "query",
+            "description": "true also keeps transactions dated before the range that are spread over months with a monthly slice inside it, so a figure from a report or a budget leads to every row that makes it up. Ignored unless both dateFrom and dateTo are set.",
             "schema": {
               "type": [
                 "null",
@@ -15770,7 +15817,7 @@
           "Transactions"
         ],
         "summary": "Update a transaction",
-        "description": "Replaces the transaction. Split lines are replaced wholesale rather than merged: send the full set you want to keep, or omit lines to turn a split back into a plain transaction. Tags are replaced the same way: send the full set, and an empty list or an absent tagIds clears them. The note is replaced too, so an absent note clears it. Moving it to another account adjusts both balances. A refund is an expense with a negative amount: it lowers that category's spending and raises the balance. It takes an expense category, cannot be split, and may name the purchase it refunds in refundOfTransactionId, which must be an expense you can see and not itself a refund.",
+        "description": "Replaces the transaction. Split lines are replaced wholesale rather than merged: send the full set you want to keep, or omit lines to turn a split back into a plain transaction. Tags are replaced the same way: send the full set, and an empty list or an absent tagIds clears them. The note and spreadMonths are replaced too, so leaving one out clears it. Moving it to another account adjusts both balances. A refund is an expense with a negative amount: it lowers that category's spending and raises the balance. It takes an expense category, cannot be split, and may name the purchase it refunds in refundOfTransactionId, which must be an expense you can see and not itself a refund.",
         "operationId": "UpdateTransaction",
         "parameters": [
           {
@@ -15802,7 +15849,8 @@
                 "tagIds": null,
                 "currency": null,
                 "refundOfTransactionId": null,
-                "note": null
+                "note": null,
+                "spreadMonths": null
               }
             }
           },
@@ -15820,7 +15868,7 @@
             }
           },
           "400": {
-            "description": "Validation failed, the split lines do not add up, a refund has lines (transaction.splitNotAllowed) or names an original that is not a visible purchase (transaction.refundOriginalInvalid), or the account, category or a tag is not visible to you.",
+            "description": "Validation failed, the split lines do not add up, a refund has lines (transaction.splitNotAllowed) or names an original that is not a visible purchase (transaction.refundOriginalInvalid), a split is spread (transaction.splitNotAllowed) or a refund is spread (transaction.spreadRefund), or the account, category or a tag is not visible to you.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -20688,6 +20736,16 @@
               "string"
             ],
             "format": "uuid"
+          },
+          "spreadMonths": {
+            "maximum": 36,
+            "minimum": 2,
+            "type": [
+              "null",
+              "integer"
+            ],
+            "description": "Optional, from 2 to 36, expense and income only: each confirmation writes a transaction spread over this many months.",
+            "format": "int32"
           }
         },
         "example": {
@@ -20704,7 +20762,8 @@
           "matchKey": null,
           "debtId": null,
           "scope": "personal",
-          "householdId": null
+          "householdId": null,
+          "spreadMonths": null
         }
       },
       "CreateSettlementRequest": {
@@ -20965,6 +21024,16 @@
               "string"
             ],
             "description": "Optional note of your own, at most 1000 characters, kept beside the bank's description and never changed by an import."
+          },
+          "spreadMonths": {
+            "maximum": 36,
+            "minimum": 2,
+            "type": [
+              "null",
+              "integer"
+            ],
+            "description": "Optional, from 2 to 36: count the amount in equal monthly slices over this many months, starting with the month of the date. Not allowed on a split or a refund.",
+            "format": "int32"
           }
         },
         "example": {
@@ -20978,7 +21047,8 @@
           "tagIds": null,
           "currency": null,
           "refundOfTransactionId": null,
-          "note": null
+          "note": null,
+          "spreadMonths": null
         }
       },
       "CreateTransferRequest": {
@@ -22104,6 +22174,7 @@
           "transaction.linesMismatch",
           "transaction.refundOriginalInvalid",
           "transaction.splitNotAllowed",
+          "transaction.spreadRefund",
           "transfer.amountMismatch",
           "transfer.receivedAmountRequired",
           "transfer.sameAccount",
@@ -25580,6 +25651,13 @@
               "string"
             ],
             "format": "uuid"
+          },
+          "spreadMonths": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
           }
         }
       },
@@ -27551,6 +27629,23 @@
               "null",
               "string"
             ]
+          },
+          "spreadMonths": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "spreadUntil": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/NullableOfDateOnly"
+              }
+            ]
           }
         }
       },
@@ -28891,6 +28986,16 @@
               "string"
             ],
             "format": "uuid"
+          },
+          "spreadMonths": {
+            "maximum": 36,
+            "minimum": 2,
+            "type": [
+              "null",
+              "integer"
+            ],
+            "description": "Optional, from 2 to 36, expense and income only: each confirmation writes a transaction spread over this many months.",
+            "format": "int32"
           }
         },
         "example": {
@@ -28908,7 +29013,8 @@
           "matchKey": null,
           "debtId": null,
           "scope": "personal",
-          "householdId": null
+          "householdId": null,
+          "spreadMonths": null
         }
       },
       "UpdateSettingsRequest": {
@@ -29211,6 +29317,16 @@
               "null",
               "string"
             ]
+          },
+          "spreadMonths": {
+            "maximum": 36,
+            "minimum": 2,
+            "type": [
+              "null",
+              "integer"
+            ],
+            "description": "Optional, from 2 to 36: count the amount in equal monthly slices over this many months, starting with the month of the date. Not allowed on a split or a refund.",
+            "format": "int32"
           }
         },
         "example": {
@@ -29224,7 +29340,8 @@
           "tagIds": null,
           "currency": null,
           "refundOfTransactionId": null,
-          "note": null
+          "note": null,
+          "spreadMonths": null
         }
       },
       "UpdateTransferRequest": {

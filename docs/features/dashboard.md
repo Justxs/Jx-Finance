@@ -46,6 +46,8 @@ Budgets in their window, on the current month, draw a thin tick on each meter at
 
 The month figures, the monthly trend and the spending breakdown count investment dividends and interest as income and withholding tax and standalone fees as expense, exactly as the [report](reports.md) does, so the dashboard month and the report for that month agree. In the breakdown they are one row, "Investment taxes and fees", without a link. With the `Investments` feature off nothing is added.
 
+A transaction [spread over months](transactions.md#spreading-over-months) counts one monthly slice in the summary, the trend, the category breakdown and the spending pace, and the ledger's recent rows show it once, on the day it was paid.
+
 The month's expenses, the trend and the category breakdown are net of [refund](transactions.md#refunds)s, which are expenses with a negative amount; a category whose refunds exceed its spending in the month shows its negative net last with an empty bar (or inside Other, past the first five), and the ledger's recent rows show a refund as "+" money back with a Refund tag.
 
 ## Month-end close

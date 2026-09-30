@@ -23,6 +23,7 @@ public sealed class RecurringBill : OwnableEntity, IShareable
     public bool IsActive { get; set; } = true;
     public string? MatchKey { get; set; }
     public DebtId? DebtId { get; set; }
+    public short? SpreadMonths { get; set; }
     public Scope Scope { get; set; } = Scope.Personal;
     public HouseholdId? HouseholdId { get; set; }
 

@@ -571,7 +571,18 @@
     "useRemaining": "Naudoti likutį {{amount}}",
     "categoryFor": "Kategorija: {{transaction}}",
     "note": "Pastaba",
-    "noteHint": "Jūsų žodžiai šalia banko aprašymo. Importas jų nekeičia."
+    "noteHint": "Jūsų žodžiai šalia banko aprašymo. Importas jų nekeičia.",
+    "spread": {
+      "label": "Paskirstyti per",
+      "off": "Ne",
+      "months": "{{months}} mėn.",
+      "custom": "Kita",
+      "customLabel": "Mėnesių skaičius",
+      "hint": "Ataskaitose ir biudžetuose kas mėnesį skaičiuojama lygi dalis, pradedant datos mėnesiu.",
+      "chip": "Paskirstyta · {{months}} mėn.",
+      "tooltip": "Ataskaitose ir biudžetuose skaičiuojama po {{amount}} per mėnesį: {{from}} – {{to}}",
+      "tooltipInRange": "Ataskaitose ir biudžetuose skaičiuojama po {{amount}} per mėnesį: {{from}} – {{to}}. Rodomoms datoms tenka {{part}}."
+    }
   },
   "receipts": {
     "fill": "Užpildyti iš kvito",
@@ -2085,6 +2096,7 @@
       "method": "dalijimo būdas",
       "shares": "dalys",
       "note": "pastaba",
+      "spreadMonths": "paskirstymas per mėnesius",
       "limitAmount": "riba",
       "period": "laikotarpis",
       "rolloverEnabled": "likučio perkėlimas",
@@ -2672,7 +2684,8 @@
     "transaction": {
       "linesMismatch": "Išskaidymo eilučių suma turi sutapti su operacijos suma.",
       "splitNotAllowed": "Išskaidytai operacijai to atlikti negalima.",
-      "refundOriginalInvalid": "Šio grąžinimo nurodytas pirkinys nėra jums matomos išlaidos. Atsiekite jį arba pasirinkite kitą pirkinį."
+      "refundOriginalInvalid": "Šio grąžinimo nurodytas pirkinys nėra jums matomos išlaidos. Atsiekite jį arba pasirinkite kitą pirkinį.",
+      "spreadRefund": "Grąžinimo negalima paskirstyti per kelis mėnesius."
     },
     "transfer": {
       "amountMismatch": "Kai valiuta ta pati, išsiųsta ir gauta sumos turi sutapti.",

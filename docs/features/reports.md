@@ -164,6 +164,8 @@ With the feature off the service returns nothing and every figure equals the sum
 
 A [refund](transactions.md#refunds) is an expense with a negative amount, so every figure here is net of refunds: the totals, the trend, and the category, tag and payee breakdowns. A category, tag or payee whose refunds exceed its spending in the range keeps its negative net and is ordered last; the lists draw only positive items, give a negative one an empty bar and no share, and still add up to the total; past the first five categories it folds into Other like any category. A payee's `count` includes its refunds.
 
+A transaction [spread over months](transactions.md#spreading-over-months) counts one monthly slice in each month it covers, in the totals, the trend and every breakdown, so the totals still equal the sum of the categories and a year counts the whole amount once. A payee's `count` counts a spread row once for every period its slices touch. The category, tag and payee links, and the money flow's category links, carry `spreadOverlap=true` with the range, so the ledger lists the spread rows dated before the range beside the rest and the chip on each says how much of it falls in the range.
+
 Visibility needs no code in the report. `InvestmentTransaction` is `IAccountScoped`, so the global query filter in `AppDbContext` shows a caller only entries on accounts visible to them, the same filter that scopes `Transaction`. The report has no account filter of its own.
 
 ## Category breakdown and the synthetic groups

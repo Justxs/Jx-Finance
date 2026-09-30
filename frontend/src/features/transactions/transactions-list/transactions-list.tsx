@@ -8,6 +8,7 @@ import { Rows } from "@/components/ui/rows/rows";
 import { DebtPaymentMarker } from "@/features/transactions/debt-payment/debt-payment";
 import { RefundMark } from "@/features/transactions/refund-mark/refund-mark";
 import { SharedExpenseMark } from "@/features/transactions/shared-expense/shared-expense";
+import { SpreadMark } from "@/features/transactions/spread-mark/spread-mark";
 import { TransactionAmount } from "@/features/transactions/transaction-amount/transaction-amount";
 import {
   isOptimistic,
@@ -103,6 +104,7 @@ export function TransactionsList({
               ) : null}
               <TagChips tagIds={row.tagIds} tagById={tagById} className="mt-1" />
               <RefundMark transaction={row} className="mt-1" />
+              <SpreadMark transaction={row} className="mt-1" />
               <div className="flex items-center gap-2">
                 <p
                   className="min-w-0 flex-1 truncate text-xs text-muted-foreground tabular-nums"

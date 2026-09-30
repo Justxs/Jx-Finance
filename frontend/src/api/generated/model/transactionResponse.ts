@@ -8,6 +8,7 @@
 import type { Currency } from "./currency";
 import type { DateOnly } from "./dateOnly";
 import type { FlowType } from "./flowType";
+import type { NullableOfDateOnly } from "./nullableOfDateOnly";
 import type { TransactionDebtPaymentResponse } from "./transactionDebtPaymentResponse";
 import type { TransactionLineResponse } from "./transactionLineResponse";
 import type { TransactionRefundOfResponse } from "./transactionRefundOfResponse";
@@ -45,4 +46,7 @@ export interface TransactionResponse {
   note?: string | null;
   /** @nullable */
   payeeName?: string | null;
+  /** @nullable */
+  spreadMonths?: number | null;
+  spreadUntil?: null | NullableOfDateOnly;
 }

@@ -19,4 +19,5 @@ public sealed record CreateRecurringBillRequest(
     string? MatchKey = null,
     Guid? DebtId = null,
     Scope Scope = Scope.Personal,
-    Guid? HouseholdId = null) : IRecurringBillInput;
+    Guid? HouseholdId = null,
+    int? SpreadMonths = null) : IRecurringBillInput;

@@ -140,6 +140,7 @@ export const ErrorCode = {
   transactionlinesMismatch: "transaction.linesMismatch",
   transactionrefundOriginalInvalid: "transaction.refundOriginalInvalid",
   transactionsplitNotAllowed: "transaction.splitNotAllowed",
+  transactionspreadRefund: "transaction.spreadRefund",
   transferamountMismatch: "transfer.amountMismatch",
   transferreceivedAmountRequired: "transfer.receivedAmountRequired",
   transfersameAccount: "transfer.sameAccount",

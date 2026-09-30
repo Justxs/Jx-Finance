@@ -17,4 +17,5 @@ public interface IRecurringBillInput : IShareableInput
     int RemindDaysBefore { get; }
     string? MatchKey { get; }
     Guid? DebtId { get; }
+    int? SpreadMonths { get; }
 }

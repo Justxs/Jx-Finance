@@ -14,9 +14,8 @@ import { tags } from "./tags";
 import {
   buildPayeeBreakdownItems,
   buildTagBreakdownItems,
+  countedBetween,
   sumByType,
-  transactions,
-  transactionsBetween,
 } from "./transactions";
 
 function addDays(date: string, days: number): string {
@@ -55,7 +54,7 @@ function investmentTaxesAndFeesGroup(cents: number): CategoryBreakdownItem {
 function buildDailyTrend(dateFrom: string, dateTo: string): ReportTrendPoint[] {
   const points: ReportTrendPoint[] = [];
   for (let day = dateFrom; day <= dateTo && points.length < 366; day = addDays(day, 1)) {
-    const items = transactions.filter((item) => item.date === day);
+    const items = countedBetween(day, day);
     const investmentIncome = day === dateTo ? INVESTMENT_INCOME_CENTS : 0;
     const investmentExpense = day === dateTo ? INVESTMENT_TAXES_AND_FEES_CENTS : 0;
     points.push({
@@ -68,7 +67,7 @@ function buildDailyTrend(dateFrom: string, dateTo: string): ReportTrendPoint[] {
 }
 
 export function buildReportSummary(dateFrom: string, dateTo: string): ReportSummaryResponse {
-  const items = transactionsBetween(dateFrom, dateTo);
+  const items = countedBetween(dateFrom, dateTo);
   const income = sumByType(items, "income") + INVESTMENT_INCOME_CENTS;
   const expense = sumByType(items, "expense") + INVESTMENT_TAXES_AND_FEES_CENTS;
   return {

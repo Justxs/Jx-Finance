@@ -1,5 +1,6 @@
 using System.Linq.Expressions;
 using System.Reflection;
+using JxFinance.Common.Spreads;
 using JxFinance.Common.Subscriptions;
 using JxFinance.Domain.Accounts;
 using JxFinance.Domain.Audit;
@@ -221,6 +222,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, ICurren
                     if (entry.Entity is Transaction added)
                     {
                         added.PayeeKey = SubscriptionDescription.Normalize(added.Description);
+                        SetSpreadUntil(added);
                     }
                     break;
                 case EntityState.Modified:
@@ -228,6 +230,12 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, ICurren
                     if (entry.Entity is Transaction edited && entry.Property(nameof(Transaction.Description)).IsModified)
                     {
                         edited.PayeeKey = SubscriptionDescription.Normalize(edited.Description);
+                    }
+
+                    if (entry.Entity is Transaction spread
+                        && (entry.Property(nameof(Transaction.Date)).IsModified || entry.Property(nameof(Transaction.SpreadMonths)).IsModified))
+                    {
+                        SetSpreadUntil(spread);
                     }
 
                     if (entry.Entity is Transaction transaction && ChangesUnusualInputs(entry))
@@ -251,6 +259,9 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, ICurren
 
         return now;
     }
+
+    private static void SetSpreadUntil(Transaction transaction) =>
+        transaction.SpreadUntil = transaction.SpreadMonths is { } months ? SpreadSlices.Until(transaction.Date, months) : null;
 
     private static bool ChangesUnusualInputs(EntityEntry<EntityBase> entry) =>
         entry.Properties.Any(p => p.IsModified && UnusualInputs.Contains(p.Metadata.Name))

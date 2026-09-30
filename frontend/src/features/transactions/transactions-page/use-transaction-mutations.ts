@@ -21,6 +21,7 @@ import { useReportingCurrency } from "@/hooks/use-currencies";
 import { silentMutation } from "@/lib/mutations";
 import { optimisticPagedRemoval, optimisticUpdate } from "@/lib/optimistic";
 import { errorMessage } from "@/lib/query-client";
+import { spreadUntil } from "@/lib/spread-slices";
 import { normalizeMoney } from "@/lib/validation";
 
 interface Options {
@@ -56,6 +57,8 @@ function optimisticTransaction(
     attachmentCount: 0,
     unusual: null,
     unusualDismissed: false,
+    spreadMonths: data.spreadMonths,
+    spreadUntil: data.spreadMonths ? spreadUntil(data.date, data.spreadMonths) : null,
   };
 }
 

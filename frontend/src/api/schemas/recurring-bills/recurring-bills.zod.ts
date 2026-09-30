@@ -21,6 +21,9 @@ export const createRecurringBillBodyRemindDaysBeforeMax = 365;
 export const createRecurringBillBodyMatchKeyMin = 0;
 export const createRecurringBillBodyMatchKeyMax = 200;
 
+export const createRecurringBillBodySpreadMonthsMin = 2;
+export const createRecurringBillBodySpreadMonthsMax = 36;
+
 export const CreateRecurringBillBody = zod.object({
   name: zod.string().min(createRecurringBillBodyNameMin).max(createRecurringBillBodyNameMax),
   shape: zod
@@ -64,6 +67,14 @@ export const CreateRecurringBillBody = zod.object({
   debtId: zod.uuid().nullish(),
   scope: zod.enum(["personal", "shared"]).optional(),
   householdId: zod.uuid().nullish(),
+  spreadMonths: zod
+    .int()
+    .min(createRecurringBillBodySpreadMonthsMin)
+    .max(createRecurringBillBodySpreadMonthsMax)
+    .nullish()
+    .describe(
+      "Optional, from 2 to 36, expense and income only: each confirmation writes a transaction spread over this many months.",
+    ),
 });
 
 export const createRecurringBillResponseAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
@@ -108,6 +119,7 @@ export const CreateRecurringBillResponse = zod.object({
   debtId: zod.uuid().nullable(),
   scope: zod.enum(["personal", "shared"]),
   householdId: zod.uuid().nullable(),
+  spreadMonths: zod.int().nullish(),
 });
 
 /**
@@ -156,6 +168,7 @@ export const RecurringBillsResponseItem = zod.object({
   debtId: zod.uuid().nullable(),
   scope: zod.enum(["personal", "shared"]),
   householdId: zod.uuid().nullable(),
+  spreadMonths: zod.int().nullish(),
 });
 export const RecurringBillsResponse = zod.array(RecurringBillsResponseItem);
 
@@ -249,6 +262,7 @@ export const RecurringBillResponse = zod.object({
   debtId: zod.uuid().nullable(),
   scope: zod.enum(["personal", "shared"]),
   householdId: zod.uuid().nullable(),
+  spreadMonths: zod.int().nullish(),
 });
 
 /**
@@ -264,6 +278,9 @@ export const updateRecurringBillBodyRemindDaysBeforeMax = 365;
 
 export const updateRecurringBillBodyMatchKeyMin = 0;
 export const updateRecurringBillBodyMatchKeyMax = 200;
+
+export const updateRecurringBillBodySpreadMonthsMin = 2;
+export const updateRecurringBillBodySpreadMonthsMax = 36;
 
 export const UpdateRecurringBillBody = zod.object({
   name: zod.string().min(updateRecurringBillBodyNameMin).max(updateRecurringBillBodyNameMax),
@@ -294,6 +311,14 @@ export const UpdateRecurringBillBody = zod.object({
   debtId: zod.uuid().nullish(),
   scope: zod.enum(["personal", "shared"]).optional(),
   householdId: zod.uuid().nullish(),
+  spreadMonths: zod
+    .int()
+    .min(updateRecurringBillBodySpreadMonthsMin)
+    .max(updateRecurringBillBodySpreadMonthsMax)
+    .nullish()
+    .describe(
+      "Optional, from 2 to 36, expense and income only: each confirmation writes a transaction spread over this many months.",
+    ),
 });
 
 export const updateRecurringBillResponseAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
@@ -338,6 +363,7 @@ export const UpdateRecurringBillResponse = zod.object({
   debtId: zod.uuid().nullable(),
   scope: zod.enum(["personal", "shared"]),
   householdId: zod.uuid().nullable(),
+  spreadMonths: zod.int().nullish(),
 });
 
 /**
@@ -415,6 +441,7 @@ export const ConfirmRecurringBillResponse = zod.object({
     debtId: zod.uuid().nullable(),
     scope: zod.enum(["personal", "shared"]),
     householdId: zod.uuid().nullable(),
+    spreadMonths: zod.int().nullish(),
   }),
   transactionId: zod.uuid().nullable(),
   transferId: zod.uuid().nullable(),

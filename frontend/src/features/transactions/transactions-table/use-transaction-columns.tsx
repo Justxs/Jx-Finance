@@ -7,6 +7,7 @@ import { Tag } from "@/components/ui/tag/tag";
 import { DebtPaymentMarker } from "@/features/transactions/debt-payment/debt-payment";
 import { RefundMark } from "@/features/transactions/refund-mark/refund-mark";
 import { SharedExpenseMark } from "@/features/transactions/shared-expense/shared-expense";
+import { SpreadMark } from "@/features/transactions/spread-mark/spread-mark";
 import { TransactionAmount } from "@/features/transactions/transaction-amount/transaction-amount";
 import {
   isOptimistic,
@@ -119,6 +120,7 @@ export function useTransactionColumns({
             />
             <DebtPaymentMarker transaction={info.row.original} className="mt-0.5" />
             <RefundMark transaction={info.row.original} className="mt-0.5" />
+            <SpreadMark transaction={info.row.original} className="mt-0.5" />
             <SharedExpenseMark
               transaction={info.row.original}
               onUpdate={onUpdateSplit}

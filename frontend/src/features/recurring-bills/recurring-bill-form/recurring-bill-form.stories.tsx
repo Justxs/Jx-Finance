@@ -100,3 +100,26 @@ export const SubmitPending: Story = {
     );
   },
 };
+
+export const SpreadOverTwelveMonths: Story = {
+  play: async ({ canvas, args }) => {
+    const [name, amount] = canvas.getAllByRole("textbox");
+    await fireEvent.change(name!, { target: { value: "Car insurance" } });
+    await fireEvent.change(amount!, { target: { value: "360.00" } });
+    await chooseOption(canvas.getByRole("combobox", { name: "Spread over" }), "12 months");
+    await userEvent.click(
+      canvas.getByRole("button", { name: /add recurring entry|pridėti periodinį/i }),
+    );
+
+    await waitFor(() => expect(args.onClose).toHaveBeenCalled());
+  },
+};
+
+export const TransferIsNeverSpread: Story = {
+  play: async ({ canvas }) => {
+    await expect(canvas.getByRole("combobox", { name: "Spread over" })).toBeVisible();
+    await userEvent.click(canvas.getByRole("radio", { name: "Transfer" }));
+
+    await expect(canvas.queryByRole("combobox", { name: "Spread over" })).toBeNull();
+  },
+};

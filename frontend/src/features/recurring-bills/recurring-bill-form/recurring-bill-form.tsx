@@ -27,6 +27,14 @@ import { FormError } from "@/components/form-error/form-error";
 import { SharingFields } from "@/components/sharing-fields/sharing-fields";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { FormGrid } from "@/components/ui/form-grid/form-grid";
+import {
+  isSpreadValid,
+  spreadIssue,
+  spreadMonthsOf,
+  spreadShape,
+  spreadValues,
+} from "@/features/transactions/spread-fields/spread-choice";
+import { SpreadFields } from "@/features/transactions/spread-fields/spread-fields";
 import { useFeature, useToday } from "@/hooks/use-settings";
 import { silentMutation, upsert } from "@/lib/mutations";
 import { namedOptions, optionsOf } from "@/lib/options";
@@ -58,6 +66,8 @@ interface FormValues {
   debtId: string;
   scope: Scope;
   householdId: string;
+  spread: string;
+  spreadCustom: string;
 }
 
 type RecurringBillDraft = Partial<Omit<RecurringBillResponse, "id">>;
@@ -105,12 +115,16 @@ export function RecurringBillForm({
       matchKey: optionalText(t, updateRecurringBillBodyMatchKeyMax),
       debtId: z.string(),
       ...sharingShape(),
+      ...spreadShape(),
     })
     .superRefine((value, ctx) => {
       if (value.kind === "fixed" && !isPositiveMoney(value.amount)) {
         ctx.addIssue({ code: "custom", message: t("validation.positiveMoney"), path: ["amount"] });
       }
       if (value.shape !== "transfer") {
+        if (!isSpreadValid(value)) {
+          ctx.addIssue(spreadIssue(t));
+        }
         return;
       }
       if (!value.accountId) {
@@ -152,6 +166,7 @@ export function RecurringBillForm({
         ? ""
         : (seed.debtId ?? ""),
     ...sharing,
+    ...spreadValues(seed.spreadMonths),
   };
   const payableDebts = debts.filter((debt) => debt.tracksPayments || debt.id === seed.debtId);
 
@@ -173,6 +188,7 @@ export function RecurringBillForm({
         remindDaysBefore: Number(value.remindDaysBefore),
         matchKey: value.matchKey.trim() || null,
         debtId: value.shape === "expense" ? value.debtId || null : null,
+        spreadMonths: isTransfer ? null : spreadMonthsOf(value),
         ...sharingPayload(value),
       };
 
@@ -323,6 +339,14 @@ export function RecurringBillForm({
                   )}
                 </form.Field>
               ) : null}
+
+              {shape === "transfer" ? null : (
+                <SpreadFields
+                  form={form}
+                  fields={{ spread: "spread", spreadCustom: "spreadCustom" }}
+                  idPrefix={fieldId}
+                />
+              )}
 
               {shape === "transfer" ? (
                 <form.Field name="toAccountId">

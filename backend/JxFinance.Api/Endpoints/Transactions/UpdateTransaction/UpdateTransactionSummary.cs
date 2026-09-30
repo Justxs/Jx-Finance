@@ -11,7 +11,7 @@ public sealed class UpdateTransactionSummary : Summary<UpdateTransactionEndpoint
         Description = "Replaces the transaction. Split lines are replaced wholesale rather than merged: "
             + "send the full set you want to keep, or omit lines to turn a split back into a plain "
             + "transaction. Tags are replaced the same way: send the full set, and an empty list or an "
-            + "absent tagIds clears them. The note is replaced too, so an absent note clears it. "
+            + "absent tagIds clears them. The note and spreadMonths are replaced too, so leaving one out clears it. "
             + "Moving it to another account adjusts both balances. "
             + "A refund is an expense with a negative amount: it lowers that category's spending and raises the "
             + "balance. It takes an expense category, cannot be split, and may name the purchase it refunds in "
@@ -25,10 +25,12 @@ public sealed class UpdateTransactionSummary : Summary<UpdateTransactionEndpoint
             new DateOnly(2026, 9, 12),
             "Weekly shop",
             null);
+        RequestParam(r => r.SpreadMonths, "Optional, from 2 to 36: count the amount in equal monthly slices over this many months, starting with the month of the date. Not allowed on a split or a refund.");
         Params["id"] = "The transaction id. Takes precedence over the id in the body.";
         Responses[200] = "The updated transaction.";
         Responses[400] = "Validation failed, the split lines do not add up, a refund has lines (transaction.splitNotAllowed) or names an original that is not a visible purchase "
-            + "(transaction.refundOriginalInvalid), or the account, category or a tag is not visible to you.";
+            + "(transaction.refundOriginalInvalid), a split is spread (transaction.splitNotAllowed) or a refund is spread (transaction.spreadRefund), "
+            + "or the account, category or a tag is not visible to you.";
         Responses[404] = "No such transaction is visible to the signed-in user.";
     }
 }

@@ -2,6 +2,7 @@ using FastEndpoints;
 using JxFinance.Common;
 using JxFinance.Common.CategoryAttributions;
 using JxFinance.Common.Settings;
+using JxFinance.Common.Spreads;
 using JxFinance.Domain.Budgets;
 using JxFinance.Domain.Categories;
 using JxFinance.Domain.Common;
@@ -90,23 +91,32 @@ public sealed class BudgetUsageCalculator(
             return [];
         }
 
+        var visible = db.Transactions
+            .Where(t => household == null || db.Accounts.Any(a => a.Id == t.AccountId && a.HouseholdId == household));
         var rows = await db.TransactionTags
             .Where(x => tagIds.Contains(x.TagId))
             .Join(
-                db.Transactions.Where(t => t.Type == FlowType.Expense
+                visible.Where(t => t.Type == FlowType.Expense
+                    && t.SpreadMonths == null
                     && t.Date >= span.Start
-                    && t.Date < span.ExclusiveEnd
-                    && (household == null || db.Accounts.Any(a => a.Id == t.AccountId && a.HouseholdId == household))),
+                    && t.Date < span.ExclusiveEnd),
                 x => x.TransactionId,
                 t => t.Id,
                 (x, t) => new { x.TagId, t.Date, t.ReportingAmount })
             .ToListAsync(cancellationToken);
+        var slices = (await visible.SlicesAsync(span, null, cancellationToken))
+            .Where(slice => slice.Type == FlowType.Expense)
+            .SelectMany(slice => slice.TagIds
+                .Where(tagIds.Contains)
+                .Select(tagId => (TagId: tagId, Spend: new CategoryAttribution(slice.Date, null, slice.Amount))));
 
         return rows
-            .GroupBy(row => row.TagId)
+            .Select(row => (row.TagId, Spend: new CategoryAttribution(row.Date, null, row.ReportingAmount)))
+            .Concat(slices)
+            .GroupBy(entry => entry.TagId)
             .ToDictionary(
                 g => g.Key,
-                g => (IReadOnlyList<CategoryAttribution>)[.. g.Select(row => new CategoryAttribution(row.Date, null, row.ReportingAmount))]);
+                g => (IReadOnlyList<CategoryAttribution>)[.. g.Select(entry => entry.Spend)]);
     }
 
     private List<BudgetWindow> Walk(Budget budget, DateOnly asOf, FirstDayOfWeek firstDayOfWeek)

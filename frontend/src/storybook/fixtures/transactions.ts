@@ -7,6 +7,7 @@ import type {
   UnusualAmountResponse,
 } from "@/api/generated/model";
 import { fromCents, toCents } from "@/lib/money";
+import { spreadSlices } from "@/lib/spread-slices";
 import { accounts } from "./accounts";
 import { FIXTURE_MONTH_END, FIXTURE_MONTH_START, ids, uid } from "./base";
 import { categories } from "./categories";
@@ -163,6 +164,14 @@ export const unlinkedRefund: TransactionResponse = {
   reportingAmount: "-5.00",
 };
 
+const SPREAD_MONTHS = 12;
+
+export const spreadTransaction: TransactionResponse = {
+  ...manual(30, "01-15", checking, transport, -360, "Gjensidige – KASKO draudimas", [car]),
+  spreadMonths: SPREAD_MONTHS,
+  spreadUntil: "2026-12-15",
+};
+
 export const refundTransactions: TransactionResponse[] = [
   unlinkedRefund,
   linkedRefund,
@@ -280,9 +289,26 @@ export function transactionsBetween(dateFrom: string, dateTo: string): Transacti
   return transactions.filter((item) => item.date >= dateFrom && item.date <= dateTo);
 }
 
+export function countedBetween(dateFrom: string, dateTo: string): TransactionResponse[] {
+  const slices = spreadSlices(
+    spreadTransaction.date,
+    spreadTransaction.reportingAmount,
+    SPREAD_MONTHS,
+  )
+    .filter((slice) => slice.date >= dateFrom && slice.date <= dateTo)
+    .map((slice) => ({
+      ...spreadTransaction,
+      date: slice.date,
+      amount: fromCents(slice.cents),
+      reportingAmount: fromCents(slice.cents),
+    }));
+  return [...transactionsBetween(dateFrom, dateTo), ...slices];
+}
+
 export const monthTransactions = transactionsBetween(FIXTURE_MONTH_START, FIXTURE_MONTH_END);
-export const monthIncomeCents = sumByType(monthTransactions, "income");
-export const monthExpenseCents = sumByType(monthTransactions, "expense");
+const monthCounted = countedBetween(FIXTURE_MONTH_START, FIXTURE_MONTH_END);
+export const monthIncomeCents = sumByType(monthCounted, "income");
+export const monthExpenseCents = sumByType(monthCounted, "expense");
 
 export const transactionsCsv = [
   "Date,Description,Account,Category,Tags,Type,Amount,Currency",

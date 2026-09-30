@@ -7,7 +7,7 @@ import type {
 import { fromCents, toCents } from "@/lib/money";
 import { ids } from "./base";
 import { categories } from "./categories";
-import { expenseParts, transactionsBetween } from "./transactions";
+import { countedBetween, expenseParts } from "./transactions";
 
 interface Window {
   start: string;
@@ -22,7 +22,7 @@ export const budgetWindows: Record<BudgetPeriod, Window> = {
 };
 
 function spentInWindow(categoryId: string, window: Window): number {
-  return expenseParts(transactionsBetween(window.start, window.end))
+  return expenseParts(countedBetween(window.start, window.end))
     .filter((part) => part.categoryId === categoryId)
     .reduce((total, part) => total + part.cents, 0);
 }

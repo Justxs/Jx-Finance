@@ -15,4 +15,5 @@ public interface ITransactionInput
     Currency? Currency { get; }
     Guid? RefundOfTransactionId { get; }
     string? Note { get; }
+    int? SpreadMonths { get; }
 }

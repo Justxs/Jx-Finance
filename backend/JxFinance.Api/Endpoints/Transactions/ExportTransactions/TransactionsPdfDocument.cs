@@ -148,6 +148,12 @@ public sealed class TransactionsPdfDocument(
 
             row.Cells[0].AddParagraph(DateFormats.Iso(transaction.Date));
             row.Cells[1].AddParagraph(transaction.Description ?? "");
+            if (transaction.SpreadMonths is { } months)
+            {
+                var spread = row.Cells[1].AddParagraph($"Spread over {months} months");
+                spread.Format.Font.Color = MutedColor;
+            }
+
             row.Cells[2].AddParagraph(names.Accounts.GetValueOrDefault(transaction.AccountId) ?? "");
             row.Cells[3].AddParagraph(category ?? "");
 

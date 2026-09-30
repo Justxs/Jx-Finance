@@ -10,6 +10,13 @@ import {
   createTransactionBodyDescriptionMax,
   createTransactionBodyNoteMax,
 } from "@/api/schemas/transactions/transactions.zod";
+import {
+  isSpreadValid,
+  spreadIssue,
+  spreadMonthsOf,
+  spreadShape,
+  spreadValues,
+} from "@/features/transactions/spread-fields/spread-choice";
 import { DEFAULT_CURRENCY } from "@/lib/currency";
 import type { Translate } from "@/lib/i18n";
 import { toCents } from "@/lib/money";
@@ -48,6 +55,8 @@ interface TransactionFormFields {
   lines: LineFormValue[];
   tagIds: string[];
   refundOf: TransactionRefundOfResponse | null;
+  spread: string;
+  spreadCustom: string;
 }
 
 type FormatMoney = (value: number, currency: string) => string;
@@ -66,6 +75,7 @@ export function transactionSchema(t: Translate, formatMoney: FormatMoney) {
       isSplit: z.boolean(),
       tagIds: z.array(z.string()),
       refundOf: z.custom<TransactionRefundOfResponse | null>(),
+      ...spreadShape(),
       lines: z.array(
         z.object({
           id: z.string(),
@@ -76,6 +86,10 @@ export function transactionSchema(t: Translate, formatMoney: FormatMoney) {
       ),
     })
     .superRefine((value, ctx) => {
+      if (spreads(value) && !isSpreadValid(value)) {
+        ctx.addIssue(spreadIssue(t));
+      }
+
       if (!value.isSplit) {
         return;
       }
@@ -102,6 +116,10 @@ export function transactionSchema(t: Translate, formatMoney: FormatMoney) {
     });
 }
 
+function spreads(value: Pick<TransactionFormFields, "type" | "isSplit">) {
+  return value.type !== "refund" && !value.isSplit;
+}
+
 export function defaultFormFields(
   source: TransactionDraft,
   defaultAccount: AccountResponse | undefined,
@@ -121,6 +139,7 @@ export function defaultFormFields(
     isSplit: !refund && (source.isSplit ?? false),
     tagIds: source.tagIds ?? [],
     refundOf: refund ? (source.refundOf ?? null) : null,
+    ...spreadValues(refund ? null : source.spreadMonths),
     lines: source.lines?.length
       ? source.lines.map((line, index) => ({
           id: `line-${index}`,
@@ -146,6 +165,7 @@ export function toSubmittedValues(value: TransactionFormFields): TransactionForm
     note: value.note.trim() || null,
     tagIds: value.tagIds,
     refundOfTransactionId: refund ? (value.refundOf?.id ?? null) : null,
+    spreadMonths: spreads(value) ? spreadMonthsOf(value) : null,
     lines: split
       ? value.lines.map((line) => ({
           categoryId: line.categoryId || null,

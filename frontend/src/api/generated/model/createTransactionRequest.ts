@@ -51,4 +51,11 @@ export interface CreateTransactionRequest {
    * @nullable
    */
   note?: string | null;
+  /**
+   * Optional, from 2 to 36: count the amount in equal monthly slices over this many months, starting with the month of the date. Not allowed on a split or a refund.
+   * @minimum 2
+   * @maximum 36
+   * @nullable
+   */
+  spreadMonths?: number | null;
 }

@@ -165,6 +165,7 @@ export const ProblemDetailsResponse = zod
                 "transaction.linesMismatch",
                 "transaction.refundOriginalInvalid",
                 "transaction.splitNotAllowed",
+                "transaction.spreadRefund",
                 "transfer.amountMismatch",
                 "transfer.receivedAmountRequired",
                 "transfer.sameAccount",

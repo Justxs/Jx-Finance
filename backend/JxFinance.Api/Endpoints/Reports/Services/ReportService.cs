@@ -3,6 +3,7 @@ using JxFinance.Common;
 using JxFinance.Common.CategoryAttributions;
 using JxFinance.Common.InvestmentCashFlows;
 using JxFinance.Common.Payees;
+using JxFinance.Common.Spreads;
 using JxFinance.Domain.Common;
 using JxFinance.Endpoints.Dashboard.Shared;
 using JxFinance.Endpoints.Reports.Interfaces;
@@ -52,11 +53,14 @@ public sealed class ReportService(
         var expenseByCategory = Breakdown(expenseAttributions, FlowType.Expense);
         var incomeByCategory = Breakdown(incomeAttributions, FlowType.Income);
 
-        List<DatedFlow> everything = [.. await db.Transactions.Within(period, earlier).DailyFlowsAsync(cancellationToken), .. investmentFlows];
+        List<DatedFlow> everything = [.. await db.Transactions.DailyFlowsAsync(period, earlier, cancellationToken), .. investmentFlows];
 
         var (trend, trendBucket) = BuildTrend(everything, period, earlier);
-        var expenseByTag = await BuildTagBreakdownAsync(period, earlier, cancellationToken);
-        var expenseByPayee = await BuildPayeeBreakdownAsync(period, earlier, cancellationToken);
+        var expenseSlices = (await db.Transactions.SlicesAsync(period, earlier, cancellationToken))
+            .Where(slice => slice.Type == FlowType.Expense)
+            .ToList();
+        var expenseByTag = await BuildTagBreakdownAsync(period, earlier, expenseSlices, cancellationToken);
+        var expenseByPayee = await BuildPayeeBreakdownAsync(period, earlier, expenseSlices, cancellationToken);
 
         var (totalIncome, totalExpense) = Totals(everything, period);
 
@@ -90,25 +94,32 @@ public sealed class ReportService(
     private async Task<IReadOnlyList<TagBreakdownItem>> BuildTagBreakdownAsync(
         DateWindow period,
         DateWindow? comparison,
+        IReadOnlyList<SpreadSlice> slices,
         CancellationToken cancellationToken)
     {
         var start = period.Start;
         var end = period.ExclusiveEnd;
-        var expenses = db.Transactions.Within(period, comparison).Where(t => t.Type == FlowType.Expense);
+        var expenses = db.Transactions.Within(period, comparison).Where(t => t.Type == FlowType.Expense && t.SpreadMonths == null);
 
-        var tagged = await expenses
+        var tagged = (await expenses
             .SelectMany(t => db.TransactionTags
                 .Where(x => x.TransactionId == t.Id)
                 .Select(x => new { x.TagId, t.ReportingAmount, Current = t.Date >= start && t.Date < end }))
             .GroupBy(pair => new { pair.TagId, pair.Current })
             .Select(group => new { group.Key.TagId, group.Key.Current, Amount = group.Sum(pair => pair.ReportingAmount) })
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken))
+            .Select(entry => (entry.TagId, entry.Current, entry.Amount))
+            .Concat(slices.SelectMany(slice => slice.TagIds.Select(tagId => (TagId: tagId, Current: period.Contains(slice.Date), slice.Amount))))
+            .ToList();
 
-        var untagged = await expenses
+        var untagged = (await expenses
             .Where(t => !db.TransactionTags.Any(x => x.TransactionId == t.Id))
             .GroupBy(t => t.Date >= start && t.Date < end)
             .Select(group => new { Current = group.Key, Amount = group.Sum(t => t.ReportingAmount) })
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken))
+            .Select(entry => (entry.Current, entry.Amount))
+            .Concat(slices.Where(slice => slice.TagIds.Count == 0).Select(slice => (Current: period.Contains(slice.Date), slice.Amount)))
+            .ToList();
 
         var names = await db.Tags.Select(tag => new { Key = tag.Id, Value = tag.Name })
             .ToDictionaryAsync(x => x.Key, x => x.Value, cancellationToken);
@@ -141,13 +152,15 @@ public sealed class ReportService(
     private async Task<IReadOnlyList<PayeeBreakdownItem>> BuildPayeeBreakdownAsync(
         DateWindow period,
         DateWindow? comparison,
+        IReadOnlyList<SpreadSlice> slices,
         CancellationToken cancellationToken)
     {
         var start = period.Start;
         var end = period.ExclusiveEnd;
         var expenses = db.Transactions.Within(period, comparison).Where(t => t.Type == FlowType.Expense);
 
-        var grouped = await expenses
+        var grouped = (await expenses
+            .Where(t => t.SpreadMonths == null)
             .GroupBy(t => new { t.PayeeKey, Current = t.Date >= start && t.Date < end })
             .Select(group => new
             {
@@ -156,7 +169,12 @@ public sealed class ReportService(
                 Amount = group.Sum(t => t.ReportingAmount),
                 Count = group.Count(),
             })
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken))
+            .Select(entry => (entry.PayeeKey, entry.Current, entry.Amount, entry.Count))
+            .Concat(slices
+                .GroupBy(slice => (slice.PayeeKey, Current: period.Contains(slice.Date)))
+                .Select(group => (group.Key.PayeeKey, group.Key.Current, Amount: group.Sum(slice => slice.Amount), Count: group.Select(slice => slice.Id).Distinct().Count())))
+            .ToList();
 
         var totals = grouped
             .GroupBy(entry => entry.PayeeKey ?? string.Empty)
@@ -175,8 +193,10 @@ public sealed class ReportService(
             .ToList();
 
         var keys = totals.Select(item => item.Key).Where(key => key.Length > 0).ToList();
-        var labels = await expenses
-            .Where(t => keys.Contains(t.PayeeKey!))
+        var spreadIds = slices.Select(slice => slice.Id).Distinct().ToList();
+        var labels = await db.Transactions
+            .Where(t => t.Type == FlowType.Expense && keys.Contains(t.PayeeKey!))
+            .Where(t => spreadIds.Contains(t.Id) || expenses.Any(e => e.Id == t.Id))
             .GroupBy(t => t.PayeeKey!)
             .Select(group => new
             {

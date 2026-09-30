@@ -119,7 +119,7 @@ export function optionalQuantity(t: Translate, messageKey: TranslationKey) {
   return z.string().refine(blankOr(isQuantity), t(messageKey));
 }
 
-function wholeNumberIn(min: number, max: number) {
+export function wholeNumberIn(min: number, max: number) {
   return (value: string) => {
     const trimmed = value.trim();
     return /^\d+$/.test(trimmed) && Number(trimmed) >= min && Number(trimmed) <= max;

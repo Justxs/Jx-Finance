@@ -26,7 +26,11 @@ export function TransactionsLink({ name, filter, className }: Readonly<Props>) {
     <Tooltip content={t("dashboard.showTransactions", { category: name })}>
       <Link
         to="/transactions"
-        search={{ page: 1, ...filter }}
+        search={{
+          page: 1,
+          ...filter,
+          spreadOverlap: filter.dateFrom && filter.dateTo ? true : undefined,
+        }}
         className={cn("underline-offset-4 hover:underline", className)}
       >
         {name}

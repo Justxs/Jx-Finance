@@ -58,4 +58,11 @@ export interface CreateRecurringBillRequest {
   scope?: Scope;
   /** @nullable */
   householdId?: string | null;
+  /**
+   * Optional, from 2 to 36, expense and income only: each confirmation writes a transaction spread over this many months.
+   * @minimum 2
+   * @maximum 36
+   * @nullable
+   */
+  spreadMonths?: number | null;
 }
