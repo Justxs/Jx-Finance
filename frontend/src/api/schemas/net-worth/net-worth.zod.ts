@@ -829,7 +829,7 @@ export const DebtPaymentCandidatesResponseItem = zod.object({
   amount: zod.stringFormat("decimal", debtPaymentCandidatesResponseAmountRegExp),
   date: zod.iso.date(),
   description: zod.string().nullable(),
-  source: zod.enum(["manual", "imported"]),
+  source: zod.enum(["manual", "imported", "api"]),
   isSplit: zod.boolean(),
   createdAt: zod.iso.datetime({ offset: true }),
   lines: zod

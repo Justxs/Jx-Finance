@@ -8,10 +8,12 @@ public sealed class AuditEvent
     public const int ValueMaxLength = 120;
     public const int MaxChanges = 12;
     public const int RetentionDays = 400;
+    public const int ViaTokenMaxLength = 60;
 
     public AuditEventId Id { get; set; } = AuditEventId.New();
     public HouseholdId HouseholdId { get; set; }
     public Guid ActorUserId { get; set; }
+    public string? ViaToken { get; set; }
     public DateTimeOffset OccurredAt { get; set; }
     public AuditAction Action { get; set; }
     public AuditEntityKind EntityKind { get; set; }

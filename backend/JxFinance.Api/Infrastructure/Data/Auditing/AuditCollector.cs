@@ -24,7 +24,7 @@ using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 namespace JxFinance.Infrastructure.Data.Auditing;
 
-internal sealed class AuditCollector(AppDbContext db, Guid actorId, DateTimeOffset now)
+internal sealed class AuditCollector(AppDbContext db, Guid actorId, string? viaToken, DateTimeOffset now)
 {
     private const string TagsField = "tags";
     private const string SplitField = "split";
@@ -548,6 +548,7 @@ internal sealed class AuditCollector(AppDbContext db, Guid actorId, DateTimeOffs
         {
             HouseholdId = household,
             ActorUserId = actorId,
+            ViaToken = viaToken,
             OccurredAt = now,
             Action = action,
             EntityKind = kind,

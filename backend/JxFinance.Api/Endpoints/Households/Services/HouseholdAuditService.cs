@@ -66,6 +66,7 @@ public sealed class HouseholdAuditService(AppDbContext db, ICurrentUser currentU
         auditEvent.OccurredAt,
         auditEvent.ActorUserId,
         actorName,
+        auditEvent.ViaToken,
         auditEvent.Action,
         auditEvent.EntityKind,
         auditEvent.EntityId,

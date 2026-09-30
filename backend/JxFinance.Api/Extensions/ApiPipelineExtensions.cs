@@ -29,6 +29,7 @@ public static class ApiPipelineExtensions
         app.UseAuthorization();
         app.UseMiddleware<FeatureGateMiddleware>();
         app.UseMiddleware<ActiveHouseholdMiddleware>();
+        app.UseMiddleware<IdempotencyMiddleware>();
 
         app.UseFastEndpoints(ConfigureFastEndpoints);
         if (ServesApiDocs(app.Configuration, app.Environment))

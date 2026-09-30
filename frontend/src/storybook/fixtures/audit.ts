@@ -15,6 +15,7 @@ interface EventInput {
   description: string;
   count?: number | null;
   changes?: AuditChangeResponse[];
+  viaToken?: string | null;
 }
 
 const actors = {
@@ -27,6 +28,7 @@ function event(index: number, occurredAt: string, input: EventInput): AuditEvent
     id: uid("a0d1a0d1", index),
     occurredAt,
     ...actors[input.actor ?? "sarunas"],
+    viaToken: input.viaToken ?? null,
     action: input.action,
     entityKind: input.kind,
     entityId: input.entityId === undefined ? uid("e0e0e0e0", index) : input.entityId,
@@ -69,6 +71,7 @@ export const householdAuditEvents: AuditEventResponse[] = [
   event(5, "2026-09-17T20:41:00Z", {
     action: "deleted",
     kind: "transfer",
+    viaToken: "Home Assistant",
     description: "Pervedimas į santaupas, 200.00 EUR",
   }),
   event(6, "2026-09-16T11:27:00Z", {

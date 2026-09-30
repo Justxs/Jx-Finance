@@ -7,6 +7,7 @@ public sealed record AuditEventResponse(
     DateTimeOffset OccurredAt,
     Guid ActorUserId,
     string ActorName,
+    string? ViaToken,
     AuditAction Action,
     AuditEntityKind EntityKind,
     Guid? EntityId,

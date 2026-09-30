@@ -7,4 +7,6 @@ public interface ICurrentUser
     Guid Id { get; }
 
     HouseholdId? ActiveHouseholdId => null;
+
+    string? TokenName => null;
 }

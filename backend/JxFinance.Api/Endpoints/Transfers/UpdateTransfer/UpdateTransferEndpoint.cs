@@ -12,6 +12,7 @@ public sealed class UpdateTransferEndpoint(ITransferService transferService)
     {
         Put(ApiRoutes.Transfers + "/{id}");
         Group<TransfersGroup>();
+        Options(b => b.WithMetadata(TokenWritable.Yes));
         Description(d => d.ProducesProblemDetails(403).ProducesProblemDetails(404));
     }
 

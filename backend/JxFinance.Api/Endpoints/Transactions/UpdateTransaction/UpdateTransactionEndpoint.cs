@@ -12,6 +12,7 @@ public sealed class UpdateTransactionEndpoint(ITransactionService transactionSer
     {
         Put(ApiRoutes.Transactions + "/{id}");
         Group<TransactionsGroup>();
+        Options(b => b.WithMetadata(TokenWritable.Yes));
         Description(d => d.ProducesProblemDetails(404));
     }
 

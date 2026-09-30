@@ -11,6 +11,7 @@ public sealed class BulkTagTransactionsEndpoint(ITransactionService transactionS
     {
         Post(ApiRoutes.Transactions + "/bulk-tags");
         Group<TransactionsGroup>();
+        Options(b => b.WithMetadata(TokenWritable.Yes));
         Description(d => d.ProducesProblemDetails(404));
     }
 

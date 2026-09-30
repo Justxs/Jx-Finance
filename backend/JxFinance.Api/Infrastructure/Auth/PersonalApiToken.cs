@@ -5,6 +5,7 @@ public sealed class PersonalApiToken
     public const int NameMaxLength = 60;
     public const int MaxActivePerUser = 10;
     public const int MaxLifetimeDays = 365;
+    public const int MaxWritableLifetimeDays = 90;
 
     public static readonly TimeSpan LastUsedPrecision = TimeSpan.FromMinutes(1);
 
@@ -19,6 +20,8 @@ public sealed class PersonalApiToken
     public string Prefix { get; set; } = string.Empty;
 
     public string SecretHash { get; set; } = string.Empty;
+
+    public TokenAccess Access { get; set; }
 
     public DateTimeOffset CreatedAt { get; set; }
 

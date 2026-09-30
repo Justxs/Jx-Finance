@@ -36,7 +36,7 @@ public sealed class PersonalApiTokenAuthenticationHandler(
             .Where(t => t.Prefix == prefix
                 && t.ExpiresAt > now
                 && db.Users.Where(AppUser.IsNotDeactivated).Any(u => u.Id == t.UserId))
-            .Select(t => new { t.Id, t.UserId, t.SecretHash, t.LastUsedAt })
+            .Select(t => new { t.Id, t.UserId, t.Name, t.Access, t.SecretHash, t.LastUsedAt })
             .FirstOrDefaultAsync(CancellationToken.None);
         if (token is null || !SecretHash.Matches(token.SecretHash, secret))
         {
@@ -55,6 +55,8 @@ public sealed class PersonalApiTokenAuthenticationHandler(
             [
                 new Claim(ClaimTypes.NameIdentifier, token.UserId.ToString()),
                 new Claim(AuthClaims.TokenId, token.Id.ToString()),
+                new Claim(AuthClaims.TokenName, token.Name),
+                new Claim(AuthClaims.TokenAccess, token.Access.ToString()),
             ],
             SchemeName);
         return AuthenticateResult.Success(new AuthenticationTicket(new ClaimsPrincipal(identity), SchemeName));

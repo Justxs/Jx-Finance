@@ -560,6 +560,7 @@ public sealed class BackupEndpointTests(ApiFixture fixture) : IntegrationTestBas
         Assert.Contains("SharedExpenseShares", tables);
         Assert.Contains("Settlements", tables);
         Assert.DoesNotContain("UserSessions", tables);
+        Assert.DoesNotContain("ApiIdempotencyKeys", tables);
         Assert.DoesNotContain("EmailMessages", tables);
     }
 

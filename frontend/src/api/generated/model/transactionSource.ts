@@ -11,4 +11,5 @@ export type TransactionSource = (typeof TransactionSource)[keyof typeof Transact
 export const TransactionSource = {
   manual: "manual",
   imported: "imported",
+  api: "api",
 } as const;

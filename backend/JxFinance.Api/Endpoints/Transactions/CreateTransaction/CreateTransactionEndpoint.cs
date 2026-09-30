@@ -12,6 +12,7 @@ public sealed class CreateTransactionEndpoint(ITransactionService transactionSer
     {
         Post(ApiRoutes.Transactions);
         Group<TransactionsGroup>();
+        Options(b => b.WithMetadata(TokenWritable.Yes));
         Description(d => d.ProducesCreated<TransactionResponse>());
     }
 

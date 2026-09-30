@@ -71,6 +71,7 @@ export const ErrorCode = {
   householdrequired: "household.required",
   householdscopeMismatch: "household.scopeMismatch",
   ibaninvalid: "iban.invalid",
+  idempotencykeyReused: "idempotency.keyReused",
   importalreadyPresent: "import.alreadyPresent",
   importentryMismatch: "import.entryMismatch",
   importinvalidDateFormat: "import.invalidDateFormat",

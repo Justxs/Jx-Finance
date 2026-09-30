@@ -127,6 +127,7 @@ export const HouseholdAuditResponse = zod.object({
       occurredAt: zod.iso.datetime({ offset: true }),
       actorUserId: zod.uuid(),
       actorName: zod.string(),
+      viaToken: zod.string().nullable(),
       action: zod.enum([
         "created",
         "updated",

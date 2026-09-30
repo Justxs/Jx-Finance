@@ -174,6 +174,10 @@ namespace JxFinance.Infrastructure.Data.Migrations
                     b.Property<DateTimeOffset>("OccurredAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("ViaToken")
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
+
                     b.ComplexCollection(typeof(List<Dictionary<string, object>>), "Changes", "JxFinance.Domain.Audit.AuditEvent.Changes#AuditChange", b1 =>
                         {
                             b1.IsRequired();
@@ -2492,6 +2496,39 @@ namespace JxFinance.Infrastructure.Data.Migrations
                     b.ToTable("DeletionEntries");
                 });
 
+            modelBuilder.Entity("JxFinance.Infrastructure.Auth.ApiIdempotencyKey", b =>
+                {
+                    b.Property<Guid>("TokenId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Key")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("Body")
+                        .HasColumnType("jsonb");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Location")
+                        .HasMaxLength(2048)
+                        .HasColumnType("character varying(2048)");
+
+                    b.Property<string>("RequestHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character(64)")
+                        .IsFixedLength();
+
+                    b.Property<int?>("StatusCode")
+                        .HasColumnType("integer");
+
+                    b.HasKey("TokenId", "Key");
+
+                    b.ToTable("ApiIdempotencyKeys");
+                });
+
             modelBuilder.Entity("JxFinance.Infrastructure.Auth.AppRole", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2620,6 +2657,13 @@ namespace JxFinance.Infrastructure.Data.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
+
+                    b.Property<string>("Access")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasDefaultValue("Read");
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -3463,6 +3507,15 @@ namespace JxFinance.Infrastructure.Data.Migrations
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("JxFinance.Infrastructure.Auth.ApiIdempotencyKey", b =>
+                {
+                    b.HasOne("JxFinance.Infrastructure.Auth.PersonalApiToken", null)
+                        .WithMany()
+                        .HasForeignKey("TokenId")
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 

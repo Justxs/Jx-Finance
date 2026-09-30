@@ -14,7 +14,7 @@ import {
 } from "@/storybook/fixtures";
 import { failWith, handlers, pending, withHandlers } from "@/storybook/handlers";
 import { readBody, text } from "@/storybook/handlers/http";
-import { type Canvas, openedDialog } from "@/storybook/interactions";
+import { type Canvas, chooseOption, openedDialog } from "@/storybook/interactions";
 import { ApiTokensSection } from "./api-tokens-section";
 
 const meta = {
@@ -33,7 +33,8 @@ function editableHandlers() {
     getCreatePersonalApiTokenMockHandler(async ({ request }) => {
       const body = await readBody(request);
       const created = { ...createdPersonalApiToken, name: text(body.name) ?? "" };
-      live = [{ ...created, lastUsedAt: null, isExpired: false }, ...live];
+      const access = text(body.access) === "readWrite" ? "readWrite" : "read";
+      live = [{ ...created, access, lastUsedAt: null, isExpired: false }, ...live];
       return created;
     }),
     getRevokePersonalApiTokenMockHandler(({ params }) => {
@@ -61,6 +62,9 @@ export const Default: Story = {
     await expect(canvas.getByText("Old budget script")).toBeVisible();
     await expect(canvas.getByText("Expired", { selector: "span" })).toBeVisible();
     await expect(canvas.getByText("Never")).toBeVisible();
+    await expect(canvas.getByText("Home Assistant")).toBeVisible();
+    await expect(canvas.getAllByText("Read and write", { selector: "span" })).toHaveLength(1);
+    await expect(canvas.getAllByText("Read only", { selector: "span" })).toHaveLength(2);
   },
 };
 
@@ -102,12 +106,45 @@ export const CreatesAToken: Story = {
     );
     await expect(dialog.getByText(/You will not see this token again/u)).toBeVisible();
     await expect(dialog.getByRole("button", { name: "Copy" })).toBeVisible();
+    await expect(dialog.queryByText(/can also add, change and delete/u)).toBeNull();
     await userEvent.click(dialog.getByRole("button", { name: "Done" }));
     await waitFor(() => expect(screen.queryByLabelText("Your new token")).toBeNull());
     await waitFor(() =>
-      expect(canvas.getAllByRole("button", { name: /^Revoke:/u })).toHaveLength(3),
+      expect(canvas.getAllByRole("button", { name: /^Revoke:/u })).toHaveLength(4),
     );
     await expect(canvas.getByText("Power Query")).toBeVisible();
+  },
+};
+
+export const ReadAndWrite: Story = {
+  parameters: { msw: { handlers: editableHandlers() } },
+  play: async ({ canvas }) => {
+    await userEvent.click(await canvas.findByRole("button", { name: "Create a token" }));
+    const dialog = within(await openedDialog("dialog"));
+    const expiry = dialog.getByLabelText("Expires after");
+    await chooseOption(expiry, "1 year");
+    await expect(expiry).toHaveTextContent("1 year");
+
+    await userEvent.click(dialog.getByRole("radio", { name: "Read and write" }));
+
+    await waitFor(() => expect(expiry).toHaveTextContent("90 days"));
+    await userEvent.click(expiry);
+    await expect(await screen.findByRole("option", { name: "30 days" })).toBeInTheDocument();
+    await expect(screen.queryByRole("option", { name: "1 year" })).toBeNull();
+    await userEvent.click(screen.getByRole("option", { name: "90 days" }));
+    await waitFor(() => expect(screen.queryByRole("listbox")).toBeNull());
+
+    await fireEvent.change(dialog.getByLabelText("Name"), { target: { value: "Home Assistant" } });
+    await fireEvent.change(dialog.getByLabelText("Current password"), {
+      target: { value: "correct horse" },
+    });
+    await userEvent.click(dialog.getByRole("button", { name: "Create a token" }));
+
+    await expect(await dialog.findByText(/can also add, change and delete/u)).toBeVisible();
+    await userEvent.click(dialog.getByRole("button", { name: "Done" }));
+    await waitFor(() =>
+      expect(canvas.getAllByText("Read and write", { selector: "span" })).toHaveLength(2),
+    );
   },
 };
 

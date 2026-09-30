@@ -14,6 +14,8 @@ export interface AuditEventResponse {
   occurredAt: string;
   actorUserId: string;
   actorName: string;
+  /** @nullable */
+  viaToken: string | null;
   action: AuditAction;
   entityKind: AuditEntityKind;
   /** @nullable */

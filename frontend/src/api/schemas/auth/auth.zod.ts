@@ -356,7 +356,7 @@ export const RevokeOtherSessionsResponse = zod.void();
 export const RevokeSessionResponse = zod.void();
 
 /**
- * Confirms the account password and creates a read-only token for scripts and spreadsheets. The token is returned once, in this response, and never again: only its public prefix and a hash of its secret are kept. Send it as Authorization: Bearer jxp_... to read what you read in the browser. It cannot write anything and cannot reach administration, sessions, tokens, settings, backups or attachments. The password counts toward the account lockout. Needs the ApiTokens feature switch. Rate limited to five attempts per five minutes.
+ * Confirms the account password and creates a token for scripts, spreadsheets and home automation. The token is returned once, in this response, and never again: only its public prefix and a hash of its secret are kept. Send it as Authorization: Bearer jxp_... to read what you read in the browser. A read-and-write token can also record, change and delete transactions and transfers, set their category or tags in bulk and confirm recurring entries; it lives at most 90 days. No token reaches administration, sessions, tokens, settings, backups or attachments. The password counts toward the account lockout. Needs the ApiTokens feature switch. Rate limited to five attempts per five minutes.
  * @summary Create a personal API token
  */
 export const createPersonalApiTokenBodyNameMin = 0;
@@ -374,8 +374,13 @@ export const CreatePersonalApiTokenBody = zod.object({
     .int()
     .min(1)
     .max(createPersonalApiTokenBodyExpiresInDaysMax)
-    .describe("Days until the token stops working, from 1 to 365."),
+    .describe(
+      "Days until the token stops working, from 1 to 365, at most 90 for a read-and-write token.",
+    ),
   password: zod.string().min(1).describe("The account password."),
+  access: zod
+    .enum(["read", "readWrite"])
+    .describe("What the token may do: read, or readWrite to record entries as well."),
 });
 
 export const CreatePersonalApiTokenResponse = zod.object({
@@ -395,6 +400,9 @@ export const PersonalApiTokensResponseItem = zod.object({
   id: zod.uuid(),
   name: zod.string(),
   prefix: zod.string(),
+  access: zod
+    .enum(["read", "readWrite"])
+    .describe("What the token may do: read, or readWrite to record entries as well."),
   createdAt: zod.iso.datetime({ offset: true }),
   expiresAt: zod.iso.datetime({ offset: true }),
   lastUsedAt: zod.iso.datetime({ offset: true }).nullable(),

@@ -25,7 +25,10 @@ export function ActivityEvent({ event }: Readonly<EventProps>) {
   const { t } = useTranslation();
   const formatDateTime = useDateTime();
   const changeText = useChangeText();
-  const actor = event.actorName || t("audit.unknownActor");
+  const name = event.actorName || t("audit.unknownActor");
+  const actor = event.viaToken
+    ? t("audit.actorViaToken", { actor: name, token: event.viaToken })
+    : name;
   const changes = event.changes.map(changeText).join(", ");
 
   return (

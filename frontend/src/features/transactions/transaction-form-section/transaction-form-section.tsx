@@ -12,6 +12,7 @@ import type {
 } from "@/api/generated/model";
 import { EditModal, Modal } from "@/components/modal";
 import type { ReceiptCandidateSplit } from "@/features/transactions/receipt-reading/fill-from-receipt";
+import { SourceMark } from "@/features/transactions/source-mark/source-mark";
 import { TransactionAttachments } from "@/features/transactions/transaction-attachments/transaction-attachments";
 import {
   type TransactionDraft,
@@ -161,6 +162,7 @@ export function useTransactionFormSection({
       >
         {(transaction, close) => (
           <>
+            <SourceMark transaction={transaction} className="mb-4" />
             <TransactionForm
               accounts={accounts}
               categories={categories}

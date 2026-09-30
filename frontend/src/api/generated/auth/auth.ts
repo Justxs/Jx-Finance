@@ -2008,7 +2008,7 @@ export const getCreatePersonalApiTokenUrl = () => {
 };
 
 /**
- * Confirms the account password and creates a read-only token for scripts and spreadsheets. The token is returned once, in this response, and never again: only its public prefix and a hash of its secret are kept. Send it as Authorization: Bearer jxp_... to read what you read in the browser. It cannot write anything and cannot reach administration, sessions, tokens, settings, backups or attachments. The password counts toward the account lockout. Needs the ApiTokens feature switch. Rate limited to five attempts per five minutes.
+ * Confirms the account password and creates a token for scripts, spreadsheets and home automation. The token is returned once, in this response, and never again: only its public prefix and a hash of its secret are kept. Send it as Authorization: Bearer jxp_... to read what you read in the browser. A read-and-write token can also record, change and delete transactions and transfers, set their category or tags in bulk and confirm recurring entries; it lives at most 90 days. No token reaches administration, sessions, tokens, settings, backups or attachments. The password counts toward the account lockout. Needs the ApiTokens feature switch. Rate limited to five attempts per five minutes.
  * @summary Create a personal API token
  */
 export const createPersonalApiToken = async (

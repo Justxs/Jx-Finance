@@ -31,6 +31,11 @@ export const Default: Story = {
       canvas.getByText(/imported Swedbank CSV into Bendra sąskaita, 42 entries/u),
     ).toBeVisible();
     await expect(canvas.getByText(/edited in bulk: Category set to Maistas/u)).toBeVisible();
+    await expect(
+      canvas.getByText(
+        `${memberUser.displayName}, through Home Assistant, deleted Pervedimas į santaupas, 200.00 EUR`,
+      ),
+    ).toBeVisible();
     await expect(canvas.getAllByRole("listitem")).toHaveLength(10);
     await expect(canvas.getByText(`1–10 of ${householdAuditEvents.length}`)).toBeVisible();
   },
@@ -46,6 +51,9 @@ export const Lithuanian: Story = {
     ).toBeVisible();
     await expect(
       canvas.getByText("suma 40.00 EUR → 42.18 EUR, kategorija Maistas → Maisto prekės"),
+    ).toBeVisible();
+    await expect(
+      canvas.getByText(/^Šarūnas Kazlauskas, per Home Assistant, ištrynė/u),
     ).toBeVisible();
   },
 };

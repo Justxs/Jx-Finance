@@ -9,6 +9,18 @@ namespace JxFinance.Common.Middleware;
 
 public sealed class PersonalApiTokenGateMiddleware(RequestDelegate next, IInstanceSettingsStore settings)
 {
+    public static readonly DomainError ReadOnlyToken = new(
+        ErrorCodes.TokenNotAllowed,
+        "This token can only read; create a read-and-write token to record entries.");
+
+    public static readonly DomainError NotReadable = new(
+        ErrorCodes.TokenNotAllowed,
+        "A personal API token can only read the ledger; this route needs a browser session.");
+
+    public static readonly DomainError NotWritable = new(
+        ErrorCodes.TokenNotAllowed,
+        "API tokens cannot use this route; it needs a browser session.");
+
     public async Task InvokeAsync(HttpContext context)
     {
         if (!PersonalApiTokenFormat.IsBearerToken(context.Request.Headers.Authorization))
@@ -31,14 +43,28 @@ public sealed class PersonalApiTokenGateMiddleware(RequestDelegate next, IInstan
             return;
         }
 
-        if (!HttpMethods.IsGet(context.Request.Method) || !TokenReadable.Allows(context.GetEndpoint()?.Metadata))
+        var canWrite = context.User.HasClaim(AuthClaims.TokenAccess, nameof(TokenAccess.ReadWrite));
+        if (Refusal(context.Request.Method, canWrite, context.GetEndpoint()?.Metadata) is { } refusal)
         {
-            await ProblemResponses.WriteAsync(
-                context,
-                new DomainError(ErrorCodes.TokenNotAllowed, "A personal API token can only read the ledger; this route needs a browser session."));
+            await ProblemResponses.WriteAsync(context, refusal);
             return;
         }
 
         await next(context);
+    }
+
+    public static DomainError? Refusal(string method, bool canWrite, IEnumerable<object>? metadata)
+    {
+        if (HttpMethods.IsGet(method))
+        {
+            return TokenReadable.Allows(metadata) ? null : NotReadable;
+        }
+
+        if (!TokenWritable.Allows(metadata))
+        {
+            return NotWritable;
+        }
+
+        return canWrite ? null : ReadOnlyToken;
     }
 }

@@ -26,6 +26,7 @@ The feature table in [docs/features/README.md](docs/features/README.md) maps eve
 - `frontend/src/{features,components,components/ui,routes,lib,stores,locales,storybook}`: one folder per component, holding its story; `locales/en` and `locales/lt` must match.
 - Generated, never edited by hand: `frontend/openapi.json`, `frontend/src/api/generated/`, `frontend/src/api/schemas/`, `frontend/src/route-tree.gen.ts`, `backend/JxFinance.Api/Infrastructure/Data/Migrations/`.
 - `scripts/`: Node and PowerShell helpers behind the `justfile` recipes.
+- `tools/jx-mcp/`: the read-only MCP server, a separate Node package with its own `package.json`, tests (`nub run test`) and build, outside the frontend build and lint.
 
 ## Commands
 

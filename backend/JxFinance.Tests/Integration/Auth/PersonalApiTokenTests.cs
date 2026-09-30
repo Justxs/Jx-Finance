@@ -77,7 +77,7 @@ public sealed class PersonalApiTokenTests(ApiFixture fixture) : IntegrationTestB
         using var client = await LoginAsync(user);
         for (var i = 0; i < PersonalApiToken.MaxActivePerUser; i++)
         {
-            await IssueAsync(user.Id);
+            await IssueTokenAsync(user.Id);
         }
 
         await AssertProblemAsync(await CreateAsync(client, user.Password, "Eleventh", 90), HttpStatusCode.Conflict, "token.limitReached");
@@ -98,7 +98,7 @@ public sealed class PersonalApiTokenTests(ApiFixture fixture) : IntegrationTestB
         var other = await CreateUserAsync();
         using var ownerClient = await LoginAsync(owner);
         using var otherClient = await LoginAsync(other);
-        var (id, token) = await IssueAsync(owner.Id);
+        var (id, token) = await IssueTokenAsync(owner.Id);
         using var script = TokenClient(token);
         Assert.Equal(HttpStatusCode.OK, (await script.GetAsync("/api/accounts", TestContext.Current.CancellationToken)).StatusCode);
 
@@ -118,7 +118,7 @@ public sealed class PersonalApiTokenTests(ApiFixture fixture) : IntegrationTestB
         var shared = await CreateAccountAsync(householdId: pair.HouseholdId, client: pair.OwnerClient);
         await CreateTransactionAsync(pair.OwnerClient, personal, null, "expense", "12.50", "2026-07-01", "Personal lunch");
         await CreateTransactionAsync(pair.OwnerClient, shared, null, "expense", "40.00", "2026-07-02", "Shared groceries");
-        var (_, token) = await IssueAsync(pair.Owner.Id);
+        var (_, token) = await IssueTokenAsync(pair.Owner.Id);
         using var script = TokenClient(token);
 
         foreach (var household in new Guid?[] { null, pair.HouseholdId })
@@ -142,7 +142,7 @@ public sealed class PersonalApiTokenTests(ApiFixture fixture) : IntegrationTestB
     {
         await using var on = await ApiTokensOnAsync();
         var admin = await CreateUserAsync("Admin");
-        var (_, token) = await IssueAsync(admin.Id);
+        var (_, token) = await IssueTokenAsync(admin.Id);
         using var script = TokenClient(token);
 
         var refused = new (HttpMethod Method, string Url)[]
@@ -199,7 +199,7 @@ public sealed class PersonalApiTokenTests(ApiFixture fixture) : IntegrationTestB
                 if (sent++ % 50 == 0)
                 {
                     script?.Dispose();
-                    script = TokenClient((await IssueAsync(user.Id)).Token);
+                    script = TokenClient((await IssueTokenAsync(user.Id)).Token);
                 }
 
                 var route = $"{operation.Name.ToUpperInvariant()} {path.Name}";
@@ -211,7 +211,7 @@ public sealed class PersonalApiTokenTests(ApiFixture fixture) : IntegrationTestB
                 var response = await script!.SendAsync(request, TestContext.Current.CancellationToken);
                 var body = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
                 var notAllowed = response.StatusCode == HttpStatusCode.Forbidden && body.Contains("\"token.notAllowed\"", StringComparison.Ordinal);
-                if (AcceptsToken(operation.Value) || route == "GET /api/ping")
+                if ((operation.Name == "get" && AcceptsToken(operation.Value)) || route == "GET /api/ping")
                 {
                     readable++;
                     if (notAllowed || response.StatusCode is HttpStatusCode.Unauthorized or HttpStatusCode.TooManyRequests)
@@ -237,9 +237,9 @@ public sealed class PersonalApiTokenTests(ApiFixture fixture) : IntegrationTestB
     {
         await using var on = await ApiTokensOnAsync();
         var user = await CreateUserAsync();
-        var (_, expired) = await IssueAsync(user.Id, DateTimeOffset.UtcNow.AddSeconds(-1));
+        var (_, expired) = await IssueTokenAsync(user.Id, DateTimeOffset.UtcNow.AddSeconds(-1));
         var unknown = PersonalApiTokenFormat.Issue().Token;
-        var (_, live) = await IssueAsync(user.Id);
+        var (_, live) = await IssueTokenAsync(user.Id);
         var tampered = live[..^2] + (live[^2] == 'A' ? "BA" : "AA");
 
         foreach (var token in new[] { expired, unknown, tampered, "jxp_short", "jxp_ABCDEFGH_not-base64url!" })
@@ -255,8 +255,8 @@ public sealed class PersonalApiTokenTests(ApiFixture fixture) : IntegrationTestB
     {
         await using var on = await ApiTokensOnAsync();
         var user = await CreateUserAsync();
-        var (_, token) = await IssueAsync(user.Id);
-        await IssueAsync(user.Id);
+        var (_, token) = await IssueTokenAsync(user.Id);
+        await IssueTokenAsync(user.Id);
 
         (await Client.PostAsync($"/api/users/{user.Id}/deactivate", null, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
 
@@ -273,7 +273,7 @@ public sealed class PersonalApiTokenTests(ApiFixture fixture) : IntegrationTestB
         await using var on = await ApiTokensOnAsync();
         var user = await CreateUserAsync();
         using var client = await LoginAsync(user);
-        var (_, token) = await IssueAsync(user.Id);
+        var (_, token) = await IssueTokenAsync(user.Id);
         using var script = TokenClient(token);
 
         var change = await client.PutAsJsonAsync(
@@ -297,7 +297,7 @@ public sealed class PersonalApiTokenTests(ApiFixture fixture) : IntegrationTestB
     public async Task The_recovery_command_deletes_the_tokens_of_the_administrator()
     {
         var admin = await CreateUserAsync("Admin");
-        await IssueAsync(admin.Id);
+        await IssueTokenAsync(admin.Id);
 
         await using (var scope = Services.CreateAsyncScope())
         {
@@ -313,7 +313,7 @@ public sealed class PersonalApiTokenTests(ApiFixture fixture) : IntegrationTestB
     {
         var user = await CreateUserAsync();
         using var client = await LoginAsync(user);
-        var (_, token) = await IssueAsync(user.Id);
+        var (_, token) = await IssueTokenAsync(user.Id);
         using var script = TokenClient(token);
 
         await AssertProblemAsync(await script.GetAsync("/api/accounts", TestContext.Current.CancellationToken), HttpStatusCode.NotFound, "feature.disabled");
@@ -334,7 +334,7 @@ public sealed class PersonalApiTokenTests(ApiFixture fixture) : IntegrationTestB
     {
         await using var on = await ApiTokensOnAsync();
         var user = await CreateUserAsync();
-        using var script = TokenClient((await IssueAsync(user.Id)).Token);
+        using var script = TokenClient((await IssueTokenAsync(user.Id)).Token);
         using var cookie = await LoginAsync(user);
 
         for (var i = 0; i < 60; i++)
@@ -351,7 +351,7 @@ public sealed class PersonalApiTokenTests(ApiFixture fixture) : IntegrationTestB
             Assert.Equal(HttpStatusCode.OK, (await cookie.GetAsync("/api/ping", TestContext.Current.CancellationToken)).StatusCode);
         }
 
-        using var second = TokenClient((await IssueAsync(user.Id)).Token);
+        using var second = TokenClient((await IssueTokenAsync(user.Id)).Token);
         Assert.Equal(HttpStatusCode.OK, (await second.GetAsync("/api/accounts", TestContext.Current.CancellationToken)).StatusCode);
     }
 
@@ -360,7 +360,7 @@ public sealed class PersonalApiTokenTests(ApiFixture fixture) : IntegrationTestB
     {
         await using var on = await ApiTokensOnAsync();
         var user = await CreateUserAsync();
-        var (id, token) = await IssueAsync(user.Id);
+        var (id, token) = await IssueTokenAsync(user.Id);
         using var script = TokenClient(token);
 
         Assert.Equal(HttpStatusCode.OK, (await script.GetAsync("/api/accounts", TestContext.Current.CancellationToken)).StatusCode);
@@ -387,7 +387,7 @@ public sealed class PersonalApiTokenTests(ApiFixture fixture) : IntegrationTestB
         await CreateAccountAsync(client: ownerBrowser);
         using var browser = await LoginAsync(browserUser);
         await CreateAccountAsync(client: browser);
-        var (_, token) = await IssueAsync(owner.Id);
+        var (_, token) = await IssueTokenAsync(owner.Id);
         using var script = TokenClient(token);
         var ownerAccounts = await script.GetStringAsync("/api/accounts", TestContext.Current.CancellationToken);
         browser.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
@@ -401,37 +401,6 @@ public sealed class PersonalApiTokenTests(ApiFixture fixture) : IntegrationTestB
 
         browser.DefaultRequestHeaders.Authorization = null;
         Assert.Equal(HttpStatusCode.OK, (await browser.GetAsync("/api/users", TestContext.Current.CancellationToken)).StatusCode);
-    }
-
-    private Task<IAsyncDisposable> ApiTokensOnAsync() =>
-        OverrideSettingsAsync(settings => settings["features"]!["apiTokens"] = true);
-
-    private HttpClient TokenClient(string token)
-    {
-        var client = CreateClient(handleCookies: false);
-        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-        return client;
-    }
-
-    private async Task<(Guid Id, string Token)> IssueAsync(Guid userId, DateTimeOffset? expiresAt = null)
-    {
-        var issued = PersonalApiTokenFormat.Issue();
-        var token = new PersonalApiToken
-        {
-            Id = Guid.NewGuid(),
-            UserId = userId,
-            Name = "Seeded",
-            Prefix = issued.Prefix,
-            SecretHash = issued.SecretHash,
-            CreatedAt = DateTimeOffset.UtcNow,
-            ExpiresAt = expiresAt ?? DateTimeOffset.UtcNow.AddDays(30),
-        };
-        await WithDbAsync(async db =>
-        {
-            db.PersonalApiTokens.Add(token);
-            await db.SaveChangesAsync(TestContext.Current.CancellationToken);
-        });
-        return (token.Id, issued.Token);
     }
 
     private static Task<HttpResponseMessage> CreateAsync(HttpClient client, string password, string name, int expiresInDays) =>

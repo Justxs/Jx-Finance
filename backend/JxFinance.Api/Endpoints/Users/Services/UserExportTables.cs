@@ -56,6 +56,7 @@ public static class UserExportTables
         ["AspNetUserTokens"] = new Excluded("authenticator key and recovery codes"),
         ["AspNetUserPasskeys"] = new Excluded("passkey credentials"),
         ["PersonalApiTokens"] = new Excluded("API token hashes"),
+        ["ApiIdempotencyKeys"] = new Excluded("retry keys of API tokens"),
         ["UserSessions"] = new Excluded("sessions"),
         ["DiscordWebhooks"] = new Excluded("the Discord webhook URL is a secret"),
         ["DiscordMessages"] = new Excluded("outbox"),

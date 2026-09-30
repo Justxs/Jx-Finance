@@ -177,7 +177,7 @@ public sealed class ImportPreviewService(
         var to = dates.Max().AddDays(ManualEntryMatcher.MaxDays);
         var candidates = await db.Transactions
             .Where(t => t.AccountId == accountId
-                && t.Source == TransactionSource.Manual
+                && t.Source != TransactionSource.Imported
                 && t.ImportRef == null
                 && t.Date >= from
                 && t.Date <= to)

@@ -49,6 +49,7 @@ public static class ErrorCodes
     public const string TokenNotAllowed = "token.notAllowed";
     public const string TokenLimitReached = "token.limitReached";
     public const string TokenRateLimited = "token.rateLimited";
+    public const string IdempotencyKeyReused = "idempotency.keyReused";
     public const string SetupAlreadyCompleted = "setup.alreadyCompleted";
     public const string FeatureDisabled = "feature.disabled";
     public const string UserSelfChange = "user.selfChange";
@@ -166,7 +167,7 @@ public static class ErrorCodes
         ConflictDuplicate or ConflictStale or ConflictBusy or SetupAlreadyCompleted or RestoreSlotTaken
             or RestoreNameTaken or AttachmentLimitReached or MonthCloseNotEnded or DebtPaymentTaken or PasskeyLimitReached
             or TokenLimitReached or SettleUpAlreadySplit or SettleUpTransferTaken or TwoFactorAlreadyEnabled
-            or ImportAlreadyPresent => StatusCodes.Status409Conflict,
+            or ImportAlreadyPresent or IdempotencyKeyReused => StatusCodes.Status409Conflict,
         AccessForbidden or UserSelfChange or UserLastAdministrator or SecurityNotHeld or SessionCurrent
             or TokenNotAllowed => StatusCodes.Status403Forbidden,
         CredentialsInvalid or TokenInvalid or TwoFactorInvalidCode => StatusCodes.Status401Unauthorized,

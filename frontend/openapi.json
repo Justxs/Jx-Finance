@@ -3370,7 +3370,7 @@
           "Auth"
         ],
         "summary": "Create a personal API token",
-        "description": "Confirms the account password and creates a read-only token for scripts and spreadsheets. The token is returned once, in this response, and never again: only its public prefix and a hash of its secret are kept. Send it as Authorization: Bearer jxp_... to read what you read in the browser. It cannot write anything and cannot reach administration, sessions, tokens, settings, backups or attachments. The password counts toward the account lockout. Needs the ApiTokens feature switch. Rate limited to five attempts per five minutes.",
+        "description": "Confirms the account password and creates a token for scripts, spreadsheets and home automation. The token is returned once, in this response, and never again: only its public prefix and a hash of its secret are kept. Send it as Authorization: Bearer jxp_... to read what you read in the browser. A read-and-write token can also record, change and delete transactions and transfers, set their category or tags in bulk and confirm recurring entries; it lives at most 90 days. No token reaches administration, sessions, tokens, settings, backups or attachments. The password counts toward the account lockout. Needs the ApiTokens feature switch. Rate limited to five attempts per five minutes.",
         "operationId": "CreatePersonalApiToken",
         "requestBody": {
           "content": {
@@ -3381,7 +3381,8 @@
               "example": {
                 "name": "Monthly spreadsheet",
                 "expiresInDays": 90,
-                "password": "correct horse battery staple"
+                "password": "correct horse battery staple",
+                "access": "read"
               }
             }
           },
@@ -13681,6 +13682,9 @@
         "security": [
           {
             "Cookie": [ ]
+          },
+          {
+            "PersonalApiToken": [ ]
           }
         ]
       }
@@ -15072,6 +15076,9 @@
         "security": [
           {
             "Cookie": [ ]
+          },
+          {
+            "PersonalApiToken": [ ]
           }
         ]
       },
@@ -15395,6 +15402,9 @@
         "security": [
           {
             "Cookie": [ ]
+          },
+          {
+            "PersonalApiToken": [ ]
           }
         ]
       }
@@ -15480,6 +15490,9 @@
         "security": [
           {
             "Cookie": [ ]
+          },
+          {
+            "PersonalApiToken": [ ]
           }
         ]
       }
@@ -16241,6 +16254,9 @@
         "security": [
           {
             "Cookie": [ ]
+          },
+          {
+            "PersonalApiToken": [ ]
           }
         ]
       },
@@ -16422,6 +16438,9 @@
         "security": [
           {
             "Cookie": [ ]
+          },
+          {
+            "PersonalApiToken": [ ]
           }
         ]
       }
@@ -16820,6 +16839,9 @@
         "security": [
           {
             "Cookie": [ ]
+          },
+          {
+            "PersonalApiToken": [ ]
           }
         ]
       },
@@ -16983,6 +17005,9 @@
         "security": [
           {
             "Cookie": [ ]
+          },
+          {
+            "PersonalApiToken": [ ]
           }
         ]
       },
@@ -17091,6 +17116,9 @@
         "security": [
           {
             "Cookie": [ ]
+          },
+          {
+            "PersonalApiToken": [ ]
           }
         ]
       }
@@ -19325,6 +19353,7 @@
           "occurredAt",
           "actorUserId",
           "actorName",
+          "viaToken",
           "action",
           "entityKind",
           "entityId",
@@ -19348,6 +19377,12 @@
           },
           "actorName": {
             "type": "string"
+          },
+          "viaToken": {
+            "type": [
+              "null",
+              "string"
+            ]
           },
           "action": {
             "$ref": "#/components/schemas/AuditAction"
@@ -21289,7 +21324,8 @@
         "required": [
           "name",
           "expiresInDays",
-          "password"
+          "password",
+          "access"
         ],
         "type": "object",
         "properties": {
@@ -21304,7 +21340,7 @@
             "maximum": 365,
             "minimum": 1,
             "type": "integer",
-            "description": "Days until the token stops working, from 1 to 365.",
+            "description": "Days until the token stops working, from 1 to 365, at most 90 for a read-and-write token.",
             "format": "int32",
             "example": 90
           },
@@ -21313,12 +21349,16 @@
             "type": "string",
             "description": "The account password.",
             "example": "correct horse battery staple"
+          },
+          "access": {
+            "$ref": "#/components/schemas/TokenAccess"
           }
         },
         "example": {
           "name": "Monthly spreadsheet",
           "expiresInDays": 90,
-          "password": "correct horse battery staple"
+          "password": "correct horse battery staple",
+          "access": "read"
         }
       },
       "CreateRecurringBillRequest": {
@@ -22800,6 +22840,7 @@
           "household.required",
           "household.scopeMismatch",
           "iban.invalid",
+          "idempotency.keyReused",
           "import.alreadyPresent",
           "import.entryMismatch",
           "import.invalidDateFormat",
@@ -25548,6 +25589,7 @@
           "id",
           "name",
           "prefix",
+          "access",
           "createdAt",
           "expiresAt",
           "lastUsedAt",
@@ -25564,6 +25606,9 @@
           },
           "prefix": {
             "type": "string"
+          },
+          "access": {
+            "$ref": "#/components/schemas/TokenAccess"
           },
           "createdAt": {
             "type": "string",
@@ -28271,6 +28316,14 @@
           }
         }
       },
+      "TokenAccess": {
+        "enum": [
+          "read",
+          "readWrite"
+        ],
+        "type": "string",
+        "description": "What the token may do: read, or readWrite to record entries as well."
+      },
       "TransactionDebtPaymentResponse": {
         "required": [
           "id",
@@ -28599,7 +28652,8 @@
       "TransactionSource": {
         "enum": [
           "manual",
-          "imported"
+          "imported",
+          "api"
         ],
         "type": "string"
       },
@@ -30556,7 +30610,7 @@
       },
       "PersonalApiToken": {
         "type": "http",
-        "description": "Read-only personal API token (jxp_...) created in Settings > Personal > Security. Accepted only on the GET operations that list it, while the ApiTokens feature is on; anything else answers 403 token.notAllowed. At most 60 requests a minute per token.",
+        "description": "Personal API token (jxp_...) created in Settings > Personal > Security. Accepted only on the operations that list it, while the ApiTokens feature is on: every token on the GET operations, a read-and-write token also on the writes. Anything else answers 403 token.notAllowed. A POST may carry Idempotency-Key (1 to 64 visible characters) so a retry within 24 hours returns the first answer. At most 60 requests a minute per token.",
         "scheme": "bearer"
       }
     }

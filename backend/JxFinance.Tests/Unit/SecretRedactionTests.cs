@@ -104,7 +104,7 @@ public sealed partial class SecretRedactionTests
 
     private static string Marker(PropertyInfo property) => $"marker-{property.Name}-7f3a";
 
-    [GeneratedRegex("Password|Token|Secret|SharedKey|ApiKey|AuthenticatorUri|TwoFactorCode|Webhook|Credential")]
+    [GeneratedRegex("Password|(?<!Via)Token|Secret|SharedKey|ApiKey|AuthenticatorUri|TwoFactorCode|Webhook|Credential")]
     private static partial Regex SecretName();
 
     [GeneratedRegex("SigningKey$|^PasskeyState$")]

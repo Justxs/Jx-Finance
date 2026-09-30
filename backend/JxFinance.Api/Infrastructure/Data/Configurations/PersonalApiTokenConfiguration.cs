@@ -11,6 +11,7 @@ public sealed class PersonalApiTokenConfiguration : IEntityTypeConfiguration<Per
         builder.Property(t => t.Name).HasMaxLength(PersonalApiToken.NameMaxLength);
         builder.Property(t => t.Prefix).HasMaxLength(PersonalApiTokenFormat.PrefixLength).IsFixedLength();
         builder.Property(t => t.SecretHash).HasMaxLength(PersonalApiTokenFormat.HashLength).IsFixedLength();
+        builder.Property(t => t.Access).HasConversion<string>().HasMaxLength(20).HasDefaultValue(TokenAccess.Read);
         builder.HasIndex(t => t.Prefix).IsUnique();
         builder.HasOne<AppUser>().WithMany().HasForeignKey(t => t.UserId).OnDelete(DeleteBehavior.Cascade);
     }

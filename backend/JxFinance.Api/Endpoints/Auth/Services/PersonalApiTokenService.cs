@@ -31,7 +31,7 @@ public sealed class PersonalApiTokenService(
             .AsNoTracking()
             .Where(t => t.UserId == userId)
             .OrderByDescending(t => t.CreatedAt)
-            .Select(t => new PersonalApiTokenResponse(t.Id, t.Name, t.Prefix, t.CreatedAt, t.ExpiresAt, t.LastUsedAt, t.ExpiresAt <= now))
+            .Select(t => new PersonalApiTokenResponse(t.Id, t.Name, t.Prefix, t.Access, t.CreatedAt, t.ExpiresAt, t.LastUsedAt, t.ExpiresAt <= now))
             .ToListAsync(cancellationToken);
     }
 
@@ -60,6 +60,7 @@ public sealed class PersonalApiTokenService(
             Name = request.Name.Trim(),
             Prefix = issued.Prefix,
             SecretHash = issued.SecretHash,
+            Access = request.Access,
             CreatedAt = now,
             ExpiresAt = now.AddDays(request.ExpiresInDays),
         };

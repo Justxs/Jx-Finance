@@ -196,6 +196,42 @@ public abstract class IntegrationTestBase(ApiFixture fixture)
         return new SettingsOverride(() => SaveSettingsAsync(original));
     }
 
+    protected Task<IAsyncDisposable> ApiTokensOnAsync() =>
+        OverrideSettingsAsync(settings => settings["features"]!["apiTokens"] = true);
+
+    protected HttpClient TokenClient(string token)
+    {
+        var client = CreateClient(handleCookies: false);
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        return client;
+    }
+
+    protected async Task<(Guid Id, string Token)> IssueTokenAsync(
+        Guid userId,
+        DateTimeOffset? expiresAt = null,
+        TokenAccess access = TokenAccess.Read,
+        string name = "Seeded")
+    {
+        var issued = PersonalApiTokenFormat.Issue();
+        var token = new PersonalApiToken
+        {
+            Id = Guid.NewGuid(),
+            UserId = userId,
+            Name = name,
+            Prefix = issued.Prefix,
+            SecretHash = issued.SecretHash,
+            Access = access,
+            CreatedAt = DateTimeOffset.UtcNow,
+            ExpiresAt = expiresAt ?? DateTimeOffset.UtcNow.AddDays(30),
+        };
+        await WithDbAsync(async db =>
+        {
+            db.PersonalApiTokens.Add(token);
+            await db.SaveChangesAsync(TestContext.Current.CancellationToken);
+        });
+        return (token.Id, issued.Token);
+    }
+
     protected Task<IAsyncDisposable> FeatureOffAsync(string feature) =>
         OverrideSettingsAsync(settings => settings["features"]![feature] = false);
 

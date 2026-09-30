@@ -1,0 +1,19 @@
+[
+  {
+    "id": "b1d3f5a7-2c4e-4b6d-8f0a-1c3e5a7b9d01",
+    "categoryId": "c2d4e6f8-1a3b-4c5d-8e7f-9a0b1c2d3e01",
+    "tagId": null,
+    "name": "Groceries",
+    "limitAmount": "450.00",
+    "carriedAmount": "0.00",
+    "effectiveLimit": "450.00",
+    "spent": "412.18",
+    "remaining": "37.82",
+    "period": "monthly",
+    "rolloverEnabled": false,
+    "windowStart": "2026-09-01",
+    "windowEnd": "2026-09-30",
+    "scope": "personal",
+    "householdId": null
+  }
+]

@@ -40,7 +40,7 @@ flowchart LR
     E --> Rates["Rates from the day after the newest stored rate,<br/>or the last 30 days; prunes ExchangeRateFetchLog"]
     B --> Imp["ImportAsync per enabled connection, failures isolated;<br/>each statement is one audit row for the owner"]
     Q --> Prices["Missing closing prices of held, mapped securities<br/>from EODHD and Kraken, within the daily call limit"]
-    L --> Prune["five steps: AuditEvents over 400 days,<br/>expired and revoked UserSessions,<br/>API tokens expired over 30 days ago,<br/>records soft-deleted over 30 days ago,<br/>then the DeletionEntries that described them"]
+    L --> Prune["six steps: AuditEvents over 400 days,<br/>expired and revoked UserSessions,<br/>API tokens expired over 30 days ago,<br/>API retry keys over a day old,<br/>records soft-deleted over 30 days ago,<br/>then the DeletionEntries that described them"]
     P --> Purge["deletes attachments deleted over 30 days ago, their files,<br/>and files no row refers to after an hour"]
 ```
 
@@ -75,6 +75,7 @@ Every job runs outside a request and therefore outside the active-household scop
 | Read notifications | `Notifications` that are read and older than the window, for every user; unread ones stay. The reminder and month jobs only deduplicate within their own short windows; the unusual-amount job could flag a row again only if that row is re-checked more than 180 days after it was flagged and read | `Notification.ReadRetentionDays`, 180 days |
 | Sessions | `UserSessions` that have expired, and ones whose `SecurityStamp` no longer matches their user's, which is what "revoked" means for a session | none; the row is already dead |
 | API tokens | `PersonalApiTokens` by `ExpiresAt`, in one `ExecuteDelete`; an expired token stays listed, marked Expired, until then | `PersonalApiToken.KeptAfterExpiry`, 30 days after expiry |
+| API retry keys | `ApiIdempotencyKeys` by `CreatedAt`, in one `ExecuteDelete`; the middleware already ignores a key older than a day, so this only keeps the table small | `ApiIdempotencyKey.Lifetime`, 24 hours |
 | Deleted records | the rows of the thirteen trash kinds listed in `Retention.PurgedKinds`, whose `IsDeleted` is true and whose `UpdatedAt` is before the window | `DeletionEntry.RetentionDays`, 30 days |
 | Trash entries | `DeletionEntries` by `DeletedAt`, and their `DeletionChanges` through the cascading foreign key | the same 30 days |
 | Attachments and receipt readings | Formerly `AttachmentPurgeJob`, now steps of this job after the record purge. It hard-deletes the row and then the file of every attachment deleted, or whose transaction was deleted, more than 30 days ago, and removes files, `.tmp` files and restore staging folders that no row refers to once they are an hour old, so an upload or a restore still in progress is never swept. Its last step deletes receipt readings older than 24 hours that failed or whose file hash no attachment row carries any more, see [Receipt reading](receipt-reading.md#retention). It is the only job that removes something a person put into the ledger, see [Attachments](attachments.md) | `DeletionEntry.RetentionDays`, 30 days; readings after `ReceiptReading.UnattachedLifetime` |

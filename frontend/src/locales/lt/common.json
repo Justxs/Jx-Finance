@@ -514,6 +514,7 @@
     "recordRefund": "Įrašyti grąžinimą",
     "refundOf": "Grąžinimas už {{description}}, {{date}}",
     "refundOfShow": "Rodyti pirkinį, už kurį grąžinta",
+    "sourceApi": "Pridėta per API",
     "refundOfClear": "Atsieti pirkinį",
     "refunded": "Grąžinta {{amount}}",
     "refundedHint": "Šį pirkinį nurodantys grąžinimai iš viso sudaro {{amount}}.",
@@ -897,7 +898,7 @@
     },
     "apiTokens": {
       "title": "Asmeniniai API raktai",
-      "description": "Leiskite savo kompiuterio scenarijui ar skaičiuoklei skaityti tai, ką matote čia. Raktu galima tik skaityti: jis nieko nekeičia ir niekada nepasiekia nustatymų, atsarginių kopijų, priedų ar administravimo.",
+      "description": "Leiskite savo kompiuterio scenarijui, skaičiuoklei ar namų automatikai skaityti tai, ką matote čia, o jei leisite, ir įrašyti operacijas. Joks raktas niekada nepasiekia nustatymų, atsarginių kopijų, priedų ar administravimo.",
       "empty": "Raktų dar nėra.",
       "create": "Sukurti raktą",
       "createTitle": "Sukurti asmeninį API raktą",
@@ -924,7 +925,15 @@
       "revoke": "Atšaukti",
       "revokeTitle": "Atšaukti šį raktą?",
       "revokeDescription": "Jį naudojantys scenarijai ir skaičiuoklės iškart nustos veikti.",
-      "revoked": "Raktas atšauktas"
+      "revoked": "Raktas atšauktas",
+      "access": {
+        "label": "Prieiga",
+        "read": "Tik skaityti",
+        "readWrite": "Skaityti ir rašyti",
+        "badgeRead": "Tik skaityti",
+        "badgeReadWrite": "Skaityti ir rašyti",
+        "readWriteSummary": "Šiuo raktu taip pat galima pridėti, keisti ir trinti operacijas bei pervedimus, keisti jų kategoriją ar žymas iš karto keliems įrašams ir patvirtinti pasikartojančius įrašus. Jis galioja ne ilgiau kaip 90 dienų."
+      }
     },
     "emailUnconfirmedTitle": "Patvirtinkite el. pašto adresą",
     "emailUnconfirmedBody": "Adresas {{email}} dar nepatvirtintas, todėl į jį nesiunčiami jokie laiškai. Kitos funkcijos neribojamos.",
@@ -1045,7 +1054,7 @@
         },
         "apiTokens": {
           "name": "Asmeniniai API raktai",
-          "hint": "Nariai gali kurti tik skaitymo raktus savo scenarijams ir skaičiuoklėms. Išjungus visi raktai sustabdomi, kol funkcija vėl įjungiama."
+          "hint": "Nariai gali kurti raktus savo scenarijams, skaičiuoklėms ir namų automatikai: tik skaitymui arba ir įrašams. Išjungus visi raktai sustabdomi, kol funkcija vėl įjungiama."
         }
       }
     },
@@ -2096,6 +2105,7 @@
     "empty": "Šiame namų ūkyje dar nieko neįvyko.",
     "emptyFiltered": "Pagal šiuos filtrus veiklos nerasta.",
     "unknownActor": "Buvęs naudotojas",
+    "actorViaToken": "{{actor}}, per {{token}},",
     "none": "nėra",
     "change": "{{field}} {{from}} → {{to}}",
     "filters": {
@@ -2695,6 +2705,9 @@
       "scopeMismatch": "Užklausoje nurodyti du skirtingi namų ūkiai. Perkraukite puslapį ir bandykite dar kartą.",
       "referenceNotShared": "Bendras įrašas gali naudoti tik su tuo pačiu namų ūkiu bendrinamas sąskaitas, kategorijas, žymes ir skolas."
     },
+    "idempotency": {
+      "keyReused": "Šis pakartojimo raktas jau panaudotas kitai užklausai. Siųskite naują raktą."
+    },
     "iban": {
       "invalid": "Įveskite galiojantį IBAN, pvz., LT12 1000 0111 0100 1000."
     },
@@ -2817,7 +2830,7 @@
     },
     "token": {
       "invalid": "API raktas nepateiktas, nebegalioja arba atšauktas.",
-      "notAllowed": "API raktu galima tik skaityti apskaitą.",
+      "notAllowed": "Šiuo API raktu to padaryti negalima. Reikia naršyklės sesijos arba skaitymo ir rašymo rakto.",
       "limitReached": "Jau turite 10 raktų. Pirmiausia atšaukite vieną.",
       "rateLimited": "Per daug užklausų su šiuo raktu. Palaukite minutę."
     },

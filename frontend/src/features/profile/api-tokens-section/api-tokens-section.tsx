@@ -11,6 +11,7 @@ import {
 import type {
   CreatedPersonalApiTokenResponse,
   PersonalApiTokenResponse,
+  TokenAccess,
 } from "@/api/generated/model";
 import { createPersonalApiTokenBodyNameMax } from "@/api/schemas/auth/auth.zod";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog/confirm-delete-dialog";
@@ -33,6 +34,13 @@ import { notify, silentMutation } from "@/lib/mutations";
 import { requiredText, requiredValue } from "@/lib/validation";
 
 const expiryOptions = ["30", "90", "365"] as const;
+const writableExpiryOptions = ["30", "90"] as const;
+const accessOptions = ["read", "readWrite"] as const satisfies readonly TokenAccess[];
+const initialAccess: TokenAccess = "read";
+
+function expiryChoices(access: TokenAccess) {
+  return access === "readWrite" ? writableExpiryOptions : expiryOptions;
+}
 
 interface RowProps {
   token: PersonalApiTokenResponse;
@@ -63,6 +71,13 @@ function TokenRow({ token, pending, disabled, onRevoke }: Readonly<RowProps>) {
           <span className="font-mono text-xs font-normal text-muted-foreground">
             jxp_{token.prefix}…
           </span>
+          <Tag>
+            {t(
+              token.access === "readWrite"
+                ? "profile.apiTokens.access.badgeReadWrite"
+                : "profile.apiTokens.access.badgeRead",
+            )}
+          </Tag>
           {token.isExpired ? <Tag>{t("profile.apiTokens.expiredTag")}</Tag> : null}
         </>
       }
@@ -123,8 +138,13 @@ function TokenList() {
 
 function CreatedToken({
   created,
+  access,
   onDone,
-}: Readonly<{ created: CreatedPersonalApiTokenResponse; onDone: () => void }>) {
+}: Readonly<{
+  created: CreatedPersonalApiTokenResponse;
+  access: TokenAccess | undefined;
+  onDone: () => void;
+}>) {
   const { t } = useTranslation();
 
   function copy() {
@@ -152,6 +172,11 @@ function CreatedToken({
           </Button>
         </div>
       </div>
+      {access === "readWrite" ? (
+        <p className="text-sm text-muted-foreground">
+          {t("profile.apiTokens.access.readWriteSummary")}
+        </p>
+      ) : null}
       <p className="text-sm font-medium">{t("profile.apiTokens.shownOnce")}</p>
       <div className="flex justify-end">
         <Button type="button" onClick={onDone}>
@@ -170,9 +195,10 @@ function CreateTokenForm({ onClose }: Readonly<{ onClose: () => void }>) {
   });
 
   const form = useServerForm({
-    defaultValues: { name: "", expiresInDays: "90", password: "" },
+    defaultValues: { name: "", access: initialAccess, expiresInDays: "90", password: "" },
     schema: z.object({
       name: requiredText(t, createPersonalApiTokenBodyNameMax),
+      access: z.enum(accessOptions),
       expiresInDays: z.enum(expiryOptions),
       password: requiredValue(t),
     }),
@@ -182,12 +208,15 @@ function CreateTokenForm({ onClose }: Readonly<{ onClose: () => void }>) {
           name: value.name.trim(),
           expiresInDays: Number(value.expiresInDays),
           password: value.password,
+          access: value.access,
         },
       }),
   });
 
   if (created) {
-    return <CreatedToken created={created} onDone={onClose} />;
+    return (
+      <CreatedToken created={created} access={create.variables?.data.access} onDone={onClose} />
+    );
   }
 
   return (
@@ -203,18 +232,40 @@ function CreateTokenForm({ onClose }: Readonly<{ onClose: () => void }>) {
             />
           )}
         </form.Field>
-        <form.Field name="expiresInDays">
+        <form.Field name="access">
           {(field) => (
             <field.SelectFieldControl
-              id="api-token-expiry"
-              label={t("profile.apiTokens.expiry")}
-              options={expiryOptions.map((days) => ({
-                value: days,
-                label: t(`profile.apiTokens.expiryOptions.${days}`),
+              id="api-token-access"
+              kind="segments"
+              label={t("profile.apiTokens.access.label")}
+              options={accessOptions.map((access) => ({
+                value: access,
+                label: t(`profile.apiTokens.access.${access}`),
               }))}
+              onValueChange={(value) => {
+                if (value === "readWrite" && form.getFieldValue("expiresInDays") === "365") {
+                  form.setFieldValue("expiresInDays", "90");
+                }
+              }}
             />
           )}
         </form.Field>
+        <form.Subscribe selector={(state) => state.values.access}>
+          {(access) => (
+            <form.Field name="expiresInDays">
+              {(field) => (
+                <field.SelectFieldControl
+                  id="api-token-expiry"
+                  label={t("profile.apiTokens.expiry")}
+                  options={expiryChoices(access).map((days) => ({
+                    value: days,
+                    label: t(`profile.apiTokens.expiryOptions.${days}`),
+                  }))}
+                />
+              )}
+            </form.Field>
+          )}
+        </form.Subscribe>
         <form.Field name="password">
           {(field) => (
             <field.TextField

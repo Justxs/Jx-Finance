@@ -64,7 +64,7 @@ public sealed class TokenReadableTests
         "GET /api/transfers",
     ];
 
-    private static readonly string[] NeverReadablePrefixes =
+    internal static readonly string[] NeverReadablePrefixes =
     [
         ApiRoutes.AuthPath,
         ApiRoutes.UsersPath,

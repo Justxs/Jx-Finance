@@ -75,6 +75,18 @@ public sealed class RetentionTests
     }
 
     [Fact]
+    public async Task Pruning_idempotency_keys_deletes_the_ones_older_than_a_day()
+    {
+        await using var capture = new SqlCapture();
+
+        await Retention.PruneIdempotencyKeysAsync(capture.Db, Clock.UtcNow, TestContext.Current.CancellationToken);
+
+        var statement = capture.OnlyStatement;
+        Assert.Contains("DELETE FROM \"ApiIdempotencyKeys\"", statement, StringComparison.Ordinal);
+        Assert.Contains("\"CreatedAt\" < @", statement, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public async Task Pruning_notifications_deletes_only_old_read_ones_of_every_user()
     {
         await using var capture = new SqlCapture();

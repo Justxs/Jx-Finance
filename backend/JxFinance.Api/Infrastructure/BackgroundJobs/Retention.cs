@@ -66,6 +66,12 @@ internal static class Retention
         return db.PersonalApiTokens.Where(t => t.ExpiresAt < cutoff).ExecuteDeleteAsync(ct);
     }
 
+    internal static Task<int> PruneIdempotencyKeysAsync(AppDbContext db, DateTimeOffset now, CancellationToken ct)
+    {
+        var cutoff = now - ApiIdempotencyKey.Lifetime;
+        return db.ApiIdempotencyKeys.Where(k => k.CreatedAt < cutoff).ExecuteDeleteAsync(ct);
+    }
+
     internal static Task<int> PruneDeletionEntriesAsync(AppDbContext db, DateTimeOffset now, CancellationToken ct)
     {
         var cutoff = DeletionEntry.WindowStart(now);

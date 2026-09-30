@@ -14,6 +14,7 @@ public sealed class AuditEventConfiguration : IEntityTypeConfiguration<AuditEven
         builder.Property(e => e.Action).HasConversion<string>().HasMaxLength(30);
         builder.Property(e => e.EntityKind).HasConversion<string>().HasMaxLength(30);
         builder.Property(e => e.Description).HasMaxLength(AuditEvent.DescriptionMaxLength);
+        builder.Property(e => e.ViaToken).HasMaxLength(AuditEvent.ViaTokenMaxLength);
         builder.ComplexCollection(e => e.Changes, changes =>
         {
             changes.ToJson();

@@ -287,6 +287,10 @@ public sealed class TransactionService(
 
         var (currency, reportingAmount) = valuation.Value;
         var transaction = request.ToEntity(currency, reportingAmount);
+        if (currentUser.TokenName is not null)
+        {
+            transaction.Source = TransactionSource.Api;
+        }
 
         db.Transactions.Add(transaction);
         AddChildren(request, transaction.Id, currency);

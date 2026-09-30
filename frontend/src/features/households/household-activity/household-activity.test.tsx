@@ -51,6 +51,14 @@ test("a row without an actor name is attributed to a former user", () => {
   expect(screen.getByText("A former user added Maxima, 40.00 EUR")).toBeInTheDocument();
 });
 
+test("a change made through an API token names the token after the member", () => {
+  renderEvent({ ...eventAt(1), viaToken: "Home Assistant" });
+
+  expect(
+    screen.getByText("Šarūnas Kazlauskas, through Home Assistant, added Maxima, 40.00 EUR"),
+  ).toBeInTheDocument();
+});
+
 test("the sentence depends on the kind for households, archived accounts and bulk edits", () => {
   const base = eventAt(0);
 

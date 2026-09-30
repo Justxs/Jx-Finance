@@ -279,7 +279,7 @@ public sealed class ImportConfirmService(
         if (row.TransferAccountId is not null
             || entry is null
             || entry.AccountId != accountId
-            || entry.Source != TransactionSource.Manual
+            || entry.Source == TransactionSource.Imported
             || entry.ImportRef is not null
             || !new ManualEntry(entry.Id, entry.Date, entry.Type, entry.Amount).Fits(new StatementLine(row.Date, row.Type, new Money(row.Amount, currency))))
         {

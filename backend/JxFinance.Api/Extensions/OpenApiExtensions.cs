@@ -57,6 +57,7 @@ public static class OpenApiExtensions
                     return Task.CompletedTask;
                 });
                 openApi.AddOperationTransformer(TokenSecurity.MarkReadable);
+                openApi.AddOperationTransformer(TokenSecurity.MarkWritable);
                 openApi.AddDocumentTransformer((document, _, _) =>
                 {
                     document.Info.Description = DocumentDescription;

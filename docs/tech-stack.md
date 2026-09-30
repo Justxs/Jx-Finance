@@ -13,6 +13,7 @@
 | Telemetry | Serilog console logs; optional OpenTelemetry traces, metrics and logs exported over OTLP to the standalone .NET Aspire dashboard |
 | PDF | PDFsharp-MigraDoc (MIT). Fonts come from the host through `PdfFontResolver`: DejaVu Sans on Linux (the API image installs `fonts-dejavu-core`), Arial on Windows and macOS |
 | Checks | xUnit v3 with FastEndpoints.Testing, real PostgreSQL integration tests (Testcontainers), NetArchTest, Oxc, TypeScript/Vite, Vitest unit and DOM tests, Storybook stories run in jsdom by Vitest with an axe-core scan (Storybook itself is for manual review, colour contrast included), Playwright end-to-end smoke tests, lefthook git hooks, `just` recipes |
+| MCP server | `tools/jx-mcp`, a separate Node 24 package with its own `package.json` and `nub.lock`, outside the frontend build and lint: `@modelcontextprotocol/server` 2 over stdio, Zod 4, TypeScript 7, Vitest with the SDK's in-memory client; see [Personal API tokens](features/personal-api-tokens.md#mcp-server-for-an-ai-client) |
 | Deployment | Docker Compose; Caddy serves the SPA and proxies /api; named volumes `db_data` (PostgreSQL), `auth_keys` (signing and Data Protection keys), `backups` (backup archives) and `attachments` (files attached to transactions), each mounted only where it is needed |
 
 Exact dependency versions are in the project/package manifests and lockfile. The backend uses one application project with Domain, Infrastructure, Endpoints and Common folders, plus a test project. The earlier separate Domain/Infrastructure-project design was not retained.

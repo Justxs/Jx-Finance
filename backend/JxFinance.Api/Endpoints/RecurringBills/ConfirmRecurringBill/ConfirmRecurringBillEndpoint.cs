@@ -11,6 +11,7 @@ public sealed class ConfirmRecurringBillEndpoint(IRecurringBillService recurring
     {
         Post(ApiRoutes.RecurringBills + "/{id}/confirm");
         Group<RecurringBillsGroup>();
+        Options(b => b.WithMetadata(TokenWritable.Yes));
         Description(d => d.ProducesProblemDetails(404));
     }
 

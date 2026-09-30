@@ -130,7 +130,7 @@ export const CreateTransactionResponse = zod.object({
   amount: zod.stringFormat("decimal", createTransactionResponseAmountRegExp),
   date: zod.iso.date(),
   description: zod.string().nullable(),
-  source: zod.enum(["manual", "imported"]),
+  source: zod.enum(["manual", "imported", "api"]),
   isSplit: zod.boolean(),
   createdAt: zod.iso.datetime({ offset: true }),
   lines: zod
@@ -281,7 +281,7 @@ export const TransactionsResponse = zod.object({
       amount: zod.stringFormat("decimal", transactionsResponseItemsItemAmountRegExp),
       date: zod.iso.date(),
       description: zod.string().nullable(),
-      source: zod.enum(["manual", "imported"]),
+      source: zod.enum(["manual", "imported", "api"]),
       isSplit: zod.boolean(),
       createdAt: zod.iso.datetime({ offset: true }),
       lines: zod
@@ -499,7 +499,7 @@ export const TransactionResponse = zod.object({
   amount: zod.stringFormat("decimal", transactionResponseAmountRegExp),
   date: zod.iso.date(),
   description: zod.string().nullable(),
-  source: zod.enum(["manual", "imported"]),
+  source: zod.enum(["manual", "imported", "api"]),
   isSplit: zod.boolean(),
   createdAt: zod.iso.datetime({ offset: true }),
   lines: zod
@@ -716,7 +716,7 @@ export const UpdateTransactionResponse = zod.object({
   amount: zod.stringFormat("decimal", updateTransactionResponseAmountRegExp),
   date: zod.iso.date(),
   description: zod.string().nullable(),
-  source: zod.enum(["manual", "imported"]),
+  source: zod.enum(["manual", "imported", "api"]),
   isSplit: zod.boolean(),
   createdAt: zod.iso.datetime({ offset: true }),
   lines: zod

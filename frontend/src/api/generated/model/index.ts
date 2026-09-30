@@ -301,6 +301,7 @@ export * from "./taxSummaryResponse";
 export * from "./taxSummaryTotals";
 export * from "./testCategorizationRuleRequest";
 export * from "./testCategorizationRuleResponse";
+export * from "./tokenAccess";
 export * from "./transactionDebtPaymentResponse";
 export * from "./transactionLineRequest";
 export * from "./transactionLineResponse";

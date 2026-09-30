@@ -1,0 +1,34 @@
+{
+  "items": [
+    {
+      "id": "9a3e5c71-1d2b-4f8e-b6a0-7c4d2e1f0b01",
+      "accountId": "4f1c2a60-2b7e-4c1d-9a51-6d2f0c8e1a01",
+      "categoryId": "c2d4e6f8-1a3b-4c5d-8e7f-9a0b1c2d3e01",
+      "type": "expense",
+      "amount": "12.40",
+      "date": "2026-09-30",
+      "description": "Maxima",
+      "source": "api",
+      "isSplit": false,
+      "createdAt": "2026-09-30T08:12:44+00:00",
+      "lines": null,
+      "currency": "EUR",
+      "reportingAmount": "12.40",
+      "tagIds": [],
+      "attachmentCount": 0,
+      "unusual": null,
+      "unusualDismissed": false,
+      "debtPayment": null,
+      "refundOf": null,
+      "refundedAmount": null,
+      "sharedExpense": null,
+      "note": null,
+      "payeeName": null,
+      "spreadMonths": null,
+      "spreadUntil": null
+    }
+  ],
+  "page": 1,
+  "pageSize": 50,
+  "total": 1
+}

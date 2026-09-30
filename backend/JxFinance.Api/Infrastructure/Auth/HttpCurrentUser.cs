@@ -30,4 +30,6 @@ public sealed class HttpCurrentUser(IHttpContextAccessor httpContextAccessor) : 
                 : null;
         }
     }
+
+    public string? TokenName => httpContextAccessor.HttpContext?.User.FindFirstValue(AuthClaims.TokenName);
 }

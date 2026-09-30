@@ -96,6 +96,7 @@ export const ProblemDetailsResponse = zod
                 "household.required",
                 "household.scopeMismatch",
                 "iban.invalid",
+                "idempotency.keyReused",
                 "import.alreadyPresent",
                 "import.entryMismatch",
                 "import.invalidDateFormat",

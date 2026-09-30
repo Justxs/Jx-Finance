@@ -11,6 +11,7 @@ public sealed class BulkCategorizeTransactionsEndpoint(ITransactionService trans
     {
         Post(ApiRoutes.Transactions + "/bulk-category");
         Group<TransactionsGroup>();
+        Options(b => b.WithMetadata(TokenWritable.Yes));
         Description(d => d.ProducesProblemDetails(404));
     }
 

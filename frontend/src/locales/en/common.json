@@ -488,6 +488,7 @@
     "recordRefund": "Record refund",
     "refundOf": "Refund of {{description}}, {{date}}",
     "refundOfShow": "Show the purchase this refunds",
+    "sourceApi": "Added through the API",
     "refundOfClear": "Unlink the purchase",
     "refunded": "Refunded {{amount}}",
     "refundedHint": "Refunds that name this purchase add up to {{amount}}.",
@@ -865,7 +866,7 @@
     },
     "apiTokens": {
       "title": "Personal API tokens",
-      "description": "Let a script or a spreadsheet on your own computer read what you see here. A token can only read: it changes nothing and never reaches settings, backups, attachments or administration.",
+      "description": "Let a script, a spreadsheet or home automation on your own computer read what you see here, and record entries when you allow it. No token ever reaches settings, backups, attachments or administration.",
       "empty": "No tokens yet.",
       "create": "Create a token",
       "createTitle": "Create a personal API token",
@@ -892,7 +893,15 @@
       "revoke": "Revoke",
       "revokeTitle": "Revoke this token?",
       "revokeDescription": "Scripts and spreadsheets that use it stop working at once.",
-      "revoked": "Token revoked"
+      "revoked": "Token revoked",
+      "access": {
+        "label": "Access",
+        "read": "Read only",
+        "readWrite": "Read and write",
+        "badgeRead": "Read only",
+        "badgeReadWrite": "Read and write",
+        "readWriteSummary": "This token can also add, change and delete transactions and transfers, set their category or tags in bulk and confirm recurring entries. It lives at most 90 days."
+      }
     },
     "emailUnconfirmedTitle": "Confirm your email address",
     "emailUnconfirmedBody": "{{email}} is not confirmed yet, so this installation sends no mail to it. Nothing else is blocked.",
@@ -1013,7 +1022,7 @@
         },
         "apiTokens": {
           "name": "Personal API tokens",
-          "hint": "Members can create read-only tokens for their own scripts and spreadsheets. Off suspends every token until it is on again."
+          "hint": "Members can create tokens for their own scripts, spreadsheets and home automation, read only or also for recording entries. Off suspends every token until it is on again."
         }
       }
     },
@@ -2030,6 +2039,7 @@
     "empty": "Nothing has happened in this household yet.",
     "emptyFiltered": "No activity matches these filters.",
     "unknownActor": "A former user",
+    "actorViaToken": "{{actor}}, through {{token}},",
     "none": "none",
     "change": "{{field}} {{from}} → {{to}}",
     "filters": {
@@ -2609,6 +2619,9 @@
       "scopeMismatch": "The request names two different households. Reload the page and try again.",
       "referenceNotShared": "A shared item can only use accounts, categories, tags and debts shared with the same household."
     },
+    "idempotency": {
+      "keyReused": "This retry key was already used for a different request. Send a new key."
+    },
     "iban": {
       "invalid": "Enter a valid IBAN, e.g. LT12 1000 0111 0100 1000."
     },
@@ -2731,7 +2744,7 @@
     },
     "token": {
       "invalid": "The API token is missing, expired or revoked.",
-      "notAllowed": "An API token can only read the ledger.",
+      "notAllowed": "This API token cannot do that. It needs a browser session or a read-and-write token.",
       "limitReached": "You already have 10 tokens. Revoke one first.",
       "rateLimited": "Too many requests with this token. Wait a minute."
     },

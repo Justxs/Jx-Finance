@@ -156,7 +156,7 @@ Every confirmed row goes through the paths the manual forms use. A transaction r
 
 Since 2026-09-28 the preview also looks for a transaction you entered yourself before the statement arrived, such as a card payment typed in on the day. `ManualEntryMatcher` (`Endpoints/Imports/Matching`) is a pure function. A row that is not a duplicate matches a transaction on the same account when the transaction:
 
-- was entered by hand (`Source` manual) and has no import reference;
+- was entered by hand or, since 2026-10-01, recorded through a [personal API token](personal-api-tokens.md#writing-with-a-token) (`Source` manual or api, anything but imported) and has no import reference;
 - moves the same money in or out of the account in the same currency: an expense matches an outgoing row of its amount, and an income or a [refund](transactions.md#refunds) entered by hand matches an incoming row of its size;
 - is dated at most three days before or after the bank entry.
 

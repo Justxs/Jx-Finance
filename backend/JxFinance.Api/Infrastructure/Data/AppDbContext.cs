@@ -93,6 +93,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, ICurren
     public DbSet<Settlement> Settlements => Set<Settlement>();
     public DbSet<UserSession> UserSessions => Set<UserSession>();
     public DbSet<PersonalApiToken> PersonalApiTokens => Set<PersonalApiToken>();
+    public DbSet<ApiIdempotencyKey> ApiIdempotencyKeys => Set<ApiIdempotencyKey>();
     public DbSet<EmailMessage> EmailMessages => Set<EmailMessage>();
     public DbSet<DiscordWebhook> DiscordWebhooks => Set<DiscordWebhook>();
     public DbSet<DiscordMessage> DiscordMessages => Set<DiscordMessage>();
@@ -125,7 +126,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, ICurren
             return;
         }
 
-        var events = await new AuditCollector(this, actorId, now).CollectAsync(summary, cancellationToken);
+        var events = await new AuditCollector(this, actorId, currentUser.TokenName, now).CollectAsync(summary, cancellationToken);
         if (events.Count > 0)
         {
             AuditEvents.AddRange(events);
