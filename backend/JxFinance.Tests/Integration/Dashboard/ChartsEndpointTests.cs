@@ -60,7 +60,7 @@ public sealed class ChartsEndpointTests(ApiFixture fixture) : IntegrationTestBas
     {
         var breakdown = await Client.GetFromJsonAsync<BreakdownDto>($"/api/dashboard/category-breakdown?month={Today:yyyy-MM}", TestContext.Current.CancellationToken);
         var start = new DateOnly(Today.Year, Today.Month, 1).AddMonths(-1);
-        var end = Today.AddMonths(-1);
+        var end = Today.AddDays(1).Day == 1 ? start.AddMonths(1).AddDays(-1) : Today.AddMonths(-1);
         Assert.Equal((start, end), (breakdown!.ComparisonStart, breakdown.ComparisonEnd));
     }
 
