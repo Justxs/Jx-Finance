@@ -17,6 +17,8 @@ export const createTransactionBodyDescriptionMin = 0;
 export const createTransactionBodyDescriptionMax = 500;
 
 export const createTransactionBodyLinesItemAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const createTransactionBodyNoteMin = 0;
+export const createTransactionBodyNoteMax = 1000;
 
 export const CreateTransactionBody = zod.object({
   accountId: zod.uuid().min(1).describe("The account the money moved on; must be visible to you."),
@@ -85,6 +87,14 @@ export const CreateTransactionBody = zod.object({
     .uuid()
     .nullish()
     .describe("Optional, only on a refund: the expense it refunds."),
+  note: zod
+    .string()
+    .min(createTransactionBodyNoteMin)
+    .max(createTransactionBodyNoteMax)
+    .nullish()
+    .describe(
+      "Optional note of your own, at most 1000 characters, kept beside the bank's description and never changed by an import.",
+    ),
 });
 
 export const createTransactionResponseAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
@@ -220,6 +230,7 @@ export const CreateTransactionResponse = zod.object({
       }),
     ])
     .optional(),
+  note: zod.string().nullish(),
 });
 
 /**
@@ -370,6 +381,7 @@ export const TransactionsResponse = zod.object({
           }),
         ])
         .optional(),
+      note: zod.string().nullish(),
     }),
   ),
   page: zod.int(),
@@ -573,10 +585,11 @@ export const TransactionResponse = zod.object({
       }),
     ])
     .optional(),
+  note: zod.string().nullish(),
 });
 
 /**
- * Replaces the transaction. Split lines are replaced wholesale rather than merged: send the full set you want to keep, or omit lines to turn a split back into a plain transaction. Tags are replaced the same way: send the full set, and an empty list or an absent tagIds clears them. Moving it to another account adjusts both balances. A refund is an expense with a negative amount: it lowers that category's spending and raises the balance. It takes an expense category, cannot be split, and may name the purchase it refunds in refundOfTransactionId, which must be an expense you can see and not itself a refund.
+ * Replaces the transaction. Split lines are replaced wholesale rather than merged: send the full set you want to keep, or omit lines to turn a split back into a plain transaction. Tags are replaced the same way: send the full set, and an empty list or an absent tagIds clears them. The note is replaced too, so an absent note clears it. Moving it to another account adjusts both balances. A refund is an expense with a negative amount: it lowers that category's spending and raises the balance. It takes an expense category, cannot be split, and may name the purchase it refunds in refundOfTransactionId, which must be an expense you can see and not itself a refund.
  * @summary Update a transaction
  */
 
@@ -585,6 +598,8 @@ export const updateTransactionBodyDescriptionMin = 0;
 export const updateTransactionBodyDescriptionMax = 500;
 
 export const updateTransactionBodyLinesItemAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const updateTransactionBodyNoteMin = 0;
+export const updateTransactionBodyNoteMax = 1000;
 
 export const UpdateTransactionBody = zod.object({
   accountId: zod.uuid().min(1),
@@ -645,6 +660,7 @@ export const UpdateTransactionBody = zod.object({
     ])
     .optional(),
   refundOfTransactionId: zod.uuid().nullish(),
+  note: zod.string().min(updateTransactionBodyNoteMin).max(updateTransactionBodyNoteMax).nullish(),
 });
 
 export const updateTransactionResponseAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
@@ -780,6 +796,7 @@ export const UpdateTransactionResponse = zod.object({
       }),
     ])
     .optional(),
+  note: zod.string().nullish(),
 });
 
 /**

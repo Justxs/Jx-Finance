@@ -86,15 +86,26 @@ export function useTransactionColumns({
       header: t("transactions.description"),
       cell: (info) => {
         const description = info.getValue();
+        const note = info.row.original.note;
         return (
           <span className="flex items-start gap-2">
-            {description ? (
-              <span className="line-clamp-2 font-medium wrap-break-word" title={description}>
-                {description}
-              </span>
-            ) : (
-              <span className="text-muted-foreground">{EMPTY_VALUE}</span>
-            )}
+            <span className="min-w-0">
+              {description ? (
+                <span className="line-clamp-2 font-medium wrap-break-word" title={description}>
+                  {description}
+                </span>
+              ) : (
+                <span className="text-muted-foreground">{EMPTY_VALUE}</span>
+              )}
+              {note ? (
+                <span
+                  className="line-clamp-1 text-xs wrap-break-word text-muted-foreground"
+                  title={note}
+                >
+                  {note}
+                </span>
+              ) : null}
+            </span>
             <AttachmentCount count={info.row.original.attachmentCount} className="mt-0.5" />
             <UnusualAmountBadge
               transactionId={info.row.original.id}

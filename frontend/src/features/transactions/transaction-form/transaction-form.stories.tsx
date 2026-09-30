@@ -158,6 +158,21 @@ export const SaveAndAddAnother: Story = {
   },
 };
 
+export const EditingANote: Story = {
+  args: { initial: transactions[7] },
+  play: async ({ canvas, args }) => {
+    const note = await canvas.findByLabelText("Note");
+    await expect(note).toHaveValue("Filmas su vaikais per atostogas");
+    await fireEvent.change(note, { target: { value: "  Tomo gimtadienis  " } });
+    await submitForm(canvas);
+    await waitFor(() =>
+      expect(args.onSubmit).toHaveBeenCalledWith(
+        expect.objectContaining({ note: "Tomo gimtadienis", description: "Forum Cinemas Vingis" }),
+      ),
+    );
+  },
+};
+
 export const ValidationErrors: Story = {
   play: async ({ canvas, args }) => {
     await submitForm(canvas);

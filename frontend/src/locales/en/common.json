@@ -429,7 +429,7 @@
     "descriptionPlaceholder": "e.g. Lidl",
     "empty": "No transactions yet.",
     "needAccount": "Create an account first to add transactions.",
-    "searchPlaceholder": "Search description...",
+    "searchPlaceholder": "Search description or note...",
     "allTypes": "All types",
     "allAccounts": "All accounts",
     "allCategories": "All categories",
@@ -532,7 +532,9 @@
     "splitOver": "{{amount}} over",
     "splitBalanced": "Fully assigned",
     "useRemaining": "Use remaining {{amount}}",
-    "categoryFor": "Category for {{transaction}}"
+    "categoryFor": "Category for {{transaction}}",
+    "note": "Note",
+    "noteHint": "Your own words, kept beside the bank's description. Imports never change it."
   },
   "receipts": {
     "fill": "Fill from receipt",

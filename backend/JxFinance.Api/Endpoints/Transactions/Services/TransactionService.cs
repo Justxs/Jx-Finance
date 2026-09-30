@@ -182,7 +182,9 @@ public sealed class TransactionService(
         if (!string.IsNullOrWhiteSpace(request.Search))
         {
             var pattern = LikePattern.Contains(request.Search);
-            query = query.Where(t => t.Description != null && EF.Functions.ILike(t.Description, pattern, LikePattern.Escape));
+            query = query.Where(t =>
+                (t.Description != null && EF.Functions.ILike(t.Description, pattern, LikePattern.Escape))
+                || (t.Note != null && EF.Functions.ILike(t.Note, pattern, LikePattern.Escape)));
         }
 
         if (SubscriptionDescription.Normalize(request.Payee) is { Length: > 0 } payeeKey)

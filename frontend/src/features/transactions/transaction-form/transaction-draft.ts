@@ -17,6 +17,7 @@ export interface TransactionDraft {
   currency?: Currency;
   date?: string;
   description?: string | null;
+  note?: string | null;
   isSplit?: boolean;
   tagIds?: string[];
   lines?: TransactionLineRequest[] | null;
@@ -32,6 +33,7 @@ export function draftFromTransaction(transaction: TransactionResponse): Transact
     currency: transaction.currency,
     date: transaction.date,
     description: transaction.description,
+    note: transaction.note,
     isSplit: transaction.isSplit,
     tagIds: transaction.tagIds,
     lines:

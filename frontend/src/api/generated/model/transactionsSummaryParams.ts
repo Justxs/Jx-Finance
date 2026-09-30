@@ -28,7 +28,7 @@ export type TransactionsSummaryParams = {
    */
   type?: FlowType;
   /**
-   * Case-insensitive match against the description.
+   * Case-insensitive match against the description or the note.
    * @nullable
    */
   search?: string | null;

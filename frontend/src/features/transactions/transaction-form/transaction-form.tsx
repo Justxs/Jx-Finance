@@ -260,6 +260,17 @@ export function TransactionForm({
           )}
         </form.Field>
 
+        <form.Field name="note">
+          {(field) => (
+            <field.TextField
+              id="tx-note"
+              label={t("transactions.note")}
+              hint={t("transactions.noteHint")}
+              className="col-span-full"
+            />
+          )}
+        </form.Field>
+
         {tags.length > 0 ? (
           <form.Field name="tagIds">
             {(field) => (

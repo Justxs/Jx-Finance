@@ -32,6 +32,7 @@ public sealed class CreateTransactionSummary : Summary<CreateTransactionEndpoint
         RequestParam(r => r.Date, "The date the money moved, as YYYY-MM-DD.");
         RequestParam(r => r.Lines, "Optional split lines. Their amounts must sum to the transaction amount.");
         RequestParam(r => r.TagIds, "Optional tags for the whole payment, at most ten, each visible to you.");
+        RequestParam(r => r.Note, "Optional note of your own, at most 1000 characters, kept beside the bank's description and never changed by an import.");
         Responses[201] = "The transaction was created. The Location header points at it.";
         Responses[400] = "Validation failed, the split lines do not add up, a refund has lines (transaction.splitNotAllowed) or names an original that is not a visible purchase "
             + "(transaction.refundOriginalInvalid), or the account, category or a tag is not visible to you.";

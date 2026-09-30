@@ -96,6 +96,11 @@ export function TransactionsList({
                   className="shrink-0 text-right"
                 />
               </div>
+              {row.note ? (
+                <p className="truncate text-xs text-muted-foreground" title={row.note}>
+                  {row.note}
+                </p>
+              ) : null}
               <TagChips tagIds={row.tagIds} tagById={tagById} className="mt-1" />
               <RefundMark transaction={row} className="mt-1" />
               <div className="flex items-center gap-2">

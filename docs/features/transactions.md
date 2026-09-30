@@ -6,7 +6,7 @@ Backend `Transactions`, page `/transactions`. One `Filtered` method builds the q
 
 ```mermaid
 flowchart TD
-    Url["Search params<br/>text, payee, account, category, tags, type, dateFrom, dateTo, unusual, uncategorized, sort, direction, page"] --> Defer["useDeferredParams"]
+    Url["Search params<br/>text, payee, account, category, tags, type, dateFrom, dateTo, amountMin, amountMax, unusual, uncategorized, sort, direction, page"] --> Defer["useDeferredParams"]
     Defer --> List["GET /api/transactions"]
     Defer --> Summary["GET /api/transactions/summary"]
     Url --> Csv["GET /api/transactions/export"]
@@ -102,6 +102,12 @@ While `MonthClose` is on, the create and edit dialogs of a transaction and a cur
 
 `payee` is a filter on the same four endpoints, part of `TransactionFilterRequest`, and belongs to no feature. The server normalizes the value with `SubscriptionDescription.Normalize` and keeps the rows whose stored `PayeeKey` equals it, so a key from the report and a pasted description such as "MAXIMA LT, UAB 4412" find the same rows; a value with nothing left after normalizing filters nothing, and more than 500 characters is refused with `text.tooLong`. It is how a row of "Expense by payee" on the reports page opens the ledger, together with `type=expense` and the range, so the list, the totals and both exports agree with the report's amount; see [Reports](reports.md#expense-by-payee). Unlike `search`, which is `ILIKE` on the raw text, it ignores punctuation and reference numbers. The filters dialog has no field for it, because it is reached from the report: it is the `payee` search param, counts as an active filter, shows as a removable "Payee" chip, travels in the export links and in a saved filter, and a saved filter written before it parses without it.
 
+## Notes
+
+Since 2026-09-30 a transaction carries `Note` beside `Description`: up to 1000 characters of the member's own words, such as "Tom's birthday gift", where the description holds what the bank printed. Create and update bodies take `note`, trimmed and stored as null when blank; an update replaces it like every other field, so an update without it clears it. Nothing else writes it: an import fills only the description of the rows it adds, and linking a statement row to a hand-entered transaction keeps the note with the rest of that transaction. The `search` filter matches the note as well as the description, both `ILIKE`, so the ledger's search placeholder reads "Search description or note". The CSV has a `Note` column at the end, which the member export's `transactions.csv` shares, the PDF leaves it out, and an edit to it is a visible field in the household activity log.
+
+The transaction form has a Note field under the description, with the hint "Your own words, kept beside the bank's description. Imports never change it.". The desktop ledger shows the note as a muted line under the description, cut to one line with the whole text in its tooltip, and the phone list shows it under the name. Duplicate copies the note with the rest of the row; a template leaves it out, because a template is a shape and a note is about one payment.
+
 ## Amount range filter
 
 `amountMin` and `amountMax` are filters on the same four endpoints, part of `TransactionFilterRequest`, and belong to no feature; they arrived on 2026-09-30. Each is inclusive and optional, so one bound alone filters from that side. They compare the size of the amount in the transaction's own currency, `abs(Amount)`, not the reporting amount: "that €49 charge" is the number printed on the statement, and a refund of €49 is found beside the purchase of €49. Each bound must be a non-negative amount with at most two decimals (`money.nonNegative`), and `amountMax` below `amountMin` is refused with `range.invalid`.
@@ -157,7 +163,7 @@ A saved filter is a name put on the filter half of the search params. It lives i
 
 ```mermaid
 flowchart TD
-    Url["Search params on /transactions"] --> Part["transactionFilterParams:<br/>search, account, category, tags, type, dateFrom, dateTo, unusual, uncategorized"]
+    Url["Search params on /transactions"] --> Part["transactionFilterParams:<br/>search, account, category, tags, type, dateFrom, dateTo, amountMin, amountMax, unusual, uncategorized"]
     Part --> Save["Save filter under a name"]
     Save --> Store[("jx-saved-filters<br/>one row per filter: id, name, filter")]
     Store --> List["Saved filters menu"]

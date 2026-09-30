@@ -44,4 +44,11 @@ export interface CreateTransactionRequest {
    * @nullable
    */
   refundOfTransactionId?: string | null;
+  /**
+   * Optional note of your own, at most 1000 characters, kept beside the bank's description and never changed by an import.
+   * @minLength 0
+   * @maxLength 1000
+   * @nullable
+   */
+  note?: string | null;
 }

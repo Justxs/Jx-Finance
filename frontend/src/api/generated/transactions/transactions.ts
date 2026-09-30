@@ -1130,7 +1130,7 @@ export const getUpdateTransactionUrl = (id: string) => {
 };
 
 /**
- * Replaces the transaction. Split lines are replaced wholesale rather than merged: send the full set you want to keep, or omit lines to turn a split back into a plain transaction. Tags are replaced the same way: send the full set, and an empty list or an absent tagIds clears them. Moving it to another account adjusts both balances. A refund is an expense with a negative amount: it lowers that category's spending and raises the balance. It takes an expense category, cannot be split, and may name the purchase it refunds in refundOfTransactionId, which must be an expense you can see and not itself a refund.
+ * Replaces the transaction. Split lines are replaced wholesale rather than merged: send the full set you want to keep, or omit lines to turn a split back into a plain transaction. Tags are replaced the same way: send the full set, and an empty list or an absent tagIds clears them. The note is replaced too, so an absent note clears it. Moving it to another account adjusts both balances. A refund is an expense with a negative amount: it lowers that category's spending and raises the balance. It takes an expense category, cannot be split, and may name the purchase it refunds in refundOfTransactionId, which must be an expense you can see and not itself a refund.
  * @summary Update a transaction
  */
 export const updateTransaction = async (

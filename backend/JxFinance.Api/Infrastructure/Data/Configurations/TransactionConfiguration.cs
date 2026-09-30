@@ -11,6 +11,7 @@ public sealed class TransactionConfiguration : IEntityTypeConfiguration<Transact
     {
         builder.ComplexProperty(t => t.Amount, money => money.HasColumns("Amount", DbSchema.CurrencyColumn));
         builder.Property(t => t.Description).HasMaxLength(500);
+        builder.Property(t => t.Note).HasMaxLength(TransactionNote.MaxLength);
         builder.Property(t => t.ImportRef).HasMaxLength(64);
         builder.Property(t => t.PayeeKey).HasMaxLength(SubscriptionDescription.MaxLength);
         builder.ComplexProperty(t => t.Unusual, unusual =>

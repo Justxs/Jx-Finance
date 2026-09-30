@@ -26,12 +26,12 @@ public sealed class TransactionExportTests(ApiFixture fixture) : IntegrationTest
         Assert.Null(response.Content.Headers.ContentLength);
         var lines = (await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken))
             .Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-        Assert.Equal("Date,Description,Account,Category,Tags,Type,Amount,Currency", lines[0]);
+        Assert.Equal("Date,Description,Account,Category,Tags,Type,Amount,Currency,Note", lines[0]);
         Assert.Equal(13, lines.Length);
         Assert.StartsWith("2026-05-01,Row 1,", lines[1]);
-        Assert.EndsWith(",Expense,1.00,EUR", lines[1]);
+        Assert.EndsWith(",Expense,1.00,EUR,", lines[1]);
         Assert.StartsWith("2026-05-12,Row 12,", lines[12]);
-        Assert.EndsWith(",Expense,12.00,EUR", lines[12]);
+        Assert.EndsWith(",Expense,12.00,EUR,", lines[12]);
     }
 
     [Fact]
@@ -57,7 +57,7 @@ public sealed class TransactionExportTests(ApiFixture fixture) : IntegrationTest
 
         var row = Assert.Single(csv.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).Skip(1));
         Assert.StartsWith("2026-05-02,Split row,", row);
-        Assert.EndsWith(",,Expense,50.00,EUR", row);
+        Assert.EndsWith(",,Expense,50.00,EUR,", row);
     }
 
     [Fact]

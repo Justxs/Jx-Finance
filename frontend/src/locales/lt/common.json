@@ -447,7 +447,7 @@
     "descriptionPlaceholder": "pvz., Lidl",
     "empty": "Operacijų dar nėra.",
     "needAccount": "Pirmiausia sukurkite sąskaitą, kad galėtumėte pridėti operacijas.",
-    "searchPlaceholder": "Ieškoti aprašyme...",
+    "searchPlaceholder": "Ieškoti aprašyme ar pastaboje...",
     "allTypes": "Visi tipai",
     "allAccounts": "Visos sąskaitos",
     "allCategories": "Visos kategorijos",
@@ -564,7 +564,9 @@
     "splitOver": "Viršyta {{amount}}",
     "splitBalanced": "Paskirstyta visa suma",
     "useRemaining": "Naudoti likutį {{amount}}",
-    "categoryFor": "Kategorija: {{transaction}}"
+    "categoryFor": "Kategorija: {{transaction}}",
+    "note": "Pastaba",
+    "noteHint": "Jūsų žodžiai šalia banko aprašymo. Importas jų nekeičia."
   },
   "receipts": {
     "fill": "Užpildyti iš kvito",

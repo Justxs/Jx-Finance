@@ -25,7 +25,7 @@ public static class TransactionFilterSummary
         summary.Describe(nameof(TransactionFilterRequest.CategoryId), category);
         summary.Describe(nameof(TransactionFilterRequest.TagIds), Tags);
         summary.Describe(nameof(TransactionFilterRequest.Type), SummaryText.FlowType);
-        summary.Describe(nameof(TransactionFilterRequest.Search), "Case-insensitive match against the description.");
+        summary.Describe(nameof(TransactionFilterRequest.Search), "Case-insensitive match against the description or the note.");
         summary.Describe(
             nameof(TransactionFilterRequest.Payee),
             "Keep only transactions whose normalized description equals the normalized value: lowercase words, "

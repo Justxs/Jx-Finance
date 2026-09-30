@@ -191,7 +191,13 @@ export const transactions: TransactionResponse[] = [
   imported(5, "09-14", shared, food, -56.72, "Lidl Žirmūnai"),
   splitTransaction,
   manual(7, "09-12", cash, cafes, -4.8, "Caffeine – kava išsinešti"),
-  imported(8, "09-11", checking, entertainment, -18, "Forum Cinemas Vingis", [holiday, children]),
+  {
+    ...imported(8, "09-11", checking, entertainment, -18, "Forum Cinemas Vingis", [
+      holiday,
+      children,
+    ]),
+    note: "Filmas su vaikais per atostogas",
+  },
   imported(9, "09-10", checking, salary, 2850, "UAB „Baltijos sprendimai“ – darbo užmokestis"),
   manual(10, "09-10", shared, salary, 2140, "Šarūno atlyginimas"),
   imported(11, "09-09", checking, transport, -61.35, "Circle K – degalai", [car]),

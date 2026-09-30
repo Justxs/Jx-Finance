@@ -170,7 +170,7 @@ public sealed class TransactionEndpointTests(ApiFixture fixture) : IntegrationTe
         var row = csv.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)[1];
 
         Assert.StartsWith($"2026-06-05,{expectedCell},'=Formula account", row);
-        Assert.EndsWith(",Expense,12.34,eur", row, StringComparison.OrdinalIgnoreCase);
+        Assert.EndsWith(",Expense,12.34,eur,", row, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]

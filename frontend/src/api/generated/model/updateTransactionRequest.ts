@@ -31,4 +31,10 @@ export interface UpdateTransactionRequest {
   currency?: null | Currency;
   /** @nullable */
   refundOfTransactionId?: string | null;
+  /**
+   * @minLength 0
+   * @maxLength 1000
+   * @nullable
+   */
+  note?: string | null;
 }

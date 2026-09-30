@@ -6,7 +6,10 @@ import {
   FlowType,
   type TransactionRefundOfResponse,
 } from "@/api/generated/model";
-import { createTransactionBodyDescriptionMax } from "@/api/schemas/transactions/transactions.zod";
+import {
+  createTransactionBodyDescriptionMax,
+  createTransactionBodyNoteMax,
+} from "@/api/schemas/transactions/transactions.zod";
 import { DEFAULT_CURRENCY } from "@/lib/currency";
 import type { Translate } from "@/lib/i18n";
 import { toCents } from "@/lib/money";
@@ -40,6 +43,7 @@ interface TransactionFormFields {
   currency: Currency;
   date: string;
   description: string;
+  note: string;
   isSplit: boolean;
   lines: LineFormValue[];
   tagIds: string[];
@@ -58,6 +62,7 @@ export function transactionSchema(t: Translate, formatMoney: FormatMoney) {
       currency: z.enum(Currency),
       date: requiredValue(t),
       description: optionalText(t, createTransactionBodyDescriptionMax),
+      note: optionalText(t, createTransactionBodyNoteMax),
       isSplit: z.boolean(),
       tagIds: z.array(z.string()),
       refundOf: z.custom<TransactionRefundOfResponse | null>(),
@@ -112,6 +117,7 @@ export function defaultFormFields(
     currency: source.currency ?? defaultAccount?.currency ?? DEFAULT_CURRENCY,
     date: source.date ?? today,
     description: source.description ?? "",
+    note: source.note ?? "",
     isSplit: !refund && (source.isSplit ?? false),
     tagIds: source.tagIds ?? [],
     refundOf: refund ? (source.refundOf ?? null) : null,
@@ -137,6 +143,7 @@ export function toSubmittedValues(value: TransactionFormFields): TransactionForm
     currency: value.currency,
     date: value.date,
     description: value.description.trim() || null,
+    note: value.note.trim() || null,
     tagIds: value.tagIds,
     refundOfTransactionId: refund ? (value.refundOf?.id ?? null) : null,
     lines: split

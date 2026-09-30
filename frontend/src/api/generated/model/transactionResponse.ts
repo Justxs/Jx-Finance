@@ -41,4 +41,6 @@ export interface TransactionResponse {
   /** @nullable */
   refundedAmount?: string | null;
   sharedExpense?: null | TransactionSharedExpenseResponse;
+  /** @nullable */
+  note?: string | null;
 }

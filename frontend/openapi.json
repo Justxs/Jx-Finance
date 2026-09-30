@@ -13991,7 +13991,8 @@
                 "lines": null,
                 "tagIds": null,
                 "currency": null,
-                "refundOfTransactionId": null
+                "refundOfTransactionId": null,
+                "note": null
               }
             }
           },
@@ -14133,7 +14134,7 @@
           {
             "name": "search",
             "in": "query",
-            "description": "Case-insensitive match against the description.",
+            "description": "Case-insensitive match against the description or the note.",
             "schema": {
               "type": [
                 "null",
@@ -14530,7 +14531,7 @@
           {
             "name": "search",
             "in": "query",
-            "description": "Case-insensitive match against the description.",
+            "description": "Case-insensitive match against the description or the note.",
             "schema": {
               "type": [
                 "null",
@@ -14760,7 +14761,7 @@
           {
             "name": "search",
             "in": "query",
-            "description": "Case-insensitive match against the description.",
+            "description": "Case-insensitive match against the description or the note.",
             "schema": {
               "type": [
                 "null",
@@ -14958,7 +14959,7 @@
           {
             "name": "search",
             "in": "query",
-            "description": "Case-insensitive match against the description.",
+            "description": "Case-insensitive match against the description or the note.",
             "schema": {
               "type": [
                 "null",
@@ -15254,7 +15255,7 @@
           "Transactions"
         ],
         "summary": "Update a transaction",
-        "description": "Replaces the transaction. Split lines are replaced wholesale rather than merged: send the full set you want to keep, or omit lines to turn a split back into a plain transaction. Tags are replaced the same way: send the full set, and an empty list or an absent tagIds clears them. Moving it to another account adjusts both balances. A refund is an expense with a negative amount: it lowers that category's spending and raises the balance. It takes an expense category, cannot be split, and may name the purchase it refunds in refundOfTransactionId, which must be an expense you can see and not itself a refund.",
+        "description": "Replaces the transaction. Split lines are replaced wholesale rather than merged: send the full set you want to keep, or omit lines to turn a split back into a plain transaction. Tags are replaced the same way: send the full set, and an empty list or an absent tagIds clears them. The note is replaced too, so an absent note clears it. Moving it to another account adjusts both balances. A refund is an expense with a negative amount: it lowers that category's spending and raises the balance. It takes an expense category, cannot be split, and may name the purchase it refunds in refundOfTransactionId, which must be an expense you can see and not itself a refund.",
         "operationId": "UpdateTransaction",
         "parameters": [
           {
@@ -15285,7 +15286,8 @@
                 "lines": null,
                 "tagIds": null,
                 "currency": null,
-                "refundOfTransactionId": null
+                "refundOfTransactionId": null,
+                "note": null
               }
             }
           },
@@ -20241,6 +20243,15 @@
             ],
             "description": "Optional, only on a refund: the expense it refunds.",
             "format": "uuid"
+          },
+          "note": {
+            "maxLength": 1000,
+            "minLength": 0,
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Optional note of your own, at most 1000 characters, kept beside the bank's description and never changed by an import."
           }
         },
         "example": {
@@ -20253,7 +20264,8 @@
           "lines": null,
           "tagIds": null,
           "currency": null,
-          "refundOfTransactionId": null
+          "refundOfTransactionId": null,
+          "note": null
         }
       },
       "CreateTransferRequest": {
@@ -26565,6 +26577,12 @@
                 "$ref": "#/components/schemas/TransactionSharedExpenseResponse"
               }
             ]
+          },
+          "note": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -28163,6 +28181,14 @@
               "string"
             ],
             "format": "uuid"
+          },
+          "note": {
+            "maxLength": 1000,
+            "minLength": 0,
+            "type": [
+              "null",
+              "string"
+            ]
           }
         },
         "example": {
@@ -28175,7 +28201,8 @@
           "lines": null,
           "tagIds": null,
           "currency": null,
-          "refundOfTransactionId": null
+          "refundOfTransactionId": null,
+          "note": null
         }
       },
       "UpdateTransferRequest": {

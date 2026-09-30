@@ -918,6 +918,7 @@ export const DebtPaymentCandidatesResponseItem = zod.object({
       }),
     ])
     .optional(),
+  note: zod.string().nullish(),
 });
 export const DebtPaymentCandidatesResponse = zod.array(DebtPaymentCandidatesResponseItem);
 

@@ -3,6 +3,7 @@ using FluentValidation;
 using JxFinance.Common.Errors;
 using JxFinance.Common.Validation;
 using JxFinance.Domain.Common;
+using JxFinance.Domain.Transactions;
 
 namespace JxFinance.Endpoints.Transactions.Shared;
 
@@ -23,6 +24,7 @@ public abstract class TransactionInputValidator<TRequest> : Validator<TRequest>
         RuleFor(r => r.Currency).IsKnownEnum();
         RuleFor(r => r.Date).IsRequired();
         RuleFor(r => r.Description).HasMaxLength(500);
+        RuleFor(r => r.Note).HasMaxLength(TransactionNote.MaxLength);
         RuleFor(r => r.TagIds).HasAtMostTags();
         RuleForEach(r => r.TagIds).IsRequired();
         RuleFor(r => r.Lines)
