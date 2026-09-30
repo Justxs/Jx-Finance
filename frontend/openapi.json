@@ -4293,7 +4293,9 @@
                 "limitAmount": "400.00",
                 "period": "monthly",
                 "rolloverEnabled": false,
-                "tagId": null
+                "tagId": null,
+                "scope": "personal",
+                "householdId": null
               }
             }
           },
@@ -4605,7 +4607,9 @@
                 "limitAmount": "450.00",
                 "period": "monthly",
                 "rolloverEnabled": true,
-                "tagId": null
+                "tagId": null,
+                "scope": "personal",
+                "householdId": null
               }
             }
           },
@@ -7377,7 +7381,9 @@
                 "targetDate": "2027-01-01",
                 "funding": "manual",
                 "fundingAccountId": null,
-                "fundingSharePercent": null
+                "fundingSharePercent": null,
+                "scope": "personal",
+                "householdId": null
               }
             }
           },
@@ -7596,7 +7602,9 @@
                 "targetDate": "2027-01-01",
                 "funding": "manual",
                 "fundingAccountId": null,
-                "fundingSharePercent": null
+                "fundingSharePercent": null,
+                "scope": "personal",
+                "householdId": null
               }
             }
           },
@@ -12791,7 +12799,9 @@
                 "nextDueDate": "2026-10-01",
                 "remindDaysBefore": 3,
                 "matchKey": null,
-                "debtId": null
+                "debtId": null,
+                "scope": "personal",
+                "householdId": null
               }
             }
           },
@@ -13218,7 +13228,9 @@
                 "remindDaysBefore": 3,
                 "isActive": true,
                 "matchKey": null,
-                "debtId": null
+                "debtId": null,
+                "scope": "personal",
+                "householdId": null
               }
             }
           },
@@ -18727,7 +18739,10 @@
           "member",
           "attachment",
           "sharedExpense",
-          "settlement"
+          "settlement",
+          "budget",
+          "goal",
+          "recurringBill"
         ],
         "type": "string"
       },
@@ -18980,7 +18995,9 @@
           "period",
           "rolloverEnabled",
           "windowStart",
-          "windowEnd"
+          "windowEnd",
+          "scope",
+          "householdId"
         ],
         "type": "object",
         "properties": {
@@ -19036,6 +19053,16 @@
           },
           "windowEnd": {
             "$ref": "#/components/schemas/DateOnly"
+          },
+          "scope": {
+            "$ref": "#/components/schemas/Scope"
+          },
+          "householdId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
           }
         }
       },
@@ -19838,6 +19865,16 @@
             ],
             "description": "The tag the limit applies to; must be visible to you. Send it or categoryId, not both.",
             "format": "uuid"
+          },
+          "scope": {
+            "$ref": "#/components/schemas/Scope"
+          },
+          "householdId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
           }
         },
         "example": {
@@ -19845,7 +19882,9 @@
           "limitAmount": "400.00",
           "period": "monthly",
           "rolloverEnabled": false,
-          "tagId": null
+          "tagId": null,
+          "scope": "personal",
+          "householdId": null
         }
       },
       "CreateCategorizationRuleRequest": {
@@ -20380,6 +20419,16 @@
             ],
             "description": "The share of that account's balance that counts, as a whole percentage from 1 to 100. Defaults to 100.",
             "format": "int32"
+          },
+          "scope": {
+            "$ref": "#/components/schemas/Scope"
+          },
+          "householdId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
           }
         },
         "example": {
@@ -20389,7 +20438,9 @@
           "targetDate": "2027-01-01",
           "funding": "manual",
           "fundingAccountId": null,
-          "fundingSharePercent": null
+          "fundingSharePercent": null,
+          "scope": "personal",
+          "householdId": null
         }
       },
       "CreateHouseholdRequest": {
@@ -20627,6 +20678,16 @@
               "string"
             ],
             "format": "uuid"
+          },
+          "scope": {
+            "$ref": "#/components/schemas/Scope"
+          },
+          "householdId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
           }
         },
         "example": {
@@ -20641,7 +20702,9 @@
           "nextDueDate": "2026-10-01",
           "remindDaysBefore": 3,
           "matchKey": null,
-          "debtId": null
+          "debtId": null,
+          "scope": "personal",
+          "householdId": null
         }
       },
       "CreateSettlementRequest": {
@@ -21968,6 +22031,7 @@
           "holding.oversold",
           "household.lastOwner",
           "household.notMember",
+          "household.referenceNotShared",
           "household.required",
           "household.scopeMismatch",
           "iban.invalid",
@@ -22344,7 +22408,9 @@
           "funding",
           "fundingAccountId",
           "fundingSharePercent",
-          "progressAmount"
+          "progressAmount",
+          "scope",
+          "householdId"
         ],
         "type": "object",
         "properties": {
@@ -22393,6 +22459,16 @@
               "string"
             ],
             "format": "decimal"
+          },
+          "scope": {
+            "$ref": "#/components/schemas/Scope"
+          },
+          "householdId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
           }
         }
       },
@@ -25412,7 +25488,9 @@
           "isActive",
           "matchKey",
           "latestMatch",
-          "debtId"
+          "debtId",
+          "scope",
+          "householdId"
         ],
         "type": "object",
         "properties": {
@@ -25487,6 +25565,16 @@
             ]
           },
           "debtId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "scope": {
+            "$ref": "#/components/schemas/Scope"
+          },
+          "householdId": {
             "type": [
               "null",
               "string"
@@ -27884,6 +27972,16 @@
               "string"
             ],
             "format": "uuid"
+          },
+          "scope": {
+            "$ref": "#/components/schemas/Scope"
+          },
+          "householdId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
           }
         },
         "example": {
@@ -27891,7 +27989,9 @@
           "limitAmount": "450.00",
           "period": "monthly",
           "rolloverEnabled": true,
-          "tagId": null
+          "tagId": null,
+          "scope": "personal",
+          "householdId": null
         }
       },
       "UpdateCategorizationRuleRequest": {
@@ -28393,6 +28493,16 @@
             ],
             "description": "The share of that account's balance that counts, as a whole percentage from 1 to 100. Defaults to 100.",
             "format": "int32"
+          },
+          "scope": {
+            "$ref": "#/components/schemas/Scope"
+          },
+          "householdId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
           }
         },
         "example": {
@@ -28402,7 +28512,9 @@
           "targetDate": "2027-01-01",
           "funding": "manual",
           "fundingAccountId": null,
-          "fundingSharePercent": null
+          "fundingSharePercent": null,
+          "scope": "personal",
+          "householdId": null
         }
       },
       "UpdateHouseholdRequest": {
@@ -28769,6 +28881,16 @@
               "string"
             ],
             "format": "uuid"
+          },
+          "scope": {
+            "$ref": "#/components/schemas/Scope"
+          },
+          "householdId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
           }
         },
         "example": {
@@ -28784,7 +28906,9 @@
           "remindDaysBefore": 3,
           "isActive": true,
           "matchKey": null,
-          "debtId": null
+          "debtId": null,
+          "scope": "personal",
+          "householdId": null
         }
       },
       "UpdateSettingsRequest": {

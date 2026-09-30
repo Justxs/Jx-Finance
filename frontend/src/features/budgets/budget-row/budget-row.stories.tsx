@@ -1,7 +1,12 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, fn, userEvent } from "storybook/test";
 import { Rows } from "@/components/ui/rows/rows";
-import { budgets, overLimitBudget, weeklyRolloverBudget } from "@/storybook/fixtures";
+import {
+  budgets,
+  familyHousehold,
+  overLimitBudget,
+  weeklyRolloverBudget,
+} from "@/storybook/fixtures";
 import { BudgetRow } from "./budget-row";
 
 const meta = {
@@ -56,5 +61,12 @@ export const EditRequested: Story = {
   play: async ({ args, canvas }) => {
     await userEvent.click(canvas.getByRole("button", { name: /^(edit|redaguoti):/i }));
     await expect(args.onEdit).toHaveBeenCalledOnce();
+  },
+};
+
+export const SharedWithHousehold: Story = {
+  args: { budget: { ...budgets[2]!, scope: "shared", householdId: familyHousehold.id } },
+  play: async ({ canvas }) => {
+    await expect(await canvas.findByText("Shared · Kazlauskų šeima")).toBeVisible();
   },
 };

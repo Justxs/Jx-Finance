@@ -6,6 +6,7 @@ import {
   accounts,
   categories,
   dueSoonBill,
+  familyHousehold,
   inactiveBill,
   incomeBill,
   overdueBill,
@@ -133,5 +134,12 @@ export const InactiveCannotRecord: Story = {
     await expect(
       canvas.getByRole("button", { name: /^(record payment|registruoti mokėjimą)$/i }),
     ).toBeDisabled();
+  },
+};
+
+export const SharedWithHousehold: Story = {
+  args: { bill: { ...dueSoonBill, scope: "shared", householdId: familyHousehold.id } },
+  play: async ({ canvas }) => {
+    await expect(await canvas.findByText("Shared · Kazlauskų šeima")).toBeVisible();
   },
 };

@@ -6,11 +6,14 @@ using JxFinance.Common.SettleUp;
 using JxFinance.Common.Trash;
 using JxFinance.Domain.Accounts;
 using JxFinance.Domain.Audit;
+using JxFinance.Domain.Budgets;
 using JxFinance.Domain.Categories;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Conversions;
+using JxFinance.Domain.Goals;
 using JxFinance.Domain.Households;
 using JxFinance.Domain.Investments;
+using JxFinance.Domain.RecurringBills;
 using JxFinance.Domain.Tags;
 using JxFinance.Domain.Transactions;
 using JxFinance.Domain.Transfers;
@@ -66,6 +69,24 @@ internal sealed class AuditCollector(AppDbContext db, Guid actorId, DateTimeOffs
             (_, c) => c.Name,
             nameof(Category.Name), nameof(Category.Type), nameof(Category.Icon)),
         Audited.Of<Tag>(AuditEntityKind.Tag, Route.Shareable, (_, t) => t.Name, nameof(Tag.Name)),
+        Audited.Of<Budget>(
+            AuditEntityKind.Budget,
+            Route.Shareable,
+            (collector, b) => (b.TagId is { } tagId
+                ? collector.tags.GetValueOrDefault(tagId)
+                : collector.categories.GetValueOrDefault(b.CategoryId!.Value)) ?? "",
+            nameof(Budget.CategoryId), nameof(Budget.LimitAmount), nameof(Budget.Period), nameof(Budget.RolloverEnabled)),
+        Audited.Of<Goal>(
+            AuditEntityKind.Goal,
+            Route.Shareable,
+            (_, g) => g.Name,
+            nameof(Goal.Name), nameof(Goal.TargetAmount), nameof(Goal.CurrentAmount), nameof(Goal.TargetDate)),
+        Audited.Of<RecurringBill>(
+            AuditEntityKind.RecurringBill,
+            Route.Shareable,
+            (_, b) => b.Name,
+            nameof(RecurringBill.Name), nameof(RecurringBill.Amount), nameof(RecurringBill.CategoryId),
+            nameof(RecurringBill.Cadence), nameof(RecurringBill.NextDueDate), nameof(RecurringBill.IsActive)),
         Audited.Of<Household>(AuditEntityKind.Household, Route.Household, (_, h) => h.Name, nameof(Household.Name)),
         Audited.Of<HouseholdMembership>(
             AuditEntityKind.Member,
@@ -516,7 +537,7 @@ internal sealed class AuditCollector(AppDbContext db, Guid actorId, DateTimeOffs
         var entries = drafts.Select(d => d.Entry).DistinctBy(e => e.Entity, ReferenceEqualityComparer.Instance).ToList();
 
         var categoryIds = entries
-            .Where(e => e.Entity is Transaction)
+            .Where(e => e.Entity is Transaction or Budget or RecurringBill)
             .SelectMany(e => BothValues<CategoryId>(e, nameof(Transaction.CategoryId)))
             .Concat(storedLines.Values.SelectMany(lines => lines.Select(l => l.CategoryId)))
             .Concat(lineChanges.SelectMany(g => g).Select(e => ((TransactionLine)e.Entity).CategoryId))
@@ -534,6 +555,7 @@ internal sealed class AuditCollector(AppDbContext db, Guid actorId, DateTimeOffs
 
         var tagIds = storedTags.Values.SelectMany(ids => ids)
             .Concat(tagChanges.SelectMany(g => g).Select(e => ((TransactionTag)e.Entity).TagId))
+            .Concat(entries.Where(e => e.Entity is Budget).SelectMany(e => BothValues<TagId>(e, nameof(Budget.TagId))).OfType<TagId>())
             .Distinct()
             .ToList();
         await FillNamesAsync(

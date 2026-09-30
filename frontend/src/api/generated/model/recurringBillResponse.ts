@@ -10,6 +10,7 @@ import type { RecurringBillCadence } from "./recurringBillCadence";
 import type { RecurringBillKind } from "./recurringBillKind";
 import type { RecurringBillMatchResponse } from "./recurringBillMatchResponse";
 import type { RecurringBillShape } from "./recurringBillShape";
+import type { Scope } from "./scope";
 
 export interface RecurringBillResponse {
   id: string;
@@ -33,4 +34,7 @@ export interface RecurringBillResponse {
   latestMatch: null | RecurringBillMatchResponse;
   /** @nullable */
   debtId: string | null;
+  scope: Scope;
+  /** @nullable */
+  householdId: string | null;
 }

@@ -1,6 +1,7 @@
 using FastEndpoints;
 using FluentValidation;
 using JxFinance.Common.Errors;
+using JxFinance.Common.Sharing;
 using JxFinance.Common.Validation;
 
 namespace JxFinance.Endpoints.Budgets.Shared;
@@ -19,5 +20,6 @@ public abstract class BudgetInputValidator<TRequest> : Validator<TRequest>
         RuleFor(r => r.LimitAmount)
             .IsPositiveMoney()
             .WithMessage("Limit must be a positive decimal with at most 2 decimal places.");
+        RuleFor(r => r.HouseholdId).RequiresHouseholdWhenShared("budget");
     }
 }

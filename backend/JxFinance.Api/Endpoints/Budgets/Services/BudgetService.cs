@@ -3,10 +3,12 @@ using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Common.References;
 using JxFinance.Common.Settings;
+using JxFinance.Common.Sharing;
 using JxFinance.Common.Trash;
 using JxFinance.Domain.Budgets;
 using JxFinance.Domain.Categories;
 using JxFinance.Domain.Common;
+using JxFinance.Domain.Households;
 using JxFinance.Domain.Tags;
 using JxFinance.Domain.Trash;
 using JxFinance.Endpoints.Budgets.CreateBudget;
@@ -25,6 +27,8 @@ public sealed class BudgetService(
     IBudgetUsageCalculator usageCalculator,
     IReferenceGuard references,
     IDeletionRecorder deletions,
+    ISharingGuard sharing,
+    ICurrentUser currentUser,
     IInstanceSettingsStore settings,
     IClock clock)
     : IBudgetService
@@ -47,7 +51,8 @@ public sealed class BudgetService(
         CreateBudgetRequest request,
         CancellationToken cancellationToken)
     {
-        var error = await ValidateAsync(request, null, cancellationToken);
+        var error = await sharing.CheckAsync(request, cancellationToken)
+            ?? await ValidateAsync(request, null, cancellationToken);
         if (error is not null)
         {
             return error;
@@ -71,7 +76,8 @@ public sealed class BudgetService(
             return NotFound;
         }
 
-        var error = await ValidateAsync(request, budgetId, cancellationToken);
+        var error = await sharing.CheckAsync(budget, request, cancellationToken)
+            ?? await ValidateAsync(request, budgetId, cancellationToken);
         if (error is not null)
         {
             return error;
@@ -92,6 +98,11 @@ public sealed class BudgetService(
             NotFound,
             async budget =>
             {
+                if (budget.UserId != currentUser.Id)
+                {
+                    return new DomainError(ErrorCodes.AccessForbidden, "Only the owner can delete a shared budget.");
+                }
+
                 var names = await NamesAsync([budget], cancellationToken);
                 deletions.Record(TrashKind.Budget, id, $"{NameOf(budget, names) ?? budget.Period.ToString()}, {TrashLabel.Amount(budget.LimitAmount)}");
                 return null;
@@ -104,11 +115,13 @@ public sealed class BudgetService(
         BudgetId? excluding,
         CancellationToken cancellationToken)
     {
+        var household = SharingState.From(input).HouseholdId;
         if (input.TagId is { } tag)
         {
             var tagId = new TagId(tag);
             return await references.TagsExistAsync([tag], cancellationToken)
-                ?? await TakenAsync(b => b.TagId == tagId, "tag", input.Period, excluding, cancellationToken);
+                ?? await sharing.CheckReferencesAsync(input, new SharedReferences([], [], [tagId]), cancellationToken)
+                ?? await TakenAsync(b => b.TagId == tagId, "tag", input.Period, household, excluding, cancellationToken);
         }
 
         var categoryId = new CategoryId(input.CategoryId!.Value);
@@ -117,18 +130,21 @@ public sealed class BudgetService(
                 FlowType.Expense,
                 "Budgets can only be set on expense categories.",
                 cancellationToken)
-            ?? await TakenAsync(b => b.CategoryId == categoryId, "category", input.Period, excluding, cancellationToken);
+            ?? await sharing.CheckReferencesAsync(input, new SharedReferences([], [categoryId], []), cancellationToken)
+            ?? await TakenAsync(b => b.CategoryId == categoryId, "category", input.Period, household, excluding, cancellationToken);
     }
 
     private async Task<DomainError?> TakenAsync(
         System.Linq.Expressions.Expression<Func<Budget, bool>> sameTarget,
         string target,
         BudgetPeriod period,
+        HouseholdId? household,
         BudgetId? excluding,
         CancellationToken cancellationToken)
     {
         var taken = await db.Budgets
             .Where(sameTarget)
+            .Where(b => b.HouseholdId == household && (household != null || b.UserId == currentUser.Id))
             .AnyAsync(b => b.Period == period && (excluding == null || b.Id != excluding), cancellationToken);
 
         return taken

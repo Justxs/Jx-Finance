@@ -1,6 +1,7 @@
 using FastEndpoints;
 using FluentValidation;
 using JxFinance.Common.Errors;
+using JxFinance.Common.Sharing;
 using JxFinance.Common.Subscriptions;
 using JxFinance.Common.Validation;
 using JxFinance.Domain.RecurringBills;
@@ -55,5 +56,6 @@ public abstract class RecurringBillInputValidator<TRequest> : Validator<TRequest
             RuleFor(r => r.ToAccountId)
                 .IsAbsent()
                 .WithMessage("Only a recurring transfer has a destination account."));
+        RuleFor(r => r.HouseholdId).RequiresHouseholdWhenShared("recurring entry");
     }
 }

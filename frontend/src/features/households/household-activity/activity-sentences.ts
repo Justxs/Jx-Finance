@@ -27,6 +27,15 @@ const FIELDS = [
   "method",
   "shares",
   "note",
+  "limitAmount",
+  "period",
+  "rolloverEnabled",
+  "targetAmount",
+  "currentAmount",
+  "targetDate",
+  "cadence",
+  "nextDueDate",
+  "isActive",
 ] as const;
 
 type AuditField = (typeof FIELDS)[number];

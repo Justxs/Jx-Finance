@@ -22,7 +22,7 @@ These come from the release checklist and block calling the current release veri
 | --- | --- | --- |
 | Investments | Corporate actions other than splits are only counted (mergers, spin-offs, symbol changes) | M |
 | Investments | Bonds by hand only; options, futures and short positions out of scope | L |
-| Households | Budgets, goals, assets, debts and recurring entries cannot be shared | L |
+| Households | Assets and debts cannot be shared | M |
 | Users | No forced password change after an administrator reset (rejected on 2026-09-19 unless done completely) | M |
 | Settings | Installation-wide only; no per-user reporting currency (the ledger's rows per page became a per-browser choice on 2026-09-30) | L |
 | Exchange rates | ECB only; no manual rate, no currencies outside the ECB list | S |
@@ -53,6 +53,7 @@ Ordered by how much they would help daily use for the effort. Following the prod
 
 | Date | Item | Where it is described |
 | --- | --- | --- |
+| 2026-09-30 | Shared budgets, goals and recurring entries: their forms offer the Visibility field of accounts and categories, members of the household see and edit a shared one while only its owner unshares or deletes it, and it must use categories, tags and accounts shared with the same household (`household.referenceNotShared`). A shared budget counts the household's shared accounts only, so every member sees one figure; a shared bill still reminds its owner only. Deleting the household makes them personal, and their changes reach the activity log. Decided while the owner was away, to be reviewed | [Households and sharing](features/households-and-sharing.md#shared-budgets-goals-and-recurring-entries) |
 | 2026-09-30 | Re-importable member export: under the download in Settings › Personal › Import and export, "Import a download" loads a `jx-finance-export` zip into a member who owns no accounts or tags yet, from this or another installation of the same version, in one transaction. Ids are kept, every record becomes the member's own and personal, a reference to a row outside the file is cleared or drops the record, attached files are checked against their SHA-256, and records that already exist answer `import.alreadyPresent`. Preferences, notifications, month closes, the trash, the broker connection and household rows are not imported. Decided while the owner was away, to be reviewed | [Data export per user](features/data-export-per-user.md#bringing-it-back) |
 | 2026-09-30 | Trade CSV from any broker: a third tab in the investments import reads a documented CSV of buys, sells, dividends, taxes, interest and fees into the same import the Interactive Brokers statement uses, with security matching, the oversell check and deduplication by row | [Investments](features/investments.md#trade-csv-from-any-broker) |
 | 2026-09-30 | Spending per receipt item: the reports page lists what each item on the member's read receipts cost over the range, grouped by the normalized item name, with the times bought and a search, from the readings already stored | [Receipt reading](features/receipt-reading.md#spending-per-item) |

@@ -12,4 +12,7 @@ public enum DeletionChangeKind
     CategoryShare,
     TagShare,
     CategoryParent,
+    BudgetShare,
+    GoalShare,
+    RecurringBillShare,
 }

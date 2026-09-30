@@ -314,6 +314,8 @@ export const CloseMonthResponse = zod.object({
         rolloverEnabled: zod.boolean(),
         windowStart: zod.iso.date(),
         windowEnd: zod.iso.date(),
+        scope: zod.enum(["personal", "shared"]),
+        householdId: zod.uuid().nullable(),
       }),
     )
     .nullable(),
@@ -743,6 +745,8 @@ export const MonthReviewResponse = zod.object({
         rolloverEnabled: zod.boolean(),
         windowStart: zod.iso.date(),
         windowEnd: zod.iso.date(),
+        scope: zod.enum(["personal", "shared"]),
+        householdId: zod.uuid().nullable(),
       }),
     )
     .nullable(),
@@ -1221,6 +1225,8 @@ export const UpdateMonthNoteResponse = zod.object({
         rolloverEnabled: zod.boolean(),
         windowStart: zod.iso.date(),
         windowEnd: zod.iso.date(),
+        scope: zod.enum(["personal", "shared"]),
+        householdId: zod.uuid().nullable(),
       }),
     )
     .nullable(),

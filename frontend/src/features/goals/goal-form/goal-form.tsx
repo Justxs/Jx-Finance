@@ -1,22 +1,32 @@
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
-import { useCreateGoal, useUpdateGoal } from "@/api/generated";
-import { type AccountResponse, GoalFunding, type GoalResponse } from "@/api/generated/model";
+import { useCreateGoal, useHouseholdsSuspense, useUpdateGoal } from "@/api/generated";
+import {
+  type AccountResponse,
+  GoalFunding,
+  type GoalResponse,
+  type Scope,
+} from "@/api/generated/model";
 import {
   createGoalBodyFundingSharePercentMax,
   createGoalBodyNameMax,
 } from "@/api/schemas/goals/goals.zod";
 import { useServerForm } from "@/components/form";
 import { FormError } from "@/components/form-error/form-error";
+import { SharingFields } from "@/components/sharing-fields/sharing-fields";
 import { FormGrid } from "@/components/ui/form-grid/form-grid";
 import { silentMutation, upsert } from "@/lib/mutations";
 import { namedOptions, optionsOf, withMissingOption } from "@/lib/options";
 import {
   optionalNonNegativeMoney,
   positiveMoney,
+  refineSharing,
   requiredText,
+  sharingPayload,
+  sharingShape,
   wholeNumberBetween,
 } from "@/lib/validation";
+import { useSharingDefaults } from "@/stores/active-household-store";
 
 const SHARE_MIN = 1;
 
@@ -28,6 +38,8 @@ interface FormValues {
   funding: GoalFunding;
   fundingAccountId: string;
   fundingSharePercent: string;
+  scope: Scope;
+  householdId: string;
 }
 
 interface Props {
@@ -38,26 +50,31 @@ interface Props {
 
 export function GoalForm({ initial, accounts, onClose }: Readonly<Props>) {
   const { t } = useTranslation();
+  const sharing = useSharingDefaults(useHouseholdsSuspense().data, initial);
 
-  const schema = z
-    .object({
-      name: requiredText(t, createGoalBodyNameMax),
-      targetAmount: positiveMoney(t),
-      currentAmount: optionalNonNegativeMoney(t),
-      targetDate: z.string(),
-      funding: z.enum(GoalFunding),
-      fundingAccountId: z.string(),
-      fundingSharePercent: wholeNumberBetween(t, SHARE_MIN, createGoalBodyFundingSharePercentMax),
-    })
-    .superRefine((value, ctx) => {
-      if (value.funding === "account" && value.fundingAccountId === "") {
-        ctx.addIssue({
-          code: "custom",
-          message: t("validation.required"),
-          path: ["fundingAccountId"],
-        });
-      }
-    });
+  const schema = refineSharing(
+    z
+      .object({
+        name: requiredText(t, createGoalBodyNameMax),
+        targetAmount: positiveMoney(t),
+        currentAmount: optionalNonNegativeMoney(t),
+        targetDate: z.string(),
+        funding: z.enum(GoalFunding),
+        fundingAccountId: z.string(),
+        fundingSharePercent: wholeNumberBetween(t, SHARE_MIN, createGoalBodyFundingSharePercentMax),
+        ...sharingShape(),
+      })
+      .superRefine((value, ctx) => {
+        if (value.funding === "account" && value.fundingAccountId === "") {
+          ctx.addIssue({
+            code: "custom",
+            message: t("validation.required"),
+            path: ["fundingAccountId"],
+          });
+        }
+      }),
+    t,
+  );
 
   const { create, update, pending, error } = upsert(
     useCreateGoal({ mutation: { ...silentMutation, onSuccess: onClose } }),
@@ -72,6 +89,7 @@ export function GoalForm({ initial, accounts, onClose }: Readonly<Props>) {
     funding: initial?.funding ?? "manual",
     fundingAccountId: initial?.fundingAccountId ?? "",
     fundingSharePercent: String(initial?.fundingSharePercent ?? 100),
+    ...sharing,
   };
 
   const form = useServerForm({
@@ -86,6 +104,7 @@ export function GoalForm({ initial, accounts, onClose }: Readonly<Props>) {
         funding: value.funding,
         fundingAccountId: fromAccount ? value.fundingAccountId : null,
         fundingSharePercent: fromAccount ? Number(value.fundingSharePercent) : null,
+        ...sharingPayload(value),
       };
 
       return initial?.id
@@ -180,6 +199,12 @@ export function GoalForm({ initial, accounts, onClose }: Readonly<Props>) {
           <form.Field name="targetDate">
             {(field) => <field.DateField id="goal-date" label={t("goals.targetDate")} />}
           </form.Field>
+
+          <SharingFields
+            form={form}
+            fields={{ scope: "scope", householdId: "householdId" }}
+            idPrefix="goal"
+          />
         </FormGrid>
 
         <FormError error={error} />

@@ -6,6 +6,7 @@ import {
   accountFundedGoal,
   accounts,
   completedGoal,
+  familyHousehold,
   goalWithTargetDate,
   openEndedGoal,
   sharedFundedGoal,
@@ -92,5 +93,12 @@ export const EditRequested: Story = {
   play: async ({ args, canvas }) => {
     await userEvent.click(canvas.getByRole("button", { name: /^(edit|redaguoti):/i }));
     await expect(args.onEdit).toHaveBeenCalledOnce();
+  },
+};
+
+export const SharedWithHousehold: Story = {
+  args: { goal: { ...goalWithTargetDate, scope: "shared", householdId: familyHousehold.id } },
+  play: async ({ canvas }) => {
+    await expect(await canvas.findByText("Shared · Kazlauskų šeima")).toBeVisible();
   },
 };

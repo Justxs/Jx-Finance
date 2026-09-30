@@ -6,6 +6,7 @@ import type {
   RecurringBillShape,
 } from "@/api/generated/model";
 import { type DeleteProps, RowActions } from "@/components/row-actions/row-actions";
+import { SharedScopeTag } from "@/components/shared-scope-tag/shared-scope-tag";
 import { Button } from "@/components/ui/button/button";
 import { Tag } from "@/components/ui/tag/tag";
 import { urgencyOf } from "@/features/recurring-bills/bill-groups";
@@ -81,6 +82,7 @@ export function RecurringBillRow({
           <Tag tone={shapeTone[bill.shape]}>{t(`recurringBills.shapes.${bill.shape}`)}</Tag>
           {bill.isActive ? null : <Tag tone="neutral">{t("recurringBills.inactive")}</Tag>}
           {overdue ? <Tag tone="negative">{t("recurringBills.overdue")}</Tag> : null}
+          <SharedScopeTag scope={bill.scope} householdId={bill.householdId} />
         </>
       }
       meta={

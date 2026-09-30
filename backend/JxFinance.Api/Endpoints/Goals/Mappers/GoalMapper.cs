@@ -1,3 +1,4 @@
+using JxFinance.Common.Sharing;
 using JxFinance.Domain.Accounts;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Goals;
@@ -22,6 +23,7 @@ public static class GoalMapper
         goal.TargetDate = input.TargetDate;
         goal.Funding = input.Funding;
         goal.FundingSharePercent = input.FundingSharePercent ?? 100;
+        goal.ApplySharing(input);
         goal.FundingAccountId = input.FundingAccount();
 
         if (input.Funding != GoalFunding.Account)
@@ -42,5 +44,7 @@ public static class GoalMapper
         goal.Funding,
         goal.FundingAccountId?.Value,
         goal.FundingSharePercent,
-        progressAmount);
+        progressAmount,
+        goal.Scope,
+        goal.HouseholdId?.Value);
 }

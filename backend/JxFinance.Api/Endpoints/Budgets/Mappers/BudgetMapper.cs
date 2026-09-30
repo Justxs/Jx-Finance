@@ -1,3 +1,4 @@
+using JxFinance.Common.Sharing;
 using JxFinance.Domain.Budgets;
 using JxFinance.Domain.Categories;
 using JxFinance.Domain.Common;
@@ -23,6 +24,7 @@ public static class BudgetMapper
         budget.LimitAmount = new Money(input.LimitAmount, reportingCurrency);
         budget.Period = input.Period;
         budget.RolloverEnabled = input.RolloverEnabled;
+        budget.ApplySharing(input);
     }
 
     public static BudgetResponse ToResponse(this Budget budget, string? name, BudgetUsage usage)
@@ -42,6 +44,8 @@ public static class BudgetMapper
             budget.Period,
             budget.RolloverEnabled,
             usage.Window.Start,
-            usage.Window.LastDay);
+            usage.Window.LastDay,
+            budget.Scope,
+            budget.HouseholdId?.Value);
     }
 }

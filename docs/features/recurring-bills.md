@@ -10,6 +10,8 @@ Two properties describe an entry. Its **shape** says what a confirmation writes 
 
 The user-facing name is "recurring entries" in both locales, because "bills" stopped covering two of the three shapes. The table, the entity, the service and the route prefix are still `RecurringBill` and `/api/recurring-bills`: a rename would mean a migration plus a backup format that no file taken by an older version could be restored into, since a backup names the tables it carries. The names are documented as a deliberate mismatch rather than paid for.
 
+A recurring entry can be shared with a household when its accounts and category are shared with it; members see and confirm it, and the reminder goes to its owner. See [Households and sharing](households-and-sharing.md#shared-budgets-goals-and-recurring-entries).
+
 ## What each shape needs
 
 | Shape | Account | Second account | Category |

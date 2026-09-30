@@ -1,7 +1,9 @@
 using FastEndpoints;
 using JxFinance.Common;
+using JxFinance.Common.Errors;
 using JxFinance.Common.References;
 using JxFinance.Common.Settings;
+using JxFinance.Common.Sharing;
 using JxFinance.Common.Trash;
 using JxFinance.Domain.Accounts;
 using JxFinance.Domain.Common;
@@ -24,7 +26,9 @@ public sealed class GoalService(
     IInstanceSettingsStore settings,
     IReferenceGuard references,
     IDeletionRecorder deletions,
-    IAccountService accounts) : IGoalService
+    IAccountService accounts,
+    ISharingGuard sharing,
+    ICurrentUser currentUser) : IGoalService
 {
     private static readonly DomainError NotFound = EntityLookup.NotFound("Goal not found.");
 
@@ -40,7 +44,7 @@ public sealed class GoalService(
         CreateGoalRequest request,
         CancellationToken cancellationToken)
     {
-        if (await FundingAccountErrorAsync(request, cancellationToken) is { } error)
+        if ((await sharing.CheckAsync(request, cancellationToken) ?? await FundingAccountErrorAsync(request, cancellationToken)) is { } error)
         {
             return error;
         }
@@ -62,7 +66,7 @@ public sealed class GoalService(
             return NotFound;
         }
 
-        if (await FundingAccountErrorAsync(request, cancellationToken) is { } error)
+        if ((await sharing.CheckAsync(goal, request, cancellationToken) ?? await FundingAccountErrorAsync(request, cancellationToken)) is { } error)
         {
             return error;
         }
@@ -80,14 +84,25 @@ public sealed class GoalService(
             id,
             g => g.Id == goalId,
             NotFound,
-            goal => deletions.Record(TrashKind.Goal, id, goal.Name),
+            goal =>
+            {
+                if (goal.UserId != currentUser.Id)
+                {
+                    return Task.FromResult<DomainError?>(new DomainError(ErrorCodes.AccessForbidden, "Only the owner can delete a shared goal."));
+                }
+
+                deletions.Record(TrashKind.Goal, id, goal.Name);
+                return Task.FromResult<DomainError?>(null);
+            },
             cancellationToken);
     }
 
-    private Task<DomainError?> FundingAccountErrorAsync(IGoalInput input, CancellationToken cancellationToken) =>
-        input.FundingAccount() is { } accountId
-            ? references.AccountExistsAsync(accountId, cancellationToken)
-            : Task.FromResult<DomainError?>(null);
+    private async Task<DomainError?> FundingAccountErrorAsync(IGoalInput input, CancellationToken cancellationToken)
+    {
+        AccountId[] funding = input.FundingAccount() is { } accountId ? [accountId] : [];
+        return (funding.Length > 0 ? await references.AccountExistsAsync(funding[0], cancellationToken) : null)
+            ?? await sharing.CheckReferencesAsync(input, new SharedReferences(funding, [], []), cancellationToken);
+    }
 
     private async Task<GoalResponse> ToResponseAsync(Goal goal, CancellationToken cancellationToken) =>
         goal.ToResponse(Progress(goal, await BalancesAsync([goal], cancellationToken)));

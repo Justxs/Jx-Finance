@@ -2025,7 +2025,10 @@
       "member": "Narys",
       "attachment": "Failas",
       "sharedExpense": "Padalinta išlaida",
-      "settlement": "Mokėjimas"
+      "settlement": "Mokėjimas",
+      "budget": "Biudžetas",
+      "goal": "Tikslas",
+      "recurringBill": "Pasikartojantis įrašas"
     },
     "sentences": {
       "created": "{{actor}} pridėjo: {{description}}",
@@ -2073,7 +2076,16 @@
       "role": "vaidmuo",
       "method": "dalijimo būdas",
       "shares": "dalys",
-      "note": "pastaba"
+      "note": "pastaba",
+      "limitAmount": "riba",
+      "period": "laikotarpis",
+      "rolloverEnabled": "likučio perkėlimas",
+      "targetAmount": "tikslas",
+      "currentAmount": "sukaupta",
+      "targetDate": "tikslo data",
+      "cadence": "kartojasi",
+      "nextDueDate": "kita data",
+      "isActive": "aktyvus"
     }
   },
   "sharing": {
@@ -2559,7 +2571,8 @@
       "lastOwner": "Namų ūkis turi turėti bent vieną savininką.",
       "notMember": "Nesate šio namų ūkio narys.",
       "required": "Bendram įrašui pasirinkite namų ūkį.",
-      "scopeMismatch": "Užklausoje nurodyti du skirtingi namų ūkiai. Perkraukite puslapį ir bandykite dar kartą."
+      "scopeMismatch": "Užklausoje nurodyti du skirtingi namų ūkiai. Perkraukite puslapį ir bandykite dar kartą.",
+      "referenceNotShared": "Bendras įrašas gali naudoti tik su tuo pačiu namų ūkiu bendrinamas sąskaitas, kategorijas ir žymes."
     },
     "iban": {
       "invalid": "Įveskite galiojantį IBAN, pvz., LT12 1000 0111 0100 1000."

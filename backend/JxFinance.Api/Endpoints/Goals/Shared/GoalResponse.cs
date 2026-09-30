@@ -1,4 +1,5 @@
 using JxFinance.Common.Json;
+using JxFinance.Domain.Common;
 using JxFinance.Domain.Goals;
 
 namespace JxFinance.Endpoints.Goals.Shared;
@@ -12,4 +13,6 @@ public sealed record GoalResponse(
     GoalFunding Funding,
     Guid? FundingAccountId,
     int FundingSharePercent,
-    [property: Money] decimal? ProgressAmount);
+    [property: Money] decimal? ProgressAmount,
+    Scope Scope,
+    Guid? HouseholdId);

@@ -8,6 +8,7 @@ import { withWidth } from "@/storybook/decorators";
 import {
   budgets,
   categories,
+  familyHousehold,
   incomeCategories,
   overLimitBudget,
   holidayTagBudget,
@@ -169,5 +170,17 @@ export const ServerFieldError: Story = {
     await fireEvent.change(limit, { target: { value: "260.00" } });
     await expect(limit).toHaveAttribute("aria-invalid", "false");
     await expect(message).not.toBeInTheDocument();
+  },
+};
+
+export const EditingShared: Story = {
+  args: { initial: { ...budgets[2]!, scope: "shared", householdId: familyHousehold.id } },
+  play: async ({ canvas }) => {
+    await expect(await canvas.findByRole("combobox", { name: "Visibility" })).toHaveTextContent(
+      "Shared",
+    );
+    await expect(canvas.getByRole("combobox", { name: "Household" })).toHaveTextContent(
+      familyHousehold.name,
+    );
   },
 };

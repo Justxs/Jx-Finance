@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import type { GoalResponse } from "@/api/generated/model";
 import { ProgressAmount, ProgressRow } from "@/components/progress-row/progress-row";
 import type { DeleteProps } from "@/components/row-actions/row-actions";
+import { SharedScopeTag } from "@/components/shared-scope-tag/shared-scope-tag";
 import { Tag } from "@/components/ui/tag/tag";
 import { monthlyToReach } from "@/features/goals/goal-pace";
 import { useIsoDate, useMoney, usePercent } from "@/hooks/use-formatters";
@@ -57,6 +58,7 @@ export function GoalRow({ goal, accountNames, onEdit, ...deleteProps }: Readonly
           {source ? (
             <p className="text-xs wrap-break-word text-muted-foreground">{source}</p>
           ) : null}
+          <SharedScopeTag scope={goal.scope} householdId={goal.householdId} className="mt-1" />
         </>
       }
       primary={

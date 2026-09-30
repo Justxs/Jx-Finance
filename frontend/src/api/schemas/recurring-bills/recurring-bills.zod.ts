@@ -62,6 +62,8 @@ export const CreateRecurringBillBody = zod.object({
     .max(createRecurringBillBodyMatchKeyMax)
     .nullish(),
   debtId: zod.uuid().nullish(),
+  scope: zod.enum(["personal", "shared"]).optional(),
+  householdId: zod.uuid().nullish(),
 });
 
 export const createRecurringBillResponseAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
@@ -104,6 +106,8 @@ export const CreateRecurringBillResponse = zod.object({
     }),
   ]),
   debtId: zod.uuid().nullable(),
+  scope: zod.enum(["personal", "shared"]),
+  householdId: zod.uuid().nullable(),
 });
 
 /**
@@ -150,6 +154,8 @@ export const RecurringBillsResponseItem = zod.object({
     }),
   ]),
   debtId: zod.uuid().nullable(),
+  scope: zod.enum(["personal", "shared"]),
+  householdId: zod.uuid().nullable(),
 });
 export const RecurringBillsResponse = zod.array(RecurringBillsResponseItem);
 
@@ -241,6 +247,8 @@ export const RecurringBillResponse = zod.object({
     }),
   ]),
   debtId: zod.uuid().nullable(),
+  scope: zod.enum(["personal", "shared"]),
+  householdId: zod.uuid().nullable(),
 });
 
 /**
@@ -284,6 +292,8 @@ export const UpdateRecurringBillBody = zod.object({
     .max(updateRecurringBillBodyMatchKeyMax)
     .nullish(),
   debtId: zod.uuid().nullish(),
+  scope: zod.enum(["personal", "shared"]).optional(),
+  householdId: zod.uuid().nullish(),
 });
 
 export const updateRecurringBillResponseAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
@@ -326,6 +336,8 @@ export const UpdateRecurringBillResponse = zod.object({
     }),
   ]),
   debtId: zod.uuid().nullable(),
+  scope: zod.enum(["personal", "shared"]),
+  householdId: zod.uuid().nullable(),
 });
 
 /**
@@ -401,6 +413,8 @@ export const ConfirmRecurringBillResponse = zod.object({
       }),
     ]),
     debtId: zod.uuid().nullable(),
+    scope: zod.enum(["personal", "shared"]),
+    householdId: zod.uuid().nullable(),
   }),
   transactionId: zod.uuid().nullable(),
   transferId: zod.uuid().nullable(),

@@ -10,7 +10,9 @@ type Defaulted =
   | "isActive"
   | "matchKey"
   | "latestMatch"
-  | "debtId";
+  | "debtId"
+  | "scope"
+  | "householdId";
 
 type BillSeed = Omit<RecurringBillResponse, Defaulted> &
   Partial<Pick<RecurringBillResponse, Defaulted>>;
@@ -25,6 +27,8 @@ function bill(seed: BillSeed): RecurringBillResponse {
     matchKey: null,
     latestMatch: null,
     debtId: null,
+    scope: "personal",
+    householdId: null,
     ...seed,
   };
 }

@@ -7,6 +7,7 @@
  */
 import type { GoalFunding } from "./goalFunding";
 import type { NullableOfDateOnly } from "./nullableOfDateOnly";
+import type { Scope } from "./scope";
 
 export interface GoalResponse {
   id: string;
@@ -20,4 +21,7 @@ export interface GoalResponse {
   fundingSharePercent: number;
   /** @nullable */
   progressAmount: string | null;
+  scope: Scope;
+  /** @nullable */
+  householdId: string | null;
 }

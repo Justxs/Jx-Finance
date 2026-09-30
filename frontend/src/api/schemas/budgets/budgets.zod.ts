@@ -37,6 +37,8 @@ export const CreateBudgetBody = zod.object({
     .describe(
       "The tag the limit applies to; must be visible to you. Send it or categoryId, not both.",
     ),
+  scope: zod.enum(["personal", "shared"]).optional(),
+  householdId: zod.uuid().nullish(),
 });
 
 export const createBudgetResponseLimitAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
@@ -61,6 +63,8 @@ export const CreateBudgetResponse = zod.object({
   rolloverEnabled: zod.boolean(),
   windowStart: zod.iso.date(),
   windowEnd: zod.iso.date(),
+  scope: zod.enum(["personal", "shared"]),
+  householdId: zod.uuid().nullable(),
 });
 
 /**
@@ -89,6 +93,8 @@ export const BudgetsResponseItem = zod.object({
   rolloverEnabled: zod.boolean(),
   windowStart: zod.iso.date(),
   windowEnd: zod.iso.date(),
+  scope: zod.enum(["personal", "shared"]),
+  householdId: zod.uuid().nullable(),
 });
 export const BudgetsResponse = zod.array(BudgetsResponseItem);
 
@@ -158,6 +164,8 @@ export const UpdateBudgetBody = zod.object({
     .boolean()
     .describe("Whether the previous window's remainder adjusts this window's limit."),
   tagId: zod.uuid().nullish(),
+  scope: zod.enum(["personal", "shared"]).optional(),
+  householdId: zod.uuid().nullish(),
 });
 
 export const updateBudgetResponseLimitAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
@@ -182,4 +190,6 @@ export const UpdateBudgetResponse = zod.object({
   rolloverEnabled: zod.boolean(),
   windowStart: zod.iso.date(),
   windowEnd: zod.iso.date(),
+  scope: zod.enum(["personal", "shared"]),
+  householdId: zod.uuid().nullable(),
 });

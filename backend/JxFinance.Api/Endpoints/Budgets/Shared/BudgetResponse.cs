@@ -1,5 +1,6 @@
 using JxFinance.Common.Json;
 using JxFinance.Domain.Budgets;
+using JxFinance.Domain.Common;
 
 namespace JxFinance.Endpoints.Budgets.Shared;
 
@@ -16,4 +17,6 @@ public sealed record BudgetResponse(
     BudgetPeriod Period,
     bool RolloverEnabled,
     DateOnly WindowStart,
-    DateOnly WindowEnd);
+    DateOnly WindowEnd,
+    Scope Scope,
+    Guid? HouseholdId);

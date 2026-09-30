@@ -78,6 +78,8 @@ export const budgetHandlers = [
       rolloverEnabled: false,
       windowStart: budgetWindows.monthly.start,
       windowEnd: budgetWindows.monthly.end,
+      scope: "personal",
+      householdId: null,
     };
     return mergeBudget(base, await readBody(request));
   }),

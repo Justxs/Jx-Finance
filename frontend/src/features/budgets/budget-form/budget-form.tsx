@@ -5,6 +5,7 @@ import {
   getBudgetSuggestionsSuspenseQueryOptions,
   useBudgetSuggestionsSuspense,
   useCreateBudget,
+  useHouseholdsSuspense,
   useUpdateBudget,
 } from "@/api/generated";
 import {
@@ -12,10 +13,12 @@ import {
   type BudgetResponse,
   type BudgetSuggestionsResponse,
   type CategoryResponse,
+  type Scope,
   type TagResponse,
 } from "@/api/generated/model";
 import { useServerForm } from "@/components/form";
 import { FormError } from "@/components/form-error/form-error";
+import { SharingFields } from "@/components/sharing-fields/sharing-fields";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { FormGrid } from "@/components/ui/form-grid/form-grid";
 import { budgetPeriodOptions } from "@/features/budgets/budget-periods";
@@ -23,7 +26,8 @@ import { useMoney } from "@/hooks/use-formatters";
 import { silentMutation, upsert } from "@/lib/mutations";
 import { namedOptions } from "@/lib/options";
 import { silentQuery } from "@/lib/query-client";
-import { positiveMoney } from "@/lib/validation";
+import { positiveMoney, refineSharing, sharingPayload, sharingShape } from "@/lib/validation";
+import { useSharingDefaults } from "@/stores/active-household-store";
 
 type BudgetTarget = "category" | "tag";
 
@@ -34,6 +38,8 @@ interface FormValues {
   limitAmount: string;
   period: BudgetPeriod;
   rolloverEnabled: boolean;
+  scope: Scope;
+  householdId: string;
 }
 
 function suggestionOf(suggestions: BudgetSuggestionsResponse | undefined, categoryId: string) {
@@ -98,22 +104,27 @@ export function BudgetForm({ categories, tags, initial, onClose }: Readonly<Prop
   const monthly = useBudgetSuggestionsSuspense({ period: "monthly" });
   const expenseCategories = categories.filter((c) => c.type === "expense");
   const firstCategoryId = expenseCategories[0]?.id ?? "";
+  const sharing = useSharingDefaults(useHouseholdsSuspense().data, initial);
 
-  const schema = z
-    .object({
-      target: z.enum(["category", "tag"]),
-      categoryId: z.string(),
-      tagId: z.string(),
-      limitAmount: positiveMoney(t),
-      period: z.enum(BudgetPeriod),
-      rolloverEnabled: z.boolean(),
-    })
-    .superRefine((value, ctx) => {
-      const field = value.target === "tag" ? "tagId" : "categoryId";
-      if (!value[field]) {
-        ctx.addIssue({ code: "custom", message: t("validation.required"), path: [field] });
-      }
-    });
+  const schema = refineSharing(
+    z
+      .object({
+        target: z.enum(["category", "tag"]),
+        categoryId: z.string(),
+        tagId: z.string(),
+        limitAmount: positiveMoney(t),
+        period: z.enum(BudgetPeriod),
+        rolloverEnabled: z.boolean(),
+        ...sharingShape(),
+      })
+      .superRefine((value, ctx) => {
+        const field = value.target === "tag" ? "tagId" : "categoryId";
+        if (!value[field]) {
+          ctx.addIssue({ code: "custom", message: t("validation.required"), path: [field] });
+        }
+      }),
+    t,
+  );
 
   const { create, update, pending, error } = upsert(
     useCreateBudget({ mutation: { ...silentMutation, onSuccess: onClose } }),
@@ -127,16 +138,18 @@ export function BudgetForm({ categories, tags, initial, onClose }: Readonly<Prop
     limitAmount: initial?.limitAmount ?? suggestedLimit(monthly.data, firstCategoryId),
     period: initial?.period ?? "monthly",
     rolloverEnabled: initial?.rolloverEnabled ?? false,
+    ...sharing,
   };
 
   const form = useServerForm({
     defaultValues,
     schema,
-    submit: ({ target, categoryId, tagId, ...rest }) => {
+    submit: ({ target, categoryId, tagId, scope, householdId, ...rest }) => {
       const data = {
         ...rest,
         categoryId: target === "category" ? categoryId : null,
         tagId: target === "tag" ? tagId : null,
+        ...sharingPayload({ scope, householdId }),
       };
       return initial?.id ? update({ id: initial.id, data }) : create({ data });
     },
@@ -271,6 +284,12 @@ export function BudgetForm({ categories, tags, initial, onClose }: Readonly<Prop
               />
             )}
           </form.Field>
+
+          <SharingFields
+            form={form}
+            fields={{ scope: "scope", householdId: "householdId" }}
+            idPrefix="budget"
+          />
         </FormGrid>
 
         <FormError error={error} />

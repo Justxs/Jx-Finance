@@ -1,5 +1,6 @@
 using JxFinance.Common.Json;
 using JxFinance.Domain.Budgets;
+using JxFinance.Domain.Common;
 using JxFinance.Endpoints.Budgets.Shared;
 
 namespace JxFinance.Endpoints.Budgets.CreateBudget;
@@ -9,4 +10,6 @@ public sealed record CreateBudgetRequest(
     [property: Money] decimal LimitAmount,
     BudgetPeriod Period,
     bool RolloverEnabled,
-    Guid? TagId = null) : IBudgetInput;
+    Guid? TagId = null,
+    Scope Scope = Scope.Personal,
+    Guid? HouseholdId = null) : IBudgetInput;

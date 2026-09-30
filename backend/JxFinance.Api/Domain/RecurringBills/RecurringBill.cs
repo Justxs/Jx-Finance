@@ -1,11 +1,12 @@
 using JxFinance.Domain.Accounts;
 using JxFinance.Domain.Categories;
 using JxFinance.Domain.Common;
+using JxFinance.Domain.Households;
 using JxFinance.Domain.NetWorth;
 
 namespace JxFinance.Domain.RecurringBills;
 
-public sealed class RecurringBill : OwnableEntity
+public sealed class RecurringBill : OwnableEntity, IShareable
 {
     public RecurringBillId Id { get; set; } = RecurringBillId.New();
     public required string Name { get; set; }
@@ -22,6 +23,8 @@ public sealed class RecurringBill : OwnableEntity
     public bool IsActive { get; set; } = true;
     public string? MatchKey { get; set; }
     public DebtId? DebtId { get; set; }
+    public Scope Scope { get; set; } = Scope.Personal;
+    public HouseholdId? HouseholdId { get; set; }
 
     public void Schedule(DateOnly nextDueDate)
     {

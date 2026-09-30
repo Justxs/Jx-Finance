@@ -1,8 +1,9 @@
+using JxFinance.Common.Sharing;
 using JxFinance.Domain.Budgets;
 
 namespace JxFinance.Endpoints.Budgets.Shared;
 
-public interface IBudgetInput
+public interface IBudgetInput : IShareableInput
 {
     Guid? CategoryId { get; }
     Guid? TagId { get; }

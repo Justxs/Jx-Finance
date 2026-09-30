@@ -18,6 +18,8 @@ function bill(overrides: Partial<RecurringBillResponse>): RecurringBillResponse 
     isActive: true,
     matchKey: null,
     latestMatch: null,
+    scope: "personal",
+    householdId: null,
     debtId: null,
     ...overrides,
   };

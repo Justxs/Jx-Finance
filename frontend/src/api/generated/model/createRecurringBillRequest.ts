@@ -9,6 +9,7 @@ import type { DateOnly } from "./dateOnly";
 import type { RecurringBillCadence } from "./recurringBillCadence";
 import type { RecurringBillKind } from "./recurringBillKind";
 import type { RecurringBillShape } from "./recurringBillShape";
+import type { Scope } from "./scope";
 
 export interface CreateRecurringBillRequest {
   /**
@@ -54,4 +55,7 @@ export interface CreateRecurringBillRequest {
   matchKey?: string | null;
   /** @nullable */
   debtId?: string | null;
+  scope?: Scope;
+  /** @nullable */
+  householdId?: string | null;
 }

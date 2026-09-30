@@ -2,7 +2,7 @@
 
 Back to the [feature walkthrough](README.md). See also [decisions](../decisions/households-and-sharing.md), [architecture: Sharing and households](../architecture/sharing.md).
 
-Backend `Households`, page `/households`, listed as Households under Shared on the one Settings page while the switch is on (see [Installation settings](installation-settings.md#one-settings-page)), with its title and a small outline "Create household" button in a section header. Household roles (Owner, Member) are independent of application roles (Admin, Member). Only accounts, categories and tags can be shared; since 2026-09-29 a member can also split an expense they paid with the household, which the other members see as a household record even when the account behind it is personal (see [Settling up](#settling-up)).
+Backend `Households`, page `/households`, listed as Households under Shared on the one Settings page while the switch is on (see [Installation settings](installation-settings.md#one-settings-page)), with its title and a small outline "Create household" button in a section header. Household roles (Owner, Member) are independent of application roles (Admin, Member). Accounts, categories and tags can be shared, and since 2026-09-30 budgets, goals and recurring entries too (see [Shared budgets, goals and recurring entries](#shared-budgets-goals-and-recurring-entries)); since 2026-09-29 a member can also split an expense they paid with the household, which the other members see as a household record even when the account behind it is personal (see [Settling up](#settling-up)).
 
 ## Who sees what
 
@@ -14,7 +14,8 @@ flowchart TD
     Filter -->|"otherwise"| Hidden["invisible, answers 404"]
     Scoped["IAccountScoped: transactions, conversions, investment entries"] --> ViaAcc["visible when the account is visible"]
     Transfer["Transfer"] --> Either["visible through either account,<br/>edit and delete need both"]
-    Personal["Budgets, goals, assets, debts, bills, notifications, snapshots"] --> OwnerOnly["owner only"]
+    Plans["Shareable plans: budgets, goals, recurring entries"] --> Filter
+    Personal["Assets, debts, notifications, snapshots"] --> OwnerOnly["owner only"]
     Household["IHouseholdScoped: split expenses, settle-up payments"] --> Members["visible to current members<br/>of a living household"]
 ```
 
@@ -54,6 +55,20 @@ The narrowing happens in one place, the shareable branch of `ApplyQueryFilters` 
 - Background jobs, the reminder and alert jobs, the broker sync, the snapshotter, backup and restore and the administrator recovery command run outside a request and keep the unscoped view. `ICurrentUser.ActiveHouseholdId` defaults to "no household", so anything that is not an HTTP request is unscoped by construction.
 - Every export answers the scope of the screen it was started from. The CSV exports stay plain browser downloads and carry the scope in the URL; the PDF export goes through the API client and carries it in the header as well. The backup download is not scoped: a backup is the whole installation, taken by an administrator, and it is written and read outside the query filter exactly as the background jobs are.
 - The [data export per user](data-export-per-user.md) is not scoped either: it answers "what is mine", not "what am I looking at", so it ignores the header and takes no `activeHousehold` parameter. An own account shared into a household other than the active one is still in it, and a partner's shared account never is.
+
+## Shared budgets, goals and recurring entries
+
+Since 2026-09-30 the budget, goal and recurring entry forms have the same Visibility field as accounts, categories and tags, shown only to a member of a household, and a shared row carries the "Shared · household" tag. They follow the same rules: every member of the household sees the record and can edit it, only its owner can change its sharing or delete it (`access.forbidden`), and the switcher hides it while another household is active.
+
+A shared record may only point at what every member can see, so its category, tag, funding account or accounts must be shared with the same household, and a shared recurring entry cannot pay a debt, since debts are personal. Anything else answers 400 `household.referenceNotShared` when it is saved. Unsharing a category or account later does not reach back: the plan stays shared and a member who can no longer see the category reads its name as "Unknown".
+
+| Record | What sharing changes |
+| --- | --- |
+| Budget | its spending counts only the transactions on accounts shared with its household, whoever entered them, so every member sees the same figure; a personal budget still counts everything its owner can see. One budget per category or tag and period applies within each household, and separately among each member's personal budgets. Each member gets the 80% and 100% alerts of a shared budget |
+| Goal | members see its progress and can update a manual goal's saved amount; a goal funded from an account needs a shared account |
+| Recurring entry | members see it on the recurring page and in their cash-flow forecast and can confirm an occurrence, which posts to the shared account as them; the due reminder still goes to the owner only |
+
+Deleting the household or removing its owner from it makes these records personal again, like the shared accounts, categories and tags, and restoring the household shares them back. Their changes appear in the household's activity log.
 
 ## Settling up
 

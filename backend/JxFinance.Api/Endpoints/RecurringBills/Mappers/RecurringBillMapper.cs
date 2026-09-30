@@ -1,3 +1,4 @@
+using JxFinance.Common.Sharing;
 using JxFinance.Common.Subscriptions;
 using JxFinance.Domain.Accounts;
 using JxFinance.Domain.Categories;
@@ -41,7 +42,9 @@ public static class RecurringBillMapper
         bill.IsActive,
         bill.MatchKey,
         latestMatch,
-        bill.DebtId?.Value);
+        bill.DebtId?.Value,
+        bill.Scope,
+        bill.HouseholdId?.Value);
 
     private static void ApplyShared(IRecurringBillInput input, RecurringBill bill)
     {
@@ -62,5 +65,6 @@ public static class RecurringBillMapper
         var matchKey = SubscriptionDescription.Normalize(input.MatchKey);
         bill.MatchKey = matchKey.Length > 0 ? matchKey : null;
         bill.DebtId = input.DebtId is { } debtId ? new DebtId(debtId) : null;
+        bill.ApplySharing(input);
     }
 }

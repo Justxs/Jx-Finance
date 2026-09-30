@@ -1961,7 +1961,10 @@
       "member": "Member",
       "attachment": "File",
       "sharedExpense": "Split expense",
-      "settlement": "Payment"
+      "settlement": "Payment",
+      "budget": "Budget",
+      "goal": "Goal",
+      "recurringBill": "Recurring entry"
     },
     "sentences": {
       "created": "{{actor}} added {{description}}",
@@ -2009,7 +2012,16 @@
       "role": "role",
       "method": "split method",
       "shares": "shares",
-      "note": "note"
+      "note": "note",
+      "limitAmount": "limit",
+      "period": "period",
+      "rolloverEnabled": "rollover",
+      "targetAmount": "target",
+      "currentAmount": "saved so far",
+      "targetDate": "target date",
+      "cadence": "repeats",
+      "nextDueDate": "next date",
+      "isActive": "active"
     }
   },
   "sharing": {
@@ -2477,7 +2489,8 @@
       "lastOwner": "A household needs at least one owner.",
       "notMember": "You are not a member of that household.",
       "required": "Choose a household for a shared item.",
-      "scopeMismatch": "The request names two different households. Reload the page and try again."
+      "scopeMismatch": "The request names two different households. Reload the page and try again.",
+      "referenceNotShared": "A shared item can only use accounts, categories and tags shared with the same household."
     },
     "iban": {
       "invalid": "Enter a valid IBAN, e.g. LT12 1000 0111 0100 1000."

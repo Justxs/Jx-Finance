@@ -7,6 +7,7 @@
  */
 import type { BudgetPeriod } from "./budgetPeriod";
 import type { DateOnly } from "./dateOnly";
+import type { Scope } from "./scope";
 
 export interface BudgetResponse {
   id: string;
@@ -24,4 +25,7 @@ export interface BudgetResponse {
   rolloverEnabled: boolean;
   windowStart: DateOnly;
   windowEnd: DateOnly;
+  scope: Scope;
+  /** @nullable */
+  householdId: string | null;
 }

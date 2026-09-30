@@ -1,5 +1,7 @@
 using FastEndpoints;
 using JxFinance.Domain.Common;
+using JxFinance.Domain.Households;
+using JxFinance.Domain.Transactions;
 using JxFinance.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -8,13 +10,28 @@ namespace JxFinance.Common.CategoryAttributions;
 [RegisterService<ICategoryAttributionService>(LifeTime.Scoped)]
 public sealed class CategoryAttributionService(AppDbContext db) : ICategoryAttributionService
 {
-    public async Task<IReadOnlyList<CategoryAttribution>> GetAttributionsAsync(
+    public Task<IReadOnlyList<CategoryAttribution>> GetAttributionsAsync(
         DateWindow window,
         DateWindow? comparison,
         FlowType type,
+        CancellationToken cancellationToken) =>
+        AttributeAsync(db.Transactions.Within(window, comparison), type, cancellationToken);
+
+    public Task<IReadOnlyList<CategoryAttribution>> GetAttributionsAsync(
+        DateWindow window,
+        HouseholdId household,
+        FlowType type,
+        CancellationToken cancellationToken) =>
+        AttributeAsync(
+            db.Transactions.Within(window, null).Where(t => db.Accounts.Any(a => a.Id == t.AccountId && a.HouseholdId == household)),
+            type,
+            cancellationToken);
+
+    private async Task<IReadOnlyList<CategoryAttribution>> AttributeAsync(
+        IQueryable<Transaction> dated,
+        FlowType type,
         CancellationToken cancellationToken)
     {
-        var dated = db.Transactions.Within(window, comparison);
 
         var nonSplit = (await dated
             .Where(t => !t.IsSplit && t.Type == type)

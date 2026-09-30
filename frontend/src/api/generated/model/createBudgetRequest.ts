@@ -6,6 +6,7 @@
  * OpenAPI spec version: v1
  */
 import type { BudgetPeriod } from "./budgetPeriod";
+import type { Scope } from "./scope";
 
 export interface CreateBudgetRequest {
   /**
@@ -23,4 +24,7 @@ export interface CreateBudgetRequest {
    * @nullable
    */
   tagId?: string | null;
+  scope?: Scope;
+  /** @nullable */
+  householdId?: string | null;
 }

@@ -1,4 +1,5 @@
 using JxFinance.Common.Json;
+using JxFinance.Domain.Common;
 using JxFinance.Domain.RecurringBills;
 using JxFinance.Endpoints.RecurringBills.Shared;
 
@@ -18,4 +19,6 @@ public sealed record UpdateRecurringBillRequest(
     int RemindDaysBefore,
     bool IsActive,
     string? MatchKey = null,
-    Guid? DebtId = null) : IRecurringBillInput;
+    Guid? DebtId = null,
+    Scope Scope = Scope.Personal,
+    Guid? HouseholdId = null) : IRecurringBillInput;

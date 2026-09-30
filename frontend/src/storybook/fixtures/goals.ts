@@ -10,6 +10,8 @@ export const goalWithTargetDate: GoalResponse = {
   funding: "manual",
   fundingAccountId: null,
   fundingSharePercent: 100,
+  scope: "personal",
+  householdId: null,
   progressAmount: "1875.50",
 };
 
@@ -22,6 +24,8 @@ export const openEndedGoal: GoalResponse = {
   funding: "manual",
   fundingAccountId: null,
   fundingSharePercent: 100,
+  scope: "personal",
+  householdId: null,
   progressAmount: "12500.00",
 };
 
@@ -34,6 +38,8 @@ export const completedGoal: GoalResponse = {
   funding: "manual",
   fundingAccountId: null,
   fundingSharePercent: 100,
+  scope: "personal",
+  householdId: null,
   progressAmount: "900.00",
 };
 
@@ -46,6 +52,8 @@ export const accountFundedGoal: GoalResponse = {
   funding: "account",
   fundingAccountId: ids.accounts.savings,
   fundingSharePercent: 100,
+  scope: "personal",
+  householdId: null,
   progressAmount: "12500.00",
 };
 
@@ -58,6 +66,8 @@ export const sharedFundedGoal: GoalResponse = {
   funding: "account",
   fundingAccountId: ids.accounts.checking,
   fundingSharePercent: 40,
+  scope: "personal",
+  householdId: null,
   progressAmount: "1137.27",
 };
 
@@ -70,6 +80,8 @@ export const unavailableFundedGoal: GoalResponse = {
   funding: "account",
   fundingAccountId: ids.accounts.archived,
   fundingSharePercent: 100,
+  scope: "personal",
+  householdId: null,
   progressAmount: null,
 };
 

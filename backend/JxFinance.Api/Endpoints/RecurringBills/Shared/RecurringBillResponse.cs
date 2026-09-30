@@ -1,4 +1,5 @@
 using JxFinance.Common.Json;
+using JxFinance.Domain.Common;
 using JxFinance.Domain.RecurringBills;
 
 namespace JxFinance.Endpoints.RecurringBills.Shared;
@@ -18,4 +19,6 @@ public sealed record RecurringBillResponse(
     bool IsActive,
     string? MatchKey,
     RecurringBillMatchResponse? LatestMatch,
-    Guid? DebtId);
+    Guid? DebtId,
+    Scope Scope,
+    Guid? HouseholdId);

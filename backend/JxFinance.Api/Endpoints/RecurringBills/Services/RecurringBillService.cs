@@ -4,6 +4,7 @@ using JxFinance.Common.Errors;
 using JxFinance.Common.ExchangeRates;
 using JxFinance.Common.References;
 using JxFinance.Common.Settings;
+using JxFinance.Common.Sharing;
 using JxFinance.Common.Trash;
 using JxFinance.Common.Unusual;
 using JxFinance.Common.Validation;
@@ -37,6 +38,8 @@ public sealed class RecurringBillService(
     IDeletionRecorder deletions,
     ITransferService transfers,
     IInstanceSettingsStore settings,
+    ISharingGuard sharing,
+    ICurrentUser currentUser,
     IClock clock) : IRecurringBillService
 {
     private static readonly DomainError NotFound = EntityLookup.NotFound("Recurring entry not found.");
@@ -119,7 +122,7 @@ public sealed class RecurringBillService(
         CreateRecurringBillRequest request,
         CancellationToken cancellationToken)
     {
-        var error = await ValidateReferencesAsync(request, cancellationToken);
+        var error = await sharing.CheckAsync(request, cancellationToken) ?? await ValidateReferencesAsync(request, cancellationToken);
         if (error is not null) return error;
 
         var bill = request.ToEntity();
@@ -138,7 +141,7 @@ public sealed class RecurringBillService(
             return NotFound;
         }
 
-        var error = await ValidateReferencesAsync(request, cancellationToken);
+        var error = await sharing.CheckAsync(bill, request, cancellationToken) ?? await ValidateReferencesAsync(request, cancellationToken);
         if (error is not null) return error;
 
         request.ApplyTo(bill);
@@ -154,7 +157,16 @@ public sealed class RecurringBillService(
             id,
             b => b.Id == billId,
             NotFound,
-            bill => deletions.Record(TrashKind.RecurringBill, id, bill.Name),
+            bill =>
+            {
+                if (bill.UserId != currentUser.Id)
+                {
+                    return Task.FromResult<DomainError?>(new DomainError(ErrorCodes.AccessForbidden, "Only the owner can delete a shared recurring entry."));
+                }
+
+                deletions.Record(TrashKind.RecurringBill, id, bill.Name);
+                return Task.FromResult<DomainError?>(null);
+            },
             cancellationToken);
     }
 
@@ -322,6 +334,12 @@ public sealed class RecurringBillService(
             if (tracks is false) return DebtNotTracked;
         }
 
+        var shared = new SharedReferences(
+            [.. new[] { input.AccountId, input.ToAccountId }.OfType<Guid>().Select(id => new AccountId(id))],
+            input.CategoryId is { } category ? [new CategoryId(category)] : [],
+            [],
+            HasPersonalOnly: input.DebtId is not null);
+        if (await sharing.CheckReferencesAsync(input, shared, ct) is { } sharingError) return sharingError;
         if (input.Shape == RecurringBillShape.Transfer || input.CategoryId is not { } categoryId) return null;
 
         var flow = FlowOf(input.Shape);

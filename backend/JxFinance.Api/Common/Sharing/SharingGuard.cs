@@ -16,6 +16,31 @@ public sealed class SharingGuard(AppDbContext db, ICurrentUser currentUser) : IS
         where T : OwnableEntity, IShareable =>
         CheckAsync(SharingState.From(input), (existing.UserId, SharingState.Of(existing)), cancellationToken);
 
+    public async Task<DomainError?> CheckReferencesAsync(
+        IShareableInput input,
+        SharedReferences references,
+        CancellationToken cancellationToken)
+    {
+        if (SharingState.From(input).HouseholdId is not { } householdId)
+        {
+            return null;
+        }
+
+        var accounts = references.Accounts.Distinct().ToList();
+        var categories = references.Categories.Distinct().ToList();
+        var tags = references.Tags.Distinct().ToList();
+        var shared = !references.HasPersonalOnly
+            && await db.Accounts.CountAsync(a => accounts.Contains(a.Id) && a.Scope == Scope.Shared && a.HouseholdId == householdId, cancellationToken) == accounts.Count
+            && await db.Categories.CountAsync(c => categories.Contains(c.Id) && c.Scope == Scope.Shared && c.HouseholdId == householdId, cancellationToken) == categories.Count
+            && await db.Tags.CountAsync(t => tags.Contains(t.Id) && t.Scope == Scope.Shared && t.HouseholdId == householdId, cancellationToken) == tags.Count;
+
+        return shared
+            ? null
+            : new DomainError(
+                ErrorCodes.HouseholdReferenceNotShared,
+                "Everything a shared item points at must be shared with the same household.");
+    }
+
     private async Task<DomainError?> CheckAsync(
         SharingState next,
         (Guid OwnerId, SharingState State)? current,

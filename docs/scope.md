@@ -87,7 +87,7 @@ A shared in-app channel any feature can write to, listed and cleared whatever is
 
 ## Households
 
-Household/member management; Accounts, Categories and Tags shareable; transactions follow their account; a global switcher narrows the whole application to one household or shows everything, with personal records visible in every scope; an expense you paid can be split with a household equally, by shares or by exact amounts, and each household card shows who owes whom per currency, the fewest payments that settle everyone and a "Record payment" that can also write the transfer between the two members' accounts, without changing reports, budgets or net worth (see [Household settle-up](features/household-settle-up.md))
+Household/member management; Accounts, Categories, Tags, Budgets, Goals and Recurring entries shareable; transactions follow their account; a global switcher narrows the whole application to one household or shows everything, with personal records visible in every scope; an expense you paid can be split with a household equally, by shares or by exact amounts, and each household card shows who owes whom per currency, the fewest payments that settle everyone and a "Record payment" that can also write the transfer between the two members' accounts, without changing reports, budgets or net worth (see [Household settle-up](features/household-settle-up.md))
 
 ## Reports
 

@@ -14,4 +14,7 @@ public enum AuditEntityKind
     Attachment,
     SharedExpense,
     Settlement,
+    Budget,
+    Goal,
+    RecurringBill,
 }

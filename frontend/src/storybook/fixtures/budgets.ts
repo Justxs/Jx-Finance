@@ -55,6 +55,8 @@ function budget(
     rolloverEnabled: carried !== "0.00",
     windowStart: window.start,
     windowEnd: window.end,
+    scope: "personal",
+    householdId: null,
   };
 }
 
@@ -85,6 +87,8 @@ export const holidayTagBudget: BudgetResponse = {
   rolloverEnabled: false,
   windowStart: budgetWindows.yearly.start,
   windowEnd: budgetWindows.yearly.end,
+  scope: "personal",
+  householdId: null,
 };
 
 export const budgets: BudgetResponse[] = [

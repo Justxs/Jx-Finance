@@ -1,5 +1,6 @@
 using FastEndpoints;
 using FluentValidation;
+using JxFinance.Common.Sharing;
 using JxFinance.Common.Validation;
 using JxFinance.Domain.Goals;
 
@@ -29,5 +30,6 @@ public abstract class GoalInputValidator<TRequest> : Validator<TRequest>
             .IsAbsent()
             .WithMessage("A goal with manual progress cannot name a funding account.")
             .When(r => r.Funding == GoalFunding.Manual);
+        RuleFor(r => r.HouseholdId).RequiresHouseholdWhenShared("goal");
     }
 }

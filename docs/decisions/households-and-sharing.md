@@ -6,7 +6,7 @@ Related: feature page [Households and sharing](../features/households-and-sharin
 
 ### Sharing
 
-Accounts, Categories and Tags only; record owner controls scope; account owner controls archiving; transfer changes require both accounts, and the new accounts as well when an edit moves it; a per-browser active household narrows the view to one household, defaults to everything, keeps personal records visible in every scope and never widens what a caller may see
+Accounts, Categories and Tags, and since 2026-09-30 Budgets, Goals and Recurring entries, whose references must be shared with the same household and whose budgets count only the household's accounts; record owner controls scope; account owner controls archiving; transfer changes require both accounts, and the new accounts as well when an edit moves it; a per-browser active household narrows the view to one household, defaults to everything, keeps personal records visible in every scope and never widens what a caller may see
 
 ### Member removal
 
@@ -20,6 +20,9 @@ Splits and payments are household rows (`IHouseholdScoped`) with their own query
 
 Newest first. Each entry is a choice between real alternatives: what was chosen, what was rejected, and why.
 
+- **2026-09-30.** Budgets, goals and recurring entries become shareable through `IShareable`, with the same owner rules; a shared budget counts only the transactions on accounts shared with its household, a shared record must point at records shared with the same household, and bill reminders still go to the owner. Decided while the owner was away; review it
+  - Rejected: Counting every member's spending in the category, personal accounts included; counting what the viewer can see; letting a shared plan point at a personal category or account; a separate household-scoped entity like the split expense; reminding every member of a shared bill
+  - Why: Counting personal accounts would tell every member the totals of accounts they are not allowed to see, and counting what the viewer sees gives two members two different figures for one budget. The household's accounts are the one set everyone sees, so the figure is the same for all. A reference to a personal record would show members a budget or bill whose category or account they cannot read, so it is refused on save rather than patched on read. Reusing `IShareable` gives the query filter, the owner guard, household delete and restore and the activity log for one line each. A reminder to every member would double the notifications for one payment, and the owner is the one who set it up
 - **2026-09-29.** Two open questions of the settle-up plan were decided while the owner was away and should be reviewed: the first release has no "my share" view of reports, budgets and the dashboard, and open balances stay out of net worth
   - Rejected: Counting only each member's share in reports, budgets and the dashboard from the first release; showing money owed to you and money you owe as an asset and a liability in net worth
   - Why: Both were the plan's conservative answer. A per-person lens touches `ReportService`, `CategoryBreakdownBuilder`, `BudgetUsageCalculator`, the dashboard and the month-close snapshot at once and is a plan of its own; until then a payer who is paid back records the money as a refund of the split expense, which lowers their spending to their share. Net worth moves when a payment is made, which is when money actually changes hands; an open balance is a claim between people in the same household, not an asset the installation can value. Review both after the daily-use trial

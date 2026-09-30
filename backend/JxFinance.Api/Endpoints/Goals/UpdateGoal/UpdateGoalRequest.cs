@@ -1,4 +1,5 @@
 using JxFinance.Common.Json;
+using JxFinance.Domain.Common;
 using JxFinance.Domain.Goals;
 using JxFinance.Endpoints.Goals.Shared;
 
@@ -12,4 +13,6 @@ public sealed record UpdateGoalRequest(
     DateOnly? TargetDate,
     GoalFunding Funding,
     Guid? FundingAccountId,
-    int? FundingSharePercent) : IGoalInput;
+    int? FundingSharePercent,
+    Scope Scope = Scope.Personal,
+    Guid? HouseholdId = null) : IGoalInput;

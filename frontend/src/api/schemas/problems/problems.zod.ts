@@ -92,6 +92,7 @@ export const ProblemDetailsResponse = zod
                 "holding.oversold",
                 "household.lastOwner",
                 "household.notMember",
+                "household.referenceNotShared",
                 "household.required",
                 "household.scopeMismatch",
                 "iban.invalid",

@@ -57,6 +57,7 @@ public static class ErrorCodes
     public const string HouseholdNotMember = "household.notMember";
     public const string HouseholdLastOwner = "household.lastOwner";
     public const string HouseholdScopeMismatch = "household.scopeMismatch";
+    public const string HouseholdReferenceNotShared = "household.referenceNotShared";
     public const string SettleUpNotPayer = "settleUp.notPayer";
     public const string SettleUpNotExpense = "settleUp.notExpense";
     public const string SettleUpAlreadySplit = "settleUp.alreadySplit";

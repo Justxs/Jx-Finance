@@ -7,6 +7,7 @@
  */
 import type { GoalFunding } from "./goalFunding";
 import type { NullableOfDateOnly } from "./nullableOfDateOnly";
+import type { Scope } from "./scope";
 
 export interface UpdateGoalRequest {
   /**
@@ -34,4 +35,7 @@ export interface UpdateGoalRequest {
    * @nullable
    */
   fundingSharePercent: number | null;
+  scope?: Scope;
+  /** @nullable */
+  householdId?: string | null;
 }

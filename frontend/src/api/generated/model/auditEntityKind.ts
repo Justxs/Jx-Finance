@@ -21,4 +21,7 @@ export const AuditEntityKind = {
   attachment: "attachment",
   sharedExpense: "sharedExpense",
   settlement: "settlement",
+  budget: "budget",
+  goal: "goal",
+  recurringBill: "recurringBill",
 } as const;

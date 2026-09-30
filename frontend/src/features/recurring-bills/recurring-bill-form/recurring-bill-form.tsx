@@ -4,6 +4,7 @@ import { z } from "zod";
 import {
   getDebtsSuspenseQueryOptions,
   useCreateRecurringBill,
+  useHouseholdsSuspense,
   useUpdateRecurringBill,
 } from "@/api/generated";
 import {
@@ -13,6 +14,7 @@ import {
   RecurringBillKind,
   type RecurringBillResponse,
   RecurringBillShape,
+  type Scope,
 } from "@/api/generated/model";
 import {
   updateRecurringBillBodyMatchKeyMax,
@@ -22,6 +24,7 @@ import {
 } from "@/api/schemas/recurring-bills/recurring-bills.zod";
 import { useServerForm } from "@/components/form";
 import { FormError } from "@/components/form-error/form-error";
+import { SharingFields } from "@/components/sharing-fields/sharing-fields";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { FormGrid } from "@/components/ui/form-grid/form-grid";
 import { useFeature, useToday } from "@/hooks/use-settings";
@@ -30,10 +33,14 @@ import { namedOptions, optionsOf } from "@/lib/options";
 import {
   isPositiveMoney,
   optionalText,
+  refineSharing,
   requiredText,
   requiredValue,
+  sharingPayload,
+  sharingShape,
   wholeNumberBetween,
 } from "@/lib/validation";
+import { useSharingDefaults } from "@/stores/active-household-store";
 
 interface FormValues {
   name: string;
@@ -49,6 +56,8 @@ interface FormValues {
   isActive: boolean;
   matchKey: string;
   debtId: string;
+  scope: Scope;
+  householdId: string;
 }
 
 type RecurringBillDraft = Partial<Omit<RecurringBillResponse, "id">>;
@@ -74,6 +83,7 @@ export function RecurringBillForm({
   const debtsQuery = useQuery({ ...getDebtsSuspenseQueryOptions(), enabled: netWorth });
   const debts = debtsQuery.data ?? [];
   const fieldId = initial ? `bill-${initial.id}` : "bill";
+  const sharing = useSharingDefaults(useHouseholdsSuspense().data, initial);
 
   const schema = z
     .object({
@@ -94,6 +104,7 @@ export function RecurringBillForm({
       isActive: z.boolean(),
       matchKey: optionalText(t, updateRecurringBillBodyMatchKeyMax),
       debtId: z.string(),
+      ...sharingShape(),
     })
     .superRefine((value, ctx) => {
       if (value.kind === "fixed" && !isPositiveMoney(value.amount)) {
@@ -115,6 +126,7 @@ export function RecurringBillForm({
         });
       }
     });
+  const sharedSchema = refineSharing(schema, t);
 
   const { create, update, pending, error } = upsert(
     useCreateRecurringBill({ mutation: { ...silentMutation, onSuccess: onClose } }),
@@ -139,12 +151,13 @@ export function RecurringBillForm({
       netWorth && debtsQuery.isSuccess && !debts.some((debt) => debt.id === seed.debtId)
         ? ""
         : (seed.debtId ?? ""),
+    ...sharing,
   };
   const payableDebts = debts.filter((debt) => debt.tracksPayments || debt.id === seed.debtId);
 
   const form = useServerForm({
     defaultValues,
-    schema,
+    schema: sharedSchema,
     submit: (value) => {
       const isTransfer = value.shape === "transfer";
       const data = {
@@ -160,6 +173,7 @@ export function RecurringBillForm({
         remindDaysBefore: Number(value.remindDaysBefore),
         matchKey: value.matchKey.trim() || null,
         debtId: value.shape === "expense" ? value.debtId || null : null,
+        ...sharingPayload(value),
       };
 
       return initial
@@ -357,6 +371,12 @@ export function RecurringBillForm({
             )}
           </form.Field>
         ) : null}
+
+        <SharingFields
+          form={form}
+          fields={{ scope: "scope", householdId: "householdId" }}
+          idPrefix={fieldId}
+        />
 
         <FormError error={error} />
 

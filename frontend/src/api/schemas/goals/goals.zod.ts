@@ -47,6 +47,8 @@ export const CreateGoalBody = zod.object({
     .describe(
       "The share of that account's balance that counts, as a whole percentage from 1 to 100. Defaults to 100.",
     ),
+  scope: zod.enum(["personal", "shared"]).optional(),
+  householdId: zod.uuid().nullish(),
 });
 
 export const createGoalResponseTargetAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
@@ -63,6 +65,8 @@ export const CreateGoalResponse = zod.object({
   fundingAccountId: zod.uuid().nullable(),
   fundingSharePercent: zod.int(),
   progressAmount: zod.stringFormat("decimal", createGoalResponseProgressAmountRegExp).nullable(),
+  scope: zod.enum(["personal", "shared"]),
+  householdId: zod.uuid().nullable(),
 });
 
 /**
@@ -83,6 +87,8 @@ export const GoalsResponseItem = zod.object({
   fundingAccountId: zod.uuid().nullable(),
   fundingSharePercent: zod.int(),
   progressAmount: zod.stringFormat("decimal", goalsResponseProgressAmountRegExp).nullable(),
+  scope: zod.enum(["personal", "shared"]),
+  householdId: zod.uuid().nullable(),
 });
 export const GoalsResponse = zod.array(GoalsResponseItem);
 
@@ -128,6 +134,8 @@ export const UpdateGoalBody = zod.object({
     .describe(
       "The share of that account's balance that counts, as a whole percentage from 1 to 100. Defaults to 100.",
     ),
+  scope: zod.enum(["personal", "shared"]).optional(),
+  householdId: zod.uuid().nullish(),
 });
 
 export const updateGoalResponseTargetAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
@@ -144,4 +152,6 @@ export const UpdateGoalResponse = zod.object({
   fundingAccountId: zod.uuid().nullable(),
   fundingSharePercent: zod.int(),
   progressAmount: zod.stringFormat("decimal", updateGoalResponseProgressAmountRegExp).nullable(),
+  scope: zod.enum(["personal", "shared"]),
+  householdId: zod.uuid().nullable(),
 });

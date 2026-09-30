@@ -1,8 +1,9 @@
+using JxFinance.Common.Sharing;
 using JxFinance.Domain.Goals;
 
 namespace JxFinance.Endpoints.Goals.Shared;
 
-public interface IGoalInput
+public interface IGoalInput : IShareableInput
 {
     string Name { get; }
     decimal TargetAmount { get; }

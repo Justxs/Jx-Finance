@@ -1,8 +1,9 @@
+using JxFinance.Common.Sharing;
 using JxFinance.Domain.RecurringBills;
 
 namespace JxFinance.Endpoints.RecurringBills.Shared;
 
-public interface IRecurringBillInput
+public interface IRecurringBillInput : IShareableInput
 {
     string Name { get; }
     RecurringBillShape Shape { get; }

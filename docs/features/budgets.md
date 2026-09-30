@@ -6,6 +6,8 @@ Backend `Budgets`, page `/budgets`. A limit per expense category, or since 2026-
 
 Each row (`budget-row`) leads with what is left, such as "€84.00 left", or with "€24.00 over" in the expense colour, and puts "€316.00 spent of €400.00" beneath it, followed by the rollover line when rollover is on. The figure is `BudgetRemaining`, the same component and text the dashboard budget snapshot shows beside its meter, and `budgetFigures` is the one place that decides a budget is over. The dashboard snapshot still leads with spending. Editing a budget opens "Edit budget" with the category name under the title, in `BudgetForm`, the form that also adds one.
 
+A budget can be shared with a household like a category; a shared budget counts only the transactions on the household's shared accounts. See [Households and sharing](households-and-sharing.md#shared-budgets-goals-and-recurring-entries).
+
 ## The window
 
 A budget has no start or end date of its own. The window is derived from the period and from today in the installation time zone, so a budget created in March and a budget created yesterday answer the same question in September. `IClock.Today` converts the current instant into the installation time zone, and `BudgetWindow.For` turns that date into a half-open range: `Start` is inclusive, `End` is exclusive, and the response publishes the inclusive last day as `windowEnd`, like every other period in the API.

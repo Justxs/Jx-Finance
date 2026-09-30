@@ -67,6 +67,7 @@ export const ErrorCode = {
   holdingoversold: "holding.oversold",
   householdlastOwner: "household.lastOwner",
   householdnotMember: "household.notMember",
+  householdreferenceNotShared: "household.referenceNotShared",
   householdrequired: "household.required",
   householdscopeMismatch: "household.scopeMismatch",
   ibaninvalid: "iban.invalid",

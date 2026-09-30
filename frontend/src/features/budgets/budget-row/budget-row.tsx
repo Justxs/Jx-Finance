@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import type { BudgetResponse } from "@/api/generated/model";
 import { ProgressRow } from "@/components/progress-row/progress-row";
 import type { DeleteProps } from "@/components/row-actions/row-actions";
+import { SharedScopeTag } from "@/components/shared-scope-tag/shared-scope-tag";
 import { TransactionsLink } from "@/components/transactions-link/transactions-link";
 import { budgetPeriodLabel } from "@/features/budgets/budget-periods";
 import { BudgetRemaining, budgetFigures } from "@/features/budgets/budget-remaining";
@@ -36,13 +37,16 @@ export function BudgetRow({ budget, onEdit, ...deleteProps }: Readonly<Props>) {
         />
       }
       meta={
-        <p className="text-xs text-muted-foreground">
-          {t("budgets.windowLabel", {
-            period: budgetPeriodLabel(t, budget.period),
-            from: isoDate(budget.windowStart),
-            to: isoDate(budget.windowEnd),
-          })}
-        </p>
+        <>
+          <p className="text-xs text-muted-foreground">
+            {t("budgets.windowLabel", {
+              period: budgetPeriodLabel(t, budget.period),
+              from: isoDate(budget.windowStart),
+              to: isoDate(budget.windowEnd),
+            })}
+          </p>
+          <SharedScopeTag scope={budget.scope} householdId={budget.householdId} className="mt-1" />
+        </>
       }
       primary={<BudgetRemaining {...figures} className="text-sm font-semibold text-foreground" />}
       secondary={

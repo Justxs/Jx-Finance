@@ -21,6 +21,8 @@ export const goalHandlers = [
     fundingAccountId: null,
     fundingSharePercent: 100,
     progressAmount: "0.00",
+    scope: "personal" as const,
+    householdId: null,
     ...(await readBody(request)),
   })),
   getUpdateGoalMockHandler(updateFrom(goals)),
