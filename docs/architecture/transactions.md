@@ -34,7 +34,7 @@ A transaction spread over months (`SpreadMonths` 2 to 36) is still one row; its 
 | `BudgetUsageCalculator.TagSpendAsync` | Yes, per tag the row carries |
 | `ReportService`'s tag and payee breakdowns | Yes; a payee's `Count` counts a spread row once per period its slices touch, and its label can come from a spread row dated before the period |
 | `TransactionService`'s summary, the refunded amount of the refund marks and the PDF totals | No: the ledger's totals are sums of the rows it lists |
-| `AccountMovements`, reconciliation, the cash-flow forecast, `UnusualAmountService`, subscription detection and price rises, debt payments, settle-up, the receipt items report | No: they are about the money that moved and when |
+| `AccountMovements`, reconciliation, the cash-flow forecast, `UnusualAmountService`, subscription detection and price rises, debt payments, settle-up, the receipt items report, the member export's double-entry journal | No: they are about the money that moved and when |
 
 The month-end close keeps its drift honest with the same columns. `SnapshotAsync` adds the ids of spread rows whose slices land in the month to `RowIds` but not to `TransactionCount`, which is compared with the month's own row count. `Changes` also picks up spread rows edited after the close whose range covers the month, and each changed row carries the last date it counts on (`SpreadUntil`, or its own date), so a spread row that still reaches the month is Edited or Created and never Moved out.
 

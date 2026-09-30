@@ -7,6 +7,7 @@ using FastEndpoints;
 using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Common.Formats;
+using JxFinance.Common.Journal;
 using JxFinance.Domain.Accounts;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Transactions;
@@ -27,6 +28,7 @@ namespace JxFinance.Endpoints.Users.Services;
 public sealed class UserExportService(
     AppDbContext db,
     AttachmentStore files,
+    IUserJournalSource journalSource,
     ICurrentUser currentUser,
     IClock clock,
     ILogger<UserExportService> logger) : IUserExportService
@@ -37,6 +39,7 @@ public sealed class UserExportService(
     public const string AccountsEntry = "accounts.csv";
     public const string TransactionsEntry = "transactions.csv";
     public const string TransfersEntry = "transfers.csv";
+    public const string JournalEntry = "ledger.beancount";
     public const string AccountsHeader = "Name,Type,Currency,StartingBalance,Scope,Archived";
     public const string TransfersHeader = "Date,Description,FromAccount,ToAccount,Amount,Currency,ReceivedAmount,ReceivedCurrency";
 
@@ -69,6 +72,7 @@ public sealed class UserExportService(
             await WriteCsvAsync(archive, AccountsEntry, AccountsHeader, AccountRowsAsync(userId, cancellationToken), cancellationToken);
             await WriteCsvAsync(archive, TransactionsEntry, TransactionCsvWriter.Header, TransactionRowsAsync(userId, names, cancellationToken), cancellationToken);
             await WriteCsvAsync(archive, TransfersEntry, TransfersHeader, TransferRowsAsync(userId, names, cancellationToken), cancellationToken);
+            await WriteJournalAsync(archive, userId, cancellationToken);
             await transaction.CommitAsync(cancellationToken);
 
             foreach (var id in present)
@@ -126,6 +130,21 @@ public sealed class UserExportService(
         json.WriteEndArray();
         json.WriteEndObject();
         await json.FlushAsync(cancellationToken);
+    }
+
+    private async Task WriteJournalAsync(ZipArchive archive, Guid userId, CancellationToken cancellationToken)
+    {
+        var journal = BeancountWriter.Write(await journalSource.LoadAsync(userId, cancellationToken));
+        await WriteEntryAsync(
+            archive,
+            JournalEntry,
+            CompressionLevel.Optimal,
+            async entry =>
+            {
+                await using var writer = new StreamWriter(entry, new UTF8Encoding(false), leaveOpen: true);
+                await writer.WriteAsync(journal.AsMemory(), cancellationToken);
+            },
+            cancellationToken);
     }
 
     private static async Task<List<Guid>> AttachmentIdsAsync(NpgsqlConnection connection, Guid userId, CancellationToken cancellationToken)

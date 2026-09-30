@@ -127,7 +127,7 @@ public sealed class UserExportTests(ApiFixture fixture) : IntegrationTestBase(fi
             Assert.Equal(table.Rows.Select(Line).Order(), scoped.Tables[name].Rows.Select(Line).Order());
         }
 
-        foreach (var entry in new[] { UserExportService.AccountsEntry, UserExportService.TransactionsEntry, UserExportService.TransfersEntry })
+        foreach (var entry in new[] { UserExportService.AccountsEntry, UserExportService.TransactionsEntry, UserExportService.TransfersEntry, UserExportService.JournalEntry })
         {
             Assert.Equal(everything.Csv(entry), scoped.Csv(entry));
         }

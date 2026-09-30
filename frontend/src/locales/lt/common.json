@@ -817,7 +817,8 @@
       "description": "Atsisiųskite viską, kas priklauso jums, vienu zip failu: savo sąskaitas, asmenines, bendras ir archyvuotas, su viskuo, kas jose įrašyta, jas liečiančius pervedimus ir savo kategorijas, žymes, taisykles, biudžetus, tikslus, turtą, skolas, pasikartojančius įrašus bei pranešimus. data.json saugo visus įrašus, o accounts.csv, transactions.csv ir transfers.csv atsidaro skaičiuoklėje.",
       "excluded": "Slaptažodžiai, dviejų veiksnių autentifikavimo paslaptys, prieigos raktai, API raktai, namų ūkiai ir kitų narių sąskaitos niekada neįtraukiami.",
       "attachments": "Įtraukti prisegtus failus",
-      "download": "Atsisiųsti mano duomenis"
+      "download": "Atsisiųsti mano duomenis",
+      "journal": "Įtraukiamas ir dvejybinio įrašo žurnalas (Beancount), kurį galite atidaryti programa Fava."
     },
     "dataImport": {
       "title": "Importuoti atsisiųstus duomenis",

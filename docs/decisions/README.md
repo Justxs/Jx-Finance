@@ -27,7 +27,7 @@ Before changing behaviour that a page here covers, read that page. When you choo
 | [Households and sharing](households-and-sharing.md) | Sharing, Member removal, Settle-up | 15 | [Households and sharing](../features/households-and-sharing.md), [Household settle-up](../features/household-settle-up.md) |
 | [Dashboard](dashboard.md) | Dashboard layout | 7 | [Dashboard](../features/dashboard.md) |
 | [Reports](reports.md) | none | 4 | [Reports](../features/reports.md) |
-| [Exports](exports.md) | Data export per user | 10 | [Exports](../features/exports.md), [Data export per user](../features/data-export-per-user.md) |
+| [Exports](exports.md) | Data export per user | 13 | [Exports](../features/exports.md), [Data export per user](../features/data-export-per-user.md) |
 | [Investments](investments.md) | Investments | 16 | [Investments](../features/investments.md) |
 | [Installation settings and feature switches](installation-settings.md) | none | 1 | [Installation settings and feature switches](../features/installation-settings.md) |
 | [Backup and restore](backup-and-restore.md) | Backup and restore | 4 | [Backup and restore](../features/backup-and-restore.md) |

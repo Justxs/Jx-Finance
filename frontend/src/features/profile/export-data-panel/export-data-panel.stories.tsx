@@ -35,6 +35,9 @@ export const Default: Story = {
     await expect(
       canvas.getByRole("checkbox", { name: "Include attached files" }),
     ).not.toBeChecked();
+    await expect(
+      canvas.getByText("Includes a double-entry journal (Beancount) you can open in Fava."),
+    ).toBeVisible();
   },
 };
 

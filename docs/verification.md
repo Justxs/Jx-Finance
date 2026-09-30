@@ -88,6 +88,17 @@ Run on the development machine (Windows, Docker 29.5.2, Compose v5.1.3). The bac
 
 Not verified: the changed workflows have not run on the Gitea runner (the `production-overlay` job assumes, like the existing `e2e` job, that ports published by the Docker daemon are reachable from the job on 127.0.0.1); certificate trust on client devices; the recovery command inside the container.
 
+## Double-entry journal
+
+The member export's `ledger.beancount` is checked in CI by `JournalChecker`, a C# reading of the Beancount rules the writer relies on. Beancount itself is a manual check, needed once before the journal is trusted and again after a change to `Common/Journal`:
+
+1. `pip install beancount fava` on a developer machine.
+2. Restore a backup of the owner's real ledger into a development installation, sign in as the owner and press "Download my data" in Settings › Personal › Import and export.
+3. Unzip `ledger.beancount` and run `bean-check ledger.beancount`: no output means every transaction balances and every `balance` assertion, one per account and currency, holding, asset and debt, holds.
+4. Run `fava ledger.beancount` and compare the balance sheet with the accounts page and the income statement with the reports; they differ only where [the feature page](features/data-export-per-user.md#double-entry-journal) says.
+
+Not verified: on 2026-09-30, when the journal was built, the development machine had no Python with Beancount and Docker was not running, so neither `bean-check` nor the integration tests ran; only the unit tests of the writer, the names, the commodities and the checker did.
+
 ## Remaining deployment validation
 
 During the 2026-09-06 pass Docker Desktop's Linux engine was unavailable (`dockerDesktopLinuxEngine` pipe missing), so nothing containerized was verified then. As of 2026-09-19 the engine runs again, and `just e2e` and the CI `e2e` job build the images and start the base Compose stack over HTTP with separate volumes. No result of those runs is recorded here.

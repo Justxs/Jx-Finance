@@ -33,6 +33,11 @@ public sealed partial class UserImportTests(ApiFixture fixture) : IntegrationTes
         var receipt = Encoding.ASCII.GetBytes($"%PDF-1.7\n% moved {Guid.NewGuid():N}\n%%EOF");
         await UploadAttachmentAsync(source, entry.Id, receipt);
         var export = await DownloadAsync(source);
+        using (var archive = new ZipArchive(new MemoryStream(export), ZipArchiveMode.Read))
+        {
+            Assert.NotNull(archive.GetEntry(UserExportService.JournalEntry));
+        }
+
         using var target = await CreateUserClientAsync();
 
         var imported = await ReadOkAsync<ImportDto>(await ImportAsync(target, WithNewIds(export)));

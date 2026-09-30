@@ -33,6 +33,8 @@ public sealed class Position(SecurityId securityId)
 
     public SecurityId SecurityId { get; } = securityId;
 
+    public IReadOnlyCollection<Lot> Lots => lots;
+
     public decimal Quantity => lots.Sum(l => l.Quantity);
 
     public decimal CostBasis => lots.Sum(l => l.Cost);
@@ -116,5 +118,5 @@ public sealed class Position(SecurityId securityId)
         }
     }
 
-    private sealed record Lot(DateOnly AcquiredOn, decimal Quantity, decimal Cost, decimal ReportingCost);
+    public sealed record Lot(DateOnly AcquiredOn, decimal Quantity, decimal Cost, decimal ReportingCost);
 }

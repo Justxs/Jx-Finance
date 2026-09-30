@@ -48,6 +48,9 @@ export function ExportDataPanel() {
           <span>{t("profile.dataExport.attachments")}</span>
         </label>
       </div>
+      <p className="mt-2 max-w-prose text-sm text-muted-foreground">
+        {t("profile.dataExport.journal")}
+      </p>
       <ImportDataForm />
     </TitledSection>
   );
