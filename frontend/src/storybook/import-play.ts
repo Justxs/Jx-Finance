@@ -7,6 +7,16 @@ const sampleFiles = {
   swedbankCsv: { name: "swedbank-2026-09.csv", type: "text/csv", content: transactionsCsv },
   camt053: { name: "statement-2026-09.xml", type: "application/xml", content: camtStatementXml },
   genericCsv: { name: "revolut-2026-09.csv", type: "text/csv", content: revolutCsv },
+  ofx: {
+    name: "statement-2026-09.ofx",
+    type: "application/x-ofx",
+    content: "<OFX><BANKTRANLIST></BANKTRANLIST></OFX>",
+  },
+  mt940: {
+    name: "statement-2026-09.sta",
+    type: "text/plain",
+    content: [":20:STMT", ":62F:C260930EUR0,00"].join("\n"),
+  },
 } satisfies Record<StatementFormat, { name: string; type: string; content: string }>;
 
 export async function uploadAndPreview(

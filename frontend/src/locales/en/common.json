@@ -2116,7 +2116,11 @@
       "camt053Format": "camt.053 statement from any bank that offers it",
       "genericCsv": "Other bank (CSV)",
       "genericCsvFormat": "Any CSV export: say once which column holds what",
-      "savedMappingFormat": "Your CSV mapping"
+      "savedMappingFormat": "Your CSV mapping",
+      "ofx": "OFX or QFX file",
+      "ofxFormat": "Money-software export offered by many banks and card issuers",
+      "mt940": "MT940 statement",
+      "mt940Format": "SWIFT MT940 text statement"
     },
     "ruleFilled": "Filled by a rule",
     "ruleFilledHint": "Filled by your rule \"{{rule}}\". Change it if it does not fit.",
@@ -2138,6 +2142,16 @@
         "hint": "A CSV export from any bank, card issuer or payment app, up to 5 MB. Nothing is saved until you confirm the reviewed rows.",
         "errorFormat": "This file cannot be read as a CSV statement with a header row.",
         "errorFix": "Export the statement as CSV and upload it unchanged. If the columns look wrong, correct the encoding, the delimiter or the lines above the header."
+      },
+      "ofx": {
+        "hint": "An OFX or QFX statement from internet banking or card services, up to 5 MB. Nothing is saved until you confirm the reviewed rows.",
+        "errorFormat": "This file is not an OFX or QFX bank statement.",
+        "errorFix": "Download the statement as OFX, QFX or \"Microsoft Money\" and upload it unchanged. Both the older SGML files and OFX 2 XML files are read."
+      },
+      "mt940": {
+        "hint": "A SWIFT MT940 statement, often a .sta or .txt file, up to 5 MB. Nothing is saved until you confirm the reviewed rows.",
+        "errorFormat": "This file is not an MT940 bank statement.",
+        "errorFix": "Download the statement as MT940 and upload it unchanged. It is a text file whose lines start with tags such as :20:, :61: and :62F:."
       }
     },
     "statement": {

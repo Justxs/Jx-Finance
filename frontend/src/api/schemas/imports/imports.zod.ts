@@ -78,9 +78,9 @@ export const ImportConfirmBody = zod.object({
       "The rows to import, as returned by preview, with any category and tag corrections applied.",
     ),
   format: zod
-    .enum(["swedbankCsv", "camt053", "genericCsv"])
+    .enum(["swedbankCsv", "camt053", "genericCsv", "ofx", "mt940"])
     .describe(
-      "The statement format: swedbankCsv for a Swedbank CSV export, camt053 for an ISO 20022 camt.053 XML statement, or genericCsv for a CSV read through a saved mapping.",
+      "The statement format: swedbankCsv for a Swedbank CSV export, camt053 for an ISO 20022 camt.053 XML statement, ofx for an OFX or QFX file (SGML 1.x or XML 2.x), mt940 for a SWIFT MT940 statement, or genericCsv for a CSV read through a saved mapping.",
     ),
   statement: zod
     .union([
@@ -724,10 +724,10 @@ export const ImportPreviewBody = zod.object({
   file: zod.instanceof(Blob).optional(),
   accountId: zod.uuid().optional().describe("The account the statement belongs to."),
   format: zod
-    .enum(["swedbankCsv", "camt053", "genericCsv"])
+    .enum(["swedbankCsv", "camt053", "genericCsv", "ofx", "mt940"])
     .optional()
     .describe(
-      "The statement format: swedbankCsv for a Swedbank CSV export, camt053 for an ISO 20022 camt.053 XML statement, or genericCsv for a CSV read through a saved mapping.",
+      "The statement format: swedbankCsv for a Swedbank CSV export, camt053 for an ISO 20022 camt.053 XML statement, ofx for an OFX or QFX file (SGML 1.x or XML 2.x), mt940 for a SWIFT MT940 statement, or genericCsv for a CSV read through a saved mapping.",
     ),
   mappingId: zod
     .uuid()

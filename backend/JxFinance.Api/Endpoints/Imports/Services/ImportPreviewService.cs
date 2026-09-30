@@ -87,6 +87,8 @@ public sealed class ImportPreviewService(
         var parsed = format switch
         {
             StatementFormat.Camt053 => await Camt053Parser.ParseAsync(fileStream, account.Iban, settings.Current.TimeZone, cancellationToken),
+            StatementFormat.Ofx => OfxParser.Parse(fileStream, account.Currency),
+            StatementFormat.Mt940 => Mt940Parser.Parse(fileStream, account.Currency),
             StatementFormat.GenericCsv => await ImportQueries.FindMappingAsync(db, mappingId, cancellationToken) is { } mapping
                 ? GenericCsvParser.Parse(fileStream, mapping, account.Currency)
                 : MappingNotFound,

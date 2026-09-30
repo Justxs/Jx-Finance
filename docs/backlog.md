@@ -54,6 +54,7 @@ Ordered by how much they would help daily use for the effort. Following the prod
 
 | Date | Item | Where it is described |
 | --- | --- | --- |
+| 2026-09-30 | OFX and MT940 import: the import dialog reads OFX and QFX files, SGML or XML, and SWIFT MT940 statements into the same review as the other formats, with the account check, duplicates by a stable reference and the closing balance kept as a reconciliation | [Bank statement import](features/bank-statement-import.md#ofx-and-mt940) |
 | 2026-09-30 | Investment returns and allocation: the portfolio answers a money-weighted annualized return over every entry and today's value, shown in the summary when the portfolio is complete and spans a month, and the allocation section switches between security, type and currency | [Investments](features/investments.md#annualized-return-and-allocation) |
 | 2026-09-30 | What-if in the forecast: "Try a payment" under the cash-flow chart adds an unsaved one-off payment on a chosen date to the account shown, and the warnings, lowest point, chart and entries include it until it is removed | [Cash-flow forecast](features/cash-flow-forecast.md#trying-a-payment) |
 | 2026-09-30 | Category groups: a category can sit under one top-level category of the same type, one level deep; the ledger filter, a budget on the parent and the report and dashboard breakdowns include the sub-categories, and deleting a parent frees its sub-categories until a restore groups them again. Decided while the owner was away, to be reviewed | [Categories](features/categories.md#groups) |

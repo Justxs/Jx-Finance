@@ -78,7 +78,7 @@ public sealed class ImportConfirmService(
 
         await db.SaveChangesAsync(cancellationToken);
 
-        var reconciliation = request is { Format: StatementFormat.Camt053 or StatementFormat.GenericCsv, Statement: { } closing }
+        var reconciliation = request is { Format: not StatementFormat.SwedbankCsv, Statement: { } closing }
             && closing.ClosingCurrency == accountCurrency
                 ? (await reconciliations.RecordAsync(
                     request.AccountId,
@@ -95,6 +95,8 @@ public sealed class ImportConfirmService(
     private async Task<string> FormatLabelAsync(ImportConfirmRequest request, CancellationToken cancellationToken) => request.Format switch
     {
         StatementFormat.Camt053 => "camt.053 XML",
+        StatementFormat.Ofx => "OFX",
+        StatementFormat.Mt940 => "MT940",
         StatementFormat.GenericCsv => $"{(await ImportQueries.FindMappingAsync(db, request.MappingId, cancellationToken))?.Name ?? "Mapped"} CSV",
         _ => "Swedbank CSV",
     };

@@ -42,6 +42,20 @@ export const XmlStatementUpload: Story = {
   },
 };
 
+export const OfxUpload: Story = {
+  play: async () => {
+    await userEvent.click(await screen.findByRole("button", { name: /OFX or QFX file/u }));
+    await expect(await screen.findByText(/An OFX or QFX statement/u)).toBeVisible();
+  },
+};
+
+export const Mt940Upload: Story = {
+  play: async () => {
+    await userEvent.click(await screen.findByRole("button", { name: /MT940 statement/u }));
+    await expect(await screen.findByText(/A SWIFT MT940 statement/u)).toBeVisible();
+  },
+};
+
 export const PreselectedAccount: Story = {
   args: { initialAccountId: ids.accounts.savings },
   play: async () => {

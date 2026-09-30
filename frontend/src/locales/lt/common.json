@@ -2190,7 +2190,11 @@
       "camt053Format": "camt.053 išrašas iš bet kurio jį siūlančio banko",
       "genericCsv": "Kitas bankas (CSV)",
       "genericCsvFormat": "Bet koks CSV eksportas: vieną kartą nurodykite, kuriame stulpelyje kas",
-      "savedMappingFormat": "Jūsų CSV susiejimas"
+      "savedMappingFormat": "Jūsų CSV susiejimas",
+      "ofx": "OFX arba QFX failas",
+      "ofxFormat": "Finansų programų eksportas, kurį siūlo daug bankų ir kortelių išdavėjų",
+      "mt940": "MT940 išrašas",
+      "mt940Format": "SWIFT MT940 tekstinis išrašas"
     },
     "ruleFilled": "Užpildė taisyklė",
     "ruleFilledHint": "Užpildė jūsų taisyklė „{{rule}}“. Pakeiskite, jei netinka.",
@@ -2212,6 +2216,16 @@
         "hint": "Bet kurio banko, kortelių išdavėjo ar mokėjimų programėlės CSV eksportas, iki 5 MB. Niekas neišsaugoma, kol nepatvirtinate peržiūrėtų eilučių.",
         "errorFormat": "Šio failo nepavyko perskaityti kaip CSV išrašo su antraštės eilute.",
         "errorFix": "Eksportuokite išrašą kaip CSV ir įkelkite jį nepakeistą. Jei stulpeliai atrodo neteisingai, pataisykite koduotę, skyriklį arba eilučių virš antraštės skaičių."
+      },
+      "ofx": {
+        "hint": "OFX arba QFX išrašas iš interneto banko ar kortelių paslaugų, iki 5 MB. Niekas neišsaugoma, kol nepatvirtinsite peržiūrėtų eilučių.",
+        "errorFormat": "Šis failas nėra OFX ar QFX banko išrašas.",
+        "errorFix": "Atsisiųskite išrašą OFX, QFX ar „Microsoft Money“ formatu ir įkelkite jo nekeisdami. Skaitomi ir senesni SGML failai, ir OFX 2 XML failai."
+      },
+      "mt940": {
+        "hint": "SWIFT MT940 išrašas, dažnai .sta ar .txt failas, iki 5 MB. Niekas neišsaugoma, kol nepatvirtinsite peržiūrėtų eilučių.",
+        "errorFormat": "Šis failas nėra MT940 banko išrašas.",
+        "errorFix": "Atsisiųskite išrašą MT940 formatu ir įkelkite jo nekeisdami. Tai tekstinis failas, kurio eilutės prasideda žymomis, pvz., :20:, :61: ir :62F:."
       }
     },
     "statement": {

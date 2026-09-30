@@ -10,7 +10,7 @@ web
 
 The owner and the few people in their household. They are trusted, invited by an administrator, and already know what the product is for. Nobody arrives cold.
 
-The main situation is a sit-down session at a desktop computer, weekly or monthly: import the bank statement (Swedbank CSV, camt.053 XML or any bank's CSV through a saved column mapping), review and categorize rows, record anything the bank did not see, then check balances, budgets, upcoming bills and reports. The phone is secondary and is used for the occasional quick entry or lookup.
+The main situation is a sit-down session at a desktop computer, weekly or monthly: import the bank statement (Swedbank CSV, camt.053 XML, OFX, MT940 or any bank's CSV through a saved column mapping), review and categorize rows, record anything the bank did not see, then check balances, budgets, upcoming bills and reports. The phone is secondary and is used for the occasional quick entry or lookup.
 
 ## Product Purpose
 
@@ -24,7 +24,7 @@ A private ledger that the household runs itself. Data stays in its own PostgreSQ
 
 ## Operating Context
 
-- Bank statements are the main bulk input: Swedbank CSV, camt.053 XML from any bank that offers it, or the CSV of any other bank, card issuer or payment app through a column mapping saved once. Import is a review step: preview, row selection, category choice, transfer matching and duplicate detection.
+- Bank statements are the main bulk input: Swedbank CSV, camt.053 XML from any bank that offers it, OFX or QFX and MT940 files, or the CSV of any other bank, card issuer or payment app through a column mapping saved once. Import is a review step: preview, row selection, category choice, transfer matching and duplicate detection.
 - The installation has one reporting currency, EUR by default. Accounts have a main currency and can hold balances in any of 30 supported currencies; every transaction carries its own currency. Totals, budgets and reports are expressed in the reporting currency using the ECB reference rate on each transaction's date, synced daily when the administrator allows it. Entry accepts comma decimals. Dates and numbers follow the chosen locale.
 - Investments are kept by hand or imported from an Interactive Brokers Flex Query, by file upload or daily through the Flex Web Service when a connection is saved. Cost basis is first-in-first-out; the last price comes from the broker or is set by hand. Holdings count toward the account's value, the dashboard total and net worth.
 - The interface is English and Lithuanian. Lithuanian labels and bank descriptions are long and use diacritics (ą č ę ė į š ų ū ž).

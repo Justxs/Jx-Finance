@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Endpoints.Imports.Shared;
 
 namespace JxFinance.Endpoints.Imports.Preview;
 
@@ -30,7 +31,7 @@ public sealed class ImportPreviewSummary : Summary<ImportPreviewEndpoint, Import
             + "multipart/form-data.";
         Params["file"] = "The statement file, at most 5 MB for a CSV file and 20 MB for an XML file.";
         Params["accountId"] = "The account the statement belongs to.";
-        Params["format"] = "The statement format: swedbankCsv for a Swedbank CSV export, camt053 for an ISO 20022 camt.053 XML statement, or genericCsv for a CSV read through a saved mapping.";
+        Params["format"] = ImportFormatText.Format;
         Params["mappingId"] = "The saved CSV column mapping to read the file with; required for genericCsv and ignored otherwise.";
         Responses[200] = "The parsed rows with suggestions and duplicate flags, and what the statement says about its account and closing balance.";
         Responses[400] = "No file, a file over the size limit, an unreadable statement, a file with no statement for this account, a CSV without a column the mapping names (import.missingColumns), or an account or mapping that is not yours.";

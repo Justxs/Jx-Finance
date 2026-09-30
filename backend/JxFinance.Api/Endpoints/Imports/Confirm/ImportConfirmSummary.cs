@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Endpoints.Imports.Shared;
 
 namespace JxFinance.Endpoints.Imports.Confirm;
 
@@ -21,7 +22,7 @@ public sealed class ImportConfirmSummary : Summary<ImportConfirmEndpoint, Import
             + "with the negated amount in the expense category given, linked to refundOfTransactionId when that is set.";
         RequestParam(r => r.AccountId, "The account the rows post to; must be the one previewed.");
         RequestParam(r => r.Rows, "The rows to import, as returned by preview, with any category and tag corrections applied.");
-        RequestParam(r => r.Format, "The statement format: swedbankCsv for a Swedbank CSV export, camt053 for an ISO 20022 camt.053 XML statement, or genericCsv for a CSV read through a saved mapping.");
+        RequestParam(r => r.Format, ImportFormatText.Format);
         RequestParam(r => r.MappingId, "The saved CSV column mapping the preview used; required for genericCsv, whose audit entry names it.");
         RequestParam(r => r.Statement, "Optional. The closing balance the camt.053 or mapped CSV preview answered; ignored for Swedbank CSV.");
         Responses[200] = "Counts of imported, linked and skipped rows, and the recorded reconciliation when there is one.";

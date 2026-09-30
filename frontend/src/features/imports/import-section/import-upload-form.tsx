@@ -17,6 +17,8 @@ export const importFormats: Record<StatementFormat, { accept: string; maxBytes: 
   swedbankCsv: { accept: ".csv,text/csv", maxBytes: 5 * 1024 * 1024 },
   camt053: { accept: ".xml,application/xml,text/xml", maxBytes: 20 * 1024 * 1024 },
   genericCsv: { accept: ".csv,.txt,text/csv", maxBytes: 5 * 1024 * 1024 },
+  ofx: { accept: ".ofx,.qfx,application/x-ofx", maxBytes: 5 * 1024 * 1024 },
+  mt940: { accept: ".sta,.mt940,.940,.txt", maxBytes: 5 * 1024 * 1024 },
 };
 interface Props {
   accounts: AccountResponse[];

@@ -69,6 +69,16 @@ export function ImportProviders({ onChoose, onEdit }: Readonly<Props>) {
       name: t("imports.providers.camt053"),
       detail: t("imports.providers.camt053Format"),
     },
+    {
+      format: "ofx",
+      name: t("imports.providers.ofx"),
+      detail: t("imports.providers.ofxFormat"),
+    },
+    {
+      format: "mt940",
+      name: t("imports.providers.mt940"),
+      detail: t("imports.providers.mt940Format"),
+    },
   ] as const;
 
   return (
