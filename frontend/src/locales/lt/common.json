@@ -2110,6 +2110,18 @@
         "worse": "prasčiau nei ankstesniu laikotarpiu",
         "same": "nepakito nuo ankstesnio laikotarpio"
       }
+    },
+    "yearReview": {
+      "title": "Metų apžvalga",
+      "months": "Mėnuo po mėnesio",
+      "month": "Mėnuo",
+      "income": "Pajamos",
+      "expenses": "Išlaidos",
+      "saved": "Sutaupyta",
+      "changes": "Didžiausi pokyčiai, palyginti su praėjusiais metais",
+      "was": "{{now}}, buvo {{was}}",
+      "noChanges": "Nė viena išlaidų kategorija nepasikeitė, palyginti su praėjusiais metais.",
+      "compare": "Palyginti su praėjusiais metais"
     }
   },
   "imports": {

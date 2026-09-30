@@ -21,6 +21,7 @@ import { reportComparison, reportParams, reportRange } from "@/features/reports/
 import { ReportStats } from "@/features/reports/report-stats/report-stats";
 import { ReportTrendChart } from "@/features/reports/report-trend-chart/report-trend-chart";
 import { TagBreakdown } from "@/features/reports/tag-breakdown/tag-breakdown";
+import { YearReview } from "@/features/reports/year-review/year-review";
 import { useDeferredParams } from "@/hooks/use-deferred-params";
 import { useExportUrl } from "@/hooks/use-export-url";
 import { useIsoDate } from "@/hooks/use-formatters";
@@ -37,6 +38,7 @@ export function ReportsPage() {
   const { dateFrom, dateTo } = reportRange(search, today);
   const comparison = reportComparison(search);
   const preset = detectPreset(dateFrom, dateTo, today);
+  const wholeYear = preset === "thisYear" || preset === "lastYear";
 
   const exportParams = { dateFrom, dateTo, page: 1, pageSize: 1 };
   const csvUrl = useExportUrl(getExportTransactionsUrl(exportParams));
@@ -89,9 +91,18 @@ export function ReportsPage() {
             comparison={against}
           />
 
-          {netWorthEnabled && (preset === "thisYear" || preset === "lastYear") && (
+          {netWorthEnabled && wholeYear && (
             <NetWorthChangeCard dateFrom={dateFrom} dateTo={dateTo} />
           )}
+
+          {wholeYear ? (
+            <YearReview
+              trend={summary.data.trend}
+              expenseByCategory={summary.data.expenseByCategory}
+              compared={comparison === "previousYear"}
+              onCompare={() => handleComparisonChange("previousYear")}
+            />
+          ) : null}
 
           <SplitColumns className="gap-x-5 gap-y-5 lg:items-start">
             <div className="space-y-5">

@@ -6,6 +6,10 @@ Related: feature page [Reports](../features/reports.md).
 
 Newest first. Each entry is a choice between real alternatives: what was chosen, what was rejected, and why.
 
+- **2026-09-30.** The year in review is a section of the reports page on the two year presets, computed in the browser from the report summary the page already loads
+  - Rejected: A yearly close beside the month-end close with its own snapshot; a `GET /api/reports/year` endpoint; a dashboard card
+  - Why: The report already answers a year's totals, its months as trend buckets and every category against the year before, so an endpoint would repeat those queries, and a snapshot would freeze figures the month closes already guard. A page the member already opens for the year keeps the navigation as it is
+
 - **2026-09-30.** A payee name is a personal row keyed by `PayeeKey`, joined to transactions by the key at read time, and managed from the ledger's row menu and a section of the Tags page. Decided while the owner was away, to be reviewed
   - Rejected: A shareable name owned like a tag, so a household reads one name; writing the name into each transaction's description; a page of its own in the Categories hub
   - Why: The name is how one person reads their ledger, and two people naming one shop differently is harmless, while a shared name needs scope, a household check and a conflict rule. Rewriting descriptions would lose the bank's text, which the import's duplicate matching and every export rely on, and would not reach tomorrow's rows. A section beside tags keeps the hub at three tabs, and the row menu is where a member meets a messy name

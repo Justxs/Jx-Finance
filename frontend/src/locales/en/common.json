@@ -2046,6 +2046,18 @@
         "worse": "worse than the earlier period",
         "same": "unchanged from the earlier period"
       }
+    },
+    "yearReview": {
+      "title": "Year in review",
+      "months": "Month by month",
+      "month": "Month",
+      "income": "Income",
+      "expenses": "Expenses",
+      "saved": "Kept",
+      "changes": "Biggest changes from the year before",
+      "was": "{{now}}, was {{was}}",
+      "noChanges": "No expense category changed from the year before.",
+      "compare": "Compare with the year before"
     }
   },
   "imports": {

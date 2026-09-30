@@ -122,6 +122,10 @@ The list covers expenses only. Tags in practice mark spending themes, the untagg
 
 The month-end review's `figures` are this same report summary, so they carry the list as well; the month-end page does not show it.
 
+## Year in review
+
+Since 2026-09-30 the page adds a "Year in review" section, after the net worth change, whenever the range is "This year" or "Last year". It needs no endpoint: `year-review-rows.ts` reads the report the page already has. A table lists each month of the trend with its income, expenses, net and the share of income kept, "—" for a month without income. Under it "Biggest changes from the year before" lists the five expense categories whose amount moved most against the comparison, either way, with "€4,200.00, was €3,900.00" and the change badge that calls a fall better; without the "Same period last year" comparison it offers "Compare with the year before", which turns that comparison on. Investment groups and unchanged categories are left out. The year's totals, the net worth change and the breakdowns are the ones the page shows for any range.
+
 ## What counts as income and expense
 
 Two ledgers feed the report. Ordinary transactions contribute their `ReportingAmount` by `FlowType`, as before. While the `Investments` feature is on, the investment ledger contributes too, through `IInvestmentCashFlowService` in `Common/InvestmentCashFlows`:
