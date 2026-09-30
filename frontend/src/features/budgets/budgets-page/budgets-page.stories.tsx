@@ -69,7 +69,7 @@ export const AllOverLimit: Story = {
       {
         ...overLimitBudget,
         id: ids.budgets.transport,
-        categoryName: "Transportas",
+        name: "Transportas",
         limitAmount: "10.00",
         effectiveLimit: "10.00",
         spent: "98.40",
@@ -135,7 +135,7 @@ export const EditDialogOpen: Story = {
     await userEvent.click(editButtons[0]!);
     const dialog = await openedDialog();
     await expect(dialog).toHaveAccessibleName("Edit budget");
-    await expect(dialog).toHaveAccessibleDescription(budgets[0]!.categoryName);
+    await expect(dialog).toHaveAccessibleDescription(budgets[0]!.name);
   },
 };
 

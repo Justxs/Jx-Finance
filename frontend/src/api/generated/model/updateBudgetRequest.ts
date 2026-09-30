@@ -8,10 +8,12 @@
 import type { BudgetPeriod } from "./budgetPeriod";
 
 export interface UpdateBudgetRequest {
-  /** @minLength 1 */
-  categoryId: string;
+  /** @nullable */
+  categoryId: string | null;
   limitAmount: string;
   period: BudgetPeriod;
   /** Whether the previous window's remainder adjusts this window's limit. */
   rolloverEnabled: boolean;
+  /** @nullable */
+  tagId?: string | null;
 }

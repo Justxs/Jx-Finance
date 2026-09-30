@@ -5,7 +5,8 @@ using JxFinance.Endpoints.Budgets.Shared;
 namespace JxFinance.Endpoints.Budgets.CreateBudget;
 
 public sealed record CreateBudgetRequest(
-    Guid CategoryId,
+    Guid? CategoryId,
     [property: Money] decimal LimitAmount,
     BudgetPeriod Period,
-    bool RolloverEnabled) : IBudgetInput;
+    bool RolloverEnabled,
+    Guid? TagId = null) : IBudgetInput;

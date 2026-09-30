@@ -2,7 +2,7 @@
 
 Back to the [feature walkthrough](README.md). See also [decisions](../decisions/budgets.md).
 
-Backend `Budgets`, page `/budgets`. A limit per expense category in the reporting currency, personal only. A budget carries a period — weekly, monthly, quarterly or yearly — and is always read against the one window of that period that holds today.
+Backend `Budgets`, page `/budgets`. A limit per expense category, or since 2026-09-30 per tag, in the reporting currency, personal only. A budget carries a period — weekly, monthly, quarterly or yearly — and is always read against the one window of that period that holds today.
 
 Each row (`budget-row`) leads with what is left, such as "€84.00 left", or with "€24.00 over" in the expense colour, and puts "€316.00 spent of €400.00" beneath it, followed by the rollover line when rollover is on. The figure is `BudgetRemaining`, the same component and text the dashboard budget snapshot shows beside its meter, and `budgetFigures` is the one place that decides a budget is over. The dashboard snapshot still leads with spending. Editing a budget opens "Edit budget" with the category name under the title, in `BudgetForm`, the form that also adds one.
 
@@ -34,6 +34,14 @@ Only the weekly window depends on `InstanceSettings.FirstDayOfWeek`: with Monday
 The uniqueness rule is one budget per category and period. Two budgets of the same period on the same category would always cover exactly the same window, so they are rejected with `conflict.duplicate` and 409. Different periods on one category are allowed and useful: a weekly limit on groceries to pace the week, and a yearly limit on the same category to cap the year. Their windows overlap by design, and each counts the same spending inside its own window.
 
 The check runs in `BudgetService` against the budgets the caller can see, not as a unique index, because duplicates were reachable before this rule existed and a unique index would fail the migration on an installation that already has one.
+
+## Budgets on a tag
+
+Since 2026-09-30 a budget follows either a category or a tag, never both: `Budget.CategoryId` became nullable, `Budget.TagId` was added, and the check constraint `CK_Budgets_CategoryOrTag` holds exactly one of them. The create and update bodies take `categoryId` or `tagId`; neither or both answers `required` on `categoryId`, a tag must be visible to the caller like one of a transaction, and the rule of one budget per target and period applies to tags as it does to categories. The response carries `categoryId`, `tagId` and `name`, the category's or the tag's, in place of the former `categoryName`.
+
+A tag says what money was for, such as "Vacation 2026", so a tag budget counts every expense that carries the tag, in full and whatever its category, dated in the window: `BudgetUsageCalculator` joins `TransactionTags` to the visible expenses of the span and sums their `ReportingAmount`, one query for all tag budgets. A split expense counts once with its whole amount, because a tag sits on the transaction and never on a split line, and a refund carrying the tag lowers the spend as it lowers a category's. Rollover, alerts at 80% and 100%, the dashboard card and the monthly budgets of the month-end review work unchanged; the alert's title is the tag's name. Limits from history and the suggested budgets stay category-only, so the form shows "Every expense with this tag counts in full…" instead of the history hint and does not prefill a tag budget.
+
+The budget form starts with "Limit on" Category or Tag, a segmented choice shown only when the member has tags, and then the matching picker. A tag budget's row links to the ledger filtered by the tag, `type=expense` and the window. Deleting a tag retires its budgets and records them beside the tag's trash entry, the way a category's delete does, and restoring the tag brings back each budget whose slot is still free; restoring a budget from the trash is refused while its tag is deleted.
 
 ## Spending in the window
 

@@ -8,17 +8,18 @@
 import * as zod from "zod";
 
 /**
- * Sets a spending limit for one category over a weekly, monthly, quarterly or yearly window. A category can carry one budget per period, so a second budget for the same category and period is rejected; the same category may hold, say, a weekly and a yearly budget at once.
+ * Sets a spending limit for one category over a weekly, monthly, quarterly or yearly window. A category can carry one budget per period, so a second budget for the same category and period is rejected; the same category may hold, say, a weekly and a yearly budget at once. Send tagId instead of categoryId to limit what is spent on a tag, such as a trip: every expense carrying the tag counts in full, whatever its category, and a refund carrying it lowers the spend.
  * @summary Create a budget
  */
-
 export const createBudgetBodyLimitAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 
 export const CreateBudgetBody = zod.object({
   categoryId: zod
     .uuid()
-    .min(1)
-    .describe("The category the limit applies to; must be visible to you."),
+    .nullable()
+    .describe(
+      "The expense category the limit applies to; must be visible to you. Send it or tagId, not both.",
+    ),
   limitAmount: zod
     .stringFormat("decimal", createBudgetBodyLimitAmountRegExp)
     .describe("Decimal string with at most two decimal places, greater than zero."),
@@ -30,6 +31,12 @@ export const CreateBudgetBody = zod.object({
     .describe(
       "When true, what is left of the previous window raises this window's limit and an overspend lowers it, walking back at most twelve windows or to the budget's creation.",
     ),
+  tagId: zod
+    .uuid()
+    .nullish()
+    .describe(
+      "The tag the limit applies to; must be visible to you. Send it or categoryId, not both.",
+    ),
 });
 
 export const createBudgetResponseLimitAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
@@ -40,8 +47,9 @@ export const createBudgetResponseRemainingRegExp = new RegExp("^-?\\d+(\\.\\d{1,
 
 export const CreateBudgetResponse = zod.object({
   id: zod.uuid(),
-  categoryId: zod.uuid(),
-  categoryName: zod.string(),
+  categoryId: zod.uuid().nullable(),
+  tagId: zod.uuid().nullable(),
+  name: zod.string(),
   limitAmount: zod.stringFormat("decimal", createBudgetResponseLimitAmountRegExp),
   carriedAmount: zod.stringFormat("decimal", createBudgetResponseCarriedAmountRegExp),
   effectiveLimit: zod.stringFormat("decimal", createBudgetResponseEffectiveLimitRegExp),
@@ -67,8 +75,9 @@ export const budgetsResponseRemainingRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$
 
 export const BudgetsResponseItem = zod.object({
   id: zod.uuid(),
-  categoryId: zod.uuid(),
-  categoryName: zod.string(),
+  categoryId: zod.uuid().nullable(),
+  tagId: zod.uuid().nullable(),
+  name: zod.string(),
   limitAmount: zod.stringFormat("decimal", budgetsResponseLimitAmountRegExp),
   carriedAmount: zod.stringFormat("decimal", budgetsResponseCarriedAmountRegExp),
   effectiveLimit: zod.stringFormat("decimal", budgetsResponseEffectiveLimitRegExp),
@@ -137,11 +146,10 @@ export const DeleteBudgetResponse = zod.void();
  * Changes the limit, the period or the rollover switch, or moves the budget to a different category. Spending already recorded is re-evaluated against the new window the next time the budget is read.
  * @summary Update a budget
  */
-
 export const updateBudgetBodyLimitAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 
 export const UpdateBudgetBody = zod.object({
-  categoryId: zod.uuid().min(1),
+  categoryId: zod.uuid().nullable(),
   limitAmount: zod.stringFormat("decimal", updateBudgetBodyLimitAmountRegExp),
   period: zod
     .enum(["monthly", "weekly", "quarterly", "yearly"])
@@ -149,6 +157,7 @@ export const UpdateBudgetBody = zod.object({
   rolloverEnabled: zod
     .boolean()
     .describe("Whether the previous window's remainder adjusts this window's limit."),
+  tagId: zod.uuid().nullish(),
 });
 
 export const updateBudgetResponseLimitAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
@@ -159,8 +168,9 @@ export const updateBudgetResponseRemainingRegExp = new RegExp("^-?\\d+(\\.\\d{1,
 
 export const UpdateBudgetResponse = zod.object({
   id: zod.uuid(),
-  categoryId: zod.uuid(),
-  categoryName: zod.string(),
+  categoryId: zod.uuid().nullable(),
+  tagId: zod.uuid().nullable(),
+  name: zod.string(),
   limitAmount: zod.stringFormat("decimal", updateBudgetResponseLimitAmountRegExp),
   carriedAmount: zod.stringFormat("decimal", updateBudgetResponseCarriedAmountRegExp),
   effectiveLimit: zod.stringFormat("decimal", updateBudgetResponseEffectiveLimitRegExp),

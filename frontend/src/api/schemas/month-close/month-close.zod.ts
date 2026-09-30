@@ -288,8 +288,9 @@ export const CloseMonthResponse = zod.object({
     .array(
       zod.object({
         id: zod.uuid(),
-        categoryId: zod.uuid(),
-        categoryName: zod.string(),
+        categoryId: zod.uuid().nullable(),
+        tagId: zod.uuid().nullable(),
+        name: zod.string(),
         limitAmount: zod.stringFormat("decimal", closeMonthResponseBudgetsItemLimitAmountRegExp),
         carriedAmount: zod.stringFormat(
           "decimal",
@@ -710,8 +711,9 @@ export const MonthReviewResponse = zod.object({
     .array(
       zod.object({
         id: zod.uuid(),
-        categoryId: zod.uuid(),
-        categoryName: zod.string(),
+        categoryId: zod.uuid().nullable(),
+        tagId: zod.uuid().nullable(),
+        name: zod.string(),
         limitAmount: zod.stringFormat("decimal", monthReviewResponseBudgetsItemLimitAmountRegExp),
         carriedAmount: zod.stringFormat(
           "decimal",
@@ -1178,8 +1180,9 @@ export const UpdateMonthNoteResponse = zod.object({
     .array(
       zod.object({
         id: zod.uuid(),
-        categoryId: zod.uuid(),
-        categoryName: zod.string(),
+        categoryId: zod.uuid().nullable(),
+        tagId: zod.uuid().nullable(),
+        name: zod.string(),
         limitAmount: zod.stringFormat(
           "decimal",
           updateMonthNoteResponseBudgetsItemLimitAmountRegExp,

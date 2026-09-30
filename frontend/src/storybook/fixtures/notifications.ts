@@ -46,7 +46,7 @@ function budgetNotification(
   return {
     id,
     type,
-    title: budget.categoryName,
+    title: budget.name,
     message: `${thresholdPercent}% of the ${budget.period} limit`,
     payload: { thresholdPercent, period: budget.period },
     relatedType: "Budget",

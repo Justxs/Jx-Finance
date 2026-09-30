@@ -55,7 +55,7 @@ export const getCreateBudgetUrl = () => {
 };
 
 /**
- * Sets a spending limit for one category over a weekly, monthly, quarterly or yearly window. A category can carry one budget per period, so a second budget for the same category and period is rejected; the same category may hold, say, a weekly and a yearly budget at once.
+ * Sets a spending limit for one category over a weekly, monthly, quarterly or yearly window. A category can carry one budget per period, so a second budget for the same category and period is rejected; the same category may hold, say, a weekly and a yearly budget at once. Send tagId instead of categoryId to limit what is spent on a tag, such as a trip: every expense carrying the tag counts in full, whatever its category, and a refund carrying it lowers the spend.
  * @summary Create a budget
  */
 export const createBudget = async (

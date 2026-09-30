@@ -11,9 +11,12 @@ public sealed class CreateBudgetSummary : Summary<CreateBudgetEndpoint, CreateBu
         Summary = "Create a budget";
         Description = "Sets a spending limit for one category over a weekly, monthly, quarterly or yearly "
             + "window. A category can carry one budget per period, so a second budget for the same category "
-            + "and period is rejected; the same category may hold, say, a weekly and a yearly budget at once.";
+            + "and period is rejected; the same category may hold, say, a weekly and a yearly budget at once. "
+            + "Send tagId instead of categoryId to limit what is spent on a tag, such as a trip: every expense "
+            + "carrying the tag counts in full, whatever its category, and a refund carrying it lowers the spend.";
         ExampleRequest = new CreateBudgetRequest(Guid.Empty, 400.00m, BudgetPeriod.Monthly, false);
-        RequestParam(r => r.CategoryId, "The category the limit applies to; must be visible to you.");
+        RequestParam(r => r.CategoryId, "The expense category the limit applies to; must be visible to you. Send it or tagId, not both.");
+        RequestParam(r => r.TagId, "The tag the limit applies to; must be visible to you. Send it or categoryId, not both.");
         RequestParam(r => r.LimitAmount, SummaryText.PositiveMoney);
         RequestParam(r => r.Period, "Weekly, Monthly, Quarterly, or Yearly. Defaults to Monthly.");
         RequestParam(
@@ -21,7 +24,7 @@ public sealed class CreateBudgetSummary : Summary<CreateBudgetEndpoint, CreateBu
             "When true, what is left of the previous window raises this window's limit and an overspend "
                 + "lowers it, walking back at most twelve windows or to the budget's creation.");
         Responses[201] = "The budget was created. The Location header points at it.";
-        Responses[400] = "Validation failed, or the category is not visible to you.";
-        Responses[409] = "That category already has a budget for the same period.";
+        Responses[400] = "Validation failed, neither or both of categoryId and tagId were sent, or the category or tag is not visible to you.";
+        Responses[409] = "That category or tag already has a budget for the same period.";
     }
 }

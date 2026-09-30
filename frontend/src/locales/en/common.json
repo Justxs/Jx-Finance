@@ -1115,7 +1115,10 @@
       "about": "about {{amount}} a month",
       "create": "Create {{amount}} monthly budget",
       "created": "Budget created"
-    }
+    },
+    "target": "Limit on",
+    "tagHint": "Every expense with this tag counts in full, whatever its category; a refund with it counts back.",
+    "tag": "Tag"
   },
   "shortcuts": {
     "title": "Keyboard shortcuts",

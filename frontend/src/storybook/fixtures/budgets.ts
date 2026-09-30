@@ -44,7 +44,8 @@ function budget(
   return {
     id,
     categoryId,
-    categoryName: categories.find((item) => item.id === categoryId)?.name ?? "",
+    tagId: null,
+    name: categories.find((item) => item.id === categoryId)?.name ?? "",
     limitAmount,
     carriedAmount: carried,
     effectiveLimit: fromCents(effective),
@@ -70,11 +71,28 @@ export const weeklyRolloverBudget: BudgetResponse = budget(
   { period: "weekly", carried: "12.50" },
 );
 
+export const holidayTagBudget: BudgetResponse = {
+  id: ids.budgets.holiday,
+  categoryId: null,
+  tagId: ids.tags.holiday,
+  name: "Atostogos 2026",
+  limitAmount: "2000.00",
+  carriedAmount: "0.00",
+  effectiveLimit: "2000.00",
+  spent: "18.00",
+  remaining: "1982.00",
+  period: "yearly",
+  rolloverEnabled: false,
+  windowStart: budgetWindows.yearly.start,
+  windowEnd: budgetWindows.yearly.end,
+};
+
 export const budgets: BudgetResponse[] = [
   overLimitBudget,
   weeklyRolloverBudget,
   budget(ids.budgets.entertainment, ids.categories.entertainment, "60.00"),
   budget(ids.budgets.utilities, ids.categories.utilities, "150.00", { period: "quarterly" }),
+  holidayTagBudget,
 ];
 
 const monthWindows: Window[] = [

@@ -38,6 +38,9 @@ public static class TrashRestorers
     private static readonly DomainError CategoryGone =
         new(ErrorCodes.RestoreReferenceMissing, "The category this belonged to was deleted, so it cannot come back as it was.");
 
+    private static readonly DomainError TagGone =
+        new(ErrorCodes.RestoreReferenceMissing, "The tag this belonged to was deleted, so it cannot come back as it was.");
+
     private static readonly DomainError FeeGone =
         new(ErrorCodes.RestoreReferenceMissing, "The fee transaction of this conversion is no longer stored.");
 
@@ -273,19 +276,22 @@ public static class TrashRestorers
 
     private static async Task<Result> RestoreBudgetAsync(TrashRestore r, Budget budget)
     {
-        if (!await r.CategoryLivesAsync(budget.CategoryId))
+        var targetLives = budget.TagId is { } tagId
+            ? await r.TagLivesAsync(tagId)
+            : await r.CategoryLivesAsync(budget.CategoryId!.Value);
+        if (!targetLives)
         {
-            return CategoryGone;
+            return budget.TagId is null ? CategoryGone : TagGone;
         }
 
         var taken = await r.Db.Budgets.AnyAsync(
-            b => b.CategoryId == budget.CategoryId && b.Period == budget.Period,
+            b => b.CategoryId == budget.CategoryId && b.TagId == budget.TagId && b.Period == budget.Period,
             r.CancellationToken);
         if (taken)
         {
             return new DomainError(
                 ErrorCodes.RestoreSlotTaken,
-                $"That category already has a {budget.Period.ToString().ToLowerInvariant()} budget.");
+                $"That {(budget.TagId is null ? "category" : "tag")} already has a {budget.Period.ToString().ToLowerInvariant()} budget.");
         }
 
         return Result.Success();
@@ -387,7 +393,7 @@ public static class TrashRestorers
             .ToListAsync(r.CancellationToken);
         foreach (var budget in budgets)
         {
-            if (await BudgetMayReturnAsync(r, budget, category))
+            if (await BudgetMayReturnAsync(r, budget, category.UserId, category.Scope, category.HouseholdId))
             {
                 budget.IsDeleted = false;
             }
@@ -396,7 +402,12 @@ public static class TrashRestorers
         return Result.Success();
     }
 
-    private static async Task<bool> BudgetMayReturnAsync(TrashRestore r, Budget budget, Category category)
+    private static async Task<bool> BudgetMayReturnAsync(
+        TrashRestore r,
+        Budget budget,
+        Guid targetOwnerId,
+        Scope targetScope,
+        HouseholdId? targetHouseholdId)
     {
         var taken = await r.Db.Budgets
             .IgnoreQueryFilters(QueryFilters.OwnerOnly)
@@ -404,6 +415,7 @@ public static class TrashRestorers
                 b => b.Id != budget.Id
                     && b.UserId == budget.UserId
                     && b.CategoryId == budget.CategoryId
+                    && b.TagId == budget.TagId
                     && b.Period == budget.Period,
                 r.CancellationToken);
         if (taken)
@@ -411,8 +423,8 @@ public static class TrashRestorers
             return false;
         }
 
-        return budget.UserId == category.UserId
-            || (category is { Scope: Scope.Shared, HouseholdId: { } householdId }
+        return budget.UserId == targetOwnerId
+            || (targetScope == Scope.Shared && targetHouseholdId is { } householdId
                 && await r.IsLiveMemberAsync(householdId, budget.UserId));
     }
 
@@ -440,6 +452,19 @@ public static class TrashRestorers
 
         db.TransactionTags.AddRange(
             stored.Except(present).Select(transactionId => new TransactionTag { TransactionId = transactionId, TagId = tagId }));
+
+        var budgetIds = r.Entry.Remembered<BudgetId>(DeletionChangeKind.Budget);
+        var budgets = await db.Budgets
+            .IgnoreQueryFilters()
+            .Where(b => budgetIds.Contains(b.Id) && b.IsDeleted && b.TagId == tagId)
+            .ToListAsync(r.CancellationToken);
+        foreach (var budget in budgets)
+        {
+            if (await BudgetMayReturnAsync(r, budget, tag.UserId, tag.Scope, tag.HouseholdId))
+            {
+                budget.IsDeleted = false;
+            }
+        }
 
         return Result.Success();
     }

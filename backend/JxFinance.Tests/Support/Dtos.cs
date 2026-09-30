@@ -48,8 +48,9 @@ public sealed record AccountDto(
 
 public sealed record BudgetDto(
     Guid Id,
-    Guid CategoryId,
-    string CategoryName,
+    Guid? CategoryId,
+    Guid? TagId,
+    string Name,
     string LimitAmount,
     string CarriedAmount,
     string EffectiveLimit,

@@ -3,6 +3,7 @@ import {
   getBudgetSuggestionsSuspenseQueryOptions,
   getBudgetsSuspenseQueryOptions,
   getCategoriesSuspenseQueryOptions,
+  getTagsSuspenseQueryOptions,
 } from "@/api/generated";
 import { BudgetsPage } from "@/features/budgets/budgets-page/budgets-page";
 import { BudgetsPending } from "@/features/budgets/budgets-page/budgets-page-pending";
@@ -14,6 +15,7 @@ export const Route = createFileRoute("/budgets")({
   loader: ({ context: { queryClient } }) => {
     warm(queryClient, getCategoriesSuspenseQueryOptions());
     warm(queryClient, getBudgetsSuspenseQueryOptions());
+    warm(queryClient, getTagsSuspenseQueryOptions());
     warm(queryClient, getBudgetSuggestionsSuspenseQueryOptions({ period: "monthly" }));
   },
   component: BudgetsPage,

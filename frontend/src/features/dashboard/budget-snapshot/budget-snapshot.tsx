@@ -57,7 +57,7 @@ export function BudgetSnapshot({ asOf }: Readonly<Props>) {
         return (
           <ShareRow
             key={budget.id}
-            name={<span className="min-w-0 flex-1 wrap-break-word">{budget.categoryName}</span>}
+            name={<span className="min-w-0 flex-1 wrap-break-word">{budget.name}</span>}
             note={
               <BudgetRemaining
                 spent={spent}
@@ -72,9 +72,9 @@ export function BudgetSnapshot({ asOf }: Readonly<Props>) {
             tone={over ? "negative" : "primary"}
             meterLabel={
               passed === undefined
-                ? budget.categoryName
+                ? budget.name
                 : t("dashboard.budgetPeriodPassed", {
-                    name: budget.categoryName,
+                    name: budget.name,
                     percent: percent.format(passed),
                   })
             }

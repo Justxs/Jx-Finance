@@ -102,6 +102,8 @@ This is the rule [Categories](categories.md) already has, applied to the join ta
 
 Before the join rows go, the ids of the transactions they pointed at are recorded beside the trash entry, so the delete is undoable: the toast offers Undo, the trash lists `Holiday, 7 transactions`, and a restore links the tag again to every one of those transactions that is still stored, soft-deleted ones included. A restore is refused with 409 `restore.nameTaken` when another live tag of the owner has taken the name meanwhile, ignoring case, because the unique-name rule would otherwise be broken by the restore itself; rename or delete the other one first. See [Trash and undo](trash-and-undo.md#deletes-that-rewrite-other-rows).
 
+Since 2026-09-30 the delete also retires the tag's [budgets](budgets.md#budgets-on-a-tag), recording them beside the trash entry, which then reads `Holiday, 7 transactions, 1 budget`, and a restore brings each back while its period is still free.
+
 A household member who did not create a shared tag may rename it, like a shared category, but only the owner may delete it or change its sharing.
 
 ## The screen

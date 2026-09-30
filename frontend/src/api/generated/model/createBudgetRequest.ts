@@ -9,13 +9,18 @@ import type { BudgetPeriod } from "./budgetPeriod";
 
 export interface CreateBudgetRequest {
   /**
-   * The category the limit applies to; must be visible to you.
-   * @minLength 1
+   * The expense category the limit applies to; must be visible to you. Send it or tagId, not both.
+   * @nullable
    */
-  categoryId: string;
+  categoryId: string | null;
   /** Decimal string with at most two decimal places, greater than zero. */
   limitAmount: string;
   period: BudgetPeriod;
   /** When true, what is left of the previous window raises this window's limit and an overspend lowers it, walking back at most twelve windows or to the budget's creation. */
   rolloverEnabled: boolean;
+  /**
+   * The tag the limit applies to; must be visible to you. Send it or categoryId, not both.
+   * @nullable
+   */
+  tagId?: string | null;
 }

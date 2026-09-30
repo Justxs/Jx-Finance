@@ -150,6 +150,7 @@ const contracts: Record<string, Contract> = {
   currencies: { schema: schemas.CurrenciesResponse },
   overLimitBudget: { schema: schemas.BudgetsResponseItem },
   weeklyRolloverBudget: { schema: schemas.BudgetsResponseItem },
+  holidayTagBudget: { schema: schemas.BudgetsResponseItem },
   budgets: { schema: schemas.BudgetsResponse },
   budgetSuggestions: { schema: schemas.BudgetSuggestionsResponse },
   weeklyBudgetSuggestions: { schema: schemas.BudgetSuggestionsResponse },

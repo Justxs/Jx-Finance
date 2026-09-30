@@ -12,6 +12,7 @@ import {
   type BudgetResponse,
   type BudgetSuggestionsResponse,
   type CategoryResponse,
+  type TagResponse,
 } from "@/api/generated/model";
 import { useServerForm } from "@/components/form";
 import { FormError } from "@/components/form-error/form-error";
@@ -22,10 +23,14 @@ import { useMoney } from "@/hooks/use-formatters";
 import { silentMutation, upsert } from "@/lib/mutations";
 import { namedOptions } from "@/lib/options";
 import { silentQuery } from "@/lib/query-client";
-import { positiveMoney, requiredValue } from "@/lib/validation";
+import { positiveMoney } from "@/lib/validation";
+
+type BudgetTarget = "category" | "tag";
 
 interface FormValues {
+  target: BudgetTarget;
   categoryId: string;
+  tagId: string;
   limitAmount: string;
   period: BudgetPeriod;
   rolloverEnabled: boolean;
@@ -82,23 +87,33 @@ function BudgetHistoryHint({ categoryId, period }: Readonly<HintProps>) {
 
 interface Props {
   categories: CategoryResponse[];
+  tags: TagResponse[];
   initial?: BudgetResponse;
   onClose: () => void;
 }
 
-export function BudgetForm({ categories, initial, onClose }: Readonly<Props>) {
+export function BudgetForm({ categories, tags, initial, onClose }: Readonly<Props>) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const monthly = useBudgetSuggestionsSuspense({ period: "monthly" });
   const expenseCategories = categories.filter((c) => c.type === "expense");
   const firstCategoryId = expenseCategories[0]?.id ?? "";
 
-  const schema = z.object({
-    categoryId: requiredValue(t),
-    limitAmount: positiveMoney(t),
-    period: z.enum(BudgetPeriod),
-    rolloverEnabled: z.boolean(),
-  });
+  const schema = z
+    .object({
+      target: z.enum(["category", "tag"]),
+      categoryId: z.string(),
+      tagId: z.string(),
+      limitAmount: positiveMoney(t),
+      period: z.enum(BudgetPeriod),
+      rolloverEnabled: z.boolean(),
+    })
+    .superRefine((value, ctx) => {
+      const field = value.target === "tag" ? "tagId" : "categoryId";
+      if (!value[field]) {
+        ctx.addIssue({ code: "custom", message: t("validation.required"), path: [field] });
+      }
+    });
 
   const { create, update, pending, error } = upsert(
     useCreateBudget({ mutation: { ...silentMutation, onSuccess: onClose } }),
@@ -106,7 +121,9 @@ export function BudgetForm({ categories, initial, onClose }: Readonly<Props>) {
   );
 
   const defaultValues: FormValues = {
+    target: initial?.tagId ? "tag" : "category",
     categoryId: initial?.categoryId ?? firstCategoryId,
+    tagId: initial?.tagId ?? tags[0]?.id ?? "",
     limitAmount: initial?.limitAmount ?? suggestedLimit(monthly.data, firstCategoryId),
     period: initial?.period ?? "monthly",
     rolloverEnabled: initial?.rolloverEnabled ?? false,
@@ -115,13 +132,19 @@ export function BudgetForm({ categories, initial, onClose }: Readonly<Props>) {
   const form = useServerForm({
     defaultValues,
     schema,
-    submit: (value) =>
-      initial?.id ? update({ id: initial.id, data: value }) : create({ data: value }),
+    submit: ({ target, categoryId, tagId, ...rest }) => {
+      const data = {
+        ...rest,
+        categoryId: target === "category" ? categoryId : null,
+        tagId: target === "tag" ? tagId : null,
+      };
+      return initial?.id ? update({ id: initial.id, data }) : create({ data });
+    },
   });
 
   async function refillLimit(typed: () => boolean) {
     const period = form.getFieldValue("period");
-    if (initial || typed()) {
+    if (initial || typed() || form.getFieldValue("target") === "tag") {
       return;
     }
     const suggestions = await queryClient
@@ -142,7 +165,7 @@ export function BudgetForm({ categories, initial, onClose }: Readonly<Props>) {
     });
   }
 
-  if (expenseCategories.length === 0) {
+  if (expenseCategories.length === 0 && tags.length === 0) {
     return <EmptyText size="sm">{t("budgets.needCategory")}</EmptyText>;
   }
 
@@ -150,27 +173,63 @@ export function BudgetForm({ categories, initial, onClose }: Readonly<Props>) {
     <form.AppForm>
       <form.FormShell className="space-y-4">
         <FormGrid>
-          <form.Field name="categoryId">
-            {(field) => (
-              <field.SelectFieldControl
-                id="budget-category"
-                kind="search"
-                label={t("budgets.category")}
-                options={namedOptions(expenseCategories)}
-              />
-            )}
-          </form.Field>
+          {tags.length > 0 ? (
+            <form.Field name="target">
+              {(field) => (
+                <field.SelectFieldControl
+                  id="budget-target"
+                  kind="segments"
+                  label={t("budgets.target")}
+                  className="col-span-full"
+                  options={[
+                    { value: "category", label: t("budgets.category") },
+                    { value: "tag", label: t("budgets.tag") },
+                  ]}
+                />
+              )}
+            </form.Field>
+          ) : null}
+
+          <form.Subscribe selector={(state) => state.values.target}>
+            {(target) =>
+              target === "tag" ? (
+                <form.Field name="tagId">
+                  {(field) => (
+                    <field.SelectFieldControl
+                      id="budget-tag"
+                      kind="search"
+                      label={t("budgets.tag")}
+                      options={namedOptions(tags)}
+                    />
+                  )}
+                </form.Field>
+              ) : (
+                <form.Field name="categoryId">
+                  {(field) => (
+                    <field.SelectFieldControl
+                      id="budget-category"
+                      kind="search"
+                      label={t("budgets.category")}
+                      options={namedOptions(expenseCategories)}
+                    />
+                  )}
+                </form.Field>
+              )
+            }
+          </form.Subscribe>
 
           <form.Subscribe
-            selector={(state) => [state.values.categoryId, state.values.period] as const}
+            selector={(state) =>
+              [state.values.target, state.values.categoryId, state.values.period] as const
+            }
           >
-            {([categoryId, period]) => (
+            {([target, categoryId, period]) => (
               <form.Field
                 name="limitAmount"
                 listeners={[
                   {
                     triggers: ["change"],
-                    watchFields: ["categoryId", "period"],
+                    watchFields: ["categoryId", "period", "target"],
                     run: ({ fieldApi }) => void refillLimit(() => fieldApi.meta.isDirty),
                   },
                 ]}
@@ -179,7 +238,13 @@ export function BudgetForm({ categories, initial, onClose }: Readonly<Props>) {
                   <field.MoneyInputField
                     id="budget-limit"
                     label={t("budgets.limit")}
-                    hint={<BudgetHistoryHint categoryId={categoryId} period={period} />}
+                    hint={
+                      target === "tag" ? (
+                        t("budgets.tagHint")
+                      ) : (
+                        <BudgetHistoryHint categoryId={categoryId} period={period} />
+                      )
+                    }
                   />
                 )}
               </form.Field>

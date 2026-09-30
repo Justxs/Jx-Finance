@@ -4,7 +4,8 @@ namespace JxFinance.Endpoints.Budgets.Shared;
 
 public interface IBudgetInput
 {
-    Guid CategoryId { get; }
+    Guid? CategoryId { get; }
+    Guid? TagId { get; }
     decimal LimitAmount { get; }
     BudgetPeriod Period { get; }
     bool RolloverEnabled { get; }

@@ -10,7 +10,9 @@ import {
   categories,
   incomeCategories,
   overLimitBudget,
+  holidayTagBudget,
   problemOf,
+  tags,
   weeklyRolloverBudget,
   youngBudgetSuggestions,
 } from "@/storybook/fixtures";
@@ -21,7 +23,7 @@ import { BudgetForm } from "./budget-form";
 const meta = {
   title: "Features/Budgets/BudgetForm",
   component: BudgetForm,
-  args: { categories, onClose: fn() },
+  args: { categories, tags, onClose: fn() },
   decorators: [withWidth("form")],
 } satisfies Meta<typeof BudgetForm>;
 
@@ -40,6 +42,35 @@ export const Default: Story = {
     await expect(canvas.getByRole("textbox")).toHaveAccessibleDescription(
       /median of the last 6 months/i,
     );
+  },
+};
+
+export const LimitOnATag: Story = {
+  parameters: withHandlers(getCreateBudgetMockHandler(async () => holidayTagBudget)),
+  play: async ({ canvas, args }) => {
+    await userEvent.click(await canvas.findByRole("radio", { name: "Tag" }));
+    await expect(canvas.getByRole("combobox", { name: "Tag" })).toBeVisible();
+    await expect(canvas.queryByRole("combobox", { name: /^category$/i })).not.toBeInTheDocument();
+    await expect(canvas.getByText(/Every expense with this tag counts in full/u)).toBeVisible();
+    await fireEvent.change(canvas.getByRole("textbox"), { target: { value: "2000" } });
+    await userEvent.click(canvas.getByRole("button", { name: "Add budget" }));
+    await waitFor(() => expect(args.onClose).toHaveBeenCalledTimes(1));
+  },
+};
+
+export const EditingATagBudget: Story = {
+  args: { initial: holidayTagBudget },
+  play: async ({ canvas }) => {
+    await expect(await canvas.findByRole("radio", { name: "Tag" })).toBeChecked();
+    await expect(canvas.getByRole("combobox", { name: "Tag" })).toHaveTextContent("Atostogos 2026");
+  },
+};
+
+export const WithoutTags: Story = {
+  args: { tags: [] },
+  play: async ({ canvas }) => {
+    await canvas.findByRole("textbox");
+    await expect(canvas.queryByRole("radio", { name: "Tag" })).not.toBeInTheDocument();
   },
 };
 

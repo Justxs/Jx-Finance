@@ -98,6 +98,8 @@ The same row also holds the mail server: `SmtpEnabled`, `SmtpHost`, `SmtpPort` (
 
 ## Payee key
 
+`Budgets.CategoryId` became nullable and `Budgets.TagId` (uuid, nullable, restricting foreign key to `Tags`, indexed) was added by the `AddTagBudgets` migration of 2026-09-30, with the check constraint `CK_Budgets_CategoryOrTag` that exactly one of the two is set. See [Budgets](features/budgets.md#budgets-on-a-tag).
+
 `PayeeNames`, added by the `AddPayeeNames` migration of 2026-09-30, holds a member's own display name for a payee: an `OwnableEntity` with its own id type `PayeeNameId`, `PayeeKey` (varchar 200) and `Name` (varchar 100), unique on (`UserId`, `PayeeKey`) among the rows not deleted. Nothing references it; it meets `Transactions` through the key at read time. Soft-deleted names are purged after 30 days by the retention job, the member export carries the table as owned, and backups carry it like any other. See [Payee names](features/payee-names.md).
 
 `Transactions.Note` (varchar 1000, nullable) was added by the `AddTransactionNote` migration of 2026-09-30: the member's own words beside the bank's `Description`, written only by the transaction create and update bodies. See [Transactions](features/transactions.md#notes).

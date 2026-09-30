@@ -1,5 +1,6 @@
 using FastEndpoints;
 using FluentValidation;
+using JxFinance.Common.Errors;
 using JxFinance.Common.Validation;
 
 namespace JxFinance.Endpoints.Budgets.Shared;
@@ -9,7 +10,11 @@ public abstract class BudgetInputValidator<TRequest> : Validator<TRequest>
 {
     protected BudgetInputValidator()
     {
-        RuleFor(r => r.CategoryId).IsRequired();
+        RuleFor(r => r)
+            .Must(r => (r.CategoryId is null) != (r.TagId is null))
+            .WithErrorCode(ErrorCodes.Required)
+            .WithMessage("A budget follows either a category or a tag, never both.")
+            .WithName(nameof(IBudgetInput.CategoryId));
         RuleFor(r => r.Period).IsKnownEnum();
         RuleFor(r => r.LimitAmount)
             .IsPositiveMoney()

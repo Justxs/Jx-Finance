@@ -106,6 +106,7 @@ export const ids = {
     transport: uid("77777777", 2),
     entertainment: uid("77777777", 3),
     utilities: uid("77777777", 4),
+    holiday: uid("77777777", 5),
   },
   goals: {
     vacation: uid("88888888", 1),

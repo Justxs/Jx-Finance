@@ -1151,7 +1151,10 @@
       "about": "apie {{amount}} per mėnesį",
       "create": "Sukurti {{amount}} mėnesinį biudžetą",
       "created": "Biudžetas sukurtas"
-    }
+    },
+    "target": "Limitas pagal",
+    "tagHint": "Kiekviena išlaida su šia žyma skaičiuojama visa, nesvarbu kokia kategorija; grąžinimas su ja atimamas.",
+    "tag": "Žyma"
   },
   "shortcuts": {
     "title": "Spartieji klavišai",

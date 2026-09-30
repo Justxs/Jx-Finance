@@ -12,6 +12,7 @@ import {
   budgetSuggestions,
   budgets,
   budgetWindows,
+  tags,
   weeklyBudgetSuggestions,
 } from "@/storybook/fixtures";
 import { categoryName } from "./categories";
@@ -25,18 +26,22 @@ function periodOf(value: string | null, fallback: BudgetPeriod): BudgetPeriod {
 }
 
 function mergeBudget(base: BudgetResponse, body: Body): BudgetResponse {
-  const categoryId = text(body.categoryId) ?? base.categoryId;
+  const tagId = text(body.tagId);
+  const categoryId = tagId ? null : (text(body.categoryId) ?? base.categoryId);
   const limitAmount = text(body.limitAmount) ?? base.limitAmount;
   const period = periodOf(text(body.period), base.period);
   const rolloverEnabled = body.rolloverEnabled === true;
-  const spent = categoryId === base.categoryId ? base.spent : "0.00";
+  const spent = categoryId === base.categoryId && tagId === base.tagId ? base.spent : "0.00";
   const carried = rolloverEnabled ? base.carriedAmount : "0.00";
   const effective = toCents(limitAmount) + toCents(carried);
   const window = budgetWindows[period];
   return {
     ...base,
     categoryId,
-    categoryName: categoryName(categoryId) || base.categoryName,
+    tagId,
+    name: tagId
+      ? (tags.find((tag) => tag.id === tagId)?.name ?? "")
+      : categoryName(categoryId ?? "") || base.name,
     limitAmount,
     carriedAmount: carried,
     effectiveLimit: (effective / 100).toFixed(2),
@@ -62,7 +67,8 @@ export const budgetHandlers = [
     const base: BudgetResponse = {
       id: NEW_ID,
       categoryId: "",
-      categoryName: "",
+      tagId: null,
+      name: "",
       limitAmount: "0.00",
       carriedAmount: "0.00",
       effectiveLimit: "0.00",

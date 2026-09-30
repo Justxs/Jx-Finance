@@ -6,7 +6,8 @@ namespace JxFinance.Endpoints.Budgets.UpdateBudget;
 
 public sealed record UpdateBudgetRequest(
     Guid Id,
-    Guid CategoryId,
+    Guid? CategoryId,
     [property: Money] decimal LimitAmount,
     BudgetPeriod Period,
-    bool RolloverEnabled) : IBudgetInput;
+    bool RolloverEnabled,
+    Guid? TagId = null) : IBudgetInput;

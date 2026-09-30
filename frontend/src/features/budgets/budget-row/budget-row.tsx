@@ -21,12 +21,14 @@ export function BudgetRow({ budget, onEdit, ...deleteProps }: Readonly<Props>) {
 
   return (
     <ProgressRow
-      label={budget.categoryName}
+      label={budget.name}
       title={
         <TransactionsLink
-          name={budget.categoryName}
+          name={budget.name}
           filter={{
-            categoryId: budget.categoryId,
+            ...(budget.tagId
+              ? { tagIds: budget.tagId }
+              : { categoryId: budget.categoryId ?? undefined }),
             type: "expense",
             dateFrom: budget.windowStart,
             dateTo: budget.windowEnd,

@@ -4,11 +4,15 @@ Related: feature page [Budgets](../features/budgets.md).
 
 ## Current
 
-Weekly, monthly, quarterly or yearly limit per expense category, one budget per category and period; the window is derived from today in the installation time zone and, for weekly, from the configured first day of the week; an optional rollover carries the previous window's remainder or overspend, recomputed per read and walked back at most twelve windows or to the budget's creation; a new budget's limit is prefilled with the median of the category's last six complete windows, rounded up to a whole unit, and the page lists up to five steady monthly categories without a monthly budget, with no dismissal
+Weekly, monthly, quarterly or yearly limit per expense category or per tag, one budget per category or tag and period, a tag budget counting every expense carrying the tag in full; the window is derived from today in the installation time zone and, for weekly, from the configured first day of the week; an optional rollover carries the previous window's remainder or overspend, recomputed per read and walked back at most twelve windows or to the budget's creation; a new budget's limit is prefilled with the median of the category's last six complete windows, rounded up to a whole unit, and the page lists up to five steady monthly categories without a monthly budget, with no dismissal
 
 ## Log
 
 Newest first. Each entry is a choice between real alternatives: what was chosen, what was rejected, and why.
+
+- **2026-09-30.** A budget follows a category or a tag, as two nullable columns with a check constraint that exactly one is set, and a tag budget counts whole tagged expenses. Decided while the owner was away, to be reviewed
+  - Rejected: A separate `TagBudget` entity; a budget on a category and a tag together; counting only the tagged split lines of an expense category
+  - Why: A second entity would repeat the windows, rollover, alerts, trash and month-end code for the same numbers. A combined filter answers a narrower question nobody asked and doubles the uniqueness rule. Tags sit on the whole transaction, so the whole amount is what "spent on the holiday" means, and rollover and alerts need no change because they only read the spend per window
 
 - **2026-09-30.** The add form refills the limit from a listener on the limit field that watches the category and the period, and skips the refill once the field is dirty; this replaces the 2026-09-29 comparison with the previous suggestion
   - Rejected: Keeping the comparison, which needed the cached suggestion of the previous category and period, both previous values from the select handlers and a period type guard; `form.getFieldMeta`, which TanStack Form 2 keeps off the typed form API

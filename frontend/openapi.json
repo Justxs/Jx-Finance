@@ -4155,7 +4155,7 @@
           "Budgets"
         ],
         "summary": "Create a budget",
-        "description": "Sets a spending limit for one category over a weekly, monthly, quarterly or yearly window. A category can carry one budget per period, so a second budget for the same category and period is rejected; the same category may hold, say, a weekly and a yearly budget at once.",
+        "description": "Sets a spending limit for one category over a weekly, monthly, quarterly or yearly window. A category can carry one budget per period, so a second budget for the same category and period is rejected; the same category may hold, say, a weekly and a yearly budget at once. Send tagId instead of categoryId to limit what is spent on a tag, such as a trip: every expense carrying the tag counts in full, whatever its category, and a refund carrying it lowers the spend.",
         "operationId": "CreateBudget",
         "requestBody": {
           "content": {
@@ -4167,7 +4167,8 @@
                 "categoryId": "00000000-0000-0000-0000-000000000000",
                 "limitAmount": "400.00",
                 "period": "monthly",
-                "rolloverEnabled": false
+                "rolloverEnabled": false,
+                "tagId": null
               }
             }
           },
@@ -4185,7 +4186,7 @@
             }
           },
           "400": {
-            "description": "Validation failed, or the category is not visible to you.",
+            "description": "Validation failed, neither or both of categoryId and tagId were sent, or the category or tag is not visible to you.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -4205,7 +4206,7 @@
             }
           },
           "409": {
-            "description": "That category already has a budget for the same period.",
+            "description": "That category or tag already has a budget for the same period.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -4478,7 +4479,8 @@
                 "categoryId": "00000000-0000-0000-0000-000000000000",
                 "limitAmount": "450.00",
                 "period": "monthly",
-                "rolloverEnabled": true
+                "rolloverEnabled": true,
+                "tagId": null
               }
             }
           },
@@ -18580,7 +18582,8 @@
         "required": [
           "id",
           "categoryId",
-          "categoryName",
+          "tagId",
+          "name",
           "limitAmount",
           "carriedAmount",
           "effectiveLimit",
@@ -18598,10 +18601,20 @@
             "format": "uuid"
           },
           "categoryId": {
-            "type": "string",
+            "type": [
+              "null",
+              "string"
+            ],
             "format": "uuid"
           },
-          "categoryName": {
+          "tagId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "name": {
             "type": "string"
           },
           "limitAmount": {
@@ -19382,9 +19395,11 @@
         "type": "object",
         "properties": {
           "categoryId": {
-            "minLength": 1,
-            "type": "string",
-            "description": "The category the limit applies to; must be visible to you.",
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The expense category the limit applies to; must be visible to you. Send it or tagId, not both.",
             "format": "uuid",
             "example": "00000000-0000-0000-0000-000000000000"
           },
@@ -19401,13 +19416,22 @@
             "type": "boolean",
             "description": "When true, what is left of the previous window raises this window's limit and an overspend lowers it, walking back at most twelve windows or to the budget's creation.",
             "example": false
+          },
+          "tagId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The tag the limit applies to; must be visible to you. Send it or categoryId, not both.",
+            "format": "uuid"
           }
         },
         "example": {
           "categoryId": "00000000-0000-0000-0000-000000000000",
           "limitAmount": "400.00",
           "period": "monthly",
-          "rolloverEnabled": false
+          "rolloverEnabled": false,
+          "tagId": null
         }
       },
       "CreateCategorizationRuleRequest": {
@@ -27247,8 +27271,10 @@
         "type": "object",
         "properties": {
           "categoryId": {
-            "minLength": 1,
-            "type": "string",
+            "type": [
+              "null",
+              "string"
+            ],
             "format": "uuid",
             "example": "00000000-0000-0000-0000-000000000000"
           },
@@ -27264,13 +27290,21 @@
             "type": "boolean",
             "description": "Whether the previous window's remainder adjusts this window's limit.",
             "example": true
+          },
+          "tagId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
           }
         },
         "example": {
           "categoryId": "00000000-0000-0000-0000-000000000000",
           "limitAmount": "450.00",
           "period": "monthly",
-          "rolloverEnabled": true
+          "rolloverEnabled": true,
+          "tagId": null
         }
       },
       "UpdateCategorizationRuleRequest": {

@@ -43,8 +43,8 @@ public sealed class BudgetSuggestionService(
             .ToListAsync(cancellationToken);
 
         var budgeted = await db.Budgets
-            .Where(b => b.Period == period)
-            .Select(b => b.CategoryId)
+            .Where(b => b.Period == period && b.CategoryId != null)
+            .Select(b => b.CategoryId!.Value)
             .ToListAsync(cancellationToken);
 
         var items = categories

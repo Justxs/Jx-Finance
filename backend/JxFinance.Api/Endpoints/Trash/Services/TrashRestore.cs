@@ -3,6 +3,7 @@ using JxFinance.Domain.Accounts;
 using JxFinance.Domain.Categories;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Households;
+using JxFinance.Domain.Tags;
 using JxFinance.Domain.Trash;
 using JxFinance.Infrastructure.Attachments;
 using JxFinance.Infrastructure.Data;
@@ -26,6 +27,11 @@ public sealed record TrashRestore(
         Db.Categories
             .IgnoreQueryFilters(QueryFilters.OwnerOnly)
             .AnyAsync(c => c.Id == categoryId, CancellationToken);
+
+    public Task<bool> TagLivesAsync(TagId tagId) =>
+        Db.Tags
+            .IgnoreQueryFilters(QueryFilters.OwnerOnly)
+            .AnyAsync(t => t.Id == tagId, CancellationToken);
 
     public Task<bool> IsLiveMemberAsync(HouseholdId householdId, Guid userId) =>
         Db.HouseholdMemberships

@@ -43,6 +43,7 @@ public sealed class BudgetAlertJob(
 
         var usage = await services.GetRequiredService<IBudgetUsageCalculator>().CalculateAsync(budgets, clock.Today, ct);
         var categories = await db.Categories.ToDictionaryAsync(c => c.Id, c => c.Name, ct);
+        var tags = await db.Tags.ToDictionaryAsync(t => t.Id, t => t.Name, ct);
         var publisher = services.GetRequiredService<INotificationPublisher>();
 
         await using var transaction = await db.Database.BeginTransactionAsync(ct);
@@ -73,7 +74,9 @@ public sealed class BudgetAlertJob(
                 {
                     UserId = userId,
                     Type = type,
-                    Title = categories.GetValueOrDefault(budget.CategoryId) ?? "Unknown",
+                    Title = (budget.TagId is { } tagId
+                        ? tags.GetValueOrDefault(tagId)
+                        : categories.GetValueOrDefault(budget.CategoryId!.Value)) ?? "Unknown",
                     Payload = new NotificationPayload { ThresholdPercent = percent, Period = budget.Period },
                     RelatedType = NotificationRelated.Budget,
                     RelatedId = budget.Id.Value,

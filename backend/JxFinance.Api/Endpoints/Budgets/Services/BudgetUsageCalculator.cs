@@ -5,13 +5,17 @@ using JxFinance.Common.Settings;
 using JxFinance.Domain.Budgets;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Settings;
+using JxFinance.Domain.Tags;
 using JxFinance.Endpoints.Budgets.Interfaces;
 using JxFinance.Endpoints.Budgets.Shared;
+using JxFinance.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace JxFinance.Endpoints.Budgets.Services;
 
 [RegisterService<IBudgetUsageCalculator>(LifeTime.Scoped)]
 public sealed class BudgetUsageCalculator(
+    AppDbContext db,
     ICategoryAttributionService attributions,
     IInstanceSettingsStore settings,
     IClock clock) : IBudgetUsageCalculator
@@ -32,18 +36,47 @@ public sealed class BudgetUsageCalculator(
         var spanStart = walks.Values.Min(windows => windows[0].Start);
         var spanEnd = walks.Values.Max(windows => windows[^1].End);
 
-        var spendByCategory = (await attributions.GetAttributionsAsync(
-                new DateWindow(spanStart, spanEnd),
-                null,
-                FlowType.Expense,
-                cancellationToken))
-            .Where(a => a.CategoryId.HasValue)
-            .GroupBy(a => a.CategoryId!.Value)
-            .ToDictionary(g => g.Key, g => (IReadOnlyList<CategoryAttribution>)[.. g]);
+        var span = new DateWindow(spanStart, spanEnd);
+        var spendByCategory = budgets.Any(b => b.CategoryId is not null)
+            ? (await attributions.GetAttributionsAsync(span, null, FlowType.Expense, cancellationToken))
+                .Where(a => a.CategoryId.HasValue)
+                .GroupBy(a => a.CategoryId!.Value)
+                .ToDictionary(g => g.Key, g => (IReadOnlyList<CategoryAttribution>)[.. g])
+            : [];
+        var spendByTag = await TagSpendAsync(budgets, span, cancellationToken);
 
         return budgets.ToDictionary(
             b => b.Id,
-            b => Usage(b, walks[b.Id], spendByCategory.GetValueOrDefault(b.CategoryId, [])));
+            b => Usage(b, walks[b.Id], b.TagId is { } tagId
+                ? spendByTag.GetValueOrDefault(tagId, [])
+                : spendByCategory.GetValueOrDefault(b.CategoryId!.Value, [])));
+    }
+
+    private async Task<Dictionary<TagId, IReadOnlyList<CategoryAttribution>>> TagSpendAsync(
+        IReadOnlyList<Budget> budgets,
+        DateWindow span,
+        CancellationToken cancellationToken)
+    {
+        var tagIds = budgets.Select(b => b.TagId).OfType<TagId>().Distinct().ToList();
+        if (tagIds.Count == 0)
+        {
+            return [];
+        }
+
+        var rows = await db.TransactionTags
+            .Where(x => tagIds.Contains(x.TagId))
+            .Join(
+                db.Transactions.Where(t => t.Type == FlowType.Expense && t.Date >= span.Start && t.Date < span.ExclusiveEnd),
+                x => x.TransactionId,
+                t => t.Id,
+                (x, t) => new { x.TagId, t.Date, t.ReportingAmount })
+            .ToListAsync(cancellationToken);
+
+        return rows
+            .GroupBy(row => row.TagId)
+            .ToDictionary(
+                g => g.Key,
+                g => (IReadOnlyList<CategoryAttribution>)[.. g.Select(row => new CategoryAttribution(row.Date, null, row.ReportingAmount))]);
     }
 
     private List<BudgetWindow> Walk(Budget budget, DateOnly asOf, FirstDayOfWeek firstDayOfWeek)

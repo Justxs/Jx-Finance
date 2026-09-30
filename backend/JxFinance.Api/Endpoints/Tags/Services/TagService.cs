@@ -88,13 +88,21 @@ public sealed class TagService(
         var live = await db.Transactions
             .IgnoreQueryFilters(QueryFilters.OwnerOnly)
             .CountAsync(t => linked.Contains(t.Id), cancellationToken);
+        var budgets = await db.Budgets
+            .IgnoreQueryFilters(QueryFilters.OwnerOnly)
+            .Where(b => b.TagId == tagId)
+            .Select(b => b.Id)
+            .ToListAsync(cancellationToken);
         var entry = deletions.Record(
             TrashKind.Tag,
             id,
-            TrashLabel.Counted(tag.Name, (live, "transaction", "transactions")));
+            TrashLabel.Counted(tag.Name, (live, "transaction", "transactions"), (budgets.Count, "budget", "budgets")));
         entry.Remember(DeletionChangeKind.TransactionTag, linked.Select(t => t.Value));
+        entry.Remember(DeletionChangeKind.Budget, budgets.Select(b => b.Value));
 
         await db.TransactionTags.Where(t => t.TagId == tagId).ExecuteDeleteAsync(cancellationToken);
+        await db.Budgets.IgnoreQueryFilters(QueryFilters.OwnerOnly).Where(b => b.TagId == tagId)
+            .ExecuteUpdateAsync(s => s.SetProperty(b => b.IsDeleted, true), cancellationToken);
         db.Tags.Remove(tag);
         await db.SaveChangesAsync(cancellationToken);
 

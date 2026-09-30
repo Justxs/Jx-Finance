@@ -5,8 +5,9 @@ namespace JxFinance.Endpoints.Budgets.Shared;
 
 public sealed record BudgetResponse(
     Guid Id,
-    Guid CategoryId,
-    string CategoryName,
+    Guid? CategoryId,
+    Guid? TagId,
+    string Name,
     [property: Money] decimal LimitAmount,
     [property: Money] decimal CarriedAmount,
     [property: Money] decimal EffectiveLimit,

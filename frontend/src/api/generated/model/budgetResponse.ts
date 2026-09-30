@@ -10,8 +10,11 @@ import type { DateOnly } from "./dateOnly";
 
 export interface BudgetResponse {
   id: string;
-  categoryId: string;
-  categoryName: string;
+  /** @nullable */
+  categoryId: string | null;
+  /** @nullable */
+  tagId: string | null;
+  name: string;
   limitAmount: string;
   carriedAmount: string;
   effectiveLimit: string;

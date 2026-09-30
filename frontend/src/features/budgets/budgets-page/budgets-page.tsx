@@ -4,6 +4,7 @@ import {
   useDeleteBudget,
   useBudgetsSuspense,
   useCategoriesSuspense,
+  useTagsSuspense,
 } from "@/api/generated";
 import type { BudgetResponse } from "@/api/generated/model";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog/confirm-delete-dialog";
@@ -24,10 +25,11 @@ import { EXPENSE_TONE } from "@/lib/tone";
 export function BudgetsPage() {
   const { t } = useTranslation();
   const categoryList = useCategoriesSuspense().data;
+  const tagList = useTagsSuspense().data;
   const budgets = useEditableList(
     useBudgetsSuspense().data,
     useDeleteBudget({ mutation: optimisticRemoval<BudgetResponse>(getBudgetsQueryKey()) }),
-    (budget) => budget.categoryName,
+    (budget) => budget.name,
     "budget",
   );
   const budgetList = budgets.list;
@@ -40,17 +42,17 @@ export function BudgetsPage() {
     <div className="space-y-5">
       <PageHeader title={t("budgets.title")} description={t("budgets.subtitle")}>
         <CreateDialog label={t("budgets.add")} title={t("budgets.add")}>
-          {(close) => <BudgetForm categories={categoryList} onClose={close} />}
+          {(close) => <BudgetForm categories={categoryList} tags={tagList} onClose={close} />}
         </CreateDialog>
       </PageHeader>
 
       <EditModal
         {...budgets.editProps}
         title={t("budgets.editTitle")}
-        description={(budget) => budget.categoryName}
+        description={(budget) => budget.name}
       >
         {(budget, close) => (
-          <BudgetForm initial={budget} categories={categoryList} onClose={close} />
+          <BudgetForm initial={budget} categories={categoryList} tags={tagList} onClose={close} />
         )}
       </EditModal>
       {budgetList.length > 0 ? (
