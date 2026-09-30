@@ -17,5 +17,5 @@ public sealed class GetCashFlowForecastEndpoint(ICashFlowForecastService forecas
     }
 
     public override async Task HandleAsync(GetCashFlowForecastRequest req, CancellationToken ct) =>
-        await Send.OkAsync(await forecastService.GetAsync(req.Days, ct), ct);
+        await Send.OkAsync(await forecastService.GetAsync(req.Days, req.WhatIf, ct), ct);
 }

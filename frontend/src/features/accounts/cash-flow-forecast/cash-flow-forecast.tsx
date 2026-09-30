@@ -20,6 +20,7 @@ import {
   TableRow,
 } from "@/components/ui/table/table";
 import { Tag } from "@/components/ui/tag/tag";
+import { ForecastWhatIf, type WhatIf } from "@/features/accounts/forecast-what-if/forecast-what-if";
 import { useMoney, useShortDayIso } from "@/hooks/use-formatters";
 import type { Translate } from "@/lib/i18n";
 import { toCents } from "@/lib/money";
@@ -32,6 +33,9 @@ const HORIZONS = ["30", "60", "90"] as const;
 type Horizon = (typeof HORIZONS)[number];
 
 function entryName(t: Translate, entry: ForecastEntryResponse) {
+  if (entry.source === "whatIf") {
+    return t("forecast.whatIfEntry");
+  }
   return entry.name ?? t("forecast.ledgerEntry");
 }
 
@@ -148,16 +152,24 @@ function EntriesTable({
 interface BodyProps {
   days: number;
   totals: boolean;
+  whatIf: WhatIf | null;
+  onWhatIf: (whatIf: WhatIf | null) => void;
 }
 
-function ForecastBody({ days, totals }: Readonly<BodyProps>) {
+function ForecastBody({ days, totals, whatIf, onWhatIf }: Readonly<BodyProps>) {
   const { t } = useTranslation();
   const money = useMoney();
   const selectId = useId();
-  const forecast = useCashFlowForecastSuspense({ days }).data;
+  const forecast = useCashFlowForecastSuspense({
+    days,
+    whatIfAccountId: whatIf?.accountId,
+    whatIfAmount: whatIf?.amount,
+    whatIfDate: whatIf?.date,
+  }).data;
   const [chosenId, setChosenId] = useState("");
   const account =
-    forecast.accounts.find((item) => item.accountId === chosenId) ?? forecast.accounts[0];
+    forecast.accounts.find((item) => item.accountId === (whatIf?.accountId ?? chosenId)) ??
+    forecast.accounts[0];
 
   const totalsLine = scheduledTotals(forecast);
 
@@ -203,6 +215,14 @@ function ForecastBody({ days, totals }: Readonly<BodyProps>) {
               })}
             </p>
           ) : null}
+          <ForecastWhatIf
+            accountId={account.accountId}
+            accountName={account.accountName}
+            currency={account.currency}
+            today={forecast.from}
+            whatIf={whatIf}
+            onChange={onWhatIf}
+          />
           <EntriesTable account={account} days={days} />
         </>
       ) : (
@@ -239,8 +259,10 @@ export function CashFlowForecast({ totals = false }: Readonly<Props>) {
   const { t } = useTranslation();
   const titleId = useId();
   const [horizon, setHorizon] = useState<Horizon>("90");
+  const [whatIf, setWhatIf] = useState<WhatIf | null>(null);
   const days = Number(horizon);
   const shownDays = useDeferredValue(days);
+  const shownWhatIf = useDeferredValue(whatIf);
   const title = t("forecast.title", { days });
 
   return (
@@ -261,8 +283,13 @@ export function CashFlowForecast({ totals = false }: Readonly<Props>) {
       </SectionHeader>
       <p className="mb-4 text-sm text-muted-foreground">{t("forecast.basis")}</p>
       <QueryBoundary fallback={<ChartSkeleton />} errorSubject={title}>
-        <StaleRegion stale={shownDays !== days}>
-          <ForecastBody days={shownDays} totals={totals} />
+        <StaleRegion stale={shownDays !== days || shownWhatIf !== whatIf}>
+          <ForecastBody
+            days={shownDays}
+            totals={totals}
+            whatIf={shownWhatIf}
+            onWhatIf={setWhatIf}
+          />
         </StaleRegion>
       </QueryBoundary>
     </Section>

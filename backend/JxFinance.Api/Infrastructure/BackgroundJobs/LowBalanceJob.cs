@@ -29,7 +29,7 @@ public sealed class LowBalanceJob(
     {
         await using var scope = UserScope(userId);
         var services = scope.ServiceProvider;
-        var forecast = await services.GetRequiredService<ICashFlowForecastService>().GetAsync(LookAheadDays, ct);
+        var forecast = await services.GetRequiredService<ICashFlowForecastService>().GetAsync(LookAheadDays, null, ct);
         var atRisk = forecast.Accounts
             .Where(account => account is { BelowZeroOn: not null, StartBalance: >= 0m })
             .ToList();

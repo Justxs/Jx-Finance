@@ -11,4 +11,19 @@ export type CashFlowForecastParams = {
    * How many days after today to project, from 30 to 90. Defaults to 90.
    */
   days: number;
+  /**
+   * Optional: the account of a payment to try without saving it. Sent with whatIfAmount and whatIfDate.
+   * @nullable
+   */
+  whatIfAccountId?: string | null;
+  /**
+   * Optional: the signed amount of the tried payment in the account's currency, negative for money out. It shows as an entry with source whatIf.
+   * @nullable
+   */
+  whatIfAmount?: number | null;
+  /**
+   * Optional: the date of the tried payment. A date outside the horizon, or an account you cannot see, leaves the forecast as it is.
+   * @nullable
+   */
+  whatIfDate?: string | null;
 };

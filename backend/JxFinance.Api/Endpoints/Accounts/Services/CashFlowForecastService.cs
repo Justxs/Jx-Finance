@@ -18,7 +18,10 @@ namespace JxFinance.Endpoints.Accounts.Services;
 public sealed class CashFlowForecastService(AppDbContext db, IExchangeRateService rates, IClock clock)
     : ICashFlowForecastService
 {
-    public async Task<CashFlowForecastResponse> GetAsync(int days, CancellationToken cancellationToken)
+    public async Task<CashFlowForecastResponse> GetAsync(
+        int days,
+        ForecastWhatIf? whatIf,
+        CancellationToken cancellationToken)
     {
         var today = clock.Today;
         var end = today.AddDays(days);
@@ -85,6 +88,14 @@ public sealed class CashFlowForecastService(AppDbContext db, IExchangeRateServic
                     changes[arrival.Account].Add(Entry(bill, occurrence, arrived, estimated || arrival.Converted));
                 }
             }
+        }
+
+        if (whatIf is not null
+            && changes.TryGetValue(new AccountId(whatIf.AccountId), out var tried)
+            && whatIf.Date >= today
+            && whatIf.Date <= end)
+        {
+            tried.Add(new ForecastEntryResponse(whatIf.Date, ForecastEntrySource.WhatIf, null, null, null, whatIf.Amount, false, false, 0m));
         }
 
         var forecasts = ids

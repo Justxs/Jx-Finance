@@ -53,6 +53,10 @@ Then, in order:
 
 When nothing falls in the horizon the section says "Nothing is scheduled in the next 90 days." and still lists what was not counted.
 
+## Trying a payment
+
+Since 2026-09-30 the section, under the chart, offers "Try a payment": an amount and a date for the account shown, and "Show in forecast". Nothing is saved. The page asks `GET /api/accounts/forecast` again with `whatIfAccountId`, `whatIfAmount` (the amount negated, since a payment is money out) and `whatIfDate`, and the service adds one entry with source `whatIf` to that account before projecting, so the warnings, the lowest point, the chart and the entries table all include it through the same code as a recurring entry. The table names it "Tried payment, not saved", and the section reads "Includes a payment of €1,400.00 from Everyday on Nov 3 that is not saved." with **Remove**. The three parameters travel together or not at all (`required` on `whatIfAmount`), the amount must be non-zero money, and a date outside the horizon or an account the caller cannot see leaves the forecast as it is. The tried payment lives in the section's state, so leaving the page forgets it; the dashboard card and `LowBalanceJob` never send one.
+
 ## How it is computed
 
 ### Starting point

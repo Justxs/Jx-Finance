@@ -407,7 +407,7 @@ export const CashFlowForecastResponse = zod.object({
       entries: zod.array(
         zod.object({
           date: zod.iso.date(),
-          source: zod.enum(["recurring", "ledger"]),
+          source: zod.enum(["recurring", "ledger", "whatIf"]),
           billId: zod.uuid().nullable(),
           name: zod.string().nullable(),
           shape: zod.union([

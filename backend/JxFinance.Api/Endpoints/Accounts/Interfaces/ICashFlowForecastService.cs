@@ -4,5 +4,5 @@ namespace JxFinance.Endpoints.Accounts.Interfaces;
 
 public interface ICashFlowForecastService
 {
-    Task<CashFlowForecastResponse> GetAsync(int days, CancellationToken cancellationToken);
+    Task<CashFlowForecastResponse> GetAsync(int days, ForecastWhatIf? whatIf, CancellationToken cancellationToken);
 }

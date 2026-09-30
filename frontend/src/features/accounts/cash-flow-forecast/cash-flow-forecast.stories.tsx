@@ -22,6 +22,19 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+export const TryingAPayment: Story = {
+  play: async ({ canvas }) => {
+    await userEvent.click(await canvas.findByText("Try a payment"));
+    await userEvent.type(canvas.getByRole("textbox", { name: "Amount" }), "1400");
+    await userEvent.click(canvas.getByRole("button", { name: "Show in forecast" }));
+    await expect(await canvas.findByRole("status")).toHaveTextContent(
+      /Includes a payment of .*1,400\.00 from Swedbank einamoji/u,
+    );
+    await userEvent.click(canvas.getByRole("button", { name: "Remove" }));
+    await expect(await canvas.findByText("Try a payment")).toBeVisible();
+  },
+};
+
 export const AtRisk: Story = {
   play: async ({ canvas }) => {
     await expect(

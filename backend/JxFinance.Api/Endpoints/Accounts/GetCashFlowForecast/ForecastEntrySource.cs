@@ -4,4 +4,5 @@ public enum ForecastEntrySource
 {
     Recurring,
     Ledger,
+    WhatIf,
 }

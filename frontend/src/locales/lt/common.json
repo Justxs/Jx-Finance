@@ -1822,7 +1822,14 @@
       "accountNotVisible": "Jo sąskaita nerodoma",
       "noExchangeRate": "Gaunančiai sąskaitai nėra dabartinio valiutos kurso"
     },
-    "totals": "Suplanuota per artimiausias {{days}} dienų: išeis {{out}}, ateis {{in}}"
+    "totals": "Suplanuota per artimiausias {{days}} dienų: išeis {{out}}, ateis {{in}}",
+    "whatIfTitle": "Išbandyti mokėjimą",
+    "whatIfAmount": "Suma",
+    "whatIfTry": "Rodyti prognozėje",
+    "whatIfHint": "Vienkartinis mokėjimas iš {{account}}, kuris neišsaugomas, kad pamatytumėte, ar likučio pakaks.",
+    "whatIfShown": "Įtrauktas neišsaugotas {{amount}} mokėjimas iš {{account}}, {{date}}.",
+    "whatIfClear": "Pašalinti",
+    "whatIfEntry": "Išbandytas mokėjimas, neišsaugotas"
   },
   "subscriptions": {
     "title": "Pastebėtos prenumeratos",

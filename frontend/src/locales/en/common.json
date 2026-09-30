@@ -1762,7 +1762,14 @@
       "accountNotVisible": "Its account is not shown",
       "noExchangeRate": "No current exchange rate for the receiving account"
     },
-    "totals": "Scheduled in the next {{days}} days: {{out}} out, {{in}} in"
+    "totals": "Scheduled in the next {{days}} days: {{out}} out, {{in}} in",
+    "whatIfTitle": "Try a payment",
+    "whatIfAmount": "Amount",
+    "whatIfTry": "Show in forecast",
+    "whatIfHint": "A one-off payment from {{account}} that is not saved, to see whether the balance holds.",
+    "whatIfShown": "Includes a payment of {{amount}} from {{account}} on {{date}} that is not saved.",
+    "whatIfClear": "Remove",
+    "whatIfEntry": "Tried payment, not saved"
   },
   "subscriptions": {
     "title": "Subscriptions we spotted",

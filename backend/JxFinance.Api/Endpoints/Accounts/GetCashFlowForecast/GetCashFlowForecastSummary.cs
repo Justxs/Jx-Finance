@@ -19,7 +19,10 @@ public sealed class GetCashFlowForecastSummary : Summary<GetCashFlowForecastEndp
             + "below zero first. notCounted names the entries that could not be placed. Nothing is stored. Needs the "
             + "recurringBills feature.";
         RequestParam(r => r.Days, "How many days after today to project, from 30 to 90. Defaults to 90.");
+        RequestParam(r => r.WhatIfAccountId, "Optional: the account of a payment to try without saving it. Sent with whatIfAmount and whatIfDate.");
+        RequestParam(r => r.WhatIfAmount, "Optional: the signed amount of the tried payment in the account's currency, negative for money out. It shows as an entry with source whatIf.");
+        RequestParam(r => r.WhatIfDate, "Optional: the date of the tried payment. A date outside the horizon, or an account you cannot see, leaves the forecast as it is.");
         Responses[200] = "The forecast per account and the entries left out.";
-        Responses[400] = "days is outside 30 to 90.";
+        Responses[400] = "days is outside 30 to 90, the what-if amount is zero or not money, or the three what-if parameters were not sent together (required).";
     }
 }

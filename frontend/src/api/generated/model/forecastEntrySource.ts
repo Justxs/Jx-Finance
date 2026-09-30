@@ -11,4 +11,5 @@ export type ForecastEntrySource = (typeof ForecastEntrySource)[keyof typeof Fore
 export const ForecastEntrySource = {
   recurring: "recurring",
   ledger: "ledger",
+  whatIf: "whatIf",
 } as const;

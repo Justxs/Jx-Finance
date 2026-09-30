@@ -230,6 +230,27 @@ public sealed class CashFlowForecastTests(ApiFixture fixture) : IntegrationTestB
         await AssertProblemAsync(response, HttpStatusCode.NotFound, "feature.disabled");
     }
 
+    [Fact]
+    public async Task A_what_if_payment_moves_the_forecast_without_saving_anything()
+    {
+        using var client = await CreateUserClientAsync();
+        var account = await CreateAccountAsync("1000.00", client: client);
+        await BillAsync(client, "Rent", "expense", "300.00", account, Today.AddDays(10));
+
+        var tried = (await client.GetFromJsonAsync<ForecastDto>(
+            $"{Url}?days=30&whatIfAccountId={account}&whatIfAmount=-1400.00&whatIfDate={Iso(Today.AddDays(3))}",
+            TestContext.Current.CancellationToken))!;
+        var plain = await ForecastAsync(client, 30);
+        var partial = await client.GetAsync($"{Url}?days=30&whatIfAmount=-10", TestContext.Current.CancellationToken);
+
+        var forecast = Of(tried, account);
+        Assert.Equal(Today.AddDays(3), forecast.BelowZeroOn);
+        Assert.Equal("-700.00", forecast.LowestBalance);
+        Assert.Equal(("whatIf", "-1400.00"), (forecast.Entries[0].Source, forecast.Entries[0].Amount));
+        Assert.Null(Of(plain, account).BelowZeroOn);
+        await AssertValidationErrorAsync(partial, "whatIfAmount");
+    }
+
     private static string Iso(DateOnly date) => date.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture);
 
     private static AccountForecastDto Of(ForecastDto forecast, Guid account) =>

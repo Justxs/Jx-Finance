@@ -285,6 +285,42 @@
               "type": "integer",
               "format": "int32"
             }
+          },
+          {
+            "name": "whatIfAccountId",
+            "in": "query",
+            "description": "Optional: the account of a payment to try without saving it. Sent with whatIfAmount and whatIfDate.",
+            "schema": {
+              "type": [
+                "null",
+                "string"
+              ],
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "whatIfAmount",
+            "in": "query",
+            "description": "Optional: the signed amount of the tried payment in the account's currency, negative for money out. It shows as an entry with source whatIf.",
+            "schema": {
+              "type": [
+                "null",
+                "number"
+              ],
+              "format": "decimal"
+            }
+          },
+          {
+            "name": "whatIfDate",
+            "in": "query",
+            "description": "Optional: the date of the tried payment. A date outside the horizon, or an account you cannot see, leaves the forecast as it is.",
+            "schema": {
+              "type": [
+                "null",
+                "string"
+              ],
+              "format": "date"
+            }
           }
         ],
         "responses": {
@@ -299,7 +335,7 @@
             }
           },
           "400": {
-            "description": "days is outside 30 to 90.",
+            "description": "days is outside 30 to 90, the what-if amount is zero or not money, or the three what-if parameters were not sent together (required).",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -21851,7 +21887,8 @@
       "ForecastEntrySource": {
         "enum": [
           "recurring",
-          "ledger"
+          "ledger",
+          "whatIf"
         ],
         "type": "string"
       },
