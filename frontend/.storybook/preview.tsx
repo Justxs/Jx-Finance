@@ -5,10 +5,12 @@ import { I18nextProvider } from "react-i18next";
 import { configure } from "storybook/test";
 import { i18n } from "../src/lib/i18n";
 import { savePreferences } from "../src/stores/preferences";
+import { pinClockToFixtureToday } from "../src/storybook/clock";
 import { disposeStoryState, withAppProviders } from "../src/storybook/decorators";
 import { handlers } from "../src/storybook/handlers";
 import { mockWorkerLoader } from "./mock-worker";
 
+pinClockToFixtureToday();
 configure({ asyncUtilTimeout: 5000 });
 
 const preview: Preview = {

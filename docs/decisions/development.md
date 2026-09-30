@@ -6,6 +6,9 @@ Related: architecture [API contract and generated client](../architecture/api-co
 
 Newest first. Each entry is a choice between real alternatives: what was chosen, what was rejected, and why.
 
+- **2026-10-01.** The Storybook preview pins the clock to noon UTC on `FIXTURE_TODAY` (`pinClockToFixtureToday` in `src/storybook/clock.ts`), with time still running from there, so Storybook and the story runner see the same day as the fixtures
+  - Rejected: Moving each story's expectation to the new month; Vitest fake timers in the story runner only; a frozen clock such as `mockdate`
+  - Why: Stories read the real date while the fixtures are pinned to September 2026, so seven stories failed when the machine date reached October 1; editing expectations would break again every month. Fake timers exist only under Vitest and would leave Storybook showing a different month from the fixtures, and a clock that never moves can starve code that measures elapsed time, such as throttling and toasts
 - **2026-09-30.** A form built from query data owns its mutation, has no remount `key`, and calls `formApi.reset(value)` after a successful save; TanStack Form applies changed `defaultValues` to untouched fields by itself
   - Rejected: The page owning the mutation and passing `pending`, `onSubmit(values, onSaved)` and a `key={JSON.stringify(data)}` down; a `key` on the query's `dataUpdatedAt`
   - Why: The pass-through props duplicated the request mapping in two files and the JSON key had to list the fields by hand. `dataUpdatedAt` changes on every refetch, including the window-focus one, so it would remount the form and discard unsaved edits whenever the administrator came back to the tab
