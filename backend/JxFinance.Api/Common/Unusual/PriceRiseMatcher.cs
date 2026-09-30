@@ -9,13 +9,13 @@ namespace JxFinance.Common.Unusual;
 
 public sealed record BillMatchTarget(
     AccountId AccountId,
-    string Key,
+    IReadOnlyList<string> Keys,
     RecurringBillKind Kind,
     decimal? Amount,
     Currency Currency)
 {
     public static BillMatchTarget Of(RecurringBill bill, Currency currency) =>
-        new(bill.AccountId!.Value, PriceRiseMatcher.KeyOf(bill.MatchKey, bill.Name), bill.Kind, bill.Amount, currency);
+        new(bill.AccountId!.Value, PriceRiseMatcher.KeysOf(bill), bill.Kind, bill.Amount, currency);
 }
 
 public sealed record BankCharge(
@@ -36,16 +36,24 @@ public static class PriceRiseMatcher
     public static string KeyOf(string? matchKey, string name) =>
         SubscriptionDescription.Normalize(string.IsNullOrWhiteSpace(matchKey) ? name : matchKey);
 
+    public static IReadOnlyList<string> KeysOf(RecurringBill bill) =>
+        new[] { KeyOf(bill.MatchKey, bill.Name), SubscriptionDescription.Normalize(bill.Name) }
+            .Where(key => key.Length > 0)
+            .Distinct()
+            .ToArray();
+
     public static Task<List<BankCharge>> LoadChargesAsync(
         IQueryable<Transaction> transactions,
         IReadOnlyCollection<AccountId> accountIds,
         DateOnly since,
         FlowType type,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        IReadOnlyCollection<string>? keys = null)
     {
         var from = since.AddMonths(-PriceRiseRule.LookBackMonths);
         return transactions
             .AsNoTracking()
+            .Where(t => keys == null || keys.Contains(t.PayeeKey!))
             .Where(t => accountIds.Contains(t.AccountId)
                 && t.Type == type
                 && !t.IsSplit
@@ -66,10 +74,9 @@ public static class PriceRiseMatcher
     }
 
     public static bool Matches(BillMatchTarget bill, BankCharge charge) =>
-        bill.Key.Length > 0
-        && bill.AccountId == charge.AccountId
+        bill.AccountId == charge.AccountId
         && bill.Currency == charge.Currency
-        && bill.Key == charge.Key;
+        && bill.Keys.Contains(charge.Key);
 
     public static PriceComparison? Compare(BillMatchTarget bill, BankCharge charge, IEnumerable<BankCharge> history)
     {

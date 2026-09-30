@@ -20,6 +20,9 @@ Stored per user and per group — the account and the normalized description —
 
 Newest first. Each entry is a choice between real alternatives: what was chosen, what was rejected, and why.
 
+- **2026-09-29.** A recurring entry's bank charges are the rows whose normalized description equals its match key or its normalized name, everywhere: the latest match, price-rise alerts and the cash flow forecast share `PriceRiseMatcher.KeysOf`
+  - Rejected: The match key alone for the latest match and price rises, while the forecast also took the name
+  - Why: Confirming an occurrence writes a row under the entry's name, so with a separate match key those confirmed payments were counted by the forecast but invisible to the latest match and the price-rise comparison. One definition keeps the three from disagreeing about which rows pay the entry
 - **2026-09-27.** A recurring expense may name only a debt that tracks payments, checked while Net worth is on; while it is off the stored link is left alone and a confirmation links nothing
   - Rejected: Accepting any owned debt and linking nothing on confirmation; refusing a debt while Net worth is off
   - Why: A link that silently does nothing looks like it works until the balance is wrong. Refusing it while the feature is off would make an unrelated edit, such as "Update expected", fail on an entry that was valid when it was saved

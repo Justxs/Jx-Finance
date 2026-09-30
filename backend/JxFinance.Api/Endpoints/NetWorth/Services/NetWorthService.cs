@@ -48,8 +48,7 @@ public sealed class NetWorthService(
     public async Task<IReadOnlyList<AssetResponse>> GetAssetsAsync(CancellationToken cancellationToken)
     {
         var assets = await db.Assets.AsNoTracking().OrderBy(a => a.CreatedAt).ToListAsync(cancellationToken);
-        var valuations = await ValuationsOfAsync(assets, cancellationToken);
-        return assets.Select(a => a.ToResponse(valuations[a.Id].ToList(), clock.Today)).ToList();
+        return assets.Select(ToResponse).ToList();
     }
 
     public async Task<Result<AssetResponse>> CreateAssetAsync(
@@ -61,7 +60,7 @@ public sealed class NetWorthService(
         await AssetValuationBook.RecordAsync(db, asset, request.AsOf, request.CurrentValue!.Value, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
 
-        return await ToResponseAsync(asset, cancellationToken);
+        return ToResponse(asset);
     }
 
     public async Task<Result<AssetResponse>> UpdateAssetAsync(
@@ -81,7 +80,7 @@ public sealed class NetWorthService(
         }
 
         await db.SaveChangesAsync(cancellationToken);
-        return await ToResponseAsync(asset, cancellationToken);
+        return ToResponse(asset);
     }
 
     public async Task<Result<IReadOnlyList<AssetValuationResponse>>> GetValuationsAsync(Guid id, CancellationToken cancellationToken)
@@ -117,7 +116,7 @@ public sealed class NetWorthService(
             return conflict;
         }
 
-        return await ToResponseAsync(asset, cancellationToken);
+        return ToResponse(asset);
     }
 
     public async Task<Result> DeleteValuationAsync(DeleteAssetValuationRequest request, CancellationToken cancellationToken)
@@ -481,15 +480,7 @@ public sealed class NetWorthService(
         return db.Assets.FindOrNotFoundAsync(a => a.Id == assetId, AssetNotFound, cancellationToken);
     }
 
-    private async Task<ILookup<AssetId, AssetValuation>> ValuationsOfAsync(List<Asset> assets, CancellationToken cancellationToken)
-    {
-        var ids = assets.Select(a => a.Id).ToList();
-        var valuations = await db.AssetValuations.AsNoTracking().Where(v => ids.Contains(v.AssetId)).ToListAsync(cancellationToken);
-        return valuations.ToLookup(v => v.AssetId);
-    }
-
-    private async Task<AssetResponse> ToResponseAsync(Asset asset, CancellationToken cancellationToken) =>
-        asset.ToResponse((await ValuationsOfAsync([asset], cancellationToken))[asset.Id].ToList(), clock.Today);
+    private AssetResponse ToResponse(Asset asset) => asset.ToResponse([asset.Newest], clock.Today);
 
     private Task<Result<Debt>> FindDebtAsync(Guid id, CancellationToken cancellationToken)
     {
@@ -519,19 +510,22 @@ public sealed class NetWorthService(
             .LeftJoin(db.Transactions.AsNoTracking(), p => p.TransactionId, t => t.Id, (payment, transaction) => new { Link = payment, Transaction = transaction })
             .OrderBy(l => l.Link.CreatedAt)
             .ToListAsync(cancellationToken);
+        var currencies = tracking.ToDictionary(d => d.Id, d => d.Currency);
+        var byDebt = links.ToLookup(l => l.Link.DebtId);
         var foreign = links
-            .Where(l => l.Transaction is not null && l.Transaction.Amount.Currency != tracking.First(d => d.Id == l.Link.DebtId).Currency)
+            .Where(l => l.Transaction is not null && l.Transaction.Amount.Currency != currencies[l.Link.DebtId])
             .Select(l => l.Transaction!.Date)
             .ToList();
         var history = foreign.Count == 0 ? null : await rates.GetHistoryAsync(foreign.Min(), foreign.Max(), cancellationToken);
 
         return tracking.ToDictionary(debt => debt.Id, debt =>
         {
-            var mine = links.Where(l => l.Link.DebtId == debt.Id).ToList();
-            var visible = mine.Where(l => PaysDebt(l.Transaction)).ToDictionary(l => l.Link.Id.Value, l => l.Transaction!);
+            var mine = byDebt[debt.Id].ToList();
+            var paying = mine.Where(l => PaysDebt(l.Transaction)).ToList();
+            var visible = paying.ToDictionary(l => l.Link.Id.Value, l => l.Transaction!);
             var payments = new List<TrackedPayment>();
             var incomplete = false;
-            foreach (var link in mine.Where(l => PaysDebt(l.Transaction)))
+            foreach (var link in paying)
             {
                 var paid = link.Transaction!.Amount;
                 var amount = paid.Currency == debt.Currency ? paid.Amount : history!.OnOrBefore(link.Transaction.Date).Convert(paid.Amount, paid.Currency, debt.Currency);
@@ -556,8 +550,7 @@ public sealed class NetWorthService(
         var (accountsTotal, accountsComplete) = await accountService.GetReportingTotalAsync(null, cancellationToken);
         var assets = await db.Assets.AsNoTracking().ToListAsync(cancellationToken);
         var debts = await db.Debts.AsNoTracking().ToListAsync(cancellationToken);
-        var valuations = await ValuationsOfAsync(assets, cancellationToken);
-        var assetValues = assets.Select(a => new Money(AssetValue.On(clock.Today, valuations[a.Id], a.Depreciation) ?? 0m, a.Currency));
+        var assetValues = assets.Select(a => new Money(AssetValue.On(clock.Today, [a.Newest], a.Depreciation) ?? 0m, a.Currency));
 
         var (assetsTotal, assetsComplete) = await ToReportingAsync(assetValues, cancellationToken);
         var tracked = await TrackAsync(debts, cancellationToken);

@@ -22,7 +22,7 @@ public sealed class StatementImport(
     ITransferAmountResolver transfers,
     FlexStatement statement,
     AccountId account,
-    AccountId? funding)
+    (AccountId Account, Currency Currency)? funding)
 {
     private const string TradeRefPrefix = "ibkr:t:";
     private const string CashRefPrefix = "ibkr:c:";
@@ -465,14 +465,11 @@ public sealed class StatementImport(
     private async Task<DomainError?> AddTransferAsync(
         string reference,
         FlexCashTransaction entry,
-        AccountId fundingAccount,
+        (AccountId Account, Currency Currency) funding,
         CancellationToken cancellationToken)
     {
+        var (fundingAccount, fundingCurrency) = funding;
         var atBroker = new Money(Math.Abs(entry.Amount), entry.Currency);
-        var fundingCurrency = await db.Accounts
-            .Where(a => a.Id == fundingAccount)
-            .Select(a => a.StartingBalance.Currency)
-            .FirstAsync(cancellationToken);
         var atFunding = await rates.ConvertAsync(atBroker, fundingCurrency, entry.Date, cancellationToken);
         if (atFunding.IsFailure)
         {

@@ -59,7 +59,8 @@ public sealed class CashFlowForecastService(AppDbContext db, IExchangeRateServic
                 continue;
             }
 
-            var matches = history.Where(row => Matches(bill, account.Currency, row)).ToList();
+            var keys = PriceRiseMatcher.KeysOf(bill);
+            var matches = history.Where(row => Matches(bill, keys, account.Currency, row)).ToList();
             var amount = bill.Kind == RecurringBillKind.Fixed
                 ? bill.Amount
                 : CashFlowProjection.Estimate(matches.Select(row => (row.Date, row.Amount)));
@@ -142,17 +143,13 @@ public sealed class CashFlowForecastService(AppDbContext db, IExchangeRateServic
         return (toAccountId, table.Convert(amount, source.Currency, destination.Currency), destination.Currency != source.Currency);
     }
 
-    private static bool Matches(RecurringBill bill, Currency currency, HistoryRow row) =>
+    private static bool Matches(RecurringBill bill, IReadOnlyList<string> keys, Currency currency, HistoryRow row) =>
         row.Shape == bill.Shape
         && row.AccountId == bill.AccountId
         && row.ToAccountId == (bill.Shape == RecurringBillShape.Transfer ? bill.ToAccountId : null)
         && row.Currency == currency
-        && KeysOf(bill).Contains(row.Key);
+        && keys.Contains(row.Key);
 
-    private static string[] KeysOf(RecurringBill bill) =>
-        new[] { PriceRiseMatcher.KeyOf(bill.MatchKey, bill.Name), SubscriptionDescription.Normalize(bill.Name) }
-            .Where(key => key.Length > 0)
-            .ToArray();
 
     private async Task<List<HistoryRow>> HistoryAsync(
         IReadOnlyList<AccountId> ids,
@@ -212,7 +209,7 @@ public sealed class CashFlowForecastService(AppDbContext db, IExchangeRateServic
 
                 var scheduled = bills
                     .Where(b => b.AccountId == account.Id && b.Shape == RecurringBillShape.Expense)
-                    .SelectMany(KeysOf)
+                    .SelectMany(PriceRiseMatcher.KeysOf)
                     .ToHashSet(StringComparer.Ordinal);
                 var totals = Enumerable.Range(0, CashFlowProjection.UsualSpendingMonths)
                     .Select(offset => from.AddMonths(offset))

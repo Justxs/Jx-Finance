@@ -71,7 +71,8 @@ public sealed class ReferenceGuard(AppDbContext db) : IReferenceGuard
             ? new Dictionary<CategoryId, FlowType>()
             : await db.Categories
                 .Where(c => wanted.Contains(c.Id))
-                .ToDictionaryAsync(c => c.Id, c => c.Type, cancellationToken);
+                .Select(c => new { Key = c.Id, Value = c.Type })
+                .ToDictionaryAsync(x => x.Key, x => x.Value, cancellationToken);
     }
 
     private Task<FlowType?> TypeOfAsync(CategoryId categoryId, CancellationToken cancellationToken) =>

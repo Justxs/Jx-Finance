@@ -338,7 +338,7 @@ public sealed class MonthCloseTests(ApiFixture fixture) : IntegrationTestBase(fi
         var reminder = Assert.Single(reminders);
         Assert.Equal(closer.Id, reminder.UserId);
         Assert.Equal(new DateOnly(2026, 9, 1), reminder.Payload!.Month);
-        Assert.Equal("2026-09", reminder.Message);
+        Assert.Equal("September 2026 has ended and is ready to close", reminder.Message);
     }
 
     [Fact]

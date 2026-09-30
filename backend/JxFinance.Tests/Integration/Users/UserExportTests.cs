@@ -4,6 +4,7 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
 using JxFinance.Common;
 using JxFinance.Domain.Accounts;
 using JxFinance.Domain.Investments;
@@ -69,9 +70,9 @@ public sealed class UserExportTests(ApiFixture fixture) : IntegrationTestBase(fi
 
         using var export = await ExportAsync(owner);
 
-        Assert.Equal(pair.Owner.Id, export.Header.UserId);
+        Assert.Equal(pair.Owner.Id, export.UserId);
         Assert.Equal(UserExportService.Format, export.Header.Format);
-        Assert.Equal(0, export.Header.MissingAttachments);
+        Assert.Equal(0, export.MissingAttachments);
         Assert.Equal(new[] { personal, shared, archived }.Order(), export.Ids("Accounts").Order());
         Assert.Contains(ownEntry.Id, export.Ids("Transactions"));
         Assert.Contains(partnerEntry.Id, export.Ids("Transactions"));
@@ -148,8 +149,8 @@ public sealed class UserExportTests(ApiFixture fixture) : IntegrationTestBase(fi
         using var with = await ExportAsync(client, attachments: true);
 
         Assert.DoesNotContain(without.Archive.Entries, e => e.FullName.StartsWith(BackupArchive.AttachmentFolder, StringComparison.Ordinal));
-        Assert.Equal(0, without.Header.MissingAttachments);
-        Assert.Equal(1, with.Header.MissingAttachments);
+        Assert.Equal(0, without.MissingAttachments);
+        Assert.Equal(1, with.MissingAttachments);
         Assert.Null(with.Archive.GetEntry(BackupArchive.AttachmentEntry(lost)));
         var file = with.Archive.GetEntry(BackupArchive.AttachmentEntry(kept))!;
         await using var content = await file.OpenAsync(TestContext.Current.CancellationToken);
@@ -263,12 +264,20 @@ public sealed class UserExportTests(ApiFixture fixture) : IntegrationTestBase(fi
             await new BackupReader(visitor).ReadAsync(data, TestContext.Current.CancellationToken);
         }
 
-        return new Export(archive, visitor.Header!, visitor.Tables);
+        await using var head = await archive.GetEntry(UserExportService.DataEntry)!.OpenAsync(TestContext.Current.CancellationToken);
+        using var document = await JsonDocument.ParseAsync(head, cancellationToken: TestContext.Current.CancellationToken);
+        var root = document.RootElement;
+        return new Export(
+            archive,
+            visitor.Header!,
+            root.GetProperty(BackupJsonNames.UserId).GetGuid(),
+            root.GetProperty(BackupJsonNames.MissingAttachments).GetInt32(),
+            visitor.Tables);
     }
 
     private sealed record ExportedTable(IReadOnlyList<string> Columns, List<IReadOnlyDictionary<string, string?>> Rows);
 
-    private sealed record Export(ZipArchive Archive, BackupHeader Header, Dictionary<string, ExportedTable> Tables) : IDisposable
+    private sealed record Export(ZipArchive Archive, BackupHeader Header, Guid UserId, int MissingAttachments, Dictionary<string, ExportedTable> Tables) : IDisposable
     {
         public List<Guid> Ids(string table) =>
             Tables.TryGetValue(table, out var found) ? found.Rows.Select(r => Guid.Parse(r["Id"]!)).ToList() : [];

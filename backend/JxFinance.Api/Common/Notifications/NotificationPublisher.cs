@@ -56,6 +56,7 @@ public sealed class NotificationPublisher(
                 $"Call {nameof(PreloadAsync)} for the owner of a notification before publishing it.");
         }
 
+        notification.Message = NotificationTexts.Sentence(LanguageOf(notification.UserId), notification);
         db.Notifications.Add(notification);
 
         var key = string.Create(

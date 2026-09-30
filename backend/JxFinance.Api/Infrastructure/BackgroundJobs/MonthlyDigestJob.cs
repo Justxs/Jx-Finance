@@ -29,16 +29,16 @@ public sealed class MonthlyDigestJob(
             return;
         }
 
-        foreach (var userId in await SubscribersAsync(services, monthText, ct))
+        foreach (var userId in await SubscribersAsync(services, ct))
         {
             await RunAsUserAsync(userId, scoped => SendAsync(scoped, userId, month, monthText, ct));
         }
     }
 
-    private static async Task<List<Guid>> SubscribersAsync(IServiceProvider services, string monthText, CancellationToken ct)
+    private static async Task<List<Guid>> SubscribersAsync(IServiceProvider services, CancellationToken ct)
     {
         var db = services.GetRequiredService<AppDbContext>();
-        var sent = Sent(db, monthText);
+        var sent = Sent(services);
         var users = await db.Users
             .AsNoTracking()
             .Where(AppUser.IsActive)
@@ -70,7 +70,7 @@ public sealed class MonthlyDigestJob(
         var publisher = services.GetRequiredService<INotificationPublisher>();
         await using var transaction = await db.Database.BeginTransactionAsync(ct);
         await db.Database.LockAsync(AppLock.MonthlyDigest, ct);
-        if (await Sent(db, monthText).AnyAsync(n => n.UserId == userId, ct))
+        if (await Sent(services).AnyAsync(n => n.UserId == userId, ct))
         {
             return;
         }
@@ -88,7 +88,6 @@ public sealed class MonthlyDigestJob(
             UserId = userId,
             Type = NotificationType.MonthlyDigest,
             Title = NotificationTexts.MonthTitle(settings.DefaultLanguage, month),
-            Message = monthText,
             Payload = new NotificationPayload { Month = month, Digest = digest },
             Channel = NotificationChannel.InApp,
         });
@@ -96,7 +95,11 @@ public sealed class MonthlyDigestJob(
         await transaction.CommitAsync(ct);
     }
 
-    private static IQueryable<Notification> Sent(AppDbContext db, string monthText) =>
-        db.Notifications.IgnoreQueryFilters()
-            .Where(n => n.Type == NotificationType.MonthlyDigest && n.Message == monthText);
+    private static IQueryable<Notification> Sent(IServiceProvider services)
+    {
+        var clock = services.GetRequiredService<IClock>();
+        var since = clock.StartOfDay(DateWindow.MonthOf(clock.Today).Start);
+        return services.GetRequiredService<AppDbContext>().Notifications.IgnoreQueryFilters()
+            .Where(n => n.Type == NotificationType.MonthlyDigest && n.CreatedAt >= since);
+    }
 }

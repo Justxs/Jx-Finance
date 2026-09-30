@@ -9,7 +9,7 @@ public sealed class Notification : OwnableEntity
     public NotificationId Id { get; set; } = NotificationId.New();
     public NotificationType Type { get; set; }
     public required string Title { get; set; }
-    public required string Message { get; set; }
+    public string Message { get; set; } = string.Empty;
     public NotificationPayload? Payload { get; set; }
     public string? RelatedType { get; set; }
     public Guid? RelatedId { get; set; }

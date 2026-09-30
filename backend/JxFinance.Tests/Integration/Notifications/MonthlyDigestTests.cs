@@ -44,7 +44,7 @@ public sealed class MonthlyDigestTests(ApiFixture fixture) : EmailTestBase(fixtu
             await DrainAsync();
 
             var digest = Assert.Single(await DigestsAsync(user.Id));
-            Assert.Equal("2026-09", digest.Message);
+            Assert.StartsWith("September 2026: income", digest.Message, StringComparison.Ordinal);
             Assert.Equal(new DateOnly(2026, 9, 1), digest.Payload!.Month);
             Assert.Equal(
                 (review!.Figures.TotalIncome, review.Figures.TotalExpense, review.Figures.Net),

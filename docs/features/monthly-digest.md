@@ -47,7 +47,7 @@ The digest says exactly what the dashboard review says, because it is the review
 | `accountsNeedingAttention` | The checklist's accounts that `differs` or are `behind` |
 | `closed` | The review's status is `closed` or `closedChanged` |
 
-The notification's `Payload.Month` is the month's first day and `Message` is `yyyy-MM`. A month with no income, no expense and nothing open gives null and no digest: a message with nothing in it teaches people to ignore the next one.
+The notification's `Payload.Month` is the month's first day and `Message` is the digest sentence in the owner's language; the job deduplicates on a digest created since the start of the current month. A month with no income, no expense and nothing open gives null and no digest: a message with nothing in it teaches people to ignore the next one.
 
 The texts are built from the payload when the message is queued, in the recipient's language:
 

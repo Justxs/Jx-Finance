@@ -274,7 +274,8 @@ public sealed class HouseholdService(
         var ids = households.Select(h => h.Id).ToList();
         var rows = await db.HouseholdMemberships
             .Where(m => ids.Contains(m.HouseholdId))
-            .LeftJoin(db.Users, m => m.UserId, u => u.Id, (membership, user) => new { Membership = membership, User = user })
+            .AsNoTracking()
+            .LeftJoin(db.Users, m => m.UserId, u => u.Id, (membership, user) => new { Membership = membership, Email = user == null ? null : user.Email, DisplayName = user == null ? null : user.DisplayName })
             .ToListAsync(cancellationToken);
 
         var byHousehold = rows
@@ -288,7 +289,7 @@ public sealed class HouseholdService(
                 var myRole = members
                     .Find(row => row.Membership.UserId == currentUser.Id)?
                     .Membership.Role ?? HouseholdRole.Member;
-                return household.ToResponse(myRole, members.Select(row => row.Membership.ToResponse(row.User)).ToList());
+                return household.ToResponse(myRole, members.Select(row => row.Membership.ToResponse(row.Email, row.DisplayName)).ToList());
             })
             .ToList();
     }

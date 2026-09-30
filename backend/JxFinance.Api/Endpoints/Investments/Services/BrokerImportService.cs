@@ -88,7 +88,7 @@ public sealed class BrokerImportService(
         {
             try
             {
-                return await new StatementImport(db, rates, transfers, statement, account, funding).RunAsync(cancellationToken);
+                return await new StatementImport(db, rates, transfers, statement, account, funding is { } fundingAccount ? (fundingAccount, fundingCurrency!.Value) : null).RunAsync(cancellationToken);
             }
             catch (DbUpdateException ex) when (IsSecurityCollision(ex))
             {

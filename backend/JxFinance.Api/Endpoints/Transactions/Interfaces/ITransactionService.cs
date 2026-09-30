@@ -3,6 +3,7 @@ using JxFinance.Domain.Common;
 using JxFinance.Endpoints.Transactions.BulkCategorizeTransactions;
 using JxFinance.Endpoints.Transactions.BulkTagTransactions;
 using JxFinance.Endpoints.Transactions.CreateTransaction;
+using JxFinance.Endpoints.Transactions.ExportTransactions;
 using JxFinance.Endpoints.Transactions.GetTransactions;
 using JxFinance.Endpoints.Transactions.GetTransactionsSummary;
 using JxFinance.Endpoints.Transactions.Shared;
@@ -41,6 +42,8 @@ public interface ITransactionService
     Task<Result<Guid>> DeleteAsync(Guid id, CancellationToken cancellationToken);
 
     Task<Result<Guid>> SetUnusualDismissedAsync(Guid id, bool dismissed, CancellationToken cancellationToken);
+
+    Task<ExportNames> ExportNamesAsync(CancellationToken cancellationToken);
 
     IAsyncEnumerable<TransactionResponse> StreamExportAsync(
         GetTransactionsRequest request,

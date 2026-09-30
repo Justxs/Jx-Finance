@@ -1,9 +1,6 @@
 using System.Net.Mime;
 using FastEndpoints;
 using JxFinance.Common;
-using JxFinance.Endpoints.Accounts.Interfaces;
-using JxFinance.Endpoints.Categories.Interfaces;
-using JxFinance.Endpoints.Tags.Interfaces;
 using JxFinance.Endpoints.Transactions.GetTransactions;
 using JxFinance.Endpoints.Transactions.Interfaces;
 using JxFinance.Endpoints.Transactions.Shared;
@@ -11,10 +8,7 @@ using JxFinance.Endpoints.Transactions.Shared;
 namespace JxFinance.Endpoints.Transactions.ExportTransactions;
 
 public sealed class ExportTransactionsEndpoint(
-    ITransactionService transactionService,
-    IAccountService accountService,
-    ICategoryService categoryService,
-    ITagService tagService) : Endpoint<GetTransactionsRequest>
+    ITransactionService transactionService) : Endpoint<GetTransactionsRequest>
 {
     public override void Configure()
     {
@@ -26,7 +20,7 @@ public sealed class ExportTransactionsEndpoint(
 
     public override async Task HandleAsync(GetTransactionsRequest req, CancellationToken ct)
     {
-        var names = await ExportNames.LoadAsync(accountService, categoryService, tagService, ct);
+        var names = await transactionService.ExportNamesAsync(ct);
 
         await using var writer = HttpContext.StartCsv("transactions.csv");
         await writer.WriteLineAsync(TransactionCsvWriter.Header);

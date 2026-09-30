@@ -68,6 +68,7 @@ Frontend:
 Backend:
 
 - Endpoints stay thin and never touch `AppDbContext`; services do the work. Architecture tests enforce the layering.
+- Every feature service keeps its interface in `Endpoints/<Tag>/Interfaces`, even with a single implementation; endpoints, jobs and other services inject the interface. Do not remove these interfaces as a simplification.
 - Every validation rule has a published error code (`Common/Errors/ErrorCodes.cs`), and every new code gets English and Lithuanian text in `frontend/src/locales/*/common.json`.
 - After an API change run `just gen` and commit the contract with the generated code. After a model change run `just migrate-add`.
 

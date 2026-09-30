@@ -9,8 +9,6 @@ namespace JxFinance.Endpoints.Accounts.Interfaces;
 
 public interface IAccountService
 {
-    Task<IReadOnlyList<AccountResponse>> GetAllAsync(CancellationToken cancellationToken);
-
     Task<(decimal Total, bool IsComplete)> GetReportingTotalAsync(DateOnly? asOf, CancellationToken cancellationToken);
 
     Task<IReadOnlyDictionary<AccountId, decimal>> GetReportingBalancesAsync(

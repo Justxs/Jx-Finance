@@ -30,9 +30,6 @@ public sealed class AccountService(
     private static readonly DomainError OnlyOwnerArchives =
         new(ErrorCodes.AccessForbidden, "Only the owner can archive an account.");
 
-    public Task<IReadOnlyList<AccountResponse>> GetAllAsync(CancellationToken cancellationToken) =>
-        GetAllAsync(new GetAccountsRequest(), cancellationToken);
-
     public async Task<IReadOnlyList<AccountResponse>> GetAllAsync(
         GetAccountsRequest request,
         CancellationToken cancellationToken)

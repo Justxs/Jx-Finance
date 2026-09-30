@@ -20,6 +20,7 @@ using JxFinance.Endpoints.Households.Shared;
 using JxFinance.Endpoints.Transactions.BulkCategorizeTransactions;
 using JxFinance.Endpoints.Transactions.BulkTagTransactions;
 using JxFinance.Endpoints.Transactions.CreateTransaction;
+using JxFinance.Endpoints.Transactions.ExportTransactions;
 using JxFinance.Endpoints.Transactions.GetTransactions;
 using JxFinance.Endpoints.Transactions.GetTransactionsSummary;
 using JxFinance.Endpoints.Transactions.Interfaces;
@@ -57,6 +58,11 @@ public sealed class TransactionService(
 
         return page.Map(await ResponderAsync(page.Items, cancellationToken));
     }
+
+    public async Task<ExportNames> ExportNamesAsync(CancellationToken cancellationToken) => new(
+        await db.Accounts.Select(a => new { a.Id, a.Name }).ToDictionaryAsync(a => a.Id.Value, a => a.Name, cancellationToken),
+        await db.Categories.Select(c => new { c.Id, c.Name }).ToDictionaryAsync(c => c.Id.Value, c => c.Name, cancellationToken),
+        await db.Tags.Select(t => new { t.Id, t.Name }).ToDictionaryAsync(t => t.Id.Value, t => t.Name, cancellationToken));
 
     public async IAsyncEnumerable<TransactionResponse> StreamExportAsync(
         GetTransactionsRequest request,

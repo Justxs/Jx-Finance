@@ -128,7 +128,7 @@ The account lines answer whether each account's statement for the month is in. `
 2. have not closed the previous month in any scope;
 3. have no `MonthReadyToClose` notification for that month yet, read, cleared or deleted.
 
-For each it publishes one `MonthReadyToClose` through `INotificationPublisher`, with the month's name in the installation language as the title ("August 2026", "2026 m. rugpjūtis"), the month as `yyyy-MM` in `Message` and its first day in `Payload.Month`. The deduplication is per user and month: `Message` is the key the job looks for, so hourly passes over five days remind each user once. The bell says "{month} has ended and is ready to close" and links to `/?month=yyyy-MM` while the feature is on; Discord receives the same sentence and link when the user ticked the kind. See [Notifications](notifications.md).
+For each it publishes one `MonthReadyToClose` through `INotificationPublisher`, with the month's name in the installation language as the title ("August 2026", "2026 m. rugpjūtis"), the sentence in the owner's language in `Message` and the month's first day in `Payload.Month`. The deduplication is per user and month: the job looks for a reminder created since the start of the current month, which only last month's reminder can be, so hourly passes over five days remind each user once. The bell says "{month} has ended and is ready to close" and links to `/?month=yyyy-MM` while the feature is on; Discord receives the same sentence and link when the user ticked the kind. See [Notifications](notifications.md).
 
 ## The monthly digest
 

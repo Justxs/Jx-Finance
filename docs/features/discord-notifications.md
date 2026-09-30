@@ -71,7 +71,7 @@ The dedupe key is `{userId:N}:{type}:{relatedId or notification id:N}:{local dat
 
 ## Message text
 
-A notification's `Message` is raw data, an ISO date or a percentage, so the text is built on the server at enqueue time by `NotificationTexts` and stored in the row. It mirrors the bell's `describe()` in English and Lithuanian:
+A notification's `Message` is the sentence `NotificationTexts.Sentence` writes in the owner's language when `INotificationPublisher.Publish` stores it, and the Discord text is built from the same `NotificationTexts` at enqueue time and stored in the row. It mirrors the bell's `describe()` in English and Lithuanian:
 
 | Kind | English | Lithuanian |
 | --- | --- | --- |

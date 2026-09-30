@@ -187,7 +187,8 @@ public sealed class InvestmentService(
         var securityIds = page.Items.Where(t => t.SecurityId is not null).Select(t => t.SecurityId!.Value).Distinct().ToList();
         var symbols = await db.Securities
             .Where(s => securityIds.Contains(s.Id))
-            .ToDictionaryAsync(s => s.Id, s => s.Symbol, cancellationToken);
+            .Select(s => new { Key = s.Id, Value = s.Symbol })
+            .ToDictionaryAsync(x => x.Key, x => x.Value, cancellationToken);
 
         return page.Map(t => t.ToResponse(t.SecurityId is { } id ? symbols.GetValueOrDefault(id) : null));
     }

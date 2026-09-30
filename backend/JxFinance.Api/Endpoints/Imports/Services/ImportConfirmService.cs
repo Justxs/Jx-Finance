@@ -125,7 +125,8 @@ public sealed class ImportConfirmService(
             ? []
             : await db.Accounts
                 .Where(a => otherAccountIds.Contains(a.Id))
-                .ToDictionaryAsync(a => a.Id, a => a.StartingBalance.Currency, cancellationToken);
+                .Select(a => new { Key = a.Id, Value = a.StartingBalance.Currency })
+                .ToDictionaryAsync(x => x.Key, x => x.Value, cancellationToken);
 
         var wantedTransferIds = rows
             .Where(r => r.ExistingTransferId is not null)

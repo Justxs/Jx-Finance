@@ -73,7 +73,7 @@ public sealed class UnusualAmountJob(
             }
         }
 
-        await PublishAsync(db, services, pass, settings.ReportingCurrency, settings.DefaultLanguage, ct);
+        await PublishAsync(db, services, pass, settings.ReportingCurrency, ct);
         await db.SaveChangesAsync(ct);
         await transaction.CommitAsync(ct);
     }
@@ -104,7 +104,6 @@ public sealed class UnusualAmountJob(
         IServiceProvider services,
         Pass pass,
         Currency reportingCurrency,
-        string language,
         CancellationToken ct)
     {
         var flaggedIds = pass.Flagged.Select(f => (Guid?)f.Row.Id.Value).ToList();
@@ -112,7 +111,7 @@ public sealed class UnusualAmountJob(
             .IgnoreQueryFilters(QueryFilters.OwnerOnly)
             .Where(n => n.Type == NotificationType.UnusualAmount && flaggedIds.Contains(n.RelatedId))
             .Select(n => n.RelatedId!.Value)
-            .ToListAsync(ct);
+            .ToHashSetAsync(ct);
         var flagged = pass.Flagged.Where(f => !alreadyFlagged.Contains(f.Row.Id.Value)).ToList();
 
         var billIds = pass.Rises.Select(r => (Guid?)r.BillId).Distinct().ToList();
@@ -128,7 +127,7 @@ public sealed class UnusualAmountJob(
             await using var ownerScope = UserScope(owner.Key);
             var ownerDb = ownerScope.ServiceProvider.GetRequiredService<AppDbContext>();
             var accountIds = owner.Select(r => r.AccountId).Distinct().ToList();
-            var visible = await ownerDb.Accounts.Where(a => accountIds.Contains(a.Id)).Select(a => a.Id).ToListAsync(ct);
+            var visible = await ownerDb.Accounts.Where(a => accountIds.Contains(a.Id)).Select(a => a.Id).ToHashSetAsync(ct);
             rises.AddRange(owner.Where(r => visible.Contains(r.AccountId)));
         }
 
@@ -154,7 +153,6 @@ public sealed class UnusualAmountJob(
         notifications.AddRange(rises.Select(Rise));
         foreach (var notification in notifications)
         {
-            notification.Message = NotificationTexts.Sentence(language, notification);
             publisher.Publish(notification);
         }
     }
@@ -164,7 +162,6 @@ public sealed class UnusualAmountJob(
         UserId = item.Row.OwnerId,
         Type = NotificationType.UnusualAmount,
         Title = Title(item.Row.Description),
-        Message = string.Empty,
         Payload = new NotificationPayload
         {
             TransactionId = item.Row.Id.Value,
@@ -185,7 +182,6 @@ public sealed class UnusualAmountJob(
             UserId = ownerId,
             Type = NotificationType.UnusualAmounts,
             Title = Title(string.Join(", ", names) + (items.Count > names.Count && names.Count > 0 ? "…" : string.Empty)),
-            Message = string.Empty,
             Payload = new NotificationPayload { Count = items.Count },
         };
     }
@@ -195,7 +191,6 @@ public sealed class UnusualAmountJob(
         UserId = rise.OwnerId,
         Type = NotificationType.RecurringPriceRise,
         Title = Title(rise.BillName),
-        Message = string.Empty,
         Payload = new NotificationPayload
         {
             BillId = rise.BillId,
@@ -221,22 +216,32 @@ public sealed class UnusualAmountJob(
 
         public async Task StoreAsync(List<PageRow> rows, IReadOnlyList<UnusualVerdict?> verdicts, CancellationToken ct)
         {
+            var ids = rows.Select(r => r.Id.Value).ToArray();
+            var updatedAts = rows.Select(r => r.UpdatedAt).ToArray();
+            var bases = verdicts.Select(v => v?.Basis.ToString()).ToArray();
+            var typicals = verdicts.Select(v => v?.TypicalAmount).ToArray();
+            var factors = verdicts.Select(v => v?.Factor).ToArray();
+            var samples = verdicts.Select(v => v?.SampleSize).ToArray();
+            var stored = (await db.Database.SqlQuery<Guid>(
+                    $"""
+                    UPDATE "Transactions" AS t
+                    SET "UnusualCheckedAt" = {now},
+                        "UnusualBasis" = v.basis,
+                        "UnusualTypicalAmount" = v.typical,
+                        "UnusualFactor" = v.factor,
+                        "UnusualSampleSize" = v.sample
+                    FROM unnest({ids}, {updatedAts}, {bases}, {typicals}, {factors}, {samples})
+                        AS v(id, updated_at, basis, typical, factor, sample)
+                    WHERE t."Id" = v.id AND t."UpdatedAt" = v.updated_at
+                    RETURNING t."Id" AS "Value"
+                    """)
+                .ToListAsync(ct))
+                .ToHashSet();
+
             for (var index = 0; index < rows.Count; index++)
             {
                 var row = rows[index];
-                var verdict = verdicts[index];
-                var id = row.Id;
-                var updatedAt = row.UpdatedAt;
-                var stored = await db.Transactions
-                    .IgnoreQueryFilters()
-                    .Where(t => t.Id == id && t.UpdatedAt == updatedAt)
-                    .ExecuteUpdateAsync(
-                        setters => setters
-                            .SetProperty(t => t.UnusualCheckedAt, now)
-                            .SetProperty(t => t.Unusual, verdict),
-                        ct);
-
-                if (stored == 1 && verdict is not null && Notifies(row) && !row.WasFlagged && !row.Dismissed)
+                if (stored.Contains(row.Id.Value) && verdicts[index] is { } verdict && Notifies(row) && !row.WasFlagged && !row.Dismissed)
                 {
                     Flagged.Add(new FlaggedRow(row, verdict));
                 }

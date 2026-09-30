@@ -23,7 +23,7 @@ public sealed class MonthCloseReminderJob(
 
     protected override async Task RunAsync(IServiceProvider services, CancellationToken ct)
     {
-        if (ClosingMonth.On(clock.Today) is not (var month, var monthText))
+        if (ClosingMonth.On(clock.Today) is not (var month, _))
         {
             return;
         }
@@ -31,12 +31,14 @@ public sealed class MonthCloseReminderJob(
         var db = services.GetRequiredService<AppDbContext>();
         var publisher = services.GetRequiredService<INotificationPublisher>();
         var store = services.GetRequiredService<IInstanceSettingsStore>();
+        var stamping = services.GetRequiredService<IClock>();
+        var stamped = stamping.StartOfDay(DateWindow.MonthOf(stamping.Today).Start);
         await using var transaction = await db.Database.BeginTransactionAsync(ct);
         await db.Database.LockAsync(AppLock.MonthCloseReminders, ct);
 
         var closes = db.MonthCloses.IgnoreQueryFilters(QueryFilters.OwnerOnly);
         var reminders = db.Notifications.IgnoreQueryFilters()
-            .Where(n => n.Type == NotificationType.MonthReadyToClose && n.Message == monthText);
+            .Where(n => n.Type == NotificationType.MonthReadyToClose && n.CreatedAt >= stamped);
 
         var due = await db.Users
             .Where(AppUser.IsActive)
@@ -59,7 +61,6 @@ public sealed class MonthCloseReminderJob(
                 UserId = userId,
                 Type = NotificationType.MonthReadyToClose,
                 Title = NotificationTexts.MonthTitle(language, month),
-                Message = monthText,
                 Payload = new NotificationPayload { Month = month },
                 Channel = NotificationChannel.InApp,
             });

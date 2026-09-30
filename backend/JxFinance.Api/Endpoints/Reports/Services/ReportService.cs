@@ -109,7 +109,8 @@ public sealed class ReportService(
             .Select(group => new { Current = group.Key, Amount = group.Sum(t => t.ReportingAmount) })
             .ToListAsync(cancellationToken);
 
-        var names = await db.Tags.ToDictionaryAsync(tag => tag.Id, tag => tag.Name, cancellationToken);
+        var names = await db.Tags.Select(tag => new { Key = tag.Id, Value = tag.Name })
+            .ToDictionaryAsync(x => x.Key, x => x.Value, cancellationToken);
 
         var items = tagged
             .GroupBy(entry => entry.TagId)
@@ -222,11 +223,12 @@ public sealed class ReportService(
     {
         var buckets = new List<Bucket>();
         var cursor = monthly ? DateWindow.MonthOf(window.Start).Start : window.Start;
+        var byBucket = flows.Where(f => window.Contains(f.Date)).ToLookup(f => monthly ? DateWindow.MonthOf(f.Date).Start : f.Date);
 
         while (cursor < window.ExclusiveEnd)
         {
             var next = monthly ? cursor.AddMonths(1) : cursor.AddDays(1);
-            var (income, expense) = flows.Where(f => f.Date >= cursor && f.Date < next && window.Contains(f.Date)).Totals();
+            var (income, expense) = byBucket[cursor].Totals();
             buckets.Add(new Bucket(cursor, income, expense));
             cursor = next;
         }

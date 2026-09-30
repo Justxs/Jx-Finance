@@ -146,22 +146,28 @@ public sealed class ReconciliationService(AppDbContext db) : IReconciliationServ
             .Where(a => ids.Contains(a.Id))
             .ToListAsync(cancellationToken);
 
-        var coverage = new List<ReconciliationCoverage>();
-        foreach (var account in accounts)
-        {
-            var own = saved.Where(r => r.AccountId == account.Id).ToList();
-            var first = own.Where(r => r.Date >= monthEnd).MinBy(r => r.Date);
-            coverage.Add(first is null
-                ? new ReconciliationCoverage(account.Id.Value, account.Name, account.Currency, own.Max(r => r.Date), null)
-                : new ReconciliationCoverage(
+        var firsts = saved.Where(r => r.Date >= monthEnd).GroupBy(r => r.AccountId).ToDictionary(g => g.Key, g => g.MinBy(r => r.Date)!);
+        var daily = firsts.Count == 0
+            ? []
+            : await AccountMovements.SumByDateAsync(db, [.. firsts.Keys], DateOnly.MinValue, firsts.Values.Max(r => r.Date), cancellationToken);
+
+        return accounts
+            .Select(account => firsts.TryGetValue(account.Id, out var first)
+                ? new ReconciliationCoverage(
                     account.Id.Value,
                     account.Name,
                     account.Currency,
                     first.Date,
-                    first.Balance.Amount - await LedgerOnAsync(account, first.Date, cancellationToken)));
-        }
-
-        return coverage;
+                    first.Balance.Amount - account.StartingBalance.Amount - daily
+                        .Where(m => m.AccountId == account.Id && m.Currency == account.Currency && m.Date <= first.Date)
+                        .Sum(m => m.Amount))
+                : new ReconciliationCoverage(
+                    account.Id.Value,
+                    account.Name,
+                    account.Currency,
+                    saved.Where(r => r.AccountId == account.Id).Max(r => r.Date),
+                    null))
+            .ToList();
     }
 
     private Task<Account?> FindAccountAsync(Guid accountId, CancellationToken cancellationToken)

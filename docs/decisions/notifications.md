@@ -6,6 +6,9 @@ Related: feature page [Notifications](../features/notifications.md); architectur
 
 Newest first. Each entry is a choice between real alternatives: what was chosen, what was rejected, and why.
 
+- **2026-09-29.** `Notification.Message` is always the sentence `NotificationTexts.Sentence` writes in the owner's language, set once by `INotificationPublisher.Publish`; the month-end reminder and the digest deduplicate on a row created since the start of the current month instead of on `Message`; the payload and the email and Discord type lists stay string-converted `jsonb`
+  - Rejected: Mapping the payload as an EF JSON complex type and the type lists as PostgreSQL arrays so jobs can filter them in SQL
+  - Why: `Message` held four different things, a month key, an ISO date, an English sentence and a localized one, so the bell's fallback text depended on the producer. The creation-date check is equivalent because a notification about last month can only be written on days 1 to 5 of this one. The JSON mapping would have needed a rewrite of every stored payload (camelCase names and enum values) for filters over a handful of rows per user
 - **2026-09-29.** Open question of the monthly digest plan, decided while the owner was away and to be reviewed: the digest is read in the "Everything" scope only, with no digest per household scope
   - Rejected: One digest per scope the member has closed a month in; a scope picker next to the opt-in
   - Why: "Everything" is what a member sees by default and the union of every household they belong to, so nothing is left out of it, while a household digest would need a new preference, a new deduplication key per scope and repeated figures in several messages. It is the conservative answer: a later choice can add scopes without changing what members already receive

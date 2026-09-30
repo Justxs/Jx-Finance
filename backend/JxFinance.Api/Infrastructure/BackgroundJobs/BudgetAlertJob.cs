@@ -1,4 +1,3 @@
-using System.Globalization;
 using JxFinance.Common;
 using JxFinance.Common.Notifications;
 using JxFinance.Domain.Common;
@@ -75,9 +74,6 @@ public sealed class BudgetAlertJob(
                     UserId = userId,
                     Type = type,
                     Title = categories.GetValueOrDefault(budget.CategoryId) ?? "Unknown",
-                    Message = string.Create(
-                        CultureInfo.InvariantCulture,
-                        $"{percent}% of the {budget.Period.ToString().ToLowerInvariant()} limit"),
                     Payload = new NotificationPayload { ThresholdPercent = percent, Period = budget.Period },
                     RelatedType = NotificationRelated.Budget,
                     RelatedId = budget.Id.Value,

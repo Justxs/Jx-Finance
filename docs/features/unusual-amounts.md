@@ -22,7 +22,7 @@ sequenceDiagram
             Job->>Eval: candidates, in a user scope for the owner
             Eval->>Db: one projection: non-split expenses before the latest candidate,<br/>same accounts or categories, newest 5000
             Eval-->>Job: a verdict or null per candidate
-            Job->>Db: ExecuteUpdate: UnusualCheckedAt and the verdict columns
+            Job->>Db: one UPDATE per page from unnest: UnusualCheckedAt and the verdict columns,<br/>only where UpdatedAt still matches
         end
         Job->>Db: while RecurringBills is on: active expense entries<br/>on those accounts and their earlier charges
     end
@@ -89,7 +89,7 @@ Six nullable columns on `Transactions`, added by `AddUnusualAmounts`:
 
 `TransactionMapper` turns the columns into the `unusual` response through the same `UnusualVerdict.ToResponse()` the import preview uses. A partial index on (`AccountId`, `Date`) where `UnusualBasis` is not null and `UnusualDismissedAt` is null serves the ledger filter, and a partial index on `UnusualCheckedAt` where it is null serves the job.
 
-The four verdict columns are one optional EF complex property, `Transaction.Unusual` of type `UnusualVerdict`, mapped onto the existing column names, so a row either has a whole verdict or none. The job still writes it with one `ExecuteUpdate` per row (`SetProperty(t => t.Unusual, verdict)`), and the dismissal writes its own column the same way. Neither write moves `UpdatedAt` or passes through the change tracker, so a verdict is not an edit: it does not reset its own check, and it does not reach the household activity log.
+The four verdict columns are one optional EF complex property, `Transaction.Unusual` of type `UnusualVerdict`, mapped onto the existing column names, so a row either has a whole verdict or none. The job writes a page of verdicts with one `UPDATE "Transactions" … FROM unnest(ids, updatedAts, bases, typicals, factors, samples)` that matches each row's `UpdatedAt` and returns the ids it wrote, so a row edited since the page was read keeps its reset check; the dismissal writes its own column with `ExecuteUpdate`. Neither write moves `UpdatedAt` or passes through the change tracker, so a verdict is not an edit: it does not reset its own check, and it does not reach the household activity log.
 
 ## The job
 
@@ -98,7 +98,7 @@ The four verdict columns are one optional EF complex property, `Transaction.Unus
 1. It reads the **backfill start**, the earliest `UnusualCheckedAt` of any transaction, deleted or not. When none has been checked, this pass starts the backfill and all of it is silent: verdicts are stored, nothing is notified and no price is compared. In later passes a row is part of the backfill when its `UpdatedAt` is not after the backfill start, which means it has not been written since the backfill began, and such a row stays silent too. That covers the upgrade, since the migration leaves every row unchecked, and the first import of a new installation, however many passes the backfill takes.
 2. It pages 500 unchecked non-split expenses at a time in id order, ignoring the owner filter but not soft deletion, joined to their account for the owner, for at most 40 pages (20,000 rows); the rest wait for the next pass.
 3. Per account owner it evaluates the page's rows through `IUnusualAmountService` resolved from a user scope for that owner, so the category history is what that owner can see: their own accounts and the accounts shared into any of their households, without an active household. The service makes one bounded query for all the candidates, the non-split expenses from 12 months before the earliest candidate to the latest one on the candidates' accounts or in their categories, newest 5000 (`MaxHistoryRows`), groups them in memory by payee key and by category, and leaves each candidate out of its own history.
-4. It stores the result: one `ExecuteUpdate` per flagged row and one for all the usual rows, which clears any old verdict.
+4. It stores the result in one statement per page, which also clears any old verdict of a row that is usual now.
 5. While `RecurringBills` is on, it compares the page's charges with the recurring entries, described under Price rises below.
 
 A flagged row is notified only when all of these hold:
@@ -137,7 +137,7 @@ The bell formats the amounts for the viewer's language; Discord writes them as `
 
 A recurring entry and a bank charge are linked by text, not by a foreign key: imported bank rows are the real charges and never pass through confirmation, and a confirmed fixed entry always writes the expected amount, so it could never show a rise.
 
-- **The entry's key** is `PriceRiseMatcher.KeyOf(MatchKey, Name)`: `SubscriptionDescription.Normalize` of `RecurringBill.MatchKey` when it is set, of the name otherwise.
+- **The entry's keys** are `PriceRiseMatcher.KeysOf(bill)`: `SubscriptionDescription.Normalize` of `RecurringBill.MatchKey` when it is set, of the name otherwise, and always the normalized name as well, so a confirmed occurrence written under the entry's name counts as one of its charges.
 - **A charge matches** when it is a non-split expense with a description, on the entry's account, in that account's main currency, and its normalized description equals the key. A charge in another currency on the same account is skipped, not converted.
 - **Only** active expense-shaped entries with an account are considered.
 - **The expected amount** is the entry's `Amount` for a fixed entry, otherwise the median of the earlier matching charges in the 13 months (`PriceRiseRule.LookBackMonths`) before the charge. A variable entry with no earlier charge has nothing to compare.
@@ -149,7 +149,7 @@ The job compares, per page, the charges that are not part of the backfill by the
 
 ### On the recurring entries page
 
-`GET /api/recurring-bills` answers `matchKey` and `latestMatch` on each entry: `date`, `amount` in the account's currency, a nullable `expected` and `isPriceRise`. It is computed only while `UnusualAmounts` is on, with one query over the listed entries' accounts for the last 13 months, newest first, at most 5000 rows; the latest matching charge is compared with the ones before it by the same rule. The single-entry answers (get, create, update and confirm) fill it the same way for their one entry.
+`GET /api/recurring-bills` answers `matchKey` and `latestMatch` on each entry: `date`, `amount` in the account's currency, a nullable `expected` and `isPriceRise`. It is computed only while `UnusualAmounts` is on, with one query over the listed entries' accounts for the last 13 months, narrowed in SQL to rows whose stored `PayeeKey` is one of the entries' keys, newest first, at most 5000 rows; the latest matching charge is compared with the ones before it by the same rule. The single-entry answers (get, create, update and confirm) fill it the same way for their one entry.
 
 When `isPriceRise` is true the row adds a line with the rising arrow, "Charged €27.99 on 3 Sep, expected €24.99". A fixed entry also gets "Update expected amount", which sends the ordinary `PUT /api/recurring-bills/{id}` with the entry unchanged except the amount, set to the charge; there is no new write path. A variable entry shows the line without the button, because its expected amount is the median of its own history.
 

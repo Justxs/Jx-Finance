@@ -140,7 +140,8 @@ public sealed class BudgetService(
         var categoryIds = budgets.Select(b => b.CategoryId).Distinct().ToList();
         var names = await db.Categories
             .Where(c => categoryIds.Contains(c.Id))
-            .ToDictionaryAsync(c => c.Id, c => c.Name, cancellationToken);
+            .Select(c => new { Key = c.Id, Value = c.Name })
+            .ToDictionaryAsync(x => x.Key, x => x.Value, cancellationToken);
 
         return budgets.Select(b => b.ToResponse(names.GetValueOrDefault(b.CategoryId), usage[b.Id])).ToList();
     }

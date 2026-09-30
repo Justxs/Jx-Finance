@@ -1,3 +1,5 @@
+using JxFinance.Common.Settings;
+using JxFinance.Domain.Settings;
 using JxFinance.Infrastructure.Auth;
 using JxFinance.Infrastructure.Data;
 using Microsoft.AspNetCore.Identity;
@@ -19,6 +21,9 @@ public static class WebApplicationExtensions
             logger.LogInformation("Applying {Count} migration(s): {Migrations}", pending.Count, string.Join(", ", pending));
             await db.Database.MigrateAsync();
         }
+
+        var store = services.GetRequiredService<IInstanceSettingsStore>();
+        store.Set(await db.InstanceSettings.AsNoTracking().FirstOrDefaultAsync(s => s.Id == InstanceSettings.SingletonId) ?? store.Defaults());
 
         var filled = await PayeeKeyBackfill.RunAsync(db, CancellationToken.None);
         if (filled > 0)

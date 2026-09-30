@@ -10,6 +10,9 @@ Implemented 2026-09-26 behind the `UnusualAmounts` switch, on by default. A job 
 
 Newest first. Each entry is a choice between real alternatives: what was chosen, what was rejected, and why.
 
+- **2026-09-29.** The job writes a page of verdicts with one `UPDATE … FROM unnest(...) RETURNING` that still matches each row's `UpdatedAt`, instead of one `ExecuteUpdate` per row; the pass stays one transaction
+  - Rejected: Committing per page
+  - Why: Up to 20,000 round trips a pass became about 40 statements with the same guard against overwriting an edit. Committing per page would shorten the row locks but split the verdicts from the notifications they raise, so a crash in between would leave rows checked that never notified
 - **2026-09-29.** The verdict becomes an optional EF complex property `Transaction.Unusual` (`UnusualVerdict`) over the same four columns, replacing the scalar columns chosen on 2026-09-26
   - Rejected: Keeping four nullable scalars that the mapper reassembles and the save rule clears one by one
   - Why: EF Core 10 writes an optional complex property with `ExecuteUpdate` without loading or tracking rows, which was the only reason for the scalars. One property cannot be half set, the mapper passes it through, and clearing it is one assignment in `Transaction.RecheckUnusual`. The column names, and so the partial indexes, did not change, and no migration was needed

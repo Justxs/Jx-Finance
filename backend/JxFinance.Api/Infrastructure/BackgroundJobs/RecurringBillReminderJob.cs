@@ -1,6 +1,4 @@
-using System.Globalization;
 using JxFinance.Common;
-using JxFinance.Common.Formats;
 using JxFinance.Common.Notifications;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Notifications;
@@ -65,7 +63,6 @@ public sealed class RecurringBillReminderJob(
                 UserId = bill.UserId,
                 Type = NotificationType.BillDue,
                 Title = bill.Name,
-                Message = bill.NextDueDate.ToString(DateFormats.IsoDate, CultureInfo.InvariantCulture),
                 Payload = new NotificationPayload { DueDate = bill.NextDueDate, Shape = bill.Shape },
                 RelatedType = NotificationRelated.RecurringBill,
                 RelatedId = bill.Id.Value,

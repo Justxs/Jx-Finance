@@ -121,5 +121,6 @@ public sealed class HoldingsValuation(AppDbContext db, IExchangeRateService rate
             .AsNoTracking()
             .Where(p => securityIds.Contains(p.SecurityId)
                 && p.Date == db.SecurityPrices.Where(x => x.SecurityId == p.SecurityId && x.Date <= day).Max(x => (DateOnly?)x.Date))
-            .ToDictionaryAsync(p => p.SecurityId, p => (decimal?)p.Price, cancellationToken);
+            .Select(p => new { Key = p.SecurityId, Value = (decimal?)p.Price })
+            .ToDictionaryAsync(x => x.Key, x => x.Value, cancellationToken);
 }

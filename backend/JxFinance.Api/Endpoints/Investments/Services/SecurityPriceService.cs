@@ -126,7 +126,8 @@ public sealed class SecurityPriceService(AppDbContext db, IExchangeRateService r
         var currencies = await db.Securities
             .AsNoTracking()
             .Where(s => securityIds.Contains(s.Id))
-            .ToDictionaryAsync(s => s.Id, s => s.Currency, cancellationToken);
+            .Select(s => new { Key = s.Id, Value = s.Currency })
+            .ToDictionaryAsync(x => x.Key, x => x.Value, cancellationToken);
         var prices = (await db.SecurityPrices
                 .AsNoTracking()
                 .Where(p => securityIds.Contains(p.SecurityId) && p.Date <= to)
