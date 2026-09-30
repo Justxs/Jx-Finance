@@ -10,6 +10,7 @@ using JxFinance.Infrastructure.Brokers.InteractiveBrokers;
 using JxFinance.Infrastructure.Configuration;
 using JxFinance.Infrastructure.Discord;
 using JxFinance.Infrastructure.ExchangeRates;
+using JxFinance.Infrastructure.MarketPrices;
 using JxFinance.Infrastructure.Receipts;
 using Serilog;
 
@@ -54,6 +55,13 @@ public static class ApiServiceExtensions
             client.DefaultRequestHeaders.UserAgent.ParseAdd("JxFinance/1.0");
         }).RemoveAllLoggers();
 
+        var priceOptions = builder.Configuration.GetSection($"{AppOptions.SectionName}:MarketPrices").Get<MarketPriceOptions>() ?? new MarketPriceOptions();
+        builder.Services.AddSingleton<EodhdQuoteCurrencies>();
+        builder.Services.AddHttpClient<EodhdPriceProvider>(client => ConfigurePriceClient(client, priceOptions.EodhdBaseUrl)).RemoveAllLoggers();
+        builder.Services.AddHttpClient<KrakenPriceProvider>(client => ConfigurePriceClient(client, priceOptions.KrakenBaseUrl)).RemoveAllLoggers();
+        builder.Services.AddTransient<IMarketPriceProvider>(sp => sp.GetRequiredService<EodhdPriceProvider>());
+        builder.Services.AddTransient<IMarketPriceProvider>(sp => sp.GetRequiredService<KrakenPriceProvider>());
+
         builder.Services.AddHttpClient<IDiscordWebhookClient, DiscordWebhookClient>(client =>
         {
             client.BaseAddress = new Uri(DiscordWebhookClient.BaseAddress);
@@ -73,6 +81,7 @@ public static class ApiServiceExtensions
             builder.Services.AddHostedService<NetWorthSnapshotJob>();
             builder.Services.AddHostedService<ExchangeRateSyncJob>();
             builder.Services.AddHostedService<BrokerSyncJob>();
+            builder.Services.AddHostedService<PriceSyncJob>();
             builder.Services.AddHostedService<EmailOutboxJob>();
             builder.Services.AddHostedService<DiscordOutboxJob>();
             builder.Services.AddHostedService<UnusualAmountJob>();
@@ -82,5 +91,13 @@ public static class ApiServiceExtensions
         }
 
         return builder;
+    }
+
+    private static void ConfigurePriceClient(HttpClient client, string baseUrl)
+    {
+        client.BaseAddress = new Uri(baseUrl);
+        client.Timeout = TimeSpan.FromSeconds(20);
+        client.MaxResponseContentBufferSize = 5 * 1024 * 1024;
+        client.DefaultRequestHeaders.UserAgent.ParseAdd("JxFinance/1.0");
     }
 }

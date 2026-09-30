@@ -20,6 +20,7 @@ using JxFinance.Endpoints.Investments.SaveSecurity;
 using JxFinance.Endpoints.Investments.Shared;
 using JxFinance.Endpoints.Investments.UpdateInvestmentTransaction;
 using JxFinance.Infrastructure.Data;
+using JxFinance.Infrastructure.MarketPrices;
 using Microsoft.EntityFrameworkCore;
 
 namespace JxFinance.Endpoints.Investments.Services;
@@ -386,12 +387,25 @@ public sealed class InvestmentService(
         return securities.Select(s => s.ToResponse()).ToList();
     }
 
-    public async Task<Result<SecurityResponse>> CreateSecurityAsync(SaveSecurityRequest request, CancellationToken cancellationToken)
+    public async Task<Result<SecurityResponse>> CreateSecurityAsync(
+        SaveSecurityRequest request,
+        bool isAdministrator,
+        CancellationToken cancellationToken)
     {
         var symbol = request.Symbol.Trim().ToUpperInvariant();
+        if (request.PriceSource != PriceSource.None && !isAdministrator)
+        {
+            return new DomainError(ErrorCodes.AccessForbidden, "Only an administrator can choose where the prices of a security come from.");
+        }
+
         if (await db.Securities.AnyAsync(s => s.Symbol == symbol && s.Currency == request.Currency, cancellationToken))
         {
             return Duplicate(symbol, request.Currency);
+        }
+
+        if (await MappingErrorAsync(request, null, cancellationToken) is { } mappingError)
+        {
+            return mappingError;
         }
 
         var security = new Security();
@@ -431,6 +445,11 @@ public sealed class InvestmentService(
                 "The currency cannot change once the security has transactions.");
         }
 
+        if (await MappingErrorAsync(request, security, cancellationToken) is { } mappingError)
+        {
+            return mappingError;
+        }
+
         request.ApplyTo(symbol, security);
         await RecordPriceAsync(request, security, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
@@ -440,8 +459,26 @@ public sealed class InvestmentService(
 
     private Task RecordPriceAsync(SaveSecurityRequest request, Security security, CancellationToken cancellationToken) =>
         request.LastPrice is { } price
-            ? SecurityPriceBook.RecordAsync(db, security, request.LastPriceDate ?? clock.Today, price, cancellationToken)
+            ? SecurityPriceBook.RecordAsync(db, security, request.LastPriceDate ?? clock.Today, price, PriceSourceKind.Manual, cancellationToken)
             : Task.CompletedTask;
+
+    private async Task<DomainError?> MappingErrorAsync(
+        SaveSecurityRequest request,
+        Security? security,
+        CancellationToken cancellationToken)
+    {
+        var changed = security is null
+            || security.PriceSource != request.PriceSource
+            || !string.Equals(security.PriceSymbol, request.PriceSymbol?.Trim(), StringComparison.OrdinalIgnoreCase);
+        if (request.PriceSource != PriceSource.Eodhd || !changed)
+        {
+            return null;
+        }
+
+        return await db.InstanceSettings.AnyAsync(s => s.EodhdProtectedKey != "", cancellationToken)
+            ? null
+            : MarketPriceErrors.KeyRequired;
+    }
 
     private static DomainError Duplicate(string symbol, Currency currency) =>
         new DomainError(ErrorCodes.ConflictDuplicate, $"{symbol} in {currency.ToCode()} already exists.");

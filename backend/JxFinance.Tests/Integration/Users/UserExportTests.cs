@@ -241,6 +241,28 @@ public sealed class UserExportTests(ApiFixture fixture) : IntegrationTestBase(fi
     }
 
     [Fact]
+    public async Task A_security_travels_without_the_state_of_its_price_fetch()
+    {
+        using var client = await CreateUserClientAsync();
+        var account = await CreateAccountAsync("1000.00", "investment", client: client);
+        var coin = (await PostAsync<IdDto>(
+            Client,
+            "/api/investments/securities",
+            new { symbol = NewSymbol(), name = "Fetched coin", type = "crypto", currency = "eur", priceSource = "kraken", priceSymbol = "XBTEUR" })).Id;
+        await RecordInvestmentAsync(client, new { accountId = account, securityId = coin, type = "buy", date = "2026-06-01", quantity = "1", price = "100" });
+        await WithDbAsync(db => db.Securities.Where(s => s.Id == new SecurityId(coin)).ExecuteUpdateAsync(
+            s => s.SetProperty(x => x.PriceSyncError, "Kraken refused: busy").SetProperty(x => x.PriceSyncedAt, DateTimeOffset.UtcNow),
+            TestContext.Current.CancellationToken));
+
+        using var export = await ExportAsync(client);
+
+        var securities = export.Tables["Securities"];
+        Assert.DoesNotContain("PriceSyncError", securities.Columns);
+        Assert.DoesNotContain("PriceSyncedAt", securities.Columns);
+        Assert.Equal("Kraken", Assert.Single(securities.Rows)["PriceSource"]);
+    }
+
+    [Fact]
     public async Task A_running_export_refuses_a_second_and_the_fourth_in_an_hour_is_throttled()
     {
         var member = await CreateUserAsync();

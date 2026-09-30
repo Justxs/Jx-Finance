@@ -2,6 +2,7 @@ using System.Diagnostics;
 using JxFinance.Common;
 using JxFinance.Infrastructure.Configuration;
 using JxFinance.Infrastructure.Discord;
+using JxFinance.Infrastructure.MarketPrices;
 using Npgsql;
 using OpenTelemetry;
 using OpenTelemetry.Metrics;
@@ -35,7 +36,7 @@ public static class TelemetryExtensions
                 .AddAspNetCoreInstrumentation(options =>
                     options.Filter = context => !context.Request.Path.StartsWithSegments(ApiPipelineExtensions.HealthPath))
                 .AddHttpClientInstrumentation(options =>
-                    options.EnrichWithHttpRequestMessage = (activity, request) => RedactDiscord(activity, request))
+                    options.EnrichWithHttpRequestMessage = (activity, request) => Redact(activity, request))
                 .AddNpgsql())
             .WithMetrics(metrics => metrics
                 .AddAspNetCoreInstrumentation()
@@ -52,9 +53,24 @@ public static class TelemetryExtensions
             ? $"{uri.Scheme}://{uri.Host}/api/webhooks/{SecretText.Hidden}"
             : null;
 
-    private static void RedactDiscord(Activity activity, HttpRequestMessage request)
+    public static string? RedactedEodhdUrl(Uri? uri)
     {
-        if (RedactedDiscordUrl(request.RequestUri) is not { } redacted)
+        if (uri is null || !uri.Host.EndsWith(EodhdPriceProvider.HostName, StringComparison.OrdinalIgnoreCase))
+        {
+            return null;
+        }
+
+        var query = uri.Query.TrimStart('?')
+            .Split('&', StringSplitOptions.RemoveEmptyEntries)
+            .Select(part => part.StartsWith(EodhdPriceProvider.TokenParameter + "=", StringComparison.OrdinalIgnoreCase)
+                ? $"{EodhdPriceProvider.TokenParameter}={SecretText.Hidden}"
+                : part);
+        return $"{uri.GetLeftPart(UriPartial.Path)}?{string.Join('&', query)}";
+    }
+
+    private static void Redact(Activity activity, HttpRequestMessage request)
+    {
+        if ((RedactedDiscordUrl(request.RequestUri) ?? RedactedEodhdUrl(request.RequestUri)) is not { } redacted)
         {
             return;
         }

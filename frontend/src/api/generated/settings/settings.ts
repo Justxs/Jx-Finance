@@ -31,12 +31,15 @@ import { customFetch } from "../../client";
 import type { ErrorType } from "../../client";
 import type {
   ExchangeRateSyncResponse,
+  MarketPriceSettingsResponse,
+  MarketPriceSyncResponse,
   ProblemDetails,
   PublicSettingsResponse,
   SettingsResponse,
   SmtpSettingsResponse,
   SmtpTestResponse,
   UpdateDiscordSettingsRequest,
+  UpdateMarketPriceSettingsRequest,
   UpdateSettingsRequest,
   UpdateSmtpSettingsRequest,
 } from "../model";
@@ -531,6 +534,298 @@ export const useSyncExchangeRates = <TError = ErrorType<ProblemDetails>, TContex
   queryClient?: QueryClient,
 ): UseMutationResult<Awaited<ReturnType<typeof syncExchangeRates>>, TError, void, TContext> => {
   return useMutation(getSyncExchangeRatesMutationOptions(options), queryClient);
+};
+export const getMarketPriceSettingsUrl = () => {
+  return `/api/settings/market-prices`;
+};
+
+/**
+ * Answers whether closing prices are fetched daily, whether an EODHD API key is saved (never the key itself), when the last fetch ran, how many EODHD calls are left today, and the securities whose last fetch failed with the reason. Administrators only.
+ * @summary Read the market price settings of this installation
+ */
+export const marketPriceSettings = async (
+  options?: Parameters<typeof customFetch>[1],
+): Promise<MarketPriceSettingsResponse> => {
+  return customFetch<MarketPriceSettingsResponse>(getMarketPriceSettingsUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getMarketPriceSettingsQueryKey = () => {
+  return [`/api/settings/market-prices`] as const;
+};
+
+export const getMarketPriceSettingsSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof marketPriceSettings>>,
+  TError = ErrorType<ProblemDetails>,
+>(options?: {
+  query?: Partial<
+    UseSuspenseQueryOptions<Awaited<ReturnType<typeof marketPriceSettings>>, TError, TData>
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getMarketPriceSettingsQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof marketPriceSettings>>> = ({ signal }) =>
+    marketPriceSettings({ signal, ...requestOptions });
+
+  return queryOptionsBuilder({
+    queryKey,
+    ...queryOptions,
+    queryFn: queryOptions?.queryFn ?? queryFn,
+  }) as UseSuspenseQueryOptions<Awaited<ReturnType<typeof marketPriceSettings>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  } & {
+    throwOnError?: ((this: never, error: TError) => boolean) & { readonly __inferenceOnly: never };
+  };
+};
+
+export type MarketPriceSettingsSuspenseQueryResult = NonNullable<
+  Awaited<ReturnType<typeof marketPriceSettings>>
+>;
+export type MarketPriceSettingsSuspenseQueryError = ErrorType<ProblemDetails>;
+
+export function useMarketPriceSettingsSuspense<
+  TData = Awaited<ReturnType<typeof marketPriceSettings>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options: {
+    query: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof marketPriceSettings>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useMarketPriceSettingsSuspense<
+  TData = Awaited<ReturnType<typeof marketPriceSettings>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof marketPriceSettings>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useMarketPriceSettingsSuspense<
+  TData = Awaited<ReturnType<typeof marketPriceSettings>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof marketPriceSettings>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Read the market price settings of this installation
+ */
+
+export function useMarketPriceSettingsSuspense<
+  TData = Awaited<ReturnType<typeof marketPriceSettings>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof marketPriceSettings>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getMarketPriceSettingsSuspenseQueryOptions(options);
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export const getUpdateMarketPriceSettingsUrl = () => {
+  return `/api/settings/market-prices`;
+};
+
+/**
+ * Switches the daily fetch of closing prices on or off and saves, keeps or removes the EODHD API key. The key is encrypted with ASP.NET Data Protection before it is stored and is never returned: the response carries hasKey instead. While the switch is off the server makes no request to a price provider on its own. Administrators only.
+ * @summary Save the market price settings of this installation
+ */
+export const updateMarketPriceSettings = async (
+  updateMarketPriceSettingsRequest: UpdateMarketPriceSettingsRequest,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<MarketPriceSettingsResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return customFetch<MarketPriceSettingsResponse>(getUpdateMarketPriceSettingsUrl(), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(updateMarketPriceSettingsRequest),
+  });
+};
+
+export const getUpdateMarketPriceSettingsMutationKey = () => ["updateMarketPriceSettings"] as const;
+
+export const getUpdateMarketPriceSettingsMutationOptions = <
+  TError = ErrorType<ProblemDetails>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateMarketPriceSettings>>,
+    TError,
+    UpdateMarketPriceSettingsMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateMarketPriceSettings>>,
+  TError,
+  UpdateMarketPriceSettingsMutationVariables,
+  TContext
+> => {
+  const mutationKey = getUpdateMarketPriceSettingsMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateMarketPriceSettings>>,
+    UpdateMarketPriceSettingsMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return updateMarketPriceSettings(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateMarketPriceSettingsMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateMarketPriceSettings>>
+>;
+export type UpdateMarketPriceSettingsMutationBody = UpdateMarketPriceSettingsRequest;
+export type UpdateMarketPriceSettingsMutationError = ErrorType<ProblemDetails>;
+export type UpdateMarketPriceSettingsMutationVariables = { data: UpdateMarketPriceSettingsRequest };
+
+/**
+ * @summary Save the market price settings of this installation
+ */
+export const useUpdateMarketPriceSettings = <
+  TError = ErrorType<ProblemDetails>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof updateMarketPriceSettings>>,
+      TError,
+      UpdateMarketPriceSettingsMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof updateMarketPriceSettings>>,
+  TError,
+  UpdateMarketPriceSettingsMutationVariables,
+  TContext
+> => {
+  return useMutation(getUpdateMarketPriceSettingsMutationOptions(options), queryClient);
+};
+export const getSyncMarketPricesUrl = () => {
+  return `/api/settings/market-prices/sync`;
+};
+
+/**
+ * Fetches the missing closing prices of every held security that has a price source, as the daily run does, including securities whose last fetch failed less than a day ago. Works whether or not the daily fetch is switched on. EODHD calls count against the daily limit. Administrators only.
+ * @summary Fetch closing prices now
+ */
+export const syncMarketPrices = async (
+  options?: Parameters<typeof customFetch>[1],
+): Promise<MarketPriceSyncResponse> => {
+  return customFetch<MarketPriceSyncResponse>(getSyncMarketPricesUrl(), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getSyncMarketPricesMutationKey = () => ["syncMarketPrices"] as const;
+
+export const getSyncMarketPricesMutationOptions = <
+  TError = ErrorType<ProblemDetails>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof syncMarketPrices>>,
+    TError,
+    void,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<Awaited<ReturnType<typeof syncMarketPrices>>, TError, void, TContext> => {
+  const mutationKey = getSyncMarketPricesMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<Awaited<ReturnType<typeof syncMarketPrices>>, void> = () => {
+    return syncMarketPrices(requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SyncMarketPricesMutationResult = NonNullable<
+  Awaited<ReturnType<typeof syncMarketPrices>>
+>;
+
+export type SyncMarketPricesMutationError = ErrorType<ProblemDetails>;
+
+/**
+ * @summary Fetch closing prices now
+ */
+export const useSyncMarketPrices = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof syncMarketPrices>>,
+      TError,
+      void,
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<Awaited<ReturnType<typeof syncMarketPrices>>, TError, void, TContext> => {
+  return useMutation(getSyncMarketPricesMutationOptions(options), queryClient);
 };
 export const getPublicSettingsUrl = () => {
   return `/api/settings/public`;

@@ -28,5 +28,6 @@ public sealed class InstanceSettingsConfiguration : IEntityTypeConfiguration<Ins
         builder.Property(s => s.SmtpFromAddress).HasMaxLength(320);
         builder.Property(s => s.SmtpFromName).HasMaxLength(100);
         builder.Property(s => s.SupportLinkEnabled).HasDefaultValue(true);
+        builder.Property(s => s.EodhdProtectedKey).HasMaxLength(1000);
     }
 }

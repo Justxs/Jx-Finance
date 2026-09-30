@@ -2,6 +2,7 @@ import { linkOptions } from "@tanstack/react-router";
 import type { LucideIcon } from "lucide-react";
 import {
   Bell,
+  ChartCandlestick,
   Coins,
   DatabaseBackup,
   FileUp,
@@ -52,6 +53,7 @@ export const settingsSections = [
   "defaults",
   "email",
   "discord",
+  "marketPrices",
   "backups",
 ] as const;
 
@@ -80,6 +82,7 @@ const settingsItems: Record<SettingsSection, [TranslationKey, LucideIcon]> = {
   defaults: ["settings.defaults.title", SlidersHorizontal],
   email: ["settings.smtp.title", Mail],
   discord: ["settings.discord.title", MessagesSquare],
+  marketPrices: ["settings.marketPrices.title", ChartCandlestick],
   backups: ["backup.title", DatabaseBackup],
 };
 
@@ -110,15 +113,17 @@ function useSettingsGroups(): SectionNavGroup[] {
 
   const installation: SectionNavItem[] = isAdmin
     ? [
-        ...settingsSections.map((section) => {
-          const [labelKey, icon] = settingsItems[section];
-          return {
-            id: section,
-            labelKey,
-            icon,
-            link: linkOptions({ to: "/settings", search: { section } }),
-          };
-        }),
+        ...settingsSections
+          .filter((section) => section !== "marketPrices" || features.investments)
+          .map((section) => {
+            const [labelKey, icon] = settingsItems[section];
+            return {
+              id: section,
+              labelKey,
+              icon,
+              link: linkOptions({ to: "/settings", search: { section } }),
+            };
+          }),
         { id: "users", labelKey: "nav.users", icon: Users, link: linkOptions({ to: "/users" }) },
       ]
     : [];

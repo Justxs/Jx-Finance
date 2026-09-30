@@ -7,6 +7,7 @@
  */
 import type { Currency } from "./currency";
 import type { NullableOfDateOnly } from "./nullableOfDateOnly";
+import type { PriceSource } from "./priceSource";
 import type { SecurityType } from "./securityType";
 
 export interface SaveSecurityRequest {
@@ -37,4 +38,12 @@ export interface SaveSecurityRequest {
   lastPrice?: string | null;
   /** Defaults to today when a price is given without a date. Not in the future. The price is recorded in the price history; one dated before the last known price leaves the last known price alone. */
   lastPriceDate?: null | NullableOfDateOnly;
+  priceSource?: PriceSource;
+  /**
+   * The symbol the price source knows the security by, such as VWCE.XETRA on EODHD or XBTEUR on Kraken. Required with a price source.
+   * @minLength 0
+   * @maxLength 32
+   * @nullable
+   */
+  priceSymbol?: string | null;
 }

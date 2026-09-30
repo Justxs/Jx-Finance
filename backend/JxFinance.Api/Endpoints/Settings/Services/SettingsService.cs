@@ -11,9 +11,11 @@ using JxFinance.Domain.Investments;
 using JxFinance.Domain.Settings;
 using JxFinance.Domain.Transactions;
 using JxFinance.Endpoints.Auth.Interfaces;
+using JxFinance.Endpoints.Investments.Services;
 using JxFinance.Endpoints.Settings.Interfaces;
 using JxFinance.Endpoints.Settings.Shared;
 using JxFinance.Endpoints.Settings.UpdateDiscordSettings;
+using JxFinance.Endpoints.Settings.UpdateMarketPriceSettings;
 using JxFinance.Endpoints.Settings.UpdateSettings;
 using JxFinance.Endpoints.Settings.UpdateSmtpSettings;
 using JxFinance.Infrastructure.Auth;
@@ -168,6 +170,45 @@ public sealed class SettingsService(
             cancellationToken);
 
         return sent.IsSuccess ? new SmtpTestResponse(address) : sent.Error;
+    }
+
+    public async Task<MarketPriceSettingsResponse> GetMarketPricesAsync(CancellationToken cancellationToken)
+    {
+        var settings = await db.InstanceSettings.AsNoTracking().FirstOrDefaultAsync(s => s.Id == InstanceSettings.SingletonId, cancellationToken)
+            ?? store.Defaults();
+        var failures = await db.Securities
+            .AsNoTracking()
+            .Where(s => s.PriceSource != PriceSource.None && s.PriceSyncError != null && s.PriceSyncedAt != null)
+            .OrderBy(s => s.Symbol)
+            .Select(s => new { s.Id, s.Symbol, s.Name, s.PriceSyncError, s.PriceSyncedAt })
+            .ToListAsync(cancellationToken);
+        return new MarketPriceSettingsResponse(
+            settings.PriceSyncEnabled,
+            settings.EodhdProtectedKey.Length > 0,
+            settings.PriceSyncRunAt,
+            PriceSyncRules.CallsLeft(settings, clock.Today, options.Value.MarketPrices.EodhdDailyLimit),
+            [.. failures.Select(f => new PriceSyncFailure(f.Id.Value, f.Symbol, f.Name, f.PriceSyncError!, f.PriceSyncedAt!.Value))]);
+    }
+
+    public async Task<MarketPriceSettingsResponse> UpdateMarketPricesAsync(
+        UpdateMarketPriceSettingsRequest request,
+        CancellationToken cancellationToken)
+    {
+        await UpdateStoredAsync(
+            settings =>
+            {
+                settings.PriceSyncEnabled = request.Enabled;
+                if (request.EodhdApiKey is { } key)
+                {
+                    settings.EodhdProtectedKey = key.Trim().Length == 0
+                        ? string.Empty
+                        : protection.Protect(PriceSyncService.KeyPurpose, key.Trim());
+                }
+
+                return Task.FromResult<DomainError?>(null);
+            },
+            cancellationToken);
+        return await GetMarketPricesAsync(cancellationToken);
     }
 
     public Task UpdateDiscordAsync(UpdateDiscordSettingsRequest request, CancellationToken cancellationToken) =>

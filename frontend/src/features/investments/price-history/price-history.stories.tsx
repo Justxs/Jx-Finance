@@ -2,10 +2,16 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, screen, userEvent, waitFor, within } from "storybook/test";
 import {
   getDeleteSecurityPriceMockHandler,
+  getImportSecurityPricesMockHandler,
   getSecurityPricesMockHandler,
 } from "@/api/generated/investments/investments.msw";
 import { withWidth } from "@/storybook/decorators";
-import { securityNotHeldProblem, securityPrices, worldEtf } from "@/storybook/fixtures";
+import {
+  missingColumnsProblem,
+  securityNotHeldProblem,
+  securityPrices,
+  worldEtf,
+} from "@/storybook/fixtures";
 import { errorHandlers, failWith, loadingHandlers, withHandlers } from "@/storybook/handlers";
 import { openedDialog, type Canvas } from "@/storybook/interactions";
 import { PriceHistory } from "./price-history";
@@ -24,6 +30,45 @@ export const Default: Story = {
   play: async ({ canvas }) => {
     await expect(await canvas.findAllByRole("listitem")).toHaveLength(securityPrices.length);
     await expect(canvas.getByText("Last price")).toBeVisible();
+  },
+};
+
+export const MixedSources: Story = {
+  play: async ({ canvas }) => {
+    await expect(await canvas.findByText("Fetched")).toBeInTheDocument();
+    await expect(canvas.getByText("Broker")).toBeInTheDocument();
+    await expect(canvas.getByText("File")).toBeInTheDocument();
+    await expect(canvas.getByText("Typed")).toBeInTheDocument();
+  },
+};
+
+async function importTwoLines(canvas: Canvas) {
+  const input = await canvas.findByLabelText("Import prices");
+  await userEvent.upload(
+    input,
+    new File([["date;price", "2026-09-16;128,10", "2026-09-17;128.46"].join("\n")], "prices.csv", {
+      type: "text/csv",
+    }),
+  );
+}
+
+export const ImportsPrices: Story = {
+  parameters: withHandlers(
+    getImportSecurityPricesMockHandler({ written: 2, skipped: 0, unreadable: 0 }),
+  ),
+  play: async ({ canvas }) => {
+    await importTwoLines(canvas);
+    await expect(
+      await canvas.findByText("2 written, 0 unchanged, 0 unreadable"),
+    ).toBeInTheDocument();
+  },
+};
+
+export const ImportRefused: Story = {
+  parameters: withHandlers(getImportSecurityPricesMockHandler(failWith(missingColumnsProblem))),
+  play: async ({ canvas }) => {
+    await importTwoLines(canvas);
+    await expect(await canvas.findByRole("alert")).toBeVisible();
   },
 };
 

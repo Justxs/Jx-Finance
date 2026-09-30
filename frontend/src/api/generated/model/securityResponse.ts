@@ -7,6 +7,7 @@
  */
 import type { Currency } from "./currency";
 import type { NullableOfDateOnly } from "./nullableOfDateOnly";
+import type { PriceSource } from "./priceSource";
 import type { SecurityType } from "./securityType";
 
 export interface SecurityResponse {
@@ -22,4 +23,9 @@ export interface SecurityResponse {
   /** @nullable */
   lastPrice: string | null;
   lastPriceDate: null | NullableOfDateOnly;
+  priceSource: PriceSource;
+  /** @nullable */
+  priceSymbol: string | null;
+  /** @nullable */
+  priceSyncError: string | null;
 }

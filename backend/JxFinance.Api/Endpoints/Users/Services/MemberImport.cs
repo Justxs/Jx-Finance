@@ -1,4 +1,5 @@
 using JxFinance.Common.Errors;
+using JxFinance.Domain.Investments;
 using JxFinance.Endpoints.Backups.Interfaces;
 using JxFinance.Endpoints.Backups.Services;
 using JxFinance.Endpoints.Backups.Shared;
@@ -54,6 +55,7 @@ public sealed class MemberImport(AppDbContext db, Guid userId, int lockTimeoutSe
         CurrentUser,
         Null,
         Personal,
+        NoPriceSource,
     }
 
     public long Rows { get; private set; }
@@ -112,6 +114,8 @@ public sealed class MemberImport(AppDbContext db, Guid userId, int lockTimeoutSe
             (UsersTable, _) => Rewrite.CurrentUser,
             (HouseholdsTable, _) => Rewrite.Null,
             (_, "Scope") => Rewrite.Personal,
+            (_, "PriceSource") when name == SecuritiesTable => Rewrite.NoPriceSource,
+            (_, "PriceSymbol") when name == SecuritiesTable => Rewrite.Null,
             _ => Rewrite.Keep,
         }).ToArray();
         idColumn = IndexOf(columns, "Id");
@@ -134,6 +138,7 @@ public sealed class MemberImport(AppDbContext db, Guid userId, int lockTimeoutSe
             Rewrite.CurrentUser => userId.ToString(),
             Rewrite.Null => null,
             Rewrite.Personal => "0",
+            Rewrite.NoPriceSource => nameof(PriceSource.None),
             _ => value,
         }).ToList();
         if (currentTable == SecuritiesTable && idColumn >= 0 && row[idColumn] is { } id)

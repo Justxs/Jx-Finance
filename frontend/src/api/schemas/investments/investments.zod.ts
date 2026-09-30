@@ -329,6 +329,13 @@ export const PortfolioResponse = zod.object({
           .stringFormat("decimal", portfolioResponseHoldingsItemSecurityLastPriceRegExp)
           .nullable(),
         lastPriceDate: zod.union([zod.null(), zod.iso.date()]),
+        priceSource: zod
+          .enum(["none", "eodhd", "kraken"])
+          .describe(
+            "Where the server fetches daily closing prices: none, eodhd (needs an API key under the market price settings) or kraken (crypto priced in EUR only). Administrators only.",
+          ),
+        priceSymbol: zod.string().nullable(),
+        priceSyncError: zod.string().nullable(),
       }),
       quantity: zod.stringFormat("decimal", portfolioResponseHoldingsItemQuantityRegExp),
       averageCost: zod.stringFormat("decimal", portfolioResponseHoldingsItemAverageCostRegExp),
@@ -425,11 +432,18 @@ export const SecuritiesResponseItem = zod.object({
   ]),
   lastPrice: zod.stringFormat("decimal", securitiesResponseLastPriceRegExp).nullable(),
   lastPriceDate: zod.union([zod.null(), zod.iso.date()]),
+  priceSource: zod
+    .enum(["none", "eodhd", "kraken"])
+    .describe(
+      "Where the server fetches daily closing prices: none, eodhd (needs an API key under the market price settings) or kraken (crypto priced in EUR only). Administrators only.",
+    ),
+  priceSymbol: zod.string().nullable(),
+  priceSyncError: zod.string().nullable(),
 });
 export const SecuritiesResponse = zod.array(SecuritiesResponseItem);
 
 /**
- * Adds a stock, ETF, fund, bond or other instrument that trades can refer to. Open to every signed-in user, because recording a first trade needs it. Symbol and currency together must be unique; the operation only ever adds, it never changes an existing security.
+ * Adds a stock, ETF, fund, bond or other instrument that trades can refer to. Open to every signed-in user, because recording a first trade needs it. Symbol and currency together must be unique; the operation only ever adds, it never changes an existing security. Only an administrator may set a price source; anyone else leaves it at none.
  * @summary Add a security
  */
 export const createSecurityBodySymbolMin = 0;
@@ -443,6 +457,8 @@ export const createSecurityBodyExchangeMin = 0;
 export const createSecurityBodyExchangeMax = 32;
 
 export const createSecurityBodyLastPriceRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const createSecurityBodyPriceSymbolMin = 0;
+export const createSecurityBodyPriceSymbolMax = 32;
 
 export const CreateSecurityBody = zod.object({
   symbol: zod.string().min(createSecurityBodySymbolMin).max(createSecurityBodySymbolMax),
@@ -493,6 +509,20 @@ export const CreateSecurityBody = zod.object({
     .describe(
       "Defaults to today when a price is given without a date. Not in the future. The price is recorded in the price history; one dated before the last known price leaves the last known price alone.",
     ),
+  priceSource: zod
+    .enum(["none", "eodhd", "kraken"])
+    .optional()
+    .describe(
+      "Where the server fetches daily closing prices: none, eodhd (needs an API key under the market price settings) or kraken (crypto priced in EUR only). Administrators only.",
+    ),
+  priceSymbol: zod
+    .string()
+    .min(createSecurityBodyPriceSymbolMin)
+    .max(createSecurityBodyPriceSymbolMax)
+    .nullish()
+    .describe(
+      "The symbol the price source knows the security by, such as VWCE.XETRA on EODHD or XBTEUR on Kraken. Required with a price source.",
+    ),
 });
 
 export const createSecurityResponseLastPriceRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
@@ -538,10 +568,17 @@ export const CreateSecurityResponse = zod.object({
   ]),
   lastPrice: zod.stringFormat("decimal", createSecurityResponseLastPriceRegExp).nullable(),
   lastPriceDate: zod.union([zod.null(), zod.iso.date()]),
+  priceSource: zod
+    .enum(["none", "eodhd", "kraken"])
+    .describe(
+      "Where the server fetches daily closing prices: none, eodhd (needs an API key under the market price settings) or kraken (crypto priced in EUR only). Administrators only.",
+    ),
+  priceSymbol: zod.string().nullable(),
+  priceSyncError: zod.string().nullable(),
 });
 
 /**
- * Changes symbol, name, ISIN, exchange, type or currency, and optionally the price. Securities are shared by every user of the installation, so only an administrator may change them; anyone who holds the security sets its price through the price operation instead. The currency cannot change once the security has transactions.
+ * Changes symbol, name, ISIN, exchange, type, currency or price source, and optionally the price. Securities are shared by every user of the installation, so only an administrator may change them; anyone who holds the security sets its price through the price operation instead. The currency cannot change once the security has transactions. Changing the price source or symbol clears the last fetch result, and the next fetch fills the history from the first trade.
  * @summary Update the details of a security
  */
 export const updateSecurityBodySymbolMin = 0;
@@ -555,6 +592,8 @@ export const updateSecurityBodyExchangeMin = 0;
 export const updateSecurityBodyExchangeMax = 32;
 
 export const updateSecurityBodyLastPriceRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const updateSecurityBodyPriceSymbolMin = 0;
+export const updateSecurityBodyPriceSymbolMax = 32;
 
 export const UpdateSecurityBody = zod.object({
   symbol: zod.string().min(updateSecurityBodySymbolMin).max(updateSecurityBodySymbolMax),
@@ -605,6 +644,20 @@ export const UpdateSecurityBody = zod.object({
     .describe(
       "Defaults to today when a price is given without a date. Not in the future. The price is recorded in the price history; one dated before the last known price leaves the last known price alone.",
     ),
+  priceSource: zod
+    .enum(["none", "eodhd", "kraken"])
+    .optional()
+    .describe(
+      "Where the server fetches daily closing prices: none, eodhd (needs an API key under the market price settings) or kraken (crypto priced in EUR only). Administrators only.",
+    ),
+  priceSymbol: zod
+    .string()
+    .min(updateSecurityBodyPriceSymbolMin)
+    .max(updateSecurityBodyPriceSymbolMax)
+    .nullish()
+    .describe(
+      "The symbol the price source knows the security by, such as VWCE.XETRA on EODHD or XBTEUR on Kraken. Required with a price source.",
+    ),
 });
 
 export const updateSecurityResponseLastPriceRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
@@ -650,6 +703,13 @@ export const UpdateSecurityResponse = zod.object({
   ]),
   lastPrice: zod.stringFormat("decimal", updateSecurityResponseLastPriceRegExp).nullable(),
   lastPriceDate: zod.union([zod.null(), zod.iso.date()]),
+  priceSource: zod
+    .enum(["none", "eodhd", "kraken"])
+    .describe(
+      "Where the server fetches daily closing prices: none, eodhd (needs an API key under the market price settings) or kraken (crypto priced in EUR only). Administrators only.",
+    ),
+  priceSymbol: zod.string().nullable(),
+  priceSyncError: zod.string().nullable(),
 });
 
 /**
@@ -709,7 +769,26 @@ export const SetSecurityPriceResponse = zod.object({
   ]),
   lastPrice: zod.stringFormat("decimal", setSecurityPriceResponseLastPriceRegExp).nullable(),
   lastPriceDate: zod.union([zod.null(), zod.iso.date()]),
+  priceSource: zod
+    .enum(["none", "eodhd", "kraken"])
+    .describe(
+      "Where the server fetches daily closing prices: none, eodhd (needs an API key under the market price settings) or kraken (crypto priced in EUR only). Administrators only.",
+    ),
+  priceSymbol: zod.string().nullable(),
+  priceSyncError: zod.string().nullable(),
 });
+
+/**
+ * Asks EODHD's search for the security's ISIN and answers the listings it knows, each with the symbol to use as the price symbol, the exchange, the name and the currency it is quoted in. Saves nothing. Each lookup is one of the day's EODHD calls. Administrators only.
+ * @summary Look up the EODHD symbols of a security
+ */
+export const FindPriceSymbolResponseItem = zod.object({
+  symbol: zod.string(),
+  exchange: zod.string(),
+  name: zod.string(),
+  currency: zod.string(),
+});
+export const FindPriceSymbolResponse = zod.array(FindPriceSymbolResponseItem);
 
 /**
  * Returns the recorded prices of a security, one per date, newest first. A point is written whenever a price is set by hand, a security is saved with a price, or a broker import carries a mark price for an open position. There is no market data feed, so dates between points have no row. Like securities themselves, the history is shared by every user of the installation.
@@ -720,8 +799,23 @@ export const securityPricesResponsePriceRegExp = new RegExp("^-?\\d+(\\.\\d{1,8}
 export const SecurityPricesResponseItem = zod.object({
   date: zod.iso.date(),
   price: zod.stringFormat("decimal", securityPricesResponsePriceRegExp),
+  source: zod.enum(["manual", "broker", "feed", "file"]),
 });
 export const SecurityPricesResponse = zod.array(SecurityPricesResponseItem);
+
+/**
+ * Reads a CSV of at most 5 MB with a header row holding date and price columns. Dates are YYYY-MM-DD, YYYY.MM.DD or DD.MM.YYYY, a price may use a decimal point or a decimal comma, and the delimiter is detected. Each price is recorded in the price history as imported from a file: it replaces a fetched price of the same date and is never replaced by one. Makes no outside request and works whether or not daily price fetching is on. Allowed for an administrator or someone who holds the security, as for setting a price.
+ * @summary Import the price history of one security from a CSV
+ */
+export const ImportSecurityPricesBody = zod.object({
+  file: zod.instanceof(Blob).optional(),
+});
+
+export const ImportSecurityPricesResponse = zod.object({
+  written: zod.int(),
+  skipped: zod.int(),
+  unreadable: zod.int(),
+});
 
 /**
  * Removes the price recorded for one date. The same rule as setting a price applies: open to a user who currently holds the security on an account they can see, and to administrators. The last known price of the security becomes the newest remaining point, or empty when none is left.

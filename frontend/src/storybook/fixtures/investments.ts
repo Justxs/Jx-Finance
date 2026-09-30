@@ -6,7 +6,11 @@ import type {
   InvestmentSource,
   InvestmentTransactionResponse,
   InvestmentTransactionType,
+  MarketPriceSettingsResponse,
+  MarketPriceSyncResponse,
   PortfolioResponse,
+  PriceImportResponse,
+  PriceSymbolCandidate,
   SecurityPriceResponse,
   SecurityResponse,
   TaxSummaryResponse,
@@ -26,6 +30,9 @@ export const worldEtf: SecurityResponse = {
   currency: "eur",
   lastPrice: "128.46",
   lastPriceDate: "2026-09-17",
+  priceSource: "eodhd",
+  priceSymbol: "VWCE.XETRA",
+  priceSyncError: null,
 };
 
 export const usStock: SecurityResponse = {
@@ -38,6 +45,9 @@ export const usStock: SecurityResponse = {
   currency: "usd",
   lastPrice: "462.18",
   lastPriceDate: "2026-09-17",
+  priceSource: "none",
+  priceSymbol: null,
+  priceSyncError: null,
 };
 
 const closedStock: SecurityResponse = {
@@ -50,6 +60,9 @@ const closedStock: SecurityResponse = {
   currency: "eur",
   lastPrice: "742.30",
   lastPriceDate: "2026-09-17",
+  priceSource: "none",
+  priceSymbol: null,
+  priceSyncError: null,
 };
 
 export const unpricedStock: SecurityResponse = {
@@ -62,6 +75,9 @@ export const unpricedStock: SecurityResponse = {
   currency: "eur",
   lastPrice: null,
   lastPriceDate: null,
+  priceSource: "none",
+  priceSymbol: null,
+  priceSyncError: null,
 };
 
 export const securities: SecurityResponse[] = [closedStock, unpricedStock, usStock, worldEtf];
@@ -175,10 +191,10 @@ export const portfolio: PortfolioResponse = {
 };
 
 export const securityPrices: SecurityPriceResponse[] = [
-  { date: "2026-09-17", price: "128.46" },
-  { date: "2026-08-31", price: "126.1" },
-  { date: "2026-06-30", price: "119.875" },
-  { date: "2026-03-31", price: "112.4" },
+  { date: "2026-09-17", price: "128.46", source: "feed" },
+  { date: "2026-08-31", price: "126.1", source: "broker" },
+  { date: "2026-06-30", price: "119.875", source: "file" },
+  { date: "2026-03-31", price: "112.4", source: "manual" },
 ];
 
 const valueHistorySeed: readonly [string, number, number][] = [
@@ -603,4 +619,92 @@ export const brokerSyncProblem = {
   instance: "/api/investments/connections/sync",
   detail:
     "Interactive Brokers rejected the request: the token has expired (code 1012). Create a new token in Flex Web Service and save it here.",
+};
+
+export const euroCoin: SecurityResponse = {
+  id: uid("eeeeeeee", 5),
+  symbol: "BTC",
+  name: "Bitcoin",
+  isin: null,
+  exchange: null,
+  type: "crypto",
+  currency: "eur",
+  lastPrice: "95350.1",
+  lastPriceDate: "2026-09-17",
+  priceSource: "kraken",
+  priceSymbol: "XBTEUR",
+  priceSyncError: null,
+};
+
+export const priceSymbolCandidates: PriceSymbolCandidate[] = [
+  {
+    symbol: "VWCE.XETRA",
+    exchange: "XETRA",
+    name: "Vanguard FTSE All-World UCITS ETF USD Accumulation",
+    currency: "EUR",
+  },
+  {
+    symbol: "VWRP.LSE",
+    exchange: "LSE",
+    name: "Vanguard FTSE All-World UCITS ETF USD Accumulation",
+    currency: "GBX",
+  },
+];
+
+export const priceImportResult: PriceImportResponse = { written: 2, skipped: 0, unreadable: 1 };
+
+export const marketPricesUnavailableProblem = problemOf(
+  400,
+  "marketPrices.unavailable",
+  "EODHD could not be reached. Try again later.",
+);
+
+export const marketPricesKeyRequiredProblem = problemOf(
+  400,
+  "marketPrices.keyRequired",
+  "Save an EODHD API key under Settings, Market prices first.",
+);
+
+export const marketPriceSettings: MarketPriceSettingsResponse = {
+  enabled: true,
+  hasKey: true,
+  lastRunAt: "2026-09-18T06:00:12Z",
+  callsLeft: 14,
+  failures: [],
+};
+
+export const marketPriceSettingsOff: MarketPriceSettingsResponse = {
+  enabled: false,
+  hasKey: false,
+  lastRunAt: null,
+  callsLeft: 20,
+  failures: [],
+};
+
+export const marketPriceSettingsWithFailures: MarketPriceSettingsResponse = {
+  ...marketPriceSettings,
+  failures: [
+    {
+      securityId: usStock.id,
+      symbol: usStock.symbol,
+      name: usStock.name,
+      reason: "EODHD refused: Ticker Not Found",
+      at: "2026-09-18T06:00:12Z",
+    },
+    {
+      securityId: worldEtf.id,
+      symbol: worldEtf.symbol,
+      name: worldEtf.name,
+      reason:
+        "The source quotes VWCE.XETRA in USD, but the security is in EUR. Check the price symbol.",
+      at: "2026-09-18T06:00:12Z",
+    },
+  ],
+};
+
+export const marketPriceSync: MarketPriceSyncResponse = {
+  checked: 3,
+  written: 12,
+  failed: 0,
+  callsLeft: 11,
 };

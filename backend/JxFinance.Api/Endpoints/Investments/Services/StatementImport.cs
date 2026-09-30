@@ -359,7 +359,7 @@ public sealed class StatementImport(
 
         foreach (var (security, date, markPrice) in marks)
         {
-            if (SecurityPriceBook.Record(db, security!, date, markPrice, recorded.GetValueOrDefault((security!.Id, date))))
+            if (SecurityPriceBook.Record(db, security!, date, markPrice, PriceSourceKind.Broker, recorded.GetValueOrDefault((security!.Id, date))))
             {
                 counts.PricesUpdated++;
             }

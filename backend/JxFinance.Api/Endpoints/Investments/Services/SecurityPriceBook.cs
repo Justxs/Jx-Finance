@@ -11,23 +11,36 @@ public static class SecurityPriceBook
         Security security,
         DateOnly date,
         decimal price,
+        PriceSourceKind source,
         CancellationToken cancellationToken)
     {
         var point = await db.SecurityPrices.FirstOrDefaultAsync(p => p.SecurityId == security.Id && p.Date == date, cancellationToken);
-        return Record(db, security, date, price, point);
+        return Record(db, security, date, price, source, point);
     }
 
-    public static bool Record(AppDbContext db, Security security, DateOnly date, decimal price, SecurityPrice? existing)
+    public static bool Record(
+        AppDbContext db,
+        Security security,
+        DateOnly date,
+        decimal price,
+        PriceSourceKind source,
+        SecurityPrice? existing)
     {
         var point = existing ?? db.SecurityPrices.Local.FirstOrDefault(p => p.SecurityId == security.Id && p.Date == date);
+        if (point is not null && !Replaces(source, point.Source))
+        {
+            return false;
+        }
+
         var isChange = point?.Price != price;
         if (point is null)
         {
-            db.SecurityPrices.Add(new SecurityPrice { SecurityId = security.Id, Date = date, Price = price });
+            db.SecurityPrices.Add(new SecurityPrice { SecurityId = security.Id, Date = date, Price = price, Source = source });
         }
         else
         {
             point.Price = price;
+            point.Source = source;
         }
 
         if (security.LastPriceDate is null || date >= security.LastPriceDate)
@@ -38,6 +51,9 @@ public static class SecurityPriceBook
 
         return isChange;
     }
+
+    public static bool Replaces(PriceSourceKind incoming, PriceSourceKind stored) =>
+        incoming != PriceSourceKind.Feed || stored == PriceSourceKind.Feed;
 
     public static async Task RemoveAsync(
         AppDbContext db,

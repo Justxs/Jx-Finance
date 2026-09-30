@@ -1101,6 +1101,30 @@
       "enabled": "Allow Discord notifications",
       "enabledHint": "Messages go from this server to discord.com. While this is off nothing is sent, and members' webhooks stay saved.",
       "saved": "Discord setting saved"
+    },
+    "marketPrices": {
+      "title": "Market prices",
+      "description": "Closing prices of held securities, fetched once a day from a market data provider.",
+      "enabled": "Fetch closing prices daily",
+      "enabledHint": "Every six hours the server asks for the weekday prices that are still missing. Off until you turn it on.",
+      "key": "EODHD API key",
+      "keyHint": "Needed for stocks, ETFs and funds. Stored encrypted and never shown again. A free key allows 20 calls a day and one year of history.",
+      "keySaved": "Key saved",
+      "replace": "Replace",
+      "remove": "Remove",
+      "removing": "The key is removed when you save.",
+      "saved": "Market price settings saved",
+      "fetchNow": "Fetch now",
+      "fetched": "Checked {{checked}}, wrote {{written}} prices, {{failed}} failed",
+      "lastRun": "Last run",
+      "never": "Never",
+      "callsLeft": "EODHD calls left today",
+      "failures": "Securities whose last fetch failed",
+      "noFailures": "No failures",
+      "security": "Security",
+      "reason": "Reason",
+      "at": "When",
+      "privacy": "The providers learn which securities this installation holds, by their symbols, and nothing else: never quantities, amounts or who holds them. Crypto priced in EUR comes from Kraken without a key, everything else from EODHD."
     }
   },
   "settingsHub": {
@@ -1430,6 +1454,30 @@
       "hint": "One price per date, newest first. Saving a price for a date that is already listed replaces it.",
       "empty": "No prices recorded yet.",
       "newest": "Last price"
+    },
+    "priceSource": {
+      "label": "Price source",
+      "hint": "Where the server fetches the daily closing price.",
+      "none": "None",
+      "eodhd": "EODHD",
+      "kraken": "Kraken",
+      "symbol": "Price symbol",
+      "symbolHint": "As the source writes it, such as VWCE.XETRA or XBTEUR.",
+      "find": "Find",
+      "findHint": "Looks the saved ISIN up on EODHD. Needs an EODHD key; each lookup is one of the day's calls.",
+      "candidates": "Listings of this ISIN",
+      "noCandidates": "EODHD knows no listing of this ISIN."
+    },
+    "priceSourceKind": {
+      "manual": "Typed",
+      "broker": "Broker",
+      "feed": "Fetched",
+      "file": "File"
+    },
+    "importPrices": {
+      "action": "Import prices",
+      "hint": "A CSV with date and price columns. Replaces fetched prices of the same dates.",
+      "result": "{{written}} written, {{skipped}} unchanged, {{unreadable}} unreadable"
     },
     "valueChart": {
       "title": "Value over time",
@@ -2531,6 +2579,12 @@
       "sendFailed": "The mail server refused the message: {{reason}}",
       "taken": "This email is already in use.",
       "tokenInvalid": "This link is no longer valid. Ask for a new one."
+    },
+    "marketPrices": {
+      "keyRequired": "Save an EODHD API key under Settings, Market prices first.",
+      "keyUnreadable": "The saved EODHD key can no longer be read here. Enter it again.",
+      "unavailable": "The price source cannot be reached right now. Try again later.",
+      "rejected": "{{reason}}"
     },
     "enum": {
       "invalid": "Choose one of the available options."

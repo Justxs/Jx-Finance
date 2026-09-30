@@ -37,7 +37,7 @@ public static class UserExportTables
         ["ReceiptItemCategories"] = new Owned(),
         ["ReceiptReadings"] = new Owned(),
         ["RecurringBills"] = new Owned(),
-        ["Securities"] = new Referenced(AlsoOwned: false, [("InvestmentTransactions", "SecurityId")]),
+        ["Securities"] = new Referenced(AlsoOwned: false, [("InvestmentTransactions", "SecurityId")]) { Hidden = ["PriceSyncError", "PriceSyncedAt"] },
         ["SubscriptionDismissals"] = new Owned(),
         ["SuggestedRuleDismissals"] = new Owned(),
         ["Tags"] = new Referenced(AlsoOwned: true, [("TransactionTags", "TagId")]),

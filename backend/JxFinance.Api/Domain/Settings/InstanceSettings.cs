@@ -29,4 +29,9 @@ public sealed class InstanceSettings
     public string? SmtpFromName { get; set; }
     public bool DiscordEnabled { get; set; }
     public bool SupportLinkEnabled { get; set; } = true;
+    public bool PriceSyncEnabled { get; set; }
+    public string EodhdProtectedKey { get; set; } = string.Empty;
+    public DateTimeOffset? PriceSyncRunAt { get; set; }
+    public DateOnly? PriceCallsDate { get; set; }
+    public int PriceCallsUsed { get; set; }
 }

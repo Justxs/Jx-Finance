@@ -1,15 +1,20 @@
 import {
+  getMarketPriceSettingsMockHandler,
   getPublicSettingsMockHandler,
   getSendTestEmailMockHandler,
   getSettingsMockHandler,
   getSmtpSettingsMockHandler,
   getSyncExchangeRatesMockHandler,
+  getSyncMarketPricesMockHandler,
   getUpdateDiscordSettingsMockHandler,
+  getUpdateMarketPriceSettingsMockHandler,
   getUpdateSettingsMockHandler,
   getUpdateSmtpSettingsMockHandler,
 } from "@/api/generated/settings/settings.msw";
 import {
   FIXTURE_TODAY,
+  marketPriceSettings,
+  marketPriceSync,
   publicSettings,
   settings,
   smtpSettings,
@@ -47,4 +52,15 @@ export const settingsHandlers = [
   }),
   getSendTestEmailMockHandler(smtpTestSent),
   getUpdateDiscordSettingsMockHandler(),
+  getMarketPriceSettingsMockHandler(marketPriceSettings),
+  getUpdateMarketPriceSettingsMockHandler(async ({ request }) => {
+    const body = await readBody(request);
+    const key = body.eodhdApiKey;
+    return {
+      ...marketPriceSettings,
+      enabled: body.enabled === true,
+      hasKey: typeof key === "string" ? key.length > 0 : marketPriceSettings.hasKey,
+    };
+  }),
+  getSyncMarketPricesMockHandler(marketPriceSync),
 ];

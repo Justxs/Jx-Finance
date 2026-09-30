@@ -10460,7 +10460,7 @@
           "Investments"
         ],
         "summary": "Add a security",
-        "description": "Adds a stock, ETF, fund, bond or other instrument that trades can refer to. Open to every signed-in user, because recording a first trade needs it. Symbol and currency together must be unique; the operation only ever adds, it never changes an existing security.",
+        "description": "Adds a stock, ETF, fund, bond or other instrument that trades can refer to. Open to every signed-in user, because recording a first trade needs it. Symbol and currency together must be unique; the operation only ever adds, it never changes an existing security. Only an administrator may set a price source; anyone else leaves it at none.",
         "operationId": "CreateSecurity",
         "requestBody": {
           "content": {
@@ -10484,7 +10484,7 @@
             }
           },
           "400": {
-            "description": "Bad Request",
+            "description": "Invalid details, range.invalid for Kraken on a security that is not crypto in EUR, or marketPrices.keyRequired for EODHD without a saved key.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -10495,6 +10495,16 @@
           },
           "401": {
             "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "access.forbidden: a price source set by someone who is not an administrator.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -10527,7 +10537,7 @@
           "Investments"
         ],
         "summary": "Update the details of a security",
-        "description": "Changes symbol, name, ISIN, exchange, type or currency, and optionally the price. Securities are shared by every user of the installation, so only an administrator may change them; anyone who holds the security sets its price through the price operation instead. The currency cannot change once the security has transactions.",
+        "description": "Changes symbol, name, ISIN, exchange, type, currency or price source, and optionally the price. Securities are shared by every user of the installation, so only an administrator may change them; anyone who holds the security sets its price through the price operation instead. The currency cannot change once the security has transactions. Changing the price source or symbol clears the last fetch result, and the next fetch fills the history from the first trade.",
         "operationId": "UpdateSecurity",
         "parameters": [
           {
@@ -10562,7 +10572,7 @@
             }
           },
           "400": {
-            "description": "Bad Request",
+            "description": "Invalid details, range.invalid for Kraken on a security that is not crypto in EUR, or marketPrices.keyRequired for EODHD without a saved key.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -10739,6 +10749,99 @@
         ]
       }
     },
+    "/api/investments/securities/{id}/price-symbol/find": {
+      "post": {
+        "tags": [
+          "Investments"
+        ],
+        "summary": "Look up the EODHD symbols of a security",
+        "description": "Asks EODHD's search for the security's ISIN and answers the listings it knows, each with the symbol to use as the price symbol, the exchange, the name and the currency it is quoted in. Saves nothing. Each lookup is one of the day's EODHD calls. Administrators only.",
+        "operationId": "FindPriceSymbol",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The candidate listings, possibly none.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PriceSymbolCandidate"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "required when the security has no ISIN, marketPrices.keyRequired or marketPrices.keyUnreadable for a missing or unreadable key, marketPrices.unavailable when EODHD could not be reached, or marketPrices.rejected when it refused or today's calls are used up.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Only administrators can look up price symbols.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such security.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [
+              "Admin"
+            ]
+          }
+        ]
+      }
+    },
     "/api/investments/securities/{id}/prices": {
       "get": {
         "tags": [
@@ -10843,6 +10946,114 @@
           },
           {
             "PersonalApiToken": [ ]
+          }
+        ]
+      }
+    },
+    "/api/investments/securities/{id}/prices/import": {
+      "post": {
+        "tags": [
+          "Investments"
+        ],
+        "summary": "Import the price history of one security from a CSV",
+        "description": "Reads a CSV of at most 5 MB with a header row holding date and price columns. Dates are YYYY-MM-DD, YYYY.MM.DD or DD.MM.YYYY, a price may use a decimal point or a decimal comma, and the delimiter is detected. Each price is recorded in the price history as imported from a file: it replaces a fetched price of the same date and is never replaced by one. Makes no outside request and works whether or not daily price fetching is on. Allowed for an administrator or someone who holds the security, as for setting a price.",
+        "operationId": "ImportSecurityPrices",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/ImportSecurityPricesRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "How many prices were written, how many readable lines changed nothing (the same price again, or a date in the future), and how many lines could not be read.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PriceImportResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "import.invalidFile for a file that is not a CSV or too large, import.missingColumns without date and price columns.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "security.notHeld: the caller neither holds the security nor is an administrator.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such security.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Someone else recorded a price for one of these dates at the same time.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
           }
         ]
       }
@@ -13818,6 +14029,225 @@
           },
           "403": {
             "description": "Only administrators can sync rates.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [
+              "Admin"
+            ]
+          }
+        ]
+      }
+    },
+    "/api/settings/market-prices": {
+      "get": {
+        "tags": [
+          "Settings"
+        ],
+        "summary": "Read the market price settings of this installation",
+        "description": "Answers whether closing prices are fetched daily, whether an EODHD API key is saved (never the key itself), when the last fetch ran, how many EODHD calls are left today, and the securities whose last fetch failed with the reason. Administrators only.",
+        "operationId": "GetMarketPriceSettings",
+        "responses": {
+          "200": {
+            "description": "The market price settings, without the key.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MarketPriceSettingsResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Only administrators can read the market price settings.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [
+              "Admin"
+            ]
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "Settings"
+        ],
+        "summary": "Save the market price settings of this installation",
+        "description": "Switches the daily fetch of closing prices on or off and saves, keeps or removes the EODHD API key. The key is encrypted with ASP.NET Data Protection before it is stored and is never returned: the response carries hasKey instead. While the switch is off the server makes no request to a price provider on its own. Administrators only.",
+        "operationId": "UpdateMarketPriceSettings",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateMarketPriceSettingsRequest"
+              },
+              "example": {
+                "enabled": true,
+                "eodhdApiKey": "your-eodhd-key"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "The saved settings, without the key.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MarketPriceSettingsResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Only administrators can change installation settings.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [
+              "Admin"
+            ]
+          }
+        ]
+      }
+    },
+    "/api/settings/market-prices/sync": {
+      "post": {
+        "tags": [
+          "Settings"
+        ],
+        "summary": "Fetch closing prices now",
+        "description": "Fetches the missing closing prices of every held security that has a price source, as the daily run does, including securities whose last fetch failed less than a day ago. Works whether or not the daily fetch is switched on. EODHD calls count against the daily limit. Administrators only.",
+        "operationId": "SyncMarketPrices",
+        "responses": {
+          "200": {
+            "description": "How many securities were checked, how many prices were written, how many securities failed, and the EODHD calls left today.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MarketPriceSyncResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "marketPrices.keyRequired or marketPrices.keyUnreadable when a security uses EODHD and the key is missing or cannot be read.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Only administrators can fetch prices.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -22381,6 +22811,10 @@
           "import.targetNotEmpty",
           "import.transferAlreadyMatched",
           "import.transferMismatch",
+          "marketPrices.keyRequired",
+          "marketPrices.keyUnreadable",
+          "marketPrices.rejected",
+          "marketPrices.unavailable",
           "money.invalid",
           "money.nonNegative",
           "money.nonZero",
@@ -23410,6 +23844,15 @@
           }
         }
       },
+      "ImportSecurityPricesRequest": {
+        "type": "object",
+        "properties": {
+          "file": {
+            "type": "string",
+            "format": "binary"
+          }
+        }
+      },
       "ImportStatementBalance": {
         "required": [
           "closingDate",
@@ -23823,6 +24266,68 @@
                 "$ref": "#/components/schemas/UserProfileResponse"
               }
             ]
+          }
+        }
+      },
+      "MarketPriceSettingsResponse": {
+        "required": [
+          "enabled",
+          "hasKey",
+          "lastRunAt",
+          "callsLeft",
+          "failures"
+        ],
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean"
+          },
+          "hasKey": {
+            "type": "boolean"
+          },
+          "lastRunAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "callsLeft": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "failures": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PriceSyncFailure"
+            }
+          }
+        }
+      },
+      "MarketPriceSyncResponse": {
+        "required": [
+          "checked",
+          "written",
+          "failed",
+          "callsLeft"
+        ],
+        "type": "object",
+        "properties": {
+          "checked": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "written": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "failed": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "callsLeft": {
+            "type": "integer",
+            "format": "int32"
           }
         }
       },
@@ -25237,6 +25742,98 @@
           }
         }
       },
+      "PriceImportResponse": {
+        "required": [
+          "written",
+          "skipped",
+          "unreadable"
+        ],
+        "type": "object",
+        "properties": {
+          "written": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "skipped": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "unreadable": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "PriceSource": {
+        "enum": [
+          "none",
+          "eodhd",
+          "kraken"
+        ],
+        "type": "string",
+        "description": "Where the server fetches daily closing prices: none, eodhd (needs an API key under the market price settings) or kraken (crypto priced in EUR only). Administrators only."
+      },
+      "PriceSourceKind": {
+        "enum": [
+          "manual",
+          "broker",
+          "feed",
+          "file"
+        ],
+        "type": "string"
+      },
+      "PriceSymbolCandidate": {
+        "required": [
+          "symbol",
+          "exchange",
+          "name",
+          "currency"
+        ],
+        "type": "object",
+        "properties": {
+          "symbol": {
+            "type": "string"
+          },
+          "exchange": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "currency": {
+            "type": "string"
+          }
+        }
+      },
+      "PriceSyncFailure": {
+        "required": [
+          "securityId",
+          "symbol",
+          "name",
+          "reason",
+          "at"
+        ],
+        "type": "object",
+        "properties": {
+          "securityId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "symbol": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
       "ProblemDetails": {
         "type": "object",
         "properties": {
@@ -26454,6 +27051,18 @@
               }
             ],
             "description": "Defaults to today when a price is given without a date. Not in the future. The price is recorded in the price history; one dated before the last known price leaves the last known price alone."
+          },
+          "priceSource": {
+            "$ref": "#/components/schemas/PriceSource"
+          },
+          "priceSymbol": {
+            "maxLength": 32,
+            "minLength": 0,
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The symbol the price source knows the security by, such as VWCE.XETRA on EODHD or XBTEUR on Kraken. Required with a price source."
           }
         }
       },
@@ -26467,7 +27076,8 @@
       "SecurityPriceResponse": {
         "required": [
           "date",
-          "price"
+          "price",
+          "source"
         ],
         "type": "object",
         "properties": {
@@ -26477,6 +27087,9 @@
           "price": {
             "type": "string",
             "format": "decimal"
+          },
+          "source": {
+            "$ref": "#/components/schemas/PriceSourceKind"
           }
         }
       },
@@ -26490,7 +27103,10 @@
           "type",
           "currency",
           "lastPrice",
-          "lastPriceDate"
+          "lastPriceDate",
+          "priceSource",
+          "priceSymbol",
+          "priceSyncError"
         ],
         "type": "object",
         "properties": {
@@ -26537,6 +27153,21 @@
               {
                 "$ref": "#/components/schemas/NullableOfDateOnly"
               }
+            ]
+          },
+          "priceSource": {
+            "$ref": "#/components/schemas/PriceSource"
+          },
+          "priceSymbol": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "priceSyncError": {
+            "type": [
+              "null",
+              "string"
             ]
           }
         }
@@ -29010,6 +29641,32 @@
           "fee": "1.25",
           "currency": null,
           "description": null
+        }
+      },
+      "UpdateMarketPriceSettingsRequest": {
+        "required": [
+          "enabled"
+        ],
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "example": true
+          },
+          "eodhdApiKey": {
+            "maxLength": 200,
+            "minLength": 0,
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Null keeps the saved key, an empty string removes it, anything else replaces it.",
+            "example": "your-eodhd-key"
+          }
+        },
+        "example": {
+          "enabled": true,
+          "eodhdApiKey": "your-eodhd-key"
         }
       },
       "UpdateMemberRoleRequest": {

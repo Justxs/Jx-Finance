@@ -21,6 +21,7 @@ public sealed class InstanceSettingsStore(
     {
         ReportingCurrency = options.Value.ReportingCurrency,
         ExchangeRateSyncEnabled = options.Value.ExchangeRates.Enabled,
+        PriceSyncEnabled = options.Value.MarketPrices.Enabled,
         DefaultLanguage = options.Value.DefaultCulture.StartsWith(AppLanguages.Lt, StringComparison.OrdinalIgnoreCase) ? AppLanguages.Lt : AppLanguages.En,
         TimeZone = options.Value.TimeZone,
     };

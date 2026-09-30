@@ -152,6 +152,17 @@ export function DiscordFormSkeleton() {
   );
 }
 
+export function MarketPricesFormSkeleton() {
+  return (
+    <div aria-hidden="true" className="mt-4 space-y-5">
+      <CheckboxFieldSkeleton className="max-w-prose" />
+      <FormGridSkeleton fields={1} hints className="max-w-md" />
+      <Skeleton className="mt-5 h-14 max-w-3xl rounded-md" />
+      <TextSkeleton size="sm" width="w-56" />
+    </div>
+  );
+}
+
 export function BackupListSkeleton() {
   return (
     <>
@@ -203,6 +214,12 @@ function SectionBodySkeleton({ section }: Readonly<{ section: SettingsSection }>
       return (
         <TitledSkeleton>
           <DiscordFormSkeleton />
+        </TitledSkeleton>
+      );
+    case "marketPrices":
+      return (
+        <TitledSkeleton>
+          <MarketPricesFormSkeleton />
         </TitledSkeleton>
       );
     case "backups":

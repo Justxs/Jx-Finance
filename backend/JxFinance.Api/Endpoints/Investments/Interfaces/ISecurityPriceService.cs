@@ -14,6 +14,12 @@ public interface ISecurityPriceService
         bool isAdministrator,
         CancellationToken cancellationToken);
 
+    Task<Result<PriceImportResponse>> ImportPricesAsync(
+        Guid securityId,
+        Stream file,
+        bool isAdministrator,
+        CancellationToken cancellationToken);
+
     Task<Result<IReadOnlyList<SecurityPriceResponse>>> GetPricesAsync(
         GetSecurityPricesRequest request,
         CancellationToken cancellationToken);

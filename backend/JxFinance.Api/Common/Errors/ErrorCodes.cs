@@ -122,6 +122,10 @@ public static class ErrorCodes
     public const string BrokerUnavailable = "broker.unavailable";
     public const string BrokerRejected = "broker.rejected";
     public const string BrokerTokenRequired = "broker.tokenRequired";
+    public const string MarketPricesKeyRequired = "marketPrices.keyRequired";
+    public const string MarketPricesKeyUnreadable = "marketPrices.keyUnreadable";
+    public const string MarketPricesUnavailable = "marketPrices.unavailable";
+    public const string MarketPricesRejected = "marketPrices.rejected";
     public const string EmailNotConfigured = "email.notConfigured";
     public const string EmailPasswordRequired = "email.passwordRequired";
     public const string EmailPasswordUnreadable = "email.passwordUnreadable";

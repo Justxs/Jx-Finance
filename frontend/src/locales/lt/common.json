@@ -1137,6 +1137,30 @@
       "enabled": "Leisti Discord pranešimus",
       "enabledHint": "Žinutės siunčiamos iš šio serverio į discord.com. Kol išjungta, niekas nesiunčiama, o narių webhook lieka išsaugoti.",
       "saved": "Discord nustatymas išsaugotas"
+    },
+    "marketPrices": {
+      "title": "Rinkos kainos",
+      "description": "Turimų vertybinių popierių uždarymo kainos, kartą per dieną gaunamos iš rinkos duomenų tiekėjo.",
+      "enabled": "Kasdien gauti uždarymo kainas",
+      "enabledHint": "Kas šešias valandas serveris paprašo trūkstamų darbo dienų kainų. Išjungta, kol neįjungsite.",
+      "key": "EODHD API raktas",
+      "keyHint": "Reikalingas akcijoms, ETF ir fondams. Saugomas užšifruotas ir daugiau nerodomas. Nemokamas raktas leidžia 20 užklausų per dieną ir vienų metų istoriją.",
+      "keySaved": "Raktas išsaugotas",
+      "replace": "Pakeisti",
+      "remove": "Pašalinti",
+      "removing": "Raktas bus pašalintas išsaugojus.",
+      "saved": "Rinkos kainų nustatymai išsaugoti",
+      "fetchNow": "Gauti dabar",
+      "fetched": "Patikrinta: {{checked}}, įrašyta kainų: {{written}}, nepavyko: {{failed}}",
+      "lastRun": "Paskutinis kartas",
+      "never": "Niekada",
+      "callsLeft": "Šiandien liko EODHD užklausų",
+      "failures": "Vertybiniai popieriai, kurių kainų gauti nepavyko",
+      "noFailures": "Nesėkmių nėra",
+      "security": "Vertybinis popierius",
+      "reason": "Priežastis",
+      "at": "Kada",
+      "privacy": "Tiekėjai sužino tik tai, kuriuos vertybinius popierius ši sistema turi, pagal jų simbolius: niekada ne kiekius, sumas ar kas juos turi. EUR įkainota kriptovaliuta gaunama iš „Kraken“ be rakto, visa kita iš EODHD."
     }
   },
   "settingsHub": {
@@ -1472,6 +1496,30 @@
       "hint": "Viena kaina vienai datai, naujausios viršuje. Išsaugota kaina datai, kuri jau yra sąraše, ją pakeičia.",
       "empty": "Kainų dar neįrašyta.",
       "newest": "Paskutinė kaina"
+    },
+    "priceSource": {
+      "label": "Kainų šaltinis",
+      "hint": "Iš kur serveris gauna dienos uždarymo kainą.",
+      "none": "Nėra",
+      "eodhd": "EODHD",
+      "kraken": "Kraken",
+      "symbol": "Kainos simbolis",
+      "symbolHint": "Taip, kaip jį rašo šaltinis, pavyzdžiui, VWCE.XETRA arba XBTEUR.",
+      "find": "Rasti",
+      "findHint": "Ieško išsaugoto ISIN EODHD sistemoje. Reikia EODHD rakto; kiekviena paieška yra viena dienos užklausa.",
+      "candidates": "Šio ISIN kotiruotės",
+      "noCandidates": "EODHD nežino nė vienos šio ISIN kotiruotės."
+    },
+    "priceSourceKind": {
+      "manual": "Įvesta",
+      "broker": "Brokeris",
+      "feed": "Gauta",
+      "file": "Failas"
+    },
+    "importPrices": {
+      "action": "Importuoti kainas",
+      "hint": "CSV failas su date ir price stulpeliais. Pakeičia tų pačių datų gautas kainas.",
+      "result": "Įrašyta: {{written}}, nepakeista: {{skipped}}, neperskaityta: {{unreadable}}"
     },
     "valueChart": {
       "title": "Vertės kitimas",
@@ -2617,6 +2665,12 @@
       "sendFailed": "Pašto serveris atmetė laišką: {{reason}}",
       "taken": "Šis el. paštas jau naudojamas.",
       "tokenInvalid": "Ši nuoroda nebegalioja. Paprašykite naujos."
+    },
+    "marketPrices": {
+      "keyRequired": "Pirmiausia išsaugokite EODHD API raktą skiltyje Nustatymai, Rinkos kainos.",
+      "keyUnreadable": "Išsaugoto EODHD rakto čia nebegalima perskaityti. Įveskite jį iš naujo.",
+      "unavailable": "Kainų šaltinis šiuo metu nepasiekiamas. Bandykite vėliau.",
+      "rejected": "Kainų šaltinis atmetė užklausą: {{reason}}"
     },
     "enum": {
       "invalid": "Pasirinkite vieną iš galimų reikšmių."

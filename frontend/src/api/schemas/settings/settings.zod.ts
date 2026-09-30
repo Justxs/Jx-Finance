@@ -335,6 +335,70 @@ export const SyncExchangeRatesResponse = zod.object({
 });
 
 /**
+ * Answers whether closing prices are fetched daily, whether an EODHD API key is saved (never the key itself), when the last fetch ran, how many EODHD calls are left today, and the securities whose last fetch failed with the reason. Administrators only.
+ * @summary Read the market price settings of this installation
+ */
+export const MarketPriceSettingsResponse = zod.object({
+  enabled: zod.boolean(),
+  hasKey: zod.boolean(),
+  lastRunAt: zod.iso.datetime({ offset: true }).nullable(),
+  callsLeft: zod.int(),
+  failures: zod.array(
+    zod.object({
+      securityId: zod.uuid(),
+      symbol: zod.string(),
+      name: zod.string(),
+      reason: zod.string(),
+      at: zod.iso.datetime({ offset: true }),
+    }),
+  ),
+});
+
+/**
+ * Switches the daily fetch of closing prices on or off and saves, keeps or removes the EODHD API key. The key is encrypted with ASP.NET Data Protection before it is stored and is never returned: the response carries hasKey instead. While the switch is off the server makes no request to a price provider on its own. Administrators only.
+ * @summary Save the market price settings of this installation
+ */
+export const updateMarketPriceSettingsBodyEodhdApiKeyMin = 0;
+export const updateMarketPriceSettingsBodyEodhdApiKeyMax = 200;
+
+export const UpdateMarketPriceSettingsBody = zod.object({
+  enabled: zod.boolean(),
+  eodhdApiKey: zod
+    .string()
+    .min(updateMarketPriceSettingsBodyEodhdApiKeyMin)
+    .max(updateMarketPriceSettingsBodyEodhdApiKeyMax)
+    .nullish()
+    .describe("Null keeps the saved key, an empty string removes it, anything else replaces it."),
+});
+
+export const UpdateMarketPriceSettingsResponse = zod.object({
+  enabled: zod.boolean(),
+  hasKey: zod.boolean(),
+  lastRunAt: zod.iso.datetime({ offset: true }).nullable(),
+  callsLeft: zod.int(),
+  failures: zod.array(
+    zod.object({
+      securityId: zod.uuid(),
+      symbol: zod.string(),
+      name: zod.string(),
+      reason: zod.string(),
+      at: zod.iso.datetime({ offset: true }),
+    }),
+  ),
+});
+
+/**
+ * Fetches the missing closing prices of every held security that has a price source, as the daily run does, including securities whose last fetch failed less than a day ago. Works whether or not the daily fetch is switched on. EODHD calls count against the daily limit. Administrators only.
+ * @summary Fetch closing prices now
+ */
+export const SyncMarketPricesResponse = zod.object({
+  checked: zod.int(),
+  written: zod.int(),
+  failed: zod.int(),
+  callsLeft: zod.int(),
+});
+
+/**
  * Anonymous. Returns only the installation name, the default language, whether this installation can send email, which is what decides if the sign-in page offers "Forgot password", and whether an administrator allowed Discord notifications, which the profile uses to explain its Discord section, and whether passkeys can work here, which is false when the configured site address is plain HTTP or an IP address. No host name, no address and no credential is part of the answer.
  * @summary Read the settings the sign-in page needs
  */

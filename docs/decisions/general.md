@@ -10,7 +10,7 @@ One API project, feature services use EF directly, thin endpoints, architecture 
 
 ### Release scope
 
-Ledger, planning, reporting, multi-currency, investments, tags on transactions, description-based categorization rules and administrator backups are in; machine-learned categorization, live investment prices, offline and wider sharing stay deferred
+Ledger, planning, reporting, multi-currency, investments, tags on transactions, description-based categorization rules and administrator backups are in, and since 2026-09-30 daily closing prices of held securities from a market data provider, off until an administrator switches it on; machine-learned categorization, offline and wider sharing stay deferred
 
 ### Database lifecycle
 

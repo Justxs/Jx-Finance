@@ -4,6 +4,7 @@ using System.Text;
 using CsvHelper;
 using CsvHelper.Configuration;
 using JxFinance.Common.Errors;
+using JxFinance.Common.Formats;
 using JxFinance.Domain.Common;
 using JxFinance.Infrastructure.Brokers.InteractiveBrokers;
 
@@ -142,32 +143,16 @@ public static class TradeCsvParser
             Text(csv, "name"),
             Text(csv, "isin")?.ToUpperInvariant(),
             Text(csv, "securitytype")?.ToLowerInvariant(),
-            Number(Text(csv, "quantity")),
-            Number(Text(csv, "price")),
-            Number(Text(csv, "amount")),
-            Number(Text(csv, "fee")),
+            CsvNumber.Parse(Text(csv, "quantity")),
+            CsvNumber.Parse(Text(csv, "price")),
+            CsvNumber.Parse(Text(csv, "amount")),
+            CsvNumber.Parse(Text(csv, "fee")),
             currency,
             Text(csv, "description"));
     }
 
     private static string? Text(CsvReader csv, string name) =>
         csv.TryGetField<string>(name, out var value) && value?.Trim() is { Length: > 0 } text ? text : null;
-
-    private static decimal? Number(string? text)
-    {
-        if (text is null)
-        {
-            return null;
-        }
-
-        var decimalComma = text.LastIndexOf(',') > text.LastIndexOf('.');
-        var normalized = decimalComma
-            ? text.Replace(".", "", StringComparison.Ordinal).Replace(',', '.')
-            : text.Replace(",", "", StringComparison.Ordinal);
-        return decimal.TryParse(normalized, NumberStyles.AllowLeadingSign | NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out var value)
-            ? value
-            : null;
-    }
 
     private static string Key(string header) => header.Trim().Replace(" ", "", StringComparison.Ordinal).ToLowerInvariant();
 

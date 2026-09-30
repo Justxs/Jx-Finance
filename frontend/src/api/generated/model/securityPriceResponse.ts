@@ -6,8 +6,10 @@
  * OpenAPI spec version: v1
  */
 import type { DateOnly } from "./dateOnly";
+import type { PriceSourceKind } from "./priceSourceKind";
 
 export interface SecurityPriceResponse {
   date: DateOnly;
   price: string;
+  source: PriceSourceKind;
 }

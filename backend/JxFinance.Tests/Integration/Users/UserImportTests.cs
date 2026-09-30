@@ -4,9 +4,11 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text;
 using System.Text.RegularExpressions;
+using JxFinance.Domain.Investments;
 using JxFinance.Endpoints.Backups.Services;
 using JxFinance.Endpoints.Users.Services;
 using JxFinance.Tests.Support;
+using Microsoft.EntityFrameworkCore;
 
 namespace JxFinance.Tests.Integration.Users;
 
@@ -104,6 +106,30 @@ public sealed partial class UserImportTests(ApiFixture fixture) : IntegrationTes
 
         var moved = Assert.Single(entries.Items);
         Assert.Equal((12, new DateOnly(2026, 12, 15)), (moved.SpreadMonths, moved.SpreadUntil));
+    }
+
+    [Fact]
+    public async Task A_security_the_import_adds_arrives_without_a_price_source()
+    {
+        using var source = await CreateUserClientAsync();
+        var account = await CreateAccountAsync("1000.00", "investment", client: source);
+        var symbol = NewSymbol();
+        var coin = (await PostAsync<IdDto>(
+            Client,
+            "/api/investments/securities",
+            new { symbol, name = "Fetched coin", type = "crypto", currency = "eur", priceSource = "kraken", priceSymbol = "XBTEUR" })).Id;
+        await RecordInvestmentAsync(source, new { accountId = account, securityId = coin, type = "buy", date = "2026-06-01", quantity = "1", price = "100" });
+        var export = await DownloadAsync(source);
+        await WithDbAsync(db => db.Securities.Where(s => s.Id == new SecurityId(coin)).ExecuteUpdateAsync(
+            s => s.SetProperty(x => x.IsDeleted, true),
+            TestContext.Current.CancellationToken));
+        using var target = await CreateUserClientAsync();
+
+        await ReadOkAsync<ImportDto>(await ImportAsync(target, WithNewIds(export)));
+        var added = await WithDbAsync(db => db.Securities.AsNoTracking().SingleAsync(s => s.Symbol == symbol, TestContext.Current.CancellationToken));
+
+        Assert.NotEqual(coin, added.Id.Value);
+        Assert.Equal((PriceSource.None, null), (added.PriceSource, added.PriceSymbol));
     }
 
     private static async Task<byte[]> DownloadAsync(HttpClient client)

@@ -13,4 +13,7 @@ public sealed record SecurityResponse(
     SecurityType Type,
     Currency Currency,
     [property: Quantity] decimal? LastPrice,
-    DateOnly? LastPriceDate);
+    DateOnly? LastPriceDate,
+    PriceSource PriceSource,
+    string? PriceSymbol,
+    string? PriceSyncError);

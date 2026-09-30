@@ -16,6 +16,7 @@ flowchart LR
         N["NetWorthSnapshotJob<br/>hourly, needs NetWorth"]
         E["ExchangeRateSyncJob<br/>every 6 h, obeys the auto-sync setting"]
         B["BrokerSyncJob<br/>daily, needs Investments"]
+        Q["PriceSyncJob<br/>every 6 h, needs Investments and the market prices switch"]
         M["EmailOutboxJob<br/>every minute, needs a mail server"]
         D["DiscordOutboxJob<br/>every 30 s, needs the Discord setting"]
         L["RetentionJob<br/>daily, no feature gate"]
@@ -38,6 +39,7 @@ flowchart LR
     N --> Snap["Snapshot per active user, failures isolated per user"]
     E --> Rates["Rates from the day after the newest stored rate,<br/>or the last 30 days; prunes ExchangeRateFetchLog"]
     B --> Imp["ImportAsync per enabled connection, failures isolated;<br/>each statement is one audit row for the owner"]
+    Q --> Prices["Missing closing prices of held, mapped securities<br/>from EODHD and Kraken, within the daily call limit"]
     L --> Prune["five steps: AuditEvents over 400 days,<br/>expired and revoked UserSessions,<br/>API tokens expired over 30 days ago,<br/>records soft-deleted over 30 days ago,<br/>then the DeletionEntries that described them"]
     P --> Purge["deletes attachments deleted over 30 days ago, their files,<br/>and files no row refers to after an hour"]
 ```
@@ -54,6 +56,7 @@ flowchart LR
 | `NetWorthSnapshotJob` | 1 hour | `NetWorth` | One point per day; an hour is enough to have today's point before anyone looks |
 | `ExchangeRateSyncJob` | 6 hours | none, obeys the auto-sync setting | The ECB publishes once per working day |
 | `BrokerSyncJob` | 24 hours | `Investments` | The Flex Web Service is rate limited and the statement changes once a day |
+| `PriceSyncJob` | 6 hours | `Investments`; returns before any query or request while Fetch closing prices daily is off | Closing prices appear once a trading day at different hours per exchange. A pass asks only for held, mapped securities without a price on the last weekday before today, each at most once a day and a failed one after 24 hours, under `AppLock.PriceSync` and the day's EODHD call limit, so four passes a day cost what one would. See [Live security prices](live-prices.md#what-is-fetched-and-when) |
 | `RetentionJob` | 24 hours | none | Every window it enforces is measured in days — 400 for the audit log, 30 for the trash — so a day's delay is irrelevant. It runs whatever any feature switch says, because rows written while a feature was on still have to age out |
 | `EmailOutboxJob` | 1 minute (`App:Email:OutboxIntervalSeconds`) | none, sends nothing while the mail server is off or incomplete | A password reset link is useless if it arrives in an hour. A minute is the shortest interval that still leaves a dead mail server cheap: a pass that finds nothing due is one indexed query. It prunes before it looks at the mail server, so rows sent while SMTP was configured still age out after it is switched off |
 | `DiscordOutboxJob` | 30 seconds | none, sends nothing while `DiscordEnabled` is off | A notification in a chat channel is expected to arrive about when it happened, and an idle pass is one indexed query. Discord rate-limits each webhook, so a pass takes at most five rows per user and the short interval drains a backlog without bursting. It deletes every row older than 7 days before it looks at the setting, sent or not, so posts queued before the switch went off are dropped rather than sent late |

@@ -13,6 +13,8 @@ import type {
   InvestmentTransactionResponse,
   PagedResponseOfInvestmentTransactionResponse,
   PortfolioResponse,
+  PriceImportResponse,
+  PriceSymbolCandidate,
   SecurityPriceResponse,
   SecurityResponse,
   TaxSummaryResponse,
@@ -278,6 +280,30 @@ export const getSetSecurityPriceMockHandler = (
   );
 };
 
+export const getFindPriceSymbolMockHandler = (
+  overrideResponse?:
+    | PriceSymbolCandidate[]
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<PriceSymbolCandidate[]> | PriceSymbolCandidate[]),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/investments/securities/:id/price-symbol/find",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : undefined,
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
 export const getSecurityPricesMockHandler = (
   overrideResponse?:
     | SecurityPriceResponse[]
@@ -289,6 +315,30 @@ export const getSecurityPricesMockHandler = (
   return http.get(
     "*/api/investments/securities/:id/prices",
     async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : undefined,
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getImportSecurityPricesMockHandler = (
+  overrideResponse?:
+    | PriceImportResponse
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<PriceImportResponse> | PriceImportResponse),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/investments/securities/:id/prices/import",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -497,7 +547,9 @@ export const getInvestmentsMock = () => [
   getCreateSecurityMockHandler(),
   getUpdateSecurityMockHandler(),
   getSetSecurityPriceMockHandler(),
+  getFindPriceSymbolMockHandler(),
   getSecurityPricesMockHandler(),
+  getImportSecurityPricesMockHandler(),
   getDeleteSecurityPriceMockHandler(),
   getTaxSummaryMockHandler(),
   getExportTaxSummaryMockHandler(),

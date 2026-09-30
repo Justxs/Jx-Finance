@@ -1,10 +1,17 @@
+import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
-import { useCreateSecurity, useUpdateSecurity } from "@/api/generated";
-import { Currency, type SecurityResponse, SecurityType } from "@/api/generated/model";
+import {
+  getMarketPriceSettingsSuspenseQueryOptions,
+  useCreateSecurity,
+  useMeSuspense,
+  useUpdateSecurity,
+} from "@/api/generated";
+import { Currency, PriceSource, type SecurityResponse, SecurityType } from "@/api/generated/model";
 import {
   createSecurityBodyExchangeMax,
   createSecurityBodyNameMax,
+  createSecurityBodyPriceSymbolMax,
   createSecurityBodySymbolMax,
 } from "@/api/schemas/investments/investments.zod";
 import { useServerForm } from "@/components/form";
@@ -14,7 +21,9 @@ import { securityTypes } from "@/features/investments/investment-types";
 import { useReportingCurrency } from "@/hooks/use-currencies";
 import { silentMutation, upsert } from "@/lib/mutations";
 import { optionsOf } from "@/lib/options";
+import { UserRole } from "@/lib/user-role";
 import { optionalQuantity, optionalText, requiredText } from "@/lib/validation";
+import { PriceSymbolFinder } from "./price-symbol-finder";
 
 interface FormValues {
   symbol: string;
@@ -25,6 +34,8 @@ interface FormValues {
   exchange: string;
   lastPrice: string;
   lastPriceDate: string;
+  priceSource: PriceSource;
+  priceSymbol: string;
 }
 
 interface Props {
@@ -35,9 +46,18 @@ interface Props {
 
 const ISIN_PATTERN = /^[A-Za-z]{2}[A-Za-z0-9]{9}\d$/;
 
+function priceSources(type: SecurityType, currency: Currency): PriceSource[] {
+  return type === "crypto" && currency === "eur" ? ["none", "eodhd", "kraken"] : ["none", "eodhd"];
+}
+
 export function SecurityForm({ initial, onClose, onSaved }: Readonly<Props>) {
   const { t } = useTranslation();
   const reportingCurrency = useReportingCurrency();
+  const isAdmin = useMeSuspense().data.role === UserRole.admin;
+  const marketPrices = useQuery({
+    ...getMarketPriceSettingsSuspenseQueryOptions(),
+    enabled: isAdmin,
+  });
 
   function handleSaved(saved: SecurityResponse) {
     onSaved?.(saved);
@@ -49,21 +69,28 @@ export function SecurityForm({ initial, onClose, onSaved }: Readonly<Props>) {
     useUpdateSecurity({ mutation: { ...silentMutation, onSuccess: handleSaved } }),
   );
 
-  const schema = z.object({
-    symbol: requiredText(t, createSecurityBodySymbolMax),
-    name: requiredText(t, createSecurityBodyNameMax),
-    type: z.enum(SecurityType),
-    currency: z.enum(Currency),
-    isin: z
-      .string()
-      .refine(
-        (value) => value.trim() === "" || ISIN_PATTERN.test(value.trim()),
-        t("investments.validation.isin"),
-      ),
-    exchange: optionalText(t, createSecurityBodyExchangeMax),
-    lastPrice: optionalQuantity(t, "investments.validation.price"),
-    lastPriceDate: z.string(),
-  });
+  const schema = z
+    .object({
+      symbol: requiredText(t, createSecurityBodySymbolMax),
+      name: requiredText(t, createSecurityBodyNameMax),
+      type: z.enum(SecurityType),
+      currency: z.enum(Currency),
+      isin: z
+        .string()
+        .refine(
+          (value) => value.trim() === "" || ISIN_PATTERN.test(value.trim()),
+          t("investments.validation.isin"),
+        ),
+      exchange: optionalText(t, createSecurityBodyExchangeMax),
+      lastPrice: optionalQuantity(t, "investments.validation.price"),
+      lastPriceDate: z.string(),
+      priceSource: z.enum(PriceSource),
+      priceSymbol: optionalText(t, createSecurityBodyPriceSymbolMax),
+    })
+    .refine((value) => value.priceSource === "none" || value.priceSymbol.trim() !== "", {
+      message: t("validation.required"),
+      path: ["priceSymbol"],
+    });
 
   const defaultValues: FormValues = {
     symbol: initial?.symbol ?? "",
@@ -74,6 +101,8 @@ export function SecurityForm({ initial, onClose, onSaved }: Readonly<Props>) {
     exchange: initial?.exchange ?? "",
     lastPrice: initial?.lastPrice ?? "",
     lastPriceDate: initial?.lastPriceDate ?? "",
+    priceSource: initial?.priceSource ?? "none",
+    priceSymbol: initial?.priceSymbol ?? "",
   };
 
   const form = useServerForm({
@@ -91,6 +120,8 @@ export function SecurityForm({ initial, onClose, onSaved }: Readonly<Props>) {
         exchange: value.exchange.trim() || null,
         lastPrice: hasPrice ? value.lastPrice : null,
         lastPriceDate: hasPrice && value.lastPriceDate ? value.lastPriceDate : null,
+        priceSource: value.priceSource,
+        priceSymbol: value.priceSource === "none" ? null : value.priceSymbol.trim().toUpperCase(),
       };
 
       return initial ? update({ id: initial.id, data }) : create({ data });
@@ -190,6 +221,54 @@ export function SecurityForm({ initial, onClose, onSaved }: Readonly<Props>) {
             />
           )}
         </form.Field>
+
+        {isAdmin ? (
+          <form.Subscribe
+            selector={(state) =>
+              [state.values.type, state.values.currency, state.values.priceSource] as const
+            }
+          >
+            {([type, currency, source]) => (
+              <>
+                <form.Field name="priceSource">
+                  {(field) => (
+                    <field.SelectFieldControl
+                      id="security-price-source"
+                      label={t("investments.priceSource.label")}
+                      hint={t("investments.priceSource.hint")}
+                      options={optionsOf(priceSources(type, currency), (item) =>
+                        t(`investments.priceSource.${item}`),
+                      )}
+                    />
+                  )}
+                </form.Field>
+                {source === "none" ? null : (
+                  <form.Field name="priceSymbol">
+                    {(field) => (
+                      <field.TextField
+                        id="security-price-symbol"
+                        label={t("investments.priceSource.symbol")}
+                        hint={t("investments.priceSource.symbolHint")}
+                        monospace
+                        autoCapitalize="characters"
+                        autoComplete="off"
+                        spellCheck={false}
+                        placeholder={source === "kraken" ? "XBTEUR" : "VWCE.XETRA"}
+                      />
+                    )}
+                  </form.Field>
+                )}
+                {source === "eodhd" && initial ? (
+                  <PriceSymbolFinder
+                    securityId={initial.id}
+                    disabled={!initial.isin || marketPrices.data?.hasKey !== true}
+                    onChoose={(symbol) => form.setFieldValue("priceSymbol", symbol)}
+                  />
+                ) : null}
+              </>
+            )}
+          </form.Subscribe>
+        ) : null}
 
         <FormError error={error} />
 

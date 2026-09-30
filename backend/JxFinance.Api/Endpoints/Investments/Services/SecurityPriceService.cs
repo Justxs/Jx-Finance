@@ -13,6 +13,7 @@ using JxFinance.Endpoints.Investments.Mappers;
 using JxFinance.Endpoints.Investments.SetSecurityPrice;
 using JxFinance.Endpoints.Investments.Shared;
 using JxFinance.Infrastructure.Data;
+using JxFinance.Infrastructure.MarketPrices;
 using Microsoft.EntityFrameworkCore;
 
 namespace JxFinance.Endpoints.Investments.Services;
@@ -41,6 +42,7 @@ public sealed class SecurityPriceService(AppDbContext db, IExchangeRateService r
             security,
             request.LastPriceDate ?? clock.Today,
             request.LastPrice!.Value,
+            PriceSourceKind.Manual,
             cancellationToken);
         if (await db.SaveOrConflictAsync(new DomainError(ErrorCodes.ConflictBusy, "Someone else recorded a price for that date just now. Try again."), cancellationToken) is { } conflict)
         {
@@ -48,6 +50,46 @@ public sealed class SecurityPriceService(AppDbContext db, IExchangeRateService r
         }
 
         return security.ToResponse();
+    }
+
+    public async Task<Result<PriceImportResponse>> ImportPricesAsync(
+        Guid securityId,
+        Stream file,
+        bool isAdministrator,
+        CancellationToken cancellationToken)
+    {
+        var writable = await FindWritableAsync(new SecurityId(securityId), isAdministrator, cancellationToken);
+        if (writable.IsFailure)
+        {
+            return writable.Error;
+        }
+
+        var parsed = PriceCsvParser.Parse(file);
+        if (parsed.IsFailure)
+        {
+            return parsed.Error;
+        }
+
+        var security = writable.Value!;
+        var today = clock.Today;
+        var points = parsed.Value!.Points.Where(p => p.Date <= today).ToList();
+        var dates = points.Select(p => p.Date).ToList();
+        var existing = await db.SecurityPrices
+            .Where(p => p.SecurityId == security.Id && dates.Contains(p.Date))
+            .ToDictionaryAsync(p => p.Date, cancellationToken);
+        var written = points.Count(point => SecurityPriceBook.Record(
+            db,
+            security,
+            point.Date,
+            point.Price,
+            PriceSourceKind.File,
+            existing.GetValueOrDefault(point.Date)));
+        if (await db.SaveOrConflictAsync(new DomainError(ErrorCodes.ConflictBusy, "Someone else recorded a price for one of these dates just now. Try again."), cancellationToken) is { } conflict)
+        {
+            return conflict;
+        }
+
+        return new PriceImportResponse(written, parsed.Value.Points.Count - written, parsed.Value.Unreadable);
     }
 
     public async Task<Result<IReadOnlyList<SecurityPriceResponse>>> GetPricesAsync(

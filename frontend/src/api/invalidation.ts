@@ -301,6 +301,18 @@ const rules: readonly Rule[] = [
     ],
   },
   {
+    after: [api.getImportSecurityPricesMutationKey],
+    refresh: holdings,
+  },
+  {
+    after: [api.getSyncMarketPricesMutationKey],
+    refresh: [...holdings, api.getMarketPriceSettingsQueryKey],
+  },
+  {
+    after: [api.getUpdateMarketPriceSettingsMutationKey],
+    refresh: [api.getSettingsQueryKey, api.getMarketPriceSettingsQueryKey],
+  },
+  {
     after: [api.getSaveBrokerConnectionMutationKey, api.getDeleteBrokerConnectionMutationKey],
     refresh: [api.getBrokerConnectionsQueryKey],
   },
@@ -410,6 +422,7 @@ export const mutationsWithoutInvalidation: readonly MutationKeyGetter[] = [
   api.getBeginPasskeySignInMutationKey,
   api.getPasskeySignInMutationKey,
   api.getImportPreviewMutationKey,
+  api.getFindPriceSymbolMutationKey,
   api.getInspectCsvMutationKey,
   api.getPreviewCategorizationRunMutationKey,
   api.getTestCategorizationRuleMutationKey,

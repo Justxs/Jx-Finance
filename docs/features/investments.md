@@ -61,7 +61,7 @@ flowchart TD
     Held -->|"no"| No["403 security.notHeld"]
 ```
 
-Deleting a point of the price history is allowed under the same rule as setting a price.
+Deleting a point of the price history, and importing a price file into it, is allowed under the same rule as setting a price. The price source and price symbol of a security are set by administrators only, see [Live security prices](live-prices.md#mapping-a-security).
 
 The price dialog opens from a position's price and reads the security from the portfolio's holdings. Setting or deleting a price refreshes the portfolio, so the dialog shows the new last price without loading the list of securities.
 
@@ -75,7 +75,7 @@ Since 2026-09-30 `GET /api/investments/portfolio` also answers `annualizedReturn
 
 ## Price history
 
-Since 2026-09-20 a price is kept per security and date in `SecurityPrice`, and `Security.LastPrice` remains the newest point. Every write goes through `SecurityPriceBook`, so the three ways a price can arrive cannot disagree.
+Since 2026-09-20 a price is kept per security and date in `SecurityPrice`, and `Security.LastPrice` remains the newest point. Every write goes through `SecurityPriceBook`, so the ways a price can arrive cannot disagree. Since 2026-09-30 each point also carries its source (typed, broker, file or fetched), a price file can be imported into the history, and the server can fetch closing prices daily; a fetched price never replaces one of another source. The diagram shows the member sources; the file import and the fetch are on [Live security prices](live-prices.md).
 
 ```mermaid
 flowchart TD

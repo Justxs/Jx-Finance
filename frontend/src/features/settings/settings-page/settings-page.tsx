@@ -8,6 +8,7 @@ import { type SettingsSection, SettingsLayout } from "@/components/settings-layo
 import { Button } from "@/components/ui/button/button";
 import { BackupSection } from "@/features/settings/backup-section/backup-section";
 import { DiscordSection } from "@/features/settings/discord-section/discord-section";
+import { MarketPricesSection } from "@/features/settings/market-prices-section/market-prices-section";
 import { SettingsForm } from "@/features/settings/settings-form/settings-form";
 import { SmtpSection } from "@/features/settings/smtp-section/smtp-section";
 import { useIsoDate } from "@/hooks/use-formatters";
@@ -72,6 +73,7 @@ export function SettingsPage() {
     <SettingsLayout current={section}>
       {section === "email" ? <SmtpSection /> : null}
       {section === "discord" ? <DiscordSection /> : null}
+      {section === "marketPrices" ? <MarketPricesSection /> : null}
       {section === "backups" ? <BackupSection /> : null}
       <QueryBoundary fallback={<SettingsFormSkeleton section={section} />}>
         <SettingsContent section={section} />

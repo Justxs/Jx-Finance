@@ -18,6 +18,7 @@ public enum AppLock : long
     UserExport = 738192445,
     LowBalanceAlerts = 738192446,
     WarrantyReminders = 738192447,
+    PriceSync = 738192448,
 }
 
 public static class AdvisoryLock

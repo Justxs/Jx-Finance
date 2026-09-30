@@ -35,12 +35,15 @@ import type {
   CreateInvestmentTransactionRequest,
   ExportTaxSummaryParams,
   ImportBrokerReportRequest,
+  ImportSecurityPricesRequest,
   ImportTradeCsvRequest,
   InvestmentTransactionResponse,
   InvestmentTransactionsParams,
   PagedResponseOfInvestmentTransactionResponse,
   PortfolioParams,
   PortfolioResponse,
+  PriceImportResponse,
+  PriceSymbolCandidate,
   ProblemDetails,
   SaveBrokerConnectionRequest,
   SaveSecurityRequest,
@@ -1011,7 +1014,7 @@ export const getCreateSecurityUrl = () => {
 };
 
 /**
- * Adds a stock, ETF, fund, bond or other instrument that trades can refer to. Open to every signed-in user, because recording a first trade needs it. Symbol and currency together must be unique; the operation only ever adds, it never changes an existing security.
+ * Adds a stock, ETF, fund, bond or other instrument that trades can refer to. Open to every signed-in user, because recording a first trade needs it. Symbol and currency together must be unique; the operation only ever adds, it never changes an existing security. Only an administrator may set a price source; anyone else leaves it at none.
  * @summary Add a security
  */
 export const createSecurity = async (
@@ -1115,7 +1118,7 @@ export const getUpdateSecurityUrl = (id: string) => {
 };
 
 /**
- * Changes symbol, name, ISIN, exchange, type or currency, and optionally the price. Securities are shared by every user of the installation, so only an administrator may change them; anyone who holds the security sets its price through the price operation instead. The currency cannot change once the security has transactions.
+ * Changes symbol, name, ISIN, exchange, type, currency or price source, and optionally the price. Securities are shared by every user of the installation, so only an administrator may change them; anyone who holds the security sets its price through the price operation instead. The currency cannot change once the security has transactions. Changing the price source or symbol clears the last fetch result, and the next fetch fills the history from the first trade.
  * @summary Update the details of a security
  */
 export const updateSecurity = async (
@@ -1322,6 +1325,91 @@ export const useSetSecurityPrice = <TError = ErrorType<ProblemDetails>, TContext
 > => {
   return useMutation(getSetSecurityPriceMutationOptions(options), queryClient);
 };
+export const getFindPriceSymbolUrl = (id: string) => {
+  return `/api/investments/securities/${id}/price-symbol/find`;
+};
+
+/**
+ * Asks EODHD's search for the security's ISIN and answers the listings it knows, each with the symbol to use as the price symbol, the exchange, the name and the currency it is quoted in. Saves nothing. Each lookup is one of the day's EODHD calls. Administrators only.
+ * @summary Look up the EODHD symbols of a security
+ */
+export const findPriceSymbol = async (
+  id: string,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<PriceSymbolCandidate[]> => {
+  return customFetch<PriceSymbolCandidate[]>(getFindPriceSymbolUrl(id), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getFindPriceSymbolMutationKey = () => ["findPriceSymbol"] as const;
+
+export const getFindPriceSymbolMutationOptions = <
+  TError = ErrorType<ProblemDetails>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof findPriceSymbol>>,
+    TError,
+    FindPriceSymbolMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof findPriceSymbol>>,
+  TError,
+  FindPriceSymbolMutationVariables,
+  TContext
+> => {
+  const mutationKey = getFindPriceSymbolMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof findPriceSymbol>>,
+    FindPriceSymbolMutationVariables
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return findPriceSymbol(id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type FindPriceSymbolMutationResult = NonNullable<
+  Awaited<ReturnType<typeof findPriceSymbol>>
+>;
+
+export type FindPriceSymbolMutationError = ErrorType<ProblemDetails>;
+export type FindPriceSymbolMutationVariables = { id: string };
+
+/**
+ * @summary Look up the EODHD symbols of a security
+ */
+export const useFindPriceSymbol = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof findPriceSymbol>>,
+      TError,
+      FindPriceSymbolMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof findPriceSymbol>>,
+  TError,
+  FindPriceSymbolMutationVariables,
+  TContext
+> => {
+  return useMutation(getFindPriceSymbolMutationOptions(options), queryClient);
+};
 export const getSecurityPricesUrl = (id: string, params?: SecurityPricesParams) => {
   const normalizedParams = new URLSearchParams();
 
@@ -1463,6 +1551,101 @@ export function useSecurityPricesSuspense<
   return withQueryKey(query, queryOptions.queryKey);
 }
 
+export const getImportSecurityPricesUrl = (id: string) => {
+  return `/api/investments/securities/${id}/prices/import`;
+};
+
+/**
+ * Reads a CSV of at most 5 MB with a header row holding date and price columns. Dates are YYYY-MM-DD, YYYY.MM.DD or DD.MM.YYYY, a price may use a decimal point or a decimal comma, and the delimiter is detected. Each price is recorded in the price history as imported from a file: it replaces a fetched price of the same date and is never replaced by one. Makes no outside request and works whether or not daily price fetching is on. Allowed for an administrator or someone who holds the security, as for setting a price.
+ * @summary Import the price history of one security from a CSV
+ */
+export const importSecurityPrices = async (
+  id: string,
+  importSecurityPricesRequest: ImportSecurityPricesRequest,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<PriceImportResponse> => {
+  const formData = new FormData();
+  if (importSecurityPricesRequest.file !== undefined) {
+    formData.append(`file`, importSecurityPricesRequest.file);
+  }
+
+  return customFetch<PriceImportResponse>(getImportSecurityPricesUrl(id), {
+    ...options,
+    method: "POST",
+    body: formData,
+  });
+};
+
+export const getImportSecurityPricesMutationKey = () => ["importSecurityPrices"] as const;
+
+export const getImportSecurityPricesMutationOptions = <
+  TError = ErrorType<ProblemDetails>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof importSecurityPrices>>,
+    TError,
+    ImportSecurityPricesMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof importSecurityPrices>>,
+  TError,
+  ImportSecurityPricesMutationVariables,
+  TContext
+> => {
+  const mutationKey = getImportSecurityPricesMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof importSecurityPrices>>,
+    ImportSecurityPricesMutationVariables
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return importSecurityPrices(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ImportSecurityPricesMutationResult = NonNullable<
+  Awaited<ReturnType<typeof importSecurityPrices>>
+>;
+export type ImportSecurityPricesMutationBody = ImportSecurityPricesRequest;
+export type ImportSecurityPricesMutationError = ErrorType<ProblemDetails>;
+export type ImportSecurityPricesMutationVariables = {
+  id: string;
+  data: ImportSecurityPricesRequest;
+};
+
+/**
+ * @summary Import the price history of one security from a CSV
+ */
+export const useImportSecurityPrices = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof importSecurityPrices>>,
+      TError,
+      ImportSecurityPricesMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof importSecurityPrices>>,
+  TError,
+  ImportSecurityPricesMutationVariables,
+  TContext
+> => {
+  return useMutation(getImportSecurityPricesMutationOptions(options), queryClient);
+};
 export const getDeleteSecurityPriceUrl = (id: string, date: string) => {
   return `/api/investments/securities/${id}/prices/${date}`;
 };

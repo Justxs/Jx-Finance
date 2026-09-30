@@ -57,9 +57,12 @@ public static class InvestmentMapper
         security.Type,
         security.Currency,
         security.LastPrice,
-        security.LastPriceDate);
+        security.LastPriceDate,
+        security.PriceSource,
+        security.PriceSymbol,
+        security.PriceSyncError);
 
-    public static SecurityPriceResponse ToResponse(this SecurityPrice price) => new(price.Date, price.Price);
+    public static SecurityPriceResponse ToResponse(this SecurityPrice price) => new(price.Date, price.Price, price.Source);
 
     public static void ApplyTo(this SaveSecurityRequest request, string symbol, Security security)
     {
@@ -69,6 +72,14 @@ public static class InvestmentMapper
         security.Exchange = OptionalText.Normalize(request.Exchange)?.ToUpperInvariant();
         security.Type = request.Type;
         security.Currency = request.Currency;
+        var priceSymbol = request.PriceSource == PriceSource.None ? null : OptionalText.Normalize(request.PriceSymbol)?.ToUpperInvariant();
+        if (security.PriceSource != request.PriceSource || security.PriceSymbol != priceSymbol)
+        {
+            security.PriceSource = request.PriceSource;
+            security.PriceSymbol = priceSymbol;
+            security.PriceSyncedAt = null;
+            security.PriceSyncError = null;
+        }
     }
 
     public static HoldingResponse ToHoldingResponse(

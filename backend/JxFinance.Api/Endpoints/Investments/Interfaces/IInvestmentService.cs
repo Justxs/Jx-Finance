@@ -30,7 +30,10 @@ public interface IInvestmentService
 
     Task<IReadOnlyList<SecurityResponse>> GetSecuritiesAsync(GetSecuritiesRequest request, CancellationToken cancellationToken);
 
-    Task<Result<SecurityResponse>> CreateSecurityAsync(SaveSecurityRequest request, CancellationToken cancellationToken);
+    Task<Result<SecurityResponse>> CreateSecurityAsync(
+        SaveSecurityRequest request,
+        bool isAdministrator,
+        CancellationToken cancellationToken);
 
     Task<Result<SecurityResponse>> UpdateSecurityAsync(SaveSecurityRequest request, CancellationToken cancellationToken);
 }

@@ -1,11 +1,21 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, fn, userEvent, waitFor } from "storybook/test";
+import { expect, fn, screen, userEvent, waitFor } from "storybook/test";
+import { getMeMockHandler } from "@/api/generated/auth/auth.msw";
 import {
   getCreateSecurityMockHandler,
+  getFindPriceSymbolMockHandler,
   getUpdateSecurityMockHandler,
 } from "@/api/generated/investments/investments.msw";
 import { withWidth } from "@/storybook/decorators";
-import { duplicateSecurityProblem, unpricedStock, usStock } from "@/storybook/fixtures";
+import {
+  duplicateSecurityProblem,
+  euroCoin,
+  marketPricesUnavailableProblem,
+  memberUser,
+  unpricedStock,
+  usStock,
+  worldEtf,
+} from "@/storybook/fixtures";
 import { failWith, pending, withHandlers } from "@/storybook/handlers";
 import type { Canvas } from "@/storybook/interactions";
 import { SecurityForm } from "./security-form";
@@ -88,5 +98,54 @@ export const SymbolAlreadyExists: Story = {
     await userEvent.click(canvas.getByRole("button", { name: "Add security" }));
     await expect(await canvas.findByRole("alert")).toHaveTextContent("This already exists.");
     await expect(args.onClose).not.toHaveBeenCalled();
+  },
+};
+
+export const WithPriceSource: Story = {
+  args: { initial: worldEtf },
+  play: async ({ canvas }) => {
+    await expect(await canvas.findByLabelText("Price symbol")).toHaveValue("VWCE.XETRA");
+    const find = canvas.getByRole("button", { name: /Find/u });
+    await waitFor(() => expect(find).toBeEnabled());
+  },
+};
+
+export const KrakenForEuroCrypto: Story = {
+  args: { initial: euroCoin },
+  play: async ({ canvas }) => {
+    await expect(await canvas.findByLabelText("Price symbol")).toHaveValue("XBTEUR");
+    await expect(canvas.queryByRole("button", { name: /Find/u })).toBeNull();
+  },
+};
+
+export const FindCandidates: Story = {
+  args: { initial: { ...worldEtf, priceSymbol: "" } },
+  play: async ({ canvas }) => {
+    const find = await canvas.findByRole("button", { name: /Find/u });
+    await waitFor(() => expect(find).toBeEnabled());
+    await userEvent.click(find);
+    await userEvent.click(await screen.findByRole("button", { name: /VWRP\.LSE/u }));
+    await waitFor(() => expect(canvas.getByLabelText("Price symbol")).toHaveValue("VWRP.LSE"));
+  },
+};
+
+export const FindError: Story = {
+  args: { initial: worldEtf },
+  parameters: withHandlers(getFindPriceSymbolMockHandler(failWith(marketPricesUnavailableProblem))),
+  play: async ({ canvas }) => {
+    const find = await canvas.findByRole("button", { name: /Find/u });
+    await waitFor(() => expect(find).toBeEnabled());
+    await userEvent.click(find);
+    await expect(await canvas.findByRole("alert")).toHaveTextContent(
+      "The price source cannot be reached right now.",
+    );
+  },
+};
+
+export const MemberSeesNoPriceSource: Story = {
+  parameters: withHandlers(getMeMockHandler(memberUser)),
+  play: async ({ canvas }) => {
+    await expect(await canvas.findByLabelText("Symbol")).toBeInTheDocument();
+    await expect(canvas.queryByText("Price source")).toBeNull();
   },
 };

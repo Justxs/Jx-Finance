@@ -18,6 +18,8 @@ import {
   getUpdateSecurityMockHandler,
   getSecurityPricesMockHandler,
   getDeleteSecurityPriceMockHandler,
+  getFindPriceSymbolMockHandler,
+  getImportSecurityPricesMockHandler,
   getTaxSummaryMockHandler,
   getValueHistoryMockHandler,
 } from "@/api/generated/investments/investments.msw";
@@ -33,6 +35,8 @@ import {
   investmentTransactions,
   oversellProblem,
   portfolio,
+  priceImportResult,
+  priceSymbolCandidates,
   securities,
   securityPrices,
   taxSummary,
@@ -136,6 +140,9 @@ export const investmentHandlers = [
       currency: "eur",
       lastPrice: null,
       lastPriceDate: null,
+      priceSource: "none",
+      priceSymbol: null,
+      priceSyncError: null,
       ...body,
     };
     const lastPriceDate = created.lastPrice ? (created.lastPriceDate ?? FIXTURE_TODAY) : null;
@@ -157,10 +164,12 @@ export const investmentHandlers = [
     }
 
     return security.lastPrice && security.lastPriceDate
-      ? [{ date: security.lastPriceDate, price: security.lastPrice }]
+      ? [{ date: security.lastPriceDate, price: security.lastPrice, source: "manual" as const }]
       : [];
   }),
   getDeleteSecurityPriceMockHandler(),
+  getImportSecurityPricesMockHandler(priceImportResult),
+  getFindPriceSymbolMockHandler(priceSymbolCandidates),
   getValueHistoryMockHandler(heldOr(valueHistory, emptyValueHistory)),
   getTaxSummaryMockHandler(({ request }) => {
     const params = query(request);

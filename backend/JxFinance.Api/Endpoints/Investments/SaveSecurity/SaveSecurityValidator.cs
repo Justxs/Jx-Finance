@@ -1,5 +1,6 @@
 using FastEndpoints;
 using FluentValidation;
+using JxFinance.Common.Errors;
 using JxFinance.Common.Validation;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Investments;
@@ -23,5 +24,13 @@ public sealed class SaveSecurityValidator : Validator<SaveSecurityRequest>
         RuleFor(r => r.LastPriceDate)
             .IsNotInFuture(() => Resolve<IClock>().Today)
             .WithMessage("The price date cannot be in the future.");
+        RuleFor(r => r.PriceSource).IsKnownEnum();
+        RuleFor(r => r.PriceSymbol).HasMaxLength(Security.PriceSymbolMaxLength);
+        RuleFor(r => r.PriceSymbol).IsRequired().When(r => r.PriceSource != PriceSource.None)
+            .WithMessage("Enter the symbol the price source uses for this security.");
+        RuleFor(r => r.PriceSource)
+            .Must((r, source) => source != PriceSource.Kraken || r is { Type: SecurityType.Crypto, Currency: Currency.Eur })
+            .WithErrorCode(ErrorCodes.RangeInvalid)
+            .WithMessage("Kraken prices only crypto priced in EUR.");
     }
 }

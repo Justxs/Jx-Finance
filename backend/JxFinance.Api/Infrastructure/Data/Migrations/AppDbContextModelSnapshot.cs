@@ -1100,6 +1100,24 @@ namespace JxFinance.Infrastructure.Data.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
+                    b.Property<string>("PriceSource")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasDefaultValue("None");
+
+                    b.Property<string>("PriceSymbol")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("PriceSyncError")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<DateTimeOffset?>("PriceSyncedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("Symbol")
                         .IsRequired()
                         .HasMaxLength(32)
@@ -1119,7 +1137,10 @@ namespace JxFinance.Infrastructure.Data.Migrations
                         .IsUnique()
                         .HasFilter("\"IsDeleted\" = false");
 
-                    b.ToTable("Securities");
+                    b.ToTable("Securities", t =>
+                        {
+                            t.HasCheckConstraint("CK_Securities_PriceSymbol", "\"PriceSource\" = 'None' OR \"PriceSymbol\" IS NOT NULL");
+                        });
                 });
 
             modelBuilder.Entity("JxFinance.Domain.Investments.SecurityPrice", b =>
@@ -1133,6 +1154,13 @@ namespace JxFinance.Infrastructure.Data.Migrations
                     b.Property<decimal>("Price")
                         .HasPrecision(18, 8)
                         .HasColumnType("numeric(18,8)");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)")
+                        .HasDefaultValue("Manual");
 
                     b.HasKey("SecurityId", "Date");
 
@@ -1880,6 +1908,11 @@ namespace JxFinance.Infrastructure.Data.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
+                    b.Property<string>("EodhdProtectedKey")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
                     b.Property<bool>("ExchangeRateSyncEnabled")
                         .HasColumnType("boolean");
 
@@ -1891,6 +1924,18 @@ namespace JxFinance.Infrastructure.Data.Migrations
                     b.Property<string>("InstanceName")
                         .HasMaxLength(40)
                         .HasColumnType("character varying(40)");
+
+                    b.Property<DateOnly?>("PriceCallsDate")
+                        .HasColumnType("date");
+
+                    b.Property<int>("PriceCallsUsed")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("PriceSyncEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTimeOffset?>("PriceSyncRunAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("ReportingCurrency")
                         .IsRequired()

@@ -10,6 +10,7 @@ public sealed class SecurityPriceConfiguration : IEntityTypeConfiguration<Securi
     {
         builder.HasKey(p => new { p.SecurityId, p.Date });
         builder.Property(p => p.Price).HasPrecision(18, 8);
+        builder.Property(p => p.Source).HasConversion<string>().HasMaxLength(10).HasDefaultValue(PriceSourceKind.Manual);
         builder.HasOne<Security>().WithMany().HasForeignKey(p => p.SecurityId).OnDelete(DeleteBehavior.Cascade);
     }
 }

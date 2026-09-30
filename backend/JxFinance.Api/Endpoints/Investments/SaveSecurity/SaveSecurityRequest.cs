@@ -13,7 +13,9 @@ public sealed record SaveSecurityRequest(
     string? Isin = null,
     string? Exchange = null,
     [property: Quantity] decimal? LastPrice = null,
-    DateOnly? LastPriceDate = null)
+    DateOnly? LastPriceDate = null,
+    PriceSource PriceSource = PriceSource.None,
+    string? PriceSymbol = null)
 {
     [RouteParam, HideFromDocs]
     public Guid Id { get; init; }

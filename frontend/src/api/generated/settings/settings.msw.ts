@@ -9,6 +9,8 @@ import { HttpResponse, http } from "msw";
 import type { RequestHandlerOptions } from "msw";
 import type {
   ExchangeRateSyncResponse,
+  MarketPriceSettingsResponse,
+  MarketPriceSyncResponse,
   PublicSettingsResponse,
   SettingsResponse,
   SmtpSettingsResponse,
@@ -92,6 +94,78 @@ export const getSyncExchangeRatesMockHandler = (
 ) => {
   return http.post(
     "*/api/settings/exchange-rates/sync",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : undefined,
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getMarketPriceSettingsMockHandler = (
+  overrideResponse?:
+    | MarketPriceSettingsResponse
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<MarketPriceSettingsResponse> | MarketPriceSettingsResponse),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/settings/market-prices",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : undefined,
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getUpdateMarketPriceSettingsMockHandler = (
+  overrideResponse?:
+    | MarketPriceSettingsResponse
+    | ((
+        info: Parameters<Parameters<typeof http.put>[1]>[0],
+      ) => Promise<MarketPriceSettingsResponse> | MarketPriceSettingsResponse),
+  options?: RequestHandlerOptions,
+) => {
+  return http.put(
+    "*/api/settings/market-prices",
+    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : undefined,
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getSyncMarketPricesMockHandler = (
+  overrideResponse?:
+    | MarketPriceSyncResponse
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<MarketPriceSyncResponse> | MarketPriceSyncResponse),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/settings/market-prices/sync",
     async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
@@ -206,6 +280,9 @@ export const getSettingsMock = () => [
   getUpdateSettingsMockHandler(),
   getUpdateDiscordSettingsMockHandler(),
   getSyncExchangeRatesMockHandler(),
+  getMarketPriceSettingsMockHandler(),
+  getUpdateMarketPriceSettingsMockHandler(),
+  getSyncMarketPricesMockHandler(),
   getPublicSettingsMockHandler(),
   getSmtpSettingsMockHandler(),
   getUpdateSmtpSettingsMockHandler(),

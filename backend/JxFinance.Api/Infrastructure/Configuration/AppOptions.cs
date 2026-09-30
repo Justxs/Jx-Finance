@@ -15,6 +15,8 @@ public sealed class AppOptions
 
     public ExchangeRateOptions ExchangeRates { get; set; } = new();
 
+    public MarketPriceOptions MarketPrices { get; set; } = new();
+
     public string InteractiveBrokersFlexUrl { get; set; } =
         "https://ndcdyn.interactivebrokers.com/AccountManagement/FlexWebService/";
 
@@ -49,4 +51,15 @@ public sealed class ExchangeRateOptions
     public bool Enabled { get; set; } = true;
 
     public string BaseUrl { get; set; } = "https://api.frankfurter.dev/v1/";
+}
+
+public sealed class MarketPriceOptions
+{
+    public bool Enabled { get; set; }
+
+    public string EodhdBaseUrl { get; set; } = "https://eodhd.com/";
+
+    public string KrakenBaseUrl { get; set; } = "https://api.kraken.com/";
+
+    public int EodhdDailyLimit { get; set; } = 20;
 }
