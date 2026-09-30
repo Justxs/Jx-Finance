@@ -2122,6 +2122,22 @@
       "was": "{{now}}, buvo {{was}}",
       "noChanges": "Nė viena išlaidų kategorija nepasikeitė, palyginti su praėjusiais metais.",
       "compare": "Palyginti su praėjusiais metais"
+    },
+    "receiptItems": {
+      "title": "Čekių prekės",
+      "hint": "Kiek kainavo nuskaitytų čekių prekės šio laikotarpio operacijų prieduose.",
+      "search": "Rasti prekę",
+      "item": "Prekė",
+      "bought": "Pirkta",
+      "amount": "Suma",
+      "last": "Paskutinį kartą {{date}}",
+      "times_one": "{{count}} kartą",
+      "times_few": "{{count}} kartus",
+      "times_many": "{{count}} karto",
+      "times_other": "{{count}} kartų",
+      "noReceipts": "Šiuo laikotarpiu čekių nenuskaityta. Išlaidai su pridėtu čekiu pasirinkite „Užpildyti iš čekio“.",
+      "noMatches": "Nė viena prekė neatitinka.",
+      "table": "Prekės pagal sumą"
     }
   },
   "imports": {

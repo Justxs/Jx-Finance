@@ -5,23 +5,182 @@
  * Personal and household finance ledger. Every route lives under /api and answers JSON. Money is carried as a decimal string with at most two decimal places so nothing is lost to floating point; dates are YYYY-MM-DD in the instance time zone. Collections that can grow are paged with page and pageSize and answer with items, page, pageSize, and total. Authentication is a session cookie from POST /api/auth/login, so browser clients must send credentials. Failures answer application/problem+json with a machine-readable code per error; see the ProblemDetails schema.
  * OpenAPI spec version: v1
  */
-import { useMutation } from "@tanstack/react-query";
+import {
+  queryOptions as queryOptionsBuilder,
+  useMutation,
+  useSuspenseQuery,
+} from "@tanstack/react-query";
 import type {
+  DataTag,
   MutationFunction,
   QueryClient,
+  QueryFunction,
+  QueryKey,
   UseMutationOptions,
   UseMutationResult,
+  UseSuspenseQueryOptions,
+  UseSuspenseQueryResult,
 } from "@tanstack/react-query";
 import { customFetch } from "../../client";
 import type { ErrorType } from "../../client";
 import type {
+  GetReceiptItemsResponse,
   ProblemDetails,
   ReadReceiptRequest,
+  ReceiptItemsParams,
   ReceiptReadingResponse,
   UpdateReceiptCategoriesRequest,
 } from "../model";
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
+
+const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKey: K } => {
+  const result = { queryKey } as T & { queryKey: K };
+  for (const key of Object.keys(query)) {
+    // The explicit queryKey always wins, matching the previous
+    // `{ ...query, queryKey }` spread where it was set last.
+    if (key === "queryKey") continue;
+    Object.defineProperty(result, key, {
+      enumerable: true,
+      configurable: true,
+      get: () => (query as Record<string, unknown>)[key],
+    });
+  }
+  return result;
+};
+
+export const getReceiptItemsUrl = (params?: ReceiptItemsParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/receipts/items?${stringifiedParams}`
+    : `/api/receipts/items`;
+};
+
+/**
+ * Sums the items of your receipt readings for the attachments of visible transactions dated in the range: how much toothpaste cost this year. Items are grouped by their normalized name, the key remembered categories use, and by currency; each item counts what the split counts, its amount less its discount plus its deposit, never below zero. Only readings you made are counted, so a receipt someone else read counts once you read it too. At most 50 items, largest first.
+ * @summary Spending per receipt item
+ */
+export const receiptItems = async (
+  params?: ReceiptItemsParams,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<GetReceiptItemsResponse> => {
+  return customFetch<GetReceiptItemsResponse>(getReceiptItemsUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getReceiptItemsQueryKey = (params?: ReceiptItemsParams) => {
+  return [`/api/receipts/items`, ...(params ? [params] : [])] as const;
+};
+
+export const getReceiptItemsSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof receiptItems>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  params?: ReceiptItemsParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof receiptItems>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getReceiptItemsQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof receiptItems>>> = ({ signal }) =>
+    receiptItems(params, { signal, ...requestOptions });
+
+  return queryOptionsBuilder({
+    queryKey,
+    ...queryOptions,
+    queryFn: queryOptions?.queryFn ?? queryFn,
+  }) as UseSuspenseQueryOptions<Awaited<ReturnType<typeof receiptItems>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  } & {
+    throwOnError?: ((this: never, error: TError) => boolean) & { readonly __inferenceOnly: never };
+  };
+};
+
+export type ReceiptItemsSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof receiptItems>>>;
+export type ReceiptItemsSuspenseQueryError = ErrorType<ProblemDetails>;
+
+export function useReceiptItemsSuspense<
+  TData = Awaited<ReturnType<typeof receiptItems>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  params: undefined | ReceiptItemsParams,
+  options: {
+    query: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof receiptItems>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useReceiptItemsSuspense<
+  TData = Awaited<ReturnType<typeof receiptItems>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  params?: ReceiptItemsParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof receiptItems>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useReceiptItemsSuspense<
+  TData = Awaited<ReturnType<typeof receiptItems>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  params?: ReceiptItemsParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof receiptItems>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Spending per receipt item
+ */
+
+export function useReceiptItemsSuspense<
+  TData = Awaited<ReturnType<typeof receiptItems>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  params?: ReceiptItemsParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof receiptItems>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getReceiptItemsSuspenseQueryOptions(params, options);
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
 
 export const getReadReceiptUrl = () => {
   return `/api/receipts/read`;

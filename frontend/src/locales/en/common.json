@@ -2058,6 +2058,20 @@
       "was": "{{now}}, was {{was}}",
       "noChanges": "No expense category changed from the year before.",
       "compare": "Compare with the year before"
+    },
+    "receiptItems": {
+      "title": "Receipt items",
+      "hint": "What the items on your read receipts cost, for the attachments of transactions in this range.",
+      "search": "Find an item",
+      "item": "Item",
+      "bought": "Bought",
+      "amount": "Amount",
+      "last": "Last on {{date}}",
+      "times_one": "{{count}} time",
+      "times_other": "{{count}} times",
+      "noReceipts": "No receipts read in this range. Use Fill from receipt on an expense with an attached receipt.",
+      "noMatches": "No item matches.",
+      "table": "Items by amount"
     }
   },
   "imports": {

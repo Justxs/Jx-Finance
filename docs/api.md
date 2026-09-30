@@ -360,6 +360,8 @@ They also take `payee`, since 2026-09-29: the value is normalized like a stored 
 
 Since 2026-09-30 the create and update bodies take an optional `note`, at most 1000 characters (`text.tooLong`), and every transaction response answers it; `search` on the four filtered endpoints matches it as well as the description. See [Transactions](features/transactions.md#notes).
 
+Since 2026-09-30 `GET /api/receipts/items` takes `dateFrom`, `dateTo` and an optional `search` and answers `{ items: [{ key, name, currency, amount, count, lastBought }], receipts }`, the caller's receipt items summed by normalized name. See [Receipt reading](features/receipt-reading.md#spending-per-item).
+
 Since 2026-09-30 `PUT /api/attachments/{id}/warranty` takes `{ warrantyUntil }` (a date or null) and answers the attachment, whose responses carry `warrantyUntil`; a `warrantyExpiring` notification follows 30 days before. See [Attachments](features/attachments.md#warranty-dates).
 
 Since 2026-09-30 the import preview and confirm take `format=ofx` and `format=mt940` beside `swedbankCsv`, `camt053` and `genericCsv`; a file that is not of the format answers `import.invalidFile`, and the closing balance of both is kept as a reconciliation like a camt.053's. See [Bank statement import](features/bank-statement-import.md#ofx-and-mt940).

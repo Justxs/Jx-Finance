@@ -12409,6 +12409,100 @@
         }
       }
     },
+    "/api/receipts/items": {
+      "get": {
+        "tags": [
+          "Receipts"
+        ],
+        "summary": "Spending per receipt item",
+        "description": "Sums the items of your receipt readings for the attachments of visible transactions dated in the range: how much toothpaste cost this year. Items are grouped by their normalized name, the key remembered categories use, and by currency; each item counts what the split counts, its amount less its discount plus its deposit, never below zero. Only readings you made are counted, so a receipt someone else read counts once you read it too. At most 50 items, largest first.",
+        "operationId": "GetReceiptItems",
+        "parameters": [
+          {
+            "name": "dateFrom",
+            "in": "query",
+            "description": "Inclusive start date as YYYY-MM-DD, against the transaction's date.",
+            "schema": {
+              "type": [
+                "null",
+                "string"
+              ],
+              "format": "date"
+            }
+          },
+          {
+            "name": "dateTo",
+            "in": "query",
+            "description": "Inclusive end date as YYYY-MM-DD.",
+            "schema": {
+              "type": [
+                "null",
+                "string"
+              ],
+              "format": "date"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "description": "Optional text an item's normalized name must contain, ignoring case and accents.",
+            "schema": {
+              "type": [
+                "null",
+                "string"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The items and how many receipts were read.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetReceiptItemsResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      }
+    },
     "/api/receipts/read": {
       "post": {
         "tags": [
@@ -22055,6 +22149,25 @@
           }
         }
       },
+      "GetReceiptItemsResponse": {
+        "required": [
+          "items",
+          "receipts"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReceiptItemSpend"
+            }
+          },
+          "receipts": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
       "GoalFunding": {
         "enum": [
           "manual",
@@ -24774,6 +24887,39 @@
           },
           "remembered": {
             "type": "boolean"
+          }
+        }
+      },
+      "ReceiptItemSpend": {
+        "required": [
+          "key",
+          "name",
+          "currency",
+          "amount",
+          "count",
+          "lastBought"
+        ],
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "currency": {
+            "$ref": "#/components/schemas/Currency"
+          },
+          "amount": {
+            "type": "string",
+            "format": "decimal"
+          },
+          "count": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "lastBought": {
+            "$ref": "#/components/schemas/DateOnly"
           }
         }
       },

@@ -1,4 +1,5 @@
 import type {
+  GetReceiptItemsResponse,
   ReceiptItemResponse,
   ReceiptReadingResponse,
   ReceiptResultResponse,
@@ -143,3 +144,35 @@ export const receiptEngineUnavailableProblem = problemOf(
   "Receipt reading needs Tesseract with Lithuanian and English language data on the server, and it is not installed.",
   { instance: "/api/receipts/read" },
 );
+
+export const receiptItems: GetReceiptItemsResponse = {
+  receipts: 14,
+  items: [
+    {
+      key: "pienas",
+      name: "Pienas Dvaro 2,5 % 1 l",
+      currency: "eur",
+      amount: "31.36",
+      count: 28,
+      lastBought: "2026-09-17",
+    },
+    {
+      key: "kava",
+      name: "Kava Paulig Presidentti 500 g",
+      currency: "eur",
+      amount: "27.96",
+      count: 4,
+      lastBought: "2026-09-02",
+    },
+    {
+      key: "dantu pasta colgate",
+      name: "Dantų pasta Colgate 75 ml",
+      currency: "eur",
+      amount: "6.18",
+      count: 2,
+      lastBought: "2026-06-10",
+    },
+  ],
+};
+
+export const noReceiptItems: GetReceiptItemsResponse = { receipts: 0, items: [] };

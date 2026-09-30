@@ -8,6 +8,57 @@
 import * as zod from "zod";
 
 /**
+ * Sums the items of your receipt readings for the attachments of visible transactions dated in the range: how much toothpaste cost this year. Items are grouped by their normalized name, the key remembered categories use, and by currency; each item counts what the split counts, its amount less its discount plus its deposit, never below zero. Only readings you made are counted, so a receipt someone else read counts once you read it too. At most 50 items, largest first.
+ * @summary Spending per receipt item
+ */
+export const receiptItemsResponseItemsItemAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+
+export const ReceiptItemsResponse = zod.object({
+  items: zod.array(
+    zod.object({
+      key: zod.string(),
+      name: zod.string(),
+      currency: zod.enum([
+        "eur",
+        "usd",
+        "gbp",
+        "chf",
+        "pln",
+        "sek",
+        "nok",
+        "dkk",
+        "czk",
+        "huf",
+        "ron",
+        "isk",
+        "try",
+        "jpy",
+        "cny",
+        "hkd",
+        "sgd",
+        "krw",
+        "inr",
+        "idr",
+        "myr",
+        "php",
+        "thb",
+        "aud",
+        "nzd",
+        "cad",
+        "mxn",
+        "brl",
+        "ils",
+        "zar",
+      ]),
+      amount: zod.stringFormat("decimal", receiptItemsResponseItemsItemAmountRegExp),
+      count: zod.int(),
+      lastBought: zod.iso.date(),
+    }),
+  ),
+  receipts: zod.int(),
+});
+
+/**
  * Reads one receipt photo or PDF on this server and answers its merchant, date, total and items for review; nothing leaves the installation and nothing in the ledger changes. Send multipart/form-data with exactly one of attachmentId, a file already attached to a transaction the caller can see, or file, a new JPEG, PNG, WebP, HEIC or PDF of at most 10 MB that is read but never stored. Photos are turned upright, stripped of their metadata and read with Tesseract (Lithuanian and English); a PDF is read from the text of its first 3 pages, and a PDF without text answers receipt.pdfWithoutText. Lines that look like part of the receipt but cannot be read as an item come back in unreadLines. Each item gets the category the caller chose for that name before (remembered), otherwise the category of the caller's first matching categorization rule, otherwise none. A reading is kept per user and file content: reading the same file again answers the stored reading with cached true, unless force is true. For an uploaded file, candidates lists up to three visible unsplit expenses with the receipt's total, within three days of its date. Needs the ReceiptReading feature switch. Rate limited to 30 calls per five minutes per client.
  * @summary Read a receipt and propose its items by category
  */

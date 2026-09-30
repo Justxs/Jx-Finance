@@ -15,6 +15,7 @@ import { SplitColumns } from "@/components/ui/split-columns/split-columns";
 import { StaleRegion } from "@/components/ui/stale-region/stale-region";
 import { NetWorthChangeCard } from "@/features/reports/net-worth-change-card/net-worth-change-card";
 import { PayeeBreakdown } from "@/features/reports/payee-breakdown/payee-breakdown";
+import { ReceiptItems } from "@/features/reports/receipt-items/receipt-items";
 import { detectPreset } from "@/features/reports/report-filters/date-range-presets";
 import { ReportFilters } from "@/features/reports/report-filters/report-filters";
 import { reportComparison, reportParams, reportRange } from "@/features/reports/report-queries";
@@ -30,6 +31,7 @@ import { useFeature, useTodayDate } from "@/hooks/use-settings";
 export function ReportsPage() {
   const { t } = useTranslation();
   const netWorthEnabled = useFeature("netWorth");
+  const receiptsEnabled = useFeature("receiptReading");
   const navigate = useNavigate({ from: "/reports" });
   const search = useSearch({ from: "/reports" });
   const isoDate = useIsoDate();
@@ -135,6 +137,9 @@ export function ReportsPage() {
                   dateTo={shown.dateTo}
                 />
               </TitledSection>
+              {receiptsEnabled ? (
+                <ReceiptItems dateFrom={shown.dateFrom} dateTo={shown.dateTo} />
+              ) : null}
             </div>
             <TitledSection title={t("reports.trend")} bodyGap="md">
               <ReportTrendChart items={summary.data.trend} bucket={summary.data.trendBucket} />

@@ -7,7 +7,31 @@
  */
 import { HttpResponse, http } from "msw";
 import type { RequestHandlerOptions } from "msw";
-import type { ReceiptReadingResponse } from "../model";
+import type { GetReceiptItemsResponse, ReceiptReadingResponse } from "../model";
+
+export const getReceiptItemsMockHandler = (
+  overrideResponse?:
+    | GetReceiptItemsResponse
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<GetReceiptItemsResponse> | GetReceiptItemsResponse),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/receipts/items",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : undefined,
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
 
 export const getReadReceiptMockHandler = (
   overrideResponse?:
@@ -52,6 +76,7 @@ export const getUpdateReceiptCategoriesMockHandler = (
   );
 };
 export const getReceiptsMock = () => [
+  getReceiptItemsMockHandler(),
   getReadReceiptMockHandler(),
   getUpdateReceiptCategoriesMockHandler(),
 ];

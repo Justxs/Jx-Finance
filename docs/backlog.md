@@ -44,7 +44,7 @@ Ordered by how much they would help daily use for the effort. Following the prod
 
 | Idea | Why | Where | Size |
 | --- | --- | --- | --- |
-| Receipt reading follow-ups | A per-item spending report ("how much did toothpaste cost this year") backfilled from the stored readings; cutting a very tall e-receipt screenshot into overlapping parts; reading PDFs that hold only a scan; return receipts read into a refund; listing and forgetting remembered item categories under Categories. No plan yet | Transaction form, Reports, Categories | M each |
+| Receipt reading follow-ups | Cutting a very tall e-receipt screenshot into overlapping parts; reading PDFs that hold only a scan; return receipts read into a refund; listing and forgetting remembered item categories under Categories. No plan yet | Transaction form, Reports, Categories | M each |
 
 ## Suggested order
 
@@ -54,6 +54,7 @@ Ordered by how much they would help daily use for the effort. Following the prod
 
 | Date | Item | Where it is described |
 | --- | --- | --- |
+| 2026-09-30 | Spending per receipt item: the reports page lists what each item on the member's read receipts cost over the range, grouped by the normalized item name, with the times bought and a search, from the readings already stored | [Receipt reading](features/receipt-reading.md#spending-per-item) |
 | 2026-09-30 | Year in review: the reports page, on "This year" or "Last year", adds a month-by-month table with the share of income kept and the five expense categories that moved most against the year before, built from the report the page already loads | [Reports](features/reports.md#year-in-review) |
 | 2026-09-30 | Warranty reminders: each attached receipt can carry a warranty end date, set in the transaction dialog, and the member who attached it gets a `warrantyExpiring` notification 30 days before it, once per date, in the bell, by email or on Discord | [Attachments](features/attachments.md#warranty-dates) |
 | 2026-09-30 | OFX and MT940 import: the import dialog reads OFX and QFX files, SGML or XML, and SWIFT MT940 statements into the same review as the other formats, with the account check, duplicates by a stable reference and the closing balance kept as a reconciliation | [Bank statement import](features/bank-statement-import.md#ofx-and-mt940) |
