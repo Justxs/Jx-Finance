@@ -2,6 +2,7 @@ using FastEndpoints;
 using FluentValidation;
 using JxFinance.Common.Amortization;
 using JxFinance.Common.Errors;
+using JxFinance.Common.Sharing;
 using JxFinance.Common.Validation;
 using JxFinance.Domain.NetWorth;
 
@@ -40,6 +41,7 @@ public abstract class DebtInputValidator<TRequest> : Validator<TRequest>
             .Must((request, _) => Repays(request))
             .WithErrorCode(ErrorCodes.DebtPaymentTooSmall)
             .WithMessage(AmortizationCalculator.PaymentTooSmallMessage);
+        RuleFor(r => r.HouseholdId).RequiresHouseholdWhenShared("debt");
     }
 
     private static bool Repays(TRequest request)

@@ -1,4 +1,5 @@
 using JxFinance.Common.Amortization;
+using JxFinance.Common.Sharing;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.NetWorth;
 using JxFinance.Endpoints.NetWorth.CreateDebt;
@@ -32,6 +33,7 @@ public static class DebtMapper
         debt.MonthlyPayment = input.MonthlyPayment;
         debt.AmortizationType = input.AmortizationType ?? AmortizationType.Annuity;
         debt.TracksPayments = input.TracksPayments;
+        debt.ApplySharing(input);
     }
 
     public static DebtResponse ToResponse(this Debt debt, DebtTracking? tracking) => new(
@@ -51,7 +53,9 @@ public static class DebtMapper
         debt.TracksPayments,
         tracking?.Track.Balance,
         tracking?.Incomplete ?? false,
-        tracking?.Unavailable ?? 0);
+        tracking?.Unavailable ?? 0,
+        debt.Scope,
+        debt.HouseholdId?.Value);
 
     private static DateOnly? PayoffDate(Debt debt) =>
         AmortizationTerms.From(debt) is { } terms && AmortizationCalculator.Calculate(terms).TryGetValue(out var schedule)

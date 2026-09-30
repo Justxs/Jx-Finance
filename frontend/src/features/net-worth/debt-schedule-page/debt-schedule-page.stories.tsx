@@ -9,10 +9,12 @@ import {
 import { withPageFrame } from "@/storybook/decorators";
 import {
   debts,
+  familyHousehold,
   ids,
   linearDebt,
   mortgagePayments,
   serverErrorProblem,
+  sharedTrackedMortgage,
   trackedMortgage,
   zeroRateDebt,
 } from "@/storybook/fixtures";
@@ -182,4 +184,11 @@ export const PaymentsLoading: Story = {
 
 export const PaymentsFail: Story = {
   parameters: withHandlers(tracking, getDebtPaymentsMockHandler(failWith(serverErrorProblem))),
+};
+
+export const SharedWithHousehold: Story = {
+  parameters: withHandlers(getDebtsMockHandler([sharedTrackedMortgage, ...debts.slice(1)])),
+  play: async ({ canvas }) => {
+    await expect(await canvas.findByText(`Shared · ${familyHousehold.name}`)).toBeVisible();
+  },
 };

@@ -47,6 +47,8 @@ export const CreateAssetBody = zod.object({
     .describe(
       "Optional straight-line depreciation: startDate (not in the future), startValue, lifeMonths (1 to 600) and residualValue (0 or more, below the start value). Give all four or leave it out (asset.depreciationIncomplete). The value falls by (startValue - residualValue) / lifeMonths, rounded up to the cent, on the start date's day of each month and never below the residual value.",
     ),
+  scope: zod.enum(["personal", "shared"]).optional(),
+  householdId: zod.uuid().nullish(),
 });
 
 export const createAssetResponseCurrentValueRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
@@ -116,6 +118,8 @@ export const CreateAssetResponse = zod.object({
     .stringFormat("decimal", createAssetResponseMonthlyDepreciationRegExp)
     .nullable(),
   fullyDepreciatedOn: zod.union([zod.null(), zod.iso.date()]),
+  scope: zod.enum(["personal", "shared"]),
+  householdId: zod.uuid().nullable(),
 });
 
 /**
@@ -184,6 +188,8 @@ export const AssetsResponseItem = zod.object({
     .stringFormat("decimal", assetsResponseMonthlyDepreciationRegExp)
     .nullable(),
   fullyDepreciatedOn: zod.union([zod.null(), zod.iso.date()]),
+  scope: zod.enum(["personal", "shared"]),
+  householdId: zod.uuid().nullable(),
 });
 export const AssetsResponse = zod.array(AssetsResponseItem);
 
@@ -231,6 +237,8 @@ export const UpdateAssetBody = zod.object({
     .describe(
       "Optional straight-line depreciation: startDate (not in the future), startValue, lifeMonths (1 to 600) and residualValue (0 or more, below the start value). Give all four or leave it out (asset.depreciationIncomplete). The value falls by (startValue - residualValue) / lifeMonths, rounded up to the cent, on the start date's day of each month and never below the residual value.",
     ),
+  scope: zod.enum(["personal", "shared"]).optional(),
+  householdId: zod.uuid().nullish(),
 });
 
 export const updateAssetResponseCurrentValueRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
@@ -300,6 +308,8 @@ export const UpdateAssetResponse = zod.object({
     .stringFormat("decimal", updateAssetResponseMonthlyDepreciationRegExp)
     .nullable(),
   fullyDepreciatedOn: zod.union([zod.null(), zod.iso.date()]),
+  scope: zod.enum(["personal", "shared"]),
+  householdId: zod.uuid().nullable(),
 });
 
 /**
@@ -413,6 +423,8 @@ export const SetAssetValuationResponse = zod.object({
     .stringFormat("decimal", setAssetValuationResponseMonthlyDepreciationRegExp)
     .nullable(),
   fullyDepreciatedOn: zod.union([zod.null(), zod.iso.date()]),
+  scope: zod.enum(["personal", "shared"]),
+  householdId: zod.uuid().nullable(),
 });
 
 /**
@@ -529,6 +541,8 @@ export const CreateDebtBody = zod.object({
     .describe(
       "When true, the balance is outstandingAmount on asOf minus the principal of the payments linked after asOf. Editing outstandingAmount or asOf sets a new starting point.",
     ),
+  scope: zod.enum(["personal", "shared"]).optional(),
+  householdId: zod.uuid().nullish(),
 });
 
 export const createDebtResponseOutstandingAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
@@ -585,6 +599,8 @@ export const CreateDebtResponse = zod.object({
   trackedBalance: zod.stringFormat("decimal", createDebtResponseTrackedBalanceRegExp).nullable(),
   trackedIncomplete: zod.boolean(),
   unavailablePayments: zod.int(),
+  scope: zod.enum(["personal", "shared"]),
+  householdId: zod.uuid().nullable(),
 });
 
 /**
@@ -645,6 +661,8 @@ export const DebtsResponseItem = zod.object({
   trackedBalance: zod.stringFormat("decimal", debtsResponseTrackedBalanceRegExp).nullable(),
   trackedIncomplete: zod.boolean(),
   unavailablePayments: zod.int(),
+  scope: zod.enum(["personal", "shared"]),
+  householdId: zod.uuid().nullable(),
 });
 export const DebtsResponse = zod.array(DebtsResponseItem);
 
@@ -717,6 +735,8 @@ export const UpdateDebtBody = zod.object({
     .describe(
       "When true, the balance is outstandingAmount on asOf minus the principal of the payments linked after asOf. Editing outstandingAmount or asOf sets a new starting point.",
     ),
+  scope: zod.enum(["personal", "shared"]).optional(),
+  householdId: zod.uuid().nullish(),
 });
 
 export const updateDebtResponseOutstandingAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
@@ -773,6 +793,8 @@ export const UpdateDebtResponse = zod.object({
   trackedBalance: zod.stringFormat("decimal", updateDebtResponseTrackedBalanceRegExp).nullable(),
   trackedIncomplete: zod.boolean(),
   unavailablePayments: zod.int(),
+  scope: zod.enum(["personal", "shared"]),
+  householdId: zod.uuid().nullable(),
 });
 
 /**
@@ -1042,6 +1064,8 @@ export const LinkDebtPaymentResponse = zod.object({
     .nullable(),
   trackedIncomplete: zod.boolean(),
   unavailablePayments: zod.int(),
+  scope: zod.enum(["personal", "shared"]),
+  householdId: zod.uuid().nullable(),
 });
 
 /**
@@ -1126,6 +1150,8 @@ export const UpdateDebtPaymentResponse = zod.object({
     .nullable(),
   trackedIncomplete: zod.boolean(),
   unavailablePayments: zod.int(),
+  scope: zod.enum(["personal", "shared"]),
+  householdId: zod.uuid().nullable(),
 });
 
 /**

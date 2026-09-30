@@ -134,6 +134,7 @@ public sealed class RetentionTests
                 "Goals",
                 "Assets",
                 "Debts",
+                "DebtPayments",
                 "RecurringBills",
                 "InvestmentTransactions",
                 "CategorizationRules",

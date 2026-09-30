@@ -1,4 +1,5 @@
 using JxFinance.Common.Json;
+using JxFinance.Domain.Common;
 using JxFinance.Domain.NetWorth;
 using JxFinance.Endpoints.NetWorth.Shared;
 
@@ -15,4 +16,6 @@ public sealed record CreateDebtRequest(
     int? TermMonths = null,
     [property: Money] decimal? MonthlyPayment = null,
     AmortizationType? AmortizationType = null,
-    bool TracksPayments = false) : IDebtInput;
+    bool TracksPayments = false,
+    Scope Scope = Scope.Personal,
+    Guid? HouseholdId = null) : IDebtInput;

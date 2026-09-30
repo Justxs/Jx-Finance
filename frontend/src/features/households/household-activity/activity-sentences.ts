@@ -37,6 +37,13 @@ const FIELDS = [
   "cadence",
   "nextDueDate",
   "isActive",
+  "currentValue",
+  "asOf",
+  "outstandingAmount",
+  "interestRate",
+  "tracksPayments",
+  "valuations",
+  "payments",
 ] as const;
 
 type AuditField = (typeof FIELDS)[number];

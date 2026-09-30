@@ -1,7 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { fn, userEvent } from "storybook/test";
+import { expect, fn, userEvent } from "storybook/test";
 import { Button } from "@/components/ui/button/button";
 import { withWidth } from "@/storybook/decorators";
+import { familyHousehold } from "@/storybook/fixtures";
 import { openedDialog } from "@/storybook/interactions";
 import {
   type BalanceItem,
@@ -74,5 +75,17 @@ export const AddDialogOpen: Story = {
   play: async ({ canvas }) => {
     await userEvent.click(canvas.getByRole("button", { name: "Add asset" }));
     await openedDialog();
+  },
+};
+
+export const SharedWithHousehold: Story = {
+  args: {
+    items: [
+      { ...items[0]!, scope: "shared", householdId: familyHousehold.id },
+      { ...items[1]!, scope: "personal", householdId: null },
+    ],
+  },
+  play: async ({ canvas }) => {
+    await expect(await canvas.findByText(`Shared · ${familyHousehold.name}`)).toBeVisible();
   },
 };

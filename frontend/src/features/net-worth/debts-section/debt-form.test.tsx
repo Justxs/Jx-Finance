@@ -1,11 +1,25 @@
-import { fireEvent, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { expect, test } from "vitest";
-import { debts, linearDebt, trackedMortgage, zeroRateDebt } from "@/storybook/fixtures";
-import { renderWithQuery } from "@/test/query";
+import { getHouseholdsQueryKey } from "@/api/generated";
+import {
+  debts,
+  households,
+  linearDebt,
+  sharedTrackedMortgage,
+  trackedMortgage,
+  zeroRateDebt,
+} from "@/storybook/fixtures";
+import { createQueryWrapper } from "@/test/query";
 import { DebtForm, debtFormValues, debtRequest } from "./debt-form";
 
-test("a debt read into the form and written back keeps every repayment term", () => {
-  for (const debt of [...debts, linearDebt, zeroRateDebt, trackedMortgage]) {
+function renderForm() {
+  const { client, Wrapper } = createQueryWrapper();
+  client.setQueryData(getHouseholdsQueryKey(), households);
+  render(<DebtForm onClose={() => {}} />, { wrapper: Wrapper });
+}
+
+test("a debt read into the form and written back keeps every repayment term and its sharing", () => {
+  for (const debt of [...debts, linearDebt, zeroRateDebt, trackedMortgage, sharedTrackedMortgage]) {
     expect(debtRequest(debtFormValues(debt))).toEqual({
       name: debt.name,
       type: debt.type,
@@ -18,6 +32,8 @@ test("a debt read into the form and written back keeps every repayment term", ()
       monthlyPayment: debt.monthlyPayment,
       amortizationType: debt.amortizationType,
       tracksPayments: debt.tracksPayments,
+      scope: debt.scope,
+      householdId: debt.householdId,
     });
   }
 });
@@ -35,6 +51,8 @@ test("empty repayment fields are sent as null and a comma is read as a decimal p
     monthlyPayment: "",
     amortizationType: "linear",
     tracksPayments: true,
+    scope: "personal",
+    householdId: "",
   });
 
   expect(request).toEqual({
@@ -49,11 +67,13 @@ test("empty repayment fields are sent as null and a comma is read as a decimal p
     monthlyPayment: null,
     amortizationType: "linear",
     tracksPayments: true,
+    scope: "personal",
+    householdId: null,
   });
 });
 
 test("a term and a monthly payment together are refused under the payment", async () => {
-  renderWithQuery(<DebtForm onClose={() => {}} />);
+  renderForm();
   fireEvent.change(screen.getByLabelText("Term, months"), { target: { value: "360" } });
   fireEvent.change(screen.getByLabelText("Monthly payment"), { target: { value: "500" } });
 
@@ -64,14 +84,14 @@ test("a term and a monthly payment together are refused under the payment", asyn
 });
 
 test("a term outside 1 to 600 months is refused", async () => {
-  renderWithQuery(<DebtForm onClose={() => {}} />);
+  renderForm();
   fireEvent.change(screen.getByLabelText("Term, months"), { target: { value: "601" } });
 
   expect(await screen.findByText("Enter a whole number from 1 to 600.")).toBeInTheDocument();
 });
 
 test("tracking payments asks for the balance and the date it is good for", async () => {
-  renderWithQuery(<DebtForm onClose={() => {}} />);
+  renderForm();
   expect(screen.queryByLabelText("Balance on")).not.toBeInTheDocument();
 
   fireEvent.click(screen.getByRole("checkbox", { name: "Track payments" }));

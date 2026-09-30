@@ -9,10 +9,12 @@ import {
 import { withPageFrame } from "@/storybook/decorators";
 import {
   assets,
+  familyHousehold,
   fullyDepreciatedAsset,
   ids,
   lastValuationProblem,
   serverErrorProblem,
+  sharedAsset,
 } from "@/storybook/fixtures";
 import {
   errorHandlers,
@@ -84,4 +86,12 @@ export const ServerError: Story = { parameters: { msw: { handlers: errorHandlers
 
 export const ChartFails: Story = {
   parameters: withHandlers(getAssetValueHistoryMockHandler(failWith(serverErrorProblem))),
+};
+
+export const SharedWithHousehold: Story = {
+  args: { assetId: sharedAsset.id },
+  parameters: withHandlers(getAssetsMockHandler([sharedAsset, ...assets.slice(1)])),
+  play: async ({ canvas }) => {
+    await expect(await canvas.findByText(`Shared · ${familyHousehold.name}`)).toBeVisible();
+  },
 };

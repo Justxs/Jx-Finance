@@ -17,4 +17,6 @@ public enum AuditEntityKind
     Budget,
     Goal,
     RecurringBill,
+    Asset,
+    Debt,
 }

@@ -1,4 +1,5 @@
 using JxFinance.Common.Assets;
+using JxFinance.Common.Sharing;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.NetWorth;
 using JxFinance.Endpoints.NetWorth.CreateAsset;
@@ -26,6 +27,7 @@ public static class AssetMapper
         asset.Depreciation = input.Depreciation is { StartDate: { } start, StartValue: { } value, LifeMonths: { } life, ResidualValue: { } residual }
             ? new Depreciation(start, value, life, residual)
             : null;
+        asset.ApplySharing(input);
     }
 
     public static AssetResponse ToResponse(this Asset asset, IReadOnlyCollection<AssetValuation> valuations, DateOnly today) => new(
@@ -40,7 +42,9 @@ public static class AssetMapper
             ? new DepreciationResponse(terms.StartDate, terms.StartValue, terms.LifeMonths, terms.ResidualValue)
             : null,
         asset.Depreciation is null ? null : AssetValue.MonthlyAmount(asset.Depreciation),
-        asset.Depreciation is null ? null : AssetValue.FullyDepreciatedOn(valuations, asset.Depreciation));
+        asset.Depreciation is null ? null : AssetValue.FullyDepreciatedOn(valuations, asset.Depreciation),
+        asset.Scope,
+        asset.HouseholdId?.Value);
 
     public static AssetValuationResponse ToResponse(this AssetValuation valuation) =>
         new(valuation.Date, valuation.Value, valuation.Note);

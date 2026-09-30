@@ -5,10 +5,13 @@ import { withWidth } from "@/storybook/decorators";
 import {
   debtPaymentTooSmallProblem,
   debts,
+  familyHousehold,
+  sharedTrackedMortgage,
   trackedMortgage,
   zeroRateDebt,
 } from "@/storybook/fixtures";
 import { failWith, pending, withHandlers } from "@/storybook/handlers";
+import { chooseOption } from "@/storybook/interactions";
 import { DebtForm } from "./debt-form";
 
 const [mortgage] = debts;
@@ -100,5 +103,30 @@ export const TracksPayments: Story = {
       canvas.getByRole("checkbox", { name: /track payments|sekti įmokas/i }),
     ).toBeChecked();
     await expect(canvas.getByLabelText(/^(balance on|likutis dieną)$/i)).toBeInTheDocument();
+  },
+};
+
+export const SharedWithHousehold: Story = {
+  args: { editing: sharedTrackedMortgage },
+  play: async ({ canvas }) => {
+    await expect(await canvas.findByRole("combobox", { name: "Visibility" })).toHaveTextContent(
+      "Shared",
+    );
+    await expect(canvas.getByRole("combobox", { name: "Household" })).toHaveTextContent(
+      familyHousehold.name,
+    );
+  },
+};
+
+export const SharingANewDebt: Story = {
+  play: async ({ canvas }) => {
+    await chooseOption(await canvas.findByRole("combobox", { name: "Visibility" }), "Shared");
+    await chooseOption(
+      await canvas.findByRole("combobox", { name: "Household" }),
+      familyHousehold.name,
+    );
+    await expect(canvas.getByRole("combobox", { name: "Household" })).toHaveTextContent(
+      familyHousehold.name,
+    );
   },
 };

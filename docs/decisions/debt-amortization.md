@@ -6,6 +6,9 @@ Related: feature page [Debt amortization](../features/debt-amortization.md).
 
 Newest first. Each entry is a choice between real alternatives: what was chosen, what was rejected, and why.
 
+- **2026-09-30.** A payment link is visible when its debt is, through a query filter of its own, and unlinking removes it through the change tracker, so it is soft-deleted and purged with the trash after 30 days instead of hard-deleted
+  - Rejected: Keeping the owner filter on the linker; unlinking with `ExecuteDelete`
+  - Why: A shared debt must show every member the same links and balance. A bulk delete bypasses the change tracker, so the household activity log could not see the unlink
 - **2026-09-27.** A debt that tracks payments derives its balance on read: the recorded amount on its as-of date is the anchor, minus the principal of the linked payments dated after it; editing the amount or date sets a new anchor
   - Rejected: Lowering the outstanding amount on every linked payment, kept in step on transaction update, delete, restore and import
   - Why: Derivation makes edits, deletes, trash restores and a housemate's change to a shared-account row correct with no hooks at all. The conversion-fee precedent shows how many places a stored side effect has to be kept in step

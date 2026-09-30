@@ -2007,7 +2007,9 @@
       "settlement": "Payment",
       "budget": "Budget",
       "goal": "Goal",
-      "recurringBill": "Recurring entry"
+      "recurringBill": "Recurring entry",
+      "asset": "Asset",
+      "debt": "Debt"
     },
     "sentences": {
       "created": "{{actor}} added {{description}}",
@@ -2065,7 +2067,14 @@
       "targetDate": "target date",
       "cadence": "repeats",
       "nextDueDate": "next date",
-      "isActive": "active"
+      "isActive": "active",
+      "currentValue": "value",
+      "asOf": "as of",
+      "outstandingAmount": "outstanding amount",
+      "interestRate": "interest rate",
+      "tracksPayments": "track payments",
+      "valuations": "valuations",
+      "payments": "linked payments"
     }
   },
   "sharing": {
@@ -2544,7 +2553,7 @@
       "notMember": "You are not a member of that household.",
       "required": "Choose a household for a shared item.",
       "scopeMismatch": "The request names two different households. Reload the page and try again.",
-      "referenceNotShared": "A shared item can only use accounts, categories and tags shared with the same household."
+      "referenceNotShared": "A shared item can only use accounts, categories, tags and debts shared with the same household."
     },
     "iban": {
       "invalid": "Enter a valid IBAN, e.g. LT12 1000 0111 0100 1000."

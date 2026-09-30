@@ -10,6 +10,7 @@ import type { Currency } from "./currency";
 import type { DateOnly } from "./dateOnly";
 import type { DebtType } from "./debtType";
 import type { NullableOfDateOnly } from "./nullableOfDateOnly";
+import type { Scope } from "./scope";
 
 export interface DebtResponse {
   id: string;
@@ -34,4 +35,7 @@ export interface DebtResponse {
   trackedBalance: string | null;
   trackedIncomplete: boolean;
   unavailablePayments: number;
+  scope: Scope;
+  /** @nullable */
+  householdId: string | null;
 }

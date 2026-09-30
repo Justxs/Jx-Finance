@@ -4,9 +4,11 @@ using JxFinance.Common.Amortization;
 using JxFinance.Common.Assets;
 using JxFinance.Common.Errors;
 using JxFinance.Common.ExchangeRates;
+using JxFinance.Common.Sharing;
 using JxFinance.Common.Trash;
 using JxFinance.Common.Validation;
 using JxFinance.Domain.Common;
+using JxFinance.Domain.Households;
 using JxFinance.Domain.NetWorth;
 using JxFinance.Domain.Transactions;
 using JxFinance.Domain.Trash;
@@ -39,11 +41,17 @@ public sealed class NetWorthService(
     IExchangeRateService rates,
     IClock clock,
     IDeletionRecorder deletions,
-    ICurrentUser currentUser) : INetWorthService
+    ICurrentUser currentUser,
+    ISharingGuard sharing,
+    INetWorthSnapshotter snapshotter) : INetWorthService
 {
     private static readonly DomainError AssetNotFound = EntityLookup.NotFound("Asset not found.");
     private static readonly DomainError DebtNotFound = EntityLookup.NotFound("Debt not found.");
     private static readonly DomainError PaymentNotFound = EntityLookup.NotFound("That payment is not linked to this debt.");
+
+    private static readonly DomainError PaidFromUnsharedAccount = new(
+        ErrorCodes.HouseholdReferenceNotShared,
+        "A shared debt can only be paid from an account shared with its household.");
 
     public async Task<IReadOnlyList<AssetResponse>> GetAssetsAsync(CancellationToken cancellationToken)
     {
@@ -55,6 +63,11 @@ public sealed class NetWorthService(
         CreateAssetRequest request,
         CancellationToken cancellationToken)
     {
+        if (await sharing.CheckAsync(request, cancellationToken) is { } error)
+        {
+            return error;
+        }
+
         var asset = request.ToEntity(rates.ReportingCurrency);
         db.Assets.Add(asset);
         await AssetValuationBook.RecordAsync(db, asset, request.AsOf, request.CurrentValue!.Value, cancellationToken);
@@ -71,6 +84,11 @@ public sealed class NetWorthService(
         if (!found.TryGetValue(out var asset))
         {
             return found.Error;
+        }
+
+        if (await sharing.CheckAsync(asset, request, cancellationToken) is { } error)
+        {
+            return error;
         }
 
         request.ApplyTo(asset);
@@ -122,7 +140,7 @@ public sealed class NetWorthService(
     public async Task<Result> DeleteValuationAsync(DeleteAssetValuationRequest request, CancellationToken cancellationToken)
     {
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
-        await db.Database.LockAsync(currentUser.Id, cancellationToken);
+        await db.Database.LockAsync(request.Id, cancellationToken);
         var found = await FindAssetAsync(request.Id, cancellationToken);
         if (!found.TryGetValue(out var asset))
         {
@@ -183,7 +201,7 @@ public sealed class NetWorthService(
             id,
             a => a.Id == assetId,
             AssetNotFound,
-            asset => deletions.Record(TrashKind.Asset, id, asset.Name),
+            asset => OwnerDeletes(asset, TrashKind.Asset, id, asset.Name, "Only the owner can delete a shared asset."),
             cancellationToken);
     }
 
@@ -198,6 +216,11 @@ public sealed class NetWorthService(
         CreateDebtRequest request,
         CancellationToken cancellationToken)
     {
+        if (await sharing.CheckAsync(request, cancellationToken) is { } error)
+        {
+            return error;
+        }
+
         var debt = request.ToEntity(rates.ReportingCurrency);
         db.Debts.Add(debt);
         await db.SaveChangesAsync(cancellationToken);
@@ -209,9 +232,23 @@ public sealed class NetWorthService(
         UpdateDebtRequest request,
         CancellationToken cancellationToken)
     {
-        var debtId = new DebtId(request.Id);
-        var updated = await db.UpdateOrNotFoundAsync<Debt>(d => d.Id == debtId, DebtNotFound, request.ApplyTo, cancellationToken);
-        return updated.TryGetValue(out var debt) ? await ToResponseAsync(debt, cancellationToken) : updated.Error;
+        var found = await FindDebtAsync(request.Id, cancellationToken);
+        if (!found.TryGetValue(out var debt))
+        {
+            return found.Error;
+        }
+
+        var rechecksPayments = SharingState.From(request) != SharingState.Of(debt) || request.TracksPayments != debt.TracksPayments;
+        var error = await sharing.CheckAsync(debt, request, cancellationToken)
+            ?? (rechecksPayments ? await PaymentAccountsErrorAsync(debt, request, cancellationToken) : null);
+        if (error is not null)
+        {
+            return error;
+        }
+
+        request.ApplyTo(debt);
+        await db.SaveChangesAsync(cancellationToken);
+        return await ToResponseAsync(debt, cancellationToken);
     }
 
     public Task<Result<Guid>> DeleteDebtAsync(Guid id, CancellationToken cancellationToken)
@@ -221,7 +258,7 @@ public sealed class NetWorthService(
             id,
             d => d.Id == debtId,
             DebtNotFound,
-            debt => deletions.Record(TrashKind.Debt, id, debt.Name),
+            debt => OwnerDeletes(debt, TrashKind.Debt, id, debt.Name, "Only the owner can delete a shared debt."),
             cancellationToken);
     }
 
@@ -322,8 +359,15 @@ public sealed class NetWorthService(
             return new DomainError(ErrorCodes.TransactionSplitNotAllowed, "A split transaction cannot pay a debt.");
         }
 
+        if (SharedHousehold(debt) is { } household
+            && !await db.Accounts.AnyAsync(a => a.Id == transaction.AccountId && a.Scope == Scope.Shared && a.HouseholdId == household, cancellationToken))
+        {
+            return PaidFromUnsharedAccount;
+        }
+
         await db.DebtPayments
-            .Where(p => p.TransactionId == transactionId && !LiveDebtPayments().Any(live => live.Id == p.Id))
+            .IgnoreQueryFilters(QueryFilters.OwnerOnly)
+            .Where(p => p.TransactionId == transactionId && !db.Debts.Any(d => d.Id == p.DebtId))
             .ExecuteDeleteAsync(cancellationToken);
         var month = transaction.Date;
         var regularThatMonth = await db.DebtPayments.AnyAsync(
@@ -375,8 +419,15 @@ public sealed class NetWorthService(
         }
 
         var paymentId = new DebtPaymentId(request.PaymentId);
-        var removed = await db.DebtPayments.Where(p => p.Id == paymentId && p.DebtId == debt.Id).ExecuteDeleteAsync(cancellationToken);
-        return removed == 1 ? Result.Success() : PaymentNotFound;
+        var link = await db.DebtPayments.FindOrNotFoundAsync(p => p.Id == paymentId && p.DebtId == debt.Id, PaymentNotFound, cancellationToken);
+        if (!link.TryGetValue(out var payment))
+        {
+            return link.Error;
+        }
+
+        db.DebtPayments.Remove(payment);
+        await db.SaveChangesAsync(cancellationToken);
+        return Result.Success();
     }
 
     public async Task<Result<IReadOnlyList<TransactionResponse>>> GetDebtPaymentCandidatesAsync(
@@ -398,9 +449,11 @@ public sealed class NetWorthService(
         var regular = AmortizationTerms.From(debt) is { } terms && AmortizationCalculator.Calculate(terms).TryGetValue(out var plan)
             ? plan.RegularPayment
             : debt.MonthlyPayment;
+        var household = SharedHousehold(debt);
         var candidates = await db.Transactions
             .AsNoTracking()
-            .Where(t => t.Type == FlowType.Expense && !t.IsSplit && t.Amount.Amount > 0 && t.Date >= from && !LiveDebtPayments().Any(p => p.TransactionId == t.Id))
+            .Where(t => t.Type == FlowType.Expense && !t.IsSplit && t.Amount.Amount > 0 && t.Date >= from && !db.DebtPayments.Any(p => p.TransactionId == t.Id))
+            .Where(t => household == null || db.Accounts.Any(a => a.Id == t.AccountId && a.Scope == Scope.Shared && a.HouseholdId == household))
             .OrderByDescending(t => t.Date)
             .Take(200)
             .ToListAsync(cancellationToken);
@@ -414,6 +467,13 @@ public sealed class NetWorthService(
 
     public async Task<NetWorthResponse> GetCurrentAsync(CancellationToken cancellationToken)
     {
+        if (currentUser.ActiveHouseholdId is not null)
+        {
+            var narrowed = await ComputeTotalsAsync(cancellationToken);
+            await snapshotter.SnapshotAsync(currentUser.Id, cancellationToken);
+            return new NetWorthResponse(narrowed.Accounts, narrowed.Assets, narrowed.Debts, narrowed.NetWorth, narrowed.IsComplete);
+        }
+
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
         await db.Database.LockAsync(currentUser.Id, cancellationToken);
         var (accountsTotal, assetsTotal, debtsTotal, netWorth, isComplete) = await ComputeTotalsAsync(cancellationToken);
@@ -493,8 +553,29 @@ public sealed class NetWorthService(
 
     private static bool PaysDebt(Transaction? transaction) => transaction is { Type: FlowType.Expense, IsSplit: false, Amount.Amount: > 0 };
 
-    private IQueryable<DebtPayment> LiveDebtPayments() =>
-        db.DebtPayments.Where(p => db.Debts.Any(d => d.Id == p.DebtId));
+    private static HouseholdId? SharedHousehold(Debt debt) => debt.Scope == Scope.Shared ? debt.HouseholdId : null;
+
+    private Task<DomainError?> OwnerDeletes(OwnableEntity entity, TrashKind kind, Guid id, string name, string forbidden)
+    {
+        if (entity.UserId != currentUser.Id)
+        {
+            return Task.FromResult<DomainError?>(new DomainError(ErrorCodes.AccessForbidden, forbidden));
+        }
+
+        deletions.Record(kind, id, name);
+        return Task.FromResult<DomainError?>(null);
+    }
+
+    private async Task<DomainError?> PaymentAccountsErrorAsync(Debt debt, IDebtInput input, CancellationToken cancellationToken)
+    {
+        var accounts = await db.Transactions
+            .IgnoreQueryFilters(QueryFilters.OwnerOnly)
+            .Where(t => db.DebtPayments.Any(p => p.DebtId == debt.Id && p.TransactionId == t.Id))
+            .Select(t => t.AccountId)
+            .Distinct()
+            .ToListAsync(cancellationToken);
+        return await sharing.CheckReferencesAsync(input, new SharedReferences(accounts, [], []), cancellationToken);
+    }
 
     private async Task<Dictionary<DebtId, DebtTracking>> TrackAsync(IReadOnlyCollection<Debt> debts, CancellationToken cancellationToken)
     {

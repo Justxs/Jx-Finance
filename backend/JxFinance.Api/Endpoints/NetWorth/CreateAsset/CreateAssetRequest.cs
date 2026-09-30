@@ -1,4 +1,5 @@
 using JxFinance.Common.Json;
+using JxFinance.Domain.Common;
 using JxFinance.Domain.NetWorth;
 using JxFinance.Endpoints.NetWorth.Shared;
 
@@ -9,4 +10,6 @@ public sealed record CreateAssetRequest(
     AssetType Type,
     [property: Money(NotNull = true)] decimal? CurrentValue,
     DateOnly AsOf,
-    DepreciationInput? Depreciation = null) : IAssetInput;
+    DepreciationInput? Depreciation = null,
+    Scope Scope = Scope.Personal,
+    Guid? HouseholdId = null) : IAssetInput;

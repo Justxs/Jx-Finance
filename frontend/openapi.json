@@ -1076,7 +1076,9 @@
                 "type": "property",
                 "currentValue": "180000.00",
                 "asOf": "2026-09-01",
-                "depreciation": null
+                "depreciation": null,
+                "scope": "personal",
+                "householdId": null
               }
             }
           },
@@ -1293,7 +1295,9 @@
                 "type": "property",
                 "currentValue": "185000.00",
                 "asOf": "2026-09-01",
-                "depreciation": null
+                "depreciation": null,
+                "scope": "personal",
+                "householdId": null
               }
             }
           },
@@ -6399,7 +6403,9 @@
                 "termMonths": 360,
                 "monthlyPayment": null,
                 "amortizationType": "annuity",
-                "tracksPayments": false
+                "tracksPayments": false,
+                "scope": "personal",
+                "householdId": null
               }
             }
           },
@@ -6622,7 +6628,9 @@
                 "termMonths": 360,
                 "monthlyPayment": null,
                 "amortizationType": "annuity",
-                "tracksPayments": false
+                "tracksPayments": false,
+                "scope": "personal",
+                "householdId": null
               }
             }
           },
@@ -18619,7 +18627,9 @@
           "value",
           "depreciation",
           "monthlyDepreciation",
-          "fullyDepreciatedOn"
+          "fullyDepreciatedOn",
+          "scope",
+          "householdId"
         ],
         "type": "object",
         "properties": {
@@ -18673,6 +18683,16 @@
                 "$ref": "#/components/schemas/NullableOfDateOnly"
               }
             ]
+          },
+          "scope": {
+            "$ref": "#/components/schemas/Scope"
+          },
+          "householdId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
           }
         }
       },
@@ -18863,7 +18883,9 @@
           "settlement",
           "budget",
           "goal",
-          "recurringBill"
+          "recurringBill",
+          "asset",
+          "debt"
         ],
         "type": "string"
       },
@@ -20054,6 +20076,16 @@
               }
             ],
             "description": "Optional straight-line depreciation: startDate (not in the future), startValue, lifeMonths (1 to 600) and residualValue (0 or more, below the start value). Give all four or leave it out (asset.depreciationIncomplete). The value falls by (startValue - residualValue) / lifeMonths, rounded up to the cent, on the start date's day of each month and never below the residual value."
+          },
+          "scope": {
+            "$ref": "#/components/schemas/Scope"
+          },
+          "householdId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
           }
         },
         "example": {
@@ -20061,7 +20093,9 @@
           "type": "property",
           "currentValue": "180000.00",
           "asOf": "2026-09-01",
-          "depreciation": null
+          "depreciation": null,
+          "scope": "personal",
+          "householdId": null
         }
       },
       "CreateBackupRequest": {
@@ -20559,6 +20593,16 @@
             "description": "When true, the balance is outstandingAmount on asOf minus the principal of the payments linked after asOf. Editing outstandingAmount or asOf sets a new starting point.",
             "default": false,
             "example": false
+          },
+          "scope": {
+            "$ref": "#/components/schemas/Scope"
+          },
+          "householdId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
           }
         },
         "example": {
@@ -20572,7 +20616,9 @@
           "termMonths": 360,
           "monthlyPayment": null,
           "amortizationType": "annuity",
-          "tracksPayments": false
+          "tracksPayments": false,
+          "scope": "personal",
+          "householdId": null
         }
       },
       "CreatedPersonalApiTokenResponse": {
@@ -21803,7 +21849,9 @@
           "tracksPayments",
           "trackedBalance",
           "trackedIncomplete",
-          "unavailablePayments"
+          "unavailablePayments",
+          "scope",
+          "householdId"
         ],
         "type": "object",
         "properties": {
@@ -21894,6 +21942,16 @@
           "unavailablePayments": {
             "type": "integer",
             "format": "int32"
+          },
+          "scope": {
+            "$ref": "#/components/schemas/Scope"
+          },
+          "householdId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
           }
         }
       },
@@ -28211,6 +28269,16 @@
               }
             ],
             "description": "Optional straight-line depreciation: startDate (not in the future), startValue, lifeMonths (1 to 600) and residualValue (0 or more, below the start value). Give all four or leave it out (asset.depreciationIncomplete). The value falls by (startValue - residualValue) / lifeMonths, rounded up to the cent, on the start date's day of each month and never below the residual value."
+          },
+          "scope": {
+            "$ref": "#/components/schemas/Scope"
+          },
+          "householdId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
           }
         },
         "example": {
@@ -28218,7 +28286,9 @@
           "type": "property",
           "currentValue": "185000.00",
           "asOf": "2026-09-01",
-          "depreciation": null
+          "depreciation": null,
+          "scope": "personal",
+          "householdId": null
         }
       },
       "UpdateBackupRequest": {
@@ -28701,6 +28771,16 @@
             "description": "When true, the balance is outstandingAmount on asOf minus the principal of the payments linked after asOf. Editing outstandingAmount or asOf sets a new starting point.",
             "default": false,
             "example": false
+          },
+          "scope": {
+            "$ref": "#/components/schemas/Scope"
+          },
+          "householdId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
           }
         },
         "example": {
@@ -28714,7 +28794,9 @@
           "termMonths": 360,
           "monthlyPayment": null,
           "amortizationType": "annuity",
-          "tracksPayments": false
+          "tracksPayments": false,
+          "scope": "personal",
+          "householdId": null
         }
       },
       "UpdateDiscordSettingsRequest": {

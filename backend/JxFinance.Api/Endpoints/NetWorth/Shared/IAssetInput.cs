@@ -1,8 +1,9 @@
+using JxFinance.Common.Sharing;
 using JxFinance.Domain.NetWorth;
 
 namespace JxFinance.Endpoints.NetWorth.Shared;
 
-public interface IAssetInput
+public interface IAssetInput : IShareableInput
 {
     string Name { get; }
     AssetType Type { get; }

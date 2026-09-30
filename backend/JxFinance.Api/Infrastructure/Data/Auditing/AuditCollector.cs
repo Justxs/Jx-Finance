@@ -13,6 +13,7 @@ using JxFinance.Domain.Conversions;
 using JxFinance.Domain.Goals;
 using JxFinance.Domain.Households;
 using JxFinance.Domain.Investments;
+using JxFinance.Domain.NetWorth;
 using JxFinance.Domain.RecurringBills;
 using JxFinance.Domain.Tags;
 using JxFinance.Domain.Transactions;
@@ -28,6 +29,8 @@ internal sealed class AuditCollector(AppDbContext db, Guid actorId, DateTimeOffs
     private const string TagsField = "tags";
     private const string SplitField = "split";
     private const string SharesField = "shares";
+    private const string ValuationsField = "valuations";
+    private const string PaymentsField = "payments";
     private const string IdProperty = "Id";
 
     private static readonly Dictionary<Type, Audited> Registry = new[]
@@ -88,6 +91,16 @@ internal sealed class AuditCollector(AppDbContext db, Guid actorId, DateTimeOffs
             (_, b) => b.Name,
             nameof(RecurringBill.Name), nameof(RecurringBill.Amount), nameof(RecurringBill.CategoryId),
             nameof(RecurringBill.Cadence), nameof(RecurringBill.NextDueDate), nameof(RecurringBill.IsActive)),
+        Audited.Of<Asset>(
+            AuditEntityKind.Asset,
+            Route.Shareable,
+            (_, a) => a.Name,
+            nameof(Asset.Name), nameof(Asset.Type), nameof(Asset.CurrentValue), nameof(Asset.AsOf)),
+        Audited.Of<Debt>(
+            AuditEntityKind.Debt,
+            Route.Shareable,
+            (_, d) => d.Name,
+            nameof(Debt.Name), nameof(Debt.Type), nameof(Debt.OutstandingAmount), nameof(Debt.InterestRate), nameof(Debt.TracksPayments)),
         Audited.Of<Household>(AuditEntityKind.Household, Route.Household, (_, h) => h.Name, nameof(Household.Name)),
         Audited.Of<HouseholdMembership>(
             AuditEntityKind.Member,
@@ -128,11 +141,14 @@ internal sealed class AuditCollector(AppDbContext db, Guid actorId, DateTimeOffs
     private readonly Dictionary<TransactionId, List<TagId>> storedTags = [];
     private readonly Dictionary<TransactionId, List<LineInfo>> storedLines = [];
     private readonly Dictionary<TransactionId, AttachedTo> attachedTo = [];
+    private readonly Dictionary<TransactionId, PaidWith> paidWith = [];
     private readonly List<Draft> drafts = [];
 
     private ILookup<TransactionId, EntityEntry> tagChanges = Array.Empty<EntityEntry>().ToLookup(_ => default(TransactionId));
     private ILookup<TransactionId, EntityEntry> lineChanges = Array.Empty<EntityEntry>().ToLookup(_ => default(TransactionId));
     private ILookup<SharedExpenseId, EntityEntry> shareEntries = Array.Empty<EntityEntry>().ToLookup(_ => default(SharedExpenseId));
+    private ILookup<AssetId, EntityEntry> valuationChanges = Array.Empty<EntityEntry>().ToLookup(_ => default(AssetId));
+    private ILookup<DebtId, EntityEntry> paymentChanges = Array.Empty<EntityEntry>().ToLookup(_ => default(DebtId));
 
     private enum Route
     {
@@ -159,13 +175,18 @@ internal sealed class AuditCollector(AppDbContext db, Guid actorId, DateTimeOffs
         tagChanges = entries.Where(e => e.Entity is TransactionTag).ToLookup(e => ((TransactionTag)e.Entity).TransactionId);
         lineChanges = entries.Where(e => e.Entity is TransactionLine).ToLookup(e => ((TransactionLine)e.Entity).TransactionId);
         shareEntries = db.ChangeTracker.Entries<SharedExpenseShare>().ToLookup(e => e.Entity.SharedExpenseId, e => (EntityEntry)e);
+        valuationChanges = entries.Where(e => e.Entity is AssetValuation).ToLookup(e => ((AssetValuation)e.Entity).AssetId);
+        paymentChanges = entries.Where(e => e.Entity is DebtPayment).ToLookup(e => ((DebtPayment)e.Entity).DebtId);
 
         var scoped = ScopedEntries(entries);
         var attachments = entries.Where(e => RouteOf(e) == Route.Attachment).ToList();
         await LoadAttachedToAsync(attachments, cancellationToken);
+        await LoadPaidWithAsync(cancellationToken);
         await LoadAccountsAsync(scoped, summary, cancellationToken);
+        var touchedByValuations = await TouchedAsync(db.Assets, valuationChanges, a => a.Id, cancellationToken);
+        var touchedByPayments = await TouchedAsync(db.Debts, paymentChanges, d => d.Id, cancellationToken);
 
-        foreach (var entry in entries)
+        foreach (var entry in entries.Concat(touchedByValuations).Concat(touchedByPayments).DistinctBy(e => e.Entity, ReferenceEqualityComparer.Instance))
         {
             switch (RouteOf(entry))
             {
@@ -225,6 +246,55 @@ internal sealed class AuditCollector(AppDbContext db, Guid actorId, DateTimeOffs
         ];
     }
 
+    private async Task<List<EntityEntry>> TouchedAsync<TEntity, TId>(
+        DbSet<TEntity> set,
+        ILookup<TId, EntityEntry> children,
+        Func<TEntity, TId> idOf,
+        CancellationToken cancellationToken)
+        where TEntity : EntityBase
+        where TId : struct, IStronglyTypedId<TId>
+    {
+        var ids = children.Select(g => g.Key).ToList();
+        if (ids.Count == 0)
+        {
+            return [];
+        }
+
+        var tracked = db.ChangeTracker.Entries<TEntity>().Select(e => idOf(e.Entity)).ToHashSet();
+        var missing = ids.Where(id => !tracked.Contains(id)).ToList();
+        if (missing.Count > 0)
+        {
+            await set.IgnoreQueryFilters()
+                .Where(e => missing.Contains(EF.Property<TId>(e, IdProperty)))
+                .LoadAsync(cancellationToken);
+        }
+
+        return [.. db.ChangeTracker.Entries<TEntity>().Where(e => children.Contains(idOf(e.Entity))).Select(e => (EntityEntry)e)];
+    }
+
+    private async Task LoadPaidWithAsync(CancellationToken cancellationToken)
+    {
+        var ids = paymentChanges.SelectMany(g => g).Select(e => ((DebtPayment)e.Entity).TransactionId).Distinct().ToList();
+        if (ids.Count == 0)
+        {
+            return;
+        }
+
+        var stored = await db.Transactions
+            .IgnoreQueryFilters()
+            .AsNoTracking()
+            .Where(t => ids.Contains(t.Id))
+            .Select(t => new { t.Id, t.AccountId, t.Date, t.Amount })
+            .ToListAsync(cancellationToken);
+        var tracked = db.ChangeTracker.Entries<Transaction>()
+            .Where(e => ids.Contains(e.Entity.Id))
+            .Select(e => new { e.Entity.Id, e.Entity.AccountId, e.Entity.Date, e.Entity.Amount });
+        foreach (var transaction in stored.Concat(tracked))
+        {
+            paidWith[transaction.Id] = new PaidWith(transaction.AccountId, transaction.Date, transaction.Amount);
+        }
+    }
+
     private List<EntityEntry> HouseholdScopedEntries(List<EntityEntry> entries)
     {
         var touchedByShares = db.ChangeTracker.Entries<SharedExpense>()
@@ -254,6 +324,7 @@ internal sealed class AuditCollector(AppDbContext db, Guid actorId, DateTimeOffs
             .SelectMany(e => AccountIds(e, true).Concat(AccountIds(e, false)))
             .Concat(summary?.Accounts ?? [])
             .Concat(attachedTo.Values.Select(t => t.AccountId))
+            .Concat(paidWith.Values.Select(t => t.AccountId))
             .Distinct()
             .ToList();
         var stored = ids.Count == 0
@@ -654,6 +725,16 @@ internal sealed class AuditCollector(AppDbContext db, Guid actorId, DateTimeOffs
             changes.Add(shareChange);
         }
 
+        if (entry.Entity is Asset asset && ValuationChange(asset) is { } valuationChange)
+        {
+            changes.Add(valuationChange);
+        }
+
+        if (entry.Entity is Debt debt && PaymentChange(debt) is { } paymentChange)
+        {
+            changes.Add(paymentChange);
+        }
+
         return changes;
     }
 
@@ -723,6 +804,62 @@ internal sealed class AuditCollector(AppDbContext db, Guid actorId, DateTimeOffs
         var to = ShareSummary(entries.Where(e => e.State != EntityState.Deleted), false);
         return from == to ? null : new AuditChange(SharesField, from, to);
     }
+
+    private AuditChange? ValuationChange(Asset asset) => ChangedChildren(
+        ValuationsField,
+        valuationChanges[asset.Id],
+        (e, original) => $"{Display(Read(e, nameof(AssetValuation.Date), original))}: "
+            + TrashLabel.Amount(new Money((decimal)Read(e, nameof(AssetValuation.Value), original)!, asset.Currency)));
+
+    private AuditChange? PaymentChange(Debt debt) => ChangedChildren(
+        PaymentsField,
+        paymentChanges[debt.Id],
+        (e, original) => PaymentSummary(e, original, debt.Currency));
+
+    private string PaymentSummary(EntityEntry entry, bool original, Currency currency)
+    {
+        var payment = (DebtPayment)entry.Entity;
+        var parts = new List<string>();
+        if (paidWith.TryGetValue(payment.TransactionId, out var transaction))
+        {
+            parts.Add(Display(transaction.AccountId) ?? "");
+            parts.Add(Display(transaction.Date)!);
+            parts.Add(TrashLabel.Amount(transaction.Amount));
+        }
+
+        if (Read(entry, nameof(DebtPayment.Kind), original) is DebtPaymentKind.Extra)
+        {
+            parts.Add(Display(DebtPaymentKind.Extra)!);
+        }
+
+        if (Read(entry, nameof(DebtPayment.Principal), original) is decimal principal)
+        {
+            parts.Add($"{FieldName(nameof(DebtPayment.Principal))} {TrashLabel.Amount(new Money(principal, currency))}");
+        }
+
+        return string.Join(", ", parts);
+    }
+
+    private static AuditChange? ChangedChildren(string field, IEnumerable<EntityEntry> changed, Func<EntityEntry, bool, string> summarise)
+    {
+        var entries = changed.ToList();
+        var from = Joined(entries.Where(ExistedBefore).Select(e => summarise(e, true)));
+        var to = Joined(entries.Where(ExistsAfter).Select(e => summarise(e, false)));
+        return from == to ? null : new AuditChange(field, from, to);
+    }
+
+    private static string? Joined(IEnumerable<string> parts)
+    {
+        var ordered = parts.Order(StringComparer.Ordinal).ToList();
+        return ordered.Count == 0 ? null : string.Join("; ", ordered);
+    }
+
+    private static bool ExistedBefore(EntityEntry entry) =>
+        entry.State != EntityState.Added
+        && (entry.Entity is not EntityBase || !(bool)entry.Property(nameof(EntityBase.IsDeleted)).OriginalValue!);
+
+    private static bool ExistsAfter(EntityEntry entry) =>
+        entry.State != EntityState.Deleted && entry.Entity is not EntityBase { IsDeleted: true };
 
     private string? ShareSummary(IEnumerable<EntityEntry> entries, bool original)
     {
@@ -847,6 +984,8 @@ internal sealed class AuditCollector(AppDbContext db, Guid actorId, DateTimeOffs
     private sealed record AccountInfo(Scope Scope, HouseholdId? HouseholdId, string Name);
 
     private sealed record AttachedTo(AccountId AccountId, string Description);
+
+    private sealed record PaidWith(AccountId AccountId, DateOnly Date, Money Amount);
 
     private sealed record LineInfo(Guid Id, CategoryId? CategoryId, decimal Amount)
     {

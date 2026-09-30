@@ -60,6 +60,8 @@ export function AssetsSection() {
         currency: asset.currency,
         record: asset,
         action: historyLink(asset),
+        scope: asset.scope,
+        householdId: asset.householdId,
       }))}
       deleteMutation={deleteMutation}
       undoKind="asset"

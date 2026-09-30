@@ -16,9 +16,17 @@ import type {
 import { fromCents, toCents } from "@/lib/money";
 import { accounts } from "./accounts";
 import { FIXTURE_TODAY, ids, totalOf, uid } from "./base";
+import { familyHousehold } from "./households";
 import { transactions } from "./transactions";
 
-const manual = { depreciation: null, monthlyDepreciation: null, fullyDepreciatedOn: null };
+const personal = { scope: "personal", householdId: null } as const;
+
+const manual = {
+  depreciation: null,
+  monthlyDepreciation: null,
+  fullyDepreciatedOn: null,
+  ...personal,
+};
 
 export const assets: AssetResponse[] = [
   {
@@ -47,6 +55,7 @@ export const assets: AssetResponse[] = [
     },
     monthlyDepreciation: "156.25",
     fullyDepreciatedOn: "2032-10-10",
+    ...personal,
   },
   {
     id: ids.assets.investments,
@@ -76,6 +85,7 @@ export const fullyDepreciatedAsset: AssetResponse = {
   },
   monthlyDepreciation: "61.12",
   fullyDepreciatedOn: "2022-11-20",
+  ...personal,
 };
 
 export const dollarAsset: AssetResponse = {
@@ -224,6 +234,7 @@ const untracked = {
   trackedBalance: null,
   trackedIncomplete: false,
   unavailablePayments: 0,
+  ...personal,
 } as const;
 
 function withPayoff(debt: Omit<DebtResponse, "payoffDate" | keyof typeof untracked>): DebtResponse {
@@ -295,11 +306,11 @@ export const linearDebt: DebtResponse = withPayoff({
   amortizationType: "linear",
 });
 
-function found(debt: DebtResponse | undefined): DebtResponse {
-  if (!debt) {
-    throw new Error("the debts fixture is empty");
+function found<T>(item: T | undefined, fixture = "debts"): T {
+  if (!item) {
+    throw new Error(`the ${fixture} fixture is empty`);
   }
-  return debt;
+  return item;
 }
 
 export function buildDebtSchedule(
@@ -348,6 +359,18 @@ export const trackedMortgage: DebtResponse = {
   asOf: "2026-06-30",
   tracksPayments: true,
   trackedBalance: "97210.95",
+};
+
+export const sharedAsset: AssetResponse = {
+  ...found(assets[0], "assets"),
+  scope: "shared",
+  householdId: familyHousehold.id,
+};
+
+export const sharedTrackedMortgage: DebtResponse = {
+  ...trackedMortgage,
+  scope: "shared",
+  householdId: familyHousehold.id,
 };
 
 function payment(

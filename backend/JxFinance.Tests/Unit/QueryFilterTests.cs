@@ -119,5 +119,17 @@ public sealed class QueryFilterTests
         Assert.Contains(NotDeleted("s"), capture.OnlyStatement, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public async Task A_debt_payment_is_visible_through_its_debt_rather_than_its_linker()
+    {
+        await using var capture = new SqlCapture();
+
+        await capture.Db.DebtPayments.ToListAsync(TestContext.Current.CancellationToken);
+
+        Assert.Contains("\"Debts\"", capture.OnlyStatement, StringComparison.Ordinal);
+        Assert.Contains("HouseholdMemberships", capture.OnlyStatement, StringComparison.Ordinal);
+        Assert.Contains(NotDeleted("d"), capture.OnlyStatement, StringComparison.Ordinal);
+    }
+
     private static string NotDeleted(string alias) => $"NOT ({alias}.\"IsDeleted\")";
 }

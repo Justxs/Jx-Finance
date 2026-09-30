@@ -1,8 +1,9 @@
+using JxFinance.Common.Sharing;
 using JxFinance.Domain.NetWorth;
 
 namespace JxFinance.Endpoints.NetWorth.Shared;
 
-public interface IDebtInput
+public interface IDebtInput : IShareableInput
 {
     string Name { get; }
     DebtType Type { get; }

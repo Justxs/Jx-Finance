@@ -2,7 +2,7 @@
 
 Back to the [feature walkthrough](README.md). See also [decisions](../decisions/households-and-sharing.md), [architecture: Sharing and households](../architecture/sharing.md).
 
-Backend `Households`, page `/households`, listed as Households under Shared on the one Settings page while the switch is on (see [Installation settings](installation-settings.md#one-settings-page)), with its title and a small outline "Create household" button in a section header. Household roles (Owner, Member) are independent of application roles (Admin, Member). Accounts, categories and tags can be shared, and since 2026-09-30 budgets, goals and recurring entries too (see [Shared budgets, goals and recurring entries](#shared-budgets-goals-and-recurring-entries)); since 2026-09-29 a member can also split an expense they paid with the household, which the other members see as a household record even when the account behind it is personal (see [Settling up](#settling-up)).
+Backend `Households`, page `/households`, listed as Households under Shared on the one Settings page while the switch is on (see [Installation settings](installation-settings.md#one-settings-page)), with its title and a small outline "Create household" button in a section header. Household roles (Owner, Member) are independent of application roles (Admin, Member). Accounts, categories and tags can be shared, and since 2026-09-30 budgets, goals and recurring entries too (see [Shared budgets, goals and recurring entries](#shared-budgets-goals-and-recurring-entries)), and assets and debts (see [Shared assets and debts](#shared-assets-and-debts)); since 2026-09-29 a member can also split an expense they paid with the household, which the other members see as a household record even when the account behind it is personal (see [Settling up](#settling-up)).
 
 ## Who sees what
 
@@ -15,7 +15,9 @@ flowchart TD
     Scoped["IAccountScoped: transactions, conversions, investment entries"] --> ViaAcc["visible when the account is visible"]
     Transfer["Transfer"] --> Either["visible through either account,<br/>edit and delete need both"]
     Plans["Shareable plans: budgets, goals, recurring entries"] --> Filter
-    Personal["Assets, debts, notifications, snapshots"] --> OwnerOnly["owner only"]
+    Wealth["Shareable assets and debts"] --> Filter
+    Payment["Debt payment links"] --> ViaDebt["visible when the debt is visible"]
+    Personal["Notifications, snapshots"] --> OwnerOnly["owner only"]
     Household["IHouseholdScoped: split expenses, settle-up payments"] --> Members["visible to current members<br/>of a living household"]
 ```
 
@@ -60,15 +62,27 @@ The narrowing happens in one place, the shareable branch of `ApplyQueryFilters` 
 
 Since 2026-09-30 the budget, goal and recurring entry forms have the same Visibility field as accounts, categories and tags, shown only to a member of a household, and a shared row carries the "Shared · household" tag. They follow the same rules: every member of the household sees the record and can edit it, only its owner can change its sharing or delete it (`access.forbidden`), and the switcher hides it while another household is active.
 
-A shared record may only point at what every member can see, so its category, tag, funding account or accounts must be shared with the same household, and a shared recurring entry cannot pay a debt, since debts are personal. Anything else answers 400 `household.referenceNotShared` when it is saved. Unsharing a category or account later does not reach back: the plan stays shared and a member who can no longer see the category reads its name as "Unknown".
+A shared record may only point at what every member can see, so its category, tag, funding account or accounts must be shared with the same household, and a shared recurring entry can pay only a debt shared with the same household. Anything else answers 400 `household.referenceNotShared` when it is saved. Unsharing a category or account later does not reach back: the plan stays shared and a member who can no longer see the category reads its name as "Unknown".
 
 | Record | What sharing changes |
 | --- | --- |
 | Budget | its spending counts only the transactions on accounts shared with its household, whoever entered them, so every member sees the same figure; a personal budget still counts everything its owner can see. One budget per category or tag and period applies within each household, and separately among each member's personal budgets. Each member gets the 80% and 100% alerts of a shared budget |
 | Goal | members see its progress and can update a manual goal's saved amount; a goal funded from an account needs a shared account |
 | Recurring entry | members see it on the recurring page and in their cash-flow forecast and can confirm an occurrence, which posts to the shared account as them; the due reminder still goes to the owner only |
+| Asset | counts in full in every member's net worth; members edit it and add or delete its valuations |
+| Debt | counts in full in every member's net worth with one tracked balance; members edit it and link, change or unlink its payments, from accounts shared with the same household only |
 
 Deleting the household or removing its owner from it makes these records personal again, like the shared accounts, categories and tags, and restoring the household shares them back. Their changes appear in the household's activity log.
+
+## Shared assets and debts
+
+Since 2026-09-30 the asset and debt forms have the same Visibility field, and a shared asset or debt carries the "Shared · household" tag in the net worth lists and next to the title of its page. A new one proposes the active household, as the other forms do; a new debt has no payments yet, so that is always safe. The owner alone changes its sharing or deletes it, and a member who tries to delete it is told so in the delete dialog (`access.forbidden`).
+
+A shared asset or debt counts in full in the net worth of every member who can see it, as a shared account does, rather than a share per member, so a shared mortgage and the flat it pays for count for both partners alike. The household switcher narrows the list and the total to one household like everything else. Any member who can see a shared asset adds or deletes its valuations, and any member who can see a shared debt links a payment to it, changes its principal or unlinks it. The links follow their debt, so both partners see the same payments and the same tracked balance.
+
+A shared debt can only be paid from an account shared with its household: linking by hand, the payment candidates and the payment a confirmed recurring entry links all keep to those accounts, so every member sees every payment. Sharing a debt whose linked payments sit on another account answers 400 `household.referenceNotShared`, and so does linking a payment from a personal account. A recurring entry, personal or shared, that pays a shared debt must use an account shared with the debt's household, and a shared recurring entry can only pay a debt shared with its own household. An account unshared after its payments were linked does not reach back: its payments stay linked and show among the debt's unavailable payments for the members who can no longer see them.
+
+Each member's net worth snapshot stays the member's whole net worth. `GET /api/networth` under an active household answers the narrowed totals without writing, and then has the snapshotter store the whole figure, so the history, the dashboard and the month-end close keep reading the same series whatever the switcher shows.
 
 ## Settling up
 

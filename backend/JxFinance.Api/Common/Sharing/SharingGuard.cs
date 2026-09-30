@@ -29,10 +29,11 @@ public sealed class SharingGuard(AppDbContext db, ICurrentUser currentUser) : IS
         var accounts = references.Accounts.Distinct().ToList();
         var categories = references.Categories.Distinct().ToList();
         var tags = references.Tags.Distinct().ToList();
-        var shared = !references.HasPersonalOnly
-            && await db.Accounts.CountAsync(a => accounts.Contains(a.Id) && a.Scope == Scope.Shared && a.HouseholdId == householdId, cancellationToken) == accounts.Count
+        var debts = (references.Debts ?? []).Distinct().ToList();
+        var shared = await db.Accounts.CountAsync(a => accounts.Contains(a.Id) && a.Scope == Scope.Shared && a.HouseholdId == householdId, cancellationToken) == accounts.Count
             && await db.Categories.CountAsync(c => categories.Contains(c.Id) && c.Scope == Scope.Shared && c.HouseholdId == householdId, cancellationToken) == categories.Count
-            && await db.Tags.CountAsync(t => tags.Contains(t.Id) && t.Scope == Scope.Shared && t.HouseholdId == householdId, cancellationToken) == tags.Count;
+            && await db.Tags.CountAsync(t => tags.Contains(t.Id) && t.Scope == Scope.Shared && t.HouseholdId == householdId, cancellationToken) == tags.Count
+            && await db.Debts.CountAsync(d => debts.Contains(d.Id) && d.Scope == Scope.Shared && d.HouseholdId == householdId, cancellationToken) == debts.Count;
 
         return shared
             ? null

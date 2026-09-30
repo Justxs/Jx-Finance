@@ -10,6 +10,7 @@ import type { Currency } from "./currency";
 import type { DateOnly } from "./dateOnly";
 import type { DepreciationResponse } from "./depreciationResponse";
 import type { NullableOfDateOnly } from "./nullableOfDateOnly";
+import type { Scope } from "./scope";
 
 export interface AssetResponse {
   id: string;
@@ -23,4 +24,7 @@ export interface AssetResponse {
   /** @nullable */
   monthlyDepreciation: string | null;
   fullyDepreciatedOn: null | NullableOfDateOnly;
+  scope: Scope;
+  /** @nullable */
+  householdId: string | null;
 }

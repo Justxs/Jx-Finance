@@ -1,8 +1,9 @@
 using JxFinance.Domain.Common;
+using JxFinance.Domain.Households;
 
 namespace JxFinance.Domain.NetWorth;
 
-public sealed class Debt : OwnableEntity
+public sealed class Debt : OwnableEntity, IShareable
 {
     public const int MaxTermMonths = 600;
 
@@ -19,4 +20,6 @@ public sealed class Debt : OwnableEntity
     public decimal? MonthlyPayment { get; set; }
     public AmortizationType AmortizationType { get; set; }
     public bool TracksPayments { get; set; }
+    public Scope Scope { get; set; } = Scope.Personal;
+    public HouseholdId? HouseholdId { get; set; }
 }

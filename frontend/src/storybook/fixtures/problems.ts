@@ -112,6 +112,13 @@ export const lastValuationProblem = problemOf(
   { instance: "/api/assets/bbbbbbbb-0000-0000-0000-000000000003/valuations/2026-09-01" },
 );
 
+export const referenceNotSharedProblem = problemOf(
+  400,
+  "household.referenceNotShared",
+  "A shared debt can only be paid from an account shared with its household.",
+  { instance: "/api/debts/cccccccc-0000-0000-0000-000000000001/payments" },
+);
+
 export const scheduleIncompleteProblem = problemOf(
   400,
   "debt.scheduleIncomplete",

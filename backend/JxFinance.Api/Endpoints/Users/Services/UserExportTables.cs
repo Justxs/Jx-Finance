@@ -25,7 +25,7 @@ public static class UserExportTables
         ["CsvImportMappings"] = new Owned(),
         ["PayeeNames"] = new Owned(),
         ["CurrencyConversions"] = new OnOwnedAccounts(AccountId),
-        ["DebtPayments"] = new Owned(),
+        ["DebtPayments"] = new ChildOf("Debts", "DebtId"),
         ["Debts"] = new Owned(),
         ["DeletionChanges"] = new ChildOf("DeletionEntries", "DeletionEntryId"),
         ["DeletionEntries"] = new Owned(),

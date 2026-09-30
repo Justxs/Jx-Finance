@@ -308,6 +308,11 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, ICurren
             return AttachmentFilter();
         }
 
+        if (clrType == typeof(DebtPayment))
+        {
+            return DebtPaymentFilter();
+        }
+
         if (clrType == typeof(Transfer))
         {
             return TransferFilter();
@@ -363,6 +368,9 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, ICurren
 
     private Expression<Func<TransactionAttachment, bool>> AttachmentFilter() =>
         a => Transactions.Any(t => t.Id == a.TransactionId);
+
+    private Expression<Func<DebtPayment, bool>> DebtPaymentFilter() =>
+        p => Debts.Any(d => d.Id == p.DebtId);
 
     private Expression<Func<Transfer, bool>> TransferFilter() =>
         t => Accounts.Any(a => a.Id == t.FromAccountId || a.Id == t.ToAccountId);

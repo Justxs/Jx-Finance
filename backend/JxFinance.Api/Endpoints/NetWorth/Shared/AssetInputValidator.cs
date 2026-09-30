@@ -1,6 +1,7 @@
 using FastEndpoints;
 using FluentValidation;
 using JxFinance.Common.Errors;
+using JxFinance.Common.Sharing;
 using JxFinance.Common.Validation;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.NetWorth;
@@ -39,5 +40,6 @@ public abstract class AssetInputValidator<TRequest> : Validator<TRequest>
             RuleFor(r => r.Depreciation!.ResidualValue).IsNonNegativeMoney();
             RuleFor(r => r.Depreciation!.LifeMonths).IsWithin(1, Depreciation.MaxLifeMonths);
         });
+        RuleFor(r => r.HouseholdId).RequiresHouseholdWhenShared("asset");
     }
 }

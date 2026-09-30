@@ -1,11 +1,12 @@
 import { type ComponentType, type ReactNode, useState } from "react";
 import { useTranslation } from "react-i18next";
-import type { TrashKind } from "@/api/generated/model";
+import type { Scope, TrashKind } from "@/api/generated/model";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog/confirm-delete-dialog";
 import { CreateDialog } from "@/components/create-dialog/create-dialog";
 import { EditModal } from "@/components/modal";
 import { RowActions } from "@/components/row-actions/row-actions";
 import { RowTransition } from "@/components/row-transition/row-transition";
+import { SharedScopeTag } from "@/components/shared-scope-tag/shared-scope-tag";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { Rows } from "@/components/ui/rows/rows";
 import { Section, SectionHeader } from "@/components/ui/section/section";
@@ -22,6 +23,8 @@ export interface BalanceItem<TRecord> {
   currency: string;
   record: TRecord;
   action?: ReactNode;
+  scope?: Scope;
+  householdId?: string | null;
 }
 
 export interface BalanceItemFormProps<TRecord> {
@@ -77,6 +80,13 @@ export function BalanceItemsSection<TRecord>({
               <div className="min-w-0 flex-1 wrap-break-word">
                 <p className="font-medium">{item.name}</p>
                 <p className="text-xs text-muted-foreground tabular-nums">{item.details}</p>
+                {item.scope ? (
+                  <SharedScopeTag
+                    scope={item.scope}
+                    householdId={item.householdId ?? null}
+                    className="mt-1"
+                  />
+                ) : null}
               </div>
               <RowActions
                 label={item.name}

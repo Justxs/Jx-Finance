@@ -21,4 +21,6 @@ public sealed record DebtResponse(
     bool TracksPayments,
     [property: Money] decimal? TrackedBalance,
     bool TrackedIncomplete,
-    int UnavailablePayments);
+    int UnavailablePayments,
+    Scope Scope,
+    Guid? HouseholdId);

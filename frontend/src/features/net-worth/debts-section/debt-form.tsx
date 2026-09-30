@@ -1,13 +1,14 @@
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
-import { useCreateDebt, useUpdateDebt } from "@/api/generated";
-import { AmortizationType, DebtType, type DebtResponse } from "@/api/generated/model";
+import { useCreateDebt, useHouseholdsSuspense, useUpdateDebt } from "@/api/generated";
+import { AmortizationType, DebtType, type DebtResponse, type Scope } from "@/api/generated/model";
 import {
   createDebtBodyNameMax,
   createDebtBodyTermMonthsMax,
 } from "@/api/schemas/net-worth/net-worth.zod";
 import { useServerForm } from "@/components/form";
 import { FormError } from "@/components/form-error/form-error";
+import { SharingFields } from "@/components/sharing-fields/sharing-fields";
 import { FormGrid } from "@/components/ui/form-grid/form-grid";
 import type { BalanceItemFormProps } from "@/features/net-worth/balance-items-section/balance-items-section";
 import { useToday } from "@/hooks/use-settings";
@@ -19,8 +20,12 @@ import {
   normalizeMoney,
   optionalPositiveMoney,
   optionalWholeNumberBetween,
+  refineSharing,
   requiredText,
+  sharingPayload,
+  sharingShape,
 } from "@/lib/validation";
+import { useSharingDefaults } from "@/stores/active-household-store";
 
 const debtTypes = Object.values(DebtType);
 const amortizationTypes = Object.values(AmortizationType);
@@ -38,6 +43,8 @@ interface DebtFormValues {
   monthlyPayment: string;
   amortizationType: AmortizationType;
   tracksPayments: boolean;
+  scope: Scope;
+  householdId: string;
 }
 
 export function debtFormValues(debt: DebtResponse): DebtFormValues {
@@ -53,6 +60,8 @@ export function debtFormValues(debt: DebtResponse): DebtFormValues {
     monthlyPayment: debt.monthlyPayment ?? "",
     amortizationType: debt.amortizationType,
     tracksPayments: debt.tracksPayments,
+    scope: debt.scope,
+    householdId: debt.householdId ?? "",
   };
 }
 
@@ -74,6 +83,7 @@ export function debtRequest(values: DebtFormValues) {
     monthlyPayment: monthlyPayment || null,
     amortizationType: values.amortizationType,
     tracksPayments: values.tracksPayments,
+    ...sharingPayload(values),
   };
 }
 
@@ -85,29 +95,35 @@ export function DebtForm({ editing, onClose }: Readonly<BalanceItemFormProps<Deb
     useUpdateDebt({ mutation: { ...silentMutation, onSuccess: onClose } }),
   );
   const idPrefix = editing ? "debt-edit" : "debt";
+  const sharing = useSharingDefaults(useHouseholdsSuspense().data, editing);
 
-  const schema = z
-    .object({
-      name: requiredText(t, createDebtBodyNameMax),
-      type: z.enum(DebtType),
-      amount: money(t),
-      interestRate: z.string().refine(isRate, t("validation.rate")),
-      asOf: z.string(),
-      loanAmount: optionalPositiveMoney(t),
-      firstPaymentDate: z.string(),
-      termMonths: optionalWholeNumberBetween(t, TERM_MIN, createDebtBodyTermMonthsMax),
-      monthlyPayment: optionalPositiveMoney(t),
-      amortizationType: z.enum(AmortizationType),
-      tracksPayments: z.boolean(),
-    })
-    .refine((value) => !(value.termMonths.trim() && value.monthlyPayment.trim()), {
-      message: t("netWorth.repayment.termOrPayment"),
-      path: ["monthlyPayment"],
-    })
-    .refine(
-      (value) => value.amortizationType !== AmortizationType.linear || !value.monthlyPayment.trim(),
-      { message: t("netWorth.repayment.linearNeedsTerm"), path: ["monthlyPayment"] },
-    );
+  const schema = refineSharing(
+    z
+      .object({
+        name: requiredText(t, createDebtBodyNameMax),
+        type: z.enum(DebtType),
+        amount: money(t),
+        interestRate: z.string().refine(isRate, t("validation.rate")),
+        asOf: z.string(),
+        loanAmount: optionalPositiveMoney(t),
+        firstPaymentDate: z.string(),
+        termMonths: optionalWholeNumberBetween(t, TERM_MIN, createDebtBodyTermMonthsMax),
+        monthlyPayment: optionalPositiveMoney(t),
+        amortizationType: z.enum(AmortizationType),
+        tracksPayments: z.boolean(),
+        ...sharingShape(),
+      })
+      .refine((value) => !(value.termMonths.trim() && value.monthlyPayment.trim()), {
+        message: t("netWorth.repayment.termOrPayment"),
+        path: ["monthlyPayment"],
+      })
+      .refine(
+        (value) =>
+          value.amortizationType !== AmortizationType.linear || !value.monthlyPayment.trim(),
+        { message: t("netWorth.repayment.linearNeedsTerm"), path: ["monthlyPayment"] },
+      ),
+    t,
+  );
 
   const defaultValues: DebtFormValues = editing
     ? debtFormValues(editing)
@@ -123,6 +139,7 @@ export function DebtForm({ editing, onClose }: Readonly<BalanceItemFormProps<Deb
         monthlyPayment: "",
         amortizationType: AmortizationType.annuity,
         tracksPayments: false,
+        ...sharing,
       };
 
   const form = useServerForm({
@@ -261,6 +278,12 @@ export function DebtForm({ editing, onClose }: Readonly<BalanceItemFormProps<Deb
             )}
           </form.Field>
         </fieldset>
+
+        <SharingFields
+          form={form}
+          fields={{ scope: "scope", householdId: "householdId" }}
+          idPrefix={idPrefix}
+        />
 
         <FormError error={error} />
 

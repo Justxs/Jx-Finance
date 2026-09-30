@@ -127,7 +127,7 @@ The schedule is computed on every request from the stored terms and never stored
 | `money.nonNegative` | 400 | `extraMonthly` or `lumpSum` is not a non-negative decimal string with at most two decimals |
 | `required` | 400 | `lumpSum` is positive and `lumpSumDate` is missing |
 
-Debts are personal, so visibility is the owner filter every debt query already has: a household partner, or anyone else, gets 404 for the schedule exactly as for the update, and the active household changes nothing.
+A debt's schedule is visible to whoever can see the debt: its owner, and since 2026-09-30 every member of the household it is shared with (see [Shared assets and debts](households-and-sharing.md#shared-assets-and-debts)). Anyone else gets 404 for the schedule exactly as for the update, and while another household is active a shared debt answers 404 like any record of that household.
 
 ## The schedule and net worth
 
@@ -184,7 +184,7 @@ erDiagram
         uuid TransactionId "unique, cascade on purge"
         int Kind "regular (0) or extra (1)"
         numeric Principal "typed from the statement, optional"
-        uuid UserId "the owner of the debt"
+        uuid UserId "the member who linked it"
     }
 ```
 
@@ -196,7 +196,9 @@ The balance is derived on every read and never stored. The recorded `outstanding
 | extra | 0 | the whole amount |
 | principal typed on the link | the amount less the typed principal | the typed principal, at most the amount |
 
-With no rate, or a zero rate, everything is principal. The principal is capped at the balance before the payment, and anything beyond it is shown as overpaid, so the balance stops at 0.00. A payment in another currency than the debt's is converted at the rate of its date from the preloaded rate history; a payment with no rate is left out and the balance is marked `trackedIncomplete`. A link whose transaction was deleted, sits on an account the owner no longer sees, or was later edited into income, a transfer or a split, is left out as well and counted in `unavailablePayments`; restoring the transaction from the trash brings it back with no change to the link. A housemate who edits the amount of a linked row on a shared account moves the owner's balance, but never sees the link: it is a row under the owner filter, not a column on the transaction.
+With no rate, or a zero rate, everything is principal. The principal is capped at the balance before the payment, and anything beyond it is shown as overpaid, so the balance stops at 0.00. A payment in another currency than the debt's is converted at the rate of its date from the preloaded rate history; a payment with no rate is left out and the balance is marked `trackedIncomplete`. A link whose transaction was deleted, sits on an account the owner no longer sees, or was later edited into income, a transfer or a split, is left out as well and counted in `unavailablePayments`; restoring the transaction from the trash brings it back with no change to the link. A housemate who edits the amount of a linked row on a shared account moves the balance of a personal debt, but never sees the link: a link is visible exactly when its debt is, through its own query filter, and is not a column on the transaction.
+
+A shared debt's links are visible to every member who can see the debt, so all of them see the same payments and the same tracked balance, and any of them may link, change or unlink a payment. Its payments must come from accounts shared with its household: a link from another account answers 400 `household.referenceNotShared`, the candidates leave those transactions out, and a recurring entry only links its confirmation when the posted row is on such an account. Sharing a debt, moving it to another household or turning tracking back on checks the accounts of its linked payments the same way. When one of those accounts is unshared later, its payments stay linked and count among the `unavailablePayments` of the members who can no longer see it.
 
 Worked example, the one `DebtPaymentTests` pins: 10 000.00 on 1 May at 6% a year. A 500.00 payment on 10 May is regular, 50.00 interest and 450.00 principal, leaving 9 550.00. A 1 000.00 payment on 12 May is linked without a kind; May already has a regular payment, so it is extra and leaves 8 550.00. Typing 900.00 as its principal from the bank statement makes it 100.00 interest and 900.00 principal, leaving 8 650.00. Setting the balance to 9 000.00 on 31 May starts again from there.
 
@@ -205,7 +207,7 @@ Worked example, the one `DebtPaymentTests` pins: 10 000.00 on 1 May at 6% a year
 | `GET /api/debts/{id}/payments` | the counted payments, oldest first, each with the transaction, account, description, amount, kind, interest, principal, whether it was typed, overpaid and the balance after it |
 | `POST /api/debts/{id}/payments` | links `{ transactionId, kind?, principal? }`; without a kind it is regular unless the month already has a regular payment |
 | `PUT /api/debts/{id}/payments/{paymentId}` | sets the kind and the typed principal |
-| `DELETE /api/debts/{id}/payments/{paymentId}` | unlinks for good; a link is a pointer and does not go to the trash |
+| `DELETE /api/debts/{id}/payments/{paymentId}` | unlinks; a link is a pointer and has no trash entry, but the row is soft-deleted, so the household activity log sees the unlink, and purged after 30 days |
 | `GET /api/debts/{id}/payment-candidates?from` | up to 50 unlinked, unsplit expenses since the anchor, best matches first: a description equal to a recurring entry that pays the debt or to an earlier linked payment, then an amount within 5% of the schedule's regular payment |
 
 | Code | Status | When |
@@ -215,10 +217,11 @@ Worked example, the one `DebtPaymentTests` pins: 10 000.00 on 1 May at 6% a year
 | `debt.paymentWrongType` | 400 | the transaction is not an expense |
 | `transaction.splitNotAllowed` | 400 | the transaction is split; a line id changes on every edit |
 | `debt.paymentTaken` | 409 | the transaction already pays a debt, the caller's or a housemate's |
+| `household.referenceNotShared` | 400 | the debt is shared and the transaction's account is not shared with its household |
 
 A deleted debt keeps its links for a restore, but they no longer hold their transactions: those show up as candidates again, and linking one to another debt drops the old link, so a restored debt comes back without it.
 
-A recurring expense can name a debt that tracks payments (`debtId`), and confirming it links the posted transaction as a regular payment in the same database transaction. The whole payment stays an expense in reports and budgets.
+A recurring expense can name a debt that tracks payments (`debtId`), and confirming it links the posted transaction as a regular payment in the same database transaction. For a shared debt that happens only when the posted row is on an account shared with the debt's household. The whole payment stays an expense in reports and budgets.
 
 On the page the summary shows the tracked balance beside the scheduled one, the balance chart draws it from the anchor to today against the contract line, and a Linked payments section lists the payments newest first with their split and an edit and an unlink action. "Link payments" opens the candidates with a checkbox each and links the chosen ones oldest first, so the server picks the kind; a wrong kind is fixed on the row. A tracking debt without complete terms still has the page, with the payments and without the schedule. In the ledger a linked row carries a small debt mark that opens the debt, and the row actions offer "Link to debt" on an unlinked plain expense when some debt tracks payments, or "Unlink from debt" on a linked one.
 

@@ -9,6 +9,7 @@ import type { AmortizationType } from "./amortizationType";
 import type { DateOnly } from "./dateOnly";
 import type { DebtType } from "./debtType";
 import type { NullableOfDateOnly } from "./nullableOfDateOnly";
+import type { Scope } from "./scope";
 
 export interface CreateDebtRequest {
   /**
@@ -50,4 +51,7 @@ export interface CreateDebtRequest {
   amortizationType?: null | AmortizationType;
   /** When true, the balance is outstandingAmount on asOf minus the principal of the payments linked after asOf. Editing outstandingAmount or asOf sets a new starting point. */
   tracksPayments?: boolean;
+  scope?: Scope;
+  /** @nullable */
+  householdId?: string | null;
 }

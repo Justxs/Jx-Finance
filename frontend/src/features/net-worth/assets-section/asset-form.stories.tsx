@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, fireEvent, fn, userEvent, waitFor } from "storybook/test";
 import { getCreateAssetMockHandler } from "@/api/generated/net-worth/net-worth.msw";
 import { withWidth } from "@/storybook/decorators";
-import { assets } from "@/storybook/fixtures";
+import { assets, familyHousehold, sharedAsset } from "@/storybook/fixtures";
 import { failWith, pending, withHandlers } from "@/storybook/handlers";
 import { AssetForm } from "./asset-form";
 
@@ -86,5 +86,17 @@ export const DepreciationServerError: Story = {
     await waitFor(() => expect(life).toHaveAttribute("aria-invalid", "true"));
     await expect(canvas.getByText("Useful life is out of range.")).toBeVisible();
     await expect(canvas.queryByRole("alert")).toBeNull();
+  },
+};
+
+export const SharedWithHousehold: Story = {
+  args: { editing: sharedAsset },
+  play: async ({ canvas }) => {
+    await expect(await canvas.findByRole("combobox", { name: "Visibility" })).toHaveTextContent(
+      "Shared",
+    );
+    await expect(canvas.getByRole("combobox", { name: "Household" })).toHaveTextContent(
+      familyHousehold.name,
+    );
   },
 };

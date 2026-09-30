@@ -156,6 +156,8 @@ export const HouseholdAuditResponse = zod.object({
         "budget",
         "goal",
         "recurringBill",
+        "asset",
+        "debt",
       ]),
       entityId: zod.uuid().nullable(),
       description: zod.string(),

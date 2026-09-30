@@ -15,4 +15,6 @@ public enum DeletionChangeKind
     BudgetShare,
     GoalShare,
     RecurringBillShare,
+    AssetShare,
+    DebtShare,
 }

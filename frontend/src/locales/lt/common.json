@@ -2073,7 +2073,9 @@
       "settlement": "Mokėjimas",
       "budget": "Biudžetas",
       "goal": "Tikslas",
-      "recurringBill": "Pasikartojantis įrašas"
+      "recurringBill": "Pasikartojantis įrašas",
+      "asset": "Turtas",
+      "debt": "Skola"
     },
     "sentences": {
       "created": "{{actor}} pridėjo: {{description}}",
@@ -2131,7 +2133,14 @@
       "targetDate": "tikslo data",
       "cadence": "kartojasi",
       "nextDueDate": "kita data",
-      "isActive": "aktyvus"
+      "isActive": "aktyvus",
+      "currentValue": "vertė",
+      "asOf": "datai",
+      "outstandingAmount": "likusi suma",
+      "interestRate": "palūkanų norma",
+      "tracksPayments": "sekti įmokas",
+      "valuations": "įvertinimai",
+      "payments": "susietos įmokos"
     }
   },
   "sharing": {
@@ -2630,7 +2639,7 @@
       "notMember": "Nesate šio namų ūkio narys.",
       "required": "Bendram įrašui pasirinkite namų ūkį.",
       "scopeMismatch": "Užklausoje nurodyti du skirtingi namų ūkiai. Perkraukite puslapį ir bandykite dar kartą.",
-      "referenceNotShared": "Bendras įrašas gali naudoti tik su tuo pačiu namų ūkiu bendrinamas sąskaitas, kategorijas ir žymes."
+      "referenceNotShared": "Bendras įrašas gali naudoti tik su tuo pačiu namų ūkiu bendrinamas sąskaitas, kategorijas, žymes ir skolas."
     },
     "iban": {
       "invalid": "Įveskite galiojantį IBAN, pvz., LT12 1000 0111 0100 1000."

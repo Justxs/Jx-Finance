@@ -56,7 +56,7 @@ Every feature the current code implements, one page per feature under `features/
 | 43 | [Household settle-up](household-settle-up.md) | `Households` | `Households` (`households/{id}/settle-up`, `shared-expenses`, `settlements`, `SettleUpService`), `Common/SettleUp`, the split marker of `Transactions`, the two kinds in `Trash`, `Retention` and `Infrastructure/Data/Auditing` | `households` (`settle-up`, `settlement-dialog`, `shared-expenses`, `split-expense-dialog`, `share-allocation.ts` on each household card), `transactions/shared-expense` (Split with household row action, ledger mark) |
 | 44 | [Payee names](payee-names.md) | always on | `Payees`, the name parts of `Transactions`, `Reports`, `RecurringBills` | `payees`, `transactions/payee-naming`, `tags` (Payee names section) |
 
-Not implemented: live prices, per-user reporting currency, manual exchange rates, PWA/offline, bank APIs, scheduled or offsite backups and sharing of assets and debts. See [Features and scope](../scope.md) and, for what is planned next, [Backlog and ideas](../backlog.md).
+Not implemented: live prices, per-user reporting currency, manual exchange rates, PWA/offline, bank APIs and scheduled or offsite backups. See [Features and scope](../scope.md) and, for what is planned next, [Backlog and ideas](../backlog.md).
 
 ## Where to read more
 

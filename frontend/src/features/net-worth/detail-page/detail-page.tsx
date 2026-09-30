@@ -1,20 +1,28 @@
 import { ArrowLeft } from "lucide-react";
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
+import type { Scope } from "@/api/generated/model";
 import { PageHeader } from "@/components/page-header/page-header";
 import { PagePending } from "@/components/route-pending/route-pending";
+import { SharedScopeTag } from "@/components/shared-scope-tag/shared-scope-tag";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { TextSkeleton } from "@/components/ui/skeleton/skeleton";
 import { TextLink } from "@/components/ui/text-link/text-link";
 
-interface Props<T extends { name: string }> {
+interface Shown {
+  name: string;
+  scope: Scope;
+  householdId: string | null;
+}
+
+interface Props<T extends Shown> {
   item: T | undefined;
   fallbackTitle: string;
   notFound: string;
   children: (item: T) => ReactNode;
 }
 
-export function DetailPage<T extends { name: string }>({
+export function DetailPage<T extends Shown>({
   item,
   fallbackTitle,
   notFound,
@@ -30,7 +38,9 @@ export function DetailPage<T extends { name: string }>({
           {t("netWorth.schedule.back")}
         </TextLink>
       </p>
-      <PageHeader title={item?.name ?? fallbackTitle} />
+      <PageHeader title={item?.name ?? fallbackTitle}>
+        {item ? <SharedScopeTag scope={item.scope} householdId={item.householdId} /> : null}
+      </PageHeader>
       {item ? children(item) : <EmptyText>{notFound}</EmptyText>}
     </div>
   );

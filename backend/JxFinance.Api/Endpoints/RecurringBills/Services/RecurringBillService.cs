@@ -56,6 +56,10 @@ public sealed class RecurringBillService(
     private static readonly DomainError DebtMissing = new(ErrorCodes.ReferenceNotFound, "Debt does not exist.");
     private static readonly DomainError DebtNotTracked = new(ErrorCodes.DebtNotTracked, "Turn on payment tracking for this debt first.");
 
+    private static readonly DomainError PaysFromUnsharedAccount = new(
+        ErrorCodes.HouseholdReferenceNotShared,
+        "A recurring entry that pays a shared debt must use an account shared with the debt's household.");
+
     private static readonly DomainError CategoryNotExpense =
         new(ErrorCodes.CategoryWrongType, "Choose an accessible expense category.");
 
@@ -211,8 +215,14 @@ public sealed class RecurringBillService(
             var posted = await PostTransactionAsync(bill, request, amount.Value, cancellationToken);
             if (posted.IsFailure) return posted.Error;
             transactionId = posted.Value;
+            var paidFrom = request.AccountId is { } chosen ? new AccountId(chosen) : bill.AccountId;
             if (bill.DebtId is { } debtId && settings.Current.IsEnabled(Feature.NetWorth)
-                && await db.Debts.AnyAsync(d => d.Id == debtId && d.TracksPayments, cancellationToken))
+                && await db.Debts.AnyAsync(
+                    d => d.Id == debtId
+                        && d.TracksPayments
+                        && (d.Scope == Scope.Personal
+                            || db.Accounts.Any(a => a.Id == paidFrom && a.Scope == Scope.Shared && a.HouseholdId == d.HouseholdId)),
+                    cancellationToken))
             {
                 db.DebtPayments.Add(new DebtPayment { DebtId = debtId, TransactionId = new TransactionId(posted.Value), Kind = DebtPaymentKind.Regular });
             }
@@ -481,16 +491,25 @@ public sealed class RecurringBillService(
         if (input.ToAccountId is { } to && await references.AccountExistsAsync(new AccountId(to), ct) is { } toError) return toError;
         if (input.DebtId is { } debt && settings.Current.IsEnabled(Feature.NetWorth))
         {
-            var tracks = await db.Debts.Where(d => d.Id == new DebtId(debt)).Select(d => (bool?)d.TracksPayments).FirstOrDefaultAsync(ct);
-            if (tracks is null) return DebtMissing;
-            if (tracks is false) return DebtNotTracked;
+            var found = await db.Debts
+                .Where(d => d.Id == new DebtId(debt))
+                .Select(d => new { d.TracksPayments, d.Scope, d.HouseholdId })
+                .FirstOrDefaultAsync(ct);
+            if (found is null) return DebtMissing;
+            if (!found.TracksPayments) return DebtNotTracked;
+            if (found is { Scope: Scope.Shared, HouseholdId: { } debtHousehold }
+                && input.AccountId is { } paidFrom
+                && !await db.Accounts.AnyAsync(a => a.Id == new AccountId(paidFrom) && a.Scope == Scope.Shared && a.HouseholdId == debtHousehold, ct))
+            {
+                return PaysFromUnsharedAccount;
+            }
         }
 
         var shared = new SharedReferences(
             [.. new[] { input.AccountId, input.ToAccountId }.OfType<Guid>().Select(id => new AccountId(id))],
             input.CategoryId is { } category ? [new CategoryId(category)] : [],
             [],
-            HasPersonalOnly: input.DebtId is not null);
+            input.DebtId is { } debtId ? [new DebtId(debtId)] : []);
         if (await sharing.CheckReferencesAsync(input, shared, ct) is { } sharingError) return sharingError;
         if (input.Shape == RecurringBillShape.Transfer || input.CategoryId is not { } categoryId) return null;
 

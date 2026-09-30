@@ -134,6 +134,29 @@ public sealed class UserExportTests(ApiFixture fixture) : IntegrationTestBase(fi
     }
 
     [Fact]
+    public async Task A_partner_link_on_the_member_shared_debt_travels_with_the_debt()
+    {
+        using var pair = await CreateHouseholdPairAsync();
+        var account = await CreateAccountAsync(householdId: pair.HouseholdId, client: pair.OwnerClient);
+        var debt = (await PostAsync<IdDto>(
+            pair.OwnerClient,
+            "/api/debts",
+            new { name = "Mortgage", type = "mortgage", outstandingAmount = "1000.00", asOf = "2026-05-01", tracksPayments = true, scope = "shared", householdId = pair.HouseholdId })).Id;
+        var payment = await CreateTransactionAsync(pair.PartnerClient, account, null, "expense", "100.00", "2026-05-10", "Mortgage");
+        (await pair.PartnerClient.PostAsJsonAsync($"/api/debts/{debt}/payments", new { transactionId = payment.Id }, TestContext.Current.CancellationToken))
+            .EnsureSuccessStatusCode();
+        var link = Assert.Single((await pair.OwnerClient.GetFromJsonAsync<List<IdDto>>($"/api/debts/{debt}/payments", TestContext.Current.CancellationToken))!).Id;
+
+        using var owners = await ExportAsync(pair.OwnerClient);
+        using var partners = await ExportAsync(pair.PartnerClient);
+
+        Assert.Contains(payment.Id, owners.Ids("Transactions"));
+        Assert.Equal([link], owners.Ids("DebtPayments"));
+        Assert.Equal(pair.Partner.Id.ToString(), Assert.Single(owners.Tables["DebtPayments"].Rows)["UserId"]);
+        Assert.Empty(partners.Ids("DebtPayments"));
+    }
+
+    [Fact]
     public async Task Attached_files_come_only_when_asked_and_a_missing_one_is_counted()
     {
         var member = await CreateUserAsync();

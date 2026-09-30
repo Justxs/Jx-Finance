@@ -2,13 +2,13 @@
 
 Back to the [feature walkthrough](README.md). See also [decisions](../decisions/net-worth.md).
 
-Backend `NetWorth` (net worth, assets, debts), page `/net-worth`. Assets and debts are personal. Each takes the reporting currency of the day it is created, keeps it through later edits and answers it as `currency`.
+Backend `NetWorth` (net worth, assets, debts), page `/net-worth`. Assets and debts are personal unless shared with a household, which they can be since 2026-09-30; a shared one counts in full in the net worth of every member who can see it, as a shared account does (see [Shared assets and debts](households-and-sharing.md#shared-assets-and-debts)). Each takes the reporting currency of the day it is created, keeps it through later edits and answers it as `currency`.
 
 ```mermaid
 flowchart TD
     Acc["Visible accounts: reportingBalance incl. holdings"] --> Total
-    Assets["Personal assets"] --> Total
-    Debts["Personal debts, subtracted"] --> Total["GetCurrentAsync"]
+    Assets["Visible assets, own and shared"] --> Total
+    Debts["Visible debts, own and shared, subtracted"] --> Total["GetCurrentAsync"]
     View["GET /api/networth"] --> Total
     Job["NetWorthSnapshotJob, hourly,<br/>per active user in its own scope and try block"] --> Total
     Total --> Rate{"Every currency has a rate?"}
@@ -33,11 +33,13 @@ flowchart LR
 
 Since 2026-09-27 a debt with "Track payments" on subtracts its tracked balance instead: the recorded amount on its `AsOf` date minus the principal of the expense transactions linked to it after that date. The tracked balance is converted with the other debts; a linked payment in another currency without a rate for its date makes the total incomplete, so no snapshot is written that day, the same rule as a missing rate anywhere else. `NetWorthSnapshotter` builds the same `NetWorthService`, so the hourly job and the page subtract the same figure.
 
+A snapshot is always the member's whole net worth. Since 2026-09-30, while a household is active, `GET /api/networth` answers the narrowed totals without writing and then asks `INetWorthSnapshotter` to store the whole figure, in a scope of its own after the request's reading is done; with no active household it computes and stores under the per-user lock as before.
+
 See [Debt amortization](debt-amortization.md) for the terms, the formulas, the rounding, tracked payments and the API.
 
 ## Asset value history
 
-Since 2026-09-27 an asset keeps a dated list of valuations instead of one overwritten number. Creating an asset records its value and date as the first valuation. Editing the value or the date records a valuation for that date, and a date that already has one is replaced. `CurrentValue` and `AsOf` stay on the asset as the newest valuation, kept in step by `AssetValuationBook` the way `SecurityPriceBook` keeps a security's last price. The asset page `/net-worth/assets/$assetId` (the chart icon on the list row) shows the value today, the last valuation, a value chart with the valuations marked, and the list of valuations with add, edit and delete. Deleting a valuation is final, with no trash, and the last one cannot be deleted (`asset.lastValuation`). Valuation dates are today or earlier.
+Since 2026-09-27 an asset keeps a dated list of valuations instead of one overwritten number. Creating an asset records its value and date as the first valuation. Editing the value or the date records a valuation for that date, and a date that already has one is replaced. `CurrentValue` and `AsOf` stay on the asset as the newest valuation, kept in step by `AssetValuationBook` the way `SecurityPriceBook` keeps a security's last price. The asset page `/net-worth/assets/$assetId` (the chart icon on the list row) shows the value today, the last valuation, a value chart with the valuations marked, and the list of valuations with add, edit and delete. Deleting a valuation is final, with no trash, and the last one cannot be deleted (`asset.lastValuation`). Valuation dates are today or earlier. Any member who can see a shared asset adds and deletes its valuations; deletes on one asset take an advisory lock on the asset's id, so two members' deletes run one after the other.
 
 An asset can also depreciate on a straight line. Its terms are a start date, a start value, a useful life of 1 to 600 months and a residual value below the start value, all four or none (`asset.depreciationIncomplete`). The monthly amount is `(start value − residual) / life`, rounded up to the cent. The value falls by that amount on the start date's day of every month, on the month's last day when the month is shorter, and never below the residual. A valuation on or after the start date restarts the decline from that value at the same monthly amount. A valuation before the start date counts until the start date, when the start value takes over.
 

@@ -1,10 +1,11 @@
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
-import { useCreateAsset, useUpdateAsset } from "@/api/generated";
-import { AssetType, type AssetResponse } from "@/api/generated/model";
+import { useCreateAsset, useHouseholdsSuspense, useUpdateAsset } from "@/api/generated";
+import { AssetType, type AssetResponse, type Scope } from "@/api/generated/model";
 import { createAssetBodyNameMax } from "@/api/schemas/net-worth/net-worth.zod";
 import { useServerForm } from "@/components/form";
 import { FormError } from "@/components/form-error/form-error";
+import { SharingFields } from "@/components/sharing-fields/sharing-fields";
 import { FormGrid } from "@/components/ui/form-grid/form-grid";
 import type { BalanceItemFormProps } from "@/features/net-worth/balance-items-section/balance-items-section";
 import { useMoney, useMonthName } from "@/hooks/use-formatters";
@@ -19,9 +20,13 @@ import {
   optionalNonNegativeMoney,
   optionalPositiveMoney,
   optionalWholeNumberBetween,
+  refineSharing,
   requiredText,
   requiredValue,
+  sharingPayload,
+  sharingShape,
 } from "@/lib/validation";
+import { useSharingDefaults } from "@/stores/active-household-store";
 
 interface AssetFormValues {
   name: string;
@@ -34,6 +39,8 @@ interface AssetFormValues {
   lifeYears: string;
   lifeMonths: string;
   residualValue: string;
+  scope: Scope;
+  householdId: string;
 }
 
 const assetTypes = Object.values(AssetType);
@@ -52,6 +59,8 @@ function assetFormValues(asset: AssetResponse): AssetFormValues {
     lifeYears: terms ? String(Math.floor(terms.lifeMonths / 12)) : "",
     lifeMonths: terms ? String(terms.lifeMonths % 12) : "",
     residualValue: terms?.residualValue ?? "",
+    scope: asset.scope,
+    householdId: asset.householdId ?? "",
   };
 }
 
@@ -111,47 +120,52 @@ export function AssetForm({ editing, onClose }: Readonly<BalanceItemFormProps<As
     useUpdateAsset({ mutation: { ...silentMutation, onSuccess: onClose } }),
   );
   const idPrefix = editing ? "asset-edit" : "asset";
+  const sharing = useSharingDefaults(useHouseholdsSuspense().data, editing);
 
   function notFuture(value: string) {
     return value <= today;
   }
 
-  const schema = z
-    .object({
-      name: requiredText(t, createAssetBodyNameMax),
-      type: z.enum(AssetType),
-      amount: money(t),
-      asOf: requiredValue(t).refine(notFuture, t("netWorth.valuations.dateFuture")),
-      depreciates: z.boolean(),
-      startDate: z.string(),
-      startValue: optionalPositiveMoney(t),
-      lifeYears: optionalWholeNumberBetween(t, 0, MAX_LIFE_MONTHS / 12),
-      lifeMonths: optionalWholeNumberBetween(t, 0, 11),
-      residualValue: optionalNonNegativeMoney(t),
-    })
-    .refine(
-      (value) => !value.depreciates || (value.startDate !== "" && notFuture(value.startDate)),
-      {
-        message: t("netWorth.depreciation.startDateInvalid"),
-        path: ["startDate"],
-      },
-    )
-    .refine(
-      (value) => !value.depreciates || (lifeOf(value) >= 1 && lifeOf(value) <= MAX_LIFE_MONTHS),
-      { message: t("netWorth.depreciation.lifeRange"), path: ["lifeYears"] },
-    )
-    .refine(
-      (value) => {
-        const terms = termsOf(value);
-        return (
-          !value.depreciates ||
-          !isNonNegativeMoney(terms.startValue) ||
-          !isNonNegativeMoney(terms.residualValue) ||
-          toCents(terms.residualValue) < toCents(terms.startValue)
-        );
-      },
-      { message: t("netWorth.depreciation.residualTooHigh"), path: ["residualValue"] },
-    );
+  const schema = refineSharing(
+    z
+      .object({
+        name: requiredText(t, createAssetBodyNameMax),
+        type: z.enum(AssetType),
+        amount: money(t),
+        asOf: requiredValue(t).refine(notFuture, t("netWorth.valuations.dateFuture")),
+        depreciates: z.boolean(),
+        startDate: z.string(),
+        startValue: optionalPositiveMoney(t),
+        lifeYears: optionalWholeNumberBetween(t, 0, MAX_LIFE_MONTHS / 12),
+        lifeMonths: optionalWholeNumberBetween(t, 0, 11),
+        residualValue: optionalNonNegativeMoney(t),
+        ...sharingShape(),
+      })
+      .refine(
+        (value) => !value.depreciates || (value.startDate !== "" && notFuture(value.startDate)),
+        {
+          message: t("netWorth.depreciation.startDateInvalid"),
+          path: ["startDate"],
+        },
+      )
+      .refine(
+        (value) => !value.depreciates || (lifeOf(value) >= 1 && lifeOf(value) <= MAX_LIFE_MONTHS),
+        { message: t("netWorth.depreciation.lifeRange"), path: ["lifeYears"] },
+      )
+      .refine(
+        (value) => {
+          const terms = termsOf(value);
+          return (
+            !value.depreciates ||
+            !isNonNegativeMoney(terms.startValue) ||
+            !isNonNegativeMoney(terms.residualValue) ||
+            toCents(terms.residualValue) < toCents(terms.startValue)
+          );
+        },
+        { message: t("netWorth.depreciation.residualTooHigh"), path: ["residualValue"] },
+      ),
+    t,
+  );
 
   const defaultValues: AssetFormValues = editing
     ? assetFormValues(editing)
@@ -166,6 +180,7 @@ export function AssetForm({ editing, onClose }: Readonly<BalanceItemFormProps<As
         lifeYears: "",
         lifeMonths: "",
         residualValue: "",
+        ...sharing,
       };
 
   const form = useServerForm({
@@ -185,6 +200,7 @@ export function AssetForm({ editing, onClose }: Readonly<BalanceItemFormProps<As
         currentValue: normalizeMoney(value.amount),
         asOf: value.asOf,
         depreciation: value.depreciates ? termsOf(value) : null,
+        ...sharingPayload(value),
       };
 
       return editing ? update({ id: editing.id, data }) : create({ data });
@@ -298,6 +314,12 @@ export function AssetForm({ editing, onClose }: Readonly<BalanceItemFormProps<As
             }
           </form.Subscribe>
         </fieldset>
+
+        <SharingFields
+          form={form}
+          fields={{ scope: "scope", householdId: "householdId" }}
+          idPrefix={idPrefix}
+        />
 
         <FormError error={error} />
 

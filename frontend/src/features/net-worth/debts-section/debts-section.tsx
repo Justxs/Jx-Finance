@@ -63,6 +63,8 @@ export function DebtsSection() {
         currency: debt.currency,
         record: debt,
         action: scheduleLink(debt),
+        scope: debt.scope,
+        householdId: debt.householdId,
       }))}
       deleteMutation={deleteMutation}
       undoKind="debt"

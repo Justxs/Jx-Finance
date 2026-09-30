@@ -14,7 +14,9 @@ public sealed record AssetResponse(
     [property: Money] decimal Value,
     DepreciationResponse? Depreciation,
     [property: Money] decimal? MonthlyDepreciation,
-    DateOnly? FullyDepreciatedOn);
+    DateOnly? FullyDepreciatedOn,
+    Scope Scope,
+    Guid? HouseholdId);
 
 public sealed record DepreciationResponse(
     DateOnly StartDate,
