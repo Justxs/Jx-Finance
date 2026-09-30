@@ -1,6 +1,6 @@
 # Backlog and ideas
 
-What is not done yet. Rechecked against the code on 2026-09-28, from [Features and scope](scope.md), [decisions](decisions/README.md), the [release checklist](release-checklist.md) and the [feature walkthrough](features/README.md). Nothing here is a promise; each item needs its own scoped change. Size is a rough guess: S is days, M is a week or two, L is more.
+What is not done yet. Rechecked against the code on 2026-09-30, from [Features and scope](scope.md), [decisions](decisions/README.md), the [release checklist](release-checklist.md), the [feature walkthrough](features/README.md) and the end-to-end suite in `frontend/e2e`. Nothing here is a promise; each item needs its own scoped change. Size is a rough guess: S is days, M is a week or two, L is more.
 
 ## 1. Open release work
 
@@ -12,11 +12,35 @@ These come from the release checklist and block calling the current release veri
 | Rerun `just verify-production` and `just e2e` | Against every migration added since 2026-09-20; they have only been applied by the test containers |
 | First run of the new CI jobs on the Gitea runner | Audit, `production-overlay`, client drift |
 | `--recover-admin` invoked inside the container | Only run on the host so far |
-| Real outside services | A real SMTP server, a real Discord webhook and camt.053 files from at least two banks; only fakes and fixtures so far |
-| Fresh verification pass | Evidence in Verification predates everything added from 2026-09-20 on, including the navigation hubs of 2026-09-28 |
-| Sustained daily-use trial | Cannot be inferred from automated checks; month-end close and unusual amounts need at least one real month |
+| Real outside services | A real SMTP server, a real Discord webhook, camt.053 files from at least two banks, and real OFX, QFX, MT940, bank CSV and broker trade CSV exports for the formats added on 2026-09-29 and 2026-09-30; only fakes and fixtures so far |
+| Receipt reading on real receipts | Tesseract in the API image has only read fixtures; read about twenty real Lithuanian shop receipts and e-receipt screenshots and tune the parser from what it misses |
+| Passkeys on the real host | Only the end-to-end virtual authenticator so far; a phone, a laptop and a password manager against the real `SITE_ADDRESS` over trusted HTTPS |
+| Double-entry journal in the real tools | The tests check `ledger.beancount` with the C# `JournalChecker`; run `bean-check` and open Fava once on a real member's download |
+| Release checklist brought up to date | Its "added" lists stop at the navigation hubs of 2026-09-28; nothing from 2026-09-29 or 2026-09-30 in Done below is listed there |
+| Fresh verification pass | Evidence in Verification predates everything added from 2026-09-20 on, including the navigation hubs of 2026-09-28 and every feature of 2026-09-29 and 2026-09-30 |
+| Sustained daily-use trial | Cannot be inferred from automated checks; month-end close, unusual amounts, the forecast, the monthly digest and settle-up need at least one real month |
 
-## 2. Gaps inside features that exist
+## 2. Decisions to review
+
+Open questions of the plans built on 2026-09-29 and 2026-09-30 were answered while the owner was away, each with the plan's recommended or most conservative answer and marked "to be reviewed" in its log. Each needs a keep or a change before the daily-use trial, so the trial runs on the answers the owner wants.
+
+| Area | Decided while away | Log |
+| --- | --- | --- |
+| Authentication | Deactivation deletes API tokens for good; attachments are not readable with a token; a passkey skips the authenticator code; one relying party name per installation | [Authentication](decisions/authentication.md) |
+| Budgets | Tag budgets as a second nullable column counting whole tagged expenses; steady-category suggestions cannot be dismissed and keep their thresholds | [Budgets](decisions/budgets.md) |
+| Cash-flow forecast | No below-zero mark on the accounts table, and the plan's other open questions | [Cash-flow forecast](decisions/cash-flow-forecast.md) |
+| Categories | Groups are one level of `ParentId`, rolled up by the client | [Categories](decisions/categories.md) |
+| Categorization rules | A rule suggestion needs three rows in twelve months; an import confirm says nothing about suggestions | [Categorization rules](decisions/categorization-rules.md) |
+| Exports | The member download re-imports into an empty member only; taking it leaves no notification | [Exports](decisions/exports.md) |
+| Households | Budgets, goals, recurring entries, assets and debts shareable with owner-only unshare and delete; settle-up has no "my share" view and no open balances in net worth | [Households and sharing](decisions/households-and-sharing.md) |
+| Notifications | The monthly digest reads the "Everything" scope only and goes out on the first hourly pass of days 1 to 5 | [Notifications](decisions/notifications.md) |
+| Receipt reading | A bottle deposit stays with its drink; the rest of that entry predates the move to Tesseract and is superseded | [Receipt reading](decisions/receipt-reading.md) |
+| Reconciliation | Main currency only; the statement date starts on the last day of the previous month | [Reconciliation](decisions/reconciliation.md) |
+| Payees | Payee names are personal rows keyed by `PayeeKey`; a chain's shops stay separate payees; the statement's own payee column is not stored | [Reports](decisions/reports.md) |
+| Bank import | No credit card account type; a mapped CSV needs a header row | [Swedbank CSV import](decisions/swedbank-csv-import.md) |
+| Transactions | No separate "Refunds" value in the type filter | [Transactions](decisions/transactions.md) |
+
+## 3. Gaps inside features that exist
 
 | Feature | Gap | Size |
 | --- | --- | --- |
@@ -26,8 +50,16 @@ These come from the release checklist and block calling the current release veri
 | Settings | Installation-wide only; no per-user reporting currency (the ledger's rows per page became a per-browser choice on 2026-09-30) | L |
 | Exchange rates | ECB only; no manual rate, no currencies outside the ECB list | S |
 | Backups | On demand only; a scheduler and offsite copies were removed on 2026-09-05 and stay a deliberate decision | M, needs the decision reopened |
+| Data export per user | A download imports only into the version that wrote it, because `MemberImport` refuses another migration; every migration makes older downloads unimportable, so it is no way to move between versions | M |
+| Household settle-up | No "my share" view of reports, budgets and the dashboard; open balances stay out of net worth | M |
+| Reconciliation | An account's main currency only; its other currencies cannot be reconciled | S |
+| Monthly digest | The "Everything" scope only; no digest per household | S |
+| Bank statement import | The statement's separate payee is not stored, so the payee key comes from the description alone; a mapped CSV needs a header row; a card is an account of type Other | S each |
+| Transactions | Bulk actions on selected rows set a category or tags only; no bulk delete with one undo and no moving rows to another account | S |
+| Debt amortization | An overpayment always shortens the term; a lower payment for the same term is not offered | S |
+| Unusual amounts | The thresholds and the price-rise margin have not been tuned on real data | S, after the trial |
 
-## 3. Deferred features named in the docs
+## 4. Deferred features named in the docs
 
 | Feature | What it needs | Size |
 | --- | --- | --- |
@@ -36,17 +68,37 @@ These come from the release checklist and block calling the current release veri
 | Bank APIs | PSD2 aggregator; licensing and consent renewal make this costly for a household tool | L |
 | Machine-learned categorization | Out of scope; rules and the recall of the last category cover the need. Since 2026-09-29 the model and `--evaluate-categorizer <email>` exist, but nothing suggests from them: the development database had only `just seed` demo data, where the recall already fills every held-out row (97.4% right, the model 96.7% at 0.80), so the gate was not measured. It needs six months and 1,500 real categorized rows; see the [plan](plans/machine-learned-categorization.md#evaluation) | L |
 
-## 4. New ideas
+## 5. New ideas
 
-Ordered by how much they would help daily use for the effort. Following the product direction, each one lives on a page that already exists rather than adding a page. The idea below has no plan yet. Machine-learned categorization above, transaction locations, transaction groups, live security prices and write access for API tokens have written designs in [Plans](plans/README.md).
+Ordered by how much they would help daily use for the effort. Following the product direction, each one lives on a page that already exists rather than adding a page, and none sends data outside the installation. The ideas below have no plan yet. Machine-learned categorization above, transaction locations, transaction groups, live security prices and write access for API tokens have written designs in [Plans](plans/README.md).
 
 | Idea | Why | Where | Size |
 | --- | --- | --- | --- |
-| Receipt reading follow-ups | Cutting a very tall e-receipt screenshot into overlapping parts; reading PDFs that hold only a scan; return receipts read into a refund; listing and forgetting remembered item categories under Categories. No plan yet | Transaction form, Reports, Categories | M each |
+| Quick add from the command palette | Typing `12.50 maxima` in `Ctrl+K` offers an expense for today on the last used account with the recalled or rule category, parsed in the browser; the fastest path for a cash or card payment the bank has not exported yet | Command palette, transaction form | S |
+| Possible duplicates | Two rows on one account with the same amount and payee key within a few days, such as one typed by hand and imported unmatched, or one statement imported in two formats; listed on the month-end close with "Keep both" and "Delete one", and as a ledger filter | Month-end close, ledger filters | S |
+| Find a purchase by receipt item | The ledger search also matches the item names of read receipts, so "vacuum" finds the purchase and its warranty date without remembering the shop | Ledger search | S |
+| Subscription totals | The recurring entries page sums what active expense entries cost a month and a year in the reporting currency, and marks an entry whose payment has not matched for two cycles as possibly cancelled, from the calendar's paid matching | Recurring entries | S |
+| Net worth pace | The net worth chart extends a dashed line at the trailing twelve months' change and states when chosen milestones would be reached; arithmetic on recorded figures, labelled as such | Wealth › Net worth | S |
+| Target allocation | A member sets target shares by type, currency or security; the allocation section shows the drift and how a new amount would be split to close it, stated as arithmetic and not advice | Wealth › Investments | M |
+| Money with people outside the household | Lent to a friend or owed for a shared dinner, tracked per named person with a running balance and "Record payment", without giving that person a login; reuses the settle-up balance code | Households page, transaction row menu | M |
+| Import inbox folder | The API watches a mounted folder and turns each statement file dropped there, by a bank's scheduled export or a sync client, into a waiting import review for the account its IBAN or saved mapping names; nothing is fetched from outside | Import dialog, Settings › Installation | M |
+| Receipt reading follow-ups | Cutting a very tall e-receipt screenshot into overlapping parts; reading PDFs that hold only a scan; HTML e-mail receipts; return receipts read into a refund; listing and forgetting remembered item categories under Categories | Transaction form, Reports, Categories | M each |
+
+## 6. Technical follow-ups
+
+| Item | Why | Size |
+| --- | --- | --- |
+| Read `PayeeKey` in SQL everywhere | Unusual amounts, subscription detection and price rises (`PriceRiseMatcher.LoadChargesAsync`) still normalize descriptions in memory, while the forecast and the calendar read the stored column through `RecurringHistory.LoadAsync`; moving them only removes code | S |
+| End-to-end coverage for the newest flows | The suite covers sign-in, two-factor, passkeys, imports, transfers, recurring bills, users, backup and the phone layout; nothing drives settle-up between two members, a refund, a reconciliation, the month-end close, the member download and import, receipt reading or a shared budget or asset | M |
+| Large-ledger timing | Seed about ten years and 100,000 rows across two members and time the ledger, a report with a comparison, the year review, the forecast, the calendar and both exports; spread slices and the recurring history are the newest reads to watch | S |
 
 ## Suggested order
 
 1. Section 1, because the release is not verified without it; the daily-use trial is also where the ideas above get confirmed or dropped.
+2. Section 2 before the trial starts, so the trial runs on answers the owner chose rather than defaults picked while away.
+3. End-to-end coverage and the large-ledger timing from section 6, because they make the verification pass cheaper to repeat.
+4. During the trial, the small ideas that save daily effort: quick add, possible duplicates and finding a purchase by receipt item.
+5. Then the planned work that is not gated: [write access for API tokens](plans/api-write-access.md) and part 1 of [transaction locations](plans/transaction-locations.md), whose prerequisite, stripping attachment metadata, shipped on 2026-09-30. The gated plans wait for their gates.
 
 ## Done
 
@@ -57,6 +109,7 @@ Ordered by how much they would help daily use for the effort. Following the prod
 | 2026-09-30 | Double-entry journal: "Download my data" also writes `ledger.beancount`, the member's own accounts, assets and debts as a Beancount v3 double-entry journal that `bean-check` checks and Fava opens as a balance sheet and an income statement by category. Every transaction, transfer, conversion and investment entry balances: a transfer to an account outside the export goes to `Equity:Outside-Accounts`, a buy carries its cash as its cost, sells book FIFO like the app, a split reposts its lots, and a tracked debt payment moves its principal to the liability. The journal ends with a `balance` assertion per account and currency, holding, asset and debt that equals the app's figure for today, and the tests check all of it with a C# `JournalChecker`. The database stays single-sided and the member import ignores the file | [Data export per user](features/data-export-per-user.md#double-entry-journal) |
 | 2026-09-30 | Spreading a payment across months: an unsplit expense or income that is not a refund, or a recurring expense or income entry, can be spread over 3, 6, 12 or a custom 2 to 36 months; the ledger keeps one row on the day it was paid with a "Spread · 12 months" chip, while reports, the year review, the dashboard, category and tag budgets and the month-end close count an equal slice in each month, and a figure's link to the ledger still lists the row. Balances, the forecast, debt payments, settle-up and the ledger's own totals see the whole payment | [Transactions](features/transactions.md#spreading-over-months) |
 | 2026-09-30 | Money flow: the reports page ends with a Sankey diagram of the range, from the income categories through one Money in node to the expense categories and Saved, with From savings when the period spent more than it earned and Money back for categories whose refunds outweighed their spending, so Saved always equals the net. Both sides show the same five rows plus Other as the lists above, a category node opens the ledger for its rows, and the section is hidden on phones. Built in the browser from the report the page already loads | [Reports](features/reports.md#money-flow) |
+| 2026-09-30 | Attachment metadata stripped: every uploaded image is decoded, turned upright, converted to sRGB and encoded again without EXIF, GPS, XMP, IPTC, ICC or text chunks before it is kept, so neither the attachment directory, a backup nor a member's download holds where a photo was taken; an image that cannot be decoded is refused as `attachment.contentMismatch`, and PDFs are stored as sent | [Attachments](features/attachments.md#location-and-other-metadata) |
 | 2026-09-30 | Hide amounts: the account menu, Appearance, the command palette and the `p` key switch a per-browser mode that replaces the digits of every formatted amount, prices and quantities included, with `•••••` while the currency and the sign stay; percentages, meters, chart shapes, form inputs, raw text and everything sent by email, Discord or export are unchanged | [Interface](features/interface.md#hide-amounts) |
 | 2026-09-30 | Shared budgets, goals and recurring entries: their forms offer the Visibility field of accounts and categories, members of the household see and edit a shared one while only its owner unshares or deletes it, and it must use categories, tags and accounts shared with the same household (`household.referenceNotShared`). A shared budget counts the household's shared accounts only, so every member sees one figure; a shared bill still reminds its owner only. Deleting the household makes them personal, and their changes reach the activity log. Decided while the owner was away, to be reviewed | [Households and sharing](features/households-and-sharing.md#shared-budgets-goals-and-recurring-entries) |
 | 2026-09-30 | Re-importable member export: under the download in Settings › Personal › Import and export, "Import a download" loads a `jx-finance-export` zip into a member who owns no accounts or tags yet, from this or another installation of the same version, in one transaction. Ids are kept, every record becomes the member's own and personal, a reference to a row outside the file is cleared or drops the record, attached files are checked against their SHA-256, and records that already exist answer `import.alreadyPresent`. Preferences, notifications, month closes, the trash, the broker connection and household rows are not imported. Decided while the owner was away, to be reviewed | [Data export per user](features/data-export-per-user.md#bringing-it-back) |

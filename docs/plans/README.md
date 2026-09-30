@@ -6,7 +6,7 @@ The table is in the suggested build order. Each plan's `Status:` line names what
 
 | Plan | Size | Where it lives | Build after |
 | --- | --- | --- | --- |
-| [Transaction locations](transaction-locations.md) | M for places; L and gated for the map | Transaction form, receipt reading, ledger filters, Reports | Stripping of attachment metadata on upload; two months of places for the map |
+| [Transaction locations](transaction-locations.md) | M for places; L and gated for the map | Transaction form, receipt reading, ledger filters, Reports | Nothing for places, since attachment metadata stripping shipped on 2026-09-30; two months of places for the map |
 | [Live security prices](live-prices.md) | M | Settings › Installation › Market prices, the security form, the price history | Nothing |
 | [Write access for API tokens](api-write-access.md) | M; the MCP server S and gated | Settings › Personal › Security, the token gate | Nothing; the MCP server only when the owner asks |
 | [Transaction groups](transaction-groups.md) | M to L, gated | Ledger, through a new ledger endpoint | The daily-use trial showing that tags and splits do not cover it |
