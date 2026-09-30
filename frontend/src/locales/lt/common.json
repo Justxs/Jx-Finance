@@ -1405,7 +1405,9 @@
       "realizedGain": "Realizuotas pelnas",
       "dividends": "Dividendai",
       "withholdingTax": "Išskaičiuotas mokestis",
-      "incomplete": "Kai kurios pozicijos neturi kainos arba valiutos kurso, todėl į šias sumas neįtrauktos. Kad jos būtų įtrauktos, pozicijų lentelėje nurodykite kainą."
+      "incomplete": "Kai kurios pozicijos neturi kainos arba valiutos kurso, todėl į šias sumas neįtrauktos. Kad jos būtų įtrauktos, pozicijų lentelėje nurodykite kainą.",
+      "annualizedReturn": "Metinė grąža",
+      "annualizedReturnDetail": "Įvertinus įnašų laiką: visi įrašai ir šios dienos vertė"
     },
     "holdings": {
       "title": "Pozicijos",
@@ -1711,7 +1713,13 @@
       "addFirst": "Pridėti pirmąjį įrašą",
       "import": "Importuoti iš „Interactive Brokers“"
     },
-    "allocation": "Paskirstymas"
+    "allocation": "Paskirstymas",
+    "allocationViews": {
+      "security": "Vertybinis popierius",
+      "type": "Tipas",
+      "currency": "Valiuta"
+    },
+    "allocationBy": "Paskirstymas pagal"
   },
   "recurringBills": {
     "title": "Periodiniai įrašai",

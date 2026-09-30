@@ -197,6 +197,7 @@ export * from "./payeeNameResponse";
 export * from "./personalApiTokenResponse";
 export * from "./portfolioParams";
 export * from "./portfolioResponse";
+export * from "./portfolioSlice";
 export * from "./portfolioYear";
 export * from "./positionMismatchResponse";
 export * from "./problemDetails";

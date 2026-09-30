@@ -144,6 +144,15 @@ export const portfolio: PortfolioResponse = {
   withholdingTax: "7.20",
   fees: "14.85",
   isComplete: true,
+  annualizedReturn: "0.0734",
+  byType: [
+    { key: "etf", marketValue: "5459.55" },
+    { key: "stock", marketValue: "5115.44" },
+  ],
+  byCurrency: [
+    { key: "eur", marketValue: "5459.55" },
+    { key: "usd", marketValue: "5115.44" },
+  ],
   holdings: [worldEtfHolding, usStockHolding, closedHolding],
   years: [
     {

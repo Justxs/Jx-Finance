@@ -1363,7 +1363,9 @@
       "realizedGain": "Realised gain",
       "dividends": "Dividends",
       "withholdingTax": "Withholding tax",
-      "incomplete": "Some holdings have no price or exchange rate and are left out of these totals. Set a price in the holdings table to include them."
+      "incomplete": "Some holdings have no price or exchange rate and are left out of these totals. Set a price in the holdings table to include them.",
+      "annualizedReturn": "Annualized return",
+      "annualizedReturnDetail": "Money-weighted, all entries and today's value"
     },
     "holdings": {
       "title": "Holdings",
@@ -1651,7 +1653,13 @@
       "addFirst": "Add first entry",
       "import": "Import from Interactive Brokers"
     },
-    "allocation": "Allocation"
+    "allocation": "Allocation",
+    "allocationViews": {
+      "security": "Security",
+      "type": "Type",
+      "currency": "Currency"
+    },
+    "allocationBy": "Allocation by"
   },
   "recurringBills": {
     "title": "Recurring entries",

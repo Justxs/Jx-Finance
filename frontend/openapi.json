@@ -24306,6 +24306,41 @@
             "items": {
               "$ref": "#/components/schemas/PortfolioYear"
             }
+          },
+          "annualizedReturn": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "decimal"
+          },
+          "byType": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PortfolioSlice"
+            }
+          },
+          "byCurrency": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PortfolioSlice"
+            }
+          }
+        }
+      },
+      "PortfolioSlice": {
+        "required": [
+          "key",
+          "marketValue"
+        ],
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "marketValue": {
+            "type": "string",
+            "format": "decimal"
           }
         }
       },

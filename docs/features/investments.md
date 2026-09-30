@@ -65,6 +65,14 @@ Deleting a point of the price history is allowed under the same rule as setting 
 
 The price dialog opens from a position's price and reads the security from the portfolio's holdings. Setting or deleting a price refreshes the portfolio, so the dialog shows the new last price without loading the list of securities.
 
+## Annualized return and allocation
+
+Since 2026-09-30 `GET /api/investments/portfolio` also answers `annualizedReturn`, `byType` and `byCurrency`, for the same accounts as the rest of the response.
+
+**Annualized return** is the money-weighted return, the rate at which every cash flow of the chosen accounts, discounted to the first one, adds up to zero: each entry except splits contributes its `ReportingAmount` on its date, signed as it moved the cash (a buy negative, a sale, dividend or interest positive, withholding tax and fees negative), and today's market value counts as the last flow. `MoneyWeightedReturn.Annualized` in `Domain/Investments` finds it by bisection between −99.99% and 10,000% and answers a fraction rounded to four places, such as `0.0734`. It is null when the flows do not go both ways, when they span fewer than 30 days (a week's gain as a yearly rate says nothing), when no rate in that range fits, and whenever `isComplete` is false, because a missing price would understate the value. The summary shows it as "Annualized return +7.3%", with the gain or loss tone, under the line "Money-weighted, all entries and today's value".
+
+**Allocation.** `byType` and `byCurrency` sum the reporting-currency market value of the open holdings that have one by security type (`stock`, `etf`, …) and by the security's currency (`eur`, `usd`, …), largest first. The allocation section, which already drew the holdings by security, gains a Security, Type and Currency switch over the same bars.
+
 ## Price history
 
 Since 2026-09-20 a price is kept per security and date in `SecurityPrice`, and `Security.LastPrice` remains the newest point. Every write goes through `SecurityPriceBook`, so the three ways a price can arrive cannot disagree.

@@ -187,6 +187,11 @@ export const portfolioResponseYearsItemWithholdingTaxRegExp = new RegExp("^-?\\d
 export const portfolioResponseYearsItemInterestRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 export const portfolioResponseYearsItemFeesRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 export const portfolioResponseYearsItemRealizedGainRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const portfolioResponseAnnualizedReturnRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const portfolioResponseByTypeItemMarketValueRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const portfolioResponseByCurrencyItemMarketValueRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
 
 export const PortfolioResponse = zod.object({
   reportingCurrency: zod.enum([
@@ -305,6 +310,23 @@ export const PortfolioResponse = zod.object({
       realizedGain: zod.stringFormat("decimal", portfolioResponseYearsItemRealizedGainRegExp),
     }),
   ),
+  annualizedReturn: zod.stringFormat("decimal", portfolioResponseAnnualizedReturnRegExp).nullish(),
+  byType: zod
+    .array(
+      zod.object({
+        key: zod.string(),
+        marketValue: zod.stringFormat("decimal", portfolioResponseByTypeItemMarketValueRegExp),
+      }),
+    )
+    .optional(),
+  byCurrency: zod
+    .array(
+      zod.object({
+        key: zod.string(),
+        marketValue: zod.stringFormat("decimal", portfolioResponseByCurrencyItemMarketValueRegExp),
+      }),
+    )
+    .optional(),
 });
 
 /**

@@ -360,6 +360,8 @@ They also take `payee`, since 2026-09-29: the value is normalized like a stored 
 
 Since 2026-09-30 the create and update bodies take an optional `note`, at most 1000 characters (`text.tooLong`), and every transaction response answers it; `search` on the four filtered endpoints matches it as well as the description. See [Transactions](features/transactions.md#notes).
 
+Since 2026-09-30 `GET /api/investments/portfolio` also answers `annualizedReturn` (a fraction string such as `0.0734`, or null) and `byType` and `byCurrency` (`{ key, marketValue }` slices of the open holdings, largest first). See [Investments](features/investments.md#annualized-return-and-allocation).
+
 Since 2026-09-30 `GET /api/accounts/forecast` takes an optional `whatIfAccountId`, `whatIfAmount` (signed, non-zero) and `whatIfDate`, all three or none, and adds that unsaved payment as an entry with source `whatIf`. See [Cash-flow forecast](features/cash-flow-forecast.md#trying-a-payment).
 
 Since 2026-09-30 category bodies take an optional `parentId` and responses answer it (`category.wrongType` for a parent of the other type, `category.nestingInvalid` for nesting deeper than one level); `categoryId` on the four transaction filters includes the sub-categories of a parent, and category breakdown items answer `parentId`, `parentName` and `parentIcon`. See [Categories](features/categories.md#groups).

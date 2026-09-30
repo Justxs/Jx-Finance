@@ -8,6 +8,10 @@ Separate `InvestmentTransaction` ledger on ordinary accounts; FIFO cost basis; a
 
 ## Log
 
+- **2026-09-30.** The portfolio's return is the money-weighted annualized rate over all cash flows of the chosen accounts plus today's value, computed per request by bisection, and allocation is answered per security type and currency by the server
+  - Rejected: A time-weighted return; a return per holding; a simple total return without time; computing the slices in the browser
+  - Why: A time-weighted return needs the portfolio's value on every flow date, which the price history only has where someone recorded a price, while the money-weighted rate needs only the flows the ledger already has and answers the household's question, what their money earned as it went in. One rate for the chosen accounts keeps the summary readable, a total without time misleads over years, and the security's type and currency are on the server already, so the browser does not repeat the grouping
+
 Newest first. Each entry is a choice between real alternatives: what was chosen, what was rejected, and why.
 
 - **2026-09-30.** The investments page renders the portfolio and the tax summary as two views, each with its own header, body and dialogs

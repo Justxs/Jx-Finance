@@ -1,3 +1,4 @@
+using System.Text.Json;
 using FastEndpoints;
 using JxFinance.Common;
 using JxFinance.Common.Errors;
@@ -134,6 +135,13 @@ public sealed class InvestmentService(
             }
         }
 
+        var open = holdings.Where(h => h.Quantity != 0m && h.MarketValueReporting is not null).ToList();
+        List<(DateOnly Date, decimal Amount)> flows =
+        [
+            .. transactions.Where(t => t.Type != InvestmentTransactionType.Split).Select(t => (t.Date, t.ReportingAmount)),
+            (clock.Today, marketValue),
+        ];
+
         return new PortfolioResponse(
             reporting,
             marketValue,
@@ -154,8 +162,20 @@ public sealed class InvestmentService(
                 y.Value.WithholdingTax,
                 y.Value.Interest,
                 y.Value.Fees,
-                y.Value.RealizedGain)).ToList());
+                y.Value.RealizedGain)).ToList())
+        {
+            AnnualizedReturn = isComplete ? MoneyWeightedReturn.Annualized(flows) : null,
+            ByType = Slices(open, h => JsonNamingPolicy.CamelCase.ConvertName(h.Security.Type.ToString())),
+            ByCurrency = Slices(open, h => JsonNamingPolicy.CamelCase.ConvertName(h.Security.Currency.ToString())),
+        };
     }
+
+    private static List<PortfolioSlice> Slices(IEnumerable<HoldingResponse> holdings, Func<HoldingResponse, string> key) =>
+        holdings
+            .GroupBy(key)
+            .Select(group => new PortfolioSlice(group.Key, group.Sum(h => h.MarketValueReporting ?? 0m)))
+            .OrderByDescending(slice => slice.MarketValue)
+            .ToList();
 
     public async Task<PagedResponse<InvestmentTransactionResponse>> GetTransactionsAsync(
         GetInvestmentTransactionsRequest request,

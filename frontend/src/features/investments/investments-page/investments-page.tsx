@@ -77,6 +77,8 @@ function InvestmentsOverview({
       <ValueChartSection accountId={shownAccountId} />
       <AllocationSection
         holdings={portfolio.data.holdings}
+        byType={portfolio.data.byType ?? []}
+        byCurrency={portfolio.data.byCurrency ?? []}
         currency={portfolio.data.reportingCurrency}
       />
       <PositionsSection

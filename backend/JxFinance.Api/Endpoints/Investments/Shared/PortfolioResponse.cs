@@ -35,4 +35,14 @@ public sealed record PortfolioResponse(
     [property: Money] decimal Fees,
     bool IsComplete,
     IReadOnlyList<HoldingResponse> Holdings,
-    IReadOnlyList<PortfolioYear> Years);
+    IReadOnlyList<PortfolioYear> Years)
+{
+    [property: Quantity]
+    public decimal? AnnualizedReturn { get; init; }
+
+    public IReadOnlyList<PortfolioSlice> ByType { get; init; } = [];
+
+    public IReadOnlyList<PortfolioSlice> ByCurrency { get; init; } = [];
+}
+
+public sealed record PortfolioSlice(string Key, [property: Money] decimal MarketValue);
