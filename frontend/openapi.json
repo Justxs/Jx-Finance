@@ -1915,6 +1915,95 @@
         ]
       }
     },
+    "/api/attachments/{id}/warranty": {
+      "put": {
+        "tags": [
+          "Attachments"
+        ],
+        "summary": "Set the warranty end of a receipt",
+        "description": "Records until when the purchase on this attached receipt is under warranty, or clears it with null. The member who attached the file is reminded 30 days before that date, once per date.",
+        "operationId": "SetAttachmentWarranty",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The attachment id.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetAttachmentWarrantyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "The attachment with its warranty date.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AttachmentResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such attachment is visible to the signed-in user.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      }
+    },
     "/api/auth/2fa/disable": {
       "post": {
         "tags": [
@@ -18320,6 +18409,16 @@
           "uploadedAt": {
             "type": "string",
             "format": "date-time"
+          },
+          "warrantyUntil": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/NullableOfDateOnly"
+              }
+            ]
           }
         }
       },
@@ -23838,7 +23937,8 @@
           "recurringPriceRise",
           "monthReadyToClose",
           "monthlyDigest",
-          "lowBalance"
+          "lowBalance",
+          "warrantyExpiring"
         ],
         "type": "string"
       },
@@ -25726,6 +25826,25 @@
               "string"
             ],
             "description": "Optional, up to 200 characters, such as \"dealer quote\"."
+          }
+        }
+      },
+      "SetAttachmentWarrantyRequest": {
+        "required": [
+          "warrantyUntil"
+        ],
+        "type": "object",
+        "properties": {
+          "warrantyUntil": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/NullableOfDateOnly"
+              }
+            ],
+            "description": "The last day of the warranty as YYYY-MM-DD, or null to clear it."
           }
         }
       },

@@ -247,6 +247,7 @@ export * from "./securityResponse";
 export * from "./securityType";
 export * from "./sessionResponse";
 export * from "./setAssetValuationRequest";
+export * from "./setAttachmentWarrantyRequest";
 export * from "./setPayeeNameRequest";
 export * from "./setSecurityPriceRequest";
 export * from "./settingsResponse";

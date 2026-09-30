@@ -47,6 +47,7 @@ flowchart LR
 | `RecurringBillReminderJob` | 15 minutes | `RecurringBills` | A reminder is dated to a day; a quarter of an hour makes the reminder appear promptly after a bill is created or edited |
 | `BudgetAlertJob` | 1 hour | `Budgets` | Spending only moves when a transaction is entered or imported, and an alert is not urgent to the minute. Each pass recomputes the usage of every budget, which for a rollover budget reads up to twelve windows of attributions, so hourly keeps the cost small and matches `NetWorthSnapshotJob` |
 | `LowBalanceJob` | 6 hours | `RecurringBills` | The forecast only moves when a row or a recurring entry changes, and a warning about a day up to 30 days away is not urgent to the hour. Each pass runs the forecast once per active user, a handful of queries, and deduplicates per account and crossing date, see [Notifications](notifications.md#low-balance-alerts) |
+| `WarrantyReminderJob` | 6 hours | none | A warranty date is a day a month away, so a quarter of the day is prompt enough; a pass reads the attachments whose date falls in the next 30 days over the whole installation and deduplicates per attachment and date |
 | `UnusualAmountJob` | 15 minutes | `UnusualAmounts`; the price-rise half also needs `RecurringBills` | An unusual charge is worth hearing about soon after it is imported, and a pass that finds no unchecked row is one query over a partial index. It takes at most 40 pages of 500 rows, so a backfill of a large ledger is spread over several passes |
 | `MonthCloseReminderJob` | 1 hour, acting only on days 1 to 5 of a month | `MonthClose` | The reminder belongs to the first days of a month in the installation time zone. `PeriodicJob` counts its interval from the process start, so a daily interval would land at an arbitrary hour and a restart would move it; hourly passes find the new month within an hour of it starting, a pass on day 6 or later returns before touching the database, and the deduplication per user and month makes the extra passes harmless |
 | `MonthlyDigestJob` | 1 hour, acting only on days 1 to 5 of a month | `MonthClose`; only members who ticked the digest for email or Discord | The same reasoning as the reminder: the first pass of a month sends the digest within an hour of the month starting, a server that was off on the 1st catches up until the 5th, and the deduplication per member and month makes later passes harmless. Each member's review is a handful of report queries, run once a month |
@@ -97,6 +98,7 @@ flowchart LR
     Lock --> Rem["AppLock.RecurringBillReminders: reminder scan"]
     Lock --> Bud["AppLock.BudgetAlerts: budget alert scan, held per user"]
     Lock --> Low["AppLock.LowBalanceAlerts: low-balance scan, held per user"]
+    Lock --> War["AppLock.WarrantyReminders: warranty reminder scan"]
     Lock --> Mail["AppLock.EmailOutbox: claiming the next batch of messages"]
     Lock --> Disc["AppLock.DiscordOutbox: claiming the next batch of Discord posts"]
     Lock --> Unu["AppLock.UnusualAmounts: unusual-amount scan, held for the whole pass"]

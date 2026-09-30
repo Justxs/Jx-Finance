@@ -186,6 +186,7 @@ const contracts: Record<string, Contract> = {
   unusualAmountsNotification: { schema: schemas.NotificationsResponseItem },
   priceRiseNotification: { schema: schemas.NotificationsResponseItem },
   lowBalanceNotification: { schema: schemas.NotificationsResponseItem },
+  warrantyNotification: { schema: schemas.NotificationsResponseItem },
   monthReadyNotification: { schema: schemas.NotificationsResponseItem },
   monthlyDigestNotification: { schema: schemas.NotificationsResponseItem },
   monthCloseYear: { schema: schemas.MonthCloseYearResponse },

@@ -27,14 +27,17 @@ function attachment(
 }
 
 export const maximaAttachments: AttachmentResponse[] = [
-  attachment(
-    1,
-    ids.transactions.maxima,
-    "maxima-kvitas.jpg",
-    "image/jpeg",
-    684_211,
-    "2026-09-17T18:40:00Z",
-  ),
+  {
+    ...attachment(
+      1,
+      ids.transactions.maxima,
+      "maxima-kvitas.jpg",
+      "image/jpeg",
+      684_211,
+      "2026-09-17T18:40:00Z",
+    ),
+    warrantyUntil: "2028-09-17",
+  },
 ];
 
 export const splitAttachments: AttachmentResponse[] = [

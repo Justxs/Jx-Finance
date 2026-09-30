@@ -20,6 +20,29 @@ export const DeleteAttachmentResponse = zod.void();
 export const DownloadAttachmentResponse = zod.unknown();
 
 /**
+ * Records until when the purchase on this attached receipt is under warranty, or clears it with null. The member who attached the file is reminded 30 days before that date, once per date.
+ * @summary Set the warranty end of a receipt
+ */
+export const SetAttachmentWarrantyBody = zod.object({
+  warrantyUntil: zod
+    .union([zod.null(), zod.iso.date()])
+    .describe("The last day of the warranty as YYYY-MM-DD, or null to clear it."),
+});
+
+export const SetAttachmentWarrantyResponse = zod.object({
+  id: zod.uuid(),
+  transactionId: zod.uuid(),
+  fileName: zod.string(),
+  contentType: zod.string(),
+  sizeBytes: zod.int(),
+  sha256: zod.string(),
+  uploadedById: zod.uuid(),
+  uploadedByName: zod.string(),
+  uploadedAt: zod.iso.datetime({ offset: true }),
+  warrantyUntil: zod.union([zod.null(), zod.iso.date()]).optional(),
+});
+
+/**
  * Returns the receipts and documents attached to one transaction, oldest first, with their sanitized file name, detected content type, size, SHA-256 and who uploaded them. Anyone who can see the transaction sees its files: the owner of the account and, for a shared account, every member of its household, narrowed by the active household like the transaction itself. Files in the trash are left out.
  * @summary List the files of a transaction
  */
@@ -33,6 +56,7 @@ export const AttachmentsResponseItem = zod.object({
   uploadedById: zod.uuid(),
   uploadedByName: zod.string(),
   uploadedAt: zod.iso.datetime({ offset: true }),
+  warrantyUntil: zod.union([zod.null(), zod.iso.date()]).optional(),
 });
 export const AttachmentsResponse = zod.array(AttachmentsResponseItem);
 
@@ -54,4 +78,5 @@ export const UploadAttachmentResponse = zod.object({
   uploadedById: zod.uuid(),
   uploadedByName: zod.string(),
   uploadedAt: zod.iso.datetime({ offset: true }),
+  warrantyUntil: zod.union([zod.null(), zod.iso.date()]).optional(),
 });

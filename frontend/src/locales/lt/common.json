@@ -560,7 +560,9 @@
       "count_one": "Pridėtas {{count}} failas",
       "count_few": "Pridėti {{count}} failai",
       "count_many": "Pridėta {{count}} failo",
-      "count_other": "Pridėta {{count}} failų"
+      "count_other": "Pridėta {{count}} failų",
+      "warranty": "Garantija iki",
+      "warrantyNone": "Pridėti datą"
     },
     "splitSummary": "Operacija {{total}} · Paskirstyta {{assigned}}",
     "splitRemaining": "Liko {{amount}}",
@@ -1867,7 +1869,8 @@
       "recurringPriceRise": "Už prenumeratą nuskaičiuota daugiau nei tikėtasi",
       "monthReadyToClose": "Pasibaigusį mėnesį galima uždaryti",
       "monthlyDigest": "Mėnesio suvestinė",
-      "lowBalance": "Prognozuojama, kad sąskaitos likutis taps neigiamas"
+      "lowBalance": "Prognozuojama, kad sąskaitos likutis taps neigiamas",
+      "warrantyExpiring": "Baigiasi čekio garantija"
     },
     "unusualAmount": "{{amount}}: {{factor}}× daugiau nei įprasta ({{typical}})",
     "unusualAmounts_one": "{{count}} išlaida gerokai viršija įprastą sumą",
@@ -1886,7 +1889,8 @@
     "unavailable": "Nepavyko įkelti pranešimų",
     "monthReadyToClose": "{{month}} baigėsi: peržiūrėkite ir uždarykite mėnesį",
     "monthlyDigest": "Pajamos {{income}}, išlaidos {{expense}}, grynai {{net}}",
-    "lowBalance": "Pagal prognozę {{date}} likutis taps neigiamas, mažiausias {{amount}}"
+    "lowBalance": "Pagal prognozę {{date}} likutis taps neigiamas, mažiausias {{amount}}",
+    "warrantyExpiring": "Garantija baigiasi {{date}}"
   },
   "households": {
     "name": "Namų ūkio pavadinimas",

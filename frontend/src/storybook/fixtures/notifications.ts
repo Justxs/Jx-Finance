@@ -4,7 +4,7 @@ import type {
   NotificationType,
   RecurringBillResponse,
 } from "@/api/generated/model";
-import { ids } from "./base";
+import { ids, uid } from "./base";
 import { overLimitBudget, weeklyRolloverBudget } from "./budgets";
 import {
   dueSoonBill,
@@ -199,6 +199,19 @@ export const lowBalanceNotification: NotificationResponse = {
   channel: "inApp",
   isRead: false,
   createdAt: "2026-09-18T09:00:00Z",
+};
+
+export const warrantyNotification: NotificationResponse = {
+  id: ids.notifications.laptopWarranty,
+  type: "warrantyExpiring",
+  title: "Nešiojamas kompiuteris",
+  message: "",
+  payload: { dueDate: "2026-10-12", transactionId: ids.transactions.maxima },
+  relatedType: "Attachment",
+  relatedId: uid("abababab", 1),
+  channel: "inApp",
+  isRead: false,
+  createdAt: "2026-09-18T10:00:00Z",
 };
 
 export const notifications: NotificationResponse[] = [

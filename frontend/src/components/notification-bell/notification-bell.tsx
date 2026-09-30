@@ -87,6 +87,7 @@ const bills = linkOptions({ to: "/recurring-bills" });
 const budgets = linkOptions({ to: "/budgets" });
 const unusual = linkOptions({ to: "/transactions", search: { unusual: true } });
 const accounts = linkOptions({ to: "/accounts" });
+const ledger = linkOptions({ to: "/transactions" });
 
 function monthLink({ month }: NotificationPayload) {
   return linkOptions({ to: "/", search: { month: month ? monthKeyOfIso(month) : undefined } });
@@ -102,9 +103,10 @@ const producers = {
   monthReadyToClose: { feature: "monthClose", link: monthLink },
   monthlyDigest: { feature: "monthClose", link: monthLink },
   lowBalance: { feature: "recurringBills", link: () => accounts },
+  warrantyExpiring: { feature: undefined, link: () => ledger },
 } as const satisfies Record<
   NotificationType,
-  { feature: FeatureKey; link: (payload: NotificationPayload) => unknown }
+  { feature: FeatureKey | undefined; link: (payload: NotificationPayload) => unknown }
 >;
 
 const entryClassName = "block w-full px-4 py-3 text-left text-sm hover:bg-accent";
@@ -195,6 +197,12 @@ export function NotificationBell({ sidebar }: Readonly<Props>) {
         return month
           ? t("notifications.monthReadyToClose", { month: monthName(month) })
           : notification.message;
+      case "warrantyExpiring": {
+        const warrantyUntil = dueDate ? parseIso(dueDate) : null;
+        return warrantyUntil
+          ? t("notifications.warrantyExpiring", { date: date.format(warrantyUntil) })
+          : notification.message;
+      }
       case "lowBalance": {
         const belowZeroOn = dueDate ? parseIso(dueDate) : null;
         return belowZeroOn && amount
@@ -295,9 +303,10 @@ export function NotificationBell({ sidebar }: Readonly<Props>) {
               <Rows>
                 {unreadList.map((notification) => {
                   const producer = producers[notification.type];
-                  const link = features[producer.feature]
-                    ? producer.link(notification.payload)
-                    : null;
+                  const link =
+                    producer.feature === undefined || features[producer.feature]
+                      ? producer.link(notification.payload)
+                      : null;
 
                   return (
                     <li key={notification.id}>

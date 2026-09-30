@@ -69,6 +69,7 @@ public static class ApiServiceExtensions
             builder.Services.AddHostedService<RecurringBillReminderJob>();
             builder.Services.AddHostedService<BudgetAlertJob>();
             builder.Services.AddHostedService<LowBalanceJob>();
+            builder.Services.AddHostedService<WarrantyReminderJob>();
             builder.Services.AddHostedService<NetWorthSnapshotJob>();
             builder.Services.AddHostedService<ExchangeRateSyncJob>();
             builder.Services.AddHostedService<BrokerSyncJob>();

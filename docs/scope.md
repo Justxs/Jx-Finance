@@ -18,7 +18,7 @@ Create/edit/delete; optional category splits; a note of the member's own beside 
 
 ## Receipts and attachments
 
-Up to ten JPEG, PNG, WebP, HEIC or PDF files of at most 10 MB per transaction, dropped or chosen in the edit dialog, with thumbnails, download and removal with undo; a paperclip with the count in the ledger. Files follow the transaction's sharing, stay with it in the trash, appear in the household log and travel in backups. See [Attachments](features/attachments.md)
+Up to ten JPEG, PNG, WebP, HEIC or PDF files of at most 10 MB per transaction, each with an optional warranty end date that raises a reminder 30 days before it, dropped or chosen in the edit dialog, with thumbnails, download and removal with undo; a paperclip with the count in the ledger. Files follow the transaction's sharing, stay with it in the trash, appear in the household log and travel in backups. See [Attachments](features/attachments.md)
 
 ## Receipt reading
 

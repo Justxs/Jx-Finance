@@ -23,6 +23,7 @@ export const NotificationsResponseItem = zod.object({
     "monthReadyToClose",
     "monthlyDigest",
     "lowBalance",
+    "warrantyExpiring",
   ]),
   title: zod.string(),
   message: zod.string(),

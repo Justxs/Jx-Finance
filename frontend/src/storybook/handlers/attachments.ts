@@ -2,6 +2,7 @@ import {
   getAttachmentsMockHandler,
   getDeleteAttachmentMockHandler,
   getDownloadAttachmentMockHandler,
+  getSetAttachmentWarrantyMockHandler,
   getUploadAttachmentMockHandler,
 } from "@/api/generated/attachments/attachments.msw";
 import type { AttachmentResponse } from "@/api/generated/model";
@@ -12,6 +13,7 @@ import {
   splitAttachments,
   tinyPng,
 } from "@/storybook/fixtures";
+import { readBody, text } from "./http";
 import { CREATED_AT } from "./ids";
 
 const byTransaction: Record<string, AttachmentResponse[]> = {
@@ -49,5 +51,14 @@ export const attachmentHandlers = [
     );
   }),
   getDeleteAttachmentMockHandler(),
+  getSetAttachmentWarrantyMockHandler(async ({ params, request }) => {
+    const found = Object.values(byTransaction)
+      .flat()
+      .find((item) => item.id === String(params.id));
+    return {
+      ...(found ?? uploadedAttachment(ids.transactions.maxima, new File([], "receipt.pdf"))),
+      warrantyUntil: text((await readBody(request)).warrantyUntil),
+    };
+  }),
   getDownloadAttachmentMockHandler(new Blob([tinyPng], { type: "image/png" })),
 ];

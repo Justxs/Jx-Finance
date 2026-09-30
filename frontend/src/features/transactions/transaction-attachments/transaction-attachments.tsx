@@ -1,11 +1,14 @@
+import { useQueryClient } from "@tanstack/react-query";
 import { Download, FileText, ImageIcon, Paperclip, Trash2 } from "lucide-react";
 import { useId, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import {
+  getAttachmentsQueryKey,
   getDownloadAttachmentUrl,
   useAttachmentsSuspense,
   useDeleteAttachment,
+  useSetAttachmentWarranty,
   useUploadAttachment,
 } from "@/api/generated";
 import type { AttachmentResponse } from "@/api/generated/model";
@@ -14,6 +17,7 @@ import { FormError } from "@/components/form-error/form-error";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { RowTransition } from "@/components/row-transition/row-transition";
 import { Button, buttonVariants } from "@/components/ui/button/button";
+import { DatePicker } from "@/components/ui/date-picker/date-picker";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { FileInput } from "@/components/ui/file-input/file-input";
 import { Rows } from "@/components/ui/rows/rows";
@@ -63,6 +67,40 @@ function Thumbnail({ attachment }: Readonly<{ attachment: AttachmentResponse }>)
   );
 }
 
+function WarrantyDate({ attachment }: Readonly<{ attachment: AttachmentResponse }>) {
+  const { t } = useTranslation();
+  const id = useId();
+  const queryClient = useQueryClient();
+  const setWarranty = useSetAttachmentWarranty({
+    mutation: {
+      ...silentMutation,
+      onSuccess: (saved) =>
+        queryClient.setQueryData<AttachmentResponse[]>(
+          getAttachmentsQueryKey(saved.transactionId),
+          (list) => list?.map((item) => (item.id === saved.id ? saved : item)),
+        ),
+    },
+  });
+
+  return (
+    <div className="mt-1 flex items-center gap-2 text-xs">
+      <label htmlFor={id} className="text-muted-foreground">
+        {t("transactions.attachments.warranty")}
+      </label>
+      <DatePicker
+        id={id}
+        className="w-44"
+        value={attachment.warrantyUntil ?? ""}
+        placeholder={t("transactions.attachments.warrantyNone")}
+        disabled={setWarranty.isPending}
+        onChange={(value) =>
+          setWarranty.mutate({ id: attachment.id, data: { warrantyUntil: value || null } })
+        }
+      />
+    </div>
+  );
+}
+
 function AttachmentRow({ attachment, removing, disabled, onRemove }: Readonly<RowProps>) {
   const { t } = useTranslation();
   const formatBytes = useBytes();
@@ -84,6 +122,7 @@ function AttachmentRow({ attachment, removing, disabled, onRemove }: Readonly<Ro
               date: formatDateTime(attachment.uploadedAt),
             })}
           </p>
+          <WarrantyDate attachment={attachment} />
         </div>
         <div className="flex shrink-0 gap-1">
           <a

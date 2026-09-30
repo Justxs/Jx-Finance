@@ -88,6 +88,21 @@ export const DocumentsAndPhotos: Story = {
   },
 };
 
+export const WarrantyDate: Story = {
+  play: async ({ canvas }) => {
+    const picker = await canvas.findByRole("button", { name: /Warranty until/u });
+    await expect(picker).toHaveTextContent("Sep 17, 2028");
+  },
+};
+
+export const NoWarrantyYet: Story = {
+  args: { transactionId: ids.transactions.split },
+  play: async ({ canvas }) => {
+    const pickers = await canvas.findAllByRole("button", { name: /Warranty until/u });
+    await expect(pickers[0]).toHaveTextContent("Add a date");
+  },
+};
+
 export const Dark: Story = { globals: { theme: "dark" } };
 
 export const Lithuanian: Story = {

@@ -11,5 +11,7 @@ public interface IAttachmentService
 
     Task<Result<AttachmentDownload>> OpenAsync(Guid id, CancellationToken cancellationToken);
 
+    Task<Result<AttachmentResponse>> SetWarrantyAsync(Guid id, DateOnly? warrantyUntil, CancellationToken cancellationToken);
+
     Task<Result<Guid>> DeleteAsync(Guid id, CancellationToken cancellationToken);
 }

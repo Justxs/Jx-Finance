@@ -17,6 +17,7 @@ public enum AppLock : long
     ReceiptReadings = 738192444,
     UserExport = 738192445,
     LowBalanceAlerts = 738192446,
+    WarrantyReminders = 738192447,
 }
 
 public static class AdvisoryLock

@@ -16,4 +16,5 @@ public sealed class TransactionAttachment : OwnableEntity
     public required string ContentType { get; set; }
     public long SizeBytes { get; set; }
     public required string Sha256 { get; set; }
+    public DateOnly? WarrantyUntil { get; set; }
 }

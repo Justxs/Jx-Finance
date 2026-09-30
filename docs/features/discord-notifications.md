@@ -82,6 +82,7 @@ A notification's `Message` is the sentence `NotificationTexts.Sentence` writes i
 | `unusualAmounts` | "{count} expenses are well above their usual amount" | "Neįprastai didelių išlaidų: {count}" |
 | `recurringPriceRise` | "Charged {amount} {CUR}, expected {expected} {CUR}" | "Nuskaičiuota {amount} {CUR}, tikėtasi {expected} {CUR}" |
 | `lowBalance` | "Forecast to go below zero on {yyyy-MM-dd}, lowest {amount} {CUR}" | "Pagal prognozę {yyyy-MM-dd} likutis taps neigiamas, mažiausias {amount} {CUR}" |
+| `warrantyExpiring` | "Warranty ends {yyyy-MM-dd}" | "Garantija baigiasi {yyyy-MM-dd}" |
 | `monthReadyToClose` | "{Month yyyy} has ended and is ready to close" | "{yyyy} m. {mėnuo} baigėsi: peržiūrėkite ir uždarykite mėnesį" |
 | `monthlyDigest` | "{Month yyyy}: income {income} {CUR}, expenses {expense} {CUR}, net {net} {CUR}, {kept}% kept", then one line each for the biggest changes, what is still to do and whether the month is closed | "{yyyy} m. {mėnuo}: pajamos …, išlaidos …, grynai …, sutaupyta {kept}%", then the same lines in Lithuanian |
 

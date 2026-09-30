@@ -528,7 +528,9 @@
       "fileTypeNotAllowed": "{{name}} is not a JPEG, PNG, WebP, HEIC or PDF file.",
       "tooMany": "Only {{free}} more files fit on this transaction; {{name}} was left out.",
       "count_one": "{{count}} file attached",
-      "count_other": "{{count}} files attached"
+      "count_other": "{{count}} files attached",
+      "warranty": "Warranty until",
+      "warrantyNone": "Add a date"
     },
     "splitSummary": "Transaction {{total}} · Assigned {{assigned}}",
     "splitRemaining": "{{amount}} remaining",
@@ -1805,7 +1807,8 @@
       "recurringPriceRise": "A subscription is charged more than expected",
       "monthReadyToClose": "A finished month is ready to close",
       "monthlyDigest": "Monthly digest",
-      "lowBalance": "An account is forecast to go below zero"
+      "lowBalance": "An account is forecast to go below zero",
+      "warrantyExpiring": "A receipt's warranty ends soon"
     },
     "unusualAmount": "{{amount}}: {{factor}}× the usual {{typical}}",
     "unusualAmounts_one": "{{count}} expense is well above its usual amount",
@@ -1822,7 +1825,8 @@
     "unavailable": "Notifications could not be loaded",
     "monthReadyToClose": "{{month}} has ended and is ready to close",
     "monthlyDigest": "Income {{income}}, expenses {{expense}}, net {{net}}",
-    "lowBalance": "Forecast to go below zero on {{date}}, lowest {{amount}}"
+    "lowBalance": "Forecast to go below zero on {{date}}, lowest {{amount}}",
+    "warrantyExpiring": "Warranty ends {{date}}"
   },
   "households": {
     "name": "Household name",

@@ -66,6 +66,10 @@ const rules: readonly Rule[] = [
     ],
   },
   {
+    after: [api.getSetAttachmentWarrantyMutationKey],
+    refresh: [api.getNotificationsQueryKey],
+  },
+  {
     after: [api.getUploadAttachmentMutationKey],
     deleted: [api.getDeleteAttachmentMutationKey],
     refresh: [api.getTransactionsQueryKey],

@@ -9,4 +9,5 @@ public sealed record AttachmentResponse(
     string Sha256,
     Guid UploadedById,
     string UploadedByName,
-    DateTimeOffset UploadedAt);
+    DateTimeOffset UploadedAt,
+    DateOnly? WarrantyUntil = null);

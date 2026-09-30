@@ -13,6 +13,7 @@ import {
   notifications,
   priceRiseNotification,
   lowBalanceNotification,
+  warrantyNotification,
   transferDueNotification,
   unusualAmountNotification,
   unusualAmountsNotification,
@@ -147,6 +148,18 @@ export const LowBalanceForecast: Story = {
       /Forecast to go below zero on Oct 1, 2026, lowest -€361.19/u,
     );
     await expect(entry).toHaveAttribute("href", expect.stringContaining("/accounts"));
+  },
+};
+
+export const WarrantyEnding: Story = {
+  parameters: withHandlers(notificationsHandler([warrantyNotification])),
+  play: async ({ canvas }) => {
+    await userEvent.click(canvas.getByRole("button", { name: /1 unread/i }));
+
+    const entry = await within(await openedDialog()).findByRole("link");
+
+    await expect(entry).toHaveTextContent(/Warranty ends Oct 12, 2026/u);
+    await expect(entry).toHaveAttribute("href", expect.stringContaining("/transactions"));
   },
 };
 

@@ -98,6 +98,8 @@ The same row also holds the mail server: `SmtpEnabled`, `SmtpHost`, `SmtpPort` (
 
 ## Payee key
 
+`TransactionAttachments.WarrantyUntil` (date, nullable) was added by the `AddAttachmentWarranty` migration of 2026-09-30; see [Attachments](features/attachments.md#warranty-dates).
+
 `Categories.ParentId` (uuid, nullable, restricting self-referencing foreign key, indexed) was added by the `AddCategoryParent` migration of 2026-09-30; see [Categories](features/categories.md#groups).
 
 `Budgets.CategoryId` became nullable and `Budgets.TagId` (uuid, nullable, restricting foreign key to `Tags`, indexed) was added by the `AddTagBudgets` migration of 2026-09-30, with the check constraint `CK_Budgets_CategoryOrTag` that exactly one of the two is set. See [Budgets](features/budgets.md#budgets-on-a-tag).

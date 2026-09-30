@@ -23,7 +23,12 @@ import type {
 } from "@tanstack/react-query";
 import { customFetch } from "../../client";
 import type { ErrorType } from "../../client";
-import type { AttachmentResponse, ProblemDetails, UploadAttachmentRequest } from "../model";
+import type {
+  AttachmentResponse,
+  ProblemDetails,
+  SetAttachmentWarrantyRequest,
+  UploadAttachmentRequest,
+} from "../model";
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
@@ -250,6 +255,116 @@ export function useDownloadAttachmentSuspense<
   return withQueryKey(query, queryOptions.queryKey);
 }
 
+export const getSetAttachmentWarrantyUrl = (id: string) => {
+  return `/api/attachments/${id}/warranty`;
+};
+
+/**
+ * Records until when the purchase on this attached receipt is under warranty, or clears it with null. The member who attached the file is reminded 30 days before that date, once per date.
+ * @summary Set the warranty end of a receipt
+ */
+export const setAttachmentWarranty = async (
+  id: string,
+  setAttachmentWarrantyRequest: SetAttachmentWarrantyRequest,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<AttachmentResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return customFetch<AttachmentResponse>(getSetAttachmentWarrantyUrl(id), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(setAttachmentWarrantyRequest),
+  });
+};
+
+export const getSetAttachmentWarrantyMutationKey = () => ["setAttachmentWarranty"] as const;
+
+export const getSetAttachmentWarrantyMutationOptions = <
+  TError = ErrorType<ProblemDetails>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof setAttachmentWarranty>>,
+    TError,
+    SetAttachmentWarrantyMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof setAttachmentWarranty>>,
+  TError,
+  SetAttachmentWarrantyMutationVariables,
+  TContext
+> => {
+  const mutationKey = getSetAttachmentWarrantyMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof setAttachmentWarranty>>,
+    SetAttachmentWarrantyMutationVariables
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return setAttachmentWarranty(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SetAttachmentWarrantyMutationResult = NonNullable<
+  Awaited<ReturnType<typeof setAttachmentWarranty>>
+>;
+export type SetAttachmentWarrantyMutationBody = SetAttachmentWarrantyRequest;
+export type SetAttachmentWarrantyMutationError = ErrorType<ProblemDetails>;
+export type SetAttachmentWarrantyMutationVariables = {
+  id: string;
+  data: SetAttachmentWarrantyRequest;
+};
+
+/**
+ * @summary Set the warranty end of a receipt
+ */
+export const useSetAttachmentWarranty = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof setAttachmentWarranty>>,
+      TError,
+      SetAttachmentWarrantyMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof setAttachmentWarranty>>,
+  TError,
+  SetAttachmentWarrantyMutationVariables,
+  TContext
+> => {
+  return useMutation(getSetAttachmentWarrantyMutationOptions(options), queryClient);
+};
 export const getAttachmentsUrl = (transactionId: string) => {
   return `/api/transactions/${transactionId}/attachments`;
 };

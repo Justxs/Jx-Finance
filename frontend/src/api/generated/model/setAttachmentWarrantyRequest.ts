@@ -7,15 +7,7 @@
  */
 import type { NullableOfDateOnly } from "./nullableOfDateOnly";
 
-export interface AttachmentResponse {
-  id: string;
-  transactionId: string;
-  fileName: string;
-  contentType: string;
-  sizeBytes: number;
-  sha256: string;
-  uploadedById: string;
-  uploadedByName: string;
-  uploadedAt: string;
-  warrantyUntil?: null | NullableOfDateOnly;
+export interface SetAttachmentWarrantyRequest {
+  /** The last day of the warranty as YYYY-MM-DD, or null to clear it. */
+  warrantyUntil: null | NullableOfDateOnly;
 }

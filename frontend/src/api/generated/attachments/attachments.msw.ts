@@ -52,6 +52,30 @@ export const getDownloadAttachmentMockHandler = (
   );
 };
 
+export const getSetAttachmentWarrantyMockHandler = (
+  overrideResponse?:
+    | AttachmentResponse
+    | ((
+        info: Parameters<Parameters<typeof http.put>[1]>[0],
+      ) => Promise<AttachmentResponse> | AttachmentResponse),
+  options?: RequestHandlerOptions,
+) => {
+  return http.put(
+    "*/api/attachments/:id/warranty",
+    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : undefined,
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
 export const getAttachmentsMockHandler = (
   overrideResponse?:
     | AttachmentResponse[]
@@ -102,6 +126,7 @@ export const getUploadAttachmentMockHandler = (
 export const getAttachmentsMock = () => [
   getDeleteAttachmentMockHandler(),
   getDownloadAttachmentMockHandler(),
+  getSetAttachmentWarrantyMockHandler(),
   getAttachmentsMockHandler(),
   getUploadAttachmentMockHandler(),
 ];

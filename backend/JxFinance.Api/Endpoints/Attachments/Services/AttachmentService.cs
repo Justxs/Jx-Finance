@@ -180,6 +180,22 @@ public sealed class AttachmentService(
             attachment.Sha256);
     }
 
+    public async Task<Result<AttachmentResponse>> SetWarrantyAsync(
+        Guid id,
+        DateOnly? warrantyUntil,
+        CancellationToken cancellationToken)
+    {
+        var typedId = new TransactionAttachmentId(id);
+        if (await db.TransactionAttachments.FirstOrDefaultAsync(a => a.Id == typedId, cancellationToken) is not { } attachment)
+        {
+            return AttachmentMissing;
+        }
+
+        attachment.WarrantyUntil = warrantyUntil;
+        await db.SaveChangesAsync(cancellationToken);
+        return (await ToResponsesAsync([attachment], cancellationToken))[0];
+    }
+
     public Task<Result<Guid>> DeleteAsync(Guid id, CancellationToken cancellationToken)
     {
         var typedId = new TransactionAttachmentId(id);
@@ -229,7 +245,8 @@ public sealed class AttachmentService(
                 a.Sha256,
                 a.UserId,
                 names.GetValueOrDefault(a.UserId) ?? "",
-                a.CreatedAt)),
+                a.CreatedAt,
+                a.WarrantyUntil)),
         ];
     }
 }

@@ -27,6 +27,7 @@ public static class NotificationTexts
         NotificationType.RecurringPriceRise => "/recurring-bills",
         NotificationType.MonthReadyToClose or NotificationType.MonthlyDigest => "/",
         NotificationType.LowBalance => "/accounts",
+        NotificationType.WarrantyExpiring => "/transactions",
         _ => throw new ArgumentOutOfRangeException(nameof(type), type, "This notification type has no page."),
     };
 
@@ -84,6 +85,8 @@ public static class NotificationTexts
                     : $"{MonthTitle(language, month)} has ended and is ready to close",
             NotificationType.MonthlyDigest when payload is { Month: { } month, Digest: { } digest } =>
                 DigestSentence(language, month, digest),
+            NotificationType.WarrantyExpiring when payload?.DueDate is { } warrantyUntil =>
+                WarrantyExpiring(lithuanian, warrantyUntil),
             NotificationType.LowBalance when payload is { DueDate: { } belowZeroOn, Amount: { } lowest } =>
                 LowBalance(lithuanian, belowZeroOn, Money(lowest, payload.Currency)),
             _ => notification.Message,
@@ -182,6 +185,12 @@ public static class NotificationTexts
         return lithuanian
             ? $"Pagal prognozę {date} likutis taps neigiamas, mažiausias {lowest}"
             : $"Forecast to go below zero on {date}, lowest {lowest}";
+    }
+
+    private static string WarrantyExpiring(bool lithuanian, DateOnly warrantyUntil)
+    {
+        var date = warrantyUntil.ToString(DateFormats.IsoDate, CultureInfo.InvariantCulture);
+        return lithuanian ? $"Garantija baigiasi {date}" : $"Warranty ends {date}";
     }
 
     private static string Factor(decimal factor) => factor.ToString("0.#", CultureInfo.InvariantCulture);
