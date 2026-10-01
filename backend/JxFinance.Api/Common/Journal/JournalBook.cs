@@ -69,6 +69,6 @@ public sealed record JournalValuation(DateOnly Date, decimal Value, string? Note
 
 public sealed record JournalAsset(Guid Id, string Name, AssetType Type, Currency Currency, IReadOnlyList<JournalValuation> Valuations, decimal ValueToday);
 
-public sealed record JournalDebt(Guid Id, string Name, Money Outstanding, DateOnly AsOf);
+public sealed record JournalDebt(Guid Id, string Name, Currency Currency, IReadOnlyList<JournalValuation> Balances);
 
 public sealed record JournalBalance(Guid Of, decimal Amount, Currency? Currency, Guid? SecurityId = null);

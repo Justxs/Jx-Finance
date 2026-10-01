@@ -798,6 +798,107 @@ export const UpdateDebtResponse = zod.object({
 });
 
 /**
+ * Returns the dated outstanding amounts recorded for a debt, newest first, in the currency of the debt. Creating or editing the debt records one, and the newest is the outstanding amount and as-of date of the debt. Tracked payments write none: they are counted from the newest on every read.
+ * @summary List the recorded balances of a debt
+ */
+export const debtBalancesResponseAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+
+export const DebtBalancesResponseItem = zod.object({
+  date: zod.iso.date(),
+  amount: zod.stringFormat("decimal", debtBalancesResponseAmountRegExp),
+  note: zod.string().nullable(),
+});
+export const DebtBalancesResponse = zod.array(DebtBalancesResponseItem);
+
+/**
+ * Removes the balance recorded for one date for good; it does not go to the trash. The outstanding amount of the debt becomes the newest remaining balance. The last balance cannot be deleted.
+ * @summary Delete a recorded balance of a debt
+ */
+export const DeleteDebtBalanceResponse = zod.void();
+
+/**
+ * Records what was owed on one date, replacing a balance already recorded for that date. The outstanding amount and as-of date of the debt follow the newest recorded balance, so a balance for an earlier date only adds history. A debt that tracks payments counts them from the newest. Net worth snapshots already taken are not rewritten.
+ * @summary Record a balance of a debt
+ */
+export const setDebtBalanceBodyAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const setDebtBalanceBodyNoteMin = 0;
+export const setDebtBalanceBodyNoteMax = 200;
+
+export const SetDebtBalanceBody = zod.object({
+  amount: zod
+    .stringFormat("decimal", setDebtBalanceBodyAmountRegExp)
+    .describe("Decimal string with at most two decimal places, in the currency of the debt."),
+  note: zod
+    .string()
+    .min(setDebtBalanceBodyNoteMin)
+    .max(setDebtBalanceBodyNoteMax)
+    .nullish()
+    .describe('Optional, up to 200 characters, such as "bank statement".'),
+});
+
+export const setDebtBalanceResponseOutstandingAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const setDebtBalanceResponseLoanAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const setDebtBalanceResponseMonthlyPaymentRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const setDebtBalanceResponseTrackedBalanceRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+
+export const SetDebtBalanceResponse = zod.object({
+  id: zod.uuid(),
+  name: zod.string(),
+  type: zod.enum(["mortgage", "loan", "other"]).describe("Mortgage, Loan, or Other."),
+  outstandingAmount: zod.stringFormat("decimal", setDebtBalanceResponseOutstandingAmountRegExp),
+  interestRate: zod.number().nullable(),
+  asOf: zod.iso.date(),
+  loanAmount: zod.stringFormat("decimal", setDebtBalanceResponseLoanAmountRegExp).nullable(),
+  firstPaymentDate: zod.union([zod.null(), zod.iso.date()]),
+  termMonths: zod.int().nullable(),
+  monthlyPayment: zod
+    .stringFormat("decimal", setDebtBalanceResponseMonthlyPaymentRegExp)
+    .nullable(),
+  amortizationType: zod.enum(["annuity", "linear"]),
+  payoffDate: zod.union([zod.null(), zod.iso.date()]),
+  currency: zod.enum([
+    "eur",
+    "usd",
+    "gbp",
+    "chf",
+    "pln",
+    "sek",
+    "nok",
+    "dkk",
+    "czk",
+    "huf",
+    "ron",
+    "isk",
+    "try",
+    "jpy",
+    "cny",
+    "hkd",
+    "sgd",
+    "krw",
+    "inr",
+    "idr",
+    "myr",
+    "php",
+    "thb",
+    "aud",
+    "nzd",
+    "cad",
+    "mxn",
+    "brl",
+    "ils",
+    "zar",
+  ]),
+  tracksPayments: zod.boolean(),
+  trackedBalance: zod
+    .stringFormat("decimal", setDebtBalanceResponseTrackedBalanceRegExp)
+    .nullable(),
+  trackedIncomplete: zod.boolean(),
+  unavailablePayments: zod.int(),
+  scope: zod.enum(["personal", "shared"]),
+  householdId: zod.uuid().nullable(),
+});
+
+/**
  * Lists up to 50 expense transactions that are not split and not linked to any of the signed-in user's debts, best matches first. A description equal to the name of a recurring entry that pays this debt, or to the description of a payment already linked, counts most; an amount within 5% of the schedule's regular payment counts next. Ties go to the newest.
  * @summary Suggest transactions to link to a debt
  */

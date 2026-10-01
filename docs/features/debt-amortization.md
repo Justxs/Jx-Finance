@@ -153,13 +153,13 @@ sequenceDiagram
     API-->>NW: next total subtracts the new amount
 ```
 
-The outstanding amount stays what the owner recorded, and net worth keeps subtracting that and only that, unless the debt tracks its payments (below). The schedule is what the contract says the balance should be, and the two differ for honest reasons: an overpayment the schedule does not know, a rate that changed, a payment holiday, a bank that counts days. Overwriting the recorded figure silently would also rewrite a net worth that the history has already snapshotted. So the summary shows both numbers side by side, and when they differ offers "Use scheduled balance", which is an ordinary update of the debt with the scheduled balance and today's date; the update invalidates the debts and net worth queries as any other debt update does. The choice is in the [decision log](../decisions/debt-amortization.md).
+The outstanding amount stays what the owner recorded, and net worth keeps subtracting that and only that, unless the debt tracks its payments (below). The schedule is what the contract says the balance should be, and the two differ for honest reasons: an overpayment the schedule does not know, a rate that changed, a payment holiday, a bank that counts days. Overwriting the recorded figure silently would also rewrite a net worth that the history has already snapshotted. So the summary shows both numbers side by side, and when they differ offers "Use scheduled balance", which is an ordinary update of the debt with the scheduled balance and today's date, recorded as the debt's balance for today; the update invalidates the debts and net worth queries as any other debt update does. The choice is in the [decision log](../decisions/debt-amortization.md).
 
 ## The screens
 
 ```mermaid
 flowchart TD
-    List["Net worth, Debts section"] -->|"payoffDate set"| Link["calendar button on the row, and 'paid off' in its details"]
+    List["Net worth, Debts section"] --> Link["calendar button on every row, and 'paid off' in its details when payoffDate is set"]
     List --> Form["Add or edit a debt: name, type, outstanding amount, rate,<br/>Repayment terms: loan amount, first payment, term or monthly payment, type"]
     Link --> Page["/net-worth/debts/$debtId"]
     Page --> Summary["payoff date, monthly payment, rate, total interest, total paid,<br/>scheduled balance beside the recorded one"]
@@ -168,6 +168,7 @@ flowchart TD
     Query --> Savings["side by side: Shorter term, paid off on …, n payments sooner, saving …;<br/>Lower payment, … instead of … from …, saving …, still paid off on …"]
     Page --> Charts["balance over time, with the overpaid line;<br/>interest, principal and overpayment stacked per year"]
     Page --> Table["payments table, 12 rows a page,<br/>opening on the page of the next payment"]
+    Page --> Balances["Recorded balances, newest first, with add, edit and delete"]
 ```
 
 The form groups the repayment terms under their own heading below the fields a debt always had, with a hint that they are optional, and checks on the client what the server checks: a term from 1 to 600, positive amounts, and not a term and a payment together. A server refusal such as `debt.paymentTooSmall` lands under the monthly payment through the form's usual field mapping.
@@ -195,7 +196,7 @@ erDiagram
     }
 ```
 
-The balance is derived on every read and never stored. The recorded `outstandingAmount` on its `asOf` date is the anchor; the tracked balance is the anchor minus the principal of every linked payment dated after it, oldest first and, on one date, in the order they were linked. Editing the amount or the date sets a new anchor, and payments on or before it stop counting. `DebtBalance.Track` works each payment out in the currency of the debt:
+The balance is derived on every read and never stored. The recorded `outstandingAmount` on its `asOf` date is the anchor; the tracked balance is the anchor minus the principal of every linked payment dated after it, oldest first and, on one date, in the order they were linked. Editing the amount or the date sets a new anchor, and payments on or before it stop counting. Since 2026-10-01 the anchor is the newest of the debt's [recorded balances](net-worth.md#debt-balance-history), so a balance recorded for an earlier date leaves it where it is. `DebtBalance.Track` works each payment out in the currency of the debt:
 
 | Payment | Interest | Principal |
 | --- | --- | --- |
@@ -234,7 +235,7 @@ On the page the summary shows the tracked balance beside the scheduled one, the 
 
 ## Trash, backups and the demo data
 
-A deleted debt keeps its terms on the row, so restoring it from the trash brings the schedule back with it. A backup copies every column of every table by name, so the new columns are carried without any change to the backup code; `Restore_brings_back_the_repayment_terms_and_payments_of_a_debt_and_the_valuations_of_an_asset` takes a backup, clears the terms and unlinks a payment, restores and reads both back. Purging a debt or a transaction from the trash deletes its payment links with it, and purging a debt clears it from any recurring entry that paid it; restoring a recurring entry whose debt is gone clears the debt instead of refusing. `--seed-demo` gives the demo car loan a loan amount of 6 000.00 over 48 months, with its first payment 23 months before the first of the current month.
+A deleted debt keeps its terms on the row and its [recorded balances](net-worth.md#debt-balance-history), so restoring it from the trash brings the schedule and the history back with it. A backup copies every column of every table by name, so the new columns are carried without any change to the backup code; `Restore_brings_back_the_repayment_terms_and_payments_of_a_debt_and_the_valuations_of_an_asset` takes a backup, clears the terms and unlinks a payment, restores and reads both back. Purging a debt or a transaction from the trash deletes its payment links with it, and purging a debt clears it from any recurring entry that paid it; restoring a recurring entry whose debt is gone clears the debt instead of refusing. `--seed-demo` gives the demo car loan a loan amount of 6 000.00 over 48 months, with its first payment 23 months before the first of the current month.
 
 ## Not covered
 

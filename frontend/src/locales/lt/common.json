@@ -1513,7 +1513,7 @@
       "paidOff": "grąžinta {{date}}"
     },
     "schedule": {
-      "open": "Grąžinimo grafikas: {{name}}",
+      "open": "Likučių istorija ir grafikas: {{name}}",
       "back": "Grynasis turtas",
       "notFound": "Šios skolos nebėra.",
       "incomplete": "Kad matytumėte grafiką, šiai skolai įveskite paskolos sumą, palūkanų normą, pirmosios įmokos datą ir terminą arba mėnesio įmoką.",
@@ -1600,6 +1600,15 @@
       "notePlaceholder": "pvz., prekybininko įvertinimas",
       "dateFuture": "Data negali būti ateityje.",
       "newest": "Dabartinė vertė"
+    },
+    "debtBalances": {
+      "title": "Įrašyti likučiai",
+      "hint": "Kiek buvo likę grąžinti tam tikrą dieną. Naujausias yra skolos likutis. Ištrinto likučio atkurti negalima.",
+      "add": "Pridėti likutį",
+      "edit": "Redaguoti likutį",
+      "amount": "Skolos likutis ({{currency}})",
+      "notePlaceholder": "pvz., banko išrašas",
+      "newest": "Skolos likutis"
     },
     "tracking": {
       "enable": "Sekti įmokas",
@@ -2446,6 +2455,7 @@
       "tracksPayments": "sekti įmokas",
       "valuations": "įvertinimai",
       "payments": "susietos įmokos",
+      "balances": "įrašyti likučiai",
       "place": "vieta"
     }
   },
@@ -2933,7 +2943,8 @@
       "scheduleIncomplete": "Šiai skolai reikia paskolos sumos, palūkanų normos, pirmosios įmokos datos ir termino arba mėnesio įmokos.",
       "paymentWrongType": "Skolą galima dengti tik išlaidomis.",
       "paymentTaken": "Ši operacija jau susieta su skola.",
-      "notTracked": "Pirmiausia įjunkite šios skolos įmokų sekimą."
+      "notTracked": "Pirmiausia įjunkite šios skolos įmokų sekimą.",
+      "lastBalance": "Skola turi turėti bent vieną įrašytą likutį. Vietoj to ištrinkite skolą."
     },
     "decimal": {
       "malformed": "Įveskite skaičių su tašku kaip dešimtainiu skirtuku, pvz., 12.34."

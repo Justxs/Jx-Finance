@@ -324,7 +324,7 @@ public sealed class BeancountWriterTests
         "debt" => (
             WithMain(1000m) with
             {
-                Debts = [new JournalDebt(Loan, "Car loan", new Money(1000m, Currency.Eur), new DateOnly(2026, 1, 1))],
+                Debts = [new JournalDebt(Loan, "Car loan", Currency.Eur, [new JournalValuation(new DateOnly(2026, 1, 1), 1000m, null)])],
                 Transactions =
                 [
                     Expense(Id(100), 150m, "Loan payment", new DateOnly(2026, 1, 1), Loans),
@@ -343,7 +343,7 @@ public sealed class BeancountWriterTests
         "debt payment in another currency" => (
             WithMain(1000m) with
             {
-                Debts = [new JournalDebt(Loan, "Dollar loan", new Money(1000m, Currency.Usd), new DateOnly(2026, 1, 1))],
+                Debts = [new JournalDebt(Loan, "Dollar loan", Currency.Usd, [new JournalValuation(new DateOnly(2026, 1, 1), 1000m, null)])],
                 Transactions = [Expense(Id(100), 100m, "Loan payment", new DateOnly(2026, 2, 1), Loans) with { DebtPayment = new JournalDebtPayment(Loan, new Money(104.5m, Currency.Usd), 95m) }],
                 Balances = [Balance(Main, 900m), Balance(Loan, -895.5m, Currency.Usd)],
             },

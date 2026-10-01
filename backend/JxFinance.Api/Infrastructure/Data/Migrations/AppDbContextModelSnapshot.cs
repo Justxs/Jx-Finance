@@ -1684,6 +1684,27 @@ namespace JxFinance.Infrastructure.Data.Migrations
                     b.ToTable("Debts");
                 });
 
+            modelBuilder.Entity("JxFinance.Domain.NetWorth.DebtBalanceEntry", b =>
+                {
+                    b.Property<Guid>("DebtId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date");
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.HasKey("DebtId", "Date");
+
+                    b.ToTable("DebtBalanceEntries");
+                });
+
             modelBuilder.Entity("JxFinance.Domain.NetWorth.DebtPayment", b =>
                 {
                     b.Property<Guid>("Id")
@@ -3686,6 +3707,15 @@ namespace JxFinance.Infrastructure.Data.Migrations
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("JxFinance.Domain.NetWorth.DebtBalanceEntry", b =>
+                {
+                    b.HasOne("JxFinance.Domain.NetWorth.Debt", null)
+                        .WithMany()
+                        .HasForeignKey("DebtId")
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 

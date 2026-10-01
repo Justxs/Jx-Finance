@@ -17,7 +17,7 @@ public sealed class MemberImport(AppDbContext db, Guid userId, int lockTimeoutSe
     {
         "Accounts", "AccountReconciliations", "AllocationTargets", "Assets", "AssetValuations", "Budgets", "Categories",
         "CategorizationRules", "CategorizationRuleTags", "ContactPayments", "Contacts", "ContactSplits", "ContactSplitShares",
-        "CsvImportMappings", "CurrencyConversions", "DebtPayments",
+        "CsvImportMappings", "CurrencyConversions", "DebtBalanceEntries", "DebtPayments",
         "Debts", "DuplicateDismissals", "Goals", "InvestmentTransactions", "NetWorthSnapshots", "PayeeNames",
         "ReceiptItemCategories", "ReceiptReadings", "RecurringBills", "Securities", "SubscriptionDismissals",
         "SuggestedRuleDismissals", "Tags", "Transactions", "TransactionAttachments", "TransactionGroups", "TransactionLines",

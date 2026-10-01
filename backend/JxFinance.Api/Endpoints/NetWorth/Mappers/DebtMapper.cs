@@ -24,9 +24,7 @@ public static class DebtMapper
     {
         debt.Name = input.Name.Trim();
         debt.Type = input.Type;
-        debt.OutstandingAmount = new Money(input.OutstandingAmount!.Value, debt.Currency);
         debt.InterestRate = input.InterestRate;
-        debt.AsOf = input.AsOf;
         debt.LoanAmount = input.LoanAmount;
         debt.FirstPaymentDate = input.FirstPaymentDate;
         debt.TermMonths = input.TermMonths;
@@ -56,6 +54,9 @@ public static class DebtMapper
         tracking?.Unavailable ?? 0,
         debt.Scope,
         debt.HouseholdId?.Value);
+
+    public static DebtBalanceEntryResponse ToResponse(this DebtBalanceEntry entry) =>
+        new(entry.Date, entry.Amount, entry.Note);
 
     private static DateOnly? PayoffDate(Debt debt) =>
         AmortizationTerms.From(debt) is { } terms && AmortizationCalculator.Calculate(terms).TryGetValue(out var schedule)

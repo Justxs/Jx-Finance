@@ -11,6 +11,7 @@ import type {
   AssetResponse,
   AssetValuationResponse,
   AssetValueHistoryResponse,
+  DebtBalanceEntryResponse,
   DebtPaymentResponse,
   DebtResponse,
   DebtScheduleResponse,
@@ -292,6 +293,73 @@ export const getUpdateDebtMockHandler = (
   );
 };
 
+export const getDebtBalancesMockHandler = (
+  overrideResponse?:
+    | DebtBalanceEntryResponse[]
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<DebtBalanceEntryResponse[]> | DebtBalanceEntryResponse[]),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/debts/:id/balances",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : undefined,
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getDeleteDebtBalanceMockHandler = (
+  overrideResponse?:
+    | void
+    | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<void> | void),
+  options?: RequestHandlerOptions,
+) => {
+  return http.delete(
+    "*/api/debts/:id/balances/:date",
+    async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+      if (typeof overrideResponse === "function") {
+        await overrideResponse(info);
+      }
+
+      return new HttpResponse(null, { status: 204 });
+    },
+    options,
+  );
+};
+
+export const getSetDebtBalanceMockHandler = (
+  overrideResponse?:
+    | DebtResponse
+    | ((
+        info: Parameters<Parameters<typeof http.put>[1]>[0],
+      ) => Promise<DebtResponse> | DebtResponse),
+  options?: RequestHandlerOptions,
+) => {
+  return http.put(
+    "*/api/debts/:id/balances/:date",
+    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : undefined,
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
 export const getDebtPaymentCandidatesMockHandler = (
   overrideResponse?:
     | TransactionResponse[]
@@ -491,6 +559,9 @@ export const getNetWorthMock = () => [
   getDebtsMockHandler(),
   getDeleteDebtMockHandler(),
   getUpdateDebtMockHandler(),
+  getDebtBalancesMockHandler(),
+  getDeleteDebtBalanceMockHandler(),
+  getSetDebtBalanceMockHandler(),
   getDebtPaymentCandidatesMockHandler(),
   getDebtPaymentsMockHandler(),
   getLinkDebtPaymentMockHandler(),

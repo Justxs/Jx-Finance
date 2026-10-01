@@ -45,6 +45,7 @@ const FIELDS = [
   "tracksPayments",
   "valuations",
   "payments",
+  "balances",
 ] as const;
 
 type AuditField = (typeof FIELDS)[number];

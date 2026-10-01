@@ -107,7 +107,7 @@ A token reaches only `GET` routes of the groups that opt in with `ApiGroup(…, 
 | Reports | the summary, spending by payee included |
 | Dashboard | the summary, the monthly trend and the category breakdown; not the dashboard layout, which is a personal setting |
 | Budgets, Goals | the lists and the budget suggestions |
-| Net worth | net worth and its history, assets with their valuations and value history, debts with their payments, payment candidates and schedule |
+| Net worth | net worth and its history, assets with their valuations and value history, debts with their recorded balances, payments, payment candidates and schedule |
 | Investments | the portfolio, securities and their prices, investment transactions, the value history, the tax summary with its CSV and, since 2026-10-01, your target allocation; not the broker connections, which describe an outside account |
 | Recurring entries | the list, one entry and the subscription suggestions |
 | Currencies | the currency list and exchange rates |

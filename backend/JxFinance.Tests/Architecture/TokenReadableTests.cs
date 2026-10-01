@@ -30,6 +30,7 @@ public sealed class TokenReadableTests
         "GET /api/dashboard/monthly-trend",
         "GET /api/dashboard/summary",
         "GET /api/debts",
+        "GET /api/debts/{id}/balances",
         "GET /api/debts/{id}/payment-candidates",
         "GET /api/debts/{id}/payments",
         "GET /api/debts/{id}/schedule",

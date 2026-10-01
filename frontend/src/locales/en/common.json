@@ -1453,7 +1453,7 @@
       "paidOff": "paid off {{date}}"
     },
     "schedule": {
-      "open": "Repayment schedule: {{name}}",
+      "open": "Balance history and schedule: {{name}}",
       "back": "Net worth",
       "notFound": "This debt no longer exists.",
       "incomplete": "Add the loan amount, interest rate, first payment and a term or a monthly payment to this debt to see its schedule.",
@@ -1538,6 +1538,15 @@
       "notePlaceholder": "Dealer quote",
       "dateFuture": "The date cannot be in the future.",
       "newest": "Current value"
+    },
+    "debtBalances": {
+      "title": "Recorded balances",
+      "hint": "What was owed on a date. The newest is the outstanding amount. A deleted balance cannot be restored.",
+      "add": "Add balance",
+      "edit": "Edit balance",
+      "amount": "Outstanding amount ({{currency}})",
+      "notePlaceholder": "Bank statement",
+      "newest": "Outstanding amount"
     },
     "tracking": {
       "enable": "Track payments",
@@ -2356,6 +2365,7 @@
       "tracksPayments": "track payments",
       "valuations": "valuations",
       "payments": "linked payments",
+      "balances": "recorded balances",
       "place": "place"
     }
   },
@@ -2821,7 +2831,8 @@
       "scheduleIncomplete": "This debt needs a loan amount, an interest rate, a first payment date and a term or a monthly payment.",
       "paymentWrongType": "Only an expense can pay a debt.",
       "paymentTaken": "This transaction already pays a debt.",
-      "notTracked": "Turn on Track payments for this debt first."
+      "notTracked": "Turn on Track payments for this debt first.",
+      "lastBalance": "A debt keeps at least one recorded balance. Delete the debt instead."
     },
     "decimal": {
       "malformed": "Enter a number with a dot as the decimal separator, e.g. 12.34."

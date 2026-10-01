@@ -4,11 +4,13 @@ import {
   getAssetValueHistoryMockHandler,
   getCreateAssetMockHandler,
   getCreateDebtMockHandler,
+  getDebtBalancesMockHandler,
   getDebtPaymentCandidatesMockHandler,
   getDebtPaymentsMockHandler,
   getDebtScheduleMockHandler,
   getDeleteAssetMockHandler,
   getDeleteAssetValuationMockHandler,
+  getDeleteDebtBalanceMockHandler,
   getDeleteDebtMockHandler,
   getAssetsMockHandler,
   getDebtsMockHandler,
@@ -16,6 +18,7 @@ import {
   getNetWorthHistoryMockHandler,
   getNetWorthMockHandler,
   getSetAssetValuationMockHandler,
+  getSetDebtBalanceMockHandler,
   getUnlinkDebtPaymentMockHandler,
   getUpdateAssetMockHandler,
   getUpdateDebtMockHandler,
@@ -34,6 +37,7 @@ import {
   fullyDepreciatedAsset,
   ids,
   linearDebt,
+  mortgageBalances,
   mortgagePayments,
   netWorth,
   netWorthHistory,
@@ -147,6 +151,14 @@ export const debtHandlers = [
   getDebtPaymentCandidatesMockHandler(
     transactions.filter((item) => item.type === "expense" && !item.isSplit).slice(0, 5),
   ),
+  getDebtBalancesMockHandler(({ params }) => {
+    const debt = found(byId(scheduledDebts, params.id));
+    return params.id === trackedMortgage.id
+      ? mortgageBalances
+      : [{ date: debt.asOf, amount: debt.outstandingAmount, note: null }];
+  }),
+  getSetDebtBalanceMockHandler(({ params }) => found(byId(scheduledDebts, params.id))),
+  getDeleteDebtBalanceMockHandler(),
   getLinkDebtPaymentMockHandler(trackedMortgage),
   getUpdateDebtPaymentMockHandler(trackedMortgage),
   getUnlinkDebtPaymentMockHandler(),

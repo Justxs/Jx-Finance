@@ -307,7 +307,12 @@ const rules: readonly Rule[] = [
     refresh: [api.getAssetsQueryKey, api.getNetWorthQueryKey, api.getNetWorthHistoryQueryKey],
   },
   {
-    after: [api.getCreateDebtMutationKey, api.getUpdateDebtMutationKey],
+    after: [
+      api.getCreateDebtMutationKey,
+      api.getUpdateDebtMutationKey,
+      api.getSetDebtBalanceMutationKey,
+      api.getDeleteDebtBalanceMutationKey,
+    ],
     deleted: [api.getDeleteDebtMutationKey],
     refresh: [api.getDebtsQueryKey, api.getNetWorthQueryKey],
   },

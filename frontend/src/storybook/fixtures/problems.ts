@@ -126,6 +126,13 @@ export const lastValuationProblem = problemOf(
   { instance: "/api/assets/bbbbbbbb-0000-0000-0000-000000000003/valuations/2026-09-01" },
 );
 
+export const lastBalanceProblem = problemOf(
+  400,
+  "debt.lastBalance",
+  "A debt keeps at least one recorded balance. Delete the debt instead.",
+  { instance: "/api/debts/cccccccc-0000-0000-0000-000000000002/balances/2026-09-01" },
+);
+
 export const referenceNotSharedProblem = problemOf(
   400,
   "household.referenceNotShared",

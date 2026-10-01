@@ -355,8 +355,15 @@ public static class BeancountWriter
         private void AddDebt(JournalDebt debt)
         {
             var account = accounts[debt.Id];
-            openedOn[account] = debt.AsOf;
-            Move(debt.AsOf, "Opening balance", account, -debt.Outstanding.Amount, debt.Outstanding.Currency.ToCode(), OpeningBalances);
+            var currency = debt.Currency.ToCode();
+            var balances = debt.Balances.OrderBy(b => b.Date).ToList();
+            openedOn[account] = balances[0].Date;
+            Move(balances[0].Date, "Opening balance", account, -balances[0].Value, currency, OpeningBalances, balances[0].Note);
+            for (var index = 1; index < balances.Count; index++)
+            {
+                var balance = balances[index];
+                Move(balance.Date, "Recorded balance", account, balances[index - 1].Value - balance.Value, currency, Revaluation, balance.Note);
+            }
         }
 
         private void AddOpenings()

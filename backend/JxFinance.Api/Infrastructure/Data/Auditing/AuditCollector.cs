@@ -31,6 +31,7 @@ internal sealed class AuditCollector(AppDbContext db, Guid actorId, string? viaT
     private const string SharesField = "shares";
     private const string ValuationsField = "valuations";
     private const string PaymentsField = "payments";
+    private const string BalancesField = "balances";
     private const string IdProperty = "Id";
 
     private static readonly Dictionary<Type, Audited> Registry = new[]
@@ -149,6 +150,7 @@ internal sealed class AuditCollector(AppDbContext db, Guid actorId, string? viaT
     private ILookup<SharedExpenseId, EntityEntry> shareEntries = Array.Empty<EntityEntry>().ToLookup(_ => default(SharedExpenseId));
     private ILookup<AssetId, EntityEntry> valuationChanges = Array.Empty<EntityEntry>().ToLookup(_ => default(AssetId));
     private ILookup<DebtId, EntityEntry> paymentChanges = Array.Empty<EntityEntry>().ToLookup(_ => default(DebtId));
+    private ILookup<DebtId, EntityEntry> balanceChanges = Array.Empty<EntityEntry>().ToLookup(_ => default(DebtId));
 
     private enum Route
     {
@@ -177,6 +179,7 @@ internal sealed class AuditCollector(AppDbContext db, Guid actorId, string? viaT
         shareEntries = db.ChangeTracker.Entries<SharedExpenseShare>().ToLookup(e => e.Entity.SharedExpenseId, e => (EntityEntry)e);
         valuationChanges = entries.Where(e => e.Entity is AssetValuation).ToLookup(e => ((AssetValuation)e.Entity).AssetId);
         paymentChanges = entries.Where(e => e.Entity is DebtPayment).ToLookup(e => ((DebtPayment)e.Entity).DebtId);
+        balanceChanges = entries.Where(e => e.Entity is DebtBalanceEntry).ToLookup(e => ((DebtBalanceEntry)e.Entity).DebtId);
 
         var scoped = ScopedEntries(entries);
         var attachments = entries.Where(e => RouteOf(e) == Route.Attachment).ToList();
@@ -185,8 +188,9 @@ internal sealed class AuditCollector(AppDbContext db, Guid actorId, string? viaT
         await LoadAccountsAsync(scoped, summary, cancellationToken);
         var touchedByValuations = await TouchedAsync(db.Assets, valuationChanges, a => a.Id, cancellationToken);
         var touchedByPayments = await TouchedAsync(db.Debts, paymentChanges, d => d.Id, cancellationToken);
+        var touchedByBalances = await TouchedAsync(db.Debts, balanceChanges, d => d.Id, cancellationToken);
 
-        foreach (var entry in entries.Concat(touchedByValuations).Concat(touchedByPayments).DistinctBy(e => e.Entity, ReferenceEqualityComparer.Instance))
+        foreach (var entry in entries.Concat(touchedByValuations).Concat(touchedByPayments).Concat(touchedByBalances).DistinctBy(e => e.Entity, ReferenceEqualityComparer.Instance))
         {
             switch (RouteOf(entry))
             {
@@ -736,6 +740,11 @@ internal sealed class AuditCollector(AppDbContext db, Guid actorId, string? viaT
             changes.Add(paymentChange);
         }
 
+        if (entry.Entity is Debt balanced && BalanceChange(balanced) is { } balanceChange)
+        {
+            changes.Add(balanceChange);
+        }
+
         return changes;
     }
 
@@ -811,6 +820,12 @@ internal sealed class AuditCollector(AppDbContext db, Guid actorId, string? viaT
         valuationChanges[asset.Id],
         (e, original) => $"{Display(Read(e, nameof(AssetValuation.Date), original))}: "
             + TrashLabel.Amount(new Money((decimal)Read(e, nameof(AssetValuation.Value), original)!, asset.Currency)));
+
+    private AuditChange? BalanceChange(Debt debt) => ChangedChildren(
+        BalancesField,
+        balanceChanges[debt.Id],
+        (e, original) => $"{Display(Read(e, nameof(DebtBalanceEntry.Date), original))}: "
+            + TrashLabel.Amount(new Money((decimal)Read(e, nameof(DebtBalanceEntry.Amount), original)!, debt.Currency)));
 
     private AuditChange? PaymentChange(Debt debt) => ChangedChildren(
         PaymentsField,

@@ -67,6 +67,7 @@ export const ProblemDetailsResponse = zod
                 "currency.disabled",
                 "dashboard.cardDuplicate",
                 "dashboard.cardUnknown",
+                "debt.lastBalance",
                 "debt.notTracked",
                 "debt.paymentTaken",
                 "debt.paymentTooSmall",

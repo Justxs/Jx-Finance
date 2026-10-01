@@ -248,6 +248,10 @@ public sealed class UserJournalSource(AppDbContext db, IExchangeRateService rate
     {
         var query = db.Debts.IgnoreQueryFilters(QueryFilters.OwnerOnly).Where(d => d.UserId == userId);
         var debts = await query.AsNoTracking().ToListAsync(cancellationToken);
+        var recorded = (await db.DebtBalanceEntries.AsNoTracking()
+                .Where(e => query.Any(d => d.Id == e.DebtId))
+                .ToListAsync(cancellationToken))
+            .ToLookup(e => e.DebtId);
         var links = await db.DebtPayments.IgnoreQueryFilters(QueryFilters.OwnerOnly).AsNoTracking()
             .Where(p => query.Any(d => d.Id == p.DebtId && d.TracksPayments))
             .OrderBy(p => p.CreatedAt)
@@ -295,7 +299,12 @@ public sealed class UserJournalSource(AppDbContext db, IExchangeRateService rate
             }
         }
 
-        return ([.. debts.Select(d => new JournalDebt(d.Id.Value, d.Name, d.OutstandingAmount, d.AsOf))], payments, balances);
+        var journal = debts.Select(d => new JournalDebt(
+            d.Id.Value,
+            d.Name,
+            d.Currency,
+            [.. recorded[d.Id].Append(d.Newest).DistinctBy(e => e.Date).OrderBy(e => e.Date).Select(e => new JournalValuation(e.Date, e.Amount, e.Note))]));
+        return ([.. journal], payments, balances);
     }
 
     private sealed record InvestmentReplay(

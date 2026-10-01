@@ -3,6 +3,7 @@ import type {
   AssetResponse,
   AssetValuationResponse,
   AssetValueHistoryResponse,
+  DebtBalanceEntryResponse,
   DebtLowerPayment,
   DebtPaymentResponse,
   DebtResponse,
@@ -381,6 +382,12 @@ export const mortgageScheduleWithLumpSum = buildDebtSchedule(mortgage, {
 export const zeroRateSchedule = buildDebtSchedule(zeroRateDebt);
 
 export const linearSchedule = buildDebtSchedule(linearDebt);
+
+export const mortgageBalances: DebtBalanceEntryResponse[] = [
+  { date: "2026-09-05", amount: "98450.32", note: "Bank statement" },
+  { date: "2026-06-30", amount: "99100.00", note: null },
+  { date: "2025-09-05", amount: "101760.40", note: "Annual statement" },
+];
 
 export const trackedMortgage: DebtResponse = {
   ...mortgage,

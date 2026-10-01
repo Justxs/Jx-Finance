@@ -122,6 +122,7 @@ public static class ErrorCodes
     public const string DebtPaymentWrongType = "debt.paymentWrongType";
     public const string DebtPaymentTaken = "debt.paymentTaken";
     public const string DebtNotTracked = "debt.notTracked";
+    public const string DebtLastBalance = "debt.lastBalance";
     public const string AttachmentEmpty = "attachment.empty";
     public const string AttachmentTooLarge = "attachment.tooLarge";
     public const string AttachmentTypeNotAllowed = "attachment.typeNotAllowed";

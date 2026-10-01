@@ -6,6 +6,7 @@ import { FormGridSkeleton } from "@/components/ui/form-grid/form-grid";
 import { Section } from "@/components/ui/section/section";
 import { ButtonSkeleton, SectionSkeleton, TextSkeleton } from "@/components/ui/skeleton/skeleton";
 import { TableSkeleton } from "@/components/ui/table/table";
+import { ValuationsSkeleton } from "@/features/net-worth/asset-page/asset-page-pending";
 import { DetailPagePending } from "@/features/net-worth/detail-page/detail-page";
 
 function DebtPaymentsSkeleton() {
@@ -59,6 +60,7 @@ export function DebtSchedulePending() {
   return (
     <DetailPagePending>
       <DebtScheduleSkeleton />
+      <ValuationsSkeleton />
     </DetailPagePending>
   );
 }

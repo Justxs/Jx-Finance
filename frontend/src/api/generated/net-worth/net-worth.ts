@@ -30,6 +30,7 @@ import type {
   AssetValueHistoryResponse,
   CreateAssetRequest,
   CreateDebtRequest,
+  DebtBalanceEntryResponse,
   DebtPaymentCandidatesParams,
   DebtPaymentResponse,
   DebtResponse,
@@ -40,6 +41,7 @@ import type {
   NetWorthResponse,
   ProblemDetails,
   SetAssetValuationRequest,
+  SetDebtBalanceRequest,
   TransactionResponse,
   UpdateAssetRequest,
   UpdateDebtPaymentRequest,
@@ -1314,6 +1316,323 @@ export const useUpdateDebt = <TError = ErrorType<ProblemDetails>, TContext = unk
   TContext
 > => {
   return useMutation(getUpdateDebtMutationOptions(options), queryClient);
+};
+export const getDebtBalancesUrl = (id: string) => {
+  return `/api/debts/${id}/balances`;
+};
+
+/**
+ * Returns the dated outstanding amounts recorded for a debt, newest first, in the currency of the debt. Creating or editing the debt records one, and the newest is the outstanding amount and as-of date of the debt. Tracked payments write none: they are counted from the newest on every read.
+ * @summary List the recorded balances of a debt
+ */
+export const debtBalances = async (
+  id: string,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<DebtBalanceEntryResponse[]> => {
+  return customFetch<DebtBalanceEntryResponse[]>(getDebtBalancesUrl(id), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getDebtBalancesQueryKey = (id: string) => {
+  return [`/api/debts/${id}/balances`] as const;
+};
+
+export const getDebtBalancesSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof debtBalances>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  id: string,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof debtBalances>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getDebtBalancesQueryKey(id);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof debtBalances>>> = ({ signal }) =>
+    debtBalances(id, { signal, ...requestOptions });
+
+  return queryOptionsBuilder({
+    queryKey,
+    ...queryOptions,
+    queryFn: queryOptions?.queryFn ?? queryFn,
+  }) as UseSuspenseQueryOptions<Awaited<ReturnType<typeof debtBalances>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  } & {
+    throwOnError?: ((this: never, error: TError) => boolean) & { readonly __inferenceOnly: never };
+  };
+};
+
+export type DebtBalancesSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof debtBalances>>>;
+export type DebtBalancesSuspenseQueryError = ErrorType<ProblemDetails>;
+
+export function useDebtBalancesSuspense<
+  TData = Awaited<ReturnType<typeof debtBalances>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  id: string,
+  options: {
+    query: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof debtBalances>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useDebtBalancesSuspense<
+  TData = Awaited<ReturnType<typeof debtBalances>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  id: string,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof debtBalances>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useDebtBalancesSuspense<
+  TData = Awaited<ReturnType<typeof debtBalances>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  id: string,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof debtBalances>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List the recorded balances of a debt
+ */
+
+export function useDebtBalancesSuspense<
+  TData = Awaited<ReturnType<typeof debtBalances>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  id: string,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof debtBalances>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getDebtBalancesSuspenseQueryOptions(id, options);
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export const getDeleteDebtBalanceUrl = (id: string, date: string) => {
+  return `/api/debts/${id}/balances/${date}`;
+};
+
+/**
+ * Removes the balance recorded for one date for good; it does not go to the trash. The outstanding amount of the debt becomes the newest remaining balance. The last balance cannot be deleted.
+ * @summary Delete a recorded balance of a debt
+ */
+export const deleteDebtBalance = async (
+  id: string,
+  date: string,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<void> => {
+  return customFetch<void>(getDeleteDebtBalanceUrl(id, date), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getDeleteDebtBalanceMutationKey = () => ["deleteDebtBalance"] as const;
+
+export const getDeleteDebtBalanceMutationOptions = <
+  TError = ErrorType<ProblemDetails>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteDebtBalance>>,
+    TError,
+    DeleteDebtBalanceMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteDebtBalance>>,
+  TError,
+  DeleteDebtBalanceMutationVariables,
+  TContext
+> => {
+  const mutationKey = getDeleteDebtBalanceMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteDebtBalance>>,
+    DeleteDebtBalanceMutationVariables
+  > = (props) => {
+    const { id, date } = props ?? {};
+
+    return deleteDebtBalance(id, date, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteDebtBalanceMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteDebtBalance>>
+>;
+
+export type DeleteDebtBalanceMutationError = ErrorType<ProblemDetails>;
+export type DeleteDebtBalanceMutationVariables = { id: string; date: string };
+
+/**
+ * @summary Delete a recorded balance of a debt
+ */
+export const useDeleteDebtBalance = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof deleteDebtBalance>>,
+      TError,
+      DeleteDebtBalanceMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof deleteDebtBalance>>,
+  TError,
+  DeleteDebtBalanceMutationVariables,
+  TContext
+> => {
+  return useMutation(getDeleteDebtBalanceMutationOptions(options), queryClient);
+};
+export const getSetDebtBalanceUrl = (id: string, date: string) => {
+  return `/api/debts/${id}/balances/${date}`;
+};
+
+/**
+ * Records what was owed on one date, replacing a balance already recorded for that date. The outstanding amount and as-of date of the debt follow the newest recorded balance, so a balance for an earlier date only adds history. A debt that tracks payments counts them from the newest. Net worth snapshots already taken are not rewritten.
+ * @summary Record a balance of a debt
+ */
+export const setDebtBalance = async (
+  id: string,
+  date: string,
+  setDebtBalanceRequest: SetDebtBalanceRequest,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<DebtResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return customFetch<DebtResponse>(getSetDebtBalanceUrl(id, date), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(setDebtBalanceRequest),
+  });
+};
+
+export const getSetDebtBalanceMutationKey = () => ["setDebtBalance"] as const;
+
+export const getSetDebtBalanceMutationOptions = <
+  TError = ErrorType<ProblemDetails>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof setDebtBalance>>,
+    TError,
+    SetDebtBalanceMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof setDebtBalance>>,
+  TError,
+  SetDebtBalanceMutationVariables,
+  TContext
+> => {
+  const mutationKey = getSetDebtBalanceMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof setDebtBalance>>,
+    SetDebtBalanceMutationVariables
+  > = (props) => {
+    const { id, date, data } = props ?? {};
+
+    return setDebtBalance(id, date, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SetDebtBalanceMutationResult = NonNullable<Awaited<ReturnType<typeof setDebtBalance>>>;
+export type SetDebtBalanceMutationBody = SetDebtBalanceRequest;
+export type SetDebtBalanceMutationError = ErrorType<ProblemDetails>;
+export type SetDebtBalanceMutationVariables = {
+  id: string;
+  date: string;
+  data: SetDebtBalanceRequest;
+};
+
+/**
+ * @summary Record a balance of a debt
+ */
+export const useSetDebtBalance = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof setDebtBalance>>,
+      TError,
+      SetDebtBalanceMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof setDebtBalance>>,
+  TError,
+  SetDebtBalanceMutationVariables,
+  TContext
+> => {
+  return useMutation(getSetDebtBalanceMutationOptions(options), queryClient);
 };
 export const getDebtPaymentCandidatesUrl = (id: string, params?: DebtPaymentCandidatesParams) => {
   const normalizedParams = new URLSearchParams();

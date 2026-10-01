@@ -22,4 +22,6 @@ public sealed class Debt : OwnableEntity, IShareable
     public bool TracksPayments { get; set; }
     public Scope Scope { get; set; } = Scope.Personal;
     public HouseholdId? HouseholdId { get; set; }
+
+    public DebtBalanceEntry Newest => new() { DebtId = Id, Date = AsOf, Amount = OutstandingAmount.Amount };
 }

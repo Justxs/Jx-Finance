@@ -42,6 +42,7 @@ export const ErrorCode = {
   currencydisabled: "currency.disabled",
   dashboardcardDuplicate: "dashboard.cardDuplicate",
   dashboardcardUnknown: "dashboard.cardUnknown",
+  debtlastBalance: "debt.lastBalance",
   debtnotTracked: "debt.notTracked",
   debtpaymentTaken: "debt.paymentTaken",
   debtpaymentTooSmall: "debt.paymentTooSmall",

@@ -21,7 +21,7 @@ flowchart TD
 
 Since 2026-09-22 the totals are added up in the reporting currency. Assets and debts are summed per currency and each sum is converted at today's rate, the same way account balances are, so an asset entered before the reporting currency changed still counts at its value. When a currency has no usable rate its assets or debts are left out, `isComplete` is false and no snapshot is written, exactly as for an account balance or a holding without a price. A snapshot stores the currency it was taken in; the history converts a snapshot taken in another currency at the rate of its own date, and leaves out a point for which no rate is known. Changing the reporting currency fetches the rates for those dates along with the ones transactions need.
 
-A debt subtracts its recorded `OutstandingAmount`, as of its `AsOf` date. Since 2026-09-21 a debt can also carry its repayment terms — loan amount, first payment date, a term or a fixed monthly payment, annuity or linear — and then has a computed repayment schedule with a payoff date, the interest and principal of every payment and a "what if I pay more" preview, on its own page `/net-worth/debts/$debtId`. The schedule never changes net worth by itself: its scheduled balance for today is shown beside the recorded amount, and "Use scheduled balance" copies it into the debt as an ordinary update.
+A debt subtracts its recorded `OutstandingAmount`, as of its `AsOf` date; since 2026-10-01 those two fields are the newest of the debt's [recorded balances](#debt-balance-history). Since 2026-09-21 a debt can also carry its repayment terms — loan amount, first payment date, a term or a fixed monthly payment, annuity or linear — and then has a computed repayment schedule with a payoff date, the interest and principal of every payment and a "what if I pay more" preview, on its own page `/net-worth/debts/$debtId`. The schedule never changes net worth by itself: its scheduled balance for today is shown beside the recorded amount, and "Use scheduled balance" copies it into the debt as an ordinary update.
 
 ```mermaid
 flowchart LR
@@ -69,4 +69,30 @@ flowchart LR
     Value --> List["GET /api/assets: value, monthlyDepreciation, fullyDepreciatedOn"]
     Value --> Total["net worth total and snapshot"]
     Value --> Chart["GET /api/assets/{id}/value-history"]
+```
+
+## Debt balance history
+
+Since 2026-10-01 a debt keeps a dated list of recorded balances, the way an asset keeps valuations, in the `DebtBalanceEntries` table: one outstanding amount per debt and date, in the debt's currency, with an optional note. Creating a debt records its outstanding amount and as-of date as the first balance. Editing the amount or the date, "Use scheduled balance" included, records a balance for that date, and a date that already has one is replaced. `OutstandingAmount` and `AsOf` stay on the debt as the newest balance, kept in step by `DebtBalanceBook` as `AssetValuationBook` keeps an asset's value, so net worth, the schedule summary and [tracked payments](debt-amortization.md#tracking-payments) read the same two fields as before. A balance for an earlier date only adds history: editing a debt to a date before its newest balance records that balance and leaves the outstanding amount at the newest one.
+
+The debt page `/net-worth/debts/$debtId` is now reached from every debt row (the calendar button, "Balance history and schedule"), not only from debts with terms or tracking. It ends with a Recorded balances section listing the balances newest first with their notes, the newest marked "Outstanding amount", with add, edit and delete. Deleting a balance is final, with no trash, and the last one cannot be deleted (`debt.lastBalance`). Balance dates are today or earlier. Any member who can see a shared debt adds, edits and deletes its balances, and deletes on one debt take an advisory lock on the debt's id. A change appears in the household activity log as the `balances` field of the debt's event, the way valuations appear on an asset's.
+
+Recording a past balance does not rewrite the net worth snapshots already taken. Deleting a debt moves it to the trash with its balances untouched, and the nightly purge removes them with the debt. Backups carry the table like every other, and [Download my data](data-export-per-user.md) carries it with the member's debts and imports it back.
+
+Debts created before the table existed got one balance from their current record. The `AddDebtBalanceEntries` migration only creates the table, and `DebtBalanceBackfill.RunAsync`, run at every start right after the migrations and the payee key backfill, inserts one balance from `OutstandingAmount` and `AsOf` for each debt, deleted ones included, that has none, in a single `INSERT … SELECT … WHERE NOT EXISTS`, and logs the count. It writes past the change tracker, so neither `UpdatedAt` nor the activity log moves. The [double-entry journal](data-export-per-user.md#double-entry-journal) opens each debt at its earliest balance and posts every later one against `Equity:Revaluation`.
+
+| Route | What it does |
+| --- | --- |
+| `GET /api/debts/{id}/balances` | the recorded balances, newest first: `date`, `amount`, `note` |
+| `PUT /api/debts/{id}/balances/{date}` | records `{ amount, note? }` for the date and answers the debt; 409 `conflict.busy` when two members write the same date at once |
+| `DELETE /api/debts/{id}/balances/{date}` | removes it for good; 400 `debt.lastBalance` for the only one, 404 for a date without one |
+
+```mermaid
+flowchart LR
+    Form["Debt form, PUT /api/debts/{id}"] --> Book["DebtBalanceBook"]
+    Page["Recorded balances, PUT /api/debts/{id}/balances/{date}"] --> Book
+    Book --> Rows["DebtBalanceEntries: one row per debt and date"]
+    Book --> Newest["Debt.OutstandingAmount, AsOf = newest balance"]
+    Newest --> Total["net worth, schedule summary, tracked balance"]
+    Rows --> Journal["ledger.beancount: opening, then Equity:Revaluation"]
 ```

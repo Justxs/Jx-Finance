@@ -194,7 +194,7 @@ public static class DemoDataCommand
             new AssetValuation { AssetId = flat.Id, Date = today.AddYears(-2), Value = 142000.00m },
             new AssetValuation { AssetId = flat.Id, Date = today.AddYears(-1), Value = 150000.00m },
             new AssetValuation { AssetId = flat.Id, Date = today, Value = 156000.00m });
-        db.Debts.Add(new Debt
+        var carLoan = new Debt
         {
             UserId = user.Id,
             Name = "Car loan",
@@ -205,7 +205,11 @@ public static class DemoDataCommand
             LoanAmount = 6000.00m,
             FirstPaymentDate = new DateOnly(today.Year, today.Month, 1).AddMonths(-23),
             TermMonths = 48,
-        });
+        };
+        db.Debts.Add(carLoan);
+        db.DebtBalanceEntries.AddRange(
+            new DebtBalanceEntry { DebtId = carLoan.Id, Date = today.AddYears(-1), Amount = 4600.00m, Note = "Bank statement" },
+            new DebtBalanceEntry { DebtId = carLoan.Id, Date = today, Amount = 3200.00m });
 
         DateOnly NextOn(int day)
         {

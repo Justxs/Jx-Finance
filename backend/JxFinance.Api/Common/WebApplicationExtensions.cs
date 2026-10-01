@@ -31,6 +31,12 @@ public static class WebApplicationExtensions
             logger.LogInformation("Filled the payee key of {Count} transaction(s)", filled);
         }
 
+        var recorded = await DebtBalanceBackfill.RunAsync(db, CancellationToken.None);
+        if (recorded > 0)
+        {
+            logger.LogInformation("Recorded the first balance of {Count} debt(s)", recorded);
+        }
+
         if (app.Environment.IsDevelopment())
         {
             var users = services.GetRequiredService<UserManager<AppUser>>();

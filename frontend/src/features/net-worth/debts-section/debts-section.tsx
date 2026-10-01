@@ -23,10 +23,6 @@ export function DebtsSection() {
   const debtList = useDeferredValue(debts.data);
 
   function scheduleLink(debt: DebtResponse) {
-    if (debt.payoffDate === null && !debt.tracksPayments) {
-      return null;
-    }
-
     const label = t("netWorth.schedule.open", { name: debt.name });
 
     return (

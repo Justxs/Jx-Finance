@@ -16,6 +16,10 @@ Refresh today's snapshot hourly and on viewing; unique user/date; no invented hi
 
 An asset keeps dated valuations, today or earlier, and may depreciate on a straight line in whole monthly steps down to a residual value. The value on any date is computed from the valuations and the terms when it is read and is never stored; an asset counts in net worth from its first valuation
 
+### Debt balance
+
+A debt keeps dated recorded balances, today or earlier, and its outstanding amount and as-of date are the newest of them; creating or editing the debt records one, and the page lists them with add, edit and delete. Tracked payments count from the newest
+
 ### Pace
 
 The Trend chart continues at the average monthly change of the last twelve months of snapshots (at least 90 days), as far ahead as that window reaches back and at most a year, and dates up to five per-browser milestones; computed in the browser and labelled as arithmetic, not advice
@@ -24,6 +28,15 @@ The Trend chart continues at the average monthly change of the last twelve month
 
 Newest first. Each entry is a choice between real alternatives: what was chosen, what was rejected, and why.
 
+- **2026-10-01.** A debt's recorded balance is kept as rows of a `DebtBalanceEntries` table, one per debt and date with an optional note, written by `DebtBalanceBook` exactly as `AssetValuationBook` writes asset valuations: creating a debt records its first balance, editing the amount or the date records one for that date, and `Debt.OutstandingAmount` and `AsOf` stay as the denormalized newest balance, so a balance for an earlier date only adds history. Decided while the owner was away, to be reviewed
+  - Rejected: Deriving the history from the household activity log; dropping `OutstandingAmount` and `AsOf` and reading the newest row everywhere; letting a debt edit to an earlier date replace the newest balance
+  - Why: The activity log covers only shared debts and keeps text, not amounts. Keeping the two columns leaves net worth, the schedule, tracked payments and the snapshot job untouched, and following the asset rule means one behaviour to learn for both sides of the balance sheet
+- **2026-10-01.** Existing debts get their first balance from an idempotent startup step, `DebtBalanceBackfill`, run after the migrations and `PayeeKeyBackfill`, which inserts one balance from the current record for every debt, deleted ones included, that has none; the `AddDebtBalanceEntries` migration only creates the table. Decided while the owner was away, to be reviewed
+  - Rejected: An `INSERT` in the migration's `Up`, as `AddAssetValuations` did; a one-off command the administrator runs
+  - Why: Generated migrations are not edited by hand any more, and `PayeeKeyBackfill` is the precedent for filling rows at startup. A step that only inserts where nothing exists is safe to run at every start and needs nobody to remember it
+- **2026-10-01.** The recorded balances live at the end of the existing debt page, which every debt row now opens, with add, edit and delete; a deleted balance is gone for good and the last one cannot be deleted (`debt.lastBalance`). Members who can see a shared debt edit its balances, and changes are audited as the debt's `balances` field. Decided while the owner was away, to be reviewed
+  - Rejected: A read-only list; a page or tab of its own; trash and undo for single balances
+  - Why: Editing came almost free by mirroring the asset valuations section, and it is how a wrong bank figure gets fixed. The debt page is where the schedule and the payments already are, so no page is added, and a single balance is as small as an asset valuation, which has no trash either
 - **2026-10-01.** The pace is the plain average change between the newest snapshot on or before twelve months before the last one and the last one, per month of 30.4375 days; with less history the window starts at the first snapshot, and under 90 days there is no pace. Decided while the owner was away, to be reviewed
   - Rejected: A least-squares line through the window; a fixed twelve-month requirement; any length of history
   - Why: Two recorded figures and one division can be checked by hand, which is what "arithmetic on recorded figures" promises. Waiting a full year hides the feature for a new installation, while a few weeks of snapshots would turn one salary or one revaluation into a monthly rate

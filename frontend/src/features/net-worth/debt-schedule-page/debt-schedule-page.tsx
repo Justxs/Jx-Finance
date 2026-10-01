@@ -10,7 +10,9 @@ import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { Section, SectionTitle, TitledSection } from "@/components/ui/section/section";
 import { StaleRegion } from "@/components/ui/stale-region/stale-region";
+import { ValuationsSkeleton } from "@/features/net-worth/asset-page/asset-page-pending";
 import { DebtBalanceChart } from "@/features/net-worth/debt-balance-chart";
+import { DebtBalances } from "@/features/net-worth/debt-balances/debt-balances";
 import {
   DebtExtraPayments,
   type ExtraPaymentDraft,
@@ -40,21 +42,29 @@ export function DebtSchedulePage({ debtId }: Readonly<Props>) {
       notFound={t("netWorth.schedule.notFound")}
     >
       {(found) => (
-        <QueryBoundary
-          fallback={<DebtScheduleSkeleton tracked={found.tracksPayments} />}
-          errorSubject={t("netWorth.schedule.table")}
-        >
-          <div className="space-y-5">
-            {found.payoffDate === null ? (
-              <Section>
-                <EmptyText>{t("netWorth.schedule.incomplete")}</EmptyText>
-              </Section>
-            ) : (
-              <DebtScheduleView debt={found} />
-            )}
-            {found.tracksPayments ? <DebtPayments debt={found} /> : null}
-          </div>
-        </QueryBoundary>
+        <>
+          <QueryBoundary
+            fallback={<DebtScheduleSkeleton tracked={found.tracksPayments} />}
+            errorSubject={t("netWorth.schedule.table")}
+          >
+            <div className="space-y-5">
+              {found.payoffDate === null ? (
+                <Section>
+                  <EmptyText>{t("netWorth.schedule.incomplete")}</EmptyText>
+                </Section>
+              ) : (
+                <DebtScheduleView debt={found} />
+              )}
+              {found.tracksPayments ? <DebtPayments debt={found} /> : null}
+            </div>
+          </QueryBoundary>
+          <QueryBoundary
+            fallback={<ValuationsSkeleton />}
+            errorSubject={t("netWorth.debtBalances.title")}
+          >
+            <DebtBalances debt={found} />
+          </QueryBoundary>
+        </>
       )}
     </DetailPage>
   );

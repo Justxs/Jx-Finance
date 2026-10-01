@@ -268,6 +268,7 @@ const contracts: Record<string, Contract> = {
   trackedMortgage: { schema: schemas.DebtsResponse, toResponse: asList },
   sharedTrackedMortgage: { schema: schemas.DebtsResponse, toResponse: asList },
   mortgagePayments: { schema: schemas.DebtPaymentsResponse },
+  mortgageBalances: { schema: schemas.DebtBalancesResponse },
   linkedPaymentTransaction: { schema: schemas.TransactionResponse },
   netWorth: { schema: schemas.NetWorthResponse },
   emptyNetWorth: { schema: schemas.NetWorthResponse },

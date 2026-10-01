@@ -16,12 +16,14 @@ using JxFinance.Endpoints.Accounts.Interfaces;
 using JxFinance.Endpoints.NetWorth.CreateAsset;
 using JxFinance.Endpoints.NetWorth.CreateDebt;
 using JxFinance.Endpoints.NetWorth.DeleteAssetValuation;
+using JxFinance.Endpoints.NetWorth.DeleteDebtBalance;
 using JxFinance.Endpoints.NetWorth.GetAssetValueHistory;
 using JxFinance.Endpoints.NetWorth.GetDebtPaymentCandidates;
 using JxFinance.Endpoints.NetWorth.Interfaces;
 using JxFinance.Endpoints.NetWorth.LinkDebtPayment;
 using JxFinance.Endpoints.NetWorth.Mappers;
 using JxFinance.Endpoints.NetWorth.SetAssetValuation;
+using JxFinance.Endpoints.NetWorth.SetDebtBalance;
 using JxFinance.Endpoints.NetWorth.Shared;
 using JxFinance.Endpoints.NetWorth.UnlinkDebtPayment;
 using JxFinance.Endpoints.NetWorth.UpdateAsset;
@@ -223,6 +225,7 @@ public sealed class NetWorthService(
 
         var debt = request.ToEntity(rates.ReportingCurrency);
         db.Debts.Add(debt);
+        await DebtBalanceBook.RecordAsync(db, debt, request.AsOf, request.OutstandingAmount!.Value, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
 
         return await ToResponseAsync(debt, cancellationToken);
@@ -247,8 +250,76 @@ public sealed class NetWorthService(
         }
 
         request.ApplyTo(debt);
+        if (request.OutstandingAmount != debt.OutstandingAmount.Amount || request.AsOf != debt.AsOf)
+        {
+            await DebtBalanceBook.RecordAsync(db, debt, request.AsOf, request.OutstandingAmount!.Value, cancellationToken);
+        }
+
         await db.SaveChangesAsync(cancellationToken);
         return await ToResponseAsync(debt, cancellationToken);
+    }
+
+    public async Task<Result<IReadOnlyList<DebtBalanceEntryResponse>>> GetDebtBalancesAsync(Guid id, CancellationToken cancellationToken)
+    {
+        var found = await FindDebtAsync(id, cancellationToken);
+        if (!found.TryGetValue(out var debt))
+        {
+            return found.Error;
+        }
+
+        var entries = await db.DebtBalanceEntries
+            .AsNoTracking()
+            .Where(e => e.DebtId == debt.Id)
+            .OrderByDescending(e => e.Date)
+            .ToListAsync(cancellationToken);
+        return entries.Select(e => e.ToResponse()).ToList();
+    }
+
+    public async Task<Result<DebtResponse>> SetDebtBalanceAsync(SetDebtBalanceRequest request, CancellationToken cancellationToken)
+    {
+        var found = await FindDebtAsync(request.Id, cancellationToken);
+        if (!found.TryGetValue(out var debt))
+        {
+            return found.Error;
+        }
+
+        var entry = await DebtBalanceBook.RecordAsync(db, debt, request.Date, request.Amount!.Value, cancellationToken);
+        entry.Note = OptionalText.Normalize(request.Note);
+        if (await db.SaveOrConflictAsync(new DomainError(ErrorCodes.ConflictBusy, "Someone else recorded a balance for that date just now. Try again."), cancellationToken) is { } conflict)
+        {
+            return conflict;
+        }
+
+        return await ToResponseAsync(debt, cancellationToken);
+    }
+
+    public async Task<Result> DeleteDebtBalanceAsync(DeleteDebtBalanceRequest request, CancellationToken cancellationToken)
+    {
+        await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
+        await db.Database.LockAsync(request.Id, cancellationToken);
+        var found = await FindDebtAsync(request.Id, cancellationToken);
+        if (!found.TryGetValue(out var debt))
+        {
+            return found.Error;
+        }
+
+        var stored = await db.DebtBalanceEntries.FindOrNotFoundAsync(
+            e => e.DebtId == debt.Id && e.Date == request.Date,
+            EntityLookup.NotFound("No balance is recorded for that date."),
+            cancellationToken);
+        if (!stored.TryGetValue(out var entry))
+        {
+            return stored.Error;
+        }
+
+        var removed = await DebtBalanceBook.RemoveAsync(db, debt, entry, cancellationToken);
+        if (removed.IsSuccess)
+        {
+            await db.SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+        }
+
+        return removed;
     }
 
     public Task<Result<Guid>> DeleteDebtAsync(Guid id, CancellationToken cancellationToken)

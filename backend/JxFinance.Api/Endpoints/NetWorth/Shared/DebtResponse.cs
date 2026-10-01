@@ -24,3 +24,5 @@ public sealed record DebtResponse(
     int UnavailablePayments,
     Scope Scope,
     Guid? HouseholdId);
+
+public sealed record DebtBalanceEntryResponse(DateOnly Date, [property: Money] decimal Amount, string? Note);

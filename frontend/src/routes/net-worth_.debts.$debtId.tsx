@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import {
   getAccountsSuspenseQueryOptions,
+  getDebtBalancesSuspenseQueryOptions,
   getDebtPaymentsSuspenseQueryOptions,
   getDebtScheduleSuspenseQueryOptions,
   getDebtsSuspenseQueryOptions,
@@ -17,6 +18,7 @@ export const Route = createFileRoute("/net-worth_/debts/$debtId")({
     warm(queryClient, getDebtScheduleSuspenseQueryOptions(params.debtId));
     warm(queryClient, getDebtPaymentsSuspenseQueryOptions(params.debtId));
     warm(queryClient, getAccountsSuspenseQueryOptions());
+    warm(queryClient, getDebtBalancesSuspenseQueryOptions(params.debtId));
   },
   component: DebtScheduleRoute,
   pendingComponent: DebtSchedulePending,

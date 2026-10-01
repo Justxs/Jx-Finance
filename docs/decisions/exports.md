@@ -10,6 +10,9 @@ Related: feature pages [Exports](../features/exports.md) and [Data export per us
 
 Newest first. Each entry is a choice between real alternatives: what was chosen, what was rejected, and why.
 
+- **2026-10-01.** The double-entry journal opens each debt at its earliest recorded balance against `Equity:Opening-Balances` and posts every later recorded balance, narrated "Recorded balance" with its note, against `Equity:Revaluation`, as it already did for asset valuations; tracked payments still count only after the newest balance, as in the app. Decided while the owner was away, to be reviewed
+  - Rejected: Keeping the opening at the current record; posting a lower recorded balance as principal repaid from `Equity:Outside-Accounts` or as interest under `Expenses`
+  - Why: The current record hid every manual change before it, and the history now exists. A recorded balance says what was owed, not how it came about, so it cannot be split into payments or interest without inventing figures; a revaluation keeps the income statement equal to the app's reports
 - **2026-10-01.** The transaction CSV and the member export's `transactions.csv` gain a `Group` column after `Place`, holding the name of the caller's own group and empty for a row in someone else's; the member export carries `TransactionGroups` as an owned table, and older exports cannot be imported after the `AddTransactionGroups` migration
   - Rejected: Leaving groups out of the exports; the group id instead of its name; naming a housemate's group
   - Why: A group is something the member made, so it belongs in what they take with them, and a spreadsheet reads a name, not an id. A housemate's group is personal to them and would leak into this member's file. The column goes at the end like `Note`, `Spread months` and `Place`, so a spreadsheet that reads the older columns by position keeps working. See [Transaction groups](transaction-groups.md)

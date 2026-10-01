@@ -3,10 +3,12 @@ using JxFinance.Domain.Common;
 using JxFinance.Endpoints.NetWorth.CreateAsset;
 using JxFinance.Endpoints.NetWorth.CreateDebt;
 using JxFinance.Endpoints.NetWorth.DeleteAssetValuation;
+using JxFinance.Endpoints.NetWorth.DeleteDebtBalance;
 using JxFinance.Endpoints.NetWorth.GetAssetValueHistory;
 using JxFinance.Endpoints.NetWorth.GetDebtPaymentCandidates;
 using JxFinance.Endpoints.NetWorth.LinkDebtPayment;
 using JxFinance.Endpoints.NetWorth.SetAssetValuation;
+using JxFinance.Endpoints.NetWorth.SetDebtBalance;
 using JxFinance.Endpoints.NetWorth.Shared;
 using JxFinance.Endpoints.NetWorth.UnlinkDebtPayment;
 using JxFinance.Endpoints.NetWorth.UpdateAsset;
@@ -41,6 +43,12 @@ public interface INetWorthService
     Task<Result<DebtResponse>> UpdateDebtAsync(UpdateDebtRequest request, CancellationToken cancellationToken);
 
     Task<Result<Guid>> DeleteDebtAsync(Guid id, CancellationToken cancellationToken);
+
+    Task<Result<IReadOnlyList<DebtBalanceEntryResponse>>> GetDebtBalancesAsync(Guid id, CancellationToken cancellationToken);
+
+    Task<Result<DebtResponse>> SetDebtBalanceAsync(SetDebtBalanceRequest request, CancellationToken cancellationToken);
+
+    Task<Result> DeleteDebtBalanceAsync(DeleteDebtBalanceRequest request, CancellationToken cancellationToken);
 
     Task<Result<DebtScheduleResponse>> GetDebtScheduleAsync(Guid id, ExtraPayments extra, CancellationToken cancellationToken);
 

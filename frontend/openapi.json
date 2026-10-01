@@ -7509,6 +7509,280 @@
         ]
       }
     },
+    "/api/debts/{id}/balances": {
+      "get": {
+        "tags": [
+          "NetWorth"
+        ],
+        "summary": "List the recorded balances of a debt",
+        "description": "Returns the dated outstanding amounts recorded for a debt, newest first, in the currency of the debt. Creating or editing the debt records one, and the newest is the outstanding amount and as-of date of the debt. Tracked payments write none: they are counted from the newest on every read.",
+        "operationId": "GetDebtBalances",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The debt id.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The recorded balances, newest first.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DebtBalanceEntryResponse"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such debt belongs to the signed-in user.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          },
+          {
+            "PersonalApiToken": [ ]
+          }
+        ]
+      }
+    },
+    "/api/debts/{id}/balances/{date}": {
+      "delete": {
+        "tags": [
+          "NetWorth"
+        ],
+        "summary": "Delete a recorded balance of a debt",
+        "description": "Removes the balance recorded for one date for good; it does not go to the trash. The outstanding amount of the debt becomes the newest remaining balance. The last balance cannot be deleted.",
+        "operationId": "DeleteDebtBalance",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The debt id.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "date",
+            "in": "path",
+            "description": "The date of the balance, as yyyy-MM-dd.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Deleted."
+          },
+          "400": {
+            "description": "debt.lastBalance when this is the only recorded balance of the debt.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such debt belongs to the signed-in user, or no balance is recorded for that date.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "NetWorth"
+        ],
+        "summary": "Record a balance of a debt",
+        "description": "Records what was owed on one date, replacing a balance already recorded for that date. The outstanding amount and as-of date of the debt follow the newest recorded balance, so a balance for an earlier date only adds history. A debt that tracks payments counts them from the newest. Net worth snapshots already taken are not rewritten.",
+        "operationId": "SetDebtBalance",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The debt id.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "date",
+            "in": "path",
+            "description": "The date of the balance, as yyyy-MM-dd. Not in the future.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetDebtBalanceRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "The debt with its outstanding amount.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DebtResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such debt belongs to the signed-in user.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Someone else recorded a balance for the same date at the same moment. Try again.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      }
+    },
     "/api/debts/{id}/payment-candidates": {
       "get": {
         "tags": [
@@ -26699,6 +26973,29 @@
         "type": "string",
         "format": "date"
       },
+      "DebtBalanceEntryResponse": {
+        "required": [
+          "date",
+          "amount",
+          "note"
+        ],
+        "type": "object",
+        "properties": {
+          "date": {
+            "$ref": "#/components/schemas/DateOnly"
+          },
+          "amount": {
+            "type": "string",
+            "format": "decimal"
+          },
+          "note": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "DebtLowerPayment": {
         "required": [
           "payoffDate",
@@ -27342,6 +27639,7 @@
           "currency.disabled",
           "dashboard.cardDuplicate",
           "dashboard.cardUnknown",
+          "debt.lastBalance",
           "debt.notTracked",
           "debt.paymentTaken",
           "debt.paymentTooSmall",
@@ -32502,6 +32800,28 @@
               }
             ],
             "description": "The last day of the warranty as YYYY-MM-DD, or null to clear it."
+          }
+        }
+      },
+      "SetDebtBalanceRequest": {
+        "required": [
+          "amount"
+        ],
+        "type": "object",
+        "properties": {
+          "amount": {
+            "type": "string",
+            "description": "Decimal string with at most two decimal places, in the currency of the debt.",
+            "format": "decimal"
+          },
+          "note": {
+            "maxLength": 200,
+            "minLength": 0,
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Optional, up to 200 characters, such as \"bank statement\"."
           }
         }
       },
