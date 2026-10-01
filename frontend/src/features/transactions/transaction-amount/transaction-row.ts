@@ -32,11 +32,13 @@ export function transactionCategoryLabel(
 
 export function transactionName(
   row: Pick<TransactionResponse, "description" | "isSplit" | "categoryId"> &
-    Partial<Pick<TransactionResponse, "payeeName">>,
+    Partial<Pick<TransactionResponse, "payeeName" | "payee">>,
   categoryById: ReadonlyMap<string | undefined, CategoryResponse | undefined>,
   t: Translate,
 ) {
-  return row.payeeName || row.description || transactionCategoryLabel(row, categoryById, t);
+  return (
+    row.payeeName || row.payee || row.description || transactionCategoryLabel(row, categoryById, t)
+  );
 }
 
 export const UNCATEGORIZED_OPTION = "none";

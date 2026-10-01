@@ -117,6 +117,15 @@ export const SplitTotalMismatch: Story = {
 
 export const Pending: Story = { args: { initial: transactions[0], pending: true } };
 
+export const WithStatementPayee: Story = {
+  args: { initial: { ...transactions[0]!, payee: "MAXIMA LT, UAB" } },
+  play: async ({ canvas }) => {
+    await expect(
+      await canvas.findByText("Payee on the bank statement: MAXIMA LT, UAB"),
+    ).toBeInTheDocument();
+  },
+};
+
 export const WithoutCancel: Story = { args: { onCancel: undefined } };
 
 export const NoCategories: Story = { args: { categories: [] } };

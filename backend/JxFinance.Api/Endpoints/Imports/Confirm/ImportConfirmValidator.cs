@@ -4,6 +4,7 @@ using JxFinance.Common.Errors;
 using JxFinance.Common.Validation;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Imports;
+using JxFinance.Domain.Transactions;
 
 namespace JxFinance.Endpoints.Imports.Confirm;
 
@@ -25,6 +26,7 @@ public sealed class ImportConfirmValidator : Validator<ImportConfirmRequest>
             row.RuleFor(r => r.Type).IsKnownEnum();
             row.RuleFor(r => r.Currency).IsKnownEnum();
             row.RuleFor(r => r.Description).HasMaxLength(500);
+            row.RuleFor(r => r.Payee).HasMaxLength(TransactionPayee.MaxLength);
             row.RuleFor(r => r.Amount).IsPositiveMoney();
             row.RuleFor(r => r.TagIds).HasAtMostTags();
             row.RuleFor(r => r)

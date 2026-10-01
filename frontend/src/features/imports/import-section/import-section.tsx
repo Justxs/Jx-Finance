@@ -229,6 +229,7 @@ export function ImportSection({
           currency: row.currency,
           date: row.date,
           description: row.description,
+          payee: row.payee,
           amount: row.amount,
           type: row.type,
           categoryId: takesCategory(row) ? row.categoryId || null : null,

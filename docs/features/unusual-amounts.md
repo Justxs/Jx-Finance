@@ -54,7 +54,7 @@ The result is an `UnusualVerdict(Basis, TypicalAmount, Factor, SampleSize)`: the
 
 `UnusualAmountService` picks the baseline per row:
 
-1. **Payee.** The rows on the same account with the same payee key, `SubscriptionDescription.Normalize` of the description, the function subscription detection already trusts. With at least 4 earlier rows the payee decides, and its answer is final even when it says the amount is usual. Since 2026-10-01 the history reads the key every transaction stores as `PayeeKey` for [spending by payee](reports.md#expense-by-payee), and `UnusualCandidate` carries a key rather than a description: the job passes the row's stored key and the import preview normalizes the statement row's description, since that row is not saved yet. A candidate with an empty key, such as a description of only reference numbers, goes straight to the category.
+1. **Payee.** The rows on the same account with the same payee key, `SubscriptionDescription.Normalize` of the statement's payee or else the description, the function subscription detection already trusts. With at least 4 earlier rows the payee decides, and its answer is final even when it says the amount is usual. Since 2026-10-01 the history reads the key every transaction stores as `PayeeKey` for [spending by payee](reports.md#expense-by-payee), and `UnusualCandidate` carries a key rather than a description: the job passes the row's stored key and the import preview normalizes the statement row's description, since that row is not saved yet. A candidate with an empty key, such as a description of only reference numbers, goes straight to the category.
 2. **Category.** Otherwise the rows of the same category, on any account the account owner can see, with at least 8 earlier rows.
 3. Otherwise the row is not flagged. A row with no category and a new payee is never flagged.
 
@@ -138,7 +138,7 @@ The bell formats the amounts for the viewer's language; Discord writes them as `
 A recurring entry and a bank charge are linked by text, not by a foreign key: imported bank rows are the real charges and never pass through confirmation, and a confirmed fixed entry always writes the expected amount, so it could never show a rise.
 
 - **The entry's keys** are `PriceRiseMatcher.KeysOf(bill)`: `SubscriptionDescription.Normalize` of `RecurringBill.MatchKey` when it is set, of the name otherwise, and always the normalized name as well, so a confirmed occurrence written under the entry's name counts as one of its charges.
-- **A charge matches** when it is a non-split expense with a description, on the entry's account, in that account's main currency, and its stored `PayeeKey` (the normalized description) equals the key. A charge in another currency on the same account is skipped, not converted.
+- **A charge matches** when it is a non-split expense with a description, on the entry's account, in that account's main currency, and its stored `PayeeKey` (the normalized statement payee, else the description) equals the key. A charge in another currency on the same account is skipped, not converted.
 - **Only** active expense-shaped entries with an account are considered.
 - **The expected amount** is the entry's `Amount` for a fixed entry, otherwise the median of the earlier matching charges in the 13 months (`PriceRiseRule.LookBackMonths`) before the charge. A variable entry with no earlier charge has nothing to compare.
 - **A rise** is `charged > expected × 1.03` and `charged − expected > 0.50` (`MinimumRatio`, `MinimumExcess`), with a positive expected amount.

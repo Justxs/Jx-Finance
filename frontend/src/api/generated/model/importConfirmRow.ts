@@ -30,4 +30,6 @@ export interface ImportConfirmRow {
   asRefund?: boolean;
   /** @nullable */
   refundOfTransactionId?: string | null;
+  /** @nullable */
+  payee?: string | null;
 }

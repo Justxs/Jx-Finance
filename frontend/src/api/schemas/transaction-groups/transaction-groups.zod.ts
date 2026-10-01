@@ -289,6 +289,7 @@ export const TransactionGroupMembersResponse = zod.object({
           }),
         ])
         .optional(),
+      payee: zod.string().nullish(),
     }),
   ),
   truncated: zod.boolean(),

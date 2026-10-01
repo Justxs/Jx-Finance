@@ -19,7 +19,7 @@ public sealed class LearnedCategoryService(
         CancellationToken cancellationToken)
     {
         var guesses = new LearnedGuess?[candidates.Count];
-        var keys = candidates.Select(candidate => SubscriptionDescription.Normalize(candidate.Description)).ToList();
+        var keys = candidates.Select(candidate => SubscriptionDescription.KeyOf(candidate.Payee, candidate.Description)).ToList();
         var guessable = Enumerable.Range(0, candidates.Count)
             .Where(index => candidates[index].Amount > 0 && keys[index].Length > 0)
             .ToList();

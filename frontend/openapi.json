@@ -28582,6 +28582,12 @@
               "string"
             ],
             "format": "uuid"
+          },
+          "payee": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -34344,6 +34350,12 @@
               {
                 "$ref": "#/components/schemas/ContactSplitResponse"
               }
+            ]
+          },
+          "payee": {
+            "type": [
+              "null",
+              "string"
             ]
           }
         }

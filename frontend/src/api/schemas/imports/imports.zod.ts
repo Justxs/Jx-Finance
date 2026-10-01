@@ -72,6 +72,7 @@ export const ImportConfirmBody = zod.object({
         existingTransactionId: zod.uuid().nullish(),
         asRefund: zod.boolean().default(importConfirmBodyRowsItemAsRefundDefault),
         refundOfTransactionId: zod.uuid().nullish(),
+        payee: zod.string().nullish(),
       }),
     )
     .describe(

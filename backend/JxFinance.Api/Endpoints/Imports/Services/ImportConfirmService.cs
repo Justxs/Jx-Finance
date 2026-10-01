@@ -263,6 +263,7 @@ public sealed class ImportConfirmService(
                 ReportingAmount = valued.ReportingAmount,
                 Date = row.Date,
                 Description = OptionalText.Normalize(row.Description),
+                Payee = TransactionPayee.Clip(row.Payee),
                 Source = TransactionSource.Imported,
                 ImportRef = row.ImportRef,
             };

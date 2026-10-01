@@ -233,15 +233,16 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, ICurren
 
                     if (entry.Entity is Transaction added)
                     {
-                        added.PayeeKey = SubscriptionDescription.Normalize(added.Description);
+                        added.PayeeKey = SubscriptionDescription.KeyOf(added.Payee, added.Description);
                         SetSpreadUntil(added);
                     }
                     break;
                 case EntityState.Modified:
                     entry.Entity.UpdatedAt = now;
-                    if (entry.Entity is Transaction edited && entry.Property(nameof(Transaction.Description)).IsModified)
+                    if (entry.Entity is Transaction edited
+                        && (entry.Property(nameof(Transaction.Description)).IsModified || entry.Property(nameof(Transaction.Payee)).IsModified))
                     {
-                        edited.PayeeKey = SubscriptionDescription.Normalize(edited.Description);
+                        edited.PayeeKey = SubscriptionDescription.KeyOf(edited.Payee, edited.Description);
                     }
 
                     if (entry.Entity is Transaction spread

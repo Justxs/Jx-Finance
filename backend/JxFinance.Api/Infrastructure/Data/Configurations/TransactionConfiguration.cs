@@ -13,6 +13,7 @@ public sealed class TransactionConfiguration : IEntityTypeConfiguration<Transact
         builder.Property(t => t.Description).HasMaxLength(500);
         builder.Property(t => t.Note).HasMaxLength(TransactionNote.MaxLength);
         builder.Property(t => t.ImportRef).HasMaxLength(64);
+        builder.Property(t => t.Payee).HasMaxLength(TransactionPayee.MaxLength);
         builder.Property(t => t.PayeeKey).HasMaxLength(SubscriptionDescription.MaxLength);
         builder.Property(t => t.Place).HasMaxLength(TransactionPlace.MaxLength);
         builder.Property(t => t.Latitude).HasPrecision(7, TransactionPlace.CoordinateDecimals);

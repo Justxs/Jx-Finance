@@ -15,6 +15,7 @@ public sealed class Transaction : OwnableEntity, IAccountScoped, IDated
     public DateOnly Date { get; set; }
     public string? Description { get; set; }
     public string? Note { get; set; }
+    public string? Payee { get; set; }
     public string? PayeeKey { get; set; }
     public TransactionSource Source { get; set; }
     public string? ImportRef { get; set; }

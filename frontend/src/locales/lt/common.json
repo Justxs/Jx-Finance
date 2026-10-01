@@ -623,6 +623,7 @@
     "categoryFor": "Kategorija: {{transaction}}",
     "note": "Pastaba",
     "noteHint": "Jūsų žodžiai šalia banko aprašymo. Importas jų nekeičia.",
+    "statementPayee": "Gavėjas banko išraše: {{payee}}",
     "spread": {
       "label": "Paskirstyti per",
       "off": "Ne",

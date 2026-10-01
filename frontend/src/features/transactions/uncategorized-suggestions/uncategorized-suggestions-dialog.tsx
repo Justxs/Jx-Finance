@@ -139,7 +139,10 @@ function SuggestionGroups({ filter, categories, onClose }: Readonly<ContentProps
                     <span className="mr-2 text-muted-foreground tabular-nums">
                       {formatDate(item.transaction.date)}
                     </span>
-                    {item.transaction.payeeName || item.transaction.description || EMPTY_VALUE}
+                    {item.transaction.payeeName ||
+                      item.transaction.payee ||
+                      item.transaction.description ||
+                      EMPTY_VALUE}
                   </span>
                   <span className="shrink-0 tabular-nums">
                     {signedAmount(money, item.transaction)}

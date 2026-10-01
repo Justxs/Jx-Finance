@@ -7,6 +7,9 @@ public static class SubscriptionDescription
     public const int MaxLength = 200;
     public const int ReferenceDigitCount = 3;
 
+    public static string KeyOf(string? payee, string? description) =>
+        Normalize(payee) is { Length: > 0 } key ? key : Normalize(description);
+
     public static string Normalize(string? description)
     {
         if (string.IsNullOrWhiteSpace(description))

@@ -324,6 +324,11 @@ export function TransactionForm({
               id="tx-description"
               label={t("transactions.description")}
               placeholder={t("transactions.descriptionPlaceholder")}
+              hint={
+                initial?.payee
+                  ? t("transactions.statementPayee", { payee: initial.payee })
+                  : undefined
+              }
               className="col-span-full"
             />
           )}

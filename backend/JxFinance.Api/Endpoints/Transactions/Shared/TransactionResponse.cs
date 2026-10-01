@@ -39,7 +39,8 @@ public sealed record TransactionResponse(
     Guid? GroupId = null,
     bool EnteredByMe = false,
     TransactionReceiptItemResponse? ReceiptItem = null,
-    ContactSplitResponse? ContactSplit = null);
+    ContactSplitResponse? ContactSplit = null,
+    string? Payee = null);
 
 public sealed record TransactionReceiptItemResponse(string Name, DateOnly? WarrantyUntil);
 

@@ -313,6 +313,7 @@ export const CreateTransactionResponse = zod.object({
       }),
     ])
     .optional(),
+  payee: zod.string().nullish(),
 });
 
 /**
@@ -512,6 +513,7 @@ export const TransactionsResponse = zod.object({
           }),
         ])
         .optional(),
+      payee: zod.string().nullish(),
     }),
   ),
   page: zod.int(),
@@ -824,6 +826,7 @@ export const LedgerResponse = zod.object({
               }),
             ])
             .optional(),
+          payee: zod.string().nullish(),
         }),
       ]),
       group: zod.union([
@@ -1134,6 +1137,7 @@ export const UncategorizedSuggestionsResponseItem = zod.object({
         }),
       ])
       .optional(),
+    payee: zod.string().nullish(),
   }),
   categoryId: zod.uuid(),
   source: zod.enum(["rule", "learned"]),
@@ -1326,6 +1330,7 @@ export const TransactionResponse = zod.object({
       }),
     ])
     .optional(),
+  payee: zod.string().nullish(),
 });
 
 /**
@@ -1619,6 +1624,7 @@ export const UpdateTransactionResponse = zod.object({
       }),
     ])
     .optional(),
+  payee: zod.string().nullish(),
 });
 
 /**

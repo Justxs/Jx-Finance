@@ -194,7 +194,7 @@ Since 2026-09-21 the page also offers entries it found by itself. `GET /api/recu
 ```mermaid
 flowchart TD
     Get["GET /api/recurring-bills/suggestions"] --> Read["expenses the caller can see:<br/>last 24 months, not split,<br/>in the account currency,<br/>with a payee key,<br/>newest 4000 rows, five columns"]
-    Read --> Norm["the stored PayeeKey:<br/>SubscriptionDescription.Normalize<br/>of each description"]
+    Read --> Norm["the stored PayeeKey:<br/>SubscriptionDescription.KeyOf<br/>of each payee or description"]
     Norm --> Group["one pass: group by<br/>account and normalized description"]
     Group --> Count{"three or more dates?"}
     Count -->|"no"| Drop["not offered"]

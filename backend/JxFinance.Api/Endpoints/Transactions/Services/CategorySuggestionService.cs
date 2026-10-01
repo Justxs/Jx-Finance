@@ -76,7 +76,7 @@ public sealed class CategorySuggestionService(
 
         var open = Enumerable.Range(0, rows.Count).Where(index => answers[index] is null).ToList();
         var guesses = await learned.SuggestAsync(
-            open.Select(index => new LearnedCandidate(new AccountId(rows[index].AccountId), rows[index].Type, rows[index].Amount, rows[index].Description)).ToList(),
+            open.Select(index => new LearnedCandidate(new AccountId(rows[index].AccountId), rows[index].Type, rows[index].Amount, rows[index].Description, rows[index].Payee)).ToList(),
             cancellationToken);
         for (var position = 0; position < open.Count; position++)
         {

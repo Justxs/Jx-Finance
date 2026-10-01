@@ -82,7 +82,7 @@ public sealed class UserJournalSource(AppDbContext db, IExchangeRateService rate
                 t.ReportingAmount,
                 t.Description,
                 t.IsSplit ? [.. lines[t.Id].Select(l => new JournalLine(l.CategoryId?.Value, l.Amount.Amount))] : [new JournalLine(t.CategoryId?.Value, t.Amount.Amount)],
-                t.PayeeKey is { } key ? payees.GetValueOrDefault(key) : null,
+                (t.PayeeKey is { } key ? payees.GetValueOrDefault(key) : null) ?? t.Payee,
                 t.Note,
                 debtPayments.GetValueOrDefault(t.Id)))
             .ToList();

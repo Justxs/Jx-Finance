@@ -139,6 +139,25 @@ export const FoundByReceiptItem: Story = {
   },
 };
 
+export const StatementPayee: Story = {
+  args: {
+    data: [
+      {
+        ...longDescriptionTransaction,
+        payeeName: null,
+        payee: "MAXIMA LT, UAB",
+        description: "Pirkinys 5168******1234 2026-09-14 MAXIMA X VILNIUS",
+      },
+    ],
+  },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText("MAXIMA LT, UAB")).toBeInTheDocument();
+    await expect(
+      canvas.getByText("Pirkinys 5168******1234 2026-09-14 MAXIMA X VILNIUS"),
+    ).toBeInTheDocument();
+  },
+};
+
 export const WithActiveFilters: Story = {
   args: { data: transactions.filter((item) => item.type === "expense").slice(0, 8) },
   parameters: {

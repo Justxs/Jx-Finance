@@ -300,6 +300,7 @@ public sealed class TransactionService(
             query = query.Where(t =>
                 (t.Description != null && EF.Functions.ILike(t.Description, pattern, LikePattern.Escape))
                 || (t.Note != null && EF.Functions.ILike(t.Note, pattern, LikePattern.Escape))
+                || (t.Payee != null && EF.Functions.ILike(t.Payee, pattern, LikePattern.Escape))
                 || (searchesPlace && t.Place != null && EF.Functions.ILike(t.Place, pattern, LikePattern.Escape))
                 || db.PayeeNames.Any(p => p.PayeeKey == t.PayeeKey && EF.Functions.ILike(p.Name, pattern, LikePattern.Escape))
                 || (searchesReceipts && attachments.Any(a => a.TransactionId == t.Id && receiptFiles.Contains(a.Sha256))));

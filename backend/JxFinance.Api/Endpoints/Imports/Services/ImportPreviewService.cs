@@ -114,7 +114,7 @@ public sealed class ImportPreviewService(
             .Select((r, index) => new ImportPreviewRow(
                 r.ImportRef,
                 r.Date,
-                r.Payee,
+                TransactionPayee.Clip(r.Payee),
                 r.Description,
                 r.Amount,
                 r.Type,
@@ -278,7 +278,7 @@ public sealed class ImportPreviewService(
             .Where(index => !duplicates[index] && suggestions[index]?.CategoryId is null)
             .ToList();
         var guesses = await learned.SuggestAsync(
-            open.Select(index => new LearnedCandidate(accountId, parsedRows[index].Type, parsedRows[index].Amount, parsedRows[index].Description)).ToList(),
+            open.Select(index => new LearnedCandidate(accountId, parsedRows[index].Type, parsedRows[index].Amount, parsedRows[index].Description, parsedRows[index].Payee)).ToList(),
             cancellationToken);
         var found = new LearnedGuess?[parsedRows.Count];
         for (var position = 0; position < open.Count; position++)
@@ -323,7 +323,7 @@ public sealed class ImportPreviewService(
             }
 
             var categoryId = suggestions[index]?.CategoryId is { } suggested ? new CategoryId(suggested) : (CategoryId?)null;
-            candidates.Add((index, new UnusualCandidate(accountId, categoryId, row.Date, valued.ReportingAmount, SubscriptionDescription.Normalize(row.Description))));
+            candidates.Add((index, new UnusualCandidate(accountId, categoryId, row.Date, valued.ReportingAmount, SubscriptionDescription.KeyOf(row.Payee, row.Description))));
         }
 
         var evaluated = await unusualAmounts.EvaluateAsync(candidates.Select(c => c.Candidate).ToList(), cancellationToken);

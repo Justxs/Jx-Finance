@@ -91,6 +91,7 @@ public static class TransactionMapper
         transaction.Unusual.ToResponse(),
         transaction.Unusual is not null && transaction.UnusualDismissedAt is not null,
         Note: transaction.Note,
+        Payee: transaction.Payee,
         SpreadMonths: transaction.SpreadMonths,
         SpreadUntil: transaction.SpreadUntil,
         Place: transaction.Place,

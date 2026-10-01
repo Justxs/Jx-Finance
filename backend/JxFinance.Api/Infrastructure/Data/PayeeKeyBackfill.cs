@@ -18,7 +18,7 @@ public static class PayeeKeyBackfill
                 .Where(t => t.PayeeKey == null)
                 .OrderBy(t => t.Id)
                 .Take(PageSize)
-                .Select(t => new { t.Id, t.Description })
+                .Select(t => new { t.Id, t.Payee, t.Description })
                 .ToListAsync(cancellationToken);
             if (page.Count == 0)
             {
@@ -26,7 +26,7 @@ public static class PayeeKeyBackfill
             }
 
             var ids = page.Select(t => t.Id.Value).ToArray();
-            var keys = page.Select(t => SubscriptionDescription.Normalize(t.Description)).ToArray();
+            var keys = page.Select(t => SubscriptionDescription.KeyOf(t.Payee, t.Description)).ToArray();
             await db.Database.ExecuteSqlAsync(
                 $"""
                 UPDATE "Transactions" AS t SET "PayeeKey" = source.key

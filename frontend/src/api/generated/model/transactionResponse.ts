@@ -62,4 +62,6 @@ export interface TransactionResponse {
   enteredByMe?: boolean;
   receiptItem?: null | TransactionReceiptItemResponse;
   contactSplit?: null | ContactSplitResponse;
+  /** @nullable */
+  payee?: string | null;
 }

@@ -4,7 +4,7 @@ Back to the [feature walkthrough](README.md). See also [decisions](../decisions/
 
 Backend `Payees` (`GetPayeeNames`, `SetPayeeName`, `DeletePayeeName`, group `PayeesGroup`), `Common/Payees/PayeeNameLookup.cs`, and the name parts of `Transactions`, `Reports` and `RecurringBills`. Frontend `payees` (`payee-name-form`), `transactions/payee-naming` (the row action), and the "Payee names" section of the Tags page. Always on; added on 2026-09-30.
 
-A bank writes the same shop many ways: "MAXIMA LT, UAB 20260402", "Maxima LT UAB 20260418". Every transaction already stores the normalized form as `PayeeKey` (`maxima lt uab`), which is how the report, unusual amounts and suggested rules group payees. A payee name puts a word the member chose on that key, once, so "Maxima" reads in the ledger, the report and the recurring-entry suggestions instead of the bank's text.
+A bank writes the same shop many ways: "MAXIMA LT, UAB 20260402", "Maxima LT UAB 20260418". Every transaction already stores the normalized form as `PayeeKey` (`maxima lt uab`), taken from the [statement's payee](bank-statement-import.md#the-statements-payee) when an import stored one and from the description otherwise, which is how the report, unusual amounts and suggested rules group payees. A payee name puts a word the member chose on that key, once, so "Maxima" reads in the ledger, the report and the recurring-entry suggestions instead of the bank's text.
 
 ## The model
 
@@ -27,14 +27,14 @@ erDiagram
 
 `PUT /api/payees` takes `{ payee, name }` and answers the stored `{ id, payeeKey, name }`. `payee` is normalized with `SubscriptionDescription.Normalize`, the same function that fills `PayeeKey`, so a raw description, as the row action sends, and a key, as the Tags page sends, name the same payee; a payee with nothing left after normalizing, such as "12345", is refused with `text.invalidFormat` on `payee`. The name is trimmed, required and at most 100 characters. A second `PUT` for the same key renames the row instead of adding one, so the endpoint is an upsert with no conflict to handle. `DELETE /api/payees/{id}` soft-deletes it and answers 204, or 404 for a name that is not the caller's; the retention job purges it after 30 days like the other deleted records, and it is not in the trash, because putting a name back is one dialog. `GET /api/payees` lists the caller's names by name. The list is readable with a personal API token; the two writes are not.
 
-In the ledger every row with a description has **Name payee** in its menu, **Rename payee** once it has a name, which opens a small form with the name field and "Bank text: …" under it. The Tags page, in the Categories hub, has a "Payee names" section after the tags, followed only by [Places](transaction-locations.md#renaming-and-merging-places) while that switch is on, that lists the names with their key in muted text, edits them in the same form and deletes them with a confirmation. The section sits beside tags rather than on a page of its own, following the rule that a task lives where the member already is.
+In the ledger every row with a description or a statement payee has **Name payee** in its menu, **Rename payee** once it has a name, which opens a small form with the name field and "Bank text: …" under it. The form sends the statement's payee when the row has one and the description otherwise, the text its key was made from. The Tags page, in the Categories hub, has a "Payee names" section after the tags, followed only by [Places](transaction-locations.md#renaming-and-merging-places) while that switch is on, that lists the names with their key in muted text, edits them in the same form and deletes them with a confirmation. The section sits beside tags rather than on a page of its own, following the rule that a task lives where the member already is.
 
 ## Where the name shows
 
 | Place | What changes |
 | --- | --- |
-| Ledger, desktop | The description cell shows the name, and the bank's text in its tooltip; the note line stays under it |
-| Ledger, phone, and the dashboard's recent transactions | `transactionName` prefers `payeeName` over the description, then the category label |
+| Ledger, desktop | The description cell shows the name, and the bank's text in its tooltip; the note line stays under it. Without a name, a row with a statement payee shows the payee and the description in a muted line under it |
+| Ledger, phone, and the dashboard's recent transactions | `transactionName` prefers `payeeName` over the statement's payee and the description, then the category label |
 | Ledger search | `search` also matches a transaction whose key has a name containing the text, so "Maxima" finds the renamed rows |
 | Reports, expense by payee | Each item carries `name`, and the row reads it before `label`, the newest bank description |
 | Recurring entries, suggestions | Each candidate carries `name`; the row and the prefilled entry use it before the capitalised key |

@@ -12,7 +12,7 @@ export function usePayeeNaming() {
   const [naming, setNaming] = useState<TransactionResponse | null>(null);
 
   function actionFor(transaction: TransactionResponse): RowAction | undefined {
-    if (!transaction.description?.trim()) {
+    if (!bankPayee(transaction)) {
       return undefined;
     }
     return {
@@ -27,7 +27,7 @@ export function usePayeeNaming() {
     <EditModal item={naming} onClose={() => setNaming(null)} title={t("payees.dialogTitle")}>
       {(transaction, close) => (
         <PayeeNameForm
-          payee={transaction.description ?? ""}
+          payee={bankPayee(transaction)}
           initialName={transaction.payeeName}
           onClose={close}
         />
@@ -36,4 +36,8 @@ export function usePayeeNaming() {
   );
 
   return { actionFor, dialog };
+}
+
+function bankPayee(transaction: TransactionResponse) {
+  return (transaction.payee || transaction.description)?.trim() ?? "";
 }
