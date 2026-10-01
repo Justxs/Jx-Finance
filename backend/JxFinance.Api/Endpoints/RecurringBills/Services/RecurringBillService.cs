@@ -22,6 +22,7 @@ using JxFinance.Domain.Trash;
 using JxFinance.Endpoints.RecurringBills.ConfirmRecurringBill;
 using JxFinance.Endpoints.RecurringBills.CreateRecurringBill;
 using JxFinance.Endpoints.RecurringBills.GetBillsCalendar;
+using JxFinance.Endpoints.RecurringBills.GetRecurringTotals;
 using JxFinance.Endpoints.RecurringBills.Interfaces;
 using JxFinance.Endpoints.RecurringBills.Mappers;
 using JxFinance.Endpoints.RecurringBills.Shared;
@@ -308,10 +309,7 @@ public sealed class RecurringBillService(
 
         var last = first.AddMonths(1).AddDays(-1);
         var bills = await db.RecurringBills.AsNoTracking().Where(b => b.IsActive).ToListAsync(cancellationToken);
-        var currencies = await db.Accounts
-            .AsNoTracking()
-            .Select(a => new { a.Id, a.StartingBalance.Currency })
-            .ToDictionaryAsync(a => a.Id, a => a.Currency, cancellationToken);
+        var currencies = await AccountCurrenciesAsync(cancellationToken);
         var occurrences = bills.SelectMany(bill => Scheduled(bill, first, last)).ToList();
         var lookBack = today.AddMonths(-RecurringEstimate.LookBackMonths);
         var loadFrom = first.AddDays(-RecurringMatch.PaidToleranceDays);
@@ -323,8 +321,7 @@ public sealed class RecurringBillService(
             loadTo > today ? loadTo : today,
             cancellationToken);
         var paid = RecurringMatch.Assign(occurrences, rows);
-        var latest = await rates.GetLatestAsync(cancellationToken);
-        var table = rates.IsFresh(latest, today) ? latest : RateTable.Empty;
+        var table = await FreshRatesAsync(today, cancellationToken);
         var expected = bills.ToDictionary(bill => bill, bill => Expected(bill, currencies, rows, lookBack, today));
 
         decimal expectedOut = 0m, expectedIn = 0m, paidOut = 0m;
@@ -386,6 +383,74 @@ public sealed class RecurringBillService(
                 .OrderBy(o => o.Date)
                 .ThenBy(o => o.Name, StringComparer.CurrentCultureIgnoreCase)
                 .ThenBy(o => o.BillId)]);
+    }
+
+    public async Task<RecurringTotalsResponse> GetTotalsAsync(CancellationToken cancellationToken)
+    {
+        var today = clock.Today;
+        var bills = await db.RecurringBills
+            .AsNoTracking()
+            .Where(b => b.IsActive && b.Shape != RecurringBillShape.Transfer)
+            .ToListAsync(cancellationToken);
+        var currencies = await AccountCurrenciesAsync(cancellationToken);
+        var from = today.AddMonths(-RecurringLapse.LookBackMonths);
+        var to = today.AddDays(RecurringMatch.PaidToleranceDays);
+        var occurrences = bills.SelectMany(bill => Scheduled(bill, from, to)).ToList();
+        var rows = await RecurringHistory.LoadAsync(db, bills, from.AddDays(-RecurringMatch.PaidToleranceDays), to, cancellationToken);
+        var paid = RecurringMatch.Assign(occurrences, rows);
+        var table = await FreshRatesAsync(today, cancellationToken);
+        var lookBack = today.AddMonths(-RecurringEstimate.LookBackMonths);
+
+        decimal yearlyOut = 0m, yearlyIn = 0m;
+        var partial = false;
+        var unpriced = 0;
+        foreach (var bill in bills)
+        {
+            var amount = Expected(bill, currencies, rows, lookBack, today);
+            if (amount is null)
+            {
+                unpriced++;
+                continue;
+            }
+
+            if (table.Convert(amount.Amount, amount.Currency, rates.ReportingCurrency) is not { } reporting)
+            {
+                partial = true;
+                continue;
+            }
+
+            partial |= amount.Estimated;
+            var perYear = RecurringCost.PerYear(reporting, bill.Cadence);
+            yearlyOut += bill.Shape == RecurringBillShape.Expense ? perYear : 0m;
+            yearlyIn += bill.Shape == RecurringBillShape.Income ? perYear : 0m;
+        }
+
+        var possiblyCancelled = bills
+            .Where(bill => bill.Shape == RecurringBillShape.Expense
+                && RecurringLapse.PossiblyCancelled(occurrences.Where(occurrence => occurrence.Bill == bill), paid, today))
+            .Select(bill => bill.Id.Value)
+            .ToList();
+
+        return new RecurringTotalsResponse(
+            Money.Round(yearlyOut / RecurringCost.MonthsPerYear),
+            Money.Round(yearlyOut),
+            Money.Round(yearlyIn / RecurringCost.MonthsPerYear),
+            Money.Round(yearlyIn),
+            partial,
+            unpriced,
+            possiblyCancelled);
+    }
+
+    private Task<Dictionary<AccountId, Currency>> AccountCurrenciesAsync(CancellationToken cancellationToken) =>
+        db.Accounts
+            .AsNoTracking()
+            .Select(a => new { a.Id, a.StartingBalance.Currency })
+            .ToDictionaryAsync(a => a.Id, a => a.Currency, cancellationToken);
+
+    private async Task<RateTable> FreshRatesAsync(DateOnly today, CancellationToken cancellationToken)
+    {
+        var latest = await rates.GetLatestAsync(cancellationToken);
+        return rates.IsFresh(latest, today) ? latest : RateTable.Empty;
     }
 
     private IEnumerable<ScheduledOccurrence> Scheduled(RecurringBill bill, DateOnly first, DateOnly last)

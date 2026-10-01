@@ -12,6 +12,7 @@ import { Section, SectionTitle } from "@/components/ui/section/section";
 import { Skeleton } from "@/components/ui/skeleton/skeleton";
 import { StaleRegion } from "@/components/ui/stale-region/stale-region";
 import { BillChip } from "@/features/recurring-bills/bill-chip/bill-chip";
+import { estimateNote } from "@/features/recurring-bills/recurring-totals/recurring-totals";
 import { useDeferredParams } from "@/hooks/use-deferred-params";
 import { useDateFormat, useMonthName } from "@/hooks/use-formatters";
 import { useToday, useWeekStartsOn } from "@/hooks/use-settings";
@@ -141,12 +142,6 @@ function CalendarBody({ month, ...actions }: Readonly<ChipActions & { month: str
   for (const occurrence of calendar.occurrences) {
     byDate.set(occurrence.date, [...(byDate.get(occurrence.date) ?? []), occurrence]);
   }
-  const notes = [
-    calendar.partial ? t("recurringBills.calendar.partial") : null,
-    calendar.unpriced > 0
-      ? t("recurringBills.calendar.unpriced", { count: calendar.unpriced })
-      : null,
-  ].filter(Boolean);
 
   return (
     <>
@@ -156,10 +151,7 @@ function CalendarBody({ month, ...actions }: Readonly<ChipActions & { month: str
             label: t("recurringBills.calendar.expectedOut"),
             value: calendar.expectedOut,
             lead: true,
-            note:
-              notes.length > 0 ? (
-                <span className="text-sm text-muted-foreground">{notes.join(" · ")}</span>
-              ) : undefined,
+            note: estimateNote(t, calendar.partial, calendar.unpriced),
           },
           {
             label: t("recurringBills.calendar.expectedIn"),

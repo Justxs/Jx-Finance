@@ -278,6 +278,7 @@ Every 201 goes through `CreatedAsync`, which sets `Location` to a path built fro
 | POST | `/api/recurring-bills/{id}/skip` |
 | GET | `/api/recurring-bills/suggestions` |
 | POST | `/api/recurring-bills/suggestions/dismiss` |
+| GET | `/api/recurring-bills/totals` |
 | GET | `/api/reports/summary` |
 | GET | `/api/settings` |
 | PUT | `/api/settings` |

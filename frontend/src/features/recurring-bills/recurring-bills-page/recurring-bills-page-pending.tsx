@@ -1,6 +1,7 @@
 import { ChartSkeleton } from "@/components/chart/chart-skeleton";
 import { ListSectionSkeleton } from "@/components/list-section/list-section";
 import { PagePending } from "@/components/route-pending/route-pending";
+import { SummaryStatsSkeleton } from "@/components/summary-stats/summary-stats";
 import { Section } from "@/components/ui/section/section";
 import { SectionSkeleton, TextSkeleton } from "@/components/ui/skeleton/skeleton";
 import { BillRowsSkeleton } from "@/features/recurring-bills/bill-row-layout";
@@ -8,6 +9,7 @@ import { BillRowsSkeleton } from "@/features/recurring-bills/bill-row-layout";
 export function RecurringBillsPending() {
   return (
     <PagePending actions={1}>
+      <SummaryStatsSkeleton items={3} />
       <SectionSkeleton>
         <ChartSkeleton />
       </SectionSkeleton>

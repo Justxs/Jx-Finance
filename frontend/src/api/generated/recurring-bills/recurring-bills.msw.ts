@@ -11,6 +11,7 @@ import type {
   BillsCalendarResponse,
   ConfirmRecurringBillResponse,
   RecurringBillResponse,
+  RecurringTotalsResponse,
   SubscriptionCandidateResponse,
 } from "../model";
 
@@ -124,6 +125,30 @@ export const getDismissSubscriptionCandidateMockHandler = (
       }
 
       return new HttpResponse(null, { status: 204 });
+    },
+    options,
+  );
+};
+
+export const getRecurringTotalsMockHandler = (
+  overrideResponse?:
+    | RecurringTotalsResponse
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<RecurringTotalsResponse> | RecurringTotalsResponse),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/recurring-bills/totals",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : undefined,
+        { status: 200 },
+      );
     },
     options,
   );
@@ -249,6 +274,7 @@ export const getRecurringBillsMock = () => [
   getBillsCalendarMockHandler(),
   getSubscriptionCandidatesMockHandler(),
   getDismissSubscriptionCandidateMockHandler(),
+  getRecurringTotalsMockHandler(),
   getDeleteRecurringBillMockHandler(),
   getRecurringBillMockHandler(),
   getUpdateRecurringBillMockHandler(),

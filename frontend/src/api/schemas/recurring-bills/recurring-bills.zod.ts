@@ -289,6 +289,25 @@ export const DismissSubscriptionCandidateBody = zod.object({
 export const DismissSubscriptionCandidateResponse = zod.void();
 
 /**
+ * Adds up your active expense entries (monthlyOut, yearlyOut) and, separately, your active income entries (monthlyIn, yearlyIn) in the reporting currency at the newest exchange rate. A weekly entry counts 52 times a year, a monthly one 12, a quarterly one 4 and a yearly one once, and a month is a twelfth of the year. A variable entry counts at the median of its newest 6 matching rows within 13 months. Transfers count in none of the figures. partial is true when an estimate or an amount without a fresh rate is inside a figure, and unpriced counts the entries left out for want of an amount. possiblyCancelled lists the active expense entries whose last 2 past occurrences no ledger row paid, matched as the calendar matches them. Nothing is stored. Needs the recurringBills feature.
+ * @summary Sum what recurring entries cost a month and a year
+ */
+export const recurringTotalsResponseMonthlyOutRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const recurringTotalsResponseYearlyOutRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const recurringTotalsResponseMonthlyInRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const recurringTotalsResponseYearlyInRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+
+export const RecurringTotalsResponse = zod.object({
+  monthlyOut: zod.stringFormat("decimal", recurringTotalsResponseMonthlyOutRegExp),
+  yearlyOut: zod.stringFormat("decimal", recurringTotalsResponseYearlyOutRegExp),
+  monthlyIn: zod.stringFormat("decimal", recurringTotalsResponseMonthlyInRegExp),
+  yearlyIn: zod.stringFormat("decimal", recurringTotalsResponseYearlyInRegExp),
+  partial: zod.boolean(),
+  unpriced: zod.int(),
+  possiblyCancelled: zod.array(zod.uuid()),
+});
+
+/**
  * Removes the schedule and its reminders. Transactions and transfers already posted from it stay in the ledger.
  * @summary Delete a recurring entry
  */

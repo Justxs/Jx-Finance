@@ -201,6 +201,25 @@ describe("invalidateAfterMutation", () => {
     expect(isInvalidated(client, calendarKey)).toBe(true);
   });
 
+  test.each([
+    ["confirmRecurringBill", api.getConfirmRecurringBillMutationKey],
+    ["updateRecurringBill", api.getUpdateRecurringBillMutationKey],
+    ["createTransaction", api.getCreateTransactionMutationKey],
+    ["deleteTransaction", api.getDeleteTransactionMutationKey],
+    ["createConversion", api.getCreateConversionMutationKey],
+    ["importConfirm", api.getImportConfirmMutationKey],
+    ["syncBrokerConnection", api.getSyncBrokerConnectionMutationKey],
+    ["syncExchangeRates", api.getSyncExchangeRatesMutationKey],
+  ])("%s refreshes the recurring totals", async (_name, getMutationKey) => {
+    const client = seededClient();
+    const totalsKey = api.getRecurringTotalsQueryKey();
+    client.setQueryData(totalsKey, {});
+
+    await invalidateAfterMutation(client, getMutationKey());
+
+    expect(isInvalidated(client, totalsKey)).toBe(true);
+  });
+
   test("invalidates everything after a restore, because any kind can come back", async () => {
     const client = seededClient();
 

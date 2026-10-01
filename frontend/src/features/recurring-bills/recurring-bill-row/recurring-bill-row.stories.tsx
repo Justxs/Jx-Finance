@@ -9,6 +9,7 @@ import {
   familyHousehold,
   inactiveBill,
   incomeBill,
+  lapsedBill,
   overdueBill,
   priceRiseBill,
   recurringBills,
@@ -78,6 +79,16 @@ export const PriceRiseOnAVariableEntry: Story = {
 };
 
 export const Variable: Story = { args: { bill: variableBill } };
+
+export const PossiblyCancelled: Story = {
+  args: { bill: lapsedBill, possiblyCancelled: true },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText("Possibly cancelled")).toBeVisible();
+    await expect(
+      canvas.getByText(/No payment matched its last two due dates./u),
+    ).toBeInTheDocument();
+  },
+};
 
 export const Inactive: Story = { args: { bill: inactiveBill } };
 

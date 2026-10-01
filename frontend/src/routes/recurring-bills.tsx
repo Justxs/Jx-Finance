@@ -7,6 +7,7 @@ import {
   getCategoriesSuspenseQueryOptions,
   getDebtsSuspenseQueryOptions,
   getRecurringBillsSuspenseQueryOptions,
+  getRecurringTotalsSuspenseQueryOptions,
   getSubscriptionCandidatesSuspenseQueryOptions,
 } from "@/api/generated";
 import { FORECAST_DAYS } from "@/features/accounts/cash-flow-forecast/forecast-series";
@@ -31,6 +32,7 @@ export const Route = createFileRoute("/recurring-bills")({
     warm(queryClient, getCategoriesSuspenseQueryOptions());
     warm(queryClient, getRecurringBillsSuspenseQueryOptions());
     warm(queryClient, getSubscriptionCandidatesSuspenseQueryOptions());
+    warm(queryClient, getRecurringTotalsSuspenseQueryOptions());
     if (deps.view !== "calendar") {
       warm(queryClient, getCashFlowForecastSuspenseQueryOptions({ days: FORECAST_DAYS }));
     }

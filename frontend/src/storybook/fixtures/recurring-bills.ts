@@ -1,4 +1,4 @@
-import type { RecurringBillResponse } from "@/api/generated/model";
+import type { RecurringBillResponse, RecurringTotalsResponse } from "@/api/generated/model";
 import { ids } from "./base";
 import { problemOf } from "./problems";
 
@@ -129,8 +129,19 @@ export const mortgageBill = bill({
   debtId: ids.debts.mortgage,
 });
 
+export const lapsedBill = bill({
+  id: ids.bills.spotify,
+  name: "Spotify Premium Family",
+  amount: "17.99",
+  categoryId: ids.categories.entertainment,
+  accountId: ids.accounts.checking,
+  nextDueDate: "2026-10-06",
+  remindDaysBefore: 1,
+});
+
 export const recurringBills: RecurringBillResponse[] = [
   overdueBill,
+  lapsedBill,
   priceRiseBill,
   variableBill,
   incomeBill,
@@ -149,6 +160,33 @@ export const recurringBills: RecurringBillResponse[] = [
   }),
   inactiveBill,
 ];
+
+export const recurringTotals: RecurringTotalsResponse = {
+  monthlyOut: "719.58",
+  yearlyOut: "8634.96",
+  monthlyIn: "2180.00",
+  yearlyIn: "26160.00",
+  partial: true,
+  unpriced: 1,
+  possiblyCancelled: [lapsedBill.id],
+};
+
+export const settledRecurringTotals: RecurringTotalsResponse = {
+  ...recurringTotals,
+  partial: false,
+  unpriced: 0,
+  possiblyCancelled: [],
+};
+
+export const emptyRecurringTotals: RecurringTotalsResponse = {
+  monthlyOut: "0.00",
+  yearlyOut: "0.00",
+  monthlyIn: "0.00",
+  yearlyIn: "0.00",
+  partial: false,
+  unpriced: 0,
+  possiblyCancelled: [],
+};
 
 export const billStaleProblem = problemOf(
   409,

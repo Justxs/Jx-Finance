@@ -12,6 +12,7 @@ import { withPageFrame } from "@/storybook/decorators";
 import {
   dueSoonBill,
   inactiveBill,
+  lapsedBill,
   overdueBill,
   recurringBills,
   many,
@@ -62,6 +63,19 @@ export const ForecastTotals: Story = {
   },
 };
 
+export const TotalsAndPossiblyCancelled: Story = {
+  play: async ({ canvas }) => {
+    await expect(await canvas.findByText("€719.58")).toBeVisible();
+    await expect(canvas.getByText("Costs per year")).toBeVisible();
+    const row = canvas.getByText(lapsedBill.name).closest("li");
+    if (!row) {
+      throw new Error("expected the lapsed entry row");
+    }
+    await expect(within(row).getByText("Possibly cancelled")).toBeVisible();
+    await expect(canvas.getAllByText("Possibly cancelled")).toHaveLength(1);
+  },
+};
+
 export const Loading: Story = { parameters: { msw: { handlers: loadingHandlers } } };
 
 export const ServerError: Story = { parameters: { msw: { handlers: errorHandlers } } };
@@ -72,6 +86,7 @@ export const OnlyInactive: Story = {
     await userEvent.click(await canvas.findByText("Inactive (1)"));
     await expect(canvas.getByText(inactiveBill.name)).toBeVisible();
     await expect(canvas.queryByRole("heading", { name: "Overdue" })).toBeNull();
+    await expect(canvas.queryByText("Costs per month")).toBeNull();
   },
 };
 

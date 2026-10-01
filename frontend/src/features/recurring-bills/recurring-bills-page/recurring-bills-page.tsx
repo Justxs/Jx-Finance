@@ -7,6 +7,7 @@ import {
   useAccountsSuspense,
   useCategoriesSuspense,
   useRecurringBillsSuspense,
+  useRecurringTotalsSuspense,
   useSkipRecurringBill,
   useSubscriptionCandidatesSuspense,
   useUpdateRecurringBill,
@@ -27,6 +28,7 @@ import { BillsCalendar } from "@/features/recurring-bills/bills-calendar/bills-c
 import { RecurringBillConfirmForm } from "@/features/recurring-bills/recurring-bill-confirm-form/recurring-bill-confirm-form";
 import { RecurringBillForm } from "@/features/recurring-bills/recurring-bill-form/recurring-bill-form";
 import { RecurringBillRow } from "@/features/recurring-bills/recurring-bill-row/recurring-bill-row";
+import { RecurringTotals } from "@/features/recurring-bills/recurring-totals/recurring-totals";
 import { SubscriptionSuggestions } from "@/features/recurring-bills/subscription-suggestions/subscription-suggestions";
 import { useEditableList } from "@/hooks/use-editable-list";
 import { useToday } from "@/hooks/use-settings";
@@ -45,6 +47,7 @@ export function RecurringBillsPage() {
   const accounts = useAccountsSuspense();
   const categories = useCategoriesSuspense();
   const candidates = useSubscriptionCandidatesSuspense();
+  const totals = useRecurringTotalsSuspense().data;
 
   const bills = useEditableList(
     useRecurringBillsSuspense().data,
@@ -96,6 +99,8 @@ export function RecurringBillsPage() {
   const candidateList = useDeferredValue(candidates.data);
   const today = useToday();
   const { groups, inactive } = groupBills(billList, today);
+  const possiblyCancelled = new Set(totals.possiblyCancelled);
+  const hasTotals = billList.some((bill) => bill.isActive && bill.shape !== "transfer");
 
   function billRow(bill: RecurringBillResponse) {
     return (
@@ -105,6 +110,7 @@ export function RecurringBillsPage() {
         accountById={accountById}
         categoryNames={categoryNames}
         onConfirm={() => setConfirming(bill)}
+        possiblyCancelled={possiblyCancelled.has(bill.id)}
         onMarkDone={() => markDone(bill.id, bill.nextDueDate)}
         markDonePending={pendingId(skipMutation) === bill.id}
         onUpdateAmount={(amount) => updateExpected(bill, amount)}
@@ -149,6 +155,7 @@ export function RecurringBillsPage() {
           markingDone={pendingId(skipMutation)}
         />
       ) : null}
+      {view === "list" && hasTotals ? <RecurringTotals totals={totals} /> : null}
       {view === "list" && billList.length > 0 ? <CashFlowForecast totals /> : null}
       {view === "list" && billList.length === 0 ? (
         <EmptyText>{t("recurringBills.empty")}</EmptyText>

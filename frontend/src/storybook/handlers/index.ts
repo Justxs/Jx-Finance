@@ -43,6 +43,7 @@ import { getPayeeNamesMockHandler } from "@/api/generated/payees/payees.msw";
 import {
   getBillsCalendarMockHandler,
   getRecurringBillsMockHandler,
+  getRecurringTotalsMockHandler,
   getSubscriptionCandidatesMockHandler,
 } from "@/api/generated/recurring-bills/recurring-bills.msw";
 import { getReportSummaryMockHandler } from "@/api/generated/reports/reports.msw";
@@ -64,6 +65,7 @@ import {
   emptyCashFlowForecast,
   emptyCategoryBreakdown,
   emptyDashboardSummary,
+  emptyRecurringTotals,
   emptyNetWorth,
   emptyReportSummary,
   emptyTransactionsSummary,
@@ -185,6 +187,7 @@ export const emptyHandlers: RequestHandler[] = [
   getNotificationsMockHandler([]),
   getRecurringBillsMockHandler([]),
   getBillsCalendarMockHandler(emptyBillsCalendar),
+  getRecurringTotalsMockHandler(emptyRecurringTotals),
   getSubscriptionCandidatesMockHandler([]),
   getTagsMockHandler([]),
   getPayeeNamesMockHandler([]),

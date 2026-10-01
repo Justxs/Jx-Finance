@@ -1858,6 +1858,14 @@
     "expectedUpdated": "Expected amount updated",
     "markDone": "Mark as done",
     "markedDone": "Marked as done. The entry moved to its next date.",
+    "possiblyCancelled": "Possibly cancelled",
+    "possiblyCancelledHint": "No payment matched its last two due dates. Switch the entry off if you cancelled it.",
+    "totals": {
+      "monthlyOut": "Costs per month",
+      "yearlyOut": "Costs per year",
+      "monthlyIn": "Income per month",
+      "yearlyIn": "Income per year"
+    },
     "category": "Category",
     "noCategory": "No category",
     "transferNoCategory": "A transfer has no category: the money stays between your own accounts.",

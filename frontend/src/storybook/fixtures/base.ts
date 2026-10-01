@@ -126,6 +126,7 @@ export const ids = {
     salary: uid("99999999", 7),
     savingsOrder: uid("99999999", 8),
     brokerTopUp: uid("99999999", 9),
+    spotify: uid("99999999", 10),
   },
   notifications: {
     telia: uid("aaaaaaaa", 1),

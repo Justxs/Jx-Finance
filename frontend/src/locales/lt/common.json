@@ -1930,6 +1930,14 @@
     "expectedUpdated": "Tikėtina suma atnaujinta",
     "markDone": "Pažymėti atliktu",
     "markedDone": "Pažymėta atlikta. Įrašas perkeltas į kitą datą.",
+    "possiblyCancelled": "Galbūt nutrauktas",
+    "possiblyCancelledHint": "Nė vienas mokėjimas neatitiko dviejų paskutinių datų. Jei paslaugą nutraukėte, išjunkite įrašą.",
+    "totals": {
+      "monthlyOut": "Išlaidos per mėnesį",
+      "yearlyOut": "Išlaidos per metus",
+      "monthlyIn": "Pajamos per mėnesį",
+      "yearlyIn": "Pajamos per metus"
+    },
     "category": "Kategorija",
     "noCategory": "Be kategorijos",
     "transferNoCategory": "Pervedimas kategorijos neturi: pinigai lieka tarp jūsų pačių sąskaitų.",

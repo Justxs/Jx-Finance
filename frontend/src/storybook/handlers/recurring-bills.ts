@@ -6,6 +6,7 @@ import {
   getDismissSubscriptionCandidateMockHandler,
   getRecurringBillMockHandler,
   getRecurringBillsMockHandler,
+  getRecurringTotalsMockHandler,
   getSkipRecurringBillMockHandler,
   getSubscriptionCandidatesMockHandler,
   getUpdateRecurringBillMockHandler,
@@ -14,6 +15,7 @@ import {
   billsCalendar,
   dueSoonBill,
   recurringBills,
+  recurringTotals,
   subscriptionCandidates,
 } from "@/storybook/fixtures";
 import { found, readBody } from "./http";
@@ -30,6 +32,7 @@ function advanced(id: unknown) {
 export const recurringBillHandlers = [
   getRecurringBillsMockHandler(recurringBills),
   getBillsCalendarMockHandler(billsCalendar),
+  getRecurringTotalsMockHandler(recurringTotals),
   getSubscriptionCandidatesMockHandler(subscriptionCandidates),
   getDismissSubscriptionCandidateMockHandler(),
   getCreateRecurringBillMockHandler(async ({ request }) => ({

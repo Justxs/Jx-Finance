@@ -61,6 +61,7 @@ const rules: readonly Rule[] = [
       api.getSuggestedRulesQueryKey,
       api.getHouseholdsQueryKey,
       api.getBillsCalendarQueryKey,
+      api.getRecurringTotalsQueryKey,
       api.getPlacesQueryKey,
     ],
   },
@@ -140,6 +141,7 @@ const rules: readonly Rule[] = [
       api.getTransfersQueryKey,
       api.getSuggestedRulesQueryKey,
       api.getBillsCalendarQueryKey,
+      api.getRecurringTotalsQueryKey,
     ],
   },
   {
@@ -186,7 +188,12 @@ const rules: readonly Rule[] = [
   {
     after: [api.getCreateConversionMutationKey, api.getUpdateConversionMutationKey],
     deleted: [api.getDeleteConversionMutationKey],
-    refresh: [...ledger, api.getConversionsQueryKey, api.getBillsCalendarQueryKey],
+    refresh: [
+      ...ledger,
+      api.getConversionsQueryKey,
+      api.getBillsCalendarQueryKey,
+      api.getRecurringTotalsQueryKey,
+    ],
   },
   {
     after: [api.getCreateBudgetMutationKey, api.getUpdateBudgetMutationKey],
@@ -312,6 +319,7 @@ const rules: readonly Rule[] = [
       api.getTransfersQueryKey,
       api.getConversionsQueryKey,
       api.getBillsCalendarQueryKey,
+      api.getRecurringTotalsQueryKey,
     ],
   },
   {
@@ -348,6 +356,7 @@ const rules: readonly Rule[] = [
       api.getDashboardSummaryQueryKey,
       api.getPortfolioQueryKey,
       api.getValueHistoryQueryKey,
+      api.getRecurringTotalsQueryKey,
     ],
   },
   {

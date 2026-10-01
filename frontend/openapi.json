@@ -13334,6 +13334,66 @@
         ]
       }
     },
+    "/api/recurring-bills/totals": {
+      "get": {
+        "tags": [
+          "RecurringBills"
+        ],
+        "summary": "Sum what recurring entries cost a month and a year",
+        "description": "Adds up your active expense entries (monthlyOut, yearlyOut) and, separately, your active income entries (monthlyIn, yearlyIn) in the reporting currency at the newest exchange rate. A weekly entry counts 52 times a year, a monthly one 12, a quarterly one 4 and a yearly one once, and a month is a twelfth of the year. A variable entry counts at the median of its newest 6 matching rows within 13 months. Transfers count in none of the figures. partial is true when an estimate or an amount without a fresh rate is inside a figure, and unpriced counts the entries left out for want of an amount. possiblyCancelled lists the active expense entries whose last 2 past occurrences no ledger row paid, matched as the calendar matches them. Nothing is stored. Needs the recurringBills feature.",
+        "operationId": "GetRecurringTotals",
+        "responses": {
+          "200": {
+            "description": "The month and year totals and the entries that may have been cancelled.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecurringTotalsResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          },
+          {
+            "PersonalApiToken": [ ]
+          }
+        ]
+      }
+    },
     "/api/recurring-bills/{id}": {
       "delete": {
         "tags": [
@@ -28653,6 +28713,50 @@
         ],
         "type": "string",
         "description": "Expense, Income, or Transfer. Decides what a confirmation writes."
+      },
+      "RecurringTotalsResponse": {
+        "required": [
+          "monthlyOut",
+          "yearlyOut",
+          "monthlyIn",
+          "yearlyIn",
+          "partial",
+          "unpriced",
+          "possiblyCancelled"
+        ],
+        "type": "object",
+        "properties": {
+          "monthlyOut": {
+            "type": "string",
+            "format": "decimal"
+          },
+          "yearlyOut": {
+            "type": "string",
+            "format": "decimal"
+          },
+          "monthlyIn": {
+            "type": "string",
+            "format": "decimal"
+          },
+          "yearlyIn": {
+            "type": "string",
+            "format": "decimal"
+          },
+          "partial": {
+            "type": "boolean"
+          },
+          "unpriced": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "possiblyCancelled": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        }
       },
       "RenamePasskeyRequest": {
         "required": [

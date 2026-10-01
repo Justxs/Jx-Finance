@@ -32,6 +32,7 @@ import type {
   DismissSubscriptionCandidateRequest,
   ProblemDetails,
   RecurringBillResponse,
+  RecurringTotalsResponse,
   SkipRecurringBillRequest,
   SubscriptionCandidateResponse,
   UpdateRecurringBillRequest,
@@ -639,6 +640,121 @@ export const useDismissSubscriptionCandidate = <
 > => {
   return useMutation(getDismissSubscriptionCandidateMutationOptions(options), queryClient);
 };
+export const getRecurringTotalsUrl = () => {
+  return `/api/recurring-bills/totals`;
+};
+
+/**
+ * Adds up your active expense entries (monthlyOut, yearlyOut) and, separately, your active income entries (monthlyIn, yearlyIn) in the reporting currency at the newest exchange rate. A weekly entry counts 52 times a year, a monthly one 12, a quarterly one 4 and a yearly one once, and a month is a twelfth of the year. A variable entry counts at the median of its newest 6 matching rows within 13 months. Transfers count in none of the figures. partial is true when an estimate or an amount without a fresh rate is inside a figure, and unpriced counts the entries left out for want of an amount. possiblyCancelled lists the active expense entries whose last 2 past occurrences no ledger row paid, matched as the calendar matches them. Nothing is stored. Needs the recurringBills feature.
+ * @summary Sum what recurring entries cost a month and a year
+ */
+export const recurringTotals = async (
+  options?: Parameters<typeof customFetch>[1],
+): Promise<RecurringTotalsResponse> => {
+  return customFetch<RecurringTotalsResponse>(getRecurringTotalsUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getRecurringTotalsQueryKey = () => {
+  return [`/api/recurring-bills/totals`] as const;
+};
+
+export const getRecurringTotalsSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof recurringTotals>>,
+  TError = ErrorType<ProblemDetails>,
+>(options?: {
+  query?: Partial<
+    UseSuspenseQueryOptions<Awaited<ReturnType<typeof recurringTotals>>, TError, TData>
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getRecurringTotalsQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof recurringTotals>>> = ({ signal }) =>
+    recurringTotals({ signal, ...requestOptions });
+
+  return queryOptionsBuilder({
+    queryKey,
+    ...queryOptions,
+    queryFn: queryOptions?.queryFn ?? queryFn,
+  }) as UseSuspenseQueryOptions<Awaited<ReturnType<typeof recurringTotals>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  } & {
+    throwOnError?: ((this: never, error: TError) => boolean) & { readonly __inferenceOnly: never };
+  };
+};
+
+export type RecurringTotalsSuspenseQueryResult = NonNullable<
+  Awaited<ReturnType<typeof recurringTotals>>
+>;
+export type RecurringTotalsSuspenseQueryError = ErrorType<ProblemDetails>;
+
+export function useRecurringTotalsSuspense<
+  TData = Awaited<ReturnType<typeof recurringTotals>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options: {
+    query: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof recurringTotals>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useRecurringTotalsSuspense<
+  TData = Awaited<ReturnType<typeof recurringTotals>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof recurringTotals>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useRecurringTotalsSuspense<
+  TData = Awaited<ReturnType<typeof recurringTotals>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof recurringTotals>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Sum what recurring entries cost a month and a year
+ */
+
+export function useRecurringTotalsSuspense<
+  TData = Awaited<ReturnType<typeof recurringTotals>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof recurringTotals>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getRecurringTotalsSuspenseQueryOptions(options);
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
 export const getDeleteRecurringBillUrl = (id: string) => {
   return `/api/recurring-bills/${id}`;
 };
