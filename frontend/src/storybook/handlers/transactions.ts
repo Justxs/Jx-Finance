@@ -18,6 +18,7 @@ import {
   getExportTransactionsPdfMockHandler,
   getLedgerMockHandler,
   getPlacesMockHandler,
+  getRenamePlaceMockHandler,
   getTransactionMockHandler,
   getTransactionsMockHandler,
   getTransactionsSummaryMockHandler,
@@ -31,6 +32,7 @@ import {
   categorySuggestionLearned,
   checkingAccount,
   ledgerItemsOf,
+  ownPlaces,
   placeSuggestions,
   transactions,
   transactionsCsv,
@@ -251,8 +253,18 @@ export const transactionHandlers = [
     return mergeTransaction(base, await readBody(request));
   }),
   getPlacesMockHandler(({ request }) => {
-    const search = query(request).get("search");
-    return placeSuggestions.filter((item) => !search || includesText(item.name, search));
+    const params = query(request);
+    const search = params.get("search");
+    const places = params.get("own") === "true" ? ownPlaces : placeSuggestions;
+    return places.filter((item) => !search || includesText(item.name, search));
+  }),
+  getRenamePlaceMockHandler(async ({ request }) => {
+    const body = await readBody(request);
+    const names = Array.isArray(body.places) ? body.places : [];
+    const updated = ownPlaces
+      .filter((place) => names.includes(place.name))
+      .reduce((sum, place) => sum + place.count, 0);
+    return { updated };
   }),
   getSuggestCategoryMockHandler(categorySuggestionLearned),
   getUncategorizedSuggestionsMockHandler(uncategorizedSuggestions),

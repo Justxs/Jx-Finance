@@ -87,6 +87,7 @@ const contracts: Record<string, Contract> = {
   receiptReadingWithPhotoLocation: { schema: schemas.ReadReceiptResponse },
   placeSuggestions: { schema: schemas.PlacesResponse },
   nearbyPlaceSuggestions: { schema: schemas.PlacesResponse },
+  ownPlaces: { schema: schemas.PlacesResponse },
   categorySuggestionByRule: { schema: schemas.SuggestCategoryResponse },
   categorySuggestionLearned: { schema: schemas.SuggestCategoryResponse },
   noCategorySuggestion: { schema: schemas.SuggestCategoryResponse },

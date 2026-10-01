@@ -3110,5 +3110,26 @@
     "rename": "Pervadinti gavėją",
     "dialogTitle": "Pavadinti šį gavėją",
     "editTitle": "Pervadinti gavėją"
+  },
+  "places": {
+    "title": "Vietos",
+    "explainer": "Vietos, kurias nurodėte operacijoms, ir kiek operacijų kiekvieną naudoja. Pervadinkite vietą arba pažymėkite kelis tos pačios parduotuvės rašybos variantus ir sujunkite juos, kad vietų ataskaita ir žemėlapis ją skaičiuotų vieną kartą. Keičiamos tik jūsų įvestos operacijos, o jų išsaugotos vietovės lieka.",
+    "empty": "Vietų dar nėra. Nurodykite vietą operacijos formoje.",
+    "name": "Vieta",
+    "select": "Pažymėti {{name}}",
+    "count_one": "{{count}} operacija",
+    "count_few": "{{count}} operacijos",
+    "count_many": "{{count}} operacijos",
+    "count_other": "{{count}} operacijų",
+    "mergeSelected": "Sujungti ({{count}})",
+    "merging": "Šios vietos taps viena:",
+    "preview_one": "{{count}} jūsų įvesta operacija turės šią vietą.",
+    "preview_few": "{{count}} jūsų įvestos operacijos turės šią vietą.",
+    "preview_many": "{{count}} jūsų įvestos operacijos turės šią vietą.",
+    "preview_other": "{{count}} jūsų įvestų operacijų turės šią vietą.",
+    "rename": "Pervadinti",
+    "merge": "Sujungti",
+    "renameTitle": "Pervadinti vietą",
+    "mergeTitle": "Sujungti vietas"
   }
 }

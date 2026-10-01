@@ -9,15 +9,26 @@ interface Props {
   count: number;
   description?: string;
   emptyText: string;
+  action?: ReactNode;
   children: ReactNode;
 }
 
-export function ListSection({ title, count, description, emptyText, children }: Readonly<Props>) {
+export function ListSection({
+  title,
+  count,
+  description,
+  emptyText,
+  action,
+  children,
+}: Readonly<Props>) {
   return (
     <Section>
       <div className="mb-2 flex items-baseline justify-between gap-3">
         <SectionTitle>{title}</SectionTitle>
-        <span className="text-sm text-muted-foreground tabular-nums">{count}</span>
+        <div className="flex items-center gap-3">
+          {action}
+          <span className="text-sm text-muted-foreground tabular-nums">{count}</span>
+        </div>
       </div>
       {description ? (
         <p className="mb-3 max-w-prose text-sm text-muted-foreground">{description}</p>

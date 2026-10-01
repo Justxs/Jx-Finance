@@ -6,6 +6,8 @@ Related: feature page [Transaction locations](../features/transaction-locations.
 
 **Places.** A place is a free text of at most 120 characters on the transaction, with optional latitude and longitude that come as a pair, behind the `Locations` switch, which starts off. There is no places table: suggestions are the distinct earlier places the caller can see, grouped by trimmed, lower-cased text under the newest spelling, and a position is named after the nearest of them within 150 metres. Nothing is geocoded by an outside service. The browser asks for the position only when Use my location is pressed, and the `Permissions-Policy` allows geolocation for the site itself only. With the switch off, reads answer null and writes keep what is stored.
 
+**Renaming and merging.** The Places section of the Tags page lists the places of the rows the member entered and renames one or merges several spellings in one step, over the member's own rows only, with one `ExecuteUpdateAsync` that leaves the coordinates and `UpdatedAt` alone and writes one summarising activity-log row when shared rows change. Decided while the owner was away, to be reviewed.
+
 **Photo location.** The GPS position of a freshly uploaded receipt photo is read just before its metadata is stripped, returned with that one reading and offered, never set, and never stored in the cached reading.
 
 **The map.** The map is MapLibre GL over a PMTiles extract of Lithuania that the administrator puts in a volume Caddy serves from the page's own origin, with the style, the fonts and the worker bundled, so the Content-Security-Policy is unchanged and no request leaves the origin. The plan's gate for it was waived by the owner on 2026-10-01.
@@ -14,6 +16,15 @@ Related: feature page [Transaction locations](../features/transaction-locations.
 
 Newest first. Each entry is a choice between real alternatives: what was chosen, what was rejected, and why.
 
+- **2026-10-01.** Places are renamed and merged from a Places section at the end of the Tags page, listing the member's own places by name with their counts from `GET /api/transactions/places?own=true`, through one `POST /api/transactions/places/rename` that takes the places and the new name; decided while the owner was away, to be reviewed
+  - Rejected: A page of its own; a section in Reports beside Expense by place; a new `GET` route for the list; separate rename and merge operations; a preview endpoint for the number of rows
+  - Why: Payee names, the other list of names a member tidies, already live on the Tags page in the Categories hub, and the product adds no pages. Extending the suggestions endpoint with `own` reuses its folding and response, and a rename is a merge of one place. Because the list counts exactly the rows the update touches, the preview is the sum of the ticked counts, with no second request
+- **2026-10-01.** A rename changes only the rows the caller entered, leaves `Latitude`, `Longitude` and `UpdatedAt` alone, and summarises a change on shared rows as one activity-log row; decided while the owner was away, to be reviewed
+  - Rejected: Every row the caller can see, a housemate's included; moving `UpdatedAt`; clearing or averaging the coordinates of merged places; one audit row per transaction
+  - Why: The bulk edits that hold rows to their author, groups among them, change only the caller's rows, and a housemate's spelling is theirs to tidy; the list then counts the same rows the update touches. No figure reads a place, so moving `UpdatedAt` would only make the month-end close report drift for nothing, the precedent groups set. Coordinates record where each payment was made, which a new name does not change. A merge of 40 rows would otherwise bury the household's log, as an import would
+- **2026-10-01.** The spellings to rename are found in memory with `PlaceSpellings.KeyOf` over the distinct stored places of the caller's rows, and the update matches them exactly; decided while the owner was away, to be reviewed
+  - Rejected: Matching `lower(btrim(Place))` against the keys in SQL
+  - Why: The list folds spellings with .NET's `ToLowerInvariant`, and PostgreSQL's `lower()` follows the database collation; matching in memory with the same function keeps the list and the update in step. The distinct places of one member are a few hundred at most
 - **2026-10-01.** The map was built together with the places, although the plan gated it on two months of places with coordinates on at least a third of expenses
   - Rejected: Waiting for the gate
   - Why: The owner asked for both parts at once and waived the gate. The risk the gate guarded against, a map that is mostly empty, is handled on screen: the list stays the default view and the map says when no place in the range has coordinates

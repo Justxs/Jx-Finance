@@ -133,6 +133,22 @@ export const nearbyPlaceSuggestions: PlaceSuggestionResponse[] = [
   ikiPlace,
 ];
 
+export const ownPlaces: PlaceSuggestionResponse[] = [
+  caffeinePlace,
+  ikiPlace,
+  lidlPlace,
+  maximaPlace,
+  { name: "Maxima Ukmerges", count: 2, latitude: null, longitude: null, nearby: false },
+  {
+    name: "Maxima X Ukmergės g.",
+    count: 1,
+    latitude: 54.72379,
+    longitude: 25.23615,
+    nearby: false,
+  },
+  rimiPlace,
+];
+
 function placed(
   transaction: TransactionResponse,
   suggestion: PlaceSuggestionResponse,

@@ -254,6 +254,8 @@ export * from "./recurringBillResponse";
 export * from "./recurringBillShape";
 export * from "./recurringTotalsResponse";
 export * from "./renamePasskeyRequest";
+export * from "./renamePlaceRequest";
+export * from "./renamePlaceResponse";
 export * from "./renameTransactionGroupRequest";
 export * from "./reportComparisonMode";
 export * from "./reportComparisonTotals";

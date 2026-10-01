@@ -14,6 +14,7 @@ import type {
   PagedResponseOfLedgerItemResponse,
   PagedResponseOfTransactionResponse,
   PlaceSuggestionResponse,
+  RenamePlaceResponse,
   TransactionResponse,
   TransactionsSummaryResponse,
   UncategorizedSuggestionResponse,
@@ -198,6 +199,30 @@ export const getPlacesMockHandler = (
   return http.get(
     "*/api/transactions/places",
     async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : undefined,
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getRenamePlaceMockHandler = (
+  overrideResponse?:
+    | RenamePlaceResponse
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<RenamePlaceResponse> | RenamePlaceResponse),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/transactions/places/rename",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -415,6 +440,7 @@ export const getTransactionsMock = () => [
   getExportTransactionsPdfMockHandler(),
   getLedgerMockHandler(),
   getPlacesMockHandler(),
+  getRenamePlaceMockHandler(),
   getSuggestCategoryMockHandler(),
   getTransactionsSummaryMockHandler(),
   getUncategorizedSuggestionsMockHandler(),

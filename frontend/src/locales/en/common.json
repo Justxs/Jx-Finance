@@ -3000,5 +3000,22 @@
     "rename": "Rename payee",
     "dialogTitle": "Name this payee",
     "editTitle": "Rename payee"
+  },
+  "places": {
+    "title": "Places",
+    "explainer": "The places you gave your transactions, with how many use each. Rename a place, or tick several spellings of one shop and merge them, so the place report and the map count it once. Only the transactions you entered change, and their saved locations stay.",
+    "empty": "No places yet. Give a transaction a place in its form.",
+    "name": "Place",
+    "select": "Select {{name}}",
+    "count_one": "{{count}} transaction",
+    "count_other": "{{count}} transactions",
+    "mergeSelected": "Merge ({{count}})",
+    "merging": "These places become one:",
+    "preview_one": "{{count}} transaction you entered will read this place.",
+    "preview_other": "{{count}} transactions you entered will read this place.",
+    "rename": "Rename",
+    "merge": "Merge",
+    "renameTitle": "Rename place",
+    "mergeTitle": "Merge places"
   }
 }

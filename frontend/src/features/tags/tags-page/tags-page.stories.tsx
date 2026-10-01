@@ -1,8 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, screen, userEvent, within } from "storybook/test";
+import { getSettingsMockHandler } from "@/api/generated/settings/settings.msw";
 import { getDeleteTagMockHandler, getTagsMockHandler } from "@/api/generated/tags/tags.msw";
 import { withPageFrame } from "@/storybook/decorators";
-import { many, payeeNames, tags } from "@/storybook/fixtures";
+import { many, ownPlaces, payeeNames, settingsWith, tags } from "@/storybook/fixtures";
 import {
   emptyHandlers,
   errorHandlers,
@@ -86,6 +87,21 @@ export const PayeeNames: Story = {
     await userEvent.click(canvas.getByRole("button", { name: `Edit: ${payeeNames[0]!.name}` }));
     const dialog = within(await openedDialog());
     await expect(dialog.getByRole("textbox", { name: "Name" })).toHaveValue(payeeNames[0]!.name);
+  },
+};
+
+export const WithPlaces: Story = {
+  parameters: withHandlers(getSettingsMockHandler(settingsWith({ features: { locations: true } }))),
+  play: async ({ canvas }) => {
+    await expect(await canvas.findByRole("heading", { name: "Places" })).toBeVisible();
+    await expect(canvas.getByText(ownPlaces[0]!.name)).toBeVisible();
+  },
+};
+
+export const WithoutPlaces: Story = {
+  play: async ({ canvas }) => {
+    await expect(await canvas.findByText(tags[0]!.name)).toBeInTheDocument();
+    await expect(canvas.queryByRole("heading", { name: "Places" })).toBeNull();
   },
 };
 

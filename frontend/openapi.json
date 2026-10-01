@@ -17246,7 +17246,7 @@
           "Transactions"
         ],
         "summary": "Suggest places used before",
-        "description": "Answers up to 20 distinct places of the transactions you can see, narrowed by the active household, most used first. Places that differ only in case or surrounding spaces are one entry, named by the newest spelling, with the number of transactions and the average of the coordinates stored with them (null when none has any). With lat and lon, the nearest place within 150 metres comes first with nearby true, so a position taken in a shop can be named after the shop. Nothing is looked up outside the installation. Needs the locations feature.",
+        "description": "Answers up to 20 distinct places of the transactions you can see, narrowed by the active household, most used first. Places that differ only in case or surrounding spaces are one entry, named by the newest spelling, with the number of transactions and the average of the coordinates stored with them (null when none has any). With lat and lon, the nearest place within 150 metres comes first with nearby true, so a position taken in a shop can be named after the shop. With own true it answers every place of the transactions you entered, by name, which is the list a rename or merge works on. Nothing is looked up outside the installation. Needs the locations feature.",
         "operationId": "GetPlaces",
         "parameters": [
           {
@@ -17282,6 +17282,17 @@
                 "number"
               ],
               "format": "decimal"
+            }
+          },
+          {
+            "name": "own",
+            "in": "query",
+            "description": "Optional; true answers all places of the transactions you entered, ordered by name, instead of the 20 most used you can see.",
+            "schema": {
+              "type": [
+                "null",
+                "boolean"
+              ]
             }
           }
         ],
@@ -17336,6 +17347,80 @@
           },
           {
             "PersonalApiToken": [ ]
+          }
+        ]
+      }
+    },
+    "/api/transactions/places/rename": {
+      "post": {
+        "tags": [
+          "Transactions"
+        ],
+        "summary": "Rename a place or merge several spellings into one",
+        "description": "Sets the place of every transaction you entered whose place matches one of the listed places, ignoring case and surrounding spaces, to the new name, in one step. Renaming is one place in the list; merging is several. Rows a housemate entered on a shared account keep their place, the coordinates of every row stay as they are, and the rows' last-changed time is not moved, so a closed month does not drift. When rows on shared accounts change, the household's activity log gains one line that counts them. Needs the locations feature.",
+        "operationId": "RenamePlace",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RenamePlaceRequest"
+              },
+              "example": {
+                "places": [
+                  "Maxima Ozo",
+                  "maxima, ozo g. 18"
+                ],
+                "name": "Maxima, Ozo g. 18"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "The number of transactions whose place changed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RenamePlaceResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed: no places, too many, or an empty or too long place or name.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
           }
         ]
       }
@@ -28773,6 +28858,54 @@
         },
         "example": {
           "name": "Phone"
+        }
+      },
+      "RenamePlaceRequest": {
+        "required": [
+          "places",
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "places": {
+            "maxItems": 120,
+            "minItems": 0,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Between 1 and 50 places as the place list shows them, each at most 120 characters.",
+            "example": [
+              "Maxima Ozo",
+              "maxima, ozo g. 18"
+            ]
+          },
+          "name": {
+            "maxLength": 120,
+            "minLength": 0,
+            "type": "string",
+            "description": "The place the rows should read, trimmed, at most 120 characters.",
+            "example": "Maxima, Ozo g. 18"
+          }
+        },
+        "example": {
+          "places": [
+            "Maxima Ozo",
+            "maxima, ozo g. 18"
+          ],
+          "name": "Maxima, Ozo g. 18"
+        }
+      },
+      "RenamePlaceResponse": {
+        "required": [
+          "updated"
+        ],
+        "type": "object",
+        "properties": {
+          "updated": {
+            "type": "integer",
+            "format": "int32"
+          }
         }
       },
       "RenameTransactionGroupRequest": {

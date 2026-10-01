@@ -86,6 +86,16 @@ const rules: readonly Rule[] = [
     ],
   },
   {
+    after: [api.getRenamePlaceMutationKey],
+    refresh: [
+      api.getPlacesQueryKey,
+      api.getTransactionsQueryKey,
+      api.getLedgerQueryKey,
+      api.getTransactionsSummaryQueryKey,
+      api.getReportSummaryQueryKey,
+    ],
+  },
+  {
     after: [api.getSetAttachmentWarrantyMutationKey],
     refresh: [api.getNotificationsQueryKey, api.getTransactionsQueryKey],
   },

@@ -98,6 +98,13 @@ export const duplicateTagProblem = problemOf(
   { instance: "/api/tags" },
 );
 
+export const placeNameTooLongProblem = problemOf(
+  400,
+  "text.tooLong",
+  "The length of 'Name' must be 120 characters or fewer.",
+  { name: "name", instance: "/api/transactions/places/rename" },
+);
+
 export const memberTakenProblem = problemOf(
   409,
   "transactionGroup.memberTaken",

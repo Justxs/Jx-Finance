@@ -7,4 +7,6 @@ public sealed class GetPlacesRequest
     public decimal? Lat { get; init; }
 
     public decimal? Lon { get; init; }
+
+    public bool? Own { get; init; }
 }

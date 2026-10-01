@@ -52,6 +52,7 @@ import { getTagsMockHandler } from "@/api/generated/tags/tags.msw";
 import { getTransactionGroupsMockHandler } from "@/api/generated/transaction-groups/transaction-groups.msw";
 import {
   getLedgerMockHandler,
+  getPlacesMockHandler,
   getTransactionsMockHandler,
   getTransactionsSummaryMockHandler,
   getUncategorizedSuggestionsMockHandler,
@@ -191,6 +192,7 @@ export const emptyHandlers: RequestHandler[] = [
   getSubscriptionCandidatesMockHandler([]),
   getTagsMockHandler([]),
   getPayeeNamesMockHandler([]),
+  getPlacesMockHandler([]),
   getUsersMockHandler([currentUser]),
   getTransactionsSummaryMockHandler(emptyTransactionsSummary),
   getTransactionsMockHandler(emptyPage),

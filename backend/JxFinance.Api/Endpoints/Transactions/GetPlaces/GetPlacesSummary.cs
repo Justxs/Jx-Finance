@@ -11,10 +11,12 @@ public sealed class GetPlacesSummary : Summary<GetPlacesEndpoint, GetPlacesReque
             + "most used first. Places that differ only in case or surrounding spaces are one entry, named by the newest spelling, "
             + "with the number of transactions and the average of the coordinates stored with them (null when none has any). "
             + "With lat and lon, the nearest place within 150 metres comes first with nearby true, so a position taken in a shop "
-            + "can be named after the shop. Nothing is looked up outside the installation. Needs the locations feature.";
+            + "can be named after the shop. With own true it answers every place of the transactions you entered, by name, "
+            + "which is the list a rename or merge works on. Nothing is looked up outside the installation. Needs the locations feature.";
         RequestParam(r => r.Search, "Optional text the place must contain, ignoring case, at most 120 characters.");
         RequestParam(r => r.Lat, "Optional latitude from -90 to 90, sent together with lon.");
         RequestParam(r => r.Lon, "Optional longitude from -180 to 180, sent together with lat.");
+        RequestParam(r => r.Own, "Optional; true answers all places of the transactions you entered, ordered by name, instead of the 20 most used you can see.");
         Responses[200] = "The suggested places.";
         Responses[400] = "Validation failed, or lat and lon are out of range or come alone (transaction.locationInvalid).";
         Responses[404] = "The locations feature is switched off (feature.disabled).";

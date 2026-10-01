@@ -38,6 +38,8 @@ import type {
   PlaceSuggestionResponse,
   PlacesParams,
   ProblemDetails,
+  RenamePlaceRequest,
+  RenamePlaceResponse,
   SuggestCategoryRequest,
   TransactionResponse,
   TransactionsParams,
@@ -934,7 +936,7 @@ export const getPlacesUrl = (params?: PlacesParams) => {
 };
 
 /**
- * Answers up to 20 distinct places of the transactions you can see, narrowed by the active household, most used first. Places that differ only in case or surrounding spaces are one entry, named by the newest spelling, with the number of transactions and the average of the coordinates stored with them (null when none has any). With lat and lon, the nearest place within 150 metres comes first with nearby true, so a position taken in a shop can be named after the shop. Nothing is looked up outside the installation. Needs the locations feature.
+ * Answers up to 20 distinct places of the transactions you can see, narrowed by the active household, most used first. Places that differ only in case or surrounding spaces are one entry, named by the newest spelling, with the number of transactions and the average of the coordinates stored with them (null when none has any). With lat and lon, the nearest place within 150 metres comes first with nearby true, so a position taken in a shop can be named after the shop. With own true it answers every place of the transactions you entered, by name, which is the list a rename or merge works on. Nothing is looked up outside the installation. Needs the locations feature.
  * @summary Suggest places used before
  */
 export const places = async (
@@ -1040,6 +1042,110 @@ export function usePlacesSuspense<
   return withQueryKey(query, queryOptions.queryKey);
 }
 
+export const getRenamePlaceUrl = () => {
+  return `/api/transactions/places/rename`;
+};
+
+/**
+ * Sets the place of every transaction you entered whose place matches one of the listed places, ignoring case and surrounding spaces, to the new name, in one step. Renaming is one place in the list; merging is several. Rows a housemate entered on a shared account keep their place, the coordinates of every row stay as they are, and the rows' last-changed time is not moved, so a closed month does not drift. When rows on shared accounts change, the household's activity log gains one line that counts them. Needs the locations feature.
+ * @summary Rename a place or merge several spellings into one
+ */
+export const renamePlace = async (
+  renamePlaceRequest: RenamePlaceRequest,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<RenamePlaceResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return customFetch<RenamePlaceResponse>(getRenamePlaceUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(renamePlaceRequest),
+  });
+};
+
+export const getRenamePlaceMutationKey = () => ["renamePlace"] as const;
+
+export const getRenamePlaceMutationOptions = <
+  TError = ErrorType<ProblemDetails>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof renamePlace>>,
+    TError,
+    RenamePlaceMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof renamePlace>>,
+  TError,
+  RenamePlaceMutationVariables,
+  TContext
+> => {
+  const mutationKey = getRenamePlaceMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof renamePlace>>,
+    RenamePlaceMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return renamePlace(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type RenamePlaceMutationResult = NonNullable<Awaited<ReturnType<typeof renamePlace>>>;
+export type RenamePlaceMutationBody = RenamePlaceRequest;
+export type RenamePlaceMutationError = ErrorType<ProblemDetails>;
+export type RenamePlaceMutationVariables = { data: RenamePlaceRequest };
+
+/**
+ * @summary Rename a place or merge several spellings into one
+ */
+export const useRenamePlace = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof renamePlace>>,
+      TError,
+      RenamePlaceMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof renamePlace>>,
+  TError,
+  RenamePlaceMutationVariables,
+  TContext
+> => {
+  return useMutation(getRenamePlaceMutationOptions(options), queryClient);
+};
 export const getSuggestCategoryUrl = () => {
   return `/api/transactions/suggest-category`;
 };

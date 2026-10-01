@@ -10,17 +10,21 @@ import {
 import type { PayeeNameResponse, TagResponse } from "@/api/generated/model";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog/confirm-delete-dialog";
 import { CreateDialog } from "@/components/create-dialog/create-dialog";
-import { ListSection } from "@/components/list-section/list-section";
+import { ListSection, ListSectionSkeleton } from "@/components/list-section/list-section";
 import { EditModal } from "@/components/modal";
-import { NamedRow } from "@/components/named-row/named-row";
+import { NamedRow, NamedRowsSkeleton } from "@/components/named-row/named-row";
 import { PageHeader } from "@/components/page-header/page-header";
+import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { PayeeNameForm } from "@/features/payees/payee-name-form/payee-name-form";
+import { PlacesSection } from "@/features/places/places-section/places-section";
 import { TagForm } from "@/features/tags/tag-form/tag-form";
 import { useEditableList } from "@/hooks/use-editable-list";
+import { useFeature } from "@/hooks/use-settings";
 import { optimisticRemoval } from "@/lib/optimistic";
 
 export function TagsPage() {
   const { t } = useTranslation();
+  const locationsEnabled = useFeature("locations");
   const tags = useEditableList(
     useTagsSuspense().data,
     useDeleteTag({ mutation: optimisticRemoval<TagResponse>(getTagsQueryKey()) }),
@@ -87,6 +91,19 @@ export function TagsPage() {
           />
         ))}
       </ListSection>
+
+      {locationsEnabled ? (
+        <QueryBoundary
+          fallback={
+            <ListSectionSkeleton description>
+              <NamedRowsSkeleton rows={3} />
+            </ListSectionSkeleton>
+          }
+          errorSubject={t("places.title")}
+        >
+          <PlacesSection />
+        </QueryBoundary>
+      ) : null}
 
       <ConfirmDeleteDialog {...tags.dialogProps} />
       <ConfirmDeleteDialog {...payees.dialogProps} />

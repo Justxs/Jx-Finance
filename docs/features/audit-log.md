@@ -117,8 +117,9 @@ A bank statement confirm of 800 rows would otherwise write 800 `created` rows an
 | `POST /api/transactions/bulk-category` | `updated`, no entity id, `Category set to Groceries, 12 transactions` |
 | `POST /api/transactions/bulk-tags` | `updated`, no entity id, `Tags set to Holiday, Travel, 12 transactions` |
 | `POST /api/categorization-rules/run` | `updated`, no entity id, `Categorization rules run, 30 transactions` |
+| `POST /api/transactions/places/rename` | `updated`, no entity id, `Place set to Maxima, Ozo g. 18, 4 transactions`, only when rows on a shared account changed |
 
-An import that adds nothing writes nothing. A rule run updates categories with a set-based update the tracker never sees, which is why it passes the accounts of the matched transactions explicitly. The count is the operation's total, so a bulk edit across two households reads the same count in both.
+An import that adds nothing writes nothing. A rule run updates categories, and a place rename the place, with a set-based update the tracker never sees, which is why both pass the accounts of the changed transactions explicitly. The count is the operation's total, so a bulk edit across two households reads the same count in both.
 
 ## The read path
 

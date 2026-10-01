@@ -720,7 +720,7 @@ export const LedgerResponse = zod.object({
 });
 
 /**
- * Answers up to 20 distinct places of the transactions you can see, narrowed by the active household, most used first. Places that differ only in case or surrounding spaces are one entry, named by the newest spelling, with the number of transactions and the average of the coordinates stored with them (null when none has any). With lat and lon, the nearest place within 150 metres comes first with nearby true, so a position taken in a shop can be named after the shop. Nothing is looked up outside the installation. Needs the locations feature.
+ * Answers up to 20 distinct places of the transactions you can see, narrowed by the active household, most used first. Places that differ only in case or surrounding spaces are one entry, named by the newest spelling, with the number of transactions and the average of the coordinates stored with them (null when none has any). With lat and lon, the nearest place within 150 metres comes first with nearby true, so a position taken in a shop can be named after the shop. With own true it answers every place of the transactions you entered, by name, which is the list a rename or merge works on. Nothing is looked up outside the installation. Needs the locations feature.
  * @summary Suggest places used before
  */
 export const PlacesResponseItem = zod.object({
@@ -731,6 +731,33 @@ export const PlacesResponseItem = zod.object({
   nearby: zod.boolean(),
 });
 export const PlacesResponse = zod.array(PlacesResponseItem);
+
+/**
+ * Sets the place of every transaction you entered whose place matches one of the listed places, ignoring case and surrounding spaces, to the new name, in one step. Renaming is one place in the list; merging is several. Rows a housemate entered on a shared account keep their place, the coordinates of every row stay as they are, and the rows' last-changed time is not moved, so a closed month does not drift. When rows on shared accounts change, the household's activity log gains one line that counts them. Needs the locations feature.
+ * @summary Rename a place or merge several spellings into one
+ */
+export const renamePlaceBodyPlacesMin = 0;
+export const renamePlaceBodyPlacesMax = 120;
+
+export const renamePlaceBodyNameMin = 0;
+export const renamePlaceBodyNameMax = 120;
+
+export const RenamePlaceBody = zod.object({
+  places: zod
+    .array(zod.string())
+    .min(renamePlaceBodyPlacesMin)
+    .max(renamePlaceBodyPlacesMax)
+    .describe("Between 1 and 50 places as the place list shows them, each at most 120 characters."),
+  name: zod
+    .string()
+    .min(renamePlaceBodyNameMin)
+    .max(renamePlaceBodyNameMax)
+    .describe("The place the rows should read, trimmed, at most 120 characters."),
+});
+
+export const RenamePlaceResponse = zod.object({
+  updated: zod.int(),
+});
 
 /**
  * Answers the category your first matching categorization rule sets, while the categorizationRules feature is on, and otherwise, while the learnedCategories feature is on, the category a naive Bayes model trained on the categorized transactions you can see guesses, when it is sure enough. The model is built for this request inside the API and thrown away with it; nothing is stored or sent anywhere. Every field of the answer is null when neither has an opinion. Only reads; nothing is set on any transaction. It is a POST so that the description never lands in a URL. With both features off every field is null.

@@ -18,6 +18,12 @@ public static class PlaceSpellings
 {
     public static string KeyOf(string place) => place.Trim().ToLowerInvariant();
 
+    public static List<string> Renamed(IEnumerable<string> spellings, IEnumerable<string> places, string name)
+    {
+        var keys = places.Select(KeyOf).ToHashSet();
+        return [.. spellings.Where(spelling => spelling != name && keys.Contains(KeyOf(spelling)))];
+    }
+
     public static Task<List<PlaceSpelling>> SpellingsAsync(this IQueryable<Transaction> rows, CancellationToken cancellationToken) =>
         rows
             .Where(t => t.Place != null)

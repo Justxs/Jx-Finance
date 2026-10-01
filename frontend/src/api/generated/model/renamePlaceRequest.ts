@@ -6,25 +6,17 @@
  * OpenAPI spec version: v1
  */
 
-export type PlacesParams = {
+export interface RenamePlaceRequest {
   /**
-   * Optional text the place must contain, ignoring case, at most 120 characters.
-   * @nullable
+   * Between 1 and 50 places as the place list shows them, each at most 120 characters.
+   * @minItems 0
+   * @maxItems 120
    */
-  search?: string | null;
+  places: string[];
   /**
-   * Optional latitude from -90 to 90, sent together with lon.
-   * @nullable
+   * The place the rows should read, trimmed, at most 120 characters.
+   * @minLength 0
+   * @maxLength 120
    */
-  lat?: number | null;
-  /**
-   * Optional longitude from -180 to 180, sent together with lat.
-   * @nullable
-   */
-  lon?: number | null;
-  /**
-   * Optional; true answers all places of the transactions you entered, ordered by name, instead of the 20 most used you can see.
-   * @nullable
-   */
-  own?: boolean | null;
-};
+  name: string;
+}
