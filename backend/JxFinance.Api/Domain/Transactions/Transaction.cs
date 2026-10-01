@@ -25,6 +25,8 @@ public sealed class Transaction : OwnableEntity, IAccountScoped, IDated
     public UnusualVerdict? Unusual { get; set; }
     public DateTimeOffset? UnusualDismissedAt { get; set; }
     public short? SpreadMonths { get; set; }
+    public SpreadDirection SpreadDirection { get; set; }
+    public DateOnly? SpreadFrom { get; set; }
     public DateOnly? SpreadUntil { get; set; }
     public string? Place { get; set; }
     public decimal? Latitude { get; set; }

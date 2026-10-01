@@ -1,6 +1,7 @@
 using JxFinance.Common.Json;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.RecurringBills;
+using JxFinance.Domain.Transactions;
 
 namespace JxFinance.Endpoints.RecurringBills.Shared;
 
@@ -22,4 +23,5 @@ public sealed record RecurringBillResponse(
     Guid? DebtId,
     Scope Scope,
     Guid? HouseholdId,
-    int? SpreadMonths = null);
+    int? SpreadMonths = null,
+    SpreadDirection? SpreadDirection = null);

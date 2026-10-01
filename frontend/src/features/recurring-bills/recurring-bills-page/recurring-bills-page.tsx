@@ -87,6 +87,7 @@ export function RecurringBillsPage() {
         scope: bill.scope,
         householdId: bill.householdId,
         spreadMonths: bill.spreadMonths,
+        spreadDirection: bill.spreadDirection,
       },
     });
   }

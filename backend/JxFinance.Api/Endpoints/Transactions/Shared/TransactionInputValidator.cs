@@ -38,6 +38,7 @@ public abstract class TransactionInputValidator<TRequest> : Validator<TRequest>
             .WithMessage("A refund cannot be split.")
             .When(r => r.Amount < 0);
         RuleFor(r => r.SpreadMonths).IsWithin(TransactionSpread.MinMonths, TransactionSpread.MaxMonths);
+        RuleFor(r => r.SpreadDirection).IsKnownEnum();
         RuleFor(r => r.SpreadMonths)
             .Null()
             .WithErrorCode(ErrorCodes.TransactionSplitNotAllowed)

@@ -568,6 +568,7 @@ public sealed class RecurringBillService(
             Description = bill.Name,
             Source = TransactionSource.Manual,
             SpreadMonths = bill.SpreadMonths,
+            SpreadDirection = bill.SpreadDirection,
         };
         db.Transactions.Add(transaction);
 

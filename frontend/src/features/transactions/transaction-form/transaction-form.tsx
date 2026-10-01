@@ -311,7 +311,11 @@ export function TransactionForm({
             spreads ? (
               <SpreadFields
                 form={form}
-                fields={{ spread: "spread", spreadCustom: "spreadCustom" }}
+                fields={{
+                  spread: "spread",
+                  spreadCustom: "spreadCustom",
+                  spreadDirection: "spreadDirection",
+                }}
                 idPrefix="tx"
               />
             ) : null

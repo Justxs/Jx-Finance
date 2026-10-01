@@ -1,6 +1,6 @@
 import { type Collection, type NonSingleResult, useLiveQuery } from "@tanstack/react-db";
 import { z } from "zod";
-import { Currency, FlowType } from "@/api/generated/model";
+import { Currency, FlowType, SpreadDirection } from "@/api/generated/model";
 import { DEFAULT_CURRENCY } from "@/lib/currency";
 import { localCollection } from "@/stores/local-collection";
 import { transactionFilterSchema } from "./transaction-queries";
@@ -38,6 +38,7 @@ const templateSchema = z.object({
     tagIds: z.array(z.string()).catch([]),
     lines: z.array(templateLineSchema).nullable().catch(null),
     spreadMonths: z.number().int().nullable().catch(null).optional(),
+    spreadDirection: z.enum(SpreadDirection).nullable().catch(null).optional(),
   }),
 });
 

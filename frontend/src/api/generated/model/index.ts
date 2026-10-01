@@ -340,6 +340,7 @@ export * from "./smtpSettingsResponse";
 export * from "./smtpTestResponse";
 export * from "./sortDirection";
 export * from "./splitMethod";
+export * from "./spreadDirection";
 export * from "./statementFormat";
 export * from "./subscriptionCandidateResponse";
 export * from "./suggestCategoryRequest";

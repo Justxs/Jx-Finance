@@ -50,6 +50,7 @@ public sealed class MonthCloseService(
         public Guid Id { get; set; }
         public MonthDriftRowKind Kind { get; set; }
         public DateOnly Date { get; set; }
+        public DateOnly CountsFrom { get; set; }
         public DateOnly CountsUntil { get; set; }
         public string? Description { get; set; }
         public decimal Amount { get; set; }
@@ -77,7 +78,7 @@ public sealed class MonthCloseService(
         var changes = closes.Count == 0
             ? []
             : await Changes(closes.Min(c => c.ClosedAt), start, end, closes.SelectMany(c => c.Snapshot.RowIds).ToList())
-                .Select(r => new { r.Id, r.Date, r.CountsUntil, r.UpdatedAt })
+                .Select(r => new { r.Id, r.CountsFrom, r.CountsUntil, r.UpdatedAt })
                 .ToListAsync(cancellationToken);
         var reporting = settings.Current.ReportingCurrency;
         var span = new DateWindow(start, end);
@@ -95,7 +96,7 @@ public sealed class MonthCloseService(
                     || close.Snapshot.TotalIncome != totals[(month, FlowType.Income)].Sum()
                     || close.Snapshot.TotalExpense != totals[(month, FlowType.Expense)].Sum()
                     || changes.Any(r => r.UpdatedAt > close.ClosedAt
-                        && (Reaches(r.Date, r.CountsUntil, window) || close.Snapshot.RowIds.Contains(r.Id))));
+                        && (Reaches(r.CountsFrom, r.CountsUntil, window) || close.Snapshot.RowIds.Contains(r.Id))));
             return new MonthCloseMonthStatus(month, Status(month, close, changed), close?.ClosedAt);
         }).ToList();
 
@@ -368,7 +369,7 @@ public sealed class MonthCloseService(
                 row.Kind,
                 row.IsDeleted ? MonthDriftChange.Deleted
                     : !known.Contains(row.Id) ? MonthDriftChange.Created
-                    : !Reaches(row.Date, row.CountsUntil, window) ? MonthDriftChange.MovedOut
+                    : !Reaches(row.CountsFrom, row.CountsUntil, window) ? MonthDriftChange.MovedOut
                     : MonthDriftChange.Edited,
                 row.Date,
                 row.Description,
@@ -386,13 +387,14 @@ public sealed class MonthCloseService(
             .IgnoreQueryFilters(QueryFilters.SoftDeleteOnly)
             .Where(t => t.UpdatedAt > since
                 && ((t.Date >= from && t.Date < to)
-                    || (t.SpreadMonths != null && t.Date < to && t.SpreadUntil >= from)
+                    || (t.SpreadMonths != null && t.SpreadFrom < to && t.SpreadUntil >= from)
                     || knownTransactions.Contains(t.Id)))
             .Select(t => new ChangedRow
             {
                 Id = (Guid)(object)t.Id,
                 Kind = MonthDriftRowKind.Transaction,
                 Date = t.Date,
+                CountsFrom = t.SpreadFrom ?? t.Date,
                 CountsUntil = t.SpreadUntil ?? t.Date,
                 Description = t.Description,
                 Amount = t.Amount.Amount,
@@ -408,6 +410,7 @@ public sealed class MonthCloseService(
                     Id = (Guid)(object)t.Id,
                     Kind = MonthDriftRowKind.InvestmentEntry,
                     Date = t.Date,
+                    CountsFrom = t.Date,
                     CountsUntil = t.Date,
                     Description = t.Description,
                     Amount = t.CashAmount.Amount,
@@ -417,8 +420,8 @@ public sealed class MonthCloseService(
                 }));
     }
 
-    private static bool Reaches(DateOnly date, DateOnly countsUntil, DateWindow window) =>
-        countsUntil >= window.Start && date < window.ExclusiveEnd;
+    private static bool Reaches(DateOnly countsFrom, DateOnly countsUntil, DateWindow window) =>
+        countsUntil >= window.Start && countsFrom < window.ExclusiveEnd;
 
     private static List<MonthDriftCategory> CategoryDrift(MonthCloseSnapshot snapshot, ReportSummaryResponse current)
     {

@@ -234,7 +234,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, ICurren
                     if (entry.Entity is Transaction added)
                     {
                         added.PayeeKey = SubscriptionDescription.KeyOf(added.Payee, added.Description);
-                        SetSpreadUntil(added);
+                        SetSpreadRange(added);
                     }
                     break;
                 case EntityState.Modified:
@@ -246,9 +246,11 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, ICurren
                     }
 
                     if (entry.Entity is Transaction spread
-                        && (entry.Property(nameof(Transaction.Date)).IsModified || entry.Property(nameof(Transaction.SpreadMonths)).IsModified))
+                        && (entry.Property(nameof(Transaction.Date)).IsModified
+                            || entry.Property(nameof(Transaction.SpreadMonths)).IsModified
+                            || entry.Property(nameof(Transaction.SpreadDirection)).IsModified))
                     {
-                        SetSpreadUntil(spread);
+                        SetSpreadRange(spread);
                     }
 
                     if (entry.Entity is Transaction transaction && ChangesUnusualInputs(entry))
@@ -273,8 +275,14 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, ICurren
         return now;
     }
 
-    private static void SetSpreadUntil(Transaction transaction) =>
-        transaction.SpreadUntil = transaction.SpreadMonths is { } months ? SpreadSlices.Until(transaction.Date, months) : null;
+    private static void SetSpreadRange(Transaction transaction)
+    {
+        var range = transaction.SpreadMonths is { } months
+            ? SpreadSlices.Range(transaction.Date, months, transaction.SpreadDirection)
+            : default((DateOnly From, DateOnly Until)?);
+        transaction.SpreadFrom = range?.From;
+        transaction.SpreadUntil = range?.Until;
+    }
 
     private static bool ChangesUnusualInputs(EntityEntry<EntityBase> entry) =>
         entry.Properties.Any(p => p.IsModified && UnusualInputs.Contains(p.Metadata.Name))

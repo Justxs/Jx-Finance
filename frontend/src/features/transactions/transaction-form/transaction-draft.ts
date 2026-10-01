@@ -1,6 +1,7 @@
 import type {
   Currency,
   FlowType,
+  SpreadDirection,
   TransactionLineRequest,
   TransactionRefundOfResponse,
   TransactionResponse,
@@ -26,6 +27,7 @@ export interface TransactionDraft {
   lines?: TransactionLineRequest[] | null;
   refundOf?: TransactionRefundOfResponse | null;
   spreadMonths?: number | null;
+  spreadDirection?: SpreadDirection | null;
 }
 
 declare module "@tanstack/react-router" {
@@ -57,6 +59,7 @@ export function draftFromTransaction(transaction: TransactionResponse): Transact
       })) ?? null,
     refundOf: transaction.refundOf ?? null,
     spreadMonths: transaction.spreadMonths,
+    spreadDirection: transaction.spreadDirection,
   };
 }
 
@@ -98,6 +101,7 @@ export function templateValuesFromFormValues(
     tagIds: values.tagIds,
     lines: values.lines?.map((line) => ({ ...line, amount: normalizeMoney(line.amount) })) ?? null,
     spreadMonths: values.spreadMonths,
+    spreadDirection: values.spreadDirection,
   };
 }
 
@@ -114,5 +118,6 @@ export function draftFromTemplate(values: TransactionTemplateValues): Transactio
     tagIds: values.tagIds,
     lines: values.lines,
     spreadMonths: values.spreadMonths,
+    spreadDirection: values.spreadDirection,
   };
 }

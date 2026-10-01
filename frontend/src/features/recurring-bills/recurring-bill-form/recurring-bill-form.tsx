@@ -29,6 +29,7 @@ import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { FormGrid } from "@/components/ui/form-grid/form-grid";
 import {
   isSpreadValid,
+  spreadDirectionOf,
   spreadIssue,
   spreadMonthsOf,
   spreadShape,
@@ -68,6 +69,7 @@ interface FormValues {
   householdId: string;
   spread: string;
   spreadCustom: string;
+  spreadDirection: string;
 }
 
 type RecurringBillDraft = Partial<Omit<RecurringBillResponse, "id">>;
@@ -166,7 +168,7 @@ export function RecurringBillForm({
         ? ""
         : (seed.debtId ?? ""),
     ...sharing,
-    ...spreadValues(seed.spreadMonths),
+    ...spreadValues(seed.spreadMonths, seed.spreadDirection),
   };
   const payableDebts = debts.filter((debt) => debt.tracksPayments || debt.id === seed.debtId);
 
@@ -189,6 +191,7 @@ export function RecurringBillForm({
         matchKey: value.matchKey.trim() || null,
         debtId: value.shape === "expense" ? value.debtId || null : null,
         spreadMonths: isTransfer ? null : spreadMonthsOf(value),
+        spreadDirection: isTransfer ? null : spreadDirectionOf(value),
         ...sharingPayload(value),
       };
 
@@ -343,7 +346,11 @@ export function RecurringBillForm({
               {shape === "transfer" ? null : (
                 <SpreadFields
                   form={form}
-                  fields={{ spread: "spread", spreadCustom: "spreadCustom" }}
+                  fields={{
+                    spread: "spread",
+                    spreadCustom: "spreadCustom",
+                    spreadDirection: "spreadDirection",
+                  }}
                   idPrefix={fieldId}
                 />
               )}

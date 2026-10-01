@@ -13,6 +13,7 @@ import {
 } from "@/api/schemas/transactions/transactions.zod";
 import {
   isSpreadValid,
+  spreadDirectionOf,
   spreadIssue,
   spreadMonthsOf,
   spreadShape,
@@ -61,6 +62,7 @@ interface TransactionFormFields {
   refundOf: TransactionRefundOfResponse | null;
   spread: string;
   spreadCustom: string;
+  spreadDirection: string;
 }
 
 type FormatMoney = (value: number, currency: string) => string;
@@ -149,7 +151,7 @@ export function defaultFormFields(
     isSplit: !refund && (source.isSplit ?? false),
     tagIds: source.tagIds ?? [],
     refundOf: refund ? (source.refundOf ?? null) : null,
-    ...spreadValues(refund ? null : source.spreadMonths),
+    ...spreadValues(refund ? null : source.spreadMonths, source.spreadDirection),
     lines: source.lines?.length
       ? source.lines.map((line, index) => ({
           id: `line-${index}`,
@@ -179,6 +181,7 @@ export function toSubmittedValues(value: TransactionFormFields): TransactionForm
     tagIds: value.tagIds,
     refundOfTransactionId: refund ? (value.refundOf?.id ?? null) : null,
     spreadMonths: spreads(value) ? spreadMonthsOf(value) : null,
+    spreadDirection: spreads(value) ? spreadDirectionOf(value) : null,
     lines: split
       ? value.lines.map((line) => ({
           categoryId: line.categoryId || null,

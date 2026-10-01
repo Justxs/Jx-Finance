@@ -107,7 +107,7 @@ export const CreateTransactionBody = zod.object({
     .max(createTransactionBodySpreadMonthsMax)
     .nullish()
     .describe(
-      "Optional, from 2 to 36: count the amount in equal monthly slices over this many months, starting with the month of the date. Not allowed on a split or a refund.",
+      "Optional, from 2 to 36: count the amount in equal monthly slices over this many months, starting with the month of the date, or ending with it when spreadDirection is backward. Not allowed on a split or a refund.",
     ),
   place: zod
     .string()
@@ -128,6 +128,12 @@ export const CreateTransactionBody = zod.object({
     .nullish()
     .describe(
       "Optional longitude from -180 to 180, sent together with latitude and kept to five decimals.",
+    ),
+  spreadDirection: zod
+    .union([zod.null(), zod.enum(["forward", "backward"])])
+    .optional()
+    .describe(
+      "Optional, with spreadMonths: forward (the default) counts from the month of the date on, backward counts the months up to and including it, for a bill paid in arrears.",
     ),
 });
 
@@ -314,6 +320,8 @@ export const CreateTransactionResponse = zod.object({
     ])
     .optional(),
   payee: zod.string().nullish(),
+  spreadDirection: zod.union([zod.null(), zod.enum(["forward", "backward"])]).optional(),
+  spreadFrom: zod.union([zod.null(), zod.iso.date()]).optional(),
 });
 
 /**
@@ -514,6 +522,8 @@ export const TransactionsResponse = zod.object({
         ])
         .optional(),
       payee: zod.string().nullish(),
+      spreadDirection: zod.union([zod.null(), zod.enum(["forward", "backward"])]).optional(),
+      spreadFrom: zod.union([zod.null(), zod.iso.date()]).optional(),
     }),
   ),
   page: zod.int(),
@@ -827,6 +837,8 @@ export const LedgerResponse = zod.object({
             ])
             .optional(),
           payee: zod.string().nullish(),
+          spreadDirection: zod.union([zod.null(), zod.enum(["forward", "backward"])]).optional(),
+          spreadFrom: zod.union([zod.null(), zod.iso.date()]).optional(),
         }),
       ]),
       group: zod.union([
@@ -1138,6 +1150,8 @@ export const UncategorizedSuggestionsResponseItem = zod.object({
       ])
       .optional(),
     payee: zod.string().nullish(),
+    spreadDirection: zod.union([zod.null(), zod.enum(["forward", "backward"])]).optional(),
+    spreadFrom: zod.union([zod.null(), zod.iso.date()]).optional(),
   }),
   categoryId: zod.uuid(),
   source: zod.enum(["rule", "learned"]),
@@ -1331,10 +1345,12 @@ export const TransactionResponse = zod.object({
     ])
     .optional(),
   payee: zod.string().nullish(),
+  spreadDirection: zod.union([zod.null(), zod.enum(["forward", "backward"])]).optional(),
+  spreadFrom: zod.union([zod.null(), zod.iso.date()]).optional(),
 });
 
 /**
- * Replaces the transaction. Split lines are replaced wholesale rather than merged: send the full set you want to keep, or omit lines to turn a split back into a plain transaction. Tags are replaced the same way: send the full set, and an empty list or an absent tagIds clears them. The note and spreadMonths are replaced too, so leaving one out clears it. So are place, latitude and longitude while the locations feature is on; while it is off they are ignored and the stored values kept. Moving it to another account adjusts both balances. A refund is an expense with a negative amount: it lowers that category's spending and raises the balance. It takes an expense category, cannot be split, and may name the purchase it refunds in refundOfTransactionId, which must be an expense you can see and not itself a refund.
+ * Replaces the transaction. Split lines are replaced wholesale rather than merged: send the full set you want to keep, or omit lines to turn a split back into a plain transaction. Tags are replaced the same way: send the full set, and an empty list or an absent tagIds clears them. The note, spreadMonths and spreadDirection are replaced too, so leaving one out clears it. So are place, latitude and longitude while the locations feature is on; while it is off they are ignored and the stored values kept. Moving it to another account adjusts both balances. A refund is an expense with a negative amount: it lowers that category's spending and raises the balance. It takes an expense category, cannot be split, and may name the purchase it refunds in refundOfTransactionId, which must be an expense you can see and not itself a refund.
  * @summary Update a transaction
  */
 
@@ -1418,7 +1434,7 @@ export const UpdateTransactionBody = zod.object({
     .max(updateTransactionBodySpreadMonthsMax)
     .nullish()
     .describe(
-      "Optional, from 2 to 36: count the amount in equal monthly slices over this many months, starting with the month of the date. Not allowed on a split or a refund.",
+      "Optional, from 2 to 36: count the amount in equal monthly slices over this many months, starting with the month of the date, or ending with it when spreadDirection is backward. Not allowed on a split or a refund.",
     ),
   place: zod
     .string()
@@ -1439,6 +1455,12 @@ export const UpdateTransactionBody = zod.object({
     .nullish()
     .describe(
       "Optional longitude from -180 to 180, sent together with latitude and kept to five decimals.",
+    ),
+  spreadDirection: zod
+    .union([zod.null(), zod.enum(["forward", "backward"])])
+    .optional()
+    .describe(
+      "Optional, with spreadMonths: forward (the default) counts from the month of the date on, backward counts the months up to and including it, for a bill paid in arrears.",
     ),
 });
 
@@ -1625,6 +1647,8 @@ export const UpdateTransactionResponse = zod.object({
     ])
     .optional(),
   payee: zod.string().nullish(),
+  spreadDirection: zod.union([zod.null(), zod.enum(["forward", "backward"])]).optional(),
+  spreadFrom: zod.union([zod.null(), zod.iso.date()]).optional(),
 });
 
 /**

@@ -17,7 +17,7 @@ public static class SpreadRows
         var otherEnd = comparison?.ExclusiveEnd ?? end;
         var rows = await visible
             .Where(t => t.SpreadMonths != null
-                && ((t.Date < end && t.SpreadUntil >= start) || (t.Date < otherEnd && t.SpreadUntil >= otherStart)))
+                && ((t.SpreadFrom < end && t.SpreadUntil >= start) || (t.SpreadFrom < otherEnd && t.SpreadUntil >= otherStart)))
             .Select(t => new
             {
                 t.Id,
@@ -26,13 +26,14 @@ public static class SpreadRows
                 t.CategoryId,
                 t.ReportingAmount,
                 Months = (int)t.SpreadMonths!.Value,
+                t.SpreadDirection,
                 t.PayeeKey,
                 t.Place,
                 TagIds = t.Tags.Select(x => x.TagId).ToList(),
             })
             .ToListAsync(cancellationToken);
 
-        return [.. rows.SelectMany(row => SpreadSlices.Of(row.Date, row.ReportingAmount, row.Months)
+        return [.. rows.SelectMany(row => SpreadSlices.Of(row.Date, row.ReportingAmount, row.Months, row.SpreadDirection)
             .Where(slice => window.Contains(slice.Date) || (comparison is { } other && other.Contains(slice.Date)))
             .Select(slice => new SpreadSlice(row.Id, slice.Date, row.Type, row.CategoryId, row.PayeeKey, row.Place, row.TagIds, slice.Amount)))];
     }

@@ -40,7 +40,9 @@ public sealed record TransactionResponse(
     bool EnteredByMe = false,
     TransactionReceiptItemResponse? ReceiptItem = null,
     ContactSplitResponse? ContactSplit = null,
-    string? Payee = null);
+    string? Payee = null,
+    SpreadDirection? SpreadDirection = null,
+    DateOnly? SpreadFrom = null);
 
 public sealed record TransactionReceiptItemResponse(string Name, DateOnly? WarrantyUntil);
 

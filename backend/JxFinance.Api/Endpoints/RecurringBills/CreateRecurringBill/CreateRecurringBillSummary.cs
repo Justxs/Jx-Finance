@@ -32,6 +32,7 @@ public sealed class CreateRecurringBillSummary : Summary<CreateRecurringBillEndp
         RequestParam(r => r.NextDueDate, "The next date the entry falls due, as YYYY-MM-DD.");
         RequestParam(r => r.RemindDaysBefore, "How many days ahead of the due date to raise a notification.");
         RequestParam(r => r.SpreadMonths, "Optional, from 2 to 36, expense and income only: each confirmation writes a transaction spread over this many months.");
+        RequestParam(r => r.SpreadDirection, "Optional, with spreadMonths: forward (the default) or backward, the direction each written transaction is spread in.");
         Responses[201] = "The recurring entry was created. The Location header points at it.";
         Responses[400] = "Validation failed, the shape is missing a field it needs, or the account or category is not visible to you.";
     }

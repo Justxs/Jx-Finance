@@ -10,6 +10,7 @@ import type { Currency } from "./currency";
 import type { DateOnly } from "./dateOnly";
 import type { FlowType } from "./flowType";
 import type { NullableOfDateOnly } from "./nullableOfDateOnly";
+import type { SpreadDirection } from "./spreadDirection";
 import type { TransactionDebtPaymentResponse } from "./transactionDebtPaymentResponse";
 import type { TransactionLineResponse } from "./transactionLineResponse";
 import type { TransactionReceiptItemResponse } from "./transactionReceiptItemResponse";
@@ -64,4 +65,6 @@ export interface TransactionResponse {
   contactSplit?: null | ContactSplitResponse;
   /** @nullable */
   payee?: string | null;
+  spreadDirection?: null | SpreadDirection;
+  spreadFrom?: null | NullableOfDateOnly;
 }

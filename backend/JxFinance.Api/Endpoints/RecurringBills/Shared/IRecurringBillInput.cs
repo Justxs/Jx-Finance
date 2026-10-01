@@ -1,5 +1,6 @@
 using JxFinance.Common.Sharing;
 using JxFinance.Domain.RecurringBills;
+using JxFinance.Domain.Transactions;
 
 namespace JxFinance.Endpoints.RecurringBills.Shared;
 
@@ -18,4 +19,5 @@ public interface IRecurringBillInput : IShareableInput
     string? MatchKey { get; }
     Guid? DebtId { get; }
     int? SpreadMonths { get; }
+    SpreadDirection? SpreadDirection { get; }
 }

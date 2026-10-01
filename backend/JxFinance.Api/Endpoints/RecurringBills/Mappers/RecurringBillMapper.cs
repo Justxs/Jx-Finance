@@ -4,6 +4,7 @@ using JxFinance.Domain.Accounts;
 using JxFinance.Domain.Categories;
 using JxFinance.Domain.NetWorth;
 using JxFinance.Domain.RecurringBills;
+using JxFinance.Domain.Transactions;
 using JxFinance.Endpoints.RecurringBills.CreateRecurringBill;
 using JxFinance.Endpoints.RecurringBills.Shared;
 using JxFinance.Endpoints.RecurringBills.UpdateRecurringBill;
@@ -45,7 +46,8 @@ public static class RecurringBillMapper
         bill.DebtId?.Value,
         bill.Scope,
         bill.HouseholdId?.Value,
-        bill.SpreadMonths);
+        bill.SpreadMonths,
+        bill.SpreadMonths is null ? null : bill.SpreadDirection);
 
     private static void ApplyShared(IRecurringBillInput input, RecurringBill bill)
     {
@@ -67,6 +69,7 @@ public static class RecurringBillMapper
         bill.MatchKey = matchKey.Length > 0 ? matchKey : null;
         bill.DebtId = input.DebtId is { } debtId ? new DebtId(debtId) : null;
         bill.SpreadMonths = (short?)input.SpreadMonths;
+        bill.SpreadDirection = input.SpreadMonths is null ? SpreadDirection.Forward : input.SpreadDirection ?? SpreadDirection.Forward;
         bill.ApplySharing(input);
     }
 }

@@ -14778,7 +14778,8 @@
                 "debtId": null,
                 "scope": "personal",
                 "householdId": null,
-                "spreadMonths": null
+                "spreadMonths": null,
+                "spreadDirection": null
               }
             }
           },
@@ -15341,7 +15342,8 @@
                 "debtId": null,
                 "scope": "personal",
                 "householdId": null,
-                "spreadMonths": null
+                "spreadMonths": null,
+                "spreadDirection": null
               }
             }
           },
@@ -17985,7 +17987,8 @@
                 "spreadMonths": null,
                 "place": null,
                 "latitude": null,
-                "longitude": null
+                "longitude": null,
+                "spreadDirection": null
               }
             }
           },
@@ -20323,7 +20326,7 @@
           "Transactions"
         ],
         "summary": "Update a transaction",
-        "description": "Replaces the transaction. Split lines are replaced wholesale rather than merged: send the full set you want to keep, or omit lines to turn a split back into a plain transaction. Tags are replaced the same way: send the full set, and an empty list or an absent tagIds clears them. The note and spreadMonths are replaced too, so leaving one out clears it. So are place, latitude and longitude while the locations feature is on; while it is off they are ignored and the stored values kept. Moving it to another account adjusts both balances. A refund is an expense with a negative amount: it lowers that category's spending and raises the balance. It takes an expense category, cannot be split, and may name the purchase it refunds in refundOfTransactionId, which must be an expense you can see and not itself a refund.",
+        "description": "Replaces the transaction. Split lines are replaced wholesale rather than merged: send the full set you want to keep, or omit lines to turn a split back into a plain transaction. Tags are replaced the same way: send the full set, and an empty list or an absent tagIds clears them. The note, spreadMonths and spreadDirection are replaced too, so leaving one out clears it. So are place, latitude and longitude while the locations feature is on; while it is off they are ignored and the stored values kept. Moving it to another account adjusts both balances. A refund is an expense with a negative amount: it lowers that category's spending and raises the balance. It takes an expense category, cannot be split, and may name the purchase it refunds in refundOfTransactionId, which must be an expense you can see and not itself a refund.",
         "operationId": "UpdateTransaction",
         "parameters": [
           {
@@ -20359,7 +20362,8 @@
                 "spreadMonths": null,
                 "place": null,
                 "latitude": null,
-                "longitude": null
+                "longitude": null,
+                "spreadDirection": null
               }
             }
           },
@@ -26245,6 +26249,17 @@
             ],
             "description": "Optional, from 2 to 36, expense and income only: each confirmation writes a transaction spread over this many months.",
             "format": "int32"
+          },
+          "spreadDirection": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/SpreadDirection"
+              }
+            ],
+            "description": "Optional, with spreadMonths: forward (the default) or backward, the direction each written transaction is spread in."
           }
         },
         "example": {
@@ -26262,7 +26277,8 @@
           "debtId": null,
           "scope": "personal",
           "householdId": null,
-          "spreadMonths": null
+          "spreadMonths": null,
+          "spreadDirection": null
         }
       },
       "CreateSettlementRequest": {
@@ -26567,7 +26583,7 @@
               "null",
               "integer"
             ],
-            "description": "Optional, from 2 to 36: count the amount in equal monthly slices over this many months, starting with the month of the date. Not allowed on a split or a refund.",
+            "description": "Optional, from 2 to 36: count the amount in equal monthly slices over this many months, starting with the month of the date, or ending with it when spreadDirection is backward. Not allowed on a split or a refund.",
             "format": "int32"
           },
           "place": {
@@ -26594,6 +26610,17 @@
             ],
             "description": "Optional longitude from -180 to 180, sent together with latitude and kept to five decimals.",
             "format": "double"
+          },
+          "spreadDirection": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/SpreadDirection"
+              }
+            ],
+            "description": "Optional, with spreadMonths: forward (the default) counts from the month of the date on, backward counts the months up to and including it, for a bill paid in arrears."
           }
         },
         "example": {
@@ -26611,7 +26638,8 @@
           "spreadMonths": null,
           "place": null,
           "latitude": null,
-          "longitude": null
+          "longitude": null,
+          "spreadDirection": null
         }
       },
       "CreateTransferRequest": {
@@ -32012,6 +32040,16 @@
               "integer"
             ],
             "format": "int32"
+          },
+          "spreadDirection": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/SpreadDirection"
+              }
+            ]
           }
         }
       },
@@ -33475,6 +33513,13 @@
         "type": "string",
         "description": "Equal, Shares or Exact."
       },
+      "SpreadDirection": {
+        "enum": [
+          "forward",
+          "backward"
+        ],
+        "type": "string"
+      },
       "StatementFormat": {
         "enum": [
           "swedbankCsv",
@@ -34516,6 +34561,26 @@
             "type": [
               "null",
               "string"
+            ]
+          },
+          "spreadDirection": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/SpreadDirection"
+              }
+            ]
+          },
+          "spreadFrom": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/NullableOfDateOnly"
+              }
             ]
           }
         }
@@ -36069,6 +36134,17 @@
             ],
             "description": "Optional, from 2 to 36, expense and income only: each confirmation writes a transaction spread over this many months.",
             "format": "int32"
+          },
+          "spreadDirection": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/SpreadDirection"
+              }
+            ],
+            "description": "Optional, with spreadMonths: forward (the default) or backward, the direction each written transaction is spread in."
           }
         },
         "example": {
@@ -36087,7 +36163,8 @@
           "debtId": null,
           "scope": "personal",
           "householdId": null,
-          "spreadMonths": null
+          "spreadMonths": null,
+          "spreadDirection": null
         }
       },
       "UpdateSettingsRequest": {
@@ -36398,7 +36475,7 @@
               "null",
               "integer"
             ],
-            "description": "Optional, from 2 to 36: count the amount in equal monthly slices over this many months, starting with the month of the date. Not allowed on a split or a refund.",
+            "description": "Optional, from 2 to 36: count the amount in equal monthly slices over this many months, starting with the month of the date, or ending with it when spreadDirection is backward. Not allowed on a split or a refund.",
             "format": "int32"
           },
           "place": {
@@ -36425,6 +36502,17 @@
             ],
             "description": "Optional longitude from -180 to 180, sent together with latitude and kept to five decimals.",
             "format": "double"
+          },
+          "spreadDirection": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/SpreadDirection"
+              }
+            ],
+            "description": "Optional, with spreadMonths: forward (the default) counts from the month of the date on, backward counts the months up to and including it, for a bill paid in arrears."
           }
         },
         "example": {
@@ -36442,7 +36530,8 @@
           "spreadMonths": null,
           "place": null,
           "latitude": null,
-          "longitude": null
+          "longitude": null,
+          "spreadDirection": null
         }
       },
       "UpdateTransferRequest": {

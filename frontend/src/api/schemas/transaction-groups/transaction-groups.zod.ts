@@ -290,6 +290,8 @@ export const TransactionGroupMembersResponse = zod.object({
         ])
         .optional(),
       payee: zod.string().nullish(),
+      spreadDirection: zod.union([zod.null(), zod.enum(["forward", "backward"])]).optional(),
+      spreadFrom: zod.union([zod.null(), zod.iso.date()]).optional(),
     }),
   ),
   truncated: zod.boolean(),

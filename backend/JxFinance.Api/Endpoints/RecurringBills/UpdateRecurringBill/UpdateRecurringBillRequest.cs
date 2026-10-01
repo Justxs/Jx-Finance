@@ -1,6 +1,7 @@
 using JxFinance.Common.Json;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.RecurringBills;
+using JxFinance.Domain.Transactions;
 using JxFinance.Endpoints.RecurringBills.Shared;
 
 namespace JxFinance.Endpoints.RecurringBills.UpdateRecurringBill;
@@ -22,4 +23,5 @@ public sealed record UpdateRecurringBillRequest(
     Guid? DebtId = null,
     Scope Scope = Scope.Personal,
     Guid? HouseholdId = null,
-    int? SpreadMonths = null) : IRecurringBillInput;
+    int? SpreadMonths = null,
+    SpreadDirection? SpreadDirection = null) : IRecurringBillInput;

@@ -1,5 +1,6 @@
 using System.Globalization;
 using JxFinance.Common.Spreads;
+using JxFinance.Domain.Transactions;
 
 namespace JxFinance.Tests.Unit;
 
@@ -73,7 +74,7 @@ public sealed class SpreadSlicesTests
     {
         var start = DateOnly.Parse(date, CultureInfo.InvariantCulture);
 
-        Assert.Equal(SpreadSlices.Of(start, 100m, months)[^1].Date, SpreadSlices.Until(start, months));
+        Assert.Equal(SpreadSlices.Of(start, 100m, months)[^1].Date, SpreadSlices.Range(start, months, SpreadDirection.Forward).Until);
     }
 
     private static decimal Parse(string value) => decimal.Parse(value, CultureInfo.InvariantCulture);

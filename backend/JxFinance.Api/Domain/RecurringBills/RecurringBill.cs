@@ -3,6 +3,7 @@ using JxFinance.Domain.Categories;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Households;
 using JxFinance.Domain.NetWorth;
+using JxFinance.Domain.Transactions;
 
 namespace JxFinance.Domain.RecurringBills;
 
@@ -24,6 +25,7 @@ public sealed class RecurringBill : OwnableEntity, IShareable
     public string? MatchKey { get; set; }
     public DebtId? DebtId { get; set; }
     public short? SpreadMonths { get; set; }
+    public SpreadDirection SpreadDirection { get; set; }
     public Scope Scope { get; set; } = Scope.Personal;
     public HouseholdId? HouseholdId { get; set; }
 

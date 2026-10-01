@@ -34,6 +34,7 @@ public abstract class RecurringBillInputValidator<TRequest> : Validator<TRequest
             .When(r => r.Kind == RecurringBillKind.Variable);
 
         RuleFor(r => r.SpreadMonths).IsWithin(TransactionSpread.MinMonths, TransactionSpread.MaxMonths);
+        RuleFor(r => r.SpreadDirection).IsKnownEnum();
         RuleFor(r => r.SpreadMonths)
             .IsAbsent()
             .WithMessage("Only a recurring expense or income can be spread over months.")

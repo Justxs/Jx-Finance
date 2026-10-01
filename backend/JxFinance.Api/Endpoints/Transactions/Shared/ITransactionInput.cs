@@ -1,4 +1,5 @@
 using JxFinance.Domain.Common;
+using JxFinance.Domain.Transactions;
 
 namespace JxFinance.Endpoints.Transactions.Shared;
 
@@ -16,6 +17,7 @@ public interface ITransactionInput
     Guid? RefundOfTransactionId { get; }
     string? Note { get; }
     int? SpreadMonths { get; }
+    SpreadDirection? SpreadDirection { get; }
     string? Place { get; }
     decimal? Latitude { get; }
     decimal? Longitude { get; }

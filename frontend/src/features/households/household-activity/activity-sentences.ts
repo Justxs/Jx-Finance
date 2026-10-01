@@ -28,6 +28,7 @@ const FIELDS = [
   "shares",
   "note",
   "spreadMonths",
+  "spreadDirection",
   "place",
   "limitAmount",
   "period",

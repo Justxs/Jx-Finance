@@ -10,6 +10,7 @@ import type { RecurringBillCadence } from "./recurringBillCadence";
 import type { RecurringBillKind } from "./recurringBillKind";
 import type { RecurringBillShape } from "./recurringBillShape";
 import type { Scope } from "./scope";
+import type { SpreadDirection } from "./spreadDirection";
 
 export interface CreateRecurringBillRequest {
   /**
@@ -65,4 +66,6 @@ export interface CreateRecurringBillRequest {
    * @nullable
    */
   spreadMonths?: number | null;
+  /** Optional, with spreadMonths: forward (the default) or backward, the direction each written transaction is spread in. */
+  spreadDirection?: null | SpreadDirection;
 }

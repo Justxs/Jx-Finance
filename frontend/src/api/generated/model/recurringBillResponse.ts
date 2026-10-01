@@ -11,6 +11,7 @@ import type { RecurringBillKind } from "./recurringBillKind";
 import type { RecurringBillMatchResponse } from "./recurringBillMatchResponse";
 import type { RecurringBillShape } from "./recurringBillShape";
 import type { Scope } from "./scope";
+import type { SpreadDirection } from "./spreadDirection";
 
 export interface RecurringBillResponse {
   id: string;
@@ -39,4 +40,5 @@ export interface RecurringBillResponse {
   householdId: string | null;
   /** @nullable */
   spreadMonths?: number | null;
+  spreadDirection?: null | SpreadDirection;
 }

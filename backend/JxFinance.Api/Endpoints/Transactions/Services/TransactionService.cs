@@ -320,7 +320,7 @@ public sealed class TransactionService(
         if (request is { SpreadOverlap: true, DateFrom: { } from, DateTo: { } to })
         {
             query = query.Where(t => (t.Date >= from && t.Date <= to)
-                || (t.SpreadMonths != null && t.Date <= to && t.SpreadUntil >= from));
+                || (t.SpreadMonths != null && t.SpreadFrom <= to && t.SpreadUntil >= from));
         }
         else
         {

@@ -1,6 +1,7 @@
 using System.Globalization;
 using JxFinance.Common.Formats;
 using JxFinance.Domain.Common;
+using JxFinance.Domain.Transactions;
 using JxFinance.Endpoints.Transactions.Shared;
 using JxFinance.Infrastructure.Pdf;
 using MigraDoc.DocumentObjectModel;
@@ -150,7 +151,9 @@ public sealed class TransactionsPdfDocument(
             row.Cells[1].AddParagraph(transaction.Description ?? "");
             if (transaction.SpreadMonths is { } months)
             {
-                var spread = row.Cells[1].AddParagraph($"Spread over {months} months");
+                var spread = row.Cells[1].AddParagraph(transaction.SpreadDirection == SpreadDirection.Backward
+                    ? $"Spread over the {months} months up to this one"
+                    : $"Spread over {months} months");
                 spread.Format.Font.Color = MutedColor;
             }
 

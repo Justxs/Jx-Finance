@@ -262,6 +262,8 @@ const SPREAD_MONTHS = 12;
 export const spreadTransaction: TransactionResponse = {
   ...manual(30, "01-15", checking, transport, -360, "Gjensidige – KASKO draudimas", [car]),
   spreadMonths: SPREAD_MONTHS,
+  spreadDirection: "forward",
+  spreadFrom: "2026-01-15",
   spreadUntil: "2026-12-15",
 };
 

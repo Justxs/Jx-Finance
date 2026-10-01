@@ -48,6 +48,14 @@ export const ThirtySixMonths: Story = {
   },
 };
 
+export const PaidInArrears: Story = {
+  args: { transaction: { ...spreadTransaction, spreadDirection: "backward" } },
+  play: async ({ canvas }) => {
+    await expect(await canvas.findByText("Spread · 12 months")).toBeInTheDocument();
+    await expect(canvas.getByText(/February 2025 to January 2026$/u)).toBeInTheDocument();
+  },
+};
+
 export const InsideADateRange: Story = {
   parameters: { route: "/transactions?dateFrom=2026-03-01&dateTo=2026-05-31&spreadOverlap=true" },
   play: async ({ canvas }) => {

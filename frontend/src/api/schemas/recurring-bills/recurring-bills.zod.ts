@@ -75,6 +75,12 @@ export const CreateRecurringBillBody = zod.object({
     .describe(
       "Optional, from 2 to 36, expense and income only: each confirmation writes a transaction spread over this many months.",
     ),
+  spreadDirection: zod
+    .union([zod.null(), zod.enum(["forward", "backward"])])
+    .optional()
+    .describe(
+      "Optional, with spreadMonths: forward (the default) or backward, the direction each written transaction is spread in.",
+    ),
 });
 
 export const createRecurringBillResponseAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
@@ -120,6 +126,7 @@ export const CreateRecurringBillResponse = zod.object({
   scope: zod.enum(["personal", "shared"]),
   householdId: zod.uuid().nullable(),
   spreadMonths: zod.int().nullish(),
+  spreadDirection: zod.union([zod.null(), zod.enum(["forward", "backward"])]).optional(),
 });
 
 /**
@@ -169,6 +176,7 @@ export const RecurringBillsResponseItem = zod.object({
   scope: zod.enum(["personal", "shared"]),
   householdId: zod.uuid().nullable(),
   spreadMonths: zod.int().nullish(),
+  spreadDirection: zod.union([zod.null(), zod.enum(["forward", "backward"])]).optional(),
 });
 export const RecurringBillsResponse = zod.array(RecurringBillsResponseItem);
 
@@ -358,6 +366,7 @@ export const RecurringBillResponse = zod.object({
   scope: zod.enum(["personal", "shared"]),
   householdId: zod.uuid().nullable(),
   spreadMonths: zod.int().nullish(),
+  spreadDirection: zod.union([zod.null(), zod.enum(["forward", "backward"])]).optional(),
 });
 
 /**
@@ -414,6 +423,12 @@ export const UpdateRecurringBillBody = zod.object({
     .describe(
       "Optional, from 2 to 36, expense and income only: each confirmation writes a transaction spread over this many months.",
     ),
+  spreadDirection: zod
+    .union([zod.null(), zod.enum(["forward", "backward"])])
+    .optional()
+    .describe(
+      "Optional, with spreadMonths: forward (the default) or backward, the direction each written transaction is spread in.",
+    ),
 });
 
 export const updateRecurringBillResponseAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
@@ -459,6 +474,7 @@ export const UpdateRecurringBillResponse = zod.object({
   scope: zod.enum(["personal", "shared"]),
   householdId: zod.uuid().nullable(),
   spreadMonths: zod.int().nullish(),
+  spreadDirection: zod.union([zod.null(), zod.enum(["forward", "backward"])]).optional(),
 });
 
 /**
@@ -537,6 +553,7 @@ export const ConfirmRecurringBillResponse = zod.object({
     scope: zod.enum(["personal", "shared"]),
     householdId: zod.uuid().nullable(),
     spreadMonths: zod.int().nullish(),
+    spreadDirection: zod.union([zod.null(), zod.enum(["forward", "backward"])]).optional(),
   }),
   transactionId: zod.uuid().nullable(),
   transferId: zod.uuid().nullable(),
@@ -599,4 +616,5 @@ export const SkipRecurringBillResponse = zod.object({
   scope: zod.enum(["personal", "shared"]),
   householdId: zod.uuid().nullable(),
   spreadMonths: zod.int().nullish(),
+  spreadDirection: zod.union([zod.null(), zod.enum(["forward", "backward"])]).optional(),
 });

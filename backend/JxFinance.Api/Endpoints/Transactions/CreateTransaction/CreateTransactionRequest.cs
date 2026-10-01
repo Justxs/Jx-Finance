@@ -1,5 +1,6 @@
 using JxFinance.Common.Json;
 using JxFinance.Domain.Common;
+using JxFinance.Domain.Transactions;
 using JxFinance.Endpoints.Transactions.Shared;
 
 namespace JxFinance.Endpoints.Transactions.CreateTransaction;
@@ -19,4 +20,5 @@ public sealed record CreateTransactionRequest(
     int? SpreadMonths = null,
     string? Place = null,
     decimal? Latitude = null,
-    decimal? Longitude = null) : ITransactionInput;
+    decimal? Longitude = null,
+    SpreadDirection? SpreadDirection = null) : ITransactionInput;

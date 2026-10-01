@@ -88,7 +88,7 @@ An update lists only the fields a member can see, in this order, and only when t
 
 | Kind | Fields |
 | --- | --- |
-| Transaction | `date`, `amount`, `type`, `description`, `note`, `spreadMonths`, `place`, `category`, `account`, then `tags` and `split` |
+| Transaction | `date`, `amount`, `type`, `description`, `note`, `spreadMonths`, `spreadDirection`, `place`, `category`, `account`, then `tags` and `split` |
 | Transfer | `date`, `amount`, `receivedAmount`, `fromAccount`, `toAccount`, `description` |
 | Currency conversion | `date`, `fromAmount`, `toAmount`, `description`, `account` |
 | Investment entry | `date`, `type`, `security`, `quantity`, `price`, `fee`, `cashAmount`, `description`, `account` |

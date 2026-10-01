@@ -5,7 +5,7 @@ import type {
   TransactionResponse,
 } from "@/api/generated/model";
 import { optimisticId } from "@/features/transactions/transaction-amount/transaction-row";
-import { spreadUntil } from "@/lib/spread-slices";
+import { spreadFrom, spreadUntil } from "@/lib/spread-slices";
 import { normalizeMoney } from "@/lib/validation";
 
 export function optimisticTransaction(
@@ -37,7 +37,13 @@ export function optimisticTransaction(
     unusual: null,
     unusualDismissed: false,
     spreadMonths: data.spreadMonths,
-    spreadUntil: data.spreadMonths ? spreadUntil(data.date, data.spreadMonths) : null,
+    spreadDirection: data.spreadMonths ? (data.spreadDirection ?? "forward") : null,
+    spreadFrom: data.spreadMonths
+      ? spreadFrom(data.date, data.spreadMonths, data.spreadDirection ?? "forward")
+      : null,
+    spreadUntil: data.spreadMonths
+      ? spreadUntil(data.date, data.spreadMonths, data.spreadDirection ?? "forward")
+      : null,
     place: data.place,
     latitude: data.latitude,
     longitude: data.longitude,

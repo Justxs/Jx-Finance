@@ -30,6 +30,7 @@ public static class TransactionMapper
         transaction.Description = OptionalText.Normalize(input.Description);
         transaction.Note = OptionalText.Normalize(input.Note);
         transaction.SpreadMonths = (short?)input.SpreadMonths;
+        transaction.SpreadDirection = input.SpreadMonths is null ? SpreadDirection.Forward : input.SpreadDirection ?? SpreadDirection.Forward;
         transaction.IsSplit = isSplit;
         transaction.RefundOfTransactionId = input.RefundOfTransactionId is { } original ? new TransactionId(original) : null;
     }
@@ -94,6 +95,8 @@ public static class TransactionMapper
         Payee: transaction.Payee,
         SpreadMonths: transaction.SpreadMonths,
         SpreadUntil: transaction.SpreadUntil,
+        SpreadDirection: transaction.SpreadMonths is null ? null : transaction.SpreadDirection,
+        SpreadFrom: transaction.SpreadFrom,
         Place: transaction.Place,
         Latitude: transaction.Latitude,
         Longitude: transaction.Longitude,

@@ -8,6 +8,7 @@
 import type { Currency } from "./currency";
 import type { DateOnly } from "./dateOnly";
 import type { FlowType } from "./flowType";
+import type { SpreadDirection } from "./spreadDirection";
 import type { TransactionLineRequest } from "./transactionLineRequest";
 
 export interface CreateTransactionRequest {
@@ -52,7 +53,7 @@ export interface CreateTransactionRequest {
    */
   note?: string | null;
   /**
-   * Optional, from 2 to 36: count the amount in equal monthly slices over this many months, starting with the month of the date. Not allowed on a split or a refund.
+   * Optional, from 2 to 36: count the amount in equal monthly slices over this many months, starting with the month of the date, or ending with it when spreadDirection is backward. Not allowed on a split or a refund.
    * @minimum 2
    * @maximum 36
    * @nullable
@@ -75,4 +76,6 @@ export interface CreateTransactionRequest {
    * @nullable
    */
   longitude?: number | null;
+  /** Optional, with spreadMonths: forward (the default) counts from the month of the date on, backward counts the months up to and including it, for a bill paid in arrears. */
+  spreadDirection?: null | SpreadDirection;
 }

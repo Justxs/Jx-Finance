@@ -37,6 +37,12 @@ public static class WebApplicationExtensions
             logger.LogInformation("Recorded the first balance of {Count} debt(s)", recorded);
         }
 
+        var spread = await SpreadFromBackfill.RunAsync(db, CancellationToken.None);
+        if (spread > 0)
+        {
+            logger.LogInformation("Filled the first spread month of {Count} transaction(s)", spread);
+        }
+
         if (app.Environment.IsDevelopment())
         {
             var users = services.GetRequiredService<UserManager<AppUser>>();
