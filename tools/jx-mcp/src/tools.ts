@@ -24,7 +24,7 @@ export const jxTools: JxTool[] = [
       "List accounts. Returns the accounts you can see: your own plus the shared accounts of your households, each with its current balance. With asOf, the balances are as of that date instead.",
     input: z.object({
       search: z.string().optional().describe("Case-insensitive match against the account name."),
-      type: z.enum(["checking", "savings", "cash", "other", "investment"]).optional(),
+      type: z.enum(["checking", "savings", "cash", "other", "investment", "creditCard"]).optional(),
       asOf: date.optional().describe("Date to compute the balances at. Defaults to today."),
     }),
   },

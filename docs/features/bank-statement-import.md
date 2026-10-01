@@ -101,7 +101,7 @@ The lines above the header offer 0 to the generated `createCsvMappingBodySkipLin
 
 The raw date cell keeps Revolut's time of day and the balance cell tells two equal coffees apart, so the hash of a row stays the same when an overlapping export is imported next month, and the overlap is flagged as duplicates. The hash does not include the mapping, so recreating a deleted mapping does not import everything again.
 
-**Credit cards.** A card is an account of type Other whose starting balance is the debt as a negative number. Its mapping uses the "Card statement" amount style, so a purchase is an expense and a payment or refund money in, and paying the card from the current account is a transfer matched on both imports as usual. There is no card account type; see the [decisions](../decisions/swedbank-csv-import.md).
+**Credit cards.** Since 2026-10-01 a card is an account of type [Credit card](accounts.md#credit-cards) whose starting balance is the debt as a negative number. Its mapping uses the "Card statement" amount style, so a purchase is an expense and a payment or refund money in, and the mapping form starts on that style when a new mapping is made for a card account; a saved mapping keeps its own. Paying the card from the current account is a transfer matched on both imports as usual. See the [decisions](../decisions/swedbank-csv-import.md).
 
 ## Review
 

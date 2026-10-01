@@ -59,6 +59,7 @@ interface Props {
   inspection?: InspectCsvResponse;
   initial?: CsvMappingResponse;
   fitting?: CsvMappingResponse[];
+  cardAccount?: boolean;
   readPending?: boolean;
   onRead?: (options: ReadOptions) => void;
   onUse?: (mapping: CsvMappingResponse) => void;
@@ -89,6 +90,7 @@ export function CsvMappingForm({
   inspection,
   initial,
   fitting = noMappings,
+  cardAccount = false,
   readPending = false,
   onRead,
   onUse,
@@ -111,7 +113,11 @@ export function CsvMappingForm({
   );
 
   const form = useServerForm({
-    defaultValues: draftOf(source, initial),
+    defaultValues: draftOf(
+      source,
+      initial,
+      cardAccount ? "signedPositiveIsExpense" : "signedNegativeIsExpense",
+    ),
     schema: mappingSchema(t),
     submit: (value) => {
       const data = toRequest(value);

@@ -36,8 +36,10 @@ export const CreateAccountBody = zod.object({
     .nullable()
     .describe("Optional IBAN. Validated for length and check digits; spaces are allowed."),
   type: zod
-    .enum(["checking", "savings", "cash", "other", "investment"])
-    .describe("Checking, Savings, Cash, or Other."),
+    .enum(["checking", "savings", "cash", "other", "investment", "creditCard"])
+    .describe(
+      "checking, savings, cash, other, investment or creditCard. A credit card's balance is normally negative: the money owed.",
+    ),
   startingBalance: zod
     .stringFormat("decimal", createAccountBodyStartingBalanceRegExp)
     .describe('Decimal string with at most two decimal places, for example "1250.00".'),
@@ -97,8 +99,10 @@ export const CreateAccountResponse = zod.object({
   description: zod.string().nullable(),
   iban: zod.string().nullable(),
   type: zod
-    .enum(["checking", "savings", "cash", "other", "investment"])
-    .describe("Checking, Savings, Cash, or Other."),
+    .enum(["checking", "savings", "cash", "other", "investment", "creditCard"])
+    .describe(
+      "checking, savings, cash, other, investment or creditCard. A credit card's balance is normally negative: the money owed.",
+    ),
   startingBalance: zod.stringFormat("decimal", createAccountResponseStartingBalanceRegExp),
   currentBalance: zod.stringFormat("decimal", createAccountResponseCurrentBalanceRegExp),
   createdAt: zod.iso.datetime({ offset: true }),
@@ -194,8 +198,10 @@ export const AccountsResponseItem = zod.object({
   description: zod.string().nullable(),
   iban: zod.string().nullable(),
   type: zod
-    .enum(["checking", "savings", "cash", "other", "investment"])
-    .describe("Checking, Savings, Cash, or Other."),
+    .enum(["checking", "savings", "cash", "other", "investment", "creditCard"])
+    .describe(
+      "checking, savings, cash, other, investment or creditCard. A credit card's balance is normally negative: the money owed.",
+    ),
   startingBalance: zod.stringFormat("decimal", accountsResponseStartingBalanceRegExp),
   currentBalance: zod.stringFormat("decimal", accountsResponseCurrentBalanceRegExp),
   createdAt: zod.iso.datetime({ offset: true }),
@@ -288,8 +294,10 @@ export const ArchivedAccountsResponseItem = zod.object({
   description: zod.string().nullable(),
   iban: zod.string().nullable(),
   type: zod
-    .enum(["checking", "savings", "cash", "other", "investment"])
-    .describe("Checking, Savings, Cash, or Other."),
+    .enum(["checking", "savings", "cash", "other", "investment", "creditCard"])
+    .describe(
+      "checking, savings, cash, other, investment or creditCard. A credit card's balance is normally negative: the money owed.",
+    ),
   startingBalance: zod.stringFormat("decimal", archivedAccountsResponseStartingBalanceRegExp),
   currency: zod.enum([
     "eur",
@@ -461,8 +469,10 @@ export const AccountResponse = zod.object({
   description: zod.string().nullable(),
   iban: zod.string().nullable(),
   type: zod
-    .enum(["checking", "savings", "cash", "other", "investment"])
-    .describe("Checking, Savings, Cash, or Other."),
+    .enum(["checking", "savings", "cash", "other", "investment", "creditCard"])
+    .describe(
+      "checking, savings, cash, other, investment or creditCard. A credit card's balance is normally negative: the money owed.",
+    ),
   startingBalance: zod.stringFormat("decimal", accountResponseStartingBalanceRegExp),
   currentBalance: zod.stringFormat("decimal", accountResponseCurrentBalanceRegExp),
   createdAt: zod.iso.datetime({ offset: true }),
@@ -563,8 +573,10 @@ export const UpdateAccountBody = zod.object({
     .nullable(),
   iban: zod.string().nullable(),
   type: zod
-    .enum(["checking", "savings", "cash", "other", "investment"])
-    .describe("Checking, Savings, Cash, or Other."),
+    .enum(["checking", "savings", "cash", "other", "investment", "creditCard"])
+    .describe(
+      "checking, savings, cash, other, investment or creditCard. A credit card's balance is normally negative: the money owed.",
+    ),
   startingBalance: zod.stringFormat("decimal", updateAccountBodyStartingBalanceRegExp),
   scope: zod.enum(["personal", "shared"]),
   householdId: zod.uuid().nullable(),
@@ -619,8 +631,10 @@ export const UpdateAccountResponse = zod.object({
   description: zod.string().nullable(),
   iban: zod.string().nullable(),
   type: zod
-    .enum(["checking", "savings", "cash", "other", "investment"])
-    .describe("Checking, Savings, Cash, or Other."),
+    .enum(["checking", "savings", "cash", "other", "investment", "creditCard"])
+    .describe(
+      "checking, savings, cash, other, investment or creditCard. A credit card's balance is normally negative: the money owed.",
+    ),
   startingBalance: zod.stringFormat("decimal", updateAccountResponseStartingBalanceRegExp),
   currentBalance: zod.stringFormat("decimal", updateAccountResponseCurrentBalanceRegExp),
   createdAt: zod.iso.datetime({ offset: true }),
@@ -951,8 +965,10 @@ export const RestoreAccountResponse = zod.object({
   description: zod.string().nullable(),
   iban: zod.string().nullable(),
   type: zod
-    .enum(["checking", "savings", "cash", "other", "investment"])
-    .describe("Checking, Savings, Cash, or Other."),
+    .enum(["checking", "savings", "cash", "other", "investment", "creditCard"])
+    .describe(
+      "checking, savings, cash, other, investment or creditCard. A credit card's balance is normally negative: the money owed.",
+    ),
   startingBalance: zod.stringFormat("decimal", restoreAccountResponseStartingBalanceRegExp),
   currentBalance: zod.stringFormat("decimal", restoreAccountResponseCurrentBalanceRegExp),
   createdAt: zod.iso.datetime({ offset: true }),

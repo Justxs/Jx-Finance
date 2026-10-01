@@ -30,6 +30,7 @@ public static class BeancountWriter
         AccountType.Savings => "Assets:Savings",
         AccountType.Cash => "Assets:Cash",
         AccountType.Investment => "Assets:Investments",
+        AccountType.CreditCard => "Liabilities:CreditCards",
         _ => "Assets:Other",
     };
 

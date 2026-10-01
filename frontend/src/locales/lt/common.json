@@ -154,6 +154,8 @@
     "type": "Tipas",
     "startingBalance": "Pradinis likutis",
     "currentBalance": "Dabartinis likutis",
+    "owed": "Skola {{amount}}",
+    "creditCardHint": "Kiek esate skolingi kortelei, neigiama suma.",
     "empty": "Sąskaitų dar nėra. Pridėkite pirmąją ir pradėkite apskaitą.",
     "archived": "Sąskaita archyvuota",
     "types": {
@@ -161,7 +163,8 @@
       "savings": "Taupomoji",
       "cash": "Grynieji",
       "other": "Kita",
-      "investment": "Investicinė"
+      "investment": "Investicinė",
+      "creditCard": "Kredito kortelė"
     },
     "allTypes": "Visi tipai",
     "currency": "Pagrindinė valiuta",

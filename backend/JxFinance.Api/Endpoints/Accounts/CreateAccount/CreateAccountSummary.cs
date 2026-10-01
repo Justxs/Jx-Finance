@@ -23,7 +23,7 @@ public sealed class CreateAccountSummary : Summary<CreateAccountEndpoint, Create
         RequestParam(r => r.Name, "Display name, up to 100 characters.");
         RequestParam(r => r.Description, "Optional note, up to 500 characters.");
         RequestParam(r => r.Iban, "Optional IBAN. Validated for length and check digits; spaces are allowed.");
-        RequestParam(r => r.Type, "Checking, Savings, Cash, or Other.");
+        RequestParam(r => r.Type, "checking, savings, cash, other, investment or creditCard. A credit card's balance is normally negative: the money owed.");
         RequestParam(r => r.StartingBalance, "Decimal string with at most two decimal places, for example \"1250.00\".");
         RequestParam(r => r.Scope, "Personal keeps the account private; Shared exposes it to a household.");
         RequestParam(r => r.HouseholdId, "Required when Scope is Shared; must be a household you belong to.");

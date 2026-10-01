@@ -23063,10 +23063,11 @@
           "savings",
           "cash",
           "other",
-          "investment"
+          "investment",
+          "creditCard"
         ],
         "type": "string",
-        "description": "Checking, Savings, Cash, or Other."
+        "description": "checking, savings, cash, other, investment or creditCard. A credit card's balance is normally negative: the money owed."
       },
       "AddMemberRequest": {
         "required": [

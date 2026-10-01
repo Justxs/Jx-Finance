@@ -152,6 +152,8 @@
     "type": "Type",
     "startingBalance": "Starting balance",
     "currentBalance": "Current balance",
+    "owed": "Owed {{amount}}",
+    "creditCardHint": "What you owe on the card, as a negative amount.",
     "empty": "No accounts yet. Add one to start tracking.",
     "archived": "Account archived",
     "types": {
@@ -159,7 +161,8 @@
       "savings": "Savings",
       "cash": "Cash",
       "other": "Other",
-      "investment": "Investment"
+      "investment": "Investment",
+      "creditCard": "Credit card"
     },
     "allTypes": "All types",
     "currency": "Main currency",

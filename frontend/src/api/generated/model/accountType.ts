@@ -7,7 +7,7 @@
  */
 
 /**
- * Checking, Savings, Cash, or Other.
+ * checking, savings, cash, other, investment or creditCard. A credit card's balance is normally negative: the money owed.
  */
 export type AccountType = (typeof AccountType)[keyof typeof AccountType];
 
@@ -17,4 +17,5 @@ export const AccountType = {
   cash: "cash",
   other: "other",
   investment: "investment",
+  creditCard: "creditCard",
 } as const;

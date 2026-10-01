@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { fn } from "storybook/test";
+import { expect, fn } from "storybook/test";
 import { withPageFrame } from "@/storybook/decorators";
 import { accounts, checkingAccount, ids, sharedAccount } from "@/storybook/fixtures";
 import { AccountsTable } from "./accounts-table";
@@ -41,6 +41,27 @@ export const Sorted: Story = { parameters: { route: "/accounts?sort=name&directi
 export const Stale: Story = { args: { stale: true } };
 
 export const Deleting: Story = { args: { deletingId: ids.accounts.savings } };
+
+export const CreditCard: Story = {
+  args: {
+    accounts: [
+      checkingAccount,
+      {
+        ...checkingAccount,
+        id: "cccccccc-0000-4000-8000-000000000001",
+        name: "Visa card",
+        type: "creditCard",
+        iban: null,
+        currentBalance: "-450.20",
+        reportingBalance: "-450.20",
+        balances: [],
+      },
+    ],
+  },
+  play: async ({ canvas }) => {
+    await expect((await canvas.findAllByText(/Owed €450.20|Skola 450,20/u))[0]).toBeVisible();
+  },
+};
 
 export const LongContent: Story = {
   args: {

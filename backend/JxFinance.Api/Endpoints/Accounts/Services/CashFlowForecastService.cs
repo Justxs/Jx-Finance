@@ -119,6 +119,10 @@ public sealed class CashFlowForecastService(AppDbContext db, IExchangeRateServic
         var own = held.Where(m => m.AccountId == account.Id).ToList();
         var start = AccountMovements.BalanceOf(account.StartingBalance, own);
         var projection = CashFlowProjection.Project(start, changes, dailySpending, today, end);
+        if (account.Type == AccountType.CreditCard)
+        {
+            projection = projection with { BelowZeroOn = null, BelowZeroWithSpendingOn = null };
+        }
 
         return new AccountForecastResponse(
             account.Id.Value,

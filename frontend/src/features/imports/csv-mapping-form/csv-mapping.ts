@@ -115,6 +115,7 @@ export function sourceOf(
 export function draftOf(
   source: MappingSource,
   initial: CsvMappingResponse | undefined,
+  amountStyle: CsvAmountStyle = "signedNegativeIsExpense",
 ): MappingValues {
   const date = source.columns.find((column) => column.dateFormats.length > 0);
   const amount = source.columns.find((column) => column.decimalSeparator !== null);
@@ -131,7 +132,7 @@ export function draftOf(
     delimiter: source.delimiter,
     skipLines: String(source.skipLines),
     noHeaderRow: source.noHeaderRow,
-    amountStyle: initial?.amountStyle ?? "signedNegativeIsExpense",
+    amountStyle: initial?.amountStyle ?? amountStyle,
     dateFormat: initial?.dateFormat ?? date?.dateFormats[0] ?? DATE_FORMATS[0],
     decimalSeparator: initial?.decimalSeparator ?? amount?.decimalSeparator ?? "dot",
     currency: initial?.currency ?? "",

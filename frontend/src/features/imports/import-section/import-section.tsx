@@ -303,6 +303,9 @@ export function ImportSection({
             fitting={mappings.data.filter((item) =>
               inspection.matchingMappingIds.includes(item.id),
             )}
+            cardAccount={
+              accounts.find((account) => account.id === accountId)?.type === "creditCard"
+            }
             readPending={inspectMutation.isPending}
             onRead={inspect}
             onUse={applyMapping}

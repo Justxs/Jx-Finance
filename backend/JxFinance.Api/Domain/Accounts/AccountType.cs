@@ -7,4 +7,5 @@ public enum AccountType
     Cash,
     Other,
     Investment,
+    CreditCard,
 }

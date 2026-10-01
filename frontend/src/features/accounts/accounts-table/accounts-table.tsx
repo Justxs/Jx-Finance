@@ -45,8 +45,12 @@ interface Props {
   positiveTotal: number;
 }
 
+function owes(account: AccountResponse) {
+  return account.type === "creditCard" && Number(account.currentBalance) < 0;
+}
+
 function balanceTone(account: AccountResponse) {
-  return Number(account.currentBalance) < 0 ? EXPENSE_TONE : undefined;
+  return Number(account.currentBalance) < 0 && !owes(account) ? EXPENSE_TONE : undefined;
 }
 
 export function AccountsTable({
@@ -90,7 +94,11 @@ export function AccountsTable({
   function balanceLines(account: AccountResponse) {
     return (
       <>
-        {money.format(Number(account.currentBalance), account.currency)}
+        {owes(account)
+          ? t("accounts.owed", {
+              amount: money.format(-Number(account.currentBalance), account.currency),
+            })
+          : money.format(Number(account.currentBalance), account.currency)}
         {account.balances.length > 1 ? (
           <ul className="mt-0.5 text-xs font-normal text-muted-foreground">
             {account.balances.map((balance) => (

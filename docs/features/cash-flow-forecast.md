@@ -75,7 +75,7 @@ Only the caller's own active entries count: recurring entries are personal and c
 - **Paid but not confirmed.** The first occurrence is skipped when a matching row is dated from 5 days before `NextDueDate` (2 for a weekly entry) up to today. Imported payments are often never confirmed, and the forecast must not charge them twice; the month-close checklist chases the confirmation.
 - **Transfers** leave the source account. They arrive in the destination when the caller can see it, converted at the newest exchange rate when the two currencies differ, and the converted side is then marked estimated.
 
-Entries of one day are applied income first, and a day counts as below zero when it ends below zero.
+Entries of one day are applied income first, and a day counts as below zero when it ends below zero. A [credit card](accounts.md#credit-cards) is projected the same way but never answers `belowZeroOn` or `belowZeroWithSpendingOn`, since 2026-10-01: its balance is the money owed and below zero is where it normally sits, so it gives no warning, no dashboard line and no notification.
 
 ### Usual spending
 

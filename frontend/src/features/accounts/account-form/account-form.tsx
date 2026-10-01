@@ -121,15 +121,20 @@ export function AccountForm({ initial, onClose }: Readonly<Props>) {
           )}
         </form.Field>
 
-        <form.Field name="startingBalance">
-          {(field) => (
-            <field.MoneyInputField
-              id="account-balance"
-              label={t("accounts.startingBalance")}
-              placeholder=""
-            />
+        <form.Subscribe selector={(state) => state.values.type}>
+          {(type) => (
+            <form.Field name="startingBalance">
+              {(field) => (
+                <field.MoneyInputField
+                  id="account-balance"
+                  label={t("accounts.startingBalance")}
+                  hint={type === "creditCard" ? t("accounts.creditCardHint") : undefined}
+                  placeholder=""
+                />
+              )}
+            </form.Field>
           )}
-        </form.Field>
+        </form.Subscribe>
 
         {multiCurrency ? (
           <form.Field name="currency">

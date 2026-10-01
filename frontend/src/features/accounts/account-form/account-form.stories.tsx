@@ -28,6 +28,15 @@ export const EditPersonal: Story = { args: { initial: checkingAccount } };
 
 export const EditShared: Story = { args: { initial: sharedAccount } };
 
+export const CreditCard: Story = {
+  args: { initial: { ...checkingAccount, type: "creditCard", startingBalance: "-300.00" } },
+  play: async ({ canvas }) => {
+    await expect(
+      await canvas.findByText(/what you owe on the card|kiek esate skolingi/i),
+    ).toBeInTheDocument();
+  },
+};
+
 export const SavesChanges: Story = {
   args: { initial: checkingAccount },
   play: async ({ canvas, args }) => {

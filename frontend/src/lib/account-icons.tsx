@@ -1,4 +1,4 @@
-import { Banknote, ChartCandlestick, Landmark, PiggyBank, Wallet } from "lucide-react";
+import { Banknote, ChartCandlestick, CreditCard, Landmark, PiggyBank, Wallet } from "lucide-react";
 import type { AccountType } from "@/api/generated/model";
 import { cn } from "@/lib/utils";
 
@@ -8,6 +8,7 @@ const accountTypeIcons: Record<AccountType, typeof Landmark> = {
   cash: Banknote,
   investment: ChartCandlestick,
   other: Wallet,
+  creditCard: CreditCard,
 };
 
 interface Props {

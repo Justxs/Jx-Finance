@@ -92,7 +92,7 @@ The file starts with four options: `title` ("Jx Finance – " and the member's n
 
 | Record | Postings |
 | --- | --- |
-| Account | `open` dated the earlier of its creation date and its first row, as `Assets:Bank:` (checking), `Assets:Savings:`, `Assets:Cash:`, `Assets:Other:` or `Assets:Investments:` and the name; the starting balance is posted against `Equity:Opening-Balances` on that date |
+| Account | `open` dated the earlier of its creation date and its first row, as `Assets:Bank:` (checking), `Assets:Savings:`, `Assets:Cash:`, `Assets:Other:`, `Assets:Investments:` or, for a [credit card](accounts.md#credit-cards), `Liabilities:CreditCards:` and the name; the starting balance is posted against `Equity:Opening-Balances` on that date |
 | Income, expense and equity accounts | `open` on the journal's earliest date |
 | Expense | Account −amount; `Expenses:<Parent>:<Category>` +amount, one posting per split line; with no category, `Expenses:Uncategorized` |
 | Refund | The same with the negative amount, so the category posting is negative |
