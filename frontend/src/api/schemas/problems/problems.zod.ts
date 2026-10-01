@@ -182,7 +182,6 @@ export const ProblemDetailsResponse = zod
                 "transaction.locationInvalid",
                 "transaction.refundOriginalInvalid",
                 "transaction.splitNotAllowed",
-                "transaction.spreadRefund",
                 "transactionGroup.memberTaken",
                 "transfer.amountMismatch",
                 "transfer.receivedAmountRequired",

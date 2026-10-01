@@ -13,8 +13,9 @@ public static class SpreadSlices
         SpreadDirection direction = SpreadDirection.Forward)
     {
         var first = FirstOffset(months, direction);
-        var amounts = ShareAllocator.Allocate(amount, SplitMethod.Equal, [.. Enumerable.Repeat(new SharePart(null, null), months)])!;
-        return [.. amounts.Select((part, index) => (date.AddMonths(first + index), part))];
+        var sign = amount < 0 ? -1 : 1;
+        var sizes = ShareAllocator.Allocate(Math.Abs(amount), SplitMethod.Equal, [.. Enumerable.Repeat(new SharePart(null, null), months)])!;
+        return [.. sizes.Select((size, index) => (date.AddMonths(first + index), sign * size))];
     }
 
     public static (DateOnly From, DateOnly Until) Range(DateOnly date, int months, SpreadDirection direction)

@@ -304,23 +304,15 @@ export function TransactionForm({
           )}
         </form.Field>
 
-        <form.Subscribe
-          selector={(state) => state.values.type !== "refund" && !state.values.isSplit}
-        >
-          {(spreads) =>
-            spreads ? (
-              <SpreadFields
-                form={form}
-                fields={{
-                  spread: "spread",
-                  spreadCustom: "spreadCustom",
-                  spreadDirection: "spreadDirection",
-                }}
-                idPrefix="tx"
-              />
-            ) : null
-          }
-        </form.Subscribe>
+        <SpreadFields
+          form={form}
+          fields={{
+            spread: "spread",
+            spreadCustom: "spreadCustom",
+            spreadDirection: "spreadDirection",
+          }}
+          idPrefix="tx"
+        />
 
         <form.Field name="description" listeners={[{ triggers: ["blur"], run: suggestCategory }]}>
           {(field) => (

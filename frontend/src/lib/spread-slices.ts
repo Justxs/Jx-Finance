@@ -27,16 +27,18 @@ export function spreadSlices(
 ): SpreadSlice[] {
   const first = firstOffset(months, direction);
   const total = toCents(amount);
-  const floor = Math.floor(total / months);
-  const left = total - floor * months;
+  const size = Math.abs(total);
+  const floor = Math.floor(size / months);
+  const left = size - floor * months;
   return Array.from({ length: months }, (_, index) => ({
     date: monthsAfter(date, first + index),
-    cents: floor + (index < left ? 1 : 0),
+    cents: Math.sign(total) * (floor + (index < left ? 1 : 0)),
   }));
 }
 
 export function spreadMonthly(amount: string, months: number) {
-  return fromCents(Math.ceil(toCents(amount) / months));
+  const total = toCents(amount);
+  return fromCents(Math.sign(total) * Math.ceil(Math.abs(total) / months));
 }
 
 export function spreadFrom(date: string, months: number, direction: SpreadDirection = "forward") {

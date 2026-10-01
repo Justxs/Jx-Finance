@@ -1,5 +1,6 @@
 using FastEndpoints;
 using JxFinance.Common.Spreads;
+using JxFinance.Domain.Categories;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Households;
 using JxFinance.Domain.Transactions;
@@ -48,40 +49,50 @@ public sealed class CategoryAttributionService(AppDbContext db) : ICategoryAttri
 
         var spread = (await visible.SlicesAsync(window, comparison, cancellationToken))
             .Where(slice => slice.Type == type)
-            .Select(slice => new CategoryAttribution(slice.Date, slice.CategoryId, slice.Amount));
+            .ToList();
 
         var splits = await dated
-            .Where(t => t.IsSplit && t.Type == type)
-            .Select(t => new { t.Id, t.Date, Total = t.Amount.Amount, t.ReportingAmount })
-            .ToDictionaryAsync(t => t.Id, cancellationToken);
-
-        if (splits.Count == 0)
-        {
-            return [.. nonSplit, .. spread];
-        }
-
-        var splitIds = splits.Keys.ToList();
-        var lines = await db.TransactionLines
-            .Where(l => splitIds.Contains(l.TransactionId))
-            .OrderBy(l => l.Position).ThenBy(l => l.Id)
-            .Select(l => new { l.TransactionId, l.CategoryId, Amount = (decimal)l.Amount })
+            .Where(t => t.IsSplit && t.Type == type && t.SpreadMonths == null)
+            .Select(t => new { t.Id, t.Date, t.ReportingAmount })
             .ToListAsync(cancellationToken);
 
-        var lineAmounts = lines.GroupBy(l => l.TransactionId).SelectMany(group =>
-        {
-            var parent = splits[group.Key];
-            var remaining = parent.ReportingAmount;
-            var last = group.Count() - 1;
-            return group.Select((line, index) =>
-            {
-                var share = index == last || parent.Total == 0m
-                    ? remaining
-                    : Money.Round(line.Amount * parent.ReportingAmount / parent.Total);
-                remaining -= share;
-                return new CategoryAttribution(parent.Date, line.CategoryId, share);
-            }).ToList();
-        });
+        var parentIds = splits.Select(t => t.Id).Concat(spread.Select(slice => slice.Id)).Distinct().ToList();
+        var lines = parentIds.Count == 0
+            ? []
+            : await db.TransactionLines
+                .Where(l => parentIds.Contains(l.TransactionId))
+                .OrderBy(l => l.Position).ThenBy(l => l.Id)
+                .Select(l => new SplitLine(l.TransactionId, l.CategoryId, (decimal)l.Amount))
+                .ToListAsync(cancellationToken);
+        var linesOf = lines.ToLookup(l => l.TransactionId);
 
-        return [.. nonSplit, .. lineAmounts, .. spread];
+        return
+        [
+            .. nonSplit,
+            .. splits.SelectMany(t => Divide(linesOf[t.Id].ToList(), new CategoryAttribution(t.Date, null, t.ReportingAmount))),
+            .. spread.SelectMany(slice => Divide(linesOf[slice.Id].ToList(), new CategoryAttribution(slice.Date, slice.CategoryId, slice.Amount))),
+        ];
     }
+
+    private static IEnumerable<CategoryAttribution> Divide(IReadOnlyList<SplitLine> lines, CategoryAttribution whole)
+    {
+        if (lines.Count == 0)
+        {
+            return [whole];
+        }
+
+        var total = lines.Sum(line => line.Amount);
+        var remaining = whole.Amount;
+        var last = lines.Count - 1;
+        return [.. lines.Select((line, index) =>
+        {
+            var share = index == last || total == 0m
+                ? remaining
+                : Money.Round(line.Amount * whole.Amount / total);
+            remaining -= share;
+            return whole with { CategoryId = line.CategoryId, Amount = share };
+        })];
+    }
+
+    private sealed record SplitLine(TransactionId TransactionId, CategoryId? CategoryId, decimal Amount);
 }

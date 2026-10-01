@@ -56,6 +56,14 @@ export const PaidInArrears: Story = {
   },
 };
 
+export const RefundSpread: Story = {
+  args: { transaction: { ...spreadTransaction, reportingAmount: "-120.00" } },
+  play: async ({ canvas }) => {
+    await expect(await canvas.findByText("Spread · 12 months")).toBeInTheDocument();
+    await expect(canvas.getByText(/10\.00 a month in reports and budgets/u)).toBeInTheDocument();
+  },
+};
+
 export const InsideADateRange: Story = {
   parameters: { route: "/transactions?dateFrom=2026-03-01&dateTo=2026-05-31&spreadOverlap=true" },
   play: async ({ canvas }) => {

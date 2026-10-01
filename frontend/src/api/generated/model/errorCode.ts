@@ -157,7 +157,6 @@ export const ErrorCode = {
   transactionlocationInvalid: "transaction.locationInvalid",
   transactionrefundOriginalInvalid: "transaction.refundOriginalInvalid",
   transactionsplitNotAllowed: "transaction.splitNotAllowed",
-  transactionspreadRefund: "transaction.spreadRefund",
   transactionGroupmemberTaken: "transactionGroup.memberTaken",
   transferamountMismatch: "transfer.amountMismatch",
   transferreceivedAmountRequired: "transfer.receivedAmountRequired",

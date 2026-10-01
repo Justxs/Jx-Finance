@@ -2988,7 +2988,6 @@
       "linesMismatch": "Split lines must add up to the transaction amount.",
       "splitNotAllowed": "This cannot be done with a split transaction.",
       "refundOriginalInvalid": "The purchase this refund names is not an expense you can see. Unlink it or choose another purchase.",
-      "spreadRefund": "A refund cannot be spread over months.",
       "locationInvalid": "The location is not valid: latitude and longitude go together and must be within range.",
       "conversionFee": "The fee of a currency conversion stays on the conversion's account."
     },

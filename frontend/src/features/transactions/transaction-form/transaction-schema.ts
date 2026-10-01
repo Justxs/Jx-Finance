@@ -95,7 +95,7 @@ export function transactionSchema(t: Translate, formatMoney: FormatMoney) {
       ),
     })
     .superRefine((value, ctx) => {
-      if (spreads(value) && !isSpreadValid(value)) {
+      if (!isSpreadValid(value)) {
         ctx.addIssue(spreadIssue(t));
       }
 
@@ -125,10 +125,6 @@ export function transactionSchema(t: Translate, formatMoney: FormatMoney) {
     });
 }
 
-function spreads(value: Pick<TransactionFormFields, "type" | "isSplit">) {
-  return value.type !== "refund" && !value.isSplit;
-}
-
 export function defaultFormFields(
   source: TransactionDraft,
   defaultAccount: AccountResponse | undefined,
@@ -151,7 +147,7 @@ export function defaultFormFields(
     isSplit: !refund && (source.isSplit ?? false),
     tagIds: source.tagIds ?? [],
     refundOf: refund ? (source.refundOf ?? null) : null,
-    ...spreadValues(refund ? null : source.spreadMonths, source.spreadDirection),
+    ...spreadValues(source.spreadMonths, source.spreadDirection),
     lines: source.lines?.length
       ? source.lines.map((line, index) => ({
           id: `line-${index}`,
@@ -180,8 +176,8 @@ export function toSubmittedValues(value: TransactionFormFields): TransactionForm
     longitude: value.longitude,
     tagIds: value.tagIds,
     refundOfTransactionId: refund ? (value.refundOf?.id ?? null) : null,
-    spreadMonths: spreads(value) ? spreadMonthsOf(value) : null,
-    spreadDirection: spreads(value) ? spreadDirectionOf(value) : null,
+    spreadMonths: spreadMonthsOf(value),
+    spreadDirection: spreadDirectionOf(value),
     lines: split
       ? value.lines.map((line) => ({
           categoryId: line.categoryId || null,

@@ -107,7 +107,7 @@ export const CreateTransactionBody = zod.object({
     .max(createTransactionBodySpreadMonthsMax)
     .nullish()
     .describe(
-      "Optional, from 2 to 36: count the amount in equal monthly slices over this many months, starting with the month of the date, or ending with it when spreadDirection is backward. Not allowed on a split or a refund.",
+      "Optional, from 2 to 36: count the amount in equal monthly slices over this many months, starting with the month of the date, or ending with it when spreadDirection is backward. A split spreads each line's share, and a refund spreads negative slices.",
     ),
   place: zod
     .string()
@@ -1434,7 +1434,7 @@ export const UpdateTransactionBody = zod.object({
     .max(updateTransactionBodySpreadMonthsMax)
     .nullish()
     .describe(
-      "Optional, from 2 to 36: count the amount in equal monthly slices over this many months, starting with the month of the date, or ending with it when spreadDirection is backward. Not allowed on a split or a refund.",
+      "Optional, from 2 to 36: count the amount in equal monthly slices over this many months, starting with the month of the date, or ending with it when spreadDirection is backward. A split spreads each line's share, and a refund spreads negative slices.",
     ),
   place: zod
     .string()

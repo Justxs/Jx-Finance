@@ -82,7 +82,6 @@ public static class ErrorCodes
     public const string TransactionLinesMismatch = "transaction.linesMismatch";
     public const string TransactionSplitNotAllowed = "transaction.splitNotAllowed";
     public const string TransactionRefundOriginalInvalid = "transaction.refundOriginalInvalid";
-    public const string TransactionSpreadRefund = "transaction.spreadRefund";
     public const string TransactionLocationInvalid = "transaction.locationInvalid";
     public const string TransactionConversionFee = "transaction.conversionFee";
     public const string TransactionGroupMemberTaken = "transactionGroup.memberTaken";

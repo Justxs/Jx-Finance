@@ -3100,7 +3100,6 @@
       "linesMismatch": "Išskaidymo eilučių suma turi sutapti su operacijos suma.",
       "splitNotAllowed": "Išskaidytai operacijai to atlikti negalima.",
       "refundOriginalInvalid": "Šio grąžinimo nurodytas pirkinys nėra jums matomos išlaidos. Atsiekite jį arba pasirinkite kitą pirkinį.",
-      "spreadRefund": "Grąžinimo negalima paskirstyti per kelis mėnesius.",
       "locationInvalid": "Vieta netinkama: platuma ir ilguma nurodomos kartu ir turi neviršyti ribų.",
       "conversionFee": "Valiutos keitimo mokestis lieka keitimo sąskaitoje."
     },

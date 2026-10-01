@@ -15,7 +15,6 @@ import {
   longDescriptionTransaction,
   settingsWith,
   splitTransaction,
-  spreadRefundProblem,
   spreadTransaction,
   tags,
   transactions,
@@ -338,22 +337,12 @@ export const EditSpread: Story = {
       "12 months",
     );
     await userEvent.click(canvas.getByRole("checkbox", { name: "Split into categories" }));
-    await expect(canvas.queryByRole("combobox", { name: "Spread over" })).toBeNull();
-  },
-};
-
-export const SpreadRefundRefused: Story = {
-  args: {
-    initial: spreadTransaction,
-    onSubmit: fn(() => Promise.reject(new ApiError(spreadRefundProblem))),
-  },
-  render: (args) => <MutationBackedForm {...args} />,
-  play: async ({ canvas, args }) => {
-    await submitForm(canvas);
-    await waitFor(() => expect(args.onSubmit).toHaveBeenCalledTimes(1));
-
-    await expect(await canvas.findByRole("alert")).toHaveTextContent(
-      "A refund cannot be spread over months.",
+    await expect(canvas.getByRole("combobox", { name: "Spread over" })).toHaveTextContent(
+      "12 months",
+    );
+    await userEvent.click(canvas.getByRole("radio", { name: "Refund" }));
+    await expect(canvas.getByRole("combobox", { name: "Spread over" })).toHaveTextContent(
+      "12 months",
     );
   },
 };
