@@ -1,45 +1,76 @@
 # Backlog and ideas
 
-What is not done yet. Rechecked against the code on 2026-09-30, from [Features and scope](scope.md), [decisions](decisions/README.md), the [release checklist](release-checklist.md), the [feature walkthrough](features/README.md) and the end-to-end suite in `frontend/e2e`. Nothing here is a promise; each item needs its own scoped change. Size is a rough guess: S is days, M is a week or two, L is more.
+What is not done yet. Rechecked against the code on 2026-10-01, from [Features and scope](scope.md), [decisions](decisions/README.md), the [release checklist](release-checklist.md), the [feature walkthrough](features/README.md) and the end-to-end suite in `frontend/e2e`. Nothing here is a promise; each item needs its own scoped change. Size is a rough guess: S is days, M is a week or two, L is more.
 
 ## 1. Open release work
 
 These come from the release checklist and block calling the current release verified.
 
+### Run what has not run
+
+Every feature from 2026-09-30 and 2026-10-01 was built while Docker was not running. Its backend unit and architecture tests, `just check-fast` and `just test-stories` passed before each commit, but none of its integration or end-to-end tests have ever run.
+
+| Item | Note |
+| --- | --- |
+| `just test` with Docker up | First run of the integration tests written for spreading, the journal, the bills calendar, shared assets and debts, live prices, API writes and idempotency, locations, groups and learned categories, and of the CSV header expectations they changed. Watch two places first: the `Transaction.Tags` navigation added with spreading (tag edits on a tracked transaction), and the ledger's SQL `UNION ALL` of rows and groups under all ten sorts |
+| `just e2e` | Against every migration added since 2026-09-20, including the new `place-map.spec.ts` with its 460-byte fixture tile; the migrations have only been applied by the test containers |
+| `just verify-production` | Its new checks (exact CSP, `geolocation=(self)`, the read-only `maps` volume, a 404 for a missing tile file) have only been written, not run against the overlay |
+| `just gen-check` and the CI jobs on the Gitea runner | Audit, `production-overlay` and client drift have never run on the runner; `tools/jx-mcp` has its own `test` and `build` scripts that no CI job calls yet |
+
+### Real host and real inputs
+
 | Item | Note |
 | --- | --- |
 | Production overlay on the real host | Certificate trust on client devices, real `SITE_ADDRESS` and `BIND_ADDRESS` |
-| Rerun `just verify-production` and `just e2e` | Against every migration added since 2026-09-20; they have only been applied by the test containers |
-| First run of the new CI jobs on the Gitea runner | Audit, `production-overlay`, client drift |
 | `--recover-admin` invoked inside the container | Only run on the host so far |
 | Real outside services | A real SMTP server, a real Discord webhook, camt.053 files from at least two banks, and real OFX, QFX, MT940, bank CSV and broker trade CSV exports for the formats added on 2026-09-29 and 2026-09-30; only fakes and fixtures so far |
-| Receipt reading on real receipts | Tesseract in the API image has only read fixtures; read about twenty real Lithuanian shop receipts and e-receipt screenshots and tune the parser from what it misses |
+| Receipt reading on real receipts | Tesseract in the API image has only read fixtures; read about twenty real Lithuanian shop receipts and e-receipt screenshots and tune the parser from what it misses, including the address line [locations](features/transaction-locations.md#receipts) now reads |
+| Attachment cleaning on real photos | A phone JPEG with GPS, a HEIC from an iPhone (no HEIC fixture exists, because Magick.NET cannot write one) and a large PNG, each uploaded and downloaded again with no position left |
 | Passkeys on the real host | Only the end-to-end virtual authenticator so far; a phone, a laptop and a password manager against the real `SITE_ADDRESS` over trusted HTTPS |
-| Double-entry journal in the real tools | The tests check `ledger.beancount` with the C# `JournalChecker`; run `bean-check` and open Fava once on a real member's download |
-| Release checklist brought up to date | Its "added" lists stop at the navigation hubs of 2026-09-28; nothing from 2026-09-29 or 2026-09-30 in Done below is listed there |
-| Fresh verification pass | Evidence in Verification predates everything added from 2026-09-20 on, including the navigation hubs of 2026-09-28 and every feature of 2026-09-29 and 2026-09-30 |
+| Double-entry journal in the real tools | The tests check `ledger.beancount` with the C# `JournalChecker`, and this machine had no Python `beancount`; run `bean-check` and open Fava once on a real member's download |
+| Live prices against the real providers | With a free EODHD key, 10 EU ETFs and 2 EUR coins get a price for every weekday of the last month within two days and never more than 20 EODHD calls a day; with the switch off, the request log shows no call to EODHD or Kraken. The provider samples in the tests are shaped from the public docs, not recorded |
+| API writes from real clients | A Home Assistant `rest_command` and an iOS Shortcut, each retried with the same `Idempotency-Key`, record exactly one transaction on the production overlay; re-record the `tools/jx-mcp` test fixtures from a live installation (they are hand-written to the contract) and register the server in one MCP client |
+| Map and location on the real host | Extract `lithuania.pmtiles` as `docs/architecture/deployment.md` describes, mount it, and check that the map draws with only same-origin requests; "Use my location" on a phone over trusted HTTPS |
+| Sankey contrast and totals | The money flow's link and node colours in both themes and all four palettes in Storybook's accessibility panel, and Saved equal to the Net stat on the seeded ledger |
+| Bills calendar on real history | The seeder creates recurring entries at seed time and the calendar never shows a month before an entry existed, so past months are empty on `just seed` data; check the paid matching on a real month, or backdate the seeded entries (see section 6) |
 | Learned categories evaluated on the real ledger | Built on 2026-10-01 with its gate waived by the owner and the `LearnedCategories` switch off. Once the daily-use trial has six months and 1,500 categorized rows, run `--evaluate-categorizer` on the owner's ledger, record the numbers and the chosen constants in the [decisions](decisions/learned-categories.md), and only then decide whether to switch it on; see [Learned categories](features/learned-categories.md#not-evaluated-yet) |
-| Sustained daily-use trial | Cannot be inferred from automated checks; month-end close, unusual amounts, the forecast, the monthly digest and settle-up need at least one real month |
+
+### Paperwork and housekeeping
+
+| Item | Note |
+| --- | --- |
+| Release checklist brought up to date | Its "added" lists stop at the navigation hubs of 2026-09-28; nothing from 2026-09-29, 2026-09-30 or 2026-10-01 in Done below is listed there |
+| Fresh verification pass | Evidence in Verification predates everything added from 2026-09-20 on, including the navigation hubs of 2026-09-28 and every feature of 2026-09-29, 2026-09-30 and 2026-10-01 |
+| Sustained daily-use trial | Cannot be inferred from automated checks; month-end close, unusual amounts, the forecast, the monthly digest, settle-up, spreading, the calendar and live prices need at least one real month |
 
 ## 2. Decisions to review
 
-Open questions of the plans built on 2026-09-29 and 2026-09-30 were answered while the owner was away, each with the plan's recommended or most conservative answer and marked "to be reviewed" in its log. Each needs a keep or a change before the daily-use trial, so the trial runs on the answers the owner wants.
+Open questions of the plans built on 2026-09-29, 2026-09-30 and 2026-10-01 were answered while the owner was away, each with the plan's recommended or most conservative answer and recorded in its log. Each needs a keep or a change before the daily-use trial, so the trial runs on the answers the owner wants.
 
 | Area | Decided while away | Log |
 | --- | --- | --- |
 | Authentication | Deactivation deletes API tokens for good; attachments are not readable with a token; a passkey skips the authenticator code; one relying party name per installation | [Authentication](decisions/authentication.md) |
+| API writes | A read-and-write token lives at most 90 days and reaches only transactions, transfers, bulk category and tags and recurring confirmations; `Idempotency-Key` only on POST, kept 24 hours; API rows become `Imported` once a bank import matches them; the MCP server uses the v2 SDK (`@modelcontextprotocol/server`) rather than `@modelcontextprotocol/sdk` 1.31; group endpoints are not token-writable | [Authentication](decisions/authentication.md) |
 | Budgets | Tag budgets as a second nullable column counting whole tagged expenses; steady-category suggestions cannot be dismissed and keep their thresholds | [Budgets](decisions/budgets.md) |
 | Cash-flow forecast | No below-zero mark on the accounts table, and the plan's other open questions | [Cash-flow forecast](decisions/cash-flow-forecast.md) |
+| Bills calendar | Every unconfirmed occurrence before today from the next due date on is Overdue; a month shows nothing before the entry was created; paid means a bank row matched within 5 days (2 for weekly); no iCal feed | [Recurring entries](decisions/recurring-bills.md) |
 | Categories | Groups are one level of `ParentId`, rolled up by the client | [Categories](decisions/categories.md) |
 | Categorization rules | A rule suggestion needs three rows in twelve months; an import confirm says nothing about suggestions | [Categorization rules](decisions/categorization-rules.md) |
 | Exports | The member download re-imports into an empty member only; taking it leaves no notification | [Exports](decisions/exports.md) |
-| Households | Budgets, goals, recurring entries, assets and debts shareable with owner-only unshare and delete; settle-up has no "my share" view and no open balances in net worth | [Households and sharing](decisions/households-and-sharing.md) |
+| Double-entry journal | A tracked debt payment's principal goes to the liability, so the journal's income statement differs from reports on purpose; an oversold account books only the lots the replay found; a split debt payment counts wholly as spending; depreciation is one posting dated today | [Exports](decisions/exports.md) |
+| Households | Budgets, goals, recurring entries, assets and debts shareable with owner-only unshare and delete; settle-up has no "my share" view and no open balances in net worth; a shared asset or debt counts in full for every member; only payments from accounts shared with the household can pay a shared debt; unlinking a debt payment is a soft delete purged after 30 days | [Households and sharing](decisions/households-and-sharing.md) |
+| Interface | Hide amounts masks with bullets that screen readers read out, leaves inputs, raw text, percentages and chart shapes visible, never turns itself on, and sits on the `p` key | [Interface](decisions/interface.md) |
+| Live prices | EODHD for stocks, ETFs and funds and Kraken for EUR crypto, Yahoo and Stooq rejected; a stale security is asked at most once a day; a first fetch of an EODHD symbol costs a second call for its currency; Find spends a call; a member's import clears a security's mapping | [Investments](decisions/investments.md) |
+| Locations | Off by default; with the switch off the place filter and search are ignored; "Use my location" fills a nearby name only into an empty field; the phone ledger shows no place; the map's two-month gate was waived by the owner on 2026-10-01 | [Transaction locations](decisions/transaction-locations.md) |
 | Notifications | The monthly digest reads the "Everything" scope only and goes out on the first hourly pass of days 1 to 5 | [Notifications](decisions/notifications.md) |
 | Receipt reading | A bottle deposit stays with its drink; the rest of that entry predates the move to Tesseract and is superseded | [Receipt reading](decisions/receipt-reading.md) |
 | Reconciliation | Main currency only; the statement date starts on the last day of the previous month | [Reconciliation](decisions/reconciliation.md) |
 | Payees | Payee names are personal rows keyed by `PayeeKey`; a chain's shops stay separate payees; the statement's own payee column is not stored | [Reports](decisions/reports.md) |
+| Money flow | The chart's node is "Saved" while the year review's column reads "Kept" in English (both "Sutaupyta" in Lithuanian); only expense groups below zero feed Money back | [Reports](decisions/reports.md) |
 | Bank import | No credit card account type; a mapped CSV needs a header row | [Swedbank CSV import](decisions/swedbank-csv-import.md) |
 | Transactions | No separate "Refunds" value in the type filter | [Transactions](decisions/transactions.md) |
+| Spreading | Forward from the payment's month only; no spread on a split or a refund; the import review cannot set a spread; changing the ledger's date range drops the drill-through flag | [Transactions](decisions/transactions.md) |
+| Transaction groups | A group can be created from one row through "Add to group…", because the phone has no multi-select; groups are personal; a group's dates and net cover its matching members; the gate was waived by the owner on 2026-10-01 | [Transaction groups](decisions/transaction-groups.md) |
 | Learned categories | A housemate's rows on a shared account train the model; refunds are neither trained on nor guessed for; the plan's 0.80 and 3 thresholds are kept until the evaluation | [Learned categories](decisions/learned-categories.md) |
 
 ## 3. Gaps inside features that exist
@@ -48,16 +79,23 @@ Open questions of the plans built on 2026-09-29 and 2026-09-30 were answered whi
 | --- | --- | --- |
 | Investments | Corporate actions other than splits are only counted (mergers, spin-offs, symbol changes) | M |
 | Investments | Bonds by hand only; options, futures and short positions out of scope | L |
+| Live prices | EODHD's free tier gives one year of history; Nasdaq Baltic shares and crypto priced outside EUR only through a price file; the EODHD currency lookup is kept in memory and costs a second call after every restart | S each |
 | Users | No forced password change after an administrator reset (rejected on 2026-09-19 unless done completely) | M |
 | Settings | Installation-wide only; no per-user reporting currency (the ledger's rows per page became a per-browser choice on 2026-09-30) | L |
 | Exchange rates | ECB only; no manual rate, no currencies outside the ECB list | S |
 | Backups | On demand only; a scheduler and offsite copies were removed on 2026-09-05 and stay a deliberate decision | M, needs the decision reopened |
 | Data export per user | A download imports only into the version that wrote it, because `MemberImport` refuses another migration; every migration makes older downloads unimportable, so it is no way to move between versions | M |
+| Double-entry journal | Starts each debt from its current record, because the app keeps no history of manual debt changes; settle-up receivables are not modelled; no journal per household | M |
 | Household settle-up | No "my share" view of reports, budgets and the dashboard; open balances stay out of net worth | M |
 | Reconciliation | An account's main currency only; its other currencies cannot be reconciled | S |
 | Monthly digest | The "Everything" scope only; no digest per household | S |
 | Bank statement import | The statement's separate payee is not stored, so the payee key comes from the description alone; a mapped CSV needs a header row; a card is an account of type Other | S each |
 | Transactions | Bulk actions on selected rows set a category or tags only; no bulk delete with one undo and no moving rows to another account | S |
+| Spreading | No spread that starts before the payment, for a bill paid in arrears; no spread on a split or a refund; no spread chosen in the import review | S each |
+| Bills calendar | A bank row that paid an entry the user never confirmed shows "not confirmed" with no way to mark the occurrence done without recording it again; matching by bank text can miss a renamed payee | S |
+| Transaction groups | Groups are personal, so a household cannot share one; the import review cannot put its rows straight into a group | M, S |
+| Locations | Place names drift ("Maxima, Ozo g. 18" and "Maxima Ozo") with no merge or rename list; the map needs the administrator to extract and mount a tile file by hand | S each |
+| API writes | Goal progress is not writable (a goal's update needs the whole goal); the idempotency key works on POST only | S |
 | Debt amortization | An overpayment always shortens the term; a lower payment for the same term is not offered | S |
 | Unusual amounts | The thresholds and the price-rise margin have not been tuned on real data | S, after the trial |
 
@@ -65,19 +103,22 @@ Open questions of the plans built on 2026-09-29 and 2026-09-30 were answered whi
 
 | Feature | What it needs | Size |
 | --- | --- | --- |
-| PWA and offline | Manifest, service worker, offline queue for new transactions | L |
+| PWA and offline | A service worker and an offline queue for new transactions; the manifest and icons already exist | L |
 | Bank APIs | PSD2 aggregator; licensing and consent renewal make this costly for a household tool | L |
 
 ## 5. New ideas
 
-Ordered by how much they would help daily use for the effort. Following the product direction, each one lives on a page that already exists rather than adding a page, and none sends data outside the installation. The ideas below have no plan yet.
+Ordered by how much they would help daily use for the effort. Following the product direction, each one lives on a page that already exists rather than adding a page, and none sends data outside the installation. The ideas below have no plan yet; [Plans](plans/README.md) has none open.
 
 | Idea | Why | Where | Size |
 | --- | --- | --- | --- |
-| Quick add from the command palette | Typing `12.50 maxima` in `Ctrl+K` offers an expense for today on the last used account with the recalled or rule category, parsed in the browser; the fastest path for a cash or card payment the bank has not exported yet | Command palette, transaction form | S |
-| Possible duplicates | Two rows on one account with the same amount and payee key within a few days, such as one typed by hand and imported unmatched, or one statement imported in two formats; listed on the month-end close with "Keep both" and "Delete one", and as a ledger filter | Month-end close, ledger filters | S |
+| Quick add from the command palette | Typing `12.50 maxima` in `Ctrl+K` offers an expense for today on the last used account with the recalled, rule or learned category, parsed in the browser; the fastest path for a cash or card payment the bank has not exported yet | Command palette, transaction form | S |
+| Possible duplicates | Two rows on one account with the same amount and payee key within a few days, such as one typed by hand and imported unmatched, one added through the API and imported, or one statement imported in two formats; listed on the month-end close with "Keep both" and "Delete one", and as a ledger filter | Month-end close, ledger filters | S |
+| Mark a recurring occurrence as paid | When the calendar shows a bank row paid an entry that was never confirmed, "Mark as done" advances the entry to its next date without writing a second transaction | Bills calendar, recurring entries | S |
 | Find a purchase by receipt item | The ledger search also matches the item names of read receipts, so "vacuum" finds the purchase and its warranty date without remembering the shop | Ledger search | S |
 | Subscription totals | The recurring entries page sums what active expense entries cost a month and a year in the reporting currency, and marks an entry whose payment has not matched for two cycles as possibly cancelled, from the calendar's paid matching | Recurring entries | S |
+| Places list | Under Categories, the member's places with their counts, renamed or merged in one step like payee names, so the place report and the map stop splitting one shop in two | Categories hub | S |
+| Goal progress for automations | A `PATCH /api/goals/{id}/progress` that a read-and-write token may call, so a script can move a manual goal without holding the whole goal | Goals, API tokens | S |
 | Net worth pace | The net worth chart extends a dashed line at the trailing twelve months' change and states when chosen milestones would be reached; arithmetic on recorded figures, labelled as such | Wealth › Net worth | S |
 | Target allocation | A member sets target shares by type, currency or security; the allocation section shows the drift and how a new amount would be split to close it, stated as arithmetic and not advice | Wealth › Investments | M |
 | Money with people outside the household | Lent to a friend or owed for a shared dinner, tracked per named person with a running balance and "Record payment", without giving that person a login; reuses the settle-up balance code | Households page, transaction row menu | M |
@@ -90,20 +131,27 @@ Ordered by how much they would help daily use for the effort. Following the prod
 | Item | Why | Size |
 | --- | --- | --- |
 | Read `PayeeKey` in SQL everywhere | Unusual amounts, subscription detection and price rises (`PriceRiseMatcher.LoadChargesAsync`) still normalize descriptions in memory, while the forecast and the calendar read the stored column through `RecurringHistory.LoadAsync`; moving them only removes code | S |
-| End-to-end coverage for the newest flows | The suite covers sign-in, two-factor, passkeys, imports, transfers, recurring bills, users, backup and the phone layout; nothing drives settle-up between two members, a refund, a reconciliation, the month-end close, the member download and import, receipt reading or a shared budget or asset | M |
-| Large-ledger timing | Seed about ten years and 100,000 rows across two members and time the ledger, a report with a comparison, the year review, the forecast, the calendar and both exports; spread slices, the recurring history and the ledger's union of rows and [groups](features/transaction-groups.md) are the newest reads to watch, the last of them against 300 ms at the 95th percentile under every sort with 200 groups | S |
+| End-to-end coverage for the newest flows | The suite covers sign-in, two-factor, passkeys, imports, transfers, recurring bills, users, backup, the phone layout and the place map; nothing drives settle-up between two members, a refund, a reconciliation, the month-end close, the member download and import, receipt reading, a shared budget or asset, spreading, the bills calendar, a transaction group, a learned suggestion or a write through an API token | M |
+| Large-ledger timing | Seed about ten years and 100,000 rows across two members and time the ledger, a report with a comparison, the year review, the forecast, the calendar and both exports. Watch the newest reads: spread slices, the recurring history, place suggestions, the member download with its journal, the learned model's training (under 150 ms for a 500-row import preview with 10,000 training rows), and the ledger's union of rows and [groups](features/transaction-groups.md) against 300 ms at the 95th percentile under every sort with 200 groups | S |
+| Seed realistic history | `just seed` creates recurring entries today, so the bills calendar and the forecast's history look empty in demo data; backdate the seeded entries and give the demo ledger a spread payment, a group, places and a few months of uncategorized rows for the learned suggestions | S |
+| `tools/jx-mcp` in CI | The MCP package has its own type check, tests and build that no CI job runs, and its dependencies are outside the frontend's audit | S |
+| Line endings in the working copy | Many docs and the EF migration files appear with CRLF in the working copy and are normalized only at commit; a `.gitattributes` rule for `*.md`, `*.cs` and the migrations would stop the warnings and keep tools that read the working copy consistent | S |
 
 ## Suggested order
 
-1. Section 1, because the release is not verified without it; the daily-use trial is also where the ideas above get confirmed or dropped.
-2. Section 2 before the trial starts, so the trial runs on answers the owner chose rather than defaults picked while away.
-3. End-to-end coverage and the large-ledger timing from section 6, because they make the verification pass cheaper to repeat.
-4. During the trial, the small ideas that save daily effort: quick add, possible duplicates and finding a purchase by receipt item.
+1. Section 1's "Run what has not run", because nine features have never met a database or a browser; fix what it finds before anything else.
+2. The rest of section 1, because the release is not verified without it; the daily-use trial is also where the ideas above get confirmed or dropped.
+3. Section 2 before the trial starts, so the trial runs on answers the owner chose rather than defaults picked while away.
+4. Seed realistic history, end-to-end coverage and the large-ledger timing from section 6, because they make the verification pass cheaper to repeat.
+5. During the trial, the small ideas that save daily effort: quick add, possible duplicates, marking a recurring occurrence as paid and finding a purchase by receipt item.
+6. After six months of real data, the learned categories evaluation, then the decision on its switch.
 
 ## Done
 
 | Date | Item | Where it is described |
 | --- | --- | --- |
+| 2026-10-01 | Old worktrees merged and removed: the three worktrees under `.claude/worktrees` held nothing master lacked once the attachment metadata cleaning and the split-line order were ported, so they and their `claude/dazzling-dubinsky-635850` and `claude/gifted-morse-9e2dd0` branches, which pointed at the history from before the trailer rewrite, were removed | This page |
+| 2026-10-01 | Split lines keep the order they were entered: each line stores its place in the request as `Position`, and the transaction response, the category proration where the last line takes the remainder and the double-entry journal order by it and then by `Id`, so existing lines keep a fixed order without a backfill. Ported from an unfinished 2026-09-29 worktree | [Transactions](features/transactions.md), [Data model](data-model.md) |
 | 2026-10-01 | Learned categories, built at once because the owner waived the evaluation gate, behind a new `LearnedCategories` switch that stays off until the evaluation on the real ledger has run: a hand-written naive Bayes model, trained per request inside the API from the categorized rows the caller can see and never stored, guesses a category where no rule gives one. The import review fills it with a "Learned" mark and its confidence, in the order rule, learned, recall, for every statement format; the transaction form offers "Suggested: Groceries" under the category after the description, never for a refund, from `POST /api/transactions/suggest-category`; and with the Uncategorized filter on, **Suggest categories** in the ledger groups up to 200 rows by suggested category and applies the ticked groups through `bulk-category`, which gains `onlyUncategorized`. `GET /api/transactions/uncategorized-suggestions` is token-readable, the form's `POST` browser-only | [Learned categories](features/learned-categories.md) |
 | 2026-10-01 | Transaction groups, built at once because the owner waived the daily-use gate: a member folds rows that belong together, such as a trip, into one named ledger row with the date range, the number of rows and the net in the reporting currency, which expands in place; Group in the selection toolbar for two or more rows, and Add to group… and Remove from group in a row's menu, on the phone too. The page reads the new `GET /api/transactions/ledger`, which pages a SQL union of ungrouped rows and groups so a group is one item under every sort, while `GET /api/transactions`, reports, budgets, balances, the month close and the journal are unchanged; membership is written without touching `UpdatedAt`, so closed months do not drift. Groups are personal, Ungroup goes to the trash with undo, the CSV gains a `Group` column, the member export carries the groups, and the group routes are token-readable but not token-writable | [Transaction groups](features/transaction-groups.md) |
 | 2026-10-01 | Transaction locations: behind a new `Locations` switch, off by default, a transaction carries a Place of the member's own with suggestions of earlier places, and, from **Use my location** over HTTPS, its position, named after the household's nearest earlier place within 150 metres and never looked up outside the installation; `Permissions-Policy` now allows geolocation for the site itself. Fill from receipt fills the place with the merchant and the receipt's address line, and a fresh photo's GPS position, read before the metadata is stripped and never stored with the reading, is offered. The ledger searches and filters by place, Reports gains Expense by place, the CSV a `Place` column, and the activity log the place but not the coordinates. The map, built at once because the owner waived its gate, draws the places as dots with MapLibre GL over a PMTiles extract of Lithuania that the administrator puts in the `maps` volume, served by Caddy from the same origin with the worker, style and fonts bundled, so the Content-Security-Policy is unchanged | [Transaction locations](features/transaction-locations.md) |
