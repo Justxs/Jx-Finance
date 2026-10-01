@@ -26,7 +26,12 @@ public static class AmortizationCalculator
 
     public static Result<AmortizationSchedule> Calculate(AmortizationTerms terms) => Calculate(terms, ExtraPayments.None);
 
-    public static Result<AmortizationSchedule> Calculate(AmortizationTerms terms, ExtraPayments extra)
+    public static Result<AmortizationSchedule> Calculate(AmortizationTerms terms, ExtraPayments extra) => Build(terms, extra, null);
+
+    public static Result<AmortizationSchedule> CalculateKeepingTerm(AmortizationTerms terms, ExtraPayments extra) =>
+        Calculate(terms).TryGetValue(out var plain) ? Build(terms, extra, plain.Rows.Count) : PaymentTooSmall();
+
+    private static Result<AmortizationSchedule> Build(AmortizationTerms terms, ExtraPayments extra, int? keptPayments)
     {
         Validate(terms, extra);
 
@@ -50,7 +55,7 @@ public static class AmortizationCalculator
             var date = terms.FirstPaymentDate.AddMonths(number - 1);
             var interest = Money.Round(balance * rate);
             var principal = Math.Max(0, terms.Type == AmortizationType.Annuity ? regular - interest : regular);
-            if (principal >= balance || number == terms.TermMonths)
+            if (principal >= balance || number == (keptPayments ?? terms.TermMonths))
             {
                 principal = balance;
             }
@@ -65,17 +70,23 @@ public static class AmortizationCalculator
             extraAmount = Math.Min(extraAmount, balance - principal);
             balance -= principal + extraAmount;
             rows.Add(new AmortizationRow(number, date, interest + principal, interest, principal, extraAmount, balance));
+            if (keptPayments is { } kept && extraAmount > 0 && balance > 0)
+            {
+                regular = RegularAmount(terms.Type, balance, terms.AnnualRatePercent, kept - number);
+            }
         }
 
         return new AmortizationSchedule(terms.Principal, rows[0].Payment, rows);
     }
 
-    private static decimal RegularAmount(AmortizationTerms terms) => (terms.Type, terms.TermMonths) switch
-    {
-        (AmortizationType.Linear, { } termMonths) => Money.Round(terms.Principal / termMonths),
-        (_, { } termMonths) => LevelPayment(terms.Principal, terms.AnnualRatePercent, termMonths),
-        _ => terms.Payment!.Value,
-    };
+    private static decimal RegularAmount(AmortizationTerms terms) => terms.TermMonths is { } termMonths
+        ? RegularAmount(terms.Type, terms.Principal, terms.AnnualRatePercent, termMonths)
+        : terms.Payment!.Value;
+
+    private static decimal RegularAmount(AmortizationType type, decimal principal, decimal annualRatePercent, int termMonths) =>
+        type == AmortizationType.Linear
+            ? Money.Round(principal / termMonths)
+            : LevelPayment(principal, annualRatePercent, termMonths);
 
     private static void Validate(AmortizationTerms terms, ExtraPayments extra)
     {

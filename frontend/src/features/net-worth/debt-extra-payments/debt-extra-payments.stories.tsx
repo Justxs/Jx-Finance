@@ -1,7 +1,14 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, fn, userEvent } from "storybook/test";
+import { savePreferences } from "@/stores/preferences";
 import { withWidth } from "@/storybook/decorators";
-import { mortgageSchedule, mortgageScheduleWithExtra } from "@/storybook/fixtures";
+import {
+  buildDebtSchedule,
+  linearDebt,
+  mortgageSchedule,
+  mortgageScheduleWithExtra,
+  mortgageScheduleWithLumpSum,
+} from "@/storybook/fixtures";
 import { DebtExtraPayments, noExtraPayments } from "./debt-extra-payments";
 
 const meta = {
@@ -20,6 +27,8 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+const lumpSumDraft = { extraMonthly: "", lumpSum: "10000.00", lumpSumDate: "2026-10-01" };
+
 export const Default: Story = {};
 
 export const WithSavings: Story = {
@@ -27,6 +36,51 @@ export const WithSavings: Story = {
     draft: { ...noExtraPayments, extraMonthly: "150.00" },
     schedule: mortgageScheduleWithExtra,
   },
+};
+
+export const ShorterTermOrLowerPayment: Story = {
+  args: { draft: lumpSumDraft, schedule: mortgageScheduleWithLumpSum },
+  play: async ({ canvas }) => {
+    const status = canvas.getByRole("status");
+    await expect(status).toHaveTextContent(/shorter term|trumpesnis terminas/i);
+    await expect(status).toHaveTextContent(/lower payment|mažesnė įmoka/i);
+    await expect(status).toHaveTextContent(/instead of|vietoj/i);
+  },
+};
+
+export const LinearLowerPayment: Story = {
+  args: {
+    currency: linearDebt.currency,
+    draft: { extraMonthly: "", lumpSum: "2000.00", lumpSumDate: "2026-10-01" },
+    schedule: buildDebtSchedule(linearDebt, { lumpSum: "2000.00", lumpSumDate: "2026-10-01" }),
+  },
+};
+
+export const HiddenAmounts: Story = {
+  args: { draft: lumpSumDraft, schedule: mortgageScheduleWithLumpSum },
+  beforeEach: () => {
+    savePreferences({ amountsHidden: true });
+    return () => {
+      savePreferences({ amountsHidden: false });
+    };
+  },
+  play: async ({ canvas }) => {
+    const status = canvas.getByRole("status");
+    await expect(status).toHaveTextContent("•••••");
+    await expect(status).not.toHaveTextContent(/€\s?\d|\d\s?€/);
+  },
+};
+
+export const Phone: Story = {
+  args: { draft: lumpSumDraft, schedule: mortgageScheduleWithLumpSum },
+  parameters: {
+    viewport: {
+      options: {
+        phone: { name: "Phone 375", styles: { width: "375px", height: "812px" }, type: "mobile" },
+      },
+    },
+  },
+  globals: { viewport: { value: "phone", isRotated: false } },
 };
 
 export const InvalidAmount: Story = {

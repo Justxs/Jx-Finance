@@ -12,7 +12,9 @@ public sealed class GetDebtScheduleSummary : Summary<GetDebtScheduleEndpoint, Ge
             + "first payment date and either its term or its fixed monthly payment. Every row splits the payment into "
             + "interest and principal, amounts are rounded to cents and the last payment absorbs the rounding. "
             + "The schedule is computed on every request and never stored. With extraMonthly or lumpSum the response "
-            + "also carries withExtra, the same debt repaid with those overpayments, and what they save.";
+            + "also carries withExtra, the same debt repaid with those overpayments and the same payment, and what they save, "
+            + "and lowerPayment, the other choice: the same number of payments, with the payment recomputed for the "
+            + "remaining term after every overpayment, the first lowered payment and the interest that saves.";
         Params["id"] = "The debt id.";
         RequestParam(r => r.ExtraMonthly, "Optional overpayment added to every monthly payment, as a decimal string such as \"100.00\".");
         RequestParam(r => r.LumpSum, "Optional one-off overpayment, as a decimal string. Needs lumpSumDate.");

@@ -100,6 +100,7 @@ export * from "./dashboardLayoutResponse";
 export * from "./dashboardSummaryParams";
 export * from "./dashboardSummaryResponse";
 export * from "./dateOnly";
+export * from "./debtLowerPayment";
 export * from "./debtPaymentCandidatesParams";
 export * from "./debtPaymentKind";
 export * from "./debtPaymentResponse";

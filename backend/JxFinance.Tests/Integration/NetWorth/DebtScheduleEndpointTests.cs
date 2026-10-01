@@ -23,6 +23,7 @@ public sealed class DebtScheduleEndpointTests(ApiFixture fixture) : IntegrationT
         Assert.Equal("0.00", schedule.Plan.Rows[^1].Balance);
         Assert.Equal(schedule.Plan.PayoffDate, debt.PayoffDate);
         Assert.Null(schedule.WithExtra);
+        Assert.Null(schedule.LowerPayment);
         Assert.Null(schedule.InterestSaved);
         Assert.Equal(
             decimal.Parse(schedule.Plan.TotalPaid, System.Globalization.CultureInfo.InvariantCulture) - 100000m,
@@ -82,6 +83,39 @@ public sealed class DebtScheduleEndpointTests(ApiFixture fixture) : IntegrationT
         var paid = Assert.Single(schedule!.WithExtra!.Rows, row => row.Extra != "0.00");
         Assert.Equal((3, "5000.00"), (paid.Number, paid.Extra));
         Assert.Equal(5, schedule.WithExtra.Payments);
+    }
+
+    [Fact]
+    public async Task A_lump_sum_answers_both_a_shorter_term_and_a_lower_payment_side_by_side()
+    {
+        using var member = await CreateUserClientAsync();
+        var debt = await CreateDebtAsync(member, new { loanAmount = "100000.00", interestRate = 5m, firstPaymentDate = "2026-01-15", termMonths = 360 });
+
+        var schedule = await member.GetFromJsonAsync<ScheduleDto>($"/api/debts/{debt.Id}/schedule?lumpSum=10000.00&lumpSumDate=2026-01-01", TestContext.Current.CancellationToken);
+
+        Assert.True(schedule!.WithExtra!.Payments < 360);
+        var lower = schedule.LowerPayment!;
+        Assert.Equal(schedule.Plan.PayoffDate, lower.PayoffDate);
+        Assert.Equal((new DateOnly(2026, 2, 15), "483.07", "536.82"), (lower.PaymentFrom, lower.Payment, lower.PaymentBefore));
+        Assert.Equal(
+            decimal.Parse(schedule.Plan.TotalInterest, System.Globalization.CultureInfo.InvariantCulture)
+                - decimal.Parse(lower.TotalInterest, System.Globalization.CultureInfo.InvariantCulture),
+            decimal.Parse(lower.InterestSaved, System.Globalization.CultureInfo.InvariantCulture));
+        Assert.True(
+            decimal.Parse(lower.InterestSaved, System.Globalization.CultureInfo.InvariantCulture)
+                < decimal.Parse(schedule.InterestSaved!, System.Globalization.CultureInfo.InvariantCulture));
+    }
+
+    [Fact]
+    public async Task A_lump_sum_that_repays_the_debt_has_no_lower_payment_to_show()
+    {
+        using var member = await CreateUserClientAsync();
+        var debt = await CreateDebtAsync(member, new { loanAmount = "1000.00", interestRate = 0m, firstPaymentDate = "2026-01-15", termMonths = 10 });
+
+        var schedule = await member.GetFromJsonAsync<ScheduleDto>($"/api/debts/{debt.Id}/schedule?lumpSum=5000&lumpSumDate=2026-01-01", TestContext.Current.CancellationToken);
+
+        var lower = schedule!.LowerPayment!;
+        Assert.Equal((new DateOnly(2026, 1, 15), (DateOnly?)null, (string?)null, (string?)null), (lower.PayoffDate, lower.PaymentFrom, lower.Payment, lower.PaymentBefore));
     }
 
     [Fact]
@@ -200,9 +234,12 @@ public sealed class DebtScheduleEndpointTests(ApiFixture fixture) : IntegrationT
         PlanDto Plan,
         PlanDto? WithExtra,
         string? InterestSaved,
-        int? PaymentsSaved);
+        int? PaymentsSaved,
+        LowerPaymentDto? LowerPayment);
 
     private sealed record PlanDto(DateOnly PayoffDate, int Payments, string TotalPaid, string TotalInterest, string TotalExtra, List<RowDto> Rows);
+
+    private sealed record LowerPaymentDto(DateOnly PayoffDate, string TotalInterest, string InterestSaved, DateOnly? PaymentFrom, string? Payment, string? PaymentBefore);
 
     private sealed record RowDto(int Number, DateOnly Date, string Payment, string Interest, string Principal, string Extra, string Balance);
 }

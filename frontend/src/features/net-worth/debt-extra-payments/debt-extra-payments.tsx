@@ -76,6 +76,7 @@ export function DebtExtraPayments({
       ? t("netWorth.schedule.lumpSumDateNeeded")
       : undefined;
   const faster = schedule.withExtra;
+  const lower = schedule.lowerPayment;
 
   return (
     <div className="space-y-4">
@@ -121,19 +122,60 @@ export function DebtExtraPayments({
           />
         </FieldShell>
       </div>
-      <p role="status" className="text-sm">
-        {faster && schedule.interestSaved !== null && schedule.paymentsSaved !== null ? (
-          <span className="font-medium">
-            {t("netWorth.schedule.savings", {
-              date: formatDate(faster.payoffDate),
-              count: schedule.paymentsSaved,
-              amount: money.format(Number(schedule.interestSaved), currency),
-            })}
-          </span>
+      <div role="status" className="text-sm">
+        {faster && lower && schedule.interestSaved !== null && schedule.paymentsSaved !== null ? (
+          <dl className="grid gap-x-8 gap-y-4 sm:grid-cols-2">
+            <Outcome
+              label={t("netWorth.schedule.shorterTerm")}
+              value={formatDate(faster.payoffDate)}
+              detail={t("netWorth.schedule.savings", {
+                count: schedule.paymentsSaved,
+                amount: money.format(Number(schedule.interestSaved), currency),
+              })}
+            />
+            {lower.payment !== null &&
+            lower.paymentBefore !== null &&
+            lower.paymentFrom !== null ? (
+              <Outcome
+                label={t("netWorth.schedule.lowerPayment")}
+                value={money.format(Number(lower.payment), currency)}
+                detail={t("netWorth.schedule.paymentSavings", {
+                  before: money.format(Number(lower.paymentBefore), currency),
+                  date: formatDate(lower.paymentFrom),
+                  amount: money.format(Number(lower.interestSaved), currency),
+                  payoff: formatDate(lower.payoffDate),
+                })}
+              />
+            ) : (
+              <Outcome
+                label={t("netWorth.schedule.lowerPayment")}
+                value={formatDate(lower.payoffDate)}
+                detail={t("netWorth.schedule.paidOffSavings", {
+                  amount: money.format(Number(lower.interestSaved), currency),
+                })}
+              />
+            )}
+          </dl>
         ) : (
-          <span className="text-muted-foreground">{t("netWorth.schedule.noSavings")}</span>
+          <p className="text-muted-foreground">{t("netWorth.schedule.noSavings")}</p>
         )}
-      </p>
+      </div>
+    </div>
+  );
+}
+
+interface OutcomeProps {
+  label: string;
+  value: string;
+  detail: string;
+}
+
+function Outcome({ label, value, detail }: Readonly<OutcomeProps>) {
+  return (
+    <div className="min-w-0">
+      <dt className="text-muted-foreground">{label}</dt>
+      <dd className="mt-0.5 text-xl font-semibold wrap-break-word tabular-nums">{value}</dd>
+      <dd className="mt-0.5 text-muted-foreground">{detail}</dd>
     </div>
   );
 }

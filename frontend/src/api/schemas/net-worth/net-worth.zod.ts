@@ -1170,7 +1170,7 @@ export const UpdateDebtPaymentResponse = zod.object({
 });
 
 /**
- * Computes the monthly amortization schedule of a debt from its loan amount, annual interest rate, first payment date and either its term or its fixed monthly payment. Every row splits the payment into interest and principal, amounts are rounded to cents and the last payment absorbs the rounding. The schedule is computed on every request and never stored. With extraMonthly or lumpSum the response also carries withExtra, the same debt repaid with those overpayments, and what they save.
+ * Computes the monthly amortization schedule of a debt from its loan amount, annual interest rate, first payment date and either its term or its fixed monthly payment. Every row splits the payment into interest and principal, amounts are rounded to cents and the last payment absorbs the rounding. The schedule is computed on every request and never stored. With extraMonthly or lumpSum the response also carries withExtra, the same debt repaid with those overpayments and the same payment, and what they save, and lowerPayment, the other choice: the same number of payments, with the payment recomputed for the remaining term after every overpayment, the first lowered payment and the interest that saves.
  * @summary Get the repayment schedule of a debt
  */
 export const debtScheduleResponseLoanAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
@@ -1207,6 +1207,18 @@ export const debtScheduleResponseWithExtraTwoRowsItemBalanceRegExp = new RegExp(
   "^-?\\d+(\\.\\d{1,8})?$",
 );
 export const debtScheduleResponseInterestSavedRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const debtScheduleResponseLowerPaymentTwoTotalInterestRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const debtScheduleResponseLowerPaymentTwoInterestSavedRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const debtScheduleResponseLowerPaymentTwoPaymentRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const debtScheduleResponseLowerPaymentTwoPaymentBeforeRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
 
 export const DebtScheduleResponse = zod.object({
   debtId: zod.uuid(),
@@ -1273,6 +1285,27 @@ export const DebtScheduleResponse = zod.object({
   ]),
   interestSaved: zod.stringFormat("decimal", debtScheduleResponseInterestSavedRegExp).nullable(),
   paymentsSaved: zod.int().nullable(),
+  lowerPayment: zod.union([
+    zod.null(),
+    zod.object({
+      payoffDate: zod.iso.date(),
+      totalInterest: zod.stringFormat(
+        "decimal",
+        debtScheduleResponseLowerPaymentTwoTotalInterestRegExp,
+      ),
+      interestSaved: zod.stringFormat(
+        "decimal",
+        debtScheduleResponseLowerPaymentTwoInterestSavedRegExp,
+      ),
+      paymentFrom: zod.union([zod.null(), zod.iso.date()]),
+      payment: zod
+        .stringFormat("decimal", debtScheduleResponseLowerPaymentTwoPaymentRegExp)
+        .nullable(),
+      paymentBefore: zod
+        .stringFormat("decimal", debtScheduleResponseLowerPaymentTwoPaymentBeforeRegExp)
+        .nullable(),
+    }),
+  ]),
 });
 
 /**

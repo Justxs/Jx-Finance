@@ -15,7 +15,8 @@ public sealed record DebtScheduleResponse(
     DebtSchedulePlan Plan,
     DebtSchedulePlan? WithExtra,
     [property: Money] decimal? InterestSaved,
-    int? PaymentsSaved);
+    int? PaymentsSaved,
+    DebtLowerPayment? LowerPayment);
 
 public sealed record DebtSchedulePlan(
     DateOnly PayoffDate,
@@ -33,3 +34,11 @@ public sealed record DebtScheduleRow(
     [property: Money] decimal Principal,
     [property: Money] decimal Extra,
     [property: Money] decimal Balance);
+
+public sealed record DebtLowerPayment(
+    DateOnly PayoffDate,
+    [property: Money] decimal TotalInterest,
+    [property: Money] decimal InterestSaved,
+    DateOnly? PaymentFrom,
+    [property: Money] decimal? Payment,
+    [property: Money] decimal? PaymentBefore);

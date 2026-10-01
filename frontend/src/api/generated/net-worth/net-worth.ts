@@ -1904,7 +1904,7 @@ export const getDebtScheduleUrl = (id: string, params?: DebtScheduleParams) => {
 };
 
 /**
- * Computes the monthly amortization schedule of a debt from its loan amount, annual interest rate, first payment date and either its term or its fixed monthly payment. Every row splits the payment into interest and principal, amounts are rounded to cents and the last payment absorbs the rounding. The schedule is computed on every request and never stored. With extraMonthly or lumpSum the response also carries withExtra, the same debt repaid with those overpayments, and what they save.
+ * Computes the monthly amortization schedule of a debt from its loan amount, annual interest rate, first payment date and either its term or its fixed monthly payment. Every row splits the payment into interest and principal, amounts are rounded to cents and the last payment absorbs the rounding. The schedule is computed on every request and never stored. With extraMonthly or lumpSum the response also carries withExtra, the same debt repaid with those overpayments and the same payment, and what they save, and lowerPayment, the other choice: the same number of payments, with the payment recomputed for the remaining term after every overpayment, the first lowered payment and the interest that saves.
  * @summary Get the repayment schedule of a debt
  */
 export const debtSchedule = async (

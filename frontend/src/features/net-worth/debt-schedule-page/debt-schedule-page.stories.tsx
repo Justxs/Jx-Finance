@@ -75,6 +75,7 @@ export const PayingExtra: Story = {
     await expect(
       await canvas.findByText(/payments? sooner|įmok\S* anksčiau/i, {}, { timeout: 5000 }),
     ).toBeInTheDocument();
+    await expect(canvas.getByText(/^(lower payment|mažesnė įmoka)$/i)).toBeInTheDocument();
     await expect(
       canvas.getAllByRole("columnheader", { name: /overpayment|permoka/i }),
     ).toHaveLength(1);

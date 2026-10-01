@@ -205,6 +205,113 @@ public sealed class AmortizationCalculatorTests
         Assert.Equal(Schedule(terms).Rows, schedule.Rows);
     }
 
+    [Theory]
+    [InlineData(1, 0)]
+    [InlineData(120, 0)]
+    [InlineData(1, 1)]
+    [InlineData(120, 1)]
+    public void A_lump_sum_keeping_the_term_lowers_the_payment_from_the_next_month(int lumpSumNumber, int type)
+    {
+        var terms = new AmortizationTerms(100000m, 5m, First, 360, null, (AmortizationType)type);
+        var plain = Schedule(terms);
+
+        var lower = KeepingTerm(terms, new ExtraPayments(LumpSum: 10000m, LumpSumDate: First.AddMonths(lumpSumNumber - 1)));
+
+        Assert.Equal(360, lower.Rows.Count);
+        Assert.Equal(plain.Rows.Take(lumpSumNumber - 1), lower.Rows.Take(lumpSumNumber - 1));
+        var paid = lower.Rows[lumpSumNumber - 1];
+        Assert.Equal((plain.Rows[lumpSumNumber - 1].Payment, 10000m), (paid.Payment, paid.Extra));
+        var next = lower.Rows[lumpSumNumber];
+        var remaining = 360 - lumpSumNumber;
+        var expectedPrincipal = terms.Type == AmortizationType.Annuity
+            ? AmortizationCalculator.LevelPayment(paid.Balance, 5m, remaining) - next.Interest
+            : decimal.Round(paid.Balance / remaining, 2, MidpointRounding.AwayFromZero);
+        Assert.Equal(expectedPrincipal, next.Principal);
+        Assert.True(next.Payment < plain.Rows[lumpSumNumber].Payment);
+        Assert.Equal(100000m, lower.Rows.Sum(row => row.Principal + row.Extra));
+        Assert.Equal(0m, lower.Rows[^1].Balance);
+        Assert.Equal(plain.PayoffDate, lower.PayoffDate);
+        Assert.InRange(lower.TotalInterest, Schedule(terms, new ExtraPayments(LumpSum: 10000m, LumpSumDate: paid.Date)).TotalInterest, plain.TotalInterest);
+    }
+
+    [Fact]
+    public void A_lump_sum_keeping_the_term_of_the_thirty_year_mortgage_has_the_known_new_payment()
+    {
+        var terms = new AmortizationTerms(100000m, 5m, First, 360, null);
+
+        var lower = KeepingTerm(terms, new ExtraPayments(LumpSum: 10000m, LumpSumDate: First));
+
+        Assert.Equal(new AmortizationRow(1, First, 536.82m, 416.67m, 120.15m, 10000m, 89879.85m), lower.Rows[0]);
+        Assert.Equal(483.07m, lower.Rows[1].Payment);
+        Assert.All(lower.Rows.Skip(1).SkipLast(1), row => Assert.Equal(483.07m, row.Payment));
+    }
+
+    [Fact]
+    public void A_linear_lump_sum_keeping_the_term_shrinks_the_principal_part()
+    {
+        var terms = new AmortizationTerms(1200m, 12m, First, 12, null, AmortizationType.Linear);
+
+        var lower = KeepingTerm(terms, new ExtraPayments(LumpSum: 300m, LumpSumDate: First.AddMonths(5)));
+
+        Assert.Equal([100m, 100m, 100m, 100m, 100m, 100m, 50m, 50m, 50m, 50m, 50m, 50m], lower.Rows.Select(row => row.Principal));
+        Assert.Equal(53m, lower.Rows[6].Payment);
+        Assert.Equal(67.5m, lower.TotalInterest);
+    }
+
+    [Fact]
+    public void Keeping_the_term_rounds_the_new_payment_and_the_last_payment_absorbs_the_remainder()
+    {
+        var lower = KeepingTerm(
+            new AmortizationTerms(1000m, 0m, First, 3, null),
+            new ExtraPayments(LumpSum: 100m, LumpSumDate: First));
+
+        Assert.Equal([333.33m, 283.34m, 283.33m], lower.Rows.Select(row => row.Payment));
+        Assert.Equal(0m, lower.TotalInterest);
+        Assert.Equal(0m, lower.Rows[^1].Balance);
+    }
+
+    [Fact]
+    public void Keeping_the_term_of_a_fixed_payment_keeps_its_derived_number_of_payments()
+    {
+        var terms = new AmortizationTerms(100000m, 5m, First, null, 536.82m);
+
+        var lower = KeepingTerm(terms, new ExtraPayments(LumpSum: 10000m, LumpSumDate: First));
+
+        Assert.Equal(361, lower.Rows.Count);
+        Assert.Equal(AmortizationCalculator.LevelPayment(lower.Rows[0].Balance, 5m, 360), lower.Rows[1].Payment);
+    }
+
+    [Fact]
+    public void An_extra_payment_every_month_keeping_the_term_lowers_the_payment_every_month()
+    {
+        var terms = new AmortizationTerms(100000m, 5m, First, 360, null);
+
+        var lower = KeepingTerm(terms, new ExtraPayments(100m));
+
+        Assert.True(lower.Rows.Count <= 360);
+        Assert.All(lower.Rows.Zip(lower.Rows.Skip(1)).SkipLast(1), pair => Assert.True(pair.Second.Payment < pair.First.Payment));
+        Assert.Equal(100000m, lower.Rows.Sum(row => row.Principal + row.Extra));
+        Assert.InRange(lower.TotalInterest, Schedule(terms, new ExtraPayments(100m)).TotalInterest, Schedule(terms).TotalInterest);
+    }
+
+    [Fact]
+    public void A_lump_sum_that_repays_everything_ends_the_schedule_keeping_the_term_too()
+    {
+        var lower = KeepingTerm(
+            new AmortizationTerms(1000m, 0m, First, 10, null),
+            new ExtraPayments(LumpSum: 5000m, LumpSumDate: First));
+
+        Assert.Equal(new AmortizationRow(1, First, 100m, 0m, 100m, 900m, 0m), Assert.Single(lower.Rows));
+    }
+
+    [Fact]
+    public void Keeping_the_term_without_an_overpayment_is_the_plain_schedule()
+    {
+        var terms = new AmortizationTerms(100000m, 5m, First, 360, null);
+
+        Assert.Equal(Schedule(terms).Rows, KeepingTerm(terms, ExtraPayments.None).Rows);
+    }
+
     [Fact]
     public void Payment_dates_keep_the_day_of_the_first_payment_after_a_short_month()
     {
@@ -277,6 +384,13 @@ public sealed class AmortizationCalculatorTests
     private static AmortizationSchedule Schedule(AmortizationTerms terms, ExtraPayments? extra = null)
     {
         var result = AmortizationCalculator.Calculate(terms, extra ?? ExtraPayments.None);
+        Assert.True(result.IsSuccess, result.ErrorMessage);
+        return result.Value!;
+    }
+
+    private static AmortizationSchedule KeepingTerm(AmortizationTerms terms, ExtraPayments extra)
+    {
+        var result = AmortizationCalculator.CalculateKeepingTerm(terms, extra);
         Assert.True(result.IsSuccess, result.ErrorMessage);
         return result.Value!;
     }

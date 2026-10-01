@@ -3,6 +3,7 @@ import type {
   AssetResponse,
   AssetValuationResponse,
   AssetValueHistoryResponse,
+  DebtLowerPayment,
   DebtPaymentResponse,
   DebtResponse,
   DebtSchedulePlan,
@@ -175,13 +176,18 @@ function regularCents(principal: number, rate: number, terms: ScheduleTerms) {
   return Math.round((principal * rate * growth) / (growth - 1));
 }
 
-function schedulePlan(terms: ScheduleTerms, extra: ScheduleExtra = {}): DebtSchedulePlan | null {
+function schedulePlan(
+  terms: ScheduleTerms,
+  extra: ScheduleExtra = {},
+  keptPayments?: number,
+): DebtSchedulePlan | null {
   if (terms.loanAmount === null || terms.interestRate === null || !terms.firstPaymentDate) {
     return null;
   }
   const principal = toCents(terms.loanAmount);
   const rate = terms.interestRate / 1200;
-  const regular = regularCents(principal, rate, terms);
+  let regular = regularCents(principal, rate, terms);
+  const lastNumber = keptPayments ?? terms.termMonths;
   const monthlyExtra = toCents(extra.extraMonthly ?? "0");
   let lumpSum = toCents(extra.lumpSum ?? "0");
   const rows: DebtScheduleRow[] = [];
@@ -193,7 +199,7 @@ function schedulePlan(terms: ScheduleTerms, extra: ScheduleExtra = {}): DebtSche
       0,
       terms.amortizationType === "linear" ? regular : regular - interest,
     );
-    if (principalPart >= balance || number === terms.termMonths) {
+    if (principalPart >= balance || number === lastNumber) {
       principalPart = balance;
     }
     let extraPart = monthlyExtra;
@@ -212,6 +218,9 @@ function schedulePlan(terms: ScheduleTerms, extra: ScheduleExtra = {}): DebtSche
       extra: fromCents(extraPart),
       balance: fromCents(balance),
     });
+    if (keptPayments !== undefined && extraPart > 0 && balance > 0) {
+      regular = regularCents(balance, rate, { ...terms, termMonths: keptPayments - number });
+    }
   }
   function sum(pick: (row: DebtScheduleRow) => string) {
     return fromCents(rows.reduce((total, row) => total + toCents(pick(row)), 0));
@@ -313,6 +322,19 @@ function found<T>(item: T | undefined, fixture = "debts"): T {
   return item;
 }
 
+function lowerPaymentOf(plan: DebtSchedulePlan, lower: DebtSchedulePlan): DebtLowerPayment {
+  const first = lower.rows.findIndex((row) => toCents(row.extra) > 0);
+  const lowered = first === -1 ? undefined : lower.rows[first + 1];
+  return {
+    payoffDate: lower.payoffDate,
+    totalInterest: lower.totalInterest,
+    interestSaved: fromCents(toCents(plan.totalInterest) - toCents(lower.totalInterest)),
+    paymentFrom: lowered?.date ?? null,
+    payment: lowered?.payment ?? null,
+    paymentBefore: lowered ? (plan.rows[lowered.number - 1]?.payment ?? null) : null,
+  };
+}
+
 export function buildDebtSchedule(
   debt: DebtResponse,
   extra: ScheduleExtra = {},
@@ -324,6 +346,7 @@ export function buildDebtSchedule(
   }
   const hasExtra = Boolean(Number(extra.extraMonthly ?? 0) || Number(extra.lumpSum ?? 0));
   const faster = hasExtra ? schedulePlan(debt, extra) : null;
+  const lower = hasExtra ? schedulePlan(debt, extra, plan.payments) : null;
   const made = plan.rows.filter((row) => row.date <= asOf);
   return {
     debtId: debt.id,
@@ -340,6 +363,7 @@ export function buildDebtSchedule(
       ? fromCents(toCents(plan.totalInterest) - toCents(faster.totalInterest))
       : null,
     paymentsSaved: faster ? plan.payments - faster.payments : null,
+    lowerPayment: lower ? lowerPaymentOf(plan, lower) : null,
   };
 }
 
@@ -348,6 +372,11 @@ const mortgage = found(debts[0]);
 export const mortgageSchedule = buildDebtSchedule(mortgage);
 
 export const mortgageScheduleWithExtra = buildDebtSchedule(mortgage, { extraMonthly: "150.00" });
+
+export const mortgageScheduleWithLumpSum = buildDebtSchedule(mortgage, {
+  lumpSum: "10000.00",
+  lumpSumDate: "2026-10-01",
+});
 
 export const zeroRateSchedule = buildDebtSchedule(zeroRateDebt);
 

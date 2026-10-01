@@ -262,6 +262,7 @@ const contracts: Record<string, Contract> = {
   linearDebt: { schema: schemas.DebtsResponse, toResponse: asList },
   mortgageSchedule: { schema: schemas.DebtScheduleResponse },
   mortgageScheduleWithExtra: { schema: schemas.DebtScheduleResponse },
+  mortgageScheduleWithLumpSum: { schema: schemas.DebtScheduleResponse },
   zeroRateSchedule: { schema: schemas.DebtScheduleResponse },
   linearSchedule: { schema: schemas.DebtScheduleResponse },
   trackedMortgage: { schema: schemas.DebtsResponse, toResponse: asList },

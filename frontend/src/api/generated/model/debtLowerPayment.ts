@@ -5,25 +5,16 @@
  * Personal and household finance ledger. Every route lives under /api and answers JSON. Money is carried as a decimal string with at most two decimal places so nothing is lost to floating point; dates are YYYY-MM-DD in the instance time zone. Collections that can grow are paged with page and pageSize and answer with items, page, pageSize, and total. Authentication is a session cookie from POST /api/auth/login, so browser clients must send credentials. Failures answer application/problem+json with a machine-readable code per error; see the ProblemDetails schema.
  * OpenAPI spec version: v1
  */
-import type { AmortizationType } from "./amortizationType";
 import type { DateOnly } from "./dateOnly";
-import type { DebtLowerPayment } from "./debtLowerPayment";
-import type { DebtSchedulePlan } from "./debtSchedulePlan";
+import type { NullableOfDateOnly } from "./nullableOfDateOnly";
 
-export interface DebtScheduleResponse {
-  debtId: string;
-  asOf: DateOnly;
-  loanAmount: string;
-  interestRate: number;
-  amortizationType: AmortizationType;
-  regularPayment: string;
-  scheduledBalance: string;
-  paymentsMade: number;
-  plan: DebtSchedulePlan;
-  withExtra: null | DebtSchedulePlan;
+export interface DebtLowerPayment {
+  payoffDate: DateOnly;
+  totalInterest: string;
+  interestSaved: string;
+  paymentFrom: null | NullableOfDateOnly;
   /** @nullable */
-  interestSaved: string | null;
+  payment: string | null;
   /** @nullable */
-  paymentsSaved: number | null;
-  lowerPayment: null | DebtLowerPayment;
+  paymentBefore: string | null;
 }

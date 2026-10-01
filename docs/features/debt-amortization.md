@@ -83,6 +83,9 @@ Worked values that the tests pin:
 | 1 000 at 0% over 3 months | 333.33, 333.33, 333.34 |
 | 1 200 at 12% linear over 12 months | 100 principal every month, payments from 112.00 down to 101.00, 78.00 interest in total |
 | 100 000 at 5% over 360 months with 100 extra a month | 256 payments instead of 360 |
+| 100 000 at 5% over 360 months with 10 000 extra on the first payment, keeping the term | 483.07 a month from the second payment, still 360 payments |
+| 1 200 at 12% linear over 12 months with 300 extra on the sixth payment, keeping the term | 50 principal a month from the seventh payment instead of 100, 67.50 interest instead of 78.00 |
+| 1 000 at 0% over 3 months with 100 extra on the first payment, keeping the term | 333.33, 283.34, 283.33 |
 
 A term derives the payment and a payment derives the term: the schedule of a debt with a monthly payment is as long as it takes, and one that would take more than 600 payments (50 years), which includes any payment not above the first month's interest, is refused with `debt.paymentTooSmall`. A linear schedule needs a term, because its payment changes every month.
 
@@ -97,11 +100,14 @@ flowchart LR
     Lump["lumpSum, lumpSumDate"] --> Once["added to the first payment on or after the date"]
     Each --> Principal["reduces the balance directly"]
     Once --> Principal
-    Principal --> Shorter["fewer payments, less interest"]
+    Principal --> Shorter["withExtra: fewer payments, less interest"]
     Same --> Shorter
+    Principal --> Lower["lowerPayment: the same number of payments,<br/>the payment recomputed for the rest of the term"]
 ```
 
-An overpayment keeps the regular payment and shortens the term, which is what "what if I pay more" usually means and what most lenders do by default; recomputing a lower payment for the same term is the other choice and is not offered. `extraMonthly` is added to every payment and `lumpSum` once, to the first scheduled payment on or after `lumpSumDate` (a date before the first payment means the first one, a date after the payoff changes nothing). Either is capped at the balance left after the regular principal, so the last overpayment is only as large as it needs to be. For a linear loan the principal part stays the same and the overpayment comes off the end.
+An overpayment can be used two ways, and the response answers both so the page shows them side by side. `withExtra` keeps the regular payment and shortens the term, which is what most lenders do by default. `lowerPayment` keeps the number of payments of the plan without overpayments (the term, or for a debt with a fixed payment the number of payments that payment takes) and, after every payment that carries an overpayment, recomputes the regular amount from the balance left over the m payments left: an annuity gets a new level payment, round(B · r(1+r)^m / ((1+r)^m − 1)), or B / m at r = 0, and a linear loan a new principal part, round(B / m), so its payment still falls every month, from a lower start. The new amount is rounded to cents once, and the last payment absorbs the remainder exactly as in the plain plan. A recurring `extraMonthly` is an overpayment every month, so under `lowerPayment` the payment is recomputed every month and keeps falling; an overpayment that repays the whole balance ends the plan under both choices.
+
+`extraMonthly` is added to every payment and `lumpSum` once, to the first scheduled payment on or after `lumpSumDate` (a date before the first payment means the first one, a date after the payoff changes nothing). Either is capped at the balance left after the regular principal, so the last overpayment is only as large as it needs to be. For a linear loan the principal part stays the same and the overpayment comes off the end.
 
 ## The API
 
@@ -114,10 +120,11 @@ An overpayment keeps the regular payment and shortens the term, which is what "w
 | `regularPayment` | the level payment of an annuity, or the first (largest) payment of a linear loan |
 | `scheduledBalance`, `paymentsMade` | the balance after the last payment dated on or before today, and how many that is; the loan amount before the first payment |
 | `plan` | `payoffDate`, `payments`, `totalPaid`, `totalInterest`, `totalExtra` and `rows`, each row `number`, `date`, `payment` (interest plus principal), `interest`, `principal`, `extra` and `balance` after it |
-| `withExtra` | the same plan with the overpayments, or null when none was asked for |
+| `withExtra` | the same plan with the overpayments and the same payment, or null when none was asked for |
 | `interestSaved`, `paymentsSaved` | the differences between the two plans, or null |
+| `lowerPayment` | the overpayments keeping the term, or null when none was asked for: `payoffDate`, `totalInterest`, `interestSaved`, and `paymentFrom`, `payment` and `paymentBefore`, the date of the first payment after the first overpayment, its new amount and what the plan without overpayments asks on that date; those three are null when no payment follows, because the overpayment repaid the debt |
 
-The schedule is computed on every request from the stored terms and never stored. 600 rows at most, twice with an overpayment, is a few tens of kilobytes, and a stored copy would have to be rewritten whenever the terms change. The overpayment amounts are query strings in the same dot-decimal form as every money value, parsed with the invariant culture, rather than numbers bound by the framework.
+The schedule is computed on every request from the stored terms and never stored. 600 rows at most, twice with an overpayment, is a few tens of kilobytes (`lowerPayment` is a summary without rows, because the page draws its table and charts from `withExtra`), and a stored copy would have to be rewritten whenever the terms change. The overpayment amounts are query strings in the same dot-decimal form as every money value, parsed with the invariant culture, rather than numbers bound by the framework.
 
 | Code | Status | When |
 | --- | --- | --- |
@@ -158,14 +165,14 @@ flowchart TD
     Page --> Summary["payoff date, monthly payment, rate, total interest, total paid,<br/>scheduled balance beside the recorded one"]
     Page --> Extra["extra each month, one-off payment and its date"]
     Extra -->|"400 ms after typing, valid amounts only"| Query["GET …/schedule?extraMonthly…"]
-    Query --> Savings["paid off on …, n payments sooner, saving … in interest"]
+    Query --> Savings["side by side: Shorter term, paid off on …, n payments sooner, saving …;<br/>Lower payment, … instead of … from …, saving …, still paid off on …"]
     Page --> Charts["balance over time, with the overpaid line;<br/>interest, principal and overpayment stacked per year"]
     Page --> Table["payments table, 12 rows a page,<br/>opening on the page of the next payment"]
 ```
 
 The form groups the repayment terms under their own heading below the fields a debt always had, with a hint that they are optional, and checks on the client what the server checks: a term from 1 to 600, positive amounts, and not a term and a payment together. A server refusal such as `debt.paymentTooSmall` lands under the monthly payment through the form's usual field mapping.
 
-The page reads the debt from the debts list and the schedule from its own query. A debt that is gone shows a sentence instead; a debt without complete terms says which terms are missing. Typing an overpayment waits 400 ms (TanStack Pacer through `useDebouncedDraft`), then asks again, and the old schedule stays on screen, marked stale, until the new one arrives. When an overpayment applies, the table, the yearly chart and the savings sentence show the faster plan and the table gains an Overpayment column, while the balance chart draws both lines. Up to 600 rows are paged twelve at a time, one year a page; the first page shown is the one holding the next payment, and paid rows are dimmed. Every amount and date goes through the formatters in `use-formatters.ts`, so both languages and the reporting currency apply; the balance chart's axis and tooltip use the debt's currency. A debt that does not track payments never asks for its payments.
+The page reads the debt from the debts list and the schedule from its own query. A debt that is gone shows a sentence instead; a debt without complete terms says which terms are missing. Typing an overpayment waits 400 ms (TanStack Pacer through `useDebouncedDraft`), then asks again, and the old schedule stays on screen, marked stale, until the new one arrives. When an overpayment applies, the status under the fields shows the two outcomes side by side, stacked on a phone: Shorter term with the new payoff date, the payments saved and the interest saved, and Lower payment with the new monthly payment, the payment it replaces and from when, the interest saved and the unchanged payoff date (or, when the overpayment repays the debt, the payoff date and the interest saved). The table and the yearly chart show the shorter-term plan and the table gains an Overpayment column, while the balance chart draws both lines. With amounts hidden every amount of the two outcomes is masked like any other amount. Up to 600 rows are paged twelve at a time, one year a page; the first page shown is the one holding the next payment, and paid rows are dimmed. Every amount and date goes through the formatters in `use-formatters.ts`, so both languages and the reporting currency apply; the balance chart's axis and tooltip use the debt's currency. A debt that does not track payments never asks for its payments.
 
 ## Tracking payments
 
@@ -233,4 +240,4 @@ A deleted debt keeps its terms on the row, so restoring it from the trash brings
 
 - Payments other than monthly; the terms would need a frequency and the term a number of payments.
 - A rate that changes over the life of the loan; the schedule uses the one rate the debt has now.
-- An overpayment that lowers the payment and keeps the term.
+- A table or charts of the lower-payment plan; the page shows its summary beside the shorter term.

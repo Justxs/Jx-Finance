@@ -284,6 +284,7 @@ public sealed class NetWorthService(
         }
 
         var withExtra = extra.IsNone ? null : AmortizationCalculator.Calculate(terms, extra).Value;
+        var keepingTerm = extra.IsNone ? null : AmortizationCalculator.CalculateKeepingTerm(terms, extra).Value;
         var today = clock.Today;
 
         return new DebtScheduleResponse(
@@ -298,7 +299,8 @@ public sealed class NetWorthService(
             ToPlan(plan),
             withExtra is null ? null : ToPlan(withExtra),
             withExtra is null ? null : plan.TotalInterest - withExtra.TotalInterest,
-            withExtra is null ? null : plan.Rows.Count - withExtra.Rows.Count);
+            withExtra is null ? null : plan.Rows.Count - withExtra.Rows.Count,
+            keepingTerm is null ? null : ToLowerPayment(plan, keepingTerm));
     }
 
     public async Task<Result<IReadOnlyList<DebtPaymentResponse>>> GetDebtPaymentsAsync(Guid id, CancellationToken cancellationToken)
@@ -533,6 +535,18 @@ public sealed class NetWorthService(
         schedule.Rows
             .Select(row => new DebtScheduleRow(row.Number, row.Date, row.Payment, row.Interest, row.Principal, row.Extra, row.Balance))
             .ToList());
+
+    private static DebtLowerPayment ToLowerPayment(AmortizationSchedule plan, AmortizationSchedule keepingTerm)
+    {
+        var lowered = keepingTerm.Rows.SkipWhile(row => row.Extra == 0).Skip(1).FirstOrDefault();
+        return new DebtLowerPayment(
+            keepingTerm.PayoffDate,
+            keepingTerm.TotalInterest,
+            plan.TotalInterest - keepingTerm.TotalInterest,
+            lowered?.Date,
+            lowered?.Payment,
+            lowered is null ? null : plan.Rows[lowered.Number - 1].Payment);
+    }
 
     private Task<Result<Asset>> FindAssetAsync(Guid id, CancellationToken cancellationToken)
     {
