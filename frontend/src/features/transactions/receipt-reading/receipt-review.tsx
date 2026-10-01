@@ -17,7 +17,14 @@ import { HintTag } from "@/components/ui/tag/tag";
 import { EMPTY_VALUE, useIsoDate, useMoney } from "@/hooks/use-formatters";
 import { toCents } from "@/lib/money";
 import { nameById, namedOptions } from "@/lib/options";
-import { type CategoryChoice, groupItems, linesFromReceipt, receiptTotals } from "./receipt-split";
+import {
+  type CategoryChoice,
+  type ReceiptFill,
+  groupItems,
+  linesFromReceipt,
+  receiptTotals,
+  refundCategory,
+} from "./receipt-split";
 
 interface Props {
   reading: ReceiptReadingResponse;
@@ -124,7 +131,9 @@ export function ReceiptReview({
   const title = source ? t("receipts.reviewTitle", { source }) : t("receipts.reviewTitleBare");
 
   const groups = groupItems(result.items, choices);
-  const fill = linesFromReceipt(result, choices, amount);
+  const fill: ReceiptFill = result.isReturn
+    ? { categoryId: refundCategory(result.items, choices) }
+    : linesFromReceipt(result, choices, amount);
   const totals = receiptTotals(result, amount);
   const lineTotal = totals.amountCents ?? totals.printedCents ?? totals.itemsCents;
   const lines =
@@ -173,9 +182,17 @@ export function ReceiptReview({
           </p>
         ) : null}
         {result.isReturn ? (
-          <p role="alert" className="text-sm font-medium text-expense">
-            {t("receipts.returnReceipt")}
-          </p>
+          <div className="space-y-1 text-sm">
+            <p className="font-medium">{t("receipts.returnReceipt")}</p>
+            <p className="text-muted-foreground">
+              {reading.refundOf
+                ? t("transactions.refundOf", {
+                    description: reading.refundOf.description || EMPTY_VALUE,
+                    date: formatDate(reading.refundOf.date),
+                  })
+                : t("receipts.refundOfNone")}
+            </p>
+          </div>
         ) : null}
 
         {groups.map((group) => (
@@ -236,7 +253,9 @@ export function ReceiptReview({
         ) : null}
 
         <div className="space-y-1 rounded-md bg-muted/50 px-4 py-3 text-sm">
-          <p className="font-medium">{t("receipts.lines")}</p>
+          <p className="font-medium">
+            {result.isReturn ? t("receipts.refundLine") : t("receipts.lines")}
+          </p>
           <p className="tabular-nums">{[...lines, format(lineTotal, currency)].join(" · ")}</p>
           {differences.map((text) => (
             <p key={text} className="text-muted-foreground">
@@ -285,10 +304,10 @@ export function ReceiptReview({
             <Button
               type="button"
               pending={pending}
-              disabled={result.isReturn || readAgainPending}
+              disabled={readAgainPending}
               onClick={() => onApply(choices)}
             >
-              {t("receipts.apply")}
+              {result.isReturn ? t("receipts.applyRefund") : t("receipts.apply")}
             </Button>
           </div>
         </div>

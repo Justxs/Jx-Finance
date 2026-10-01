@@ -5,7 +5,9 @@ using JxFinance.Common.Attachments;
 using JxFinance.Common.Errors;
 using JxFinance.Common.Receipts;
 using JxFinance.Common.References;
+using JxFinance.Common.Refunds;
 using JxFinance.Common.Settings;
+using JxFinance.Common.Subscriptions;
 using JxFinance.Domain.Categories;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Receipts;
@@ -19,6 +21,7 @@ using JxFinance.Endpoints.Receipts.Interfaces;
 using JxFinance.Endpoints.Receipts.Mappers;
 using JxFinance.Endpoints.Receipts.Shared;
 using JxFinance.Endpoints.Receipts.UpdateReceiptCategories;
+using JxFinance.Endpoints.Transactions.Shared;
 using JxFinance.Infrastructure.Attachments;
 using JxFinance.Infrastructure.Data;
 using JxFinance.Infrastructure.Receipts;
@@ -356,10 +359,51 @@ public sealed class ReceiptService(
         var result = reading.Result!;
         var shown = store.Current.IsEnabled(Feature.Locations) ? position : null;
         IReadOnlyList<ReceiptCandidateResponse> candidates = source.AttachmentId is null
-            && result is { Total: > 0 and var total, Date: { } date }
+            && result is { IsReturn: false, Total: > 0 and var total, Date: { } date }
             ? await CandidatesAsync(total, result.Currency, date, cancellationToken)
             : [];
-        return new ReceiptReadingResponse(reading.Id.Value, cached, result.ToResponse(), candidates, shown?.Latitude, shown?.Longitude);
+        var refundOf = result.IsReturn ? await RefundOriginalAsync(result, reading.Sha256, cancellationToken) : null;
+        return new ReceiptReadingResponse(
+            reading.Id.Value,
+            cached,
+            result.ToResponse(),
+            candidates,
+            shown?.Latitude,
+            shown?.Longitude,
+            refundOf);
+    }
+
+    private async Task<TransactionRefundOfResponse?> RefundOriginalAsync(
+        ReceiptResult result,
+        string sha256,
+        CancellationToken cancellationToken)
+    {
+        var key = SubscriptionDescription.Normalize(result.Merchant);
+        if (key.Length == 0)
+        {
+            return null;
+        }
+
+        var prefix = key + " ";
+        var date = result.Date ?? clock.Today;
+        var from = date.AddDays(-RefundOriginal.CandidateLookBackDays);
+        var total = result.Total ?? 0;
+        var currency = result.Currency;
+        return await db.Transactions
+            .AsNoTracking()
+            .Where(t => t.Type == FlowType.Expense
+                && t.Amount.Amount > 0
+                && t.Amount.Amount >= total
+                && (currency == null || t.Amount.Currency == currency)
+                && t.Date >= from
+                && t.Date <= date
+                && t.PayeeKey != null
+                && (t.PayeeKey == key || t.PayeeKey.StartsWith(prefix))
+                && !db.TransactionAttachments.Any(a => a.TransactionId == t.Id && a.Sha256 == sha256))
+            .OrderByDescending(t => t.Date)
+            .ThenByDescending(t => t.CreatedAt)
+            .Select(t => new TransactionRefundOfResponse(t.Id.Value, t.Date, t.Description))
+            .FirstOrDefaultAsync(cancellationToken);
     }
 
     private async Task<IReadOnlyList<ReceiptCandidateResponse>> CandidatesAsync(

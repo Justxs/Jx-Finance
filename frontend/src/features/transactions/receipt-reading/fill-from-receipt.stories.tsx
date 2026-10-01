@@ -11,6 +11,7 @@ import {
   ids,
   receiptEngineUnavailableProblem,
   receiptReadingWithCandidate,
+  receiptReadingReturn,
   receiptReadingWithPhotoLocation,
   receiptUnreadableProblem,
   receiptUnsupportedFileProblem,
@@ -79,6 +80,20 @@ export const ReadsAnEmailReceiptWithoutAttachingIt: Story = {
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
     await expect(args.onReceiptFile).toHaveBeenCalledWith(null);
     await expect(canvas.getByLabelText("Description")).toHaveValue("MAXIMA LT, UAB");
+  },
+};
+
+export const FillsARefundFromAReturnReceipt: Story = {
+  parameters: withHandlers(readySettings, getReadReceiptMockHandler(receiptReadingReturn)),
+  play: async ({ canvas }) => {
+    await pickReceipt();
+    await openedDialog();
+    await userEvent.click(screen.getByRole("button", { name: "Fill as a refund" }));
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+    await expect(canvas.getByText(/Refund of MAXIMA LT, UAB VILNIUS/u)).toBeVisible();
+    await expect(canvas.getByLabelText("Description")).toHaveValue("MAXIMA LT, UAB VILNIUS");
+    await expect(canvas.getByLabelText("Amount")).toHaveValue("4.79");
+    await expect(canvas.queryByRole("checkbox", { name: "Split into categories" })).toBeNull();
   },
 };
 

@@ -39,6 +39,14 @@ export function groupItems(
   return [...groups.values()];
 }
 
+export function refundCategory(
+  items: readonly ReceiptItemResponse[],
+  choices: readonly CategoryChoice[],
+): string {
+  const heaviest = groupItems(items, choices).toSorted((a, b) => b.weightCents - a.weightCents)[0];
+  return heaviest?.categoryId ?? "";
+}
+
 export function shareByWeight(totalCents: number, weights: readonly number[]): number[] {
   const sum = weights.reduce((total, weight) => total + weight, 0);
   if (sum === 0) {

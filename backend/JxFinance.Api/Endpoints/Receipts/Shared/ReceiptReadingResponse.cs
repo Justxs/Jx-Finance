@@ -1,6 +1,7 @@
 using JxFinance.Common.Json;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Receipts;
+using JxFinance.Endpoints.Transactions.Shared;
 
 namespace JxFinance.Endpoints.Receipts.Shared;
 
@@ -10,7 +11,8 @@ public sealed record ReceiptReadingResponse(
     ReceiptResultResponse Result,
     IReadOnlyList<ReceiptCandidateResponse> Candidates,
     decimal? PhotoLatitude = null,
-    decimal? PhotoLongitude = null);
+    decimal? PhotoLongitude = null,
+    TransactionRefundOfResponse? RefundOf = null);
 
 public sealed record ReceiptResultResponse(
     string? Merchant,

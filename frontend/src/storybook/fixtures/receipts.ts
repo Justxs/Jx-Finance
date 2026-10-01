@@ -115,6 +115,16 @@ export const receiptReadingReturn: ReceiptReadingResponse = {
     items: [item("Head&Shoulders šampūnas 250 ml", "4.79", health)],
     adjustments: [],
   },
+  refundOf: {
+    id: ids.transactions.maxima,
+    date: "2026-09-26",
+    description: "MAXIMA LT, UAB VILNIUS",
+  },
+};
+
+export const receiptReadingReturnUnlinked: ReceiptReadingResponse = {
+  ...receiptReadingReturn,
+  refundOf: null,
 };
 
 export const receiptReadingPdf: ReceiptReadingResponse = {

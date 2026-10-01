@@ -10,6 +10,7 @@ import {
   receiptReadingPdf,
   receiptReadingRemembered,
   receiptReadingReturn,
+  receiptReadingReturnUnlinked,
   receiptReadingUnreadLines,
   receiptReadingWithCandidate,
 } from "@/storybook/fixtures";
@@ -119,12 +120,22 @@ export const MovingAnItemChangesTheLines: Story = {
 
 export const ReturnReceipt: Story = {
   args: { reading: receiptReadingReturn, amount: "4.79" },
+  play: async ({ args }) => {
+    await openedDialog();
+    await expect(screen.getByText(/fills the form as a refund/u)).toBeVisible();
+    await expect(screen.getByText(/Refund of MAXIMA LT, UAB VILNIUS/u)).toBeVisible();
+    await userEvent.click(screen.getByRole("button", { name: "Fill as a refund" }));
+    await expect(args.onApply).toHaveBeenCalled();
+  },
+};
+
+export const ReturnReceiptWithoutPurchase: Story = {
+  args: { reading: receiptReadingReturnUnlinked, amount: "4.79" },
   play: async () => {
     await openedDialog();
-    await expect(screen.getByRole("alert")).toHaveTextContent(
-      "Return receipts cannot be split yet.",
-    );
-    await expect(screen.getByRole("button", { name: "Use these lines" })).toBeDisabled();
+    await expect(
+      screen.getByText("No earlier purchase from this shop was found to link it to."),
+    ).toBeVisible();
   },
 };
 

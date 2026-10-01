@@ -30,7 +30,12 @@ import { useUsableCurrencies } from "@/hooks/use-currencies";
 import { useFeature } from "@/hooks/use-settings";
 import { silentMutation } from "@/lib/mutations";
 import { ReceiptReview } from "./receipt-review";
-import { type CategoryChoice, type ReceiptFill, linesFromReceipt } from "./receipt-split";
+import {
+  type CategoryChoice,
+  type ReceiptFill,
+  linesFromReceipt,
+  refundCategory,
+} from "./receipt-split";
 
 interface ReceiptSource {
   attachmentId?: string;
@@ -278,6 +283,20 @@ export function FillFromReceipt({
     form.setFieldValue("categoryId", fill.categoryId);
   }
 
+  function fillRefund(current: ReceiptReadingResponse, choices: CategoryChoice[]) {
+    form.setFieldValue("isSplit", false);
+    form.setFieldValue("lines", []);
+    form.setFieldValue("categoryId", refundCategory(current.result.items, choices));
+    const original = current.refundOf;
+    if (original) {
+      form.setFieldValue("refundOf", original);
+      if (!transactionId && original.description) {
+        form.setFieldValue("description", original.description);
+      }
+    }
+    form.setFieldValue("type", "refund");
+  }
+
   function remember(current: ReceiptReadingResponse, choices: CategoryChoice[], then: () => void) {
     categoriesMutation.mutate(
       {
@@ -299,6 +318,10 @@ export function FillFromReceipt({
         fillDetails(current.result);
       }
       fillPlace(current.result);
+      if (current.result.isReturn) {
+        fillRefund(current, choices);
+        return;
+      }
       fillLines(linesFromReceipt(current.result, choices, form.getFieldValue("amount")));
     });
   }

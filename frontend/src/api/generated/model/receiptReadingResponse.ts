@@ -7,6 +7,7 @@
  */
 import type { ReceiptCandidateResponse } from "./receiptCandidateResponse";
 import type { ReceiptResultResponse } from "./receiptResultResponse";
+import type { TransactionRefundOfResponse } from "./transactionRefundOfResponse";
 
 export interface ReceiptReadingResponse {
   id: string;
@@ -17,4 +18,5 @@ export interface ReceiptReadingResponse {
   photoLatitude?: number | null;
   /** @nullable */
   photoLongitude?: number | null;
+  refundOf?: null | TransactionRefundOfResponse;
 }
