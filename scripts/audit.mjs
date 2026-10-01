@@ -1,8 +1,9 @@
 import { fail, run } from "./run.mjs";
 
-const selected = ["--backend", "--frontend"].filter((flag) => process.argv.includes(flag));
+const selected = ["--backend", "--frontend", "--mcp"].filter((flag) => process.argv.includes(flag));
 const backend = selected.length === 0 || selected.includes("--backend");
 const frontend = selected.length === 0 || selected.includes("--frontend");
+const mcp = selected.length === 0 || selected.includes("--mcp");
 
 try {
   if (backend) {
@@ -15,6 +16,10 @@ try {
   if (frontend) {
     run("nub", ["audit", "-C", "frontend", "--prod", "--audit-level", "moderate"]);
     run("nub", ["audit", "-C", "frontend", "--dev", "--audit-level", "moderate"], { allowFailure: true });
+  }
+  if (mcp) {
+    run("nub", ["audit", "-C", "tools/jx-mcp", "--prod", "--audit-level", "moderate"]);
+    run("nub", ["audit", "-C", "tools/jx-mcp", "--dev", "--audit-level", "moderate"], { allowFailure: true });
   }
 } catch (error) {
   fail(error.message);

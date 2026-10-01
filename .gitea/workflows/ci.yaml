@@ -31,6 +31,7 @@ jobs:
     outputs:
       backend: ${{ steps.filter.outputs.backend }}
       frontend: ${{ steps.filter.outputs.frontend }}
+      mcp: ${{ steps.filter.outputs.mcp }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
@@ -51,16 +52,20 @@ jobs:
           if [ -z "$base" ]; then
             echo "backend=true" >> "$GITHUB_OUTPUT"
             echo "frontend=true" >> "$GITHUB_OUTPUT"
+            echo "mcp=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi
           files=$(git diff --name-only "$base" HEAD)
           shared="^(\.gitea/|\.editorconfig|\.dockerignore|\.env\.example|global\.json|docker-compose|justfile|lefthook\.yml|scripts/)"
           backend=false
           frontend=false
+          mcp=false
           if echo "$files" | grep -qE "^backend/|$shared"; then backend=true; fi
           if echo "$files" | grep -qE "^frontend/|$shared"; then frontend=true; fi
+          if echo "$files" | grep -qE "^tools/jx-mcp/|$shared"; then mcp=true; fi
           echo "backend=$backend" >> "$GITHUB_OUTPUT"
           echo "frontend=$frontend" >> "$GITHUB_OUTPUT"
+          echo "mcp=$mcp" >> "$GITHUB_OUTPUT"
 
   backend:
     needs: changes
@@ -137,6 +142,39 @@ jobs:
           name: frontend-coverage
           path: frontend/coverage
           retention-days: 7
+
+  mcp:
+    needs: changes
+    if: needs.changes.outputs.mcp == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: tools/jx-mcp
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      - name: Setup nub and Node
+        uses: nubjs/setup-nub@c7b970ec04655a2f0a111cd436cc182a3b660e7a # v0.6.0
+        with:
+          nub-version: "0.9.2"
+          node-version: 24
+          working-directory: tools/jx-mcp
+          cache: true
+          cache-dependency-path: tools/jx-mcp/nub.lock
+
+      - name: Install packages
+        run: nub ci
+
+      - name: Vulnerable shipped packages (development packages are reported only)
+        run: node scripts/audit.mjs --mcp
+        working-directory: .
+
+      - name: Types and tests
+        run: nub run test
+
+      - name: Build
+        run: nub run build
 
   client-drift:
     needs: changes

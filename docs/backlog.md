@@ -15,7 +15,7 @@ Every feature from 2026-09-30 and 2026-10-01 was built while Docker was not runn
 | `just test` with Docker up | First run of the integration tests written for spreading, the journal, the bills calendar, shared assets and debts, live prices, API writes and idempotency, locations, groups and learned categories, and of the CSV header expectations they changed. Watch two places first: the `Transaction.Tags` navigation added with spreading (tag edits on a tracked transaction), and the ledger's SQL `UNION ALL` of rows and groups under all ten sorts |
 | `just e2e` | Against every migration added since 2026-09-20, including the new `place-map.spec.ts` with its 460-byte fixture tile; the migrations have only been applied by the test containers |
 | `just verify-production` | Its new checks (exact CSP, `geolocation=(self)`, the read-only `maps` volume, a 404 for a missing tile file) have only been written, not run against the overlay |
-| `just gen-check` and the CI jobs on the Gitea runner | Audit, `production-overlay` and client drift have never run on the runner; `tools/jx-mcp` has its own `test` and `build` scripts that no CI job calls yet |
+| `just gen-check` and the CI jobs on the Gitea runner | Audit, `production-overlay` and client drift have never run on the runner, and neither has the `mcp` job added on 2026-10-01 |
 
 ### Real host and real inputs
 
@@ -133,7 +133,6 @@ Ordered by how much they would help daily use for the effort. Following the prod
 | End-to-end coverage for the newest flows | The suite covers sign-in, two-factor, passkeys, imports, transfers, recurring bills, users, backup, the phone layout and the place map; nothing drives settle-up between two members, a refund, a reconciliation, the month-end close, the member download and import, receipt reading, a shared budget or asset, spreading, the bills calendar, a transaction group, a learned suggestion or a write through an API token | M |
 | Large-ledger timing | Seed about ten years and 100,000 rows across two members and time the ledger, a report with a comparison, the year review, the forecast, the calendar and both exports. Watch the newest reads: spread slices, the recurring history, place suggestions, the member download with its journal, the learned model's training (under 150 ms for a 500-row import preview with 10,000 training rows), and the ledger's union of rows and [groups](features/transaction-groups.md) against 300 ms at the 95th percentile under every sort with 200 groups | S |
 | Seed realistic history | `just seed` creates recurring entries today, so the bills calendar and the forecast's history look empty in demo data; backdate the seeded entries and give the demo ledger a spread payment, a group, places and a few months of uncategorized rows for the learned suggestions | S |
-| `tools/jx-mcp` in CI | The MCP package has its own type check, tests and build that no CI job runs, and its dependencies are outside the frontend's audit | S |
 
 ## Suggested order
 
@@ -148,6 +147,7 @@ Ordered by how much they would help daily use for the effort. Following the prod
 
 | Date | Item | Where it is described |
 | --- | --- | --- |
+| 2026-10-01 | `tools/jx-mcp` in CI: a CI `mcp` job, run when `tools/jx-mcp/` or a shared file changes, installs the package from its lockfile, audits it with `scripts/audit.mjs --mcp`, type-checks, tests and builds it; `just check-mcp` does the same locally and `just check` includes it | [Developer tooling](architecture/developer-tooling.md) |
 | 2026-10-01 | Line endings: `.gitattributes` checks every text file out with LF whatever `core.autocrlf` says, so docs, scripts and migrations no longer appear with CRLF in the working copy | [Development decisions](decisions/development.md) |
 | 2026-10-01 | Release checklist brought up to date: it lists everything added on 2026-09-29, 2026-09-30 and 2026-10-01, says which of it has only met the checks that need no Docker, points its open items at the backlog, and no longer calls tags, learned suggestions or expanded sharing out of scope | [Release checklist](release-checklist.md) |
 | 2026-10-01 | Old worktrees merged and removed: the three worktrees under `.claude/worktrees` held nothing master lacked once the attachment metadata cleaning and the split-line order were ported, so they and their `claude/dazzling-dubinsky-635850` and `claude/gifted-morse-9e2dd0` branches, which pointed at the history from before the trailer rewrite, were removed | This page |
