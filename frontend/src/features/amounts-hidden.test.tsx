@@ -7,7 +7,7 @@ import {
 import { render, screen } from "@testing-library/react";
 import type { ReactElement } from "react";
 import { afterEach, beforeEach, expect, test } from "vitest";
-import { getReceiptItemsQueryKey } from "@/api/generated";
+import { getNetWorthHistoryQueryKey, getReceiptItemsQueryKey } from "@/api/generated";
 import type { MonthDrift } from "@/api/generated/model";
 import { BreakdownList } from "@/components/breakdown-list/breakdown-list";
 import { ChartTooltip } from "@/components/chart/chart-tooltip";
@@ -18,6 +18,7 @@ import { AllocationSection } from "@/features/investments/allocation-section/all
 import { PortfolioSummary } from "@/features/investments/portfolio-summary/portfolio-summary";
 import { PositionsTable } from "@/features/investments/positions-section/positions-table";
 import { DriftPanel } from "@/features/month-close/drift-panel/drift-panel";
+import { NetWorthPace } from "@/features/net-worth/net-worth-pace/net-worth-pace";
 import { ReceiptItems } from "@/features/reports/receipt-items/receipt-items";
 import { YearReview } from "@/features/reports/year-review/year-review";
 import { TransactionAmount } from "@/features/transactions/transaction-amount/transaction-amount";
@@ -27,6 +28,7 @@ import { savePreferences } from "@/stores/preferences";
 import {
   closedChangedMonthReview,
   longDescriptionTransaction,
+  netWorthHistory,
   portfolio,
   receiptItems,
   reportSummaryYear,
@@ -56,6 +58,7 @@ async function renderRouted(ui: ReactElement) {
     getReceiptItemsQueryKey({ ...receiptRange, search: undefined }),
     receiptItems,
   );
+  client.setQueryData(getNetWorthHistoryQueryKey(), netWorthHistory);
   const rootRoute = createRootRoute({ component: () => ui });
   const router = createRouter({ routeTree: rootRoute, history: createMemoryHistory() });
   await router.load();
@@ -128,6 +131,7 @@ function everyAmount() {
         onChange={noop}
       />
       <DriftPanel drift={driftOf()} figures={closedChangedMonthReview.figures} />
+      <NetWorthPace />
     </>
   );
 }

@@ -45,6 +45,7 @@ const preferencesSchema = z.object({
     .union(pageSizes.map((size) => z.literal(size)))
     .optional()
     .catch(undefined),
+  paceMilestones: z.array(z.number()).optional().catch(undefined),
   monthClosePromptHidden: z
     .string()
     .regex(/^\d{4}-\d{2}$/)

@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { expect } from "storybook/test";
 import { getNetWorthHistoryMockHandler } from "@/api/generated/net-worth/net-worth.msw";
 import { Section } from "@/components/ui/section/section";
 import { withWidth } from "@/storybook/decorators";
@@ -72,3 +73,29 @@ export const FiveYearsLargeValues: Story = {
 export const Loading: Story = { parameters: { msw: { handlers: loadingHandlers } } };
 
 export const ServerError: Story = { parameters: { msw: { handlers: errorHandlers } } };
+
+const fallingItems = netWorthHistoryItems.map((item, index) => ({
+  ...item,
+  netWorth: String(90_000 - index * 1500),
+}));
+
+export const WithPace: Story = {
+  args: { pace: true },
+  play: async ({ canvas }) => {
+    await canvas.findByText("At this pace");
+  },
+};
+
+export const WithFallingPace: Story = {
+  args: { pace: true },
+  parameters: { msw: { handlers: historyHandlers(fallingItems) } },
+};
+
+export const PaceWithShortHistory: Story = {
+  args: { pace: true },
+  parameters: { msw: { handlers: historyHandlers(netWorthHistoryItems.slice(-3)) } },
+  play: async ({ canvas }) => {
+    await canvas.findByRole("img", { name: "Net worth over time" });
+    await expect(canvas.queryByText("At this pace")).toBeNull();
+  },
+};

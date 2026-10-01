@@ -16,9 +16,29 @@ Refresh today's snapshot hourly and on viewing; unique user/date; no invented hi
 
 An asset keeps dated valuations, today or earlier, and may depreciate on a straight line in whole monthly steps down to a residual value. The value on any date is computed from the valuations and the terms when it is read and is never stored; an asset counts in net worth from its first valuation
 
+### Pace
+
+The Trend chart continues at the average monthly change of the last twelve months of snapshots (at least 90 days), as far ahead as that window reaches back and at most a year, and dates up to five per-browser milestones; computed in the browser and labelled as arithmetic, not advice
+
 ## Log
 
 Newest first. Each entry is a choice between real alternatives: what was chosen, what was rejected, and why.
+
+- **2026-10-01.** The pace is the plain average change between the newest snapshot on or before twelve months before the last one and the last one, per month of 30.4375 days; with less history the window starts at the first snapshot, and under 90 days there is no pace. Decided while the owner was away, to be reviewed
+  - Rejected: A least-squares line through the window; a fixed twelve-month requirement; any length of history
+  - Why: Two recorded figures and one division can be checked by hand, which is what "arithmetic on recorded figures" promises. Waiting a full year hides the feature for a new installation, while a few weeks of snapshots would turn one salary or one revaluation into a monthly rate
+- **2026-10-01.** The dashed line runs as far ahead as the window reaches back, at most a year, with as many points as the window has; milestones are dated up to 50 years ahead, "Not within 50 years at this pace" beyond. Decided while the owner was away, to be reviewed
+  - Rejected: Always a year ahead; drawing every milestone on the chart; dating milestones without a limit
+  - Why: Three months of history extended by twelve would draw a longer guess than the record it rests on. The chart's date axis is categorical, so matching the point count keeps future and past at one scale. A date centuries away reads as precision the arithmetic does not have
+- **2026-10-01.** Milestones are a per-browser list in the preferences row, up to five amounts in the reporting currency, defaulting to the next two round numbers of the 1, 2, 5 series above the last snapshot, or 0 and a round number when net worth is negative. Decided while the owner was away, to be reviewed
+  - Rejected: Milestones stored on the server per member; only automatic round numbers; fixed defaults such as 100 000
+  - Why: The pace is a view of figures the server already answers, so a table and an endpoint for it would be code for a preference. Round numbers alone cannot hold a target such as a deposit, and fixed defaults mean nothing across currencies and sizes of household
+- **2026-10-01.** A zero or falling pace says "Not reached at this pace" for every milestone above the last snapshot, and a milestone at or below it reads "Already reached"; the line still draws flat or falling. Decided while the owner was away, to be reviewed
+  - Rejected: Hiding the line when the pace is not positive; dating when a falling net worth would cross a milestone below it
+  - Why: A falling trend is the most useful thing the line can show, and milestones are targets to reach upwards
+- **2026-10-01.** Computed in the browser from `GET /api/networth/history` and drawn only on the net worth page, on the member's whole net worth whatever the household switcher shows. Decided while the owner was away, to be reviewed
+  - Rejected: A server endpoint answering the pace; a pace per household
+  - Why: The history is already loaded for the chart and the arithmetic is a few lines. Snapshots are always the whole net worth, so the chart and its pace read the same series
 
 - **2026-09-27.** Asset valuations are rows of an `AssetValuation` table, one per asset and date, removed with the asset by a cascade; `Asset.CurrentValue` and `AsOf` stay as the newest valuation, kept in step by one `AssetValuationBook`
   - Rejected: Overwriting `CurrentValue` as before

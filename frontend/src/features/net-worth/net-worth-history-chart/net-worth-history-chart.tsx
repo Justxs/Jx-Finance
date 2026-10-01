@@ -2,7 +2,12 @@ import { useTranslation } from "react-i18next";
 import { CHART_COLOR_PRIMARY } from "@/components/chart";
 import { type NetWorthSeries, NetWorthSeriesChart } from "./net-worth-series-chart";
 
-export function NetWorthHistoryChart({ until }: Readonly<{ until?: string }>) {
+interface Props {
+  until?: string;
+  pace?: boolean;
+}
+
+export function NetWorthHistoryChart({ until, pace }: Readonly<Props>) {
   const { t } = useTranslation();
 
   const series: NetWorthSeries[] = [
@@ -16,6 +21,7 @@ export function NetWorthHistoryChart({ until }: Readonly<{ until?: string }>) {
       yDomain={["auto", "auto"]}
       baseline
       until={until}
+      pace={pace}
     />
   );
 }

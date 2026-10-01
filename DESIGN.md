@@ -212,7 +212,7 @@ The individual charts:
 - **Budgets page:** limit and spent as paired horizontal bars at most 10px thick, largest limit first. The limit is in `input` gray; spent is navy, red once over the limit.
 - **Cash-flow forecast (accounts and recurring entries):** one account's balance by day as a 2px navy step line (`stepAfter`), with an ink zero line; when the account has usual spending, a dashed 1.5px navy "With usual spending" line and a legend. Warnings sit above the chart as expense-red sentences, and the entries follow in a table.
 - **Net worth composition:** three lines, accounts navy, assets green, debts red.
-- **Net worth history:** a single navy line on an automatic domain so the change is visible. Both net worth charts show one muted sentence until there are two snapshots.
+- **Net worth history:** a single navy line on an automatic domain so the change is visible. Both net worth charts show one muted sentence until there are two snapshots. On the net worth page a dashed 1.5px navy "At this pace" line continues it from the last snapshot, with a legend, and the pace and milestones follow below a hairline rule as muted text with the amounts in tabular figures.
 - **Investment value:** market value navy, cost basis muted ink.
 - **Debt balance:** navy, with extra payments in green.
 - **Debt payment split:** stacked yearly bars, principal navy, interest red, extra green.

@@ -8,6 +8,7 @@ import { AssetsSection } from "@/features/net-worth/assets-section/assets-sectio
 import { DebtsSection } from "@/features/net-worth/debts-section/debts-section";
 import { NetWorthCompositionChart } from "@/features/net-worth/net-worth-composition-chart";
 import { NetWorthHistoryChart } from "@/features/net-worth/net-worth-history-chart";
+import { NetWorthPace } from "@/features/net-worth/net-worth-pace/net-worth-pace";
 import { NetWorthStats } from "@/features/net-worth/net-worth-stats/net-worth-stats";
 import { BalanceItemsSkeleton } from "./net-worth-page-pending";
 
@@ -25,7 +26,8 @@ export function NetWorthPage() {
       <div className="grid gap-5 lg:grid-cols-2">
         <TitledSection title={t("netWorth.trend")} bodyGap="md">
           <QueryBoundary fallback={<ChartSkeleton />} errorSubject={t("netWorth.trend")}>
-            <NetWorthHistoryChart />
+            <NetWorthHistoryChart pace />
+            <NetWorthPace />
           </QueryBoundary>
         </TitledSection>
         <TitledSection title={t("netWorth.composition")} bodyGap="md">
