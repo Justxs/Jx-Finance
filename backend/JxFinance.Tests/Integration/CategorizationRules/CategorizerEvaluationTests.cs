@@ -48,9 +48,10 @@ public sealed class CategorizerEvaluationTests(ApiFixture fixture) : Integration
             CategoryId = transport.Id,
         });
         await db.SaveChangesAsync(TestContext.Current.CancellationToken);
-        var latest = await db.Transactions.MaxAsync(t => t.Date, TestContext.Current.CancellationToken);
+        var categorized = db.Transactions.Where(t => t.CategoryId != null);
+        var latest = await categorized.MaxAsync(t => t.Date, TestContext.Current.CancellationToken);
         var cutOff = latest.AddMonths(-CategorizerEvaluationCommand.HeldOutMonths);
-        var heldOut = await db.Transactions.CountAsync(t => t.Date > cutOff, TestContext.Current.CancellationToken);
+        var heldOut = await categorized.CountAsync(t => t.Date > cutOff, TestContext.Current.CancellationToken);
         var fuel = await db.Transactions.CountAsync(
             t => t.Date > cutOff && t.Description == "Fuel",
             TestContext.Current.CancellationToken);

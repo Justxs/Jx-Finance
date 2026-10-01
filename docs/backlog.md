@@ -32,7 +32,7 @@ Every feature from 2026-09-30 and 2026-10-01 was built while Docker was not runn
 | API writes from real clients | A Home Assistant `rest_command` and an iOS Shortcut, each retried with the same `Idempotency-Key`, record exactly one transaction on the production overlay; re-record the `tools/jx-mcp` test fixtures from a live installation (they are hand-written to the contract) and register the server in one MCP client |
 | Map and location on the real host | Extract `lithuania.pmtiles` as `docs/architecture/deployment.md` describes, mount it, and check that the map draws with only same-origin requests; "Use my location" on a phone over trusted HTTPS |
 | Sankey contrast and totals | The money flow's link and node colours in both themes and all four palettes in Storybook's accessibility panel, and Saved equal to the Net stat on the seeded ledger |
-| Bills calendar on real history | The seeder creates recurring entries at seed time and the calendar never shows a month before an entry existed, so past months are empty on `just seed` data; check the paid matching on a real month, or backdate the seeded entries (see section 6) |
+| Bills calendar on real history | `just seed` now backdates its recurring entries, so its past months show paid occurrences, but only against rows the seeder wrote to match; check the paid matching on a real month of imported bank rows, whose descriptions and dates drift |
 | Learned categories evaluated on the real ledger | Built on 2026-10-01 with its gate waived by the owner and the `LearnedCategories` switch off. Once the daily-use trial has six months and 1,500 categorized rows, run `--evaluate-categorizer` on the owner's ledger, record the numbers and the chosen constants in the [decisions](decisions/learned-categories.md), and only then decide whether to switch it on; see [Learned categories](features/learned-categories.md#not-evaluated-yet) |
 
 ### Paperwork and housekeeping
@@ -131,14 +131,13 @@ Ordered by how much they would help daily use for the effort. Following the prod
 | --- | --- | --- |
 | End-to-end coverage for the newest flows | The suite covers sign-in, two-factor, passkeys, imports, transfers, recurring bills, users, backup, the phone layout and the place map; nothing drives settle-up between two members, a refund, a reconciliation, the month-end close, the member download and import, receipt reading, a shared budget or asset, spreading, the bills calendar, a transaction group, a learned suggestion or a write through an API token | M |
 | Large-ledger timing | Seed about ten years and 100,000 rows across two members and time the ledger, a report with a comparison, the year review, the forecast, the calendar and both exports. Watch the newest reads: spread slices, the recurring history, place suggestions, the member download with its journal, the learned model's training (under 150 ms for a 500-row import preview with 10,000 training rows), and the ledger's union of rows and [groups](features/transaction-groups.md) against 300 ms at the 95th percentile under every sort with 200 groups | S |
-| Seed realistic history | `just seed` creates recurring entries today, so the bills calendar and the forecast's history look empty in demo data; backdate the seeded entries and give the demo ledger a spread payment, a group, places and a few months of uncategorized rows for the learned suggestions | S |
 
 ## Suggested order
 
 1. Section 1's "Run what has not run", because nine features have never met a database or a browser; fix what it finds before anything else.
 2. The rest of section 1, because the release is not verified without it; the daily-use trial is also where the ideas above get confirmed or dropped.
 3. Section 2 before the trial starts, so the trial runs on answers the owner chose rather than defaults picked while away.
-4. Seed realistic history, end-to-end coverage and the large-ledger timing from section 6, because they make the verification pass cheaper to repeat.
+4. End-to-end coverage and the large-ledger timing from section 6, because they make the verification pass cheaper to repeat.
 5. During the trial, the small ideas that save daily effort: quick add, possible duplicates, marking a recurring occurrence as paid and finding a purchase by receipt item.
 6. After six months of real data, the learned categories evaluation, then the decision on its switch.
 
@@ -146,6 +145,7 @@ Ordered by how much they would help daily use for the effort. Following the prod
 
 | Date | Item | Where it is described |
 | --- | --- | --- |
+| 2026-10-01 | Realistic demo history: `just seed` backdates everything it adds to the start of its first month and puts its recurring entries on fixed days, so the bills calendar shows paid occurrences matched by their rows from the first month on, the standing order matches its transfers through a `monthly saving` match key, and the ledger gains a yearly car insurance spread over 12 months with its recurring entry, a "Riga weekend" group across two accounts, places with Vilnius coordinates on repeated shops, three months of uncategorized card payees after three categorized ones, two payee display names and a flat shared in a "Home" household. No feature switch changes, so Locations and Learned categories stay off | [Developer tooling](architecture/developer-tooling.md) |
 | 2026-10-01 | `PayeeKey` read in SQL everywhere: unusual amounts, subscription detection and price rises read the stored payee key instead of normalizing descriptions in memory, so only text that is not a stored transaction, such as typed match keys and import rows before they are saved, is still normalized. Detection leaves out rows without a key in SQL and the price-rise job narrows its earlier charges to the matched entries' keys, so neither row cap fills with rows that cannot match | [Transactions architecture](architecture/transactions.md#payee-key) |
 | 2026-10-01 | `tools/jx-mcp` in CI: a CI `mcp` job, run when `tools/jx-mcp/` or a shared file changes, installs the package from its lockfile, audits it with `scripts/audit.mjs --mcp`, type-checks, tests and builds it; `just check-mcp` does the same locally and `just check` includes it | [Developer tooling](architecture/developer-tooling.md) |
 | 2026-10-01 | Line endings: `.gitattributes` checks every text file out with LF whatever `core.autocrlf` says, so docs, scripts and migrations no longer appear with CRLF in the working copy | [Development decisions](decisions/development.md) |
