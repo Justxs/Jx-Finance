@@ -224,6 +224,14 @@ Eighteen places pass a kind: the files list of the transaction edit dialog, whic
 
 Undo calls the same mutation the trash screen calls, so a refusal surfaces through the ordinary error toast with the translated sentence for its code. `POST /api/trash/restore` is listed in `src/api/invalidation.ts` with `refresh: "everything"` — a restore can bring back any of fifteen kinds and there is no honest smaller set — while each of the fifteen delete mutations gained the trash query root beside the roots it already refreshed.
 
+## Undoing a selection
+
+Since 2026-10-01 the ledger's selection toolbar can [delete several transactions at once](transactions.md#deleting-a-selection-and-moving-it-to-another-account), and one Undo brings the whole selection back. Nothing new is stored for it: `POST /api/transactions/bulk-delete` writes one ordinary `transaction` entry per row, in the same save as the soft deletes, so each row is listed in the trash on its own and its Restore button works exactly as before. The toast already knows the ids it deleted, as the single-row toast knows its one id, so its Undo sends them back to `POST /api/trash/restore-transactions` with `transactionIds`, 1 to 200.
+
+That call runs every id through the steps of `POST /api/trash/restore` with kind `transaction`, extracted as `TrashService.RestoreEntryAsync`: the newest entry of the caller for that id, the 30-day window, the `TrashRestorers` row (account visible, category still there, split lines stored) and `RestoredAt`. Unlike the single restore it does not stop at the first refusal. A row that cannot come back stays in the trash and is answered in `refused` as `{ transactionId, code, reason }` with the code the single restore would have answered: `restore.referenceMissing`, `restore.detailsLost`, `restore.expired`, or `resource.notFound` for an id the caller never deleted. `restored` counts the rest, including rows that were already back, so a second Undo, or Undo after restoring one of them from the trash, changes nothing and reads the same. The transaction kind's checks only read, so a refused row leaves nothing changed in the context, and every restored row commits with its `RestoredAt` in one database transaction and one save, which writes one `Selection restored, 3 transactions` row in the household activity log instead of a `restored` row per transaction.
+
+The toast then reads "3 transactions brought back", or a warning "Brought back 2 of 3 transactions" whose description is the translated sentence of each code once. The mutation refreshes everything, like the single restore.
+
 ## What it touches from the rest of the product
 
 - **Tags on transactions.** A restored transaction comes back with its tags, because deleting a transaction never touched `TransactionTags`. Deleting a *tag* still removes those rows, and now records which transactions they were, so restoring the tag puts them back.

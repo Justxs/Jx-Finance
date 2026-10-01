@@ -146,6 +146,7 @@ export const ErrorCode = {
   tokenlimitReached: "token.limitReached",
   tokennotAllowed: "token.notAllowed",
   tokenrateLimited: "token.rateLimited",
+  transactionconversionFee: "transaction.conversionFee",
   transactionlinesMismatch: "transaction.linesMismatch",
   transactionlocationInvalid: "transaction.locationInvalid",
   transactionrefundOriginalInvalid: "transaction.refundOriginalInvalid",

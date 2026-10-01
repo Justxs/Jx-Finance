@@ -83,6 +83,7 @@ public static class ErrorCodes
     public const string TransactionRefundOriginalInvalid = "transaction.refundOriginalInvalid";
     public const string TransactionSpreadRefund = "transaction.spreadRefund";
     public const string TransactionLocationInvalid = "transaction.locationInvalid";
+    public const string TransactionConversionFee = "transaction.conversionFee";
     public const string TransactionGroupMemberTaken = "transactionGroup.memberTaken";
     public const string GoalNotManual = "goal.notManual";
     public const string RecurringBillInactive = "recurringBill.inactive";

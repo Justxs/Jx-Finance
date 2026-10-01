@@ -52,7 +52,7 @@ A worked example: 100.00 EUR split equally between three members is 10000 cents;
 
 A split keeps its copy of the date, description and amount; it does not follow the transaction, because a live amount would break exact shares the moment the payer corrects a typo. When the transaction's amount differs from the copy, the payer's ledger row says "The amount changed since it was split" and offers "Update split", which opens the dialog prefilled and saves with `refreshFromTransaction`, copying the current amount, date and description before the shares are computed again.
 
-Deleting the transaction makes its split stop counting, derived on read: the balances skip it and the list shows it with "Not counted while the transaction is deleted". Restoring the transaction from the trash brings it back. Nothing hooks into the delete path, the same reasoning as debt payments. The retention purge of a transaction takes its split with it, because the foreign key cascades.
+Deleting the transaction makes its split stop counting, derived on read: the balances skip it and the list shows it with "Not counted while the transaction is deleted". Restoring the transaction from the trash brings it back. Nothing hooks into the delete path, the same reasoning as debt payments, and a [deleted selection](transactions.md#deleting-a-selection-and-moving-it-to-another-account) behaves the same. Moving the transaction to another account from the ledger's selection keeps its split only when the payer owns the new account; otherwise the row stays where it is with `settleUp.notPayer`. The retention purge of a transaction takes its split with it, because the foreign key cascades.
 
 ## Who sees what
 

@@ -171,6 +171,7 @@ export const ProblemDetailsResponse = zod
                 "token.limitReached",
                 "token.notAllowed",
                 "token.rateLimited",
+                "transaction.conversionFee",
                 "transaction.linesMismatch",
                 "transaction.locationInvalid",
                 "transaction.refundOriginalInvalid",

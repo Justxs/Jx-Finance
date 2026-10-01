@@ -9,6 +9,8 @@ import { HttpResponse, http } from "msw";
 import type { RequestHandlerOptions } from "msw";
 import type {
   BulkCategorizeTransactionsResponse,
+  BulkDeleteTransactionsResponse,
+  BulkMoveTransactionsResponse,
   BulkTagTransactionsResponse,
   CategorySuggestionResponse,
   PagedResponseOfLedgerItemResponse,
@@ -68,6 +70,30 @@ export const getTransactionsMockHandler = (
   );
 };
 
+export const getBulkMoveTransactionsMockHandler = (
+  overrideResponse?:
+    | BulkMoveTransactionsResponse
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<BulkMoveTransactionsResponse> | BulkMoveTransactionsResponse),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/transactions/bulk-account",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : undefined,
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
 export const getBulkCategorizeTransactionsMockHandler = (
   overrideResponse?:
     | BulkCategorizeTransactionsResponse
@@ -78,6 +104,30 @@ export const getBulkCategorizeTransactionsMockHandler = (
 ) => {
   return http.post(
     "*/api/transactions/bulk-category",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : undefined,
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getBulkDeleteTransactionsMockHandler = (
+  overrideResponse?:
+    | BulkDeleteTransactionsResponse
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<BulkDeleteTransactionsResponse> | BulkDeleteTransactionsResponse),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/transactions/bulk-delete",
     async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
@@ -434,7 +484,9 @@ export const getRestoreUnusualAmountMockHandler = (
 export const getTransactionsMock = () => [
   getCreateTransactionMockHandler(),
   getTransactionsMockHandler(),
+  getBulkMoveTransactionsMockHandler(),
   getBulkCategorizeTransactionsMockHandler(),
+  getBulkDeleteTransactionsMockHandler(),
   getBulkTagTransactionsMockHandler(),
   getExportTransactionsMockHandler(),
   getExportTransactionsPdfMockHandler(),

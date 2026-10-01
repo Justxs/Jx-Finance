@@ -54,8 +54,9 @@ const rules: readonly Rule[] = [
       api.getUpdateTransactionMutationKey,
       api.getBulkCategorizeTransactionsMutationKey,
       api.getBulkTagTransactionsMutationKey,
+      api.getBulkMoveTransactionsMutationKey,
     ],
-    deleted: [api.getDeleteTransactionMutationKey],
+    deleted: [api.getDeleteTransactionMutationKey, api.getBulkDeleteTransactionsMutationKey],
     refresh: [
       ...ledger,
       api.getSuggestedRulesQueryKey,
@@ -107,6 +108,7 @@ const rules: readonly Rule[] = [
   {
     after: [
       api.getRestoreDeletedMutationKey,
+      api.getRestoreTransactionsMutationKey,
       api.getRestoreAccountMutationKey,
       api.getImportMyDataMutationKey,
     ],

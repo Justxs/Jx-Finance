@@ -116,6 +116,9 @@ A bank statement confirm of 800 rows would otherwise write 800 `created` rows an
 | Interactive Brokers upload, fetch and nightly sync | `imported`, kind `investmentTransaction`, the account's id, `Interactive Brokers statement into Broker, 12 trades, 3 cash entries` |
 | `POST /api/transactions/bulk-category` | `updated`, no entity id, `Category set to Groceries, 12 transactions` |
 | `POST /api/transactions/bulk-tags` | `updated`, no entity id, `Tags set to Holiday, Travel, 12 transactions` |
+| `POST /api/transactions/bulk-account` | `updated`, no entity id, `Moved to Swedbank, 12 transactions`, in the households of the accounts the rows left and of the one they moved to; only rows that moved count |
+| `POST /api/transactions/bulk-delete` | `deleted`, no entity id, `Selection deleted, 12 transactions` |
+| `POST /api/trash/restore-transactions` | `restored`, no entity id, `Selection restored, 12 transactions`, counting the rows that came back in this call |
 | `POST /api/categorization-rules/run` | `updated`, no entity id, `Categorization rules run, 30 transactions` |
 | `POST /api/transactions/places/rename` | `updated`, no entity id, `Place set to Maxima, Ozo g. 18, 4 transactions`, only when rows on a shared account changed |
 

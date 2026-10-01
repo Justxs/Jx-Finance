@@ -14,7 +14,7 @@ export type FieldAliases = Readonly<Record<string, string>>;
 
 const placedNames = new WeakMap<object, ReadonlySet<string>>();
 
-export function errorCodeText(code: ErrorCode | null | undefined, reason?: string) {
+export function errorCodeText(code: string | null | undefined, reason?: string) {
   if (!code) {
     return undefined;
   }

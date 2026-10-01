@@ -229,6 +229,9 @@ On desktop, when rows are selected, a selection toolbar takes the place of that 
 - "N selected".
 - A category select with an outline "Set category" button.
 - An outline "Set tags" button that opens a popover with the tag picker and a small primary "Set tags" button.
+- An outline "Move to account" button that opens a popover with an account select, a one-line hint and a small primary "Move" button.
+- An outline "Group" button.
+- An `outline-destructive` "Delete" button, which asks for confirmation and then offers Undo in its toast.
 - An outline "Clear selection".
 - A hint appears when the selection mixes transaction types.
 - The toolbar itself never holds a primary button.

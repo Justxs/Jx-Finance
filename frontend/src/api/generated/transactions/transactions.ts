@@ -26,6 +26,10 @@ import type { ErrorType } from "../../client";
 import type {
   BulkCategorizeTransactionsRequest,
   BulkCategorizeTransactionsResponse,
+  BulkDeleteTransactionsRequest,
+  BulkDeleteTransactionsResponse,
+  BulkMoveTransactionsRequest,
+  BulkMoveTransactionsResponse,
   BulkTagTransactionsRequest,
   BulkTagTransactionsResponse,
   CategorySuggestionResponse,
@@ -306,6 +310,112 @@ export function useTransactionsSuspense<
   return withQueryKey(query, queryOptions.queryKey);
 }
 
+export const getBulkMoveTransactionsUrl = () => {
+  return `/api/transactions/bulk-account`;
+};
+
+/**
+ * Puts every listed transaction on the account sent, as changing the account in the transaction form does: the amount, currency, date, category, split lines, tags, files, refund link, group and import reference stay, so the reporting amount needs no revaluation, and an imported row keeps guarding its new account against being imported twice. Rows already on that account are left alone and not counted. A row whose link would no longer hold stays where it is and is listed in refused with its code: the fee of a currency conversion (transaction.conversionFee), an expense split with a household when its payer does not own the account (settleUp.notPayer), and a payment of a shared debt when the account is not shared with the debt's household (household.referenceNotShared). Split rows and members of a transaction group move like any other row. An invisible id or account refuses the whole request. Repeated ids count once. A read-and-write API token cannot call it.
+ * @summary Move several transactions to another account
+ */
+export const bulkMoveTransactions = async (
+  bulkMoveTransactionsRequest: BulkMoveTransactionsRequest,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<BulkMoveTransactionsResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return customFetch<BulkMoveTransactionsResponse>(getBulkMoveTransactionsUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(bulkMoveTransactionsRequest),
+  });
+};
+
+export const getBulkMoveTransactionsMutationKey = () => ["bulkMoveTransactions"] as const;
+
+export const getBulkMoveTransactionsMutationOptions = <
+  TError = ErrorType<ProblemDetails>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof bulkMoveTransactions>>,
+    TError,
+    BulkMoveTransactionsMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof bulkMoveTransactions>>,
+  TError,
+  BulkMoveTransactionsMutationVariables,
+  TContext
+> => {
+  const mutationKey = getBulkMoveTransactionsMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof bulkMoveTransactions>>,
+    BulkMoveTransactionsMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return bulkMoveTransactions(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type BulkMoveTransactionsMutationResult = NonNullable<
+  Awaited<ReturnType<typeof bulkMoveTransactions>>
+>;
+export type BulkMoveTransactionsMutationBody = BulkMoveTransactionsRequest;
+export type BulkMoveTransactionsMutationError = ErrorType<ProblemDetails>;
+export type BulkMoveTransactionsMutationVariables = { data: BulkMoveTransactionsRequest };
+
+/**
+ * @summary Move several transactions to another account
+ */
+export const useBulkMoveTransactions = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof bulkMoveTransactions>>,
+      TError,
+      BulkMoveTransactionsMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof bulkMoveTransactions>>,
+  TError,
+  BulkMoveTransactionsMutationVariables,
+  TContext
+> => {
+  return useMutation(getBulkMoveTransactionsMutationOptions(options), queryClient);
+};
 export const getBulkCategorizeTransactionsUrl = () => {
   return `/api/transactions/bulk-category`;
 };
@@ -417,6 +527,112 @@ export const useBulkCategorizeTransactions = <
   TContext
 > => {
   return useMutation(getBulkCategorizeTransactionsMutationOptions(options), queryClient);
+};
+export const getBulkDeleteTransactionsUrl = () => {
+  return `/api/transactions/bulk-delete`;
+};
+
+/**
+ * Deletes every listed transaction exactly as DELETE /api/transactions/{id} does, in one save: each keeps its split lines, tags and files, and each gets its own trash entry, so POST /api/trash/restore-transactions brings the whole selection back in one call and POST /api/trash/restore brings back any one of them. Split rows and members of a transaction group are accepted like any other row. The request is all-or-nothing: if any id is not visible to you, nothing is deleted. Repeated ids count once. A read-and-write API token cannot call it.
+ * @summary Delete several transactions
+ */
+export const bulkDeleteTransactions = async (
+  bulkDeleteTransactionsRequest: BulkDeleteTransactionsRequest,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<BulkDeleteTransactionsResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return customFetch<BulkDeleteTransactionsResponse>(getBulkDeleteTransactionsUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(bulkDeleteTransactionsRequest),
+  });
+};
+
+export const getBulkDeleteTransactionsMutationKey = () => ["bulkDeleteTransactions"] as const;
+
+export const getBulkDeleteTransactionsMutationOptions = <
+  TError = ErrorType<ProblemDetails>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof bulkDeleteTransactions>>,
+    TError,
+    BulkDeleteTransactionsMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof bulkDeleteTransactions>>,
+  TError,
+  BulkDeleteTransactionsMutationVariables,
+  TContext
+> => {
+  const mutationKey = getBulkDeleteTransactionsMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof bulkDeleteTransactions>>,
+    BulkDeleteTransactionsMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return bulkDeleteTransactions(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type BulkDeleteTransactionsMutationResult = NonNullable<
+  Awaited<ReturnType<typeof bulkDeleteTransactions>>
+>;
+export type BulkDeleteTransactionsMutationBody = BulkDeleteTransactionsRequest;
+export type BulkDeleteTransactionsMutationError = ErrorType<ProblemDetails>;
+export type BulkDeleteTransactionsMutationVariables = { data: BulkDeleteTransactionsRequest };
+
+/**
+ * @summary Delete several transactions
+ */
+export const useBulkDeleteTransactions = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof bulkDeleteTransactions>>,
+      TError,
+      BulkDeleteTransactionsMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof bulkDeleteTransactions>>,
+  TError,
+  BulkDeleteTransactionsMutationVariables,
+  TContext
+> => {
+  return useMutation(getBulkDeleteTransactionsMutationOptions(options), queryClient);
 };
 export const getBulkTagTransactionsUrl = () => {
   return `/api/transactions/bulk-tags`;

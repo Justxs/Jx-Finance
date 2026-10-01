@@ -460,6 +460,30 @@ export const TransactionsResponse = zod.object({
 });
 
 /**
+ * Puts every listed transaction on the account sent, as changing the account in the transaction form does: the amount, currency, date, category, split lines, tags, files, refund link, group and import reference stay, so the reporting amount needs no revaluation, and an imported row keeps guarding its new account against being imported twice. Rows already on that account are left alone and not counted. A row whose link would no longer hold stays where it is and is listed in refused with its code: the fee of a currency conversion (transaction.conversionFee), an expense split with a household when its payer does not own the account (settleUp.notPayer), and a payment of a shared debt when the account is not shared with the debt's household (household.referenceNotShared). Split rows and members of a transaction group move like any other row. An invisible id or account refuses the whole request. Repeated ids count once. A read-and-write API token cannot call it.
+ * @summary Move several transactions to another account
+ */
+
+export const BulkMoveTransactionsBody = zod.object({
+  transactionIds: zod.array(zod.uuid()).min(1).describe("Between 1 and 200 transaction ids."),
+  accountId: zod
+    .uuid()
+    .min(1)
+    .describe("The account the transactions should be on, one you can see."),
+});
+
+export const BulkMoveTransactionsResponse = zod.object({
+  moved: zod.int(),
+  refused: zod.array(
+    zod.object({
+      transactionId: zod.uuid(),
+      code: zod.string(),
+      reason: zod.string(),
+    }),
+  ),
+});
+
+/**
  * Files every listed transaction under one category, or clears their category when categoryId is null. The request is all-or-nothing: if any id is not visible to you, is a split transaction, or has a type the category does not match, nothing changes. Repeated ids count once. With onlyUncategorized, only the listed transactions that still have no category change, so a category somebody set after a review is kept, and the answer counts only those.
  * @summary Set the category of several transactions
  */
@@ -482,6 +506,19 @@ export const BulkCategorizeTransactionsBody = zod.object({
 
 export const BulkCategorizeTransactionsResponse = zod.object({
   updated: zod.int(),
+});
+
+/**
+ * Deletes every listed transaction exactly as DELETE /api/transactions/{id} does, in one save: each keeps its split lines, tags and files, and each gets its own trash entry, so POST /api/trash/restore-transactions brings the whole selection back in one call and POST /api/trash/restore brings back any one of them. Split rows and members of a transaction group are accepted like any other row. The request is all-or-nothing: if any id is not visible to you, nothing is deleted. Repeated ids count once. A read-and-write API token cannot call it.
+ * @summary Delete several transactions
+ */
+
+export const BulkDeleteTransactionsBody = zod.object({
+  transactionIds: zod.array(zod.uuid()).min(1).describe("Between 1 and 200 transaction ids."),
+});
+
+export const BulkDeleteTransactionsResponse = zod.object({
+  deleted: zod.int(),
 });
 
 /**

@@ -2,6 +2,8 @@ using JxFinance.Common;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Transactions;
 using JxFinance.Endpoints.Transactions.BulkCategorizeTransactions;
+using JxFinance.Endpoints.Transactions.BulkDeleteTransactions;
+using JxFinance.Endpoints.Transactions.BulkMoveTransactions;
 using JxFinance.Endpoints.Transactions.BulkTagTransactions;
 using JxFinance.Endpoints.Transactions.CreateTransaction;
 using JxFinance.Endpoints.Transactions.ExportTransactions;
@@ -54,6 +56,14 @@ public interface ITransactionService
 
     Task<Result<int>> BulkTagAsync(
         BulkTagTransactionsRequest request,
+        CancellationToken cancellationToken);
+
+    Task<Result<int>> BulkDeleteAsync(
+        BulkDeleteTransactionsRequest request,
+        CancellationToken cancellationToken);
+
+    Task<Result<BulkMoveTransactionsResponse>> BulkMoveAsync(
+        BulkMoveTransactionsRequest request,
         CancellationToken cancellationToken);
 
     Task<Result<Guid>> DeleteAsync(Guid id, CancellationToken cancellationToken);

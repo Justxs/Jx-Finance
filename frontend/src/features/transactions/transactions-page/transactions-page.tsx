@@ -55,6 +55,7 @@ import { useDeferredParams } from "@/hooks/use-deferred-params";
 import { useExportUrl } from "@/hooks/use-export-url";
 import { useIsoDate, useMoney } from "@/hooks/use-formatters";
 import { usePageClamp } from "@/hooks/use-paged-list";
+import { useRetained } from "@/hooks/use-retained";
 import { useSettingsSuspense } from "@/hooks/use-settings";
 import { byId, nameById } from "@/lib/options";
 import { metaLine } from "@/lib/utils";
@@ -73,6 +74,8 @@ export function TransactionsPage() {
   const [shown, stale] = useDeferredParams(view);
   const navigate = useNavigate({ from: "/transactions" });
   const [importOpen, setImportOpen] = useState(false);
+  const [deletingIds, setDeletingIds] = useState<string[] | null>(null);
+  const deletingCount = useRetained(deletingIds?.length);
   const viewKey = JSON.stringify(view);
   const selection = useTransactionSelection(viewKey);
 
@@ -95,7 +98,12 @@ export function TransactionsPage() {
   const rowDialogs = useTransactionRowDialogs({ possibleDuplicates: shown.duplicates === true });
   const inlineCategory = useInlineCategory(suggestedRule.offerAfterSave);
 
-  const mutations = useTransactionMutations({ listKey, onBulkApplied: selection.clear });
+  const accountNames = nameById(accounts);
+  const mutations = useTransactionMutations({
+    listKey,
+    accountNames,
+    onBulkApplied: selection.clear,
+  });
   const groups = useLedgerGroups({
     viewKey,
     items: ledgerItems,
@@ -136,7 +144,7 @@ export function TransactionsPage() {
   );
 
   const rowHandlers: TransactionRowHandlers = {
-    accountNames: nameById(accounts),
+    accountNames,
     categoryById,
     tagById: byId(tags),
     onEdit: (transaction) => formSection.startEditing(transaction),
@@ -198,14 +206,21 @@ export function TransactionsPage() {
             selected={selectedItems}
             categories={categories}
             tags={tags}
+            accounts={accounts}
             pending={mutations.bulkCategory.isPending}
             tagPending={mutations.bulkTag.isPending}
+            movePending={mutations.bulkMove.isPending}
+            deletePending={mutations.bulkDelete.isPending}
             onApply={(categoryId) =>
               mutations.bulkCategory.mutate({ data: { transactionIds: selectedIds, categoryId } })
             }
             onApplyTags={(tagIds) =>
               mutations.bulkTag.mutate({ data: { transactionIds: selectedIds, tagIds } })
             }
+            onMove={(accountId) =>
+              mutations.bulkMove.mutate({ data: { transactionIds: selectedIds, accountId } })
+            }
+            onDelete={() => setDeletingIds(selectedIds)}
             onGroup={() =>
               groups.openGroupDialog({ kind: "selection", transactionIds: selectedIds })
             }
@@ -260,6 +275,13 @@ export function TransactionsPage() {
       {rowDialogs.dialogs}
       {groups.dialogs}
       <ConfirmDeleteDialog {...remove.dialogProps} />
+      <ConfirmDeleteDialog
+        target={deletingIds}
+        title={t("transactions.bulkDeleteTitle", { count: deletingCount ?? 0 })}
+        description={t("confirmDelete.undoable")}
+        onCancel={() => setDeletingIds(null)}
+        onConfirm={(transactionIds) => mutations.bulkDelete.mutate({ data: { transactionIds } })}
+      />
       {features.import ? (
         <ImportDialog open={importOpen} onOpenChange={setImportOpen} accounts={accounts} />
       ) : null}

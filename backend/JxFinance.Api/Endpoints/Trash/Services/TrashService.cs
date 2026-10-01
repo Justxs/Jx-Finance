@@ -3,15 +3,21 @@ using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Common.Holdings;
 using JxFinance.Common.Settings;
+using JxFinance.Common.Trash;
+using JxFinance.Domain.Audit;
 using JxFinance.Domain.Common;
+using JxFinance.Domain.Transactions;
 using JxFinance.Domain.Trash;
+using JxFinance.Endpoints.Transactions.Shared;
 using JxFinance.Endpoints.Trash.GetTrash;
 using JxFinance.Endpoints.Trash.Interfaces;
 using JxFinance.Endpoints.Trash.Mappers;
 using JxFinance.Endpoints.Trash.RestoreDeleted;
+using JxFinance.Endpoints.Trash.RestoreTransactions;
 using JxFinance.Endpoints.Trash.Shared;
 using JxFinance.Infrastructure.Attachments;
 using JxFinance.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace JxFinance.Endpoints.Trash.Services;
 
@@ -26,6 +32,9 @@ public sealed class TrashService(
 {
     private static readonly DomainError Gone =
         EntityLookup.NotFound("That record is no longer stored and cannot be restored.");
+
+    private static readonly DomainError NothingDeleted =
+        EntityLookup.NotFound("Nothing you deleted matches that record.");
 
     public async Task<PagedResponse<TrashEntryResponse>> GetPageAsync(
         GetTrashRequest request,
@@ -52,13 +61,72 @@ public sealed class TrashService(
             .OrderByDescending(e => e.DeletedAt)
             .FindOrNotFoundAsync(
                 e => e.Kind == request.Kind && e.EntityId == request.EntityId,
-                EntityLookup.NotFound("Nothing you deleted matches that record."),
+                NothingDeleted,
                 cancellationToken);
         if (!found.TryGetValue(out var entry))
         {
             return found.Error;
         }
 
+        await using var dbTransaction = await db.Database.BeginTransactionAsync(cancellationToken);
+        var restored = await RestoreEntryAsync(entry, cancellationToken);
+        if (restored.IsFailure)
+        {
+            return restored;
+        }
+
+        await db.SaveChangesAsync(cancellationToken);
+        await dbTransaction.CommitAsync(cancellationToken);
+
+        return Result.Success();
+    }
+
+    public async Task<RestoreTransactionsResponse> RestoreTransactionsAsync(
+        RestoreTransactionsRequest request,
+        CancellationToken cancellationToken)
+    {
+        var ids = request.TransactionIds.Distinct().ToList();
+        var newest = (await db.DeletionEntries
+                .Where(e => e.Kind == TrashKind.Transaction && ids.Contains(e.EntityId))
+                .ToListAsync(cancellationToken))
+            .GroupBy(e => e.EntityId)
+            .ToDictionary(g => g.Key, g => g.MaxBy(e => e.DeletedAt)!);
+
+        await using var dbTransaction = await db.Database.BeginTransactionAsync(cancellationToken);
+        var refused = new List<TransactionRefusalResponse>();
+        foreach (var id in ids)
+        {
+            var outcome = newest.TryGetValue(id, out var entry)
+                ? await RestoreEntryAsync(entry, cancellationToken)
+                : NothingDeleted;
+            if (outcome.IsFailure)
+            {
+                refused.Add(new TransactionRefusalResponse(id, outcome.Error.Code, outcome.Error.Message));
+            }
+        }
+
+        var accounts = db.ChangeTracker.Entries<Transaction>()
+            .Where(e => e.State == EntityState.Modified)
+            .Select(e => e.Entity.AccountId)
+            .ToList();
+        if (accounts.Count > 0)
+        {
+            db.Audit.Summarise(
+                AuditAction.Restored,
+                AuditEntityKind.Transaction,
+                TrashLabel.Counted("Selection restored", (accounts.Count, "transaction", "transactions")),
+                accounts.Count,
+                accounts: accounts);
+        }
+
+        await db.SaveChangesAsync(cancellationToken);
+        await dbTransaction.CommitAsync(cancellationToken);
+
+        return new RestoreTransactionsResponse(ids.Count - refused.Count, refused);
+    }
+
+    private async Task<Result> RestoreEntryAsync(DeletionEntry entry, CancellationToken cancellationToken)
+    {
         if (!TrashRestorers.IsEnabled(entry.Kind, settings.Current))
         {
             return new DomainError(
@@ -78,18 +146,13 @@ public sealed class TrashService(
                 $"This was deleted more than {DeletionEntry.RetentionDays} days ago and can no longer be restored.");
         }
 
-        await using var dbTransaction = await db.Database.BeginTransactionAsync(cancellationToken);
         var restored = await RestoreRecordAsync(entry, cancellationToken);
-        if (restored.IsFailure)
+        if (restored.IsSuccess)
         {
-            return restored;
+            entry.RestoredAt = clock.UtcNow;
         }
 
-        entry.RestoredAt = clock.UtcNow;
-        await db.SaveChangesAsync(cancellationToken);
-        await dbTransaction.CommitAsync(cancellationToken);
-
-        return Result.Success();
+        return restored;
     }
 
     private async Task<Result> RestoreRecordAsync(DeletionEntry entry, CancellationToken cancellationToken)

@@ -1,10 +1,17 @@
-import { Group } from "lucide-react";
+import { ArrowRightLeft, Group, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import type { CategoryResponse, TagResponse, TransactionResponse } from "@/api/generated/model";
+import type {
+  AccountResponse,
+  CategoryResponse,
+  TagResponse,
+  TransactionResponse,
+} from "@/api/generated/model";
 import { ComboboxField } from "@/components/combobox-field/combobox-field";
+import { SelectField } from "@/components/select-field/select-field";
 import { TagPicker } from "@/components/tag-picker/tag-picker";
 import { Button } from "@/components/ui/button/button";
+import { Hint } from "@/components/ui/field-error";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover/popover";
 import { UNCATEGORIZED_OPTION } from "@/features/transactions/transaction-amount/transaction-row";
 import { namedOptions } from "@/lib/options";
@@ -13,11 +20,16 @@ interface Props {
   selected: TransactionResponse[];
   categories: CategoryResponse[];
   tags: TagResponse[];
+  accounts: AccountResponse[];
   pending: boolean;
   tagPending: boolean;
+  movePending: boolean;
+  deletePending: boolean;
   onApply: (categoryId: string | null) => void;
   onApplyTags: (tagIds: string[]) => void;
+  onMove: (accountId: string) => void;
   onGroup: () => void;
+  onDelete: () => void;
   onClear: () => void;
 }
 
@@ -25,16 +37,26 @@ export function SelectionToolbar({
   selected,
   categories,
   tags,
+  accounts,
   pending,
   tagPending,
+  movePending,
+  deletePending,
   onApply,
   onApplyTags,
+  onMove,
   onGroup,
+  onDelete,
   onClear,
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const [choice, setChoice] = useState("");
   const [tagChoice, setTagChoice] = useState<string[]>([]);
+  const [accountChoice, setAccountChoice] = useState("");
+  const accountOptions = namedOptions(accounts);
+  const targetAccount = accountOptions.some((option) => option.value === accountChoice)
+    ? accountChoice
+    : "";
 
   const types = new Set(selected.map((item) => item.type));
   const mixed = types.size > 1;
@@ -105,9 +127,50 @@ export function SelectionToolbar({
           </div>
         </PopoverContent>
       </Popover>
+      <Popover>
+        <PopoverTrigger
+          render={
+            <Button type="button" variant="outline" pending={movePending} disabled={pending} />
+          }
+        >
+          <ArrowRightLeft />
+          {t("transactions.moveToAccount")}
+        </PopoverTrigger>
+        <PopoverContent align="start" aria-label={t("transactions.moveToAccount")} className="w-72">
+          <SelectField
+            aria-label={t("transactions.moveAccountField")}
+            aria-describedby="tx-move-hint"
+            placeholder={t("transactions.moveAccountField")}
+            value={targetAccount}
+            onChange={setAccountChoice}
+            options={accountOptions}
+          />
+          <Hint id="tx-move-hint">{t("transactions.moveHint")}</Hint>
+          <div className="flex justify-end border-t pt-2">
+            <Button
+              type="button"
+              size="sm"
+              disabled={targetAccount === "" || movePending}
+              onClick={() => onMove(targetAccount)}
+            >
+              {t("transactions.move")}
+            </Button>
+          </div>
+        </PopoverContent>
+      </Popover>
       <Button type="button" variant="outline" disabled={pending || !groupable} onClick={onGroup}>
         <Group />
         {t("transactions.groups.group")}
+      </Button>
+      <Button
+        type="button"
+        variant="outline-destructive"
+        pending={deletePending}
+        disabled={pending}
+        onClick={onDelete}
+      >
+        <Trash2 />
+        {t("transactions.deleteSelected")}
       </Button>
       <Button type="button" variant="outline" disabled={pending} onClick={onClear}>
         {t("transactions.clearSelection")}

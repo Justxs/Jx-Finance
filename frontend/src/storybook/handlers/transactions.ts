@@ -6,6 +6,8 @@ import type {
 } from "@/api/generated/model";
 import {
   getBulkCategorizeTransactionsMockHandler,
+  getBulkDeleteTransactionsMockHandler,
+  getBulkMoveTransactionsMockHandler,
   getBulkTagTransactionsMockHandler,
   getCreateTransactionMockHandler,
   getDeleteTransactionMockHandler,
@@ -190,7 +192,7 @@ function mergeTransaction(base: TransactionResponse, body: Body): TransactionRes
   return { ...base, ...body, lines, isSplit: lines !== null };
 }
 
-async function bulkUpdate({ request }: { request: Request }) {
+async function bulkSelection(request: Request): Promise<number> {
   const body = await readBody(request);
   const requested = Array.isArray(body.transactionIds) ? body.transactionIds : [];
   const known = [...transactions, ...uncategorizedSuggestions.map((item) => item.transaction)];
@@ -198,7 +200,11 @@ async function bulkUpdate({ request }: { request: Request }) {
   if (matched.some((item) => item === undefined)) {
     throw notFound();
   }
-  return { updated: matched.length };
+  return matched.length;
+}
+
+async function bulkUpdate({ request }: { request: Request }) {
+  return { updated: await bulkSelection(request) };
 }
 
 export const transactionHandlers = [
@@ -275,4 +281,11 @@ export const transactionHandlers = [
   getRestoreUnusualAmountMockHandler(),
   getKeepPossibleDuplicatesMockHandler(),
   getBulkTagTransactionsMockHandler(bulkUpdate),
+  getBulkMoveTransactionsMockHandler(async ({ request }) => ({
+    moved: await bulkSelection(request),
+    refused: [],
+  })),
+  getBulkDeleteTransactionsMockHandler(async ({ request }) => ({
+    deleted: await bulkSelection(request),
+  })),
 ];

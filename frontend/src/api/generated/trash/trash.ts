@@ -27,6 +27,8 @@ import type {
   PagedResponseOfTrashEntryResponse,
   ProblemDetails,
   RestoreDeletedRequest,
+  RestoreTransactionsRequest,
+  RestoreTransactionsResponse,
   TrashParams,
 } from "../model";
 
@@ -271,4 +273,110 @@ export const useRestoreDeleted = <TError = ErrorType<ProblemDetails>, TContext =
   TContext
 > => {
   return useMutation(getRestoreDeletedMutationOptions(options), queryClient);
+};
+export const getRestoreTransactionsUrl = () => {
+  return `/api/trash/restore-transactions`;
+};
+
+/**
+ * The undo of POST /api/transactions/bulk-delete: brings back every listed transaction the signed-in user deleted, each through the same checks as POST /api/trash/restore with kind transaction, in one save. A transaction that cannot come back stays in the trash and is listed in refused with the code that single restore would answer: restore.referenceMissing when its account is archived or no longer visible or its category was deleted, restore.detailsLost when its split lines are gone, restore.expired when it was deleted more than 30 days ago, and resource.notFound when you deleted no such transaction. One that is already back counts as restored, which makes the call safe to repeat. Each one also stays restorable on its own from the trash. A read-and-write API token cannot call it.
+ * @summary Restore several deleted transactions
+ */
+export const restoreTransactions = async (
+  restoreTransactionsRequest: RestoreTransactionsRequest,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<RestoreTransactionsResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return customFetch<RestoreTransactionsResponse>(getRestoreTransactionsUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(restoreTransactionsRequest),
+  });
+};
+
+export const getRestoreTransactionsMutationKey = () => ["restoreTransactions"] as const;
+
+export const getRestoreTransactionsMutationOptions = <
+  TError = ErrorType<ProblemDetails>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof restoreTransactions>>,
+    TError,
+    RestoreTransactionsMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof restoreTransactions>>,
+  TError,
+  RestoreTransactionsMutationVariables,
+  TContext
+> => {
+  const mutationKey = getRestoreTransactionsMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof restoreTransactions>>,
+    RestoreTransactionsMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return restoreTransactions(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type RestoreTransactionsMutationResult = NonNullable<
+  Awaited<ReturnType<typeof restoreTransactions>>
+>;
+export type RestoreTransactionsMutationBody = RestoreTransactionsRequest;
+export type RestoreTransactionsMutationError = ErrorType<ProblemDetails>;
+export type RestoreTransactionsMutationVariables = { data: RestoreTransactionsRequest };
+
+/**
+ * @summary Restore several deleted transactions
+ */
+export const useRestoreTransactions = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof restoreTransactions>>,
+      TError,
+      RestoreTransactionsMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof restoreTransactions>>,
+  TError,
+  RestoreTransactionsMutationVariables,
+  TContext
+> => {
+  return useMutation(getRestoreTransactionsMutationOptions(options), queryClient);
 };

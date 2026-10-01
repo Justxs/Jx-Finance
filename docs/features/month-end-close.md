@@ -96,6 +96,7 @@ Drift can only see what stamps `UpdatedAt`, so every writer that rewrites a tran
 | Change a row's date out of the month | Yes, `movedOut` in the old month and `created` in the new one |
 | Create, edit or delete a spread row dated before the month whose slices reach it | Yes, as `created`, `edited` or `deleted` in every month it counts in, never `movedOut` while a slice still lands there; its own month's transaction count is the only one it changes |
 | Bulk recategorize, a categorization rule run, deleting a category, restoring a deleted category | Yes: each stamps `UpdatedAt` on the rows it rewrites |
+| Deleting a selection, undoing it, moving a selection to another account | Yes, as `deleted`, `created` or `edited`: each row is changed through the tracker like a single delete, restore or edit. A row moved to an account outside the closed scope is no longer listed, like an archived account's rows, while the totals still show the difference |
 | A reporting-currency change | `currencyChanged` only. The revaluation stamps the rows whose `ReportingAmount` it rewrites, but the month is not compared row by row |
 | Tags: `bulk-tags`, deleting a tag | No. They only touch `TransactionTags`, and tags are not in the month's figures |
 | Attachments | No. They are rows of their own and change no figure |

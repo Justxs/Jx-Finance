@@ -213,6 +213,43 @@ flowchart TD
 
 `POST /api/transactions/bulk-tags` is the same operation for tags and replaces the whole set on every listed row. It differs in two ways: it accepts split rows, because a tag belongs to the payment rather than to a line, and it does not care whether the selection mixes income and expense, because a tag has no flow type. It is all or nothing in the same way: an invisible transaction answers 404, an invisible tag answers 400 `reference.notFound`, and nothing is written in either case.
 
+## Deleting a selection and moving it to another account
+
+Since 2026-10-01 the selection toolbar also has **Move to account**, an outline button that opens a popover with an account select, the hint "Each row keeps its amount, currency, date, category and tags." and a small **Move** button, and **Delete**, an outline button in expense red. Neither cares whether the selection mixes income and expense. The selection itself is unchanged: split rows and the members of an expanded group cannot be ticked, as for the other bulk actions, although both endpoints accept them like any other row, so a client of the API can delete or move them.
+
+```mermaid
+flowchart TD
+    Tick["Tick rows"] --> Del["Delete"]
+    Del --> Confirm["ConfirmDeleteDialog: 'Delete 3 transactions?'<br/>'You can undo this straight away…'"]
+    Confirm --> BD["POST /api/transactions/bulk-delete"]
+    BD --> Rows["each row soft-deleted as DELETE /{id} does,<br/>one DeletionEntry per row, one summarised activity row"]
+    Rows --> Toast["toast '3 transactions deleted' with Undo"]
+    Toast -->|"Undo"| RT["POST /api/trash/restore-transactions"]
+    RT --> Each["each row through the trash's own transaction checks"]
+    Each --> Report["'Brought back 2 of 3 transactions'<br/>with the reason the third stayed"]
+    Tick --> Move["Move to account: choose, Move"]
+    Move --> BM["POST /api/transactions/bulk-account"]
+    BM --> Rules{"fee of a conversion, split with a household,<br/>payment of a shared debt?"}
+    Rules -->|"link would break"| Refused["row stays, listed in refused with its code"]
+    Rules -->|"no"| Moved["AccountId changes; nothing else"]
+    Moved --> MToast["'Moved 4 of 5 transactions to Swedbank'<br/>with the reasons"]
+    Refused --> MToast
+```
+
+`POST /api/transactions/bulk-delete` takes `transactionIds`, 1 to 200 (`required`, `collection.invalidSize`), and is all or nothing on visibility like the other bulk operations: one invisible id answers 404 and nothing is deleted. Otherwise every row is deleted exactly as a single delete does it, in one save: its split lines, tags and files stay, its debt payment link, household split and group membership are left alone and stop counting while it is deleted, as they do for one row, and each row gets its own trash entry, so each is listed in the trash and restorable on its own for 30 days. The answer is `{ deleted }`. The undo is `POST /api/trash/restore-transactions` with the same ids, which restores each row through the same checks as `POST /api/trash/restore` and answers `{ restored, refused }`; see [Trash and undo](trash-and-undo.md#undoing-a-selection).
+
+`POST /api/transactions/bulk-account` takes `transactionIds` and `accountId`. The account must be visible to the caller (400 `reference.notFound`) and every row too (404), or nothing moves. A move changes `AccountId` and nothing else, which is what the transaction form allows when the account is changed: the amount, its currency, the date and therefore `ReportingAmount` stay, so there is no revaluation and no currency check, because an account holds balances in any currency and the row's currency is already in use. The category, split lines, tags, files, refund link (a refund may name a purchase on any account), group, note, place and import reference stay too; an imported row keeps its reference, so the account it moved to treats the same statement line as a duplicate, which is what correcting a statement imported into the wrong account needs. A row already on the account is left alone and not counted in `moved`. Three links refuse a row, which then stays where it is and is listed in `refused` as `{ transactionId, code, reason }`:
+
+| The row is | Refused when | Code |
+| --- | --- | --- |
+| the fee of a currency conversion | always: the fee stays on the conversion's account, which a conversion edit keeps updating in place | `transaction.conversionFee` |
+| an expense split with a household | the member who paid it does not own the account, the rule a split is created under | `settleUp.notPayer` |
+| a payment of a debt shared with a household | the account is not shared with that household, the rule a shared debt's payment is linked under | `household.referenceNotShared` |
+
+The page clears the selection after either action and shows one toast: "5 transactions moved to Swedbank", or a warning "Moved 4 of 5 transactions to Swedbank" whose description lists each distinct reason once in the reader's language (`refusalReasons` in `transactions-page/bulk-refusals.ts`). The row is updated through the change tracker, so `UpdatedAt` is stamped and a row dated in a closed month shows as an edit in that month's [drift](month-end-close.md#what-drift-covers-and-what-it-does-not); the unusual-amount check runs again for it, as after an account change in the form. On shared accounts each operation writes one row in the household [activity log](audit-log.md#imports-and-bulk-edits) instead of one per transaction: `Selection deleted, 3 transactions`, `Selection restored, 3 transactions` and `Moved to Swedbank, 3 transactions`, the last in the households of both the old and the new accounts. None of the three is token-writable: a read-and-write API token gets 403 `token.notAllowed` from them, as from every other route outside the [write list](personal-api-tokens.md#writing-with-a-token).
+
+`BulkDeleteAndMoveTests` covers a selection with a split row deleted with one trash entry per row and restored whole in one call, twice; one row of it restored on its own; an invisible row refusing the delete; an undo that restores one row, refuses one whose account was archived and one that was never deleted; a move keeping the currency, reporting amount, category and tags and leaving a row already there uncounted; an invisible account or row and 201 ids refused; a conversion fee, a household split and a shared debt payment refused; and one activity row each for a move, a delete and an undo on shared accounts. `MonthCloseTests` checks that a moved row is an edit and a deleted one a deletion in a closed month. On the client, `bulk-refusals.test.ts` covers the reasons, the `SelectionToolbar` stories `MovingToAnotherAccount`, `DeletingTheSelection`, `MovePending` and `DeletePending` the toolbar, and the page stories `MovingSelectedRowsWithARefusal` and `DeletingSelectedRowsAndUndoingWithARefusal` the toasts with a partial refusal.
+
 ## Saved filters
 
 A saved filter is a name put on the filter half of the search params. It lives in the browser, in the `jx-saved-filters` TanStack DB local-storage collection of `features/transactions/transaction-views.ts`, next to the preferences row; there is no table, no endpoint and nothing to invalidate. The menu sits in the page header beside the export menu, holds the whole list, and saves, renames, deletes and applies.

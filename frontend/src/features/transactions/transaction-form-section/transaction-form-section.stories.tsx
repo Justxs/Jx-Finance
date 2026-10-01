@@ -7,6 +7,7 @@ import {
 } from "@/api/generated/transactions/transactions.msw";
 import { Button } from "@/components/ui/button/button";
 import { useTransactionMutations } from "@/features/transactions/transactions-page/use-transaction-mutations";
+import { nameById } from "@/lib/options";
 import { accounts, categories, splitTransaction, tags, transactions } from "@/storybook/fixtures";
 import { pending, withHandlers } from "@/storybook/handlers";
 import { openedDialog } from "@/storybook/interactions";
@@ -17,6 +18,7 @@ const offerRule = fn();
 function FormSectionHarness() {
   const mutations = useTransactionMutations({
     listKey: getLedgerQueryKey(),
+    accountNames: nameById(accounts),
     onBulkApplied: fn(),
   });
   const section = useTransactionFormSection({

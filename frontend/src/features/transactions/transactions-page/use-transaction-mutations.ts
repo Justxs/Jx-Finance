@@ -5,17 +5,24 @@ import {
   type CreateTransactionMutationVariables,
   getLedgerQueryKey,
   useBulkCategorizeTransactions,
+  useBulkDeleteTransactions,
+  useBulkMoveTransactions,
   useBulkTagTransactions,
   useCreateTransaction,
   useDeleteTransaction,
+  useRestoreTransactions,
   useUpdateTransaction,
   useUploadAttachment,
 } from "@/api/generated";
-import type { PagedResponseOfLedgerItemResponse } from "@/api/generated/model";
+import type {
+  PagedResponseOfLedgerItemResponse,
+  TransactionRefusalResponse,
+} from "@/api/generated/model";
 import { useReportingCurrency } from "@/hooks/use-currencies";
 import { silentMutation } from "@/lib/mutations";
 import { optimisticUpdate } from "@/lib/optimistic";
 import { errorMessage } from "@/lib/query-client";
+import { refusalReasons } from "./bulk-refusals";
 import {
   optimisticTransaction,
   withLedgerTransaction,
@@ -24,10 +31,23 @@ import {
 
 interface Options {
   listKey: QueryKey;
+  accountNames: ReadonlyMap<string | undefined, string | undefined>;
   onBulkApplied: () => void;
 }
 
-export function useTransactionMutations({ listKey, onBulkApplied }: Readonly<Options>) {
+function showOutcome(refused: readonly TransactionRefusalResponse[], done: string, partly: string) {
+  if (refused.length === 0) {
+    toast.success(done);
+    return;
+  }
+  toast.warning(partly, { description: refusalReasons(refused) });
+}
+
+export function useTransactionMutations({
+  listKey,
+  accountNames,
+  onBulkApplied,
+}: Readonly<Options>) {
   const { t } = useTranslation();
   const reportingCurrency = useReportingCurrency();
 
@@ -79,6 +99,50 @@ export function useTransactionMutations({ listKey, onBulkApplied }: Readonly<Opt
     },
   });
 
+  const bulkMove = useBulkMoveTransactions({
+    mutation: {
+      onSuccess: (result, { data }) => {
+        const count = data.transactionIds.length;
+        const moved = count - result.refused.length;
+        const account = accountNames.get(data.accountId) ?? "";
+        showOutcome(
+          result.refused,
+          t("transactions.moved", { count, account }),
+          t("transactions.movedPartly", { count, moved, account }),
+        );
+        onBulkApplied();
+      },
+    },
+  });
+
+  const restoreSelection = useRestoreTransactions({
+    mutation: {
+      onSuccess: (result, { data }) => {
+        const count = data.transactionIds.length;
+        showOutcome(
+          result.refused,
+          t("transactions.bulkRestored", { count }),
+          t("transactions.bulkRestoredPartly", { count, restored: result.restored }),
+        );
+      },
+    },
+  });
+
+  const bulkDelete = useBulkDeleteTransactions({
+    mutation: {
+      onSuccess: (result, { data }) => {
+        toast.success(t("transactions.bulkDeleted", { count: result.deleted }), {
+          action: {
+            label: t("trash.undo"),
+            onClick: () =>
+              restoreSelection.mutate({ data: { transactionIds: data.transactionIds } }),
+          },
+        });
+        onBulkApplied();
+      },
+    },
+  });
+
   const uploadReceipt = useUploadAttachment({ mutation: silentMutation });
 
   async function attachReceipt(transactionId: string, file: File) {
@@ -89,5 +153,5 @@ export function useTransactionMutations({ listKey, onBulkApplied }: Readonly<Opt
     }
   }
 
-  return { create, update, remove, bulkTag, bulkCategory, attachReceipt };
+  return { create, update, remove, bulkTag, bulkCategory, bulkMove, bulkDelete, attachReceipt };
 }

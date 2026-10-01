@@ -81,6 +81,28 @@ public sealed class MonthCloseTests(ApiFixture fixture) : IntegrationTestBase(fi
     }
 
     [Fact]
+    public async Task Moving_a_selection_to_another_account_and_deleting_one_are_drift()
+    {
+        using var member = await CreateUserClientAsync();
+        var account = await CreateAccountAsync("1000.00", client: member);
+        var other = await CreateAccountAsync("1000.00", client: member);
+        var moved = await CreateTransactionAsync(member, account, null, "expense", "40.00", "2025-03-04", "Rent");
+        var deleted = await CreateTransactionAsync(member, account, null, "expense", "10.00", "2025-03-05", "Coffee");
+        await CloseAsync(member, March);
+
+        (await member.PostAsJsonAsync("/api/transactions/bulk-account", new { transactionIds = new[] { moved.Id }, accountId = other }, TestContext.Current.CancellationToken))
+            .EnsureSuccessStatusCode();
+        (await member.PostAsJsonAsync("/api/transactions/bulk-delete", new { transactionIds = new[] { deleted.Id } }, TestContext.Current.CancellationToken))
+            .EnsureSuccessStatusCode();
+
+        var review = await ReviewAsync(member, March);
+        Assert.Equal("closedChanged", review.Status);
+        Assert.Equal("edited", Row(review, moved.Id).Change);
+        Assert.Equal("deleted", Row(review, deleted.Id).Change);
+        Assert.Equal(("50.00", "40.00"), (review.Drift!.Totals!.ClosedExpense, review.Figures.TotalExpense));
+    }
+
+    [Fact]
     public async Task Rows_in_other_months_are_ignored_and_rows_moved_out_or_merely_edited_are_drift()
     {
         using var member = await CreateUserClientAsync();

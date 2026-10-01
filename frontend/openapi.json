@@ -16646,6 +16646,89 @@
         ]
       }
     },
+    "/api/transactions/bulk-account": {
+      "post": {
+        "tags": [
+          "Transactions"
+        ],
+        "summary": "Move several transactions to another account",
+        "description": "Puts every listed transaction on the account sent, as changing the account in the transaction form does: the amount, currency, date, category, split lines, tags, files, refund link, group and import reference stay, so the reporting amount needs no revaluation, and an imported row keeps guarding its new account against being imported twice. Rows already on that account are left alone and not counted. A row whose link would no longer hold stays where it is and is listed in refused with its code: the fee of a currency conversion (transaction.conversionFee), an expense split with a household when its payer does not own the account (settleUp.notPayer), and a payment of a shared debt when the account is not shared with the debt's household (household.referenceNotShared). Split rows and members of a transaction group move like any other row. An invisible id or account refuses the whole request. Repeated ids count once. A read-and-write API token cannot call it.",
+        "operationId": "BulkMoveTransactions",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BulkMoveTransactionsRequest"
+              },
+              "example": {
+                "transactionIds": [
+                  "00000000-0000-0000-0000-000000000000"
+                ],
+                "accountId": "00000000-0000-0000-0000-000000000000"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "How many transactions moved, and which stayed where they were and why.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BulkMoveTransactionsResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed, or the account is not visible to you (reference.notFound).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "At least one listed transaction is not visible to the signed-in user.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      }
+    },
     "/api/transactions/bulk-category": {
       "post": {
         "tags": [
@@ -16729,6 +16812,88 @@
           },
           {
             "PersonalApiToken": [ ]
+          }
+        ]
+      }
+    },
+    "/api/transactions/bulk-delete": {
+      "post": {
+        "tags": [
+          "Transactions"
+        ],
+        "summary": "Delete several transactions",
+        "description": "Deletes every listed transaction exactly as DELETE /api/transactions/{id} does, in one save: each keeps its split lines, tags and files, and each gets its own trash entry, so POST /api/trash/restore-transactions brings the whole selection back in one call and POST /api/trash/restore brings back any one of them. Split rows and members of a transaction group are accepted like any other row. The request is all-or-nothing: if any id is not visible to you, nothing is deleted. Repeated ids count once. A read-and-write API token cannot call it.",
+        "operationId": "BulkDeleteTransactions",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BulkDeleteTransactionsRequest"
+              },
+              "example": {
+                "transactionIds": [
+                  "00000000-0000-0000-0000-000000000000"
+                ]
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "The number of transactions deleted.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BulkDeleteTransactionsResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "At least one listed transaction is not visible to the signed-in user.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
           }
         ]
       }
@@ -19525,6 +19690,78 @@
         ]
       }
     },
+    "/api/trash/restore-transactions": {
+      "post": {
+        "tags": [
+          "Trash"
+        ],
+        "summary": "Restore several deleted transactions",
+        "description": "The undo of POST /api/transactions/bulk-delete: brings back every listed transaction the signed-in user deleted, each through the same checks as POST /api/trash/restore with kind transaction, in one save. A transaction that cannot come back stays in the trash and is listed in refused with the code that single restore would answer: restore.referenceMissing when its account is archived or no longer visible or its category was deleted, restore.detailsLost when its split lines are gone, restore.expired when it was deleted more than 30 days ago, and resource.notFound when you deleted no such transaction. One that is already back counts as restored, which makes the call safe to repeat. Each one also stays restorable on its own from the trash. A read-and-write API token cannot call it.",
+        "operationId": "RestoreTransactions",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RestoreTransactionsRequest"
+              },
+              "example": {
+                "transactionIds": [
+                  "00000000-0000-0000-0000-000000000000"
+                ]
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "How many transactions are back, and which stayed in the trash and why.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RestoreTransactionsResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      }
+    },
     "/api/users": {
       "post": {
         "tags": [
@@ -22199,6 +22436,96 @@
           "updated": {
             "type": "integer",
             "format": "int32"
+          }
+        }
+      },
+      "BulkDeleteTransactionsRequest": {
+        "required": [
+          "transactionIds"
+        ],
+        "type": "object",
+        "properties": {
+          "transactionIds": {
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Between 1 and 200 transaction ids.",
+            "example": [
+              "00000000-0000-0000-0000-000000000000"
+            ]
+          }
+        },
+        "example": {
+          "transactionIds": [
+            "00000000-0000-0000-0000-000000000000"
+          ]
+        }
+      },
+      "BulkDeleteTransactionsResponse": {
+        "required": [
+          "deleted"
+        ],
+        "type": "object",
+        "properties": {
+          "deleted": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "BulkMoveTransactionsRequest": {
+        "required": [
+          "transactionIds",
+          "accountId"
+        ],
+        "type": "object",
+        "properties": {
+          "transactionIds": {
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Between 1 and 200 transaction ids.",
+            "example": [
+              "00000000-0000-0000-0000-000000000000"
+            ]
+          },
+          "accountId": {
+            "minLength": 1,
+            "type": "string",
+            "description": "The account the transactions should be on, one you can see.",
+            "format": "uuid",
+            "example": "00000000-0000-0000-0000-000000000000"
+          }
+        },
+        "example": {
+          "transactionIds": [
+            "00000000-0000-0000-0000-000000000000"
+          ],
+          "accountId": "00000000-0000-0000-0000-000000000000"
+        }
+      },
+      "BulkMoveTransactionsResponse": {
+        "required": [
+          "moved",
+          "refused"
+        ],
+        "type": "object",
+        "properties": {
+          "moved": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "refused": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TransactionRefusalResponse"
+            }
           }
         }
       },
@@ -25288,6 +25615,7 @@
           "token.limitReached",
           "token.notAllowed",
           "token.rateLimited",
+          "transaction.conversionFee",
           "transaction.linesMismatch",
           "transaction.locationInvalid",
           "transaction.refundOriginalInvalid",
@@ -29652,6 +29980,50 @@
           "entityId": "00000000-0000-0000-0000-000000000000"
         }
       },
+      "RestoreTransactionsRequest": {
+        "required": [
+          "transactionIds"
+        ],
+        "type": "object",
+        "properties": {
+          "transactionIds": {
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Between 1 and 200 ids of deleted transactions.",
+            "example": [
+              "00000000-0000-0000-0000-000000000000"
+            ]
+          }
+        },
+        "example": {
+          "transactionIds": [
+            "00000000-0000-0000-0000-000000000000"
+          ]
+        }
+      },
+      "RestoreTransactionsResponse": {
+        "required": [
+          "restored",
+          "refused"
+        ],
+        "type": "object",
+        "properties": {
+          "restored": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "refused": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TransactionRefusalResponse"
+            }
+          }
+        }
+      },
       "RunRulesRequest": {
         "type": "object",
         "properties": {
@@ -31342,6 +31714,26 @@
               "null",
               "string"
             ]
+          }
+        }
+      },
+      "TransactionRefusalResponse": {
+        "required": [
+          "transactionId",
+          "code",
+          "reason"
+        ],
+        "type": "object",
+        "properties": {
+          "transactionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "code": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
           }
         }
       },

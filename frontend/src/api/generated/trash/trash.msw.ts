@@ -7,7 +7,7 @@
  */
 import { HttpResponse, http } from "msw";
 import type { RequestHandlerOptions } from "msw";
-import type { PagedResponseOfTrashEntryResponse } from "../model";
+import type { PagedResponseOfTrashEntryResponse, RestoreTransactionsResponse } from "../model";
 
 export const getTrashMockHandler = (
   overrideResponse?:
@@ -51,4 +51,32 @@ export const getRestoreDeletedMockHandler = (
     options,
   );
 };
-export const getTrashMock = () => [getTrashMockHandler(), getRestoreDeletedMockHandler()];
+
+export const getRestoreTransactionsMockHandler = (
+  overrideResponse?:
+    | RestoreTransactionsResponse
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<RestoreTransactionsResponse> | RestoreTransactionsResponse),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/trash/restore-transactions",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : undefined,
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+export const getTrashMock = () => [
+  getTrashMockHandler(),
+  getRestoreDeletedMockHandler(),
+  getRestoreTransactionsMockHandler(),
+];

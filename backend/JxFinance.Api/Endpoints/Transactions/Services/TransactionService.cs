@@ -19,6 +19,8 @@ using JxFinance.Domain.Transactions;
 using JxFinance.Domain.Trash;
 using JxFinance.Endpoints.Households.Shared;
 using JxFinance.Endpoints.Transactions.BulkCategorizeTransactions;
+using JxFinance.Endpoints.Transactions.BulkDeleteTransactions;
+using JxFinance.Endpoints.Transactions.BulkMoveTransactions;
 using JxFinance.Endpoints.Transactions.BulkTagTransactions;
 using JxFinance.Endpoints.Transactions.CreateTransaction;
 using JxFinance.Endpoints.Transactions.ExportTransactions;
@@ -587,6 +589,78 @@ public sealed class TransactionService(
         await dbTransaction.CommitAsync(cancellationToken);
 
         return transactions.Count;
+    }
+
+    public async Task<Result<int>> BulkDeleteAsync(
+        BulkDeleteTransactionsRequest request,
+        CancellationToken cancellationToken)
+    {
+        var loaded = await LoadForBulkAsync(request.TransactionIds, cancellationToken);
+        if (!loaded.TryGetValue(out var transactions))
+        {
+            return loaded.Error;
+        }
+
+        foreach (var transaction in transactions)
+        {
+            deletions.Record(
+                TrashKind.Transaction,
+                transaction.Id.Value,
+                TrashLabel.Dated(transaction.Description, transaction.Date, transaction.Amount));
+        }
+
+        db.Transactions.RemoveRange(transactions);
+        db.Audit.Summarise(
+            AuditAction.Deleted,
+            AuditEntityKind.Transaction,
+            TrashLabel.Counted("Selection deleted", (transactions.Count, "transaction", "transactions")),
+            transactions.Count,
+            accounts: transactions.Select(t => t.AccountId));
+        await db.SaveChangesAsync(cancellationToken);
+
+        return transactions.Count;
+    }
+
+    public async Task<Result<BulkMoveTransactionsResponse>> BulkMoveAsync(
+        BulkMoveTransactionsRequest request,
+        CancellationToken cancellationToken)
+    {
+        var loaded = await LoadForBulkAsync(request.TransactionIds, cancellationToken);
+        if (!loaded.TryGetValue(out var transactions))
+        {
+            return loaded.Error;
+        }
+
+        var targetId = new AccountId(request.AccountId);
+        if (await references.AccountExistsAsync(targetId, cancellationToken) is { } accountError)
+        {
+            return accountError;
+        }
+
+        var target = await db.Accounts.AsNoTracking().FirstAsync(a => a.Id == targetId, cancellationToken);
+        var moving = transactions.Where(t => t.AccountId != targetId).ToList();
+        var refusals = await AccountMoves.RefusalsAsync(db, moving, target, cancellationToken);
+        var moved = moving.Where(t => !refusals.ContainsKey(t.Id)).ToList();
+        if (moved.Count > 0)
+        {
+            var touched = moved.Select(t => t.AccountId).Append(targetId).ToList();
+            foreach (var transaction in moved)
+            {
+                transaction.AccountId = targetId;
+            }
+
+            db.Audit.Summarise(
+                AuditAction.Updated,
+                AuditEntityKind.Transaction,
+                TrashLabel.Counted($"Moved to {target.Name}", (moved.Count, "transaction", "transactions")),
+                moved.Count,
+                accounts: touched);
+            await db.SaveChangesAsync(cancellationToken);
+        }
+
+        return new BulkMoveTransactionsResponse(
+            moved.Count,
+            [.. refusals.Select(r => new TransactionRefusalResponse(r.Key.Value, r.Value.Code, r.Value.Message))]);
     }
 
     public Task<Result<Guid>> DeleteAsync(Guid id, CancellationToken cancellationToken)

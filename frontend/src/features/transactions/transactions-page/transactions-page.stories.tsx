@@ -2,16 +2,20 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, fireEvent, fn, screen, userEvent, waitFor, within } from "storybook/test";
 import { getCreateTransactionGroupMockHandler } from "@/api/generated/transaction-groups/transaction-groups.msw";
 import {
+  getBulkDeleteTransactionsMockHandler,
+  getBulkMoveTransactionsMockHandler,
   getCreateTransactionMockHandler,
   getKeepPossibleDuplicatesMockHandler,
   getLedgerMockHandler,
 } from "@/api/generated/transactions/transactions.msw";
+import { getRestoreTransactionsMockHandler } from "@/api/generated/trash/trash.msw";
 import { savedFilters, transactionTemplates } from "@/features/transactions/transaction-views";
 import { withPageFrame } from "@/storybook/decorators";
 import {
   ids,
   ledgerItemsOf,
   possibleDuplicatePair,
+  savingsAccount,
   splitTransaction,
   transactionGroups,
 } from "@/storybook/fixtures";
@@ -22,7 +26,13 @@ import {
   pending,
   withHandlers,
 } from "@/storybook/handlers";
-import { chooseMenuItem, first, openedDialog } from "@/storybook/interactions";
+import {
+  type Canvas,
+  chooseMenuItem,
+  chooseOption,
+  first,
+  openedDialog,
+} from "@/storybook/interactions";
 import { TransactionsPage } from "./transactions-page";
 
 const meta = {
@@ -119,6 +129,89 @@ export const GroupingTwoSelectedRows: Story = {
       }),
     );
     await waitFor(() => expect(canvas.queryByText("2 selected")).not.toBeInTheDocument());
+  },
+};
+
+async function selectTwoRows(canvas: Canvas) {
+  const boxes = await canvas.findAllByRole("checkbox", { name: /^Select: / });
+  const enabled = boxes.filter((box) => box.getAttribute("aria-disabled") !== "true");
+  await userEvent.click(enabled[0]!);
+  await userEvent.click(enabled[1]!);
+  return within(canvas.getByRole("group", { name: "Selected transactions" }));
+}
+
+export const MovingSelectedRowsWithARefusal: Story = {
+  parameters: withHandlers(
+    getBulkMoveTransactionsMockHandler({
+      moved: 1,
+      refused: [
+        {
+          transactionId: ids.transactions.maxima,
+          code: "transaction.conversionFee",
+          reason: "This is the fee of a currency conversion.",
+        },
+      ],
+    }),
+  ),
+  play: async ({ canvas }) => {
+    const toolbar = await selectTwoRows(canvas);
+    await userEvent.click(toolbar.getByRole("button", { name: "Move to account" }));
+    const popover = within(await screen.findByRole("dialog", { name: "Move to account" }));
+    await chooseOption(
+      popover.getByRole("combobox", { name: "Account to move to" }),
+      savingsAccount.name,
+    );
+    await userEvent.click(popover.getByRole("button", { name: "Move" }));
+
+    await expect(
+      await screen.findByText(`Moved 1 of 2 transactions to ${savingsAccount.name}`),
+    ).toBeVisible();
+    await expect(
+      screen.getByText("The fee of a currency conversion stays on the conversion's account."),
+    ).toBeVisible();
+    await waitFor(() => expect(canvas.queryByText("2 selected")).not.toBeInTheDocument());
+  },
+};
+
+const deletedIds = fn();
+
+export const DeletingSelectedRowsAndUndoingWithARefusal: Story = {
+  parameters: withHandlers(
+    getBulkDeleteTransactionsMockHandler(async ({ request }) => {
+      deletedIds(await request.json());
+      return { deleted: 2 };
+    }),
+    getRestoreTransactionsMockHandler({
+      restored: 1,
+      refused: [
+        {
+          transactionId: ids.transactions.maxima,
+          code: "restore.referenceMissing",
+          reason: "The account this belonged to is archived.",
+        },
+      ],
+    }),
+  ),
+  play: async ({ canvas }) => {
+    const toolbar = await selectTwoRows(canvas);
+    await userEvent.click(toolbar.getByRole("button", { name: "Delete" }));
+    const confirm = within(await openedDialog("alertdialog"));
+    await expect(confirm.getByText("Delete 2 transactions?")).toBeVisible();
+    await userEvent.click(confirm.getByRole("button", { name: "Delete" }));
+
+    await waitFor(() =>
+      expect(deletedIds).toHaveBeenCalledWith({
+        transactionIds: [expect.any(String), expect.any(String)],
+      }),
+    );
+    await expect(await screen.findByText("2 transactions deleted")).toBeVisible();
+    await waitFor(() => expect(canvas.queryByText("2 selected")).not.toBeInTheDocument());
+    await userEvent.click(screen.getByRole("button", { name: "Undo" }));
+
+    await expect(await screen.findByText("Brought back 1 of 2 transactions")).toBeVisible();
+    await expect(
+      screen.getByText("The account or category this entry needs is gone. Restore that first."),
+    ).toBeVisible();
   },
 };
 
