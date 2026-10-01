@@ -1406,6 +1406,12 @@
     "debts": "Debts",
     "netWorth": "Net worth",
     "trend": "Trend",
+    "openBalances": {
+      "label": "Open balances",
+      "hint": "Count what people owe you and what you owe them",
+      "receivable": "Owed to you",
+      "payable": "You owe"
+    },
     "notEnoughHistory": "Check back after a couple of snapshots to see a trend.",
     "pace": {
       "line": "At this pace",
@@ -2186,7 +2192,7 @@
     },
     "settleUp": {
       "title": "Balances",
-      "description": "Who owes whom for split expenses, per currency. Balances never enter reports, budgets or net worth.",
+      "description": "Who owes whom for split expenses, per currency. Balances count in your net worth only when you turn on Open balances there.",
       "empty": "Everyone is even.",
       "owes": "{{name}} owes {{amount}}",
       "isOwed": "{{name}} is owed {{amount}}",
@@ -2248,7 +2254,7 @@
     },
     "people": {
       "title": "People",
-      "description": "Friends and others outside the household, with what you lent them or shared with them. Only you see them; balances never enter reports, budgets or net worth.",
+      "description": "Friends and others outside the household, with what you lent them or shared with them. Only you see them; balances count in your net worth only when you turn on Open balances there.",
       "add": "Add person",
       "rename": "Rename person",
       "name": "Name",

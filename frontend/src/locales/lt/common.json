@@ -1466,6 +1466,12 @@
     "debts": "Skolos",
     "netWorth": "Grynasis turtas",
     "trend": "Tendencija",
+    "openBalances": {
+      "label": "Atviri balansai",
+      "hint": "Įskaičiuoti, ką žmonės skolingi jums ir ką jūs skolingi jiems",
+      "receivable": "Jums skolingi",
+      "payable": "Jūs skolingi"
+    },
     "notEnoughHistory": "Tendencija bus matoma, kai susikaups kelių dienų duomenys.",
     "pace": {
       "line": "Šiuo tempu",
@@ -2276,7 +2282,7 @@
     },
     "settleUp": {
       "title": "Balansai",
-      "description": "Kas kam skolingas už padalintas išlaidas, pagal valiutą. Balansai nepatenka į ataskaitas, biudžetus ir grynąją vertę.",
+      "description": "Kas kam skolingas už padalintas išlaidas, pagal valiutą. Balansai į grynąjį turtą įskaičiuojami tik ten įjungus „Atviri balansai“.",
       "empty": "Visi atsiskaitę.",
       "owes": "{{name}} skolingas {{amount}}",
       "isOwed": "{{name}} turi gauti {{amount}}",
@@ -2338,7 +2344,7 @@
     },
     "people": {
       "title": "Žmonės",
-      "description": "Draugai ir kiti žmonės už namų ūkio ribų su tuo, ką jiems paskolinote ar su jais pasidalinote. Juos matote tik jūs; balansai nepatenka į ataskaitas, biudžetus ir grynąją vertę.",
+      "description": "Draugai ir kiti žmonės už namų ūkio ribų su tuo, ką jiems paskolinote ar su jais pasidalinote. Juos matote tik jūs; balansai į grynąjį turtą įskaičiuojami tik ten įjungus „Atviri balansai“.",
       "add": "Pridėti žmogų",
       "rename": "Pervadinti žmogų",
       "name": "Vardas",

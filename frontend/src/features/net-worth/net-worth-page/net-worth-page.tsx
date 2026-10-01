@@ -10,6 +10,7 @@ import { NetWorthCompositionChart } from "@/features/net-worth/net-worth-composi
 import { NetWorthHistoryChart } from "@/features/net-worth/net-worth-history-chart";
 import { NetWorthPace } from "@/features/net-worth/net-worth-pace/net-worth-pace";
 import { NetWorthStats } from "@/features/net-worth/net-worth-stats/net-worth-stats";
+import { OpenBalancesToggle } from "@/features/net-worth/open-balances-toggle/open-balances-toggle";
 import { BalanceItemsSkeleton } from "./net-worth-page-pending";
 
 export function NetWorthPage() {
@@ -17,7 +18,11 @@ export function NetWorthPage() {
 
   return (
     <div className="space-y-5">
-      <PageHeader title={t("netWorth.title")} />
+      <PageHeader title={t("netWorth.title")}>
+        <QueryBoundary fallback={null}>
+          <OpenBalancesToggle />
+        </QueryBoundary>
+      </PageHeader>
 
       <QueryBoundary fallback={<SummaryStatsSkeleton items={3} />}>
         <NetWorthStats />

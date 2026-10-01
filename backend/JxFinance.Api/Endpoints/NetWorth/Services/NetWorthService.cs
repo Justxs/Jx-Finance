@@ -4,15 +4,19 @@ using JxFinance.Common.Amortization;
 using JxFinance.Common.Assets;
 using JxFinance.Common.Errors;
 using JxFinance.Common.ExchangeRates;
+using JxFinance.Common.Settings;
 using JxFinance.Common.Sharing;
 using JxFinance.Common.Trash;
 using JxFinance.Common.Validation;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Households;
 using JxFinance.Domain.NetWorth;
+using JxFinance.Domain.Settings;
 using JxFinance.Domain.Transactions;
 using JxFinance.Domain.Trash;
 using JxFinance.Endpoints.Accounts.Interfaces;
+using JxFinance.Endpoints.Contacts.Interfaces;
+using JxFinance.Endpoints.Households.Interfaces;
 using JxFinance.Endpoints.NetWorth.CreateAsset;
 using JxFinance.Endpoints.NetWorth.CreateDebt;
 using JxFinance.Endpoints.NetWorth.DeleteAssetValuation;
@@ -45,7 +49,10 @@ public sealed class NetWorthService(
     IDeletionRecorder deletions,
     ICurrentUser currentUser,
     ISharingGuard sharing,
-    INetWorthSnapshotter snapshotter) : INetWorthService
+    INetWorthSnapshotter snapshotter,
+    ISettleUpService settleUp,
+    IContactService contacts,
+    IInstanceSettingsStore settings) : INetWorthService
 {
     private static readonly DomainError AssetNotFound = EntityLookup.NotFound("Asset not found.");
     private static readonly DomainError DebtNotFound = EntityLookup.NotFound("Debt not found.");
@@ -544,26 +551,29 @@ public sealed class NetWorthService(
         {
             var narrowed = await ComputeTotalsAsync(cancellationToken);
             await snapshotter.SnapshotAsync(currentUser.Id, cancellationToken);
-            return new NetWorthResponse(narrowed.Accounts, narrowed.Assets, narrowed.Debts, narrowed.NetWorth, narrowed.IsComplete);
+            return narrowed;
         }
 
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
         await db.Database.LockAsync(currentUser.Id, cancellationToken);
-        var (accountsTotal, assetsTotal, debtsTotal, netWorth, isComplete) = await ComputeTotalsAsync(cancellationToken);
-        var fitsSnapshot = new[] { accountsTotal, assetsTotal, debtsTotal, netWorth }.All(total => DecimalRules.FitsMoney(Money.Round(total)));
-        if (isComplete && fitsSnapshot)
+        var totals = await ComputeTotalsAsync(cancellationToken);
+        var fitsSnapshot = new[] { totals.Accounts, totals.Assets, totals.Debts, totals.NetWorth }.All(total => DecimalRules.FitsMoney(Money.Round(total)));
+        if (totals.IsComplete && fitsSnapshot)
         {
-            await UpsertTodaySnapshotAsync(accountsTotal, assetsTotal, debtsTotal, netWorth, cancellationToken);
+            await UpsertTodaySnapshotAsync(totals.Accounts, totals.Assets, totals.Debts, totals.NetWorth, cancellationToken);
         }
 
         await transaction.CommitAsync(cancellationToken);
 
-        return new NetWorthResponse(
-            accountsTotal,
-            assetsTotal,
-            debtsTotal,
-            netWorth,
-            isComplete);
+        return totals;
+    }
+
+    public async Task<NetWorthResponse> CountOpenBalancesAsync(bool count, CancellationToken cancellationToken)
+    {
+        await db.Users
+            .Where(u => u.Id == currentUser.Id)
+            .ExecuteUpdateAsync(setters => setters.SetProperty(u => u.CountOpenBalancesInNetWorth, count), cancellationToken);
+        return await GetCurrentAsync(cancellationToken);
     }
 
     public async Task<NetWorthHistoryResponse> GetHistoryAsync(CancellationToken cancellationToken)
@@ -710,8 +720,7 @@ public sealed class NetWorthService(
         });
     }
 
-    private async Task<(decimal Accounts, decimal Assets, decimal Debts, decimal NetWorth, bool IsComplete)> ComputeTotalsAsync(
-        CancellationToken cancellationToken)
+    private async Task<NetWorthResponse> ComputeTotalsAsync(CancellationToken cancellationToken)
     {
         var (accountsTotal, accountsComplete) = await accountService.GetReportingTotalAsync(null, cancellationToken);
         var assets = await db.Assets.AsNoTracking().ToListAsync(cancellationToken);
@@ -723,12 +732,43 @@ public sealed class NetWorthService(
         var debtBalances = debts.Select(d => tracked.TryGetValue(d.Id, out var t) ? new Money(t.Track.Balance, d.Currency) : d.OutstandingAmount);
         var (debtsTotal, debtsComplete) = await ToReportingAsync(debtBalances, cancellationToken);
 
-        return (
+        var counted = settings.Current.IsEnabled(Feature.Households)
+            && await db.Users.Where(u => u.Id == currentUser.Id).Select(u => u.CountOpenBalancesInNetWorth).FirstOrDefaultAsync(cancellationToken);
+        var open = counted ? await OpenBalancesAsync(cancellationToken) : [];
+        var (receivable, receivableComplete) = await ToReportingAsync(open.Where(b => b.Amount > 0), cancellationToken);
+        var (payable, payableComplete) = await ToReportingAsync(
+            open.Where(b => b.Amount < 0).Select(b => new Money(-b.Amount, b.Currency)),
+            cancellationToken);
+
+        return new NetWorthResponse(
             accountsTotal,
-            assetsTotal,
-            debtsTotal,
-            accountsTotal + assetsTotal - debtsTotal,
-            accountsComplete && assetsComplete && debtsComplete && !tracked.Values.Any(t => t.Incomplete));
+            assetsTotal + receivable,
+            debtsTotal + payable,
+            accountsTotal + assetsTotal + receivable - debtsTotal - payable,
+            accountsComplete && assetsComplete && debtsComplete && receivableComplete && payableComplete
+                && !tracked.Values.Any(t => t.Incomplete),
+            counted,
+            receivable,
+            payable);
+    }
+
+    private async Task<List<Money>> OpenBalancesAsync(CancellationToken cancellationToken)
+    {
+        var balances = new List<Money>();
+        foreach (var household in await db.Households.Select(h => h.Id).ToListAsync(cancellationToken))
+        {
+            if ((await settleUp.GetBalancesAsync(household.Value, cancellationToken)).TryGetValue(out var settled))
+            {
+                balances.AddRange(settled.Balances
+                    .Where(b => b.UserId == currentUser.Id)
+                    .Select(b => new Money(b.Amount, b.Currency)));
+            }
+        }
+
+        balances.AddRange((await contacts.GetAllAsync(cancellationToken))
+            .SelectMany(c => c.Balances)
+            .Select(b => new Money(b.Amount, b.Currency)));
+        return balances;
     }
 
     private async Task<(decimal Total, bool IsComplete)> ToReportingAsync(

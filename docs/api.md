@@ -282,6 +282,7 @@ Every 201 goes through `CreatedAsync`, which sets `Location` to a path built fro
 | PUT | `/api/month-close/{month}/note` |
 | GET | `/api/networth` |
 | GET | `/api/networth/history` |
+| PUT | `/api/networth/open-balances` |
 | GET | `/api/notifications` |
 | POST | `/api/notifications/read-all` |
 | PATCH | `/api/notifications/{id}/read` |
@@ -517,6 +518,8 @@ Since 2026-09-30 asset and debt requests take the same optional `scope` and `hou
 `DELETE /api/households/{id}/settlements/{settlementId}` is for either party and leaves the transfer. Transaction rows, from the list and from `GET`, `POST` and `PUT /api/transactions` alike (one `ResponderAsync` builds all of them), carry `sharedExpense` for the payer (`id`, `householdId`, `householdName`, `method`, `shares`, `myShare`, `amountDiffers`), and account responses carry `ownerId`. The three `GET` routes are token-readable. See [Household settle-up](features/household-settle-up.md).
 
 Asset and debt responses carry `currency`, the reporting currency of the day the asset or debt was created, in which its amounts stay; a debt's loan amount and monthly payment are in the same currency. `GET /api/networth` answers `accounts`, `assets`, `debts` and `netWorth` in the reporting currency with `isComplete`, false when an account balance, a holding, an asset or a debt could not be valued and was left out; `GET /api/networth/history` converts a point stored in an earlier reporting currency at the rate of its date. `GET /api/dashboard/summary` carries the same `isComplete` for `totalBalance`.
+
+Since 2026-10-02 `GET /api/networth` also answers `countsOpenBalances`, `receivable` and `payable`. `PUT /api/networth/open-balances` takes `{ "count": true }` or `false` (400 `required` without it), stores the caller's choice and answers the net worth under it. While it is true `receivable`, what the caller's households and people owe them, is inside `assets` and `payable`, what they owe, is inside `debts`; both are `0.00` otherwise. See [Net worth](features/net-worth.md#open-settle-up-balances).
 
 Budget bodies carry `period` (`weekly`, `monthly`, `quarterly` or `yearly`) and `rolloverEnabled`. Both default to the shape a body written before this addition had, monthly with no rollover, so such a body still creates the budget it used to. A category may carry one budget per period; a second one for the same pair is refused with 409 `conflict.duplicate`, on create and on an update that would move a budget onto a taken pair. The response adds `carriedAmount`, `effectiveLimit`, `rolloverEnabled`, `windowStart` and the inclusive `windowEnd`: `limitAmount` is still the typed limit, `effectiveLimit` is that plus the carry, and `spent` and `remaining` are measured inside the window instead of the calendar month. With rollover off the carry is zero and the three numbers read exactly as the two did before.
 

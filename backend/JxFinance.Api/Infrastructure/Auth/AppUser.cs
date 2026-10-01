@@ -27,6 +27,8 @@ public sealed class AppUser : IdentityUser<Guid>
 
     public DashboardLayout? DashboardLayout { get; set; }
 
+    public bool CountOpenBalancesInNetWorth { get; set; }
+
     public bool IsDeactivated => LockoutEnd >= DeactivatedUntil;
 
     public bool CanSignIn => PasswordHash is not null && !IsDeactivated;

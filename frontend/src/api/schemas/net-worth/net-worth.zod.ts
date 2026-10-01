@@ -1443,13 +1443,15 @@ export const DebtScheduleResponse = zod.object({
 });
 
 /**
- * Returns assets, debts, and the difference between them as of now. Account balances count towards assets, so cash in the ledger and tracked assets are not double counted against each other. Every total is in the reporting currency; assets and debts are converted from their own currency at today's rate. IsComplete is false when a balance, holding, asset or debt could not be valued and was left out, and no snapshot is taken then.
+ * Returns assets, debts, and the difference between them as of now. Account balances count towards assets, so cash in the ledger and tracked assets are not double counted against each other. Every total is in the reporting currency; assets and debts are converted from their own currency at today's rate. IsComplete is false when a balance, holding, asset or debt could not be valued and was left out, and no snapshot is taken then. CountsOpenBalances is your choice made with PUT /api/networth/open-balances; while it is true, Receivable, what your households and people outside them owe you, is inside Assets and Payable, what you owe them, is inside Debts, and the snapshot carries both. They are zero otherwise.
  * @summary Get current net worth
  */
 export const netWorthResponseAccountsRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 export const netWorthResponseAssetsRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 export const netWorthResponseDebtsRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 export const netWorthResponseNetWorthRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const netWorthResponseReceivableRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const netWorthResponsePayableRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 
 export const NetWorthResponse = zod.object({
   accounts: zod.stringFormat("decimal", netWorthResponseAccountsRegExp),
@@ -1457,6 +1459,9 @@ export const NetWorthResponse = zod.object({
   debts: zod.stringFormat("decimal", netWorthResponseDebtsRegExp),
   netWorth: zod.stringFormat("decimal", netWorthResponseNetWorthRegExp),
   isComplete: zod.boolean(),
+  countsOpenBalances: zod.boolean(),
+  receivable: zod.stringFormat("decimal", netWorthResponseReceivableRegExp),
+  payable: zod.stringFormat("decimal", netWorthResponsePayableRegExp),
 });
 
 /**
@@ -1478,4 +1483,30 @@ export const NetWorthHistoryResponse = zod.object({
       netWorth: zod.stringFormat("decimal", netWorthHistoryResponseItemsItemNetWorthRegExp),
     }),
   ),
+});
+
+/**
+ * Chooses, for you alone, whether your open balances with your households and with people outside them count in your net worth: what others owe you as a receivable inside assets and what you owe as a payable inside debts, each converted at today's rate. Off by default. Answers your net worth as it now stands and records today's snapshot with it, so the history follows from today; earlier snapshots are not rewritten.
+ * @summary Count open settle-up balances in your net worth
+ */
+export const CountOpenBalancesBody = zod.object({
+  count: zod.boolean(),
+});
+
+export const countOpenBalancesResponseAccountsRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const countOpenBalancesResponseAssetsRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const countOpenBalancesResponseDebtsRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const countOpenBalancesResponseNetWorthRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const countOpenBalancesResponseReceivableRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const countOpenBalancesResponsePayableRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+
+export const CountOpenBalancesResponse = zod.object({
+  accounts: zod.stringFormat("decimal", countOpenBalancesResponseAccountsRegExp),
+  assets: zod.stringFormat("decimal", countOpenBalancesResponseAssetsRegExp),
+  debts: zod.stringFormat("decimal", countOpenBalancesResponseDebtsRegExp),
+  netWorth: zod.stringFormat("decimal", countOpenBalancesResponseNetWorthRegExp),
+  isComplete: zod.boolean(),
+  countsOpenBalances: zod.boolean(),
+  receivable: zod.stringFormat("decimal", countOpenBalancesResponseReceivableRegExp),
+  payable: zod.stringFormat("decimal", countOpenBalancesResponsePayableRegExp),
 });

@@ -7,7 +7,10 @@ public sealed record NetWorthResponse(
     [property: Money] decimal Assets,
     [property: Money] decimal Debts,
     [property: Money] decimal NetWorth,
-    bool IsComplete);
+    bool IsComplete,
+    bool CountsOpenBalances,
+    [property: Money] decimal Receivable,
+    [property: Money] decimal Payable);
 
 public sealed record NetWorthSnapshotItem(
     DateOnly Date,

@@ -55,7 +55,7 @@ public static class UserExportTables
         ["TransactionTags"] = new ChildOf(Transactions, TransactionId),
         ["TransferImports"] = new OnOwnedAccounts(AccountId),
         ["Transfers"] = new EitherSideOwned("FromAccountId", "ToAccountId"),
-        ["AspNetUsers"] = new UserRow(["Id", "Email", "UserName", "DisplayName", "EmailConfirmed", "EmailNotificationTypes", "MonthlyDigestEverything", "MonthlyDigestHouseholdIds", "DashboardLayout", "Language"]),
+        ["AspNetUsers"] = new UserRow(["Id", "Email", "UserName", "DisplayName", "EmailConfirmed", "EmailNotificationTypes", "MonthlyDigestEverything", "MonthlyDigestHouseholdIds", "DashboardLayout", "Language", "CountOpenBalancesInNetWorth"]),
         ["AspNetRoles"] = new Excluded("installation roles"),
         ["AspNetRoleClaims"] = new Excluded("installation roles"),
         ["AspNetUserRoles"] = new Excluded("the role an administrator gave"),

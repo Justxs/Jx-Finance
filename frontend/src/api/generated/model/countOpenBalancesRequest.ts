@@ -6,13 +6,6 @@
  * OpenAPI spec version: v1
  */
 
-export interface NetWorthResponse {
-  accounts: string;
-  assets: string;
-  debts: string;
-  netWorth: string;
-  isComplete: boolean;
-  countsOpenBalances: boolean;
-  receivable: string;
-  payable: string;
+export interface CountOpenBalancesRequest {
+  count: boolean;
 }

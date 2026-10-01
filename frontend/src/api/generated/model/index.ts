@@ -78,6 +78,7 @@ export * from "./contactShareResponse";
 export * from "./contactSplitResponse";
 export * from "./conversionResponse";
 export * from "./conversionsParams";
+export * from "./countOpenBalancesRequest";
 export * from "./createAccountRequest";
 export * from "./createAssetRequest";
 export * from "./createBackupRequest";

@@ -6,7 +6,7 @@ Related: feature page [Net worth](../features/net-worth.md).
 
 ### Net worth
 
-Includes full balances of all visible accounts plus all visible assets minus all visible debts, own or shared with a household, a debt that tracks payments counting with its tracked balance; this is not an ownership-percentage calculation
+Includes full balances of all visible accounts plus all visible assets minus all visible debts, own or shared with a household, a debt that tracks payments counting with its tracked balance; since 2026-10-02 a member may opt in to count their open settle-up balances, a receivable inside assets and a payable inside debts ([Households and sharing](households-and-sharing.md)); this is not an ownership-percentage calculation
 
 ### Snapshot schedule
 

@@ -488,6 +488,20 @@ export const netWorth: NetWorthResponse = {
   debts: fromCents(debtsCents),
   netWorth: fromCents(accountsCents + assetsCents - debtsCents),
   isComplete: true,
+  countsOpenBalances: false,
+  receivable: "0.00",
+  payable: "0.00",
+};
+
+export const netWorthWithOpenBalances: NetWorthResponse = {
+  accounts: fromCents(accountsCents),
+  assets: fromCents(assetsCents + 4250),
+  debts: fromCents(debtsCents + 1200),
+  netWorth: fromCents(accountsCents + assetsCents + 4250 - debtsCents - 1200),
+  isComplete: true,
+  countsOpenBalances: true,
+  receivable: "42.50",
+  payable: "12.00",
 };
 
 export const emptyNetWorth: NetWorthResponse = {
@@ -496,6 +510,9 @@ export const emptyNetWorth: NetWorthResponse = {
   debts: "0.00",
   netWorth: "0.00",
   isComplete: true,
+  countsOpenBalances: false,
+  receivable: "0.00",
+  payable: "0.00",
 };
 
 function snapshot(date: string, accountsValue: string, assetsValue: string, debtsValue: string) {

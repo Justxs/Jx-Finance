@@ -28,6 +28,7 @@ import type {
   AssetValuationResponse,
   AssetValueHistoryParams,
   AssetValueHistoryResponse,
+  CountOpenBalancesRequest,
   CreateAssetRequest,
   CreateDebtRequest,
   DebtBalanceEntryResponse,
@@ -2350,7 +2351,7 @@ export const getNetWorthUrl = () => {
 };
 
 /**
- * Returns assets, debts, and the difference between them as of now. Account balances count towards assets, so cash in the ledger and tracked assets are not double counted against each other. Every total is in the reporting currency; assets and debts are converted from their own currency at today's rate. IsComplete is false when a balance, holding, asset or debt could not be valued and was left out, and no snapshot is taken then.
+ * Returns assets, debts, and the difference between them as of now. Account balances count towards assets, so cash in the ledger and tracked assets are not double counted against each other. Every total is in the reporting currency; assets and debts are converted from their own currency at today's rate. IsComplete is false when a balance, holding, asset or debt could not be valued and was left out, and no snapshot is taken then. CountsOpenBalances is your choice made with PUT /api/networth/open-balances; while it is true, Receivable, what your households and people outside them owe you, is inside Assets and Payable, what you owe them, is inside Debts, and the snapshot carries both. They are zero otherwise.
  * @summary Get current net worth
  */
 export const netWorth = async (
@@ -2562,3 +2563,110 @@ export function useNetWorthHistorySuspense<
 
   return withQueryKey(query, queryOptions.queryKey);
 }
+
+export const getCountOpenBalancesUrl = () => {
+  return `/api/networth/open-balances`;
+};
+
+/**
+ * Chooses, for you alone, whether your open balances with your households and with people outside them count in your net worth: what others owe you as a receivable inside assets and what you owe as a payable inside debts, each converted at today's rate. Off by default. Answers your net worth as it now stands and records today's snapshot with it, so the history follows from today; earlier snapshots are not rewritten.
+ * @summary Count open settle-up balances in your net worth
+ */
+export const countOpenBalances = async (
+  countOpenBalancesRequest: CountOpenBalancesRequest,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<NetWorthResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return customFetch<NetWorthResponse>(getCountOpenBalancesUrl(), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(countOpenBalancesRequest),
+  });
+};
+
+export const getCountOpenBalancesMutationKey = () => ["countOpenBalances"] as const;
+
+export const getCountOpenBalancesMutationOptions = <
+  TError = ErrorType<ProblemDetails>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof countOpenBalances>>,
+    TError,
+    CountOpenBalancesMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof countOpenBalances>>,
+  TError,
+  CountOpenBalancesMutationVariables,
+  TContext
+> => {
+  const mutationKey = getCountOpenBalancesMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof countOpenBalances>>,
+    CountOpenBalancesMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return countOpenBalances(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CountOpenBalancesMutationResult = NonNullable<
+  Awaited<ReturnType<typeof countOpenBalances>>
+>;
+export type CountOpenBalancesMutationBody = CountOpenBalancesRequest;
+export type CountOpenBalancesMutationError = ErrorType<ProblemDetails>;
+export type CountOpenBalancesMutationVariables = { data: CountOpenBalancesRequest };
+
+/**
+ * @summary Count open settle-up balances in your net worth
+ */
+export const useCountOpenBalances = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof countOpenBalances>>,
+      TError,
+      CountOpenBalancesMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof countOpenBalances>>,
+  TError,
+  CountOpenBalancesMutationVariables,
+  TContext
+> => {
+  return useMutation(getCountOpenBalancesMutationOptions(options), queryClient);
+};

@@ -76,7 +76,7 @@ A positive balance is owed to the member, a negative one is owed by them, and th
 
 `SettleUpPlanner` proposes the payments for each currency: it matches the member owed the most with the member who owes the most, pays the smaller of the two amounts, and repeats. Each step settles at least one member completely, so a household of n members needs at most n − 1 payments. The card lists them as "Šarūnas pays Rūta €42.50"; each has "Record payment" when the signed-in member is one of the two.
 
-Only the deleted flag of a split's transaction is read to decide whether it counts, through `IgnoreQueryFilters(QueryFilters.OwnerOnly)`, so nothing else of a personal transaction reaches another member. [My share](#my-share) reads a little more and answers none of it.
+Only the deleted flag of a split's transaction is read to decide whether it counts, through `IgnoreQueryFilters(QueryFilters.OwnerOnly)`, so nothing else of a personal transaction reaches another member. [My share](#my-share) reads a little more and answers none of it. A member's balances count in their net worth only when they turn on [Open balances](net-worth.md#open-settle-up-balances) there.
 
 ### My share
 

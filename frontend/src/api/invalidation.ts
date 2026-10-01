@@ -48,6 +48,10 @@ const holdings = [
 
 const rules: readonly Rule[] = [
   {
+    after: [api.getCountOpenBalancesMutationKey],
+    refresh: [api.getNetWorthQueryKey, api.getNetWorthHistoryQueryKey],
+  },
+  {
     after: [
       api.getCreateBackupMutationKey,
       api.getUploadBackupMutationKey,
@@ -275,7 +279,12 @@ const rules: readonly Rule[] = [
   {
     after: [api.getCreateSharedExpenseMutationKey, api.getUpdateSharedExpenseMutationKey],
     deleted: [api.getDeleteSharedExpenseMutationKey],
-    refresh: [api.getHouseholdsQueryKey, api.getTransactionsQueryKey, ...spending],
+    refresh: [
+      api.getHouseholdsQueryKey,
+      api.getTransactionsQueryKey,
+      api.getNetWorthQueryKey,
+      ...spending,
+    ],
   },
   {
     after: [api.getCreateSettlementMutationKey],
@@ -301,13 +310,14 @@ const rules: readonly Rule[] = [
       api.getContactsQueryKey,
       api.getTransactionsQueryKey,
       api.getLedgerQueryKey,
+      api.getNetWorthQueryKey,
       ...spending,
     ],
   },
   {
     after: [api.getCreateContactPaymentMutationKey],
     deleted: [api.getDeleteContactPaymentMutationKey],
-    refresh: [api.getContactsQueryKey],
+    refresh: [api.getContactsQueryKey, api.getNetWorthQueryKey],
   },
   {
     after: [
