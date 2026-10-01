@@ -3,6 +3,7 @@ import { useCategoryBreakdownSuspense } from "@/api/generated";
 import { CategoryBreakdown } from "@/components/category-breakdown/category-breakdown";
 import { useShortDayIso } from "@/hooks/use-formatters";
 import { monthDate, monthBounds } from "@/lib/calendar";
+import { useShare, withShare } from "@/stores/my-share-store";
 
 interface Props {
   month: string;
@@ -11,7 +12,7 @@ interface Props {
 export function CategoryBreakdownChart({ month }: Readonly<Props>) {
   const { t } = useTranslation();
   const shortDay = useShortDayIso();
-  const breakdown = useCategoryBreakdownSuspense({ month });
+  const breakdown = useCategoryBreakdownSuspense(withShare({ month }, useShare()));
   const { dateFrom, dateTo } = monthBounds(monthDate(month));
   const { items, comparisonStart, comparisonEnd } = breakdown.data;
 

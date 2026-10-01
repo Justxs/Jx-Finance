@@ -1,5 +1,6 @@
 using FastEndpoints;
 using JxFinance.Common;
+using JxFinance.Common.SettleUp;
 using JxFinance.Endpoints.Budgets.Interfaces;
 using JxFinance.Endpoints.Budgets.Shared;
 
@@ -15,5 +16,5 @@ public sealed class GetBudgetsEndpoint(IBudgetService budgetService)
     }
 
     public override async Task HandleAsync(GetBudgetsRequest req, CancellationToken ct) =>
-        await Send.OkAsync(await budgetService.GetAllAsync(req.AsOf, ct), ct);
+        await Send.OkAsync(await budgetService.GetAllAsync(req.AsOf, req.Share ?? SpendingShare.Full, ct), ct);
 }

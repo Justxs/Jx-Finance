@@ -11,6 +11,7 @@ import { ReportsPending } from "@/features/reports/reports-page/reports-page-pen
 import { requireFeature } from "@/lib/feature-gate";
 import { todayDateIn, warm, warmWithSettings } from "@/lib/route-prefetch";
 import { optionalParam } from "@/lib/search-schema";
+import { readShare, withShare } from "@/stores/my-share-store";
 
 export const reportsSearchSchema = z.object({
   dateFrom: optionalParam(z.string()),
@@ -30,7 +31,9 @@ export const Route = createFileRoute("/reports")({
     warmWithSettings(queryClient, (settings) => {
       warm(
         queryClient,
-        getReportSummarySuspenseQueryOptions(reportParams(deps, todayDateIn(settings))),
+        getReportSummarySuspenseQueryOptions(
+          withShare(reportParams(deps, todayDateIn(settings)), readShare(settings.features)),
+        ),
       );
       if (settings.features.netWorth) {
         warm(queryClient, getNetWorthHistorySuspenseQueryOptions());

@@ -9,6 +9,7 @@ import {
 import type { ReportComparisonMode } from "@/api/generated/model";
 import { CategoryBreakdown } from "@/components/category-breakdown/category-breakdown";
 import { ExportMenu } from "@/components/export-menu/export-menu";
+import { MyShareToggle } from "@/components/my-share-toggle/my-share-toggle";
 import { PageHeader } from "@/components/page-header/page-header";
 import { TitledSection } from "@/components/ui/section/section";
 import { SplitColumns } from "@/components/ui/split-columns/split-columns";
@@ -29,6 +30,7 @@ import { useDeferredParams } from "@/hooks/use-deferred-params";
 import { useExportUrl } from "@/hooks/use-export-url";
 import { useIsoDate } from "@/hooks/use-formatters";
 import { useFeature, useTodayDate } from "@/hooks/use-settings";
+import { useShare, withShare } from "@/stores/my-share-store";
 
 export function ReportsPage() {
   const { t } = useTranslation();
@@ -49,7 +51,7 @@ export function ReportsPage() {
   const csvUrl = useExportUrl(getExportTransactionsUrl(exportParams));
   const pdfUrl = useExportUrl(getExportTransactionsPdfUrl(exportParams));
 
-  const [shown, stale] = useDeferredParams(reportParams(search, today));
+  const [shown, stale] = useDeferredParams(withShare(reportParams(search, today), useShare()));
   const summary = useReportSummarySuspense(shown);
   const against = summary.data.comparison;
 
@@ -73,6 +75,7 @@ export function ReportsPage() {
   return (
     <div className="space-y-5">
       <PageHeader title={t("reports.title")}>
+        <MyShareToggle />
         <ExportMenu csvUrl={csvUrl} pdfUrl={pdfUrl} />
       </PageHeader>
 

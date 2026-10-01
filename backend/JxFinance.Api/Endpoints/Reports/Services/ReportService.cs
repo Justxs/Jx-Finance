@@ -5,6 +5,7 @@ using JxFinance.Common.InvestmentCashFlows;
 using JxFinance.Common.Payees;
 using JxFinance.Common.Places;
 using JxFinance.Common.Settings;
+using JxFinance.Common.SettleUp;
 using JxFinance.Common.Spreads;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Settings;
@@ -20,6 +21,7 @@ namespace JxFinance.Endpoints.Reports.Services;
 public sealed class ReportService(
     AppDbContext db,
     IClock clock,
+    ICurrentUser currentUser,
     ICategoryAttributionService attributions,
     IInvestmentCashFlowService investmentCashFlows,
     IInstanceSettingsStore settings) : IReportService
@@ -30,6 +32,7 @@ public sealed class ReportService(
         DateOnly? dateFrom,
         DateOnly? dateTo,
         ReportComparisonMode comparison,
+        SpendingShare share,
         CancellationToken cancellationToken)
     {
         var nowLocal = clock.Today;
@@ -39,9 +42,10 @@ public sealed class ReportService(
         var earlier = ComparisonWindow.For(comparison, period);
 
         var investmentFlows = await investmentCashFlows.GetFlowsAsync(period, earlier, cancellationToken);
+        var shares = await ShareSlices.OfAsync(db, currentUser.Id, share, period, earlier, cancellationToken);
 
-        var expenseAttributions = await attributions.GetAttributionsAsync(period, earlier, FlowType.Expense, cancellationToken);
-        var incomeAttributions = await attributions.GetAttributionsAsync(period, earlier, FlowType.Income, cancellationToken);
+        var expenseAttributions = await attributions.GetAttributionsAsync(period, earlier, FlowType.Expense, shares, cancellationToken);
+        var incomeAttributions = await attributions.GetAttributionsAsync(period, earlier, FlowType.Income, shares, cancellationToken);
 
         var categories = await db.Categories.ToDictionaryAsync(c => c.Id, cancellationToken);
 
@@ -57,16 +61,16 @@ public sealed class ReportService(
         var expenseByCategory = Breakdown(expenseAttributions, FlowType.Expense);
         var incomeByCategory = Breakdown(incomeAttributions, FlowType.Income);
 
-        List<DatedFlow> everything = [.. await db.Transactions.DailyFlowsAsync(period, earlier, cancellationToken), .. investmentFlows];
+        List<DatedFlow> everything = [.. await db.Transactions.DailyFlowsAsync(period, earlier, shares, cancellationToken), .. investmentFlows];
 
         var (trend, trendBucket) = BuildTrend(everything, period, earlier);
         var expenseSlices = (await db.Transactions.SlicesAsync(period, earlier, cancellationToken))
             .Where(slice => slice.Type == FlowType.Expense)
             .ToList();
-        var expenseByTag = await BuildTagBreakdownAsync(period, earlier, expenseSlices, cancellationToken);
-        var expenseByPayee = await BuildPayeeBreakdownAsync(period, earlier, expenseSlices, cancellationToken);
+        var expenseByTag = await BuildTagBreakdownAsync(period, earlier, [.. expenseSlices, .. shares], cancellationToken);
+        var expenseByPayee = await BuildPayeeBreakdownAsync(period, earlier, expenseSlices, shares, cancellationToken);
         var expenseByPlace = settings.Current.IsEnabled(Feature.Locations)
-            ? await BuildPlaceBreakdownAsync(period, earlier, expenseSlices, cancellationToken)
+            ? await BuildPlaceBreakdownAsync(period, earlier, expenseSlices, shares, cancellationToken)
             : [];
 
         var (totalIncome, totalExpense) = Totals(everything, period);
@@ -161,6 +165,7 @@ public sealed class ReportService(
         DateWindow period,
         DateWindow? comparison,
         IReadOnlyList<SpreadSlice> slices,
+        IReadOnlyList<SpreadSlice> shares,
         CancellationToken cancellationToken)
     {
         var start = period.Start;
@@ -182,6 +187,7 @@ public sealed class ReportService(
             .Concat(slices
                 .GroupBy(slice => (slice.PayeeKey, Current: period.Contains(slice.Date)))
                 .Select(group => (group.Key.PayeeKey, group.Key.Current, Amount: group.Sum(slice => slice.Amount), Count: group.Select(slice => slice.Id).Distinct().Count())))
+            .Concat(shares.Select(slice => (slice.PayeeKey, Current: period.Contains(slice.Date), slice.Amount, Count: 0)))
             .ToList();
 
         var totals = grouped
@@ -232,6 +238,7 @@ public sealed class ReportService(
         DateWindow period,
         DateWindow? comparison,
         IReadOnlyList<SpreadSlice> slices,
+        IReadOnlyList<SpreadSlice> shares,
         CancellationToken cancellationToken)
     {
         var start = period.Start;
@@ -253,6 +260,7 @@ public sealed class ReportService(
             .Concat(slices
                 .GroupBy(slice => (slice.Place, Current: period.Contains(slice.Date)))
                 .Select(group => (group.Key.Place, group.Key.Current, Amount: group.Sum(slice => slice.Amount), Count: group.Select(slice => slice.Id).Distinct().Count())))
+            .Concat(shares.Select(slice => (slice.Place, Current: period.Contains(slice.Date), slice.Amount, Count: 0)))
             .ToList();
 
         var totals = grouped

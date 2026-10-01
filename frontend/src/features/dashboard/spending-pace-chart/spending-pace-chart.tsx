@@ -16,6 +16,7 @@ import { spendingPaceRanges } from "@/features/dashboard/dashboard-queries";
 import { useShortMonth } from "@/hooks/use-formatters";
 import { useSettingsSuspense, useTodayDate } from "@/hooks/use-settings";
 import { monthDate, shiftMonth, parseIso, currentMonthKey } from "@/lib/calendar";
+import { useShare } from "@/stores/my-share-store";
 import { billsDueAfter, projectedTotals } from "./pace-projection";
 
 function cumulativeByDay(points: readonly ReportTrendPoint[], lastDay: number) {
@@ -61,7 +62,7 @@ export function SpendingPaceChart({ month }: Readonly<Props>) {
   const today = useTodayDate();
   const { features } = useSettingsSuspense();
   const isCurrent = month === currentMonthKey(today);
-  const ranges = spendingPaceRanges(month);
+  const ranges = spendingPaceRanges(month, useShare());
   const current = useReportSummarySuspense(ranges.current);
   const earlier = useSuspenseQueries({
     queries: ranges.earlier.map((range) => getReportSummarySuspenseQueryOptions(range)),

@@ -1,3 +1,4 @@
+using JxFinance.Common.SettleUp;
 using JxFinance.Domain.Common;
 using JxFinance.Endpoints.Budgets.CreateBudget;
 using JxFinance.Endpoints.Budgets.Shared;
@@ -7,7 +8,7 @@ namespace JxFinance.Endpoints.Budgets.Interfaces;
 
 public interface IBudgetService
 {
-    Task<IReadOnlyList<BudgetResponse>> GetAllAsync(DateOnly? asOf, CancellationToken cancellationToken);
+    Task<IReadOnlyList<BudgetResponse>> GetAllAsync(DateOnly? asOf, SpendingShare share, CancellationToken cancellationToken);
 
     Task<IReadOnlyList<BudgetResponse>> GetMonthlyAsync(DateOnly asOf, CancellationToken cancellationToken);
 

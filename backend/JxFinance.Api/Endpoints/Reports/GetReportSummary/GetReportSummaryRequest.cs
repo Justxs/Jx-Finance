@@ -1,3 +1,4 @@
+using JxFinance.Common.SettleUp;
 using JxFinance.Endpoints.Reports.Shared;
 
 namespace JxFinance.Endpoints.Reports.GetReportSummary;
@@ -9,4 +10,6 @@ public sealed class GetReportSummaryRequest
     public DateOnly? DateTo { get; init; }
 
     public ReportComparisonMode? Comparison { get; init; }
+
+    public SpendingShare? Share { get; init; }
 }

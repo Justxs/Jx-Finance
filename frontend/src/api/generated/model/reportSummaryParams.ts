@@ -6,6 +6,7 @@
  * OpenAPI spec version: v1
  */
 import type { ReportComparisonMode } from "./reportComparisonMode";
+import type { SpendingShare } from "./spendingShare";
 
 export type ReportSummaryParams = {
   /**
@@ -22,4 +23,8 @@ export type ReportSummaryParams = {
    * Which earlier period to answer beside this one: previousPeriod for the same number of days immediately before the range, previousYear for the same range a year earlier, where a range that ends on the last day of a month again ends on the last day of that month, so February meets the whole of February. Omit it, or send none, for no comparison.
    */
   comparison?: ReportComparisonMode;
+  /**
+   * How to count an expense split with a household or with people: full, the default, counts it at its whole amount; mine counts it at your own share, your part of what you paid and your share of a household split another member paid, which is dated on the split's date while you cannot see its transaction.
+   */
+  share?: SpendingShare;
 };

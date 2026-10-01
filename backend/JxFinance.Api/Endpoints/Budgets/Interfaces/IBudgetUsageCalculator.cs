@@ -1,3 +1,4 @@
+using JxFinance.Common.SettleUp;
 using JxFinance.Domain.Budgets;
 using JxFinance.Endpoints.Budgets.Shared;
 
@@ -8,5 +9,6 @@ public interface IBudgetUsageCalculator
     Task<IReadOnlyDictionary<BudgetId, BudgetUsage>> CalculateAsync(
         IReadOnlyList<Budget> budgets,
         DateOnly asOf,
+        SpendingShare share,
         CancellationToken cancellationToken);
 }

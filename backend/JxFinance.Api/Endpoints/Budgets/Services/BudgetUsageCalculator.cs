@@ -2,6 +2,7 @@ using FastEndpoints;
 using JxFinance.Common;
 using JxFinance.Common.CategoryAttributions;
 using JxFinance.Common.Settings;
+using JxFinance.Common.SettleUp;
 using JxFinance.Common.Spreads;
 using JxFinance.Domain.Budgets;
 using JxFinance.Domain.Categories;
@@ -21,11 +22,13 @@ public sealed class BudgetUsageCalculator(
     AppDbContext db,
     ICategoryAttributionService attributions,
     IInstanceSettingsStore settings,
-    IClock clock) : IBudgetUsageCalculator
+    IClock clock,
+    ICurrentUser currentUser) : IBudgetUsageCalculator
 {
     public async Task<IReadOnlyDictionary<BudgetId, BudgetUsage>> CalculateAsync(
         IReadOnlyList<Budget> budgets,
         DateOnly asOf,
+        SpendingShare share,
         CancellationToken cancellationToken)
     {
         if (budgets.Count == 0)
@@ -43,10 +46,13 @@ public sealed class BudgetUsageCalculator(
         var usage = new Dictionary<BudgetId, BudgetUsage>();
         foreach (var group in budgets.GroupBy(b => b.HouseholdId))
         {
-            var spendByCategory = group.Any(b => b.CategoryId is not null)
-                ? await CategorySpendAsync(span, group.Key, cancellationToken)
+            var shares = group.Key is null
+                ? await ShareSlices.OfAsync(db, currentUser.Id, share, span, null, cancellationToken)
                 : [];
-            var spendByTag = await TagSpendAsync([.. group], span, group.Key, cancellationToken);
+            var spendByCategory = group.Any(b => b.CategoryId is not null)
+                ? await CategorySpendAsync(span, group.Key, shares, cancellationToken)
+                : [];
+            var spendByTag = await TagSpendAsync([.. group], span, group.Key, shares, cancellationToken);
             foreach (var b in group)
             {
                 usage[b.Id] = Usage(b, walks[b.Id], b.TagId is { } tagId
@@ -61,6 +67,7 @@ public sealed class BudgetUsageCalculator(
     private async Task<Dictionary<CategoryId, IReadOnlyList<CategoryAttribution>>> CategorySpendAsync(
         DateWindow span,
         HouseholdId? household,
+        IReadOnlyList<SpreadSlice> shares,
         CancellationToken cancellationToken)
     {
         var parents = await db.Categories
@@ -68,7 +75,7 @@ public sealed class BudgetUsageCalculator(
             .ToDictionaryAsync(c => c.Id, c => c.ParentId!.Value, cancellationToken);
         var spend = household is { } shared
             ? await attributions.GetAttributionsAsync(span, shared, FlowType.Expense, cancellationToken)
-            : await attributions.GetAttributionsAsync(span, null, FlowType.Expense, cancellationToken);
+            : await attributions.GetAttributionsAsync(span, null, FlowType.Expense, shares, cancellationToken);
 
         return spend
             .Where(a => a.CategoryId.HasValue)
@@ -83,6 +90,7 @@ public sealed class BudgetUsageCalculator(
         IReadOnlyList<Budget> budgets,
         DateWindow span,
         HouseholdId? household,
+        IReadOnlyList<SpreadSlice> shares,
         CancellationToken cancellationToken)
     {
         var tagIds = budgets.Select(b => b.TagId).OfType<TagId>().Distinct().ToList();
@@ -105,6 +113,7 @@ public sealed class BudgetUsageCalculator(
                 (x, t) => new { x.TagId, t.Date, t.ReportingAmount })
             .ToListAsync(cancellationToken);
         var slices = (await visible.SlicesAsync(span, null, cancellationToken))
+            .Concat(shares)
             .Where(slice => slice.Type == FlowType.Expense)
             .SelectMany(slice => slice.TagIds
                 .Where(tagIds.Contains)

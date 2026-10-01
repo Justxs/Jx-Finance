@@ -154,6 +154,10 @@ Clicking an income or expense category, or a group, opens `/transactions` with t
 
 Below `md` the section is hidden and the lists stay the view: a horizontal flow of long Lithuanian names does not fit a phone. When both totals are zero the section shows "Nothing recorded in this period." instead of the chart. The month-end review does not show it yet; the component takes a report summary, so it can be reused there without change.
 
+## My share
+
+Since 2026-10-02, with [My share](household-settle-up.md#my-share) pressed in the page header, the report asks with `share=mine`: an expense split with a household or with people counts at the member's own part, and a household split another member paid counts at the member's share, in every total, the trend, the category, tag, payee and place breakdowns and the comparison period alike. A share whose transaction the member cannot see counts on the split's date without tag, payee or place, and a payee or place keeps the count of its own rows. Without the toggle nothing changes.
+
 ## What counts as income and expense
 
 Two ledgers feed the report. Ordinary transactions contribute their `ReportingAmount` by `FlowType`, as before. While the `Investments` feature is on, the investment ledger contributes too, through `IInvestmentCashFlowService` in `Common/InvestmentCashFlows`:

@@ -1,3 +1,4 @@
+using JxFinance.Common.SettleUp;
 using JxFinance.Endpoints.Reports.Shared;
 
 namespace JxFinance.Endpoints.Reports.Interfaces;
@@ -8,5 +9,6 @@ public interface IReportService
         DateOnly? dateFrom,
         DateOnly? dateTo,
         ReportComparisonMode comparison,
+        SpendingShare share,
         CancellationToken cancellationToken);
 }

@@ -5,6 +5,7 @@ import { useTodayDate } from "@/hooks/use-settings";
 import { currentMonthKey } from "@/lib/calendar";
 import { EXPENSE_TONE, gainTone } from "@/lib/tone";
 import { cn } from "@/lib/utils";
+import { useShare, withShare } from "@/stores/my-share-store";
 
 const NEUTRAL_TONE = "text-foreground";
 const RING_RADIUS = 44;
@@ -67,7 +68,7 @@ export function DashboardStats({ month }: Readonly<Props>) {
   const { t } = useTranslation();
   const money = useMoney();
   const percent = usePercent();
-  const summary = useDashboardSummarySuspense({ month });
+  const summary = useDashboardSummarySuspense(withShare({ month }, useShare()));
   const isCurrent = month === currentMonthKey(useTodayDate());
 
   const income = Number(summary.data.monthIncome);

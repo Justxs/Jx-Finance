@@ -20,12 +20,14 @@ import type {
   DashboardLayoutResponse,
   FeatureFlags,
   SettingsResponse,
+  SpendingShare,
 } from "@/api/generated/model";
 import { FORECAST_DAYS } from "@/features/accounts/cash-flow-forecast/forecast-series";
 import { latestEndedMonth, currentMonthKey } from "@/lib/calendar";
 import { type MoveDirection, adjacentIndex, swapItems } from "@/lib/reorder";
 import { todayDateIn, warm, warmWithSettings } from "@/lib/route-prefetch";
 import type { FeatureKey } from "@/lib/settings";
+import { readShare, withShare } from "@/stores/my-share-store";
 import {
   asOfParams,
   pastMonthEnd,
@@ -87,19 +89,28 @@ export function setCardShown(draft: LayoutDraft, card: DashboardCard, shown: boo
   return { ...draft, hidden: shown ? hidden : [...hidden, card] };
 }
 
-function warmCard(queryClient: QueryClient, card: DashboardCard, month: string, today: Date) {
+function warmCard(
+  queryClient: QueryClient,
+  card: DashboardCard,
+  month: string,
+  today: Date,
+  share: SpendingShare | undefined,
+) {
   switch (card) {
     case "summary":
-      warm(queryClient, getDashboardSummarySuspenseQueryOptions({ month }));
+      warm(queryClient, getDashboardSummarySuspenseQueryOptions(withShare({ month }, share)));
       break;
     case "monthlyTrend":
-      warm(queryClient, getMonthlyTrendSuspenseQueryOptions(monthlyTrendParams(month)));
+      warm(
+        queryClient,
+        getMonthlyTrendSuspenseQueryOptions(withShare(monthlyTrendParams(month), share)),
+      );
       break;
     case "spendingByCategory":
-      warm(queryClient, getCategoryBreakdownSuspenseQueryOptions({ month }));
+      warm(queryClient, getCategoryBreakdownSuspenseQueryOptions(withShare({ month }, share)));
       break;
     case "spendingPace": {
-      const ranges = spendingPaceRanges(month);
+      const ranges = spendingPaceRanges(month, share);
       warm(queryClient, getReportSummarySuspenseQueryOptions(ranges.current));
       for (const range of ranges.earlier) {
         warm(queryClient, getReportSummarySuspenseQueryOptions(range));
@@ -107,7 +118,10 @@ function warmCard(queryClient: QueryClient, card: DashboardCard, month: string, 
       break;
     }
     case "budgets":
-      warm(queryClient, getBudgetsSuspenseQueryOptions(asOfParams(pastMonthEnd(month, today))));
+      warm(
+        queryClient,
+        getBudgetsSuspenseQueryOptions(withShare(asOfParams(pastMonthEnd(month, today)), share)),
+      );
       break;
     case "netWorth":
       warm(queryClient, getNetWorthHistorySuspenseQueryOptions());
@@ -143,7 +157,7 @@ function warmShownCards(
   month: string,
 ) {
   for (const card of shownCards(layout, settings.features)) {
-    warmCard(queryClient, card, month, todayDateIn(settings));
+    warmCard(queryClient, card, month, todayDateIn(settings), readShare(settings.features));
   }
 }
 

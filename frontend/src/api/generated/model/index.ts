@@ -340,6 +340,7 @@ export * from "./smtpEncryption";
 export * from "./smtpSettingsResponse";
 export * from "./smtpTestResponse";
 export * from "./sortDirection";
+export * from "./spendingShare";
 export * from "./splitMethod";
 export * from "./spreadDirection";
 export * from "./statementFormat";

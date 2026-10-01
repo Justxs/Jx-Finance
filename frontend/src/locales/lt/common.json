@@ -2270,6 +2270,10 @@
       "label": "Aktyvus namų ūkis",
       "everything": "Viskas"
     },
+    "myShare": {
+      "label": "Mano dalis",
+      "hint": "Padalintas išlaidas skaičiuoti pagal jūsų dalį"
+    },
     "settleUp": {
       "title": "Balansai",
       "description": "Kas kam skolingas už padalintas išlaidas, pagal valiutą. Balansai nepatenka į ataskaitas, biudžetus ir grynąją vertę.",

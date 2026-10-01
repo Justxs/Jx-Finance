@@ -2,6 +2,7 @@ using FastEndpoints;
 using JxFinance.Common;
 using JxFinance.Common.CategoryAttributions;
 using JxFinance.Common.InvestmentCashFlows;
+using JxFinance.Common.SettleUp;
 using JxFinance.Domain.Common;
 using JxFinance.Endpoints.Accounts.Interfaces;
 using JxFinance.Endpoints.Dashboard.Interfaces;
@@ -16,12 +17,16 @@ namespace JxFinance.Endpoints.Dashboard.Services;
 public sealed class DashboardService(
     AppDbContext db,
     IClock clock,
+    ICurrentUser currentUser,
     ICategoryAttributionService attributions,
     IAccountService accountService,
     IInvestmentCashFlowService investmentCashFlows)
     : IDashboardService
 {
-    public async Task<DashboardSummaryResponse> GetSummaryAsync(string? month, CancellationToken cancellationToken)
+    public async Task<DashboardSummaryResponse> GetSummaryAsync(
+        string? month,
+        SpendingShare share,
+        CancellationToken cancellationToken)
     {
         var period = ResolveMonth(month, clock.Today);
         var (monthStart, monthEnd) = period;
@@ -29,7 +34,11 @@ public sealed class DashboardService(
         var balanceDate = period.InclusiveEnd < clock.Today ? period.InclusiveEnd : (DateOnly?)null;
         var (totalBalance, isComplete) = await accountService.GetReportingTotalAsync(balanceDate, cancellationToken);
 
-        var (monthIncome, monthExpense) = (await db.Transactions.DailyFlowsAsync(period, null, cancellationToken))
+        var (monthIncome, monthExpense) = (await db.Transactions.DailyFlowsAsync(
+                period,
+                null,
+                await ShareSlices.OfAsync(db, currentUser.Id, share, period, null, cancellationToken),
+                cancellationToken))
             .Concat(await investmentCashFlows.GetFlowsAsync(period, null, cancellationToken))
             .Totals();
 
@@ -44,6 +53,7 @@ public sealed class DashboardService(
 
     public async Task<CategoryBreakdownResponse> GetCategoryBreakdownAsync(
         string? month,
+        SpendingShare share,
         CancellationToken cancellationToken)
     {
         var period = ResolveMonth(month, clock.Today);
@@ -54,11 +64,13 @@ public sealed class DashboardService(
             period,
             null,
             FlowType.Expense,
+            await ShareSlices.OfAsync(db, currentUser.Id, share, period, null, cancellationToken),
             cancellationToken);
         var earlierAttributions = await attributions.GetAttributionsAsync(
             earlier,
             null,
             FlowType.Expense,
+            await ShareSlices.OfAsync(db, currentUser.Id, share, earlier, null, cancellationToken),
             cancellationToken);
 
         var categories = await db.Categories.ToDictionaryAsync(c => c.Id, cancellationToken);
@@ -84,6 +96,7 @@ public sealed class DashboardService(
     public async Task<MonthlyTrendResponse> GetMonthlyTrendAsync(
         int months,
         string? month,
+        SpendingShare share,
         CancellationToken cancellationToken)
     {
         var clamped = Math.Clamp(months, 1, 24);
@@ -91,7 +104,11 @@ public sealed class DashboardService(
         var earliestStart = lastMonth.Start.AddMonths(-(clamped - 1));
 
         var window = new DateWindow(earliestStart, lastMonth.ExclusiveEnd);
-        var byMonth = (await db.Transactions.DailyFlowsAsync(window, null, cancellationToken))
+        var byMonth = (await db.Transactions.DailyFlowsAsync(
+                window,
+                null,
+                await ShareSlices.OfAsync(db, currentUser.Id, share, window, null, cancellationToken),
+                cancellationToken))
             .Concat(await investmentCashFlows.GetFlowsAsync(window, null, cancellationToken))
             .ToLookup(f => DateWindow.MonthOf(f.Date).Start);
 

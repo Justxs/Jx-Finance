@@ -13,6 +13,11 @@ public sealed class GetMonthlyTrendSummary : Summary<GetMonthlyTrendEndpoint, Ge
             + "dividends and interest as income and withholding tax and standalone fees as expense.";
         RequestParam(r => r.Months, "How many months to include, counting back from the last one. Defaults to 6.");
         RequestParam(r => r.Month, "Last month to include as YYYY-MM. Defaults to the current month.");
+        RequestParam(
+            r => r.Share,
+            "How to count an expense split with a household or with people: full, the default, counts it at its whole amount; mine counts "
+                + "it at your own share, your part of what you paid and your share of a household split another member paid, which is dated "
+                + "on the split's date while you cannot see its transaction.");
         Responses[200] = "One entry per month in the requested window.";
         Responses[400] = "Validation failed: month.invalid, the month is not a YYYY-MM value between 2000 and 2999.";
     }

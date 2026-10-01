@@ -5,6 +5,7 @@
  * Personal and household finance ledger. Every route lives under /api and answers JSON. Money is carried as a decimal string with at most two decimal places so nothing is lost to floating point; dates are YYYY-MM-DD in the instance time zone. Collections that can grow are paged with page and pageSize and answer with items, page, pageSize, and total. Authentication is a session cookie from POST /api/auth/login, so browser clients must send credentials. Failures answer application/problem+json with a machine-readable code per error; see the ProblemDetails schema.
  * OpenAPI spec version: v1
  */
+import type { SpendingShare } from "./spendingShare";
 
 export type CategoryBreakdownParams = {
   /**
@@ -12,4 +13,8 @@ export type CategoryBreakdownParams = {
    * @nullable
    */
   month?: string | null;
+  /**
+   * How to count an expense split with a household or with people: full, the default, counts it at its whole amount; mine counts it at your own share, your part of what you paid and your share of a household split another member paid, which is dated on the split's date while you cannot see its transaction.
+   */
+  share?: SpendingShare;
 };

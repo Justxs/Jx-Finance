@@ -1,5 +1,6 @@
 using FastEndpoints;
 using JxFinance.Common;
+using JxFinance.Common.SettleUp;
 using JxFinance.Endpoints.Reports.Interfaces;
 using JxFinance.Endpoints.Reports.Shared;
 
@@ -14,5 +15,5 @@ public sealed class GetReportSummaryEndpoint(IReportService reportService) : End
     }
 
     public override async Task HandleAsync(GetReportSummaryRequest req, CancellationToken ct) =>
-        await Send.OkAsync(await reportService.GetSummaryAsync(req.DateFrom, req.DateTo, req.Comparison ?? ReportComparisonMode.None, ct), ct);
+        await Send.OkAsync(await reportService.GetSummaryAsync(req.DateFrom, req.DateTo, req.Comparison ?? ReportComparisonMode.None, req.Share ?? SpendingShare.Full, ct), ct);
 }

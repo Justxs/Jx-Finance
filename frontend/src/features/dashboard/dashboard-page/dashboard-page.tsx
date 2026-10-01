@@ -2,6 +2,7 @@ import { Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { ChevronLeft, ChevronRight, SlidersHorizontal } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useDashboardLayoutSuspense } from "@/api/generated";
+import { MyShareToggle } from "@/components/my-share-toggle/my-share-toggle";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { Button, buttonVariants } from "@/components/ui/button/button";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
@@ -80,37 +81,40 @@ function MonthHeader({ month, current, onChange }: Readonly<MonthHeaderProps>) {
       >
         {monthName(month)}
       </h1>
-      <nav aria-label={t("dashboard.month.label")} className="flex items-center gap-1">
-        <span
-          className={cn(
-            "transition-all duration-200 ease-out-expo motion-reduce:transition-none",
-            month === current && "invisible translate-x-2 opacity-0",
-          )}
-        >
-          <Button type="button" variant="outline" onClick={() => onChange(current)}>
-            {t("dashboard.month.current")}
+      <div className="flex flex-wrap items-center gap-2">
+        <MyShareToggle />
+        <nav aria-label={t("dashboard.month.label")} className="flex items-center gap-1">
+          <span
+            className={cn(
+              "transition-all duration-200 ease-out-expo motion-reduce:transition-none",
+              month === current && "invisible translate-x-2 opacity-0",
+            )}
+          >
+            <Button type="button" variant="outline" onClick={() => onChange(current)}>
+              {t("dashboard.month.current")}
+            </Button>
+          </span>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            aria-label={t("dashboard.month.previous")}
+            onClick={() => onChange(shiftMonth(month, -1))}
+          >
+            <ChevronLeft />
           </Button>
-        </span>
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          aria-label={t("dashboard.month.previous")}
-          onClick={() => onChange(shiftMonth(month, -1))}
-        >
-          <ChevronLeft />
-        </Button>
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          aria-label={t("dashboard.month.next")}
-          disabled={next > current}
-          onClick={() => onChange(next)}
-        >
-          <ChevronRight />
-        </Button>
-      </nav>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            aria-label={t("dashboard.month.next")}
+            disabled={next > current}
+            onClick={() => onChange(next)}
+          >
+            <ChevronRight />
+          </Button>
+        </nav>
+      </div>
     </div>
   );
 }

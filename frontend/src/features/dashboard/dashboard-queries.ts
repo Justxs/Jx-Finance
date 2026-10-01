@@ -1,9 +1,11 @@
 import type {
   MonthlyTrendParams,
   ReportSummaryParams,
+  SpendingShare,
   TransactionsParams,
 } from "@/api/generated/model";
 import { currentMonthKey, monthBounds, monthDate } from "@/lib/calendar";
+import { withShare } from "@/stores/my-share-store";
 
 const PACE_BASELINE_MONTHS = 3;
 
@@ -31,12 +33,17 @@ interface SpendingPaceRanges {
   earlier: ReportSummaryParams[];
 }
 
-export function spendingPaceRanges(month: string): SpendingPaceRanges {
+export function spendingPaceRanges(month: string, share?: SpendingShare): SpendingPaceRanges {
   const date = monthDate(month);
   return {
-    current: monthBounds(date),
+    current: withShare(monthBounds(date), share),
     earlier: Array.from({ length: PACE_BASELINE_MONTHS }, (_, index) =>
-      monthBounds(new Date(date.getFullYear(), date.getMonth() - PACE_BASELINE_MONTHS + index, 1)),
+      withShare(
+        monthBounds(
+          new Date(date.getFullYear(), date.getMonth() - PACE_BASELINE_MONTHS + index, 1),
+        ),
+        share,
+      ),
     ),
   };
 }

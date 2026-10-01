@@ -9,6 +9,7 @@ import { asOfParams } from "@/features/dashboard/dashboard-queries";
 import { useMoney, usePercent } from "@/hooks/use-formatters";
 import { useToday } from "@/hooks/use-settings";
 import { daysBetween } from "@/lib/calendar";
+import { useShare, withShare } from "@/stores/my-share-store";
 
 const MAX_ROWS = 5;
 
@@ -35,7 +36,7 @@ export function BudgetSnapshot({ asOf }: Readonly<Props>) {
   const money = useMoney();
   const percent = usePercent();
   const today = useToday();
-  const budgets = useBudgetsSuspense(asOfParams(asOf));
+  const budgets = useBudgetsSuspense(withShare(asOfParams(asOf), useShare()));
 
   const rows = budgets.data
     .toSorted((a, b) => usage(b.spent, b.effectiveLimit) - usage(a.spent, a.effectiveLimit))

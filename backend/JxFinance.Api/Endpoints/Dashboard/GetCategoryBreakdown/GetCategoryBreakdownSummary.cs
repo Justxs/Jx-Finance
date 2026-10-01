@@ -17,6 +17,11 @@ public sealed class GetCategoryBreakdownSummary : Summary<GetCategoryBreakdownEn
             + "month is cut to the same number of days, so the 1st to the 12th is compared with the 1st to the "
             + "12th; comparisonStart and comparisonEnd give the compared days.";
         RequestParam(r => r.Month, "Month to report on as YYYY-MM. Defaults to the current month.");
+        RequestParam(
+            r => r.Share,
+            "How to count an expense split with a household or with people: full, the default, counts it at its whole amount; mine counts "
+                + "it at your own share, your part of what you paid and your share of a household split another member paid, which is dated "
+                + "on the split's date while you cannot see its transaction.");
         Responses[200] = "One entry per category that had spending in the month.";
         Responses[400] = "Validation failed: month.invalid, the month is not a YYYY-MM value between 2000 and 2999.";
     }

@@ -2180,6 +2180,10 @@
       "label": "Active household",
       "everything": "Everything"
     },
+    "myShare": {
+      "label": "My share",
+      "hint": "Count split expenses at your own share"
+    },
     "settleUp": {
       "title": "Balances",
       "description": "Who owes whom for split expenses, per currency. Balances never enter reports, budgets or net worth.",

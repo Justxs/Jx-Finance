@@ -1,5 +1,6 @@
 using JxFinance.Common;
 using JxFinance.Common.Notifications;
+using JxFinance.Common.SettleUp;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Notifications;
 using JxFinance.Domain.Settings;
@@ -41,7 +42,7 @@ public sealed class BudgetAlertJob(
             return;
         }
 
-        var usage = await services.GetRequiredService<IBudgetUsageCalculator>().CalculateAsync(budgets, clock.Today, ct);
+        var usage = await services.GetRequiredService<IBudgetUsageCalculator>().CalculateAsync(budgets, clock.Today, SpendingShare.Full, ct);
         var categories = await db.Categories.ToDictionaryAsync(c => c.Id, c => c.Name, ct);
         var tags = await db.Tags.ToDictionaryAsync(t => t.Id, t => t.Name, ct);
         var publisher = services.GetRequiredService<INotificationPublisher>();

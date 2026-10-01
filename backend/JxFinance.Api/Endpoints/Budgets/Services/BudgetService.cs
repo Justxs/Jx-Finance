@@ -3,6 +3,7 @@ using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Common.References;
 using JxFinance.Common.Settings;
+using JxFinance.Common.SettleUp;
 using JxFinance.Common.Sharing;
 using JxFinance.Common.Trash;
 using JxFinance.Domain.Budgets;
@@ -35,16 +36,19 @@ public sealed class BudgetService(
 {
     private static readonly DomainError NotFound = EntityLookup.NotFound("Budget not found.");
 
-    public async Task<IReadOnlyList<BudgetResponse>> GetAllAsync(DateOnly? asOf, CancellationToken cancellationToken)
+    public async Task<IReadOnlyList<BudgetResponse>> GetAllAsync(
+        DateOnly? asOf,
+        SpendingShare share,
+        CancellationToken cancellationToken)
     {
         var budgets = await db.Budgets.ToListAsync(cancellationToken);
-        return budgets.Count == 0 ? [] : await ToResponsesAsync(budgets, asOf ?? clock.Today, cancellationToken);
+        return budgets.Count == 0 ? [] : await ToResponsesAsync(budgets, asOf ?? clock.Today, share, cancellationToken);
     }
 
     public async Task<IReadOnlyList<BudgetResponse>> GetMonthlyAsync(DateOnly asOf, CancellationToken cancellationToken)
     {
         var budgets = await db.Budgets.Where(b => b.Period == BudgetPeriod.Monthly).ToListAsync(cancellationToken);
-        return budgets.Count == 0 ? [] : await ToResponsesAsync(budgets, asOf, cancellationToken);
+        return budgets.Count == 0 ? [] : await ToResponsesAsync(budgets, asOf, SpendingShare.Full, cancellationToken);
     }
 
     public async Task<Result<BudgetResponse>> CreateAsync(
@@ -155,14 +159,15 @@ public sealed class BudgetService(
     }
 
     private async Task<Result<BudgetResponse>> ToResponseAsync(Budget budget, CancellationToken cancellationToken) =>
-        (await ToResponsesAsync([budget], clock.Today, cancellationToken))[0];
+        (await ToResponsesAsync([budget], clock.Today, SpendingShare.Full, cancellationToken))[0];
 
     private async Task<List<BudgetResponse>> ToResponsesAsync(
         List<Budget> budgets,
         DateOnly asOf,
+        SpendingShare share,
         CancellationToken cancellationToken)
     {
-        var usage = await usageCalculator.CalculateAsync(budgets, asOf, cancellationToken);
+        var usage = await usageCalculator.CalculateAsync(budgets, asOf, share, cancellationToken);
         var names = await NamesAsync(budgets, cancellationToken);
 
         return budgets.Select(b => b.ToResponse(NameOf(b, names), usage[b.Id])).ToList();

@@ -3,6 +3,7 @@ using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Common.InvestmentCashFlows;
 using JxFinance.Common.Settings;
+using JxFinance.Common.SettleUp;
 using JxFinance.Common.Spreads;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Investments;
@@ -82,7 +83,7 @@ public sealed class MonthCloseService(
                 .ToListAsync(cancellationToken);
         var reporting = settings.Current.ReportingCurrency;
         var span = new DateWindow(start, end);
-        var totals = (await db.Transactions.DailyFlowsAsync(span, null, cancellationToken))
+        var totals = (await db.Transactions.DailyFlowsAsync(span, null, [], cancellationToken))
             .Concat(await investmentCashFlows.GetFlowsAsync(span, null, cancellationToken))
             .ToLookup(f => (DateWindow.MonthOf(f.Date).Start, f.Type), f => f.Amount);
 
@@ -203,6 +204,7 @@ public sealed class MonthCloseService(
             window.Start,
             window.InclusiveEnd,
             ReportComparisonMode.PreviousMonth,
+            SpendingShare.Full,
             cancellationToken);
         var checklist = await ChecklistAsync(window, cancellationToken);
         var budgets = IsEnabled(Feature.Budgets)
@@ -304,7 +306,12 @@ public sealed class MonthCloseService(
     private async Task<MonthCloseSnapshot> SnapshotAsync(DateOnly start, CancellationToken cancellationToken)
     {
         var window = DateWindow.MonthOf(start);
-        var summary = await reports.GetSummaryAsync(window.Start, window.InclusiveEnd, ReportComparisonMode.None, cancellationToken);
+        var summary = await reports.GetSummaryAsync(
+            window.Start,
+            window.InclusiveEnd,
+            ReportComparisonMode.None,
+            SpendingShare.Full,
+            cancellationToken);
         var transactionIds = await db.Transactions
             .Within(window)
             .Select(t => t.Id.Value)

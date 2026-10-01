@@ -31,6 +31,7 @@ public sealed class BudgetSuggestionService(
                 new DateWindow(windows[0].Start, windows[^1].End),
                 null,
                 FlowType.Expense,
+                [],
                 cancellationToken))
             .Where(a => a.CategoryId.HasValue)
             .ToLookup(a => a.CategoryId!.Value);

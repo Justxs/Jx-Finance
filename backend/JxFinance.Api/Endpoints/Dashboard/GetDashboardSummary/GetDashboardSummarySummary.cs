@@ -16,6 +16,11 @@ public sealed class GetDashboardSummarySummary : Summary<GetDashboardSummaryEndp
             + "expenses include withholding tax and standalone fees, exactly as in the report summary. "
             + "IsComplete is false when a balance or holding could not be valued and the total balance leaves it out.";
         RequestParam(r => r.Month, "Month to report on as YYYY-MM. Defaults to the current month.");
+        RequestParam(
+            r => r.Share,
+            "How to count an expense split with a household or with people: full, the default, counts it at its whole amount; mine counts "
+                + "it at your own share, your part of what you paid and your share of a household split another member paid, which is dated "
+                + "on the split's date while you cannot see its transaction. The total balance is never affected.");
         Responses[200] = "The month's totals and the total balance at the month's end.";
         Responses[400] = "Validation failed: month.invalid, the month is not a YYYY-MM value between 2000 and 2999.";
     }

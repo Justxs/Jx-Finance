@@ -1,5 +1,6 @@
 using FastEndpoints;
 using JxFinance.Common;
+using JxFinance.Common.SettleUp;
 using JxFinance.Endpoints.Dashboard.Interfaces;
 using JxFinance.Endpoints.Dashboard.Shared;
 
@@ -15,5 +16,5 @@ public sealed class GetDashboardSummaryEndpoint(IDashboardService dashboardServi
     }
 
     public override async Task HandleAsync(GetDashboardSummaryRequest req, CancellationToken ct) =>
-        await Send.OkAsync(await dashboardService.GetSummaryAsync(req.Month, ct), ct);
+        await Send.OkAsync(await dashboardService.GetSummaryAsync(req.Month, req.Share ?? SpendingShare.Full, ct), ct);
 }

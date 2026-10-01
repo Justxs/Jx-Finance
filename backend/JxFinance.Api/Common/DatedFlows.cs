@@ -11,6 +11,7 @@ public static class DatedFlows
         this IQueryable<Transaction> visible,
         DateWindow window,
         DateWindow? comparison,
+        IReadOnlyList<SpreadSlice> shares,
         CancellationToken cancellationToken)
     {
         var flows = await visible
@@ -21,7 +22,7 @@ public static class DatedFlows
             .ToListAsync(cancellationToken);
         var slices = await visible.SlicesAsync(window, comparison, cancellationToken);
 
-        return [.. flows, .. slices.Select(slice => new DatedFlow(slice.Date, slice.Type, slice.Amount))];
+        return [.. flows, .. slices.Concat(shares).Select(slice => new DatedFlow(slice.Date, slice.Type, slice.Amount))];
     }
 
     public static (decimal Income, decimal Expense) Totals(this IEnumerable<DatedFlow> flows)

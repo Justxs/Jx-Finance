@@ -10,6 +10,7 @@ import type { BudgetResponse } from "@/api/generated/model";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog/confirm-delete-dialog";
 import { CreateDialog } from "@/components/create-dialog/create-dialog";
 import { EditModal } from "@/components/modal";
+import { MyShareToggle } from "@/components/my-share-toggle/my-share-toggle";
 import { PageHeader } from "@/components/page-header/page-header";
 import { PanelRows } from "@/components/panel-rows/panel-rows";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
@@ -21,14 +22,16 @@ import { useEditableList } from "@/hooks/use-editable-list";
 import { fromCents, toCents } from "@/lib/money";
 import { optimisticRemoval } from "@/lib/optimistic";
 import { EXPENSE_TONE } from "@/lib/tone";
+import { useShare, withShare } from "@/stores/my-share-store";
 
 export function BudgetsPage() {
   const { t } = useTranslation();
   const categoryList = useCategoriesSuspense().data;
   const tagList = useTagsSuspense().data;
+  const params = withShare(undefined, useShare());
   const budgets = useEditableList(
-    useBudgetsSuspense().data,
-    useDeleteBudget({ mutation: optimisticRemoval<BudgetResponse>(getBudgetsQueryKey()) }),
+    useBudgetsSuspense(params).data,
+    useDeleteBudget({ mutation: optimisticRemoval<BudgetResponse>(getBudgetsQueryKey(params)) }),
     (budget) => budget.name,
     "budget",
   );
@@ -41,6 +44,7 @@ export function BudgetsPage() {
   return (
     <div className="space-y-5">
       <PageHeader title={t("budgets.title")} description={t("budgets.subtitle")}>
+        <MyShareToggle />
         <CreateDialog label={t("budgets.add")} title={t("budgets.add")}>
           {(close) => <BudgetForm categories={categoryList} tags={tagList} onClose={close} />}
         </CreateDialog>

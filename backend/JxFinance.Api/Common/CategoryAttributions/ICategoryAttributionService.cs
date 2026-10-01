@@ -1,3 +1,4 @@
+using JxFinance.Common.Spreads;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Households;
 
@@ -9,6 +10,7 @@ public interface ICategoryAttributionService
         DateWindow window,
         DateWindow? comparison,
         FlowType type,
+        IReadOnlyList<SpreadSlice> shares,
         CancellationToken cancellationToken);
 
     Task<IReadOnlyList<CategoryAttribution>> GetAttributionsAsync(

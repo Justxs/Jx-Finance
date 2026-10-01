@@ -26,6 +26,14 @@ const ledger = [
   api.getMonthCloseYearQueryKey,
 ] as const;
 
+const spending = [
+  api.getDashboardSummaryQueryKey,
+  api.getCategoryBreakdownQueryKey,
+  api.getMonthlyTrendQueryKey,
+  api.getReportSummaryQueryKey,
+  api.getBudgetsQueryKey,
+] as const;
+
 const holdings = [
   api.getPortfolioQueryKey,
   api.getTaxSummaryQueryKey,
@@ -267,7 +275,7 @@ const rules: readonly Rule[] = [
   {
     after: [api.getCreateSharedExpenseMutationKey, api.getUpdateSharedExpenseMutationKey],
     deleted: [api.getDeleteSharedExpenseMutationKey],
-    refresh: [api.getHouseholdsQueryKey, api.getTransactionsQueryKey],
+    refresh: [api.getHouseholdsQueryKey, api.getTransactionsQueryKey, ...spending],
   },
   {
     after: [api.getCreateSettlementMutationKey],
@@ -289,7 +297,12 @@ const rules: readonly Rule[] = [
       api.getUpdateContactSplitMutationKey,
     ],
     deleted: [api.getDeleteContactMutationKey, api.getDeleteContactSplitMutationKey],
-    refresh: [api.getContactsQueryKey, api.getTransactionsQueryKey, api.getLedgerQueryKey],
+    refresh: [
+      api.getContactsQueryKey,
+      api.getTransactionsQueryKey,
+      api.getLedgerQueryKey,
+      ...spending,
+    ],
   },
   {
     after: [api.getCreateContactPaymentMutationKey],

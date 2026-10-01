@@ -16,8 +16,9 @@ public sealed class CategoryAttributionService(AppDbContext db) : ICategoryAttri
         DateWindow window,
         DateWindow? comparison,
         FlowType type,
+        IReadOnlyList<SpreadSlice> shares,
         CancellationToken cancellationToken) =>
-        AttributeAsync(db.Transactions, window, comparison, type, cancellationToken);
+        AttributeAsync(db.Transactions, window, comparison, type, shares, cancellationToken);
 
     public Task<IReadOnlyList<CategoryAttribution>> GetAttributionsAsync(
         DateWindow window,
@@ -29,6 +30,7 @@ public sealed class CategoryAttributionService(AppDbContext db) : ICategoryAttri
             window,
             null,
             type,
+            [],
             cancellationToken);
 
     private async Task<IReadOnlyList<CategoryAttribution>> AttributeAsync(
@@ -36,6 +38,7 @@ public sealed class CategoryAttributionService(AppDbContext db) : ICategoryAttri
         DateWindow window,
         DateWindow? comparison,
         FlowType type,
+        IReadOnlyList<SpreadSlice> shares,
         CancellationToken cancellationToken)
     {
         var dated = visible.Within(window, comparison);
@@ -48,6 +51,7 @@ public sealed class CategoryAttributionService(AppDbContext db) : ICategoryAttri
             .ToList();
 
         var spread = (await visible.SlicesAsync(window, comparison, cancellationToken))
+            .Concat(shares)
             .Where(slice => slice.Type == type)
             .ToList();
 
@@ -60,7 +64,7 @@ public sealed class CategoryAttributionService(AppDbContext db) : ICategoryAttri
         var lines = parentIds.Count == 0
             ? []
             : await db.TransactionLines
-                .Where(l => parentIds.Contains(l.TransactionId))
+                .Where(l => parentIds.Contains(l.TransactionId) && visible.Any(t => t.Id == l.TransactionId))
                 .OrderBy(l => l.Position).ThenBy(l => l.Id)
                 .Select(l => new SplitLine(l.TransactionId, l.CategoryId, (decimal)l.Amount))
                 .ToListAsync(cancellationToken);

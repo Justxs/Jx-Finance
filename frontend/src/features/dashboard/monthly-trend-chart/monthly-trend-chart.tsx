@@ -3,13 +3,14 @@ import { IncomeExpenseChart } from "@/components/chart";
 import { monthlyTrendParams } from "@/features/dashboard/dashboard-queries";
 import { useShortMonth } from "@/hooks/use-formatters";
 import { useTodayDate } from "@/hooks/use-settings";
+import { useShare, withShare } from "@/stores/my-share-store";
 
 interface Props {
   month: string;
 }
 
 export function MonthlyTrendChart({ month }: Readonly<Props>) {
-  const trend = useMonthlyTrendSuspense(monthlyTrendParams(month));
+  const trend = useMonthlyTrendSuspense(withShare(monthlyTrendParams(month), useShare()));
   const monthFormat = useShortMonth();
   const today = useTodayDate();
 
