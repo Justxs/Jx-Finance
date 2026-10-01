@@ -16,7 +16,7 @@ public static class ReceiptImage
     public const int MaxPdfPages = 3;
     public const int MinShortEdge = 200;
     public const int OcrWidth = 1600;
-    public const int OcrMaxHeight = 12000;
+    public const int OcrMaxHeight = AttachmentImage.MaxPixelEdge;
 
     private const int ThresholdWindow = 30;
     private const double ThresholdBias = -0.05;
@@ -47,7 +47,7 @@ public static class ReceiptImage
             image.Grayscale();
             image.Resize(new MagickGeometry(OcrWidth, OcrMaxHeight));
             image.AdaptiveThreshold(ThresholdWindow, ThresholdWindow, ThresholdBias * Quantum.Max);
-            return new ReceiptInput(image.ToByteArray(MagickFormat.Png), null, 1, 1);
+            return new ReceiptInput(ReceiptBands.Cut(image), null, 1, 1);
         }
         catch (MagickException)
         {
@@ -65,7 +65,7 @@ public static class ReceiptImage
             var text = string.Join('\n', Enumerable.Range(1, pagesRead).Select(number => PageText(document.GetPage(number))));
             return pageCount == 0 ? ReceiptErrors.Unsupported
                 : string.IsNullOrWhiteSpace(text) ? ReceiptErrors.PdfWithoutText
-                : new ReceiptInput(null, text, pagesRead, pageCount);
+                : new ReceiptInput([], text, pagesRead, pageCount);
         }
         catch (Exception ex) when (ex is PdfDocumentFormatException or PdfDocumentEncryptedException or InvalidOperationException or ArgumentException)
         {

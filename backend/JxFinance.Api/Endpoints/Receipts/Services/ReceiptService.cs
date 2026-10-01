@@ -280,10 +280,27 @@ public sealed class ReceiptService(
     {
         var text = input.Text is { } embedded
             ? Result<string>.Success(embedded)
-            : await reader.ReadTextAsync(input.Image!, cancellationToken);
+            : await ReadBandsAsync(input.Bands, cancellationToken);
         return text.TryGetValue(out var read)
             ? ReceiptTextParser.Parse(read).Map(result => result with { PagesRead = input.PagesRead, PageCount = input.PageCount })
             : text.Error;
+    }
+
+    private async Task<Result<string>> ReadBandsAsync(IReadOnlyList<byte[]> bands, CancellationToken cancellationToken)
+    {
+        var texts = new List<string>();
+        foreach (var band in bands)
+        {
+            var text = await reader.ReadTextAsync(band, cancellationToken);
+            if (!text.TryGetValue(out var read))
+            {
+                return text.Error;
+            }
+
+            texts.Add(read);
+        }
+
+        return ReceiptBands.Join(texts);
     }
 
     private async Task FinishAsync(

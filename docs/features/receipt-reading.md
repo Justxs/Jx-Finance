@@ -24,13 +24,13 @@ flowchart TD
     Attached --> Service
     Service{"stored reading for this user<br/>and file content?"} -->|"yes, not forced"| Cached["answer it, cached: true"]
     Service -->|"no, or Read again"| Prepare{"photo or PDF?"}
-    Prepare -->|"photo"| Image["turn upright, strip metadata, grey,<br/>1600 px wide, local threshold"]
+    Prepare -->|"photo"| Image["turn upright, strip metadata, grey,<br/>1600 px wide, local threshold,<br/>parts of 2000 px above 4000 px high"]
     Prepare -->|"PDF"| Text["text of the first 3 pages,<br/>words joined by baseline"]
     Text -->|"no text"| NoText["400 receipt.pdfWithoutText"]
     Image --> Busy{"under AppLock.ReceiptReadings:<br/>same file being read?"}
     Text --> Busy
     Busy -->|"yes"| Conflict["409 conflict.busy"]
-    Busy -->|"no, insert Pending"| Ocr["tesseract stdin stdout -l lit+eng --psm 6<br/>(photos only)"]
+    Busy -->|"no, insert Pending"| Ocr["tesseract stdin stdout -l lit+eng --psm 6<br/>(photos only, once per part, overlaps removed)"]
     Ocr --> Parse["ReceiptTextParser: merchant, date, currency,<br/>total, items, adjustments, unread lines"]
     Parse --> Categories["remembered name, else first matching rule,<br/>else none; store the reading"]
     Categories --> Review["review dialog: items by category,<br/>unread lines, resulting lines, differences"]
@@ -46,9 +46,15 @@ The read runs inside the request. Tesseract takes about one second for a receipt
 
 ## Preparing a photo
 
-`ReceiptImage.Prepare` works in memory on a file of at most 10 MB and reads it only as the format `AttachmentContent.Detect` found, with Magick.NET's width and height limited to 16000 pixels. JPEG, PNG, WebP and HEIC are turned upright from their EXIF orientation, stripped of every metadata profile, refused below 200 pixels on the short side, flattened on white, turned grey, scaled up or down to 1600 pixels wide (at most 12000 high), put through a local adaptive threshold (a 30 pixel window, 5% below the local mean) and written as PNG. An uploaded `file` is first cleaned in memory exactly as an attachment is before it is stored ([`AttachmentImage.WithoutMetadata`](attachments.md#location-and-other-metadata)), after `PhotoLocation` has read its GPS tags for the [photo's position](#the-address-and-the-photos-position), and its SHA-256 is taken over the cleaned bytes, so a file read in the create dialog and the attachment it then becomes have the same hash and share the reading; an image that cannot be decoded answers `receipt.unsupportedFile`.
+`ReceiptImage.Prepare` works in memory on a file of at most 10 MB and reads it only as the format `AttachmentContent.Detect` found, with Magick.NET's width and height limited to 16000 pixels. JPEG, PNG, WebP and HEIC are turned upright from their EXIF orientation, stripped of every metadata profile, refused below 200 pixels on the short side, flattened on white, turned grey, scaled up or down to 1600 pixels wide (at most 16000 high), put through a local adaptive threshold (a 30 pixel window, 5% below the local mean) and written as PNG. An uploaded `file` is first cleaned in memory exactly as an attachment is before it is stored ([`AttachmentImage.WithoutMetadata`](attachments.md#location-and-other-metadata)), after `PhotoLocation` has read its GPS tags for the [photo's position](#the-address-and-the-photos-position), and its SHA-256 is taken over the cleaned bytes, so a file read in the create dialog and the attachment it then becomes have the same hash and share the reading; an image that cannot be decoded answers `receipt.unsupportedFile`.
 
 The threshold is what makes a phone photo readable. Measured on 2026-09-29 with receipts rendered, blurred and lit from one side, Tesseract read 1 of 13 checked values (prices, totals, the date) from the raw photo and all 13 after the local threshold, while a global contrast stretch lost the darker half of the receipt; on a clean scan the threshold changed nothing. Page segmentation mode 6 (one uniform block of text) kept each printed line together where mode 4 split some of them in two. HEIC decoding comes with Magick.NET's native library.
+
+### Very tall screenshots
+
+Since 2026-10-01 a prepared image taller than 4000 pixels, such as a phone screenshot of an e-receipt several screens long, is read in parts. `ReceiptBands.Cut` cuts it, after the threshold, into horizontal parts of 2000 pixels that overlap by 150, about two printed lines at 1600 pixels wide; the last part is what is left. Every photo up to 2.5 times as tall as it is wide stays one part, as before. The height limit is the 16000 pixels Magick.NET allows, so a screenshot 1080 pixels wide and 16000 tall keeps its size instead of being shrunk to fit 12000, which the limit was before.
+
+Each part is read by its own Tesseract process, one after the other, each under the 60 second limit, and a part that fails fails the read. `ReceiptBands.Join` then puts the texts together: blank lines go and the spaces inside a line collapse to one. Where two parts meet it takes the last of the next part's first six lines that equals, ignoring case, one of the previous part's last six lines of at least four characters. The next part's lines up to and including it are dropped, and so are the previous part's lines after its copy, because the edge cut those and the next part has them whole. When no line repeats, as when the overlap fell on blank space, the texts follow each other unchanged. The threshold runs before the cut, so both parts see the same pixels in the overlap and Tesseract mostly reads them the same way. Two identical short lines within six lines of a seam, such as a repeated `2 x 1,19`, can still be taken for the overlap; the review then shows a gap between the items and the printed total.
 
 ## Reading a PDF
 

@@ -22,7 +22,7 @@ public sealed class ReceiptImageTests
 
         var prepared = ReceiptImage.Prepare(photo.ToByteArray(MagickFormat.Jpeg), AttachmentContent.Jpeg).Value!;
 
-        using var read = new MagickImage(prepared.Image!);
+        using var read = new MagickImage(Assert.Single(prepared.Bands));
         Assert.True(read.Height > read.Width);
         Assert.Null(read.GetExifProfile());
         Assert.Equal((null, 1, 1), (prepared.Text, prepared.PagesRead, prepared.PageCount));
@@ -38,7 +38,7 @@ public sealed class ReceiptImageTests
 
         var prepared = ReceiptImage.Prepare(photo.ToByteArray(MagickFormat.Png), AttachmentContent.Png).Value!;
 
-        using var read = new MagickImage(prepared.Image!);
+        using var read = new MagickImage(Assert.Single(prepared.Bands));
         Assert.Equal((uint)ReceiptImage.OcrWidth, read.Width);
         Assert.Equal(MagickFormat.Png, read.Format);
         Assert.True(read.TotalColors <= 2);
@@ -69,7 +69,7 @@ public sealed class ReceiptImageTests
     {
         var prepared = ReceiptImage.Prepare(SampleReceiptPdf.Of(5, "Duona 800 g  1,89 A", "Pienas 1 l  1,19 A"), AttachmentContent.Pdf).Value!;
 
-        Assert.Null(prepared.Image);
+        Assert.Empty(prepared.Bands);
         Assert.Equal((3, 5), (prepared.PagesRead, prepared.PageCount));
         var lines = prepared.Text!.Split('\n');
         Assert.Equal(6, lines.Length);
