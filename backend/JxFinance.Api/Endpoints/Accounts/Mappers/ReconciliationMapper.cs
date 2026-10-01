@@ -8,10 +8,10 @@ public static class ReconciliationMapper
     public static ReconciliationResponse ToResponse(this AccountReconciliation reconciliation, decimal ledgerBalance) => new(
         reconciliation.Id.Value,
         reconciliation.Date,
-        reconciliation.Balance.Amount,
-        reconciliation.Balance.Currency,
+        reconciliation.Balance,
+        reconciliation.Currency,
         reconciliation.Source,
         ledgerBalance,
-        reconciliation.Balance.Amount - ledgerBalance,
+        reconciliation.Balance - ledgerBalance,
         reconciliation.CreatedAt);
 }

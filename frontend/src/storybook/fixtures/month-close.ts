@@ -94,6 +94,7 @@ export function monthReviewOf(month: string, patch: Partial<MonthReviewResponse>
           date: lastDayOf(month),
           difference: "0.00",
           currency: "eur",
+          otherCurrencies: [],
         },
         {
           accountId: ids.accounts.shared,
@@ -102,6 +103,7 @@ export function monthReviewOf(month: string, patch: Partial<MonthReviewResponse>
           date: `${month}-24`,
           difference: null,
           currency: "eur",
+          otherCurrencies: [],
         },
       ],
     },
@@ -127,6 +129,7 @@ const clearChecklist: MonthReviewResponse["checklist"] = {
       date: "2026-08-31",
       difference: null,
       currency: "eur",
+      otherCurrencies: [],
     },
   ],
 };

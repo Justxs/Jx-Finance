@@ -71,6 +71,14 @@ export const firstReconciliationPreview: ReconciliationPreviewResponse = {
   previous: null,
 };
 
+export const usdReconciliationPreview: ReconciliationPreviewResponse = {
+  ...firstReconciliationPreview,
+  currency: "usd",
+  ledgerBalance: "2710.40",
+  rows: [],
+  rowCount: 0,
+};
+
 export const longReconciliationPreview: ReconciliationPreviewResponse = {
   ...reconciliationPreview,
   rows: many(reconciliationRows, 100, "5e5e5e5f"),

@@ -7,7 +7,11 @@ namespace JxFinance.Endpoints.Accounts.Interfaces;
 
 public interface IReconciliationService
 {
-    Task<Result<ReconciliationPreviewResponse>> PreviewAsync(Guid accountId, DateOnly date, CancellationToken cancellationToken);
+    Task<Result<ReconciliationPreviewResponse>> PreviewAsync(
+        Guid accountId,
+        DateOnly date,
+        Currency? currency,
+        CancellationToken cancellationToken);
 
     Task<Result<IReadOnlyList<ReconciliationResponse>>> ListAsync(Guid accountId, CancellationToken cancellationToken);
 
@@ -15,6 +19,7 @@ public interface IReconciliationService
         Guid accountId,
         DateOnly date,
         decimal balance,
+        Currency? currency,
         ReconciliationSource source,
         CancellationToken cancellationToken);
 

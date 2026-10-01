@@ -15,5 +15,5 @@ public sealed class GetReconciliationPreviewEndpoint(IReconciliationService reco
     }
 
     public override async Task HandleAsync(GetReconciliationPreviewRequest req, CancellationToken ct) =>
-        await Send.OkOrProblemAsync(await reconciliationService.PreviewAsync(req.Id, req.Date, ct), ct);
+        await Send.OkOrProblemAsync(await reconciliationService.PreviewAsync(req.Id, req.Date, req.Currency, ct), ct);
 }

@@ -7,6 +7,7 @@
  */
 import type { Currency } from "./currency";
 import type { MonthAccountState } from "./monthAccountState";
+import type { MonthCurrencyCoverage } from "./monthCurrencyCoverage";
 import type { NullableOfDateOnly } from "./nullableOfDateOnly";
 
 export interface MonthAccountCoverage {
@@ -17,4 +18,5 @@ export interface MonthAccountCoverage {
   /** @nullable */
   difference: string | null;
   currency: Currency;
+  otherCurrencies: MonthCurrencyCoverage[];
 }

@@ -15,6 +15,7 @@ public sealed class RecordReconciliationValidator : Validator<RecordReconciliati
             .IsNotInFuture(() => Resolve<IClock>().Today)
             .WithErrorCode(ErrorCodes.ReconciliationFutureDate)
             .WithMessage("The statement date cannot be in the future.");
+        RuleFor(r => r.Currency).IsKnownEnum();
         RuleFor(r => r.Balance)
             .IsPresent()
             .IsMoney()

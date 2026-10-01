@@ -187,6 +187,7 @@
       "title": "Suderinti: {{account}}",
       "description": "Įveskite banko išraše nurodytą likutį. Jis išsaugomas, net jei skiriasi nuo apskaitos likučio.",
       "date": "Išrašo data",
+      "currency": "Išrašo valiuta",
       "balance": "Likutis išraše ({{currency}})",
       "ledger": "Apskaitos likutis {{date}}: {{amount}}",
       "matches": "Sutampa su išrašu",
@@ -3197,6 +3198,10 @@
       "reconciled": "{{account}}: suderinta {{date}}",
       "differs": "{{account}}: išrašas skiriasi {{difference}} ({{date}})",
       "behind": "{{account}}: paskutinis išrašas {{date}}, anksčiau nei mėnesio pabaiga",
+      "noStatement": "{{account}}: dar nėra išrašo valiuta {{currency}}",
+      "otherReconciled": "{{currency}}: suderinta {{date}}",
+      "otherDiffers": "{{currency}}: išrašas skiriasi {{difference}} ({{date}})",
+      "otherBehind": "{{currency}}: paskutinis išrašas {{date}}",
       "reconcile": "Suderinti"
     },
     "drift": {

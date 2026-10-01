@@ -43,10 +43,18 @@ const accountTexts = {
   behind: "monthClose.checklist.behind",
 } as const;
 
+const otherCurrencyTexts = {
+  reconciled: "monthClose.checklist.otherReconciled",
+  differs: "monthClose.checklist.otherDiffers",
+  imported: "monthClose.checklist.otherBehind",
+  behind: "monthClose.checklist.otherBehind",
+} as const;
+
 interface Item {
   key: string;
   done: boolean;
   label: string;
+  notes?: string[];
   actions: { label: string; link: LinkOptions }[];
 }
 
@@ -147,11 +155,19 @@ export function CloseChecklist({ month, checklist, openOnly = false, className }
     items.push({
       key: `account-${entry.accountId}`,
       done: !needsReconciling(entry),
-      label: t(accountTexts[entry.state], {
+      label: t(entry.date ? accountTexts[entry.state] : "monthClose.checklist.noStatement", {
         account: entry.accountName,
+        currency: entry.currency.toUpperCase(),
         date: entry.date ? isoDate(entry.date) : "",
         difference: money.format(Math.abs(Number(entry.difference ?? 0)), entry.currency),
       }),
+      notes: entry.otherCurrencies.map((other) =>
+        t(otherCurrencyTexts[other.state], {
+          currency: other.currency.toUpperCase(),
+          date: isoDate(other.date),
+          difference: money.format(Math.abs(Number(other.difference ?? 0)), other.currency),
+        }),
+      ),
       actions,
     });
   }
@@ -179,6 +195,11 @@ export function CloseChecklist({ month, checklist, openOnly = false, className }
                 )}
               >
                 {item.label}
+                {item.notes?.map((note) => (
+                  <span key={note} className="block text-xs font-normal text-muted-foreground">
+                    {note}
+                  </span>
+                ))}
               </span>
             </span>
             {item.done ? null : (

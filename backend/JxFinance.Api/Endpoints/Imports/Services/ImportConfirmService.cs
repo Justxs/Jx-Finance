@@ -79,14 +79,14 @@ public sealed class ImportConfirmService(
         await db.SaveChangesAsync(cancellationToken);
 
         var reconciliation = request is { Format: not StatementFormat.SwedbankCsv, Statement: { } closing }
-            && closing.ClosingCurrency == accountCurrency
-                ? (await reconciliations.RecordAsync(
-                    request.AccountId,
-                    closing.ClosingDate,
-                    closing.ClosingBalance,
-                    ReconciliationSource.Statement,
-                    cancellationToken)).Value
-                : null;
+            ? (await reconciliations.RecordAsync(
+                request.AccountId,
+                closing.ClosingDate,
+                closing.ClosingBalance,
+                closing.ClosingCurrency,
+                ReconciliationSource.Statement,
+                cancellationToken)).Value
+            : null;
 
         await transaction.CommitAsync(cancellationToken);
         return new ImportConfirmResponse(totals.Imported, totals.Skipped, totals.Linked, reconciliation);

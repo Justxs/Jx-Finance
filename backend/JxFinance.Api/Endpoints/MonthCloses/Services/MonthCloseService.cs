@@ -263,7 +263,7 @@ public sealed class MonthCloseService(
 
     private async Task<IReadOnlyList<MonthAccountCoverage>> AccountCoverageAsync(DateOnly monthEnd, CancellationToken cancellationToken)
     {
-        var reconciled = (await reconciliations.CoverageAsync(monthEnd, cancellationToken)).ToDictionary(c => c.AccountId);
+        var reconciled = await reconciliations.CoverageAsync(monthEnd, cancellationToken);
         var imports = IsEnabled(Feature.Import)
             ? await db.Transactions
                 .Where(t => t.Source == TransactionSource.Imported)
@@ -274,14 +274,14 @@ public sealed class MonthCloseService(
             : [];
         var imported = imports.ToDictionary(i => i.Id.Value, i => i.Latest);
 
-        return reconciled.Values
-            .Select(r => (r.AccountId, r.AccountName, r.Currency))
+        return reconciled
+            .Select(r => (r.AccountId, r.AccountName, Currency: r.AccountCurrency))
             .Concat(imports.Select(i => (AccountId: i.Id.Value, AccountName: i.Name, i.Currency)))
             .DistinctBy(a => a.AccountId)
             .OrderBy(a => a.AccountName, StringComparer.CurrentCultureIgnoreCase)
             .Select(a =>
             {
-                var check = reconciled.GetValueOrDefault(a.AccountId);
+                var check = reconciled.FirstOrDefault(r => r.AccountId == a.AccountId && r.Currency == a.Currency);
                 var latestImport = imported.TryGetValue(a.AccountId, out var latest) ? latest : (DateOnly?)null;
                 var state = MonthAccountCoverage.StateOf(monthEnd, check?.Difference, latestImport);
                 var date = state switch
@@ -290,7 +290,12 @@ public sealed class MonthCloseService(
                     MonthAccountState.Imported => latestImport,
                     _ => new[] { latestImport, check?.Date }.Max(),
                 };
-                return new MonthAccountCoverage(a.AccountId, a.AccountName, state, date, check?.Difference, a.Currency);
+                var others = reconciled
+                    .Where(r => r.AccountId == a.AccountId && r.Currency != a.Currency)
+                    .OrderBy(r => r.Currency.ToString(), StringComparer.Ordinal)
+                    .Select(r => new MonthCurrencyCoverage(r.Currency, MonthAccountCoverage.StateOf(monthEnd, r.Difference, null), r.Date, r.Difference))
+                    .ToList();
+                return new MonthAccountCoverage(a.AccountId, a.AccountName, state, date, check?.Difference, a.Currency, others);
             })
             .ToList();
     }

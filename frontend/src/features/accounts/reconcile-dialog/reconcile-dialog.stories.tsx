@@ -6,14 +6,16 @@ import {
   getRecordReconciliationMockHandler,
 } from "@/api/generated/accounts/accounts.msw";
 import {
+  brokerAccount,
   checkingAccount,
   firstReconciliationPreview,
   longReconciliationPreview,
   reconciliationFutureDateProblem,
   serverErrorProblem,
+  usdReconciliationPreview,
 } from "@/storybook/fixtures";
 import { failWith, pending, withHandlers } from "@/storybook/handlers";
-import { first, openedDialog } from "@/storybook/interactions";
+import { chooseOption, first, openedDialog } from "@/storybook/interactions";
 import { ReconcileDialog } from "./reconcile-dialog";
 
 const meta = {
@@ -39,6 +41,18 @@ export const Matching: Story = {
     await expect(dialog.getByText(/Rows since the reconciliation on/)).toBeVisible();
     await expect(dialog.getByText("Transfer out")).toBeVisible();
     await expect(dialog.getByText("Maxima")).toBeVisible();
+    await expect(dialog.queryByRole("combobox", { name: "Statement currency" })).toBeNull();
+  },
+};
+
+export const OtherCurrency: Story = {
+  args: { account: brokerAccount },
+  parameters: withHandlers(getReconciliationPreviewMockHandler(usdReconciliationPreview)),
+  play: async () => {
+    const dialog = within(await openedDialog());
+    await chooseOption(dialog.getByRole("combobox", { name: "Statement currency" }), "USD");
+    await expect(dialog.getByLabelText("Balance on the statement (USD)")).toBeVisible();
+    await expect(await dialog.findByText(/Ledger balance on .*2,710\.40/)).toBeVisible();
   },
 };
 

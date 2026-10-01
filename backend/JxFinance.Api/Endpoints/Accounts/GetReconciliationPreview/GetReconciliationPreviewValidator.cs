@@ -15,5 +15,6 @@ public sealed class GetReconciliationPreviewValidator : Validator<GetReconciliat
             .IsNotInFuture(() => Resolve<IClock>().Today)
             .WithErrorCode(ErrorCodes.ReconciliationFutureDate)
             .WithMessage("The statement date cannot be in the future.");
+        RuleFor(r => r.Currency).IsKnownEnum();
     }
 }

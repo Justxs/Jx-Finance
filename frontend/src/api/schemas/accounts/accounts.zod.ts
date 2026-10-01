@@ -715,7 +715,7 @@ export const UpdateAccountResponse = zod.object({
 });
 
 /**
- * Returns the newest 24 statement balances recorded for the account, typed by hand or taken from a camt.053 import, newest date first. Only the statement's balance is stored: the ledger balance on each date and the difference (statement minus ledger) are computed on every read, so an edit dated on or before a statement date changes its difference.
+ * Returns the newest 24 statement balances recorded for the account, typed by hand or taken from a statement import, in any currency of the account, newest date first. Only the statement's balance is stored: the ledger balance on each date in the reconciliation's currency and the difference (statement minus ledger) are computed on every read, so an edit dated on or before a statement date changes its difference.
  * @summary List the reconciliations of an account
  */
 export const reconciliationsResponseBalanceRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
@@ -766,7 +766,7 @@ export const ReconciliationsResponseItem = zod.object({
 export const ReconciliationsResponse = zod.array(ReconciliationsResponseItem);
 
 /**
- * Saves the balance a bank statement printed for the account on a date, in the account's main currency, whether or not it agrees with the ledger. A balance already recorded for that date, typed or imported, is replaced, and its source becomes manual. Anyone who can see the account can record one.
+ * Saves the balance a bank statement printed for the account on a date, in one currency the account holds, whether or not it agrees with the ledger. A balance already recorded for that date and currency, typed or imported, is replaced, and its source becomes manual. Anyone who can see the account can record one.
  * @summary Record a statement balance for an account
  */
 export const recordReconciliationBodyBalanceRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
@@ -777,6 +777,46 @@ export const RecordReconciliationBody = zod.object({
     .stringFormat("decimal", recordReconciliationBodyBalanceRegExp)
     .describe(
       "The balance on the statement, a signed decimal string with at most two decimal places.",
+    ),
+  currency: zod
+    .union([
+      zod.null(),
+      zod.enum([
+        "eur",
+        "usd",
+        "gbp",
+        "chf",
+        "pln",
+        "sek",
+        "nok",
+        "dkk",
+        "czk",
+        "huf",
+        "ron",
+        "isk",
+        "try",
+        "jpy",
+        "cny",
+        "hkd",
+        "sgd",
+        "krw",
+        "inr",
+        "idr",
+        "myr",
+        "php",
+        "thb",
+        "aud",
+        "nzd",
+        "cad",
+        "mxn",
+        "brl",
+        "ils",
+        "zar",
+      ]),
+    ])
+    .optional()
+    .describe(
+      "Optional. The currency of the statement; the account's main currency when left out.",
     ),
 });
 
@@ -827,7 +867,7 @@ export const RecordReconciliationResponse = zod.object({
 });
 
 /**
- * Answers what the ledger holds on a statement date, before the balance printed on the statement is saved: the ledger balance on that date in the account's main currency (the starting balance plus every transaction, transfer, conversion and investment entry dated on or before it), the latest reconciliation dated before it, and the rows in the main currency dated after that reconciliation, or from the beginning when there is none, up to the date, newest first, at most 100, with their count. Nothing is stored.
+ * Answers what the ledger holds on a statement date in one currency of the account, before the balance printed on the statement is saved: the ledger balance on that date in that currency (the starting balance when it is the main currency, plus every transaction, transfer, conversion and investment entry in that currency dated on or before it), the latest reconciliation in that currency dated before it, and the rows in that currency dated after that reconciliation, or from the beginning when there is none, up to the date, newest first, at most 100, with their count. Nothing is stored.
  * @summary Preview a reconciliation of an account
  */
 export const reconciliationPreviewResponseLedgerBalanceRegExp = new RegExp(

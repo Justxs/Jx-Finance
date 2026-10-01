@@ -16,8 +16,8 @@ public sealed class ImportConfirmSummary : Summary<ImportConfirmEndpoint, Import
             + "the bank entry is linked to that transaction, which keeps its date, category, tags and "
             + "description and is then treated as imported, so the same entry is a duplicate next time. "
             + "The audit entry names the format the rows came from, and for genericCsv the mapping. For a camt.053 file or a mapped CSV with a balance column, statement echoes the "
-            + "preview's closing date, balance and currency; when the currency is the account's, that balance is "
-            + "recorded as a reconciliation of the account after the rows are written, replacing one on the same date, "
+            + "preview's closing date, balance and currency, and that balance is "
+            + "recorded as a reconciliation of the account in that currency after the rows are written, replacing one on the same date and currency, "
             + "and returned with its difference from the ledger. An incoming row sent with asRefund is written as a refund: an expense "
             + "with the negated amount in the expense category given, linked to refundOfTransactionId when that is set.";
         RequestParam(r => r.AccountId, "The account the rows post to; must be the one previewed.");

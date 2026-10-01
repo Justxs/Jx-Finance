@@ -18,6 +18,6 @@ public sealed class RecordReconciliationEndpoint(IReconciliationService reconcil
 
     public override async Task HandleAsync(RecordReconciliationRequest req, CancellationToken ct) =>
         await Send.OkOrProblemAsync(
-            await reconciliationService.RecordAsync(req.Id, req.Date, req.Balance!.Value, ReconciliationSource.Manual, ct),
+            await reconciliationService.RecordAsync(req.Id, req.Date, req.Balance!.Value, req.Currency, ReconciliationSource.Manual, ct),
             ct);
 }

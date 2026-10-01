@@ -185,6 +185,7 @@
       "title": "Reconcile {{account}}",
       "description": "Type the balance printed on the bank statement. It is saved even when it differs from the ledger.",
       "date": "Statement date",
+      "currency": "Statement currency",
       "balance": "Balance on the statement ({{currency}})",
       "ledger": "Ledger balance on {{date}}: {{amount}}",
       "matches": "Matches the statement",
@@ -3077,6 +3078,10 @@
       "reconciled": "{{account}} reconciled on {{date}}",
       "differs": "{{account}}: the statement differs by {{difference}} on {{date}}",
       "behind": "{{account}}: last statement {{date}}, before the month ends",
+      "noStatement": "{{account}}: no statement in {{currency}} yet",
+      "otherReconciled": "{{currency}} reconciled on {{date}}",
+      "otherDiffers": "{{currency}}: the statement differs by {{difference}} on {{date}}",
+      "otherBehind": "{{currency}}: last statement {{date}}",
       "reconcile": "Reconcile"
     },
     "drift": {

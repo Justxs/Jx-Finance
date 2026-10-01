@@ -67,7 +67,8 @@ public sealed record MonthAccountCoverage(
     MonthAccountState State,
     DateOnly? Date,
     [property: Money] decimal? Difference,
-    Currency Currency)
+    Currency Currency,
+    IReadOnlyList<MonthCurrencyCoverage> OtherCurrencies)
 {
     public static MonthAccountState StateOf(DateOnly monthEnd, decimal? difference, DateOnly? latestImport) =>
         difference switch
@@ -77,6 +78,12 @@ public sealed record MonthAccountCoverage(
             _ => latestImport >= monthEnd ? MonthAccountState.Imported : MonthAccountState.Behind,
         };
 }
+
+public sealed record MonthCurrencyCoverage(
+    Currency Currency,
+    MonthAccountState State,
+    DateOnly Date,
+    [property: Money] decimal? Difference);
 
 public sealed record MonthDrift(
     bool CurrencyChanged,

@@ -41,6 +41,8 @@ export const CloseMonthBody = zod.object({
 export const closeMonthResponseChecklistAccountsItemDifferenceRegExp = new RegExp(
   "^-?\\d+(\\.\\d{1,8})?$",
 );
+export const closeMonthResponseChecklistAccountsItemOtherCurrenciesItemDifferenceRegExp =
+  new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 export const closeMonthResponseFiguresTotalIncomeRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 export const closeMonthResponseFiguresTotalExpenseRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 export const closeMonthResponseFiguresNetRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
@@ -179,6 +181,50 @@ export const CloseMonthResponse = zod.object({
           "ils",
           "zar",
         ]),
+        otherCurrencies: zod.array(
+          zod.object({
+            currency: zod.enum([
+              "eur",
+              "usd",
+              "gbp",
+              "chf",
+              "pln",
+              "sek",
+              "nok",
+              "dkk",
+              "czk",
+              "huf",
+              "ron",
+              "isk",
+              "try",
+              "jpy",
+              "cny",
+              "hkd",
+              "sgd",
+              "krw",
+              "inr",
+              "idr",
+              "myr",
+              "php",
+              "thb",
+              "aud",
+              "nzd",
+              "cad",
+              "mxn",
+              "brl",
+              "ils",
+              "zar",
+            ]),
+            state: zod.enum(["reconciled", "differs", "imported", "behind"]),
+            date: zod.iso.date(),
+            difference: zod
+              .stringFormat(
+                "decimal",
+                closeMonthResponseChecklistAccountsItemOtherCurrenciesItemDifferenceRegExp,
+              )
+              .nullable(),
+          }),
+        ),
       }),
     ),
   }),
@@ -493,6 +539,8 @@ export const CloseMonthResponse = zod.object({
 export const monthReviewResponseChecklistAccountsItemDifferenceRegExp = new RegExp(
   "^-?\\d+(\\.\\d{1,8})?$",
 );
+export const monthReviewResponseChecklistAccountsItemOtherCurrenciesItemDifferenceRegExp =
+  new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 export const monthReviewResponseFiguresTotalIncomeRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 export const monthReviewResponseFiguresTotalExpenseRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 export const monthReviewResponseFiguresNetRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
@@ -635,6 +683,50 @@ export const MonthReviewResponse = zod.object({
           "ils",
           "zar",
         ]),
+        otherCurrencies: zod.array(
+          zod.object({
+            currency: zod.enum([
+              "eur",
+              "usd",
+              "gbp",
+              "chf",
+              "pln",
+              "sek",
+              "nok",
+              "dkk",
+              "czk",
+              "huf",
+              "ron",
+              "isk",
+              "try",
+              "jpy",
+              "cny",
+              "hkd",
+              "sgd",
+              "krw",
+              "inr",
+              "idr",
+              "myr",
+              "php",
+              "thb",
+              "aud",
+              "nzd",
+              "cad",
+              "mxn",
+              "brl",
+              "ils",
+              "zar",
+            ]),
+            state: zod.enum(["reconciled", "differs", "imported", "behind"]),
+            date: zod.iso.date(),
+            difference: zod
+              .stringFormat(
+                "decimal",
+                monthReviewResponseChecklistAccountsItemOtherCurrenciesItemDifferenceRegExp,
+              )
+              .nullable(),
+          }),
+        ),
       }),
     ),
   }),
@@ -967,6 +1059,8 @@ export const UpdateMonthNoteBody = zod.object({
 export const updateMonthNoteResponseChecklistAccountsItemDifferenceRegExp = new RegExp(
   "^-?\\d+(\\.\\d{1,8})?$",
 );
+export const updateMonthNoteResponseChecklistAccountsItemOtherCurrenciesItemDifferenceRegExp =
+  new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 export const updateMonthNoteResponseFiguresTotalIncomeRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 export const updateMonthNoteResponseFiguresTotalExpenseRegExp = new RegExp(
   "^-?\\d+(\\.\\d{1,8})?$",
@@ -1131,6 +1225,50 @@ export const UpdateMonthNoteResponse = zod.object({
           "ils",
           "zar",
         ]),
+        otherCurrencies: zod.array(
+          zod.object({
+            currency: zod.enum([
+              "eur",
+              "usd",
+              "gbp",
+              "chf",
+              "pln",
+              "sek",
+              "nok",
+              "dkk",
+              "czk",
+              "huf",
+              "ron",
+              "isk",
+              "try",
+              "jpy",
+              "cny",
+              "hkd",
+              "sgd",
+              "krw",
+              "inr",
+              "idr",
+              "myr",
+              "php",
+              "thb",
+              "aud",
+              "nzd",
+              "cad",
+              "mxn",
+              "brl",
+              "ils",
+              "zar",
+            ]),
+            state: zod.enum(["reconciled", "differs", "imported", "behind"]),
+            date: zod.iso.date(),
+            difference: zod
+              .stringFormat(
+                "decimal",
+                updateMonthNoteResponseChecklistAccountsItemOtherCurrenciesItemDifferenceRegExp,
+              )
+              .nullable(),
+          }),
+        ),
       }),
     ),
   }),

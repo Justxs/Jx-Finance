@@ -86,6 +86,7 @@ const accountStates = {
       date: "2026-08-31",
       difference: "0.00",
       currency: "eur",
+      otherCurrencies: [],
     },
     {
       accountId: ids.accounts.savings,
@@ -94,6 +95,9 @@ const accountStates = {
       date: "2026-08-31",
       difference: "-12.30",
       currency: "eur",
+      otherCurrencies: [
+        { currency: "usd", state: "differs", date: "2026-08-31", difference: "3.00" },
+      ],
     },
     {
       accountId: ids.accounts.shared,
@@ -102,6 +106,7 @@ const accountStates = {
       date: "2026-08-31",
       difference: null,
       currency: "eur",
+      otherCurrencies: [],
     },
     {
       accountId: ids.accounts.cash,
@@ -110,6 +115,7 @@ const accountStates = {
       date: "2026-08-20",
       difference: null,
       currency: "eur",
+      otherCurrencies: [],
     },
   ],
 } satisfies typeof emptyMonthReview.checklist;
@@ -121,6 +127,7 @@ export const AccountStates: Story = {
     await expect(canvas.getByText(/^Revolut: the statement differs by €12.30 on/)).toBeVisible();
     await expect(canvas.getByText(/^Luminor imported through/)).toBeVisible();
     await expect(canvas.getByText(/^SEB: last statement .*, before the month ends$/)).toBeVisible();
+    await expect(canvas.getByText(/^USD: the statement differs by .*3\.00 on/)).toBeVisible();
     const reconcile = canvas.getAllByRole("link", { name: "Reconcile" });
     await expect(reconcile).toHaveLength(2);
     await expect(reconcile[0]).toHaveAttribute(
@@ -137,5 +144,30 @@ export const AccountStatesWithoutImport: Story = {
   play: async ({ canvas }) => {
     await expect(await canvas.findAllByRole("link", { name: "Reconcile" })).toHaveLength(2);
     await expect(canvas.queryByRole("link", { name: "Import" })).toBeNull();
+  },
+};
+
+export const OtherCurrencyOnly: Story = {
+  args: {
+    checklist: {
+      ...emptyMonthReview.checklist,
+      accounts: [
+        {
+          accountId: ids.accounts.savings,
+          accountName: "Revolut",
+          state: "behind",
+          date: null,
+          difference: null,
+          currency: "eur",
+          otherCurrencies: [
+            { currency: "usd", state: "reconciled", date: "2026-08-31", difference: "0.00" },
+          ],
+        },
+      ],
+    },
+  },
+  play: async ({ canvas }) => {
+    await expect(await canvas.findByText("Revolut: no statement in EUR yet")).toBeVisible();
+    await expect(canvas.getByText(/^USD reconciled on/)).toBeVisible();
   },
 };

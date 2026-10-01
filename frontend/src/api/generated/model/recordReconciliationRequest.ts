@@ -5,10 +5,13 @@
  * Personal and household finance ledger. Every route lives under /api and answers JSON. Money is carried as a decimal string with at most two decimal places so nothing is lost to floating point; dates are YYYY-MM-DD in the instance time zone. Collections that can grow are paged with page and pageSize and answer with items, page, pageSize, and total. Authentication is a session cookie from POST /api/auth/login, so browser clients must send credentials. Failures answer application/problem+json with a machine-readable code per error; see the ProblemDetails schema.
  * OpenAPI spec version: v1
  */
+import type { Currency } from "./currency";
 import type { DateOnly } from "./dateOnly";
 
 export interface RecordReconciliationRequest {
   date: DateOnly;
   /** The balance on the statement, a signed decimal string with at most two decimal places. */
   balance: string;
+  /** Optional. The currency of the statement; the account's main currency when left out. */
+  currency?: null | Currency;
 }

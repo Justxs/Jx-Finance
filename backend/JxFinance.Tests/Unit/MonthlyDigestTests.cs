@@ -85,7 +85,7 @@ public sealed class MonthlyDigestTests
                 0,
                 null,
                 0,
-                (accounts ?? []).Select(state => new MonthAccountCoverage(Guid.NewGuid(), "Account", state, null, null, Currency.Eur)).ToList()),
+                (accounts ?? []).Select(state => new MonthAccountCoverage(Guid.NewGuid(), "Account", state, null, null, Currency.Eur, [])).ToList()),
             new ReportSummaryResponse(August, new DateOnly(2026, 8, 31), income, expense, income - expense, expenses, [], [], "day", [], [], []),
             null,
             null,

@@ -139,12 +139,13 @@ public sealed class ImportPreviewService(
 
         var closing = statement.ClosingBalance;
         decimal? ledger = null;
-        if (closing?.Currency == account.Currency && statement.ClosingDate is { } closingDate)
+        if (closing is { } balance && statement.ClosingDate is { } closingDate)
         {
             ledger = await AccountMovements.LedgerBalanceOnAsync(
                 db,
                 typedAccountId,
                 new Money(account.Amount, account.Currency),
+                balance.Currency,
                 closingDate,
                 cancellationToken);
         }

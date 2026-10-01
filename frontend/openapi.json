@@ -629,7 +629,7 @@
           "Accounts"
         ],
         "summary": "List the reconciliations of an account",
-        "description": "Returns the newest 24 statement balances recorded for the account, typed by hand or taken from a camt.053 import, newest date first. Only the statement's balance is stored: the ledger balance on each date and the difference (statement minus ledger) are computed on every read, so an edit dated on or before a statement date changes its difference.",
+        "description": "Returns the newest 24 statement balances recorded for the account, typed by hand or taken from a statement import, in any currency of the account, newest date first. Only the statement's balance is stored: the ledger balance on each date in the reconciliation's currency and the difference (statement minus ledger) are computed on every read, so an edit dated on or before a statement date changes its difference.",
         "operationId": "GetReconciliations",
         "parameters": [
           {
@@ -712,7 +712,7 @@
           "Accounts"
         ],
         "summary": "Record a statement balance for an account",
-        "description": "Saves the balance a bank statement printed for the account on a date, in the account's main currency, whether or not it agrees with the ledger. A balance already recorded for that date, typed or imported, is replaced, and its source becomes manual. Anyone who can see the account can record one.",
+        "description": "Saves the balance a bank statement printed for the account on a date, in one currency the account holds, whether or not it agrees with the ledger. A balance already recorded for that date and currency, typed or imported, is replaced, and its source becomes manual. Anyone who can see the account can record one.",
         "operationId": "RecordReconciliation",
         "parameters": [
           {
@@ -801,7 +801,7 @@
           "Accounts"
         ],
         "summary": "Preview a reconciliation of an account",
-        "description": "Answers what the ledger holds on a statement date, before the balance printed on the statement is saved: the ledger balance on that date in the account's main currency (the starting balance plus every transaction, transfer, conversion and investment entry dated on or before it), the latest reconciliation dated before it, and the rows in the main currency dated after that reconciliation, or from the beginning when there is none, up to the date, newest first, at most 100, with their count. Nothing is stored.",
+        "description": "Answers what the ledger holds on a statement date in one currency of the account, before the balance printed on the statement is saved: the ledger balance on that date in that currency (the starting balance when it is the main currency, plus every transaction, transfer, conversion and investment entry in that currency dated on or before it), the latest reconciliation in that currency dated before it, and the rows in that currency dated after that reconciliation, or from the beginning when there is none, up to the date, newest first, at most 100, with their count. Nothing is stored.",
         "operationId": "GetReconciliationPreview",
         "parameters": [
           {
@@ -823,6 +823,14 @@
               "type": "string",
               "format": "date"
             }
+          },
+          {
+            "name": "currency",
+            "in": "query",
+            "description": "Optional. The currency of the statement; the account's main currency when left out.",
+            "schema": {
+              "$ref": "#/components/schemas/Currency"
+            }
           }
         ],
         "responses": {
@@ -837,7 +845,7 @@
             }
           },
           "400": {
-            "description": "The date is missing, or after today (reconciliation.futureDate).",
+            "description": "The date is missing or after today (reconciliation.futureDate), or the currency is unknown (enum.invalid).",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -10523,7 +10531,7 @@
           "Imports"
         ],
         "summary": "Commit previewed statement rows",
-        "description": "Writes the rows the user kept from a preview into the ledger. Rows the preview flagged as already present are skipped rather than duplicated, and the response reports how many were imported and how many were skipped. A row's tagIds are written as they arrive, whether a rule suggested them in the preview or the user picked them, so an empty list imports the row with no tags. A row with existingTransactionId adds nothing: the bank entry is linked to that transaction, which keeps its date, category, tags and description and is then treated as imported, so the same entry is a duplicate next time. The audit entry names the format the rows came from, and for genericCsv the mapping. For a camt.053 file or a mapped CSV with a balance column, statement echoes the preview's closing date, balance and currency; when the currency is the account's, that balance is recorded as a reconciliation of the account after the rows are written, replacing one on the same date, and returned with its difference from the ledger. An incoming row sent with asRefund is written as a refund: an expense with the negated amount in the expense category given, linked to refundOfTransactionId when that is set.",
+        "description": "Writes the rows the user kept from a preview into the ledger. Rows the preview flagged as already present are skipped rather than duplicated, and the response reports how many were imported and how many were skipped. A row's tagIds are written as they arrive, whether a rule suggested them in the preview or the user picked them, so an empty list imports the row with no tags. A row with existingTransactionId adds nothing: the bank entry is linked to that transaction, which keeps its date, category, tags and description and is then treated as imported, so the same entry is a duplicate next time. The audit entry names the format the rows came from, and for genericCsv the mapping. For a camt.053 file or a mapped CSV with a balance column, statement echoes the preview's closing date, balance and currency, and that balance is recorded as a reconciliation of the account in that currency after the rows are written, replacing one on the same date and currency, and returned with its difference from the ledger. An incoming row sent with asRefund is written as a refund: an expense with the negated amount in the expense category given, linked to refundOfTransactionId when that is set.",
         "operationId": "ImportConfirm",
         "requestBody": {
           "content": {
@@ -29497,7 +29505,8 @@
           "state",
           "date",
           "difference",
-          "currency"
+          "currency",
+          "otherCurrencies"
         ],
         "type": "object",
         "properties": {
@@ -29530,6 +29539,12 @@
           },
           "currency": {
             "$ref": "#/components/schemas/Currency"
+          },
+          "otherCurrencies": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MonthCurrencyCoverage"
+            }
           }
         }
       },
@@ -29630,6 +29645,33 @@
             "items": {
               "$ref": "#/components/schemas/MonthCloseMonthStatus"
             }
+          }
+        }
+      },
+      "MonthCurrencyCoverage": {
+        "required": [
+          "currency",
+          "state",
+          "date",
+          "difference"
+        ],
+        "type": "object",
+        "properties": {
+          "currency": {
+            "$ref": "#/components/schemas/Currency"
+          },
+          "state": {
+            "$ref": "#/components/schemas/MonthAccountState"
+          },
+          "date": {
+            "$ref": "#/components/schemas/DateOnly"
+          },
+          "difference": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "decimal"
           }
         }
       },
@@ -31713,6 +31755,17 @@
             "type": "string",
             "description": "The balance on the statement, a signed decimal string with at most two decimal places.",
             "format": "decimal"
+          },
+          "currency": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Currency"
+              }
+            ],
+            "description": "Optional. The currency of the statement; the account's main currency when left out."
           }
         }
       },

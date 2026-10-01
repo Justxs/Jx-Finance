@@ -206,6 +206,7 @@ export * from "./monthCloseMonthStatus";
 export * from "./monthCloseStatus";
 export * from "./monthCloseYearParams";
 export * from "./monthCloseYearResponse";
+export * from "./monthCurrencyCoverage";
 export * from "./monthDrift";
 export * from "./monthDriftCategory";
 export * from "./monthDriftChange";

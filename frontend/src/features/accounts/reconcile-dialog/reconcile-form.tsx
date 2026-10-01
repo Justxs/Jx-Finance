@@ -5,7 +5,7 @@ import {
   getReconciliationPreviewSuspenseQueryOptions,
   useRecordReconciliation,
 } from "@/api/generated";
-import type { AccountResponse } from "@/api/generated/model";
+import { type AccountResponse, Currency } from "@/api/generated/model";
 import { useServerForm } from "@/components/form";
 import { FormError } from "@/components/form-error/form-error";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
@@ -17,6 +17,7 @@ import { useIsoDate, useMoney } from "@/hooks/use-formatters";
 import { useToday, useTodayDate } from "@/hooks/use-settings";
 import { monthBounds, parseIso, previousMonth, toIso } from "@/lib/calendar";
 import { toCents } from "@/lib/money";
+import { optionsOf } from "@/lib/options";
 import { silentQuery } from "@/lib/query-client";
 import { INCOME_TONE } from "@/lib/tone";
 import { cn } from "@/lib/utils";
@@ -31,18 +32,19 @@ function dayAfter(iso: string) {
 
 interface PreviewProps {
   account: AccountResponse;
+  currency: Currency;
   date: string;
   balance: string;
   today: string;
 }
 
-function ReconcilePreview({ account, date, balance, today }: Readonly<PreviewProps>) {
+function ReconcilePreview({ account, currency, date, balance, today }: Readonly<PreviewProps>) {
   const { t } = useTranslation();
   const formatMoney = useMoney();
   const formatDate = useIsoDate();
   const valid = parseIso(date) !== null && date <= today;
   const preview = useQuery({
-    ...getReconciliationPreviewSuspenseQueryOptions(account.id, { date }),
+    ...getReconciliationPreviewSuspenseQueryOptions(account.id, { date, currency }),
     ...silentQuery,
     enabled: valid,
     placeholderData: keepPreviousData,
@@ -58,9 +60,9 @@ function ReconcilePreview({ account, date, balance, today }: Readonly<PreviewPro
     return <TextSkeleton size="sm" width="w-64" />;
   }
 
-  const { currency, ledgerBalance, previous, rows, rowCount } = preview.data;
+  const { ledgerBalance, previous, rows, rowCount } = preview.data;
   const difference = isMoney(balance) ? toCents(balance) - toCents(ledgerBalance) : null;
-  const magnitude = formatMoney.format(Math.abs(difference ?? 0) / 100, currency);
+  const magnitude = formatMoney.format(Math.abs(difference ?? 0) / 100, preview.data.currency);
   const hidden = rowCount - rows.length;
 
   let verdict: string | null = null;
@@ -81,7 +83,7 @@ function ReconcilePreview({ account, date, balance, today }: Readonly<PreviewPro
         <span>
           {t("accounts.reconcile.ledger", {
             date: formatDate(preview.data.date),
-            amount: formatMoney.format(Number(ledgerBalance), currency),
+            amount: formatMoney.format(Number(ledgerBalance), preview.data.currency),
           })}
         </span>
         {verdict ? (
@@ -120,7 +122,7 @@ function ReconcilePreview({ account, date, balance, today }: Readonly<PreviewPro
                     Number(row.amount) > 0 && INCOME_TONE,
                   )}
                 >
-                  {formatMoney.formatSigned(Number(row.amount), "auto", currency)}
+                  {formatMoney.formatSigned(Number(row.amount), "auto", preview.data.currency)}
                 </span>
               </li>
             ))}
@@ -154,6 +156,7 @@ export function ReconcileForm({ account, onClose }: Readonly<Props>) {
   const { t } = useTranslation();
   const today = useToday();
   const statementDate = monthBounds(previousMonth(useTodayDate())).dateTo;
+  const held = [...new Set([account.currency, ...account.balances.map((entry) => entry.currency)])];
   const mutation = useRecordReconciliation({
     mutation: {
       onSuccess: onClose,
@@ -167,15 +170,20 @@ export function ReconcileForm({ account, onClose }: Readonly<Props>) {
       t("serverErrors.reconciliation.futureDate"),
     ),
     balance: money(t),
+    currency: z.enum(Currency),
   });
 
   const form = useServerForm({
-    defaultValues: { date: statementDate, balance: "" },
+    defaultValues: { date: statementDate, balance: "", currency: account.currency },
     schema,
     submit: (value) =>
       mutation.mutateAsync({
         id: account.id,
-        data: { date: value.date, balance: normalizeMoney(value.balance) },
+        data: {
+          date: value.date,
+          balance: normalizeMoney(value.balance),
+          currency: value.currency,
+        },
       }),
   });
 
@@ -183,26 +191,49 @@ export function ReconcileForm({ account, onClose }: Readonly<Props>) {
     <form.AppForm>
       <form.FormShell className="space-y-4">
         <FormGrid>
+          {held.length > 1 ? (
+            <form.Field name="currency">
+              {(field) => (
+                <field.SelectFieldControl
+                  id="reconcile-currency"
+                  label={t("accounts.reconcile.currency")}
+                  options={optionsOf(held, (currency) => currency.toUpperCase())}
+                />
+              )}
+            </form.Field>
+          ) : null}
           <form.Field name="date">
             {(field) => (
               <field.DateField id="reconcile-date" label={t("accounts.reconcile.date")} />
             )}
           </form.Field>
-          <form.Field name="balance">
-            {(field) => (
-              <field.MoneyInputField
-                id="reconcile-balance"
-                label={t("accounts.reconcile.balance", {
-                  currency: account.currency.toUpperCase(),
-                })}
-              />
+          <form.Subscribe selector={(state) => state.values.currency}>
+            {(currency) => (
+              <form.Field name="balance">
+                {(field) => (
+                  <field.MoneyInputField
+                    id="reconcile-balance"
+                    label={t("accounts.reconcile.balance", { currency: currency.toUpperCase() })}
+                  />
+                )}
+              </form.Field>
             )}
-          </form.Field>
+          </form.Subscribe>
         </FormGrid>
 
-        <form.Subscribe selector={(state) => [state.values.date, state.values.balance] as const}>
-          {([date, balance]) => (
-            <ReconcilePreview account={account} date={date} balance={balance} today={today} />
+        <form.Subscribe
+          selector={(state) =>
+            [state.values.currency, state.values.date, state.values.balance] as const
+          }
+        >
+          {([currency, date, balance]) => (
+            <ReconcilePreview
+              account={account}
+              currency={currency}
+              date={date}
+              balance={balance}
+              today={today}
+            />
           )}
         </form.Subscribe>
 

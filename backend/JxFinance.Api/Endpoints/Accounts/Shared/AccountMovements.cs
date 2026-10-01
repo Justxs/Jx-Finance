@@ -31,13 +31,17 @@ public static class AccountMovements
     public static decimal BalanceOf(Money startingBalance, IEnumerable<AccountMovement> moved) =>
         startingBalance.Amount + moved.Where(m => m.Currency == startingBalance.Currency).Sum(m => m.Amount);
 
+    public static Money StartingIn(Money startingBalance, Currency currency) =>
+        startingBalance.Currency == currency ? startingBalance : new Money(0m, currency);
+
     public static async Task<decimal> LedgerBalanceOnAsync(
         AppDbContext db,
         AccountId accountId,
         Money startingBalance,
+        Currency currency,
         DateOnly date,
         CancellationToken cancellationToken) =>
-        BalanceOf(startingBalance, await SumAsync(db, [accountId], date, cancellationToken));
+        BalanceOf(StartingIn(startingBalance, currency), await SumAsync(db, [accountId], date, cancellationToken));
 
     public static async Task<(IReadOnlyList<AccountMovementRow> Rows, int Count)> ListAsync(
         AppDbContext db,

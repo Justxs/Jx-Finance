@@ -10,6 +10,7 @@ function account(state: MonthAccountState): MonthAccountCoverage {
     date: "2026-08-31",
     difference: null,
     currency: "eur",
+    otherCurrencies: [],
   };
 }
 

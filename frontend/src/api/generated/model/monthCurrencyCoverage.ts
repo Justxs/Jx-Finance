@@ -6,14 +6,13 @@
  * OpenAPI spec version: v1
  */
 import type { Currency } from "./currency";
+import type { DateOnly } from "./dateOnly";
+import type { MonthAccountState } from "./monthAccountState";
 
-export type ReconciliationPreviewParams = {
-  /**
-   * The statement date, as yyyy-MM-dd. Not after today.
-   */
-  date: string;
-  /**
-   * Optional. The currency of the statement; the account's main currency when left out.
-   */
-  currency?: Currency;
-};
+export interface MonthCurrencyCoverage {
+  currency: Currency;
+  state: MonthAccountState;
+  date: DateOnly;
+  /** @nullable */
+  difference: string | null;
+}
