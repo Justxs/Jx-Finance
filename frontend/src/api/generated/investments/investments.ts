@@ -30,6 +30,7 @@ import type {
 import { customFetch } from "../../client";
 import type { ErrorType } from "../../client";
 import type {
+  AllocationTargetsResponse,
   BrokerConnectionResponse,
   BrokerImportResponse,
   CreateInvestmentTransactionRequest,
@@ -45,6 +46,7 @@ import type {
   PriceImportResponse,
   PriceSymbolCandidate,
   ProblemDetails,
+  SaveAllocationTargetsRequest,
   SaveBrokerConnectionRequest,
   SaveSecurityRequest,
   SecuritiesParams,
@@ -76,6 +78,227 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
   return result;
 };
 
+export const getAllocationTargetsUrl = () => {
+  return `/api/investments/allocation-targets`;
+};
+
+/**
+ * Returns the target shares you set for your investments, in percent, and the one dimension they are set by: security type (keys such as etf or stock), the security's currency (eur, usd) or the security itself (its id, answered with its symbol). Targets belong to the signed-in member alone and are the same whichever account or household is chosen. Without targets, dimension is null and targets is empty. Compare them with byType, byCurrency or the holdings of GET /api/investments/portfolio.
+ * @summary Get your target allocation
+ */
+export const allocationTargets = async (
+  options?: Parameters<typeof customFetch>[1],
+): Promise<AllocationTargetsResponse> => {
+  return customFetch<AllocationTargetsResponse>(getAllocationTargetsUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getAllocationTargetsQueryKey = () => {
+  return [`/api/investments/allocation-targets`] as const;
+};
+
+export const getAllocationTargetsSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof allocationTargets>>,
+  TError = ErrorType<ProblemDetails>,
+>(options?: {
+  query?: Partial<
+    UseSuspenseQueryOptions<Awaited<ReturnType<typeof allocationTargets>>, TError, TData>
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getAllocationTargetsQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof allocationTargets>>> = ({ signal }) =>
+    allocationTargets({ signal, ...requestOptions });
+
+  return queryOptionsBuilder({
+    queryKey,
+    ...queryOptions,
+    queryFn: queryOptions?.queryFn ?? queryFn,
+  }) as UseSuspenseQueryOptions<Awaited<ReturnType<typeof allocationTargets>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  } & {
+    throwOnError?: ((this: never, error: TError) => boolean) & { readonly __inferenceOnly: never };
+  };
+};
+
+export type AllocationTargetsSuspenseQueryResult = NonNullable<
+  Awaited<ReturnType<typeof allocationTargets>>
+>;
+export type AllocationTargetsSuspenseQueryError = ErrorType<ProblemDetails>;
+
+export function useAllocationTargetsSuspense<
+  TData = Awaited<ReturnType<typeof allocationTargets>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options: {
+    query: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof allocationTargets>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAllocationTargetsSuspense<
+  TData = Awaited<ReturnType<typeof allocationTargets>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof allocationTargets>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAllocationTargetsSuspense<
+  TData = Awaited<ReturnType<typeof allocationTargets>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof allocationTargets>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get your target allocation
+ */
+
+export function useAllocationTargetsSuspense<
+  TData = Awaited<ReturnType<typeof allocationTargets>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof allocationTargets>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getAllocationTargetsSuspenseQueryOptions(options);
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export const getSaveAllocationTargetsUrl = () => {
+  return `/api/investments/allocation-targets`;
+};
+
+/**
+ * Replaces every target you had with the ones sent, all in one dimension, so targets of another dimension are dropped; an empty list removes your targets. Shares are percentages with at most two decimals and add up to exactly 100. A bucket you hold without a target counts as a target of 0.
+ * @summary Replace your target allocation
+ */
+export const saveAllocationTargets = async (
+  saveAllocationTargetsRequest: SaveAllocationTargetsRequest,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<AllocationTargetsResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return customFetch<AllocationTargetsResponse>(getSaveAllocationTargetsUrl(), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(saveAllocationTargetsRequest),
+  });
+};
+
+export const getSaveAllocationTargetsMutationKey = () => ["saveAllocationTargets"] as const;
+
+export const getSaveAllocationTargetsMutationOptions = <
+  TError = ErrorType<ProblemDetails>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof saveAllocationTargets>>,
+    TError,
+    SaveAllocationTargetsMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof saveAllocationTargets>>,
+  TError,
+  SaveAllocationTargetsMutationVariables,
+  TContext
+> => {
+  const mutationKey = getSaveAllocationTargetsMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof saveAllocationTargets>>,
+    SaveAllocationTargetsMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return saveAllocationTargets(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SaveAllocationTargetsMutationResult = NonNullable<
+  Awaited<ReturnType<typeof saveAllocationTargets>>
+>;
+export type SaveAllocationTargetsMutationBody = SaveAllocationTargetsRequest;
+export type SaveAllocationTargetsMutationError = ErrorType<ProblemDetails>;
+export type SaveAllocationTargetsMutationVariables = { data: SaveAllocationTargetsRequest };
+
+/**
+ * @summary Replace your target allocation
+ */
+export const useSaveAllocationTargets = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof saveAllocationTargets>>,
+      TError,
+      SaveAllocationTargetsMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof saveAllocationTargets>>,
+  TError,
+  SaveAllocationTargetsMutationVariables,
+  TContext
+> => {
+  return useMutation(getSaveAllocationTargetsMutationOptions(options), queryClient);
+};
 export const getBrokerConnectionsUrl = () => {
   return `/api/investments/connections`;
 };

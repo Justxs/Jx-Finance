@@ -235,6 +235,8 @@ Every 201 goes through `CreatedAsync`, which sets `Location` to a path built fro
 | PUT | `/api/import/csv-mappings/{id}` |
 | POST | `/api/import/csv/inspect` |
 | POST | `/api/import/preview` |
+| GET | `/api/investments/allocation-targets` |
+| PUT | `/api/investments/allocation-targets` |
 | GET | `/api/investments/connections` |
 | PUT | `/api/investments/connections/{accountId}` |
 | DELETE | `/api/investments/connections/{accountId}` |
@@ -416,6 +418,8 @@ Since 2026-09-30 `PUT /api/attachments/{id}/warranty` takes `{ warrantyUntil }` 
 Since 2026-09-30 the import preview and confirm take `format=ofx` and `format=mt940` beside `swedbankCsv`, `camt053` and `genericCsv`; a file that is not of the format answers `import.invalidFile`, and the closing balance of both is kept as a reconciliation like a camt.053's. See [Bank statement import](features/bank-statement-import.md#ofx-and-mt940).
 
 Since 2026-09-30 `GET /api/investments/portfolio` also answers `annualizedReturn` (a fraction string such as `0.0734`, or null) and `byType` and `byCurrency` (`{ key, marketValue }` slices of the open holdings, largest first). See [Investments](features/investments.md#annualized-return-and-allocation).
+
+Since 2026-10-01 `GET /api/investments/allocation-targets` answers the caller's own target allocation, `{ dimension, targets: [{ key, share, symbol }] }` with `dimension` one of `type`, `currency` and `security` (null without targets), `share` a percentage string and `symbol` filled for a security, and is readable with an API token; `PUT` takes `{ dimension, targets: [{ key, share }] }` and replaces every target, an empty list removing them, refusing `allocation.shareInvalid`, `allocation.sharesTotal`, `allocation.bucketUnknown` and `allocation.bucketDuplicate`. See [Investments](features/investments.md#target-allocation).
 
 Since 2026-09-30 `GET /api/accounts/forecast` takes an optional `whatIfAccountId`, `whatIfAmount` (signed, non-zero) and `whatIfDate`, all three or none, and adds that unsaved payment as an entry with source `whatIf`. See [Cash-flow forecast](features/cash-flow-forecast.md#trying-a-payment).
 

@@ -323,6 +323,10 @@ const rules: readonly Rule[] = [
     refresh: holdings,
   },
   {
+    after: [api.getSaveAllocationTargetsMutationKey],
+    refresh: [api.getAllocationTargetsQueryKey],
+  },
+  {
     after: [
       api.getImportBrokerReportMutationKey,
       api.getSyncBrokerConnectionMutationKey,

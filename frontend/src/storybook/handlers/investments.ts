@@ -1,6 +1,8 @@
 import type { RequestHandler } from "msw";
 import { z } from "zod";
 import {
+  getAllocationTargetsMockHandler,
+  getSaveAllocationTargetsMockHandler,
   getCreateInvestmentTransactionMockHandler,
   getCreateSecurityMockHandler,
   getDeleteBrokerConnectionMockHandler,
@@ -23,7 +25,11 @@ import {
   getTaxSummaryMockHandler,
   getValueHistoryMockHandler,
 } from "@/api/generated/investments/investments.msw";
-import { InvestmentTransactionType, type SecurityResponse } from "@/api/generated/model";
+import {
+  AllocationDimension,
+  InvestmentTransactionType,
+  type SecurityResponse,
+} from "@/api/generated/model";
 import {
   FIXTURE_TODAY,
   brokerConnections,
@@ -33,6 +39,7 @@ import {
   emptyTaxSummary,
   emptyValueHistory,
   investmentTransactions,
+  noAllocationTargets,
   oversellProblem,
   portfolio,
   priceImportResult,
@@ -49,6 +56,10 @@ import { byId, byIdFrom, emptyPage, paginate, updateFrom } from "./lists";
 
 const investmentType = z.enum(InvestmentTransactionType).catch("buy");
 
+const allocationDimension = z.enum(AllocationDimension).catch("type");
+
+const allocationTargetsBody = z.array(z.object({ key: z.string(), share: z.string() })).catch([]);
+
 function heldOr<T>(held: T, empty: T) {
   return function resolve({ request }: { request: Request }): T {
     const accountId = query(request).get("accountId");
@@ -59,6 +70,19 @@ function heldOr<T>(held: T, empty: T) {
 
 export const investmentHandlers = [
   getPortfolioMockHandler(heldOr(portfolio, emptyPortfolio)),
+  getAllocationTargetsMockHandler(noAllocationTargets),
+  getSaveAllocationTargetsMockHandler(async ({ request }) => {
+    const body = await readBody(request);
+    const targets = allocationTargetsBody.parse(body.targets);
+    return {
+      dimension: targets.length === 0 ? null : allocationDimension.parse(body.dimension),
+      targets: targets.map((target) => ({
+        key: target.key,
+        share: target.share,
+        symbol: securities.find((item) => item.id === target.key)?.symbol ?? null,
+      })),
+    };
+  }),
   getInvestmentTransactionsMockHandler(({ request }) => {
     const params = query(request);
     const accountId = params.get("accountId");
@@ -207,6 +231,7 @@ export const investmentHandlers = [
 
 export const emptyInvestmentHandlers: RequestHandler[] = [
   getPortfolioMockHandler(emptyPortfolio),
+  getAllocationTargetsMockHandler(noAllocationTargets),
   getInvestmentTransactionsMockHandler(emptyPage),
   getSecuritiesMockHandler([]),
   getSecurityPricesMockHandler([]),

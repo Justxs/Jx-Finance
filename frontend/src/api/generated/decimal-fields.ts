@@ -25,6 +25,7 @@ export const decimalFields: ReadonlySet<string> = new Set([
   "rate",
   "receivedAmount",
   "residualValue",
+  "share",
   "startingBalance",
   "startValue",
   "targetAmount",

@@ -39,6 +39,7 @@ public sealed class TokenReadableTests
         "GET /api/households/{id}/settle-up",
         "GET /api/households/{id}/settlements",
         "GET /api/households/{id}/shared-expenses",
+        "GET /api/investments/allocation-targets",
         "GET /api/investments/portfolio",
         "GET /api/investments/securities",
         "GET /api/investments/securities/{id:guid}/prices",

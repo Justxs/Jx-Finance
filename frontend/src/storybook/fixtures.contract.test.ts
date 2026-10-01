@@ -337,6 +337,9 @@ const contracts: Record<string, Contract> = {
   portfolio: { schema: schemas.PortfolioResponse },
   incompletePortfolio: { schema: schemas.PortfolioResponse },
   emptyPortfolio: { schema: schemas.PortfolioResponse },
+  allocationTargets: { schema: schemas.AllocationTargetsResponse },
+  securityAllocationTargets: { schema: schemas.AllocationTargetsResponse },
+  noAllocationTargets: { schema: schemas.AllocationTargetsResponse },
   investmentTransactions: {
     schema: schemas.InvestmentTransactionsResponse,
     toResponse: asPage,

@@ -38,6 +38,10 @@ export const ProblemDetailsResponse = zod
             code: zod
               .enum([
                 "access.forbidden",
+                "allocation.bucketDuplicate",
+                "allocation.bucketUnknown",
+                "allocation.shareInvalid",
+                "allocation.sharesTotal",
                 "asset.depreciationIncomplete",
                 "asset.lastValuation",
                 "attachment.contentMismatch",

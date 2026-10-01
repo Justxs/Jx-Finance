@@ -76,6 +76,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, ICurren
     public DbSet<Security> Securities => Set<Security>();
     public DbSet<SecurityPrice> SecurityPrices => Set<SecurityPrice>();
     public DbSet<InvestmentTransaction> InvestmentTransactions => Set<InvestmentTransaction>();
+    public DbSet<AllocationTarget> AllocationTargets => Set<AllocationTarget>();
     public DbSet<BrokerConnection> BrokerConnections => Set<BrokerConnection>();
     public DbSet<InstanceSettings> InstanceSettings => Set<InstanceSettings>();
     public DbSet<Budget> Budgets => Set<Budget>();

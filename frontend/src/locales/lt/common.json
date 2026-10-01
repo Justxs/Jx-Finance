@@ -1970,7 +1970,30 @@
       "type": "Tipas",
       "currency": "Valiuta"
     },
-    "allocationBy": "Paskirstymas pagal"
+    "allocationBy": "Paskirstymas pagal",
+    "allocationTargets": {
+      "set": "Nustatyti tikslus",
+      "edit": "Keisti tikslus",
+      "title": "Tikslinis paskirstymas",
+      "description": "Pasirinkite, kokią dalį turėtų sudaryti kiekviena grupė, visas pagal vieną požymį. Dalių suma yra 100 %, o turima grupė be dalies turi 0 % tikslą.",
+      "dimension": "Tikslai pagal",
+      "shares": "Tikslinės dalys",
+      "shareLabel": "{{name}} tikslinė dalis, procentais",
+      "total": "Iš viso {{total}} % iš 100 %",
+      "totalInvalid": "Dalių suma yra {{total}} %, o ne 100 %.",
+      "shareInvalid": "Įveskite procentą nuo 0 iki 100, ne daugiau kaip dviejų skaitmenų po kablelio.",
+      "clearHint": "Palikite visas dalis tuščias, jei norite pašalinti tikslus.",
+      "otherDimension": "Jūsų tikslai nustatyti pagal požymį „{{dimension}}“.",
+      "target": "Tikslas {{target}}",
+      "over": "{{points}} proc. punkto daugiau",
+      "under": "{{points}} proc. punkto mažiau",
+      "onTarget": "Atitinka tikslą",
+      "amount": "Nauja investuojama suma",
+      "amountInvalid": "Įveskite didesnę už nulį sumą, ne daugiau kaip dviejų skaitmenų po kablelio.",
+      "add": "Pridėti {{amount}}, tada {{share}}",
+      "splitNote": "{{amount}} skiriama grupėms, kurios labiausiai atsilieka nuo tikslo, keliant jas kartu ir nieko neparduodant.",
+      "disclaimer": "Tai aritmetika su užregistruotomis pozicijomis pagal paskutines kainas, o ne patarimas."
+    }
   },
   "recurringBills": {
     "title": "Periodiniai įrašai",
@@ -2780,6 +2803,12 @@
   "serverErrors": {
     "access": {
       "forbidden": "Neturite teisės atlikti šio veiksmo."
+    },
+    "allocation": {
+      "bucketDuplicate": "Ta pati grupė turi daugiau nei vieną tikslą.",
+      "bucketUnknown": "Tikslas nurodo neegzistuojantį tipą, valiutą ar vertybinį popierių. Įkelkite puslapį iš naujo ir bandykite dar kartą.",
+      "shareInvalid": "Dalis turi būti procentas nuo 0 iki 100, ne daugiau kaip dviejų skaitmenų po kablelio.",
+      "sharesTotal": "Dalių suma turi būti 100 %."
     },
     "asset": {
       "depreciationIncomplete": "Nurodykite nusidėvėjimo pradžios datą, pradinę vertę, naudingo tarnavimo laiką ir likutinę vertę arba nė vieno iš jų.",

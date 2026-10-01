@@ -3,6 +3,7 @@ import { createFileRoute, redirect } from "@tanstack/react-router";
 import { z } from "zod";
 import {
   getAccountsSuspenseQueryOptions,
+  getAllocationTargetsSuspenseQueryOptions,
   getInvestmentTransactionsSuspenseQueryOptions,
   getPortfolioSuspenseQueryOptions,
   getTaxSummarySuspenseQueryOptions,
@@ -59,6 +60,7 @@ export const Route = createFileRoute("/investments")({
     }
 
     warm(queryClient, getPortfolioSuspenseQueryOptions(portfolioParams(deps.accountId)));
+    warm(queryClient, getAllocationTargetsSuspenseQueryOptions());
     warm(
       queryClient,
       getInvestmentTransactionsSuspenseQueryOptions(activityParams(1, deps.accountId, "")),

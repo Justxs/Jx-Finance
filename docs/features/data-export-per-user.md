@@ -44,7 +44,7 @@ It can be taken three times an hour from one client (`Throttle(3, 3600)`, 429 be
 
 | Kind of row | Tables |
 | --- | --- |
-| Every row the member owns (`"UserId"` is the member) | `Accounts` (personal, shared and archived), `Assets`, `Budgets`, `BrokerConnections` without the token, `CategorizationRules`, `CsvImportMappings`, `Debts`, `DeletionEntries`, `Goals`, `MonthCloses`, `NetWorthSnapshots`, `Notifications`, `ReceiptItemCategories`, `ReceiptReadings`, `RecurringBills`, `SubscriptionDismissals`, `SuggestedRuleDismissals`, since 2026-10-01 `TransactionGroups`, the `SharedExpenses` the member paid for and the `Settlements` the member recorded (since 2026-09-29), and the member's own `Categories` and `Tags` |
+| Every row the member owns (`"UserId"` is the member) | `Accounts` (personal, shared and archived), since 2026-10-01 `AllocationTargets`, `Assets`, `Budgets`, `BrokerConnections` without the token, `CategorizationRules`, `CsvImportMappings`, `Debts`, `DeletionEntries`, `Goals`, `MonthCloses`, `NetWorthSnapshots`, `Notifications`, `ReceiptItemCategories`, `ReceiptReadings`, `RecurringBills`, `SubscriptionDismissals`, `SuggestedRuleDismissals`, since 2026-10-01 `TransactionGroups`, the `SharedExpenses` the member paid for and the `Settlements` the member recorded (since 2026-09-29), and the member's own `Categories` and `Tags` |
 | Everything on the member's own accounts, whoever entered it | `Transactions`, `AccountReconciliations`, `CurrencyConversions`, `InvestmentTransactions`, `TransferImports` |
 | Rows that belong to an exported row | `TransactionLines`, `TransactionTags`, `TransactionAttachments` and, since 2026-10-01, `DuplicateDismissals` (the pairs kept as both) of the exported transactions; `AssetValuations`, `CategorizationRuleTags`, `DebtPayments`, `DeletionChanges` and `SharedExpenseShares` of their parents; since 2026-09-30 the payment links of a member's debt travel with it whoever linked them |
 | Every transfer with one side on the member's accounts | `Transfers` |
@@ -138,8 +138,8 @@ The import works only into an empty member: one who owns no accounts and no tags
 | From the file | What happens |
 | --- | --- |
 | Accounts, transactions, lines, tags on them, transfers, conversions, reconciliations, bank import history | inserted with their ids |
-| Categories, tags, rules, CSV mappings, payee names, transaction groups, budgets, goals, recurring entries, assets, debts, receipts, dismissals, net-worth snapshots | inserted with their ids |
-| Securities | inserted without a price source: `PriceSource` becomes `None` and `PriceSymbol` empty, because a mapping is an administrator's choice for one installation and spends its key; one that already exists here is reused with its own mapping, and a security that collides on symbol and currency is replaced by the one already here |
+| Categories, tags, rules, CSV mappings, payee names, transaction groups, budgets, goals, recurring entries, assets, debts, receipts, dismissals, net-worth snapshots, allocation targets | inserted with their ids |
+| Securities | inserted without a price source: `PriceSource` becomes `None` and `PriceSymbol` empty, because a mapping is an administrator's choice for one installation and spends its key; one that already exists here is reused with its own mapping, and a security that collides on symbol and currency is replaced by the one already here, in investment entries and in allocation targets by security alike |
 | Every column that points at a user | the importing member, so a partner's entries on a shared account become the member's |
 | Household id and scope | cleared and personal: households are not in the file |
 | A reference to a row the file does not hold | an optional one is cleared; a required one drops the record, repeated until nothing points outside, and counted in `removed` |

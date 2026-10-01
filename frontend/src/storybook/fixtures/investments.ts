@@ -1,4 +1,5 @@
 import type {
+  AllocationTargetsResponse,
   BrokerConnectionResponse,
   BrokerImportResponse,
   Currency,
@@ -605,6 +606,32 @@ export const duplicateSecurityProblem = problemOf(
   "conflict.duplicate",
   "A security with this symbol and currency already exists.",
   { instance: "/api/investments/securities" },
+);
+
+export const allocationTargets: AllocationTargetsResponse = {
+  dimension: "type",
+  targets: [
+    { key: "etf", share: "60", symbol: null },
+    { key: "stock", share: "30", symbol: null },
+    { key: "bond", share: "10", symbol: null },
+  ],
+};
+
+export const securityAllocationTargets: AllocationTargetsResponse = {
+  dimension: "security",
+  targets: [
+    { key: worldEtf.id, share: "70", symbol: worldEtf.symbol },
+    { key: usStock.id, share: "30", symbol: usStock.symbol },
+  ],
+};
+
+export const noAllocationTargets: AllocationTargetsResponse = { dimension: null, targets: [] };
+
+export const allocationSharesTotalProblem = problemOf(
+  400,
+  "allocation.sharesTotal",
+  "The shares must add up to 100.",
+  { name: "targets", instance: "/api/investments/allocation-targets" },
 );
 
 export const securityNotHeldProblem = problemOf(

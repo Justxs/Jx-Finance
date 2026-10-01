@@ -8,6 +8,64 @@
 import * as zod from "zod";
 
 /**
+ * Returns the target shares you set for your investments, in percent, and the one dimension they are set by: security type (keys such as etf or stock), the security's currency (eur, usd) or the security itself (its id, answered with its symbol). Targets belong to the signed-in member alone and are the same whichever account or household is chosen. Without targets, dimension is null and targets is empty. Compare them with byType, byCurrency or the holdings of GET /api/investments/portfolio.
+ * @summary Get your target allocation
+ */
+export const allocationTargetsResponseTargetsItemShareRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+
+export const AllocationTargetsResponse = zod.object({
+  dimension: zod.union([
+    zod.null(),
+    zod.enum(["type", "currency", "security"]).describe("type, currency or security."),
+  ]),
+  targets: zod.array(
+    zod.object({
+      key: zod.string(),
+      share: zod.stringFormat("decimal", allocationTargetsResponseTargetsItemShareRegExp),
+      symbol: zod.string().nullable(),
+    }),
+  ),
+});
+
+/**
+ * Replaces every target you had with the ones sent, all in one dimension, so targets of another dimension are dropped; an empty list removes your targets. Shares are percentages with at most two decimals and add up to exactly 100. A bucket you hold without a target counts as a target of 0.
+ * @summary Replace your target allocation
+ */
+export const saveAllocationTargetsBodyTargetsItemShareRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+
+export const SaveAllocationTargetsBody = zod.object({
+  dimension: zod.enum(["type", "currency", "security"]).describe("type, currency or security."),
+  targets: zod
+    .array(
+      zod.object({
+        key: zod.string(),
+        share: zod.stringFormat("decimal", saveAllocationTargetsBodyTargetsItemShareRegExp),
+      }),
+    )
+    .describe(
+      "Each bucket at most once: a security type such as etf, a currency such as eur, or a security id; at most 100.",
+    ),
+});
+
+export const saveAllocationTargetsResponseTargetsItemShareRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+
+export const SaveAllocationTargetsResponse = zod.object({
+  dimension: zod.union([
+    zod.null(),
+    zod.enum(["type", "currency", "security"]).describe("type, currency or security."),
+  ]),
+  targets: zod.array(
+    zod.object({
+      key: zod.string(),
+      share: zod.stringFormat("decimal", saveAllocationTargetsResponseTargetsItemShareRegExp),
+      symbol: zod.string().nullable(),
+    }),
+  ),
+});
+
+/**
  * One connection per account. The Flex token is write-only and never returned.
  * @summary List your Interactive Brokers connections
  */

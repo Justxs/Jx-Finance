@@ -26,6 +26,7 @@ import { i18n } from "@/lib/i18n";
 import { AMOUNT_MASK } from "@/lib/mask-amount";
 import { savePreferences } from "@/stores/preferences";
 import {
+  allocationTargets,
   closedChangedMonthReview,
   longDescriptionTransaction,
   netWorthHistory,
@@ -121,6 +122,7 @@ function everyAmount() {
         byType={portfolio.byType ?? []}
         byCurrency={portfolio.byCurrency ?? []}
         currency={portfolio.reportingCurrency}
+        targets={allocationTargets}
       />
       <ForecastWhatIf
         accountId="account"

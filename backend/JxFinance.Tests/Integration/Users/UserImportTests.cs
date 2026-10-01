@@ -165,6 +165,29 @@ public sealed partial class UserImportTests(ApiFixture fixture) : IntegrationTes
         Assert.Equal((PriceSource.None, null), (added.PriceSource, added.PriceSymbol));
     }
 
+    [Fact]
+    public async Task Allocation_targets_by_security_follow_the_security_already_stored_here()
+    {
+        using var source = await CreateUserClientAsync();
+        var account = await CreateAccountAsync("1000.00", "investment", client: source);
+        var fund = await CreateSecurityAsync(source);
+        var other = await CreateSecurityAsync(source);
+        await RecordInvestmentAsync(source, new { accountId = account, securityId = fund, type = "buy", date = "2026-06-01", quantity = "1", price = "100" });
+        await RecordInvestmentAsync(source, new { accountId = account, securityId = other, type = "buy", date = "2026-06-01", quantity = "1", price = "100" });
+        (await source.PutAsJsonAsync(
+            "/api/investments/allocation-targets",
+            new { dimension = "security", targets = new[] { new { key = fund.ToString(), share = "75" }, new { key = other.ToString(), share = "25" } } },
+            TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
+        var export = await DownloadAsync(source);
+        using var target = await CreateUserClientAsync();
+
+        await ReadOkAsync<ImportDto>(await ImportAsync(target, WithNewIds(export)));
+        var targets = (await target.GetFromJsonAsync<AllocationTargetsDto>("/api/investments/allocation-targets", TestContext.Current.CancellationToken))!;
+
+        Assert.Equal("security", targets.Dimension);
+        Assert.Equal([(fund.ToString(), "75"), (other.ToString(), "25")], targets.Targets.Select(t => (t.Key, t.Share)));
+    }
+
     private static async Task<byte[]> DownloadAsync(HttpClient client)
     {
         var response = await client.GetAsync("/api/users/me/export?attachments=true", TestContext.Current.CancellationToken);
@@ -235,4 +258,8 @@ public sealed partial class UserImportTests(ApiFixture fixture) : IntegrationTes
     private sealed record EntryDto(Guid Id, List<Guid> TagIds);
 
     private sealed record SpreadEntryDto(Guid Id, int? SpreadMonths, DateOnly? SpreadUntil);
+
+    private sealed record AllocationTargetDto(string Key, string Share);
+
+    private sealed record AllocationTargetsDto(string? Dimension, List<AllocationTargetDto> Targets);
 }

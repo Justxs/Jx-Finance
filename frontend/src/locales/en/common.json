@@ -1886,7 +1886,30 @@
       "type": "Type",
       "currency": "Currency"
     },
-    "allocationBy": "Allocation by"
+    "allocationBy": "Allocation by",
+    "allocationTargets": {
+      "set": "Set targets",
+      "edit": "Edit targets",
+      "title": "Target allocation",
+      "description": "Choose the share you want each bucket to have, all by one dimension. The shares add up to 100%, and a bucket you hold without a share has a target of 0%.",
+      "dimension": "Targets by",
+      "shares": "Target shares",
+      "shareLabel": "{{name}} target share, percent",
+      "total": "Total {{total}}% of 100%",
+      "totalInvalid": "The shares add up to {{total}}%, not 100%.",
+      "shareInvalid": "Enter a percentage from 0 to 100 with at most two decimals.",
+      "clearHint": "Leave every share empty to remove your targets.",
+      "otherDimension": "Your targets are set by {{dimension}}.",
+      "target": "Target {{target}}",
+      "over": "{{points}} points above",
+      "under": "{{points}} points below",
+      "onTarget": "On target",
+      "amount": "New amount to invest",
+      "amountInvalid": "Enter an amount above zero with at most two decimals.",
+      "add": "Add {{amount}}, then {{share}}",
+      "splitNote": "{{amount}} goes to the buckets furthest below their target, lifting them together, without selling anything.",
+      "disclaimer": "Arithmetic on recorded holdings at their last prices, not advice."
+    }
   },
   "recurringBills": {
     "title": "Recurring entries",
@@ -2670,6 +2693,12 @@
   "serverErrors": {
     "access": {
       "forbidden": "You do not have permission to do this."
+    },
+    "allocation": {
+      "bucketDuplicate": "A bucket has more than one target.",
+      "bucketUnknown": "A target names a type, currency or security that does not exist. Reload the page and try again.",
+      "shareInvalid": "A share must be a percentage from 0 to 100 with at most two decimals.",
+      "sharesTotal": "The shares must add up to 100%."
     },
     "asset": {
       "depreciationIncomplete": "Give the start date, start value, useful life and residual value of the depreciation, or none of them.",

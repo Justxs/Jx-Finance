@@ -14,6 +14,7 @@ public static class UserExportTables
     public static IReadOnlyDictionary<string, UserExportRule> Rules { get; } = new Dictionary<string, UserExportRule>(StringComparer.Ordinal)
     {
         [Accounts] = new Owned(),
+        ["AllocationTargets"] = new Owned(),
         ["AccountReconciliations"] = new OnOwnedAccounts(AccountId),
         ["AssetValuations"] = new ChildOf("Assets", "AssetId"),
         ["Assets"] = new Owned(),

@@ -2,7 +2,11 @@ import { Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { ArrowLeft, FileUp, Library, Plus, ReceiptText } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useAccountsSuspense, usePortfolioSuspense } from "@/api/generated";
+import {
+  useAccountsSuspense,
+  useAllocationTargetsSuspense,
+  usePortfolioSuspense,
+} from "@/api/generated";
 import type { AccountResponse } from "@/api/generated/model";
 import { PageHeader } from "@/components/page-header/page-header";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
@@ -43,6 +47,7 @@ function InvestmentsOverview({
   const [shown, stale] = useDeferredParams({ accountId: accountId ?? "" });
   const shownAccountId = shown.accountId || undefined;
   const portfolio = usePortfolioSuspense(portfolioParams(shownAccountId));
+  const targets = useAllocationTargetsSuspense();
   const firstRun =
     shownAccountId === undefined &&
     portfolio.data.holdings.length === 0 &&
@@ -80,6 +85,7 @@ function InvestmentsOverview({
         byType={portfolio.data.byType ?? []}
         byCurrency={portfolio.data.byCurrency ?? []}
         currency={portfolio.data.reportingCurrency}
+        targets={targets.data}
       />
       <PositionsSection
         holdings={portfolio.data.holdings}

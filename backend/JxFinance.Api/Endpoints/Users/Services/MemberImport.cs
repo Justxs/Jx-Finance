@@ -15,7 +15,7 @@ public sealed class MemberImport(AppDbContext db, Guid userId, int lockTimeoutSe
 {
     public static readonly IReadOnlySet<string> Imported = new HashSet<string>(StringComparer.Ordinal)
     {
-        "Accounts", "AccountReconciliations", "Assets", "AssetValuations", "Budgets", "Categories",
+        "Accounts", "AccountReconciliations", "AllocationTargets", "Assets", "AssetValuations", "Budgets", "Categories",
         "CategorizationRules", "CategorizationRuleTags", "CsvImportMappings", "CurrencyConversions", "DebtPayments",
         "Debts", "DuplicateDismissals", "Goals", "InvestmentTransactions", "NetWorthSnapshots", "PayeeNames",
         "ReceiptItemCategories", "ReceiptReadings", "RecurringBills", "Securities", "SubscriptionDismissals",
@@ -245,6 +245,16 @@ public sealed class MemberImport(AppDbContext db, Guid userId, int lockTimeoutSe
                 new NpgsqlParameter { NpgsqlDbType = NpgsqlDbType.Text, Value = id },
                 new NpgsqlParameter { NpgsqlDbType = NpgsqlDbType.Text, Value = symbol },
                 new NpgsqlParameter { NpgsqlDbType = NpgsqlDbType.Text, Value = currency });
+            await ExecuteAsync(
+                $"UPDATE {Q("AllocationTargets")} SET {Q("Key")} = COALESCE("
+                + $"(SELECT s.{Q("Id")}::text FROM {Q(SecuritiesTable)} s WHERE s.{Q("Symbol")} = $2 AND s.{Q("Currency")}::text = $3 LIMIT 1), {Q("Key")}) "
+                + $"WHERE {Q("UserId")} = $4 AND {Q("Dimension")} = '{nameof(AllocationDimension.Security)}' AND {Q("Key")} = $1 "
+                + $"AND NOT EXISTS (SELECT 1 FROM {Q(SecuritiesTable)} WHERE {Q("Id")}::text = $1)",
+                cancellationToken,
+                new NpgsqlParameter { NpgsqlDbType = NpgsqlDbType.Text, Value = id },
+                new NpgsqlParameter { NpgsqlDbType = NpgsqlDbType.Text, Value = symbol },
+                new NpgsqlParameter { NpgsqlDbType = NpgsqlDbType.Text, Value = currency },
+                new NpgsqlParameter { NpgsqlDbType = NpgsqlDbType.Uuid, Value = userId });
         }
     }
 

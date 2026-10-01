@@ -73,6 +73,38 @@ Since 2026-09-30 `GET /api/investments/portfolio` also answers `annualizedReturn
 
 **Allocation.** `byType` and `byCurrency` sum the reporting-currency market value of the open holdings that have one by security type (`stock`, `etf`, …) and by the security's currency (`eur`, `usd`, …), largest first. The allocation section, which already drew the holdings by security, gains a Security, Type and Currency switch over the same bars.
 
+## Target allocation
+
+Since 2026-10-01 a member can set the share each bucket of the portfolio should have, and the allocation section compares the holdings with it and splits a new amount to invest. It is arithmetic on recorded holdings at their last prices, not advice, and the section says so in English and Lithuanian under the rows. Nothing is bought, sold or recorded.
+
+**Targets.** "Set targets" (or "Edit targets") beside the Security, Type and Currency switch opens a dialog. The member picks one dimension, Type, Currency or Security, and types a percentage per bucket: every security type is listed, and for currency and security the buckets held now plus any that already have a target. The dialog shows the running total, and saving needs the filled shares to add up to exactly 100; leaving every share empty removes the targets. A bucket that is held but has no share counts as a target of 0%, so there is no "unassigned" remainder. Targets are kept per member on the server in `AllocationTargets`, so they follow the member across devices and are the same whichever account or household is chosen. `GET /api/investments/allocation-targets` answers `dimension` (null without targets) and `targets` of `{ key, share, symbol }`, largest share first, `symbol` filled for a security; `PUT` replaces every target with the ones sent, all in one dimension.
+
+| Rule | Error code |
+| --- | --- |
+| A share is from 0 to 100 with at most two decimals | `allocation.shareInvalid` |
+| The shares add up to exactly 100, unless the list is empty | `allocation.sharesTotal` |
+| A key is a security type (`etf`), a currency (`eur`) or the lower-case id of a stored security, matching the dimension | `allocation.bucketUnknown` |
+| A bucket appears once | `allocation.bucketDuplicate` |
+| At most 100 targets | `collection.invalidSize` |
+
+**Drift.** When the switch shows the dimension the targets are set by, the section opens on it, and each bucket's row shows its value, its current share of the holdings shown, a mark on the bar at its target, and "Target 60% · 8.4 points below". A bucket with a target that is not held is listed with nothing in it. On another dimension the plain bars stay, with "Your targets are set by Type." The holdings are the ones the portfolio already shows: the accounts the caller can see, narrowed by the active household and by the account filter, valued at their last price and converted at the newest rate; a holding without a price is left out, as it is from `byType` and `byCurrency`. A closed position no longer appears in the Security view, and the section now shows from the first valued holding rather than the second, because a member with one fund may want a target for a second one.
+
+**Splitting a new amount.** Below the rows "New amount to invest" takes an amount in the reporting currency, and every row that would receive part of it shows "Add €922.79, then 8%". The split is computed in the browser by `splitContribution` in `features/investments/allocation-split.ts`, without selling anything:
+
+```mermaid
+flowchart TD
+    In["value v and target share w of each bucket, amount A, in cents"] --> Drop["buckets with a target of 0 get nothing"]
+    Drop --> Sort["sort by v / w, the value per point of target, lowest first"]
+    Sort --> Fill["take the lowest k buckets and the level L = (A + their v) / (their w)"]
+    Fill --> Next{"L above the next bucket's v / w?"}
+    Next -->|"yes"| More["k + 1"] --> Fill
+    Next -->|"no"| Give["each of the k buckets gets w × L − v"]
+    Give --> Round["floor each to a cent, hand the cents left over to the largest remainders"]
+    Round --> Out["amounts that add up to A exactly"]
+```
+
+The amount goes first to the bucket furthest below its target, measured against the target, and lifts the buckets below the level together so that each one it funds ends at the same fraction of its target. A bucket that would still be above its target after the amount is added gets nothing, an amount too small to reach any target goes to the most underweight bucket alone, and an amount large enough brings every bucket exactly to target. Privacy mode masks the values and the amounts to add; the shares, the targets and the drift stay visible.
+
 ## Price history
 
 Since 2026-09-20 a price is kept per security and date in `SecurityPrice`, and `Security.LastPrice` remains the newest point. Every write goes through `SecurityPriceBook`, so the ways a price can arrive cannot disagree. Since 2026-09-30 each point also carries its source (typed, broker, file or fetched), a price file can be imported into the history, and the server can fetch closing prices daily; a fetched price never replaces one of another source. The diagram shows the member sources; the file import and the fetch are on [Live security prices](live-prices.md).

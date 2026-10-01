@@ -13,6 +13,10 @@ export type ErrorCode = (typeof ErrorCode)[keyof typeof ErrorCode];
 
 export const ErrorCode = {
   accessforbidden: "access.forbidden",
+  allocationbucketDuplicate: "allocation.bucketDuplicate",
+  allocationbucketUnknown: "allocation.bucketUnknown",
+  allocationshareInvalid: "allocation.shareInvalid",
+  allocationsharesTotal: "allocation.sharesTotal",
   assetdepreciationIncomplete: "asset.depreciationIncomplete",
   assetlastValuation: "asset.lastValuation",
   attachmentcontentMismatch: "attachment.contentMismatch",

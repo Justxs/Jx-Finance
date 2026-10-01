@@ -8,6 +8,7 @@
 import { HttpResponse, http } from "msw";
 import type { RequestHandlerOptions } from "msw";
 import type {
+  AllocationTargetsResponse,
   BrokerConnectionResponse,
   BrokerImportResponse,
   InvestmentTransactionResponse,
@@ -20,6 +21,54 @@ import type {
   TaxSummaryResponse,
   ValueHistoryResponse,
 } from "../model";
+
+export const getAllocationTargetsMockHandler = (
+  overrideResponse?:
+    | AllocationTargetsResponse
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<AllocationTargetsResponse> | AllocationTargetsResponse),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/investments/allocation-targets",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : undefined,
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getSaveAllocationTargetsMockHandler = (
+  overrideResponse?:
+    | AllocationTargetsResponse
+    | ((
+        info: Parameters<Parameters<typeof http.put>[1]>[0],
+      ) => Promise<AllocationTargetsResponse> | AllocationTargetsResponse),
+  options?: RequestHandlerOptions,
+) => {
+  return http.put(
+    "*/api/investments/allocation-targets",
+    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : undefined,
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
 
 export const getBrokerConnectionsMockHandler = (
   overrideResponse?:
@@ -536,6 +585,8 @@ export const getValueHistoryMockHandler = (
   );
 };
 export const getInvestmentsMock = () => [
+  getAllocationTargetsMockHandler(),
+  getSaveAllocationTargetsMockHandler(),
   getBrokerConnectionsMockHandler(),
   getDeleteBrokerConnectionMockHandler(),
   getSaveBrokerConnectionMockHandler(),

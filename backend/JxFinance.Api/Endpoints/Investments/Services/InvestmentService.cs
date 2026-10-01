@@ -1,4 +1,3 @@
-using System.Text.Json;
 using FastEndpoints;
 using JxFinance.Common;
 using JxFinance.Common.Errors;
@@ -166,8 +165,8 @@ public sealed class InvestmentService(
                 y.Value.RealizedGain)).ToList())
         {
             AnnualizedReturn = isComplete ? MoneyWeightedReturn.Annualized(flows) : null,
-            ByType = Slices(open, h => JsonNamingPolicy.CamelCase.ConvertName(h.Security.Type.ToString())),
-            ByCurrency = Slices(open, h => JsonNamingPolicy.CamelCase.ConvertName(h.Security.Currency.ToString())),
+            ByType = Slices(open, h => AllocationBucket.Of(h.Security.Type)),
+            ByCurrency = Slices(open, h => AllocationBucket.Of(h.Security.Currency)),
         };
     }
 

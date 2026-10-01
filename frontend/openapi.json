@@ -9967,6 +9967,148 @@
         ]
       }
     },
+    "/api/investments/allocation-targets": {
+      "get": {
+        "tags": [
+          "Investments"
+        ],
+        "summary": "Get your target allocation",
+        "description": "Returns the target shares you set for your investments, in percent, and the one dimension they are set by: security type (keys such as etf or stock), the security's currency (eur, usd) or the security itself (its id, answered with its symbol). Targets belong to the signed-in member alone and are the same whichever account or household is chosen. Without targets, dimension is null and targets is empty. Compare them with byType, byCurrency or the holdings of GET /api/investments/portfolio.",
+        "operationId": "GetAllocationTargets",
+        "responses": {
+          "200": {
+            "description": "Your targets, largest share first.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AllocationTargetsResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          },
+          {
+            "PersonalApiToken": [ ]
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "Investments"
+        ],
+        "summary": "Replace your target allocation",
+        "description": "Replaces every target you had with the ones sent, all in one dimension, so targets of another dimension are dropped; an empty list removes your targets. Shares are percentages with at most two decimals and add up to exactly 100. A bucket you hold without a target counts as a target of 0.",
+        "operationId": "SaveAllocationTargets",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveAllocationTargetsRequest"
+              },
+              "example": {
+                "dimension": "type",
+                "targets": [
+                  {
+                    "key": "etf",
+                    "share": "70"
+                  },
+                  {
+                    "key": "bond",
+                    "share": "20"
+                  },
+                  {
+                    "key": "stock",
+                    "share": "10"
+                  }
+                ]
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "The targets as stored, largest share first.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AllocationTargetsResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed: allocation.shareInvalid, allocation.sharesTotal, allocation.bucketUnknown (also for a security id that does not exist) or allocation.bucketDuplicate.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      }
+    },
     "/api/investments/connections": {
       "get": {
         "tags": [
@@ -21494,6 +21636,79 @@
           ]
         }
       },
+      "AllocationDimension": {
+        "enum": [
+          "type",
+          "currency",
+          "security"
+        ],
+        "type": "string",
+        "description": "type, currency or security."
+      },
+      "AllocationTargetInput": {
+        "required": [
+          "key",
+          "share"
+        ],
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "share": {
+            "type": "string",
+            "format": "decimal"
+          }
+        }
+      },
+      "AllocationTargetResponse": {
+        "required": [
+          "key",
+          "share",
+          "symbol"
+        ],
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "share": {
+            "type": "string",
+            "format": "decimal"
+          },
+          "symbol": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "AllocationTargetsResponse": {
+        "required": [
+          "dimension",
+          "targets"
+        ],
+        "type": "object",
+        "properties": {
+          "dimension": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/AllocationDimension"
+              }
+            ]
+          },
+          "targets": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AllocationTargetResponse"
+            }
+          }
+        }
+      },
       "AmortizationType": {
         "enum": [
           "annuity",
@@ -25541,6 +25756,10 @@
       "ErrorCode": {
         "enum": [
           "access.forbidden",
+          "allocation.bucketDuplicate",
+          "allocation.bucketUnknown",
+          "allocation.shareInvalid",
+          "allocation.sharesTotal",
           "asset.depreciationIncomplete",
           "asset.lastValuation",
           "attachment.contentMismatch",
@@ -30148,6 +30367,56 @@
             "type": "integer",
             "format": "int32"
           }
+        }
+      },
+      "SaveAllocationTargetsRequest": {
+        "required": [
+          "dimension",
+          "targets"
+        ],
+        "type": "object",
+        "properties": {
+          "dimension": {
+            "$ref": "#/components/schemas/AllocationDimension"
+          },
+          "targets": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AllocationTargetInput"
+            },
+            "description": "Each bucket at most once: a security type such as etf, a currency such as eur, or a security id; at most 100.",
+            "example": [
+              {
+                "key": "etf",
+                "share": "70"
+              },
+              {
+                "key": "bond",
+                "share": "20"
+              },
+              {
+                "key": "stock",
+                "share": "10"
+              }
+            ]
+          }
+        },
+        "example": {
+          "dimension": "type",
+          "targets": [
+            {
+              "key": "etf",
+              "share": "70"
+            },
+            {
+              "key": "bond",
+              "share": "20"
+            },
+            {
+              "key": "stock",
+              "share": "10"
+            }
+          ]
         }
       },
       "SaveBrokerConnectionRequest": {

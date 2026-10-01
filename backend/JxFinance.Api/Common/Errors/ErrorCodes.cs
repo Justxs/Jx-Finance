@@ -91,6 +91,10 @@ public static class ErrorCodes
     public const string HoldingOversold = "holding.oversold";
     public const string HoldingDependentSales = "holding.dependentSales";
     public const string SecurityNotHeld = "security.notHeld";
+    public const string AllocationShareInvalid = "allocation.shareInvalid";
+    public const string AllocationSharesTotal = "allocation.sharesTotal";
+    public const string AllocationBucketUnknown = "allocation.bucketUnknown";
+    public const string AllocationBucketDuplicate = "allocation.bucketDuplicate";
     public const string ImportInvalidFile = "import.invalidFile";
     public const string ImportNoStatementForAccount = "import.noStatementForAccount";
     public const string ImportTransferMismatch = "import.transferMismatch";
