@@ -1,6 +1,6 @@
 # Release checklist
 
-The earlier M0–M7 history mixed implementation, deferred ideas and old test results. This checklist tracks the actual completion pass. Updated 2026-09-19.
+The earlier M0–M7 history mixed implementation, deferred ideas and old test results. This checklist tracks the actual completion pass. Updated 2026-10-01.
 
 - [x] Import validation, duplicate/concurrency handling, deleted-reference retention and explicit transfer matching.
 - [x] Expected-date bill confirmation, inactive-bill rejection and reference validation.
@@ -63,13 +63,43 @@ Added from 2026-09-26 to 2026-09-28, in the same way:
 - [x] camt.053 statement import beside the Swedbank CSV.
 - [x] Navigation grouped into hubs, one Settings page, the close on the dashboard and an account menu.
 
-None of that has been through a deployment, a real SMTP server, a real Discord webhook or a day of ordinary use; only the automated checks have run.
+Added on 2026-09-29, each with its own integration tests, stories and page under `docs/features/`:
+
+- [x] Rule suggestions from history and budget limits prefilled from history.
+- [x] Spending by payee, stored as `PayeeKey` on every transaction.
+- [x] A 30 to 90 day cash-flow forecast of every account from its balance and recurring entries.
+- [x] Reconciliation of an account against a statement balance.
+- [x] A monthly digest by email or Discord, in the member's own language.
+- [x] Refunds as negative expenses in the category they were spent in.
+- [x] A generic CSV import through a column mapping saved per bank.
+- [x] Receipt reading with Tesseract inside the installation.
+- [x] Passkeys and read-only personal API tokens.
+- [x] A data download per member, and household settle-up.
+
+Added on 2026-09-30 and 2026-10-01, in the same way; from 2026-09-30 on the integration tests were written but not run, because Docker was not running:
+
+- [x] Notes on a transaction, the amount range filter, rows per page per browser and a low-balance notification.
+- [x] Payee display names, category groups, budgets by tag and a what-if payment in the forecast.
+- [x] Investment returns and allocation, and a trade CSV from any broker.
+- [x] OFX, QFX and MT940 statement import.
+- [x] Warranty reminders on attachments, spending per receipt item and the year in review.
+- [x] Re-importing a member's download into an empty member.
+- [x] Shared budgets, goals, recurring entries, assets and debts.
+- [x] Hide amounts, the money flow Sankey diagram and attachment metadata stripped on upload.
+- [x] Spreading a payment across months, the bills calendar and the double-entry journal in the member download.
+- [x] Live security prices from EODHD and Kraken, and a price file import.
+- [x] Write access for personal API tokens with idempotency keys, and a read-only MCP server in `tools/jx-mcp`.
+- [x] Transaction locations with a self-hosted map, transaction groups, learned category suggestions (switched off) and split lines kept in the order entered.
+
+None of that has been through a deployment, a real SMTP server, a real Discord webhook or a day of ordinary use; only the automated checks have run, and for the features of 2026-09-30 and 2026-10-01 only the checks that need no Docker.
 
 Still open:
 
+- [ ] Run `just test` and `just e2e` with Docker up. The integration tests of every feature from 2026-09-30 and 2026-10-01 and the place map's end-to-end spec have never run; see [Backlog](backlog.md#run-what-has-not-run).
 - [ ] Record a verification pass for everything added from 2026-09-20 on. The backend suite, the frontend unit and DOM tests, the story tests with their accessibility scans and the Mermaid parse of every diagram all pass, but nothing in those lists has been used by a person.
 - [ ] Run the end-to-end suite and the production overlay against every migration added since 2026-09-20. They have only been applied by the test containers.
-- [ ] Import camt.053 files from at least two real banks; the parser has only read fixtures.
+- [ ] Import camt.053 files from at least two real banks, and real OFX, QFX, MT940, bank CSV and broker trade CSV files; the parsers have only read fixtures.
+- [ ] Check the newest features against real inputs: receipts, passkeys on real devices, `bean-check` on a download, live prices with a real EODHD key, API writes from Home Assistant and an iOS Shortcut, and the map with a real tile file; see [Backlog](backlog.md#real-host-and-real-inputs).
 - [ ] Production overlay on the real host: certificate trust on client devices, the real `SITE_ADDRESS` and `BIND_ADDRESS`. The script accepts Caddy's certificate without trusting it, so it proves nothing about trust.
 - [ ] Rerun `just verify-production` once the backend changes in progress on 2026-09-19 have their migration; on that working tree the API container did not start (pending model changes).
 - [ ] The CI jobs added on 2026-09-19 have not run on the Gitea runner yet.
@@ -78,4 +108,4 @@ Still open:
 
 The Docker engine that blocked container checks on 2026-09-06 is available again, and `just e2e` and the CI `e2e` job build the images and start the HTTP stack. The production overlay is covered by `just verify-production` and the CI `production-overlay` job, within the limits listed above.
 
-A task is not verified merely because its implementation is checked above. Offline, tags, ML, scheduled or offsite backups and expanded sharing remain outside this release. Email delivery is implemented since 2026-09-20, but it is verified only against a fake transport: no run against a real SMTP server has happened yet, and the operator still has to supply the server, the sender address and `App:SiteUrl`. Real deployment configuration and a sustained daily-use trial cannot be inferred from automated checks.
+A task is not verified merely because its implementation is checked above. Offline, bank APIs and scheduled or offsite backups remain outside this release; learned category suggestions are built but switched off until their evaluation runs on a real ledger. Email delivery is implemented since 2026-09-20, but it is verified only against a fake transport: no run against a real SMTP server has happened yet, and the operator still has to supply the server, the sender address and `App:SiteUrl`. Real deployment configuration and a sustained daily-use trial cannot be inferred from automated checks.

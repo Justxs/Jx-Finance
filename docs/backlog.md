@@ -39,7 +39,6 @@ Every feature from 2026-09-30 and 2026-10-01 was built while Docker was not runn
 
 | Item | Note |
 | --- | --- |
-| Release checklist brought up to date | Its "added" lists stop at the navigation hubs of 2026-09-28; nothing from 2026-09-29, 2026-09-30 or 2026-10-01 in Done below is listed there |
 | Fresh verification pass | Evidence in Verification predates everything added from 2026-09-20 on, including the navigation hubs of 2026-09-28 and every feature of 2026-09-29, 2026-09-30 and 2026-10-01 |
 | Sustained daily-use trial | Cannot be inferred from automated checks; month-end close, unusual amounts, the forecast, the monthly digest, settle-up, spreading, the calendar and live prices need at least one real month |
 
@@ -150,6 +149,7 @@ Ordered by how much they would help daily use for the effort. Following the prod
 
 | Date | Item | Where it is described |
 | --- | --- | --- |
+| 2026-10-01 | Release checklist brought up to date: it lists everything added on 2026-09-29, 2026-09-30 and 2026-10-01, says which of it has only met the checks that need no Docker, points its open items at the backlog, and no longer calls tags, learned suggestions or expanded sharing out of scope | [Release checklist](release-checklist.md) |
 | 2026-10-01 | Old worktrees merged and removed: the three worktrees under `.claude/worktrees` held nothing master lacked once the attachment metadata cleaning and the split-line order were ported, so they and their `claude/dazzling-dubinsky-635850` and `claude/gifted-morse-9e2dd0` branches, which pointed at the history from before the trailer rewrite, were removed | This page |
 | 2026-10-01 | Split lines keep the order they were entered: each line stores its place in the request as `Position`, and the transaction response, the category proration where the last line takes the remainder and the double-entry journal order by it and then by `Id`, so existing lines keep a fixed order without a backfill. Ported from an unfinished 2026-09-29 worktree | [Transactions](features/transactions.md), [Data model](data-model.md) |
 | 2026-10-01 | Learned categories, built at once because the owner waived the evaluation gate, behind a new `LearnedCategories` switch that stays off until the evaluation on the real ledger has run: a hand-written naive Bayes model, trained per request inside the API from the categorized rows the caller can see and never stored, guesses a category where no rule gives one. The import review fills it with a "Learned" mark and its confidence, in the order rule, learned, recall, for every statement format; the transaction form offers "Suggested: Groceries" under the category after the description, never for a refund, from `POST /api/transactions/suggest-category`; and with the Uncategorized filter on, **Suggest categories** in the ledger groups up to 200 rows by suggested category and applies the ticked groups through `bulk-category`, which gains `onlyUncategorized`. `GET /api/transactions/uncategorized-suggestions` is token-readable, the form's `POST` browser-only | [Learned categories](features/learned-categories.md) |
