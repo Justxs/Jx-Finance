@@ -10,9 +10,15 @@ A refund is an expense with a negative amount, the same signed number in the dat
 
 A transaction can be spread over 2 to 36 months. Its monthly slices are computed on read from the row (`SpreadSlices`), cut forward from the payment's month on the same day of each month with a largest-remainder split, and located by a stored `SpreadUntil`; splits and refunds cannot be spread. Spending figures count the slices, while the ledger, balances and the other readers of the money that moved see the whole row. A figure's link reaches the spread rows through `spreadOverlap`, which lives only in the URL.
 
+Split lines keep the order they were entered in through a stored `TransactionLine.Position`, set from the request's line index; every read orders a transaction's lines by `Position` then `Id`.
+
 ## Log
 
 Newest first. Each entry is a choice between real alternatives: what was chosen, what was rejected, and why.
+
+- **2026-10-01.** Split lines keep the order they were entered in through a stored `TransactionLine.Position`, set from the request and used, then `Id`, to order every read; existing lines stay at 0 and so keep their `Id` order. Ported from an unfinished session of 2026-09-29, whose migration numbered the existing lines by `Id` in hand-written SQL
+  - Rejected: Version 7 UUIDs for new line ids and ordering by `Id`; ordering by category or amount; a backfill in the migration
+  - Why: A time-ordered id only works when every line of a request gets a later id than the one before, which holds within one process but says nothing about the lines already stored, and it ties the order to how ids are made. Sorting by category or amount would be stable but would still move lines away from where the person put them, which the receipt split and a reordered edit both rely on. Ordering by `Position` then `Id` gives the old lines, all at 0, the same order a backfill by `Id` would have stored, so the migration stays as EF generates it
 
 - **2026-09-30.** A spread payment's monthly slices are computed on read from `Date`, `SpreadMonths` and `ReportingAmount`, and only the date of the last slice is stored, as `SpreadUntil` set in `AppDbContext.ApplyEntityRules`
   - Rejected: A `TransactionAllocations` table written on save; computing the end in SQL from `Date` and `SpreadMonths`; expanding the slices in SQL with `generate_series`

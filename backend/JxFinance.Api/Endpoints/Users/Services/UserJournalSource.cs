@@ -35,7 +35,7 @@ public sealed class UserJournalSource(AppDbContext db, IExchangeRateService rate
             .ToListAsync(cancellationToken);
         var lines = (await db.TransactionLines.AsNoTracking()
                 .Where(l => transactionQuery.Any(t => t.Id == l.TransactionId && t.IsSplit))
-                .OrderBy(l => l.Id)
+                .OrderBy(l => l.Position).ThenBy(l => l.Id)
                 .ToListAsync(cancellationToken))
             .ToLookup(l => l.TransactionId);
         var transfers = await db.Transfers.IgnoreQueryFilters(QueryFilters.OwnerOnly).AsNoTracking()

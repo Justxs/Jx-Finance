@@ -722,7 +722,10 @@ public sealed class TransactionService(
             return [];
         }
 
-        var lines = await db.TransactionLines.Where(l => ids.Contains(l.TransactionId)).ToListAsync(cancellationToken);
+        var lines = await db.TransactionLines
+            .Where(l => ids.Contains(l.TransactionId))
+            .OrderBy(l => l.Position).ThenBy(l => l.Id)
+            .ToListAsync(cancellationToken);
         return lines.GroupBy(l => l.TransactionId).ToDictionary(g => g.Key, g => g.ToList());
     }
 

@@ -40,6 +40,27 @@ public sealed class SplitTransactionEndpointTests(ApiFixture fixture) : Integrat
     }
 
     [Fact]
+    public async Task Split_lines_keep_the_order_they_were_entered_in()
+    {
+        var account = await CreateAccountAsync("1000.00");
+        var category = await CreateCategoryAsync();
+        string[] entered = ["5.00", "30.00", "1.50", "13.50"];
+        string[] reordered = ["13.50", "1.50", "30.00", "5.00"];
+
+        var created = await RecordTransactionAsync(Client, SplitBody(account, category, entered));
+        Assert.Equal(entered, created.Lines!.Select(l => l.Amount));
+        await AssertLineOrderAsync(account, created.Id, entered);
+
+        var updateResponse = await Client.PutAsJsonAsync(
+            $"/api/transactions/{created.Id}",
+            SplitBody(account, category, reordered),
+            TestContext.Current.CancellationToken);
+        var updated = await ReadOkAsync<TransactionDto>(updateResponse);
+        Assert.Equal(reordered, updated.Lines!.Select(l => l.Amount));
+        await AssertLineOrderAsync(account, created.Id, reordered);
+    }
+
+    [Fact]
     public async Task Create_rejects_lines_that_do_not_sum_to_the_total()
     {
         var account = await CreateAccountAsync("1000.00");
@@ -161,5 +182,23 @@ public sealed class SplitTransactionEndpointTests(ApiFixture fixture) : Integrat
 
         Assert.False(updated!.IsSplit);
         Assert.Null(updated.Lines);
+    }
+
+    private static object SplitBody(Guid account, Guid category, string[] amounts) => new
+    {
+        accountId = account,
+        type = "expense",
+        amount = "50.00",
+        date = "2026-06-07",
+        lines = amounts.Select(amount => new { categoryId = category, amount }).ToArray(),
+    };
+
+    private async Task AssertLineOrderAsync(Guid account, Guid transactionId, string[] expected)
+    {
+        var fetched = await Client.GetFromJsonAsync<TransactionDto>($"/api/transactions/{transactionId}", TestContext.Current.CancellationToken);
+        var page = await Client.GetFromJsonAsync<PageDto<TransactionDto>>($"/api/transactions?accountId={account}", TestContext.Current.CancellationToken);
+        var listed = Assert.Single(page!.Items, t => t.Id == transactionId);
+        Assert.Equal(expected, fetched!.Lines!.Select(l => l.Amount));
+        Assert.Equal(expected, listed.Lines!.Select(l => l.Amount));
     }
 }

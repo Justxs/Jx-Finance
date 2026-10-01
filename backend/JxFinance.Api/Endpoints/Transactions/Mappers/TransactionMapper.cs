@@ -46,13 +46,14 @@ public static class TransactionMapper
         TransactionId transactionId,
         Guid userId,
         Currency currency) =>
-        lines.Select(line => new TransactionLine
+        lines.Select((line, position) => new TransactionLine
         {
             UserId = userId,
             TransactionId = transactionId,
             CategoryId = line.CategoryId is { } categoryId ? new CategoryId(categoryId) : null,
             Amount = new Money(line.Amount, currency),
             Description = OptionalText.Normalize(line.Description),
+            Position = position,
         }).ToList();
 
     public static List<TransactionTag> ToTransactionTags(this IReadOnlyList<Guid>? tagIds, TransactionId transactionId) =>

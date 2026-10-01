@@ -158,7 +158,7 @@ public sealed class TrashEndpointTests(ApiFixture fixture) : IntegrationTestBase
         var back = (await member.GetFromJsonAsync<TransactionDto>($"/api/transactions/{transaction.Id}", TestContext.Current.CancellationToken))!;
 
         Assert.True(back.IsSplit);
-        Assert.Equal(["10.00", "20.00"], back.Lines!.Select(l => l.Amount).Order());
+        Assert.Equal(["20.00", "10.00"], back.Lines!.Select(l => l.Amount));
         Assert.Equal([tag], back.TagIds);
     }
 

@@ -161,6 +161,8 @@ sequenceDiagram
     Note over Form: failure keeps the dialog open with values,<br/>field errors land on their fields
 ```
 
+Split lines come back in the order they were sent, on create, update, get by id and the list, and after a restore from the trash: each line stores its place in the request as `Position`, which is not part of the contract, and every read orders by it then by `Id`. Reordering the lines in an edit is therefore kept, the Beancount journal writes the postings in that order, and the line that takes the remainder when category figures share out the reporting amount is the last one entered.
+
 While the split is on and the amount is a valid positive number, a line above the split lines reads "Transaction €75.00 · Assigned €52.00" followed by "€23.00 remaining", "€5.00 over" in the expense colour, or "Fully assigned". `splitBalance` in `line-form-value.ts` counts only line amounts that parse as money and works in cents. A line whose amount is empty offers "Use remaining €23.00", which types the remainder into it. The zod rule that the lines must total the amount is unchanged; the line only shows the gap before submit. The description and every line's description take at most 500 characters, the generated `createTransactionBodyDescriptionMax`; the server's limit on a line's description is not in the contract, so the form and the receipt split reuse the transaction's.
 
 ## Suggested categories

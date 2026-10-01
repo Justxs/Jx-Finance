@@ -63,7 +63,7 @@ public sealed class CategoryAttributionService(AppDbContext db) : ICategoryAttri
         var splitIds = splits.Keys.ToList();
         var lines = await db.TransactionLines
             .Where(l => splitIds.Contains(l.TransactionId))
-            .OrderBy(l => l.Id)
+            .OrderBy(l => l.Position).ThenBy(l => l.Id)
             .Select(l => new { l.TransactionId, l.CategoryId, Amount = (decimal)l.Amount })
             .ToListAsync(cancellationToken);
 

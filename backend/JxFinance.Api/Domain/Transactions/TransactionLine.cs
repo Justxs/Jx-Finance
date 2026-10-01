@@ -11,4 +11,5 @@ public sealed class TransactionLine
     public CategoryId? CategoryId { get; set; }
     public Money Amount { get; set; }
     public string? Description { get; set; }
+    public int Position { get; set; }
 }

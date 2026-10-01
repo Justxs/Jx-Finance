@@ -429,7 +429,7 @@ public sealed class ReceiptReadingTests(ApiFixture fixture) : IntegrationTestBas
 
         var linked = await Client.GetFromJsonAsync<TransactionDto>($"/api/transactions/{entered.Id}", TestContext.Current.CancellationToken);
         Assert.Equal(("imported", true), (linked!.Source, linked.IsSplit));
-        Assert.Equal(["10.15", "8.06"], linked.Lines!.Select(l => l.Amount).Order(StringComparer.Ordinal));
+        Assert.Equal(["10.15", "8.06"], linked.Lines!.Select(l => l.Amount));
     }
 
     private static byte[] Jpeg()
