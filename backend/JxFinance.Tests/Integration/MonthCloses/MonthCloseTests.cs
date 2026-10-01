@@ -240,6 +240,8 @@ public sealed class MonthCloseTests(ApiFixture fixture) : IntegrationTestBase(fi
         var unusual = await CreateTransactionAsync(member, account, food, "expense", "90.00", "2025-03-05");
         await SqlAsync($"""UPDATE "Transactions" SET "UnusualBasis" = 'Payee', "UnusualTypicalAmount" = 30, "UnusualFactor" = 3, "UnusualSampleSize" = 5, "UnusualCheckedAt" = now() WHERE "Id" = {unusual.Id}""");
         await CreateTransactionAsync(member, account, null, "expense", "5.00", "2025-04-01");
+        await CreateTransactionAsync(member, account, food, "expense", "3.50", "2025-03-30", "Kava");
+        await CreateTransactionAsync(member, account, food, "expense", "3.50", "2025-04-01", "Kava ");
         await PostAsync<IdDto>(member, "/api/recurring-bills", new
         {
             name = "Rent",
@@ -259,12 +261,17 @@ public sealed class MonthCloseTests(ApiFixture fixture) : IntegrationTestBase(fi
         var flagged = await member.GetFromJsonAsync<SummaryDto>(
             "/api/transactions/summary?dateFrom=2025-03-01&dateTo=2025-03-31&unusual=true",
             TestContext.Current.CancellationToken);
+        var duplicates = await member.GetFromJsonAsync<SummaryDto>(
+            "/api/transactions/summary?dateFrom=2025-03-01&dateTo=2025-03-31&duplicates=true",
+            TestContext.Current.CancellationToken);
 
         Assert.Equal(2, review.Checklist.Uncategorized);
         Assert.Equal(uncategorized!.Count, review.Checklist.Uncategorized);
         Assert.Equal(1, review.Checklist.Unusual);
         Assert.Equal(flagged!.Count, review.Checklist.Unusual);
         Assert.Equal(1, review.Checklist.UnconfirmedRecurring);
+        Assert.Equal(1, review.Checklist.Duplicates);
+        Assert.Equal(duplicates!.Count, review.Checklist.Duplicates);
     }
 
     [Fact]
@@ -426,7 +433,7 @@ public sealed class MonthCloseTests(ApiFixture fixture) : IntegrationTestBase(fi
 
     private sealed record FiguresDto(string TotalIncome, string TotalExpense, string Net, ComparisonDto? Comparison);
 
-    private sealed record ChecklistDto(int Uncategorized, int? UnconfirmedRecurring, int? Unusual, List<AccountCoverageDto> Accounts);
+    private sealed record ChecklistDto(int Uncategorized, int? UnconfirmedRecurring, int? Unusual, int Duplicates, List<AccountCoverageDto> Accounts);
 
     private sealed record AccountCoverageDto(Guid AccountId, string State, DateOnly? Date, string? Difference);
 

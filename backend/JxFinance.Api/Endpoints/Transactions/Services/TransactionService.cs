@@ -349,6 +349,12 @@ public sealed class TransactionService(
                 : t.CategoryId == null);
         }
 
+        if (request.Duplicates == true)
+        {
+            var pairs = PossibleDuplicates.Pairs(db);
+            query = query.Where(t => pairs.Any(p => p.Id == t.Id));
+        }
+
         return query;
     }
 
@@ -385,6 +391,25 @@ public sealed class TransactionService(
             .ExecuteUpdateAsync(setters => setters.SetProperty(t => t.UnusualDismissedAt, dismissedAt), cancellationToken);
 
         return changed == 0 ? NotFound : id;
+    }
+
+    public async Task<Result<Guid>> KeepPossibleDuplicatesAsync(Guid id, CancellationToken cancellationToken)
+    {
+        var transactionId = new TransactionId(id);
+        if (!await db.Transactions.AnyAsync(t => t.Id == transactionId, cancellationToken))
+        {
+            return NotFound;
+        }
+
+        var others = await PossibleDuplicates.Pairs(db)
+            .Where(p => p.Id == transactionId)
+            .Select(p => p.OtherId)
+            .Distinct()
+            .ToListAsync(cancellationToken);
+        db.DuplicateDismissals.AddRange(others.Select(other => new DuplicateDismissal { TransactionId = transactionId, OtherTransactionId = other }));
+        await db.SaveChangesAsync(cancellationToken);
+
+        return id;
     }
 
     public async Task<Result<TransactionResponse>> CreateAsync(

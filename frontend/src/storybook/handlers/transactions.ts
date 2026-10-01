@@ -11,6 +11,7 @@ import {
   getDeleteTransactionMockHandler,
   getDismissUnusualAmountMockHandler,
   getExportTransactionsMockHandler,
+  getKeepPossibleDuplicatesMockHandler,
   getRestoreUnusualAmountMockHandler,
   getSuggestCategoryMockHandler,
   getUncategorizedSuggestionsMockHandler,
@@ -86,6 +87,29 @@ function compareTransactions(sort: string | null) {
   };
 }
 
+const DUPLICATE_WINDOW_DAYS = 3;
+const DAY_MS = 86_400_000;
+
+function hasPossibleDuplicate(
+  item: TransactionResponse,
+  rows: readonly TransactionResponse[],
+): boolean {
+  return (
+    toCents(item.amount) > 0 &&
+    rows.some(
+      (other) =>
+        other.id !== item.id &&
+        other.accountId === item.accountId &&
+        other.type === item.type &&
+        other.amount === item.amount &&
+        other.currency === item.currency &&
+        Math.abs(Date.parse(other.date) - Date.parse(item.date)) <=
+          DUPLICATE_WINDOW_DAYS * DAY_MS &&
+        (other.description ?? "").trim() === (item.description ?? "").trim(),
+    )
+  );
+}
+
 export function filterRows(
   rows: readonly TransactionResponse[],
   params: URLSearchParams,
@@ -100,6 +124,7 @@ export function filterRows(
   const dateTo = params.get("dateTo");
   const unusualOnly = params.get("unusual") === "true";
   const uncategorizedOnly = params.get("uncategorized") === "true";
+  const duplicatesOnly = params.get("duplicates") === "true";
   const filtered = rows.filter(
     (item) =>
       (!accountId || item.accountId === accountId) &&
@@ -114,7 +139,8 @@ export function filterRows(
       (!uncategorizedOnly ||
         (item.isSplit
           ? (item.lines ?? []).some((line) => line.categoryId === null)
-          : item.categoryId === null)),
+          : item.categoryId === null)) &&
+      (!duplicatesOnly || hasPossibleDuplicate(item, rows)),
   );
   const sorted = filtered.toSorted(compareTransactions(params.get("sort")));
   return applyDirection(sorted, params, "desc");
@@ -235,5 +261,6 @@ export const transactionHandlers = [
   getDeleteTransactionMockHandler(),
   getDismissUnusualAmountMockHandler(),
   getRestoreUnusualAmountMockHandler(),
+  getKeepPossibleDuplicatesMockHandler(),
   getBulkTagTransactionsMockHandler(bulkUpdate),
 ];

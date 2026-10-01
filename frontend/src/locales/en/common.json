@@ -510,6 +510,11 @@
       "dismissed": "Marked as not unusual",
       "restored": "Marked as unusual again"
     },
+    "possibleDuplicates": {
+      "only": "Possible duplicates only",
+      "keepBoth": "Keep both",
+      "kept": "Kept both. This pair will not be offered again."
+    },
     "attachments": {
       "title": "Receipts and files",
       "hint": "JPEG, PNG, WebP, HEIC or PDF, up to {{size}} MB each and {{max}} per transaction.",
@@ -2857,10 +2862,13 @@
       "uncategorized_other": "{{count}} uncategorized transactions",
       "unusual_one": "{{count}} unusual expense",
       "unusual_other": "{{count}} unusual expenses",
+      "duplicates_one": "{{count}} transaction looks like a duplicate",
+      "duplicates_other": "{{count}} transactions look like duplicates",
       "recurring_one": "{{count}} recurring entry due by the end of the month",
       "recurring_other": "{{count}} recurring entries due by the end of the month",
       "noUncategorized": "Every transaction has a category",
       "noUnusual": "No unusual expenses",
+      "noDuplicates": "No possible duplicates",
       "noRecurring": "No recurring entry is waiting",
       "importCovered": "{{account}} imported through {{date}}",
       "review": "Review",

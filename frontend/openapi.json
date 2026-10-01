@@ -11943,7 +11943,7 @@
           "MonthClose"
         ],
         "summary": "Review one month for closing",
-        "description": "Everything the month-end close page shows for one calendar month. checklist counts what still needs attention: uncategorized transactions dated in the month (the same rows as the ledger with uncategorized=true), active recurring entries due on or before the month's last day while the recurringBills feature is on, unusual expenses not marked \"not unusual\" while the unusualAmounts feature is on, and per account the date of the latest imported transaction while the import feature is on; a disabled feature answers null. figures is the report summary of the month compared with the previous month. budgets holds the monthly budgets with their usage as of the month's last day, measured against today's limits, and is null while the budgets feature is off. netWorthStart and netWorthEnd hold the last net worth snapshots before the month and on or before its last day; both are null while the netWorth feature is off. drift is null until the month is closed. Once closed it holds the totals frozen at the close, every category whose amount moved, and up to 100 of the transactions and investment entries created, edited, deleted or moved out of the month since, newest first; rowCount gives the full number. When the totals and categories match today's figures, the listed changes left the month's figures as they were. After a change of reporting currency every figure moves, so drift only says currencyChanged and lists nothing. Tags, attachments and notes are not part of the figures and never count as drift.",
+        "description": "Everything the month-end close page shows for one calendar month. checklist counts what still needs attention: uncategorized transactions dated in the month (the same rows as the ledger with uncategorized=true), active recurring entries due on or before the month's last day while the recurringBills feature is on, unusual expenses not marked \"not unusual\" while the unusualAmounts feature is on, possible duplicates dated in the month (the same rows as the ledger with duplicates=true), and per account the date of the latest imported transaction while the import feature is on; a disabled feature answers null. figures is the report summary of the month compared with the previous month. budgets holds the monthly budgets with their usage as of the month's last day, measured against today's limits, and is null while the budgets feature is off. netWorthStart and netWorthEnd hold the last net worth snapshots before the month and on or before its last day; both are null while the netWorth feature is off. drift is null until the month is closed. Once closed it holds the totals frozen at the close, every category whose amount moved, and up to 100 of the transactions and investment entries created, edited, deleted or moved out of the month since, newest first; rowCount gives the full number. When the totals and categories match today's figures, the listed changes left the month's figures as they were. After a change of reporting currency every figure moves, so drift only says currencyChanged and lists nothing. Tags, attachments and notes are not part of the figures and never count as drift.",
         "operationId": "GetMonthReview",
         "parameters": [
           {
@@ -15598,6 +15598,17 @@
             }
           },
           {
+            "name": "duplicates",
+            "in": "query",
+            "description": "true keeps only possible duplicates: transactions with another one on the same account, of the same type, amount and currency, dated at most three days apart, with the same payee key or, when either has none, the same trimmed description. Refunds, two rows imported by one confirm and pairs marked \"keep both\" are left out.",
+            "schema": {
+              "type": [
+                "null",
+                "boolean"
+              ]
+            }
+          },
+          {
             "name": "spreadOverlap",
             "in": "query",
             "description": "true also keeps transactions dated before the range that are spread over months with a monthly slice inside it, so a figure from a report or a budget leads to every row that makes it up. Ignored unless both dateFrom and dateTo are set.",
@@ -16018,6 +16029,17 @@
             "name": "uncategorized",
             "in": "query",
             "description": "true keeps only transactions without a category, and split transactions with at least one line without one.",
+            "schema": {
+              "type": [
+                "null",
+                "boolean"
+              ]
+            }
+          },
+          {
+            "name": "duplicates",
+            "in": "query",
+            "description": "true keeps only possible duplicates: transactions with another one on the same account, of the same type, amount and currency, dated at most three days apart, with the same payee key or, when either has none, the same trimmed description. Refunds, two rows imported by one confirm and pairs marked \"keep both\" are left out.",
             "schema": {
               "type": [
                 "null",
@@ -16452,6 +16474,17 @@
             }
           },
           {
+            "name": "duplicates",
+            "in": "query",
+            "description": "true keeps only possible duplicates: transactions with another one on the same account, of the same type, amount and currency, dated at most three days apart, with the same payee key or, when either has none, the same trimmed description. Refunds, two rows imported by one confirm and pairs marked \"keep both\" are left out.",
+            "schema": {
+              "type": [
+                "null",
+                "boolean"
+              ]
+            }
+          },
+          {
             "name": "spreadOverlap",
             "in": "query",
             "description": "true also keeps transactions dated before the range that are spread over months with a monthly slice inside it, so a figure from a report or a budget leads to every row that makes it up. Ignored unless both dateFrom and dateTo are set.",
@@ -16696,6 +16729,17 @@
             "name": "uncategorized",
             "in": "query",
             "description": "true keeps only transactions without a category, and split transactions with at least one line without one.",
+            "schema": {
+              "type": [
+                "null",
+                "boolean"
+              ]
+            }
+          },
+          {
+            "name": "duplicates",
+            "in": "query",
+            "description": "true keeps only possible duplicates: transactions with another one on the same account, of the same type, amount and currency, dated at most three days apart, with the same payee key or, when either has none, the same trimmed description. Refunds, two rows imported by one confirm and pairs marked \"keep both\" are left out.",
             "schema": {
               "type": [
                 "null",
@@ -16950,6 +16994,17 @@
             "name": "uncategorized",
             "in": "query",
             "description": "true keeps only transactions without a category, and split transactions with at least one line without one.",
+            "schema": {
+              "type": [
+                "null",
+                "boolean"
+              ]
+            }
+          },
+          {
+            "name": "duplicates",
+            "in": "query",
+            "description": "true keeps only possible duplicates: transactions with another one on the same account, of the same type, amount and currency, dated at most three days apart, with the same payee key or, when either has none, the same trimmed description. Refunds, two rows imported by one confirm and pairs marked \"keep both\" are left out.",
             "schema": {
               "type": [
                 "null",
@@ -17350,6 +17405,17 @@
             }
           },
           {
+            "name": "duplicates",
+            "in": "query",
+            "description": "true keeps only possible duplicates: transactions with another one on the same account, of the same type, amount and currency, dated at most three days apart, with the same payee key or, when either has none, the same trimmed description. Refunds, two rows imported by one confirm and pairs marked \"keep both\" are left out.",
+            "schema": {
+              "type": [
+                "null",
+                "boolean"
+              ]
+            }
+          },
+          {
             "name": "spreadOverlap",
             "in": "query",
             "description": "true also keeps transactions dated before the range that are spread over months with a monthly slice inside it, so a figure from a report or a budget leads to every row that makes it up. Ignored unless both dateFrom and dateTo are set.",
@@ -17561,6 +17627,17 @@
             "name": "uncategorized",
             "in": "query",
             "description": "true keeps only transactions without a category, and split transactions with at least one line without one.",
+            "schema": {
+              "type": [
+                "null",
+                "boolean"
+              ]
+            }
+          },
+          {
+            "name": "duplicates",
+            "in": "query",
+            "description": "true keeps only possible duplicates: transactions with another one on the same account, of the same type, amount and currency, dated at most three days apart, with the same payee key or, when either has none, the same trimmed description. Refunds, two rows imported by one confirm and pairs marked \"keep both\" are left out.",
             "schema": {
               "type": [
                 "null",
@@ -17902,6 +17979,77 @@
           },
           {
             "PersonalApiToken": [ ]
+          }
+        ]
+      }
+    },
+    "/api/transactions/{id}/duplicates/keep": {
+      "post": {
+        "tags": [
+          "Transactions"
+        ],
+        "summary": "Keep a transaction and its possible duplicates",
+        "description": "Answers \"keep both\" for every pair the duplicates=true filter currently finds with this transaction: each pair is stored and never offered again, so both rows leave the filter unless one of them still pairs with a third row. Changes neither transaction. To remove the extra row instead, delete it through DELETE /api/transactions/{id}. A transaction without a possible duplicate answers 204 and stores nothing.",
+        "operationId": "KeepPossibleDuplicates",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The transaction id.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Every current pair of the transaction is kept."
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such transaction is visible to the signed-in user.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
           }
         ]
       }
@@ -26145,6 +26293,7 @@
           "uncategorized",
           "unconfirmedRecurring",
           "unusual",
+          "duplicates",
           "accounts"
         ],
         "type": "object",
@@ -26165,6 +26314,10 @@
               "null",
               "integer"
             ],
+            "format": "int32"
+          },
+          "duplicates": {
+            "type": "integer",
             "format": "int32"
           },
           "accounts": {

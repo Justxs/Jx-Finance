@@ -78,6 +78,24 @@ public sealed class RetentionJobTests(ApiFixture fixture) : IntegrationTestBase(
     }
 
     [Fact]
+    public async Task An_expired_transaction_takes_its_kept_duplicate_pair_with_it()
+    {
+        using var member = await CreateUserClientAsync();
+        var account = await CreateAccountAsync(client: member);
+        var kept = await CreateTransactionAsync(member, account, null, "expense", "7.00", Date, "Kava");
+        var deleted = await CreateTransactionAsync(member, account, null, "expense", "7.00", Date, "Kava");
+        (await member.PostAsync($"/api/transactions/{kept.Id}/duplicates/keep", null, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
+        (await member.DeleteAsync($"/api/transactions/{deleted.Id}", TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
+        await BackdateAsync(deleted.Id);
+
+        await RunAsync();
+
+        var keptId = new Domain.Transactions.TransactionId(kept.Id);
+        Assert.Equal(0, await CountAsync(db => db.DuplicateDismissals.Where(d => d.TransactionId == keptId || d.OtherTransactionId == keptId)));
+        Assert.Equal(1, await CountAsync(db => db.Transactions.IgnoreQueryFilters().Where(t => t.Id == keptId && !t.IsDeleted)));
+    }
+
+    [Fact]
     public async Task An_expired_session_goes_and_the_signed_in_one_stays()
     {
         var user = await CreateUserAsync();

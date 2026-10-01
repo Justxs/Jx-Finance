@@ -30,5 +30,7 @@ public abstract class TransactionFilterRequest
 
     public bool? Uncategorized { get; init; }
 
+    public bool? Duplicates { get; init; }
+
     public bool? SpreadOverlap { get; init; }
 }

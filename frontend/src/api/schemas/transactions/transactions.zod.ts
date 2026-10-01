@@ -1320,6 +1320,12 @@ export const UpdateTransactionResponse = zod.object({
 });
 
 /**
+ * Answers "keep both" for every pair the duplicates=true filter currently finds with this transaction: each pair is stored and never offered again, so both rows leave the filter unless one of them still pairs with a third row. Changes neither transaction. To remove the extra row instead, delete it through DELETE /api/transactions/{id}. A transaction without a possible duplicate answers 204 and stores nothing.
+ * @summary Keep a transaction and its possible duplicates
+ */
+export const KeepPossibleDuplicatesResponse = zod.void();
+
+/**
  * Keeps the flag the background check stored but stops showing it: the ledger's unusual filter leaves the row out and the response reports unusualDismissed. The mark survives later edits of the transaction, so correcting a typo does not bring the flag back. Only an annotation; the transaction itself is not changed. Needs the unusualAmounts feature.
  * @summary Mark an unusual expense as not unusual
  */

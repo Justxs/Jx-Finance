@@ -112,6 +112,11 @@ export function TransactionsFiltersDialog({ filters, tags, className }: Readonly
             </label>
           ) : null}
 
+          <label className="flex items-center gap-2.5 text-sm font-medium">
+            <Checkbox checked={fields.duplicates.value} onCheckedChange={fields.duplicates.set} />
+            {fields.duplicates.label}
+          </label>
+
           <FieldShell id="tx-filter-date" label={fields.date.label}>
             <DateRangePicker
               id="tx-filter-date"

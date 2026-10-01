@@ -23,6 +23,13 @@ import {
   transactionFilterParams,
 } from "./transaction-queries";
 
+export interface AmountFilterDraft {
+  type: TransactionTypeFilter;
+  unusual: boolean;
+  duplicates: boolean;
+  range: AmountRangeDraft;
+}
+
 interface Args {
   accounts: AccountResponse[];
   categories: CategoryResponse[];
@@ -50,6 +57,7 @@ export function useTransactionFilters({ accounts, categories }: Args) {
     search.accountId,
     search.tagIds,
     unusualEnabled && search.unusual,
+    search.duplicates,
   ].filter(Boolean).length;
 
   const selectedTagIds = parseTagIds(search.tagIds);
@@ -142,11 +150,12 @@ export function useTransactionFilters({ accounts, categories }: Args) {
       clear: () => setTagIds([]),
     },
     amount: {
-      set: (type: TransactionTypeFilter, unusual: boolean, range: AmountRangeDraft) =>
+      set: (draft: AmountFilterDraft) =>
         patchSearch({
-          type: type || undefined,
-          unusual: unusual || undefined,
-          ...parseAmountRange(range),
+          type: draft.type || undefined,
+          unusual: draft.unusual || undefined,
+          duplicates: draft.duplicates || undefined,
+          ...parseAmountRange(draft.range),
         }),
     },
     amountRange: {
@@ -162,6 +171,11 @@ export function useTransactionFilters({ accounts, categories }: Args) {
       enabled: unusualEnabled,
       value: search.unusual === true,
       set: (next: boolean) => patchSearch({ unusual: next || undefined }),
+    },
+    duplicates: {
+      label: t("transactions.possibleDuplicates.only"),
+      value: search.duplicates === true,
+      set: (next: boolean) => patchSearch({ duplicates: next || undefined }),
     },
     sort: {
       label: t("transactions.sortBy"),

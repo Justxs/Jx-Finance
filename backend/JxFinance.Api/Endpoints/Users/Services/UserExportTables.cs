@@ -26,6 +26,7 @@ public static class UserExportTables
         ["PayeeNames"] = new Owned(),
         ["CurrencyConversions"] = new OnOwnedAccounts(AccountId),
         ["DebtPayments"] = new ChildOf("Debts", "DebtId"),
+        ["DuplicateDismissals"] = new ChildOf(Transactions, TransactionId),
         ["Debts"] = new Owned(),
         ["DeletionChanges"] = new ChildOf("DeletionEntries", "DeletionEntryId"),
         ["DeletionEntries"] = new Owned(),

@@ -79,6 +79,11 @@ export type ExportTransactionsParams = {
    */
   uncategorized?: boolean | null;
   /**
+   * true keeps only possible duplicates: transactions with another one on the same account, of the same type, amount and currency, dated at most three days apart, with the same payee key or, when either has none, the same trimmed description. Refunds, two rows imported by one confirm and pairs marked "keep both" are left out.
+   * @nullable
+   */
+  duplicates?: boolean | null;
+  /**
    * true also keeps transactions dated before the range that are spread over months with a monthly slice inside it, so a figure from a report or a budget leads to every row that makes it up. Ignored unless both dateFrom and dateTo are set.
    * @nullable
    */

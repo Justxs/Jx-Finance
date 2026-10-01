@@ -18,6 +18,7 @@ export const transactionFilterSchema = z.object({
   amountMax: optionalParam(z.number().nonnegative()),
   unusual: optionalParam(z.literal(true)),
   uncategorized: optionalParam(z.literal(true)),
+  duplicates: optionalParam(z.literal(true)),
   spreadOverlap: optionalParam(z.literal(true)),
 });
 

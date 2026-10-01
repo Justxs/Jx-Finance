@@ -13,5 +13,6 @@ export interface MonthChecklist {
   unconfirmedRecurring: number | null;
   /** @nullable */
   unusual: number | null;
+  duplicates: number;
   accounts: MonthAccountCoverage[];
 }

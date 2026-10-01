@@ -135,6 +135,14 @@ export function useFilterSummaries(
       clear: () => fields.unusual.set(false),
     });
   }
+  if (fields.duplicates.value) {
+    summaries.push({
+      key: "duplicates",
+      label: columnLabels.amount,
+      value: fields.duplicates.label,
+      clear: () => fields.duplicates.set(false),
+    });
+  }
 
   function valueOf(...keys: string[]) {
     const values = summaries

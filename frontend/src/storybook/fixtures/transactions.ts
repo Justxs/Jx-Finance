@@ -269,6 +269,13 @@ export const foreignCurrencyTransactions: TransactionResponse[] = [
   },
 ];
 
+const boltRide = imported(2, "09-16", checking, transport, -7.4, "Bolt pavėžėjimas", [car]);
+
+export const possibleDuplicatePair: TransactionResponse[] = [
+  boltRide,
+  manual(31, "09-15", checking, transport, -7.4, "Bolt pavėžėjimas"),
+];
+
 export const transactions: TransactionResponse[] = [
   {
     ...placed(
@@ -277,7 +284,7 @@ export const transactions: TransactionResponse[] = [
     ),
     payeeName: "Maxima",
   },
-  imported(2, "09-16", checking, transport, -7.4, "Bolt pavėžėjimas", [car]),
+  boltRide,
   imported(3, "09-15", shared, utilities, -68.93, "Ignitis – elektra už rugpjūtį"),
   imported(4, "09-15", checking, telecom, -24.99, "Telia – mobilusis ryšys ir internetas"),
   placed(imported(5, "09-14", shared, food, -56.72, "Lidl Žirmūnai"), lidlPlace),

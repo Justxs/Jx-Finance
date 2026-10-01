@@ -13,14 +13,15 @@ function account(state: MonthAccountState): MonthAccountCoverage {
   };
 }
 
-test("accounts that differ or are behind need attention but are not open items", () => {
+test("possible duplicates are open items, while accounts that differ or are behind only need attention", () => {
   const checklist = {
     uncategorized: 2,
     unusual: 0,
+    duplicates: 2,
     unconfirmedRecurring: null,
     accounts: [account("reconciled"), account("differs"), account("imported"), account("behind")],
   };
 
-  expect(attentionCount(checklist)).toBe(3);
-  expect(openItemCount(checklist)).toBe(2);
+  expect(attentionCount(checklist)).toBe(4);
+  expect(openItemCount(checklist)).toBe(4);
 });

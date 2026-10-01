@@ -239,6 +239,10 @@ public sealed class MonthCloseService(
             new GetTransactionsSummaryRequest { DateFrom = window.Start, DateTo = window.InclusiveEnd, Uncategorized = true },
             cancellationToken);
 
+        var duplicates = await transactions.GetSummaryAsync(
+            new GetTransactionsSummaryRequest { DateFrom = window.Start, DateTo = window.InclusiveEnd, Duplicates = true },
+            cancellationToken);
+
         int? unusual = null;
         if (IsEnabled(Feature.UnusualAmounts))
         {
@@ -254,7 +258,7 @@ public sealed class MonthCloseService(
             recurring = await db.RecurringBills.CountAsync(b => b.IsActive && b.NextDueDate <= lastDay, cancellationToken);
         }
 
-        return new MonthChecklist(uncategorized.Count, recurring, unusual, await AccountCoverageAsync(window.InclusiveEnd, cancellationToken));
+        return new MonthChecklist(uncategorized.Count, recurring, unusual, duplicates.Count, await AccountCoverageAsync(window.InclusiveEnd, cancellationToken));
     }
 
     private async Task<IReadOnlyList<MonthAccountCoverage>> AccountCoverageAsync(DateOnly monthEnd, CancellationToken cancellationToken)

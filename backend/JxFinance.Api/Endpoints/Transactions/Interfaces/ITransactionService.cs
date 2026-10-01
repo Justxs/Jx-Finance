@@ -60,6 +60,8 @@ public interface ITransactionService
 
     Task<Result<Guid>> SetUnusualDismissedAsync(Guid id, bool dismissed, CancellationToken cancellationToken);
 
+    Task<Result<Guid>> KeepPossibleDuplicatesAsync(Guid id, CancellationToken cancellationToken);
+
     Task<ExportNames> ExportNamesAsync(CancellationToken cancellationToken);
 
     IAsyncEnumerable<TransactionResponse> StreamExportAsync(

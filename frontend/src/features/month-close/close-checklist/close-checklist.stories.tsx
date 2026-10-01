@@ -36,6 +36,17 @@ export const WithOpenItems: Story = {
   },
 };
 
+export const WithPossibleDuplicates: Story = {
+  args: { checklist: { ...clearOpenMonthReview.checklist, duplicates: 2 } },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText("2 transactions look like duplicates")).toBeVisible();
+    await expect(canvas.getByRole("link", { name: "Review" })).toHaveAttribute(
+      "href",
+      expect.stringContaining("duplicates=true"),
+    );
+  },
+};
+
 export const AllClear: Story = {
   args: { checklist: clearOpenMonthReview.checklist },
   play: async ({ canvas }) => {
@@ -61,7 +72,7 @@ export const FeaturesOff: Story = {
     },
   },
   play: async ({ canvas }) => {
-    await expect(canvas.getAllByRole("listitem")).toHaveLength(1);
+    await expect(canvas.getAllByRole("listitem")).toHaveLength(2);
   },
 };
 

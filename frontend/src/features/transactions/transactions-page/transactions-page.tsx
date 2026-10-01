@@ -92,7 +92,7 @@ export function TransactionsPage() {
   const suggestedRule = useSuggestedRuleToast(categories);
   const filters = useTransactionFilters({ accounts, categories });
   const columnHeaders = useTransactionColumnHeaders(filters, tags);
-  const rowDialogs = useTransactionRowDialogs();
+  const rowDialogs = useTransactionRowDialogs({ possibleDuplicates: shown.duplicates === true });
   const inlineCategory = useInlineCategory(suggestedRule.offerAfterSave);
 
   const mutations = useTransactionMutations({ listKey, onBulkApplied: selection.clear });

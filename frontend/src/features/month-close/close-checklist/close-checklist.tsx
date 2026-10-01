@@ -11,7 +11,12 @@ import { EXPENSE_TONE, INCOME_TONE } from "@/lib/tone";
 import { cn } from "@/lib/utils";
 
 export function openItemCount(checklist: MonthChecklist) {
-  return checklist.uncategorized + (checklist.unusual ?? 0) + (checklist.unconfirmedRecurring ?? 0);
+  return (
+    checklist.uncategorized +
+    (checklist.unusual ?? 0) +
+    checklist.duplicates +
+    (checklist.unconfirmedRecurring ?? 0)
+  );
 }
 
 function needsReconciling(entry: MonthAccountCoverage) {
@@ -19,7 +24,12 @@ function needsReconciling(entry: MonthAccountCoverage) {
 }
 
 export function attentionCount(checklist: MonthChecklist) {
-  const counts = [checklist.uncategorized, checklist.unusual, checklist.unconfirmedRecurring];
+  const counts = [
+    checklist.uncategorized,
+    checklist.unusual,
+    checklist.duplicates,
+    checklist.unconfirmedRecurring,
+  ];
   return (
     counts.filter((count) => (count ?? 0) > 0).length +
     checklist.accounts.filter(needsReconciling).length
@@ -91,6 +101,21 @@ export function CloseChecklist({ month, checklist, openOnly = false, className }
       ],
     });
   }
+
+  items.push({
+    key: "duplicates",
+    done: checklist.duplicates === 0,
+    label:
+      checklist.duplicates === 0
+        ? t("monthClose.checklist.noDuplicates")
+        : t("monthClose.checklist.duplicates", { count: checklist.duplicates }),
+    actions: [
+      {
+        label: review,
+        link: linkOptions({ to: "/transactions", search: { page: 1, ...range, duplicates: true } }),
+      },
+    ],
+  });
 
   if (checklist.unconfirmedRecurring !== null) {
     items.push({

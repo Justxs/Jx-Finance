@@ -536,6 +536,11 @@
       "dismissed": "Pažymėta kaip įprasta suma",
       "restored": "Vėl pažymėta kaip neįprasta suma"
     },
+    "possibleDuplicates": {
+      "only": "Tik galimi dublikatai",
+      "keepBoth": "Palikti abi",
+      "kept": "Abi operacijos paliktos. Ši pora daugiau nebus siūloma."
+    },
     "attachments": {
       "title": "Čekiai ir failai",
       "hint": "JPEG, PNG, WebP, HEIC arba PDF, kiekvienas iki {{size}} MB, ne daugiau kaip {{max}} vienai operacijai.",
@@ -2959,12 +2964,17 @@
       "unusual_few": "{{count}} neįprastos išlaidos",
       "unusual_many": "{{count}} neįprastos išlaidos",
       "unusual_other": "{{count}} neįprastų išlaidų",
+      "duplicates_one": "{{count}} operacija atrodo kaip dublikatas",
+      "duplicates_few": "{{count}} operacijos atrodo kaip dublikatai",
+      "duplicates_many": "{{count}} operacijos atrodo kaip dublikatai",
+      "duplicates_other": "{{count}} operacijų atrodo kaip dublikatai",
       "recurring_one": "{{count}} periodinis įrašas, kurio terminas iki mėnesio pabaigos",
       "recurring_few": "{{count}} periodiniai įrašai, kurių terminas iki mėnesio pabaigos",
       "recurring_many": "{{count}} periodinio įrašo, kurių terminas iki mėnesio pabaigos",
       "recurring_other": "{{count}} periodinių įrašų, kurių terminas iki mėnesio pabaigos",
       "noUncategorized": "Visos operacijos turi kategoriją",
       "noUnusual": "Neįprastų išlaidų nėra",
+      "noDuplicates": "Galimų dublikatų nėra",
       "noRecurring": "Laukiančių periodinių įrašų nėra",
       "importCovered": "{{account}}: importuota iki {{date}}",
       "review": "Peržiūrėti",

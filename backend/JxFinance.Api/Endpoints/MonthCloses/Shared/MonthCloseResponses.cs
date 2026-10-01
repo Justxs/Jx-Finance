@@ -50,6 +50,7 @@ public sealed record MonthChecklist(
     int Uncategorized,
     int? UnconfirmedRecurring,
     int? Unusual,
+    int Duplicates,
     IReadOnlyList<MonthAccountCoverage> Accounts);
 
 public enum MonthAccountState

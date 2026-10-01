@@ -316,6 +316,7 @@ Every 201 goes through `CreatedAsync`, which sets `Location` to a path built fro
 | DELETE | `/api/transactions/{id}` |
 | GET | `/api/transactions/{id}` |
 | PUT | `/api/transactions/{id}` |
+| POST | `/api/transactions/{id}/duplicates/keep` |
 | DELETE | `/api/transactions/{id}/unusual/dismiss` |
 | POST | `/api/transactions/{id}/unusual/dismiss` |
 | GET | `/api/transactions/{transactionId}/attachments` |
@@ -375,6 +376,8 @@ Since 2026-09-29 a transaction's `amount` is signed for an expense: negative mea
 The transaction list, summary and both exports take `unusual`: `true` keeps the expenses flagged as unusual and not marked "not unusual", and it is ignored while the `UnusualAmounts` feature is off. `GET /api/transactions` and `GET /api/transactions/{id}` answer `unusual` (`basis`, `typicalAmount`, `factor`, `sampleSize`, or null) and `unusualDismissed`, both empty while the feature is off. `POST /api/transactions/{id}/unusual/dismiss` marks a row "not unusual" and `DELETE` of the same route removes the mark; both answer 204, 404 `resource.notFound` for a transaction the caller cannot see and 404 `feature.disabled` while the feature is off. They sit in `TransactionsGroup`, which has no feature, and carry `RequiresFeature` on the endpoint itself; `GET /api/transactions/places` does the same for `Locations`, and these are the only gated routes outside a gated group. The Swedbank preview answers `unusual` on each expense row in the same shape.
 
 The same four also take `uncategorized`: `true` keeps the transactions without a category and the split transactions with at least one line without one. It is a property of the shared `TransactionFilterRequest`, belongs to no feature, and is what the month-end checklist counts and links to.
+
+Since 2026-10-01 they also take `duplicates`: `true` keeps the [possible duplicates](features/transactions.md#possible-duplicates), transactions with another one on the same account of the same type, amount and currency within three days and with the same payee key, or the same trimmed description when either has none. Like `uncategorized` it belongs to no feature, and the month-end checklist counts it. `POST /api/transactions/{id}/duplicates/keep` answers "keep both" for every pair the filter finds with that row and answers 204, also when there is none, or 404 `resource.notFound` for a transaction the caller cannot see; it is not reachable with an API token.
 
 They also take `payee`, since 2026-09-29: the value is normalized like a stored `PayeeKey` and keeps the transactions whose key equals it, so a `payeeKey` of the report and a raw description both work; a value with nothing left after normalizing is ignored and more than 500 characters answers `text.tooLong`. See [Transactions](features/transactions.md#payee-filter).
 

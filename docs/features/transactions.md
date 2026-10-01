@@ -6,7 +6,7 @@ Backend `Transactions`, page `/transactions`. One `Filtered` method builds the q
 
 ```mermaid
 flowchart TD
-    Url["Search params<br/>text, payee, place, account, category, tags, type, dateFrom, dateTo, amountMin, amountMax, unusual, uncategorized, spreadOverlap, sort, direction, page"] --> Defer["useDeferredParams"]
+    Url["Search params<br/>text, payee, place, account, category, tags, type, dateFrom, dateTo, amountMin, amountMax, unusual, uncategorized, duplicates, spreadOverlap, sort, direction, page"] --> Defer["useDeferredParams"]
     Defer --> List["GET /api/transactions/ledger"]
     Defer --> Summary["GET /api/transactions/summary"]
     Url --> Csv["GET /api/transactions/export"]
@@ -63,6 +63,7 @@ How each part of the application treats a refund. Totals net it, and the checks 
 | PDF export | Totals are net; the type cell reads "Refund" and the amount keeps its sign |
 | Unusual amounts, `UnusualAmountService`, `UnusualAmountJob` | Ignored as history and as a candidate: the job marks a refund checked with no verdict, and an edit that makes a row a refund clears its verdict (`AppDbContext.ApplyEntityRules`) |
 | Subscription detection, `SubscriptionDetectionService` | Ignored |
+| Possible duplicates, `PossibleDuplicates.Pairs` | Never pairs: only rows above zero are compared, so two equal refunds are not offered as duplicates |
 | Price rises, `PriceRiseMatcher` and the job's comparison | Ignored |
 | Debt payments, `NetWorthService` | Never offered as a candidate; linking one answers `debt.paymentWrongType` |
 | Rule suggestions, `SuggestedRuleService` | Ignored as evidence |
@@ -80,7 +81,7 @@ The row menus only list these actions. "Link to debt" and the household split ea
 
 While a column filter is active its button names the value in its tooltip and accessible name, such as "Filter by Account (now: Swedbank einamoji)", besides the tint. Above the rows, one line lists every active filter as a removable chip, labelled with its column, and ends with "Clear filters", which keeps the sort. A date range that covers exactly one calendar month reads as the month, such as "September 2026"; otherwise it reads as a range, or "From" or "Until" one date. The search text is quoted, the payee chip shows the key it filters on, and the category chip can read "Uncategorized". The phone filters dialog writes the same search params, so the line shows on phones too. It replaced the "Clear filters" button that sat in the page header. The page calls `useTransactionFilters` once and passes the result to the chip line, the column headers, the phone filters dialog and the saved filters menu; `useFilterSummaries(filters, tags)` builds the chip texts, and the column buttons read the same texts.
 
-The filter half of the search params is one zod schema, `transactionFilterSchema` in `features/transactions/transaction-queries.ts`. The route's `transactionsSearchSchema` extends it with `page`, `sort`, `direction` and `new`; `transactionFilterParams` parses a view through it, which keeps only the filter keys; and a saved filter stores the same shape. Each field falls back to "not set" on its own, so a URL or a saved filter with one bad value keeps the rest: `accountId` and `categoryId` must be UUIDs, `tagIds` a comma-separated list of them, `dateFrom` and `dateTo` ISO dates such as `2026-09-01`, `amountMin` and `amountMax` non-negative numbers, and `unusual` and `uncategorized` only take `true`, so `unusual=false` reads as no filter.
+The filter half of the search params is one zod schema, `transactionFilterSchema` in `features/transactions/transaction-queries.ts`. The route's `transactionsSearchSchema` extends it with `page`, `sort`, `direction` and `new`; `transactionFilterParams` parses a view through it, which keeps only the filter keys; and a saved filter stores the same shape. Each field falls back to "not set" on its own, so a URL or a saved filter with one bad value keeps the rest: `accountId` and `categoryId` must be UUIDs, `tagIds` a comma-separated list of them, `dateFrom` and `dateTo` ISO dates such as `2026-09-01`, `amountMin` and `amountMax` non-negative numbers, and `unusual`, `uncategorized` and `duplicates` only take `true`, so `unusual=false` reads as no filter.
 
 The create and edit dialogs, with the prefill of a duplicate, a refund or a template, the receipt file waiting to be attached and the receipt split that moves to an existing row, live in `useTransactionFormSection`; the page calls it once and hands its `startBlank`, `startFromDraft` and `startEditing` to the header, the templates menu and the row actions.
 
@@ -101,6 +102,25 @@ A save that sets or changes a category, in this cell or in the transaction form'
 `uncategorized=true` is a filter on the same four endpoints, part of `TransactionFilterRequest` like every other, and belongs to no feature. It keeps a transaction with no category, and a split transaction with at least one line without one; a split whose lines all carry a category is categorized even though its own `CategoryId` is empty. The ledger offers it as "Uncategorized", right after "All categories" in the category column's filter and in the phone filters dialog; choosing it clears `categoryId` and choosing a category clears it, so the two never combine. The filter's "Uncategorized" option and the "Uncategorized" choice of the category cell and the selection toolbar use one option value, `UNCATEGORIZED_OPTION`; the filter turns it into `uncategorized=true` and the other two into a null category. It is the `uncategorized` search param, counts as an active filter, travels in the export links and in a saved filter, and a saved filter written before it parses without it. It arrived with [month-end close](month-end-close.md), whose checklist counts the month's uncategorized rows through the summary and links to the ledger with the month's dates and this filter, so the count and the list it opens agree.
 
 While `MonthClose` is on, the create and edit dialogs of a transaction and a currency conversion show a hint under the date when that date falls in a month the user closed under the current household scope: "August 2026 is closed. Saving will show as a change after the close." `ClosedMonthHint` in `features/month-close` reads the year's statuses from `GET /api/month-close?year=`, fetched quietly on demand with a one-minute stale time; a failure shows no hint. It is a hint only: saving is never blocked, and the change shows as drift when the dashboard shows that month. Every transaction, transfer, conversion and investment mutation also invalidates the `/api/month-close` queries, so the month's status and drift follow without a reload.
+
+## Possible duplicates
+
+Since 2026-10-01 the ledger can show the rows that may have been recorded twice: a card payment typed in by hand and later imported without being matched, a row added through a [personal API token](personal-api-tokens.md) and then imported, or one statement imported once as CSV and once as camt.053. `duplicates=true` is a filter on the same four endpoints and on the ledger, part of `TransactionFilterRequest` like `uncategorized`, and belongs to no feature switch.
+
+A row is a possible duplicate when another visible, not deleted row (`PossibleDuplicates.Pairs` in `Transactions/Services`):
+
+- is on the same account, of the same type, with the same amount and currency;
+- is dated at most three days before or after it (`PossibleDuplicates.WindowDays`, the window of the import's [hand-entered match](bank-statement-import.md#entries-you-already-made-by-hand));
+- has the same stored `PayeeKey`, or, when either row has no payee key, the same description once trimmed;
+- is not a refund: rows with an amount of zero or below never pair;
+- was not imported together with it: two rows imported by one confirm carry the same `CreatedAt`, which is how a statement that really lists two equal coffees on one day keeps both without being asked;
+- was not already answered with "Keep both" for this pair.
+
+Split rows pair like any other, by their total, because a split typed in by hand and the bank's unsplit row are exactly the case to catch. Transfers are rows of their own and never pair, and neither does a row with its partner on another account. The query is one `EXISTS` per row over a self-join of `Transactions` on `AccountId` and a date range, so the second side is read through the `(AccountId, Date)` index that serves the account filter; no index was added.
+
+The ledger offers it as "Possible duplicates only", beside "Unusual only" in the amount column's filter and in the phone filters dialog. It is the `duplicates` search param, counts as an active filter with a chip under the amount label, travels in both export links and in a saved filter, and a saved filter written before it parses without it. While it is on, every row's actions menu adds **Keep both**, which posts `POST /api/transactions/{id}/duplicates/keep`: the server stores a `DuplicateDismissal` for every pair the filter currently finds with that row, both rows leave the list unless one still pairs with a third, and a toast says the pair will not be offered again. The other answer is the ordinary **Delete** of the same menu, with its confirmation and its undo toast; the partner left alone leaves the list, and restoring the deleted row from the trash brings the pair back. A kept pair follows the rows' visibility rather than the person: a household member who keeps a pair on a shared account keeps it for everyone who sees that account. The [month-end close](month-end-close.md#the-review) counts the month's possible duplicates and links here with the month's dates and this filter.
+
+`PossibleDuplicateTests` cover a typed row and an imported one paired across three days while a fourth day, another amount, another type and another account are not, the summary and the CSV following the list, rows without a payee key paired by their trimmed description, refunds and rows imported by one confirm left out, Keep both storing one pair and answering 204 again with nothing left, 404 for a row the caller cannot see, a delete ending the pair and a restore bringing it back, and a pair kept by one household member gone for the other. `PossibleDuplicatesQueryTests` check in SQL that the pairs are read on the account with the three-day range, the payee key, the trimmed description and the kept pairs, `RetentionJobTests` that a purged transaction takes its kept pair with it, and `MonthCloseTests` that the checklist count equals the filtered summary. On the client, the transactions page story `KeepingBothPossibleDuplicates` and the checklist story `WithPossibleDuplicates` cover the filter chip, the menu action and the link.
 
 ## Payee filter
 
@@ -195,7 +215,7 @@ A saved filter is a name put on the filter half of the search params. It lives i
 
 ```mermaid
 flowchart TD
-    Url["Search params on /transactions"] --> Part["transactionFilterParams:<br/>search, account, category, tags, type, dateFrom, dateTo, amountMin, amountMax, unusual, uncategorized;<br/>spreadOverlap is dropped"]
+    Url["Search params on /transactions"] --> Part["transactionFilterParams:<br/>search, account, category, tags, type, dateFrom, dateTo, amountMin, amountMax, unusual, uncategorized, duplicates;<br/>spreadOverlap is dropped"]
     Part --> Save["Save filter under a name"]
     Save --> Store[("jx-saved-filters<br/>one row per filter: id, name, filter")]
     Store --> List["Saved filters menu"]

@@ -17,10 +17,10 @@ public sealed class MemberImport(AppDbContext db, Guid userId, int lockTimeoutSe
     {
         "Accounts", "AccountReconciliations", "Assets", "AssetValuations", "Budgets", "Categories",
         "CategorizationRules", "CategorizationRuleTags", "CsvImportMappings", "CurrencyConversions", "DebtPayments",
-        "Debts", "Goals", "InvestmentTransactions", "NetWorthSnapshots", "PayeeNames", "ReceiptItemCategories",
-        "ReceiptReadings", "RecurringBills", "Securities", "SubscriptionDismissals", "SuggestedRuleDismissals",
-        "Tags", "Transactions", "TransactionAttachments", "TransactionGroups", "TransactionLines", "TransactionTags",
-        "TransferImports", "Transfers",
+        "Debts", "DuplicateDismissals", "Goals", "InvestmentTransactions", "NetWorthSnapshots", "PayeeNames",
+        "ReceiptItemCategories", "ReceiptReadings", "RecurringBills", "Securities", "SubscriptionDismissals",
+        "SuggestedRuleDismissals", "Tags", "Transactions", "TransactionAttachments", "TransactionGroups", "TransactionLines",
+        "TransactionTags", "TransferImports", "Transfers",
     };
 
     private const string SecuritiesTable = "Securities";

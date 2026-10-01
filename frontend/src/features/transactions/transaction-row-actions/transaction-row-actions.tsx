@@ -5,13 +5,15 @@ import { type RowAction, RowActions } from "@/components/row-actions/row-actions
 import { useDebtPaymentLinks } from "@/features/transactions/debt-payment/debt-payment";
 import { useGroupRowActions } from "@/features/transactions/group-dialog/group-dialog";
 import { usePayeeNaming } from "@/features/transactions/payee-naming/payee-naming";
+import { useKeepBoth } from "@/features/transactions/possible-duplicates/use-keep-both";
 import { useSharedExpenseSplits } from "@/features/transactions/shared-expense/shared-expense";
 import {
   isOptimistic,
   isPurchase,
 } from "@/features/transactions/transaction-amount/transaction-row";
 
-export function useTransactionRowDialogs() {
+export function useTransactionRowDialogs({ possibleDuplicates = false } = {}) {
+  const keepBoth = useKeepBoth(possibleDuplicates);
   const debt = useDebtPaymentLinks();
   const split = useSharedExpenseSplits();
   const payee = usePayeeNaming();
@@ -19,6 +21,7 @@ export function useTransactionRowDialogs() {
 
   function moreActions(transaction: TransactionResponse) {
     return [
+      keepBoth.actionFor(transaction),
       debt.actionFor(transaction),
       split.actionFor(transaction),
       payee.actionFor(transaction),

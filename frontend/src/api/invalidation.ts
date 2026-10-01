@@ -373,7 +373,11 @@ const rules: readonly Rule[] = [
     refresh: [api.getSmtpSettingsQueryKey, api.getPublicSettingsQueryKey],
   },
   {
-    after: [api.getDismissUnusualAmountMutationKey, api.getRestoreUnusualAmountMutationKey],
+    after: [
+      api.getDismissUnusualAmountMutationKey,
+      api.getRestoreUnusualAmountMutationKey,
+      api.getKeepPossibleDuplicatesMutationKey,
+    ],
     refresh: [
       api.getTransactionsQueryKey,
       api.getTransactionsSummaryQueryKey,

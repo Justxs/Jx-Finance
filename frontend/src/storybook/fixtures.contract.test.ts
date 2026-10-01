@@ -149,6 +149,7 @@ const contracts: Record<string, Contract> = {
   spreadTransaction: { schema: schemas.TransactionResponse },
   refundTransactions: { schema: schemas.TransactionsResponse, toResponse: asPage },
   foreignCurrencyTransactions: { schema: schemas.TransactionsResponse, toResponse: asPage },
+  possibleDuplicatePair: { schema: schemas.TransactionsResponse, toResponse: asPage },
   transactions: { schema: schemas.TransactionsResponse, toResponse: asPage },
   monthTransactions: { schema: schemas.TransactionsResponse, toResponse: asPage },
   emptyTransactionsSummary: { schema: schemas.TransactionsSummaryResponse },

@@ -1730,6 +1730,91 @@ export const useUpdateTransaction = <TError = ErrorType<ProblemDetails>, TContex
 > => {
   return useMutation(getUpdateTransactionMutationOptions(options), queryClient);
 };
+export const getKeepPossibleDuplicatesUrl = (id: string) => {
+  return `/api/transactions/${id}/duplicates/keep`;
+};
+
+/**
+ * Answers "keep both" for every pair the duplicates=true filter currently finds with this transaction: each pair is stored and never offered again, so both rows leave the filter unless one of them still pairs with a third row. Changes neither transaction. To remove the extra row instead, delete it through DELETE /api/transactions/{id}. A transaction without a possible duplicate answers 204 and stores nothing.
+ * @summary Keep a transaction and its possible duplicates
+ */
+export const keepPossibleDuplicates = async (
+  id: string,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<void> => {
+  return customFetch<void>(getKeepPossibleDuplicatesUrl(id), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getKeepPossibleDuplicatesMutationKey = () => ["keepPossibleDuplicates"] as const;
+
+export const getKeepPossibleDuplicatesMutationOptions = <
+  TError = ErrorType<ProblemDetails>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof keepPossibleDuplicates>>,
+    TError,
+    KeepPossibleDuplicatesMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof keepPossibleDuplicates>>,
+  TError,
+  KeepPossibleDuplicatesMutationVariables,
+  TContext
+> => {
+  const mutationKey = getKeepPossibleDuplicatesMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof keepPossibleDuplicates>>,
+    KeepPossibleDuplicatesMutationVariables
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return keepPossibleDuplicates(id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type KeepPossibleDuplicatesMutationResult = NonNullable<
+  Awaited<ReturnType<typeof keepPossibleDuplicates>>
+>;
+
+export type KeepPossibleDuplicatesMutationError = ErrorType<ProblemDetails>;
+export type KeepPossibleDuplicatesMutationVariables = { id: string };
+
+/**
+ * @summary Keep a transaction and its possible duplicates
+ */
+export const useKeepPossibleDuplicates = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof keepPossibleDuplicates>>,
+      TError,
+      KeepPossibleDuplicatesMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof keepPossibleDuplicates>>,
+  TError,
+  KeepPossibleDuplicatesMutationVariables,
+  TContext
+> => {
+  return useMutation(getKeepPossibleDuplicatesMutationOptions(options), queryClient);
+};
 export const getDismissUnusualAmountUrl = (id: string) => {
   return `/api/transactions/${id}/unusual/dismiss`;
 };

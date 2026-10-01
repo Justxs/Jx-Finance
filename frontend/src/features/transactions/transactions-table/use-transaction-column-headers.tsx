@@ -12,12 +12,11 @@ import { ColumnHeader } from "@/components/ui/column-header/column-header";
 import { DateRangePicker } from "@/components/ui/date-range-picker/date-range-picker";
 import { Input } from "@/components/ui/input/input";
 import { AmountRangeFields } from "@/features/transactions/amount-range-fields/amount-range-fields";
-import type {
-  AmountRangeDraft,
-  TransactionTypeFilter,
-} from "@/features/transactions/transaction-filter-fields";
 import { useFilterSummaries } from "@/features/transactions/use-filter-summaries";
-import type { TransactionFilters } from "@/features/transactions/use-transaction-filters";
+import type {
+  AmountFilterDraft,
+  TransactionFilters,
+} from "@/features/transactions/use-transaction-filters";
 import { SEARCH_SHORTCUT_TARGET } from "@/lib/shortcuts";
 import { type AriaSort, ariaSortFor } from "@/lib/sort";
 
@@ -140,16 +139,17 @@ export function useTransactionColumnHeaders(filters: TransactionFilters, tags: T
     ),
     amount: header(
       "amount",
-      <ColumnFilter<{ type: TransactionTypeFilter; unusual: boolean; range: AmountRangeDraft }>
+      <ColumnFilter<AmountFilterDraft>
         label={columnLabels.amount}
         value={{
           type: fields.type.value,
           unusual: fields.unusual.value,
+          duplicates: fields.duplicates.value,
           range: fields.amountRange.draft,
         }}
-        empty={{ type: "", unusual: false, range: { min: "", max: "" } }}
-        summary={valueOf("type", "amountRange", "unusual")}
-        onApply={(next) => fields.amount.set(next.type, next.unusual, next.range)}
+        empty={{ type: "", unusual: false, duplicates: false, range: { min: "", max: "" } }}
+        summary={valueOf("type", "amountRange", "unusual", "duplicates")}
+        onApply={fields.amount.set}
       >
         {(draft, setDraft) => (
           <>
@@ -173,6 +173,13 @@ export function useTransactionColumnHeaders(filters: TransactionFilters, tags: T
                 {fields.unusual.label}
               </label>
             ) : null}
+            <label className="flex items-center gap-2.5 text-sm">
+              <Checkbox
+                checked={draft.duplicates}
+                onCheckedChange={(duplicates) => setDraft({ ...draft, duplicates })}
+              />
+              {fields.duplicates.label}
+            </label>
           </>
         )}
       </ColumnFilter>,

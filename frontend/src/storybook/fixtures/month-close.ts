@@ -85,6 +85,7 @@ export function monthReviewOf(month: string, patch: Partial<MonthReviewResponse>
       uncategorized: 3,
       unconfirmedRecurring: 2,
       unusual: 1,
+      duplicates: 0,
       accounts: [
         {
           accountId: ids.accounts.checking,
@@ -117,6 +118,7 @@ const clearChecklist: MonthReviewResponse["checklist"] = {
   uncategorized: 0,
   unconfirmedRecurring: 0,
   unusual: 0,
+  duplicates: 0,
   accounts: [
     {
       accountId: ids.accounts.checking,
@@ -259,7 +261,7 @@ export const notEndedMonthReview = monthReviewOf(MONTH_CLOSE_RUNNING_MONTH, {
 });
 
 export const emptyMonthReview = monthReviewOf(MONTH_CLOSE_MONTH, {
-  checklist: { uncategorized: 0, unconfirmedRecurring: 0, unusual: 0, accounts: [] },
+  checklist: { uncategorized: 0, unconfirmedRecurring: 0, unusual: 0, duplicates: 0, accounts: [] },
   figures: { ...emptyReportSummary, periodStart: "2026-08-01", periodEnd: "2026-08-31" },
   budgets: [],
   netWorthStart: null,

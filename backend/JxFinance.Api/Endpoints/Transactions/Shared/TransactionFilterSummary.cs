@@ -53,5 +53,11 @@ public static class TransactionFilterSummary
             nameof(TransactionFilterRequest.Uncategorized),
             "true keeps only transactions without a category, and split transactions with at least one line "
             + "without one.");
+        summary.Describe(
+            nameof(TransactionFilterRequest.Duplicates),
+            "true keeps only possible duplicates: transactions with another one on the same account, of the same "
+            + "type, amount and currency, dated at most three days apart, with the same payee key or, when either "
+            + "has none, the same trimmed description. Refunds, two rows imported by one confirm and pairs marked "
+            + "\"keep both\" are left out.");
     }
 }

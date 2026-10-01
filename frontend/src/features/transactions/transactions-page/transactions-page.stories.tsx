@@ -1,10 +1,20 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, fireEvent, fn, screen, userEvent, waitFor, within } from "storybook/test";
 import { getCreateTransactionGroupMockHandler } from "@/api/generated/transaction-groups/transaction-groups.msw";
-import { getCreateTransactionMockHandler } from "@/api/generated/transactions/transactions.msw";
+import {
+  getCreateTransactionMockHandler,
+  getKeepPossibleDuplicatesMockHandler,
+  getLedgerMockHandler,
+} from "@/api/generated/transactions/transactions.msw";
 import { savedFilters, transactionTemplates } from "@/features/transactions/transaction-views";
 import { withPageFrame } from "@/storybook/decorators";
-import { ids, splitTransaction, transactionGroups } from "@/storybook/fixtures";
+import {
+  ids,
+  ledgerItemsOf,
+  possibleDuplicatePair,
+  splitTransaction,
+  transactionGroups,
+} from "@/storybook/fixtures";
 import {
   emptyHandlers,
   errorHandlers,
@@ -171,6 +181,38 @@ export const SavedFilterNamingADeletedCategory: Story = {
 
     await waitFor(() => expect(canvas.getByRole("list", { name: "Active filters" })).toBeVisible());
     await expect(canvas.getAllByRole("table")[0]).toBeVisible();
+  },
+};
+
+const keptPair = fn();
+
+export const KeepingBothPossibleDuplicates: Story = {
+  parameters: {
+    route: "/transactions?duplicates=true",
+    ...withHandlers(
+      getLedgerMockHandler({
+        items: ledgerItemsOf(possibleDuplicatePair),
+        page: 1,
+        pageSize: 25,
+        total: possibleDuplicatePair.length,
+      }),
+      getKeepPossibleDuplicatesMockHandler(({ params }) => {
+        keptPair(params.id);
+      }),
+    ),
+  },
+  play: async ({ canvas }) => {
+    const active = await canvas.findByRole("list", { name: "Active filters" });
+    await expect(within(active).getByText("Possible duplicates only")).toBeVisible();
+    const actions = await canvas.findAllByRole("button", {
+      name: `Actions: ${first(possibleDuplicatePair).description ?? ""}`,
+    });
+    await chooseMenuItem(first(actions), "Keep both");
+
+    await waitFor(() => expect(keptPair).toHaveBeenCalledWith(first(possibleDuplicatePair).id));
+    await expect(
+      await screen.findByText("Kept both. This pair will not be offered again."),
+    ).toBeVisible();
   },
 };
 

@@ -350,6 +350,25 @@ export const getUpdateTransactionMockHandler = (
   );
 };
 
+export const getKeepPossibleDuplicatesMockHandler = (
+  overrideResponse?:
+    | void
+    | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<void> | void),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/transactions/:id/duplicates/keep",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      if (typeof overrideResponse === "function") {
+        await overrideResponse(info);
+      }
+
+      return new HttpResponse(null, { status: 204 });
+    },
+    options,
+  );
+};
+
 export const getDismissUnusualAmountMockHandler = (
   overrideResponse?:
     | void
@@ -402,6 +421,7 @@ export const getTransactionsMock = () => [
   getDeleteTransactionMockHandler(),
   getTransactionMockHandler(),
   getUpdateTransactionMockHandler(),
+  getKeepPossibleDuplicatesMockHandler(),
   getDismissUnusualAmountMockHandler(),
   getRestoreUnusualAmountMockHandler(),
 ];
