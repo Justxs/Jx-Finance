@@ -6,6 +6,10 @@ Related: architecture [API contract and generated client](../architecture/api-co
 
 Newest first. Each entry is a choice between real alternatives: what was chosen, what was rejected, and why.
 
+- **2026-10-01.** Every text file is checked out with LF through `* text=auto eol=lf` in `.gitattributes`, whatever `core.autocrlf` says, instead of only the C# and project files
+  - Rejected: Leaving the per-extension rules for `.cs`, `.csproj`, `.props` and `.slnx` alone; asking every clone to set `core.autocrlf false`
+  - Why: With `core.autocrlf true` on the Windows machine, docs, scripts, YAML and EF migrations were written to the working copy with CRLF and normalized only at commit, so every commit warned about line endings and tools reading the working copy saw CRLF, against the repository rule of UTF-8 with LF. A repository rule works for every clone without a local setting, and `text=auto` leaves binary files such as the map tile fixture untouched
+
 - **2026-10-01.** The Storybook preview pins the clock to noon UTC on `FIXTURE_TODAY` (`pinClockToFixtureToday` in `src/storybook/clock.ts`), with time still running from there, so Storybook and the story runner see the same day as the fixtures
   - Rejected: Moving each story's expectation to the new month; Vitest fake timers in the story runner only; a frozen clock such as `mockdate`
   - Why: Stories read the real date while the fixtures are pinned to September 2026, so seven stories failed when the machine date reached October 1; editing expectations would break again every month. Fake timers exist only under Vitest and would leave Storybook showing a different month from the fixtures, and a clock that never moves can starve code that measures elapsed time, such as throttling and toasts

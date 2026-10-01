@@ -1,3 +1,5 @@
+* text=auto eol=lf
+
 frontend/src/api/generated/** linguist-generated=true
 frontend/src/api/schemas/** linguist-generated=true
 frontend/src/route-tree.gen.ts linguist-generated=true
