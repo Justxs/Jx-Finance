@@ -137,7 +137,7 @@ For each it publishes one `MonthReadyToClose` through `INotificationPublisher`, 
 
 ## The monthly digest
 
-The [monthly digest](monthly-digest.md) is the review sent out. On the same days 1 to 5, `MonthlyDigestJob` calls `GetMonthAsync` for last month as each member who opted in, in the "Everything" scope, and mails or posts its figures, the three expense categories that moved most against the month before, the checklist's open items (uncategorised, unusual, unconfirmed recurring entries, and accounts that `differs` or are `behind`; possible duplicates are not in the digest) and whether the month is closed, with a link to `/?month=yyyy-MM`. It reads nothing the review does not, so the digest and the dashboard cannot disagree. It is independent of the reminder: both can arrive on the same day.
+The [monthly digest](monthly-digest.md) is the review sent out. On the same days 1 to 5, `MonthlyDigestJob` calls `GetMonthAsync` for last month as each member who opted in, in the "Everything" scope and, since 2026-10-01, in each household the member chose, and mails or posts its figures, the three expense categories that moved most against the month before, the checklist's open items (uncategorised, unusual, unconfirmed recurring entries, and accounts that `differs` or are `behind`; possible duplicates are not in the digest) and whether the month is closed, with a link to `/?month=yyyy-MM`. It reads nothing the review does not, so the digest and the dashboard cannot disagree. It is independent of the reminder: both can arrive on the same day.
 
 ## Endpoints
 

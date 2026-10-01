@@ -1081,6 +1081,8 @@
       "discordPaused": "Discord pristabdytas. Pažymėkite „Siųsti pranešimus į šį kanalą“ žemiau, kad atnaujintumėte.",
       "saved": "Pranešimų nustatymai išsaugoti",
       "digestOnlyOutside": "Siunčiama tik el. paštu arba į Discord",
+      "digestScopes": "Mėnesio suvestinė apie",
+      "digestScopesHint": "Kiekviena pažymėta ateina atskiru pranešimu, su mėnesiu tokiu, kokį rodo pagrindinis puslapis pasirinkus tą namų ūkį.",
       "digestNote": "Mėnesio suvestinė atkeliauja pirmosiomis mėnesio dienomis ir apibendrina pasibaigusį mėnesį: pajamas ir išlaidas, labiausiai pasikeitusias kategorijas ir tai, ką dar reikia sutvarkyti prieš jį uždarant. Pažymėkite el. paštą arba Discord, kad ją gautumėte."
     },
     "discord": {

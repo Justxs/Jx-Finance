@@ -168,7 +168,9 @@ public sealed class AuthService(
         !user.IsDeactivated,
         user.EmailConfirmed,
         user.EmailNotificationTypes,
-        user.Language);
+        user.Language,
+        user.MonthlyDigestEverything,
+        user.MonthlyDigestHouseholdIds);
 
     public async Task<Result<UserProfileResponse>> GetCurrentProfileAsync(CancellationToken cancellationToken) =>
         await CurrentAsync(cancellationToken) is { } user ? await ToProfileAsync(user) : UserMissing;

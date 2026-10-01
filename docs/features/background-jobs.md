@@ -30,7 +30,7 @@ flowchart LR
     U --> Verdict["Verdicts on unchecked expenses, written one page per statement;<br/>silent for rows not written since the backfill began,<br/>otherwise new flags within 45 days<br/>and price rises of recurring entries"]
     C --> Pub
     C --> Ready["One MonthReadyToClose per user who closed a month before<br/>and has not closed last month, deduplicated per user and month"]
-    G --> Review["Last month's review read as each subscribed member,<br/>in RunAsUserAsync, one MonthlyDigest per member and month"]
+    G --> Review["Last month's review read as each subscribed member,<br/>in RunAsUserAsync, one MonthlyDigest per member, scope and month"]
     Review --> Pub
     Pub --> Notif["Notifications"]
     Pub --> Mail["An EmailMessages row, only for a bill reminder<br/>whose owner asked for reminder emails"]
@@ -125,6 +125,6 @@ flowchart LR
 
 `MonthCloseReminderJob` takes `AppLock.MonthCloseReminders` (`738192442`) in one transaction for a pass on days 1 to 5. Inside it one query finds the active users who have a close of any month, have none of the previous month under any scope, and have no `MonthReadyToClose` notification created since the start of the current month, deleted ones included (a reminder for last month can only be written on days 1 to 5 of this one); the job preloads them, publishes one notification each and commits. A second instance waits for the lock and then finds every user already reminded. See [Month-end close](month-end-close.md).
 
-`MonthlyDigestJob` takes `AppLock.MonthlyDigest` (`738192443`) inside each member's own transaction, the way the budget scan holds its lock per user, because each member's work runs in its own `RunAsUserAsync` scope. Inside the lock it checks again that the member has no `MonthlyDigest` notification for the month, reads the review, publishes and commits, so a second instance waits and then skips the member. See [Monthly digest](monthly-digest.md).
+`MonthlyDigestJob` takes `AppLock.MonthlyDigest` (`738192443`) inside each member's own transaction, the way the budget scan holds its lock per user, because each member's work runs in its own `RunAsUserAsync` scope. Inside the lock it checks again that the member has no `MonthlyDigest` notification for the month and scope (since 2026-10-01 a household digest runs in a scope with that household active), reads the review, publishes and commits, so a second instance waits and then skips the member. See [Monthly digest](monthly-digest.md).
 
 The bill reminder scan takes its lock once for the whole pass because it reads every user's bills in one query. The budget alert scan takes `AppLock.BudgetAlerts` inside each user's own transaction instead, since the work is already split per user; the read of what has already been raised and the insert of what has not are both inside that lock, which is what makes a second pass, a restart or a second instance unable to write the same alert twice.

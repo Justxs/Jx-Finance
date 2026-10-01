@@ -6,11 +6,16 @@ import { z } from "zod";
 import {
   useDeleteMyDiscord,
   useTestMyDiscord,
+  useUpdateMyDigestScopes,
   useUpdateMyDiscord,
   useUpdateMyEmailNotifications,
 } from "@/api/generated";
 import { NotificationType } from "@/api/generated/model";
-import type { DiscordWebhookResponse, UserProfileResponse } from "@/api/generated/model";
+import type {
+  DiscordWebhookResponse,
+  HouseholdResponse,
+  UserProfileResponse,
+} from "@/api/generated/model";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog/confirm-delete-dialog";
 import { useServerForm } from "@/components/form";
 import { FormError } from "@/components/form-error/form-error";
@@ -29,18 +34,21 @@ interface FormValues {
   discord: NotificationType[];
   webhookUrl: string;
   discordEnabled: boolean;
+  digestEverything: boolean;
+  digestHouseholds: { id: string; chosen: boolean }[];
 }
 
-function sameKinds(left: readonly NotificationType[], right: readonly NotificationType[]) {
+function sameKinds<T>(left: readonly T[], right: readonly T[]) {
   return left.length === right.length && left.every((kind) => right.includes(kind));
 }
 
 interface Props {
   profile: UserProfileResponse;
   discord: DiscordWebhookResponse;
+  households: HouseholdResponse[];
 }
 
-export function NotificationsForm({ profile, discord }: Readonly<Props>) {
+export function NotificationsForm({ profile, discord, households }: Readonly<Props>) {
   const { t } = useTranslation();
   const formatDateTime = useDateTime();
   const emailServer = useEmailEnabled();
@@ -49,6 +57,7 @@ export function NotificationsForm({ profile, discord }: Readonly<Props>) {
 
   const emailMutation = useUpdateMyEmailNotifications({ mutation: silentMutation });
   const discordMutation = useUpdateMyDiscord({ mutation: silentMutation });
+  const digestMutation = useUpdateMyDigestScopes({ mutation: silentMutation });
   const testMutation = useTestMyDiscord({
     mutation: { ...silentMutation, onSuccess: () => toast.success(t("profile.discord.testSent")) },
   });
@@ -65,6 +74,8 @@ export function NotificationsForm({ profile, discord }: Readonly<Props>) {
         message: t("serverErrors.discord.invalidWebhook"),
       }),
     discordEnabled: z.boolean(),
+    digestEverything: z.boolean(),
+    digestHouseholds: z.array(z.object({ id: z.string(), chosen: z.boolean() })),
   });
 
   const defaultValues: FormValues = {
@@ -72,6 +83,11 @@ export function NotificationsForm({ profile, discord }: Readonly<Props>) {
     discord: [...discord.types],
     webhookUrl: "",
     discordEnabled: discord.hasWebhook ? discord.isEnabled : true,
+    digestEverything: profile.monthlyDigestEverything,
+    digestHouseholds: households.map((household) => ({
+      id: household.id,
+      chosen: profile.monthlyDigestHouseholdIds.includes(household.id),
+    })),
   };
 
   const form = useServerForm({
@@ -81,6 +97,17 @@ export function NotificationsForm({ profile, discord }: Readonly<Props>) {
       const webhookUrl = value.webhookUrl.trim();
       if (!sameKinds(value.email, profile.emailNotificationTypes)) {
         await emailMutation.mutateAsync({ data: { types: value.email } });
+      }
+      const householdIds = value.digestHouseholds
+        .filter((household) => household.chosen)
+        .map((household) => household.id);
+      if (
+        value.digestEverything !== profile.monthlyDigestEverything ||
+        !sameKinds(householdIds, profile.monthlyDigestHouseholdIds)
+      ) {
+        await digestMutation.mutateAsync({
+          data: { everything: value.digestEverything, householdIds },
+        });
       }
       const discordChanged =
         webhookUrl !== "" ||
@@ -155,6 +182,35 @@ export function NotificationsForm({ profile, discord }: Readonly<Props>) {
               );
             }}
           </form.Subscribe>
+
+          {households.length > 0 ? (
+            <fieldset className="mt-5 max-w-prose space-y-2.5">
+              <legend className="text-sm font-medium">
+                {t("profile.notifications.digestScopes")}
+              </legend>
+              <p className="text-sm text-muted-foreground">
+                {t("profile.notifications.digestScopesHint")}
+              </p>
+              <form.Field name="digestEverything">
+                {(field) => (
+                  <field.CheckboxField
+                    id="digest-everything"
+                    label={t("households.scope.everything")}
+                  />
+                )}
+              </form.Field>
+              {households.map((household, index) => (
+                <form.Field key={household.id} name={`digestHouseholds[${index}].chosen`}>
+                  {(field) => (
+                    <field.CheckboxField
+                      id={`digest-household-${household.id}`}
+                      label={household.name}
+                    />
+                  )}
+                </form.Field>
+              ))}
+            </fieldset>
+          ) : null}
         </Section>
 
         <Section aria-labelledby="discord-title" className="space-y-5">
@@ -243,6 +299,7 @@ export function NotificationsForm({ profile, discord }: Readonly<Props>) {
         <FormError
           error={
             emailMutation.error ??
+            digestMutation.error ??
             discordMutation.error ??
             testMutation.error ??
             removeMutation.error
@@ -250,7 +307,11 @@ export function NotificationsForm({ profile, discord }: Readonly<Props>) {
         />
 
         <div className="flex justify-end">
-          <form.SubmitButton pending={emailMutation.isPending || discordMutation.isPending}>
+          <form.SubmitButton
+            pending={
+              emailMutation.isPending || digestMutation.isPending || discordMutation.isPending
+            }
+          >
             {t("actions.save")}
           </form.SubmitButton>
         </div>

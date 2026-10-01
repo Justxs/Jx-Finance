@@ -32,4 +32,6 @@ export interface NotificationPayload {
   currency?: null | Currency;
   month?: null | NullableOfDateOnly;
   digest?: null | MonthlyDigestPayload;
+  /** @nullable */
+  household?: string | null;
 }

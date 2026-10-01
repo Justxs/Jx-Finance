@@ -1,4 +1,5 @@
 using JxFinance.Common.Settings;
+using JxFinance.Domain.Households;
 using JxFinance.Domain.Settings;
 using JxFinance.Infrastructure.Auth;
 using JxFinance.Infrastructure.Data;
@@ -53,11 +54,14 @@ public abstract class PeriodicJob(IServiceScopeFactory scopes, ILogger logger) :
 
     protected AsyncServiceScope UserScope(Guid userId) => scopes.CreateUserScope(userId);
 
-    protected async Task RunAsUserAsync(Guid userId, Func<IServiceProvider, Task> work)
+    protected async Task RunAsUserAsync(
+        Guid userId,
+        Func<IServiceProvider, Task> work,
+        HouseholdId? activeHousehold = null)
     {
         try
         {
-            await using var scope = UserScope(userId);
+            await using var scope = scopes.CreateUserScope(userId, activeHousehold);
             await work(scope.ServiceProvider);
         }
         catch (Exception ex) when (ex is not OperationCanceledException)

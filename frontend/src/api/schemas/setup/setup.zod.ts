@@ -51,6 +51,8 @@ export const SetupResponse = zod.object({
     ]),
   ),
   language: zod.string().nullable(),
+  monthlyDigestEverything: zod.boolean(),
+  monthlyDigestHouseholdIds: zod.array(zod.uuid()),
 });
 
 /**

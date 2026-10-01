@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, fireEvent, userEvent, waitFor } from "storybook/test";
 import { getMeMockHandler } from "@/api/generated/auth/auth.msw";
+import { getHouseholdsMockHandler } from "@/api/generated/households/households.msw";
 import {
   getMyDiscordMockHandler,
   getTestMyDiscordMockHandler,
@@ -9,6 +10,7 @@ import {
   digestSubscriber,
   discordWebhookGoneProblem,
   emailSubscriber,
+  householdDigestSubscriber,
   myDiscordEmpty,
   myDiscordFailing,
   myDiscordGone,
@@ -82,6 +84,30 @@ export const DigestChosen: Story = {
       canvas.getByRole("img", { name: "Only sent by email or Discord" }),
     ).toBeInTheDocument();
     await expect(canvas.getByText(/sums up the month that ended/u)).toBeInTheDocument();
+  },
+};
+
+export const DigestPerHousehold: Story = {
+  parameters: withHandlers(emailEnabledHandler, getMeMockHandler(householdDigestSubscriber)),
+  play: async ({ canvas }) => {
+    const everything = await canvas.findByRole("checkbox", { name: "Everything" });
+    await expect(everything).not.toBeChecked();
+    await expect(canvas.getByRole("checkbox", { name: "Kazlauskų šeima" })).toBeChecked();
+    await userEvent.click(everything);
+    await expect(everything).toBeChecked();
+    const save = canvas.getByRole("button", { name: "Save" });
+    await userEvent.click(save);
+    await waitFor(() => expect(save).not.toHaveAttribute("aria-busy"));
+  },
+};
+
+export const DigestWithoutHouseholds: Story = {
+  parameters: withHandlers(getHouseholdsMockHandler([])),
+  play: async ({ canvas }) => {
+    await expect(
+      await canvas.findByRole("checkbox", { name: "Monthly digest by email" }),
+    ).toBeVisible();
+    await expect(canvas.queryByRole("group", { name: "Monthly digest for" })).toBeNull();
   },
 };
 

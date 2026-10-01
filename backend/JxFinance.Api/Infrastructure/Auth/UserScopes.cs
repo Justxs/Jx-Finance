@@ -1,11 +1,16 @@
+using JxFinance.Domain.Households;
+
 namespace JxFinance.Infrastructure.Auth;
 
 public static class UserScopes
 {
-    public static AsyncServiceScope CreateUserScope(this IServiceScopeFactory scopes, Guid userId)
+    public static AsyncServiceScope CreateUserScope(
+        this IServiceScopeFactory scopes,
+        Guid userId,
+        HouseholdId? activeHousehold = null)
     {
         var scope = scopes.CreateAsyncScope();
-        scope.ServiceProvider.GetRequiredService<JobUser>().User = new FixedUser(userId);
+        scope.ServiceProvider.GetRequiredService<JobUser>().User = new FixedUser(userId, activeHousehold);
         return scope;
     }
 

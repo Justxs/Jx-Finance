@@ -405,6 +405,7 @@ export * from "./updateInvestmentTransactionRequest";
 export * from "./updateMarketPriceSettingsRequest";
 export * from "./updateMemberRoleRequest";
 export * from "./updateMonthNoteRequest";
+export * from "./updateMyDigestScopesRequest";
 export * from "./updateMyDiscordRequest";
 export * from "./updateMyEmailNotificationsRequest";
 export * from "./updateMyLanguageRequest";

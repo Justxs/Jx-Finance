@@ -146,6 +146,7 @@ export const NotificationsResponseItem = zod.object({
         }),
       ])
       .optional(),
+    household: zod.string().nullish(),
   }),
   relatedType: zod.string().nullable(),
   relatedId: zod.uuid().nullable(),

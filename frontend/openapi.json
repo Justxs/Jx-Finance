@@ -21889,6 +21889,82 @@
         ]
       }
     },
+    "/api/users/me/digest-scopes": {
+      "put": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Choose which scopes get a monthly digest",
+        "description": "Replaces the scopes your monthly digest covers, for email and Discord alike: everything, the default, which is your own records and everything shared into any of your households, and each household listed, whose digest reads the month as the dashboard does with that household picked. Each chosen scope is its own message. The digest is still sent only when you tick it for email or Discord, and nothing is sent when no scope is chosen.",
+        "operationId": "UpdateMyDigestScopes",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateMyDigestScopesRequest"
+              },
+              "example": {
+                "everything": true,
+                "householdIds": [
+                  "8d3c1e52-7a1f-4f53-9f2a-1b6c4e0d9a10"
+                ]
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Your profile with the saved digest scopes.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserProfileResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed: a household is listed twice (collection.invalidSize) or you are not a member of it (household.notMember).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many changes from this client; wait and retry."
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      }
+    },
     "/api/users/me/discord": {
       "delete": {
         "tags": [
@@ -30285,6 +30361,12 @@
                 "$ref": "#/components/schemas/MonthlyDigestPayload"
               }
             ]
+          },
+          "household": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -35720,6 +35802,35 @@
           "note": "Two refunds still pending."
         }
       },
+      "UpdateMyDigestScopesRequest": {
+        "required": [
+          "everything",
+          "householdIds"
+        ],
+        "type": "object",
+        "properties": {
+          "everything": {
+            "type": "boolean",
+            "example": true
+          },
+          "householdIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "example": [
+              "8d3c1e52-7a1f-4f53-9f2a-1b6c4e0d9a10"
+            ]
+          }
+        },
+        "example": {
+          "everything": true,
+          "householdIds": [
+            "8d3c1e52-7a1f-4f53-9f2a-1b6c4e0d9a10"
+          ]
+        }
+      },
       "UpdateMyDiscordRequest": {
         "required": [
           "webhookUrl",
@@ -36470,7 +36581,9 @@
           "isActive",
           "emailConfirmed",
           "emailNotificationTypes",
-          "language"
+          "language",
+          "monthlyDigestEverything",
+          "monthlyDigestHouseholdIds"
         ],
         "type": "object",
         "properties": {
@@ -36507,6 +36620,16 @@
               "null",
               "string"
             ]
+          },
+          "monthlyDigestEverything": {
+            "type": "boolean"
+          },
+          "monthlyDigestHouseholdIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
           }
         }
       },

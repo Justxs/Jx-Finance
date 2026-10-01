@@ -60,6 +60,8 @@ export const CreateUserResponse = zod.object({
     ]),
   ),
   language: zod.string().nullable(),
+  monthlyDigestEverything: zod.boolean(),
+  monthlyDigestHouseholdIds: zod.array(zod.uuid()),
 });
 
 /**
@@ -90,6 +92,8 @@ export const UsersResponseItem = zod.object({
     ]),
   ),
   language: zod.string().nullable(),
+  monthlyDigestEverything: zod.boolean(),
+  monthlyDigestHouseholdIds: zod.array(zod.uuid()),
 });
 export const UsersResponse = zod.array(UsersResponseItem);
 
@@ -141,6 +145,45 @@ export const UpdateMyProfileResponse = zod.object({
     ]),
   ),
   language: zod.string().nullable(),
+  monthlyDigestEverything: zod.boolean(),
+  monthlyDigestHouseholdIds: zod.array(zod.uuid()),
+});
+
+/**
+ * Replaces the scopes your monthly digest covers, for email and Discord alike: everything, the default, which is your own records and everything shared into any of your households, and each household listed, whose digest reads the month as the dashboard does with that household picked. Each chosen scope is its own message. The digest is still sent only when you tick it for email or Discord, and nothing is sent when no scope is chosen.
+ * @summary Choose which scopes get a monthly digest
+ */
+export const UpdateMyDigestScopesBody = zod.object({
+  everything: zod.boolean(),
+  householdIds: zod.array(zod.uuid()),
+});
+
+export const UpdateMyDigestScopesResponse = zod.object({
+  id: zod.uuid(),
+  email: zod.string(),
+  displayName: zod.string(),
+  role: zod.string(),
+  twoFactorEnabled: zod.boolean(),
+  isActive: zod.boolean(),
+  emailConfirmed: zod.boolean(),
+  emailNotificationTypes: zod.array(
+    zod.enum([
+      "billDue",
+      "budgetWarning",
+      "budgetExceeded",
+      "unusualAmount",
+      "unusualAmounts",
+      "recurringPriceRise",
+      "monthReadyToClose",
+      "monthlyDigest",
+      "lowBalance",
+      "warrantyExpiring",
+      "importWaiting",
+    ]),
+  ),
+  language: zod.string().nullable(),
+  monthlyDigestEverything: zod.boolean(),
+  monthlyDigestHouseholdIds: zod.array(zod.uuid()),
 });
 
 /**
@@ -277,6 +320,8 @@ export const UpdateMyEmailNotificationsResponse = zod.object({
     ]),
   ),
   language: zod.string().nullable(),
+  monthlyDigestEverything: zod.boolean(),
+  monthlyDigestHouseholdIds: zod.array(zod.uuid()),
 });
 
 /**
@@ -332,6 +377,8 @@ export const UpdateMyLanguageResponse = zod.object({
     ]),
   ),
   language: zod.string().nullable(),
+  monthlyDigestEverything: zod.boolean(),
+  monthlyDigestHouseholdIds: zod.array(zod.uuid()),
 });
 
 /**
@@ -401,6 +448,8 @@ export const ResetUserPasswordResponse = zod.object({
     ]),
   ),
   language: zod.string().nullable(),
+  monthlyDigestEverything: zod.boolean(),
+  monthlyDigestHouseholdIds: zod.array(zod.uuid()),
 });
 
 /**
@@ -435,4 +484,6 @@ export const UpdateUserRoleResponse = zod.object({
     ]),
   ),
   language: zod.string().nullable(),
+  monthlyDigestEverything: zod.boolean(),
+  monthlyDigestHouseholdIds: zod.array(zod.uuid()),
 });

@@ -19,6 +19,10 @@ public sealed class AppUser : IdentityUser<Guid>
 
     public List<NotificationType> EmailNotificationTypes { get; set; } = [];
 
+    public bool MonthlyDigestEverything { get; set; } = true;
+
+    public List<Guid> MonthlyDigestHouseholdIds { get; set; } = [];
+
     public string? Language { get; set; }
 
     public DashboardLayout? DashboardLayout { get; set; }

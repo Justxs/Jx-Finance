@@ -48,9 +48,12 @@ public static class NotificationTexts
             ? $"{month.Year} m. {LithuanianMonths[month.Month - 1]}"
             : month.ToString("MMMM yyyy", CultureInfo.InvariantCulture);
 
+    public static string DigestTitle(string language, DateOnly month, string? household) =>
+        household is null ? MonthTitle(language, month) : $"{MonthTitle(language, month)}, {household}";
+
     public static string Title(string language, Notification notification) =>
         notification is { Type: NotificationType.MonthReadyToClose or NotificationType.MonthlyDigest, Payload.Month: { } month }
-            ? MonthTitle(language, month)
+            ? DigestTitle(language, month, notification.Payload.Household)
             : notification.Title;
 
     public static string Sentence(string language, Notification notification)
@@ -85,7 +88,7 @@ public static class NotificationTexts
                     ? $"{MonthTitle(language, month)} baigėsi: peržiūrėkite ir uždarykite mėnesį"
                     : $"{MonthTitle(language, month)} has ended and is ready to close",
             NotificationType.MonthlyDigest when payload is { Month: { } month, Digest: { } digest } =>
-                DigestSentence(language, month, digest),
+                DigestSentence(language, DigestTitle(language, month, payload.Household), digest),
             NotificationType.WarrantyExpiring when payload?.DueDate is { } warrantyUntil =>
                 WarrantyExpiring(lithuanian, warrantyUntil),
             NotificationType.LowBalance when payload is { DueDate: { } belowZeroOn, Amount: { } lowest } =>
@@ -161,7 +164,7 @@ public static class NotificationTexts
         return lines;
     }
 
-    private static string DigestSentence(string language, DateOnly month, MonthlyDigestPayload digest)
+    private static string DigestSentence(string language, string title, MonthlyDigestPayload digest)
     {
         var lithuanian = EmailTexts.IsLithuanian(language);
         var (income, expense, net) = (
@@ -175,8 +178,8 @@ public static class NotificationTexts
             ({ } percent, false) => $", {percent}% kept",
         };
         return lithuanian
-            ? $"{MonthTitle(language, month)}: pajamos {income}, išlaidos {expense}, grynai {net}{kept}"
-            : $"{MonthTitle(language, month)}: income {income}, expenses {expense}, net {net}{kept}";
+            ? $"{title}: pajamos {income}, išlaidos {expense}, grynai {net}{kept}"
+            : $"{title}: income {income}, expenses {expense}, net {net}{kept}";
     }
 
     private static string Money(string amount, Currency? currency) =>

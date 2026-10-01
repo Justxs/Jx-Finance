@@ -31,4 +31,6 @@ public sealed record NotificationPayload
     public DateOnly? Month { get; init; }
 
     public MonthlyDigestPayload? Digest { get; init; }
+
+    public string? Household { get; init; }
 }

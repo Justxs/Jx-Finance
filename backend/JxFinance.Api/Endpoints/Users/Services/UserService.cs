@@ -2,12 +2,14 @@ using FastEndpoints;
 using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Domain.Common;
+using JxFinance.Domain.Households;
 using JxFinance.Endpoints.Auth.Interfaces;
 using JxFinance.Endpoints.Auth.Shared;
 using JxFinance.Endpoints.Users.CreateUser;
 using JxFinance.Endpoints.Users.GetUsers;
 using JxFinance.Endpoints.Users.Interfaces;
 using JxFinance.Endpoints.Users.ResetUserPassword;
+using JxFinance.Endpoints.Users.UpdateMyDigestScopes;
 using JxFinance.Endpoints.Users.UpdateMyEmailNotifications;
 using JxFinance.Endpoints.Users.UpdateMyLanguage;
 using JxFinance.Endpoints.Users.UpdateMyProfile;
@@ -318,6 +320,26 @@ public sealed class UserService(
         UpdateMyLanguageRequest request,
         CancellationToken cancellationToken) =>
         UpdateOwnAsync(user => user.Language = request.Language, cancellationToken);
+
+    public async Task<Result<UserProfileResponse>> UpdateOwnDigestScopesAsync(
+        UpdateMyDigestScopesRequest request,
+        CancellationToken cancellationToken)
+    {
+        var chosen = request.HouseholdIds.Select(id => new HouseholdId(id)).ToList();
+        var member = await db.Households.CountAsync(h => chosen.Contains(h.Id), cancellationToken);
+        if (member != chosen.Count)
+        {
+            return new DomainError(ErrorCodes.HouseholdNotMember, "You are not a member of that household.");
+        }
+
+        return await UpdateOwnAsync(
+            user =>
+            {
+                user.MonthlyDigestEverything = request.Everything;
+                user.MonthlyDigestHouseholdIds = [.. request.HouseholdIds];
+            },
+            cancellationToken);
+    }
 
     private async Task<Result<UserProfileResponse>> UpdateOwnAsync(Action<AppUser> change, CancellationToken cancellationToken)
     {

@@ -111,6 +111,8 @@ export const LoginResponse = zod.object({
         ]),
       ),
       language: zod.string().nullable(),
+      monthlyDigestEverything: zod.boolean(),
+      monthlyDigestHouseholdIds: zod.array(zod.uuid()),
     }),
   ]),
 });
@@ -148,6 +150,8 @@ export const MeResponse = zod.object({
     ]),
   ),
   language: zod.string().nullable(),
+  monthlyDigestEverything: zod.boolean(),
+  monthlyDigestHouseholdIds: zod.array(zod.uuid()),
 });
 
 /**
@@ -247,6 +251,8 @@ export const PasskeySignInResponse = zod.object({
         ]),
       ),
       language: zod.string().nullable(),
+      monthlyDigestEverything: zod.boolean(),
+      monthlyDigestHouseholdIds: zod.array(zod.uuid()),
     }),
   ]),
 });

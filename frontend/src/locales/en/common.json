@@ -1025,6 +1025,8 @@
       "discordPaused": "Discord is paused. Tick “Send notifications to this channel” below to resume.",
       "saved": "Notification settings saved",
       "digestOnlyOutside": "Only sent by email or Discord",
+      "digestScopes": "Monthly digest for",
+      "digestScopesHint": "Each one you tick is its own message, with the month as the dashboard shows it with that household picked.",
       "digestNote": "The monthly digest arrives in the first days of each month and sums up the month that ended: income and expenses, the categories that moved most and what is still open before you close it. Tick Email or Discord to receive it."
     },
     "discord": {

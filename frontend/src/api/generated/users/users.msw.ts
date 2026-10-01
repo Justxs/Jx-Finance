@@ -81,6 +81,30 @@ export const getUpdateMyProfileMockHandler = (
   );
 };
 
+export const getUpdateMyDigestScopesMockHandler = (
+  overrideResponse?:
+    | UserProfileResponse
+    | ((
+        info: Parameters<Parameters<typeof http.put>[1]>[0],
+      ) => Promise<UserProfileResponse> | UserProfileResponse),
+  options?: RequestHandlerOptions,
+) => {
+  return http.put(
+    "*/api/users/me/digest-scopes",
+    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : undefined,
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
 export const getDeleteMyDiscordMockHandler = (
   overrideResponse?:
     | void
@@ -352,6 +376,7 @@ export const getUsersMock = () => [
   getCreateUserMockHandler(),
   getUsersMockHandler(),
   getUpdateMyProfileMockHandler(),
+  getUpdateMyDigestScopesMockHandler(),
   getDeleteMyDiscordMockHandler(),
   getMyDiscordMockHandler(),
   getUpdateMyDiscordMockHandler(),

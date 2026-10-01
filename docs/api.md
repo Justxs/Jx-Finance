@@ -369,6 +369,7 @@ Every 201 goes through `CreatedAsync`, which sets `Location` to a path built fro
 | PUT | `/api/users/me/discord` |
 | POST | `/api/users/me/discord/test` |
 | PUT | `/api/users/me/email-notifications` |
+| PUT | `/api/users/me/digest-scopes` |
 | GET | `/api/users/me/export` |
 | POST | `/api/users/me/import` |
 | PUT | `/api/users/me/language` |
@@ -389,6 +390,8 @@ Since 2026-10-01 a confirm row also takes `payee`, the preview row's `payee` sen
 `/api/users/me/dashboard-layout` is the signed-in user's own dashboard layout and is open to every signed-in user, under the `Dashboard` tag. `GET` answers `order` (every card id this version knows, saved ones first), `hidden` and `isDefault`; `PUT` takes `order` and `hidden` as lists of card id strings and answers the same shape, refusing an unknown id with `dashboard.cardUnknown` and a repeated one with `dashboard.cardDuplicate`; `DELETE` forgets the saved layout and answers the default. The card ids are the `DashboardCard` enum of the contract. See [Dashboard](features/dashboard.md).
 
 `PUT /api/users/me/email-notifications` takes `{ types }`, the notification kinds the signed-in user also wants by email, and answers the profile with `emailNotificationTypes`. It is open to every signed-in user under the `Users` tag, refuses a missing list with `required`, a repeated kind with `collection.invalidSize` and an unknown one with a 400, allows an empty list, and is throttled to 20 calls per five minutes. `PUT /api/users/me` carries only the display name and the optional password change. See [Email](features/email.md).
+
+`PUT /api/users/me/digest-scopes` takes `{ everything, householdIds }`, the scopes the signed-in member's monthly digest covers, and answers the profile with `monthlyDigestEverything` and `monthlyDigestHouseholdIds`. It refuses a missing list with `required`, a repeated household with `collection.invalidSize` and a household the member does not belong to with `household.notMember`, allows nothing chosen, and is throttled to 20 calls per five minutes. See [Monthly digest](features/monthly-digest.md#opting-in).
 
 `PUT /api/users/me/language` takes `{ language }`, `en` or `lt`, the language every email and Discord message to the signed-in user is written in, and answers the profile, whose `language` is null until one is saved. Anything else is refused with 400 `enum.invalid`; it is open to every signed-in user under the `Users` tag and throttled to 20 calls per five minutes. See [Monthly digest](features/monthly-digest.md#the-members-language).
 

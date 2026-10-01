@@ -31,6 +31,7 @@ import type {
   ImportMyDataResponse,
   ProblemDetails,
   ResetUserPasswordRequest,
+  UpdateMyDigestScopesRequest,
   UpdateMyDiscordRequest,
   UpdateMyEmailNotificationsRequest,
   UpdateMyLanguageRequest,
@@ -387,6 +388,115 @@ export const useUpdateMyProfile = <TError = ErrorType<ProblemDetails | void>, TC
   TContext
 > => {
   return useMutation(getUpdateMyProfileMutationOptions(options), queryClient);
+};
+export const getUpdateMyDigestScopesUrl = () => {
+  return `/api/users/me/digest-scopes`;
+};
+
+/**
+ * Replaces the scopes your monthly digest covers, for email and Discord alike: everything, the default, which is your own records and everything shared into any of your households, and each household listed, whose digest reads the month as the dashboard does with that household picked. Each chosen scope is its own message. The digest is still sent only when you tick it for email or Discord, and nothing is sent when no scope is chosen.
+ * @summary Choose which scopes get a monthly digest
+ */
+export const updateMyDigestScopes = async (
+  updateMyDigestScopesRequest: UpdateMyDigestScopesRequest,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<UserProfileResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return customFetch<UserProfileResponse>(getUpdateMyDigestScopesUrl(), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(updateMyDigestScopesRequest),
+  });
+};
+
+export const getUpdateMyDigestScopesMutationKey = () => ["updateMyDigestScopes"] as const;
+
+export const getUpdateMyDigestScopesMutationOptions = <
+  TError = ErrorType<ProblemDetails | void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateMyDigestScopes>>,
+    TError,
+    UpdateMyDigestScopesMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateMyDigestScopes>>,
+  TError,
+  UpdateMyDigestScopesMutationVariables,
+  TContext
+> => {
+  const mutationKey = getUpdateMyDigestScopesMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateMyDigestScopes>>,
+    UpdateMyDigestScopesMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return updateMyDigestScopes(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateMyDigestScopesMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateMyDigestScopes>>
+>;
+export type UpdateMyDigestScopesMutationBody = UpdateMyDigestScopesRequest;
+export type UpdateMyDigestScopesMutationError = ErrorType<ProblemDetails | void>;
+export type UpdateMyDigestScopesMutationVariables = { data: UpdateMyDigestScopesRequest };
+
+/**
+ * @summary Choose which scopes get a monthly digest
+ */
+export const useUpdateMyDigestScopes = <
+  TError = ErrorType<ProblemDetails | void>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof updateMyDigestScopes>>,
+      TError,
+      UpdateMyDigestScopesMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof updateMyDigestScopes>>,
+  TError,
+  UpdateMyDigestScopesMutationVariables,
+  TContext
+> => {
+  return useMutation(getUpdateMyDigestScopesMutationOptions(options), queryClient);
 };
 export const getDeleteMyDiscordUrl = () => {
   return `/api/users/me/discord`;

@@ -16,6 +16,8 @@ export function userProfile(seed: UserSeed): UserProfileResponse {
     emailConfirmed: true,
     emailNotificationTypes: [],
     language: null,
+    monthlyDigestEverything: true,
+    monthlyDigestHouseholdIds: [],
     ...seed,
   };
 }
@@ -65,6 +67,12 @@ export const emailSubscriber: UserProfileResponse = {
 export const digestSubscriber: UserProfileResponse = {
   ...currentUser,
   emailNotificationTypes: ["monthlyDigest"],
+};
+
+export const householdDigestSubscriber: UserProfileResponse = {
+  ...digestSubscriber,
+  monthlyDigestEverything: false,
+  monthlyDigestHouseholdIds: [ids.households.family],
 };
 
 export const users: UserProfileResponse[] = [currentUser, memberUser, longNameUser, inactiveUser];

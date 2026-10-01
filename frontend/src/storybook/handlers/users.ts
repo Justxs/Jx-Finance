@@ -11,6 +11,7 @@ import {
   getReactivateUserMockHandler,
   getResetUserPasswordMockHandler,
   getTestMyDiscordMockHandler,
+  getUpdateMyDigestScopesMockHandler,
   getUpdateMyDiscordMockHandler,
   getUsersMockHandler,
   getUpdateMyEmailNotificationsMockHandler,
@@ -99,6 +100,16 @@ export const userHandlers = [
     ...currentUser,
     language: text((await readBody(request)).language) ?? null,
   })),
+  getUpdateMyDigestScopesMockHandler(async ({ request }) => {
+    const body = await readBody(request);
+    return {
+      ...currentUser,
+      monthlyDigestEverything: body.everything === true,
+      monthlyDigestHouseholdIds: Array.isArray(body.householdIds)
+        ? body.householdIds.filter((id): id is string => typeof id === "string")
+        : [],
+    };
+  }),
   getDeactivateUserMockHandler(),
   getReactivateUserMockHandler(),
   getResetUserPasswordMockHandler(async ({ params, request }) => {

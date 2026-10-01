@@ -3,6 +3,7 @@ using JxFinance.Endpoints.Auth.Shared;
 using JxFinance.Endpoints.Users.CreateUser;
 using JxFinance.Endpoints.Users.GetUsers;
 using JxFinance.Endpoints.Users.ResetUserPassword;
+using JxFinance.Endpoints.Users.UpdateMyDigestScopes;
 using JxFinance.Endpoints.Users.UpdateMyEmailNotifications;
 using JxFinance.Endpoints.Users.UpdateMyLanguage;
 using JxFinance.Endpoints.Users.UpdateMyProfile;
@@ -38,5 +39,9 @@ public interface IUserService
 
     Task<Result<UserProfileResponse>> UpdateOwnLanguageAsync(
         UpdateMyLanguageRequest request,
+        CancellationToken cancellationToken);
+
+    Task<Result<UserProfileResponse>> UpdateOwnDigestScopesAsync(
+        UpdateMyDigestScopesRequest request,
         CancellationToken cancellationToken);
 }
