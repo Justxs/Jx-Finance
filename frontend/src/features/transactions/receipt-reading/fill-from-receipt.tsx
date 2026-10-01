@@ -40,15 +40,29 @@ interface ReceiptSource {
 export interface ReceiptCandidateSplit {
   candidateId: string;
   draft: TransactionDraft;
-  file: File;
+  file: File | null;
 }
 
 interface Props {
   form: TransactionFormApi;
   categories: CategoryResponse[];
   transactionId?: string;
-  onReceiptFile?: (file: File) => void;
+  onReceiptFile?: (file: File | null) => void;
   onSplitCandidate?: (split: ReceiptCandidateSplit) => void;
+}
+
+const DOCUMENT_TYPES = ["text/html", "message/rfc822"];
+
+const DOCUMENT_EXTENSIONS = [".html", ".htm", ".eml"];
+
+const RECEIPT_ACCEPT = [ACCEPT_ATTRIBUTE, ...DOCUMENT_TYPES, ...DOCUMENT_EXTENSIONS].join(",");
+
+function isReceiptDocument(file: File) {
+  const name = file.name.toLowerCase();
+  return (
+    DOCUMENT_TYPES.includes(file.type) ||
+    DOCUMENT_EXTENSIONS.some((extension) => name.endsWith(extension))
+  );
 }
 
 interface PhotoPosition {
@@ -106,7 +120,7 @@ function FilePicker({ label, busy, onPick }: Readonly<FilePickerProps>) {
       variant="button"
       icon={ScanText}
       placeholder={label}
-      accept={ACCEPT_ATTRIBUTE}
+      accept={RECEIPT_ACCEPT}
       disabled={busy}
       onChange={(event) => {
         const file = event.target.files?.[0];
@@ -206,8 +220,9 @@ export function FillFromReceipt({
 
   function pick(file: File) {
     readMutation.reset();
-    if (!transactionId) {
-      onReceiptFile?.(file);
+    const document = isReceiptDocument(file);
+    if (!transactionId || document) {
+      onReceiptFile?.(document ? null : file);
       read({ file });
       return;
     }
@@ -301,7 +316,7 @@ export function FillFromReceipt({
       onSplitCandidate?.({
         candidateId: candidate.id,
         draft: draftOf(linesFromReceipt(current.result, choices, candidate.amount)),
-        file,
+        file: isReceiptDocument(file) ? null : file,
       }),
     );
   }

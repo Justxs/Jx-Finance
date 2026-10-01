@@ -116,7 +116,9 @@ export function useTransactionFormSection({
   }
 
   async function splitCandidate({ candidateId, draft, file }: ReceiptCandidateSplit) {
-    await attachReceipt(candidateId, file);
+    if (file) {
+      await attachReceipt(candidateId, file);
+    }
     const candidate = await queryClient.query(getTransactionSuspenseQueryOptions(candidateId));
     setCreateOpen(false);
     startEditing(candidate, draft);

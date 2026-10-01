@@ -2979,7 +2979,7 @@
       "futureDate": "The statement date cannot be after today."
     },
     "receipt": {
-      "unsupportedFile": "This file cannot be read as a receipt. Use a JPEG, PNG, WebP or HEIC photo or a PDF without a password.",
+      "unsupportedFile": "This file cannot be read as a receipt. Use a JPEG, PNG, WebP or HEIC photo, a PDF without a password, or a receipt e-mail saved as HTML or EML.",
       "pdfWithoutText": "This PDF holds only a picture of the receipt. Take a photo of the receipt instead.",
       "unreadable": "No items or total could be read. Take a sharper, straight photo of the whole receipt in even light and try again.",
       "engineUnavailable": "Receipt reading is not available: the server has no Tesseract with Lithuanian and English language data."

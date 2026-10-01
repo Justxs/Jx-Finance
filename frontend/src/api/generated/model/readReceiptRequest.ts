@@ -12,7 +12,7 @@ export interface ReadReceiptRequest {
    * @nullable
    */
   attachmentId?: string | null;
-  /** A new file to read, at most 10 MB; leave empty when sending attachmentId. */
+  /** A new file to read, at most 10 MB: a photo, a PDF, or an HTML or .eml receipt e-mail; leave empty when sending attachmentId. */
   file?: null | Blob | File;
   /** Read again even when a stored reading exists. */
   force?: boolean;

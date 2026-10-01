@@ -67,6 +67,21 @@ export const ReadsAPickedFile: Story = {
   },
 };
 
+export const ReadsAnEmailReceiptWithoutAttachingIt: Story = {
+  args: { onReceiptFile: fn() },
+  play: async ({ canvas, args }) => {
+    await userEvent.upload(
+      await screen.findByLabelText(/Fill from receipt/u),
+      new File(["<p>MAXIMA LT, UAB</p>"], "maxima.html", { type: "text/html" }),
+    );
+    await openedDialog();
+    await userEvent.click(screen.getByRole("button", { name: "Use these lines" }));
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+    await expect(args.onReceiptFile).toHaveBeenCalledWith(null);
+    await expect(canvas.getByLabelText("Description")).toHaveValue("MAXIMA LT, UAB");
+  },
+};
+
 export const ReadsTheAttachedReceipt: Story = {
   args: { initial: maximaPayment },
   play: async ({ canvas }) => {

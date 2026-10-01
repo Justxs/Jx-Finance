@@ -232,9 +232,13 @@ public sealed class ReceiptService(
         }
 
         var bytes = content.ToArray();
-        var contentType = AttachmentErrors.ContentTypeOf(
-            upload.ContentType,
-            bytes.AsSpan(0, Math.Min(bytes.Length, AttachmentContent.HeaderBytes)));
+        var header = bytes.AsSpan(0, Math.Min(bytes.Length, AttachmentContent.HeaderBytes));
+        if (ReceiptDocument.ContentTypeOf(upload.ContentType, upload.FileName, header) is { } document)
+        {
+            return new ReceiptFile(bytes, document, Convert.ToHexStringLower(SHA256.HashData(bytes)));
+        }
+
+        var contentType = AttachmentErrors.ContentTypeOf(upload.ContentType, header);
         if (!contentType.TryGetValue(out var detected))
         {
             return contentType.Error;

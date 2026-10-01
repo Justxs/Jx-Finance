@@ -10,7 +10,10 @@ public sealed class ReadReceiptSummary : Summary<ReadReceiptEndpoint, ReadReceip
         Description = "Reads one receipt photo or PDF on this server and answers its merchant, date, total and items "
             + "for review; nothing leaves the installation and nothing in the ledger changes. Send multipart/form-data "
             + "with exactly one of attachmentId, a file already attached to a transaction the caller can see, or file, "
-            + "a new JPEG, PNG, WebP, HEIC or PDF of at most 10 MB that is read but never stored. Photos are turned "
+            + "a new JPEG, PNG, WebP, HEIC or PDF of at most 10 MB that is read but never stored. file may also be a "
+            + "receipt e-mail saved as an HTML page (text/html, .html or .htm) or as a message (message/rfc822, .eml), "
+            + "whose visible text, or a message's HTML part and else its text part, is read in reading order; such a "
+            + "file cannot be attached. Photos are turned "
             + "upright, stripped of their metadata and read with Tesseract (Lithuanian and English); a PDF is read from "
             + "the text of its first 3 pages, and a PDF without text answers receipt.pdfWithoutText. Lines that look "
             + "like part of the receipt but cannot be read as an item come back in unreadLines. Each item gets the "
@@ -25,7 +28,7 @@ public sealed class ReadReceiptSummary : Summary<ReadReceiptEndpoint, ReadReceip
             + "Needs the ReceiptReading feature switch. Rate limited to 30 calls per five "
             + "minutes per client.";
         Params["attachmentId"] = "An attached file to read; leave empty when sending file.";
-        Params["file"] = "A new file to read, at most 10 MB; leave empty when sending attachmentId.";
+        Params["file"] = "A new file to read, at most 10 MB: a photo, a PDF, or an HTML or .eml receipt e-mail; leave empty when sending attachmentId.";
         Params["force"] = "Read again even when a stored reading exists.";
         Responses[200] = "The reading.";
         Responses[400] = "Neither or both of attachmentId and file (required, value.mustBeEmpty), an attachment.* file "

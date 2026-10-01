@@ -15,7 +15,7 @@ public static class ReceiptErrors
 
     public static readonly DomainError Unsupported = new(
         ErrorCodes.ReceiptUnsupportedFile,
-        "This file cannot be read as a receipt. Use a JPEG, PNG, WebP or HEIC photo or a PDF that is not password protected.");
+        "This file cannot be read as a receipt. Use a JPEG, PNG, WebP or HEIC photo, a PDF that is not password protected, or a receipt e-mail saved as HTML or EML.");
 
     public static readonly DomainError PdfWithoutText = new(
         ErrorCodes.ReceiptPdfWithoutText,

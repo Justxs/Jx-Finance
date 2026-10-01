@@ -29,7 +29,16 @@ public static class ReceiptImage
     public static Result<ReceiptInput> Prepare(byte[] content, string contentType) =>
         AttachmentImage.Formats.TryGetValue(contentType, out var format) ? PrepareImage(content, format)
         : contentType == AttachmentContent.Pdf ? ReadPdf(content)
+        : ReceiptDocument.IsDocument(contentType) ? ReadDocument(content, contentType)
         : ReceiptErrors.Unsupported;
+
+    private static Result<ReceiptInput> ReadDocument(byte[] content, string contentType) =>
+        ReceiptDocument.Text(content, contentType) switch
+        {
+            null => ReceiptErrors.Unsupported,
+            var text when string.IsNullOrWhiteSpace(text) => ReceiptErrors.Unreadable,
+            var text => new ReceiptInput([], text, 1, 1),
+        };
 
     private static Result<ReceiptInput> PrepareImage(byte[] content, MagickFormat format)
     {

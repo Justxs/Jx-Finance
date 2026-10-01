@@ -64,7 +64,7 @@ interface Props {
   onSubmitAndAddAnother?: (values: TransactionFormValues) => Promise<boolean>;
   onSaveAsTemplate?: (name: string, values: TransactionFormValues) => void;
   onCancel?: () => void;
-  onReceiptFile?: (file: File) => void;
+  onReceiptFile?: (file: File | null) => void;
   onSplitCandidate?: (split: ReceiptCandidateSplit) => void;
 }
 

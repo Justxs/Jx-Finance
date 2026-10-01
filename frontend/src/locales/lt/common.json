@@ -3091,7 +3091,7 @@
       "futureDate": "Išrašo data negali būti vėlesnė nei šiandien."
     },
     "receipt": {
-      "unsupportedFile": "Šio failo negalima perskaityti kaip kvito. Naudokite JPEG, PNG, WebP ar HEIC nuotrauką arba PDF failą be slaptažodžio.",
+      "unsupportedFile": "Šio failo negalima perskaityti kaip kvito. Naudokite JPEG, PNG, WebP ar HEIC nuotrauką, PDF failą be slaptažodžio arba kvito laišką, išsaugotą kaip HTML ar EML.",
       "pdfWithoutText": "Šiame PDF faile yra tik kvito paveikslėlis. Vietoj jo nufotografuokite kvitą.",
       "unreadable": "Nepavyko perskaityti nei prekių, nei sumos. Nufotografuokite visą kvitą ryškiau, tiesiai ir gerai apšviestą, tada bandykite dar kartą.",
       "engineUnavailable": "Kvitų skaitymas neprieinamas: serveryje nėra Tesseract su lietuvių ir anglų kalbų duomenimis."
