@@ -8,6 +8,7 @@
 import type { Currency } from "./currency";
 import type { DateOnly } from "./dateOnly";
 import type { FlowType } from "./flowType";
+import type { SpreadDirection } from "./spreadDirection";
 
 export interface ImportConfirmRow {
   importRef: string;
@@ -32,4 +33,7 @@ export interface ImportConfirmRow {
   refundOfTransactionId?: string | null;
   /** @nullable */
   payee?: string | null;
+  /** @nullable */
+  spreadMonths?: number | null;
+  spreadDirection?: null | SpreadDirection;
 }

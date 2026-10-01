@@ -2671,6 +2671,8 @@
     "ruleFilledHint": "Užpildė jūsų taisyklė „{{rule}}“. Pakeiskite, jei netinka.",
     "tagsFor": "Žymos: {{row}}",
     "chooseTags": "Žymos",
+    "spread": "Paskirstyti per mėnesius",
+    "spreadFor": "Paskirstymas per mėnesius: {{row}}",
     "reversal": "Atšaukimas",
     "formats": {
       "swedbankCsv": {

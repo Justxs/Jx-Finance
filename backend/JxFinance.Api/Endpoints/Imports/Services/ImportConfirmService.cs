@@ -266,6 +266,8 @@ public sealed class ImportConfirmService(
                 Payee = TransactionPayee.Clip(row.Payee),
                 Source = TransactionSource.Imported,
                 ImportRef = row.ImportRef,
+                SpreadMonths = (short?)row.SpreadMonths,
+                SpreadDirection = row.SpreadMonths is null ? SpreadDirection.Forward : row.SpreadDirection ?? SpreadDirection.Forward,
             };
             db.Transactions.Add(created);
             db.TransactionTags.AddRange(row.TagIds.ToTransactionTags(created.Id));

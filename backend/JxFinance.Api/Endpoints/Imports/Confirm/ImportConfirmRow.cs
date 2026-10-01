@@ -1,5 +1,6 @@
 using JxFinance.Common.Json;
 using JxFinance.Domain.Common;
+using JxFinance.Domain.Transactions;
 
 namespace JxFinance.Endpoints.Imports.Confirm;
 
@@ -17,4 +18,6 @@ public sealed record ImportConfirmRow(
     Guid? ExistingTransactionId = null,
     bool AsRefund = false,
     Guid? RefundOfTransactionId = null,
-    string? Payee = null);
+    string? Payee = null,
+    int? SpreadMonths = null,
+    SpreadDirection? SpreadDirection = null);

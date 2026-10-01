@@ -3,6 +3,7 @@ import type {
   Currency,
   FlowType,
   ImportPreviewRow,
+  SpreadDirection,
   TransactionResponse,
 } from "@/api/generated/model";
 import { toCents } from "@/lib/money";
@@ -19,6 +20,8 @@ export interface PreviewRowState extends ImportPreviewRow {
   learnedConfidence: number | null;
   ruleName: string | null;
   tagIds: string[];
+  spreadMonths: number | null;
+  spreadDirection: SpreadDirection;
 }
 
 interface CurrencyNet {
@@ -161,6 +164,8 @@ export function toPreviewRows(
         learnedConfidence: null,
         ruleName: null,
         tagIds: [],
+        spreadMonths: null,
+        spreadDirection: "forward",
       };
     }
     return {
@@ -176,6 +181,8 @@ export function toPreviewRows(
       learnedConfidence: learnedCategoryId ? (row.learnedConfidence ?? null) : null,
       ruleName,
       tagIds: ruleName ? [...row.suggestedTagIds] : [],
+      spreadMonths: null,
+      spreadDirection: "forward",
     };
   });
 }

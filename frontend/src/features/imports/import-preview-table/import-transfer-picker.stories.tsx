@@ -59,6 +59,8 @@ function toState(
     learnedConfidence: null,
     ruleName: null,
     tagIds: [],
+    spreadMonths: null,
+    spreadDirection: "forward",
     ...patch,
   };
 }

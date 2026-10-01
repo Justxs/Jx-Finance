@@ -29,6 +29,12 @@ public sealed class ImportConfirmValidator : Validator<ImportConfirmRequest>
             row.RuleFor(r => r.Payee).HasMaxLength(TransactionPayee.MaxLength);
             row.RuleFor(r => r.Amount).IsPositiveMoney();
             row.RuleFor(r => r.TagIds).HasAtMostTags();
+            row.RuleFor(r => r.SpreadMonths).IsWithin(TransactionSpread.MinMonths, TransactionSpread.MaxMonths);
+            row.RuleFor(r => r.SpreadDirection).IsKnownEnum();
+            row.RuleFor(r => r.SpreadMonths)
+                .IsAbsent()
+                .WithMessage("Only a row recorded as a transaction can be spread over months.")
+                .When(r => r.TransferAccountId is not null || r.ExistingTransferId is not null || r.ExistingTransactionId is not null);
             row.RuleFor(r => r)
                 .Must(r => r.AsRefund
                     ? r is { Type: FlowType.Income, TransferAccountId: null, ExistingTransferId: null, ExistingTransactionId: null }

@@ -234,6 +234,8 @@ export function ImportSection({
           type: row.type,
           categoryId: takesCategory(row) ? row.categoryId || null : null,
           tagIds: takesCategory(row) ? row.tagIds : [],
+          spreadMonths: takesCategory(row) ? row.spreadMonths : null,
+          spreadDirection: takesCategory(row) && row.spreadMonths ? row.spreadDirection : null,
           transferAccountId: row.transferAccountId || null,
           existingTransferId: row.existingTransferId || null,
           existingTransactionId: row.existingTransactionId || null,

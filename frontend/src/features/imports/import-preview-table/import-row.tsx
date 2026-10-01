@@ -12,6 +12,7 @@ import { EMPTY_VALUE, useIsoDate, useMoney } from "@/hooks/use-formatters";
 import { namedOptions } from "@/lib/options";
 import { INCOME_TONE } from "@/lib/tone";
 import { cn, metaLine } from "@/lib/utils";
+import { ImportSpreadPicker } from "./import-spread-picker";
 import { ImportTagPicker } from "./import-tag-picker";
 import { ImportTransferPicker } from "./import-transfer-picker";
 import { type PreviewRowState, categoryType, takesCategory } from "./preview-rows";
@@ -139,6 +140,16 @@ export function ImportRow({
     </Button>
   );
 
+  const spread = editable ? (
+    <ImportSpreadPicker
+      id={`import-spread-${index}`}
+      label={t("imports.spreadFor", { row: rowName })}
+      spreadMonths={row.spreadMonths}
+      spreadDirection={row.spreadDirection}
+      onChange={(next) => onRowChange(index, next)}
+    />
+  ) : null;
+
   const flags = hasFlags ? (
     <div className="flex flex-wrap gap-1">
       {row.isDuplicate ? <Tag>{t("imports.duplicate")}</Tag> : null}
@@ -185,6 +196,7 @@ export function ImportRow({
         {category}
         {tagPicker}
         {transfer}
+        {spread}
       </li>
     );
   }
@@ -204,7 +216,12 @@ export function ImportRow({
       <TableCell className="text-right">{amount}</TableCell>
       <TableCell>{category}</TableCell>
       <TableCell>{tagPicker}</TableCell>
-      <TableCell>{transfer}</TableCell>
+      <TableCell>
+        <div className="flex flex-col items-start gap-1">
+          {transfer}
+          {spread}
+        </div>
+      </TableCell>
       <TableCell>{flags}</TableCell>
     </TableRow>
   );

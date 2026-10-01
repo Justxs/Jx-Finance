@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import { toast } from "sonner";
-import { expect, userEvent, within } from "storybook/test";
+import { expect, screen, userEvent, within } from "storybook/test";
 import {
   accounts,
   categories,
@@ -10,7 +10,7 @@ import {
   tags,
   transactions,
 } from "@/storybook/fixtures";
-import { first } from "@/storybook/interactions";
+import { chooseOption, first } from "@/storybook/interactions";
 import { ImportPreviewTable } from "./import-preview-table";
 import { type PreviewRowState, toPreviewRows } from "./preview-rows";
 
@@ -151,6 +151,21 @@ export const LearnedCategory: Story = {
     const table = within(first(canvas.getAllByRole("region", { name: "Preview" })));
     await expect(table.getByText("Learned")).toBeVisible();
     await expect(table.getByText("Filled by a rule")).toBeVisible();
+  },
+};
+
+export const SpreadARow: Story = {
+  play: async ({ canvas }) => {
+    const table = within(first(canvas.getAllByRole("region", { name: "Preview" })));
+    const trigger = first(table.getAllByRole("button", { name: /^Spread over months: .*MAXIMA/ }));
+    await userEvent.click(trigger);
+    await chooseOption(await screen.findByRole("combobox", { name: "Spread over" }), "12 months");
+    await chooseOption(
+      await screen.findByRole("combobox", { name: "Months counted" }),
+      "Up to the date's month",
+    );
+
+    await expect(trigger).toHaveTextContent("Spread · 12 months");
   },
 };
 

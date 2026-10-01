@@ -195,6 +195,12 @@ The review starts a row as a refund, selected, when it carries a candidate or is
 
 Confirm sends `asRefund` and, for the linked choice, `refundOfTransactionId`; `type` and `amount` stay the bank's. `ImportConfirmService` writes the row as an `Expense` with the negated amount, valued the usual way, in the chosen category, which must be an expense category (`category.wrongType`). The purchase is checked by `RefundOriginal`, the helper the transaction form's save uses: a visible expense that is not a refund, or `transaction.refundOriginalInvalid`. `asRefund` on an outgoing row, a transfer or a linked row, and `refundOfTransactionId` without `asRefund`, answer `import.refundInvalid`. As with every confirm error, nothing is written.
 
+## Spreading a row over months
+
+Since 2026-10-02 a row that will be written as a transaction, a refund included, can be [spread over months](transactions.md#spreading-over-months) from the review. Under the "Record as" picker (on the phone, under the tags) the link "Spread over months" opens a small popover with the "Spread over" select (Off, 3, 6 or 12 months) and, once a count is chosen, the "Months counted" select (from the date's month on, or up to it for a bill paid in arrears); the link then reads "Spread · 12 months". A row recorded as a transfer or linked to your own entry shows no link, and confirm leaves its spread out. A count other than 3, 6 or 12 is set afterwards in the ledger.
+
+A confirm row takes `spreadMonths` (2 to 36, `range.invalid`) and `spreadDirection` (`forward` by default, or `backward`), and `ImportConfirmService` writes them onto the transaction it creates, so reports and budgets count its slices from the first import. A row with a transfer account, a matched transfer or an entry to link answers 400 `value.mustBeEmpty` when it carries `spreadMonths`.
+
 ## Views, search and leaving a review
 
 The rows sit under a switch of four counted views: All, Needs attention, Transfers and Duplicates. Needs attention holds the selected rows that are not recorded as a transfer or linked to your own entry and have no category, which would otherwise enter the ledger uncategorized. Transfers holds suspected transfers and rows recorded as one, and Duplicates the rows already imported. A search box narrows any view to rows whose description or payee contains the text, ignoring case.

@@ -2567,6 +2567,8 @@
     "ruleFilledHint": "Filled by your rule \"{{rule}}\". Change it if it does not fit.",
     "tagsFor": "Tags: {{row}}",
     "chooseTags": "Tags",
+    "spread": "Spread over months",
+    "spreadFor": "Spread over months: {{row}}",
     "reversal": "Reversal",
     "formats": {
       "swedbankCsv": {

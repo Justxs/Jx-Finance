@@ -19,7 +19,9 @@ public sealed class ImportConfirmSummary : Summary<ImportConfirmEndpoint, Import
             + "preview's closing date, balance and currency, and that balance is "
             + "recorded as a reconciliation of the account in that currency after the rows are written, replacing one on the same date and currency, "
             + "and returned with its difference from the ledger. An incoming row sent with asRefund is written as a refund: an expense "
-            + "with the negated amount in the expense category given, linked to refundOfTransactionId when that is set.";
+            + "with the negated amount in the expense category given, linked to refundOfTransactionId when that is set. A row written as a transaction may carry "
+            + "spreadMonths and spreadDirection, which spread it over months as on a transaction created by hand; a transfer or a linked row "
+            + "cannot be spread (value.mustBeEmpty).";
         RequestParam(r => r.AccountId, "The account the rows post to; must be the one previewed.");
         RequestParam(r => r.Rows, "The rows to import, as returned by preview, with any category and tag corrections applied.");
         RequestParam(r => r.Format, ImportFormatText.Format);
