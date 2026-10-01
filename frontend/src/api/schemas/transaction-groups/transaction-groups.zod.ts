@@ -248,6 +248,15 @@ export const TransactionGroupMembersResponse = zod.object({
       enteredByMe: zod
         .boolean()
         .default(transactionGroupMembersResponseItemsItemEnteredByMeDefault),
+      receiptItem: zod
+        .union([
+          zod.null(),
+          zod.object({
+            name: zod.string(),
+            warrantyUntil: zod.union([zod.null(), zod.iso.date()]),
+          }),
+        ])
+        .optional(),
     }),
   ),
   truncated: zod.boolean(),

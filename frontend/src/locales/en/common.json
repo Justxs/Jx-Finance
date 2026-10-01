@@ -434,6 +434,8 @@
     "empty": "No transactions yet.",
     "needAccount": "Create an account first to add transactions.",
     "searchPlaceholder": "Search description or note...",
+    "receiptItem": "Receipt item: {{name}}",
+    "receiptItemWarranty": "Receipt item: {{name}} · warranty until {{date}}",
     "allTypes": "All types",
     "allAccounts": "All accounts",
     "allCategories": "All categories",

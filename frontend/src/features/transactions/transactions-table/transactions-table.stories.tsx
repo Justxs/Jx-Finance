@@ -16,6 +16,7 @@ import {
   linkedPaymentTransaction,
   linkedRefund,
   longDescriptionTransaction,
+  receiptItemTransaction,
   refundedPurchase,
   refundTransactions,
   splitTransaction,
@@ -126,6 +127,16 @@ export const ForeignCurrency: Story = {
 export const FilteredNoMatches: Story = {
   args: { data: [] },
   parameters: { route: "/transactions?type=expense&search=nothing" },
+};
+
+export const FoundByReceiptItem: Story = {
+  args: { data: [receiptItemTransaction] },
+  parameters: { route: "/transactions?search=dyson" },
+  play: async ({ canvas }) => {
+    await expect(
+      canvas.getByText(/^Receipt item: DYSON V8 dulkių siurblys · warranty until .*2028$/u),
+    ).toBeInTheDocument();
+  },
 };
 
 export const WithActiveFilters: Story = {

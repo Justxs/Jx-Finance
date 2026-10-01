@@ -25,7 +25,11 @@ public static class TransactionFilterSummary
         summary.Describe(nameof(TransactionFilterRequest.CategoryId), category);
         summary.Describe(nameof(TransactionFilterRequest.TagIds), Tags);
         summary.Describe(nameof(TransactionFilterRequest.Type), SummaryText.FlowType);
-        summary.Describe(nameof(TransactionFilterRequest.Search), "Case-insensitive match against the description, the note, your name for the payee or, while the locations feature is on, the place.");
+        summary.Describe(
+            nameof(TransactionFilterRequest.Search),
+            "Case-insensitive match against the description, the note, your name for the payee, while the locations feature is on the place, "
+            + "and while the receipt reading feature is on the item names of your own readings of the transaction's attached receipts. "
+            + "A listed transaction matched by an item answers it as receiptItem, with the warranty date of its file.");
         summary.Describe(
             nameof(TransactionFilterRequest.Place),
             "Keep only transactions whose place contains this text, ignoring case, at most 120 characters. Ignored while the locations feature is off.");

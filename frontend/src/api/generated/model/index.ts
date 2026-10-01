@@ -323,6 +323,7 @@ export * from "./transactionGroupResponse";
 export * from "./transactionGroupSummary";
 export * from "./transactionLineRequest";
 export * from "./transactionLineResponse";
+export * from "./transactionReceiptItemResponse";
 export * from "./transactionRefundOfResponse";
 export * from "./transactionResponse";
 export * from "./transactionSharedExpenseResponse";

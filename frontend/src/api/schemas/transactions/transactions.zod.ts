@@ -274,6 +274,15 @@ export const CreateTransactionResponse = zod.object({
   longitude: zod.number().nullish(),
   groupId: zod.uuid().nullish(),
   enteredByMe: zod.boolean().default(createTransactionResponseEnteredByMeDefault),
+  receiptItem: zod
+    .union([
+      zod.null(),
+      zod.object({
+        name: zod.string(),
+        warrantyUntil: zod.union([zod.null(), zod.iso.date()]),
+      }),
+    ])
+    .optional(),
 });
 
 /**
@@ -434,6 +443,15 @@ export const TransactionsResponse = zod.object({
       longitude: zod.number().nullish(),
       groupId: zod.uuid().nullish(),
       enteredByMe: zod.boolean().default(transactionsResponseItemsItemEnteredByMeDefault),
+      receiptItem: zod
+        .union([
+          zod.null(),
+          zod.object({
+            name: zod.string(),
+            warrantyUntil: zod.union([zod.null(), zod.iso.date()]),
+          }),
+        ])
+        .optional(),
     }),
   ),
   page: zod.int(),
@@ -668,6 +686,15 @@ export const LedgerResponse = zod.object({
           enteredByMe: zod
             .boolean()
             .default(ledgerResponseItemsItemTransactionTwoEnteredByMeDefault),
+          receiptItem: zod
+            .union([
+              zod.null(),
+              zod.object({
+                name: zod.string(),
+                warrantyUntil: zod.union([zod.null(), zod.iso.date()]),
+              }),
+            ])
+            .optional(),
         }),
       ]),
       group: zod.union([
@@ -910,6 +937,15 @@ export const UncategorizedSuggestionsResponseItem = zod.object({
     enteredByMe: zod
       .boolean()
       .default(uncategorizedSuggestionsResponseTransactionEnteredByMeDefault),
+    receiptItem: zod
+      .union([
+        zod.null(),
+        zod.object({
+          name: zod.string(),
+          warrantyUntil: zod.union([zod.null(), zod.iso.date()]),
+        }),
+      ])
+      .optional(),
   }),
   categoryId: zod.uuid(),
   source: zod.enum(["rule", "learned"]),
@@ -1063,6 +1099,15 @@ export const TransactionResponse = zod.object({
   longitude: zod.number().nullish(),
   groupId: zod.uuid().nullish(),
   enteredByMe: zod.boolean().default(transactionResponseEnteredByMeDefault),
+  receiptItem: zod
+    .union([
+      zod.null(),
+      zod.object({
+        name: zod.string(),
+        warrantyUntil: zod.union([zod.null(), zod.iso.date()]),
+      }),
+    ])
+    .optional(),
 });
 
 /**
@@ -1317,6 +1362,15 @@ export const UpdateTransactionResponse = zod.object({
   longitude: zod.number().nullish(),
   groupId: zod.uuid().nullish(),
   enteredByMe: zod.boolean().default(updateTransactionResponseEnteredByMeDefault),
+  receiptItem: zod
+    .union([
+      zod.null(),
+      zod.object({
+        name: zod.string(),
+        warrantyUntil: zod.union([zod.null(), zod.iso.date()]),
+      }),
+    ])
+    .optional(),
 });
 
 /**

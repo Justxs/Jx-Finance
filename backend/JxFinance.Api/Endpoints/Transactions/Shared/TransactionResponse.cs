@@ -36,7 +36,10 @@ public sealed record TransactionResponse(
     decimal? Latitude = null,
     decimal? Longitude = null,
     Guid? GroupId = null,
-    bool EnteredByMe = false);
+    bool EnteredByMe = false,
+    TransactionReceiptItemResponse? ReceiptItem = null);
+
+public sealed record TransactionReceiptItemResponse(string Name, DateOnly? WarrantyUntil);
 
 public sealed record TransactionDebtPaymentResponse(Guid Id, Guid DebtId, string DebtName);
 

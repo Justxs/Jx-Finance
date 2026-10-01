@@ -249,6 +249,11 @@ export const spreadTransaction: TransactionResponse = {
   spreadUntil: "2026-12-15",
 };
 
+export const receiptItemTransaction: TransactionResponse = {
+  ...manual(32, "09-12", checking, shopping, -349, "SENUKAI", [], 1),
+  receiptItem: { name: "DYSON V8 dulkių siurblys", warrantyUntil: "2028-09-12" },
+};
+
 export const refundTransactions: TransactionResponse[] = [
   unlinkedRefund,
   linkedRefund,

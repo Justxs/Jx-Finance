@@ -5,6 +5,7 @@ import type { RowAction } from "@/components/row-actions/row-actions";
 import { TagChips } from "@/components/tag-chips/tag-chips";
 import { Tag } from "@/components/ui/tag/tag";
 import { DebtPaymentMarker } from "@/features/transactions/debt-payment/debt-payment";
+import { ReceiptItemMatch } from "@/features/transactions/receipt-item-match/receipt-item-match";
 import { RefundMark } from "@/features/transactions/refund-mark/refund-mark";
 import { SharedExpenseMark } from "@/features/transactions/shared-expense/shared-expense";
 import { SpreadMark } from "@/features/transactions/spread-mark/spread-mark";
@@ -110,6 +111,7 @@ export function useTransactionColumns({
                   {note}
                 </span>
               ) : null}
+              <ReceiptItemMatch transaction={info.row.original} />
             </span>
             <AttachmentCount count={info.row.original.attachmentCount} className="mt-0.5" />
             <UnusualAmountBadge

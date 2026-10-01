@@ -147,6 +147,7 @@ const contracts: Record<string, Contract> = {
   linkedRefund: { schema: schemas.TransactionResponse },
   unlinkedRefund: { schema: schemas.TransactionResponse },
   spreadTransaction: { schema: schemas.TransactionResponse },
+  receiptItemTransaction: { schema: schemas.TransactionResponse },
   refundTransactions: { schema: schemas.TransactionsResponse, toResponse: asPage },
   foreignCurrencyTransactions: { schema: schemas.TransactionsResponse, toResponse: asPage },
   possibleDuplicatePair: { schema: schemas.TransactionsResponse, toResponse: asPage },

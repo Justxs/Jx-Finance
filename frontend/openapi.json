@@ -15601,7 +15601,7 @@
           {
             "name": "search",
             "in": "query",
-            "description": "Case-insensitive match against the description, the note, your name for the payee or, while the locations feature is on, the place.",
+            "description": "Case-insensitive match against the description, the note, your name for the payee, while the locations feature is on the place, and while the receipt reading feature is on the item names of your own readings of the transaction's attached receipts. A listed transaction matched by an item answers it as receiptItem, with the warranty date of its file.",
             "schema": {
               "type": [
                 "null",
@@ -16040,7 +16040,7 @@
           {
             "name": "search",
             "in": "query",
-            "description": "Case-insensitive match against the description, the note, your name for the payee or, while the locations feature is on, the place.",
+            "description": "Case-insensitive match against the description, the note, your name for the payee, while the locations feature is on the place, and while the receipt reading feature is on the item names of your own readings of the transaction's attached receipts. A listed transaction matched by an item answers it as receiptItem, with the warranty date of its file.",
             "schema": {
               "type": [
                 "null",
@@ -16477,7 +16477,7 @@
           {
             "name": "search",
             "in": "query",
-            "description": "Case-insensitive match against the description, the note, your name for the payee or, while the locations feature is on, the place.",
+            "description": "Case-insensitive match against the description, the note, your name for the payee, while the locations feature is on the place, and while the receipt reading feature is on the item names of your own readings of the transaction's attached receipts. A listed transaction matched by an item answers it as receiptItem, with the warranty date of its file.",
             "schema": {
               "type": [
                 "null",
@@ -16740,7 +16740,7 @@
           {
             "name": "search",
             "in": "query",
-            "description": "Case-insensitive match against the description, the note, your name for the payee or, while the locations feature is on, the place.",
+            "description": "Case-insensitive match against the description, the note, your name for the payee, while the locations feature is on the place, and while the receipt reading feature is on the item names of your own readings of the transaction's attached receipts. A listed transaction matched by an item answers it as receiptItem, with the warranty date of its file.",
             "schema": {
               "type": [
                 "null",
@@ -17005,7 +17005,7 @@
           {
             "name": "search",
             "in": "query",
-            "description": "Case-insensitive match against the description, the note, your name for the payee or, while the locations feature is on, the place.",
+            "description": "Case-insensitive match against the description, the note, your name for the payee, while the locations feature is on the place, and while the receipt reading feature is on the item names of your own readings of the transaction's attached receipts. A listed transaction matched by an item answers it as receiptItem, with the warranty date of its file.",
             "schema": {
               "type": [
                 "null",
@@ -17408,7 +17408,7 @@
           {
             "name": "search",
             "in": "query",
-            "description": "Case-insensitive match against the description, the note, your name for the payee or, while the locations feature is on, the place.",
+            "description": "Case-insensitive match against the description, the note, your name for the payee, while the locations feature is on the place, and while the receipt reading feature is on the item names of your own readings of the transaction's attached receipts. A listed transaction matched by an item answers it as receiptItem, with the warranty date of its file.",
             "schema": {
               "type": [
                 "null",
@@ -17638,7 +17638,7 @@
           {
             "name": "search",
             "in": "query",
-            "description": "Case-insensitive match against the description, the note, your name for the payee or, while the locations feature is on, the place.",
+            "description": "Case-insensitive match against the description, the note, your name for the payee, while the locations feature is on the place, and while the receipt reading feature is on the item names of your own readings of the transaction's attached receipts. A listed transaction matched by an item answers it as receiptItem, with the warranty date of its file.",
             "schema": {
               "type": [
                 "null",
@@ -30637,6 +30637,28 @@
           }
         }
       },
+      "TransactionReceiptItemResponse": {
+        "required": [
+          "name",
+          "warrantyUntil"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "warrantyUntil": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/NullableOfDateOnly"
+              }
+            ]
+          }
+        }
+      },
       "TransactionRefundOfResponse": {
         "required": [
           "id",
@@ -30859,6 +30881,16 @@
           "enteredByMe": {
             "type": "boolean",
             "default": false
+          },
+          "receiptItem": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/TransactionReceiptItemResponse"
+              }
+            ]
           }
         }
       },

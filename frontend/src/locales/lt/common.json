@@ -452,6 +452,8 @@
     "empty": "Operacijų dar nėra.",
     "needAccount": "Pirmiausia sukurkite sąskaitą, kad galėtumėte pridėti operacijas.",
     "searchPlaceholder": "Ieškoti aprašyme ar pastaboje...",
+    "receiptItem": "Kvito prekė: {{name}}",
+    "receiptItemWarranty": "Kvito prekė: {{name}} · garantija iki {{date}}",
     "allTypes": "Visi tipai",
     "allAccounts": "Visos sąskaitos",
     "allCategories": "Visos kategorijos",

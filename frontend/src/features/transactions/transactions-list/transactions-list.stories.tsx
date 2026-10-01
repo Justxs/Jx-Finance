@@ -7,6 +7,7 @@ import {
   categories,
   longDescriptionTransaction,
   partlyMatchingTripGroup,
+  receiptItemTransaction,
   refundTransactions,
   splitTransaction,
   tags,
@@ -93,6 +94,16 @@ export const OptimisticRow: Story = {
 };
 
 export const Refunds: Story = { args: { rows: refundTransactions.map(transactionRow) } };
+
+export const FoundByReceiptItem: Story = {
+  args: { rows: [transactionRow(receiptItemTransaction)], filtered: true },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText("SENUKAI")).toBeInTheDocument();
+    await expect(
+      canvas.getByText(/^Receipt item: DYSON V8 dulkių siurblys · warranty until .*2028$/u),
+    ).toBeInTheDocument();
+  },
+};
 
 const groupHandlers = {
   onToggle: fn(),

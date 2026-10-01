@@ -398,6 +398,8 @@ Since 2026-09-30 `POST /api/investments/import/trade-csv` takes `accountId` and 
 
 Since 2026-09-30 `GET /api/receipts/items` takes `dateFrom`, `dateTo` and an optional `search` and answers `{ items: [{ key, name, currency, amount, count, lastBought }], receipts }`, the caller's receipt items summed by normalized name. See [Receipt reading](features/receipt-reading.md#spending-per-item).
 
+Since 2026-10-01, while the `ReceiptReading` feature is on, `search` on the filtered transaction endpoints and the ledger also matches the item names of the caller's own readings of the files attached to a transaction, and a listed transaction with a matching item answers `receiptItem` (`name`, `warrantyUntil`, the warranty date of that file), null otherwise; the single-transaction response never carries it. See [Receipt reading](features/receipt-reading.md#finding-a-purchase-by-item).
+
 Since 2026-09-30 `PUT /api/attachments/{id}/warranty` takes `{ warrantyUntil }` (a date or null) and answers the attachment, whose responses carry `warrantyUntil`; a `warrantyExpiring` notification follows 30 days before. See [Attachments](features/attachments.md#warranty-dates).
 
 Since 2026-09-30 the import preview and confirm take `format=ofx` and `format=mt940` beside `swedbankCsv`, `camt053` and `genericCsv`; a file that is not of the format answers `import.invalidFile`, and the closing balance of both is kept as a reconciliation like a camt.053's. See [Bank statement import](features/bank-statement-import.md#ofx-and-mt940).

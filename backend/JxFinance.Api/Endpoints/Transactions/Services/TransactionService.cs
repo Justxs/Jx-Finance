@@ -58,7 +58,7 @@ public sealed class TransactionService(
             .AsNoTracking()
             .ToPageAsync(request, query => Sorted(query, request), cancellationToken);
 
-        return page.Map(await ResponderAsync(page.Items, cancellationToken));
+        return page.Map(await ResponderAsync(page.Items, request.Search, cancellationToken));
     }
 
     public async Task<PagedResponse<LedgerItemResponse>> GetLedgerPageAsync(
@@ -78,7 +78,7 @@ public sealed class TransactionService(
         var transactions = transactionIds.Count == 0
             ? []
             : await db.Transactions.AsNoTracking().Where(t => transactionIds.Contains(t.Id)).ToListAsync(cancellationToken);
-        var respond = await ResponderAsync(transactions, cancellationToken);
+        var respond = await ResponderAsync(transactions, request.Search, cancellationToken);
         var responses = transactions.ToDictionary(t => t.Id.Value, respond);
         var groups = await GroupSummariesAsync(
             filtered,
@@ -103,7 +103,7 @@ public sealed class TransactionService(
             .AsNoTracking()
             .Take(limit)
             .ToListAsync(cancellationToken);
-        var respond = await ResponderAsync(members, cancellationToken);
+        var respond = await ResponderAsync(members, filter.Search, cancellationToken);
 
         return members.Select(respond).ToList();
     }
@@ -120,7 +120,7 @@ public sealed class TransactionService(
             .AsNoTracking()
             .Take(limit)
             .ToListAsync(cancellationToken);
-        var respond = await ResponderAsync(rows, cancellationToken);
+        var respond = await ResponderAsync(rows, filter.Search, cancellationToken);
 
         return rows.Select(respond).ToList();
     }
@@ -291,11 +291,15 @@ public sealed class TransactionService(
         {
             var pattern = LikePattern.Contains(request.Search);
             var searchesPlace = LocationsEnabled;
+            var searchesReceipts = ReceiptItemsEnabled;
+            var receiptFiles = ReceiptItemSearch.MatchingFiles(db, currentUser.Id, request.Search);
+            var attachments = db.TransactionAttachments.IgnoreQueryFilters(QueryFilters.OwnerOnly);
             query = query.Where(t =>
                 (t.Description != null && EF.Functions.ILike(t.Description, pattern, LikePattern.Escape))
                 || (t.Note != null && EF.Functions.ILike(t.Note, pattern, LikePattern.Escape))
                 || (searchesPlace && t.Place != null && EF.Functions.ILike(t.Place, pattern, LikePattern.Escape))
-                || db.PayeeNames.Any(p => p.PayeeKey == t.PayeeKey && EF.Functions.ILike(p.Name, pattern, LikePattern.Escape)));
+                || db.PayeeNames.Any(p => p.PayeeKey == t.PayeeKey && EF.Functions.ILike(p.Name, pattern, LikePattern.Escape))
+                || (searchesReceipts && attachments.Any(a => a.TransactionId == t.Id && receiptFiles.Contains(a.Sha256))));
         }
 
         if (!string.IsNullOrWhiteSpace(request.Place) && LocationsEnabled)
@@ -361,6 +365,8 @@ public sealed class TransactionService(
     private bool UnusualEnabled => settings.Current.IsEnabled(Feature.UnusualAmounts);
 
     private bool LocationsEnabled => settings.Current.IsEnabled(Feature.Locations);
+
+    private bool ReceiptItemsEnabled => settings.Current.IsEnabled(Feature.ReceiptReading);
 
     private TransactionResponse Shown(TransactionResponse response) =>
         Placed(UnusualEnabled ? response : response.WithoutUnusual());
@@ -650,10 +656,11 @@ public sealed class TransactionService(
     }
 
     private async Task<TransactionResponse> ResponseAsync(Transaction transaction, CancellationToken cancellationToken) =>
-        (await ResponderAsync([transaction], cancellationToken))(transaction);
+        (await ResponderAsync([transaction], null, cancellationToken))(transaction);
 
     private async Task<Func<Transaction, TransactionResponse>> ResponderAsync(
         IReadOnlyList<Transaction> transactions,
+        string? search,
         CancellationToken cancellationToken)
     {
         var ids = transactions.Select(t => t.Id).ToList();
@@ -665,6 +672,9 @@ public sealed class TransactionService(
         var splits = await SharedExpensesOfAsync(transactions, cancellationToken);
         var payeeNames = await db.PayeeNamesForAsync(transactions.Select(t => t.PayeeKey), cancellationToken);
         var groups = await VisibleGroupsAsync(transactions, cancellationToken);
+        var receiptItems = string.IsNullOrWhiteSpace(search) || !ReceiptItemsEnabled
+            ? []
+            : await ReceiptItemSearch.MatchesAsync(db, ids, search, cancellationToken);
         var callerId = currentUser.Id;
 
         return t => Shown(refunds.Apply(t, t.ToResponse(
@@ -677,6 +687,7 @@ public sealed class TransactionService(
             PayeeName = t.PayeeKey is { } key ? payeeNames.GetValueOrDefault(key) : null,
             GroupId = t.GroupId is { } groupId && groups.Contains(groupId) ? groupId.Value : null,
             EnteredByMe = t.UserId == callerId,
+            ReceiptItem = receiptItems.GetValueOrDefault(t.Id),
         }));
     }
 

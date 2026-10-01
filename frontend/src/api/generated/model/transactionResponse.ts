@@ -11,6 +11,7 @@ import type { FlowType } from "./flowType";
 import type { NullableOfDateOnly } from "./nullableOfDateOnly";
 import type { TransactionDebtPaymentResponse } from "./transactionDebtPaymentResponse";
 import type { TransactionLineResponse } from "./transactionLineResponse";
+import type { TransactionReceiptItemResponse } from "./transactionReceiptItemResponse";
 import type { TransactionRefundOfResponse } from "./transactionRefundOfResponse";
 import type { TransactionSharedExpenseResponse } from "./transactionSharedExpenseResponse";
 import type { TransactionSource } from "./transactionSource";
@@ -58,4 +59,5 @@ export interface TransactionResponse {
   /** @nullable */
   groupId?: string | null;
   enteredByMe?: boolean;
+  receiptItem?: null | TransactionReceiptItemResponse;
 }

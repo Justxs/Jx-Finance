@@ -15,6 +15,7 @@ import {
 } from "@/features/transactions/ledger-groups/group-row";
 import { type LedgerRow, ledgerRowKey } from "@/features/transactions/ledger-groups/ledger-rows";
 import type { LedgerGroupHandlers } from "@/features/transactions/ledger-groups/use-ledger-groups";
+import { ReceiptItemMatch } from "@/features/transactions/receipt-item-match/receipt-item-match";
 import { RefundMark } from "@/features/transactions/refund-mark/refund-mark";
 import { SharedExpenseMark } from "@/features/transactions/shared-expense/shared-expense";
 import { SpreadMark } from "@/features/transactions/spread-mark/spread-mark";
@@ -159,6 +160,7 @@ export function TransactionsList({
                   {row.note}
                 </p>
               ) : null}
+              <ReceiptItemMatch transaction={row} />
               <TagChips tagIds={row.tagIds} tagById={tagById} className="mt-1" />
               <RefundMark transaction={row} className="mt-1" />
               <SpreadMark transaction={row} className="mt-1" />

@@ -950,6 +950,15 @@ export const DebtPaymentCandidatesResponseItem = zod.object({
   longitude: zod.number().nullish(),
   groupId: zod.uuid().nullish(),
   enteredByMe: zod.boolean().default(debtPaymentCandidatesResponseEnteredByMeDefault),
+  receiptItem: zod
+    .union([
+      zod.null(),
+      zod.object({
+        name: zod.string(),
+        warrantyUntil: zod.union([zod.null(), zod.iso.date()]),
+      }),
+    ])
+    .optional(),
 });
 export const DebtPaymentCandidatesResponse = zod.array(DebtPaymentCandidatesResponseItem);
 
