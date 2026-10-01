@@ -1,4 +1,5 @@
 import type {
+  GetReceiptItemCategoriesResponse,
   GetReceiptItemsResponse,
   ReceiptItemResponse,
   ReceiptReadingResponse,
@@ -193,3 +194,30 @@ export const receiptItems: GetReceiptItemsResponse = {
 };
 
 export const noReceiptItems: GetReceiptItemsResponse = { receipts: 0, items: [] };
+
+export const rememberedItemCategories: GetReceiptItemCategoriesResponse = {
+  total: 4,
+  items: [
+    { id: uid("5ec5ca7e", 1), key: "pienas", categoryId: food, lastUsed: "2026-09-26T10:12:00Z" },
+    {
+      id: uid("5ec5ca7e", 2),
+      key: "dantu pasta colgate",
+      categoryId: health,
+      lastUsed: "2026-09-26T10:12:00Z",
+    },
+    {
+      id: uid("5ec5ca7e", 3),
+      key: "head shoulders sampunas",
+      categoryId: health,
+      lastUsed: "2026-09-20T17:40:00Z",
+    },
+    {
+      id: uid("5ec5ca7e", 4),
+      key: "vynas",
+      categoryId: uid("44444444", 99),
+      lastUsed: "2026-08-02T15:05:00Z",
+    },
+  ],
+};
+
+export const noRememberedItemCategories: GetReceiptItemCategoriesResponse = { total: 0, items: [] };

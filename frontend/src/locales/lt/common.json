@@ -302,7 +302,20 @@
     },
     "parent": "Priskirti grupei",
     "noParent": "Be grupės (viršutinis lygis)",
-    "parentHint": "Grupės biudžetas, operacijų filtras ir ataskaitos suma apima jos subkategorijas."
+    "parentHint": "Grupės biudžetas, operacijų filtras ir ataskaitos suma apima jos subkategorijas.",
+    "remembered": {
+      "title": "Įsimintos kvitų prekės",
+      "explainer": "Kai kvito prekę priskiriate kategorijai, kitame kvite tokio pavadinimo prekė gauna tą pačią kategoriją. Pamirškite ją, kad vėl spręstų jūsų taisyklės.",
+      "search": "Rasti prekę",
+      "detail": "{{category}} · paskutinį kartą {{date}}",
+      "unavailable": "Ištrinta arba nebebendrinama kategorija",
+      "empty": "Kol kas nieko neįsiminta. Čia atsiras kategorijos, kurias pasirenkate kvitų prekėms.",
+      "noMatches": "Pagal šią paiešką įsimintų prekių nėra.",
+      "more": "Rodomos {{shown}} paskiausiai naudotos iš {{total}}. Kitas raskite paieška.",
+      "forget": "Pamiršti",
+      "forgetTitle": "Pamiršti šią prekę?",
+      "forgetDescription": "Kitame kvite ši prekė gaus pirmos tinkančios taisyklės kategoriją arba jokios. Operacijų kategorijos nepasikeis."
+    }
   },
   "tags": {
     "title": "Žymos",

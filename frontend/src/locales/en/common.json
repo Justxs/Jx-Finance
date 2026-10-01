@@ -298,7 +298,20 @@
     },
     "parent": "Group under",
     "noParent": "No group (top level)",
-    "parentHint": "A group's budget, ledger filter and report total include its sub-categories."
+    "parentHint": "A group's budget, ledger filter and report total include its sub-categories.",
+    "remembered": {
+      "title": "Remembered receipt items",
+      "explainer": "When you file a receipt item under a category, the next receipt with an item of that name gets the same category. Forget one to let your rules decide again.",
+      "search": "Find an item",
+      "detail": "{{category}} · last used {{date}}",
+      "unavailable": "Deleted or unshared category",
+      "empty": "Nothing remembered yet. Categories you choose for receipt items appear here.",
+      "noMatches": "No remembered item matches this search.",
+      "more": "Showing the {{shown}} most recently used of {{total}}. Search to find the others.",
+      "forget": "Forget",
+      "forgetTitle": "Forget this item?",
+      "forgetDescription": "The next receipt with this item takes the category of your first matching rule, or none. Transactions keep their categories."
+    }
   },
   "tags": {
     "title": "Tags",

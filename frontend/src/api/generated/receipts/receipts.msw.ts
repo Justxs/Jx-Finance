@@ -7,7 +7,54 @@
  */
 import { HttpResponse, http } from "msw";
 import type { RequestHandlerOptions } from "msw";
-import type { GetReceiptItemsResponse, ReceiptReadingResponse } from "../model";
+import type {
+  GetReceiptItemCategoriesResponse,
+  GetReceiptItemsResponse,
+  ReceiptReadingResponse,
+} from "../model";
+
+export const getReceiptItemCategoriesMockHandler = (
+  overrideResponse?:
+    | GetReceiptItemCategoriesResponse
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<GetReceiptItemCategoriesResponse> | GetReceiptItemCategoriesResponse),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/receipts/item-categories",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : undefined,
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getForgetReceiptItemCategoryMockHandler = (
+  overrideResponse?:
+    | void
+    | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<void> | void),
+  options?: RequestHandlerOptions,
+) => {
+  return http.delete(
+    "*/api/receipts/item-categories/:id",
+    async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+      if (typeof overrideResponse === "function") {
+        await overrideResponse(info);
+      }
+
+      return new HttpResponse(null, { status: 204 });
+    },
+    options,
+  );
+};
 
 export const getReceiptItemsMockHandler = (
   overrideResponse?:
@@ -76,6 +123,8 @@ export const getUpdateReceiptCategoriesMockHandler = (
   );
 };
 export const getReceiptsMock = () => [
+  getReceiptItemCategoriesMockHandler(),
+  getForgetReceiptItemCategoryMockHandler(),
   getReceiptItemsMockHandler(),
   getReadReceiptMockHandler(),
   getUpdateReceiptCategoriesMockHandler(),

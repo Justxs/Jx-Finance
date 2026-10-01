@@ -14045,6 +14045,147 @@
         }
       }
     },
+    "/api/receipts/item-categories": {
+      "get": {
+        "tags": [
+          "Receipts"
+        ],
+        "summary": "List your remembered receipt item categories",
+        "description": "Lists the categories receipt reading remembers for you per item name: each entry has the normalized item name it matches (lower case, without accents, digits or units), the category, which may since have been deleted or stopped being shared with you, and when you last filed an item of that name. Most recently used first, at most 100, with total counting every entry that matches. Not readable with a personal API token.",
+        "operationId": "GetReceiptItemCategories",
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "description": "Optional text the normalized item name must contain, ignoring case and accents.",
+            "schema": {
+              "type": [
+                "null",
+                "string"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The remembered items and how many match.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetReceiptItemCategoriesResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The search is longer than 100 characters (text.tooLong).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      }
+    },
+    "/api/receipts/item-categories/{id}": {
+      "delete": {
+        "tags": [
+          "Receipts"
+        ],
+        "summary": "Forget a remembered receipt item category",
+        "description": "Removes one remembered category for good, so the next receipt with an item of that name takes the category of your first matching categorization rule, or none. Readings already stored and transactions keep what they have.",
+        "operationId": "ForgetReceiptItemCategory",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The remembered entry's id.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "The entry is forgotten."
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such entry belongs to you, or the receiptReading feature is switched off (feature.disabled).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      }
+    },
     "/api/receipts/items": {
       "get": {
         "tags": [
@@ -27632,6 +27773,25 @@
           }
         }
       },
+      "GetReceiptItemCategoriesResponse": {
+        "required": [
+          "items",
+          "total"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReceiptItemCategoryResponse"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
       "GetReceiptItemsResponse": {
         "required": [
           "items",
@@ -30853,6 +31013,32 @@
           },
           "currency": {
             "$ref": "#/components/schemas/Currency"
+          }
+        }
+      },
+      "ReceiptItemCategoryResponse": {
+        "required": [
+          "id",
+          "key",
+          "categoryId",
+          "lastUsed"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "key": {
+            "type": "string"
+          },
+          "categoryId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "lastUsed": {
+            "type": "string",
+            "format": "date-time"
           }
         }
       },

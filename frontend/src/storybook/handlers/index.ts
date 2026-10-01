@@ -44,6 +44,7 @@ import {
 } from "@/api/generated/net-worth/net-worth.msw";
 import { getNotificationsMockHandler } from "@/api/generated/notifications/notifications.msw";
 import { getPayeeNamesMockHandler } from "@/api/generated/payees/payees.msw";
+import { getReceiptItemCategoriesMockHandler } from "@/api/generated/receipts/receipts.msw";
 import {
   getBillsCalendarMockHandler,
   getRecurringBillsMockHandler,
@@ -77,6 +78,7 @@ import {
   emptyTransactionsSummary,
   evenSettleUp,
   importPreview,
+  noRememberedItemCategories,
   serverErrorProblem,
   setupStatus,
 } from "@/storybook/fixtures";
@@ -202,6 +204,7 @@ export const emptyHandlers: RequestHandler[] = [
   getTagsMockHandler([]),
   getPayeeNamesMockHandler([]),
   getPlacesMockHandler([]),
+  getReceiptItemCategoriesMockHandler(noRememberedItemCategories),
   getUsersMockHandler([currentUser]),
   getTransactionsSummaryMockHandler(emptyTransactionsSummary),
   getTransactionsMockHandler(emptyPage),

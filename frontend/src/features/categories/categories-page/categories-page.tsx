@@ -8,7 +8,9 @@ import { EditModal } from "@/components/modal";
 import { NamedRow } from "@/components/named-row/named-row";
 import { PageHeader } from "@/components/page-header/page-header";
 import { CategoryForm } from "@/features/categories/category-form/category-form";
+import { RememberedItems } from "@/features/categories/remembered-items/remembered-items";
 import { useEditableList } from "@/hooks/use-editable-list";
+import { useFeature } from "@/hooks/use-settings";
 import { CategoryIcon } from "@/lib/category-icons";
 import type { TranslationKey } from "@/lib/i18n";
 import { optimisticRemoval } from "@/lib/optimistic";
@@ -30,6 +32,7 @@ function inGroups(items: readonly CategoryResponse[]) {
 
 export function CategoriesPage() {
   const { t } = useTranslation();
+  const receiptReadingEnabled = useFeature("receiptReading");
   const categories = useEditableList(
     useCategoriesSuspense().data,
     useDeleteCategory({ mutation: optimisticRemoval<CategoryResponse>(getCategoriesQueryKey()) }),
@@ -82,6 +85,8 @@ export function CategoriesPage() {
           );
         })}
       </div>
+
+      {receiptReadingEnabled ? <RememberedItems /> : null}
 
       <ConfirmDeleteDialog {...categories.dialogProps} />
     </div>

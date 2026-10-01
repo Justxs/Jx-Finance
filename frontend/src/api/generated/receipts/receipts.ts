@@ -24,9 +24,11 @@ import type {
 import { customFetch } from "../../client";
 import type { ErrorType } from "../../client";
 import type {
+  GetReceiptItemCategoriesResponse,
   GetReceiptItemsResponse,
   ProblemDetails,
   ReadReceiptRequest,
+  ReceiptItemCategoriesParams,
   ReceiptItemsParams,
   ReceiptReadingResponse,
   UpdateReceiptCategoriesRequest,
@@ -49,6 +51,231 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
   return result;
 };
 
+export const getReceiptItemCategoriesUrl = (params?: ReceiptItemCategoriesParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/receipts/item-categories?${stringifiedParams}`
+    : `/api/receipts/item-categories`;
+};
+
+/**
+ * Lists the categories receipt reading remembers for you per item name: each entry has the normalized item name it matches (lower case, without accents, digits or units), the category, which may since have been deleted or stopped being shared with you, and when you last filed an item of that name. Most recently used first, at most 100, with total counting every entry that matches. Not readable with a personal API token.
+ * @summary List your remembered receipt item categories
+ */
+export const receiptItemCategories = async (
+  params?: ReceiptItemCategoriesParams,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<GetReceiptItemCategoriesResponse> => {
+  return customFetch<GetReceiptItemCategoriesResponse>(getReceiptItemCategoriesUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getReceiptItemCategoriesQueryKey = (params?: ReceiptItemCategoriesParams) => {
+  return [`/api/receipts/item-categories`, ...(params ? [params] : [])] as const;
+};
+
+export const getReceiptItemCategoriesSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof receiptItemCategories>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  params?: ReceiptItemCategoriesParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof receiptItemCategories>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getReceiptItemCategoriesQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof receiptItemCategories>>> = ({ signal }) =>
+    receiptItemCategories(params, { signal, ...requestOptions });
+
+  return queryOptionsBuilder({
+    queryKey,
+    ...queryOptions,
+    queryFn: queryOptions?.queryFn ?? queryFn,
+  }) as UseSuspenseQueryOptions<
+    Awaited<ReturnType<typeof receiptItemCategories>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> } & {
+    throwOnError?: ((this: never, error: TError) => boolean) & { readonly __inferenceOnly: never };
+  };
+};
+
+export type ReceiptItemCategoriesSuspenseQueryResult = NonNullable<
+  Awaited<ReturnType<typeof receiptItemCategories>>
+>;
+export type ReceiptItemCategoriesSuspenseQueryError = ErrorType<ProblemDetails>;
+
+export function useReceiptItemCategoriesSuspense<
+  TData = Awaited<ReturnType<typeof receiptItemCategories>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  params: undefined | ReceiptItemCategoriesParams,
+  options: {
+    query: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof receiptItemCategories>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useReceiptItemCategoriesSuspense<
+  TData = Awaited<ReturnType<typeof receiptItemCategories>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  params?: ReceiptItemCategoriesParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof receiptItemCategories>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useReceiptItemCategoriesSuspense<
+  TData = Awaited<ReturnType<typeof receiptItemCategories>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  params?: ReceiptItemCategoriesParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof receiptItemCategories>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List your remembered receipt item categories
+ */
+
+export function useReceiptItemCategoriesSuspense<
+  TData = Awaited<ReturnType<typeof receiptItemCategories>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  params?: ReceiptItemCategoriesParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof receiptItemCategories>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getReceiptItemCategoriesSuspenseQueryOptions(params, options);
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export const getForgetReceiptItemCategoryUrl = (id: string) => {
+  return `/api/receipts/item-categories/${id}`;
+};
+
+/**
+ * Removes one remembered category for good, so the next receipt with an item of that name takes the category of your first matching categorization rule, or none. Readings already stored and transactions keep what they have.
+ * @summary Forget a remembered receipt item category
+ */
+export const forgetReceiptItemCategory = async (
+  id: string,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<void> => {
+  return customFetch<void>(getForgetReceiptItemCategoryUrl(id), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getForgetReceiptItemCategoryMutationKey = () => ["forgetReceiptItemCategory"] as const;
+
+export const getForgetReceiptItemCategoryMutationOptions = <
+  TError = ErrorType<ProblemDetails>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof forgetReceiptItemCategory>>,
+    TError,
+    ForgetReceiptItemCategoryMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof forgetReceiptItemCategory>>,
+  TError,
+  ForgetReceiptItemCategoryMutationVariables,
+  TContext
+> => {
+  const mutationKey = getForgetReceiptItemCategoryMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof forgetReceiptItemCategory>>,
+    ForgetReceiptItemCategoryMutationVariables
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return forgetReceiptItemCategory(id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ForgetReceiptItemCategoryMutationResult = NonNullable<
+  Awaited<ReturnType<typeof forgetReceiptItemCategory>>
+>;
+
+export type ForgetReceiptItemCategoryMutationError = ErrorType<ProblemDetails>;
+export type ForgetReceiptItemCategoryMutationVariables = { id: string };
+
+/**
+ * @summary Forget a remembered receipt item category
+ */
+export const useForgetReceiptItemCategory = <
+  TError = ErrorType<ProblemDetails>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof forgetReceiptItemCategory>>,
+      TError,
+      ForgetReceiptItemCategoryMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof forgetReceiptItemCategory>>,
+  TError,
+  ForgetReceiptItemCategoryMutationVariables,
+  TContext
+> => {
+  return useMutation(getForgetReceiptItemCategoryMutationOptions(options), queryClient);
+};
 export const getReceiptItemsUrl = (params?: ReceiptItemsParams) => {
   const normalizedParams = new URLSearchParams();
 

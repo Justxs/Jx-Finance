@@ -87,6 +87,10 @@ const rules: readonly Rule[] = [
     ],
   },
   {
+    after: [api.getUpdateReceiptCategoriesMutationKey, api.getForgetReceiptItemCategoryMutationKey],
+    refresh: [api.getReceiptItemCategoriesQueryKey],
+  },
+  {
     after: [api.getRenamePlaceMutationKey],
     refresh: [
       api.getPlacesQueryKey,
@@ -505,7 +509,6 @@ export const mutationsWithoutInvalidation: readonly MutationKeyGetter[] = [
   api.getSaveDashboardLayoutMutationKey,
   api.getResetDashboardLayoutMutationKey,
   api.getReadReceiptMutationKey,
-  api.getUpdateReceiptCategoriesMutationKey,
 ];
 
 function withTrash(refresh: Rule["refresh"]): Rule["refresh"] {

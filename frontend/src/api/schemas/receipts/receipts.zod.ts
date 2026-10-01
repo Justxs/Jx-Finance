@@ -8,6 +8,28 @@
 import * as zod from "zod";
 
 /**
+ * Lists the categories receipt reading remembers for you per item name: each entry has the normalized item name it matches (lower case, without accents, digits or units), the category, which may since have been deleted or stopped being shared with you, and when you last filed an item of that name. Most recently used first, at most 100, with total counting every entry that matches. Not readable with a personal API token.
+ * @summary List your remembered receipt item categories
+ */
+export const ReceiptItemCategoriesResponse = zod.object({
+  items: zod.array(
+    zod.object({
+      id: zod.uuid(),
+      key: zod.string(),
+      categoryId: zod.uuid(),
+      lastUsed: zod.iso.datetime({ offset: true }),
+    }),
+  ),
+  total: zod.int(),
+});
+
+/**
+ * Removes one remembered category for good, so the next receipt with an item of that name takes the category of your first matching categorization rule, or none. Readings already stored and transactions keep what they have.
+ * @summary Forget a remembered receipt item category
+ */
+export const ForgetReceiptItemCategoryResponse = zod.void();
+
+/**
  * Sums the items of your receipt readings for the attachments of visible transactions dated in the range: how much toothpaste cost this year. Items are grouped by their normalized name, the key remembered categories use, and by currency; each item counts what the split counts, its amount less its discount plus its deposit, never below zero. Only readings you made are counted, so a receipt someone else read counts once you read it too. At most 50 items, largest first.
  * @summary Spending per receipt item
  */

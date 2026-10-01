@@ -14,9 +14,18 @@ Since 2026-10-01 a receipt e-mail, saved as an HTML page or as an `.eml` message
 
 Since 2026-10-01 a return receipt fills the form as a refund in the category of its largest returned amount, linked to the latest purchase from the same merchant that the reading finds; it is no longer refused.
 
+Since 2026-10-01 the remembered item categories are listed at the end of the Categories page, by their normalized key with the category and the last use, searched on the server and shown 100 at a time, and each can be forgotten for good after a confirmation, through two routes under `/api/receipts` that tokens cannot use.
+
 ## Log
 
 Newest first. Each entry is a choice between real alternatives: what was chosen, what was rejected, and why.
+
+- **2026-10-01.** The remembered item categories are listed in a section at the end of the Categories page, shown while `ReceiptReading` is on, one row per entry with its normalized key, the category or "Deleted or unshared category", and `UpdatedAt` as the last use. Decided while the owner was away, to be reviewed
+  - Rejected: The Tags page beside Payee names and Places; a tab or a page of its own; storing and showing the printed item name, which needs a new column, a migration and a name for every entry written before
+  - Why: An entry says which category an item goes to, so it belongs where categories are managed, and the product direction puts it on a page that exists. The key is what the dictionary matches on and is readable enough (`pienas`, `dantu pasta colgate`); a printed name would be one spelling among the many the key folds together, so it could mislead about what the entry matches
+- **2026-10-01.** `GET /api/receipts/item-categories` searches on the server with the key's normalization and answers the 100 most recently used matches with a `total`; `DELETE /api/receipts/item-categories/{id}` hard-deletes one entry after a confirmation dialog, with no undo and no "forget all for this category". Both stay under `/api/receipts`, so a personal API token can use neither. Decided while the owner was away, to be reviewed
+  - Rejected: Sending all up to 5000 entries to the browser; paging; a soft delete with an undo toast through the trash; a bulk forget per category; making the `GET` token-readable
+  - Why: A search box finds any entry and the most recent hundred are the ones a person is likely to fix, so paging would add controls for little; the whole dictionary could be half a megabyte. Forgetting must hard-delete because the key is unique per person and the next choice of that name inserts it again, as forgetting through the review already does, so a trash entry would need a restore path for a row that is cheap to recreate by filing one item. Deleting or unsharing a category already makes its entries inactive, so a bulk forget would serve only a tidy-up. The receipts prefix is closed to tokens because readings reveal purchases item by item, and this list is the same kind of data
 
 - **2026-10-01.** A return receipt fills the transaction form as a refund, with the category of the heaviest group of its items by the split's weight, the first group on a tie. This reverses the "return receipts refused" part of the 2026-09-29 plan entry below. Decided while the owner was away, to be reviewed
   - Rejected: Keeping returns refused; a refund per category, which would be several transactions from one form; leaving the category empty; taking the linked purchase's category
