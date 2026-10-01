@@ -251,7 +251,7 @@ public sealed class UserExportTests(ApiFixture fixture) : IntegrationTestBase(fi
             new { symbol = NewSymbol(), name = "Fetched coin", type = "crypto", currency = "eur", priceSource = "kraken", priceSymbol = "XBTEUR" })).Id;
         await RecordInvestmentAsync(client, new { accountId = account, securityId = coin, type = "buy", date = "2026-06-01", quantity = "1", price = "100" });
         await WithDbAsync(db => db.Securities.Where(s => s.Id == new SecurityId(coin)).ExecuteUpdateAsync(
-            s => s.SetProperty(x => x.PriceSyncError, "Kraken refused: busy").SetProperty(x => x.PriceSyncedAt, DateTimeOffset.UtcNow),
+            s => s.SetProperty(x => x.PriceSyncError, "Kraken refused: busy").SetProperty(x => x.PriceSyncedAt, DateTimeOffset.UtcNow).SetProperty(x => x.PriceQuoteCurrency, "EUR"),
             TestContext.Current.CancellationToken));
 
         using var export = await ExportAsync(client);
@@ -259,6 +259,7 @@ public sealed class UserExportTests(ApiFixture fixture) : IntegrationTestBase(fi
         var securities = export.Tables["Securities"];
         Assert.DoesNotContain("PriceSyncError", securities.Columns);
         Assert.DoesNotContain("PriceSyncedAt", securities.Columns);
+        Assert.DoesNotContain("PriceQuoteCurrency", securities.Columns);
         Assert.Equal("Kraken", Assert.Single(securities.Rows)["PriceSource"]);
     }
 

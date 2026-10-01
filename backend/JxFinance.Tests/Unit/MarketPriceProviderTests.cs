@@ -1,6 +1,7 @@
 using System.Net;
 using System.Text;
 using JxFinance.Common.Errors;
+using JxFinance.Domain.Investments;
 using JxFinance.Infrastructure.MarketPrices;
 using JxFinance.Tests.Support;
 
@@ -18,9 +19,12 @@ public sealed class MarketPriceProviderTests
             .Answer("api/eod/VWCE.XETRA", SampleMarketPrices.EodhdEodXetra);
         var provider = new EodhdPriceProvider(http.Client("https://eodhd.com/"), new EodhdQuoteCurrencies());
 
-        var closes = await provider.CloseAsync("VWCE.XETRA", new DateOnly(2026, 9, 25), new DateOnly(2026, 9, 29), Key, TestContext.Current.CancellationToken);
+        var security = Listed("VWCE.XETRA");
+
+        var closes = await provider.CloseAsync(security, new DateOnly(2026, 9, 25), new DateOnly(2026, 9, 29), Key, TestContext.Current.CancellationToken);
 
         Assert.True(closes.IsSuccess, closes.ErrorMessage);
+        Assert.Equal("EUR", security.PriceQuoteCurrency);
         Assert.Equal(
             [
                 new MarketClose(new DateOnly(2026, 9, 25), 139.3m, "EUR"),
@@ -32,37 +36,57 @@ public sealed class MarketPriceProviderTests
     }
 
     [Fact]
-    public async Task Eodhd_asks_for_the_currency_once_per_symbol()
+    public async Task Eodhd_counts_two_calls_until_the_currency_is_stored_and_one_after()
     {
-        var currencies = new EodhdQuoteCurrencies();
         var http = new RecordedHttp()
             .Answer("api/search/VWRP", SampleMarketPrices.EodhdSearchLse)
             .Answer("api/eod/VWRP.LSE", SampleMarketPrices.EodhdEodLse);
-        var provider = new EodhdPriceProvider(http.Client("https://eodhd.com/"), currencies);
-        Assert.Equal(2, provider.CallsFor("VWRP.LSE"));
+        var provider = new EodhdPriceProvider(http.Client("https://eodhd.com/"), new EodhdQuoteCurrencies());
+        var security = Listed("VWRP.LSE");
+        Assert.Equal(2, provider.CallsFor(security));
 
-        var first = await provider.CloseAsync("VWRP.LSE", new DateOnly(2026, 9, 28), new DateOnly(2026, 9, 28), Key, TestContext.Current.CancellationToken);
-        await provider.CloseAsync("VWRP.LSE", new DateOnly(2026, 9, 28), new DateOnly(2026, 9, 28), Key, TestContext.Current.CancellationToken);
+        var first = await provider.CloseAsync(security, new DateOnly(2026, 9, 28), new DateOnly(2026, 9, 28), Key, TestContext.Current.CancellationToken);
 
         Assert.Equal([new MarketClose(new DateOnly(2026, 9, 28), 12134m, "GBX")], first.Value!);
-        Assert.Equal(1, provider.CallsFor("VWRP.LSE"));
-        Assert.Single(http.Requests, uri => uri.Contains("api/search/", StringComparison.Ordinal));
+        Assert.Equal("GBX", security.PriceQuoteCurrency);
+        Assert.Equal(1, provider.CallsFor(security));
+        Assert.Equal(2, http.Requests.Count);
     }
 
     [Fact]
-    public async Task Eodhd_find_lists_every_listing_of_the_isin()
+    public async Task Eodhd_with_a_stored_currency_spends_one_call_after_a_restart()
     {
-        var currencies = new EodhdQuoteCurrencies();
+        var http = new RecordedHttp().Answer("api/eod/VWRP.LSE", SampleMarketPrices.EodhdEodLse);
+        var restarted = new EodhdPriceProvider(http.Client("https://eodhd.com/"), new EodhdQuoteCurrencies());
+        var security = Listed("VWRP.LSE", "GBX");
+        Assert.Equal(1, restarted.CallsFor(security));
+
+        var closes = await restarted.CloseAsync(security, new DateOnly(2026, 9, 28), new DateOnly(2026, 9, 28), Key, TestContext.Current.CancellationToken);
+
+        Assert.Equal([new MarketClose(new DateOnly(2026, 9, 28), 12134m, "GBX")], closes.Value!);
+        Assert.DoesNotContain(http.Requests, uri => uri.Contains("api/search/", StringComparison.Ordinal));
+        Assert.Single(http.Requests);
+    }
+
+    [Fact]
+    public async Task Eodhd_find_lists_every_listing_of_the_isin_and_spares_the_lookup_of_the_chosen_one()
+    {
         var http = new RecordedHttp().Answer("api/search/IE00BK5BQT80", SampleMarketPrices.EodhdSearchByIsin);
-        var provider = new EodhdPriceProvider(http.Client("https://eodhd.com/"), currencies);
+        var provider = new EodhdPriceProvider(http.Client("https://eodhd.com/"), new EodhdQuoteCurrencies());
 
         var found = await provider.FindAsync("IE00BK5BQT80", Key, TestContext.Current.CancellationToken);
 
         Assert.Equal(
             ["VWCE.XETRA EUR", "VWRP.LSE GBX", "VWCE.MI EUR"],
             found.Value!.Select(c => $"{c.Symbol} {c.Currency}"));
-        Assert.True(currencies.TryGet("VWRP.LSE", out var remembered));
-        Assert.Equal("GBX", remembered);
+        var chosen = Listed("VWRP.LSE");
+        Assert.Equal(1, provider.CallsFor(chosen));
+
+        http.Answer("api/eod/VWRP.LSE", SampleMarketPrices.EodhdEodLse);
+        await provider.CloseAsync(chosen, new DateOnly(2026, 9, 28), new DateOnly(2026, 9, 28), Key, TestContext.Current.CancellationToken);
+
+        Assert.Equal("GBX", chosen.PriceQuoteCurrency);
+        Assert.Single(http.Requests, uri => uri.Contains("api/search/", StringComparison.Ordinal));
     }
 
     [Theory]
@@ -72,12 +96,10 @@ public sealed class MarketPriceProviderTests
     [InlineData(HttpStatusCode.BadGateway, "", ErrorCodes.MarketPricesUnavailable)]
     public async Task Eodhd_failures_name_the_reason(HttpStatusCode status, string body, string code)
     {
-        var currencies = new EodhdQuoteCurrencies();
-        currencies.Remember("VWCE.XETRA", "EUR");
         var http = new RecordedHttp().Answer("api/eod/VWCE.XETRA", body, status);
-        var provider = new EodhdPriceProvider(http.Client("https://eodhd.com/"), currencies);
+        var provider = new EodhdPriceProvider(http.Client("https://eodhd.com/"), new EodhdQuoteCurrencies());
 
-        var closes = await provider.CloseAsync("VWCE.XETRA", new DateOnly(2026, 9, 25), new DateOnly(2026, 9, 29), Key, TestContext.Current.CancellationToken);
+        var closes = await provider.CloseAsync(Listed("VWCE.XETRA", "EUR"), new DateOnly(2026, 9, 25), new DateOnly(2026, 9, 29), Key, TestContext.Current.CancellationToken);
 
         Assert.Equal(code, closes.ErrorCode);
         Assert.Contains(body, closes.ErrorMessage, StringComparison.Ordinal);
@@ -90,7 +112,7 @@ public sealed class MarketPriceProviderTests
         var http = new RecordedHttp();
         var provider = new EodhdPriceProvider(http.Client("https://eodhd.com/"), new EodhdQuoteCurrencies());
 
-        var closes = await provider.CloseAsync("VWCE.XETRA", new DateOnly(2026, 9, 25), new DateOnly(2026, 9, 29), null, TestContext.Current.CancellationToken);
+        var closes = await provider.CloseAsync(Listed("VWCE.XETRA"), new DateOnly(2026, 9, 25), new DateOnly(2026, 9, 29), null, TestContext.Current.CancellationToken);
 
         Assert.Equal(ErrorCodes.MarketPricesKeyRequired, closes.ErrorCode);
         Assert.Empty(http.Requests);
@@ -102,7 +124,9 @@ public sealed class MarketPriceProviderTests
         var http = new RecordedHttp().Answer("0/public/OHLC", SampleMarketPrices.KrakenOhlcXbtEur);
         var provider = new KrakenPriceProvider(http.Client("https://api.kraken.com/"));
 
-        var closes = await provider.CloseAsync("XBTEUR", new DateOnly(2026, 9, 25), new DateOnly(2026, 9, 26), null, TestContext.Current.CancellationToken);
+        var coin = Listed("XBTEUR");
+
+        var closes = await provider.CloseAsync(coin, new DateOnly(2026, 9, 25), new DateOnly(2026, 9, 26), null, TestContext.Current.CancellationToken);
 
         Assert.Equal(
             [
@@ -111,7 +135,7 @@ public sealed class MarketPriceProviderTests
             ],
             closes.Value!);
         Assert.Contains("pair=XBTEUR&interval=1440&since=1790294399", Assert.Single(http.Requests), StringComparison.Ordinal);
-        Assert.Equal(0, provider.CallsFor("XBTEUR"));
+        Assert.Equal(0, provider.CallsFor(coin));
     }
 
     [Fact]
@@ -120,11 +144,14 @@ public sealed class MarketPriceProviderTests
         var http = new RecordedHttp().Answer("0/public/OHLC", SampleMarketPrices.KrakenUnknownPair);
         var provider = new KrakenPriceProvider(http.Client("https://api.kraken.com/"));
 
-        var closes = await provider.CloseAsync("NOPEEUR", new DateOnly(2026, 9, 25), new DateOnly(2026, 9, 26), null, TestContext.Current.CancellationToken);
+        var closes = await provider.CloseAsync(Listed("NOPEEUR"), new DateOnly(2026, 9, 25), new DateOnly(2026, 9, 26), null, TestContext.Current.CancellationToken);
 
         Assert.Equal(ErrorCodes.MarketPricesRejected, closes.ErrorCode);
         Assert.Contains("Unknown asset pair", closes.ErrorMessage, StringComparison.Ordinal);
     }
+
+    private static Security Listed(string symbol, string? quoteCurrency = null) =>
+        new() { PriceSource = PriceSource.Eodhd, PriceSymbol = symbol, PriceQuoteCurrency = quoteCurrency };
 
     private sealed class RecordedHttp : HttpMessageHandler
     {

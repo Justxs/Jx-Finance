@@ -77,6 +77,7 @@ public static class InvestmentMapper
         {
             security.PriceSource = request.PriceSource;
             security.PriceSymbol = priceSymbol;
+            security.PriceQuoteCurrency = null;
             security.PriceSyncedAt = null;
             security.PriceSyncError = null;
         }

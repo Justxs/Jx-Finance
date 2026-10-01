@@ -9,6 +9,7 @@ public sealed class Security : EntityBase
     public const int ExchangeMaxLength = 32;
     public const int PriceSymbolMaxLength = 32;
     public const int PriceSyncErrorMaxLength = 200;
+    public const int PriceQuoteCurrencyLength = 3;
 
     public SecurityId Id { get; set; } = SecurityId.New();
     public string Symbol { get; set; } = string.Empty;
@@ -22,6 +23,7 @@ public sealed class Security : EntityBase
     public DateOnly? LastPriceDate { get; set; }
     public PriceSource PriceSource { get; set; }
     public string? PriceSymbol { get; set; }
+    public string? PriceQuoteCurrency { get; set; }
     public DateTimeOffset? PriceSyncedAt { get; set; }
     public string? PriceSyncError { get; set; }
 }

@@ -7,10 +7,10 @@ public interface IMarketPriceProvider
 {
     PriceSource Source { get; }
 
-    int CallsFor(string symbol);
+    int CallsFor(Security security);
 
     Task<Result<IReadOnlyList<MarketClose>>> CloseAsync(
-        string symbol,
+        Security security,
         DateOnly from,
         DateOnly to,
         string? apiKey,

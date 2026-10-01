@@ -48,6 +48,28 @@ public sealed class PriceSyncTests(ApiFixture fixture) : IntegrationTestBase(fix
     }
 
     [Fact]
+    public async Task After_a_restart_the_stored_quote_currency_keeps_a_fetch_at_one_call()
+    {
+        await SaveMarketPricesAsync(enabled: true, key: "test-key");
+        await ResetBudgetAsync();
+        var symbol = $"{NewSymbol()}.XETRA";
+        var held = await MappedHoldingAsync("eodhd", symbol);
+        await Job<PriceSyncJob>().RunOnceAsync(TestContext.Current.CancellationToken);
+        Assert.Equal("EUR", (await SecurityAsync(held.SecurityId)).PriceQuoteCurrency);
+
+        var yesterday = new DateTimeOffset(Today.AddDays(-1).ToDateTime(new TimeOnly(12, 0)), TimeSpan.Zero);
+        await SqlAsync($"""UPDATE "Securities" SET "PriceSyncedAt" = {yesterday}, "LastPriceDate" = {held.FirstTrade} WHERE "Id" = {held.SecurityId}""");
+        await SqlAsync($"""UPDATE "InstanceSettings" SET "PriceCallsDate" = {Today}, "PriceCallsUsed" = 19""");
+        await Job<PriceSyncJob>().RunOnceAsync(TestContext.Current.CancellationToken);
+
+        Assert.Equal(2, Eodhd.Calls.Count(c => c.Symbol == symbol));
+        var settings = await ReadOkAsync<MarketPriceSettingsDto>(await Client.GetAsync("/api/settings/market-prices", TestContext.Current.CancellationToken));
+        Assert.Equal(0, settings.CallsLeft);
+        await SaveMarketPricesAsync(enabled: false, key: null);
+        await ResetBudgetAsync();
+    }
+
+    [Fact]
     public async Task Kraken_prices_crypto_every_day_of_the_week()
     {
         await SaveMarketPricesAsync(enabled: false, key: "test-key");

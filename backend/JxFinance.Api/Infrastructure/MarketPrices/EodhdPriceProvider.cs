@@ -16,10 +16,11 @@ public sealed class EodhdPriceProvider(HttpClient http, EodhdQuoteCurrencies cur
 
     public PriceSource Source => PriceSource.Eodhd;
 
-    public int CallsFor(string symbol) => currencies.TryGet(symbol, out _) ? 1 : 2;
+    public int CallsFor(Security security) =>
+        security.PriceQuoteCurrency is not null || currencies.TryGet(security.PriceSymbol!, out _) ? 1 : 2;
 
     public async Task<Result<IReadOnlyList<MarketClose>>> CloseAsync(
-        string symbol,
+        Security security,
         DateOnly from,
         DateOnly to,
         string? apiKey,
@@ -32,7 +33,8 @@ public sealed class EodhdPriceProvider(HttpClient http, EodhdQuoteCurrencies cur
 
         try
         {
-            var currency = await CurrencyAsync(symbol, apiKey, cancellationToken);
+            var symbol = security.PriceSymbol!;
+            var currency = await CurrencyAsync(security, apiKey, cancellationToken);
             if (currency.IsFailure)
             {
                 return Result<IReadOnlyList<MarketClose>>.Failure(currency.Error);
@@ -86,7 +88,7 @@ public sealed class EodhdPriceProvider(HttpClient http, EodhdQuoteCurrencies cur
             }
 
             var candidates = found.Value!
-                .Where(item => item is { Code.Length: > 0, Exchange.Length: > 0, Currency.Length: > 0 })
+                .Where(item => item is { Code.Length: > 0, Exchange.Length: > 0, Currency.Length: Security.PriceQuoteCurrencyLength })
                 .Select(item => new PriceSymbolCandidate($"{item.Code}.{item.Exchange}", item.Exchange!, item.Name ?? item.Code!, item.Currency!.ToUpperInvariant()))
                 .ToList();
             foreach (var candidate in candidates)
@@ -102,11 +104,17 @@ public sealed class EodhdPriceProvider(HttpClient http, EodhdQuoteCurrencies cur
         }
     }
 
-    private async Task<Result<string>> CurrencyAsync(string symbol, string apiKey, CancellationToken cancellationToken)
+    private async Task<Result<string>> CurrencyAsync(Security security, string apiKey, CancellationToken cancellationToken)
     {
+        if (security.PriceQuoteCurrency is { } stored)
+        {
+            return stored;
+        }
+
+        var symbol = security.PriceSymbol!;
         if (currencies.TryGet(symbol, out var known))
         {
-            return known;
+            return security.PriceQuoteCurrency = known;
         }
 
         var dot = symbol.LastIndexOf('.');
@@ -125,14 +133,13 @@ public sealed class EodhdPriceProvider(HttpClient http, EodhdQuoteCurrencies cur
         var match = found.Value!.FirstOrDefault(item =>
             string.Equals(item.Code, code, StringComparison.OrdinalIgnoreCase)
             && string.Equals(item.Exchange, exchange, StringComparison.OrdinalIgnoreCase)
-            && !string.IsNullOrWhiteSpace(item.Currency));
+            && item.Currency is { Length: Security.PriceQuoteCurrencyLength });
         if (match is null)
         {
             return MarketPriceErrors.Rejected(Name, $"it does not list {symbol}.");
         }
 
-        currencies.Remember(symbol, match.Currency!);
-        return match.Currency!.ToUpperInvariant();
+        return security.PriceQuoteCurrency = match.Currency!.ToUpperInvariant();
     }
 
     private async Task<Result<List<SearchItem>>> SearchAsync(

@@ -48,7 +48,7 @@ It can be taken three times an hour from one client (`Throttle(3, 3600)`, 429 be
 | Everything on the member's own accounts, whoever entered it | `Transactions`, `AccountReconciliations`, `CurrencyConversions`, `InvestmentTransactions`, `TransferImports` |
 | Rows that belong to an exported row | `TransactionLines`, `TransactionTags`, `TransactionAttachments` and, since 2026-10-01, `DuplicateDismissals` (the pairs kept as both) of the exported transactions; `AssetValuations`, `CategorizationRuleTags`, `DebtPayments`, `DeletionChanges` and `SharedExpenseShares` of their parents; since 2026-09-30 the payment links of a member's debt travel with it whoever linked them |
 | Every transfer with one side on the member's accounts | `Transfers` |
-| Rows the member does not own but that their rows point at | a housemate's category used on a transaction or split line of theirs, a housemate's tag on one of their transactions, and the `Securities` of their investment entries, without `PriceSyncError` and `PriceSyncedAt`, the state of the installation's last price fetch |
+| Rows the member does not own but that their rows point at | a housemate's category used on a transaction or split line of theirs, a housemate's tag on one of their transactions, and the `Securities` of their investment entries, without `PriceSyncError`, `PriceSyncedAt` and `PriceQuoteCurrency`, the state of the installation's last price fetch |
 | The member's own user row, eight columns only | `AspNetUsers`: `Id`, `Email`, `UserName`, `DisplayName`, `EmailConfirmed`, `EmailNotificationTypes`, `DashboardLayout` and `Language` |
 
 | Never included | Tables or columns |

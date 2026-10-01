@@ -79,7 +79,7 @@ public sealed class PriceSyncService(
                 continue;
             }
 
-            var calls = provider.CallsFor(symbol);
+            var calls = provider.CallsFor(security);
             if (security.PriceSource == PriceSource.Eodhd
                 && (key.IsFailure || calls > PriceSyncRules.CallsLeft(settings, today, DailyLimit)))
             {
@@ -88,7 +88,7 @@ public sealed class PriceSyncService(
 
             PriceSyncRules.Spend(settings, today, calls);
             checkedCount++;
-            var fetched = await provider.CloseAsync(symbol, from, to, key.Value, cancellationToken);
+            var fetched = await provider.CloseAsync(security, from, to, key.Value, cancellationToken);
             var closes = fetched.IsSuccess ? PriceSyncRules.InSecurityCurrency(security, fetched.Value!) : fetched;
             if (closes.IsFailure)
             {

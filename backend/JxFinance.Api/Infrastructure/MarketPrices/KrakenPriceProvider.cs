@@ -12,15 +12,16 @@ public sealed class KrakenPriceProvider(HttpClient http) : IMarketPriceProvider
 
     public PriceSource Source => PriceSource.Kraken;
 
-    public int CallsFor(string symbol) => 0;
+    public int CallsFor(Security security) => 0;
 
     public async Task<Result<IReadOnlyList<MarketClose>>> CloseAsync(
-        string symbol,
+        Security security,
         DateOnly from,
         DateOnly to,
         string? apiKey,
         CancellationToken cancellationToken)
     {
+        var symbol = security.PriceSymbol!;
         var since = new DateTimeOffset(from.ToDateTime(TimeOnly.MinValue), TimeSpan.Zero).ToUnixTimeSeconds() - 1;
         try
         {

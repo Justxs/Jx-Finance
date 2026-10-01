@@ -15,6 +15,7 @@ public sealed class SecurityConfiguration : IEntityTypeConfiguration<Security>
         builder.Property(s => s.LastPrice).HasPrecision(18, 8);
         builder.Property(s => s.PriceSource).HasConversion<string>().HasMaxLength(20).HasDefaultValue(PriceSource.None);
         builder.Property(s => s.PriceSymbol).HasMaxLength(Security.PriceSymbolMaxLength);
+        builder.Property(s => s.PriceQuoteCurrency).HasMaxLength(Security.PriceQuoteCurrencyLength);
         builder.Property(s => s.PriceSyncError).HasMaxLength(Security.PriceSyncErrorMaxLength);
         builder.ToTable(table => table.HasCheckConstraint(
             "CK_Securities_PriceSymbol",

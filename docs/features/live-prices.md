@@ -25,7 +25,7 @@ Administrators see Price source (None, EODHD, and Kraken only while the security
 
 When editing a security with a saved ISIN, **Find** asks EODHD's search for that ISIN and lists every listing it knows, with the symbol, the name and the quoted currency, in a popover; choosing one fills the symbol. It saves nothing, needs the key, and costs one of the day's calls. Its errors show under the button.
 
-Changing the source or the symbol clears the last fetch result (`PriceSyncedAt`, `PriceSyncError`), so the next run fetches the history again from the first trade.
+Changing the source or the symbol clears the last fetch result (`PriceSyncedAt`, `PriceSyncError`) and the stored quote currency (`PriceQuoteCurrency`), so the next run fetches the history again from the first trade.
 
 ## What is fetched, and when
 
@@ -52,9 +52,9 @@ flowchart TD
     Currency -->|"yes"| Book["SecurityPriceBook with source Feed"]
 ```
 
-A security is due when it has never been fetched, or when its last price is older than the last weekday before today and it was not already asked today. So a run on a holiday, when the provider has nothing new, costs one call per security that day and none on the next runs. A failure waits 24 hours before it is tried again, except on Fetch now. EODHD calls are counted on the settings row (`PriceCallsDate`, `PriceCallsUsed`), including Find; a fetch that would need more calls than are left is not made, so the day's count never passes the limit. The first fetch of an EODHD symbol costs two calls, because EODHD's end-of-day answer carries no currency and the provider asks its search once for the listing's currency; later fetches of the same symbol cost one until the API restarts.
+A security is due when it has never been fetched, or when its last price is older than the last weekday before today and it was not already asked today. So a run on a holiday, when the provider has nothing new, costs one call per security that day and none on the next runs. A failure waits 24 hours before it is tried again, except on Fetch now. EODHD calls are counted on the settings row (`PriceCallsDate`, `PriceCallsUsed`), including Find; a fetch that would need more calls than are left is not made, so the day's count never passes the limit. The first fetch of an EODHD symbol costs two calls, because EODHD's end-of-day answer carries no currency and the provider asks its search once for the listing's currency. The answer is stored on the security as `PriceQuoteCurrency`, so every later fetch costs one call, across restarts, until the source or the symbol changes. A symbol chosen from Find's list costs one call on its first fetch too, because the API keeps Find's answers in memory and the first fetch stores the remembered currency; only a restart between Find and that first fetch brings the second call back, once.
 
-The run stores `PriceSyncedAt` and `PriceSyncError` on each security it asked and `PriceSyncRunAt` on the settings row, and answers how many securities it checked, how many prices it wrote, how many failed and how many EODHD calls are left. A failure is logged as a warning and listed in the settings section; there is no notification, because the price date shown next to every price already says when it is stale.
+The run stores `PriceSyncedAt`, `PriceSyncError` and, for EODHD, `PriceQuoteCurrency` on each security it asked and `PriceSyncRunAt` on the settings row, and answers how many securities it checked, how many prices it wrote, how many failed and how many EODHD calls are left. A failure is logged as a warning and listed in the settings section; there is no notification, because the price date shown next to every price already says when it is stale.
 
 ## Which price wins
 

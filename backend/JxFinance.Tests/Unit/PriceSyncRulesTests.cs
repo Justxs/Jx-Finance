@@ -1,6 +1,8 @@
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Investments;
 using JxFinance.Domain.Settings;
+using JxFinance.Endpoints.Investments.Mappers;
+using JxFinance.Endpoints.Investments.SaveSecurity;
 using JxFinance.Endpoints.Investments.Services;
 using JxFinance.Infrastructure.MarketPrices;
 using JxFinance.Tests.Support;
@@ -86,6 +88,21 @@ public sealed class PriceSyncRulesTests
         Assert.Equal(20, PriceSyncRules.CallsLeft(settings, today.AddDays(1), 20));
         PriceSyncRules.Spend(settings, today.AddDays(1), 1);
         Assert.Equal((today.AddDays(1), 1), (settings.PriceCallsDate!.Value, settings.PriceCallsUsed));
+    }
+
+    [Fact]
+    public void Changing_the_price_symbol_forgets_the_stored_quote_currency()
+    {
+        var kept = Mapped(new DateOnly(2026, 9, 29), Wednesday);
+        kept.PriceQuoteCurrency = "EUR";
+        var moved = Mapped(new DateOnly(2026, 9, 29), Wednesday);
+        moved.PriceQuoteCurrency = "EUR";
+
+        new SaveSecurityRequest("VWCE", "World", SecurityType.Etf, Currency.Eur, PriceSource: PriceSource.Eodhd, PriceSymbol: "vwce.xetra").ApplyTo("VWCE", kept);
+        new SaveSecurityRequest("VWCE", "World", SecurityType.Etf, Currency.Eur, PriceSource: PriceSource.Eodhd, PriceSymbol: "VWCE.MI").ApplyTo("VWCE", moved);
+
+        Assert.Equal("EUR", kept.PriceQuoteCurrency);
+        Assert.Null(moved.PriceQuoteCurrency);
     }
 
     [Fact]

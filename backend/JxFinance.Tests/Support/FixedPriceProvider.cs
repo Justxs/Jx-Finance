@@ -18,17 +18,27 @@ public sealed class FixedPriceProvider(PriceSource source) : IMarketPriceProvide
 
     public void QuoteIn(string symbol, string currency) => currencies[symbol] = currency;
 
-    public int CallsFor(string symbol) => source == PriceSource.Kraken ? 0 : 1;
+    public int CallsFor(Security security) => source switch
+    {
+        PriceSource.Kraken => 0,
+        _ => security.PriceQuoteCurrency is null ? 2 : 1,
+    };
 
     public Task<Result<IReadOnlyList<MarketClose>>> CloseAsync(
-        string symbol,
+        Security security,
         DateOnly from,
         DateOnly to,
         string? apiKey,
         CancellationToken cancellationToken)
     {
+        var symbol = security.PriceSymbol!;
         calls.Enqueue((symbol, from, to));
-        var currency = currencies.GetValueOrDefault(symbol, "EUR");
+        var currency = security.PriceQuoteCurrency ?? currencies.GetValueOrDefault(symbol, "EUR");
+        if (source == PriceSource.Eodhd)
+        {
+            security.PriceQuoteCurrency = currency;
+        }
+
         var closes = new List<MarketClose>();
         for (var day = from; day <= to; day = day.AddDays(1))
         {
