@@ -1,3 +1,3 @@
 namespace JxFinance.Common.Receipts;
 
-public sealed record ReceiptInput(IReadOnlyList<byte[]> Bands, string? Text, int PagesRead, int PageCount);
+public sealed record ReceiptInput(IReadOnlyList<IReadOnlyList<byte[]>> Pages, string? Text, int PagesRead, int PageCount);

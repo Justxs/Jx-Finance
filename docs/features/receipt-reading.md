@@ -8,11 +8,11 @@ A grocery receipt is one payment for several kinds of spending. Splitting it by 
 
 ## Nothing leaves the installation
 
-The photo, its text and the items are read and kept inside the API container and the database. Reading makes no network call: Tesseract runs as a process next to the API, PDFs are read in the API process, and the categories come from the person's own dictionary and rules. There is no key, no provider, no per-read notice and no monthly limit, because there is nothing to pay for and nothing to disclose.
+The photo, its text and the items are read and kept inside the API container and the database. Reading makes no network call: Tesseract runs as a process next to the API, PDFs are read in the API process, a scanned PDF's pages are rendered by Ghostscript, which Magick.NET runs as a process next to the API, and the categories come from the person's own dictionary and rules. There is no key, no provider, no per-read notice and no monthly limit, because there is nothing to pay for and nothing to disclose.
 
 ## When the action is offered
 
-`GET /api/settings` answers `receiptReadingReady`, true when the `ReceiptReading` switch is on and the `tesseract` executable is on the API's `PATH`; the form shows "Fill from receipt" only then. The switch starts on, like every other switch. The production image installs Tesseract with its Lithuanian and English language data, so there it is ready; on a development machine without Tesseract the action stays hidden, a photo sent anyway answers `receipt.engineUnavailable` (503), and a PDF with text still reads. While the switch is off, `/api/receipts` answers `feature.disabled`. Nothing is read on upload, by a job or for another person: a person clicks.
+`GET /api/settings` answers `receiptReadingReady`, true when the `ReceiptReading` switch is on and the `tesseract` executable is on the API's `PATH`; the form shows "Fill from receipt" only then. The switch starts on, like every other switch. The production image installs Tesseract with its Lithuanian and English language data, so there it is ready; on a development machine without Tesseract the action stays hidden, a photo sent anyway answers `receipt.engineUnavailable` (503), and a PDF with text still reads. The production image also installs Ghostscript, which renders a scanned PDF; where it is missing, as on a development machine without it, a scan answers `receipt.pdfWithoutText` as it did before. While the switch is off, `/api/receipts` answers `feature.disabled`. Nothing is read on upload, by a job or for another person: a person clicks.
 
 ## The flow
 
@@ -26,7 +26,9 @@ flowchart TD
     Service -->|"no, or Read again"| Prepare{"photo or PDF?"}
     Prepare -->|"photo"| Image["turn upright, strip metadata, grey,<br/>1600 px wide, local threshold,<br/>parts of 2000 px above 4000 px high"]
     Prepare -->|"PDF"| Text["text of the first 3 pages,<br/>words joined by baseline"]
-    Text -->|"no text"| NoText["400 receipt.pdfWithoutText"]
+    Text -->|"no text"| Render["render the first 3 pages at 300 dpi<br/>with Ghostscript, then as a photo"]
+    Render -->|"no Ghostscript, or every page blank"| NoText["400 receipt.pdfWithoutText"]
+    Render --> Busy
     Image --> Busy{"under AppLock.ReceiptReadings:<br/>same file being read?"}
     Text --> Busy
     Busy -->|"yes"| Conflict["409 conflict.busy"]
@@ -58,7 +60,13 @@ Each part is read by its own Tesseract process, one after the other, each under 
 
 ## Reading a PDF
 
-A PDF is not rendered. `ReceiptImage` opens it with PdfPig, takes the words of the first three pages, groups them into lines by their baseline and orders each line from left to right, so a name and a price that the PDF placed separately end up on one line. The review says "Only the first 3 of 7 pages were read" for a longer file. A PDF whose pages carry no text, a scan saved as PDF, answers `receipt.pdfWithoutText`; an encrypted or broken one answers `receipt.unsupportedFile`. E-receipts and shop PDFs carry text, and rendering a scan would need Ghostscript or Poppler in the image, see the [decisions](../decisions/receipt-reading.md).
+A PDF is read from its text when it has any. `ReceiptImage` opens it with PdfPig, takes the words of the first three pages, groups them into lines by their baseline and orders each line from left to right, so a name and a price that the PDF placed separately end up on one line. The review says "Only the first 3 of 7 pages were read" for a longer file. An encrypted or broken PDF answers `receipt.unsupportedFile`. E-receipts and shop PDFs carry text, which is exact where OCR guesses, so the text always wins.
+
+### Scanned PDFs
+
+Since 2026-10-01 a PDF whose first three pages carry no text, a scan saved as PDF, is rendered and read like a photo. `ReceiptImage` asks Magick.NET for each of those pages on its own at 300 dots per inch, which runs Ghostscript (`gs`, with `-dSAFER`) as a process inside the API container, and gives every page the photo's preparation: flattened on white, grey, 1600 pixels wide, the local threshold and, above 4000 pixels high, the [parts](#very-tall-screenshots). A page that comes out all white is skipped. The service reads each page's parts with Tesseract, joins a page's parts with the overlaps removed and the pages one after the other, so the review's "Only the first 3 of 7 pages were read" holds for a scan too. The rendered pages live only in memory for the request, under the limits `AttachmentImage` sets: `Prepare` looks up its image formats before anything else, so the limits are in place even when a stored PDF is the first file the API touches after a start. At 300 dots per inch an A4 page is 2480 by 3508 pixels before it is scaled to 1600 wide, and a till roll page 80 millimetres wide is 945 pixels wide and may be up to about 1350 millimetres long before it meets the 16000 pixel limit.
+
+Whether rendering works is found out on each scan rather than at start: when Ghostscript is not installed, cannot read the file or a page exceeds the Magick.NET limits, Magick.NET throws, and the scan answers `receipt.pdfWithoutText` as before, as does a scan whose pages all come out blank. So a development machine without Ghostscript keeps today's answer, and `receiptReadingReady` still depends on Tesseract alone. Where Tesseract is missing, a scan that rendered answers `receipt.engineUnavailable` like a photo.
 
 ## The engine
 
@@ -168,7 +176,7 @@ A reading lives while its file does. The last step of `RetentionJob` deletes rea
 | --- | --- | --- |
 | `feature.disabled` | 404 | The `ReceiptReading` switch is off |
 | `receipt.unsupportedFile` | 400 | Not a readable image or PDF, a password-protected or broken PDF, a photo under 200 pixels, or an attachment whose file is gone |
-| `receipt.pdfWithoutText` | 400 | A PDF whose first three pages carry no text, such as a scan |
+| `receipt.pdfWithoutText` | 400 | A PDF whose first three pages carry no text and either render blank or cannot be rendered, because Ghostscript is not installed or a page is over the image limits |
 | `receipt.unreadable` | 400 | No item and no total could be read, or Tesseract took longer than 60 seconds |
 | `receipt.engineUnavailable` | 503 | Tesseract, or its Lithuanian and English data, is not installed where the API runs |
 | `conflict.busy` | 409 | The same person's same file is being read |
@@ -176,7 +184,7 @@ A reading lives while its file does. The last step of `RetentionJob` deletes rea
 
 ## Tests
 
-`ReceiptTextParserTests` runs the parser over the six OCR fixtures, including the address of each, and a few inline texts (an English receipt, a weight on the item line, a price on its own line, a line without a price between items, text without prices). `ReceiptImageTests` covers orientation 6 coming out upright without EXIF, the 1600 pixel width for a small and a large photo, the black-and-white output, a tiny photo, bytes that are not the declared image, HEIC support, a five-page PDF read line by line from its first three pages, a PDF without text and an encrypted PDF (built with PDFsharp in `SampleReceiptPdf`). `ReceiptItemKeyTests` covers the key, and `PhotoLocationTests` the GPS position with each reference on a JPEG built with EXIF by `SamplePhoto`; `ReceiptLocationTests` covers the position on an upload, a cached upload, an attachment and with the switch off, and that the stored reading has none. Integration tests replace `IReceiptReader` with `FakeReceiptReader`, which answers a fixture's text, records the PNG it was given, can be made unavailable, hold or fail, so the service, the parser, the dictionary, the rules, the cache (including a file read before it is attached and answered from the cache when the attachment is read), the busy check, the PDF path without the engine and the purge run against PostgreSQL. No test starts Tesseract; the production image is checked by hand, see [deployment](../architecture/deployment.md). `ReceiptItemSearchTests` (unit) checks that the item search is one SQL statement over the caller's readings and that a stored reading keeps its names under `items[].name`, and the integration test of the same name covers the ledger, the list, the summary and the CSV export, the warranty date, a partner's search, the switch turned off and a deleted file.
+`ReceiptTextParserTests` runs the parser over the six OCR fixtures, including the address of each, and a few inline texts (an English receipt, a weight on the item line, a price on its own line, a line without a price between items, text without prices). `ReceiptImageTests` covers orientation 6 coming out upright without EXIF, the 1600 pixel width for a small and a large photo, the black-and-white output, a tiny photo, bytes that are not the declared image, HEIC support, a five-page PDF read line by line from its first three pages, a PDF without text, whose blank page gives the same answer with Ghostscript and without, and an encrypted PDF (built with PDFsharp in `SampleReceiptPdf`). `ReceiptItemKeyTests` covers the key, and `PhotoLocationTests` the GPS position with each reference on a JPEG built with EXIF by `SamplePhoto`; `ReceiptLocationTests` covers the position on an upload, a cached upload, an attachment and with the switch off, and that the stored reading has none. Integration tests replace `IReceiptReader` with `FakeReceiptReader`, which answers a fixture's text, records the PNG it was given, can be made unavailable, hold or fail, so the service, the parser, the dictionary, the rules, the cache (including a file read before it is attached and answered from the cache when the attachment is read), the busy check, the PDF path without the engine and the purge run against PostgreSQL. No test starts Tesseract; the production image is checked by hand, see [deployment](../architecture/deployment.md). `ReceiptItemSearchTests` (unit) checks that the item search is one SQL statement over the caller's readings and that a stored reading keeps its names under `items[].name`, and the integration test of the same name covers the ledger, the list, the summary and the CSV export, the warranty date, a partner's search, the switch turned off and a deleted file.
 
 ## Before release
 

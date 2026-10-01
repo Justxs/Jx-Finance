@@ -280,27 +280,33 @@ public sealed class ReceiptService(
     {
         var text = input.Text is { } embedded
             ? Result<string>.Success(embedded)
-            : await ReadBandsAsync(input.Bands, cancellationToken);
+            : await ReadPagesAsync(input.Pages, cancellationToken);
         return text.TryGetValue(out var read)
             ? ReceiptTextParser.Parse(read).Map(result => result with { PagesRead = input.PagesRead, PageCount = input.PageCount })
             : text.Error;
     }
 
-    private async Task<Result<string>> ReadBandsAsync(IReadOnlyList<byte[]> bands, CancellationToken cancellationToken)
+    private async Task<Result<string>> ReadPagesAsync(IReadOnlyList<IReadOnlyList<byte[]>> pages, CancellationToken cancellationToken)
     {
-        var texts = new List<string>();
-        foreach (var band in bands)
+        var pageTexts = new List<string>();
+        foreach (var bands in pages)
         {
-            var text = await reader.ReadTextAsync(band, cancellationToken);
-            if (!text.TryGetValue(out var read))
+            var bandTexts = new List<string>();
+            foreach (var band in bands)
             {
-                return text.Error;
+                var text = await reader.ReadTextAsync(band, cancellationToken);
+                if (!text.TryGetValue(out var read))
+                {
+                    return text.Error;
+                }
+
+                bandTexts.Add(read);
             }
 
-            texts.Add(read);
+            pageTexts.Add(ReceiptBands.Join(bandTexts));
         }
 
-        return ReceiptBands.Join(texts);
+        return string.Join('\n', pageTexts);
     }
 
     private async Task FinishAsync(

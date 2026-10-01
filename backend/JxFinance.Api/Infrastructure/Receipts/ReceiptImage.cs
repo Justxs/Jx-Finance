@@ -17,6 +17,7 @@ public static class ReceiptImage
     public const int MinShortEdge = 200;
     public const int OcrWidth = 1600;
     public const int OcrMaxHeight = AttachmentImage.MaxPixelEdge;
+    public const int PdfDensity = 300;
 
     private const int ThresholdWindow = 30;
     private const double ThresholdBias = -0.05;
@@ -26,8 +27,8 @@ public static class ReceiptImage
         $"The photo is too small to read. Use one that is at least {MinShortEdge} pixels on its short side.");
 
     public static Result<ReceiptInput> Prepare(byte[] content, string contentType) =>
-        contentType == AttachmentContent.Pdf ? ReadPdf(content)
-        : AttachmentImage.Formats.TryGetValue(contentType, out var format) ? PrepareImage(content, format)
+        AttachmentImage.Formats.TryGetValue(contentType, out var format) ? PrepareImage(content, format)
+        : contentType == AttachmentContent.Pdf ? ReadPdf(content)
         : ReceiptErrors.Unsupported;
 
     private static Result<ReceiptInput> PrepareImage(byte[] content, MagickFormat format)
@@ -42,17 +43,22 @@ public static class ReceiptImage
                 return TooSmall;
             }
 
-            image.BackgroundColor = MagickColors.White;
-            image.Alpha(AlphaOption.Remove);
-            image.Grayscale();
-            image.Resize(new MagickGeometry(OcrWidth, OcrMaxHeight));
-            image.AdaptiveThreshold(ThresholdWindow, ThresholdWindow, ThresholdBias * Quantum.Max);
-            return new ReceiptInput(ReceiptBands.Cut(image), null, 1, 1);
+            PrepareForOcr(image);
+            return new ReceiptInput([ReceiptBands.Cut(image)], null, 1, 1);
         }
         catch (MagickException)
         {
             return ReceiptErrors.Unsupported;
         }
+    }
+
+    private static void PrepareForOcr(MagickImage image)
+    {
+        image.BackgroundColor = MagickColors.White;
+        image.Alpha(AlphaOption.Remove);
+        image.Grayscale();
+        image.Resize(new MagickGeometry(OcrWidth, OcrMaxHeight));
+        image.AdaptiveThreshold(ThresholdWindow, ThresholdWindow, ThresholdBias * Quantum.Max);
     }
 
     private static Result<ReceiptInput> ReadPdf(byte[] content)
@@ -64,12 +70,42 @@ public static class ReceiptImage
             var pagesRead = Math.Min(pageCount, MaxPdfPages);
             var text = string.Join('\n', Enumerable.Range(1, pagesRead).Select(number => PageText(document.GetPage(number))));
             return pageCount == 0 ? ReceiptErrors.Unsupported
-                : string.IsNullOrWhiteSpace(text) ? ReceiptErrors.PdfWithoutText
+                : string.IsNullOrWhiteSpace(text) ? RenderPdf(content, pagesRead, pageCount)
                 : new ReceiptInput([], text, pagesRead, pageCount);
         }
         catch (Exception ex) when (ex is PdfDocumentFormatException or PdfDocumentEncryptedException or InvalidOperationException or ArgumentException)
         {
             return ReceiptErrors.Unsupported;
+        }
+    }
+
+    private static Result<ReceiptInput> RenderPdf(byte[] content, int pagesRead, int pageCount)
+    {
+        try
+        {
+            var pages = new List<IReadOnlyList<byte[]>>();
+            for (var index = 0; index < pagesRead; index++)
+            {
+                var settings = new MagickReadSettings
+                {
+                    Format = MagickFormat.Pdf,
+                    Density = new Density(PdfDensity),
+                    FrameIndex = (uint)index,
+                    FrameCount = 1,
+                };
+                using var page = new MagickImage(content, settings);
+                PrepareForOcr(page);
+                if (page.TotalColors > 1)
+                {
+                    pages.Add(ReceiptBands.Cut(page));
+                }
+            }
+
+            return pages.Count > 0 ? new ReceiptInput(pages, null, pagesRead, pageCount) : ReceiptErrors.PdfWithoutText;
+        }
+        catch (MagickException)
+        {
+            return ReceiptErrors.PdfWithoutText;
         }
     }
 
