@@ -122,6 +122,61 @@ export async function createMember(request: APIRequestContext, email: string, pa
   );
 }
 
+export async function createTransaction(
+  request: APIRequestContext,
+  accountId: string,
+  description: string,
+  amount: string,
+  options: {
+    type?: "income" | "expense";
+    date?: string;
+    categoryId?: string;
+    spreadMonths?: number;
+  } = {},
+) {
+  return created(
+    await request.post("/api/transactions", {
+      data: {
+        accountId,
+        categoryId: options.categoryId ?? null,
+        type: options.type ?? "expense",
+        amount,
+        date: options.date ?? today(),
+        description,
+        spreadMonths: options.spreadMonths ?? null,
+      },
+    }),
+  );
+}
+
+export const memberPassword = "Member-Password-123!";
+
+export async function signedInMember(
+  administrator: Page,
+  browser: Browser,
+  testInfo: TestInfo,
+  salt = "member",
+) {
+  const email = uniqueEmail(salt);
+  const id = await createMember(administrator.request, email, memberPassword);
+  const member = await newVisitor(browser, testInfo, salt);
+  await signIn(member, email, memberPassword);
+  return { id, email, member };
+}
+
+export async function createHousehold(
+  request: APIRequestContext,
+  name: string,
+  memberEmail: string,
+) {
+  const id = await created(await request.post("/api/households", { data: { name } }));
+  const added = await request.post(`/api/households/${id}/members`, {
+    data: { email: memberEmail, role: "member" },
+  });
+  expect(added.ok(), await added.text()).toBe(true);
+  return id;
+}
+
 export async function setFeature(
   request: APIRequestContext,
   feature: keyof FeatureFlags,

@@ -13,7 +13,7 @@ Every feature from 2026-09-30 and 2026-10-01 was built while Docker was not runn
 | Item | Note |
 | --- | --- |
 | `just test` with Docker up | First run of the integration tests written for spreading, the journal, the bills calendar, shared assets and debts, live prices, API writes and idempotency, locations, groups and learned categories, and of the CSV header expectations they changed. Watch two places first: the `Transaction.Tags` navigation added with spreading (tag edits on a tracked transaction), and the ledger's SQL `UNION ALL` of rows and groups under all ten sorts |
-| `just e2e` | Against every migration added since 2026-09-20, including the new `place-map.spec.ts` with its 460-byte fixture tile; the migrations have only been applied by the test containers |
+| `just e2e` | Against every migration added since 2026-09-20, including the new `place-map.spec.ts` with its 460-byte fixture tile and the specs written on 2026-10-01 for settle-up, shared assets, refunds, spreading, reconciliation, the month-end close, the member download, API token writes, transaction groups, learned categories and the bills calendar, none of which has run; the migrations have only been applied by the test containers |
 | `just verify-production` | Its new checks (exact CSP, `geolocation=(self)`, the read-only `maps` volume, a 404 for a missing tile file) have only been written, not run against the overlay |
 | `just gen-check` and the CI jobs on the Gitea runner | Audit, `production-overlay` and client drift have never run on the runner, and neither has the `mcp` job added on 2026-10-01 |
 
@@ -129,7 +129,7 @@ Ordered by how much they would help daily use for the effort. Following the prod
 
 | Item | Why | Size |
 | --- | --- | --- |
-| End-to-end coverage for the newest flows | The suite covers sign-in, two-factor, passkeys, imports, transfers, recurring bills, users, backup, the phone layout and the place map; nothing drives settle-up between two members, a refund, a reconciliation, the month-end close, the member download and import, receipt reading, a shared budget or asset, spreading, the bills calendar, a transaction group, a learned suggestion or a write through an API token | M |
+| End-to-end receipt reading | The only flow of the 2026-10-01 coverage list without a spec: Fill from receipt needs a committed receipt image or text PDF in `frontend/e2e/fixtures`, and the backend tests build theirs in code with PdfSharp | S |
 | Large-ledger timing | Seed about ten years and 100,000 rows across two members and time the ledger, a report with a comparison, the year review, the forecast, the calendar and both exports. Watch the newest reads: spread slices, the recurring history, place suggestions, the member download with its journal, the learned model's training (under 150 ms for a 500-row import preview with 10,000 training rows), and the ledger's union of rows and [groups](features/transaction-groups.md) against 300 ms at the 95th percentile under every sort with 200 groups | S |
 
 ## Suggested order
@@ -137,7 +137,7 @@ Ordered by how much they would help daily use for the effort. Following the prod
 1. Section 1's "Run what has not run", because nine features have never met a database or a browser; fix what it finds before anything else.
 2. The rest of section 1, because the release is not verified without it; the daily-use trial is also where the ideas above get confirmed or dropped.
 3. Section 2 before the trial starts, so the trial runs on answers the owner chose rather than defaults picked while away.
-4. End-to-end coverage and the large-ledger timing from section 6, because they make the verification pass cheaper to repeat.
+4. The large-ledger timing from section 6, because it makes the verification pass cheaper to repeat.
 5. During the trial, the small ideas that save daily effort: quick add, possible duplicates, marking a recurring occurrence as paid and finding a purchase by receipt item.
 6. After six months of real data, the learned categories evaluation, then the decision on its switch.
 
@@ -145,6 +145,7 @@ Ordered by how much they would help daily use for the effort. Following the prod
 
 | Date | Item | Where it is described |
 | --- | --- | --- |
+| 2026-10-01 | End-to-end coverage for the newest flows, written but not run yet because Docker was down: settle-up between two household members and a shared asset (`households.spec.ts`), Record refund (`refunds.spec.ts`), spreading and its slice in a report month (`spreading.spec.ts`), reconciliation (`reconciliation.spec.ts`), the month-end close (`month-close.spec.ts`), the member download and its import into an empty member (`member-export.spec.ts`), a read-and-write API token write replayed with one `Idempotency-Key` (`api-tokens.spec.ts`), a transaction group with undo (`transaction-groups.spec.ts`), a learned category suggestion (`learned-categories.spec.ts`) and the bills calendar (`recurring-bills.spec.ts`), with `createTransaction`, `signedInMember` and `createHousehold` in `e2e/support.ts`. Receipt reading stays open in section 6 | [Frontend tests](architecture/testing.md) |
 | 2026-10-01 | Realistic demo history: `just seed` backdates everything it adds to the start of its first month and puts its recurring entries on fixed days, so the bills calendar shows paid occurrences matched by their rows from the first month on, the standing order matches its transfers through a `monthly saving` match key, and the ledger gains a yearly car insurance spread over 12 months with its recurring entry, a "Riga weekend" group across two accounts, places with Vilnius coordinates on repeated shops, three months of uncategorized card payees after three categorized ones, two payee display names and a flat shared in a "Home" household. No feature switch changes, so Locations and Learned categories stay off | [Developer tooling](architecture/developer-tooling.md) |
 | 2026-10-01 | `PayeeKey` read in SQL everywhere: unusual amounts, subscription detection and price rises read the stored payee key instead of normalizing descriptions in memory, so only text that is not a stored transaction, such as typed match keys and import rows before they are saved, is still normalized. Detection leaves out rows without a key in SQL and the price-rise job narrows its earlier charges to the matched entries' keys, so neither row cap fills with rows that cannot match | [Transactions architecture](architecture/transactions.md#payee-key) |
 | 2026-10-01 | `tools/jx-mcp` in CI: a CI `mcp` job, run when `tools/jx-mcp/` or a shared file changes, installs the package from its lockfile, audits it with `scripts/audit.mjs --mcp`, type-checks, tests and builds it; `just check-mcp` does the same locally and `just check` includes it | [Developer tooling](architecture/developer-tooling.md) |

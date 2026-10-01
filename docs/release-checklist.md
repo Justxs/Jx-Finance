@@ -95,7 +95,7 @@ None of that has been through a deployment, a real SMTP server, a real Discord w
 
 Still open:
 
-- [ ] Run `just test` and `just e2e` with Docker up. The integration tests of every feature from 2026-09-30 and 2026-10-01 and the place map's end-to-end spec have never run; see [Backlog](backlog.md#run-what-has-not-run).
+- [ ] Run `just test` and `just e2e` with Docker up. The integration tests of every feature from 2026-09-30 and 2026-10-01 the place map's end-to-end spec and the end-to-end specs written on 2026-10-01 for the newest flows have never run; see [Backlog](backlog.md#run-what-has-not-run).
 - [ ] Record a verification pass for everything added from 2026-09-20 on. The backend suite, the frontend unit and DOM tests, the story tests with their accessibility scans and the Mermaid parse of every diagram all pass, but nothing in those lists has been used by a person.
 - [ ] Run the end-to-end suite and the production overlay against every migration added since 2026-09-20. They have only been applied by the test containers.
 - [ ] Import camt.053 files from at least two real banks, and real OFX, QFX, MT940, bank CSV and broker trade CSV files; the parsers have only read fixtures.
