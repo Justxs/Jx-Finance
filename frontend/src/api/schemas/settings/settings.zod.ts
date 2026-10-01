@@ -332,12 +332,117 @@ export const UpdateDiscordSettingsBody = zod.object({
 export const UpdateDiscordSettingsResponse = zod.void();
 
 /**
+ * Administrators only. Returns the rates of one currency in units per euro, newest first: every rate synced from the ECB in the last 30 days and every rate an administrator entered by hand, whatever its date. A date with both shows the hand-entered rate, which wins, with the synced one beside it.
+ * @summary List the stored exchange rates of a currency
+ */
+export const exchangeRateEntriesResponseRateRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const exchangeRateEntriesResponseSyncedRateRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+
+export const ExchangeRateEntriesResponseItem = zod.object({
+  date: zod.iso.date(),
+  currency: zod.enum([
+    "eur",
+    "usd",
+    "gbp",
+    "chf",
+    "pln",
+    "sek",
+    "nok",
+    "dkk",
+    "czk",
+    "huf",
+    "ron",
+    "isk",
+    "try",
+    "jpy",
+    "cny",
+    "hkd",
+    "sgd",
+    "krw",
+    "inr",
+    "idr",
+    "myr",
+    "php",
+    "thb",
+    "aud",
+    "nzd",
+    "cad",
+    "mxn",
+    "brl",
+    "ils",
+    "zar",
+  ]),
+  rate: zod.stringFormat("decimal", exchangeRateEntriesResponseRateRegExp),
+  source: zod.enum(["ecb", "manual"]),
+  syncedRate: zod.stringFormat("decimal", exchangeRateEntriesResponseSyncedRateRegExp).nullable(),
+});
+export const ExchangeRateEntriesResponse = zod.array(ExchangeRateEntriesResponseItem);
+
+/**
  * Administrators only. Fetches reference rates published since the newest stored date. It works even when automatic sync is turned off.
  * @summary Fetch exchange rates now
  */
 export const SyncExchangeRatesResponse = zod.object({
   added: zod.int(),
   ratesAsOf: zod.union([zod.null(), zod.iso.date()]),
+});
+
+/**
+ * Administrators only. Removes the rate entered by hand for a currency and date, so the synced ECB rate of that date, or else the newest stored rate before it, applies again. The rows that depended on it are valued again in the same way as when the rate was entered; when one of them would be left without a rate nothing is deleted. Synced rates cannot be deleted.
+ * @summary Delete an exchange rate entered by hand
+ */
+export const DeleteExchangeRateResponse = zod.void();
+
+/**
+ * Administrators only. Stores the rate of a currency for one date, in units per euro, replacing one entered for the same date before. A rate entered by hand wins over the synced ECB rate of the same date and, like any rate, applies until the next stored rate of that currency. In the same database transaction every transaction and investment entry dated from that date up to the day before the next stored rate, and not after today, whose reporting value depends on the currency is valued again; when one of them cannot be valued nothing is saved.
+ * @summary Enter an exchange rate by hand
+ */
+export const setExchangeRateBodyRateRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+
+export const SetExchangeRateBody = zod.object({
+  rate: zod.stringFormat("decimal", setExchangeRateBodyRateRegExp),
+});
+
+export const setExchangeRateResponseRateRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const setExchangeRateResponseSyncedRateRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+
+export const SetExchangeRateResponse = zod.object({
+  date: zod.iso.date(),
+  currency: zod.enum([
+    "eur",
+    "usd",
+    "gbp",
+    "chf",
+    "pln",
+    "sek",
+    "nok",
+    "dkk",
+    "czk",
+    "huf",
+    "ron",
+    "isk",
+    "try",
+    "jpy",
+    "cny",
+    "hkd",
+    "sgd",
+    "krw",
+    "inr",
+    "idr",
+    "myr",
+    "php",
+    "thb",
+    "aud",
+    "nzd",
+    "cad",
+    "mxn",
+    "brl",
+    "ils",
+    "zar",
+  ]),
+  rate: zod.stringFormat("decimal", setExchangeRateResponseRateRegExp),
+  source: zod.enum(["ecb", "manual"]),
+  syncedRate: zod.stringFormat("decimal", setExchangeRateResponseSyncedRateRegExp).nullable(),
 });
 
 /**

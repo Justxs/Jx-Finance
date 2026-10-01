@@ -8,6 +8,7 @@
 import { HttpResponse, http } from "msw";
 import type { RequestHandlerOptions } from "msw";
 import type {
+  ExchangeRateEntryResponse,
   ExchangeRateSyncResponse,
   MarketPriceSettingsResponse,
   MarketPriceSyncResponse,
@@ -84,6 +85,30 @@ export const getUpdateDiscordSettingsMockHandler = (
   );
 };
 
+export const getExchangeRateEntriesMockHandler = (
+  overrideResponse?:
+    | ExchangeRateEntryResponse[]
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<ExchangeRateEntryResponse[]> | ExchangeRateEntryResponse[]),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/settings/exchange-rates",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : undefined,
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
 export const getSyncExchangeRatesMockHandler = (
   overrideResponse?:
     | ExchangeRateSyncResponse
@@ -95,6 +120,49 @@ export const getSyncExchangeRatesMockHandler = (
   return http.post(
     "*/api/settings/exchange-rates/sync",
     async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : undefined,
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getDeleteExchangeRateMockHandler = (
+  overrideResponse?:
+    | void
+    | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<void> | void),
+  options?: RequestHandlerOptions,
+) => {
+  return http.delete(
+    "*/api/settings/exchange-rates/:currency/:date",
+    async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+      if (typeof overrideResponse === "function") {
+        await overrideResponse(info);
+      }
+
+      return new HttpResponse(null, { status: 204 });
+    },
+    options,
+  );
+};
+
+export const getSetExchangeRateMockHandler = (
+  overrideResponse?:
+    | ExchangeRateEntryResponse
+    | ((
+        info: Parameters<Parameters<typeof http.put>[1]>[0],
+      ) => Promise<ExchangeRateEntryResponse> | ExchangeRateEntryResponse),
+  options?: RequestHandlerOptions,
+) => {
+  return http.put(
+    "*/api/settings/exchange-rates/:currency/:date",
+    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -279,7 +347,10 @@ export const getSettingsMock = () => [
   getSettingsMockHandler(),
   getUpdateSettingsMockHandler(),
   getUpdateDiscordSettingsMockHandler(),
+  getExchangeRateEntriesMockHandler(),
   getSyncExchangeRatesMockHandler(),
+  getDeleteExchangeRateMockHandler(),
+  getSetExchangeRateMockHandler(),
   getMarketPriceSettingsMockHandler(),
   getUpdateMarketPriceSettingsMockHandler(),
   getSyncMarketPricesMockHandler(),

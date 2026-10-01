@@ -57,7 +57,7 @@ It can be taken three times an hour from one client (`Throttle(3, 3600)`, 429 be
 | Sign-in and roles | `UserSessions`, `AspNetUserLogins`, `AspNetUserClaims`, `AspNetUserRoles`, `AspNetRoles`, `AspNetRoleClaims` |
 | What belongs to the household | `Households`, `HouseholdMemberships`, `AuditEvents`; a split another member paid for, or a payment another member recorded, even when the member is a party to it |
 | Work in flight | `EmailMessages`, `DiscordMessages` |
-| The installation | `InstanceSettings` (with the SMTP password), `ExchangeRates`, `SecurityPrices` |
+| The installation | `InstanceSettings` (with the SMTP password), `ExchangeRates`, `ManualExchangeRates`, `SecurityPrices` |
 | Other members' data | their accounts and everything on them, including rows the member entered there; their budgets, goals and every other row they own that no row of the member points at |
 
 "Mine" is what the member owns, not what the member can see: the history of a partner's shared account is the household's, and leaves only through the administrator's backup. An account's history is never split between two files, so what a partner entered on the member's shared account comes with it. The export ignores the household switcher: an account shared into a household other than the active one is still the member's own, so `X-Active-Household` changes nothing (`UserExportTests` compares both).

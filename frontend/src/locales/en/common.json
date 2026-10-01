@@ -1115,7 +1115,29 @@
       "syncNow": "Sync now",
       "synced_one": "{{count}} rate added",
       "synced_other": "{{count}} rates added",
-      "upToDate": "Rates are already up to date"
+      "upToDate": "Rates are already up to date",
+      "entries": {
+        "title": "Stored rates",
+        "description": "Enter a rate by hand when automatic sync is off, a day is missing or a rate needs correcting. A rate entered by hand wins over the ECB rate of the same day, and transactions from that day on are valued again.",
+        "currency": "Currency",
+        "add": "Enter rate",
+        "addTitle": "Enter a {{currency}} rate",
+        "editTitle": "{{currency}} rate on {{date}}",
+        "empty": "No {{currency}} rates from the last 30 days, and none entered by hand.",
+        "listLabel": "{{currency}} rates",
+        "syncedRate": "ECB rate {{rate}}"
+      },
+      "source": {
+        "ecb": "ECB",
+        "manual": "Entered by hand"
+      },
+      "form": {
+        "rate": "{{currency}} per euro",
+        "rateHint": "How many {{currency}} one euro buys on that day.",
+        "date": "Date",
+        "dateFuture": "A rate cannot be dated after today.",
+        "rateInvalid": "Enter a number above zero with at most 8 decimal places."
+      }
     },
     "regional": {
       "title": "Regional",
@@ -2697,7 +2719,10 @@
       "invalid": "Choose one of the available options."
     },
     "exchangeRate": {
-      "unavailable": "No exchange rate for that date. Sync rates in settings first."
+      "unavailable": "No exchange rate for that date. Sync rates or enter one in settings first.",
+      "notPositive": "The rate must be above zero, with at most 8 decimal places.",
+      "unsupportedCurrency": "Rates are given per euro, so the euro has no rate of its own.",
+      "futureDate": "A rate cannot be dated after today."
     },
     "export": {
       "tooManyRows": "Too many transactions for a PDF. Narrow the filters or export CSV instead."

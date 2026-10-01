@@ -357,7 +357,11 @@ const rules: readonly Rule[] = [
     refresh: [api.getNotificationsQueryKey],
   },
   {
-    after: [api.getUpdateSettingsMutationKey],
+    after: [
+      api.getUpdateSettingsMutationKey,
+      api.getSetExchangeRateMutationKey,
+      api.getDeleteExchangeRateMutationKey,
+    ],
     refresh: "everything",
   },
   {

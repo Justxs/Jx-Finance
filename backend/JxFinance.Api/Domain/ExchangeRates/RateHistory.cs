@@ -1,12 +1,37 @@
+using JxFinance.Domain.Common;
+
 namespace JxFinance.Domain.ExchangeRates;
 
-public sealed class RateHistory(IEnumerable<ExchangeRate> rates)
+public sealed class RateHistory
 {
-    private readonly List<RateTable> tables = rates
-        .GroupBy(r => r.Date)
-        .OrderBy(g => g.Key)
-        .Select(g => new RateTable(g.Key, g.ToDictionary(r => r.Currency, r => r.Rate)))
-        .ToList();
+    private readonly List<RateTable> tables = [];
+
+    public RateHistory(IEnumerable<ExchangeRate> synced, IEnumerable<ManualExchangeRate> manual)
+    {
+        var quotes = synced.Select(r => (r.Date, r.Currency, r.Rate, Manual: false))
+            .Concat(manual.Select(r => (r.Date, r.Currency, r.Rate, Manual: true)))
+            .GroupBy(q => q.Date)
+            .OrderBy(g => g.Key);
+
+        var newest = new Dictionary<Currency, (DateOnly Date, decimal Rate)>();
+        DateOnly? syncedAsOf = null;
+        foreach (var day in quotes)
+        {
+            foreach (var quote in day.OrderBy(q => q.Manual))
+            {
+                newest[quote.Currency] = (day.Key, quote.Rate);
+            }
+
+            if (day.Any(q => !q.Manual))
+            {
+                syncedAsOf = day.Key;
+            }
+
+            var oldest = day.Key.AddDays(-RateTable.MaxGapDays);
+            var current = newest.Where(p => p.Value.Date >= oldest).ToDictionary(p => p.Key, p => p.Value.Rate);
+            tables.Add(new RateTable(day.Key, current) { SyncedAsOf = syncedAsOf });
+        }
+    }
 
     public RateTable OnOrBefore(DateOnly date)
     {

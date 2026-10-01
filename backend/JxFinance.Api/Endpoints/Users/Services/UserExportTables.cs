@@ -68,6 +68,7 @@ public static class UserExportTables
         ["AuditEvents"] = new Excluded("belongs to every member of the household"),
         ["InstanceSettings"] = new Excluded("installation settings"),
         ["ExchangeRates"] = new Excluded("installation-wide market data"),
+        ["ManualExchangeRates"] = new Excluded("installation-wide market data"),
         ["SecurityPrices"] = new Excluded("installation-wide market data"),
         ["SharedExpenses"] = new Owned(),
         ["SharedExpenseShares"] = new ChildOf("SharedExpenses", "SharedExpenseId"),

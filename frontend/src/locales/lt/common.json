@@ -1163,7 +1163,29 @@
       "synced_few": "Pridėti {{count}} kursai",
       "synced_many": "Pridėta {{count}} kurso",
       "synced_other": "Pridėta {{count}} kursų",
-      "upToDate": "Kursai jau atnaujinti"
+      "upToDate": "Kursai jau atnaujinti",
+      "entries": {
+        "title": "Saugomi kursai",
+        "description": "Įveskite kursą ranka, kai automatinis gavimas išjungtas, trūksta dienos arba kursą reikia pataisyti. Ranka įvestas kursas pakeičia tos pačios dienos ECB kursą, o operacijos nuo tos dienos įvertinamos iš naujo.",
+        "currency": "Valiuta",
+        "add": "Įvesti kursą",
+        "addTitle": "Įvesti {{currency}} kursą",
+        "editTitle": "{{currency}} kursas {{date}}",
+        "empty": "Per pastarąsias 30 dienų {{currency}} kursų nėra, ranka įvestų taip pat nėra.",
+        "listLabel": "{{currency}} kursai",
+        "syncedRate": "ECB kursas {{rate}}"
+      },
+      "source": {
+        "ecb": "ECB",
+        "manual": "Įvestas ranka"
+      },
+      "form": {
+        "rate": "{{currency}} už eurą",
+        "rateHint": "Kiek {{currency}} galima gauti už vieną eurą tą dieną.",
+        "date": "Data",
+        "dateFuture": "Kurso data negali būti vėlesnė nei šiandien.",
+        "rateInvalid": "Įveskite didesnį už nulį skaičių, ne daugiau kaip 8 skaitmenys po kablelio."
+      }
     },
     "regional": {
       "title": "Regioniniai nustatymai",
@@ -2795,7 +2817,10 @@
       "invalid": "Pasirinkite vieną iš galimų reikšmių."
     },
     "exchangeRate": {
-      "unavailable": "Šiai datai nėra valiutos kurso. Pirmiausia sinchronizuokite kursus nustatymuose."
+      "unavailable": "Šiai datai nėra valiutos kurso. Pirmiausia sinchronizuokite kursus arba įveskite kursą nustatymuose.",
+      "notPositive": "Kursas turi būti didesnis už nulį, ne daugiau kaip 8 skaitmenys po kablelio.",
+      "unsupportedCurrency": "Kursai nurodomi už vieną eurą, todėl euras savo kurso neturi.",
+      "futureDate": "Kurso data negali būti vėlesnė nei šiandien."
     },
     "export": {
       "tooManyRows": "Per daug operacijų PDF failui. Susiaurinkite filtrus arba eksportuokite CSV."

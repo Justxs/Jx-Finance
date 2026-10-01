@@ -30,11 +30,15 @@ import type {
 import { customFetch } from "../../client";
 import type { ErrorType } from "../../client";
 import type {
+  Currency,
+  ExchangeRateEntriesParams,
+  ExchangeRateEntryResponse,
   ExchangeRateSyncResponse,
   MarketPriceSettingsResponse,
   MarketPriceSyncResponse,
   ProblemDetails,
   PublicSettingsResponse,
+  SetExchangeRateRequest,
   SettingsResponse,
   SmtpSettingsResponse,
   SmtpTestResponse,
@@ -467,6 +471,141 @@ export const useUpdateDiscordSettings = <TError = ErrorType<ProblemDetails>, TCo
 > => {
   return useMutation(getUpdateDiscordSettingsMutationOptions(options), queryClient);
 };
+export const getExchangeRateEntriesUrl = (params: ExchangeRateEntriesParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/settings/exchange-rates?${stringifiedParams}`
+    : `/api/settings/exchange-rates`;
+};
+
+/**
+ * Administrators only. Returns the rates of one currency in units per euro, newest first: every rate synced from the ECB in the last 30 days and every rate an administrator entered by hand, whatever its date. A date with both shows the hand-entered rate, which wins, with the synced one beside it.
+ * @summary List the stored exchange rates of a currency
+ */
+export const exchangeRateEntries = async (
+  params: ExchangeRateEntriesParams,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<ExchangeRateEntryResponse[]> => {
+  return customFetch<ExchangeRateEntryResponse[]>(getExchangeRateEntriesUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getExchangeRateEntriesQueryKey = (params?: ExchangeRateEntriesParams) => {
+  return [`/api/settings/exchange-rates`, ...(params ? [params] : [])] as const;
+};
+
+export const getExchangeRateEntriesSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof exchangeRateEntries>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  params: ExchangeRateEntriesParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof exchangeRateEntries>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getExchangeRateEntriesQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof exchangeRateEntries>>> = ({ signal }) =>
+    exchangeRateEntries(params, { signal, ...requestOptions });
+
+  return queryOptionsBuilder({
+    queryKey,
+    ...queryOptions,
+    queryFn: queryOptions?.queryFn ?? queryFn,
+  }) as UseSuspenseQueryOptions<Awaited<ReturnType<typeof exchangeRateEntries>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  } & {
+    throwOnError?: ((this: never, error: TError) => boolean) & { readonly __inferenceOnly: never };
+  };
+};
+
+export type ExchangeRateEntriesSuspenseQueryResult = NonNullable<
+  Awaited<ReturnType<typeof exchangeRateEntries>>
+>;
+export type ExchangeRateEntriesSuspenseQueryError = ErrorType<ProblemDetails>;
+
+export function useExchangeRateEntriesSuspense<
+  TData = Awaited<ReturnType<typeof exchangeRateEntries>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  params: ExchangeRateEntriesParams,
+  options: {
+    query: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof exchangeRateEntries>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useExchangeRateEntriesSuspense<
+  TData = Awaited<ReturnType<typeof exchangeRateEntries>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  params: ExchangeRateEntriesParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof exchangeRateEntries>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useExchangeRateEntriesSuspense<
+  TData = Awaited<ReturnType<typeof exchangeRateEntries>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  params: ExchangeRateEntriesParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof exchangeRateEntries>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List the stored exchange rates of a currency
+ */
+
+export function useExchangeRateEntriesSuspense<
+  TData = Awaited<ReturnType<typeof exchangeRateEntries>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  params: ExchangeRateEntriesParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof exchangeRateEntries>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getExchangeRateEntriesSuspenseQueryOptions(params, options);
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
 export const getSyncExchangeRatesUrl = () => {
   return `/api/settings/exchange-rates/sync`;
 };
@@ -534,6 +673,204 @@ export const useSyncExchangeRates = <TError = ErrorType<ProblemDetails>, TContex
   queryClient?: QueryClient,
 ): UseMutationResult<Awaited<ReturnType<typeof syncExchangeRates>>, TError, void, TContext> => {
   return useMutation(getSyncExchangeRatesMutationOptions(options), queryClient);
+};
+export const getDeleteExchangeRateUrl = (currency: Currency, date: string) => {
+  return `/api/settings/exchange-rates/${currency}/${date}`;
+};
+
+/**
+ * Administrators only. Removes the rate entered by hand for a currency and date, so the synced ECB rate of that date, or else the newest stored rate before it, applies again. The rows that depended on it are valued again in the same way as when the rate was entered; when one of them would be left without a rate nothing is deleted. Synced rates cannot be deleted.
+ * @summary Delete an exchange rate entered by hand
+ */
+export const deleteExchangeRate = async (
+  currency: Currency,
+  date: string,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<void> => {
+  return customFetch<void>(getDeleteExchangeRateUrl(currency, date), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getDeleteExchangeRateMutationKey = () => ["deleteExchangeRate"] as const;
+
+export const getDeleteExchangeRateMutationOptions = <
+  TError = ErrorType<ProblemDetails>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteExchangeRate>>,
+    TError,
+    DeleteExchangeRateMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteExchangeRate>>,
+  TError,
+  DeleteExchangeRateMutationVariables,
+  TContext
+> => {
+  const mutationKey = getDeleteExchangeRateMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteExchangeRate>>,
+    DeleteExchangeRateMutationVariables
+  > = (props) => {
+    const { currency, date } = props ?? {};
+
+    return deleteExchangeRate(currency, date, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteExchangeRateMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteExchangeRate>>
+>;
+
+export type DeleteExchangeRateMutationError = ErrorType<ProblemDetails>;
+export type DeleteExchangeRateMutationVariables = { currency: Currency; date: string };
+
+/**
+ * @summary Delete an exchange rate entered by hand
+ */
+export const useDeleteExchangeRate = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof deleteExchangeRate>>,
+      TError,
+      DeleteExchangeRateMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof deleteExchangeRate>>,
+  TError,
+  DeleteExchangeRateMutationVariables,
+  TContext
+> => {
+  return useMutation(getDeleteExchangeRateMutationOptions(options), queryClient);
+};
+export const getSetExchangeRateUrl = (currency: Currency, date: string) => {
+  return `/api/settings/exchange-rates/${currency}/${date}`;
+};
+
+/**
+ * Administrators only. Stores the rate of a currency for one date, in units per euro, replacing one entered for the same date before. A rate entered by hand wins over the synced ECB rate of the same date and, like any rate, applies until the next stored rate of that currency. In the same database transaction every transaction and investment entry dated from that date up to the day before the next stored rate, and not after today, whose reporting value depends on the currency is valued again; when one of them cannot be valued nothing is saved.
+ * @summary Enter an exchange rate by hand
+ */
+export const setExchangeRate = async (
+  currency: Currency,
+  date: string,
+  setExchangeRateRequest: SetExchangeRateRequest,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<ExchangeRateEntryResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return customFetch<ExchangeRateEntryResponse>(getSetExchangeRateUrl(currency, date), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(setExchangeRateRequest),
+  });
+};
+
+export const getSetExchangeRateMutationKey = () => ["setExchangeRate"] as const;
+
+export const getSetExchangeRateMutationOptions = <
+  TError = ErrorType<ProblemDetails>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof setExchangeRate>>,
+    TError,
+    SetExchangeRateMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof setExchangeRate>>,
+  TError,
+  SetExchangeRateMutationVariables,
+  TContext
+> => {
+  const mutationKey = getSetExchangeRateMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof setExchangeRate>>,
+    SetExchangeRateMutationVariables
+  > = (props) => {
+    const { currency, date, data } = props ?? {};
+
+    return setExchangeRate(currency, date, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SetExchangeRateMutationResult = NonNullable<
+  Awaited<ReturnType<typeof setExchangeRate>>
+>;
+export type SetExchangeRateMutationBody = SetExchangeRateRequest;
+export type SetExchangeRateMutationError = ErrorType<ProblemDetails>;
+export type SetExchangeRateMutationVariables = {
+  currency: Currency;
+  date: string;
+  data: SetExchangeRateRequest;
+};
+
+/**
+ * @summary Enter an exchange rate by hand
+ */
+export const useSetExchangeRate = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof setExchangeRate>>,
+      TError,
+      SetExchangeRateMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof setExchangeRate>>,
+  TError,
+  SetExchangeRateMutationVariables,
+  TContext
+> => {
+  return useMutation(getSetExchangeRateMutationOptions(options), queryClient);
 };
 export const getMarketPriceSettingsUrl = () => {
   return `/api/settings/market-prices`;

@@ -26,8 +26,8 @@ Account balances use the same five-day rule as a single conversion (`IExchangeRa
 flowchart TD
     Ask["GetForDateAsync(date)"] --> Future{"Date in the future?"}
     Future -->|"yes"| TodayRates["use today's rates"]
-    Future -->|"no"| Stored{"Rate stored on or before the date,<br/>within 5 days?"}
-    Stored -->|"yes"| Use["use newest rate on or before the date"]
+    Future -->|"no"| Stored{"Synced rate stored on or before the date,<br/>within 5 days?"}
+    Stored -->|"yes"| Use["use each currency's newest rate on or before the date,<br/>a rate entered by hand winning on its own date"]
     Stored -->|"no"| Log{"Range failed in the last 15 minutes?<br/>ExchangeRateFetchLog"}
     Log -->|"yes"| Stale
     Log -->|"no"| Fetch["fetch the 10 days ending at the date from Frankfurter<br/>INSERT ON CONFLICT DO NOTHING"]
@@ -35,6 +35,31 @@ flowchart TD
     Again -->|"yes"| Use
     Again -->|"no"| Stale["write in a foreign currency fails validation,<br/>read totals leave the currency out,<br/>net worth snapshot skipped that day"]
 ```
+
+## Rates entered by hand
+
+An administrator can enter a rate by hand under Settings › Installation › Currencies, in the Stored rates section below the sync switch, for example while automatic sync is off, when a day is missing, or to correct a rate. A currency picker (every supported currency except the euro, the first enabled foreign currency selected) lists that currency's rates newest first: every ECB rate of the last 30 days and every rate entered by hand whatever its date, each tagged ECB or Entered by hand, and a rate entered by hand on a date that also has an ECB rate shows the ECB rate beside it. Enter rate opens a dialog with the rate in units of the currency per euro (up to eight decimals) and the date, today by default. Every row has Edit, which opens the same dialog filled in, so editing an ECB row enters a hand rate for its date; only rows entered by hand have Delete, and deleting one brings back the ECB rate of that date, or the newest stored rate before it.
+
+```mermaid
+flowchart TD
+    Save["PUT /api/settings/exchange-rates/{currency}/{date}<br/>or DELETE the same route"] --> Tx["Begin transaction, LOCK TABLE Transactions, InvestmentTransactions"]
+    Tx --> Row["Insert, replace or delete the ManualExchangeRates row"]
+    Row --> Window["Window: the date up to the day before the next stored rate<br/>of that currency, never after today"]
+    Window --> Rows{"Currency is the reporting currency?"}
+    Rows -->|"yes"| All["every transaction and investment entry<br/>not in the reporting currency"]
+    Rows -->|"no"| One["every transaction and investment entry<br/>in that currency"]
+    All --> Value["value again in batches, deleted rows included"]
+    One --> Value
+    Value --> Missing{"Any rate missing?"}
+    Missing -->|"yes"| Rollback["Roll back, 400 exchangeRate.unavailable"]
+    Missing -->|"no"| Commit["Commit; the client refreshes every query"]
+```
+
+A rate entered by hand wins over the ECB rate of the same date, and like any rate it applies until the next stored rate of its currency, synced or entered by hand. The sync never touches it, because the ECB rows live in their own table. A future-dated transaction keeps the value it was saved with, as it does when rates sync later. Revalued rows get a new `UpdatedAt`, so a closed month whose totals moved shows as changed after close. The route refuses a rate that is not above zero or has more than eight decimals (`exchangeRate.notPositive`), the euro (`exchangeRate.unsupportedCurrency`) and a date after today (`exchangeRate.futureDate`); deleting a date that has no rate entered by hand answers 404. Members get 403 on all three routes and no token can reach them.
+
+Only the 30 currencies of the `Currency` enum can be used, the euro and 29 of the ECB's reference currencies; a rate entered by hand cannot add another currency.
+
+Backups include `ManualExchangeRates` like every other table. The [member download](data-export-per-user.md) leaves it out as installation-wide market data, the same as `ExchangeRates`.
 
 ## Filling a range once
 

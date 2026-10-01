@@ -10,6 +10,8 @@ public sealed class RateTable(DateOnly? asOf, IReadOnlyDictionary<Currency, deci
 
     public DateOnly? AsOf { get; } = asOf;
 
+    public DateOnly? SyncedAsOf { get; init; }
+
     public decimal? Rate(Currency from, Currency to)
     {
         if (from == to)
@@ -27,10 +29,14 @@ public sealed class RateTable(DateOnly? asOf, IReadOnlyDictionary<Currency, deci
         return toPerEuro.Value / fromPerEuro.Value;
     }
 
-    public bool IsFreshOn(DateOnly day) => AsOf is { } asOf && day.DayNumber - asOf.DayNumber <= MaxGapDays;
+    public bool IsFreshOn(DateOnly day) => Covers(AsOf, day);
+
+    public bool IsSyncedFreshOn(DateOnly day) => Covers(SyncedAsOf, day);
 
     public decimal? Convert(decimal amount, Currency from, Currency to) =>
         Rate(from, to) is { } rate ? Money.Round(amount * rate) : null;
+
+    private static bool Covers(DateOnly? date, DateOnly day) => date is { } from && day.DayNumber - from.DayNumber <= MaxGapDays;
 
     private decimal? PerEuro(Currency currency)
     {

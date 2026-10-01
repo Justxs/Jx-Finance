@@ -586,6 +586,24 @@ namespace JxFinance.Infrastructure.Data.Migrations
                     b.ToTable("ExchangeRates");
                 });
 
+            modelBuilder.Entity("JxFinance.Domain.ExchangeRates.ManualExchangeRate", b =>
+                {
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date");
+
+                    b.Property<string>("Currency")
+                        .HasMaxLength(3)
+                        .HasColumnType("character varying(3)");
+
+                    b.Property<decimal>("Rate")
+                        .HasPrecision(18, 8)
+                        .HasColumnType("numeric(18,8)");
+
+                    b.HasKey("Date", "Currency");
+
+                    b.ToTable("ManualExchangeRates");
+                });
+
             modelBuilder.Entity("JxFinance.Domain.Goals.Goal", b =>
                 {
                     b.Property<Guid>("Id")

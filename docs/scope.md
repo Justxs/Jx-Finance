@@ -63,7 +63,7 @@ Administrators switch features on and off, choose the reporting currency and the
 
 ## Multi-currency
 
-Each account has a main currency and can hold balances in any of 30 supported currencies; transactions carry their own currency; in-account currency conversions with an optional fee booked as an expense, editable afterwards with the fee transaction kept in step, unless a broker import wrote them; ECB reference rates synced daily; totals, budgets and reports expressed in one reporting currency using the rate on each transaction's date
+Each account has a main currency and can hold balances in any of 30 supported currencies; transactions carry their own currency; in-account currency conversions with an optional fee booked as an expense, editable afterwards with the fee transaction kept in step, unless a broker import wrote them; ECB reference rates synced daily, which an administrator can fill in or override by hand per currency and date; totals, budgets and reports expressed in one reporting currency using the rate on each transaction's date
 
 ## Investments
 
@@ -149,4 +149,4 @@ Unusual amounts are implemented since 2026-09-26 and are described in [Unusual a
 
 Month-end close is implemented since 2026-09-27 and is described in [Month-end close](features/month-end-close.md). It gives the monthly bookkeeping session a checklist, a summary and an end: closing a month keeps a snapshot of its report figures, and anything dated in it that changes afterwards shows as drift with the rows behind it. It is a soft close by design: every write path stays open, because deleting a category, a categorization rule run or a reporting-currency change legitimately rewrites old months, and the snapshot gives the traceability without refusing a correction. It is a feature switch because it is a page of its own and runs a reminder job; turning it off hides the page and the edit hints and keeps every close.
 
-Outside this release: per-user settings other than the language of email and Discord messages, a per-user reporting currency, manual exchange rates, PWA/offline, bank APIs, scheduled or offsite backups. A global active-household switcher is implemented since 2026-09-20: it narrows the view to one household and never widens it.
+Outside this release: per-user settings other than the language of email and Discord messages, a per-user reporting currency, currencies outside the 30 supported ones, PWA/offline, bank APIs, scheduled or offsite backups. A global active-household switcher is implemented since 2026-09-20: it narrows the view to one household and never widens it.

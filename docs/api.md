@@ -284,7 +284,10 @@ Every 201 goes through `CreatedAsync`, which sets `Location` to a path built fro
 | GET | `/api/settings` |
 | PUT | `/api/settings` |
 | PUT | `/api/settings/discord` |
+| GET | `/api/settings/exchange-rates` (Admin) |
 | POST | `/api/settings/exchange-rates/sync` |
+| DELETE | `/api/settings/exchange-rates/{currency}/{date}` (Admin) |
+| PUT | `/api/settings/exchange-rates/{currency}/{date}` (Admin) |
 | GET | `/api/settings/market-prices` (Admin) |
 | PUT | `/api/settings/market-prices` (Admin) |
 | POST | `/api/settings/market-prices/sync` (Admin) |

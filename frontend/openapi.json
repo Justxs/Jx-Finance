@@ -14253,6 +14253,89 @@
         ]
       }
     },
+    "/api/settings/exchange-rates": {
+      "get": {
+        "tags": [
+          "Settings"
+        ],
+        "summary": "List the stored exchange rates of a currency",
+        "description": "Administrators only. Returns the rates of one currency in units per euro, newest first: every rate synced from the ECB in the last 30 days and every rate an administrator entered by hand, whatever its date. A date with both shows the hand-entered rate, which wins, with the synced one beside it.",
+        "operationId": "GetExchangeRateEntries",
+        "parameters": [
+          {
+            "name": "currency",
+            "in": "query",
+            "description": "The currency, such as usd. The euro has no rate of its own.",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Currency"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The rates, newest first.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ExchangeRateEntryResponse"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Only administrators can see the stored rates.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [
+              "Admin"
+            ]
+          }
+        ]
+      }
+    },
     "/api/settings/exchange-rates/sync": {
       "post": {
         "tags": [
@@ -14294,6 +14377,197 @@
           },
           "403": {
             "description": "Only administrators can sync rates.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [
+              "Admin"
+            ]
+          }
+        ]
+      }
+    },
+    "/api/settings/exchange-rates/{currency}/{date}": {
+      "delete": {
+        "tags": [
+          "Settings"
+        ],
+        "summary": "Delete an exchange rate entered by hand",
+        "description": "Administrators only. Removes the rate entered by hand for a currency and date, so the synced ECB rate of that date, or else the newest stored rate before it, applies again. The rows that depended on it are valued again in the same way as when the rate was entered; when one of them would be left without a rate nothing is deleted. Synced rates cannot be deleted.",
+        "operationId": "DeleteExchangeRate",
+        "parameters": [
+          {
+            "name": "currency",
+            "in": "path",
+            "description": "The currency, such as usd.",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Currency"
+            }
+          },
+          {
+            "name": "date",
+            "in": "path",
+            "description": "The date of the rate, as yyyy-MM-dd.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Deleted."
+          },
+          "400": {
+            "description": "A revalued row would have no exchange rate.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Only administrators can delete rates.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No rate was entered by hand for that currency and date.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [
+              "Admin"
+            ]
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "Settings"
+        ],
+        "summary": "Enter an exchange rate by hand",
+        "description": "Administrators only. Stores the rate of a currency for one date, in units per euro, replacing one entered for the same date before. A rate entered by hand wins over the synced ECB rate of the same date and, like any rate, applies until the next stored rate of that currency. In the same database transaction every transaction and investment entry dated from that date up to the day before the next stored rate, and not after today, whose reporting value depends on the currency is valued again; when one of them cannot be valued nothing is saved.",
+        "operationId": "SetExchangeRate",
+        "parameters": [
+          {
+            "name": "currency",
+            "in": "path",
+            "description": "The currency, such as usd. Not the euro.",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Currency"
+            }
+          },
+          {
+            "name": "date",
+            "in": "path",
+            "description": "The date the rate is for, as yyyy-MM-dd. Not in the future.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetExchangeRateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "The stored rate, with the synced rate of the same date when there is one.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExchangeRateEntryResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid rate, currency or date, or a revalued row has no exchange rate.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Only administrators can enter rates.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -24928,7 +25202,10 @@
           "email.taken",
           "email.tokenInvalid",
           "enum.invalid",
+          "exchangeRate.futureDate",
+          "exchangeRate.notPositive",
           "exchangeRate.unavailable",
+          "exchangeRate.unsupportedCurrency",
           "export.tooManyRows",
           "feature.disabled",
           "goal.notManual",
@@ -25031,6 +25308,38 @@
         "type": "string",
         "description": "Stable machine-readable reason for a failure. Translate it on the client; the reason text is an English fallback."
       },
+      "ExchangeRateEntryResponse": {
+        "required": [
+          "date",
+          "currency",
+          "rate",
+          "source",
+          "syncedRate"
+        ],
+        "type": "object",
+        "properties": {
+          "date": {
+            "$ref": "#/components/schemas/DateOnly"
+          },
+          "currency": {
+            "$ref": "#/components/schemas/Currency"
+          },
+          "rate": {
+            "type": "string",
+            "format": "decimal"
+          },
+          "source": {
+            "$ref": "#/components/schemas/ExchangeRateSource"
+          },
+          "syncedRate": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "decimal"
+          }
+        }
+      },
       "ExchangeRateResponse": {
         "required": [
           "from",
@@ -25053,6 +25362,13 @@
             "$ref": "#/components/schemas/DateOnly"
           }
         }
+      },
+      "ExchangeRateSource": {
+        "enum": [
+          "ecb",
+          "manual"
+        ],
+        "type": "string"
       },
       "ExchangeRateSyncResponse": {
         "required": [
@@ -29745,6 +30061,18 @@
               }
             ],
             "description": "The last day of the warranty as YYYY-MM-DD, or null to clear it."
+          }
+        }
+      },
+      "SetExchangeRateRequest": {
+        "required": [
+          "rate"
+        ],
+        "type": "object",
+        "properties": {
+          "rate": {
+            "type": "string",
+            "format": "decimal"
           }
         }
       },

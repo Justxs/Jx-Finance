@@ -1,7 +1,10 @@
 import {
+  getDeleteExchangeRateMockHandler,
+  getExchangeRateEntriesMockHandler,
   getMarketPriceSettingsMockHandler,
   getPublicSettingsMockHandler,
   getSendTestEmailMockHandler,
+  getSetExchangeRateMockHandler,
   getSettingsMockHandler,
   getSmtpSettingsMockHandler,
   getSyncExchangeRatesMockHandler,
@@ -12,6 +15,7 @@ import {
   getUpdateSmtpSettingsMockHandler,
 } from "@/api/generated/settings/settings.msw";
 import {
+  exchangeRateEntries,
   FIXTURE_TODAY,
   marketPriceSettings,
   marketPriceSync,
@@ -20,7 +24,7 @@ import {
   smtpSettings,
   smtpTestSent,
 } from "@/storybook/fixtures";
-import { readBody, text } from "./http";
+import { currencyCode, readBody, text } from "./http";
 
 export const emailEnabledHandler = getPublicSettingsMockHandler({
   ...publicSettings,
@@ -45,6 +49,15 @@ export const settingsHandlers = [
     ...(await readBody(request)),
   })),
   getSyncExchangeRatesMockHandler({ added: 62, ratesAsOf: FIXTURE_TODAY }),
+  getExchangeRateEntriesMockHandler(exchangeRateEntries),
+  getSetExchangeRateMockHandler(async ({ request, params }) => ({
+    date: String(params.date),
+    currency: currencyCode.parse(params.currency),
+    rate: text((await readBody(request)).rate) ?? "",
+    source: "manual",
+    syncedRate: null,
+  })),
+  getDeleteExchangeRateMockHandler(),
   getSmtpSettingsMockHandler(smtpSettings),
   getUpdateSmtpSettingsMockHandler(async ({ request }) => {
     const body = await readBody(request);

@@ -9,7 +9,6 @@ using JxFinance.Domain.Accounts;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Investments;
 using JxFinance.Domain.Settings;
-using JxFinance.Domain.Transactions;
 using JxFinance.Endpoints.Auth.Interfaces;
 using JxFinance.Endpoints.Investments.Services;
 using JxFinance.Endpoints.Settings.Interfaces;
@@ -32,6 +31,7 @@ public sealed class SettingsService(
     AppDbContext db,
     IInstanceSettingsStore store,
     IExchangeRateService rates,
+    IReportingRevaluation revaluation,
     IEmailDelivery emails,
     IAuthService authService,
     IDataProtectionProvider protection,
@@ -39,9 +39,6 @@ public sealed class SettingsService(
     IClock clock,
     IOptions<AppOptions> options) : ISettingsService
 {
-    private const string LockRevaluedTables =
-        "LOCK TABLE \"Transactions\", \"InvestmentTransactions\" IN SHARE ROW EXCLUSIVE MODE";
-
     public async Task<SettingsResponse> GetAsync(CancellationToken cancellationToken)
     {
         var latest = await rates.GetLatestAsync(cancellationToken);
@@ -246,7 +243,7 @@ public sealed class SettingsService(
 
     private async Task<string?> RevalueAsync(Currency reportingCurrency, CancellationToken cancellationToken)
     {
-        await db.Database.ExecuteSqlRawAsync(LockRevaluedTables, cancellationToken);
+        await revaluation.LockAsync(cancellationToken);
 
         var foreign = db.Transactions
             .IgnoreQueryFilters()
@@ -273,21 +270,7 @@ public sealed class SettingsService(
             await rates.PreloadAsync(dates.Min(), dates.Max(), cancellationToken);
         }
 
-        var error = await RevalueInBatchesAsync<Transaction, TransactionId>(
-            (after, size) => (after is { } last ? foreign.Where(t => t.Id > last) : foreign).OrderBy(t => t.Id).Take(size),
-            t => t.Id,
-            t => (t.Amount, t.Date),
-            (t, value) => t.ReportingAmount = value,
-            reportingCurrency,
-            cancellationToken);
-        error ??= await RevalueInBatchesAsync<InvestmentTransaction, InvestmentTransactionId>(
-            (after, size) => (after is { } last ? foreignEntries.Where(t => t.Id > last) : foreignEntries).OrderBy(t => t.Id).Take(size),
-            t => t.Id,
-            t => (t.CashAmount, t.Date),
-            (t, value) => t.ReportingAmount = value,
-            reportingCurrency,
-            cancellationToken);
-        if (error is not null)
+        if (await revaluation.RevalueAsync(foreign, foreignEntries, reportingCurrency, cancellationToken) is { } error)
         {
             return error;
         }
@@ -311,47 +294,6 @@ public sealed class SettingsService(
             .ExecuteUpdateAsync(s => s.SetProperty(t => t.UnusualCheckedAt, (DateTimeOffset?)null), cancellationToken);
 
         return null;
-    }
-
-    private async Task<string?> RevalueInBatchesAsync<T, TId>(
-        Func<TId?, int, IQueryable<T>> page,
-        Func<T, TId> keyOf,
-        Func<T, (Money Amount, DateOnly Date)> read,
-        Action<T, decimal> write,
-        Currency reportingCurrency,
-        CancellationToken cancellationToken)
-        where T : class
-        where TId : struct
-    {
-        var batchSize = options.Value.RevalueBatchSize;
-        TId? after = null;
-        while (true)
-        {
-            var batch = await page(after, batchSize).ToListAsync(cancellationToken);
-            if (batch.Count == 0)
-            {
-                return null;
-            }
-
-            foreach (var row in batch)
-            {
-                var (amount, date) = read(row);
-                var value = await rates.ConvertAsync(amount, reportingCurrency, date, cancellationToken);
-                if (value.IsFailure)
-                {
-                    return value.ErrorMessage;
-                }
-
-                write(row, value.Value);
-            }
-
-            after = keyOf(batch[^1]);
-            await db.SaveChangesAsync(cancellationToken);
-            foreach (var row in batch)
-            {
-                db.Entry(row).State = EntityState.Detached;
-            }
-        }
     }
 
     private SettingsResponse ToResponse(InstanceSettingsSnapshot settings, DateOnly? ratesAsOf) => new(

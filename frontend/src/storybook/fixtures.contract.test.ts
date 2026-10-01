@@ -321,6 +321,7 @@ const contracts: Record<string, Contract> = {
   euroCoin: { schema: schemas.SecuritiesResponseItem },
   priceSymbolCandidates: { schema: schemas.FindPriceSymbolResponse },
   priceImportResult: { schema: schemas.ImportSecurityPricesResponse },
+  exchangeRateEntries: { schema: schemas.ExchangeRateEntriesResponse },
   marketPriceSettings: { schema: schemas.MarketPriceSettingsResponse },
   marketPriceSettingsOff: { schema: schemas.MarketPriceSettingsResponse },
   marketPriceSettingsWithFailures: { schema: schemas.MarketPriceSettingsResponse },

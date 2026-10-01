@@ -47,6 +47,7 @@ import {
   getSubscriptionCandidatesMockHandler,
 } from "@/api/generated/recurring-bills/recurring-bills.msw";
 import { getReportSummaryMockHandler } from "@/api/generated/reports/reports.msw";
+import { getExchangeRateEntriesMockHandler } from "@/api/generated/settings/settings.msw";
 import { getSetupStatusMockHandler } from "@/api/generated/setup/setup.msw";
 import { getTagsMockHandler } from "@/api/generated/tags/tags.msw";
 import { getTransactionGroupsMockHandler } from "@/api/generated/transaction-groups/transaction-groups.msw";
@@ -201,6 +202,7 @@ export const emptyHandlers: RequestHandler[] = [
   getTransactionGroupsMockHandler([]),
   getTransfersMockHandler(emptyPage),
   getConversionsMockHandler(emptyPage),
+  getExchangeRateEntriesMockHandler([]),
   getDashboardSummaryMockHandler(emptyDashboardSummary),
   getMonthlyTrendMockHandler({ items: [] }),
   getCategoryBreakdownMockHandler(emptyCategoryBreakdown),

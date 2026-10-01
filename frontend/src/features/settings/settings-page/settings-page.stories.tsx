@@ -65,3 +65,11 @@ export const ReportingCurrencyWarning: Story = {
     await expect(canvas.getByText(/revalues every transaction/)).toBeInTheDocument();
   },
 };
+
+export const CurrenciesWithStoredRates: Story = {
+  parameters: { route: "/settings?section=currencies" },
+  play: async ({ canvas }) => {
+    await expect(await canvas.findByRole("region", { name: "USD rates" })).toBeInTheDocument();
+    await expect(canvas.getByRole("button", { name: "Enter rate" })).toBeEnabled();
+  },
+};

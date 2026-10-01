@@ -47,7 +47,7 @@ public sealed class ExchangeRateService(
         }
 
         var table = await LoadAsync(target, cancellationToken);
-        if (!IsFresh(table, target) && await FetchAsync(target.AddDays(-FetchWindowDays), target, false, cancellationToken) > 0)
+        if (!table.IsSyncedFreshOn(target) && await FetchAsync(target.AddDays(-FetchWindowDays), target, false, cancellationToken) > 0)
         {
             table = await LoadAsync(target, cancellationToken);
         }
@@ -58,12 +58,18 @@ public sealed class ExchangeRateService(
 
     public async Task<RateHistory> GetHistoryAsync(DateOnly from, DateOnly to, CancellationToken cancellationToken)
     {
-        var rates = await db.ExchangeRates
+        var syncedAnchor = await db.ExchangeRates.Where(r => r.Date <= from).MaxAsync(r => (DateOnly?)r.Date, cancellationToken);
+        var manualAnchor = await db.ManualExchangeRates.Where(r => r.Date <= from).MaxAsync(r => (DateOnly?)r.Date, cancellationToken);
+        var oldest = (new[] { syncedAnchor, manualAnchor }.Max() ?? from).AddDays(-RateTable.MaxGapDays);
+        var synced = await db.ExchangeRates
             .AsNoTracking()
-            .Where(r => r.Date <= to
-                && r.Date >= (db.ExchangeRates.Where(x => x.Date <= from).Max(x => (DateOnly?)x.Date) ?? from))
+            .Where(r => r.Date >= oldest && r.Date <= to)
             .ToListAsync(cancellationToken);
-        return new RateHistory(rates);
+        var manual = await db.ManualExchangeRates
+            .AsNoTracking()
+            .Where(r => r.Date >= oldest && r.Date <= to)
+            .ToListAsync(cancellationToken);
+        return new RateHistory(synced, manual);
     }
 
     public Task<Result<decimal>> ToReportingAsync(Money amount, DateOnly date, CancellationToken cancellationToken) =>
@@ -121,6 +127,7 @@ public sealed class ExchangeRateService(
         var start = from > end ? end : from;
         preloaded = await GetHistoryAsync(start, end, cancellationToken);
         preloadedRange = (start, end);
+        tables.Clear();
     }
 
     private async Task<List<DateRange>> UncoveredRangesAsync(
@@ -153,13 +160,7 @@ public sealed class ExchangeRateService(
             return history.OnOrBefore(target);
         }
 
-        var rates = await db.ExchangeRates
-            .AsNoTracking()
-            .Where(r => r.Date == db.ExchangeRates.Where(x => x.Date <= target).Max(x => (DateOnly?)x.Date))
-            .ToListAsync(cancellationToken);
-        return rates.Count == 0
-            ? RateTable.Empty
-            : new RateTable(rates[0].Date, rates.ToDictionary(r => r.Currency, r => r.Rate));
+        return (await GetHistoryAsync(target, target, cancellationToken)).OnOrBefore(target);
     }
 
     private async Task<int> FetchAsync(DateOnly from, DateOnly to, bool force, CancellationToken cancellationToken)

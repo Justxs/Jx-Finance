@@ -72,6 +72,9 @@ public static class ErrorCodes
     public const string CategoryNestingInvalid = "category.nestingInvalid";
     public const string CurrencyDisabled = "currency.disabled";
     public const string ExchangeRateUnavailable = "exchangeRate.unavailable";
+    public const string ExchangeRateNotPositive = "exchangeRate.notPositive";
+    public const string ExchangeRateUnsupportedCurrency = "exchangeRate.unsupportedCurrency";
+    public const string ExchangeRateFutureDate = "exchangeRate.futureDate";
     public const string TransferSameAccount = "transfer.sameAccount";
     public const string TransferReceivedAmountRequired = "transfer.receivedAmountRequired";
     public const string TransferAmountMismatch = "transfer.amountMismatch";
