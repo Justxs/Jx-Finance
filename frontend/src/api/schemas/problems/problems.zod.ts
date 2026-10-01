@@ -88,6 +88,7 @@ export const ProblemDetailsResponse = zod
                 "exchangeRate.unavailable",
                 "export.tooManyRows",
                 "feature.disabled",
+                "goal.notManual",
                 "holding.dependentSales",
                 "holding.oversold",
                 "household.lastOwner",

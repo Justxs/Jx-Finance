@@ -356,6 +356,7 @@ export * from "./updateCsvMappingRequest";
 export * from "./updateDebtPaymentRequest";
 export * from "./updateDebtRequest";
 export * from "./updateDiscordSettingsRequest";
+export * from "./updateGoalProgressRequest";
 export * from "./updateGoalRequest";
 export * from "./updateHouseholdRequest";
 export * from "./updateInvestmentTransactionRequest";

@@ -32,7 +32,7 @@ public sealed class IdempotencyMiddleware(RequestDelegate next)
 
     public async Task InvokeAsync(HttpContext context, AppDbContext db, IClock clock)
     {
-        if (!HttpMethods.IsPost(context.Request.Method)
+        if (!(HttpMethods.IsPost(context.Request.Method) || HttpMethods.IsPatch(context.Request.Method))
             || !context.Request.Headers.TryGetValue(ApiIdempotencyKey.HeaderName, out var header)
             || !Guid.TryParse(context.User.FindFirstValue(AuthClaims.TokenId), out var tokenId))
         {

@@ -4,12 +4,18 @@ Related: feature pages [Sign-in, sessions and lockout](../features/sign-in-and-s
 
 ## Current
 
-Admin-created users; optional 2FA; optional passkeys through ASP.NET Core Identity, each a whole sign-in that never counts toward the lockout; absolute 1/30-day sessions; immediate stamp/deactivation validation; 15-minute lockout after five failed passwords or codes; personal API tokens behind the `ApiTokens` switch, off by default, read-only or read-and-write (at most 90 days), reaching only an allowlist of `GET` routes and, for a read-and-write token, an allowlist of ledger writes (`TokenWritable`), never administration, structure or files; token `POST`s may carry `Idempotency-Key`, remembered for 24 hours; a read-only MCP server in `tools/jx-mcp` for the member's own AI client
+Admin-created users; optional 2FA; optional passkeys through ASP.NET Core Identity, each a whole sign-in that never counts toward the lockout; absolute 1/30-day sessions; immediate stamp/deactivation validation; 15-minute lockout after five failed passwords or codes; personal API tokens behind the `ApiTokens` switch, off by default, read-only or read-and-write (at most 90 days), reaching only an allowlist of `GET` routes and, for a read-and-write token, an allowlist of ledger writes (`TokenWritable`), never administration, structure or files; token `POST`s and `PATCH`es may carry `Idempotency-Key`, remembered for 24 hours; a read-only MCP server in `tools/jx-mcp` for the member's own AI client
 
 ## Log
 
 Newest first. Each entry is a choice between real alternatives: what was chosen, what was rejected, and why.
 
+- **2026-10-01.** A read-and-write token may move a manual goal's progress through `PATCH /api/goals/{id}/progress`, the only goal route on the write allowlist. This narrows the entry below that kept goals browser-only because their update needs the whole goal. Decided while the owner was away, to be reviewed
+  - Rejected: Allowing the full `PUT /api/goals/{id}`; keeping goals browser-only
+  - Why: The progress route touches one amount on one goal the member can already change, like a recorded expense, while the full update lets a leaked token rename, retarget or repoint a goal at another account. Home Assistant moving a savings goal when money is put aside is the use the backlog named
+- **2026-10-01.** `IdempotencyMiddleware` honours `Idempotency-Key` on token `PATCH`es as well as `POST`s. Decided while the owner was away, to be reviewed
+  - Rejected: `POST` only; every method
+  - Why: A goal progress `delta` repeated by a retry would add twice, which is the duplicate the key exists to stop; a `currentAmount` set is idempotent anyway and loses nothing by being replayed. `PUT` and `DELETE` still ignore the header because repeating them changes nothing. The browser's only `PATCH`, marking a notification read, carries no token claim and never reaches the key table
 - **2026-10-01.** Marking a recurring occurrence done (`POST /api/recurring-bills/{id}/skip`) stays off the token write allowlist. Decided while the owner was away, to be reviewed
   - Rejected: Allowing it beside confirm
   - Why: The allowlist is the rows a script records, and this route records none. A leaked token able to call it could move every schedule forward and silence its reminders without a trace in the ledger. Adding it later is one metadata line and one line in `TokenWritableTests`

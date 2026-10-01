@@ -23,7 +23,13 @@ import type {
 } from "@tanstack/react-query";
 import { customFetch } from "../../client";
 import type { ErrorType } from "../../client";
-import type { CreateGoalRequest, GoalResponse, ProblemDetails, UpdateGoalRequest } from "../model";
+import type {
+  CreateGoalRequest,
+  GoalResponse,
+  ProblemDetails,
+  UpdateGoalProgressRequest,
+  UpdateGoalRequest,
+} from "../model";
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
@@ -436,4 +442,111 @@ export const useUpdateGoal = <TError = ErrorType<ProblemDetails>, TContext = unk
   TContext
 > => {
   return useMutation(getUpdateGoalMutationOptions(options), queryClient);
+};
+export const getUpdateGoalProgressUrl = (id: string) => {
+  return `/api/goals/${id}/progress`;
+};
+
+/**
+ * Moves the saved amount of a manual goal without sending the rest of the goal, so a script or an automation can record what it put aside. Send currentAmount to set the amount, or delta to add to it (a negative delta takes money out); exactly one of the two. The result may exceed the target but never fall below zero. A goal funded from an account follows that account and answers goal.notManual. A read-and-write personal API token may call this.
+ * @summary Update a manual goal's progress
+ */
+export const updateGoalProgress = async (
+  id: string,
+  updateGoalProgressRequest: UpdateGoalProgressRequest,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<GoalResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return customFetch<GoalResponse>(getUpdateGoalProgressUrl(id), {
+    ...options,
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(updateGoalProgressRequest),
+  });
+};
+
+export const getUpdateGoalProgressMutationKey = () => ["updateGoalProgress"] as const;
+
+export const getUpdateGoalProgressMutationOptions = <
+  TError = ErrorType<ProblemDetails>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateGoalProgress>>,
+    TError,
+    UpdateGoalProgressMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateGoalProgress>>,
+  TError,
+  UpdateGoalProgressMutationVariables,
+  TContext
+> => {
+  const mutationKey = getUpdateGoalProgressMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateGoalProgress>>,
+    UpdateGoalProgressMutationVariables
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return updateGoalProgress(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateGoalProgressMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateGoalProgress>>
+>;
+export type UpdateGoalProgressMutationBody = UpdateGoalProgressRequest;
+export type UpdateGoalProgressMutationError = ErrorType<ProblemDetails>;
+export type UpdateGoalProgressMutationVariables = { id: string; data: UpdateGoalProgressRequest };
+
+/**
+ * @summary Update a manual goal's progress
+ */
+export const useUpdateGoalProgress = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof updateGoalProgress>>,
+      TError,
+      UpdateGoalProgressMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof updateGoalProgress>>,
+  TError,
+  UpdateGoalProgressMutationVariables,
+  TContext
+> => {
+  return useMutation(getUpdateGoalProgressMutationOptions(options), queryClient);
 };

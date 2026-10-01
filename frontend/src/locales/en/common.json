@@ -2705,6 +2705,9 @@
     "feature": {
       "disabled": "This feature is turned off."
     },
+    "goal": {
+      "notManual": "This goal follows its funding account. To type an amount, edit the goal so progress comes from an amount you type."
+    },
     "holding": {
       "dependentSales": "Later sales depend on this entry.",
       "oversold": "This would sell more than was held on that date."

@@ -99,9 +99,34 @@ export const getUpdateGoalMockHandler = (
     options,
   );
 };
+
+export const getUpdateGoalProgressMockHandler = (
+  overrideResponse?:
+    | GoalResponse
+    | ((
+        info: Parameters<Parameters<typeof http.patch>[1]>[0],
+      ) => Promise<GoalResponse> | GoalResponse),
+  options?: RequestHandlerOptions,
+) => {
+  return http.patch(
+    "*/api/goals/:id/progress",
+    async (info: Parameters<Parameters<typeof http.patch>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : undefined,
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
 export const getGoalsMock = () => [
   getCreateGoalMockHandler(),
   getGoalsMockHandler(),
   getDeleteGoalMockHandler(),
   getUpdateGoalMockHandler(),
+  getUpdateGoalProgressMockHandler(),
 ];

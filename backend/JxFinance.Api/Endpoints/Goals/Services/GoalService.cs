@@ -15,6 +15,7 @@ using JxFinance.Endpoints.Goals.Interfaces;
 using JxFinance.Endpoints.Goals.Mappers;
 using JxFinance.Endpoints.Goals.Shared;
 using JxFinance.Endpoints.Goals.UpdateGoal;
+using JxFinance.Endpoints.Goals.UpdateGoalProgress;
 using JxFinance.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -31,6 +32,14 @@ public sealed class GoalService(
     ICurrentUser currentUser) : IGoalService
 {
     private static readonly DomainError NotFound = EntityLookup.NotFound("Goal not found.");
+
+    private static readonly DomainError NotManual = new(
+        ErrorCodes.GoalNotManual,
+        "This goal follows its funding account; edit it to take progress from a typed amount first.");
+
+    private static readonly DomainError BelowZero = new(
+        ErrorCodes.MoneyNonNegative,
+        "The goal's saved amount cannot fall below zero.");
 
     public async Task<IReadOnlyList<GoalResponse>> GetAllAsync(CancellationToken cancellationToken)
     {
@@ -75,6 +84,36 @@ public sealed class GoalService(
         await db.SaveChangesAsync(cancellationToken);
 
         return await ToResponseAsync(goal, cancellationToken);
+    }
+
+    public async Task<Result<GoalResponse>> UpdateProgressAsync(
+        UpdateGoalProgressRequest request,
+        CancellationToken cancellationToken)
+    {
+        var goalId = new GoalId(request.Id);
+        await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
+        await db.Database.LockAsync(request.Id, cancellationToken);
+        if (await db.Goals.FirstOrDefaultAsync(g => g.Id == goalId, cancellationToken) is not { } goal)
+        {
+            return NotFound;
+        }
+
+        if (goal.Funding != GoalFunding.Manual)
+        {
+            return NotManual;
+        }
+
+        var amount = request.CurrentAmount ?? goal.CurrentAmount.Amount + request.Delta!.Value;
+        if (amount < 0)
+        {
+            return BelowZero;
+        }
+
+        goal.CurrentAmount = new Money(amount, settings.Current.ReportingCurrency);
+        await db.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+
+        return goal.ToResponse(goal.CurrentAmount.Amount);
     }
 
     public Task<Result<Guid>> DeleteAsync(Guid id, CancellationToken cancellationToken)

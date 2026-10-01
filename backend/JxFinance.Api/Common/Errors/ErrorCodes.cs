@@ -81,6 +81,7 @@ public static class ErrorCodes
     public const string TransactionSpreadRefund = "transaction.spreadRefund";
     public const string TransactionLocationInvalid = "transaction.locationInvalid";
     public const string TransactionGroupMemberTaken = "transactionGroup.memberTaken";
+    public const string GoalNotManual = "goal.notManual";
     public const string RecurringBillInactive = "recurringBill.inactive";
     public const string RecurringBillDebtShape = "recurringBill.debtShape";
     public const string HoldingOversold = "holding.oversold";

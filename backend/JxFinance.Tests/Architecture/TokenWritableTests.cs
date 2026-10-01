@@ -12,6 +12,7 @@ public sealed class TokenWritableTests
     [
         "DELETE /api/transactions/{id}",
         "DELETE /api/transfers/{id}",
+        "PATCH /api/goals/{id}/progress",
         "POST /api/recurring-bills/{id}/confirm",
         "POST /api/transactions",
         "POST /api/transactions/bulk-category",

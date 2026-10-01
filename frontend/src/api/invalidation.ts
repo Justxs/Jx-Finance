@@ -224,7 +224,11 @@ const rules: readonly Rule[] = [
     ],
   },
   {
-    after: [api.getCreateGoalMutationKey, api.getUpdateGoalMutationKey],
+    after: [
+      api.getCreateGoalMutationKey,
+      api.getUpdateGoalMutationKey,
+      api.getUpdateGoalProgressMutationKey,
+    ],
     deleted: [api.getDeleteGoalMutationKey],
     refresh: [api.getGoalsQueryKey],
   },

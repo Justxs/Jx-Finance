@@ -7678,6 +7678,103 @@
         ]
       }
     },
+    "/api/goals/{id}/progress": {
+      "patch": {
+        "tags": [
+          "Goals"
+        ],
+        "summary": "Update a manual goal's progress",
+        "description": "Moves the saved amount of a manual goal without sending the rest of the goal, so a script or an automation can record what it put aside. Send currentAmount to set the amount, or delta to add to it (a negative delta takes money out); exactly one of the two. The result may exceed the target but never fall below zero. A goal funded from an account follows that account and answers goal.notManual. A read-and-write personal API token may call this.",
+        "operationId": "UpdateGoalProgress",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The goal id. Takes precedence over the id in the body.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "example": "00000000-0000-0000-0000-000000000000"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateGoalProgressRequest"
+              },
+              "example": {
+                "currentAmount": null,
+                "delta": "50.00"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "The updated goal.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GoalResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed. Also goal.notManual for a goal funded from an account, and money.nonNegative when a delta would take the amount below zero.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such goal is visible to the signed-in user.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          },
+          {
+            "PersonalApiToken": [ ]
+          }
+        ]
+      }
+    },
     "/api/households": {
       "post": {
         "tags": [
@@ -24834,6 +24931,7 @@
           "exchangeRate.unavailable",
           "export.tooManyRows",
           "feature.disabled",
+          "goal.notManual",
           "holding.dependentSales",
           "holding.oversold",
           "household.lastOwner",
@@ -32068,6 +32166,36 @@
           "enabled": true
         }
       },
+      "UpdateGoalProgressRequest": {
+        "required": [
+          "currentAmount",
+          "delta"
+        ],
+        "type": "object",
+        "properties": {
+          "currentAmount": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The new amount saved so far, zero or more. Leave empty when sending delta.",
+            "format": "decimal"
+          },
+          "delta": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "An amount to add to the saved amount, negative to take some out. Leave empty when sending currentAmount.",
+            "format": "decimal",
+            "example": "50.00"
+          }
+        },
+        "example": {
+          "currentAmount": null,
+          "delta": "50.00"
+        }
+      },
       "UpdateGoalRequest": {
         "required": [
           "name",
@@ -33207,7 +33335,7 @@
       },
       "PersonalApiToken": {
         "type": "http",
-        "description": "Personal API token (jxp_...) created in Settings > Personal > Security. Accepted only on the operations that list it, while the ApiTokens feature is on: every token on the GET operations, a read-and-write token also on the writes. Anything else answers 403 token.notAllowed. A POST may carry Idempotency-Key (1 to 64 visible characters) so a retry within 24 hours returns the first answer. At most 60 requests a minute per token.",
+        "description": "Personal API token (jxp_...) created in Settings > Personal > Security. Accepted only on the operations that list it, while the ApiTokens feature is on: every token on the GET operations, a read-and-write token also on the writes. Anything else answers 403 token.notAllowed. A POST or PATCH may carry Idempotency-Key (1 to 64 visible characters) so a retry within 24 hours returns the first answer. At most 60 requests a minute per token.",
         "scheme": "bearer"
       }
     }

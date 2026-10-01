@@ -4,7 +4,7 @@ Back to the [feature walkthrough](README.md). See also [decisions](../decisions/
 
 Backend `Auth/Tokens` (`GetPersonalApiTokens`, `CreatePersonalApiToken`, `RevokePersonalApiToken`, group `ApiTokensGroup`), `Auth/Services/PersonalApiTokenService.cs`, `Infrastructure/Auth` (`PersonalApiToken`, `TokenAccess`, `ApiIdempotencyKey`, `PersonalApiTokenFormat`, `PersonalApiTokenAuthenticationHandler`, the policy scheme in `JwtCookieAuthentication`), `Common/Middleware` (`PersonalApiTokenGateMiddleware`, `PersonalApiTokenRateLimit`, `IdempotencyMiddleware`), `Common/TokenReadable.cs` and `Common/TokenWritable.cs`. Frontend `profile/api-tokens-section` and `transactions/source-mark`. The read-only MCP server is `tools/jx-mcp`. Feature switch `ApiTokens`, off by default.
 
-A personal API token lets a script, a spreadsheet, Home Assistant or an iOS Shortcut on the member's own devices read what the member reads in the browser. A token created with read-and-write access can also record, change and delete transactions and transfers, set their category or tags in bulk and confirm recurring entries. Nothing administrative, personal to the account, structural (categories, rules, budgets) or stored as a file can be reached with any token, even when the token belongs to an administrator.
+A personal API token lets a script, a spreadsheet, Home Assistant or an iOS Shortcut on the member's own devices read what the member reads in the browser. A token created with read-and-write access can also record, change and delete transactions and transfers, set their category or tags in bulk, confirm recurring entries and move the saved amount of a manual goal. Nothing administrative, personal to the account, structural (categories, rules, budgets) or stored as a file can be reached with any token, even when the token belongs to an administrator.
 
 ## Creating a token
 
@@ -129,10 +129,11 @@ A token created with Read and write access, since 2026-10-01, also reaches the r
 | `POST /api/transactions/bulk-tags` | replaces the tags of many transactions with the ones sent |
 | `POST /api/transfers`, `PUT /api/transfers/{id}`, `DELETE /api/transfers/{id}` | records, changes and deletes a transfer |
 | `POST /api/recurring-bills/{id}/confirm` | confirms the due occurrence of a recurring entry |
+| `PATCH /api/goals/{id}/progress` | sets (`currentAmount`) or adds to (`delta`) the saved amount of a manual goal, since 2026-10-01; see [Goals](goals.md#moving-progress-without-the-whole-goal) |
 
 Marking a recurring occurrence done without recording it (`POST /api/recurring-bills/{id}/skip`, since 2026-10-01) is not on the list, because it records no row and would let a token move schedules forward and silence their reminders.
 
-Anything else answers 403 `token.notAllowed`, with "API tokens cannot use this route; it needs a browser session." in `reason`; a write with a read-only token answers the same code with "This token can only read; create a read-and-write token to record entries." Imports, attachments, receipts, the Trash, settings, users, households, backups, categories, categorization rules, budgets, goals and, since 2026-10-01, [transaction groups](transaction-groups.md) stay browser-only, so a leaked token can add noise to the ledger but cannot reshape the books or read files. The request bodies, validation, visibility and feature switches are those of the browser: under `X-Active-Household` a write that names an account outside that household answers `reference.notFound`.
+Anything else answers 403 `token.notAllowed`, with "API tokens cannot use this route; it needs a browser session." in `reason`; a write with a read-only token answers the same code with "This token can only read; create a read-and-write token to record entries." Imports, attachments, receipts, the Trash, settings, users, households, backups, categories, categorization rules, budgets, goals apart from their progress and, since 2026-10-01, [transaction groups](transaction-groups.md) stay browser-only, so a leaked token can add noise to the ledger but cannot reshape the books or read files. The request bodies, validation, visibility and feature switches are those of the browser: under `X-Active-Household` a write that names an account outside that household answers `reference.notFound`.
 
 Three consequences follow from sharing the browser's code:
 
@@ -142,7 +143,7 @@ Three consequences follow from sharing the browser's code:
 
 ### Retries and Idempotency-Key
 
-A client may send `Idempotency-Key: <1 to 64 visible ASCII characters>` with a `POST`. The first request with a key runs as usual; sending the same request again with the same key within 24 hours answers the first answer (status, body and `Location`) with `Idempotency-Replayed: true` and records nothing. A Shortcut that retries on a bad connection therefore never books a coffee twice. Use a new key for every new entry, such as a UUID or the Shortcut's current date with seconds.
+A client may send `Idempotency-Key: <1 to 64 visible ASCII characters>` with a `POST` or, since 2026-10-01, a `PATCH`. The first request with a key runs as usual; sending the same request again with the same key within 24 hours answers the first answer (status, body and `Location`) with `Idempotency-Replayed: true` and records nothing. A Shortcut that retries on a bad connection therefore never books a coffee twice. Use a new key for every new entry, such as a UUID or the Shortcut's current date with seconds.
 
 | Situation | Answer |
 | --- | --- |
@@ -153,11 +154,11 @@ A client may send `Idempotency-Key: <1 to 64 visible ASCII characters>` with a `
 | A key longer than 64 characters | 400 `text.tooLong` |
 | An empty key, or one with spaces or characters outside visible ASCII | 400 `text.invalidFormat` |
 
-Keys belong to one token: two tokens may use the same key. `PUT` and `DELETE` ignore the header because repeating them changes nothing, and the browser never sends it. The 60 requests a minute are shared by reads and writes.
+Keys belong to one token: two tokens may use the same key. A `PATCH` honours it because a goal's `delta` repeated by a retry would add twice. `PUT` and `DELETE` ignore the header because repeating them changes nothing, and the browser never sends it. The 60 requests a minute are shared by reads and writes.
 
 ### Marks in the ledger and the activity log
 
-A transaction created through a token has the source `api`, and its edit dialog says "Added through the API" under the title. Nothing shows for a hand-entered or imported row. A later bank import matches an API-created row like a hand-entered one, within three days and the same amount, and links it instead of importing it again; the link turns its source into `imported`, as for a typed row. On a shared account the household activity log names the token after the member, for example "Justas, through Home Assistant, added Maxima, 12.40 EUR", and a bulk categorization through a token names it on its summarising row too.
+A transaction created through a token has the source `api`, and its edit dialog says "Added through the API" under the title. Nothing shows for a hand-entered or imported row. A later bank import matches an API-created row like a hand-entered one, within three days and the same amount, and links it instead of importing it again; the link turns its source into `imported`, as for a typed row. On a shared account the household activity log names the token after the member, for example "Justas, through Home Assistant, added Maxima, 12.40 EUR", and a bulk categorization through a token names it on its summarising row too. A token moving a shared goal's progress is named the same way on the goal's update.
 
 ### Write examples
 
@@ -223,6 +224,32 @@ rest_command:
 
 An automation then calls `rest_command.jx_expense` with `amount`, `description` and a `key` such as `"{{ now().isoformat() }}"`, fixed once per event so that Home Assistant's own retry reuses it.
 
+#### Moving a savings goal
+
+`PATCH /api/goals/{id}/progress` moves a manual goal; `GET /api/goals` gives the ids. Send `delta` to add what was put aside, or `currentAmount` to set the total. A delta is not idempotent by itself, so send an `Idempotency-Key` with it.
+
+curl, adding 50 EUR:
+
+```sh
+curl --cacert jx-root.crt -X PATCH "https://finance.home.lan/api/goals/<goal id>/progress"   -H "Authorization: Bearer $JX_TOKEN"   -H "Content-Type: application/json"   -H "Idempotency-Key: $(uuidgen)"   -d '{"delta":"50.00"}'
+```
+
+Home Assistant, with the same `secrets.yaml` entry as above:
+
+```yaml
+rest_command:
+  jx_goal_add:
+    url: "https://finance.home.lan/api/goals/<goal id>/progress"
+    method: PATCH
+    headers:
+      Authorization: !secret jx_token
+      Idempotency-Key: "{{ key }}"
+    content_type: "application/json"
+    payload: '{"delta": "{{ amount }}"}'
+```
+
+An automation calls `rest_command.jx_goal_add` with `amount` (a dot as the decimal separator, negative to take money out) and a `key` fixed once per event. A goal funded from an account answers 400 `goal.notManual`, and a delta that would take the goal below zero `money.nonNegative`.
+
 ## What ends a token
 
 | Event | Effect |
@@ -270,7 +297,7 @@ None of the three is reachable with a token. The request record prints its passw
 
 ## MCP server for an AI client
 
-`tools/jx-mcp` is a small [Model Context Protocol](https://modelcontextprotocol.io) server that runs on the member's own computer and lets an AI client the member chooses, such as Claude Desktop, read the ledger through a token. It speaks MCP over stdio, reads `JX_URL` and `JX_TOKEN` from its environment and only ever sends `GET` requests, so even a read-and-write token given to it cannot write; give it a read-only token anyway. Its seven tools map one to one to readable routes, with descriptions taken from the contract's summaries: `list_accounts` (`GET /api/accounts`), `list_transactions` (`GET /api/transactions` with the ledger filters and paging), `get_report_summary` (`GET /api/reports/summary`), `list_budgets`, `list_goals`, `get_net_worth` (`GET /api/networth`) and `list_recurring_entries` (`GET /api/recurring-bills`). A problem answer from the installation reaches the client as a tool error with its code.
+`tools/jx-mcp` is a small [Model Context Protocol](https://modelcontextprotocol.io) server that runs on the member's own computer and lets an AI client the member chooses, such as Claude Desktop, read the ledger through a token. It speaks MCP over stdio, reads `JX_URL` and `JX_TOKEN` from its environment and only ever sends `GET` requests, so even a read-and-write token given to it cannot write, the goal progress route included; give it a read-only token anyway. Its seven tools map one to one to readable routes, with descriptions taken from the contract's summaries: `list_accounts` (`GET /api/accounts`), `list_transactions` (`GET /api/transactions` with the ledger filters and paging), `get_report_summary` (`GET /api/reports/summary`), `list_budgets`, `list_goals`, `get_net_worth` (`GET /api/networth`) and `list_recurring_entries` (`GET /api/recurring-bills`). A problem answer from the installation reaches the client as a tool error with its code.
 
 The installation still sends nothing anywhere. Whatever the AI client does with the answers is the member's choice: a client that runs a hosted model sends the ledger data it reads to that model's provider. Revoke the token when you stop using the server.
 
@@ -307,4 +334,4 @@ Then register `node <path to the checkout>/tools/jx-mcp/dist/index.js` with the 
 
 `PersonalApiTokenTests` (integration, PostgreSQL) cover the secret shown once and never listed, the password that counts toward the lockout, the name and expiry rules, the eleventh token and an expired one that does not count, revocation and another member's token, the same transactions with and without `X-Active-Household` as the owner's cookie and the CSV with `activeHousehold`, writes and private routes refused for an administrator's token, every documented operation checked against the readable list, expired, unknown, tampered and malformed tokens, deactivation, an administrator reset against an own password change, `--recover-admin`, the switch off and on, the 61st request, `LastUsedAt` at most once a minute, and a token sent beside a cookie. `TokenReadableTests` pins the readable routes and `TokenWritableTests` the writable ones, with no write route under a private prefix, categories, budgets or households; `PersonalApiTokenGateTests` covers the gate's decision by method, access and marks, and `IdempotencyRequestHashTests` the request hash. `PersonalApiTokenFormatTests` pins the parsing, `SecretRedactionTests` the two records, `RetentionTests` the clean-up queries and `BackupEndpointTests` that the token table travels and the retry keys do not.
 
-`PersonalApiTokenWriteTests` (integration) cover a read token refused a write, a read-and-write token creating, editing, categorizing, tagging and deleting a transaction and a transfer, the refusal of categories, attachment upload, import confirm, budgets and account deletion, a write under `X-Active-Household` naming an account outside it, the token's name on the activity events of a shared account including the bulk row, a bank import linking an API-created row, a recurring confirmation that pays a debt, the 90-day rule and the deletion of write tokens by deactivation, a password reset and `--recover-admin`. `IdempotencyKeyTests` cover a replayed retry leaving one row, a reused key with another body or household, a running claim answering `conflict.busy` and an abandoned one taken over, a server error that is not remembered, keys per token, malformed keys and a browser request ignoring the header, and the retention of day-old keys. The stories of `ApiTokensSection` show the list with an expired and a read-and-write token, the empty list, loading, a failed load, a created token, a read-and-write token whose expiry shrinks to 90 days, the limit and a revocation; `SourceMark` and the activity log have stories of their own.
+`PersonalApiTokenWriteTests` (integration) cover a read token refused a write, a read-and-write token creating, editing, categorizing, tagging and deleting a transaction and a transfer, the refusal of categories, attachment upload, import confirm, budgets and account deletion, a write under `X-Active-Household` naming an account outside it, the token's name on the activity events of a shared account including the bulk row, a bank import linking an API-created row, a recurring confirmation that pays a debt, the 90-day rule and the deletion of write tokens by deactivation, a password reset and `--recover-admin`. `GoalProgressTests` cover a partner's write token moving a shared goal with the token named in the activity log, a read-only token refused, and a retried `PATCH` delta added once. `IdempotencyKeyTests` cover a replayed retry leaving one row, a reused key with another body or household, a running claim answering `conflict.busy` and an abandoned one taken over, a server error that is not remembered, keys per token, malformed keys and a browser request ignoring the header, and the retention of day-old keys. The stories of `ApiTokensSection` show the list with an expired and a read-and-write token, the empty list, loading, a failed load, a created token, a read-and-write token whose expiry shrinks to 90 days, the limit and a revocation; `SourceMark` and the activity log have stories of their own.

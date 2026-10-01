@@ -155,3 +155,43 @@ export const UpdateGoalResponse = zod.object({
   scope: zod.enum(["personal", "shared"]),
   householdId: zod.uuid().nullable(),
 });
+
+/**
+ * Moves the saved amount of a manual goal without sending the rest of the goal, so a script or an automation can record what it put aside. Send currentAmount to set the amount, or delta to add to it (a negative delta takes money out); exactly one of the two. The result may exceed the target but never fall below zero. A goal funded from an account follows that account and answers goal.notManual. A read-and-write personal API token may call this.
+ * @summary Update a manual goal's progress
+ */
+export const updateGoalProgressBodyCurrentAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const updateGoalProgressBodyDeltaRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+
+export const UpdateGoalProgressBody = zod.object({
+  currentAmount: zod
+    .stringFormat("decimal", updateGoalProgressBodyCurrentAmountRegExp)
+    .nullable()
+    .describe("The new amount saved so far, zero or more. Leave empty when sending delta."),
+  delta: zod
+    .stringFormat("decimal", updateGoalProgressBodyDeltaRegExp)
+    .nullable()
+    .describe(
+      "An amount to add to the saved amount, negative to take some out. Leave empty when sending currentAmount.",
+    ),
+});
+
+export const updateGoalProgressResponseTargetAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const updateGoalProgressResponseCurrentAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const updateGoalProgressResponseProgressAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+
+export const UpdateGoalProgressResponse = zod.object({
+  id: zod.uuid(),
+  name: zod.string(),
+  targetAmount: zod.stringFormat("decimal", updateGoalProgressResponseTargetAmountRegExp),
+  currentAmount: zod.stringFormat("decimal", updateGoalProgressResponseCurrentAmountRegExp),
+  targetDate: zod.union([zod.null(), zod.iso.date()]),
+  funding: zod.enum(["manual", "account"]),
+  fundingAccountId: zod.uuid().nullable(),
+  fundingSharePercent: zod.int(),
+  progressAmount: zod
+    .stringFormat("decimal", updateGoalProgressResponseProgressAmountRegExp)
+    .nullable(),
+  scope: zod.enum(["personal", "shared"]),
+  householdId: zod.uuid().nullable(),
+});

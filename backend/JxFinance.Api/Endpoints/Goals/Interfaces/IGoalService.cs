@@ -2,6 +2,7 @@ using JxFinance.Domain.Common;
 using JxFinance.Endpoints.Goals.CreateGoal;
 using JxFinance.Endpoints.Goals.Shared;
 using JxFinance.Endpoints.Goals.UpdateGoal;
+using JxFinance.Endpoints.Goals.UpdateGoalProgress;
 
 namespace JxFinance.Endpoints.Goals.Interfaces;
 
@@ -12,6 +13,8 @@ public interface IGoalService
     Task<Result<GoalResponse>> CreateAsync(CreateGoalRequest request, CancellationToken cancellationToken);
 
     Task<Result<GoalResponse>> UpdateAsync(UpdateGoalRequest request, CancellationToken cancellationToken);
+
+    Task<Result<GoalResponse>> UpdateProgressAsync(UpdateGoalProgressRequest request, CancellationToken cancellationToken);
 
     Task<Result<Guid>> DeleteAsync(Guid id, CancellationToken cancellationToken);
 }

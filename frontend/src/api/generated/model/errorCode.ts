@@ -63,6 +63,7 @@ export const ErrorCode = {
   exchangeRateunavailable: "exchangeRate.unavailable",
   exporttooManyRows: "export.tooManyRows",
   featuredisabled: "feature.disabled",
+  goalnotManual: "goal.notManual",
   holdingdependentSales: "holding.dependentSales",
   holdingoversold: "holding.oversold",
   householdlastOwner: "household.lastOwner",

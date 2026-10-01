@@ -46,7 +46,7 @@ public static class TokenSecurity
             Description = "Personal API token (jxp_...) created in Settings > Personal > Security. "
                 + "Accepted only on the operations that list it, while the ApiTokens feature is on: every token on the GET operations, "
                 + "a read-and-write token also on the writes. Anything else answers 403 token.notAllowed. "
-                + "A POST may carry Idempotency-Key (1 to 64 visible characters) so a retry within 24 hours returns the first answer. "
+                + "A POST or PATCH may carry Idempotency-Key (1 to 64 visible characters) so a retry within 24 hours returns the first answer. "
                 + "At most 60 requests a minute per token.",
         };
 
