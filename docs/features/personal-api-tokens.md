@@ -111,7 +111,7 @@ A token reaches only `GET` routes of the groups that opt in with `ApiGroup(…, 
 | Investments | the portfolio, securities and their prices, investment transactions, the value history, the tax summary with its CSV and, since 2026-10-01, your target allocation; not the broker connections, which describe an outside account |
 | Recurring entries | the list, one entry and the subscription suggestions |
 | Currencies | the currency list and exchange rates |
-| Households | the list, one household and its activity log, and since 2026-09-29 its settle-up balances, split expenses and payments |
+| Households | the list, one household and its activity log, and since 2026-09-29 its settle-up balances, split expenses and payments; since 2026-10-01 your people outside the household with their balances and history |
 | Diagnostics | `GET /api/ping` |
 
 Everything else answers 403 `token.notAllowed`: every `POST`, `PUT`, `PATCH` and `DELETE` outside the [writable list](#writing-with-a-token), and every write at all for a read-only token; the whole of Auth (the profile, sessions, passkeys, two-factor, the token list itself), Users, Settings, Backups (a backup download holds every table), Notifications, Trash, Imports, Attachments (the stored files), Receipts (which starts work on the server), Month-end close and Categorization rules; anonymous routes such as sign-in; `/health`, the OpenAPI document; and any path that matches no route. `TokenReadableTests` holds the exact list of readable routes, so a new `GET` in a readable group fails that test until someone decides it belongs there.

@@ -33,6 +33,9 @@ public sealed class TrashRestorersTests
     [InlineData(TrashKind.SharedExpense, Feature.Households)]
     [InlineData(TrashKind.Settlement, Feature.Households)]
     [InlineData(TrashKind.TransactionGroup, null)]
+    [InlineData(TrashKind.Contact, Feature.Households)]
+    [InlineData(TrashKind.ContactSplit, Feature.Households)]
+    [InlineData(TrashKind.ContactPayment, Feature.Households)]
     public void Each_kind_belongs_to_its_feature(TrashKind kind, Feature? feature) =>
         Assert.Equal(feature, TrashRestorers.FeatureOf(kind));
 

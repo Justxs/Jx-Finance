@@ -28,6 +28,7 @@ public sealed class TokenWritableTests
         ApiRoutes.CategoriesPath,
         ApiRoutes.BudgetsPath,
         ApiRoutes.HouseholdsPath,
+        ApiRoutes.ContactsPath,
         ApiRoutes.TransactionGroupsPath,
     ];
 

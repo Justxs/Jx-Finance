@@ -30,4 +30,7 @@ export const TrashKind = {
   sharedExpense: "sharedExpense",
   settlement: "settlement",
   transactionGroup: "transactionGroup",
+  contact: "contact",
+  contactSplit: "contactSplit",
+  contactPayment: "contactPayment",
 } as const;

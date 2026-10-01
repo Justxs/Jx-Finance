@@ -275,6 +275,21 @@ const rules: readonly Rule[] = [
   },
   {
     after: [
+      api.getCreateContactMutationKey,
+      api.getUpdateContactMutationKey,
+      api.getCreateContactSplitMutationKey,
+      api.getUpdateContactSplitMutationKey,
+    ],
+    deleted: [api.getDeleteContactMutationKey, api.getDeleteContactSplitMutationKey],
+    refresh: [api.getContactsQueryKey, api.getTransactionsQueryKey, api.getLedgerQueryKey],
+  },
+  {
+    after: [api.getCreateContactPaymentMutationKey],
+    deleted: [api.getDeleteContactPaymentMutationKey],
+    refresh: [api.getContactsQueryKey],
+  },
+  {
+    after: [
       api.getCreateAssetMutationKey,
       api.getUpdateAssetMutationKey,
       api.getSetAssetValuationMutationKey,

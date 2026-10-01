@@ -30,6 +30,9 @@ internal static class Retention
         TrashKind.SharedExpense,
         TrashKind.Settlement,
         TrashKind.TransactionGroup,
+        TrashKind.Contact,
+        TrashKind.ContactSplit,
+        TrashKind.ContactPayment,
     ];
 
     internal static IReadOnlyList<TrashKind> KeptKinds { get; } =
@@ -112,6 +115,15 @@ internal static class Retention
         purged += await PurgeAsync(Expired(db.PayeeNames, cutoff), ct);
         purged += await PurgeAsync(Expired(db.SharedExpenses, cutoff), ct);
         purged += await PurgeAsync(Expired(db.Settlements, cutoff), ct);
+        purged += await PurgeAsync(Expired(db.ContactPayments, cutoff), ct);
+        purged += await PurgeAsync(Expired(db.ContactSplits, cutoff), ct);
+        var contacts = Expired(db.Contacts, cutoff);
+        purged += await PurgeAsync(
+            db.ContactSplits.IgnoreQueryFilters().Where(s => db.ContactSplitShares
+                .Where(share => share.ContactSplitId == s.Id)
+                .All(share => contacts.Any(c => c.Id == share.ContactId))),
+            ct);
+        purged += await PurgeAsync(contacts, ct);
         return purged;
     }
 

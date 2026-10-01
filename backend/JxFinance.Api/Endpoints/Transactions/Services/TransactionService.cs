@@ -17,6 +17,7 @@ using JxFinance.Domain.Settings;
 using JxFinance.Domain.Tags;
 using JxFinance.Domain.Transactions;
 using JxFinance.Domain.Trash;
+using JxFinance.Endpoints.Contacts.Services;
 using JxFinance.Endpoints.Households.Shared;
 using JxFinance.Endpoints.Transactions.BulkCategorizeTransactions;
 using JxFinance.Endpoints.Transactions.BulkDeleteTransactions;
@@ -744,6 +745,9 @@ public sealed class TransactionService(
         var debtPayments = await DebtPaymentsOfAsync(ids, cancellationToken);
         var refunds = await RefundMarksAsync(transactions, cancellationToken);
         var splits = await SharedExpensesOfAsync(transactions, cancellationToken);
+        var contactSplits = settings.Current.IsEnabled(Feature.Households)
+            ? await ContactSplitMarks.OfAsync(db, ids, cancellationToken)
+            : [];
         var payeeNames = await db.PayeeNamesForAsync(transactions.Select(t => t.PayeeKey), cancellationToken);
         var groups = await VisibleGroupsAsync(transactions, cancellationToken);
         var receiptItems = string.IsNullOrWhiteSpace(search) || !ReceiptItemsEnabled
@@ -758,6 +762,7 @@ public sealed class TransactionService(
         {
             DebtPayment = debtPayments.GetValueOrDefault(t.Id),
             SharedExpense = splits.GetValueOrDefault(t.Id),
+            ContactSplit = contactSplits.GetValueOrDefault(t.Id),
             PayeeName = t.PayeeKey is { } key ? payeeNames.GetValueOrDefault(key) : null,
             GroupId = t.GroupId is { } groupId && groups.Contains(groupId) ? groupId.Value : null,
             EnteredByMe = t.UserId == callerId,

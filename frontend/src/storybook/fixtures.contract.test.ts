@@ -366,6 +366,10 @@ const contracts: Record<string, Contract> = {
   partnerSharedAccount: { schema: schemas.AccountResponse },
   sharedPurchase: { schema: schemas.TransactionResponse },
   outdatedSharedPurchase: { schema: schemas.TransactionResponse },
+  contacts: { schema: schemas.ContactsResponse },
+  contactEntries: { schema: schemas.ContactEntriesResponse, toResponse: asPage },
+  contactSplitPurchase: { schema: schemas.TransactionResponse },
+  dinnerSplit: { schema: schemas.CreateContactSplitResponse },
 };
 
 function buildSummary() {

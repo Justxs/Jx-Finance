@@ -36,6 +36,7 @@ export const ErrorCode = {
   conflictbusy: "conflict.busy",
   conflictduplicate: "conflict.duplicate",
   conflictstale: "conflict.stale",
+  contactnoPerson: "contact.noPerson",
   credentialsinvalid: "credentials.invalid",
   credentialslockedOut: "credentials.lockedOut",
   currencydisabled: "currency.disabled",

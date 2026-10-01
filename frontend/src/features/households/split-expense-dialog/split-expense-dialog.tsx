@@ -10,7 +10,7 @@ import { useServerForm } from "@/components/form";
 import { FormError } from "@/components/form-error/form-error";
 import { FieldError } from "@/components/ui/field-error";
 import { FormGrid } from "@/components/ui/form-grid/form-grid";
-import { allocateShares } from "@/features/households/share-allocation";
+import { MAX_WEIGHT, allocateShares, isWeight } from "@/features/households/share-allocation";
 import { useMoney } from "@/hooks/use-formatters";
 import { silentMutation, upsert } from "@/lib/mutations";
 import { namedOptions, optionsOf } from "@/lib/options";
@@ -19,7 +19,6 @@ import { isNonNegativeMoney, normalizeMoney, requiredValue } from "@/lib/validat
 import { useActiveHouseholdId } from "@/stores/active-household-store";
 
 const methods = Object.values(SplitMethod);
-const MAX_WEIGHT = 100;
 
 interface MemberValue {
   userId: string;
@@ -32,10 +31,6 @@ interface MemberValue {
 interface Props {
   transaction: TransactionResponse;
   onClose: () => void;
-}
-
-function isWeight(value: string) {
-  return /^\d+$/.test(value.trim()) && Number(value) >= 1 && Number(value) <= MAX_WEIGHT;
 }
 
 export function SplitExpenseForm({ transaction, onClose }: Readonly<Props>) {

@@ -2,6 +2,7 @@ import { Copy, Undo2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import type { TransactionResponse } from "@/api/generated/model";
 import { type RowAction, RowActions } from "@/components/row-actions/row-actions";
+import { useContactSplits } from "@/features/transactions/contact-split/contact-split";
 import { useDebtPaymentLinks } from "@/features/transactions/debt-payment/debt-payment";
 import { useGroupRowActions } from "@/features/transactions/group-dialog/group-dialog";
 import { usePayeeNaming } from "@/features/transactions/payee-naming/payee-naming";
@@ -16,6 +17,7 @@ export function useTransactionRowDialogs({ possibleDuplicates = false } = {}) {
   const keepBoth = useKeepBoth(possibleDuplicates);
   const debt = useDebtPaymentLinks();
   const split = useSharedExpenseSplits();
+  const contactSplit = useContactSplits();
   const payee = usePayeeNaming();
   const group = useGroupRowActions();
 
@@ -24,6 +26,7 @@ export function useTransactionRowDialogs({ possibleDuplicates = false } = {}) {
       keepBoth.actionFor(transaction),
       debt.actionFor(transaction),
       split.actionFor(transaction),
+      contactSplit.actionFor(transaction),
       payee.actionFor(transaction),
       group.actionFor(transaction),
     ].filter((action) => action !== undefined);
@@ -36,6 +39,7 @@ export function useTransactionRowDialogs({ possibleDuplicates = false } = {}) {
       <>
         {debt.dialog}
         {split.dialog}
+        {contactSplit.dialog}
         {payee.dialog}
         {group.dialog}
       </>

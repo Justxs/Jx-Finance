@@ -21,6 +21,7 @@ public sealed class FeatureGateTests
         (ApiRoutes.ReportsPath, Feature.Reports),
         (ApiRoutes.ImportPath, Feature.Import),
         (ApiRoutes.HouseholdsPath, Feature.Households),
+        (ApiRoutes.ContactsPath, Feature.Households),
         (ApiRoutes.ConversionsPath, Feature.MultiCurrency),
         (ApiRoutes.InvestmentsPath, Feature.Investments),
         (ApiRoutes.CategorizationRulesPath, Feature.CategorizationRules),

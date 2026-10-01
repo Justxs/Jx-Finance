@@ -15,7 +15,7 @@ public static class AccountMoves
 
     private static readonly DomainError PayerDoesNotOwn = new(
         ErrorCodes.SettleUpNotPayer,
-        "This expense is split with a household, and the member who paid it does not own that account.");
+        "This expense is split, and the member who paid it does not own that account.");
 
     private static readonly DomainError DebtNotShared = new(
         ErrorCodes.HouseholdReferenceNotShared,
@@ -38,6 +38,11 @@ public static class AccountMoves
             .Where(e => ids.Contains(e.TransactionId))
             .Select(e => new { e.TransactionId, e.UserId })
             .ToListAsync(cancellationToken);
+        payers.AddRange(await db.ContactSplits
+            .IgnoreQueryFilters(QueryFilters.OwnerOnly)
+            .Where(s => ids.Contains(s.TransactionId))
+            .Select(s => new { s.TransactionId, s.UserId })
+            .ToListAsync(cancellationToken));
         var sharedDebts = await db.DebtPayments
             .IgnoreQueryFilters(QueryFilters.OwnerOnly)
             .Where(p => ids.Contains(p.TransactionId))

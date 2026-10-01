@@ -187,6 +187,16 @@ Every 201 goes through `CreatedAsync`, which sets `Location` to a path built fro
 | POST | `/api/categories` |
 | DELETE | `/api/categories/{id}` |
 | PUT | `/api/categories/{id}` |
+| GET | `/api/contacts` |
+| POST | `/api/contacts` |
+| DELETE | `/api/contacts/payments/{id}` |
+| POST | `/api/contacts/splits` |
+| DELETE | `/api/contacts/splits/{id}` |
+| PUT | `/api/contacts/splits/{id}` |
+| DELETE | `/api/contacts/{id}` |
+| PUT | `/api/contacts/{id}` |
+| GET | `/api/contacts/{id}/entries` |
+| POST | `/api/contacts/{id}/payments` |
 | GET | `/api/conversions` |
 | POST | `/api/conversions` |
 | DELETE | `/api/conversions/{id}` |
@@ -472,6 +482,12 @@ Debt bodies take optional repayment terms: `loanAmount`, `firstPaymentDate`, `te
 Debt bodies also take `tracksPayments` (false when left out). A debt response carries `tracksPayments`, `trackedBalance` (null unless it tracks payments), `trackedIncomplete` and `unavailablePayments`. `GET /api/debts/{id}/payments` lists the counted payments with their interest, principal and balance after; `POST` to the same route links `{ transactionId, kind?, principal? }` (`debt.notTracked`, `reference.notFound`, `debt.paymentWrongType`, `transaction.splitNotAllowed`, 409 `debt.paymentTaken`); `PUT` and `DELETE` on `/api/debts/{id}/payments/{paymentId}` change or remove a link; `GET /api/debts/{id}/payment-candidates?from` suggests unlinked expenses. Link, update and the debt endpoints answer the debt with its new tracked balance. Recurring entry bodies and responses carry `debtId`, accepted only on the expense shape (`recurringBill.debtShape`). Transaction list rows carry `debtPayment` for every member who can see the debt. See [Debt amortization](features/debt-amortization.md#tracking-payments).
 
 Since 2026-09-29 the household settle-up routes are under the Households switch and every one answers 404 `resource.notFound` for a caller who is not a member, a deleted household, or a household other than the one active in `X-Active-Household`. `GET /api/households/{id}/settle-up` answers `balances`, the non-zero `{ userId, name, isMember, currency, amount }` of each member per currency (positive is owed to the member), and `payments`, the suggested `{ fromUserId, fromName, toUserId, toName, currency, amount }`.
+Since 2026-10-01 the routes under `/api/contacts` keep the caller's people outside the household, under the Households switch and personal to the caller: another member's person answers 404 `resource.notFound`. `GET /api/contacts` answers each person by name with `id`, `name` and `balances`, the non-zero `{ currency, amount }` per currency, positive when the person owes the caller. `POST` and `PUT /api/contacts/{id}` take `{ name }` (1 to 100 characters); `DELETE` sends the person to the trash as `contact`.
+
+`GET /api/contacts/{id}/entries?page&pageSize` pages the person's splits and payments newest first as `{ id, kind, date, description, amount, currency, direction, counted }`, `kind` being `split` (with the person's share as `amount` and `counted` false while the transaction is deleted) or `payment` (with `direction` `toContact` or `fromContact` and the note as `description`). `POST /api/contacts/{id}/payments` takes `{ direction, amount, currency, date, note }` and answers 201 with the entry; `DELETE /api/contacts/payments/{id}` sends it to the trash as `contactPayment`.
+
+`POST /api/contacts/splits` takes `{ transactionId, method, own, shares }`, `own` being the caller's `{ weight, amount }` or null when they take no part and `shares` one `{ contactId, weight, amount }` per person, and answers 201 with `{ id, method, ownWeight, ownAmount, shares }`; it refuses with `reference.notFound`, `settleUp.notPayer`, `settleUp.notExpense`, `contact.noPerson`, `settleUp.sharesMismatch` and 409 `settleUp.alreadySplit`, which a household split now also answers for a transaction split with people. `PUT /api/contacts/splits/{id}` takes `{ method, own, shares }` and copies the transaction's current amount, date and description first; `DELETE` sends it to the trash as `contactSplit`. Transaction rows carry `contactSplit` with the same shape for their owner. Only the two `GET` routes are token-readable. See [Money with people outside the household](features/money-with-people.md).
+
 Budget, goal and recurring entry requests take an optional `scope` (`personal`, the default, or `shared`) and `householdId`, as accounts, categories and tags do, and their responses carry both. A shared one answers 400 `household.referenceNotShared` when a category, tag or account it names is not shared with the same household, or a debt a recurring entry pays; only its owner changes its sharing or deletes it (403 `access.forbidden`).
 
 Since 2026-09-30 asset and debt requests take the same optional `scope` and `householdId`, and their responses carry both. Members of the household edit a shared asset or debt, set and delete its valuations and link, change and unlink its payments; only its owner changes its sharing or deletes it (403 `access.forbidden`). A shared debt answers 400 `household.referenceNotShared` when a payment is linked from an account not shared with its household, when it is shared while its linked payments sit on such accounts, and when a recurring entry that pays it uses such an account. See [Shared assets and debts](features/households-and-sharing.md#shared-assets-and-debts).

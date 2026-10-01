@@ -8,6 +8,7 @@ using JxFinance.Domain.Budgets;
 using JxFinance.Domain.Categories;
 using JxFinance.Domain.CategorizationRules;
 using JxFinance.Domain.Common;
+using JxFinance.Domain.Contacts;
 using JxFinance.Domain.Conversions;
 using JxFinance.Domain.Email;
 using JxFinance.Domain.ExchangeRates;
@@ -95,6 +96,10 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, ICurren
     public DbSet<SharedExpense> SharedExpenses => Set<SharedExpense>();
     public DbSet<SharedExpenseShare> SharedExpenseShares => Set<SharedExpenseShare>();
     public DbSet<Settlement> Settlements => Set<Settlement>();
+    public DbSet<Contact> Contacts => Set<Contact>();
+    public DbSet<ContactSplit> ContactSplits => Set<ContactSplit>();
+    public DbSet<ContactSplitShare> ContactSplitShares => Set<ContactSplitShare>();
+    public DbSet<ContactPayment> ContactPayments => Set<ContactPayment>();
     public DbSet<UserSession> UserSessions => Set<UserSession>();
     public DbSet<PersonalApiToken> PersonalApiTokens => Set<PersonalApiToken>();
     public DbSet<ApiIdempotencyKey> ApiIdempotencyKeys => Set<ApiIdempotencyKey>();

@@ -821,6 +821,12 @@ export const debtPaymentCandidatesResponseSharedExpenseTwoMyShareRegExp = new Re
   "^-?\\d+(\\.\\d{1,8})?$",
 );
 export const debtPaymentCandidatesResponseEnteredByMeDefault = false;
+export const debtPaymentCandidatesResponseContactSplitTwoOwnAmountRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const debtPaymentCandidatesResponseContactSplitTwoSharesItemAmountRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
 
 export const DebtPaymentCandidatesResponseItem = zod.object({
   id: zod.uuid(),
@@ -956,6 +962,30 @@ export const DebtPaymentCandidatesResponseItem = zod.object({
       zod.object({
         name: zod.string(),
         warrantyUntil: zod.union([zod.null(), zod.iso.date()]),
+      }),
+    ])
+    .optional(),
+  contactSplit: zod
+    .union([
+      zod.null(),
+      zod.object({
+        id: zod.uuid(),
+        method: zod.enum(["equal", "shares", "exact"]).describe("Equal, Shares or Exact."),
+        ownWeight: zod.int().nullable(),
+        ownAmount: zod
+          .stringFormat("decimal", debtPaymentCandidatesResponseContactSplitTwoOwnAmountRegExp)
+          .nullable(),
+        shares: zod.array(
+          zod.object({
+            contactId: zod.uuid(),
+            name: zod.string(),
+            weight: zod.int().nullable(),
+            amount: zod.stringFormat(
+              "decimal",
+              debtPaymentCandidatesResponseContactSplitTwoSharesItemAmountRegExp,
+            ),
+          }),
+        ),
       }),
     ])
     .optional(),

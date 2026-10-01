@@ -32,6 +32,9 @@ public static class ApiRoutes
     public const string Conversions = "conversions";
     public const string ConversionsPath = Base + "/" + Conversions;
 
+    public const string Contacts = "contacts";
+    public const string ContactsPath = Base + "/" + Contacts;
+
     public const string Currencies = "currencies";
 
     public const string Dashboard = "dashboard";

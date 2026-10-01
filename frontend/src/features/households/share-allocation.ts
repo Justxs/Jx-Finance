@@ -2,6 +2,12 @@ import type { SplitMethod } from "@/api/generated/model";
 import { toCents } from "@/lib/money";
 import { isNonNegativeMoney } from "@/lib/validation";
 
+export const MAX_WEIGHT = 100;
+
+export function isWeight(value: string) {
+  return /^\d+$/.test(value.trim()) && Number(value) >= 1 && Number(value) <= MAX_WEIGHT;
+}
+
 export interface SharePart {
   weight?: number | null;
   amount?: string | null;

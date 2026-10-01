@@ -5,6 +5,7 @@ export * from "./backups/backups.zod";
 export * from "./budgets/budgets.zod";
 export * from "./categories/categories.zod";
 export * from "./categorization-rules/categorization-rules.zod";
+export * from "./contacts/contacts.zod";
 export * from "./conversions/conversions.zod";
 export * from "./currencies/currencies.zod";
 export * from "./dashboard/dashboard.zod";

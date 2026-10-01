@@ -426,6 +426,176 @@ namespace JxFinance.Infrastructure.Data.Migrations
                     b.ToTable("SuggestedRuleDismissals");
                 });
 
+            modelBuilder.Entity("JxFinance.Domain.Contacts.Contact", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Contacts");
+                });
+
+            modelBuilder.Entity("JxFinance.Domain.Contacts.ContactPayment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ContactId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date");
+
+                    b.Property<int>("Direction")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.ComplexProperty(typeof(Dictionary<string, object>), "Amount", "JxFinance.Domain.Contacts.ContactPayment.Amount#Money", b1 =>
+                        {
+                            b1.IsRequired();
+
+                            b1.Property<decimal>("Amount")
+                                .HasPrecision(18, 2)
+                                .HasColumnType("numeric(18,2)")
+                                .HasColumnName("Amount");
+
+                            b1.Property<string>("Currency")
+                                .IsRequired()
+                                .HasMaxLength(3)
+                                .HasColumnType("character varying(3)")
+                                .HasColumnName("Currency");
+                        });
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("ContactId", "Date");
+
+                    b.ToTable("ContactPayments");
+                });
+
+            modelBuilder.Entity("JxFinance.Domain.Contacts.ContactSplit", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("Method")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal?>("OwnAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<int?>("OwnWeight")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("TransactionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.ComplexProperty(typeof(Dictionary<string, object>), "Amount", "JxFinance.Domain.Contacts.ContactSplit.Amount#Money", b1 =>
+                        {
+                            b1.IsRequired();
+
+                            b1.Property<decimal>("Amount")
+                                .HasPrecision(18, 2)
+                                .HasColumnType("numeric(18,2)")
+                                .HasColumnName("Amount");
+
+                            b1.Property<string>("Currency")
+                                .IsRequired()
+                                .HasMaxLength(3)
+                                .HasColumnType("character varying(3)")
+                                .HasColumnName("Currency");
+                        });
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TransactionId")
+                        .IsUnique()
+                        .HasFilter("\"IsDeleted\" = false");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("ContactSplits");
+                });
+
+            modelBuilder.Entity("JxFinance.Domain.Contacts.ContactSplitShare", b =>
+                {
+                    b.Property<Guid>("ContactSplitId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ContactId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<int?>("Weight")
+                        .HasColumnType("integer");
+
+                    b.HasKey("ContactSplitId", "ContactId");
+
+                    b.HasIndex("ContactId");
+
+                    b.ToTable("ContactSplitShares");
+                });
+
             modelBuilder.Entity("JxFinance.Domain.Conversions.CurrencyConversion", b =>
                 {
                     b.Property<Guid>("Id")
@@ -3147,6 +3317,60 @@ namespace JxFinance.Infrastructure.Data.Migrations
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("JxFinance.Domain.Contacts.Contact", b =>
+                {
+                    b.HasOne("JxFinance.Infrastructure.Auth.AppUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("JxFinance.Domain.Contacts.ContactPayment", b =>
+                {
+                    b.HasOne("JxFinance.Domain.Contacts.Contact", null)
+                        .WithMany()
+                        .HasForeignKey("ContactId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("JxFinance.Infrastructure.Auth.AppUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("JxFinance.Domain.Contacts.ContactSplit", b =>
+                {
+                    b.HasOne("JxFinance.Domain.Transactions.Transaction", null)
+                        .WithMany()
+                        .HasForeignKey("TransactionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("JxFinance.Infrastructure.Auth.AppUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("JxFinance.Domain.Contacts.ContactSplitShare", b =>
+                {
+                    b.HasOne("JxFinance.Domain.Contacts.Contact", null)
+                        .WithMany()
+                        .HasForeignKey("ContactId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("JxFinance.Domain.Contacts.ContactSplit", null)
+                        .WithMany()
+                        .HasForeignKey("ContactSplitId")
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 

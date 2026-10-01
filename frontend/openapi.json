@@ -5752,6 +5752,819 @@
         ]
       }
     },
+    "/api/contacts": {
+      "post": {
+        "tags": [
+          "Contacts"
+        ],
+        "summary": "Add a person",
+        "description": "Adds a person outside the household, such as a friend you lend money to or share a dinner with. The person has no login and is visible only to you. Two people may have the same name.",
+        "operationId": "CreateContact",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateContactRequest"
+              },
+              "example": {
+                "name": "Jonas"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "The new person, with no balance.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContactResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      },
+      "get": {
+        "tags": [
+          "Contacts"
+        ],
+        "summary": "List the people you keep money with",
+        "description": "Returns your people outside the household, by name, each with the open balance per currency. A positive amount is owed to you, a negative one is owed by you. A balance is what the person's shares of your splits add up to, plus the payments you made to them, minus the payments they made to you. A split whose transaction is deleted stops counting until the transaction is restored. Currencies are never converted, and nothing here enters reports, budgets or net worth. People are personal: nobody else sees them.",
+        "operationId": "GetContacts",
+        "responses": {
+          "200": {
+            "description": "Your people with their non-zero balances.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ContactResponse"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          },
+          {
+            "PersonalApiToken": [ ]
+          }
+        ]
+      }
+    },
+    "/api/contacts/payments/{id}": {
+      "delete": {
+        "tags": [
+          "Contacts"
+        ],
+        "summary": "Delete a payment with a person",
+        "description": "Removes the payment from the person's balance. It is listed in your trash, from where POST /api/trash/restore brings it back while the person still exists.",
+        "operationId": "DeleteContactPayment",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The payment id.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "The payment is deleted."
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "You have no such payment.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      }
+    },
+    "/api/contacts/splits": {
+      "post": {
+        "tags": [
+          "Contacts"
+        ],
+        "summary": "Split an expense with people",
+        "description": "Splits an expense you paid from one of your own accounts with people outside the household, the way a household split divides it between members: Equal, Shares by whole weights from 1 to 100, or Exact amounts that add up to the expense, cents left over going to the largest remainders in the order listed with you first. own is your part, or null when you take no part, which records the whole amount as owed, for example money you lent with an ordinary bank payment. The split keeps a copy of the transaction's date, description and amount. A transaction is split once, with a household or with people.",
+        "operationId": "CreateContactSplit",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateContactSplitRequest"
+              },
+              "example": {
+                "transactionId": "00000000-0000-0000-0000-000000000000",
+                "method": "equal",
+                "own": {
+                  "weight": null,
+                  "amount": null
+                },
+                "shares": [
+                  {
+                    "contactId": "00000000-0000-0000-0000-000000000000",
+                    "weight": null,
+                    "amount": null
+                  }
+                ]
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "The split, with every person's amount.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContactSplitResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed, the transaction is not visible, not yours or not an expense, a person is not yours, or the exact amounts do not add up.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The transaction is already split, with a household or with people.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      }
+    },
+    "/api/contacts/splits/{id}": {
+      "delete": {
+        "tags": [
+          "Contacts"
+        ],
+        "summary": "Delete a split with people",
+        "description": "Removes the split from every person's balance and leaves the transaction as it is. It is listed in your trash, from where POST /api/trash/restore brings it back while its transaction exists and is not split again.",
+        "operationId": "DeleteContactSplit",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The split id.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "The split is deleted."
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "You have no such split.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "Contacts"
+        ],
+        "summary": "Change a split with people",
+        "description": "Replaces the method, your part and the people with their amounts. The split first copies the transaction's current amount, date and description, so saving it again follows a corrected transaction.",
+        "operationId": "UpdateContactSplit",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The split id.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateContactSplitRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "The split as it is now.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContactSplitResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed, a person is not yours, the exact amounts do not add up, or the transaction is no longer an expense on an account you own.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "You have no such split.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      }
+    },
+    "/api/contacts/{id}": {
+      "delete": {
+        "tags": [
+          "Contacts"
+        ],
+        "summary": "Delete a person",
+        "description": "Removes the person, and with them their balances, payments and shares, from every list. Splits they shared with others keep the other people's shares. The person is listed in your trash, from where POST /api/trash/restore brings everything back; after 30 days the person, their payments and their shares are purged, and a split left with nobody else goes with them.",
+        "operationId": "DeleteContact",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The person's id.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "The person is deleted."
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "You have no such person.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "Contacts"
+        ],
+        "summary": "Rename a person",
+        "description": "Changes the name of one of your people. Their splits, payments and balances stay.",
+        "operationId": "UpdateContact",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The person's id.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "example": "00000000-0000-0000-0000-000000000000"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateContactRequest"
+              },
+              "example": {
+                "name": "Jonas K."
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "The person with their balances.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContactResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "You have no such person.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      }
+    },
+    "/api/contacts/{id}/entries": {
+      "get": {
+        "tags": [
+          "Contacts"
+        ],
+        "summary": "List what you shared with a person",
+        "description": "Returns a page of the person's history, newest first: each split with its copied date and description and the person's share as amount, and each payment with its direction and note. counted is false while a split's transaction is deleted; a payment always counts.",
+        "operationId": "GetContactEntries",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The person's id.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "One-based page number. Defaults to 1.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "description": "Rows per page. Defaults to 20.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A page of splits and payments with the total row count.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResponseOfContactEntryResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "You have no such person.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          },
+          {
+            "PersonalApiToken": [ ]
+          }
+        ]
+      }
+    },
+    "/api/contacts/{id}/payments": {
+      "post": {
+        "tags": [
+          "Contacts"
+        ],
+        "summary": "Record money between you and a person",
+        "description": "Records that you paid the person (ToContact), for example a loan or paying back what you owed, or that they paid you or paid for you (FromContact). Your paying raises what they owe you; their paying lowers it. Only the payment is stored: no account changes, and money that left or reached your bank stays the ordinary ledger row it is.",
+        "operationId": "CreateContactPayment",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The person's id.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "example": "00000000-0000-0000-0000-000000000000"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateContactPaymentRequest"
+              },
+              "example": {
+                "direction": "toContact",
+                "amount": "50.00",
+                "currency": "eur",
+                "date": "2026-10-01",
+                "note": "Loan until payday"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "The payment as a history entry.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContactEntryResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "You have no such person.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      }
+    },
     "/api/conversions": {
       "post": {
         "tags": [
@@ -23182,6 +23995,205 @@
           }
         }
       },
+      "ContactBalanceResponse": {
+        "required": [
+          "currency",
+          "amount"
+        ],
+        "type": "object",
+        "properties": {
+          "currency": {
+            "$ref": "#/components/schemas/Currency"
+          },
+          "amount": {
+            "type": "string",
+            "format": "decimal"
+          }
+        }
+      },
+      "ContactEntryKind": {
+        "enum": [
+          "split",
+          "payment"
+        ],
+        "type": "string"
+      },
+      "ContactEntryResponse": {
+        "required": [
+          "id",
+          "kind",
+          "date",
+          "description",
+          "amount",
+          "currency",
+          "direction",
+          "counted"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/ContactEntryKind"
+          },
+          "date": {
+            "$ref": "#/components/schemas/DateOnly"
+          },
+          "description": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "amount": {
+            "type": "string",
+            "format": "decimal"
+          },
+          "currency": {
+            "$ref": "#/components/schemas/Currency"
+          },
+          "direction": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ContactPaymentDirection"
+              }
+            ]
+          },
+          "counted": {
+            "type": "boolean"
+          }
+        }
+      },
+      "ContactPaymentDirection": {
+        "enum": [
+          "toContact",
+          "fromContact"
+        ],
+        "type": "string",
+        "description": "ToContact when you paid them, FromContact when they paid you or for you."
+      },
+      "ContactResponse": {
+        "required": [
+          "id",
+          "name",
+          "balances"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "balances": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ContactBalanceResponse"
+            }
+          }
+        }
+      },
+      "ContactShareRequest": {
+        "required": [
+          "contactId"
+        ],
+        "type": "object",
+        "properties": {
+          "contactId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "weight": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "amount": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "decimal"
+          }
+        }
+      },
+      "ContactShareResponse": {
+        "required": [
+          "contactId",
+          "name",
+          "weight",
+          "amount"
+        ],
+        "type": "object",
+        "properties": {
+          "contactId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "weight": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "amount": {
+            "type": "string",
+            "format": "decimal"
+          }
+        }
+      },
+      "ContactSplitResponse": {
+        "required": [
+          "id",
+          "method",
+          "ownWeight",
+          "ownAmount",
+          "shares"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "method": {
+            "$ref": "#/components/schemas/SplitMethod"
+          },
+          "ownWeight": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "ownAmount": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "decimal"
+          },
+          "shares": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ContactShareResponse"
+            }
+          }
+        }
+      },
       "ConversionResponse": {
         "required": [
           "id",
@@ -23630,6 +24642,131 @@
           "scope": "personal",
           "householdId": null,
           "parentId": null
+        }
+      },
+      "CreateContactPaymentRequest": {
+        "required": [
+          "direction",
+          "amount",
+          "currency",
+          "date"
+        ],
+        "type": "object",
+        "properties": {
+          "direction": {
+            "$ref": "#/components/schemas/ContactPaymentDirection"
+          },
+          "amount": {
+            "type": "string",
+            "description": "Decimal string with at most two decimal places, greater than zero.",
+            "format": "decimal",
+            "example": "50.00"
+          },
+          "currency": {
+            "$ref": "#/components/schemas/Currency"
+          },
+          "date": {
+            "$ref": "#/components/schemas/DateOnly"
+          },
+          "note": {
+            "maxLength": 200,
+            "minLength": 0,
+            "type": [
+              "null",
+              "string"
+            ],
+            "example": "Loan until payday"
+          }
+        },
+        "example": {
+          "direction": "toContact",
+          "amount": "50.00",
+          "currency": "eur",
+          "date": "2026-10-01",
+          "note": "Loan until payday"
+        }
+      },
+      "CreateContactRequest": {
+        "required": [
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string",
+            "description": "The name, 1 to 100 characters.",
+            "example": "Jonas"
+          }
+        },
+        "example": {
+          "name": "Jonas"
+        }
+      },
+      "CreateContactSplitRequest": {
+        "required": [
+          "transactionId",
+          "method",
+          "own",
+          "shares"
+        ],
+        "type": "object",
+        "properties": {
+          "transactionId": {
+            "minLength": 1,
+            "type": "string",
+            "description": "The expense to split. It must be on an account you own.",
+            "format": "uuid",
+            "example": "00000000-0000-0000-0000-000000000000"
+          },
+          "method": {
+            "$ref": "#/components/schemas/SplitMethod"
+          },
+          "own": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/OwnShareRequest"
+              }
+            ],
+            "description": "Your part: a weight for Shares, an amount for Exact; null when you take no part.",
+            "example": {
+              "weight": null,
+              "amount": null
+            }
+          },
+          "shares": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ContactShareRequest"
+            },
+            "description": "One entry per person: a weight for Shares, an amount for Exact.",
+            "example": [
+              {
+                "contactId": "00000000-0000-0000-0000-000000000000",
+                "weight": null,
+                "amount": null
+              }
+            ]
+          }
+        },
+        "example": {
+          "transactionId": "00000000-0000-0000-0000-000000000000",
+          "method": "equal",
+          "own": {
+            "weight": null,
+            "amount": null
+          },
+          "shares": [
+            {
+              "contactId": "00000000-0000-0000-0000-000000000000",
+              "weight": null,
+              "amount": null
+            }
+          ]
         }
       },
       "CreateConversionRequest": {
@@ -25779,6 +26916,7 @@
           "conflict.busy",
           "conflict.duplicate",
           "conflict.stale",
+          "contact.noPerson",
           "credentials.invalid",
           "credentials.lockedOut",
           "currency.disabled",
@@ -28336,6 +29474,25 @@
         "type": "string",
         "format": "date"
       },
+      "OwnShareRequest": {
+        "type": "object",
+        "properties": {
+          "weight": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "amount": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "decimal"
+          }
+        }
+      },
       "PagedResponseOfAuditEventResponse": {
         "required": [
           "items",
@@ -28349,6 +29506,35 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/AuditEventResponse"
+            }
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "total": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "PagedResponseOfContactEntryResponse": {
+        "required": [
+          "items",
+          "page",
+          "pageSize",
+          "total"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ContactEntryResponse"
             }
           },
           "page": {
@@ -32274,6 +33460,16 @@
                 "$ref": "#/components/schemas/TransactionReceiptItemResponse"
               }
             ]
+          },
+          "contactSplit": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ContactSplitResponse"
+              }
+            ]
           }
         }
       },
@@ -32471,7 +33667,10 @@
           "csvImportMapping",
           "sharedExpense",
           "settlement",
-          "transactionGroup"
+          "transactionGroup",
+          "contact",
+          "contactSplit",
+          "contactPayment"
         ],
         "type": "string",
         "description": "Which kind of record to bring back, as listed by GET /api/trash."
@@ -32888,6 +34087,53 @@
           "scope": "personal",
           "householdId": null,
           "parentId": null
+        }
+      },
+      "UpdateContactRequest": {
+        "required": [
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string",
+            "description": "The new name, 1 to 100 characters.",
+            "example": "Jonas K."
+          }
+        },
+        "example": {
+          "name": "Jonas K."
+        }
+      },
+      "UpdateContactSplitRequest": {
+        "required": [
+          "method",
+          "own",
+          "shares"
+        ],
+        "type": "object",
+        "properties": {
+          "method": {
+            "$ref": "#/components/schemas/SplitMethod"
+          },
+          "own": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/OwnShareRequest"
+              }
+            ]
+          },
+          "shares": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ContactShareRequest"
+            }
+          }
         }
       },
       "UpdateConversionRequest": {
@@ -34420,6 +35666,9 @@
     {
       "name": "CategorizationRules",
       "description": "Ordered rules that pick a category for matching transactions, plus a dry run over existing ones."
+    },
+    {
+      "name": "Contacts"
     },
     {
       "name": "Conversions",

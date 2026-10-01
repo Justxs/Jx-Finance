@@ -1,11 +1,13 @@
 import { useTranslation } from "react-i18next";
 import { useHouseholdsSuspense } from "@/api/generated";
 import { CreateDialog } from "@/components/create-dialog/create-dialog";
+import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { SettingsLayout } from "@/components/settings-layout/settings-layout";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { SectionHeader } from "@/components/ui/section/section";
 import { CreateHouseholdForm } from "@/features/households/create-household-form/create-household-form";
 import { HouseholdCard } from "@/features/households/household-card/household-card";
+import { PeopleSection, PeopleSkeleton } from "@/features/households/people-section/people-section";
 
 export function HouseholdsPage() {
   const { t } = useTranslation();
@@ -26,6 +28,10 @@ export function HouseholdsPage() {
       ) : (
         householdList.map((household) => <HouseholdCard key={household.id} household={household} />)
       )}
+
+      <QueryBoundary fallback={<PeopleSkeleton />}>
+        <PeopleSection />
+      </QueryBoundary>
     </SettingsLayout>
   );
 }

@@ -742,7 +742,10 @@
       "csvImportMapping": "CSV susiejimas",
       "sharedExpense": "Padalinta išlaida",
       "settlement": "Namų ūkio mokėjimas",
-      "transactionGroup": "Operacijų grupė"
+      "transactionGroup": "Operacijų grupė",
+      "contact": "Žmogus",
+      "contactSplit": "Padalijimas su žmonėmis",
+      "contactPayment": "Mokėjimas su žmogumi"
     }
   },
   "theme": {
@@ -2280,6 +2283,36 @@
       "fromAccount": "Iš sąskaitos",
       "toAccount": "Į sąskaitą",
       "noAccount": "Jums nematoma jokia {{name}} sąskaita valiuta {{currency}}, todėl galima įrašyti tik mokėjimą."
+    },
+    "people": {
+      "title": "Žmonės",
+      "description": "Draugai ir kiti žmonės už namų ūkio ribų su tuo, ką jiems paskolinote ar su jais pasidalinote. Juos matote tik jūs; balansai nepatenka į ataskaitas, biudžetus ir grynąją vertę.",
+      "add": "Pridėti žmogų",
+      "rename": "Pervadinti žmogų",
+      "name": "Vardas",
+      "namePlaceholder": "pvz., Jonas",
+      "empty": "Žmonių dar nėra. Pridėkite tą, kuriam skolinate pinigų ar su kuriuo dalijatės vakarienės sąskaitą, tada padalinkite pirkinį su juo iš jo eilutės operacijų sąraše.",
+      "even": "Atsiskaitę",
+      "owesYou": "Jums skolingas {{amount}}",
+      "youOwe": "Jūs skolingi {{amount}}",
+      "record": "Įrašyti mokėjimą",
+      "showHistory": "Rodyti istoriją",
+      "hideHistory": "Slėpti istoriją",
+      "emptyHistory": "Su {{name}} dar nieko nėra.",
+      "shareOfSplit": "Jo dalis padalijime",
+      "youPaid": "Jūs sumokėjote {{name}}",
+      "theyPaid": "{{name}} sumokėjo jums",
+      "payment": {
+        "title": "Įrašyti mokėjimą su {{name}}",
+        "direction": "Kas sumokėjo",
+        "hint": "Paskolinti ar grąžinti jūsų pinigai didina jo skolą; jo jums sumokėti ar už jus sumokėti pinigai ją mažina. Sąskaitos nesikeičia."
+      },
+      "split": {
+        "action": "Padalinti su žmogumi",
+        "edit": "Keisti padalijimą su žmonėmis",
+        "nobody": "Pasirinkite bent vieną žmogų.",
+        "hint": "Nepažymėkite savęs, kai sumokėjote viską už jį, pavyzdžiui, paskolinote pinigų."
+      }
     }
   },
   "audit": {
@@ -3063,6 +3096,9 @@
     },
     "transactionGroup": {
       "memberTaken": "Eilutė jau yra kitoje grupėje. Pirmiausia pašalinkite ją iš tos grupės."
+    },
+    "contact": {
+      "noPerson": "Dalinkitės bent su vienu žmogumi."
     }
   },
   "export": {

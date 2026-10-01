@@ -2,12 +2,14 @@ using System.Collections.Frozen;
 using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Common.Settings;
+using JxFinance.Common.SettleUp;
 using JxFinance.Common.Sharing;
 using JxFinance.Domain.Accounts;
 using JxFinance.Domain.Budgets;
 using JxFinance.Domain.Categories;
 using JxFinance.Domain.CategorizationRules;
 using JxFinance.Domain.Common;
+using JxFinance.Domain.Contacts;
 using JxFinance.Domain.Conversions;
 using JxFinance.Domain.Goals;
 using JxFinance.Domain.Households;
@@ -91,6 +93,9 @@ public static class TrashRestorers
     private static readonly DomainError TransferSettledAgain =
         new(ErrorCodes.SettleUpTransferTaken, "The transfer of this payment settles another payment now.");
 
+    private static readonly DomainError ContactGone =
+        new(ErrorCodes.RestoreReferenceMissing, "The person this payment was with is deleted. Restore the person first.");
+
     private static readonly DomainError NotHouseholdOwner =
         new(ErrorCodes.AccessForbidden, "Only an owner of this household can restore it.");
 
@@ -159,7 +164,7 @@ public static class TrashRestorers
             Feature.Households,
             (db, id) => db.SharedExpenses.Where(e => e.Id == id),
             check: (r, e) => MemberOfAsync(r, e.HouseholdId),
-            restore: RestoreSharedExpenseAsync),
+            restore: (r, e) => RestoreSplitAsync(r, e.TransactionId, e.Id.Value)),
         [TrashKind.Settlement] = Stored<Settlement, SettlementId>(
             Feature.Households,
             (db, id) => db.Settlements.Where(s => s.Id == id),
@@ -170,6 +175,15 @@ public static class TrashRestorers
             (db, id) => db.TransactionGroups.Where(g => g.Id == id),
             restore: RestoreTransactionGroupAsync,
             usesChanges: true),
+        [TrashKind.Contact] = Owned<Contact, ContactId>(Feature.Households, (db, id) => db.Contacts.Where(c => c.Id == id)),
+        [TrashKind.ContactSplit] = Owned<ContactSplit, ContactSplitId>(
+            Feature.Households,
+            (db, id) => db.ContactSplits.Where(s => s.Id == id),
+            restore: (r, s) => RestoreSplitAsync(r, s.TransactionId, s.Id.Value)),
+        [TrashKind.ContactPayment] = Owned<ContactPayment, ContactPaymentId>(
+            Feature.Households,
+            (db, id) => db.ContactPayments.Where(p => p.Id == id),
+            check: CheckContactAsync),
     }.ToFrozenDictionary();
 
     public static TrashRestorer? Of(TrashKind kind) => All.GetValueOrDefault(kind);
@@ -562,19 +576,18 @@ public static class TrashRestorers
     private static async Task<Result> MemberOfAsync(TrashRestore r, HouseholdId householdId) =>
         await r.IsLiveMemberAsync(householdId, r.UserId) ? Result.Success() : NotHouseholdMember;
 
-    private static async Task<Result> RestoreSharedExpenseAsync(TrashRestore r, SharedExpense expense)
+    private static async Task<Result> RestoreSplitAsync(TrashRestore r, TransactionId transactionId, Guid splitId)
     {
-        var transactionId = expense.TransactionId;
         if (!await r.Db.Transactions.IgnoreQueryFilters(QueryFilters.OwnerOnly).AnyAsync(t => t.Id == transactionId, r.CancellationToken))
         {
             return SplitTransactionGone;
         }
 
-        var splitAgain = await r.Db.SharedExpenses
-            .IgnoreQueryFilters(QueryFilters.OwnerOnly)
-            .AnyAsync(e => e.TransactionId == transactionId && e.Id != expense.Id, r.CancellationToken);
-        return splitAgain ? SplitAgain : Result.Success();
+        return await SplitRules.IsSplitAsync(r.Db, transactionId, splitId, r.CancellationToken) ? SplitAgain : Result.Success();
     }
+
+    private static async Task<Result> CheckContactAsync(TrashRestore r, ContactPayment payment) =>
+        await r.Db.Contacts.AnyAsync(c => c.Id == payment.ContactId, r.CancellationToken) ? Result.Success() : ContactGone;
 
     private static async Task<Result> RestoreSettlementAsync(TrashRestore r, Settlement settlement)
     {

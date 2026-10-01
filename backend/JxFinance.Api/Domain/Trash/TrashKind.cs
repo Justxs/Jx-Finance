@@ -20,4 +20,7 @@ public enum TrashKind
     SharedExpense,
     Settlement,
     TransactionGroup,
+    Contact,
+    ContactSplit,
+    ContactPayment,
 }

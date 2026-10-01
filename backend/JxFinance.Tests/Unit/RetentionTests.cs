@@ -155,6 +155,10 @@ public sealed class RetentionTests
                 "PayeeNames",
                 "SharedExpenses",
                 "Settlements",
+                "ContactPayments",
+                "ContactSplits",
+                "ContactSplits",
+                "Contacts",
             ],
             tables);
         Assert.All(

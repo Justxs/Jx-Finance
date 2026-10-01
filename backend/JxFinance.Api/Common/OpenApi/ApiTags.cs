@@ -9,6 +9,7 @@ public static class ApiTags
     public const string Budgets = "Budgets";
     public const string Categories = "Categories";
     public const string CategorizationRules = "CategorizationRules";
+    public const string Contacts = "Contacts";
     public const string Conversions = "Conversions";
     public const string Currencies = "Currencies";
     public const string Dashboard = "Dashboard";

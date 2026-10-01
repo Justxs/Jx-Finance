@@ -686,7 +686,10 @@
       "csvImportMapping": "CSV mapping",
       "sharedExpense": "Split expense",
       "settlement": "Household payment",
-      "transactionGroup": "Transaction group"
+      "transactionGroup": "Transaction group",
+      "contact": "Person",
+      "contactSplit": "Split with people",
+      "contactPayment": "Payment with a person"
     }
   },
   "theme": {
@@ -2190,6 +2193,36 @@
       "fromAccount": "From account",
       "toAccount": "To account",
       "noAccount": "No account of {{name}} in {{currency}} is visible to you, so only the payment can be recorded."
+    },
+    "people": {
+      "title": "People",
+      "description": "Friends and others outside the household, with what you lent them or shared with them. Only you see them; balances never enter reports, budgets or net worth.",
+      "add": "Add person",
+      "rename": "Rename person",
+      "name": "Name",
+      "namePlaceholder": "e.g. Jonas",
+      "empty": "No people yet. Add someone you lend money to or share a dinner with, then split a purchase with them from its row in the ledger.",
+      "even": "Even",
+      "owesYou": "Owes you {{amount}}",
+      "youOwe": "You owe {{amount}}",
+      "record": "Record payment",
+      "showHistory": "Show history",
+      "hideHistory": "Hide history",
+      "emptyHistory": "Nothing with {{name}} yet.",
+      "shareOfSplit": "Their share of a split",
+      "youPaid": "You paid {{name}}",
+      "theyPaid": "{{name}} paid you",
+      "payment": {
+        "title": "Record payment with {{name}}",
+        "direction": "Who paid",
+        "hint": "Money you lent or paid back raises what they owe; money they paid you or paid for you lowers it. No account changes."
+      },
+      "split": {
+        "action": "Split with a person",
+        "edit": "Edit split with people",
+        "nobody": "Choose at least one person.",
+        "hint": "Leave yourself out when you paid it all for them, such as money you lent."
+      }
     }
   },
   "audit": {
@@ -2953,6 +2986,9 @@
     },
     "transactionGroup": {
       "memberTaken": "A row is already in another group. Remove it from that group first."
+    },
+    "contact": {
+      "noPerson": "Split with at least one person."
     }
   },
   "export": {

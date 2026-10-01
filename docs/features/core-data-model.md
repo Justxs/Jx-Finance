@@ -25,6 +25,11 @@ erDiagram
     SharedExpense ||--o{ SharedExpenseShare : "one stored amount per member"
     Household ||--o{ Settlement : "payment between two members"
     Settlement }o--o| Transfer : "optional transfer"
+    AppUser ||--o{ Contact : "personal people"
+    Transaction ||--o| ContactSplit : "split with people by its payer"
+    ContactSplit ||--o{ ContactSplitShare : "one stored amount per person"
+    Contact ||--o{ ContactSplitShare : "share"
+    Contact ||--o{ ContactPayment : "payment either way"
     Account ||--o{ Transaction : holds
     Account ||--o{ AccountReconciliation : "statement balance, one per date"
     Transaction ||--o{ TransactionLine : "optional split"

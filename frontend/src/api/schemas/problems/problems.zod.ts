@@ -61,6 +61,7 @@ export const ProblemDetailsResponse = zod
                 "conflict.busy",
                 "conflict.duplicate",
                 "conflict.stale",
+                "contact.noPerson",
                 "credentials.invalid",
                 "credentials.lockedOut",
                 "currency.disabled",

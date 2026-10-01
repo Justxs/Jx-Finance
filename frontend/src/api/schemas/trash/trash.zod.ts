@@ -35,6 +35,9 @@ export const TrashResponse = zod.object({
           "sharedExpense",
           "settlement",
           "transactionGroup",
+          "contact",
+          "contactSplit",
+          "contactPayment",
         ])
         .describe("Which kind of record to bring back, as listed by GET /api/trash."),
       entityId: zod.uuid(),
@@ -73,6 +76,9 @@ export const RestoreDeletedBody = zod.object({
       "sharedExpense",
       "settlement",
       "transactionGroup",
+      "contact",
+      "contactSplit",
+      "contactPayment",
     ])
     .describe("Which kind of record to bring back, as listed by GET /api/trash."),
   entityId: zod.uuid().min(1).describe("The id the record had before it was deleted."),

@@ -22,6 +22,8 @@ public sealed class TokenReadableTests
         "GET /api/budgets",
         "GET /api/budgets/suggestions",
         "GET /api/categories",
+        "GET /api/contacts",
+        "GET /api/contacts/{id}/entries",
         "GET /api/conversions",
         "GET /api/currencies",
         "GET /api/dashboard/category-breakdown",

@@ -24,7 +24,7 @@ Before changing behaviour that a page here covers, read that page. When you choo
 | [Cash-flow forecast](cash-flow-forecast.md) | Cash-flow forecast | 12 | [Cash-flow forecast](../features/cash-flow-forecast.md) |
 | [Notifications](notifications.md) | none | 2 | [Notifications](../features/notifications.md) |
 | [Net worth](net-worth.md) | Net worth, Snapshot schedule, Asset value | 8 | [Net worth](../features/net-worth.md) |
-| [Households and sharing](households-and-sharing.md) | Sharing, Member removal, Settle-up | 15 | [Households and sharing](../features/households-and-sharing.md), [Household settle-up](../features/household-settle-up.md) |
+| [Households and sharing](households-and-sharing.md) | Sharing, Member removal, Settle-up, People outside the household | 21 | [Households and sharing](../features/households-and-sharing.md), [Household settle-up](../features/household-settle-up.md), [Money with people outside the household](../features/money-with-people.md) |
 | [Dashboard](dashboard.md) | Dashboard layout | 7 | [Dashboard](../features/dashboard.md) |
 | [Reports](reports.md) | none | 4 | [Reports](../features/reports.md) |
 | [Exports](exports.md) | Data export per user | 14 | [Exports](../features/exports.md), [Data export per user](../features/data-export-per-user.md) |

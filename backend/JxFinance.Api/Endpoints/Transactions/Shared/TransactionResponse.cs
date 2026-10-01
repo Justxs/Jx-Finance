@@ -2,6 +2,7 @@ using JxFinance.Common.Json;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Households;
 using JxFinance.Domain.Transactions;
+using JxFinance.Endpoints.Contacts.Shared;
 using JxFinance.Endpoints.Households.Shared;
 
 namespace JxFinance.Endpoints.Transactions.Shared;
@@ -37,7 +38,8 @@ public sealed record TransactionResponse(
     decimal? Longitude = null,
     Guid? GroupId = null,
     bool EnteredByMe = false,
-    TransactionReceiptItemResponse? ReceiptItem = null);
+    TransactionReceiptItemResponse? ReceiptItem = null,
+    ContactSplitResponse? ContactSplit = null);
 
 public sealed record TransactionReceiptItemResponse(string Name, DateOnly? WarrantyUntil);
 

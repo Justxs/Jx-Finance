@@ -188,6 +188,32 @@ public sealed partial class UserImportTests(ApiFixture fixture) : IntegrationTes
         Assert.Equal([(fund.ToString(), "75"), (other.ToString(), "25")], targets.Targets.Select(t => (t.Key, t.Share)));
     }
 
+    [Fact]
+    public async Task People_with_their_splits_and_payments_travel_with_the_member()
+    {
+        using var source = await CreateUserClientAsync();
+        var account = await CreateAccountAsync(client: source);
+        var jonas = (await PostAsync<IdDto>(source, "/api/contacts", new { name = "Jonas" })).Id;
+        var dinner = (await CreateTransactionAsync(source, account, null, "expense", "60.00", "2026-09-10", "Dinner")).Id;
+        (await source.PostAsJsonAsync(
+            "/api/contacts/splits",
+            new { transactionId = dinner, method = "equal", own = new { }, shares = new[] { new { contactId = jonas } } },
+            TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
+        (await source.PostAsJsonAsync(
+            $"/api/contacts/{jonas}/payments",
+            new { direction = "fromContact", amount = "10.00", currency = "eur", date = "2026-09-12" },
+            TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
+        var export = await DownloadAsync(source);
+        using var target = await CreateUserClientAsync();
+
+        await ReadOkAsync<ImportDto>(await ImportAsync(target, WithNewIds(export)));
+        var people = (await target.GetFromJsonAsync<List<PersonDto>>("/api/contacts", TestContext.Current.CancellationToken))!;
+
+        var person = Assert.Single(people);
+        Assert.Equal("Jonas", person.Name);
+        Assert.Equal([("eur", "20.00")], person.Balances.Select(b => (b.Currency, b.Amount)));
+    }
+
     private static async Task<byte[]> DownloadAsync(HttpClient client)
     {
         var response = await client.GetAsync("/api/users/me/export?attachments=true", TestContext.Current.CancellationToken);
@@ -262,4 +288,8 @@ public sealed partial class UserImportTests(ApiFixture fixture) : IntegrationTes
     private sealed record AllocationTargetDto(string Key, string Share);
 
     private sealed record AllocationTargetsDto(string? Dimension, List<AllocationTargetDto> Targets);
+
+    private sealed record PersonBalanceDto(string Currency, string Amount);
+
+    private sealed record PersonDto(string Name, List<PersonBalanceDto> Balances);
 }

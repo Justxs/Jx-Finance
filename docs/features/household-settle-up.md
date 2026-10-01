@@ -2,7 +2,7 @@
 
 Back to the [feature walkthrough](README.md). See also [Households and sharing](households-and-sharing.md), [decisions](../decisions/households-and-sharing.md), [architecture: Sharing and households](../architecture/sharing.md), [Transfers](transfers.md) and [Audit log](audit-log.md).
 
-Backend `Households` (`GetSettleUp`, `GetSharedExpenses`, `CreateSharedExpense`, `UpdateSharedExpense`, `DeleteSharedExpense`, `GetSettlements`, `CreateSettlement`, `DeleteSettlement`, `Services/SettleUpService.cs`), the pure rules `Common/SettleUp` (`ShareAllocator`, `SettleUpPlanner`, `SettleUpText`), the entities `SharedExpense`, `SharedExpenseShare` and `Settlement` with the marker `IHouseholdScoped` in `Domain/Households`, the ledger marker in `Transactions/Services/TransactionService.cs`, and the two kinds in `TrashRestorers`, `Retention` and `AuditCollector`. Frontend `households/split-expense-dialog`, `households/share-allocation.ts`, `households/settle-up`, `households/settlement-dialog`, `households/shared-expenses`, and `transactions/shared-expense` (the row action and the ledger mark). Gated by `Households`; there is no switch of its own.
+Backend `Households` (`GetSettleUp`, `GetSharedExpenses`, `CreateSharedExpense`, `UpdateSharedExpense`, `DeleteSharedExpense`, `GetSettlements`, `CreateSettlement`, `DeleteSettlement`, `Services/SettleUpService.cs`), the pure rules `Common/SettleUp` (`ShareAllocator`, `SettleUpPlanner`, `SettleUpBalances`, `SplitRules`, `SettleUpText`), shared since 2026-10-01 with [money with people outside the household](money-with-people.md), the entities `SharedExpense`, `SharedExpenseShare` and `Settlement` with the marker `IHouseholdScoped` in `Domain/Households`, the ledger marker in `Transactions/Services/TransactionService.cs`, and the two kinds in `TrashRestorers`, `Retention` and `AuditCollector`. Frontend `households/split-expense-dialog`, `households/share-allocation.ts`, `households/settle-up`, `households/settlement-dialog`, `households/shared-expenses`, and `transactions/shared-expense` (the row action and the ledger mark). Gated by `Households`; there is no switch of its own.
 
 Shipped on 2026-09-29. A member who paid for the household splits the expense with other members from its row in the ledger; the household card then shows who owes whom, per currency, and the fewest payments that would settle everyone, and "Record payment" writes down that one member paid another, with the ordinary transfer between their accounts when the person recording it can see an account of each.
 
@@ -29,7 +29,7 @@ The server refuses:
 | The transaction is not visible to the caller | 400 `reference.notFound` |
 | It sits on an account the caller does not own, for example a housemate's payment on a shared account | 400 `settleUp.notPayer` |
 | It is income, a refund (a negative expense) or not an expense at all | 400 `settleUp.notExpense` |
-| It is split already, in this or another household, including by a request that won the race to the unique index | 409 `settleUp.alreadySplit` |
+| It is split already, in this or another household or since 2026-10-01 with people outside the household, including by a request that won the race to the unique index | 409 `settleUp.alreadySplit` |
 | A member is not in the household | 400 `household.notMember` |
 | Nobody but the payer takes part | 400 `settleUp.noOtherMember` |
 | Exact amounts that do not add up to the expense | 400 `settleUp.sharesMismatch` |
@@ -72,7 +72,7 @@ Balances are derived on every read from three stored sets: the splits whose tran
 
 balance = what they paid for others in splits − what others paid for them + the payments they made − the payments they received
 
-A positive balance is owed to the member, a negative one is owed by them, and the balances of a currency always add up to zero. The card writes them in words, never by colour alone: "You are owed €42.50", "Šarūnas owes €42.50". Currencies are never converted: a household that paid in euros and dollars sees two lines per member, and a payment settles the balance of its own currency.
+A positive balance is owed to the member, a negative one is owed by them, and the balances of a currency always add up to zero. The sum is `SettleUpBalances`, which the balances with people outside the household use too. The card writes them in words, never by colour alone: "You are owed €42.50", "Šarūnas owes €42.50". Currencies are never converted: a household that paid in euros and dollars sees two lines per member, and a payment settles the balance of its own currency.
 
 `SettleUpPlanner` proposes the payments for each currency: it matches the member owed the most with the member who owes the most, pays the smaller of the two amounts, and repeats. Each step settles at least one member completely, so a household of n members needs at most n − 1 payments. The card lists them as "Šarūnas pays Rūta €42.50"; each has "Record payment" when the signed-in member is one of the two.
 

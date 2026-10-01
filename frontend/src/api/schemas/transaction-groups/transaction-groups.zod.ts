@@ -109,6 +109,11 @@ export const transactionGroupMembersResponseItemsItemSharedExpenseTwoMyShareRegE
   "^-?\\d+(\\.\\d{1,8})?$",
 );
 export const transactionGroupMembersResponseItemsItemEnteredByMeDefault = false;
+export const transactionGroupMembersResponseItemsItemContactSplitTwoOwnAmountRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const transactionGroupMembersResponseItemsItemContactSplitTwoSharesItemAmountRegExp =
+  new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 
 export const TransactionGroupMembersResponse = zod.object({
   items: zod.array(
@@ -254,6 +259,33 @@ export const TransactionGroupMembersResponse = zod.object({
           zod.object({
             name: zod.string(),
             warrantyUntil: zod.union([zod.null(), zod.iso.date()]),
+          }),
+        ])
+        .optional(),
+      contactSplit: zod
+        .union([
+          zod.null(),
+          zod.object({
+            id: zod.uuid(),
+            method: zod.enum(["equal", "shares", "exact"]).describe("Equal, Shares or Exact."),
+            ownWeight: zod.int().nullable(),
+            ownAmount: zod
+              .stringFormat(
+                "decimal",
+                transactionGroupMembersResponseItemsItemContactSplitTwoOwnAmountRegExp,
+              )
+              .nullable(),
+            shares: zod.array(
+              zod.object({
+                contactId: zod.uuid(),
+                name: zod.string(),
+                weight: zod.int().nullable(),
+                amount: zod.stringFormat(
+                  "decimal",
+                  transactionGroupMembersResponseItemsItemContactSplitTwoSharesItemAmountRegExp,
+                ),
+              }),
+            ),
           }),
         ])
         .optional(),

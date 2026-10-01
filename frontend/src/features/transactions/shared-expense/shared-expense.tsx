@@ -37,7 +37,13 @@ export function useSharedExpenseSplits() {
 
   function actionFor(transaction: TransactionResponse): RowAction | undefined {
     const account = accounts.find((item) => item.id === transaction.accountId);
-    if (households.length === 0 || !isPurchase(transaction) || !me || account?.ownerId !== me.id) {
+    if (
+      households.length === 0 ||
+      transaction.contactSplit ||
+      !isPurchase(transaction) ||
+      !me ||
+      account?.ownerId !== me.id
+    ) {
       return undefined;
     }
     return {

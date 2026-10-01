@@ -1,5 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { getHouseholdsSuspenseQueryOptions } from "@/api/generated";
+import {
+  getContactsSuspenseQueryOptions,
+  getHouseholdsSuspenseQueryOptions,
+} from "@/api/generated";
 import { HouseholdsPage } from "@/features/households/households-page/households-page";
 import { HouseholdsPending } from "@/features/households/households-page/households-page-pending";
 import { requireFeature } from "@/lib/feature-gate";
@@ -9,6 +12,7 @@ export const Route = createFileRoute("/households")({
   beforeLoad: requireFeature("households"),
   loader: ({ context: { queryClient } }) => {
     warm(queryClient, getHouseholdsSuspenseQueryOptions());
+    warm(queryClient, getContactsSuspenseQueryOptions());
   },
   component: HouseholdsPage,
   pendingComponent: HouseholdsPending,

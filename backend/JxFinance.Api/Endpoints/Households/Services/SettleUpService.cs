@@ -35,13 +35,8 @@ public sealed class SettleUpService(
     private static readonly DomainError ExpenseMissing = EntityLookup.NotFound("Split not found.");
     private static readonly DomainError SettlementMissing = EntityLookup.NotFound("Payment not found.");
 
-    private static readonly DomainError TransactionNotFound = new(ErrorCodes.ReferenceNotFound, "Transaction not found.");
     private static readonly DomainError AccountNotFound = new(ErrorCodes.ReferenceNotFound, "Account not found.");
     private static readonly DomainError TransferNotFound = new(ErrorCodes.ReferenceNotFound, "Transfer not found.");
-    private static readonly DomainError NotPayer =
-        new(ErrorCodes.SettleUpNotPayer, "Only an expense paid from an account you own can be split.");
-    private static readonly DomainError NotExpense = new(ErrorCodes.SettleUpNotExpense, "Only an expense can be split.");
-    private static readonly DomainError AlreadySplit = new(ErrorCodes.SettleUpAlreadySplit, "This expense is already split.");
     private static readonly DomainError NotMember =
         new(ErrorCodes.HouseholdNotMember, "Everyone taking part must be a member of the household.");
     private static readonly DomainError NoOtherMember =
@@ -73,12 +68,12 @@ public sealed class SettleUpService(
             .OrderBy(b => b.Key.Currency)
             .ThenByDescending(b => b.Value)
             .ToList();
-        var names = await NamesAsync(balances.Select(b => b.Key.UserId), cancellationToken);
+        var names = await NamesAsync(balances.Select(b => b.Key.Id), cancellationToken);
         var members = await MembersAsync(id, cancellationToken);
         var payments = balances
             .GroupBy(b => b.Key.Currency)
             .SelectMany(group => SettleUpPlanner
-                .Plan([.. group.Select(b => new MemberBalance(b.Key.UserId, b.Value))])
+                .Plan([.. group.Select(b => new MemberBalance(b.Key.Id, b.Value))])
                 .Select(p => new SuggestedPaymentResponse(
                     p.FromUserId,
                     names.GetValueOrDefault(p.FromUserId, ""),
@@ -91,9 +86,9 @@ public sealed class SettleUpService(
         return new SettleUpResponse(
             [
                 .. balances.Select(b => new MemberBalanceResponse(
-                    b.Key.UserId,
-                    names.GetValueOrDefault(b.Key.UserId, ""),
-                    members.Contains(b.Key.UserId),
+                    b.Key.Id,
+                    names.GetValueOrDefault(b.Key.Id, ""),
+                    members.Contains(b.Key.Id),
                     b.Key.Currency,
                     b.Value)),
             ],
@@ -134,14 +129,14 @@ public sealed class SettleUpService(
 
         var transactionId = new TransactionId(request.TransactionId);
         var transaction = await db.Transactions.AsNoTracking().FirstOrDefaultAsync(t => t.Id == transactionId, cancellationToken);
-        if (await RefusedSplitAsync(transaction, cancellationToken) is { } refused)
+        if (await SplitRules.RefusedAsync(db, Me, transaction, cancellationToken) is { } refused)
         {
             return refused;
         }
 
-        if (await db.SharedExpenses.IgnoreQueryFilters(QueryFilters.OwnerOnly).AnyAsync(e => e.TransactionId == transactionId, cancellationToken))
+        if (await SplitRules.IsSplitAsync(db, transactionId, Guid.Empty, cancellationToken))
         {
-            return AlreadySplit;
+            return SplitRules.AlreadySplit;
         }
 
         var expense = new SharedExpense { HouseholdId = householdId, TransactionId = transactionId, Method = request.Method };
@@ -154,7 +149,7 @@ public sealed class SettleUpService(
 
         db.SharedExpenses.Add(expense);
         db.SharedExpenseShares.AddRange(rows);
-        if (await db.SaveOrConflictAsync(AlreadySplit, cancellationToken) is { } conflict)
+        if (await db.SaveOrConflictAsync(SplitRules.AlreadySplit, cancellationToken) is { } conflict)
         {
             return conflict;
         }
@@ -176,7 +171,7 @@ public sealed class SettleUpService(
         {
             var transaction = await db.Transactions.AsNoTracking()
                 .FirstOrDefaultAsync(t => t.Id == expense.TransactionId, cancellationToken);
-            if (await RefusedSplitAsync(transaction, cancellationToken) is { } refused)
+            if (await SplitRules.RefusedAsync(db, Me, transaction, cancellationToken) is { } refused)
             {
                 return refused;
             }
@@ -355,21 +350,6 @@ public sealed class SettleUpService(
         return found.TryGetValue(out var expense) && expense.UserId != Me ? PayerOnly : found;
     }
 
-    private async Task<DomainError?> RefusedSplitAsync(Transaction? transaction, CancellationToken cancellationToken)
-    {
-        if (transaction is null)
-        {
-            return TransactionNotFound;
-        }
-
-        if (!await db.Accounts.AnyAsync(a => a.Id == transaction.AccountId && a.UserId == Me, cancellationToken))
-        {
-            return NotPayer;
-        }
-
-        return transaction is { Type: FlowType.Expense, Amount.Amount: > 0 } ? null : NotExpense;
-    }
-
     private static void Copy(Transaction transaction, SharedExpense expense)
     {
         expense.Date = transaction.Date;
@@ -496,12 +476,12 @@ public sealed class SettleUpService(
 
         var owing = (await BalancesAsync(householdId, cancellationToken))
             .Where(b => b.Value != 0)
-            .Select(b => b.Key.UserId)
+            .Select(b => b.Key.Id)
             .ToHashSet();
         return userIds.All(id => members.Contains(id) || owing.Contains(id));
     }
 
-    private async Task<Dictionary<(Guid UserId, Currency Currency), decimal>> BalancesAsync(
+    private async Task<Dictionary<(Guid Id, Currency Currency), decimal>> BalancesAsync(
         HouseholdId householdId,
         CancellationToken cancellationToken)
     {
@@ -528,24 +508,13 @@ public sealed class SettleUpService(
             .Select(s => new { s.FromUserId, s.ToUserId, s.Amount })
             .ToListAsync(cancellationToken);
 
-        var balances = new Dictionary<(Guid UserId, Currency Currency), decimal>();
-        void Add(Guid userId, Currency currency, decimal amount) =>
-            balances[(userId, currency)] = balances.GetValueOrDefault((userId, currency)) + amount;
-
-        foreach (var share in shares)
-        {
-            var expense = countedExpenses[share.SharedExpenseId];
-            Add(expense.UserId, expense.Currency, share.Amount);
-            Add(share.UserId, expense.Currency, -share.Amount);
-        }
-
-        foreach (var settlement in settlements)
-        {
-            Add(settlement.FromUserId, settlement.Amount.Currency, settlement.Amount.Amount);
-            Add(settlement.ToUserId, settlement.Amount.Currency, -settlement.Amount.Amount);
-        }
-
-        return balances;
+        return SettleUpBalances.Of(shares
+            .Select(share =>
+            {
+                var expense = countedExpenses[share.SharedExpenseId];
+                return new Owed(expense.UserId, share.UserId, expense.Currency, share.Amount);
+            })
+            .Concat(settlements.Select(s => new Owed(s.FromUserId, s.ToUserId, s.Amount.Currency, s.Amount.Amount))));
     }
 
     private async Task<HashSet<Guid>> MembersAsync(HouseholdId householdId, CancellationToken cancellationToken) =>

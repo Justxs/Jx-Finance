@@ -15,6 +15,10 @@ import {
   getCategorizationRulesMockHandler,
   getSuggestedRulesMockHandler,
 } from "@/api/generated/categorization-rules/categorization-rules.msw";
+import {
+  getContactEntriesMockHandler,
+  getContactsMockHandler,
+} from "@/api/generated/contacts/contacts.msw";
 import { getConversionsMockHandler } from "@/api/generated/conversions/conversions.msw";
 import {
   getCategoryBreakdownMockHandler,
@@ -83,6 +87,7 @@ import { backupHandlers } from "./backups";
 import { budgetHandlers } from "./budgets";
 import { categoryHandlers } from "./categories";
 import { categorizationRuleHandlers } from "./categorization-rules";
+import { contactHandlers } from "./contacts";
 import { conversionHandlers } from "./conversions";
 import { currencyHandlers } from "./currencies";
 import { dashboardHandlers } from "./dashboard";
@@ -121,6 +126,7 @@ export const handlers: RequestHandler[] = [
   ...budgetHandlers,
   ...categorizationRuleHandlers,
   ...categoryHandlers,
+  ...contactHandlers,
   ...conversionHandlers,
   ...currencyHandlers,
   ...dashboardHandlers,
@@ -186,6 +192,8 @@ export const emptyHandlers: RequestHandler[] = [
   getSettleUpMockHandler(evenSettleUp),
   getSharedExpensesMockHandler(emptyPage),
   getSettlementsMockHandler(emptyPage),
+  getContactsMockHandler([]),
+  getContactEntriesMockHandler(emptyPage),
   getNotificationsMockHandler([]),
   getRecurringBillsMockHandler([]),
   getBillsCalendarMockHandler(emptyBillsCalendar),

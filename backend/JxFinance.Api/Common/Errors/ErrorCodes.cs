@@ -68,6 +68,7 @@ public static class ErrorCodes
     public const string SettleUpAccountOwner = "settleUp.accountOwner";
     public const string SettleUpCurrencyMismatch = "settleUp.currencyMismatch";
     public const string SettleUpTransferTaken = "settleUp.transferTaken";
+    public const string ContactNoPerson = "contact.noPerson";
     public const string CategoryWrongType = "category.wrongType";
     public const string CategoryNestingInvalid = "category.nestingInvalid";
     public const string CurrencyDisabled = "currency.disabled";
