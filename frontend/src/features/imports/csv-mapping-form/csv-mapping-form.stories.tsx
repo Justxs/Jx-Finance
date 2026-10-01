@@ -5,6 +5,7 @@ import { withWidth } from "@/storybook/decorators";
 import {
   cardInspection,
   csvMappings,
+  headerlessInspection,
   revolutInspection,
   revolutInspectionFitting,
   revolutMapping,
@@ -73,6 +74,23 @@ export const AmountWithDirection: Story = {
       await canvas.findByRole("radio", { name: /amount and direction|suma ir kryptis/i }),
     );
     await expect(await canvas.findByLabelText(/direction value|krypties reikšmė/i)).toBeVisible();
+  },
+};
+
+export const WithoutHeaderRow: Story = {
+  args: { inspection: headerlessInspection },
+  play: async ({ canvas, args }) => {
+    const noHeader = await canvas.findByRole("checkbox", {
+      name: /no header row|neturi antraštės/i,
+    });
+    await expect(noHeader).toBeChecked();
+    await expect(canvas.getByRole("region", { name: /first rows|pirmosios/i })).toHaveTextContent(
+      /Column 1|1 stulpelis/,
+    );
+    await userEvent.click(noHeader);
+    await expect(args.onRead).toHaveBeenCalledWith(
+      expect.objectContaining({ noHeaderRow: false, skipLines: 0 }),
+    );
   },
 };
 

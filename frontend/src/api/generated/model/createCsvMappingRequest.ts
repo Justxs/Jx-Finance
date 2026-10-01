@@ -37,4 +37,6 @@ export interface CreateCsvMappingRequest {
   columns: CsvColumnMap;
   /** Optional. The currency of every row when the file has no currency column; the account's currency when left out. */
   currency?: null | Currency;
+  /** Optional, false by default. True for a file without a header row: every column is then named by its position, 1 for the first, and the lines skipped sit above the first entry. */
+  noHeaderRow?: boolean;
 }

@@ -6,6 +6,7 @@ public sealed record InspectCsvResponse(
     CsvEncoding Encoding,
     string Delimiter,
     int SkipLines,
+    bool NoHeaderRow,
     IReadOnlyList<InspectCsvColumn> Columns,
     IReadOnlyList<IReadOnlyList<string>> Samples,
     IReadOnlyList<Guid> MatchingMappingIds);

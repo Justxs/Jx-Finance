@@ -34,6 +34,7 @@ test("a saved mapping without a file offers only the columns it names", () => {
     encoding: revolutMapping.encoding,
     delimiter: revolutMapping.delimiter,
     skipLines: revolutMapping.skipLines,
+    noHeaderRow: revolutMapping.noHeaderRow,
     amountStyle: revolutMapping.amountStyle,
     dateFormat: revolutMapping.dateFormat,
     decimalSeparator: revolutMapping.decimalSeparator,

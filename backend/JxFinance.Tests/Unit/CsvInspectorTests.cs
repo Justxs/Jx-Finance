@@ -61,7 +61,7 @@ public sealed class CsvInspectorTests
         const string csv = "Date\tText\tAmount\n2026-09-01\tShop, Vilnius\t-4.20\n2026-09-02\tPay\t10.00\n";
 
         var detected = await InspectAsync(Utf8(csv));
-        var corrected = await CsvInspector.InspectAsync(new MemoryStream(Utf8(csv)), CsvEncoding.Windows1252, "\t", 1, TestContext.Current.CancellationToken);
+        var corrected = await CsvInspector.InspectAsync(new MemoryStream(Utf8(csv)), CsvEncoding.Windows1252, "\t", 1, null, TestContext.Current.CancellationToken);
 
         Assert.Equal(("\t", 3), (detected.Delimiter, detected.Columns.Count));
         Assert.Equal((CsvEncoding.Windows1252, 1, "2026-09-01"), (corrected.Value!.Encoding, corrected.Value.SkipLines, corrected.Value.Columns[0].Name));
@@ -70,13 +70,13 @@ public sealed class CsvInspectorTests
     [Fact]
     public async Task Text_without_columns_is_not_a_csv_file()
     {
-        var result = await CsvInspector.InspectAsync(new MemoryStream(Utf8("just a note\nnothing else\n")), null, null, null, TestContext.Current.CancellationToken);
+        var result = await CsvInspector.InspectAsync(new MemoryStream(Utf8("just a note\nnothing else\n")), null, null, null, null, TestContext.Current.CancellationToken);
 
         Assert.Equal(ErrorCodes.ImportInvalidFile, result.Error!.Code);
     }
 
     private static async Task<InspectCsvResponse> InspectAsync(byte[] bytes) =>
-        (await CsvInspector.InspectAsync(new MemoryStream(bytes), null, null, null, TestContext.Current.CancellationToken)).Value!;
+        (await CsvInspector.InspectAsync(new MemoryStream(bytes), null, null, null, null, TestContext.Current.CancellationToken)).Value!;
 
     private static InspectCsvColumn Column(InspectCsvResponse inspection, string name) =>
         inspection.Columns.Single(c => c.Name == name);

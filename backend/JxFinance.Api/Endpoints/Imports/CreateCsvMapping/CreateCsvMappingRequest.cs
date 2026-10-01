@@ -13,4 +13,5 @@ public sealed record CreateCsvMappingRequest(
     string DateFormat,
     CsvDecimalSeparator DecimalSeparator,
     CsvColumnMap Columns,
-    Currency? Currency = null) : ICsvMappingInput;
+    Currency? Currency = null,
+    bool NoHeaderRow = false) : ICsvMappingInput;

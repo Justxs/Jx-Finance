@@ -23,4 +23,9 @@ export interface InspectCsvRequest {
    * @nullable
    */
   skipLines?: number | null;
+  /**
+   * Optional. True reads the file as having no header row, so the columns are named 1, 2 and so on and the first line is a sample; false reads the first line as the header. Left out, it is proposed: true when the first line holds a date.
+   * @nullable
+   */
+  noHeaderRow?: boolean | null;
 }

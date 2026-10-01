@@ -2640,6 +2640,9 @@
         "pipe": "Pipe"
       },
       "skipLines": "Lines above the header",
+      "noHeaderRow": "The file has no header row",
+      "noHeaderRowHint": "Columns are then chosen by position, and the lines above count up to the first entry.",
+      "position": "Column {{position}}",
       "money": "Money",
       "amountStyle": "How the amount is written",
       "styles": {

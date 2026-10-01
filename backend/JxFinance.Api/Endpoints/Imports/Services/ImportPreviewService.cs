@@ -47,9 +47,10 @@ public sealed class ImportPreviewService(
         CsvEncoding? encoding,
         string? delimiter,
         int? skipLines,
+        bool? noHeaderRow,
         CancellationToken cancellationToken)
     {
-        var inspected = await CsvInspector.InspectAsync(fileStream, encoding, delimiter, skipLines, cancellationToken);
+        var inspected = await CsvInspector.InspectAsync(fileStream, encoding, delimiter, skipLines, noHeaderRow, cancellationToken);
         if (!inspected.TryGetValue(out var inspection))
         {
             return inspected.Error;
@@ -63,7 +64,10 @@ public sealed class ImportPreviewService(
             .ToListAsync(cancellationToken);
         return inspection with
         {
-            MatchingMappingIds = mappings.Where(m => m.Columns.Named().All(headers.Contains)).Select(m => m.Id.Value).ToList(),
+            MatchingMappingIds = mappings
+                .Where(m => m.NoHeaderRow == inspection.NoHeaderRow && m.Columns.Named().All(headers.Contains))
+                .Select(m => m.Id.Value)
+                .ToList(),
         };
     }
 

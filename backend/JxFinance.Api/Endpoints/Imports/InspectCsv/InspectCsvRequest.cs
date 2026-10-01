@@ -11,4 +11,6 @@ public sealed class InspectCsvRequest
     public string? Delimiter { get; set; }
 
     public int? SkipLines { get; set; }
+
+    public bool? NoHeaderRow { get; set; }
 }

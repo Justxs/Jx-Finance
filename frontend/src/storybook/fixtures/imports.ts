@@ -303,6 +303,7 @@ export const revolutMapping: CsvMappingResponse = {
   encoding: "utf8",
   delimiter: ",",
   skipLines: 0,
+  noHeaderRow: false,
   amountStyle: "signedNegativeIsExpense",
   dateFormat: "yyyy-MM-dd",
   decimalSeparator: "dot",
@@ -374,6 +375,7 @@ export const revolutInspection: InspectCsvResponse = {
   encoding: "utf8",
   delimiter: ",",
   skipLines: 0,
+  noHeaderRow: false,
   columns: [
     { name: "Type", dateFormats: [], decimalSeparator: null },
     { name: "Product", dateFormats: [], decimalSeparator: null },
@@ -403,6 +405,7 @@ export const cardInspection: InspectCsvResponse = {
   encoding: "windows1257",
   delimiter: ";",
   skipLines: 3,
+  noHeaderRow: false,
   columns: [
     { name: "Data", dateFormats: ["dd/MM/yyyy", "MM/dd/yyyy"], decimalSeparator: null },
     { name: "Prekybininkas", dateFormats: [], decimalSeparator: null },
@@ -416,6 +419,13 @@ export const cardInspection: InspectCsvResponse = {
     ["09/09/2026", "Maxima", "170,00", "170,00"],
   ],
   matchingMappingIds: [],
+};
+
+export const headerlessInspection: InspectCsvResponse = {
+  ...cardInspection,
+  skipLines: 0,
+  noHeaderRow: true,
+  columns: cardInspection.columns.map((column, index) => ({ ...column, name: String(index + 1) })),
 };
 
 export const mappedCsvPreview: ImportPreviewResponse = {

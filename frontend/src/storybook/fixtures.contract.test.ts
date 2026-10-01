@@ -309,6 +309,7 @@ const contracts: Record<string, Contract> = {
   revolutInspection: { schema: schemas.InspectCsvResponse },
   revolutInspectionFitting: { schema: schemas.InspectCsvResponse },
   cardInspection: { schema: schemas.InspectCsvResponse },
+  headerlessInspection: { schema: schemas.InspectCsvResponse },
   backups: { schema: schemas.BackupsResponse },
   backupRestored: { schema: schemas.RestoreBackupResponse },
   twoFactorSetup: { schema: schemas.SetupTwoFactorResponse },

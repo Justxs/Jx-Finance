@@ -30,4 +30,5 @@ export interface UpdateCsvMappingRequest {
   decimalSeparator: CsvDecimalSeparator;
   columns: CsvColumnMap;
   currency?: null | Currency;
+  noHeaderRow?: boolean;
 }

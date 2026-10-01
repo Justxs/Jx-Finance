@@ -48,6 +48,7 @@ const mappingFields = z.object({
   encoding: z.enum(CsvEncoding),
   delimiter: z.string(),
   skipLines: z.string(),
+  noHeaderRow: z.boolean(),
   amountStyle: z.enum(CsvAmountStyle),
   dateFormat: z.string(),
   decimalSeparator: z.enum(CsvDecimalSeparator),
@@ -77,6 +78,7 @@ export interface MappingSource {
   encoding: CsvEncoding;
   delimiter: string;
   skipLines: number;
+  noHeaderRow: boolean;
   columns: InspectCsvColumn[];
   samples: string[][];
 }
@@ -104,6 +106,7 @@ export function sourceOf(
     encoding: initial?.encoding ?? "utf8",
     delimiter: initial?.delimiter ?? ",",
     skipLines: initial?.skipLines ?? 0,
+    noHeaderRow: initial?.noHeaderRow ?? false,
     columns: [...new Set(names)].map((name) => ({ name, dateFormats: [], decimalSeparator: null })),
     samples: [],
   };
@@ -115,9 +118,10 @@ export function draftOf(
 ): MappingValues {
   const date = source.columns.find((column) => column.dateFormats.length > 0);
   const amount = source.columns.find((column) => column.decimalSeparator !== null);
+  const kept = initial?.noHeaderRow === source.noHeaderRow ? initial : undefined;
   const columns = columnsSchema.parse(
     Object.fromEntries(
-      columnsSchema.keyof().options.map((role) => [role, initial?.columns[role] ?? ""]),
+      columnsSchema.keyof().options.map((role) => [role, kept?.columns[role] ?? ""]),
     ),
   );
 
@@ -126,11 +130,12 @@ export function draftOf(
     encoding: source.encoding,
     delimiter: source.delimiter,
     skipLines: String(source.skipLines),
+    noHeaderRow: source.noHeaderRow,
     amountStyle: initial?.amountStyle ?? "signedNegativeIsExpense",
     dateFormat: initial?.dateFormat ?? date?.dateFormats[0] ?? DATE_FORMATS[0],
     decimalSeparator: initial?.decimalSeparator ?? amount?.decimalSeparator ?? "dot",
     currency: initial?.currency ?? "",
-    columns: initial ? columns : { ...columns, date: date?.name ?? "", amount: amount?.name ?? "" },
+    columns: kept ? columns : { ...columns, date: date?.name ?? "", amount: amount?.name ?? "" },
   };
 }
 
@@ -165,6 +170,7 @@ export function toRequest(values: MappingValues): CreateCsvMappingRequest {
     encoding: values.encoding,
     delimiter: values.delimiter,
     skipLines: Number(values.skipLines),
+    noHeaderRow: values.noHeaderRow,
     amountStyle: values.amountStyle,
     dateFormat: values.dateFormat,
     decimalSeparator: values.decimalSeparator,

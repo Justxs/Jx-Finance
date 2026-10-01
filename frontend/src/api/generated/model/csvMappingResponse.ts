@@ -17,6 +17,7 @@ export interface CsvMappingResponse {
   encoding: CsvEncoding;
   delimiter: string;
   skipLines: number;
+  noHeaderRow: boolean;
   amountStyle: CsvAmountStyle;
   dateFormat: string;
   decimalSeparator: CsvDecimalSeparator;

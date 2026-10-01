@@ -9,6 +9,7 @@ public sealed record CsvMappingResponse(
     CsvEncoding Encoding,
     string Delimiter,
     int SkipLines,
+    bool NoHeaderRow,
     CsvAmountStyle AmountStyle,
     string DateFormat,
     CsvDecimalSeparator DecimalSeparator,

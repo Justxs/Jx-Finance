@@ -164,7 +164,7 @@ export const getCreateCsvMappingUrl = () => {
 };
 
 /**
- * Saves how to read one bank's CSV export, so its next file goes straight to the preview with format genericCsv and this mapping's id. Columns are named by their header text. The amount style decides which columns carry the money: signedNegativeIsExpense and signedPositiveIsExpense read one signed amount column (the second for card statements, where a positive amount is a purchase), debitCredit reads a debit and a credit column, and amountWithDirection reads an amount and a direction column whose value equals expenseValue, ignoring case, for money out. A mapping is personal: nobody else sees it.
+ * Saves how to read one bank's CSV export, so its next file goes straight to the preview with format genericCsv and this mapping's id. Columns are named by their header text, or by their position from 1 when noHeaderRow is true. The amount style decides which columns carry the money: signedNegativeIsExpense and signedPositiveIsExpense read one signed amount column (the second for card statements, where a positive amount is a purchase), debitCredit reads a debit and a credit column, and amountWithDirection reads an amount and a direction column whose value equals expenseValue, ignoring case, for money out. A mapping is personal: nobody else sees it.
  * @summary Save a CSV column mapping
  */
 export const createCsvMapping = async (
@@ -577,7 +577,7 @@ export const getInspectCsvUrl = () => {
 };
 
 /**
- * Reads a CSV export from any bank, card issuer or payment app and proposes how to read it: the text encoding (a byte-order mark decides UTF-8 or UTF-16, otherwise windows1257 is proposed when the bytes are not valid UTF-8), the delimiter (comma, semicolon, tab or pipe) and how many lines sit above the header row. It returns the header names, up to ten sample rows of raw cells, and for each column the date formats that read every sample and the decimal separator its numbers use. matchingMappingIds lists your saved mappings whose every named column is in this header, so the client can offer one. Send encoding, delimiter or skipLines to read the file again after the user corrected a proposal. Nothing is written. Send the file as multipart/form-data.
+ * Reads a CSV export from any bank, card issuer or payment app and proposes how to read it: the text encoding (a byte-order mark decides UTF-8 or UTF-16, otherwise windows1257 is proposed when the bytes are not valid UTF-8), the delimiter (comma, semicolon, tab or pipe) and how many lines sit above the header row. It returns the header names, up to ten sample rows of raw cells, and for each column the date formats that read every sample and the decimal separator its numbers use. matchingMappingIds lists your saved mappings whose every named column is in this header, so the client can offer one. Send encoding, delimiter or skipLines to read the file again after the user corrected a proposal; noHeaderRow says whether the file was read without a header row. Nothing is written. Send the file as multipart/form-data.
  * @summary Inspect a CSV file for a column mapping
  */
 export const inspectCsv = async (
@@ -596,6 +596,9 @@ export const inspectCsv = async (
   }
   if (inspectCsvRequest.skipLines !== undefined && inspectCsvRequest.skipLines !== null) {
     formData.append(`skipLines`, inspectCsvRequest.skipLines.toString());
+  }
+  if (inspectCsvRequest.noHeaderRow !== undefined && inspectCsvRequest.noHeaderRow !== null) {
+    formData.append(`noHeaderRow`, inspectCsvRequest.noHeaderRow.toString());
   }
 
   return customFetch<InspectCsvResponse>(getInspectCsvUrl(), {

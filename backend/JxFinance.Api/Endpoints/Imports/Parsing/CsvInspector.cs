@@ -18,6 +18,7 @@ public static class CsvInspector
         CsvEncoding? encoding,
         string? delimiter,
         int? skipLines,
+        bool? noHeaderRow,
         CancellationToken cancellationToken)
     {
         using var buffer = new MemoryStream();
@@ -35,16 +36,24 @@ public static class CsvInspector
             var chosenDelimiter = delimiter ?? CsvMappingRules.Delimiters.MaxBy(candidate => Fit(text, candidate))!;
             var records = CsvText.Records(new StringReader(text), chosenDelimiter).ToList();
             var headerAt = skipLines ?? HeaderLine(records);
-            if (headerAt + 1 >= records.Count || records[headerAt].Length < 2)
+            if (headerAt >= records.Count || records[headerAt].Length < 2)
             {
                 return Invalid();
             }
 
-            var samples = records.Skip(headerAt + 1).Take(SampleRows).ToList();
+            var positional = noHeaderRow ?? records[headerAt].Any(LooksLikeData);
+            var samples = records.Skip(positional ? headerAt : headerAt + 1).Take(SampleRows).ToList();
+            if (samples.Count == 0)
+            {
+                return Invalid();
+            }
+
             var columns = records[headerAt]
-                .Select((name, index) => Column(name.Trim(), samples.Select(row => index < row.Length ? row[index].Trim() : "")))
+                .Select((name, index) => Column(
+                    positional ? CsvColumnMap.Position(index) : name.Trim(),
+                    samples.Select(row => index < row.Length ? row[index].Trim() : "")))
                 .ToList();
-            return new InspectCsvResponse(chosenEncoding, chosenDelimiter, headerAt, columns, samples, []);
+            return new InspectCsvResponse(chosenEncoding, chosenDelimiter, headerAt, positional, columns, samples, []);
         }
         catch (CsvHelperException)
         {
@@ -84,6 +93,9 @@ public static class CsvInspector
         return index is >= 0 and <= CsvImportMapping.MaxSkipLines ? index : 0;
     }
 
+    private static bool LooksLikeData(string cell) =>
+        CsvDateFormats.All.Any(format => CsvText.Date(cell.Trim(), format) is not null);
+
     private static InspectCsvColumn Column(string name, IEnumerable<string> cells)
     {
         var values = cells.Where(cell => cell.Length > 0).ToList();
@@ -104,5 +116,5 @@ public static class CsvInspector
 
     private static DomainError Invalid() => new(
         ErrorCodes.ImportInvalidFile,
-        "The file is not a CSV file with a header row and at least one entry.");
+        "The file is not a CSV file with at least one entry under its header row, or one entry when it has none.");
 }

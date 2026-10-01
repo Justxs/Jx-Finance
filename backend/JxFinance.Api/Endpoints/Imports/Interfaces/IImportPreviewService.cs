@@ -19,5 +19,6 @@ public interface IImportPreviewService
         CsvEncoding? encoding,
         string? delimiter,
         int? skipLines,
+        bool? noHeaderRow,
         CancellationToken cancellationToken);
 }

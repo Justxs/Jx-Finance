@@ -9,7 +9,8 @@ public sealed class CreateCsvMappingSummary : Summary<CreateCsvMappingEndpoint, 
     {
         Summary = "Save a CSV column mapping";
         Description = "Saves how to read one bank's CSV export, so its next file goes straight to the preview with "
-            + "format genericCsv and this mapping's id. Columns are named by their header text. The amount style decides "
+            + "format genericCsv and this mapping's id. Columns are named by their header text, or by their position from 1 when "
+            + "noHeaderRow is true. The amount style decides "
             + "which columns carry the money: signedNegativeIsExpense and signedPositiveIsExpense read one signed amount "
             + "column (the second for card statements, where a positive amount is a purchase), debitCredit reads a debit and "
             + "a credit column, and amountWithDirection reads an amount and a direction column whose value equals "
@@ -42,7 +43,8 @@ public sealed class CreateCsvMappingSummary : Summary<CreateCsvMappingEndpoint, 
         RequestParam(r => r.DecimalSeparator, "The decimal mark of the numbers, dot or comma; the other one is read as a thousands mark.");
         RequestParam(r => r.Columns, "The header names of the columns to read. date is required, and the amount style needs its columns. bookedValues is a comma-separated list of the status values that mean booked.");
         RequestParam(r => r.Currency, "Optional. The currency of every row when the file has no currency column; the account's currency when left out.");
+        RequestParam(r => r.NoHeaderRow, "Optional, false by default. True for a file without a header row: every column is then named by its position, 1 for the first, and the lines skipped sit above the first entry.");
         Responses[201] = "The mapping was saved. The Location header points at it.";
-        Responses[400] = "Validation failed, the amount style lacks its columns (import.mappingIncomplete) or the date format is not one of the list (import.invalidDateFormat).";
+        Responses[400] = "Validation failed, the amount style lacks its columns (import.mappingIncomplete), the date format is not one of the list (import.invalidDateFormat) or, without a header row, a column is not a position (text.invalidFormat).";
     }
 }

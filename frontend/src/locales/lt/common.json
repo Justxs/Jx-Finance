@@ -2750,6 +2750,9 @@
         "pipe": "Vertikali linija"
       },
       "skipLines": "Eilučių virš antraštės",
+      "noHeaderRow": "Failas neturi antraštės eilutės",
+      "noHeaderRowHint": "Tada stulpeliai pasirenkami pagal eilės numerį, o eilutės viršuje skaičiuojamos iki pirmojo įrašo.",
+      "position": "{{position}} stulpelis",
       "money": "Pinigai",
       "amountStyle": "Kaip įrašyta suma",
       "styles": {

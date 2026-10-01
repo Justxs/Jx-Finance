@@ -16,6 +16,6 @@ public sealed class InspectCsvEndpoint(IImportPreviewService importService) : En
     public override async Task HandleAsync(InspectCsvRequest req, CancellationToken ct)
     {
         await using var stream = req.File.OpenReadStream();
-        await Send.OkOrProblemAsync(await importService.InspectCsvAsync(stream, req.Encoding, req.Delimiter, req.SkipLines, ct), ct);
+        await Send.OkOrProblemAsync(await importService.InspectCsvAsync(stream, req.Encoding, req.Delimiter, req.SkipLines, req.NoHeaderRow, ct), ct);
     }
 }

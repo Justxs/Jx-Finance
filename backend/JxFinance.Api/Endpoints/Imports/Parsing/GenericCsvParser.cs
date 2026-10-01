@@ -20,8 +20,9 @@ public static class GenericCsvParser
                 return Invalid();
             }
 
-            var header = records.Current
-                .Select((name, index) => (Name: name.Trim(), Index: index))
+            var first = records.Current;
+            var header = first
+                .Select((name, index) => (Name: mapping.NoHeaderRow ? CsvColumnMap.Position(index) : name.Trim(), Index: index))
                 .DistinctBy(column => column.Name, StringComparer.Ordinal)
                 .ToDictionary(column => column.Name, column => column.Index, StringComparer.Ordinal);
             var missing = mapping.Columns.Named().Where(name => !header.ContainsKey(name)).ToList();
@@ -32,7 +33,8 @@ public static class GenericCsvParser
                     string.Join(", ", missing.Select(name => $"\"{name}\"")));
             }
 
-            return Read(records, new Reader(mapping, header, accountCurrency));
+            var entries = Rest(records);
+            return Read(mapping.NoHeaderRow ? entries.Prepend(first) : entries, new Reader(mapping, header, accountCurrency));
         }
         catch (CsvHelperException)
         {
@@ -40,14 +42,21 @@ public static class GenericCsvParser
         }
     }
 
-    private static Result<ParsedStatement> Read(IEnumerator<string[]> records, Reader reader)
+    private static IEnumerable<string[]> Rest(IEnumerator<string[]> records)
+    {
+        while (records.MoveNext())
+        {
+            yield return records.Current;
+        }
+    }
+
+    private static Result<ParsedStatement> Read(IEnumerable<string[]> records, Reader reader)
     {
         var rows = new List<(ParsedRow Row, decimal? Balance)>();
         var notBooked = 0;
         var unreadable = 0;
-        while (records.MoveNext())
+        foreach (var cells in records)
         {
-            var cells = records.Current;
             if (!reader.IsBooked(cells))
             {
                 notBooked++;
@@ -86,7 +95,7 @@ public static class GenericCsvParser
 
     private static DomainError Invalid() => new(
         ErrorCodes.ImportInvalidFile,
-        "The file is not a CSV file this mapping can read: it needs the header row and at least one entry.");
+        "The file is not a CSV file this mapping can read: it needs its header row, unless the mapping reads columns by position, and at least one entry.");
 
     private sealed class Reader(CsvImportMapping mapping, Dictionary<string, int> header, Currency accountCurrency)
     {

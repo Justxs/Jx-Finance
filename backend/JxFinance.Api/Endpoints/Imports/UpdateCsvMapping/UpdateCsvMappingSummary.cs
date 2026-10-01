@@ -24,7 +24,7 @@ public sealed class UpdateCsvMappingSummary : Summary<UpdateCsvMappingEndpoint, 
             new CsvColumnMap { Date = "Data", Description = "Aprašymas", Amount = "Suma" });
         Params["id"] = "The mapping id. Takes precedence over the id in the body.";
         Responses[200] = "The updated mapping.";
-        Responses[400] = "Validation failed, the amount style lacks its columns (import.mappingIncomplete) or the date format is not one of the list (import.invalidDateFormat).";
+        Responses[400] = "Validation failed, the amount style lacks its columns (import.mappingIncomplete), the date format is not one of the list (import.invalidDateFormat) or, without a header row, a column is not a position (text.invalidFormat).";
         Responses[404] = "No such mapping belongs to the signed-in user.";
     }
 }

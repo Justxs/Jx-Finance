@@ -19,6 +19,7 @@ public static class CsvMappingMapper
         mapping.Encoding = input.Encoding;
         mapping.Delimiter = input.Delimiter;
         mapping.SkipLines = input.SkipLines;
+        mapping.NoHeaderRow = input.NoHeaderRow;
         mapping.AmountStyle = input.AmountStyle;
         mapping.DateFormat = input.DateFormat;
         mapping.DecimalSeparator = input.DecimalSeparator;
@@ -32,6 +33,7 @@ public static class CsvMappingMapper
         mapping.Encoding,
         mapping.Delimiter,
         mapping.SkipLines,
+        mapping.NoHeaderRow,
         mapping.AmountStyle,
         mapping.DateFormat,
         mapping.DecimalSeparator,

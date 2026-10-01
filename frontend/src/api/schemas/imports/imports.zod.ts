@@ -205,7 +205,7 @@ export const ImportConfirmResponse = zod.object({
 });
 
 /**
- * Saves how to read one bank's CSV export, so its next file goes straight to the preview with format genericCsv and this mapping's id. Columns are named by their header text. The amount style decides which columns carry the money: signedNegativeIsExpense and signedPositiveIsExpense read one signed amount column (the second for card statements, where a positive amount is a purchase), debitCredit reads a debit and a credit column, and amountWithDirection reads an amount and a direction column whose value equals expenseValue, ignoring case, for money out. A mapping is personal: nobody else sees it.
+ * Saves how to read one bank's CSV export, so its next file goes straight to the preview with format genericCsv and this mapping's id. Columns are named by their header text, or by their position from 1 when noHeaderRow is true. The amount style decides which columns carry the money: signedNegativeIsExpense and signedPositiveIsExpense read one signed amount column (the second for card statements, where a positive amount is a purchase), debitCredit reads a debit and a credit column, and amountWithDirection reads an amount and a direction column whose value equals expenseValue, ignoring case, for money out. A mapping is personal: nobody else sees it.
  * @summary Save a CSV column mapping
  */
 export const createCsvMappingBodyNameMin = 0;
@@ -213,6 +213,8 @@ export const createCsvMappingBodyNameMax = 60;
 
 export const createCsvMappingBodySkipLinesMin = 0;
 export const createCsvMappingBodySkipLinesMax = 20;
+
+export const createCsvMappingBodyNoHeaderRowDefault = false;
 
 export const CreateCsvMappingBody = zod.object({
   name: zod
@@ -309,6 +311,12 @@ export const CreateCsvMappingBody = zod.object({
     .describe(
       "Optional. The currency of every row when the file has no currency column; the account's currency when left out.",
     ),
+  noHeaderRow: zod
+    .boolean()
+    .default(createCsvMappingBodyNoHeaderRowDefault)
+    .describe(
+      "Optional, false by default. True for a file without a header row: every column is then named by its position, 1 for the first, and the lines skipped sit above the first entry.",
+    ),
 });
 
 export const CreateCsvMappingResponse = zod.object({
@@ -321,6 +329,7 @@ export const CreateCsvMappingResponse = zod.object({
     ),
   delimiter: zod.string(),
   skipLines: zod.int(),
+  noHeaderRow: zod.boolean(),
   amountStyle: zod
     .enum([
       "signedNegativeIsExpense",
@@ -406,6 +415,7 @@ export const ListCsvMappingsResponseItem = zod.object({
     ),
   delimiter: zod.string(),
   skipLines: zod.int(),
+  noHeaderRow: zod.boolean(),
   amountStyle: zod
     .enum([
       "signedNegativeIsExpense",
@@ -494,6 +504,8 @@ export const updateCsvMappingBodyNameMax = 60;
 export const updateCsvMappingBodySkipLinesMin = 0;
 export const updateCsvMappingBodySkipLinesMax = 20;
 
+export const updateCsvMappingBodyNoHeaderRowDefault = false;
+
 export const UpdateCsvMappingBody = zod.object({
   name: zod.string().min(updateCsvMappingBodyNameMin).max(updateCsvMappingBodyNameMax),
   encoding: zod
@@ -574,6 +586,7 @@ export const UpdateCsvMappingBody = zod.object({
       ]),
     ])
     .optional(),
+  noHeaderRow: zod.boolean().default(updateCsvMappingBodyNoHeaderRowDefault),
 });
 
 export const UpdateCsvMappingResponse = zod.object({
@@ -586,6 +599,7 @@ export const UpdateCsvMappingResponse = zod.object({
     ),
   delimiter: zod.string(),
   skipLines: zod.int(),
+  noHeaderRow: zod.boolean(),
   amountStyle: zod
     .enum([
       "signedNegativeIsExpense",
@@ -658,7 +672,7 @@ export const UpdateCsvMappingResponse = zod.object({
 });
 
 /**
- * Reads a CSV export from any bank, card issuer or payment app and proposes how to read it: the text encoding (a byte-order mark decides UTF-8 or UTF-16, otherwise windows1257 is proposed when the bytes are not valid UTF-8), the delimiter (comma, semicolon, tab or pipe) and how many lines sit above the header row. It returns the header names, up to ten sample rows of raw cells, and for each column the date formats that read every sample and the decimal separator its numbers use. matchingMappingIds lists your saved mappings whose every named column is in this header, so the client can offer one. Send encoding, delimiter or skipLines to read the file again after the user corrected a proposal. Nothing is written. Send the file as multipart/form-data.
+ * Reads a CSV export from any bank, card issuer or payment app and proposes how to read it: the text encoding (a byte-order mark decides UTF-8 or UTF-16, otherwise windows1257 is proposed when the bytes are not valid UTF-8), the delimiter (comma, semicolon, tab or pipe) and how many lines sit above the header row. It returns the header names, up to ten sample rows of raw cells, and for each column the date formats that read every sample and the decimal separator its numbers use. matchingMappingIds lists your saved mappings whose every named column is in this header, so the client can offer one. Send encoding, delimiter or skipLines to read the file again after the user corrected a proposal; noHeaderRow says whether the file was read without a header row. Nothing is written. Send the file as multipart/form-data.
  * @summary Inspect a CSV file for a column mapping
  */
 export const inspectCsvBodySkipLinesMin = 0;
@@ -689,6 +703,12 @@ export const InspectCsvBody = zod.object({
     .max(inspectCsvBodySkipLinesMax)
     .nullish()
     .describe("Optional. How many non-empty lines sit above the header row, 0 to 20."),
+  noHeaderRow: zod
+    .boolean()
+    .nullish()
+    .describe(
+      "Optional. True reads the file as having no header row, so the columns are named 1, 2 and so on and the first line is a sample; false reads the first line as the header. Left out, it is proposed: true when the first line holds a date.",
+    ),
 });
 
 export const InspectCsvResponse = zod.object({
@@ -699,6 +719,7 @@ export const InspectCsvResponse = zod.object({
     ),
   delimiter: zod.string(),
   skipLines: zod.int(),
+  noHeaderRow: zod.boolean(),
   columns: zod.array(
     zod.object({
       name: zod.string(),

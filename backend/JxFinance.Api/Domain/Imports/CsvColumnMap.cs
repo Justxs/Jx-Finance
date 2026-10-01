@@ -1,3 +1,5 @@
+using System.Globalization;
+
 namespace JxFinance.Domain.Imports;
 
 public sealed record CsvColumnMap
@@ -42,6 +44,12 @@ public sealed record CsvColumnMap
         CsvAmountStyle.AmountWithDirection => Filled(Amount) && Filled(Direction) && Filled(ExpenseValue),
         _ => Filled(Amount),
     } && (Status is null || Filled(BookedValues));
+
+    public static string Position(int index) => (index + 1).ToString(CultureInfo.InvariantCulture);
+
+    public static bool IsPosition(string name) =>
+        int.TryParse(name, NumberStyles.None, CultureInfo.InvariantCulture, out var position)
+        && position is >= 1 and <= CsvImportMapping.MaxColumnPosition;
 
     private static bool Filled(string? value) => !string.IsNullOrWhiteSpace(value);
 }

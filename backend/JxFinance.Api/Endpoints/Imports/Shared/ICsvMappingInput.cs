@@ -9,6 +9,7 @@ public interface ICsvMappingInput
     CsvEncoding Encoding { get; }
     string Delimiter { get; }
     int SkipLines { get; }
+    bool NoHeaderRow { get; }
     CsvAmountStyle AmountStyle { get; }
     string DateFormat { get; }
     CsvDecimalSeparator DecimalSeparator { get; }

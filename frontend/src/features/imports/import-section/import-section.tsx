@@ -165,7 +165,7 @@ export function ImportSection({
     return inbox?.file ?? fileField.take();
   }
 
-  function inspect(options?: ReadOptions) {
+  function inspect(options?: Partial<ReadOptions>) {
     const file = takeFile();
     if (file) {
       inspectMutation.mutate({ data: { file, ...options } });
@@ -195,7 +195,7 @@ export function ImportSection({
   function remap() {
     setRemapping(mapping);
     previewMutation.reset();
-    inspect();
+    inspect({ noHeaderRow: mapping?.noHeaderRow });
   }
 
   function switchAccount(id: string) {
@@ -297,7 +297,7 @@ export function ImportSection({
             </p>
           </div>
           <CsvMappingForm
-            key={`${inspection.encoding}|${inspection.delimiter}|${inspection.skipLines}`}
+            key={`${inspection.encoding}|${inspection.delimiter}|${inspection.skipLines}|${inspection.noHeaderRow}`}
             inspection={inspection}
             initial={remapping}
             fitting={mappings.data.filter((item) =>

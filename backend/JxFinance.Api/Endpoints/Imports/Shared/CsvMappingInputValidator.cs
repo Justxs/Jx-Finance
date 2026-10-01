@@ -50,6 +50,11 @@ public abstract class CsvMappingInputValidator<TRequest> : Validator<TRequest>
             }
         });
         RuleFor(r => r.Columns)
+            .Must(columns => columns is null || columns.Named().All(CsvColumnMap.IsPosition))
+            .When(r => r.NoHeaderRow)
+            .WithErrorCode(ErrorCodes.TextInvalidFormat)
+            .WithMessage($"Without a header row, every column is its position, 1 to {CsvImportMapping.MaxColumnPosition}.");
+        RuleFor(r => r.Columns)
             .Must((request, columns) => columns is null || columns.Completes(request.AmountStyle))
             .WithErrorCode(ErrorCodes.ImportMappingIncomplete)
             .WithMessage("Name the amount column for a signed amount, the debit and credit columns, or the amount, "

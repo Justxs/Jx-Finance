@@ -12,6 +12,7 @@ export interface InspectCsvResponse {
   encoding: CsvEncoding;
   delimiter: string;
   skipLines: number;
+  noHeaderRow: boolean;
   columns: InspectCsvColumn[];
   samples: string[][];
   matchingMappingIds: string[];

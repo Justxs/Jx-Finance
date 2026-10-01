@@ -52,6 +52,7 @@ export interface ReadOptions {
   encoding: CsvEncoding;
   delimiter: string;
   skipLines: number;
+  noHeaderRow: boolean;
 }
 
 interface Props {
@@ -65,15 +66,20 @@ interface Props {
   onCancel: () => void;
 }
 
-function columnOptions(source: MappingSource, blank?: string): SelectOption[] {
+function columnOptions(
+  source: MappingSource,
+  title: (name: string) => string,
+  blank?: string,
+): SelectOption[] {
   const options = source.columns.map((column, index) => {
     const examples = source.samples
       .map((row) => row[index]?.trim())
       .filter(Boolean)
       .slice(0, 2);
+    const name = title(column.name);
     return {
       value: column.name,
-      label: examples.length ? `${column.name} · ${examples.join(", ")}` : column.name,
+      label: examples.length ? `${name} · ${examples.join(", ")}` : name,
     };
   });
   return blank === undefined ? options : [{ value: "", label: blank }, ...options];
@@ -95,6 +101,10 @@ export function CsvMappingForm({
   const source = sourceOf(inspection, initial);
   const none = t("imports.mapping.none");
 
+  function columnTitle(name: string) {
+    return source.noHeaderRow ? t("imports.mapping.position", { position: name }) : name;
+  }
+
   const { create, update, pending, error } = upsert(
     useCreateCsvMapping({ mutation: { ...silentMutation, onSuccess: onSaved } }),
     useUpdateCsvMapping({ mutation: { ...silentMutation, onSuccess: onSaved } }),
@@ -114,6 +124,7 @@ export function CsvMappingForm({
       encoding: form.getFieldValue("encoding"),
       delimiter: form.getFieldValue("delimiter"),
       skipLines: Number(form.getFieldValue("skipLines")),
+      noHeaderRow: form.getFieldValue("noHeaderRow"),
     });
   }
 
@@ -125,7 +136,7 @@ export function CsvMappingForm({
             id={`csv-column-${role}`}
             label={label}
             hint={hint}
-            options={columnOptions(source, role === "date" ? undefined : none)}
+            options={columnOptions(source, columnTitle, role === "date" ? undefined : none)}
             placeholder={none}
             onValueChange={
               role === "date"
@@ -223,6 +234,17 @@ export function CsvMappingForm({
               )}
             </form.Field>
           </FormGrid>
+          <form.Field name="noHeaderRow">
+            {(field) => (
+              <field.CheckboxField
+                id="csv-no-header-row"
+                label={t("imports.mapping.noHeaderRow")}
+                hint={t("imports.mapping.noHeaderRowHint")}
+                disabled={readPending || !onRead}
+                onCheckedChange={reread}
+              />
+            )}
+          </form.Field>
           {onRead ? (
             <p className="text-sm text-muted-foreground">{t("imports.mapping.readingHint")}</p>
           ) : null}
@@ -384,7 +406,7 @@ export function CsvMappingForm({
                 <TableHeader>
                   <TableRow>
                     {source.columns.map((column) => (
-                      <TableHead key={column.name}>{column.name}</TableHead>
+                      <TableHead key={column.name}>{columnTitle(column.name)}</TableHead>
                     ))}
                   </TableRow>
                 </TableHeader>
