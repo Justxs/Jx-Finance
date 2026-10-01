@@ -1,5 +1,6 @@
 using System.Text.Json;
 using JxFinance.Domain.Email;
+using JxFinance.Domain.Imports;
 using JxFinance.Domain.Notifications;
 using JxFinance.Infrastructure.Auth;
 using JxFinance.Infrastructure.Data;
@@ -22,6 +23,7 @@ public static class BackupDatabase
             db.Model.FindEntityType(typeof(ApiIdempotencyKey))!.GetTableName(),
             db.Model.FindEntityType(typeof(EmailMessage))!.GetTableName(),
             db.Model.FindEntityType(typeof(DiscordMessage))!.GetTableName(),
+            db.Model.FindEntityType(typeof(ImportInboxFile))!.GetTableName(),
         ];
 
         return db.Model.GetRelationalModel().Tables

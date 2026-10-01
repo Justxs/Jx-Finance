@@ -7,4 +7,5 @@ public static class NotificationRelated
     public const string Transaction = "Transaction";
     public const string Account = "Account";
     public const string Attachment = "Attachment";
+    public const string ImportInboxFile = "ImportInboxFile";
 }

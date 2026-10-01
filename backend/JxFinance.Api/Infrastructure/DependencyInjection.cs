@@ -36,6 +36,7 @@ public static class DependencyInjection
         services.AddSingleton<IClock, Time.SystemClock>();
         services.AddSingleton<Backups.BackupStore>();
         services.AddSingleton<Attachments.AttachmentStore>();
+        services.AddSingleton(sp => new Imports.ImportInboxFolder(configuration[ConfigKeys.ImportInbox], sp.GetRequiredService<IClock>()));
         services.AddSingleton<Common.Email.IEmailTransport, Email.MailKitEmailTransport>();
         services.AddHttpContextAccessor();
         services.AddScoped<JobUser>();

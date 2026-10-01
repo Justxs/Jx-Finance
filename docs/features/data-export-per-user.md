@@ -56,7 +56,7 @@ It can be taken three times an hour from one client (`Throttle(3, 3600)`, 429 be
 | Secrets and credentials | the password hash, security and concurrency stamps and every other `AspNetUsers` column; `AspNetUserTokens` (authenticator key, recovery codes); `AspNetUserPasskeys`; `PersonalApiTokens` and their retry keys, `ApiIdempotencyKeys`; `BrokerConnections.ProtectedToken`; `DiscordWebhooks` (the webhook URL) |
 | Sign-in and roles | `UserSessions`, `AspNetUserLogins`, `AspNetUserClaims`, `AspNetUserRoles`, `AspNetRoles`, `AspNetRoleClaims` |
 | What belongs to the household | `Households`, `HouseholdMemberships`, `AuditEvents`; a split another member paid for, or a payment another member recorded, even when the member is a party to it |
-| Work in flight | `EmailMessages`, `DiscordMessages` |
+| Work in flight | `EmailMessages`, `DiscordMessages`, `ImportInboxFiles` (statements waiting in the [import inbox](bank-statement-import.md#import-inbox), copies of files its folder keeps) |
 | The installation | `InstanceSettings` (with the SMTP password), `ExchangeRates`, `ManualExchangeRates`, `SecurityPrices` |
 | Other members' data | their accounts and everything on them, including rows the member entered there; their budgets, goals and every other row they own that no row of the member points at |
 

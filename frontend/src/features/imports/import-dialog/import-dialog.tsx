@@ -8,6 +8,7 @@ import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { Button } from "@/components/ui/button/button";
 import { RowsSkeleton } from "@/components/ui/skeleton/skeleton";
 import { CsvMappingForm } from "@/features/imports/csv-mapping-form/csv-mapping-form";
+import type { InboxReview } from "@/features/imports/import-inbox-list/import-inbox-list";
 import { ImportSection } from "@/features/imports/import-section/import-section";
 import { ImportUploadFormSkeleton } from "@/features/imports/import-section/import-upload-form";
 import { type ImportProvider, ImportProviders } from "./import-providers";
@@ -26,6 +27,7 @@ interface Props {
 export function ImportDialog({ open, onOpenChange, accounts, initialAccountId }: Readonly<Props>) {
   const { t } = useTranslation();
   const [provider, setProvider] = useState<ImportProvider | null>(null);
+  const [inbox, setInbox] = useState<InboxReview | null>(null);
   const [editing, setEditing] = useState<CsvMappingResponse | null>(null);
   const [edited, setEdited] = useState(false);
   const [pendingDiscard, setPendingDiscard] = useState<PendingDiscard | null>(null);
@@ -45,6 +47,7 @@ export function ImportDialog({ open, onOpenChange, accounts, initialAccountId }:
     }
     confirmDiscard(() => {
       setProvider(null);
+      setInbox(null);
       setEditing(null);
       onOpenChange(false);
     });
@@ -72,7 +75,15 @@ export function ImportDialog({ open, onOpenChange, accounts, initialAccountId }:
     if (!provider) {
       return (
         <QueryBoundary fallback={<RowsSkeleton rows={3} lines={2} />}>
-          <ImportProviders onChoose={setProvider} onEdit={setEditing} />
+          <ImportProviders
+            accounts={accounts}
+            onChoose={setProvider}
+            onEdit={setEditing}
+            onReview={(chosen, review) => {
+              setInbox(review);
+              setProvider(chosen);
+            }}
+          />
         </QueryBoundary>
       );
     }
@@ -82,7 +93,12 @@ export function ImportDialog({ open, onOpenChange, accounts, initialAccountId }:
           variant="outline"
           size="sm"
           className="-ml-2"
-          onClick={() => confirmDiscard(() => setProvider(null))}
+          onClick={() =>
+            confirmDiscard(() => {
+              setProvider(null);
+              setInbox(null);
+            })
+          }
         >
           <ArrowLeft />
           {t("imports.allProviders")}
@@ -92,7 +108,8 @@ export function ImportDialog({ open, onOpenChange, accounts, initialAccountId }:
             accounts={accounts}
             format={provider.format}
             mapping={provider.mapping}
-            initialAccountId={initialAccountId}
+            initialAccountId={inbox?.item.accountId ?? initialAccountId}
+            inbox={inbox ?? undefined}
             onEditedChange={setEdited}
             confirmDiscard={confirmDiscard}
           />

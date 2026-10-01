@@ -19,4 +19,5 @@ export const NotificationType = {
   monthlyDigest: "monthlyDigest",
   lowBalance: "lowBalance",
   warrantyExpiring: "warrantyExpiring",
+  importWaiting: "importWaiting",
 } as const;

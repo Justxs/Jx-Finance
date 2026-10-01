@@ -7,6 +7,7 @@ public static class ConfigKeys
     public const string BackgroundJobs = AppPrefix + "BackgroundJobs";
     public const string BackupDirectory = AppPrefix + "BackupDirectory";
     public const string DataProtectionDirectory = AppPrefix + "DataProtectionDirectory";
+    public const string ImportInbox = AppPrefix + "ImportInbox";
     public const string JwtSigningKey = AppPrefix + "Jwt:SigningKey";
     public const string SecureCookies = AppPrefix + "SecureCookies";
 

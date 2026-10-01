@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button/button";
 import { BackupSection } from "@/features/settings/backup-section/backup-section";
 import { DiscordSection } from "@/features/settings/discord-section/discord-section";
 import { ExchangeRatesSection } from "@/features/settings/exchange-rates-section/exchange-rates-section";
+import { ImportInboxSection } from "@/features/settings/import-inbox-section/import-inbox-section";
 import { MarketPricesSection } from "@/features/settings/market-prices-section/market-prices-section";
 import { SettingsForm } from "@/features/settings/settings-form/settings-form";
 import { SmtpSection } from "@/features/settings/smtp-section/smtp-section";
@@ -75,6 +76,7 @@ export function SettingsPage() {
       {section === "email" ? <SmtpSection /> : null}
       {section === "discord" ? <DiscordSection /> : null}
       {section === "marketPrices" ? <MarketPricesSection /> : null}
+      {section === "importInbox" ? <ImportInboxSection /> : null}
       {section === "backups" ? <BackupSection /> : null}
       <QueryBoundary fallback={<SettingsFormSkeleton section={section} />}>
         <SettingsContent section={section} />

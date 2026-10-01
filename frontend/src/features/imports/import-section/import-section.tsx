@@ -2,7 +2,9 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import {
+  getListImportInboxQueryKey,
   useCategoriesSuspense,
+  useDismissImportInboxFile,
   useTagsSuspense,
   useTransactionsSuspense,
   useImportConfirm,
@@ -23,6 +25,7 @@ import {
   CsvMappingForm,
   type ReadOptions,
 } from "@/features/imports/csv-mapping-form/csv-mapping-form";
+import type { InboxReview } from "@/features/imports/import-inbox-list/import-inbox-list";
 import { ImportPreviewTable } from "@/features/imports/import-preview-table/import-preview-table";
 import { ImportStatementBar } from "@/features/imports/import-preview-table/import-statement-bar";
 import {
@@ -34,6 +37,7 @@ import {
 import { recallParams } from "@/features/imports/import-queries";
 import { useFileField } from "@/hooks/use-file-field";
 import { silentMutation } from "@/lib/mutations";
+import { optimisticRemoval } from "@/lib/optimistic";
 import { ImportPreviewError, problemDetail } from "./import-preview-error";
 import { type ImportResult, ImportResultLine, useReconciliationText } from "./import-result";
 import { IMPORT_FILE_INPUT_ID, ImportUploadForm, importFormats } from "./import-upload-form";
@@ -49,6 +53,7 @@ interface Props {
   format: StatementFormat;
   mapping?: CsvMappingResponse;
   initialAccountId?: string;
+  inbox?: InboxReview;
   onEditedChange: (edited: boolean) => void;
   confirmDiscard: (run: () => void) => void;
 }
@@ -58,6 +63,7 @@ export function ImportSection({
   format,
   mapping: chosenMapping,
   initialAccountId,
+  inbox,
   onEditedChange,
   confirmDiscard,
 }: Readonly<Props>) {
@@ -72,19 +78,27 @@ export function ImportSection({
   const [accountId, setAccountId] = useState(
     accounts.find((account) => account.id === initialAccountId)?.id ?? accounts[0]?.id ?? "",
   );
-  const [result, setResult] = useState<ImportResult | null>(null);
-  const [rows, setRows] = useState<PreviewRowState[] | null>(null);
-  const [statement, setStatement] = useState<ImportStatementSummary | null>(null);
-  const [mapping, setMapping] = useState(chosenMapping);
-  const [inspection, setInspection] = useState<InspectCsvResponse | null>(null);
-  const [remapping, setRemapping] = useState<CsvMappingResponse | undefined>(undefined);
-
   const categories = useCategoriesSuspense();
   const categoryList = categories.data;
   const tags = useTagsSuspense();
   const tagList = tags.data;
   const history = useTransactionsSuspense(recallParams);
   const mappings = useListCsvMappingsSuspense();
+
+  const [result, setResult] = useState<ImportResult | null>(null);
+  const [rows, setRows] = useState<PreviewRowState[] | null>(() =>
+    inbox ? toPreviewRows(inbox.preview.rows, history.data.items, categoryList) : null,
+  );
+  const [statement, setStatement] = useState<ImportStatementSummary | null>(
+    inbox?.preview.statement ?? null,
+  );
+  const [mapping, setMapping] = useState(chosenMapping);
+  const [inspection, setInspection] = useState<InspectCsvResponse | null>(null);
+  const [remapping, setRemapping] = useState<CsvMappingResponse | undefined>(undefined);
+
+  const dismissMutation = useDismissImportInboxFile({
+    mutation: optimisticRemoval(getListImportInboxQueryKey()),
+  });
 
   function replaceRows(next: PreviewRowState[] | null) {
     setRows(next);
@@ -134,6 +148,9 @@ export function ImportSection({
         });
         replaceRows(null);
         fileField.reset();
+        if (inbox) {
+          dismissMutation.mutate({ id: inbox.item.id });
+        }
       },
     },
   });
@@ -144,8 +161,12 @@ export function ImportSection({
     previewMutation.reset();
   }
 
+  function takeFile() {
+    return inbox?.file ?? fileField.take();
+  }
+
   function inspect(options?: ReadOptions) {
-    const file = fileField.take();
+    const file = takeFile();
     if (file) {
       inspectMutation.mutate({ data: { file, ...options } });
     }
@@ -157,7 +178,7 @@ export function ImportSection({
       inspect();
       return;
     }
-    const file = fileField.take();
+    const file = takeFile();
     if (!id || !file) {
       return;
     }
@@ -238,6 +259,7 @@ export function ImportSection({
             })
           }
           fileInputRef={fileField.inputProps.ref}
+          storedFileName={inbox?.file.name}
           format={format}
           onPreview={() => confirmDiscard(() => preview(accountId))}
           onFileChange={() => {

@@ -1,4 +1,4 @@
-using JxFinance.Endpoints.Imports.Parsing;
+using JxFinance.Domain.Imports;
 
 namespace JxFinance.Endpoints.Imports.Confirm;
 

@@ -147,6 +147,10 @@ const rules: readonly Rule[] = [
     refresh: [api.getListCsvMappingsQueryKey],
   },
   {
+    after: [api.getDismissImportInboxFileMutationKey],
+    refresh: [api.getListImportInboxQueryKey],
+  },
+  {
     after: [api.getImportConfirmMutationKey],
     refresh: [
       ...ledger,

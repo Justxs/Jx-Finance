@@ -2,7 +2,7 @@
 
 Back to the [feature walkthrough](README.md). See also [decisions](../decisions/installation-settings.md), [architecture: Installation settings](../architecture/installation-settings.md).
 
-Backend `Settings`, page `/settings` with sections `general`, `features`, `currencies`, `regional`, `defaults`, `email`, `discord`, `marketPrices` and `backups`, shown under Installation on the one Settings page described [below](#one-settings-page). Administrators only; `GET /api/settings/public` is anonymous and carries only the name, the default language, whether this installation can send email and whether it allows Discord notifications.
+Backend `Settings`, page `/settings` with sections `general`, `features`, `currencies`, `regional`, `defaults`, `email`, `discord`, `marketPrices`, `importInbox` and `backups`, shown under Installation on the one Settings page described [below](#one-settings-page). Administrators only; `GET /api/settings/public` is anonymous and carries only the name, the default language, whether this installation can send email and whether it allows Discord notifications.
 
 ```mermaid
 flowchart TD
@@ -27,7 +27,7 @@ Each switch is declared by the endpoint groups under these prefixes (`ApiGroup(t
 | `RecurringBills` | `/api/recurring-bills` | reminder job, and the link on a bill reminder in the bell |
 | `NetWorth` | `/api/networth`, `/api/assets`, `/api/debts` | snapshot job |
 | `Reports` | `/api/reports` | |
-| `Import` | `/api/import` | |
+| `Import` | `/api/import` | the import inbox job, the Import inbox section, and the link on a waiting-statement notification in the bell |
 | `Households` | `/api/households` (list answers empty) | |
 | `MultiCurrency` | `/api/conversions` | foreign currency entry |
 | `Investments` | `/api/investments` | broker sync job, price sync job, the Market prices section |
@@ -63,6 +63,8 @@ Turning a feature off deletes nothing; turning it on brings the data back. `/api
 
 `CategorizationRules` is in the table for the mirror image of that reasoning. A rule is a screen and a route of its own, and what it produces is ordinary values on ordinary transactions: with the switch off the page leaves the navigation, the routes answer `feature.disabled`, the import preview stops suggesting and carries on importing, and every category and tag a rule ever set stays exactly where it is. Nothing anywhere else needs a second shape. See [Categorization rules](categorization-rules.md).
 
+The import inbox has no setting in the form either: its folder is a path on the server, so it is `App:ImportInbox` in the configuration rather than a setting, and the Import inbox section only shows it, with the files the inbox could not use. See [Bank statement import](bank-statement-import.md#import-inbox).
+
 ## The Ko-fi support link
 
 `InstanceSettings.SupportLinkEnabled` (column default true, migration `SupportLinkSetting`) is part of `GET` and `PUT /api/settings` and is edited in the General section as "Show the Support on Ko-fi link". Off hides the button in every user's sidebar and replaces the personal show/hide checkbox under Appearance with a line saying an administrator turned it off. The button is a plain link to the developer's Ko-fi page; Ko-fi's widget script is not used, because the Content-Security-Policy allows same-origin scripts only and the browser makes no third-party request.
@@ -75,7 +77,7 @@ Every user has one Settings entry at the bottom of the sidebar. It covers four r
 | --- | --- | --- |
 | Personal | `profileSections` on `/profile?section=`: account, security, sessions, notifications, appearance, trash, and import (labelled Import and export, always listed since the [data export per user](data-export-per-user.md); the import panel inside follows the `Import` switch) | everyone |
 | Shared | Households (`/households`) | everyone, while the `Households` switch is on |
-| Installation | `settingsSections` on `/settings?section=`: general, features, currencies, regional, defaults, email, discord, market prices (while `Investments` is on), backups; then Users (`/users`) | administrators |
+| Installation | `settingsSections` on `/settings?section=`: general, features, currencies, regional, defaults, email, discord, market prices (while `Investments` is on), import inbox (while `Import` is on), backups; then Users (`/users`) | administrators |
 
 `SectionNav` takes groups of items whose `link` is typed router link options, so one nav can point at several routes. From the `lg` breakpoint it is a sticky column with a label over each group; below that it is one scrolling row without labels. The account section holds only the display name and the password; notification choices moved to the Notifications section, described in [Email](email.md#notification-emails) and [Discord notifications](discord-notifications.md#screens). Import and export and Appearance are personal sections only: the installation sections used to repeat them, and a link to `/settings?section=import` or `appearance` now opens the General section. Users and Households put their title and a small outline create button ("Create user", "Create household") in a `SectionHeader` inside the layout, instead of a page header of their own.
 

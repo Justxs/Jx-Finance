@@ -1111,6 +1111,61 @@ namespace JxFinance.Infrastructure.Data.Migrations
                     b.ToTable("CsvImportMappings");
                 });
 
+            modelBuilder.Entity("JxFinance.Domain.Imports.ImportInboxFile", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("AccountId")
+                        .HasColumnType("uuid");
+
+                    b.Property<byte[]>("Content")
+                        .HasColumnType("bytea");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("Format")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid?>("MappingId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Sha256")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character(64)")
+                        .IsFixedLength();
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AccountId");
+
+                    b.HasIndex("MappingId");
+
+                    b.HasIndex("Sha256");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("ImportInboxFiles");
+                });
+
             modelBuilder.Entity("JxFinance.Domain.Investments.AllocationTarget", b =>
                 {
                     b.Property<Guid>("Id")
@@ -3498,6 +3553,26 @@ namespace JxFinance.Infrastructure.Data.Migrations
 
             modelBuilder.Entity("JxFinance.Domain.Imports.CsvImportMapping", b =>
                 {
+                    b.HasOne("JxFinance.Infrastructure.Auth.AppUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("JxFinance.Domain.Imports.ImportInboxFile", b =>
+                {
+                    b.HasOne("JxFinance.Domain.Accounts.Account", null)
+                        .WithMany()
+                        .HasForeignKey("AccountId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("JxFinance.Domain.Imports.CsvImportMapping", null)
+                        .WithMany()
+                        .HasForeignKey("MappingId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("JxFinance.Infrastructure.Auth.AppUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")

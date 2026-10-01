@@ -3,6 +3,7 @@ import { z } from "zod";
 import {
   getAccountsSuspenseQueryOptions,
   getBackupsSuspenseQueryOptions,
+  getImportInboxStatusSuspenseQueryOptions,
   getMarketPriceSettingsSuspenseQueryOptions,
   getSmtpSettingsSuspenseQueryOptions,
 } from "@/api/generated";
@@ -30,6 +31,9 @@ export const Route = createFileRoute("/settings")({
     }
     if (section === "marketPrices") {
       warm(queryClient, getMarketPriceSettingsSuspenseQueryOptions());
+    }
+    if (section === "importInbox") {
+      warm(queryClient, getImportInboxStatusSuspenseQueryOptions());
     }
     if (section === "email") {
       warm(queryClient, getSmtpSettingsSuspenseQueryOptions());

@@ -26,6 +26,7 @@ interface Props {
   onAccountChange: (accountId: string) => void;
   format: StatementFormat;
   fileInputRef: RefObject<HTMLInputElement | null>;
+  storedFileName?: string;
   onPreview: () => void;
   onFileChange: () => void;
   previewPending: boolean;
@@ -40,6 +41,7 @@ export function ImportUploadForm({
   onAccountChange,
   format,
   fileInputRef,
+  storedFileName,
   onPreview,
   onFileChange,
   previewPending,
@@ -49,7 +51,7 @@ export function ImportUploadForm({
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const locked = previewPending || disabled;
-  const [fileName, setFileName] = useState("");
+  const [fileName, setFileName] = useState(storedFileName ?? "");
   const [expanded, setExpanded] = useState(false);
   const collapsed = secondary && !expanded;
   const accountName = accounts.find((account) => account.id === accountId)?.name;
@@ -95,18 +97,24 @@ export function ImportUploadForm({
           error={fileError}
           className="col-span-full"
         >
-          <FileInput
-            id={IMPORT_FILE_INPUT_ID}
-            ref={fileInputRef}
-            accept={importFormats[format].accept}
-            disabled={locked}
-            onChange={(event) => {
-              setFileName(event.target.files?.[0]?.name ?? "");
-              onFileChange();
-            }}
-            placeholder={t("imports.chooseFile")}
-            {...shellAria({ id: IMPORT_FILE_INPUT_ID, hint: true, error: fileError })}
-          />
+          {storedFileName ? (
+            <p id={IMPORT_FILE_INPUT_ID} className="text-sm font-medium wrap-break-word">
+              {storedFileName}
+            </p>
+          ) : (
+            <FileInput
+              id={IMPORT_FILE_INPUT_ID}
+              ref={fileInputRef}
+              accept={importFormats[format].accept}
+              disabled={locked}
+              onChange={(event) => {
+                setFileName(event.target.files?.[0]?.name ?? "");
+                onFileChange();
+              }}
+              placeholder={t("imports.chooseFile")}
+              {...shellAria({ id: IMPORT_FILE_INPUT_ID, hint: true, error: fileError })}
+            />
+          )}
         </FieldShell>
       </FormGrid>
       <div className={collapsed ? "hidden" : "mt-4 flex justify-end"}>

@@ -12,4 +12,5 @@ public enum NotificationType
     MonthlyDigest,
     LowBalance,
     WarrantyExpiring,
+    ImportWaiting,
 }

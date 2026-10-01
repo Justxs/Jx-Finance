@@ -2,15 +2,6 @@ using JxFinance.Domain.Common;
 
 namespace JxFinance.Endpoints.Imports.Parsing;
 
-public enum StatementFormat
-{
-    SwedbankCsv,
-    Camt053,
-    GenericCsv,
-    Ofx,
-    Mt940,
-}
-
 public sealed record ParsedStatement(
     IReadOnlyList<ParsedRow> Rows,
     string? Iban = null,

@@ -42,8 +42,6 @@ public sealed class ImportPreviewService(
         ["transfer", "pervedimas", "grynieji", "cash", "withdrawal", "easy saver", "atsiskaitom", "tarp saskaitu"],
         StringComparison.OrdinalIgnoreCase);
 
-    private static readonly DomainError MappingNotFound = new(ErrorCodes.ReferenceNotFound, "CSV mapping does not exist.");
-
     public async Task<Result<InspectCsvResponse>> InspectCsvAsync(
         Stream fileStream,
         CsvEncoding? encoding,
@@ -86,16 +84,15 @@ public sealed class ImportPreviewService(
             return new DomainError(ErrorCodes.ReferenceNotFound, "Account does not exist.");
         }
 
-        var parsed = format switch
-        {
-            StatementFormat.Camt053 => await Camt053Parser.ParseAsync(fileStream, account.Iban, settings.Current.TimeZone, cancellationToken),
-            StatementFormat.Ofx => OfxParser.Parse(fileStream, account.Currency),
-            StatementFormat.Mt940 => Mt940Parser.Parse(fileStream, account.Currency),
-            StatementFormat.GenericCsv => await ImportQueries.FindMappingAsync(db, mappingId, cancellationToken) is { } mapping
-                ? GenericCsvParser.Parse(fileStream, mapping, account.Currency)
-                : MappingNotFound,
-            _ => SwedbankCsvParser.Parse(fileStream),
-        };
+        var mapping = format == StatementFormat.GenericCsv ? await ImportQueries.FindMappingAsync(db, mappingId, cancellationToken) : null;
+        var parsed = await StatementReader.ReadAsync(
+            format,
+            fileStream,
+            account.Iban,
+            account.Currency,
+            mapping,
+            settings.Current.TimeZone,
+            cancellationToken);
         if (!parsed.TryGetValue(out var statement))
         {
             return parsed.Error;

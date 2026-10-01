@@ -28,6 +28,7 @@ public static class NotificationTexts
         NotificationType.MonthReadyToClose or NotificationType.MonthlyDigest => "/",
         NotificationType.LowBalance => "/accounts",
         NotificationType.WarrantyExpiring => "/transactions",
+        NotificationType.ImportWaiting => "/profile?section=import",
         _ => throw new ArgumentOutOfRangeException(nameof(type), type, "This notification type has no page."),
     };
 
@@ -89,6 +90,8 @@ public static class NotificationTexts
                 WarrantyExpiring(lithuanian, warrantyUntil),
             NotificationType.LowBalance when payload is { DueDate: { } belowZeroOn, Amount: { } lowest } =>
                 LowBalance(lithuanian, belowZeroOn, Money(lowest, payload.Currency)),
+            NotificationType.ImportWaiting =>
+                lithuanian ? "Banko išrašas laukia peržiūros" : "A bank statement is waiting for review",
             _ => notification.Message,
         };
     }

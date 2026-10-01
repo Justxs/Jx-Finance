@@ -1,5 +1,6 @@
 using JxFinance.Domain.Audit;
 using JxFinance.Domain.Common;
+using JxFinance.Domain.Imports;
 using JxFinance.Domain.Notifications;
 using JxFinance.Domain.Receipts;
 using JxFinance.Domain.Trash;
@@ -56,6 +57,15 @@ public sealed class RetentionJob(IServiceScopeFactory scopes, ILogger<RetentionJ
         if (keys > 0)
         {
             Logger.LogInformation("Deleted {Count} API retry keys older than a day.", keys);
+        }
+
+        var inbox = await Retention.PruneImportInboxAsync(db, now, ct);
+        if (inbox > 0)
+        {
+            Logger.LogInformation(
+                "Removed {Count} import inbox files received more than {Days} days ago.",
+                inbox,
+                ImportInboxFile.KeptDays);
         }
 
         var records = await Retention.PurgeDeletedAsync(db, files, now, ct);

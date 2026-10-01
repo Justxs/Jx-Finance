@@ -24,6 +24,7 @@ export const NotificationsResponseItem = zod.object({
     "monthlyDigest",
     "lowBalance",
     "warrantyExpiring",
+    "importWaiting",
   ]),
   title: zod.string(),
   message: zod.string(),

@@ -68,6 +68,7 @@ public static class UserExportTables
         ["DiscordWebhooks"] = new Excluded("the Discord webhook URL is a secret"),
         ["DiscordMessages"] = new Excluded("outbox"),
         ["EmailMessages"] = new Excluded("outbox"),
+        ["ImportInboxFiles"] = new Excluded("statements waiting in the import inbox, copies of files kept in its folder"),
         ["Households"] = new Excluded("belongs to every member of the household"),
         ["HouseholdMemberships"] = new Excluded("belongs to every member of the household"),
         ["AuditEvents"] = new Excluded("belongs to every member of the household"),

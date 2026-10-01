@@ -1244,6 +1244,17 @@
       "reason": "Reason",
       "at": "When",
       "privacy": "The providers learn which securities this installation holds, by their symbols, and nothing else: never quantities, amounts or who holds them. Crypto priced in EUR comes from Kraken without a key, everything else from EODHD."
+    },
+    "importInbox": {
+      "title": "Import inbox",
+      "description": "A folder the server watches for bank statement files. Each file becomes a review waiting for the owner of the account it names.",
+      "off": "The inbox is off. Set App__ImportInbox to a folder mounted into the API container to turn it on.",
+      "folder": "Watching",
+      "failures": "Files the inbox could not use",
+      "noFailures": "No failures",
+      "file": "File",
+      "reason": "Reason",
+      "at": "Moved to failed"
     }
   },
   "settingsHub": {
@@ -2091,7 +2102,8 @@
       "monthReadyToClose": "A finished month is ready to close",
       "monthlyDigest": "Monthly digest",
       "lowBalance": "An account is forecast to go below zero",
-      "warrantyExpiring": "A receipt's warranty ends soon"
+      "warrantyExpiring": "A receipt's warranty ends soon",
+      "importWaiting": "A bank statement arrives in the import inbox"
     },
     "unusualAmount": "{{amount}}: {{factor}}× the usual {{typical}}",
     "unusualAmounts_one": "{{count}} expense is well above its usual amount",
@@ -2109,7 +2121,8 @@
     "monthReadyToClose": "{{month}} has ended and is ready to close",
     "monthlyDigest": "Income {{income}}, expenses {{expense}}, net {{net}}",
     "lowBalance": "Forecast to go below zero on {{date}}, lowest {{amount}}",
-    "warrantyExpiring": "Warranty ends {{date}}"
+    "warrantyExpiring": "Warranty ends {{date}}",
+    "importWaiting": "A bank statement is waiting for review"
   },
   "households": {
     "name": "Household name",
@@ -2657,7 +2670,17 @@
       "updateFromFile": "Update the mapping from this file"
     },
     "learned": "Learned",
-    "learnedHint": "From your history, {{percent}}% sure. Change it if it does not fit."
+    "learnedHint": "From your history, {{percent}}% sure. Change it if it does not fit.",
+    "inbox": {
+      "title": "Waiting in the inbox",
+      "received": "{{account}} · arrived {{date}}",
+      "review": "Review",
+      "dismiss": "Dismiss",
+      "dismissTitle": "Dismiss this statement?",
+      "dismissDescription": "It leaves the list without importing anything. The file stays in the inbox folder's done folder.",
+      "waiting_one": "{{count}} bank statement is waiting for review.",
+      "waiting_other": "{{count}} bank statements are waiting for review."
+    }
   },
   "errors": {
     "generic": "Something went wrong. Please try again.",

@@ -14,7 +14,7 @@ FROM mcr.microsoft.com/dotnet/aspnet:10.0.12@sha256:6a94333d37514e385650a3c81a55
 RUN apt-get update \
     && apt-get install -y --no-install-recommends curl fonts-dejavu-core tesseract-ocr tesseract-ocr-eng tesseract-ocr-lit \
     && rm -rf /var/lib/apt/lists/*
-RUN mkdir /keys /backups /attachments && chown app:app /keys /backups /attachments
+RUN mkdir /keys /backups /attachments /import-inbox && chown app:app /keys /backups /attachments /import-inbox
 WORKDIR /app
 COPY --from=build /app ./
 ENV ASPNETCORE_URLS=http://+:8080

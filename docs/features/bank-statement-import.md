@@ -2,7 +2,7 @@
 
 Back to the [feature walkthrough](README.md). See also [decisions](../decisions/swedbank-csv-import.md), [architecture: Transactions, imports and receipts](../architecture/transactions.md).
 
-Backend `Imports` (`ImportPreviewService` for inspect and preview, `ImportConfirmService` for confirm, sharing `ImportQueries`, `CsvMappingService`, parsers in `Endpoints/Imports/Parsing`), frontend `imports` (`ImportDataSection`, `ImportDialog`, `ImportProviders`, `ImportSection`, `CsvMappingForm`, `ImportStatementBar`). No route of its own. The dialog opens from three places, all shown to every user while the `Import` switch is on: the "Import bank statement" button beside "Add transaction" in the ledger header, the same entry in an account's row actions on the Accounts page, which preselects that account, and the Import data panel of the Import and export section under Personal on the one Settings page (`/profile?section=import`), whose other panel is the [data export per user](data-export-per-user.md).
+Backend `Imports` (`ImportPreviewService` for inspect and preview, `ImportConfirmService` for confirm, sharing `ImportQueries`, `CsvMappingService`, parsers in `Endpoints/Imports/Parsing` behind `StatementReader`, and the [import inbox](#import-inbox)), frontend `imports` (`ImportDataSection`, `ImportDialog`, `ImportProviders`, `ImportInboxList`, `ImportSection`, `CsvMappingForm`, `ImportStatementBar`). No route of its own. The dialog opens from three places, all shown to every user while the `Import` switch is on: the "Import bank statement" button beside "Add transaction" in the ledger header, the same entry in an account's row actions on the Accounts page, which preselects that account, and the Import data panel of the Import and export section under Personal on the one Settings page (`/profile?section=import`), whose other panel is the [data export per user](data-export-per-user.md).
 
 The dialog lists the providers, and each one is a statement format:
 
@@ -193,6 +193,36 @@ The rows sit under a switch of four counted views: All, Needs attention, Transfe
 Views and search only decide which rows are shown. A hidden row keeps its selection, category and tags, and the selected count, the net, the statement balance check and the Import button always count every row. The header checkbox selects or clears only the rows the view and search show, while "Set category for selected" still applies to every selected row. Changing the view or the search returns the list to its first page, and neither is remembered.
 
 Everything decided in the review lives in the dialog until it is imported. Once a row has been changed (selected or cleared, given a category, tags or a transfer), every action that would throw the review away asks first: closing the dialog by Escape, a click outside or the close button, going back to All providers, Cancel, choosing another account, Preview and "Switch to" on the statement bar. Choosing another file does not clear the review by itself; the new file replaces it only when Preview runs. An untouched preview is discarded without asking.
+
+## Import inbox
+
+Since 2026-10-01 a statement can also arrive without the dialog: the API watches a folder, and each statement file dropped there by a bank's scheduled export or a sync client becomes a review waiting for the owner of the account it names. Nothing is fetched from outside and nothing is imported until the owner reviews it. The pieces are `ImportInboxJob` (`Infrastructure/BackgroundJobs`), `ImportInboxFolder` (`Infrastructure/Imports`), `ImportInboxReceiver` and `ImportInboxService` (`Endpoints/Imports/Services`), the pure `InboxRules` (`Endpoints/Imports/Inbox`) and, on the client, `ImportInboxList` in the provider step of the dialog and `ImportInboxSection` under Settings › Installation.
+
+**Turning it on.** The folder is `App:ImportInbox`. Unset, the inbox is off: the job finds no folder and does nothing, and the waiting list stays empty. `docker-compose.yml` sets it to `/import-inbox` on the `import_inbox` volume, see [Deployment](../architecture/deployment.md#import-inbox-folder). It is part of the `Import` switch: with Import off the job does not run and the routes answer `feature.disabled`.
+
+**What the job reads.** Every five minutes `ImportInboxJob` lists the files in the folder and in its direct subfolders, leaving out `done/` and `failed/`, names that start with `.` or `~` or end in `.tmp` or `.part`, and files written less than a minute ago, so a file still being copied waits for the next pass. The format comes from the extension, because there is no person to choose it:
+
+| Extension | Format | Limit |
+| --- | --- | --- |
+| `.xml` | camt.053 | 20 MB |
+| `.ofx`, `.qfx` | OFX | 5 MB |
+| `.sta`, `.mt940`, `.940` | MT940 | 5 MB |
+| `.csv` | a saved CSV mapping, else Swedbank CSV | 5 MB |
+
+**Whose statement it is.** The account is the one whose IBAN the file names, among the accounts of active members:
+
+- a camt.053, OFX or MT940 file in the root of the folder names its own IBAN (`Stmt/Acct/Id/IBAN`, `BANKACCTFROM/ACCTID`, `:25:`); a file in a subfolder belongs to the account whose IBAN is the subfolder's name, spaces and case ignored, which is also how a camt.053 file with several statements chooses one;
+- a CSV file names no account, so it must sit in a subfolder named after the account's IBAN. The file is read with each of the account owner's saved mappings; exactly one that reads it is chosen. When none does and the file is a Swedbank export, it is read as Swedbank CSV. Two mappings that both read it are refused rather than guessed between.
+
+The IBAN must belong to exactly one account. An IBAN no account has, or one that two members both recorded, is refused, and so is a file that does not read as its format. The file then moves to `failed/` (under its subfolder, if it had one) with the reason beside it in `<name>.reason.txt`, for example "No account has the IBAN LT12…. Record it on the account first.".
+
+**Waiting review.** An accepted file is stored as an `ImportInboxFile` row of the account's owner (the bytes, the account, the format, the chosen mapping and the SHA-256), the owner gets an `importWaiting` [notification](notifications.md) naming the file, and the file moves to `done/`. The stored copy is what the review reads, so moving, renaming or deleting the original changes nothing. A file whose SHA-256 the inbox already received in the last 90 days, waiting or not, moves to `done/` without a second review; this is what keeps a sync client that copies the same export again from filling the list.
+
+The provider step of the import dialog lists the owner's waiting files above the providers ("Waiting in the inbox"), each with the account and when it arrived, a Review button and a Dismiss button. Review downloads the stored file (`GET /api/import/inbox/{id}/file`), sends it to the ordinary `POST /api/import/preview` with the stored account, format and mapping, and opens the provider's review with the result, the account preselected and the file name in place of the file input. From there everything is the normal review: views, Switch to, the statement bar and Confirm. A confirmed import removes the file from the list (`DELETE /api/import/inbox/{id}`); Dismiss does the same after asking, without importing anything. A preview that fails, for example because the mapping was deleted since, shows its error as a toast and the file stays listed until dismissed. The Import data panel under Settings › Personal › Import and export says how many statements are waiting, and the notification links there.
+
+**Retention.** Removing a file from the list deletes its stored bytes at once and keeps the row, without them, as the fingerprint. `RetentionJob` deletes every inbox row 90 days after it arrived (`ImportInboxFile.KeptDays`), reviewed or not; the original stays in `done/`, so a statement nobody reviewed in that time can be dropped in again. Nothing ever deletes files from `done/` or `failed/`; that is the host's housekeeping. The table is left out of [backups](backup-and-restore.md), like the outboxes, and out of the [member download](data-export-per-user.md): the waiting files are copies of what the folder holds.
+
+**Administrators.** Settings › Installation › Import inbox (`importInbox`, listed while `Import` is on) shows the folder the API watches, or that the inbox is off, and the 20 most recent files in `failed/` with their reasons (`GET /api/import/inbox/status`). Fixing a refused file is done on the host: record the IBAN on the account or save a mapping by importing one file by hand, then move the file back into the inbox.
 
 ## Real bank samples
 

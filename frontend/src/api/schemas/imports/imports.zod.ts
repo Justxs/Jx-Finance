@@ -717,6 +717,51 @@ export const InspectCsvResponse = zod.object({
 });
 
 /**
+ * Returns the statement files the import inbox received for accounts you own and that you have not imported or dismissed yet, newest first. Each names the account, the format and, for a CSV file, the saved mapping the inbox chose. A file whose account is no longer visible to you is left out. Nothing is imported until you review it: fetch the file and send it through POST /api/import/preview and confirm as usual.
+ * @summary List statements waiting in the import inbox
+ */
+export const ListImportInboxResponseItem = zod.object({
+  id: zod.uuid(),
+  fileName: zod.string(),
+  format: zod
+    .enum(["swedbankCsv", "camt053", "genericCsv", "ofx", "mt940"])
+    .describe(
+      "The statement format: swedbankCsv for a Swedbank CSV export, camt053 for an ISO 20022 camt.053 XML statement, ofx for an OFX or QFX file (SGML 1.x or XML 2.x), mt940 for a SWIFT MT940 statement, or genericCsv for a CSV read through a saved mapping.",
+    ),
+  accountId: zod.uuid(),
+  mappingId: zod.uuid().nullable(),
+  receivedAt: zod.iso.datetime({ offset: true }),
+});
+export const ListImportInboxResponse = zod.array(ListImportInboxResponseItem);
+
+/**
+ * Answers the folder the API watches for statement files (App:ImportInbox, null when the inbox is off) and the latest 20 files it could not use, newest first, each with the reason written beside it in the failed folder. Administrators only.
+ * @summary Read the import inbox of this installation
+ */
+export const ImportInboxStatusResponse = zod.object({
+  directory: zod.string().nullable(),
+  failures: zod.array(
+    zod.object({
+      fileName: zod.string(),
+      reason: zod.string(),
+      at: zod.iso.datetime({ offset: true }),
+    }),
+  ),
+});
+
+/**
+ * Takes a waiting statement off your list and deletes its stored copy. The import dialog calls it after the statement is imported, and Dismiss calls it without importing. The file's fingerprint is kept for 90 days from its arrival, so the same file dropped into the inbox again in that time is ignored. Nothing in the ledger changes.
+ * @summary Remove a statement from the import inbox
+ */
+export const DismissImportInboxFileResponse = zod.void();
+
+/**
+ * Answers the stored bytes of a waiting statement file exactly as the inbox received them, as an attachment. The import dialog sends them to POST /api/import/preview to open the usual review.
+ * @summary Download a statement waiting in the import inbox
+ */
+export const DownloadImportInboxFileResponse = zod.unknown();
+
+/**
  * Parses an exported bank statement and returns the rows it found, each with a flag saying whether a matching transaction already exists in the account. Three formats are read: swedbankCsv, the Swedbank CSV export, camt053, an ISO 20022 camt.053 XML statement, and genericCsv, any CSV export read through the saved column mapping named by mappingId. From a camt.053 file only booked entries are returned; pending and informational entries and entries that could not be read are counted in statement. A mapped CSV counts rows its status filter leaves out or whose amount is zero in notBooked and rows it cannot read in unreadable, and with a balance column answers the balance of its latest row as the closing balance. When the file holds several statements, the one for the account's IBAN is read. A counterparty IBAN that belongs to another of your accounts fills in suggestedTransferAccountId. Your categorization rules are evaluated against each row's description, amount and flow type, and the first rule that matches fills in suggestedCategoryId, suggestedTagIds and matchedRuleName; a row nothing matched carries none of them. While the learnedCategories feature is on, a row that is not a duplicate and got no category from a rule carries learnedCategoryId and learnedConfidence when a model trained on the categorized rows you can see is sure enough; otherwise both are null. The suggestion is a suggestion: confirm sends back whatever the client decided. A row that is not a duplicate and has the same flow type, amount and currency as a transaction entered by hand on the account within three days of it carries that transaction in matchedTransaction, each transaction offered to one row at most, the closest date first. An incoming row that is neither a duplicate nor matched carries refundCandidate when an expense on the account, not a refund, in the same currency, of at least the row's amount and dated at most 90 days before it has the same normalized payee or description as the row; the most recent such expense wins. Nothing is written: this call only reads the file. Send the file as multipart/form-data.
  * @summary Preview a bank statement
  */

@@ -90,6 +90,7 @@ const budgets = linkOptions({ to: "/budgets" });
 const unusual = linkOptions({ to: "/transactions", search: { unusual: true } });
 const accounts = linkOptions({ to: "/accounts" });
 const ledger = linkOptions({ to: "/transactions" });
+const importSection = linkOptions({ to: "/profile", search: { section: "import" } });
 
 function monthLink({ month }: NotificationPayload) {
   return linkOptions({ to: "/", search: { month: month ? monthKeyOfIso(month) : undefined } });
@@ -106,6 +107,7 @@ const producers = {
   monthlyDigest: { feature: "monthClose", link: monthLink },
   lowBalance: { feature: "recurringBills", link: () => accounts },
   warrantyExpiring: { feature: undefined, link: () => ledger },
+  importWaiting: { feature: "import", link: () => importSection },
 } as const satisfies Record<
   NotificationType,
   { feature: FeatureKey | undefined; link: (payload: NotificationPayload) => unknown }
@@ -210,6 +212,8 @@ export function NotificationBell({ sidebar }: Readonly<Props>) {
           ? t("notifications.warrantyExpiring", { date: date.format(warrantyUntil) })
           : serverMessage(notification);
       }
+      case "importWaiting":
+        return t("notifications.importWaiting");
       case "lowBalance": {
         const belowZeroOn = dueDate ? parseIso(dueDate) : null;
         return belowZeroOn && amount

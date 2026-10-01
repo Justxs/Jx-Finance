@@ -28,6 +28,8 @@ import type {
   CsvMappingResponse,
   ImportConfirmRequest,
   ImportConfirmResponse,
+  ImportInboxFileResponse,
+  ImportInboxStatusResponse,
   ImportPreviewRequest,
   ImportPreviewResponse,
   InspectCsvRequest,
@@ -668,6 +670,447 @@ export const useInspectCsv = <TError = ErrorType<ProblemDetails>, TContext = unk
 > => {
   return useMutation(getInspectCsvMutationOptions(options), queryClient);
 };
+export const getListImportInboxUrl = () => {
+  return `/api/import/inbox`;
+};
+
+/**
+ * Returns the statement files the import inbox received for accounts you own and that you have not imported or dismissed yet, newest first. Each names the account, the format and, for a CSV file, the saved mapping the inbox chose. A file whose account is no longer visible to you is left out. Nothing is imported until you review it: fetch the file and send it through POST /api/import/preview and confirm as usual.
+ * @summary List statements waiting in the import inbox
+ */
+export const listImportInbox = async (
+  options?: Parameters<typeof customFetch>[1],
+): Promise<ImportInboxFileResponse[]> => {
+  return customFetch<ImportInboxFileResponse[]>(getListImportInboxUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListImportInboxQueryKey = () => {
+  return [`/api/import/inbox`] as const;
+};
+
+export const getListImportInboxSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof listImportInbox>>,
+  TError = ErrorType<ProblemDetails>,
+>(options?: {
+  query?: Partial<
+    UseSuspenseQueryOptions<Awaited<ReturnType<typeof listImportInbox>>, TError, TData>
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListImportInboxQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listImportInbox>>> = ({ signal }) =>
+    listImportInbox({ signal, ...requestOptions });
+
+  return queryOptionsBuilder({
+    queryKey,
+    ...queryOptions,
+    queryFn: queryOptions?.queryFn ?? queryFn,
+  }) as UseSuspenseQueryOptions<Awaited<ReturnType<typeof listImportInbox>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  } & {
+    throwOnError?: ((this: never, error: TError) => boolean) & { readonly __inferenceOnly: never };
+  };
+};
+
+export type ListImportInboxSuspenseQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listImportInbox>>
+>;
+export type ListImportInboxSuspenseQueryError = ErrorType<ProblemDetails>;
+
+export function useListImportInboxSuspense<
+  TData = Awaited<ReturnType<typeof listImportInbox>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options: {
+    query: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof listImportInbox>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListImportInboxSuspense<
+  TData = Awaited<ReturnType<typeof listImportInbox>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof listImportInbox>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListImportInboxSuspense<
+  TData = Awaited<ReturnType<typeof listImportInbox>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof listImportInbox>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List statements waiting in the import inbox
+ */
+
+export function useListImportInboxSuspense<
+  TData = Awaited<ReturnType<typeof listImportInbox>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof listImportInbox>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListImportInboxSuspenseQueryOptions(options);
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export const getImportInboxStatusUrl = () => {
+  return `/api/import/inbox/status`;
+};
+
+/**
+ * Answers the folder the API watches for statement files (App:ImportInbox, null when the inbox is off) and the latest 20 files it could not use, newest first, each with the reason written beside it in the failed folder. Administrators only.
+ * @summary Read the import inbox of this installation
+ */
+export const importInboxStatus = async (
+  options?: Parameters<typeof customFetch>[1],
+): Promise<ImportInboxStatusResponse> => {
+  return customFetch<ImportInboxStatusResponse>(getImportInboxStatusUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getImportInboxStatusQueryKey = () => {
+  return [`/api/import/inbox/status`] as const;
+};
+
+export const getImportInboxStatusSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof importInboxStatus>>,
+  TError = ErrorType<ProblemDetails>,
+>(options?: {
+  query?: Partial<
+    UseSuspenseQueryOptions<Awaited<ReturnType<typeof importInboxStatus>>, TError, TData>
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getImportInboxStatusQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof importInboxStatus>>> = ({ signal }) =>
+    importInboxStatus({ signal, ...requestOptions });
+
+  return queryOptionsBuilder({
+    queryKey,
+    ...queryOptions,
+    queryFn: queryOptions?.queryFn ?? queryFn,
+  }) as UseSuspenseQueryOptions<Awaited<ReturnType<typeof importInboxStatus>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  } & {
+    throwOnError?: ((this: never, error: TError) => boolean) & { readonly __inferenceOnly: never };
+  };
+};
+
+export type ImportInboxStatusSuspenseQueryResult = NonNullable<
+  Awaited<ReturnType<typeof importInboxStatus>>
+>;
+export type ImportInboxStatusSuspenseQueryError = ErrorType<ProblemDetails>;
+
+export function useImportInboxStatusSuspense<
+  TData = Awaited<ReturnType<typeof importInboxStatus>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options: {
+    query: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof importInboxStatus>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useImportInboxStatusSuspense<
+  TData = Awaited<ReturnType<typeof importInboxStatus>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof importInboxStatus>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useImportInboxStatusSuspense<
+  TData = Awaited<ReturnType<typeof importInboxStatus>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof importInboxStatus>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Read the import inbox of this installation
+ */
+
+export function useImportInboxStatusSuspense<
+  TData = Awaited<ReturnType<typeof importInboxStatus>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof importInboxStatus>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getImportInboxStatusSuspenseQueryOptions(options);
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export const getDismissImportInboxFileUrl = (id: string) => {
+  return `/api/import/inbox/${id}`;
+};
+
+/**
+ * Takes a waiting statement off your list and deletes its stored copy. The import dialog calls it after the statement is imported, and Dismiss calls it without importing. The file's fingerprint is kept for 90 days from its arrival, so the same file dropped into the inbox again in that time is ignored. Nothing in the ledger changes.
+ * @summary Remove a statement from the import inbox
+ */
+export const dismissImportInboxFile = async (
+  id: string,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<void> => {
+  return customFetch<void>(getDismissImportInboxFileUrl(id), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getDismissImportInboxFileMutationKey = () => ["dismissImportInboxFile"] as const;
+
+export const getDismissImportInboxFileMutationOptions = <
+  TError = ErrorType<ProblemDetails>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof dismissImportInboxFile>>,
+    TError,
+    DismissImportInboxFileMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof dismissImportInboxFile>>,
+  TError,
+  DismissImportInboxFileMutationVariables,
+  TContext
+> => {
+  const mutationKey = getDismissImportInboxFileMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof dismissImportInboxFile>>,
+    DismissImportInboxFileMutationVariables
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return dismissImportInboxFile(id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DismissImportInboxFileMutationResult = NonNullable<
+  Awaited<ReturnType<typeof dismissImportInboxFile>>
+>;
+
+export type DismissImportInboxFileMutationError = ErrorType<ProblemDetails>;
+export type DismissImportInboxFileMutationVariables = { id: string };
+
+/**
+ * @summary Remove a statement from the import inbox
+ */
+export const useDismissImportInboxFile = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof dismissImportInboxFile>>,
+      TError,
+      DismissImportInboxFileMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof dismissImportInboxFile>>,
+  TError,
+  DismissImportInboxFileMutationVariables,
+  TContext
+> => {
+  return useMutation(getDismissImportInboxFileMutationOptions(options), queryClient);
+};
+export const getDownloadImportInboxFileUrl = (id: string) => {
+  return `/api/import/inbox/${id}/file`;
+};
+
+/**
+ * Answers the stored bytes of a waiting statement file exactly as the inbox received them, as an attachment. The import dialog sends them to POST /api/import/preview to open the usual review.
+ * @summary Download a statement waiting in the import inbox
+ */
+export const downloadImportInboxFile = async (
+  id: string,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<Blob> => {
+  return customFetch<Blob>(getDownloadImportInboxFileUrl(id), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getDownloadImportInboxFileQueryKey = (id: string) => {
+  return [`/api/import/inbox/${id}/file`] as const;
+};
+
+export const getDownloadImportInboxFileSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof downloadImportInboxFile>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  id: string,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof downloadImportInboxFile>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getDownloadImportInboxFileQueryKey(id);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof downloadImportInboxFile>>> = ({
+    signal,
+  }) => downloadImportInboxFile(id, { signal, ...requestOptions });
+
+  return queryOptionsBuilder({
+    queryKey,
+    ...queryOptions,
+    queryFn: queryOptions?.queryFn ?? queryFn,
+  }) as UseSuspenseQueryOptions<
+    Awaited<ReturnType<typeof downloadImportInboxFile>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> } & {
+    throwOnError?: ((this: never, error: TError) => boolean) & { readonly __inferenceOnly: never };
+  };
+};
+
+export type DownloadImportInboxFileSuspenseQueryResult = NonNullable<
+  Awaited<ReturnType<typeof downloadImportInboxFile>>
+>;
+export type DownloadImportInboxFileSuspenseQueryError = ErrorType<ProblemDetails>;
+
+export function useDownloadImportInboxFileSuspense<
+  TData = Awaited<ReturnType<typeof downloadImportInboxFile>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  id: string,
+  options: {
+    query: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof downloadImportInboxFile>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useDownloadImportInboxFileSuspense<
+  TData = Awaited<ReturnType<typeof downloadImportInboxFile>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  id: string,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof downloadImportInboxFile>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useDownloadImportInboxFileSuspense<
+  TData = Awaited<ReturnType<typeof downloadImportInboxFile>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  id: string,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof downloadImportInboxFile>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Download a statement waiting in the import inbox
+ */
+
+export function useDownloadImportInboxFileSuspense<
+  TData = Awaited<ReturnType<typeof downloadImportInboxFile>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  id: string,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof downloadImportInboxFile>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getDownloadImportInboxFileSuspenseQueryOptions(id, options);
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
 export const getImportPreviewUrl = () => {
   return `/api/import/preview`;
 };

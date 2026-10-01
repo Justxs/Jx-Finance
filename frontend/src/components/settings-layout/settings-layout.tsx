@@ -8,6 +8,7 @@ import {
   FileUp,
   Globe,
   House,
+  Inbox,
   LayoutDashboard,
   Mail,
   MessagesSquare,
@@ -54,6 +55,7 @@ export const settingsSections = [
   "email",
   "discord",
   "marketPrices",
+  "importInbox",
   "backups",
 ] as const;
 
@@ -83,6 +85,7 @@ const settingsItems: Record<SettingsSection, [TranslationKey, LucideIcon]> = {
   email: ["settings.smtp.title", Mail],
   discord: ["settings.discord.title", MessagesSquare],
   marketPrices: ["settings.marketPrices.title", ChartCandlestick],
+  importInbox: ["settings.importInbox.title", Inbox],
   backups: ["backup.title", DatabaseBackup],
 };
 
@@ -115,6 +118,7 @@ function useSettingsGroups(): SectionNavGroup[] {
     ? [
         ...settingsSections
           .filter((section) => section !== "marketPrices" || features.investments)
+          .filter((section) => section !== "importInbox" || features.import)
           .map((section) => {
             const [labelKey, icon] = settingsItems[section];
             return {

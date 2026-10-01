@@ -1,7 +1,7 @@
 import { FileUp } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useAccountsSuspense } from "@/api/generated";
+import { useAccountsSuspense, useListImportInboxSuspense } from "@/api/generated";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { Button } from "@/components/ui/button/button";
 import { TitledSection } from "@/components/ui/section/section";
@@ -15,6 +15,7 @@ function ImportActions() {
   const [open, setOpen] = useState(false);
   const accounts = useAccountsSuspense();
   const accountList = accounts.data;
+  const waiting = useListImportInboxSuspense().data.length;
 
   if (accountList.length === 0) {
     return (
@@ -26,6 +27,9 @@ function ImportActions() {
 
   return (
     <div className="mt-4">
+      {waiting > 0 ? (
+        <p className="mb-3 text-sm">{t("imports.inbox.waiting", { count: waiting })}</p>
+      ) : null}
       <Button variant="outline" onClick={() => setOpen(true)}>
         <FileUp />
         {t("imports.open")}

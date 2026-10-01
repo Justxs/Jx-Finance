@@ -1304,6 +1304,17 @@
       "reason": "Priežastis",
       "at": "Kada",
       "privacy": "Tiekėjai sužino tik tai, kuriuos vertybinius popierius ši sistema turi, pagal jų simbolius: niekada ne kiekius, sumas ar kas juos turi. EUR įkainota kriptovaliuta gaunama iš „Kraken“ be rakto, visa kita iš EODHD."
+    },
+    "importInbox": {
+      "title": "Importo gautieji",
+      "description": "Aplankas, kurį serveris stebi ieškodamas banko išrašų failų. Kiekvienas failas tampa peržiūra, laukiančia sąskaitos, kurią jis nurodo, savininko.",
+      "off": "Gautieji išjungti. Kad juos įjungtumėte, nustatykite App__ImportInbox į aplanką, prijungtą prie API konteinerio.",
+      "folder": "Stebimas",
+      "failures": "Failai, kurių gautieji negalėjo panaudoti",
+      "noFailures": "Nesėkmių nėra",
+      "file": "Failas",
+      "reason": "Priežastis",
+      "at": "Perkelta į failed"
     }
   },
   "settingsHub": {
@@ -2179,7 +2190,8 @@
       "monthReadyToClose": "Pasibaigusį mėnesį galima uždaryti",
       "monthlyDigest": "Mėnesio suvestinė",
       "lowBalance": "Prognozuojama, kad sąskaitos likutis taps neigiamas",
-      "warrantyExpiring": "Baigiasi čekio garantija"
+      "warrantyExpiring": "Baigiasi čekio garantija",
+      "importWaiting": "Į importo gautuosius atkeliauja banko išrašas"
     },
     "unusualAmount": "{{amount}}: {{factor}}× daugiau nei įprasta ({{typical}})",
     "unusualAmounts_one": "{{count}} išlaida gerokai viršija įprastą sumą",
@@ -2199,7 +2211,8 @@
     "monthReadyToClose": "{{month}} baigėsi: peržiūrėkite ir uždarykite mėnesį",
     "monthlyDigest": "Pajamos {{income}}, išlaidos {{expense}}, grynai {{net}}",
     "lowBalance": "Pagal prognozę {{date}} likutis taps neigiamas, mažiausias {{amount}}",
-    "warrantyExpiring": "Garantija baigiasi {{date}}"
+    "warrantyExpiring": "Garantija baigiasi {{date}}",
+    "importWaiting": "Banko išrašas laukia peržiūros"
   },
   "households": {
     "name": "Namų ūkio pavadinimas",
@@ -2767,7 +2780,19 @@
       "updateFromFile": "Atnaujinti susiejimą pagal šį failą"
     },
     "learned": "Išmokta",
-    "learnedHint": "Pagal jūsų istoriją, {{percent}} % tikrumas. Jei netinka, pakeiskite."
+    "learnedHint": "Pagal jūsų istoriją, {{percent}} % tikrumas. Jei netinka, pakeiskite.",
+    "inbox": {
+      "title": "Laukia gautuosiuose",
+      "received": "{{account}} · gauta {{date}}",
+      "review": "Peržiūrėti",
+      "dismiss": "Atmesti",
+      "dismissTitle": "Atmesti šį išrašą?",
+      "dismissDescription": "Jis dings iš sąrašo, nieko neimportavus. Failas lieka gautųjų aplanko aplanke done.",
+      "waiting_one": "Peržiūros laukia {{count}} banko išrašas.",
+      "waiting_few": "Peržiūros laukia {{count}} banko išrašai.",
+      "waiting_many": "Peržiūros laukia {{count}} banko išrašo.",
+      "waiting_other": "Peržiūros laukia {{count}} banko išrašų."
+    }
   },
   "errors": {
     "generic": "Kažkas nepavyko. Bandykite dar kartą.",

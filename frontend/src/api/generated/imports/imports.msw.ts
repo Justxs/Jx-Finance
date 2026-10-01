@@ -10,6 +10,8 @@ import type { RequestHandlerOptions } from "msw";
 import type {
   CsvMappingResponse,
   ImportConfirmResponse,
+  ImportInboxFileResponse,
+  ImportInboxStatusResponse,
   ImportPreviewResponse,
   InspectCsvResponse,
 } from "../model";
@@ -153,6 +155,97 @@ export const getInspectCsvMockHandler = (
   );
 };
 
+export const getListImportInboxMockHandler = (
+  overrideResponse?:
+    | ImportInboxFileResponse[]
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<ImportInboxFileResponse[]> | ImportInboxFileResponse[]),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/import/inbox",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : undefined,
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getImportInboxStatusMockHandler = (
+  overrideResponse?:
+    | ImportInboxStatusResponse
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<ImportInboxStatusResponse> | ImportInboxStatusResponse),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/import/inbox/status",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : undefined,
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getDismissImportInboxFileMockHandler = (
+  overrideResponse?:
+    | void
+    | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<void> | void),
+  options?: RequestHandlerOptions,
+) => {
+  return http.delete(
+    "*/api/import/inbox/:id",
+    async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+      if (typeof overrideResponse === "function") {
+        await overrideResponse(info);
+      }
+
+      return new HttpResponse(null, { status: 204 });
+    },
+    options,
+  );
+};
+
+export const getDownloadImportInboxFileMockHandler = (
+  overrideResponse?:
+    | Blob
+    | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<Blob> | Blob),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/import/inbox/:id/file",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      const binaryBody =
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : undefined;
+      return new HttpResponse(binaryBody, {
+        status: 200,
+        headers: { "Content-Type": "application/octet-stream" },
+      });
+    },
+    options,
+  );
+};
+
 export const getImportPreviewMockHandler = (
   overrideResponse?:
     | ImportPreviewResponse
@@ -183,5 +276,9 @@ export const getImportsMock = () => [
   getDeleteCsvMappingMockHandler(),
   getUpdateCsvMappingMockHandler(),
   getInspectCsvMockHandler(),
+  getListImportInboxMockHandler(),
+  getImportInboxStatusMockHandler(),
+  getDismissImportInboxFileMockHandler(),
+  getDownloadImportInboxFileMockHandler(),
   getImportPreviewMockHandler(),
 ];

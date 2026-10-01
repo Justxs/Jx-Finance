@@ -1,14 +1,18 @@
 import {
   getCreateCsvMappingMockHandler,
   getDeleteCsvMappingMockHandler,
+  getDismissImportInboxFileMockHandler,
   getImportConfirmMockHandler,
+  getImportInboxStatusMockHandler,
   getImportPreviewMockHandler,
   getInspectCsvMockHandler,
   getListCsvMappingsMockHandler,
+  getListImportInboxMockHandler,
   getUpdateCsvMappingMockHandler,
 } from "@/api/generated/imports/imports.msw";
 import {
   csvMappings,
+  importInboxStatus,
   importPreview,
   revolutInspection,
   revolutMapping,
@@ -43,4 +47,7 @@ export const importHandlers = [
   getUpdateCsvMappingMockHandler(updateFrom(csvMappings)),
   getDeleteCsvMappingMockHandler(),
   getInspectCsvMockHandler(revolutInspection),
+  getListImportInboxMockHandler([]),
+  getDismissImportInboxFileMockHandler(),
+  getImportInboxStatusMockHandler(importInboxStatus),
 ];

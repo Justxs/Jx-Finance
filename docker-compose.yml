@@ -33,6 +33,7 @@ services:
       App__DataProtectionDirectory: /keys
       App__BackupDirectory: /backups
       App__AttachmentDirectory: /attachments
+      App__ImportInbox: /import-inbox
       OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
     env_file:
       - .env
@@ -42,6 +43,7 @@ services:
       - auth_keys:/keys
       - backups:/backups
       - attachments:/attachments
+      - import_inbox:/import-inbox
     depends_on:
       db:
         condition: service_healthy
@@ -90,4 +92,5 @@ volumes:
   auth_keys:
   backups:
   attachments:
+  import_inbox:
   maps:

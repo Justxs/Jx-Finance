@@ -3,7 +3,7 @@ using FluentValidation;
 using JxFinance.Common.Errors;
 using JxFinance.Common.Validation;
 using JxFinance.Domain.Common;
-using JxFinance.Endpoints.Imports.Parsing;
+using JxFinance.Domain.Imports;
 
 namespace JxFinance.Endpoints.Imports.Confirm;
 

@@ -1,5 +1,6 @@
 using JxFinance.Domain.Audit;
 using JxFinance.Domain.Common;
+using JxFinance.Domain.Imports;
 using JxFinance.Domain.Notifications;
 using JxFinance.Domain.Transactions;
 using JxFinance.Domain.Trash;
@@ -74,6 +75,12 @@ internal static class Retention
     {
         var cutoff = now - ApiIdempotencyKey.Lifetime;
         return db.ApiIdempotencyKeys.Where(k => k.CreatedAt < cutoff).ExecuteDeleteAsync(ct);
+    }
+
+    internal static Task<int> PruneImportInboxAsync(AppDbContext db, DateTimeOffset now, CancellationToken ct)
+    {
+        var cutoff = now.AddDays(-ImportInboxFile.KeptDays);
+        return PurgeAsync(db.ImportInboxFiles.IgnoreQueryFilters().Where(f => f.CreatedAt < cutoff), ct);
     }
 
     internal static Task<int> PruneDeletionEntriesAsync(AppDbContext db, DateTimeOffset now, CancellationToken ct)

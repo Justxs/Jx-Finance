@@ -87,6 +87,7 @@ public static class ApiServiceExtensions
             builder.Services.AddHostedService<UnusualAmountJob>();
             builder.Services.AddHostedService<MonthCloseReminderJob>();
             builder.Services.AddHostedService<MonthlyDigestJob>();
+            builder.Services.AddHostedService<ImportInboxJob>();
             builder.Services.AddHostedService<RetentionJob>();
         }
 

@@ -47,6 +47,7 @@ export const SetupResponse = zod.object({
       "monthlyDigest",
       "lowBalance",
       "warrantyExpiring",
+      "importWaiting",
     ]),
   ),
   language: zod.string().nullable(),

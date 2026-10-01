@@ -163,6 +163,15 @@ export function MarketPricesFormSkeleton() {
   );
 }
 
+export function ImportInboxSkeleton() {
+  return (
+    <div aria-hidden="true" className="mt-4 max-w-3xl space-y-5">
+      <Skeleton className="h-11 rounded-md" />
+      <TableSkeleton rows={3} columns={3} />
+    </div>
+  );
+}
+
 export function BackupListSkeleton() {
   return (
     <>
@@ -220,6 +229,12 @@ function SectionBodySkeleton({ section }: Readonly<{ section: SettingsSection }>
       return (
         <TitledSkeleton>
           <MarketPricesFormSkeleton />
+        </TitledSkeleton>
+      );
+    case "importInbox":
+      return (
+        <TitledSkeleton>
+          <ImportInboxSkeleton />
         </TitledSkeleton>
       );
     case "backups":

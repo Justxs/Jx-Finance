@@ -1,5 +1,7 @@
 import type {
   CsvMappingResponse,
+  ImportInboxFileResponse,
+  ImportInboxStatusResponse,
   ImportPreviewResponse,
   ImportPreviewRow,
   ImportStatementSummary,
@@ -324,6 +326,49 @@ export const revolutMapping: CsvMappingResponse = {
 };
 
 export const csvMappings: CsvMappingResponse[] = [revolutMapping];
+
+export const inboxFiles: ImportInboxFileResponse[] = [
+  {
+    id: uid("4c4c4c4c", 1),
+    fileName: "swedbank-2026-09.xml",
+    format: "camt053",
+    accountId: ids.accounts.checking,
+    mappingId: null,
+    receivedAt: "2026-09-18T06:05:00Z",
+  },
+  {
+    id: uid("4c4c4c4c", 2),
+    fileName: "revolut-statement-september.csv",
+    format: "genericCsv",
+    accountId: ids.accounts.savings,
+    mappingId: revolutMapping.id,
+    receivedAt: "2026-09-17T21:40:00Z",
+  },
+];
+
+export const importInboxStatus: ImportInboxStatusResponse = {
+  directory: "/import-inbox",
+  failures: [
+    {
+      fileName: "LT601010012345678901/card-2026-09.csv",
+      reason:
+        "None of the account owner's saved CSV mappings reads this file. Save a mapping by importing one file by hand.",
+      at: "2026-09-18T06:10:00Z",
+    },
+    {
+      fileName: "statement-joint.xml",
+      reason: "No account has the IBAN LT447300010123456789. Record it on the account first.",
+      at: "2026-09-16T05:00:00Z",
+    },
+  ],
+};
+
+export const importInboxQuiet: ImportInboxStatusResponse = {
+  directory: "/import-inbox",
+  failures: [],
+};
+
+export const importInboxOff: ImportInboxStatusResponse = { directory: null, failures: [] };
 
 export const revolutInspection: InspectCsvResponse = {
   encoding: "utf8",

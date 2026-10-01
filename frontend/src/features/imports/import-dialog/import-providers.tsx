@@ -4,11 +4,21 @@ import {
   getListCsvMappingsQueryKey,
   useDeleteCsvMapping,
   useListCsvMappingsSuspense,
+  useListImportInboxSuspense,
 } from "@/api/generated";
-import type { CsvMappingResponse, StatementFormat } from "@/api/generated/model";
+import type {
+  AccountResponse,
+  CsvMappingResponse,
+  ImportInboxFileResponse,
+  StatementFormat,
+} from "@/api/generated/model";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog/confirm-delete-dialog";
 import { RowActions } from "@/components/row-actions/row-actions";
 import { Rows } from "@/components/ui/rows/rows";
+import {
+  ImportInboxList,
+  type InboxReview,
+} from "@/features/imports/import-inbox-list/import-inbox-list";
 import { useConfirmedDelete } from "@/hooks/use-confirmed-delete";
 import { optimisticRemoval } from "@/lib/optimistic";
 
@@ -19,8 +29,10 @@ export interface ImportProvider {
 }
 
 interface Props {
+  accounts: AccountResponse[];
   onChoose: (provider: ImportProvider) => void;
   onEdit: (mapping: CsvMappingResponse) => void;
+  onReview: (provider: ImportProvider, review: InboxReview) => void;
 }
 
 function ProviderButton({
@@ -45,9 +57,10 @@ function ProviderButton({
   );
 }
 
-export function ImportProviders({ onChoose, onEdit }: Readonly<Props>) {
+export function ImportProviders({ accounts, onChoose, onEdit, onReview }: Readonly<Props>) {
   const { t } = useTranslation();
   const mappings = useListCsvMappingsSuspense();
+  const inbox = useListImportInboxSuspense();
   const deleteMutation = useDeleteCsvMapping({
     mutation: optimisticRemoval<CsvMappingResponse>(getListCsvMappingsQueryKey()),
   });
@@ -81,8 +94,22 @@ export function ImportProviders({ onChoose, onEdit }: Readonly<Props>) {
     },
   ] as const;
 
+  function providerOf({ format, mappingId }: ImportInboxFileResponse): ImportProvider {
+    const mapping = mappings.data.find((item) => item.id === mappingId);
+    const name =
+      mapping?.name ??
+      fixed.find((item) => item.format === format)?.name ??
+      t("imports.providers.genericCsv");
+    return { format, name, mapping };
+  }
+
   return (
     <>
+      <ImportInboxList
+        items={inbox.data}
+        accounts={accounts}
+        onReview={(review) => onReview(providerOf(review.item), review)}
+      />
       <Rows className="-my-2">
         {fixed.map((item) => (
           <li key={item.format} className="flex">
