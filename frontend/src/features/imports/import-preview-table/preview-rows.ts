@@ -16,6 +16,7 @@ export interface PreviewRowState extends ImportPreviewRow {
   selected: boolean;
   categoryId: string;
   categorySuggested: boolean;
+  learnedConfidence: number | null;
   ruleName: string | null;
   tagIds: string[];
 }
@@ -63,6 +64,7 @@ export function refundPatch(row: PreviewRowState, linked: boolean): Partial<Prev
     existingTransferId: "",
     categoryId,
     categorySuggested: false,
+    learnedConfidence: null,
     ruleName: null,
   };
 }
@@ -134,7 +136,9 @@ export function toPreviewRows(
   return rows.map((row) => {
     const ruleName = row.isDuplicate ? null : row.matchedRuleName;
     const ruleCategoryId = ruleName ? (row.suggestedCategoryId ?? "") : "";
-    const categoryId = ruleCategoryId || recallCategoryId(row, transactions, categories);
+    const learnedCategoryId = (!ruleCategoryId && !row.isDuplicate && row.learnedCategoryId) || "";
+    const categoryId =
+      ruleCategoryId || learnedCategoryId || recallCategoryId(row, transactions, categories);
     const matchedId = row.isDuplicate ? "" : (row.matchedTransaction?.id ?? "");
     const refund =
       !row.isDuplicate &&
@@ -154,6 +158,7 @@ export function toPreviewRows(
         refundOfTransactionId: row.refundCandidate?.id ?? "",
         categoryId: refundCategoryId,
         categorySuggested: Boolean(refundCategoryId),
+        learnedConfidence: null,
         ruleName: null,
         tagIds: [],
       };
@@ -168,6 +173,7 @@ export function toPreviewRows(
       existingTransactionId: matchedId,
       categoryId,
       categorySuggested: Boolean(categoryId),
+      learnedConfidence: learnedCategoryId ? (row.learnedConfidence ?? null) : null,
       ruleName,
       tagIds: ruleName ? [...row.suggestedTagIds] : [],
     };
@@ -220,7 +226,7 @@ export function applyCategory(
 ): PreviewRowState[] {
   return rows.map((row) =>
     row.selected && categoryType(row) === category.type && takesCategory(row)
-      ? { ...row, categoryId: category.id, categorySuggested: false }
+      ? { ...row, categoryId: category.id, categorySuggested: false, learnedConfidence: null }
       : row,
   );
 }

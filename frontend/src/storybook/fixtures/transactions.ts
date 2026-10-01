@@ -1,4 +1,5 @@
 import type {
+  CategorySuggestionResponse,
   GroupMembersResponse,
   LedgerItemResponse,
   PayeeBreakdownItem,
@@ -10,6 +11,7 @@ import type {
   TransactionLineResponse,
   TransactionResponse,
   TransactionsSummaryResponse,
+  UncategorizedSuggestionResponse,
   UnusualAmountResponse,
 } from "@/api/generated/model";
 import { fromCents, toCents } from "@/lib/money";
@@ -306,6 +308,51 @@ export const transactions: TransactionResponse[] = [
   imported(24, "08-25", checking, shopping, -89.95, "Zara, Akropolis", [children]),
   manual(25, "08-20", checking, transport, -29, "Trafi – mėnesinis viešojo transporto bilietas"),
   imported(26, "08-10", checking, salary, 2850, "UAB „Baltijos sprendimai“ – darbo užmokestis"),
+];
+
+export const categorySuggestionByRule: CategorySuggestionResponse = {
+  categoryId: food,
+  source: "rule",
+  ruleName: "Maxima",
+  confidence: null,
+};
+
+export const categorySuggestionLearned: CategorySuggestionResponse = {
+  categoryId: food,
+  source: "learned",
+  ruleName: null,
+  confidence: 0.93,
+};
+
+export const noCategorySuggestion: CategorySuggestionResponse = {
+  categoryId: null,
+  source: null,
+  ruleName: null,
+  confidence: null,
+};
+
+export const uncategorizedSuggestions: UncategorizedSuggestionResponse[] = [
+  {
+    transaction: imported(41, "09-16", checking, null, -12.4, "MAXIMA LT 0412 VILNIUS"),
+    categoryId: food,
+    source: "learned",
+    ruleName: null,
+    confidence: 0.93,
+  },
+  {
+    transaction: imported(42, "09-12", checking, null, -8.15, "MAXIMA LT 0388 VILNIUS"),
+    categoryId: food,
+    source: "learned",
+    ruleName: null,
+    confidence: 0.88,
+  },
+  {
+    transaction: imported(43, "09-09", checking, null, -14.5, "Bolt Food – Pizza Jazz"),
+    categoryId: cafes,
+    source: "rule",
+    ruleName: "Bolt Food",
+    confidence: null,
+  },
 ];
 
 const tripGroupId = uid("57575757", 1);

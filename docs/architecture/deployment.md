@@ -46,4 +46,4 @@ To make it, on any machine with network access:
 
 This requires an existing administrator and interactive password entry. It resets the password, clears lockout and 2FA, invalidates recovery codes, and revokes sessions. It does not create users or change application records. The database must already be migrated. The host command was tested against a disposable administrator; the container invocation still requires validation on a working Docker host.
 
-`docker compose run --rm --no-deps api --evaluate-categorizer member@example.com` prints how well a learned categorizer would have filled that member's last three months, in counts and percentages only, and writes nothing; see [Categorization rules](../features/categorization-rules.md#evaluating-a-learned-categorizer).
+`docker compose run --rm --no-deps api --evaluate-categorizer member@example.com` prints how well a learned categorizer would have filled that member's last three months, in counts and percentages only, and writes nothing; see [Learned categories](../features/learned-categories.md#evaluating-on-a-ledger).

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button/button";
 import { Checkbox } from "@/components/ui/checkbox/checkbox";
 import { TableCell, TableRow } from "@/components/ui/table/table";
 import { HintTag, Tag } from "@/components/ui/tag/tag";
+import { confidencePercent } from "@/features/transactions/category-suggestion/confidence";
 import { useUnusualSentence } from "@/features/transactions/unusual-amount/use-unusual-sentence";
 import { EMPTY_VALUE, useIsoDate, useMoney } from "@/hooks/use-formatters";
 import { namedOptions } from "@/lib/options";
@@ -57,7 +58,8 @@ export function ImportRow({
     Boolean(row.refundCandidate) ||
     row.asRefund;
   const filledByRule = Boolean(row.ruleName) && editable;
-  const recalled = row.categorySuggested && !row.ruleName && editable;
+  const learned = row.learnedConfidence !== null && editable;
+  const recalled = row.categorySuggested && !row.ruleName && !learned && editable;
   const unusual = !row.isDuplicate && !linked && row.unusual ? unusualSentence(row.unusual) : null;
   const matchedHint = row.matchedTransaction
     ? t("imports.matchedHint", {
@@ -72,6 +74,7 @@ export function ImportRow({
     row.asRefund ||
     row.looksLikeTransfer ||
     filledByRule ||
+    learned ||
     recalled ||
     Boolean(unusual);
 
@@ -99,7 +102,9 @@ export function ImportRow({
       aria-label={t("imports.categoryFor", { row: rowName })}
       disabled={!editable}
       value={linked ? (row.matchedTransaction?.categoryId ?? "") : row.categoryId}
-      onChange={(categoryId) => onRowChange(index, { categoryId, categorySuggested: false })}
+      onChange={(categoryId) =>
+        onRowChange(index, { categoryId, categorySuggested: false, learnedConfidence: null })
+      }
       options={namedOptions(rowCategories, t("transactions.uncategorized"))}
     />
   );
@@ -147,6 +152,14 @@ export function ImportRow({
       {filledByRule ? (
         <HintTag tone="accent" hint={t("imports.ruleFilledHint", { rule: row.ruleName ?? "" })}>
           {t("imports.ruleFilled")}
+        </HintTag>
+      ) : null}
+      {learned ? (
+        <HintTag
+          tone="accent"
+          hint={t("imports.learnedHint", { percent: confidencePercent(row.learnedConfidence) })}
+        >
+          {t("imports.learned")}
         </HintTag>
       ) : null}
       {recalled ? (

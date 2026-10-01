@@ -10,7 +10,7 @@ One API project, feature services use EF directly, thin endpoints, architecture 
 
 ### Release scope
 
-Ledger, planning, reporting, multi-currency, investments, tags on transactions, description-based categorization rules and administrator backups are in, and since 2026-09-30 daily closing prices of held securities from a market data provider, off until an administrator switches it on; machine-learned categorization, offline and wider sharing stay deferred
+Ledger, planning, reporting, multi-currency, investments, tags on transactions, description-based categorization rules and administrator backups are in, and since 2026-09-30 daily closing prices of held securities from a market data provider, off until an administrator switches it on; since 2026-10-01 machine-learned category suggestions are in too, off until an administrator switches them on, see [Learned categories](learned-categories.md); offline and wider sharing stay deferred
 
 ### Database lifecycle
 
@@ -20,6 +20,9 @@ Apply EF migrations directly on startup; the `pg_dump` based dump, the backup sc
 
 Newest first. Each entry is a choice between real alternatives: what was chosen, what was rejected, and why.
 
+- **2026-10-01.** Machine-learned categorization leaves the deferred list: a suggestion-only naive Bayes model trained per request inside the API, behind a `LearnedCategories` switch that is off by default, built although its evaluation gate could not be measured, because the owner waived it; the evaluation on the owner's ledger is still to run before the switch goes on. See [Learned categories](learned-categories.md)
+  - Rejected: Keeping it out of scope because rules and the recall of the last category cover the need
+  - Why: The owner asked for the whole feature on 2026-10-01; nothing leaves the installation and the switch keeps it off until the evaluation has run
 - **2026-09-29.** Strongly-typed ids stay hand-written `readonly record struct` types implementing `IStronglyTypedId<T>`, with their EF conversions registered in `AppDbContext.ConfigureConventions`
   - Rejected: A source generator package such as StronglyTypedId or Vogen
   - Why: Each id is a few lines and they change rarely, while a generator adds a build-time dependency whose generated API has changed between major versions; the hand-written types are plain C# any reader can follow

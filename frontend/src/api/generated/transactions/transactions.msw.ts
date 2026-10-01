@@ -10,11 +10,13 @@ import type { RequestHandlerOptions } from "msw";
 import type {
   BulkCategorizeTransactionsResponse,
   BulkTagTransactionsResponse,
+  CategorySuggestionResponse,
   PagedResponseOfLedgerItemResponse,
   PagedResponseOfTransactionResponse,
   PlaceSuggestionResponse,
   TransactionResponse,
   TransactionsSummaryResponse,
+  UncategorizedSuggestionResponse,
 } from "../model";
 
 export const getCreateTransactionMockHandler = (
@@ -209,6 +211,30 @@ export const getPlacesMockHandler = (
   );
 };
 
+export const getSuggestCategoryMockHandler = (
+  overrideResponse?:
+    | CategorySuggestionResponse
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<CategorySuggestionResponse> | CategorySuggestionResponse),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/transactions/suggest-category",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : undefined,
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
 export const getTransactionsSummaryMockHandler = (
   overrideResponse?:
     | TransactionsSummaryResponse
@@ -219,6 +245,30 @@ export const getTransactionsSummaryMockHandler = (
 ) => {
   return http.get(
     "*/api/transactions/summary",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : undefined,
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getUncategorizedSuggestionsMockHandler = (
+  overrideResponse?:
+    | UncategorizedSuggestionResponse[]
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<UncategorizedSuggestionResponse[]> | UncategorizedSuggestionResponse[]),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/transactions/uncategorized-suggestions",
     async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
@@ -346,7 +396,9 @@ export const getTransactionsMock = () => [
   getExportTransactionsPdfMockHandler(),
   getLedgerMockHandler(),
   getPlacesMockHandler(),
+  getSuggestCategoryMockHandler(),
   getTransactionsSummaryMockHandler(),
+  getUncategorizedSuggestionsMockHandler(),
   getDeleteTransactionMockHandler(),
   getTransactionMockHandler(),
   getUpdateTransactionMockHandler(),

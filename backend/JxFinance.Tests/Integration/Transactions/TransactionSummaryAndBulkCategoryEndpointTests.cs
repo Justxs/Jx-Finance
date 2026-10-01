@@ -121,6 +121,30 @@ public sealed class TransactionSummaryAndBulkCategoryEndpointTests(ApiFixture fi
     }
 
     [Fact]
+    public async Task Bulk_category_with_only_uncategorized_skips_a_row_categorized_after_the_review()
+    {
+        var account = await CreateAccountAsync("1000.00");
+        var suggested = await CreateCategoryAsync();
+        var chosen = await CreateCategoryAsync();
+        var open = await CreateTransactionAsync(Client, account, null, "expense", "5.00", "2026-06-01", "Review open");
+        var meanwhile = await CreateTransactionAsync(Client, account, null, "expense", "6.00", "2026-06-02", "Review meanwhile");
+        (await Client.PostAsJsonAsync(
+            "/api/transactions/bulk-category",
+            new { transactionIds = new[] { meanwhile.Id }, categoryId = chosen },
+            TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
+
+        var response = await Client.PostAsJsonAsync(
+            "/api/transactions/bulk-category",
+            new { transactionIds = new[] { open.Id, meanwhile.Id }, categoryId = suggested, onlyUncategorized = true },
+            TestContext.Current.CancellationToken);
+
+        response.EnsureSuccessStatusCode();
+        Assert.Equal(1, (await response.Content.ReadFromJsonAsync<BulkDto>(TestContext.Current.CancellationToken))!.Updated);
+        Assert.Equal(suggested, (await GetTransactionAsync(open.Id)).CategoryId);
+        Assert.Equal(chosen, (await GetTransactionAsync(meanwhile.Id)).CategoryId);
+    }
+
+    [Fact]
     public async Task Bulk_category_counts_repeated_ids_once()
     {
         var account = await CreateAccountAsync("1000.00");

@@ -9809,7 +9809,7 @@
           "Imports"
         ],
         "summary": "Preview a bank statement",
-        "description": "Parses an exported bank statement and returns the rows it found, each with a flag saying whether a matching transaction already exists in the account. Three formats are read: swedbankCsv, the Swedbank CSV export, camt053, an ISO 20022 camt.053 XML statement, and genericCsv, any CSV export read through the saved column mapping named by mappingId. From a camt.053 file only booked entries are returned; pending and informational entries and entries that could not be read are counted in statement. A mapped CSV counts rows its status filter leaves out or whose amount is zero in notBooked and rows it cannot read in unreadable, and with a balance column answers the balance of its latest row as the closing balance. When the file holds several statements, the one for the account's IBAN is read. A counterparty IBAN that belongs to another of your accounts fills in suggestedTransferAccountId. Your categorization rules are evaluated against each row's description, amount and flow type, and the first rule that matches fills in suggestedCategoryId, suggestedTagIds and matchedRuleName; a row nothing matched carries none of them. The suggestion is a suggestion: confirm sends back whatever the client decided. A row that is not a duplicate and has the same flow type, amount and currency as a transaction entered by hand on the account within three days of it carries that transaction in matchedTransaction, each transaction offered to one row at most, the closest date first. An incoming row that is neither a duplicate nor matched carries refundCandidate when an expense on the account, not a refund, in the same currency, of at least the row's amount and dated at most 90 days before it has the same normalized payee or description as the row; the most recent such expense wins. Nothing is written: this call only reads the file. Send the file as multipart/form-data.",
+        "description": "Parses an exported bank statement and returns the rows it found, each with a flag saying whether a matching transaction already exists in the account. Three formats are read: swedbankCsv, the Swedbank CSV export, camt053, an ISO 20022 camt.053 XML statement, and genericCsv, any CSV export read through the saved column mapping named by mappingId. From a camt.053 file only booked entries are returned; pending and informational entries and entries that could not be read are counted in statement. A mapped CSV counts rows its status filter leaves out or whose amount is zero in notBooked and rows it cannot read in unreadable, and with a balance column answers the balance of its latest row as the closing balance. When the file holds several statements, the one for the account's IBAN is read. A counterparty IBAN that belongs to another of your accounts fills in suggestedTransferAccountId. Your categorization rules are evaluated against each row's description, amount and flow type, and the first rule that matches fills in suggestedCategoryId, suggestedTagIds and matchedRuleName; a row nothing matched carries none of them. While the learnedCategories feature is on, a row that is not a duplicate and got no category from a rule carries learnedCategoryId and learnedConfidence when a model trained on the categorized rows you can see is sure enough; otherwise both are null. The suggestion is a suggestion: confirm sends back whatever the client decided. A row that is not a duplicate and has the same flow type, amount and currency as a transaction entered by hand on the account within three days of it carries that transaction in matchedTransaction, each transaction offered to one row at most, the closest date first. An incoming row that is neither a duplicate nor matched carries refundCandidate when an expense on the account, not a refund, in the same currency, of at least the row's amount and dated at most 90 days before it has the same normalized payee or description as the row; the most recent such expense wins. Nothing is written: this call only reads the file. Send the file as multipart/form-data.",
         "operationId": "ImportPreview",
         "requestBody": {
           "content": {
@@ -16095,7 +16095,7 @@
           "Transactions"
         ],
         "summary": "Set the category of several transactions",
-        "description": "Files every listed transaction under one category, or clears their category when categoryId is null. The request is all-or-nothing: if any id is not visible to you, is a split transaction, or has a type the category does not match, nothing changes. Repeated ids count once.",
+        "description": "Files every listed transaction under one category, or clears their category when categoryId is null. The request is all-or-nothing: if any id is not visible to you, is a split transaction, or has a type the category does not match, nothing changes. Repeated ids count once. With onlyUncategorized, only the listed transactions that still have no category change, so a category somebody set after a review is kept, and the answer counts only those.",
         "operationId": "BulkCategorizeTransactions",
         "requestBody": {
           "content": {
@@ -16107,7 +16107,8 @@
                 "transactionIds": [
                   "00000000-0000-0000-0000-000000000000"
                 ],
-                "categoryId": "00000000-0000-0000-0000-000000000000"
+                "categoryId": "00000000-0000-0000-0000-000000000000",
+                "onlyUncategorized": false
               }
             }
           },
@@ -17120,6 +17121,89 @@
         ]
       }
     },
+    "/api/transactions/suggest-category": {
+      "post": {
+        "tags": [
+          "Transactions"
+        ],
+        "summary": "Suggest a category for a transaction being entered",
+        "description": "Answers the category your first matching categorization rule sets, while the categorizationRules feature is on, and otherwise the category a naive Bayes model trained on the categorized transactions you can see guesses, when it is sure enough. The model is built for this request inside the API and thrown away with it; nothing is stored or sent anywhere. Every field of the answer is null when neither has an opinion. Only reads; nothing is set on any transaction. It is a POST so that the description never lands in a URL. Needs the learnedCategories feature.",
+        "operationId": "SuggestCategory",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SuggestCategoryRequest"
+              },
+              "example": {
+                "accountId": "00000000-0000-0000-0000-000000000000",
+                "type": "expense",
+                "amount": "12.40",
+                "description": "MAXIMA LT 0412"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "The suggested category with its source (rule or learned) and the rule's name or the model's confidence, or every field null.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CategorySuggestionResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed, or the account is not visible to you.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The learnedCategories feature is switched off (feature.disabled).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      }
+    },
     "/api/transactions/summary": {
       "get": {
         "tags": [
@@ -17310,6 +17394,238 @@
           },
           "401": {
             "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          },
+          {
+            "PersonalApiToken": [ ]
+          }
+        ]
+      }
+    },
+    "/api/transactions/uncategorized-suggestions": {
+      "get": {
+        "tags": [
+          "Transactions"
+        ],
+        "summary": "Suggest categories for uncategorized transactions",
+        "description": "Takes the newest 200 transactions that match the filters, have no category and are not split, and suggests a category for each: the first matching categorization rule while the categorizationRules feature is on, otherwise a naive Bayes model trained inside the API on the categorized transactions you can see, when it is sure enough. Only transactions that got a suggestion are answered, each with the transaction itself, the category, the source and the rule's name or the model's confidence. Nothing is written: apply a suggestion through POST /api/transactions/bulk-category with onlyUncategorized. Needs the learnedCategories feature.",
+        "operationId": "GetUncategorizedSuggestions",
+        "parameters": [
+          {
+            "name": "accountId",
+            "in": "query",
+            "description": "Keep only transactions on this account.",
+            "schema": {
+              "type": [
+                "null",
+                "string"
+              ],
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "categoryId",
+            "in": "query",
+            "description": "Keep only transactions in this category, including split lines filed under it.",
+            "schema": {
+              "type": [
+                "null",
+                "string"
+              ],
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "tagIds",
+            "in": "query",
+            "description": "Comma-separated tag ids, at most ten. A transaction is kept only when it carries every one of them, so adding a tag always narrows the list. Tags sit on the transaction, never on a split line.",
+            "schema": {
+              "type": [
+                "null",
+                "string"
+              ]
+            }
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "description": "Income or Expense.",
+            "schema": {
+              "$ref": "#/components/schemas/FlowType"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "description": "Case-insensitive match against the description, the note, your name for the payee or, while the locations feature is on, the place.",
+            "schema": {
+              "type": [
+                "null",
+                "string"
+              ]
+            }
+          },
+          {
+            "name": "payee",
+            "in": "query",
+            "description": "Keep only transactions whose normalized description equals the normalized value: lowercase words, punctuation dropped and tokens with three or more digits dropped. Send a payeeKey from the report's expenseByPayee or a raw description. A value with nothing left after normalizing is ignored.",
+            "schema": {
+              "type": [
+                "null",
+                "string"
+              ]
+            }
+          },
+          {
+            "name": "place",
+            "in": "query",
+            "description": "Keep only transactions whose place contains this text, ignoring case, at most 120 characters. Ignored while the locations feature is off.",
+            "schema": {
+              "type": [
+                "null",
+                "string"
+              ]
+            }
+          },
+          {
+            "name": "dateFrom",
+            "in": "query",
+            "description": "Inclusive start date as YYYY-MM-DD.",
+            "schema": {
+              "type": [
+                "null",
+                "string"
+              ],
+              "format": "date"
+            }
+          },
+          {
+            "name": "dateTo",
+            "in": "query",
+            "description": "Inclusive end date as YYYY-MM-DD.",
+            "schema": {
+              "type": [
+                "null",
+                "string"
+              ],
+              "format": "date"
+            }
+          },
+          {
+            "name": "amountMin",
+            "in": "query",
+            "description": "Inclusive lowest amount, compared with the size of the amount in the transaction's own currency, so a refund of 49.00 matches like a purchase of 49.00.",
+            "schema": {
+              "type": [
+                "null",
+                "number"
+              ],
+              "format": "decimal"
+            }
+          },
+          {
+            "name": "amountMax",
+            "in": "query",
+            "description": "Inclusive highest amount, compared the same way as amountMin.",
+            "schema": {
+              "type": [
+                "null",
+                "number"
+              ],
+              "format": "decimal"
+            }
+          },
+          {
+            "name": "unusual",
+            "in": "query",
+            "description": "true keeps only expenses flagged as unusual and not marked \"not unusual\". Ignored while the unusualAmounts feature is off.",
+            "schema": {
+              "type": [
+                "null",
+                "boolean"
+              ]
+            }
+          },
+          {
+            "name": "uncategorized",
+            "in": "query",
+            "description": "true keeps only transactions without a category, and split transactions with at least one line without one.",
+            "schema": {
+              "type": [
+                "null",
+                "boolean"
+              ]
+            }
+          },
+          {
+            "name": "spreadOverlap",
+            "in": "query",
+            "description": "true also keeps transactions dated before the range that are spread over months with a monthly slice inside it, so a figure from a report or a budget leads to every row that makes it up. Ignored unless both dateFrom and dateTo are set.",
+            "schema": {
+              "type": [
+                "null",
+                "boolean"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The suggestions, newest transaction first.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/UncategorizedSuggestionResponse"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The learnedCategories feature is switched off (feature.disabled).",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -21100,13 +21416,20 @@
             "description": "The category to file them under, or null to clear it.",
             "format": "uuid",
             "example": "00000000-0000-0000-0000-000000000000"
+          },
+          "onlyUncategorized": {
+            "type": "boolean",
+            "description": "When true, leave every listed transaction that already has a category as it is. Defaults to false.",
+            "default": false,
+            "example": false
           }
         },
         "example": {
           "transactionIds": [
             "00000000-0000-0000-0000-000000000000"
           ],
-          "categoryId": "00000000-0000-0000-0000-000000000000"
+          "categoryId": "00000000-0000-0000-0000-000000000000",
+          "onlyUncategorized": false
         }
       },
       "BulkCategorizeTransactionsResponse": {
@@ -21418,6 +21741,54 @@
             "format": "uuid"
           }
         }
+      },
+      "CategorySuggestionResponse": {
+        "required": [
+          "categoryId",
+          "source",
+          "ruleName",
+          "confidence"
+        ],
+        "type": "object",
+        "properties": {
+          "categoryId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "source": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/CategorySuggestionSource"
+              }
+            ]
+          },
+          "ruleName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "confidence": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          }
+        }
+      },
+      "CategorySuggestionSource": {
+        "enum": [
+          "rule",
+          "learned"
+        ],
+        "type": "string"
       },
       "CloseMonthRequest": {
         "required": [
@@ -24237,7 +24608,8 @@
           "monthClose",
           "receiptReading",
           "apiTokens",
-          "locations"
+          "locations",
+          "learnedCategories"
         ],
         "type": "object",
         "properties": {
@@ -24284,6 +24656,9 @@
             "type": "boolean"
           },
           "locations": {
+            "type": "boolean"
+          },
+          "learnedCategories": {
             "type": "boolean"
           }
         }
@@ -25150,6 +25525,20 @@
                 "$ref": "#/components/schemas/ImportMatchedTransaction"
               }
             ]
+          },
+          "learnedCategoryId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "learnedConfidence": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
           }
         }
       },
@@ -29287,6 +29676,46 @@
           }
         }
       },
+      "SuggestCategoryRequest": {
+        "required": [
+          "accountId",
+          "type",
+          "amount",
+          "description"
+        ],
+        "type": "object",
+        "properties": {
+          "accountId": {
+            "minLength": 1,
+            "type": "string",
+            "description": "The account the transaction is on.",
+            "format": "uuid",
+            "example": "00000000-0000-0000-0000-000000000000"
+          },
+          "type": {
+            "$ref": "#/components/schemas/FlowType"
+          },
+          "amount": {
+            "type": "string",
+            "description": "The amount, zero or more, with at most two decimal places.",
+            "format": "decimal",
+            "example": "12.40"
+          },
+          "description": {
+            "maxLength": 500,
+            "minLength": 0,
+            "type": "string",
+            "description": "The description as typed, at most 500 characters.",
+            "example": "MAXIMA LT 0412"
+          }
+        },
+        "example": {
+          "accountId": "00000000-0000-0000-0000-000000000000",
+          "type": "expense",
+          "amount": "12.40",
+          "description": "MAXIMA LT 0412"
+        }
+      },
       "SuggestedPaymentResponse": {
         "required": [
           "fromUserId",
@@ -30374,6 +30803,41 @@
           },
           "authenticatorUri": {
             "type": "string"
+          }
+        }
+      },
+      "UncategorizedSuggestionResponse": {
+        "required": [
+          "transaction",
+          "categoryId",
+          "source",
+          "ruleName",
+          "confidence"
+        ],
+        "type": "object",
+        "properties": {
+          "transaction": {
+            "$ref": "#/components/schemas/TransactionResponse"
+          },
+          "categoryId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "source": {
+            "$ref": "#/components/schemas/CategorySuggestionSource"
+          },
+          "ruleName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "confidence": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
           }
         }
       },

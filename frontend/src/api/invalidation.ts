@@ -13,6 +13,7 @@ interface Rule {
 const ledger = [
   api.getTransactionsQueryKey,
   api.getLedgerQueryKey,
+  api.getUncategorizedSuggestionsQueryKey,
   api.getTransactionGroupsQueryKey,
   api.getAccountsQueryKey,
   api.getDashboardSummaryQueryKey,
@@ -439,6 +440,7 @@ export const mutationsWithoutInvalidation: readonly MutationKeyGetter[] = [
   api.getInspectCsvMutationKey,
   api.getPreviewCategorizationRunMutationKey,
   api.getTestCategorizationRuleMutationKey,
+  api.getSuggestCategoryMutationKey,
   api.getRestoreBackupMutationKey,
   api.getForgotPasswordMutationKey,
   api.getResetPasswordMutationKey,

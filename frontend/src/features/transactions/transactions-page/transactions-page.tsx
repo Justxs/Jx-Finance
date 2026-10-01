@@ -154,6 +154,7 @@ export function TransactionsPage() {
       <PageHeader title={t("transactions.title")}>
         <TransactionsToolbar
           filters={filters}
+          filterParams={filterParams}
           accounts={accounts}
           categories={categories}
           tags={tags}

@@ -21,8 +21,8 @@ public static class CategorizerEvaluationReport
         output.WriteLine(Line("Rules", EvaluationScore.Of(cases, c => c.Rule)));
         output.WriteLine(Line("Recall of the last category", EvaluationScore.Of(cases, c => c.Recall)));
         output.WriteLine(Line(learned, EvaluationScore.Of(cases, c => c.Learned(threshold))));
-        output.WriteLine(Line("Today: rule, then recall", EvaluationScore.Of(cases, c => c.Rule ?? c.Recall)));
-        output.WriteLine(Line("Planned: rule, learned, recall", EvaluationScore.Of(cases, c => c.Rule ?? c.Learned(threshold) ?? c.Recall)));
+        output.WriteLine(Line("Without the model: rule, then recall", EvaluationScore.Of(cases, c => c.Rule ?? c.Recall)));
+        output.WriteLine(Line("With the model: rule, learned, recall", EvaluationScore.Of(cases, c => c.Rule ?? c.Learned(threshold) ?? c.Recall)));
         output.WriteLine(Line("Neither rule nor recall: " + learned, EvaluationScore.Of(tail, c => c.Learned(threshold))));
         output.WriteLine(Line("Recall fills: recall", EvaluationScore.Of(recalled, c => c.Recall)));
         output.WriteLine(Line("Recall fills: " + learned, EvaluationScore.Of(recalled, c => c.Learned(threshold))));

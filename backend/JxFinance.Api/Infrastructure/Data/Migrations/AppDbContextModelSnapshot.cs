@@ -2015,6 +2015,9 @@ namespace JxFinance.Infrastructure.Data.Migrations
                             b1.Property<bool>("Investments")
                                 .HasColumnType("boolean");
 
+                            b1.Property<bool>("LearnedCategories")
+                                .HasColumnType("boolean");
+
                             b1.Property<bool>("Locations")
                                 .HasColumnType("boolean");
 

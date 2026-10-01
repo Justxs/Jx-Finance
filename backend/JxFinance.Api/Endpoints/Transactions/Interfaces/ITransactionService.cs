@@ -29,6 +29,11 @@ public interface ITransactionService
         int limit,
         CancellationToken cancellationToken);
 
+    Task<IReadOnlyList<TransactionResponse>> ListUncategorizedAsync(
+        TransactionFilterRequest filter,
+        int limit,
+        CancellationToken cancellationToken);
+
     Task<TransactionsSummaryResponse> GetSummaryAsync(
         GetTransactionsSummaryRequest request,
         CancellationToken cancellationToken);

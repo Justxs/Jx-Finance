@@ -624,6 +624,30 @@
       "noGroups": "Grupių dar neturite. Pavadinkite naują ir ji prasidės nuo šios eilutės.",
       "grouped": "Sugrupuota",
       "truncated": "Rodomos tik pirmosios 200 operacijų. Susiaurinkite filtrus, kad pamatytumėte kitas."
+    },
+    "categorySuggestion": {
+      "label": "Siūloma: {{category}}",
+      "byRule": "pagal taisyklę „{{rule}}“",
+      "sure": "{{percent}} % tikrumas"
+    },
+    "uncategorizedSuggestions": {
+      "open": "Pasiūlyti kategorijas",
+      "title": "Siūlomos kategorijos",
+      "description": "Kategorijos iki 200 rodomų operacijų be kategorijos pagal jūsų taisykles ir istoriją. Pažymėkite grupes, kurioms pritariate; tuo metu kategoriją gavusi operacija nekeičiama.",
+      "group_one": "{{category}}, {{count}} operacija",
+      "group_few": "{{category}}, {{count}} operacijos",
+      "group_many": "{{category}}, {{count}} operacijos",
+      "group_other": "{{category}}, {{count}} operacijų",
+      "learned": "Pagal jūsų istoriją",
+      "empty": "Šioms operacijoms nėra ką pasiūlyti.",
+      "apply_one": "Pritaikyti {{count}} operacijai",
+      "apply_few": "Pritaikyti {{count}} operacijoms",
+      "apply_many": "Pritaikyti {{count}} operacijos",
+      "apply_other": "Pritaikyti {{count}} operacijų",
+      "applied_one": "Kategorija priskirta: {{count}} operacija",
+      "applied_few": "Kategorija priskirta: {{count}} operacijos",
+      "applied_many": "Kategorija priskirta: {{count}} operacijos",
+      "applied_other": "Kategorija priskirta: {{count}} operacijų"
     }
   },
   "receipts": {
@@ -1100,6 +1124,10 @@
         "locations": {
           "name": "Vietos",
           "hint": "Kiekvieno mokėjimo vieta ir, paprašius, padėtis, kur jis atliktas, su pasiūlymais, vietos filtru ir išlaidomis pagal vietą. Padėtys lieka šiame serveryje, nors naršyklė gali kreiptis į savo vietos nustatymo paslaugą."
+        },
+        "learnedCategories": {
+          "name": "Išmoktos kategorijos",
+          "hint": "Kai jokia taisyklė netinka, pasiūlo kategoriją pagal jūsų jau suskirstytas operacijas importo peržiūroje, operacijos formoje ir operacijų sąraše. Modelis sudaromas šiame serveryje kiekvienai užklausai, niekur nesaugomas ir nesiunčiamas."
         }
       }
     },
@@ -2592,7 +2620,9 @@
       "samples": "Pirmosios failo eilutės",
       "saveAndPreview": "Išsaugoti ir peržiūrėti",
       "updateFromFile": "Atnaujinti susiejimą pagal šį failą"
-    }
+    },
+    "learned": "Išmokta",
+    "learnedHint": "Pagal jūsų istoriją, {{percent}} % tikrumas. Jei netinka, pakeiskite."
   },
   "errors": {
     "generic": "Kažkas nepavyko. Bandykite dar kartą.",

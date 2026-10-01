@@ -2,6 +2,7 @@ using System.Buffers;
 using FastEndpoints;
 using JxFinance.Common.Errors;
 using JxFinance.Common.ExchangeRates;
+using JxFinance.Common.LearnedCategories;
 using JxFinance.Common.Refunds;
 using JxFinance.Common.Settings;
 using JxFinance.Common.Subscriptions;
@@ -34,6 +35,7 @@ public sealed class ImportPreviewService(
     ITransactionValuation valuations,
     ICategorizationRuleService rules,
     IUnusualAmountService unusualAmounts,
+    ILearnedCategoryService learned,
     IInstanceSettingsStore settings) : IImportPreviewService
 {
     private static readonly SearchValues<string> TransferKeywords = SearchValues.Create(
@@ -106,6 +108,7 @@ public sealed class ImportPreviewService(
         var existingRefSet = await ImportQueries.ExistingRefsAsync(db, typedAccountId, parsedRows.Select(r => r.ImportRef), cancellationToken);
         var duplicates = parsedRows.Select(r => !existingRefSet.Add(r.ImportRef)).ToList();
         var suggestions = await SuggestionsAsync(typedAccountId, parsedRows, cancellationToken);
+        var guesses = await LearnedAsync(typedAccountId, parsedRows, duplicates, suggestions, cancellationToken);
         var unusualVerdicts = await UnusualAsync(typedAccountId, parsedRows, suggestions, cancellationToken);
         var matchedEntries = await ManualMatchesAsync(typedAccountId, parsedRows, duplicates, cancellationToken);
         var refundCandidates = await RefundCandidatesAsync(typedAccountId, parsedRows, duplicates, matchedEntries, cancellationToken);
@@ -128,7 +131,9 @@ public sealed class ImportPreviewService(
                 OtherAccount(r.CounterpartyIban),
                 unusualVerdicts[index].ToResponse(),
                 matchedEntries[index],
-                refundCandidates[index]))
+                refundCandidates[index],
+                guesses[index]?.CategoryId.Value,
+                guesses[index]?.Confidence))
             .ToList();
 
         var closing = statement.ClosingBalance;
@@ -263,6 +268,28 @@ public sealed class ImportPreviewService(
             .ToList();
 
         return await rules.SuggestAsync(accountId, candidates, cancellationToken);
+    }
+
+    private async Task<IReadOnlyList<LearnedGuess?>> LearnedAsync(
+        AccountId accountId,
+        IReadOnlyList<ParsedRow> parsedRows,
+        List<bool> duplicates,
+        IReadOnlyList<RuleSuggestion?> suggestions,
+        CancellationToken cancellationToken)
+    {
+        var open = Enumerable.Range(0, parsedRows.Count)
+            .Where(index => !duplicates[index] && suggestions[index]?.CategoryId is null)
+            .ToList();
+        var guesses = await learned.SuggestAsync(
+            open.Select(index => new LearnedCandidate(accountId, parsedRows[index].Type, parsedRows[index].Amount, parsedRows[index].Description)).ToList(),
+            cancellationToken);
+        var found = new LearnedGuess?[parsedRows.Count];
+        for (var position = 0; position < open.Count; position++)
+        {
+            found[open[position]] = guesses[position];
+        }
+
+        return found;
     }
 
     private async Task<IReadOnlyList<UnusualVerdict?>> UnusualAsync(

@@ -442,9 +442,11 @@ export const TransactionsResponse = zod.object({
 });
 
 /**
- * Files every listed transaction under one category, or clears their category when categoryId is null. The request is all-or-nothing: if any id is not visible to you, is a split transaction, or has a type the category does not match, nothing changes. Repeated ids count once.
+ * Files every listed transaction under one category, or clears their category when categoryId is null. The request is all-or-nothing: if any id is not visible to you, is a split transaction, or has a type the category does not match, nothing changes. Repeated ids count once. With onlyUncategorized, only the listed transactions that still have no category change, so a category somebody set after a review is kept, and the answer counts only those.
  * @summary Set the category of several transactions
  */
+
+export const bulkCategorizeTransactionsBodyOnlyUncategorizedDefault = false;
 
 export const BulkCategorizeTransactionsBody = zod.object({
   transactionIds: zod.array(zod.uuid()).min(1).describe("Between 1 and 200 transaction ids."),
@@ -452,6 +454,12 @@ export const BulkCategorizeTransactionsBody = zod.object({
     .uuid()
     .nullable()
     .describe("The category to file them under, or null to clear it."),
+  onlyUncategorized: zod
+    .boolean()
+    .default(bulkCategorizeTransactionsBodyOnlyUncategorizedDefault)
+    .describe(
+      "When true, leave every listed transaction that already has a category as it is. Defaults to false.",
+    ),
 });
 
 export const BulkCategorizeTransactionsResponse = zod.object({
@@ -698,6 +706,35 @@ export const PlacesResponseItem = zod.object({
 export const PlacesResponse = zod.array(PlacesResponseItem);
 
 /**
+ * Answers the category your first matching categorization rule sets, while the categorizationRules feature is on, and otherwise the category a naive Bayes model trained on the categorized transactions you can see guesses, when it is sure enough. The model is built for this request inside the API and thrown away with it; nothing is stored or sent anywhere. Every field of the answer is null when neither has an opinion. Only reads; nothing is set on any transaction. It is a POST so that the description never lands in a URL. Needs the learnedCategories feature.
+ * @summary Suggest a category for a transaction being entered
+ */
+
+export const suggestCategoryBodyAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const suggestCategoryBodyDescriptionMin = 0;
+export const suggestCategoryBodyDescriptionMax = 500;
+
+export const SuggestCategoryBody = zod.object({
+  accountId: zod.uuid().min(1).describe("The account the transaction is on."),
+  type: zod.enum(["income", "expense"]),
+  amount: zod
+    .stringFormat("decimal", suggestCategoryBodyAmountRegExp)
+    .describe("The amount, zero or more, with at most two decimal places."),
+  description: zod
+    .string()
+    .min(suggestCategoryBodyDescriptionMin)
+    .max(suggestCategoryBodyDescriptionMax)
+    .describe("The description as typed, at most 500 characters."),
+});
+
+export const SuggestCategoryResponse = zod.object({
+  categoryId: zod.uuid().nullable(),
+  source: zod.union([zod.null(), zod.enum(["rule", "learned"])]),
+  ruleName: zod.string().nullable(),
+  confidence: zod.number().nullable(),
+});
+
+/**
  * Returns the row count and the income and expense totals of every transaction the list endpoint would return for the same filters, across all pages. Transfers are not transactions and are never counted. A refund is an expense with a negative amount, so the expense total is net of refunds.
  * @summary Total the filtered transactions
  */
@@ -709,6 +746,177 @@ export const TransactionsSummaryResponse = zod.object({
   totalIncome: zod.stringFormat("decimal", transactionsSummaryResponseTotalIncomeRegExp),
   totalExpense: zod.stringFormat("decimal", transactionsSummaryResponseTotalExpenseRegExp),
 });
+
+/**
+ * Takes the newest 200 transactions that match the filters, have no category and are not split, and suggests a category for each: the first matching categorization rule while the categorizationRules feature is on, otherwise a naive Bayes model trained inside the API on the categorized transactions you can see, when it is sure enough. Only transactions that got a suggestion are answered, each with the transaction itself, the category, the source and the rule's name or the model's confidence. Nothing is written: apply a suggestion through POST /api/transactions/bulk-category with onlyUncategorized. Needs the learnedCategories feature.
+ * @summary Suggest categories for uncategorized transactions
+ */
+export const uncategorizedSuggestionsResponseTransactionAmountRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const uncategorizedSuggestionsResponseTransactionLinesItemAmountRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const uncategorizedSuggestionsResponseTransactionReportingAmountRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const uncategorizedSuggestionsResponseTransactionUnusualTwoTypicalAmountRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const uncategorizedSuggestionsResponseTransactionRefundedAmountRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const uncategorizedSuggestionsResponseTransactionSharedExpenseTwoSharesItemAmountRegExp =
+  new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const uncategorizedSuggestionsResponseTransactionSharedExpenseTwoMyShareRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const uncategorizedSuggestionsResponseTransactionEnteredByMeDefault = false;
+
+export const UncategorizedSuggestionsResponseItem = zod.object({
+  transaction: zod.object({
+    id: zod.uuid(),
+    accountId: zod.uuid(),
+    categoryId: zod.uuid().nullable(),
+    type: zod.enum(["income", "expense"]),
+    amount: zod.stringFormat("decimal", uncategorizedSuggestionsResponseTransactionAmountRegExp),
+    date: zod.iso.date(),
+    description: zod.string().nullable(),
+    source: zod.enum(["manual", "imported", "api"]),
+    isSplit: zod.boolean(),
+    createdAt: zod.iso.datetime({ offset: true }),
+    lines: zod
+      .array(
+        zod.object({
+          id: zod.uuid(),
+          categoryId: zod.uuid().nullable(),
+          amount: zod.stringFormat(
+            "decimal",
+            uncategorizedSuggestionsResponseTransactionLinesItemAmountRegExp,
+          ),
+          description: zod.string().nullable(),
+        }),
+      )
+      .nullable(),
+    currency: zod.enum([
+      "eur",
+      "usd",
+      "gbp",
+      "chf",
+      "pln",
+      "sek",
+      "nok",
+      "dkk",
+      "czk",
+      "huf",
+      "ron",
+      "isk",
+      "try",
+      "jpy",
+      "cny",
+      "hkd",
+      "sgd",
+      "krw",
+      "inr",
+      "idr",
+      "myr",
+      "php",
+      "thb",
+      "aud",
+      "nzd",
+      "cad",
+      "mxn",
+      "brl",
+      "ils",
+      "zar",
+    ]),
+    reportingAmount: zod.stringFormat(
+      "decimal",
+      uncategorizedSuggestionsResponseTransactionReportingAmountRegExp,
+    ),
+    tagIds: zod.array(zod.uuid()),
+    attachmentCount: zod.int(),
+    unusual: zod.union([
+      zod.null(),
+      zod.object({
+        basis: zod.enum(["payee", "category"]),
+        typicalAmount: zod.stringFormat(
+          "decimal",
+          uncategorizedSuggestionsResponseTransactionUnusualTwoTypicalAmountRegExp,
+        ),
+        factor: zod.number(),
+        sampleSize: zod.int(),
+      }),
+    ]),
+    unusualDismissed: zod.boolean(),
+    debtPayment: zod
+      .union([
+        zod.null(),
+        zod.object({
+          id: zod.uuid(),
+          debtId: zod.uuid(),
+          debtName: zod.string(),
+        }),
+      ])
+      .optional(),
+    refundOf: zod
+      .union([
+        zod.null(),
+        zod.object({
+          id: zod.uuid(),
+          date: zod.iso.date(),
+          description: zod.string().nullable(),
+        }),
+      ])
+      .optional(),
+    refundedAmount: zod
+      .stringFormat("decimal", uncategorizedSuggestionsResponseTransactionRefundedAmountRegExp)
+      .nullish(),
+    sharedExpense: zod
+      .union([
+        zod.null(),
+        zod.object({
+          id: zod.uuid(),
+          householdId: zod.uuid(),
+          householdName: zod.string(),
+          method: zod.enum(["equal", "shares", "exact"]).describe("Equal, Shares or Exact."),
+          shares: zod.array(
+            zod.object({
+              userId: zod.uuid(),
+              name: zod.string(),
+              weight: zod.int().nullable(),
+              amount: zod.stringFormat(
+                "decimal",
+                uncategorizedSuggestionsResponseTransactionSharedExpenseTwoSharesItemAmountRegExp,
+              ),
+            }),
+          ),
+          myShare: zod.stringFormat(
+            "decimal",
+            uncategorizedSuggestionsResponseTransactionSharedExpenseTwoMyShareRegExp,
+          ),
+          amountDiffers: zod.boolean(),
+        }),
+      ])
+      .optional(),
+    note: zod.string().nullish(),
+    payeeName: zod.string().nullish(),
+    spreadMonths: zod.int().nullish(),
+    spreadUntil: zod.union([zod.null(), zod.iso.date()]).optional(),
+    place: zod.string().nullish(),
+    latitude: zod.number().nullish(),
+    longitude: zod.number().nullish(),
+    groupId: zod.uuid().nullish(),
+    enteredByMe: zod
+      .boolean()
+      .default(uncategorizedSuggestionsResponseTransactionEnteredByMeDefault),
+  }),
+  categoryId: zod.uuid(),
+  source: zod.enum(["rule", "learned"]),
+  ruleName: zod.string().nullable(),
+  confidence: zod.number().nullable(),
+});
+export const UncategorizedSuggestionsResponse = zod.array(UncategorizedSuggestionsResponseItem);
 
 /**
  * Removes the transaction and adjusts the account balance accordingly. Its split lines, tags and attached files are kept with it, so POST /api/trash/restore brings it back whole for the next 30 days.

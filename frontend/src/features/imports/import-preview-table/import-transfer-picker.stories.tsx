@@ -56,6 +56,7 @@ function toState(
     refundOfTransactionId: "",
     categoryId: "",
     categorySuggested: false,
+    learnedConfidence: null,
     ruleName: null,
     tagIds: [],
     ...patch,

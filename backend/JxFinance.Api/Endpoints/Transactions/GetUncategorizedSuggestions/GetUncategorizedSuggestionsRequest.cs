@@ -1,0 +1,5 @@
+using JxFinance.Endpoints.Transactions.Shared;
+
+namespace JxFinance.Endpoints.Transactions.GetUncategorizedSuggestions;
+
+public sealed class GetUncategorizedSuggestionsRequest : TransactionFilterRequest;

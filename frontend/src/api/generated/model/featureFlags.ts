@@ -22,4 +22,5 @@ export interface FeatureFlags {
   receiptReading: boolean;
   apiTokens: boolean;
   locations: boolean;
+  learnedCategories: boolean;
 }

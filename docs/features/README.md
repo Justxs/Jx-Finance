@@ -59,6 +59,8 @@ Every feature the current code implements, one page per feature under `features/
 | 46 | [Transaction locations](transaction-locations.md) | `Locations`, off by default; the map also needs the tile file on the server | `Transactions` (`transactions/places`, `PlaceService`, the `place` filter), `Common/Places`, `Reports` (`expenseByPlace`), `Infrastructure/Receipts` (`PhotoLocation`, the receipt address) | `transactions` (`place-field`, the place parts of `receipt-reading` and the filters), `reports` (`place-breakdown`, `place-map`) |
 | 47 | [Transaction groups](transaction-groups.md) | none; groups are personal | `TransactionGroups`, `Transactions` (`transactions/ledger`, `LedgerKeys`, `groupId` and `enteredByMe`, the `Group` CSV column), the `transactionGroup` kind of `Trash` and `Retention`, the member export of `Users` | `transactions` (`ledger-groups`, `group-dialog`, Group in `selection-toolbar`, Add to group… and Remove from group in `transaction-row-actions`) |
 
+| 48 | [Learned categories](learned-categories.md) | `LearnedCategories`, off by default | `Common/LearnedCategories`, `Infrastructure/LearnedCategories` (`--evaluate-categorizer`), `Imports` (`learnedCategoryId`, `learnedConfidence`), `Transactions` (`transactions/suggest-category`, `transactions/uncategorized-suggestions`, `CategorySuggestionService`, `onlyUncategorized` of `bulk-category`) | `imports` (the Learned mark), `transactions` (`category-suggestion`, `uncategorized-suggestions`, the toolbar button) |
+
 Not implemented: per-user reporting currency, manual exchange rates, PWA/offline, bank APIs and scheduled or offsite backups. See [Features and scope](../scope.md) and, for what is planned next, [Backlog and ideas](../backlog.md).
 
 ## Where to read more

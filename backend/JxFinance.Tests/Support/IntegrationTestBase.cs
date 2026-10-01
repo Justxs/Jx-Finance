@@ -202,6 +202,9 @@ public abstract class IntegrationTestBase(ApiFixture fixture)
     protected Task<IAsyncDisposable> LocationsOnAsync() =>
         OverrideSettingsAsync(settings => settings["features"]!["locations"] = true);
 
+    protected Task<IAsyncDisposable> LearnedCategoriesOnAsync() =>
+        OverrideSettingsAsync(settings => settings["features"]!["learnedCategories"] = true);
+
     protected HttpClient TokenClient(string token)
     {
         var client = CreateClient(handleCookies: false);

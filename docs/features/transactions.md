@@ -163,6 +163,10 @@ sequenceDiagram
 
 While the split is on and the amount is a valid positive number, a line above the split lines reads "Transaction €75.00 · Assigned €52.00" followed by "€23.00 remaining", "€5.00 over" in the expense colour, or "Fully assigned". `splitBalance` in `line-form-value.ts` counts only line amounts that parse as money and works in cents. A line whose amount is empty offers "Use remaining €23.00", which types the remainder into it. The zod rule that the lines must total the amount is unchanged; the line only shows the gap before submit. The description and every line's description take at most 500 characters, the generated `createTransactionBodyDescriptionMax`; the server's limit on a line's description is not in the contract, so the form and the receipt split reuse the transaction's.
 
+## Suggested categories
+
+While the `LearnedCategories` switch is on, the form offers a category when the description field loses focus with no category chosen, on an expense or income that is not split and not a refund: a chip under the category reads "Suggested: Groceries" with "by rule "Maxima"" or "93% sure", and one click sets the category. With the Uncategorized filter on, the toolbar's **Suggest categories** lists up to 200 of the filtered rows grouped by suggested category, and **Apply** files the ticked groups through `bulk-category` with `onlyUncategorized`, so a row categorized meanwhile keeps its category. A rule always wins over the model. See [Learned categories](learned-categories.md).
+
 ## Bulk recategorize and bulk tagging
 
 ```mermaid
@@ -176,6 +180,8 @@ flowchart TD
     Load --> Check["ValidateCategoryAsync once per type"]
     Check --> Save["one SaveChanges, all or nothing"]
 ```
+
+`onlyUncategorized: true` on `POST /api/transactions/bulk-category` leaves every listed row that already has a category as it is and counts only the rows it changed in `updated`; the other checks still cover every listed row. The ledger's [suggested categories](#suggested-categories) apply with it.
 
 `POST /api/categorization-rules/run` is the third way a category or a tag arrives on a row that already exists, and it plays by stricter rules than either bulk operation: it only offers rows that carry no category at all, unless the caller explicitly asks to recategorize, it never touches a split transaction, and it adds tags without removing any. See [Categorization rules](categorization-rules.md).
 

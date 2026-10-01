@@ -1,9 +1,14 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { fn } from "storybook/test";
+import { useSearch } from "@tanstack/react-router";
+import { expect, fn, userEvent, within } from "storybook/test";
 import { getExportTransactionsPdfUrl, getExportTransactionsUrl } from "@/api/generated";
+import { getSettingsMockHandler } from "@/api/generated/settings/settings.msw";
+import { transactionFilterParams } from "@/features/transactions/transaction-queries";
 import { useTransactionFilters } from "@/features/transactions/use-transaction-filters";
 import { withWidth } from "@/storybook/decorators";
-import { accounts, categories, tags } from "@/storybook/fixtures";
+import { accounts, categories, settingsWith, tags } from "@/storybook/fixtures";
+import { withHandlers } from "@/storybook/handlers";
+import { openedDialog } from "@/storybook/interactions";
 import { TransactionsToolbar } from "./transactions-toolbar";
 
 interface HarnessProps {
@@ -14,9 +19,11 @@ interface HarnessProps {
 
 function ToolbarHarness(props: Readonly<HarnessProps>) {
   const filters = useTransactionFilters({ accounts, categories });
+  const filterParams = transactionFilterParams(useSearch({ from: "/transactions" }));
   return (
     <TransactionsToolbar
       filters={filters}
+      filterParams={filterParams}
       accounts={accounts}
       categories={categories}
       tags={tags}
@@ -51,4 +58,18 @@ export const Filtered: Story = {
 
 export const Narrow: Story = {
   decorators: [withWidth("w-56")],
+};
+
+export const SuggestCategories: Story = {
+  parameters: {
+    route: "/transactions?uncategorized=true",
+    ...withHandlers(
+      getSettingsMockHandler(settingsWith({ features: { learnedCategories: true } })),
+    ),
+  },
+  play: async ({ canvas }) => {
+    await userEvent.click(await canvas.findByRole("button", { name: "Suggest categories" }));
+    const dialog = within(await openedDialog());
+    await expect(await dialog.findByText('by rule "Bolt Food"')).toBeVisible();
+  },
 };

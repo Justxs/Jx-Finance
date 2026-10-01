@@ -28,6 +28,7 @@ import type {
   BulkCategorizeTransactionsResponse,
   BulkTagTransactionsRequest,
   BulkTagTransactionsResponse,
+  CategorySuggestionResponse,
   CreateTransactionRequest,
   ExportTransactionsParams,
   ExportTransactionsPdfParams,
@@ -37,10 +38,13 @@ import type {
   PlaceSuggestionResponse,
   PlacesParams,
   ProblemDetails,
+  SuggestCategoryRequest,
   TransactionResponse,
   TransactionsParams,
   TransactionsSummaryParams,
   TransactionsSummaryResponse,
+  UncategorizedSuggestionResponse,
+  UncategorizedSuggestionsParams,
   UpdateTransactionRequest,
 } from "../model";
 
@@ -305,7 +309,7 @@ export const getBulkCategorizeTransactionsUrl = () => {
 };
 
 /**
- * Files every listed transaction under one category, or clears their category when categoryId is null. The request is all-or-nothing: if any id is not visible to you, is a split transaction, or has a type the category does not match, nothing changes. Repeated ids count once.
+ * Files every listed transaction under one category, or clears their category when categoryId is null. The request is all-or-nothing: if any id is not visible to you, is a split transaction, or has a type the category does not match, nothing changes. Repeated ids count once. With onlyUncategorized, only the listed transactions that still have no category change, so a category somebody set after a review is kept, and the answer counts only those.
  * @summary Set the category of several transactions
  */
 export const bulkCategorizeTransactions = async (
@@ -1036,6 +1040,112 @@ export function usePlacesSuspense<
   return withQueryKey(query, queryOptions.queryKey);
 }
 
+export const getSuggestCategoryUrl = () => {
+  return `/api/transactions/suggest-category`;
+};
+
+/**
+ * Answers the category your first matching categorization rule sets, while the categorizationRules feature is on, and otherwise the category a naive Bayes model trained on the categorized transactions you can see guesses, when it is sure enough. The model is built for this request inside the API and thrown away with it; nothing is stored or sent anywhere. Every field of the answer is null when neither has an opinion. Only reads; nothing is set on any transaction. It is a POST so that the description never lands in a URL. Needs the learnedCategories feature.
+ * @summary Suggest a category for a transaction being entered
+ */
+export const suggestCategory = async (
+  suggestCategoryRequest: SuggestCategoryRequest,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<CategorySuggestionResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return customFetch<CategorySuggestionResponse>(getSuggestCategoryUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(suggestCategoryRequest),
+  });
+};
+
+export const getSuggestCategoryMutationKey = () => ["suggestCategory"] as const;
+
+export const getSuggestCategoryMutationOptions = <
+  TError = ErrorType<ProblemDetails>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof suggestCategory>>,
+    TError,
+    SuggestCategoryMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof suggestCategory>>,
+  TError,
+  SuggestCategoryMutationVariables,
+  TContext
+> => {
+  const mutationKey = getSuggestCategoryMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof suggestCategory>>,
+    SuggestCategoryMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return suggestCategory(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SuggestCategoryMutationResult = NonNullable<
+  Awaited<ReturnType<typeof suggestCategory>>
+>;
+export type SuggestCategoryMutationBody = SuggestCategoryRequest;
+export type SuggestCategoryMutationError = ErrorType<ProblemDetails>;
+export type SuggestCategoryMutationVariables = { data: SuggestCategoryRequest };
+
+/**
+ * @summary Suggest a category for a transaction being entered
+ */
+export const useSuggestCategory = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof suggestCategory>>,
+      TError,
+      SuggestCategoryMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof suggestCategory>>,
+  TError,
+  SuggestCategoryMutationVariables,
+  TContext
+> => {
+  return useMutation(getSuggestCategoryMutationOptions(options), queryClient);
+};
 export const getTransactionsSummaryUrl = (params?: TransactionsSummaryParams) => {
   const normalizedParams = new URLSearchParams();
 
@@ -1162,6 +1272,144 @@ export function useTransactionsSummarySuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
   const queryOptions = getTransactionsSummarySuspenseQueryOptions(params, options);
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export const getUncategorizedSuggestionsUrl = (params?: UncategorizedSuggestionsParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/transactions/uncategorized-suggestions?${stringifiedParams}`
+    : `/api/transactions/uncategorized-suggestions`;
+};
+
+/**
+ * Takes the newest 200 transactions that match the filters, have no category and are not split, and suggests a category for each: the first matching categorization rule while the categorizationRules feature is on, otherwise a naive Bayes model trained inside the API on the categorized transactions you can see, when it is sure enough. Only transactions that got a suggestion are answered, each with the transaction itself, the category, the source and the rule's name or the model's confidence. Nothing is written: apply a suggestion through POST /api/transactions/bulk-category with onlyUncategorized. Needs the learnedCategories feature.
+ * @summary Suggest categories for uncategorized transactions
+ */
+export const uncategorizedSuggestions = async (
+  params?: UncategorizedSuggestionsParams,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<UncategorizedSuggestionResponse[]> => {
+  return customFetch<UncategorizedSuggestionResponse[]>(getUncategorizedSuggestionsUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getUncategorizedSuggestionsQueryKey = (params?: UncategorizedSuggestionsParams) => {
+  return [`/api/transactions/uncategorized-suggestions`, ...(params ? [params] : [])] as const;
+};
+
+export const getUncategorizedSuggestionsSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof uncategorizedSuggestions>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  params?: UncategorizedSuggestionsParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof uncategorizedSuggestions>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getUncategorizedSuggestionsQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof uncategorizedSuggestions>>> = ({
+    signal,
+  }) => uncategorizedSuggestions(params, { signal, ...requestOptions });
+
+  return queryOptionsBuilder({
+    queryKey,
+    ...queryOptions,
+    queryFn: queryOptions?.queryFn ?? queryFn,
+  }) as UseSuspenseQueryOptions<
+    Awaited<ReturnType<typeof uncategorizedSuggestions>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> } & {
+    throwOnError?: ((this: never, error: TError) => boolean) & { readonly __inferenceOnly: never };
+  };
+};
+
+export type UncategorizedSuggestionsSuspenseQueryResult = NonNullable<
+  Awaited<ReturnType<typeof uncategorizedSuggestions>>
+>;
+export type UncategorizedSuggestionsSuspenseQueryError = ErrorType<ProblemDetails>;
+
+export function useUncategorizedSuggestionsSuspense<
+  TData = Awaited<ReturnType<typeof uncategorizedSuggestions>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  params: undefined | UncategorizedSuggestionsParams,
+  options: {
+    query: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof uncategorizedSuggestions>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useUncategorizedSuggestionsSuspense<
+  TData = Awaited<ReturnType<typeof uncategorizedSuggestions>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  params?: UncategorizedSuggestionsParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof uncategorizedSuggestions>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useUncategorizedSuggestionsSuspense<
+  TData = Awaited<ReturnType<typeof uncategorizedSuggestions>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  params?: UncategorizedSuggestionsParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof uncategorizedSuggestions>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Suggest categories for uncategorized transactions
+ */
+
+export function useUncategorizedSuggestionsSuspense<
+  TData = Awaited<ReturnType<typeof uncategorizedSuggestions>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  params?: UncategorizedSuggestionsParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof uncategorizedSuggestions>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getUncategorizedSuggestionsSuspenseQueryOptions(params, options);
 
   const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
     TData,

@@ -17,4 +17,5 @@ public enum Feature
     ReceiptReading,
     ApiTokens,
     Locations,
+    LearnedCategories,
 }

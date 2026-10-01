@@ -34,4 +34,8 @@ export interface ImportPreviewRow {
   unusual?: null | UnusualAmountResponse;
   matchedTransaction?: null | ImportMatchedTransaction;
   refundCandidate?: null | ImportMatchedTransaction;
+  /** @nullable */
+  learnedCategoryId?: string | null;
+  /** @nullable */
+  learnedConfidence?: number | null;
 }

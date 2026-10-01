@@ -4,10 +4,13 @@ import type { ComponentProps } from "react";
 import { expect, fireEvent, fn, userEvent, waitFor } from "storybook/test";
 import { ApiError } from "@/api/client";
 import { getSettingsMockHandler } from "@/api/generated/settings/settings.msw";
+import { getSuggestCategoryMockHandler } from "@/api/generated/transactions/transactions.msw";
 import { withWidth } from "@/storybook/decorators";
 import {
   accounts,
   categories,
+  categorySuggestionLearned,
+  ids,
   linkedRefund,
   longDescriptionTransaction,
   settingsWith,
@@ -20,6 +23,7 @@ import {
   unlinkedRefund,
 } from "@/storybook/fixtures";
 import { withHandlers } from "@/storybook/handlers";
+import { readBody } from "@/storybook/handlers/http";
 import { type Canvas, chooseOption } from "@/storybook/interactions";
 import { duplicateDraft, refundDraft } from "./transaction-draft";
 import { TransactionForm } from "./transaction-form";
@@ -36,6 +40,23 @@ const splitLineProblem = new ApiError({
     { name: "generalErrors", reason: "The month is closed for this account." },
   ],
 });
+
+const suggestionRequested = fn();
+
+const learnedCategoriesOn = withHandlers(
+  getSettingsMockHandler(settingsWith({ features: { learnedCategories: true } })),
+  getSuggestCategoryMockHandler(async ({ request }) => {
+    suggestionRequested(await readBody(request));
+    return categorySuggestionLearned;
+  }),
+);
+
+async function leaveDescription(canvas: Canvas, value: string) {
+  const description = await canvas.findByLabelText("Description");
+  await userEvent.click(description);
+  await fireEvent.change(description, { target: { value } });
+  await userEvent.tab();
+}
 
 const incomeTransaction = transactions.find((item) => item.type === "income") ?? transactions[0];
 
@@ -324,6 +345,50 @@ export const SpreadRefundRefused: Story = {
 
     await expect(await canvas.findByRole("alert")).toHaveTextContent(
       "A refund cannot be spread over months.",
+    );
+  },
+};
+
+export const SuggestsACategory: Story = {
+  args: { prefill: { accountId: ids.accounts.checking, amount: "12.40" } },
+  parameters: learnedCategoriesOn,
+  beforeEach: () => suggestionRequested.mockClear(),
+  play: async ({ canvas, args }) => {
+    await leaveDescription(canvas, "MAXIMA LT 0412");
+    const chip = await canvas.findByRole("button", { name: /^Suggested: / });
+    await expect(canvas.getByText("93% sure")).toBeVisible();
+    await userEvent.click(chip);
+    await waitFor(() => expect(canvas.queryByRole("button", { name: /^Suggested: / })).toBeNull());
+    await submitForm(canvas);
+    await waitFor(() =>
+      expect(args.onSubmit).toHaveBeenCalledWith(
+        expect.objectContaining({ categoryId: ids.categories.food }),
+      ),
+    );
+    await expect(suggestionRequested).toHaveBeenCalledWith({
+      accountId: ids.accounts.checking,
+      type: "expense",
+      description: "MAXIMA LT 0412",
+      amount: "12.40",
+    });
+  },
+};
+
+export const NoSuggestionForARefund: Story = {
+  args: {
+    prefill: { accountId: ids.accounts.checking, type: "expense", amount: "-5.00" },
+  },
+  parameters: learnedCategoriesOn,
+  beforeEach: () => suggestionRequested.mockClear(),
+  play: async ({ canvas }) => {
+    await expect(await canvas.findByRole("radio", { name: "Refund" })).toBeChecked();
+    await leaveDescription(canvas, "MAXIMA LT 0412");
+    await userEvent.click(canvas.getByRole("radio", { name: "Expense" }));
+    await leaveDescription(canvas, "MAXIMA LT 0412 ");
+    await canvas.findByRole("button", { name: /^Suggested: / });
+    await expect(suggestionRequested).toHaveBeenCalledTimes(1);
+    await expect(suggestionRequested).toHaveBeenCalledWith(
+      expect.objectContaining({ type: "expense" }),
     );
   },
 };

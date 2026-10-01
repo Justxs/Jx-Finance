@@ -17,4 +17,6 @@ export interface BulkCategorizeTransactionsRequest {
    * @nullable
    */
   categoryId: string | null;
+  /** When true, leave every listed transaction that already has a category as it is. Defaults to false. */
+  onlyUncategorized?: boolean;
 }

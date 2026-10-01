@@ -80,6 +80,8 @@ The market prices of 2026-09-30 (`AddMarketPrices`) add `PriceSyncEnabled` (defa
 
 `FeatureFlags` gained `Locations` in the `AddTransactionLocations` migration of 2026-10-01, the column `Features_Locations` with a database default of false, off for an upgraded installation and in `FeatureFlags.Default` alike.
 
+`FeatureFlags` gained `LearnedCategories` in the `AddLearnedCategoriesSwitch` migration of 2026-10-01, the column `Features_LearnedCategories` with a database default of false, off for an upgraded installation and in `FeatureFlags.Default` alike. The [learned categorizer](features/learned-categories.md) has no table: its model is computed per request and never stored.
+
 `FeatureFlags` gained `UnusualAmounts` on 2026-09-26, the column `Features_UnusualAmounts` with a database default of true, so an upgraded installation has the feature on. It gained `MonthClose` in the `AddMonthClose` migration, the column `Features_MonthClose`, also with a database default of true.
 
 ## Email

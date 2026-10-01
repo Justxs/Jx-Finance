@@ -64,6 +64,7 @@ public sealed class TokenReadableTests
         "GET /api/transactions/ledger",
         "GET /api/transactions/places",
         "GET /api/transactions/summary",
+        "GET /api/transactions/uncategorized-suggestions",
         "GET /api/transactions/{id}",
         "GET /api/transfers",
     ];

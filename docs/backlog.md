@@ -18,6 +18,7 @@ These come from the release checklist and block calling the current release veri
 | Double-entry journal in the real tools | The tests check `ledger.beancount` with the C# `JournalChecker`; run `bean-check` and open Fava once on a real member's download |
 | Release checklist brought up to date | Its "added" lists stop at the navigation hubs of 2026-09-28; nothing from 2026-09-29 or 2026-09-30 in Done below is listed there |
 | Fresh verification pass | Evidence in Verification predates everything added from 2026-09-20 on, including the navigation hubs of 2026-09-28 and every feature of 2026-09-29 and 2026-09-30 |
+| Learned categories evaluated on the real ledger | Built on 2026-10-01 with its gate waived by the owner and the `LearnedCategories` switch off. Once the daily-use trial has six months and 1,500 categorized rows, run `--evaluate-categorizer` on the owner's ledger, record the numbers and the chosen constants in the [decisions](decisions/learned-categories.md), and only then decide whether to switch it on; see [Learned categories](features/learned-categories.md#not-evaluated-yet) |
 | Sustained daily-use trial | Cannot be inferred from automated checks; month-end close, unusual amounts, the forecast, the monthly digest and settle-up need at least one real month |
 
 ## 2. Decisions to review
@@ -39,6 +40,7 @@ Open questions of the plans built on 2026-09-29 and 2026-09-30 were answered whi
 | Payees | Payee names are personal rows keyed by `PayeeKey`; a chain's shops stay separate payees; the statement's own payee column is not stored | [Reports](decisions/reports.md) |
 | Bank import | No credit card account type; a mapped CSV needs a header row | [Swedbank CSV import](decisions/swedbank-csv-import.md) |
 | Transactions | No separate "Refunds" value in the type filter | [Transactions](decisions/transactions.md) |
+| Learned categories | A housemate's rows on a shared account train the model; refunds are neither trained on nor guessed for; the plan's 0.80 and 3 thresholds are kept until the evaluation | [Learned categories](decisions/learned-categories.md) |
 
 ## 3. Gaps inside features that exist
 
@@ -65,11 +67,10 @@ Open questions of the plans built on 2026-09-29 and 2026-09-30 were answered whi
 | --- | --- | --- |
 | PWA and offline | Manifest, service worker, offline queue for new transactions | L |
 | Bank APIs | PSD2 aggregator; licensing and consent renewal make this costly for a household tool | L |
-| Machine-learned categorization | Out of scope; rules and the recall of the last category cover the need. Since 2026-09-29 the model and `--evaluate-categorizer <email>` exist, but nothing suggests from them: the development database had only `just seed` demo data, where the recall already fills every held-out row (97.4% right, the model 96.7% at 0.80), so the gate was not measured. It needs six months and 1,500 real categorized rows; see the [plan](plans/machine-learned-categorization.md#evaluation) | L |
 
 ## 5. New ideas
 
-Ordered by how much they would help daily use for the effort. Following the product direction, each one lives on a page that already exists rather than adding a page, and none sends data outside the installation. The ideas below have no plan yet. Machine-learned categorization above has a written design in [Plans](plans/README.md).
+Ordered by how much they would help daily use for the effort. Following the product direction, each one lives on a page that already exists rather than adding a page, and none sends data outside the installation. The ideas below have no plan yet.
 
 | Idea | Why | Where | Size |
 | --- | --- | --- | --- |
@@ -98,12 +99,12 @@ Ordered by how much they would help daily use for the effort. Following the prod
 2. Section 2 before the trial starts, so the trial runs on answers the owner chose rather than defaults picked while away.
 3. End-to-end coverage and the large-ledger timing from section 6, because they make the verification pass cheaper to repeat.
 4. During the trial, the small ideas that save daily effort: quick add, possible duplicates and finding a purchase by receipt item.
-5. The gated plan, machine-learned categorization, waits for its gate.
 
 ## Done
 
 | Date | Item | Where it is described |
 | --- | --- | --- |
+| 2026-10-01 | Learned categories, built at once because the owner waived the evaluation gate, behind a new `LearnedCategories` switch that stays off until the evaluation on the real ledger has run: a hand-written naive Bayes model, trained per request inside the API from the categorized rows the caller can see and never stored, guesses a category where no rule gives one. The import review fills it with a "Learned" mark and its confidence, in the order rule, learned, recall, for every statement format; the transaction form offers "Suggested: Groceries" under the category after the description, never for a refund, from `POST /api/transactions/suggest-category`; and with the Uncategorized filter on, **Suggest categories** in the ledger groups up to 200 rows by suggested category and applies the ticked groups through `bulk-category`, which gains `onlyUncategorized`. `GET /api/transactions/uncategorized-suggestions` is token-readable, the form's `POST` browser-only | [Learned categories](features/learned-categories.md) |
 | 2026-10-01 | Transaction groups, built at once because the owner waived the daily-use gate: a member folds rows that belong together, such as a trip, into one named ledger row with the date range, the number of rows and the net in the reporting currency, which expands in place; Group in the selection toolbar for two or more rows, and Add to group… and Remove from group in a row's menu, on the phone too. The page reads the new `GET /api/transactions/ledger`, which pages a SQL union of ungrouped rows and groups so a group is one item under every sort, while `GET /api/transactions`, reports, budgets, balances, the month close and the journal are unchanged; membership is written without touching `UpdatedAt`, so closed months do not drift. Groups are personal, Ungroup goes to the trash with undo, the CSV gains a `Group` column, the member export carries the groups, and the group routes are token-readable but not token-writable | [Transaction groups](features/transaction-groups.md) |
 | 2026-10-01 | Transaction locations: behind a new `Locations` switch, off by default, a transaction carries a Place of the member's own with suggestions of earlier places, and, from **Use my location** over HTTPS, its position, named after the household's nearest earlier place within 150 metres and never looked up outside the installation; `Permissions-Policy` now allows geolocation for the site itself. Fill from receipt fills the place with the merchant and the receipt's address line, and a fresh photo's GPS position, read before the metadata is stripped and never stored with the reading, is offered. The ledger searches and filters by place, Reports gains Expense by place, the CSV a `Place` column, and the activity log the place but not the coordinates. The map, built at once because the owner waived its gate, draws the places as dots with MapLibre GL over a PMTiles extract of Lithuania that the administrator puts in the `maps` volume, served by Caddy from the same origin with the worker, style and fonts bundled, so the Content-Security-Policy is unchanged | [Transaction locations](features/transaction-locations.md) |
 | 2026-10-01 | Write access for personal API tokens: Create a token gains Access, Read only by default or Read and write for 30 or 90 days, and the list shows each token's access. A read-and-write token creates, edits and deletes transactions and transfers, sets categories and tags in bulk and confirms recurring entries, on an allowlist pinned by `TokenWritableTests`; categories, rules, budgets, goals, imports, files and settings stay browser-only. A `POST` may carry `Idempotency-Key`, so a retried Shortcut or Home Assistant call within 24 hours answers the first answer instead of booking twice. API rows read "Added through the API" in the edit dialog, the activity log names the token after the member, and a bank import links an API row like a typed one. Also a read-only MCP server, `tools/jx-mcp`, which the member runs over stdio for an AI client of their choosing and which sends only `GET` requests | [Personal API tokens](features/personal-api-tokens.md#writing-with-a-token) |

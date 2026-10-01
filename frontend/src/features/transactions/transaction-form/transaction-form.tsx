@@ -1,6 +1,7 @@
 import { X } from "lucide-react";
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useSuggestCategory } from "@/api/generated";
 import type {
   AccountResponse,
   CategoryResponse,
@@ -15,6 +16,7 @@ import { FormGrid } from "@/components/ui/form-grid/form-grid";
 import { Label } from "@/components/ui/label/label";
 import { heldCurrencies } from "@/features/accounts/held-currencies";
 import { ClosedMonthHint } from "@/features/month-close/closed-month-hint/closed-month-hint";
+import { CategorySuggestion } from "@/features/transactions/category-suggestion/category-suggestion";
 import { PlaceField } from "@/features/transactions/place-field/place-field";
 import {
   FillFromReceipt,
@@ -23,7 +25,9 @@ import {
 import { SpreadFields } from "@/features/transactions/spread-fields/spread-fields";
 import { EMPTY_VALUE, useIsoDate } from "@/hooks/use-formatters";
 import { useFeature, useSettings } from "@/hooks/use-settings";
+import { silentMutation } from "@/lib/mutations";
 import { namedOptions } from "@/lib/options";
+import { isMoney, normalizeMoney } from "@/lib/validation";
 import { emptyLine } from "./line-form-value";
 import { SaveTemplateControl } from "./save-template-control";
 import { SplitLinesEditor } from "./split-lines-editor";
@@ -137,6 +141,8 @@ export function TransactionForm({
   const { t } = useTranslation();
   const { receiptReadingReady } = useSettings();
   const locationsEnabled = useFeature("locations");
+  const learnedCategoriesEnabled = useFeature("learnedCategories");
+  const suggestion = useSuggestCategory({ mutation: silentMutation });
   const intent = useRef<SubmitIntent>("save");
   const amountInput = useRef<HTMLInputElement>(null);
   const [anotherPending, setAnotherPending] = useState(false);
@@ -150,6 +156,31 @@ export function TransactionForm({
     amountInput,
     onAnotherSettled: () => setAnotherPending(false),
   });
+
+  function suggestCategory() {
+    const type = form.getFieldValue("type");
+    const accountId = form.getFieldValue("accountId");
+    const description = form.getFieldValue("description").trim();
+    if (
+      !learnedCategoriesEnabled ||
+      type === "refund" ||
+      !accountId ||
+      !description ||
+      form.getFieldValue("categoryId") ||
+      form.getFieldValue("isSplit")
+    ) {
+      return;
+    }
+    const amount = normalizeMoney(form.getFieldValue("amount"));
+    suggestion.mutate({
+      data: {
+        accountId,
+        type,
+        description,
+        amount: isMoney(amount) && Number(amount) >= 0 ? amount : "0",
+      },
+    });
+  }
 
   function submitAndAddAnother() {
     intent.current = "another";
@@ -223,7 +254,28 @@ export function TransactionForm({
                 </p>
               </div>
             ) : (
-              <CategoryField form={form} categories={categories} />
+              <div className="space-y-2">
+                <CategoryField form={form} categories={categories} />
+                <form.Subscribe
+                  selector={(state) =>
+                    [state.values.categoryId, state.values.description, state.values.type] as const
+                  }
+                >
+                  {([categoryId, description, type]) => (
+                    <CategorySuggestion
+                      suggestion={
+                        !categoryId &&
+                        suggestion.variables?.data.description === description.trim() &&
+                        suggestion.variables.data.type === type
+                          ? suggestion.data
+                          : undefined
+                      }
+                      categories={categories}
+                      onApply={(chosen) => form.setFieldValue("categoryId", chosen)}
+                    />
+                  )}
+                </form.Subscribe>
+              </div>
             )
           }
         </form.Subscribe>
@@ -266,7 +318,7 @@ export function TransactionForm({
           }
         </form.Subscribe>
 
-        <form.Field name="description">
+        <form.Field name="description" listeners={[{ triggers: ["blur"], run: suggestCategory }]}>
           {(field) => (
             <field.TextField
               id="tx-description"

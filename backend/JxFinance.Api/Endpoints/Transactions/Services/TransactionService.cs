@@ -108,6 +108,23 @@ public sealed class TransactionService(
         return members.Select(respond).ToList();
     }
 
+    public async Task<IReadOnlyList<TransactionResponse>> ListUncategorizedAsync(
+        TransactionFilterRequest filter,
+        int limit,
+        CancellationToken cancellationToken)
+    {
+        var rows = await Filtered(filter)
+            .Where(t => !t.IsSplit && t.CategoryId == null)
+            .OrderByDescending(t => t.Date)
+            .ThenByDescending(t => t.CreatedAt)
+            .AsNoTracking()
+            .Take(limit)
+            .ToListAsync(cancellationToken);
+        var respond = await ResponderAsync(rows, cancellationToken);
+
+        return rows.Select(respond).ToList();
+    }
+
     private async Task<Dictionary<Guid, TransactionGroupSummary>> GroupSummariesAsync(
         IQueryable<Transaction> filtered,
         List<TransactionGroupId> ids,
@@ -476,7 +493,13 @@ public sealed class TransactionService(
         }
 
         CategoryId? categoryId = request.CategoryId is { } value ? new CategoryId(value) : null;
-        foreach (var transaction in transactions)
+        var changing = request.OnlyUncategorized ? transactions.Where(t => t.CategoryId == null).ToList() : transactions;
+        if (changing.Count == 0)
+        {
+            return 0;
+        }
+
+        foreach (var transaction in changing)
         {
             transaction.CategoryId = categoryId;
         }
@@ -489,12 +512,12 @@ public sealed class TransactionService(
             AuditEntityKind.Transaction,
             TrashLabel.Counted(
                 categoryName is null ? "Category cleared" : $"Category set to {categoryName}",
-                (transactions.Count, "transaction", "transactions")),
-            transactions.Count,
-            accounts: transactions.Select(t => t.AccountId));
+                (changing.Count, "transaction", "transactions")),
+            changing.Count,
+            accounts: changing.Select(t => t.AccountId));
         await db.SaveChangesAsync(cancellationToken);
 
-        return transactions.Count;
+        return changing.Count;
     }
 
     public async Task<Result<int>> BulkTagAsync(

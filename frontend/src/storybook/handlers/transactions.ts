@@ -12,6 +12,8 @@ import {
   getDismissUnusualAmountMockHandler,
   getExportTransactionsMockHandler,
   getRestoreUnusualAmountMockHandler,
+  getSuggestCategoryMockHandler,
+  getUncategorizedSuggestionsMockHandler,
   getExportTransactionsPdfMockHandler,
   getLedgerMockHandler,
   getPlacesMockHandler,
@@ -25,6 +27,7 @@ import {
   FIXTURE_TODAY,
   accounts,
   buildTransactionsSummary,
+  categorySuggestionLearned,
   checkingAccount,
   ledgerItemsOf,
   placeSuggestions,
@@ -32,6 +35,7 @@ import {
   transactionsCsv,
   tripGroup,
   tripGroupMembers,
+  uncategorizedSuggestions,
 } from "@/storybook/fixtures";
 import { categoryName } from "./categories";
 import { notFound, onRouteOf, query, readBody, text } from "./http";
@@ -161,7 +165,8 @@ function mergeTransaction(base: TransactionResponse, body: Body): TransactionRes
 async function bulkUpdate({ request }: { request: Request }) {
   const body = await readBody(request);
   const requested = Array.isArray(body.transactionIds) ? body.transactionIds : [];
-  const matched = requested.map((id) => byId(transactions, id));
+  const known = [...transactions, ...uncategorizedSuggestions.map((item) => item.transaction)];
+  const matched = requested.map((id) => byId(known, id));
   if (matched.some((item) => item === undefined)) {
     throw notFound();
   }
@@ -223,6 +228,8 @@ export const transactionHandlers = [
     const search = query(request).get("search");
     return placeSuggestions.filter((item) => !search || includesText(item.name, search));
   }),
+  getSuggestCategoryMockHandler(categorySuggestionLearned),
+  getUncategorizedSuggestionsMockHandler(uncategorizedSuggestions),
   getTransactionMockHandler(byIdFrom(transactions)),
   getUpdateTransactionMockHandler(updateFrom(transactions, mergeTransaction)),
   getDeleteTransactionMockHandler(),

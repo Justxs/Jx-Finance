@@ -21,4 +21,6 @@ public sealed record ImportPreviewRow(
     Guid? SuggestedTransferAccountId,
     UnusualAmountResponse? Unusual = null,
     ImportMatchedTransaction? MatchedTransaction = null,
-    ImportMatchedTransaction? RefundCandidate = null);
+    ImportMatchedTransaction? RefundCandidate = null,
+    Guid? LearnedCategoryId = null,
+    decimal? LearnedConfidence = null);

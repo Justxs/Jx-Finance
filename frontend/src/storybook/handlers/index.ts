@@ -53,6 +53,7 @@ import {
   getLedgerMockHandler,
   getTransactionsMockHandler,
   getTransactionsSummaryMockHandler,
+  getUncategorizedSuggestionsMockHandler,
 } from "@/api/generated/transactions/transactions.msw";
 import { getTransfersMockHandler } from "@/api/generated/transfers/transfers.msw";
 import { getTrashMockHandler } from "@/api/generated/trash/trash.msw";
@@ -191,6 +192,7 @@ export const emptyHandlers: RequestHandler[] = [
   getTransactionsSummaryMockHandler(emptyTransactionsSummary),
   getTransactionsMockHandler(emptyPage),
   getLedgerMockHandler(emptyPage),
+  getUncategorizedSuggestionsMockHandler([]),
   getTransactionGroupsMockHandler([]),
   getTransfersMockHandler(emptyPage),
   getConversionsMockHandler(emptyPage),

@@ -101,7 +101,7 @@ A token reaches only `GET` routes of the groups that opt in with `ApiGroup(…, 
 | Group | Readable with a token |
 | --- | --- |
 | Accounts | the list, archived accounts, one account, the cash-flow forecast, reconciliations and the reconciliation preview |
-| Transactions | the ledger, one transaction, the summary, the CSV and PDF exports, and since 2026-10-01 the ledger with groups folded, `GET /api/transactions/ledger` |
+| Transactions | the ledger, one transaction, the summary, the CSV and PDF exports, and since 2026-10-01 the ledger with groups folded, `GET /api/transactions/ledger`, and, while `LearnedCategories` is on, the suggested categories of uncategorized rows, `GET /api/transactions/uncategorized-suggestions` |
 | Transaction groups | since 2026-10-01 the list of your [groups](transaction-groups.md) and the members of one |
 | Transfers, Conversions, Categories, Tags, Payees | their lists; payee names since 2026-09-30 |
 | Reports | the summary, spending by payee included |

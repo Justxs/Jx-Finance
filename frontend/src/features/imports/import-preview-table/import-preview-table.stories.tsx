@@ -54,6 +54,23 @@ const matchedRows: PreviewRowState[] = toPreviewRows(
   categories,
 );
 
+const learnedRows: PreviewRowState[] = toPreviewRows(
+  importPreviewRows.map((row) =>
+    row.payee === "IGNITIS, UAB"
+      ? {
+          ...row,
+          suggestedCategoryId: null,
+          suggestedTagIds: [],
+          matchedRuleName: null,
+          learnedCategoryId: ids.categories.utilities,
+          learnedConfidence: 0.93,
+        }
+      : row,
+  ),
+  [],
+  categories,
+);
+
 const manyRows: PreviewRowState[] = Array.from({ length: 5 }, (_, batch) =>
   defaultRows.map((row, index) => ({
     ...row,
@@ -125,6 +142,15 @@ export const MatchesHandEnteredEntry: Story = {
     const table = within(first(canvas.getAllByRole("region", { name: "Preview" })));
     await expect(table.getByText("Matches your entry")).toBeVisible();
     await expect(table.getByRole("combobox", { name: /^Category: .*TRAFI UAB/ })).toBeDisabled();
+  },
+};
+
+export const LearnedCategory: Story = {
+  args: { rows: learnedRows },
+  play: async ({ canvas }) => {
+    const table = within(first(canvas.getAllByRole("region", { name: "Preview" })));
+    await expect(table.getByText("Learned")).toBeVisible();
+    await expect(table.getByText("Filled by a rule")).toBeVisible();
   },
 };
 

@@ -40,6 +40,7 @@ Before changing behaviour that a page here covers, read that page. When you choo
 | [Categories](categories.md) | Categories | 1 | [Categories](../features/categories.md) |
 | [Tags](tags.md) | Tags | 6 | [Tags](../features/tags.md) |
 | [Categorization rules](categorization-rules.md) | Categorization rules | 10 | [Categorization rules](../features/categorization-rules.md) |
+| [Learned categories](learned-categories.md) | Learned categories | 6 | [Learned categories](../features/learned-categories.md) |
 | [Trash and undo](trash-and-undo.md) | Trash and undo | 11 | [Trash and undo](../features/trash-and-undo.md) |
 | [Attachments](attachments.md) | none | 3 | [Attachments](../features/attachments.md) |
 | [Receipt reading](receipt-reading.md) | Receipt reading | 16 | [Receipt reading](../features/receipt-reading.md) |

@@ -586,6 +586,24 @@
       "noGroups": "You have no groups yet. Name a new one to start it with this row.",
       "grouped": "Grouped",
       "truncated": "Only the first 200 rows are shown. Narrow the filters to see the rest."
+    },
+    "categorySuggestion": {
+      "label": "Suggested: {{category}}",
+      "byRule": "by rule \"{{rule}}\"",
+      "sure": "{{percent}}% sure"
+    },
+    "uncategorizedSuggestions": {
+      "open": "Suggest categories",
+      "title": "Suggested categories",
+      "description": "Categories for up to 200 of the uncategorized transactions shown, from your rules and your history. Tick the groups you agree with; a transaction categorized meanwhile is left as it is.",
+      "group_one": "{{category}}, {{count}} transaction",
+      "group_other": "{{category}}, {{count}} transactions",
+      "learned": "From your history",
+      "empty": "Nothing to suggest for these transactions.",
+      "apply_one": "Apply to {{count}} transaction",
+      "apply_other": "Apply to {{count}} transactions",
+      "applied_one": "{{count}} transaction categorized",
+      "applied_other": "{{count}} transactions categorized"
     }
   },
   "receipts": {
@@ -1062,6 +1080,10 @@
         "locations": {
           "name": "Places",
           "hint": "A place for each payment and, on request, where it was made, with suggestions, a place filter and spending by place. Positions stay on this server, though the browser may ask its own location service."
+        },
+        "learnedCategories": {
+          "name": "Learned categories",
+          "hint": "Suggests a category from your own categorized history where no rule fills one, in the import review, the transaction form and the ledger. The model is built on this server for each request and never stored or sent anywhere."
         }
       }
     },
@@ -2500,7 +2522,9 @@
       "samples": "First rows of the file",
       "saveAndPreview": "Save and preview",
       "updateFromFile": "Update the mapping from this file"
-    }
+    },
+    "learned": "Learned",
+    "learnedHint": "From your history, {{percent}}% sure. Change it if it does not fit."
   },
   "errors": {
     "generic": "Something went wrong. Please try again.",

@@ -183,6 +183,89 @@ describe("rule suggestions", () => {
   });
 });
 
+describe("learned suggestions", () => {
+  const history = [transaction("2026-08-01", "Trafi bilietas", "expense", "food")];
+
+  test("a rule beats a learned guess, which beats the recall", () => {
+    const rows = toPreviewRows(
+      [
+        row("1", "Trafi bilietas", "expense", "29.00", {
+          suggestedCategoryId: "transport",
+          matchedRuleName: "Transport",
+          learnedCategoryId: "food",
+          learnedConfidence: 0.9,
+        }),
+        row("2", "Trafi bilietas", "expense", "29.00", {
+          learnedCategoryId: "transport",
+          learnedConfidence: 0.91,
+        }),
+        row("3", "Trafi bilietas", "expense", "29.00"),
+        row("4", "Trafi bilietas", "expense", "29.00", {
+          isDuplicate: true,
+          learnedCategoryId: "transport",
+          learnedConfidence: 0.91,
+        }),
+      ],
+      history,
+      categories,
+    );
+
+    expect(rows.map((item) => [item.categoryId, item.learnedConfidence])).toEqual([
+      ["transport", null],
+      ["transport", 0.91],
+      ["food", null],
+      ["", null],
+    ]);
+  });
+
+  test("a rule that only adds tags leaves the category to the learned guess", () => {
+    const rows = toPreviewRows(
+      [
+        row("1", "Trafi bilietas", "expense", "29.00", {
+          suggestedTagIds: ["commute"],
+          matchedRuleName: "Commuting",
+          learnedCategoryId: "transport",
+          learnedConfidence: 0.85,
+        }),
+      ],
+      history,
+      categories,
+    );
+
+    expect(rows[0]).toMatchObject({
+      categoryId: "transport",
+      learnedConfidence: 0.85,
+      tagIds: ["commute"],
+    });
+  });
+
+  test("choosing a category or recording a refund clears the learned mark", () => {
+    const rows = toPreviewRows(
+      [
+        row("1", "Trafi bilietas", "expense", "29.00", {
+          learnedCategoryId: "transport",
+          learnedConfidence: 0.91,
+        }),
+      ],
+      [],
+      categories,
+    );
+
+    expect(applyCategory(rows, food)[0]).toMatchObject({
+      categoryId: "food",
+      categorySuggested: false,
+      learnedConfidence: null,
+    });
+
+    const [learned] = rows;
+    if (!learned) {
+      throw new Error("expected a row");
+    }
+
+    expect(refundPatch(learned, false)).toMatchObject({ learnedConfidence: null });
+  });
+});
+
 describe("initial state", () => {
   test("duplicates and likely transfers start unselected", () => {
     const rows = toPreviewRows(

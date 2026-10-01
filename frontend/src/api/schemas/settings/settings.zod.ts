@@ -29,6 +29,7 @@ export const SettingsResponse = zod.object({
     receiptReading: zod.boolean(),
     apiTokens: zod.boolean(),
     locations: zod.boolean(),
+    learnedCategories: zod.boolean(),
   }),
   reportingCurrency: zod.enum([
     "eur",
@@ -137,6 +138,7 @@ export const UpdateSettingsBody = zod.object({
     receiptReading: zod.boolean(),
     apiTokens: zod.boolean(),
     locations: zod.boolean(),
+    learnedCategories: zod.boolean(),
   }),
   reportingCurrency: zod.enum([
     "eur",
@@ -240,6 +242,7 @@ export const UpdateSettingsResponse = zod.object({
     receiptReading: zod.boolean(),
     apiTokens: zod.boolean(),
     locations: zod.boolean(),
+    learnedCategories: zod.boolean(),
   }),
   reportingCurrency: zod.enum([
     "eur",
