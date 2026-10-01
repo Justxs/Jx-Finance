@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 import {
   accounts,
+  savingsAccount,
   categories,
   checkingAccount,
   familyHousehold,
@@ -9,7 +10,13 @@ import {
   settings,
   tags,
 } from "@/storybook/fixtures";
-import { type CommandEntry, type CommandSources, buildCommandEntries } from "./command-entries";
+import {
+  type CommandEntry,
+  type CommandSources,
+  type QuickAddSources,
+  buildCommandEntries,
+  quickAddEntry,
+} from "./command-entries";
 import { filterCommandEntries, foldText, matchScore } from "./command-search";
 
 function t(key: string) {
@@ -161,6 +168,53 @@ describe("buildCommandEntries", () => {
       kind: "navigate",
       link: { to: "/transactions", search: { tagIds: fixtureIds.tags.holiday } },
     });
+  });
+});
+
+function quickSources(overrides: Partial<QuickAddSources> = {}): QuickAddSources {
+  return {
+    t: (key, options) => `${key} ${JSON.stringify(options ?? {})}`,
+    accounts,
+    lastAccountId: savingsAccount.id,
+    defaultAccountId: null,
+    formatMoney: (amount, currency) => `${currency} ${amount.toFixed(2)}`,
+    ...overrides,
+  };
+}
+
+describe("quickAddEntry", () => {
+  test("an amount and a payee offer an expense for the last used account", () => {
+    const entry = quickAddEntry("12,50 maxima", quickSources());
+
+    expect(entry?.id).toBe("action-quick-add");
+    expect(entry?.label).toBe('commandPalette.quickAdd {"amount":"eur 12.50","payee":"Maxima"}');
+    expect(entry?.hint).toContain(savingsAccount.name);
+    expect(entry?.target).toEqual({
+      kind: "quickAdd",
+      draft: {
+        type: "expense",
+        accountId: savingsAccount.id,
+        currency: savingsAccount.currency,
+        amount: "12.50",
+        description: "Maxima",
+      },
+    });
+  });
+
+  test("the label shows the amount the way the formatter does, masked while amounts are hidden", () => {
+    const entry = quickAddEntry("maxima 12.50", quickSources({ formatMoney: () => "€•••••" }));
+
+    expect(entry?.label).toContain("€•••••");
+    expect(entry?.label).not.toContain("12");
+  });
+
+  test("without an account the caller cannot add, so nothing is offered", () => {
+    expect(quickAddEntry("12.50 maxima", quickSources({ accounts: [] }))).toBeNull();
+  });
+
+  test("text that is not an amount and a payee offers nothing", () => {
+    expect(quickAddEntry("tags", quickSources())).toBeNull();
+    expect(quickAddEntry("-3 maxima", quickSources())).toBeNull();
   });
 });
 

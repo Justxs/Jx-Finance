@@ -706,7 +706,7 @@ export const PlacesResponseItem = zod.object({
 export const PlacesResponse = zod.array(PlacesResponseItem);
 
 /**
- * Answers the category your first matching categorization rule sets, while the categorizationRules feature is on, and otherwise the category a naive Bayes model trained on the categorized transactions you can see guesses, when it is sure enough. The model is built for this request inside the API and thrown away with it; nothing is stored or sent anywhere. Every field of the answer is null when neither has an opinion. Only reads; nothing is set on any transaction. It is a POST so that the description never lands in a URL. Needs the learnedCategories feature.
+ * Answers the category your first matching categorization rule sets, while the categorizationRules feature is on, and otherwise, while the learnedCategories feature is on, the category a naive Bayes model trained on the categorized transactions you can see guesses, when it is sure enough. The model is built for this request inside the API and thrown away with it; nothing is stored or sent anywhere. Every field of the answer is null when neither has an opinion. Only reads; nothing is set on any transaction. It is a POST so that the description never lands in a URL. With both features off every field is null.
  * @summary Suggest a category for a transaction being entered
  */
 

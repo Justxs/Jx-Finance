@@ -229,4 +229,6 @@ Duplicate is one action on a row. It opens the ordinary create dialog filled fro
 
 A template stores the same shape under a name, minus the date, in `jx-transaction-templates`. It is saved from inside the create dialog, so a template can be composed from nothing or, with Duplicate first, from an existing row. The amount is normalized before it is stored, so a comma typed in the form becomes the canonical `12.50`.
 
-Both paths reach the server through the create form and its schema, not through a second writer: a template whose amount was left empty opens a form that refuses to submit until an amount is typed, exactly like a blank one.
+The command palette's [quick add](interface.md#command-palette) is a third way into the same dialog: `12.50 maxima` opens it filled in with an expense for today, the account this browser last saved a transaction on and the category from a rule, the recall or a learned guess, and nothing is written until Save.
+
+All of them reach the server through the create form and its schema, not through a second writer: a template whose amount was left empty opens a form that refuses to submit until an amount is typed, exactly like a blank one.

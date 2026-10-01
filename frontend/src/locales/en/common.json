@@ -1279,7 +1279,9 @@
     },
     "closeLastMonth": "Close last month",
     "hideAmounts": "Hide amounts",
-    "showAmounts": "Show amounts"
+    "showAmounts": "Show amounts",
+    "quickAdd": "Add expense {{amount}} · {{payee}}",
+    "quickAddHint": "today"
   },
   "goals": {
     "title": "Goals",

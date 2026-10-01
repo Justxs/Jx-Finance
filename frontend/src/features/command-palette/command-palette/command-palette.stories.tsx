@@ -1,10 +1,12 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, fireEvent, screen, waitFor, within } from "storybook/test";
+import { getAccountsMockHandler } from "@/api/generated/accounts/accounts.msw";
 import { getMeMockHandler } from "@/api/generated/auth/auth.msw";
 import { getSettingsMockHandler } from "@/api/generated/settings/settings.msw";
 import { rememberCommand, setCommandPaletteOpen } from "@/stores/command-palette-store";
+import { savePreferences } from "@/stores/preferences";
 import { memberUser, settingsWith } from "@/storybook/fixtures";
-import { handlers } from "@/storybook/handlers";
+import { handlers, withHandlers } from "@/storybook/handlers";
 import { openedDialog } from "@/storybook/interactions";
 import { CommandPalette } from "./command-palette";
 
@@ -145,5 +147,50 @@ export const Lithuanian: Story = {
   play: async () => {
     const dialog = await openedDialog();
     await within(dialog).findByRole("combobox", { name: "Ieškoti puslapių, įrašų ir veiksmų" });
+  },
+};
+
+export const QuickAdd: Story = {
+  play: async () => {
+    await type("12.50 maxima");
+
+    await waitFor(async () =>
+      expect((await optionNames())[0]).toContain("Add expense €12.50 · Maxima"),
+    );
+    await expect((await optionNames())[0]).toContain("today");
+  },
+};
+
+export const QuickAddWithHiddenAmounts: Story = {
+  beforeEach: () => {
+    setCommandPaletteOpen(true);
+    savePreferences({ amountsHidden: true });
+    return () => {
+      setCommandPaletteOpen(false);
+      savePreferences({ amountsHidden: false });
+    };
+  },
+  play: async () => {
+    await type("maxima 12,50");
+
+    await waitFor(async () =>
+      expect((await optionNames())[0]).toContain("Add expense €••••• · Maxima"),
+    );
+    await expect((await optionNames())[0]).not.toContain("12");
+  },
+};
+
+export const QuickAddWithoutAccounts: Story = {
+  parameters: withHandlers(getAccountsMockHandler([])),
+  play: async () => {
+    await type("kavines");
+    await waitFor(async () =>
+      expect((await optionNames()).some((name) => name.includes("Kavinės ir restoranai"))).toBe(
+        true,
+      ),
+    );
+
+    await type("12.50 maxima");
+    await screen.findByText("Nothing matches what you typed.");
   },
 };

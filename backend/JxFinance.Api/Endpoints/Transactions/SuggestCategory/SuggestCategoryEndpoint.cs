@@ -1,7 +1,5 @@
 using FastEndpoints;
 using JxFinance.Common;
-using JxFinance.Common.Settings;
-using JxFinance.Domain.Settings;
 using JxFinance.Endpoints.Transactions.Interfaces;
 
 namespace JxFinance.Endpoints.Transactions.SuggestCategory;
@@ -13,8 +11,6 @@ public sealed class SuggestCategoryEndpoint(ICategorySuggestionService suggestio
     {
         Post(ApiRoutes.Transactions + "/suggest-category");
         Group<TransactionsGroup>();
-        Options(b => b.WithMetadata(new RequiresFeature(Feature.LearnedCategories)));
-        Description(d => d.ProducesProblemDetails(404));
     }
 
     public override async Task HandleAsync(SuggestCategoryRequest req, CancellationToken ct) =>

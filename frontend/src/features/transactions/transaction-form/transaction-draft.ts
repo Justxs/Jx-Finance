@@ -28,6 +28,12 @@ export interface TransactionDraft {
   spreadMonths?: number | null;
 }
 
+declare module "@tanstack/react-router" {
+  interface HistoryState {
+    transactionDraft?: TransactionDraft;
+  }
+}
+
 export function draftFromTransaction(transaction: TransactionResponse): TransactionDraft {
   return {
     accountId: transaction.accountId,

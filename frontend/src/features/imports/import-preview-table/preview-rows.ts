@@ -106,7 +106,7 @@ function normalize(text: string | null | undefined) {
 }
 
 export function recallCategoryId(
-  row: ImportPreviewRow,
+  row: Pick<ImportPreviewRow, "description" | "type" | "isDuplicate">,
   transactions: TransactionResponse[],
   categories: CategoryResponse[],
 ) {

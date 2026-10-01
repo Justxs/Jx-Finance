@@ -1,5 +1,5 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { useNavigate, useSearch } from "@tanstack/react-router";
+import { useLocation, useNavigate, useSearch } from "@tanstack/react-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -24,6 +24,7 @@ import {
 } from "@/features/transactions/transaction-form/transaction-form";
 import { transactionTemplates } from "@/features/transactions/transaction-views";
 import type { useTransactionMutations } from "@/features/transactions/transactions-page/use-transaction-mutations";
+import { savePreferences } from "@/stores/preferences";
 
 interface Options {
   accounts: AccountResponse[];
@@ -47,6 +48,7 @@ export function useTransactionFormSection({
   const queryClient = useQueryClient();
   const navigate = useNavigate({ from: "/transactions" });
   const createOpen = useSearch({ from: "/transactions", select: (search) => search.new ?? false });
+  const handedDraft = useLocation({ select: (location) => location.state.transactionDraft });
   const [prefill, setPrefill] = useState<{ key: string; draft: TransactionDraft } | null>(null);
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
   const [editing, setEditing] = useState<TransactionResponse | null>(null);
@@ -91,6 +93,7 @@ export function useTransactionFormSection({
       { data: values },
       {
         onSuccess: (created) => {
+          savePreferences({ lastAccountId: created.accountId });
           offerRule(created);
           if (receiptFile) {
             void attachReceipt(created.id, receiptFile);
@@ -103,6 +106,7 @@ export function useTransactionFormSection({
 
   async function handleCreateAnother(values: TransactionFormValues) {
     const created = await create.mutateAsync({ data: values });
+    savePreferences({ lastAccountId: created.accountId });
     offerRule(created);
     if (receiptFile) {
       setReceiptFile(null);
@@ -138,11 +142,11 @@ export function useTransactionFormSection({
         className="max-w-2xl"
       >
         <TransactionForm
-          key={prefill?.key ?? "blank"}
+          key={prefill?.key ?? (handedDraft ? "handed" : "blank")}
           accounts={accounts}
           categories={categories}
           tags={tags}
-          prefill={prefill?.draft}
+          prefill={prefill?.draft ?? handedDraft}
           pending={create.isPending}
           error={create.error}
           onSubmit={handleCreate}

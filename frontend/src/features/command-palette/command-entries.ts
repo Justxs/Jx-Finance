@@ -12,6 +12,7 @@ import { type RoutePath, adminNavPages, navPages } from "@/lib/navigation";
 import type { FeatureKey } from "@/lib/settings";
 import { type Locale, localeNames, nextLocale } from "@/stores/app-store";
 import type { Theme } from "@/stores/theme-store";
+import { type QuickAddDraft, parseQuickAdd, quickAddAccount } from "./quick-add";
 
 export type CommandTarget =
   | { kind: "navigate"; link: LinkOptions }
@@ -20,6 +21,7 @@ export type CommandTarget =
   | { kind: "amounts" }
   | { kind: "household"; householdId: string | undefined }
   | { kind: "backup" }
+  | { kind: "quickAdd"; draft: QuickAddDraft }
   | { kind: "signOut" };
 
 export interface CommandEntry {
@@ -327,4 +329,44 @@ function recordEntries({ t, accounts, categories, tags }: CommandSources): Comma
 
 export function buildCommandEntries(sources: CommandSources): CommandEntry[] {
   return [...actionEntries(sources), ...pageEntries(sources), ...recordEntries(sources)];
+}
+
+export interface QuickAddSources {
+  t: Translate;
+  accounts: readonly AccountResponse[];
+  lastAccountId: string | undefined;
+  defaultAccountId: string | null;
+  formatMoney: (amount: number, currency: string) => string;
+}
+
+export function quickAddEntry(query: string, sources: QuickAddSources): CommandEntry | null {
+  const parsed = parseQuickAdd(query);
+  const account = quickAddAccount(
+    sources.accounts,
+    sources.lastAccountId,
+    sources.defaultAccountId,
+  );
+  if (!parsed || !account) {
+    return null;
+  }
+
+  return {
+    id: "action-quick-add",
+    label: sources.t("commandPalette.quickAdd", {
+      amount: sources.formatMoney(Number(parsed.amount), account.currency),
+      payee: parsed.payee,
+    }),
+    hint: `${account.name} · ${sources.t("commandPalette.quickAddHint")}`,
+    keywords: "",
+    target: {
+      kind: "quickAdd",
+      draft: {
+        type: "expense",
+        accountId: account.id,
+        currency: account.currency,
+        amount: parsed.amount,
+        description: parsed.payee,
+      },
+    },
+  };
 }

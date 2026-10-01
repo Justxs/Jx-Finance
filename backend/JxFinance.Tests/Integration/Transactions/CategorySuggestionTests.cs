@@ -33,21 +33,23 @@ public sealed class CategorySuggestionTests(ApiFixture fixture) : IntegrationTes
     }
 
     [Fact]
-    public async Task The_form_suggestion_refuses_an_unknown_account_and_answers_feature_disabled_while_the_switch_is_off()
+    public async Task The_form_suggestion_refuses_an_unknown_account_and_answers_only_rules_while_the_switch_is_off()
     {
         using var member = await CreateUserClientAsync();
         var account = await CreateAccountAsync("500.00", client: member);
+        var groceries = await CreateCategoryAsync(client: member);
+        var snacks = await CreateCategoryAsync(client: member);
+        await HistoryAsync(member, account, groceries, "MAXIMA LT 0412 VILNIUS", 4);
+        await Seed.RuleAsync(member, "startsWith", "KIOSK", categoryId: snacks, name: "Kiosk");
         using var stranger = await CreateUserClientAsync();
         var strangersAccount = await CreateAccountAsync("500.00", client: stranger);
 
-        var off = await PostSuggestAsync(member, account, "MAXIMA");
-        HttpResponseMessage unknown;
-        await using (await LearnedCategoriesOnAsync())
-        {
-            unknown = await PostSuggestAsync(member, strangersAccount, "MAXIMA");
-        }
+        var ruled = await SuggestAsync(member, account, "KIOSK NARVESEN");
+        var unguessed = await SuggestAsync(member, account, "MAXIMA LT 0518 VILNIUS");
+        var unknown = await PostSuggestAsync(member, strangersAccount, "MAXIMA");
 
-        await AssertProblemAsync(off, HttpStatusCode.NotFound, "feature.disabled");
+        Assert.Equal(new SuggestionDto(snacks, "rule", "Kiosk", null), ruled);
+        Assert.Equal(new SuggestionDto(null, null, null, null), unguessed);
         await AssertProblemAsync(unknown, HttpStatusCode.BadRequest, "reference.notFound");
     }
 

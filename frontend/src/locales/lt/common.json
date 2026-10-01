@@ -1327,7 +1327,9 @@
     },
     "closeLastMonth": "Uždaryti praėjusį mėnesį",
     "hideAmounts": "Slėpti sumas",
-    "showAmounts": "Rodyti sumas"
+    "showAmounts": "Rodyti sumas",
+    "quickAdd": "Pridėti išlaidą {{amount}} · {{payee}}",
+    "quickAddHint": "šiandien"
   },
   "goals": {
     "title": "Tikslai",

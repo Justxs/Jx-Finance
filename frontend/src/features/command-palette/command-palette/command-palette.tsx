@@ -22,8 +22,12 @@ import {
   type CommandEntry,
   type CommandTarget,
   buildCommandEntries,
+  quickAddEntry,
 } from "@/features/command-palette/command-entries";
 import { filterCommandEntries } from "@/features/command-palette/command-search";
+import type { QuickAddDraft } from "@/features/command-palette/quick-add";
+import { quickAddCategoryId } from "@/features/command-palette/quick-add-category";
+import { useMoney } from "@/hooks/use-formatters";
 import { useSettings, useTodayDate } from "@/hooks/use-settings";
 import { endSession } from "@/lib/auth-gate";
 import { latestEndedMonth } from "@/lib/calendar";
@@ -38,6 +42,7 @@ import {
   useCommandPaletteOpen,
   useCommandRecents,
 } from "@/stores/command-palette-store";
+import { usePreferences } from "@/stores/preferences";
 import { toggleAmountsHidden, useAmountsHidden } from "@/stores/privacy-store";
 import { setTheme, useTheme } from "@/stores/theme-store";
 
@@ -67,7 +72,9 @@ function CommandPaletteContent({ onClose }: Readonly<ContentProps>) {
   const [activeIndex, setActiveIndex] = useState(0);
 
   const me = useMe();
-  const { features } = useSettings();
+  const { features, defaultAccountId } = useSettings();
+  const money = useMoney();
+  const { lastAccountId } = usePreferences();
   const { theme } = useTheme();
   const { locale } = useLocale();
   const amountsHidden = useAmountsHidden();
@@ -92,6 +99,8 @@ function CommandPaletteContent({ onClose }: Readonly<ContentProps>) {
   const backupMutation = useCreateBackup({ mutation: notify(t("backup.created")) });
 
   const lastMonth = latestEndedMonth(useTodayDate());
+  const accountList = accounts.data ?? [];
+  const categoryList = categories.data ?? [];
   const entries = buildCommandEntries({
     t,
     features,
@@ -100,16 +109,33 @@ function CommandPaletteContent({ onClose }: Readonly<ContentProps>) {
     locale,
     amountsHidden,
     activeHouseholdId,
-    accounts: accounts.data ?? [],
-    categories: categories.data ?? [],
+    accounts: accountList,
+    categories: categoryList,
     tags: tags.data ?? [],
     households: households.data ?? [],
     lastMonth,
   });
 
-  const results = filterCommandEntries(entries, query, recents).slice(0, RESULT_LIMIT);
+  const quickAdd = quickAddEntry(query, {
+    t,
+    accounts: accountList,
+    lastAccountId,
+    defaultAccountId,
+    formatMoney: money.format,
+  });
+  const matches = filterCommandEntries(entries, query, recents);
+  const results = (quickAdd ? [quickAdd, ...matches] : matches).slice(0, RESULT_LIMIT);
   const activeAt = Math.min(activeIndex, Math.max(results.length - 1, 0));
   const active = results[activeAt];
+
+  async function startQuickAdd(draft: QuickAddDraft) {
+    const categoryId = await quickAddCategoryId(queryClient, draft, categoryList, features);
+    await navigate({
+      to: "/transactions",
+      search: { new: true },
+      state: { transactionDraft: { ...draft, categoryId } },
+    });
+  }
 
   function run(target: CommandTarget) {
     switch (target.kind) {
@@ -141,11 +167,17 @@ function CommandPaletteContent({ onClose }: Readonly<ContentProps>) {
         logoutMutation.mutate();
         break;
       }
+      case "quickAdd": {
+        void startQuickAdd(target.draft);
+        break;
+      }
     }
   }
 
   function choose(entry: CommandEntry) {
-    rememberCommand(entry.id);
+    if (entry.target.kind !== "quickAdd") {
+      rememberCommand(entry.id);
+    }
     onClose();
     run(entry.target);
   }

@@ -209,3 +209,25 @@ test("a member is offered neither, and a switched-off feature keeps its pages ou
   fireEvent.change(searchBox(), { target: { value: "Investment tax summary" } });
   expect(optionNames().some((name) => name.includes("Investment tax summary"))).toBe(false);
 });
+
+test("an amount and a payee open the add dialog filled in, with the recalled category", async () => {
+  const { queryClient, router } = mount();
+  await settled(queryClient);
+  await openPalette(queryClient);
+
+  fireEvent.change(searchBox(), { target: { value: "9,99 eurovaistinė" } });
+  expect(optionNames()[0]).toContain("Add expense €9.99 · Eurovaistinė");
+
+  await act(async () => {
+    fireEvent.keyDown(searchBox(), { key: "Enter" });
+  });
+
+  await waitFor(() => expect(router.state.location.pathname).toBe("/transactions"), appWait);
+  const dialog = await screen.findByRole("dialog", { name: "Add transaction" }, appWait);
+  expect(within(dialog).getByLabelText("Amount")).toHaveValue("9.99");
+  expect(within(dialog).getByLabelText("Description")).toHaveValue("Eurovaistinė");
+  expect(within(dialog).getByRole("combobox", { name: "Category" })).toHaveTextContent(
+    categoryName(ids.categories.health),
+  );
+  expect(requestsTo("/api/transactions/suggest-category")).toHaveLength(1);
+});
