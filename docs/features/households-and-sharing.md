@@ -16,6 +16,7 @@ flowchart TD
     Transfer["Transfer"] --> Either["visible through either account,<br/>edit and delete need both"]
     Plans["Shareable plans: budgets, goals, recurring entries"] --> Filter
     Wealth["Shareable assets and debts"] --> Filter
+    Groups["Shareable transaction groups"] --> Filter
     Payment["Debt payment links"] --> ViaDebt["visible when the debt is visible"]
     Personal["Notifications, snapshots"] --> OwnerOnly["owner only"]
     Household["IHouseholdScoped: split expenses, settle-up payments"] --> Members["visible to current members<br/>of a living household"]
@@ -83,6 +84,10 @@ A shared asset or debt counts in full in the net worth of every member who can s
 A shared debt can only be paid from an account shared with its household: linking by hand, the payment candidates and the payment a confirmed recurring entry links all keep to those accounts, so every member sees every payment. Sharing a debt whose linked payments sit on another account answers 400 `household.referenceNotShared`, and so does linking a payment from a personal account. A recurring entry, personal or shared, that pays a shared debt must use an account shared with the debt's household, and a shared recurring entry can only pay a debt shared with its own household. An account unshared after its payments were linked does not reach back: its payments stay linked and show among the debt's unavailable payments for the members who can no longer see them.
 
 Each member's net worth snapshot stays the member's whole net worth. `GET /api/networth` under an active household answers the narrowed totals without writing, and then has the snapshotter store the whole figure, so the history, the dashboard and the month-end close keep reading the same series whatever the switcher shows.
+
+## Shared transaction groups
+
+Since 2026-10-02 the dialog that groups ledger rows has the same Visibility field, and a shared [transaction group](transaction-groups.md#personal-and-shared-groups) carries the "Shared · household" tag on its ledger row. Every member of the household sees it fold, can add rows that sit on accounts shared with the household, whoever entered them, and can take rows out or rename it; only its owner changes its sharing or ungroups it. Making it personal again takes out the rows other members entered.
 
 ## Settling up
 

@@ -18,6 +18,7 @@ export const KINDS = [
   "recurringBill",
   "asset",
   "debt",
+  "transactionGroup",
   "member",
   "household",
 ] as const satisfies readonly AuditEntityKind[];

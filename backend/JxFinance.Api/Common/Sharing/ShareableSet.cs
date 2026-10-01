@@ -7,6 +7,7 @@ using JxFinance.Domain.Households;
 using JxFinance.Domain.NetWorth;
 using JxFinance.Domain.RecurringBills;
 using JxFinance.Domain.Tags;
+using JxFinance.Domain.Transactions;
 using JxFinance.Domain.Trash;
 using JxFinance.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
@@ -25,6 +26,7 @@ public abstract class ShareableSet(Type entityType, DeletionChangeKind shareKind
         new Of<RecurringBill, RecurringBillId>(db => db.RecurringBills, DeletionChangeKind.RecurringBillShare, "recurring entry", "recurring entries"),
         new Of<Asset, AssetId>(db => db.Assets, DeletionChangeKind.AssetShare, "asset", "assets"),
         new Of<Debt, DebtId>(db => db.Debts, DeletionChangeKind.DebtShare, "debt", "debts"),
+        new Of<TransactionGroup, TransactionGroupId>(db => db.TransactionGroups, DeletionChangeKind.TransactionGroupShare, "transaction group", "transaction groups"),
     ];
 
     public Type EntityType { get; } = entityType;

@@ -1,5 +1,6 @@
 using JxFinance.Domain.Accounts;
 using JxFinance.Domain.Audit;
+using JxFinance.Domain.Households;
 
 namespace JxFinance.Infrastructure.Data.Auditing;
 
@@ -13,8 +14,9 @@ public sealed class AuditTrail
         string description,
         int count,
         Guid? entityId = null,
-        IEnumerable<AccountId>? accounts = null) =>
-        summary = new AuditSummary(action, kind, description, count, entityId, [.. (accounts ?? []).Distinct()]);
+        IEnumerable<AccountId>? accounts = null,
+        HouseholdId? household = null) =>
+        summary = new AuditSummary(action, kind, description, count, entityId, [.. (accounts ?? []).Distinct()], household);
 
     internal AuditSummary? Take()
     {
@@ -30,4 +32,5 @@ internal sealed record AuditSummary(
     string Description,
     int Count,
     Guid? EntityId,
-    IReadOnlyList<AccountId> Accounts);
+    IReadOnlyList<AccountId> Accounts,
+    HouseholdId? Household);

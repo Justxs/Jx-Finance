@@ -16,12 +16,18 @@ public sealed class SharingGuard(AppDbContext db, ICurrentUser currentUser) : IS
         where T : OwnableEntity, IShareable =>
         CheckAsync(SharingState.From(input), (existing.UserId, SharingState.Of(existing)), cancellationToken);
 
-    public async Task<DomainError?> CheckReferencesAsync(
+    public Task<DomainError?> CheckReferencesAsync(
         IShareableInput input,
+        SharedReferences references,
+        CancellationToken cancellationToken) =>
+        CheckReferencesAsync(SharingState.From(input), references, cancellationToken);
+
+    public async Task<DomainError?> CheckReferencesAsync(
+        SharingState state,
         SharedReferences references,
         CancellationToken cancellationToken)
     {
-        if (SharingState.From(input).HouseholdId is not { } householdId)
+        if (state.HouseholdId is not { } householdId)
         {
             return null;
         }

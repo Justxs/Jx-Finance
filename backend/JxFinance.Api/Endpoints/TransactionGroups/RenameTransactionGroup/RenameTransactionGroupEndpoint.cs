@@ -12,7 +12,7 @@ public sealed class RenameTransactionGroupEndpoint(ITransactionGroupService grou
     {
         Put(ApiRoutes.TransactionGroups + "/{id}");
         Group<TransactionGroupsGroup>();
-        Description(d => d.ProducesProblemDetails(404));
+        Description(d => d.ProducesProblemDetails(403).ProducesProblemDetails(404));
     }
 
     public override async Task HandleAsync(RenameTransactionGroupRequest req, CancellationToken ct) =>

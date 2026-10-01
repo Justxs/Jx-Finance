@@ -17201,7 +17201,7 @@
           "TransactionGroups"
         ],
         "summary": "Group transactions",
-        "description": "Creates a personal group, such as \"Trip to Riga\", and puts the listed transactions in it, so that GET /api/transactions/ledger folds them into one item. Grouping changes only how the ledger reads: every member keeps its own date, category and amount in reports, budgets, balances, the month close and the exports, and the member's last-updated time is left as it was. Every transaction must be one you entered, and none may already be in another group; remove it from that group first. Names need not be unique. The ledger offers grouping for two or more selected rows, while a row's own actions start a group with that row alone. Only a browser session can group; a personal API token cannot.",
+        "description": "Creates a group, such as \"Trip to Riga\", and puts the listed transactions in it, so that GET /api/transactions/ledger folds them into one item. Grouping changes only how the ledger reads: every member keeps its own date, category and amount in reports, budgets, balances, the month close and the exports, and the member's last-updated time is left as it was. A personal group holds only transactions you entered; a group shared with a household holds transactions on accounts shared with that household, whoever entered them. None may already be in another group; remove it from that group first. Names need not be unique. The ledger offers grouping for two or more selected rows, while a row's own actions start a group with that row alone. Only a browser session can group; a personal API token cannot.",
         "operationId": "CreateTransactionGroup",
         "requestBody": {
           "content": {
@@ -17214,7 +17214,9 @@
                 "transactionIds": [
                   "00000000-0000-0000-0000-000000000000",
                   "00000000-0000-0000-0000-000000000000"
-                ]
+                ],
+                "scope": "personal",
+                "householdId": null
               }
             }
           },
@@ -17232,7 +17234,7 @@
             }
           },
           "400": {
-            "description": "Validation failed.",
+            "description": "Validation failed, or a shared group names a transaction on an account not shared with its household.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -17252,7 +17254,7 @@
             }
           },
           "403": {
-            "description": "A transaction was entered by someone else, such as a housemate on a shared account.",
+            "description": "A personal group names a transaction someone else entered, or you are not a member of the household.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -17303,7 +17305,7 @@
           "TransactionGroups"
         ],
         "summary": "List your transaction groups",
-        "description": "Returns your own transaction groups that still hold at least one live transaction you can see, the one with the newest member first, each with its member count and the dates of its first and last member. Groups are personal: a housemate never sees them.",
+        "description": "Returns the transaction groups you can see, your own and those shared with your households, that still hold at least one live transaction you can see, the one with the newest member first, each with its member count and the dates of its first and last member. A personal group is never seen by a housemate.",
         "operationId": "GetTransactionGroups",
         "responses": {
           "200": {
@@ -17365,8 +17367,8 @@
         "tags": [
           "TransactionGroups"
         ],
-        "summary": "Rename a transaction group",
-        "description": "Changes the name of one of your groups. Its members are untouched.",
+        "summary": "Rename or share a transaction group",
+        "description": "Changes the name of a group you can see, and its owner can share it with a household or make it personal again. Any member of the household can rename a shared group. Sharing needs every member on an account shared with that household; making a shared group personal takes out the transactions other people entered.",
         "operationId": "RenameTransactionGroup",
         "parameters": [
           {
@@ -17388,7 +17390,9 @@
                 "$ref": "#/components/schemas/RenameTransactionGroupRequest"
               },
               "example": {
-                "name": "Trip to Riga"
+                "name": "Trip to Riga",
+                "scope": "personal",
+                "householdId": null
               }
             }
           },
@@ -17406,7 +17410,7 @@
             }
           },
           "400": {
-            "description": "Validation failed.",
+            "description": "Validation failed, or a member is on an account not shared with the household.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -17417,6 +17421,16 @@
           },
           "401": {
             "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Only the owner can change how a group is shared, or you are not a member of the household.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -17457,7 +17471,7 @@
           "TransactionGroups"
         ],
         "summary": "Ungroup",
-        "description": "Removes one of your groups and keeps every member as an ordinary transaction. The group goes to the trash with the members it held, and POST /api/trash/restore with kind transactionGroup puts back the name and the members that are still live and in no other group.",
+        "description": "Removes a group you own and keeps every member as an ordinary transaction. The group goes to the trash with the members it held, and POST /api/trash/restore with kind transactionGroup puts back the name and the members that are still live and in no other group.",
         "operationId": "UngroupTransactionGroup",
         "parameters": [
           {
@@ -17486,6 +17500,16 @@
           },
           "401": {
             "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The group is shared with you; only its owner can ungroup it.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -17528,7 +17552,7 @@
           "TransactionGroups"
         ],
         "summary": "Add transactions to a group",
-        "description": "Puts the listed transactions in one of your groups; split transactions are accepted. Every transaction must be one you entered and in no other group; a transaction already in this group is left as it is. Nothing is written when one of them is refused.",
+        "description": "Puts the listed transactions in a group you can see; split transactions are accepted. A personal group takes only transactions you entered, a shared group only transactions on accounts shared with its household, and none may be in another group; a transaction already in this group is left as it is. Nothing is written when one of them is refused.",
         "operationId": "AddToTransactionGroup",
         "parameters": [
           {
@@ -17563,7 +17587,7 @@
             "description": "The transactions are in the group."
           },
           "400": {
-            "description": "Validation failed.",
+            "description": "Validation failed, or a transaction is on an account not shared with the group's household.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -17583,7 +17607,7 @@
             }
           },
           "403": {
-            "description": "A transaction was entered by someone else.",
+            "description": "The group is personal and a transaction was entered by someone else.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -17634,7 +17658,7 @@
           "TransactionGroups"
         ],
         "summary": "List the members of a group",
-        "description": "Returns the members of one of your groups that match the same filters as the ledger, newest first, so an expanded group row shows exactly the members that made it appear. The list is not paged: at most 200 members are returned, and truncated says whether more matched.",
+        "description": "Returns the members of a group you can see that match the same filters as the ledger, newest first, so an expanded group row shows exactly the members that made it appear. The list is not paged: at most 200 members are returned, and truncated says whether more matched.",
         "operationId": "GetTransactionGroupMembers",
         "parameters": [
           {
@@ -17884,7 +17908,7 @@
           "TransactionGroups"
         ],
         "summary": "Remove a transaction from a group",
-        "description": "Takes one transaction out of one of your groups, so the ledger shows it as an ordinary row again. The group stays, even with a single member left.",
+        "description": "Takes one transaction out of a group you can see, a shared one included, so the ledger shows it as an ordinary row again. The group stays, even with a single member left.",
         "operationId": "RemoveFromTransactionGroup",
         "parameters": [
           {
@@ -23647,7 +23671,8 @@
           "goal",
           "recurringBill",
           "asset",
-          "debt"
+          "debt",
+          "transactionGroup"
         ],
         "type": "string"
       },
@@ -26469,6 +26494,17 @@
               "00000000-0000-0000-0000-000000000000",
               "00000000-0000-0000-0000-000000000000"
             ]
+          },
+          "scope": {
+            "$ref": "#/components/schemas/Scope"
+          },
+          "householdId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The household a shared group belongs to; required when the scope is shared.",
+            "format": "uuid"
           }
         },
         "example": {
@@ -26476,7 +26512,9 @@
           "transactionIds": [
             "00000000-0000-0000-0000-000000000000",
             "00000000-0000-0000-0000-000000000000"
-          ]
+          ],
+          "scope": "personal",
+          "householdId": null
         }
       },
       "CreateTransactionRequest": {
@@ -32199,10 +32237,23 @@
             "type": "string",
             "description": "The new name, 1 to 120 characters.",
             "example": "Trip to Riga"
+          },
+          "scope": {
+            "$ref": "#/components/schemas/Scope"
+          },
+          "householdId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The household a shared group belongs to; required when the scope is shared.",
+            "format": "uuid"
           }
         },
         "example": {
-          "name": "Trip to Riga"
+          "name": "Trip to Riga",
+          "scope": "personal",
+          "householdId": null
         }
       },
       "ReportComparisonMode": {
@@ -34167,7 +34218,9 @@
           "name",
           "memberCount",
           "firstDate",
-          "lastDate"
+          "lastDate",
+          "scope",
+          "householdId"
         ],
         "type": "object",
         "properties": {
@@ -34187,6 +34240,16 @@
           },
           "lastDate": {
             "$ref": "#/components/schemas/DateOnly"
+          },
+          "scope": {
+            "$ref": "#/components/schemas/Scope"
+          },
+          "householdId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
           }
         }
       },
@@ -34198,7 +34261,9 @@
           "lastDate",
           "memberCount",
           "matchingCount",
-          "netReportingAmount"
+          "netReportingAmount",
+          "scope",
+          "householdId"
         ],
         "type": "object",
         "properties": {
@@ -34226,6 +34291,16 @@
           "netReportingAmount": {
             "type": "string",
             "format": "decimal"
+          },
+          "scope": {
+            "$ref": "#/components/schemas/Scope"
+          },
+          "householdId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
           }
         }
       },

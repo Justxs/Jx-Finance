@@ -7,7 +7,7 @@ public sealed class RemoveFromTransactionGroupSummary : Summary<RemoveFromTransa
     public RemoveFromTransactionGroupSummary()
     {
         Summary = "Remove a transaction from a group";
-        Description = "Takes one transaction out of one of your groups, so the ledger shows it as an ordinary row again. "
+        Description = "Takes one transaction out of a group you can see, a shared one included, so the ledger shows it as an ordinary row again. "
             + "The group stays, even with a single member left.";
         Params["id"] = "The group id.";
         Params["transactionId"] = "The transaction to take out.";

@@ -80,7 +80,7 @@ public sealed class LedgerKeysTests
     public async Task The_group_list_counts_and_dates_the_members_in_one_query()
     {
         await using var capture = new SqlCapture();
-        var service = new TransactionGroupService(capture.Db, new FixedUser(Guid.NewGuid()), null!, null!);
+        var service = new TransactionGroupService(capture.Db, new FixedUser(Guid.NewGuid()), null!, null!, null!);
 
         await service.GetAllAsync(TestContext.Current.CancellationToken);
 

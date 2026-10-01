@@ -2,6 +2,7 @@ import { ChevronRight, Layers } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import type { TransactionGroupSummary } from "@/api/generated/model";
 import { RowActions } from "@/components/row-actions/row-actions";
+import { SharedScopeTag } from "@/components/shared-scope-tag/shared-scope-tag";
 import { Button } from "@/components/ui/button/button";
 import { TextSkeleton } from "@/components/ui/skeleton/skeleton";
 import { TableCell, TableRow } from "@/components/ui/table/table";
@@ -109,6 +110,11 @@ export function GroupRow({ group, expanded, selectable, handlers }: Readonly<Pro
           <span className="shrink-0 text-xs whitespace-nowrap text-muted-foreground tabular-nums">
             {groupCount(group)}
           </span>
+          <SharedScopeTag
+            scope={group.scope}
+            householdId={group.householdId}
+            className="shrink-0"
+          />
         </span>
       </TableCell>
       <TableCell>

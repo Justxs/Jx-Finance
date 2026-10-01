@@ -6,7 +6,7 @@ Related: feature page [Households and sharing](../features/households-and-sharin
 
 ### Sharing
 
-Accounts, Categories and Tags, and since 2026-09-30 Budgets, Goals, Recurring entries, Assets and Debts, whose references must be shared with the same household and whose budgets count only the household's accounts; a shared asset or debt counts in full in every member's net worth, its valuations and payment links follow it, and a shared debt is paid only from accounts shared with its household; snapshots stay each member's whole net worth; record owner controls scope; account owner controls archiving; transfer changes require both accounts, and the new accounts as well when an edit moves it; a per-browser active household narrows the view to one household, defaults to everything, keeps personal records visible in every scope and never widens what a caller may see
+Accounts, Categories and Tags, since 2026-09-30 Budgets, Goals, Recurring entries, Assets and Debts, and since 2026-10-02 [Transaction groups](transaction-groups.md), whose references must be shared with the same household and whose budgets count only the household's accounts; a shared asset or debt counts in full in every member's net worth, its valuations and payment links follow it, and a shared debt is paid only from accounts shared with its household; snapshots stay each member's whole net worth; record owner controls scope; account owner controls archiving; transfer changes require both accounts, and the new accounts as well when an edit moves it; a per-browser active household narrows the view to one household, defaults to everything, keeps personal records visible in every scope and never widens what a caller may see
 
 ### Member removal
 

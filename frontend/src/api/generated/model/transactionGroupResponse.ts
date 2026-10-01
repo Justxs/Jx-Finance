@@ -6,6 +6,7 @@
  * OpenAPI spec version: v1
  */
 import type { DateOnly } from "./dateOnly";
+import type { Scope } from "./scope";
 
 export interface TransactionGroupResponse {
   id: string;
@@ -13,4 +14,7 @@ export interface TransactionGroupResponse {
   memberCount: number;
   firstDate: DateOnly;
   lastDate: DateOnly;
+  scope: Scope;
+  /** @nullable */
+  householdId: string | null;
 }

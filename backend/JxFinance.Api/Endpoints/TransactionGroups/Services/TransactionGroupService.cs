@@ -1,7 +1,9 @@
 using FastEndpoints;
 using JxFinance.Common;
 using JxFinance.Common.Errors;
+using JxFinance.Common.Sharing;
 using JxFinance.Common.Trash;
+using JxFinance.Domain.Audit;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Transactions;
 using JxFinance.Domain.Trash;
@@ -23,6 +25,7 @@ public sealed class TransactionGroupService(
     AppDbContext db,
     ICurrentUser currentUser,
     IDeletionRecorder deletions,
+    ISharingGuard sharing,
     ITransactionService transactions) : ITransactionGroupService
 {
     private static readonly DomainError GroupNotFound = EntityLookup.NotFound("Transaction group not found.");
@@ -30,7 +33,10 @@ public sealed class TransactionGroupService(
     private static readonly DomainError TransactionNotFound = EntityLookup.NotFound("Transaction not found.");
 
     private static readonly DomainError EnteredBySomeoneElse =
-        new(ErrorCodes.AccessForbidden, "Only transactions you entered can be grouped.");
+        new(ErrorCodes.AccessForbidden, "A personal group holds only transactions you entered.");
+
+    private static readonly DomainError OwnerOnly =
+        new(ErrorCodes.AccessForbidden, "Only the owner can ungroup a shared group.");
 
     private static readonly DomainError MemberTaken = new(
         ErrorCodes.TransactionGroupMemberTaken,
@@ -51,18 +57,27 @@ public sealed class TransactionGroupService(
         CancellationToken cancellationToken)
     {
         var ids = Typed(request.TransactionIds);
-        if (await CheckMembersAsync(ids, null, cancellationToken) is { } refused)
+        var refused = await sharing.CheckAsync(request, cancellationToken)
+            ?? await CheckMembersAsync(ids, null, currentUser.Id, SharingState.From(request), cancellationToken);
+        if (refused is not null)
         {
             return refused;
         }
 
         var group = new TransactionGroup { Name = request.Name.Trim() };
+        group.ApplySharing(request);
 
-        await using var dbTransaction = await db.Database.BeginTransactionAsync(cancellationToken);
+        await using var owned = db.Database.CurrentTransaction is null
+            ? await db.Database.BeginTransactionAsync(cancellationToken)
+            : null;
         db.TransactionGroups.Add(group);
+        Summarise(group, AuditAction.Created, (ids.Count, "transaction", "transactions"));
         await db.SaveChangesAsync(cancellationToken);
         await SetGroupAsync(ids, group.Id, cancellationToken);
-        await dbTransaction.CommitAsync(cancellationToken);
+        if (owned is not null)
+        {
+            await owned.CommitAsync(cancellationToken);
+        }
 
         return await SummaryAsync(group.Id, cancellationToken);
     }
@@ -72,15 +87,42 @@ public sealed class TransactionGroupService(
         CancellationToken cancellationToken)
     {
         var groupId = new TransactionGroupId(request.Id);
-        var renamed = await db.UpdateOrNotFoundAsync<TransactionGroup>(
-            g => g.Id == groupId,
-            GroupNotFound,
-            g => g.Name = request.Name.Trim(),
-            cancellationToken);
-        if (renamed.IsFailure)
+        if (await db.TransactionGroups.FirstOrDefaultAsync(g => g.Id == groupId, cancellationToken) is not { } group)
         {
-            return renamed.Error;
+            return GroupNotFound;
         }
+
+        if (await sharing.CheckAsync(group, request, cancellationToken) is { } sharingError)
+        {
+            return sharingError;
+        }
+
+        var next = SharingState.From(request);
+        await using var dbTransaction = await db.Database.BeginTransactionAsync(cancellationToken);
+        if (next != SharingState.Of(group))
+        {
+            var members = Members(groupId);
+            if (next.HouseholdId is not null)
+            {
+                var accounts = await members.Select(t => t.AccountId).Distinct().ToListAsync(cancellationToken);
+                if (await sharing.CheckReferencesAsync(next, new SharedReferences(accounts, [], []), cancellationToken) is { } notShared)
+                {
+                    return notShared;
+                }
+            }
+            else
+            {
+                var ownerId = group.UserId;
+                await members.Where(t => t.UserId != ownerId).ExecuteUpdateAsync(
+                    setters => setters.SetProperty(t => t.GroupId, (TransactionGroupId?)null),
+                    cancellationToken);
+            }
+        }
+
+        group.Name = request.Name.Trim();
+        group.ApplySharing(request);
+        await db.SaveChangesAsync(cancellationToken);
+        await dbTransaction.CommitAsync(cancellationToken);
 
         return await SummaryAsync(groupId, cancellationToken);
     }
@@ -88,25 +130,26 @@ public sealed class TransactionGroupService(
     public async Task<Result> AddAsync(AddToTransactionGroupRequest request, CancellationToken cancellationToken)
     {
         var groupId = new TransactionGroupId(request.Id);
-        if (!await db.TransactionGroups.AnyAsync(g => g.Id == groupId, cancellationToken))
+        if (await db.TransactionGroups.FirstOrDefaultAsync(g => g.Id == groupId, cancellationToken) is not { } group)
         {
             return GroupNotFound;
         }
 
         var ids = Typed(request.TransactionIds);
-        if (await CheckMembersAsync(ids, groupId, cancellationToken) is { } refused)
+        if (await CheckMembersAsync(ids, groupId, group.UserId, SharingState.Of(group), cancellationToken) is { } refused)
         {
             return refused;
         }
 
         await SetGroupAsync(ids, groupId, cancellationToken);
+        await RecordAsync(group, (ids.Count, "transaction added", "transactions added"), cancellationToken);
         return Result.Success();
     }
 
     public async Task<Result> RemoveAsync(Guid id, Guid transactionId, CancellationToken cancellationToken)
     {
         var groupId = new TransactionGroupId(id);
-        if (!await db.TransactionGroups.AnyAsync(g => g.Id == groupId, cancellationToken))
+        if (await db.TransactionGroups.FirstOrDefaultAsync(g => g.Id == groupId, cancellationToken) is not { } group)
         {
             return GroupNotFound;
         }
@@ -115,8 +158,13 @@ public sealed class TransactionGroupService(
         var removed = await db.Transactions
             .Where(t => t.Id == memberId && t.GroupId == groupId)
             .ExecuteUpdateAsync(setters => setters.SetProperty(t => t.GroupId, (TransactionGroupId?)null), cancellationToken);
+        if (removed == 0)
+        {
+            return TransactionNotFound;
+        }
 
-        return removed == 0 ? TransactionNotFound : Result.Success();
+        await RecordAsync(group, (removed, "transaction removed", "transactions removed"), cancellationToken);
+        return Result.Success();
     }
 
     public async Task<Result<Guid>> UngroupAsync(Guid id, CancellationToken cancellationToken)
@@ -127,9 +175,14 @@ public sealed class TransactionGroupService(
             return GroupNotFound;
         }
 
+        if (group.UserId != currentUser.Id)
+        {
+            return OwnerOnly;
+        }
+
         await using var dbTransaction = await db.Database.BeginTransactionAsync(cancellationToken);
 
-        var members = OwnMembers(groupId);
+        var members = Members(groupId);
         var memberIds = await members.Select(t => t.Id.Value).ToListAsync(cancellationToken);
         var entry = deletions.Record(
             TrashKind.TransactionGroup,
@@ -166,43 +219,60 @@ public sealed class TransactionGroupService(
     private static List<TransactionId> Typed(IReadOnlyList<Guid> ids) =>
         [.. ids.Distinct().Select(id => new TransactionId(id))];
 
-    private IQueryable<Transaction> OwnMembers(TransactionGroupId groupId)
-    {
-        var ownerId = currentUser.Id;
-        return db.Transactions
+    private IQueryable<Transaction> Members(TransactionGroupId groupId) =>
+        db.Transactions
             .IgnoreQueryFilters(QueryFilters.OwnerOnly)
-            .Where(t => t.GroupId == groupId && t.UserId == ownerId);
-    }
+            .Where(t => t.GroupId == groupId);
 
     private async Task<DomainError?> CheckMembersAsync(
         List<TransactionId> ids,
         TransactionGroupId? target,
+        Guid ownerId,
+        SharingState sharingState,
         CancellationToken cancellationToken)
     {
         var rows = await db.Transactions
             .Where(t => ids.Contains(t.Id))
-            .Select(t => new { t.UserId, t.GroupId })
+            .Select(t => new { t.UserId, t.AccountId, t.GroupId })
             .ToListAsync(cancellationToken);
         if (rows.Count != ids.Count)
         {
             return TransactionNotFound;
         }
 
-        if (rows.Any(r => r.UserId != currentUser.Id))
+        if (sharingState.HouseholdId is null && rows.Any(r => r.UserId != ownerId))
         {
             return EnteredBySomeoneElse;
         }
 
-        var otherGroups = rows
-            .Select(r => r.GroupId)
-            .OfType<TransactionGroupId>()
-            .Where(groupId => groupId != target)
-            .Distinct()
-            .ToList();
-        var taken = otherGroups.Count > 0
-            && await db.TransactionGroups.AnyAsync(g => otherGroups.Contains(g.Id), cancellationToken);
+        var accounts = rows.Select(r => r.AccountId).Distinct().ToList();
+        if (await sharing.CheckReferencesAsync(sharingState, new SharedReferences(accounts, [], []), cancellationToken) is { } notShared)
+        {
+            return notShared;
+        }
 
-        return taken ? MemberTaken : null;
+        var inOthers = rows
+            .Where(r => r.GroupId is { } groupId && groupId != target)
+            .Select(r => (Group: r.GroupId!.Value, r.UserId))
+            .ToList();
+        if (inOthers.Count == 0)
+        {
+            return null;
+        }
+
+        var otherIds = inOthers.Select(r => r.Group).Distinct().ToList();
+        var visible = await db.TransactionGroups
+            .Where(g => otherIds.Contains(g.Id))
+            .Select(g => g.Id)
+            .ToListAsync(cancellationToken);
+        var owners = await db.TransactionGroups
+            .IgnoreQueryFilters(QueryFilters.OwnerOnly)
+            .Where(g => otherIds.Contains(g.Id))
+            .ToDictionaryAsync(g => g.Id, g => g.UserId, cancellationToken);
+
+        return inOthers.Any(r => visible.Contains(r.Group) || owners.GetValueOrDefault(r.Group) == r.UserId)
+            ? MemberTaken
+            : null;
     }
 
     private Task<int> SetGroupAsync(List<TransactionId> ids, TransactionGroupId groupId, CancellationToken cancellationToken)
@@ -211,6 +281,26 @@ public sealed class TransactionGroupService(
         return db.Transactions
             .Where(t => ids.Contains(t.Id))
             .ExecuteUpdateAsync(setters => setters.SetProperty(t => t.GroupId, grouped), cancellationToken);
+    }
+
+    private void Summarise(TransactionGroup group, AuditAction action, (int Count, string One, string Many) rows) =>
+        db.Audit.Summarise(
+            action,
+            AuditEntityKind.TransactionGroup,
+            TrashLabel.Counted(group.Name, rows),
+            rows.Count,
+            group.Id.Value,
+            household: group.HouseholdId);
+
+    private async Task RecordAsync(TransactionGroup group, (int Count, string One, string Many) rows, CancellationToken cancellationToken)
+    {
+        if (group.HouseholdId is null)
+        {
+            return;
+        }
+
+        Summarise(group, AuditAction.Updated, rows);
+        await db.SaveChangesAsync(cancellationToken);
     }
 
     private async Task<TransactionGroupResponse> SummaryAsync(TransactionGroupId groupId, CancellationToken cancellationToken) =>
@@ -225,6 +315,8 @@ public sealed class TransactionGroupService(
             {
                 g.Id,
                 g.Name,
+                g.Scope,
+                g.HouseholdId,
                 Count = db.Transactions.Count(t => t.GroupId == g.Id),
                 First = db.Transactions.Where(t => t.GroupId == g.Id).Min(t => (DateOnly?)t.Date),
                 Last = db.Transactions.Where(t => t.GroupId == g.Id).Max(t => (DateOnly?)t.Date),
@@ -232,7 +324,14 @@ public sealed class TransactionGroupService(
             .ToListAsync(cancellationToken);
 
         return rows
-            .Select(g => new TransactionGroupResponse(g.Id.Value, g.Name, g.Count, g.First ?? default, g.Last ?? default))
+            .Select(g => new TransactionGroupResponse(
+                g.Id.Value,
+                g.Name,
+                g.Count,
+                g.First ?? default,
+                g.Last ?? default,
+                g.Scope,
+                g.HouseholdId?.Value))
             .ToList();
     }
 }

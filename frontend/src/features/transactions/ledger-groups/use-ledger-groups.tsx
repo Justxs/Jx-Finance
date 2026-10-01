@@ -120,7 +120,7 @@ export function useLedgerGroups({ viewKey, items, filter, onGrouped }: Readonly<
       {
         icon: Pencil,
         label: t("transactions.groups.rename"),
-        onSelect: () => groupDialog.open({ kind: "rename", groupId: group.id, name: group.name }),
+        onSelect: () => groupDialog.open({ kind: "rename", group }),
       },
       {
         icon: Ungroup,

@@ -126,6 +126,8 @@ export const GroupingTwoSelectedRows: Story = {
       expect(grouped).toHaveBeenCalledWith({
         name: "Kelionė į Klaipėdą",
         transactionIds: [expect.any(String), expect.any(String)],
+        scope: "personal",
+        householdId: null,
       }),
     );
     await waitFor(() => expect(canvas.queryByText("2 selected")).not.toBeInTheDocument());

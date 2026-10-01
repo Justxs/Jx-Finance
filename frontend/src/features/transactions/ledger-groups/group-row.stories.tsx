@@ -10,9 +10,11 @@ import { useTransactionColumns } from "@/features/transactions/transactions-tabl
 import {
   accounts,
   categories,
+  familyHousehold,
   ledgerItemsOf,
   partlyMatchingTripGroup,
   serverErrorProblem,
+  sharedTripGroup,
   tags,
   transactions,
   tripGroup,
@@ -100,6 +102,13 @@ export const Expanded: Story = {
     );
     await userEvent.click(canvas.getByRole("button", { name: "Actions: Hotel Bergs, Ryga" }));
     await expect(await screen.findByRole("menuitem", { name: "Remove from group" })).toBeVisible();
+  },
+};
+
+export const SharedWithHousehold: Story = {
+  args: { items: ledgerItemsOf(transactions.slice(0, 8), [sharedTripGroup]) },
+  play: async ({ canvas }) => {
+    await expect(await canvas.findByText(`Shared · ${familyHousehold.name}`)).toBeVisible();
   },
 };
 

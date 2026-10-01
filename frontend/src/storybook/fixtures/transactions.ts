@@ -19,6 +19,7 @@ import { spreadSlices } from "@/lib/spread-slices";
 import { accounts } from "./accounts";
 import { FIXTURE_MONTH_END, FIXTURE_MONTH_START, ids, uid } from "./base";
 import { categories } from "./categories";
+import { familyHousehold } from "./households";
 import { tags } from "./tags";
 
 const { broker, cash, checking, shared } = ids.accounts;
@@ -406,6 +407,14 @@ export const tripGroup: TransactionGroupSummary = {
   memberCount: 3,
   matchingCount: 3,
   netReportingAmount: "-300.40",
+  scope: "personal",
+  householdId: null,
+};
+
+export const sharedTripGroup: TransactionGroupSummary = {
+  ...tripGroup,
+  scope: "shared",
+  householdId: familyHousehold.id,
 };
 
 export const partlyMatchingTripGroup: TransactionGroupSummary = {
@@ -428,6 +437,8 @@ export const transactionGroups: TransactionGroupResponse[] = [
     memberCount: tripGroup.memberCount,
     firstDate: tripGroup.firstDate,
     lastDate: tripGroup.lastDate,
+    scope: "personal",
+    householdId: null,
   },
   {
     id: kitchenGroupId,
@@ -435,6 +446,8 @@ export const transactionGroups: TransactionGroupResponse[] = [
     memberCount: 6,
     firstDate: "2026-07-02",
     lastDate: "2026-08-27",
+    scope: "shared",
+    householdId: familyHousehold.id,
   },
 ];
 

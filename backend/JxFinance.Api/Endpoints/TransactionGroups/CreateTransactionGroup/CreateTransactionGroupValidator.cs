@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common.Sharing;
 using JxFinance.Endpoints.TransactionGroups.Shared;
 using JxFinance.Endpoints.Transactions.Shared;
 
@@ -9,6 +10,7 @@ public sealed class CreateTransactionGroupValidator : Validator<CreateTransactio
     public CreateTransactionGroupValidator()
     {
         RuleFor(r => r.Name).IsGroupName();
+        RuleFor(r => r.HouseholdId).RequiresHouseholdWhenShared("group");
         RuleFor(r => r.TransactionIds).IsBulkSelection("grouped");
     }
 }

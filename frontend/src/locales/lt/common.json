@@ -2399,7 +2399,8 @@
       "goal": "Tikslas",
       "recurringBill": "Pasikartojantis įrašas",
       "asset": "Turtas",
-      "debt": "Skola"
+      "debt": "Skola",
+      "transactionGroup": "Operacijų grupė"
     },
     "sentences": {
       "created": "{{actor}} pridėjo: {{description}}",

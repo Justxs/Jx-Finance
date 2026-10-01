@@ -102,6 +102,7 @@ internal sealed class AuditCollector(AppDbContext db, Guid actorId, string? viaT
             Route.Shareable,
             (_, d) => d.Name,
             nameof(Debt.Name), nameof(Debt.Type), nameof(Debt.OutstandingAmount), nameof(Debt.InterestRate), nameof(Debt.TracksPayments)),
+        Audited.Of<TransactionGroup>(AuditEntityKind.TransactionGroup, Route.Shareable, (_, g) => g.Name, nameof(TransactionGroup.Name)),
         Audited.Of<Household>(AuditEntityKind.Household, Route.Household, (_, h) => h.Name, nameof(Household.Name)),
         Audited.Of<HouseholdMembership>(
             AuditEntityKind.Member,
@@ -491,6 +492,7 @@ internal sealed class AuditCollector(AppDbContext db, Guid actorId, string? viaT
     [
         .. drafts.Select(d => d.Household)
             .Concat(summary.Accounts.Select(HouseholdOf).OfType<HouseholdId>())
+            .Concat(summary.Household is { } household ? [household] : [])
             .Distinct()
             .Select(household => NewEvent(
                 household,

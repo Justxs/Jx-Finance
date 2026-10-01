@@ -11,7 +11,7 @@ public sealed class UngroupTransactionGroupEndpoint(ITransactionGroupService gro
     {
         Delete(ApiRoutes.TransactionGroups + "/{id}");
         Group<TransactionGroupsGroup>();
-        Description(d => d.ProducesProblemDetails(404));
+        Description(d => d.ProducesProblemDetails(403).ProducesProblemDetails(404));
     }
 
     protected override Task<Result<Guid>> DeleteAsync(Guid id, CancellationToken ct) =>

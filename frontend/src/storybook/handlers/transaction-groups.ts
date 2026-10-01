@@ -35,6 +35,8 @@ export const transactionGroupHandlers = [
       memberCount: members.length,
       firstDate: FIXTURE_TODAY,
       lastDate: FIXTURE_TODAY,
+      scope: body.scope === "shared" ? ("shared" as const) : ("personal" as const),
+      householdId: text(body.householdId) ?? null,
     };
   }),
   getRenameTransactionGroupMockHandler(async ({ params, request }) => {

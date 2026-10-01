@@ -55,7 +55,7 @@ export const getCreateTransactionGroupUrl = () => {
 };
 
 /**
- * Creates a personal group, such as "Trip to Riga", and puts the listed transactions in it, so that GET /api/transactions/ledger folds them into one item. Grouping changes only how the ledger reads: every member keeps its own date, category and amount in reports, budgets, balances, the month close and the exports, and the member's last-updated time is left as it was. Every transaction must be one you entered, and none may already be in another group; remove it from that group first. Names need not be unique. The ledger offers grouping for two or more selected rows, while a row's own actions start a group with that row alone. Only a browser session can group; a personal API token cannot.
+ * Creates a group, such as "Trip to Riga", and puts the listed transactions in it, so that GET /api/transactions/ledger folds them into one item. Grouping changes only how the ledger reads: every member keeps its own date, category and amount in reports, budgets, balances, the month close and the exports, and the member's last-updated time is left as it was. A personal group holds only transactions you entered; a group shared with a household holds transactions on accounts shared with that household, whoever entered them. None may already be in another group; remove it from that group first. Names need not be unique. The ledger offers grouping for two or more selected rows, while a row's own actions start a group with that row alone. Only a browser session can group; a personal API token cannot.
  * @summary Group transactions
  */
 export const createTransactionGroup = async (
@@ -161,7 +161,7 @@ export const getTransactionGroupsUrl = () => {
 };
 
 /**
- * Returns your own transaction groups that still hold at least one live transaction you can see, the one with the newest member first, each with its member count and the dates of its first and last member. Groups are personal: a housemate never sees them.
+ * Returns the transaction groups you can see, your own and those shared with your households, that still hold at least one live transaction you can see, the one with the newest member first, each with its member count and the dates of its first and last member. A personal group is never seen by a housemate.
  * @summary List your transaction groups
  */
 export const transactionGroups = async (
@@ -276,8 +276,8 @@ export const getRenameTransactionGroupUrl = (id: string) => {
 };
 
 /**
- * Changes the name of one of your groups. Its members are untouched.
- * @summary Rename a transaction group
+ * Changes the name of a group you can see, and its owner can share it with a household or make it personal again. Any member of the household can rename a shared group. Sharing needs every member on an account shared with that household; making a shared group personal takes out the transactions other people entered.
+ * @summary Rename or share a transaction group
  */
 export const renameTransactionGroup = async (
   id: string,
@@ -360,7 +360,7 @@ export type RenameTransactionGroupMutationVariables = {
 };
 
 /**
- * @summary Rename a transaction group
+ * @summary Rename or share a transaction group
  */
 export const useRenameTransactionGroup = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
   options?: {
@@ -386,7 +386,7 @@ export const getUngroupTransactionGroupUrl = (id: string) => {
 };
 
 /**
- * Removes one of your groups and keeps every member as an ordinary transaction. The group goes to the trash with the members it held, and POST /api/trash/restore with kind transactionGroup puts back the name and the members that are still live and in no other group.
+ * Removes a group you own and keeps every member as an ordinary transaction. The group goes to the trash with the members it held, and POST /api/trash/restore with kind transactionGroup puts back the name and the members that are still live and in no other group.
  * @summary Ungroup
  */
 export const ungroupTransactionGroup = async (
@@ -471,7 +471,7 @@ export const getAddToTransactionGroupUrl = (id: string) => {
 };
 
 /**
- * Puts the listed transactions in one of your groups; split transactions are accepted. Every transaction must be one you entered and in no other group; a transaction already in this group is left as it is. Nothing is written when one of them is refused.
+ * Puts the listed transactions in a group you can see; split transactions are accepted. A personal group takes only transactions you entered, a shared group only transactions on accounts shared with its household, and none may be in another group; a transaction already in this group is left as it is. Nothing is written when one of them is refused.
  * @summary Add transactions to a group
  */
 export const addToTransactionGroup = async (
@@ -596,7 +596,7 @@ export const getTransactionGroupMembersUrl = (
 };
 
 /**
- * Returns the members of one of your groups that match the same filters as the ledger, newest first, so an expanded group row shows exactly the members that made it appear. The list is not paged: at most 200 members are returned, and truncated says whether more matched.
+ * Returns the members of a group you can see that match the same filters as the ledger, newest first, so an expanded group row shows exactly the members that made it appear. The list is not paged: at most 200 members are returned, and truncated says whether more matched.
  * @summary List the members of a group
  */
 export const transactionGroupMembers = async (
@@ -731,7 +731,7 @@ export const getRemoveFromTransactionGroupUrl = (id: string, transactionId: stri
 };
 
 /**
- * Takes one transaction out of one of your groups, so the ledger shows it as an ordinary row again. The group stays, even with a single member left.
+ * Takes one transaction out of a group you can see, a shared one included, so the ledger shows it as an ordinary row again. The group stays, even with a single member left.
  * @summary Remove a transaction from a group
  */
 export const removeFromTransactionGroup = async (

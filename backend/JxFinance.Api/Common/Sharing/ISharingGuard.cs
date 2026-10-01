@@ -10,4 +10,6 @@ public interface ISharingGuard
         where T : OwnableEntity, IShareable;
 
     Task<DomainError?> CheckReferencesAsync(IShareableInput input, SharedReferences references, CancellationToken cancellationToken);
+
+    Task<DomainError?> CheckReferencesAsync(SharingState state, SharedReferences references, CancellationToken cancellationToken);
 }

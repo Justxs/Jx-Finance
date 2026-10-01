@@ -1,4 +1,5 @@
 using JxFinance.Common.Json;
+using JxFinance.Domain.Common;
 using JxFinance.Endpoints.Transactions.Shared;
 
 namespace JxFinance.Endpoints.Transactions.GetLedger;
@@ -18,4 +19,6 @@ public sealed record TransactionGroupSummary(
     DateOnly LastDate,
     int MemberCount,
     int MatchingCount,
-    [property: Money] decimal NetReportingAmount);
+    [property: Money] decimal NetReportingAmount,
+    Scope Scope,
+    Guid? HouseholdId);

@@ -26,4 +26,5 @@ export const AuditEntityKind = {
   recurringBill: "recurringBill",
   asset: "asset",
   debt: "debt",
+  transactionGroup: "transactionGroup",
 } as const;

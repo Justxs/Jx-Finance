@@ -8,23 +8,34 @@ import {
   useAddToTransactionGroup,
   useCreateTransactionGroup,
   useRemoveFromTransactionGroup,
+  useHouseholdsSuspense,
   useRenameTransactionGroup,
 } from "@/api/generated";
-import type { TransactionGroupResponse, TransactionResponse } from "@/api/generated/model";
+import type {
+  TransactionGroupResponse,
+  TransactionGroupSummary,
+  TransactionResponse,
+} from "@/api/generated/model";
 import { createTransactionGroupBodyNameMax } from "@/api/schemas/transaction-groups/transaction-groups.zod";
 import { useServerForm } from "@/components/form";
 import { FormError } from "@/components/form-error/form-error";
 import { EditModal } from "@/components/modal";
 import type { RowAction } from "@/components/row-actions/row-actions";
+import { SharingFields } from "@/components/sharing-fields/sharing-fields";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { isOptimistic } from "@/features/transactions/transaction-amount/transaction-row";
 import { useIsoDate } from "@/hooks/use-formatters";
 import { metaLine } from "@/lib/utils";
+import { refineSharing, sharingPayload, sharingShape } from "@/lib/validation";
+import { useSharingDefaults } from "@/stores/active-household-store";
 
 export type GroupTarget =
   | { kind: "selection"; transactionIds: string[] }
   | { kind: "row"; transactionId: string }
-  | { kind: "rename"; groupId: string; name: string };
+  | {
+      kind: "rename";
+      group: Pick<TransactionGroupSummary, "id" | "name" | "scope" | "householdId">;
+    };
 
 interface FormProps {
   target: GroupTarget;
@@ -43,6 +54,10 @@ export function GroupForm({ target, onClose, onGrouped }: Readonly<FormProps>) {
   const { t } = useTranslation();
   const formatDate = useIsoDate();
   const fromRow = target.kind === "row";
+  const sharing = useSharingDefaults(
+    useHouseholdsSuspense().data,
+    target.kind === "rename" ? target.group : undefined,
+  );
   const groups = useQuery({ ...getTransactionGroupsSuspenseQueryOptions(), enabled: fromRow }).data;
   const existing: TransactionGroupResponse[] = fromRow ? (groups ?? []) : [];
   const grouped = { meta: { silent: true, success: t("transactions.groups.grouped") } } as const;
@@ -62,32 +77,44 @@ export function GroupForm({ target, onClose, onGrouped }: Readonly<FormProps>) {
   const form = useServerForm({
     defaultValues: {
       choice: "new",
-      name: target.kind === "rename" ? target.name : "",
+      name: target.kind === "rename" ? target.group.name : "",
       groupId: "",
+      ...sharing,
     },
-    schema: z
-      .object({ choice: z.enum(["new", "existing"]), name: z.string(), groupId: z.string() })
-      .refine((value) => value.choice === "existing" || value.name.trim().length > 0, {
-        path: ["name"],
-        message: t("validation.required"),
-      })
-      .refine((value) => value.name.trim().length <= max, {
-        path: ["name"],
-        message: t("validation.maxLength", { max }),
-      })
-      .refine((value) => value.choice === "new" || value.groupId !== "", {
-        path: ["groupId"],
-        message: t("validation.required"),
-      }),
+    schema: refineSharing(
+      z
+        .object({
+          choice: z.enum(["new", "existing"]),
+          name: z.string(),
+          groupId: z.string(),
+          ...sharingShape(),
+        })
+        .refine((value) => value.choice === "existing" || value.name.trim().length > 0, {
+          path: ["name"],
+          message: t("validation.required"),
+        })
+        .refine((value) => value.name.trim().length <= max, {
+          path: ["name"],
+          message: t("validation.maxLength", { max }),
+        })
+        .refine((value) => value.choice === "new" || value.groupId !== "", {
+          path: ["groupId"],
+          message: t("validation.required"),
+        }),
+      t,
+    ),
     submit: (value) => {
       const name = value.name.trim();
       if (target.kind === "rename") {
-        return rename.mutateAsync({ id: target.groupId, data: { name } });
+        return rename.mutateAsync({
+          id: target.group.id,
+          data: { name, ...sharingPayload(value) },
+        });
       }
       const transactionIds = transactionIdsOf(target);
       return value.choice === "existing"
         ? add.mutateAsync({ id: value.groupId, data: { transactionIds } })
-        : create.mutateAsync({ data: { name, transactionIds } });
+        : create.mutateAsync({ data: { name, transactionIds, ...sharingPayload(value) } });
     },
   });
 
@@ -137,16 +164,23 @@ export function GroupForm({ target, onClose, onGrouped }: Readonly<FormProps>) {
                 )}
               </form.Field>
             ) : (
-              <form.Field name="name">
-                {(field) => (
-                  <field.TextField
-                    id="group-name"
-                    label={t("transactions.groups.name")}
-                    placeholder={t("transactions.groups.namePlaceholder")}
-                    autoFocus
-                  />
-                )}
-              </form.Field>
+              <>
+                <form.Field name="name">
+                  {(field) => (
+                    <field.TextField
+                      id="group-name"
+                      label={t("transactions.groups.name")}
+                      placeholder={t("transactions.groups.namePlaceholder")}
+                      autoFocus
+                    />
+                  )}
+                </form.Field>
+                <SharingFields
+                  form={form}
+                  fields={{ scope: "scope", householdId: "householdId" }}
+                  idPrefix="group"
+                />
+              </>
             )
           }
         </form.Subscribe>
@@ -172,7 +206,7 @@ interface DialogTarget {
 
 function dialogIdOf(target: GroupTarget) {
   if (target.kind === "rename") {
-    return target.groupId;
+    return target.group.id;
   }
   return target.kind === "row" ? target.transactionId : target.transactionIds.join(",");
 }
@@ -206,7 +240,7 @@ export function useGroupRowActions() {
   const groupDialog = useGroupDialog();
   const remove = useRemoveFromTransactionGroup();
 
-  function actionFor(transaction: TransactionResponse): RowAction | undefined {
+  function actionFor(transaction: TransactionResponse): RowAction {
     const groupId = transaction.groupId;
     if (groupId) {
       return {
@@ -215,9 +249,6 @@ export function useGroupRowActions() {
         pending: remove.isPending && remove.variables.transactionId === transaction.id,
         onSelect: () => remove.mutate({ id: groupId, transactionId: transaction.id }),
       };
-    }
-    if (!transaction.enteredByMe) {
-      return undefined;
     }
     return {
       icon: Group,

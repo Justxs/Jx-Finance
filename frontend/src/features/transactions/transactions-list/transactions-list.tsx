@@ -2,6 +2,7 @@ import { useDeferredValue } from "react";
 import { useTranslation } from "react-i18next";
 import { RowActions } from "@/components/row-actions/row-actions";
 import { RowTransition } from "@/components/row-transition/row-transition";
+import { SharedScopeTag } from "@/components/shared-scope-tag/shared-scope-tag";
 import { TagChips } from "@/components/tag-chips/tag-chips";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { Rows } from "@/components/ui/rows/rows";
@@ -97,6 +98,7 @@ export function TransactionsList({
                 <p className="min-w-0 flex-1 truncate text-xs text-muted-foreground tabular-nums">
                   {metaLine(groupDates(group), groupCount(group))}
                 </p>
+                <SharedScopeTag scope={group.scope} householdId={group.householdId} />
                 <RowActions
                   label={group.name}
                   actions={groups.actions(group)}

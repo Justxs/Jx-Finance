@@ -19,4 +19,5 @@ public enum AuditEntityKind
     RecurringBill,
     Asset,
     Debt,
+    TransactionGroup,
 }

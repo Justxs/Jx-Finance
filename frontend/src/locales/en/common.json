@@ -2309,7 +2309,8 @@
       "goal": "Goal",
       "recurringBill": "Recurring entry",
       "asset": "Asset",
-      "debt": "Debt"
+      "debt": "Debt",
+      "transactionGroup": "Transaction group"
     },
     "sentences": {
       "created": "{{actor}} added {{description}}",

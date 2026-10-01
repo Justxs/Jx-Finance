@@ -502,12 +502,16 @@ public static class TrashRestorers
     {
         var db = r.Db;
         var ownerId = group.UserId;
+        var householdId = group.HouseholdId;
         TransactionGroupId? restoredId = group.Id;
         var remembered = r.Entry.Remembered<TransactionId>(DeletionChangeKind.GroupMember);
         await db.Transactions
             .IgnoreQueryFilters(QueryFilters.OwnerOnly)
             .Where(t => remembered.Contains(t.Id)
-                && t.UserId == ownerId
+                && (householdId == null
+                    ? t.UserId == ownerId
+                    : db.Accounts.IgnoreQueryFilters(QueryFilters.OwnerOnly)
+                        .Any(a => a.Id == t.AccountId && a.Scope == Scope.Shared && a.HouseholdId == householdId))
                 && (t.GroupId == null || !db.TransactionGroups.IgnoreQueryFilters(QueryFilters.OwnerOnly).Any(g => g.Id == t.GroupId)))
             .ExecuteUpdateAsync(setters => setters.SetProperty(t => t.GroupId, restoredId), r.CancellationToken);
 

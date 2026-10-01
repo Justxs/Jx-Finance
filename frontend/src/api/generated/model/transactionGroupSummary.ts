@@ -6,6 +6,7 @@
  * OpenAPI spec version: v1
  */
 import type { DateOnly } from "./dateOnly";
+import type { Scope } from "./scope";
 
 export interface TransactionGroupSummary {
   id: string;
@@ -15,4 +16,7 @@ export interface TransactionGroupSummary {
   memberCount: number;
   matchingCount: number;
   netReportingAmount: string;
+  scope: Scope;
+  /** @nullable */
+  householdId: string | null;
 }

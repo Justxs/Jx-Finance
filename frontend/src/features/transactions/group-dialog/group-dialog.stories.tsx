@@ -5,9 +5,17 @@ import {
   getTransactionGroupsMockHandler,
 } from "@/api/generated/transaction-groups/transaction-groups.msw";
 import { withWidth } from "@/storybook/decorators";
-import { ids, memberTakenProblem, transactionGroups, transactions } from "@/storybook/fixtures";
+import {
+  familyHousehold,
+  ids,
+  memberTakenProblem,
+  referenceNotSharedProblem,
+  transactionGroups,
+  transactions,
+  tripGroup,
+} from "@/storybook/fixtures";
 import { failWith, pending, withHandlers } from "@/storybook/handlers";
-import { first } from "@/storybook/interactions";
+import { chooseOption, first } from "@/storybook/interactions";
 import { GroupForm } from "./group-dialog";
 
 const created = fn();
@@ -46,6 +54,8 @@ export const FromTheSelection: Story = {
       expect(created).toHaveBeenCalledWith({
         name: "Kelionė į Rygą",
         transactionIds: transactions.slice(0, 3).map((item) => item.id),
+        scope: "personal",
+        householdId: null,
       }),
     );
     await waitFor(() => expect(args.onGrouped).toHaveBeenCalled());
@@ -72,7 +82,44 @@ export const FromARowWithNone: Story = {
 };
 
 export const Renaming: Story = {
-  args: { target: { kind: "rename", groupId: ids.transactions.maxima, name: "Kelionė į Rygą" } },
+  args: { target: { kind: "rename", group: tripGroup } },
+};
+
+export const SharingWithTheHousehold: Story = {
+  parameters: withHandlers(
+    getCreateTransactionGroupMockHandler(async ({ request }) => {
+      created(await request.json());
+      return first(transactionGroups);
+    }),
+  ),
+  play: async ({ canvas }) => {
+    await fireEvent.change(canvas.getByLabelText("Group name"), {
+      target: { value: "Atostogos" },
+    });
+    await chooseOption(await canvas.findByRole("combobox", { name: "Visibility" }), "Shared");
+    await chooseOption(
+      await canvas.findByRole("combobox", { name: "Household" }),
+      familyHousehold.name,
+    );
+    await userEvent.click(canvas.getByRole("button", { name: "Group" }));
+    await waitFor(() =>
+      expect(created).toHaveBeenCalledWith(
+        expect.objectContaining({ scope: "shared", householdId: familyHousehold.id }),
+      ),
+    );
+  },
+};
+
+export const RowOnAPersonalAccount: Story = {
+  parameters: withHandlers(
+    getCreateTransactionGroupMockHandler(failWith(referenceNotSharedProblem)),
+  ),
+  play: async ({ canvas, args }) => {
+    await fireEvent.change(canvas.getByLabelText("Group name"), { target: { value: "Atostogos" } });
+    await userEvent.click(canvas.getByRole("button", { name: "Group" }));
+    await expect(await canvas.findByRole("alert")).toBeVisible();
+    await expect(args.onClose).not.toHaveBeenCalled();
+  },
 };
 
 export const Pending: Story = {

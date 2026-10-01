@@ -24,7 +24,7 @@ Startup applies pending EF migrations directly. Only in the Development environm
 | [Authentication](authentication.md) | Authentication |
 | [Containers and the recovery command](deployment.md) | Containers; Recovery command |
 | [Background work and notifications](background-jobs.md) | Background work; Notification fan-out and Discord; Recurring entry schedule |
-| [Sharing and households](sharing.md) | Shared category deletion; Shareable records; Removing a household member |
+| [Sharing and households](sharing.md) | Shared category deletion; Shareable records; Removing a household member; Shared changes written around the change tracker |
 | [Transactions, imports and receipts](transactions.md) | Transactions and import workflow; Transaction aggregates and receipts; Transaction summary and bulk recategorization |
 | [Multi-currency](multi-currency.md) | Multi-currency |
 | [Installation settings](installation-settings.md) | Installation settings |

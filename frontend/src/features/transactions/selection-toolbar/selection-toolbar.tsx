@@ -68,7 +68,7 @@ export function SelectionToolbar({
     UNCATEGORIZED_OPTION,
   );
   const value = !mixed && options.some((option) => option.value === choice) ? choice : "";
-  const groupable = selected.length >= 2 && selected.every((item) => item.enteredByMe);
+  const groupable = selected.length >= 2;
 
   return (
     <div

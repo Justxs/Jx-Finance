@@ -18,4 +18,5 @@ public enum DeletionChangeKind
     AssetShare,
     DebtShare,
     GroupMember,
+    TransactionGroupShare,
 }

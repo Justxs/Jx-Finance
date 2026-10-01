@@ -8,7 +8,7 @@ public sealed class GetTransactionGroupMembersSummary : Summary<GetTransactionGr
     public GetTransactionGroupMembersSummary()
     {
         Summary = "List the members of a group";
-        Description = "Returns the members of one of your groups that match the same filters as the ledger, newest first, "
+        Description = "Returns the members of a group you can see that match the same filters as the ledger, newest first, "
             + "so an expanded group row shows exactly the members that made it appear. The list is not paged: at most "
             + $"{BulkRules.MaxTransactions} members are returned, and truncated says whether more matched.";
         Params["id"] = "The group id.";
