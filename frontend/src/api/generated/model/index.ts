@@ -292,6 +292,7 @@ export * from "./sharedExpensesParams";
 export * from "./shareRequest";
 export * from "./shareResponse";
 export * from "./skippedCorporateActionResponse";
+export * from "./skipRecurringBillRequest";
 export * from "./smtpEncryption";
 export * from "./smtpSettingsResponse";
 export * from "./smtpTestResponse";

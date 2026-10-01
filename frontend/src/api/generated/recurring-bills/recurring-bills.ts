@@ -32,6 +32,7 @@ import type {
   DismissSubscriptionCandidateRequest,
   ProblemDetails,
   RecurringBillResponse,
+  SkipRecurringBillRequest,
   SubscriptionCandidateResponse,
   UpdateRecurringBillRequest,
 } from "../model";
@@ -1062,4 +1063,111 @@ export const useConfirmRecurringBill = <TError = ErrorType<ProblemDetails>, TCon
   TContext
 > => {
   return useMutation(getConfirmRecurringBillMutationOptions(options), queryClient);
+};
+export const getSkipRecurringBillUrl = (id: string) => {
+  return `/api/recurring-bills/${id}/skip`;
+};
+
+/**
+ * Rolls the next due date forward by the cadence without writing a transaction or a transfer, for an occurrence a bank row already paid or one deliberately skipped, and marks the entry's unread reminders read. expectedDueDate identifies the occurrence, as it does for a confirmation. When the entry pays a debt that tracks payments and transactionId names a visible expense that pays no debt yet, that row is linked to the debt as a regular payment, as a confirmation links the row it writes.
+ * @summary Mark a due occurrence as done
+ */
+export const skipRecurringBill = async (
+  id: string,
+  skipRecurringBillRequest: SkipRecurringBillRequest,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<RecurringBillResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return customFetch<RecurringBillResponse>(getSkipRecurringBillUrl(id), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(skipRecurringBillRequest),
+  });
+};
+
+export const getSkipRecurringBillMutationKey = () => ["skipRecurringBill"] as const;
+
+export const getSkipRecurringBillMutationOptions = <
+  TError = ErrorType<ProblemDetails>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof skipRecurringBill>>,
+    TError,
+    SkipRecurringBillMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof skipRecurringBill>>,
+  TError,
+  SkipRecurringBillMutationVariables,
+  TContext
+> => {
+  const mutationKey = getSkipRecurringBillMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof skipRecurringBill>>,
+    SkipRecurringBillMutationVariables
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return skipRecurringBill(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SkipRecurringBillMutationResult = NonNullable<
+  Awaited<ReturnType<typeof skipRecurringBill>>
+>;
+export type SkipRecurringBillMutationBody = SkipRecurringBillRequest;
+export type SkipRecurringBillMutationError = ErrorType<ProblemDetails>;
+export type SkipRecurringBillMutationVariables = { id: string; data: SkipRecurringBillRequest };
+
+/**
+ * @summary Mark a due occurrence as done
+ */
+export const useSkipRecurringBill = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof skipRecurringBill>>,
+      TError,
+      SkipRecurringBillMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof skipRecurringBill>>,
+  TError,
+  SkipRecurringBillMutationVariables,
+  TContext
+> => {
+  return useMutation(getSkipRecurringBillMutationOptions(options), queryClient);
 };

@@ -10,6 +10,9 @@ Admin-created users; optional 2FA; optional passkeys through ASP.NET Core Identi
 
 Newest first. Each entry is a choice between real alternatives: what was chosen, what was rejected, and why.
 
+- **2026-10-01.** Marking a recurring occurrence done (`POST /api/recurring-bills/{id}/skip`) stays off the token write allowlist. Decided while the owner was away, to be reviewed
+  - Rejected: Allowing it beside confirm
+  - Why: The allowlist is the rows a script records, and this route records none. A leaked token able to call it could move every schedule forward and silence its reminders without a trace in the ledger. Adding it later is one metadata line and one line in `TokenWritableTests`
 - **2026-10-01.** Personal API tokens gain an access level: `PersonalApiToken.Access`, an enum `TokenAccess` of `Read` (the default, and every existing token) or `ReadWrite`, carried in the `jx.access` claim. This reopens the read-only decision of 2026-09-29, which had named a column with a default as the way write access would come
   - Rejected: Fine-grained scopes per resource; a separate token type for writing
   - Why: Two levels answer every use named so far (a Shortcut or Home Assistant recording an expense). Per-resource scopes can replace the enum later without changing the gate's shape, and a second token type would duplicate the list, the lifetime rules and the revocation paths

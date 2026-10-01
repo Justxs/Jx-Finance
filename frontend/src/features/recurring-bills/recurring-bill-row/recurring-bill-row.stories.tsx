@@ -16,6 +16,7 @@ import {
   transferBill,
   variableBill,
 } from "@/storybook/fixtures";
+import { chooseMenuItem } from "@/storybook/interactions";
 import { RecurringBillRow } from "./recurring-bill-row";
 
 const longNameBill = recurringBills.find((bill) => bill.accountId === null) ?? dueSoonBill;
@@ -134,6 +135,34 @@ export const InactiveCannotRecord: Story = {
     await expect(
       canvas.getByRole("button", { name: /^(record payment|registruoti mokėjimą)$/i }),
     ).toBeDisabled();
+  },
+};
+
+export const MarkDoneWhenDue: Story = {
+  args: { bill: overdueBill, onMarkDone: fn() },
+  play: async ({ args, canvas }) => {
+    await chooseMenuItem(
+      canvas.getByRole("button", { name: `Actions: ${overdueBill.name}` }),
+      "Mark as done",
+    );
+    await expect(args.onMarkDone).toHaveBeenCalledOnce();
+  },
+};
+
+export const MarkDonePending: Story = {
+  args: { bill: dueSoonBill, onMarkDone: fn(), markDonePending: true },
+  play: async ({ canvas }) => {
+    await expect(
+      canvas.getByRole("button", { name: `Actions: ${dueSoonBill.name}` }),
+    ).toHaveAttribute("aria-busy", "true");
+  },
+};
+
+export const NoMarkDoneForALaterEntry: Story = {
+  args: { bill: incomeBill, onMarkDone: fn() },
+  play: async ({ canvas }) => {
+    await expect(canvas.queryByRole("button", { name: /^Actions:/u })).toBeNull();
+    await expect(canvas.queryByRole("button", { name: /^Mark as done/u })).toBeNull();
   },
 };
 

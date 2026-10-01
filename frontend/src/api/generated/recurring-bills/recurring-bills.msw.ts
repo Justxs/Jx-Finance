@@ -219,6 +219,30 @@ export const getConfirmRecurringBillMockHandler = (
     options,
   );
 };
+
+export const getSkipRecurringBillMockHandler = (
+  overrideResponse?:
+    | RecurringBillResponse
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<RecurringBillResponse> | RecurringBillResponse),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/recurring-bills/:id/skip",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : undefined,
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
 export const getRecurringBillsMock = () => [
   getCreateRecurringBillMockHandler(),
   getRecurringBillsMockHandler(),
@@ -229,4 +253,5 @@ export const getRecurringBillsMock = () => [
   getRecurringBillMockHandler(),
   getUpdateRecurringBillMockHandler(),
   getConfirmRecurringBillMockHandler(),
+  getSkipRecurringBillMockHandler(),
 ];

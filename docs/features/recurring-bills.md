@@ -62,6 +62,21 @@ The confirm dialog names what it will create, per shape and per kind, and shows 
 
 What lands in the ledger is an ordinary row, so nothing downstream needs to know it came from a schedule, with one exception: an expense entry can name a debt that tracks its payments (`debtId`, refused on the other shapes with `recurringBill.debtShape`, for a debt the caller cannot see with `reference.notFound`, for a shared debt paid from an account not shared with its household with `household.referenceNotShared` and for a debt that does not track payments with `debt.notTracked`; while Net worth is switched off the link is kept but not checked, and confirming writes no payment), and confirming it links the posted row to that debt as a regular payment inside the same database transaction and lock, which lowers the debt's tracked balance (see [Debt amortization](debt-amortization.md#tracking-payments)). The form offers "Pays debt" on the expense shape, listing the caller's debts that track payments. The `/recurring-bills` loader warms the debts while Net worth is on, and the form clears a linked debt it cannot list only after the debts have loaded, so saving an edit made while they are still loading keeps the link. Purging the debt clears the field, and restoring an entry from the trash whose debt is gone clears it instead of refusing. Otherwise: a confirmed income counts as income in reports, on the dashboard and against no budget; a confirmed expense counts against the budget of its category; a confirmed transfer moves both balances and counts as neither.
 
+## Marking an occurrence done
+
+Since 2026-10-01 an occurrence can be marked done without recording it again: when a bank import already brought the payment in, or when the occurrence was skipped on purpose. `POST /api/recurring-bills/{id}/skip` takes `expectedDueDate` and an optional `transactionId`, and answers the entry with its new next due date. It writes no transaction and no transfer.
+
+It runs the confirmation's checks in the same order under the same advisory lock (`LockDueAsync`): an entry the caller cannot see answers 404, an inactive one `recurringBill.inactive`, and a date that is not the next due date 409 `conflict.stale`, so a double click, or a confirm and a mark racing each other, move the schedule once. It then advances the schedule and marks the entry's unread reminders read through the same `AdvanceAsync` as a confirmation. A member of the household a shared entry belongs to may mark it done, as they may confirm it.
+
+When the entry pays a debt that tracks payments and `transactionId` names the row that paid the occurrence, that row is linked to the debt as a regular payment inside the same transaction, as a confirmation links the row it writes, with the same conditions (Net worth on, and for a shared debt an account shared with its household). The row must be an expense the caller can see, not split and not a refund, and must not pay a debt already, in the trash or not; otherwise nothing is linked and the mark still succeeds.
+
+The page offers it in two places, both through `useSkipRecurringBill` on `RecurringBillsPage`, with the toast "Marked as done. The entry moved to its next date." and no confirmation dialog, since editing the next due date undoes it:
+
+- On the [calendar](#clicking-a-chip), a paid chip that is not confirmed and sits on the entry's next due date shows **Mark as done**, which sends the chip's date and its row.
+- On the list, an active entry that is overdue or due this week gains **Mark as done** in its row actions, which then fold into the actions menu; it sends the next due date and no row.
+
+The route is not on the [API token](personal-api-tokens.md#writing-with-a-token) write list. Its cache rule is the confirmation's in `invalidation.ts`.
+
 ## Schedule advance
 
 ```mermaid
@@ -106,7 +121,7 @@ flowchart TD
 
 - **Due**: on or after today and not paid.
 - **Overdue**: before today and on or after the entry's next due date, so it has not been confirmed. Every such occurrence is overdue, as in the forecast; only the one on the next due date carries `isNextDue`.
-- **Paid**: a ledger row paid it, and the chip shows that row's amount in its own currency. When the occurrence is on or after the next due date the entry itself still waits for the confirmation, and the chip adds "Not confirmed".
+- **Paid**: a ledger row paid it, and the chip shows that row's amount in its own currency. When the occurrence is on or after the next due date the entry itself still waits for the confirmation, and the chip adds "Not confirmed"; on the next due date it also offers [Mark as done](#marking-an-occurrence-done).
 - **No match**: before today and before the next due date, so it was confirmed or skipped, but no row matched. It is drawn muted rather than as missed, because bank-text matching can miss a row whose text changed.
 
 A past month shows only what an entry was expected to do after it was created: walking back stops at the creation date in the installation time zone, so an entry set up today shows nothing in last year's months.
@@ -132,6 +147,7 @@ On a phone the same month is an agenda: only the days that have occurrences, one
 - The occurrence on the next due date, due or overdue, opens the ordinary confirm dialog for that entry.
 - Any other chip that is not paid opens the entry's edit form, through the page's `useEditableList`.
 - A paid chip's name is a `TransactionsLink` to the ledger filtered to that account and that day.
+- A paid chip that is not confirmed and is on the next due date adds a **Mark as done** link, named for screen readers with the entry, which advances the entry without a second row and links its row to the entry's debt when it pays one (see [Marking an occurrence done](#marking-an-occurrence-done)).
 
 The chip finds its entry in the entries the page already loaded, by `billId`.
 
@@ -149,6 +165,7 @@ There is no iCal (`webcal://`) feed. Calendar apps cannot send an `Authorization
 - `RecurringMatchTests`: the 5 and 2 day tolerances, another account or text, the nearest occurrence, a tie between two entries going to the lower id, two rows for one occurrence, and an entry without an account.
 - `BillsCalendarTests` (integration): a monthly entry once and a weekly one every week, a variable estimate, an overdue occurrence paid by a bank row and left unconfirmed, a past occurrence with no row and a confirmed one, nothing before creation, inactive entries left out, a foreign currency without a rate, an entry without an account, transfers outside the totals, a household entry for the partner and under the active household, an account the partner cannot see, `month.invalid`, `range.invalid` 13 months away and `feature.disabled`.
 - `calendar.test.ts` for `monthWeeks`, `invalidation.test.ts` for the calendar key, and the stories of `BillsCalendar`, `BillChip` and the Upcoming bills card.
+- `SkipRecurringBillTests` (integration, not run yet): marking done advances without a row, a wrong date, a second concurrent mark and a later confirm answer `conflict.stale`, an inactive entry is refused, the reminders are read, a household member marks a shared entry done, and the matched row pays the entry's debt once. The `BillChip`, `BillsCalendar`, `RecurringBillRow` and `RecurringBillsPage` stories click Mark as done and check the request body.
 
 ## Finding a subscription
 
@@ -233,7 +250,7 @@ Detection's 15% `AmountTolerance` is unchanged and still absorbs a rise: a subsc
 
 ## Reminders and the forecast
 
-`RecurringBillReminderJob` treats all three shapes alike: it scans every 15 minutes, raises one `billDue` notification per entry and local day, and the confirmation marks the unread ones read. The payload carries the shape beside the due date, so the bell says "Payment due", "Expected" or "Transfer due" in English and the matching sentence in Lithuanian. Reminders written before shapes existed carry no shape and read as an expense.
+`RecurringBillReminderJob` treats all three shapes alike: it scans every 15 minutes, raises one `billDue` notification per entry and local day, and the confirmation, or marking the occurrence done, marks the unread ones read. The payload carries the shape beside the due date, so the bell says "Payment due", "Expected" or "Transfer due" in English and the matching sentence in Lithuanian. Reminders written before shapes existed carry no shape and read as an expense.
 
 Since 2026-09-20 the same pass can also queue an email. It does so only for the owner of the entry, only when that person switched "Email me about a due recurring entry" on in their profile, only when their address is confirmed and only while the installation has a mail server. The email row is written in the same transaction and under the same lock as the notification, with the dedupe key `bill:{id}:{local date}`, so the two are raised together or not at all and a second pass on the same day raises neither. The job never talks to SMTP itself: `EmailOutboxJob` drains the rows a minute later, so a dead mail server cannot slow the scan or delay another household's reminder. The sentence follows the shape as well — "due to be paid", "due to arrive", "due to be transferred". See [Email](email.md).
 

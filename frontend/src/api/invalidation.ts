@@ -143,7 +143,7 @@ const rules: readonly Rule[] = [
     ],
   },
   {
-    after: [api.getConfirmRecurringBillMutationKey],
+    after: [api.getConfirmRecurringBillMutationKey, api.getSkipRecurringBillMutationKey],
     refresh: [
       ...ledger,
       api.getRecurringBillsQueryKey,

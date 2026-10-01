@@ -17,7 +17,7 @@ import { BillChip } from "./bill-chip";
 const meta = {
   title: "Features/RecurringBills/BillChip",
   component: BillChip,
-  args: { occurrence: dueOccurrence, onConfirm: fn(), onEdit: fn() },
+  args: { occurrence: dueOccurrence, onConfirm: fn(), onEdit: fn(), onMarkDone: fn() },
   decorators: [withWidth("w-44")],
 } satisfies Meta<typeof BillChip>;
 
@@ -30,6 +30,7 @@ export const DueNext: Story = {
     await expect(args.onConfirm).toHaveBeenCalledOnce();
     await expect(args.onEdit).not.toHaveBeenCalled();
     await expect(canvas.getByText("Due")).toHaveClass("sr-only");
+    await expect(canvas.queryByRole("button", { name: /^Mark as done/u })).toBeNull();
   },
 };
 
@@ -74,8 +75,29 @@ export const PaidIncome: Story = {
 
 export const PaidNotConfirmed: Story = {
   args: { occurrence: unconfirmedOccurrence },
+  play: async ({ canvas, args }) => {
+    await expect(await canvas.findByText("Not confirmed")).toBeVisible();
+    await userEvent.click(
+      canvas.getByRole("button", { name: `Mark as done: ${unconfirmedOccurrence.name}` }),
+    );
+    await expect(args.onMarkDone).toHaveBeenCalledWith(unconfirmedOccurrence);
+  },
+};
+
+export const PaidNotConfirmedLaterOccurrence: Story = {
+  args: { occurrence: { ...unconfirmedOccurrence, isNextDue: false } },
   play: async ({ canvas }) => {
     await expect(await canvas.findByText("Not confirmed")).toBeVisible();
+    await expect(canvas.queryByRole("button", { name: /^Mark as done/u })).toBeNull();
+  },
+};
+
+export const MarkingDone: Story = {
+  args: { occurrence: unconfirmedOccurrence, markingDone: unconfirmedOccurrence.billId },
+  play: async ({ canvas }) => {
+    await expect(
+      await canvas.findByRole("button", { name: `Mark as done: ${unconfirmedOccurrence.name}` }),
+    ).toBeDisabled();
   },
 };
 

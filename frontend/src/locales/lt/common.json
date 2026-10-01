@@ -1926,6 +1926,8 @@
     "priceRise": "{{date}} nuskaičiuota {{amount}}, tikėtasi {{expected}}",
     "updateExpected": "Atnaujinti tikėtiną sumą",
     "expectedUpdated": "Tikėtina suma atnaujinta",
+    "markDone": "Pažymėti atliktu",
+    "markedDone": "Pažymėta atlikta. Įrašas perkeltas į kitą datą.",
     "category": "Kategorija",
     "noCategory": "Be kategorijos",
     "transferNoCategory": "Pervedimas kategorijos neturi: pinigai lieka tarp jūsų pačių sąskaitų.",

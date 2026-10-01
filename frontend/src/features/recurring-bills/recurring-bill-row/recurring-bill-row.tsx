@@ -1,4 +1,4 @@
-import { TrendingUp } from "lucide-react";
+import { CalendarCheck, TrendingUp } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import type {
   AccountResponse,
@@ -29,6 +29,8 @@ interface Props extends DeleteProps {
   categoryNames: ReadonlyMap<string, string>;
   onEdit: () => void;
   onConfirm: () => void;
+  onMarkDone?: () => void;
+  markDonePending?: boolean;
   onUpdateAmount?: (amount: string) => void;
   updatePending?: boolean;
 }
@@ -39,6 +41,8 @@ export function RecurringBillRow({
   categoryNames,
   onEdit,
   onConfirm,
+  onMarkDone,
+  markDonePending = false,
   onUpdateAmount,
   updatePending = false,
   ...deleteProps
@@ -59,6 +63,17 @@ export function RecurringBillRow({
   const isTransfer = bill.shape === "transfer";
   const rise = bill.latestMatch?.isPriceRise && bill.latestMatch.expected ? bill.latestMatch : null;
   const currency = account?.currency;
+  const markDone =
+    onMarkDone && bill.isActive && urgency !== "later"
+      ? [
+          {
+            icon: CalendarCheck,
+            label: t("recurringBills.markDone"),
+            onSelect: onMarkDone,
+            pending: markDonePending,
+          },
+        ]
+      : [];
 
   const meta = metaLine(
     t(`recurringBills.cadences.${bill.cadence}`),
@@ -143,6 +158,7 @@ export function RecurringBillRow({
         <RowActions
           label={bill.name}
           size="icon"
+          actions={markDone}
           onEdit={onEdit}
           {...deleteProps}
           className="gap-0"

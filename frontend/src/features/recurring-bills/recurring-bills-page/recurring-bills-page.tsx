@@ -7,6 +7,7 @@ import {
   useAccountsSuspense,
   useCategoriesSuspense,
   useRecurringBillsSuspense,
+  useSkipRecurringBill,
   useSubscriptionCandidatesSuspense,
   useUpdateRecurringBill,
 } from "@/api/generated";
@@ -57,6 +58,12 @@ export function RecurringBillsPage() {
     mutation: notify(t("recurringBills.expectedUpdated")),
   });
 
+  const skipMutation = useSkipRecurringBill({ mutation: notify(t("recurringBills.markedDone")) });
+
+  function markDone(billId: string, expectedDueDate: string, transactionId: string | null = null) {
+    skipMutation.mutate({ id: billId, data: { expectedDueDate, transactionId } });
+  }
+
   function updateExpected(bill: RecurringBillResponse, amount: string) {
     updateMutation.mutate({
       id: bill.id,
@@ -98,6 +105,8 @@ export function RecurringBillsPage() {
         accountById={accountById}
         categoryNames={categoryNames}
         onConfirm={() => setConfirming(bill)}
+        onMarkDone={() => markDone(bill.id, bill.nextDueDate)}
+        markDonePending={pendingId(skipMutation) === bill.id}
         onUpdateAmount={(amount) => updateExpected(bill, amount)}
         updatePending={pendingId(updateMutation) === bill.id}
         {...bills.rowProps(bill)}
@@ -131,7 +140,14 @@ export function RecurringBillsPage() {
       </PageHeader>
 
       {view === "calendar" ? (
-        <BillsCalendar onConfirm={setConfirming} onEdit={(bill) => bills.rowProps(bill).onEdit()} />
+        <BillsCalendar
+          onConfirm={setConfirming}
+          onEdit={(bill) => bills.rowProps(bill).onEdit()}
+          onMarkDone={(occurrence) =>
+            markDone(occurrence.billId, occurrence.date, occurrence.transactionId)
+          }
+          markingDone={pendingId(skipMutation)}
+        />
       ) : null}
       {view === "list" && billList.length > 0 ? <CashFlowForecast totals /> : null}
       {view === "list" && billList.length === 0 ? (

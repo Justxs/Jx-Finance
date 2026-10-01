@@ -13689,6 +13689,110 @@
         ]
       }
     },
+    "/api/recurring-bills/{id}/skip": {
+      "post": {
+        "tags": [
+          "RecurringBills"
+        ],
+        "summary": "Mark a due occurrence as done",
+        "description": "Rolls the next due date forward by the cadence without writing a transaction or a transfer, for an occurrence a bank row already paid or one deliberately skipped, and marks the entry's unread reminders read. expectedDueDate identifies the occurrence, as it does for a confirmation. When the entry pays a debt that tracks payments and transactionId names a visible expense that pays no debt yet, that row is linked to the debt as a regular payment, as a confirmation links the row it writes.",
+        "operationId": "SkipRecurringBill",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The recurring entry id. Takes precedence over the id in the body.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "example": "00000000-0000-0000-0000-000000000000"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SkipRecurringBillRequest"
+              },
+              "example": {
+                "expectedDueDate": "2026-10-01",
+                "transactionId": null
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "The entry with its new next due date.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecurringBillResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The entry is inactive.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such recurring entry is visible to you.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "conflict.stale when the occurrence was already confirmed or marked done.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      }
+    },
     "/api/reports/summary": {
       "get": {
         "tags": [
@@ -29668,6 +29772,29 @@
             "type": "integer",
             "format": "int32"
           }
+        }
+      },
+      "SkipRecurringBillRequest": {
+        "required": [
+          "expectedDueDate"
+        ],
+        "type": "object",
+        "properties": {
+          "expectedDueDate": {
+            "$ref": "#/components/schemas/DateOnly"
+          },
+          "transactionId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The ledger row that paid the occurrence, when known; only used to link a debt payment.",
+            "format": "uuid"
+          }
+        },
+        "example": {
+          "expectedDueDate": "2026-10-01",
+          "transactionId": null
         }
       },
       "SmtpEncryption": {

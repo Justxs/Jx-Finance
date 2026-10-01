@@ -1,6 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, fn, userEvent, waitFor, within } from "storybook/test";
-import { getBillsCalendarMockHandler } from "@/api/generated/recurring-bills/recurring-bills.msw";
+import {
+  getBillsCalendarMockHandler,
+  getSkipRecurringBillMockHandler,
+} from "@/api/generated/recurring-bills/recurring-bills.msw";
 import { getSettingsMockHandler } from "@/api/generated/settings/settings.msw";
 import { RecurringBillsPage } from "@/features/recurring-bills/recurring-bills-page/recurring-bills-page";
 import { withPageFrame } from "@/storybook/decorators";
@@ -13,17 +16,22 @@ import {
   settingsWith,
   transferBill,
   unconfirmedBillsCalendar,
+  unconfirmedOccurrence,
   unpricedBillsCalendar,
   variableBill,
 } from "@/storybook/fixtures";
 import { failWith, pending, withHandlers } from "@/storybook/handlers";
+import { readBody } from "@/storybook/handlers/http";
 import { type Canvas, openedDialog } from "@/storybook/interactions";
 import { BillsCalendar } from "./bills-calendar";
+
+const skipped = fn();
+const markDoneLabel = `Mark as done: ${dueSoonBill.name}`;
 
 const meta = {
   title: "Features/RecurringBills/BillsCalendar",
   component: BillsCalendar,
-  args: { onConfirm: fn(), onEdit: fn() },
+  args: { onConfirm: fn(), onEdit: fn(), onMarkDone: fn() },
   parameters: { layout: "fullscreen", route: "/recurring-bills?view=calendar&month=2026-09" },
   decorators: [withPageFrame],
 } satisfies Meta<typeof BillsCalendar>;
@@ -81,9 +89,33 @@ export const PaidPastDay: Story = {
 
 export const PaidNotConfirmed: Story = {
   parameters: withHandlers(getBillsCalendarMockHandler(unconfirmedBillsCalendar)),
-  play: async ({ canvas }) => {
+  play: async ({ canvas, args }) => {
     await expect(await chipOf(canvas, dueSoonBill.name)).toHaveTextContent(
       /€27\.99.*Paid.*Not confirmed/u,
+    );
+    const table = await monthTable(canvas);
+    await userEvent.click(table.getByRole("button", { name: markDoneLabel }));
+    await expect(args.onMarkDone).toHaveBeenCalledWith(unconfirmedOccurrence);
+  },
+};
+
+export const MarksAPaidOccurrenceDone: Story = {
+  render: () => <RecurringBillsPage />,
+  parameters: withHandlers(
+    getBillsCalendarMockHandler(unconfirmedBillsCalendar),
+    getSkipRecurringBillMockHandler(async ({ request }) => {
+      skipped(await readBody(request));
+      return { ...dueSoonBill, nextDueDate: "2026-10-20" };
+    }),
+  ),
+  play: async ({ canvas }) => {
+    const table = await monthTable(canvas);
+    await userEvent.click(await table.findByRole("button", { name: markDoneLabel }));
+    await waitFor(() =>
+      expect(skipped).toHaveBeenCalledWith({
+        expectedDueDate: unconfirmedOccurrence.date,
+        transactionId: unconfirmedOccurrence.transactionId,
+      }),
     );
   },
 };

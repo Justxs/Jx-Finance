@@ -24,6 +24,8 @@ const MONTHS_AWAY = 12;
 interface ChipActions {
   onConfirm: (bill: RecurringBillResponse) => void;
   onEdit: (bill: RecurringBillResponse) => void;
+  onMarkDone: (occurrence: BillOccurrence) => void;
+  markingDone?: string | null;
 }
 
 function Chips({

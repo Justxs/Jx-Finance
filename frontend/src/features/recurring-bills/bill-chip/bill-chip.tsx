@@ -8,6 +8,7 @@ import type {
   RecurringBillShape,
 } from "@/api/generated/model";
 import { TransactionsLink } from "@/components/transactions-link/transactions-link";
+import { Button } from "@/components/ui/button/button";
 import { Tag } from "@/components/ui/tag/tag";
 import { useMoney } from "@/hooks/use-formatters";
 import { INCOME_TONE } from "@/lib/tone";
@@ -33,9 +34,15 @@ interface Props {
   occurrence: BillOccurrence;
   onConfirm: (bill: RecurringBillResponse) => void;
   onEdit: (bill: RecurringBillResponse) => void;
+  onMarkDone: (occurrence: BillOccurrence) => void;
+  markingDone?: string | null;
 }
 
-function ChipName({ occurrence, onConfirm, onEdit }: Readonly<Props>) {
+function ChipName({
+  occurrence,
+  onConfirm,
+  onEdit,
+}: Readonly<Pick<Props, "occurrence" | "onConfirm" | "onEdit">>) {
   const bill = useRecurringBillsSuspense().data.find((item) => item.id === occurrence.billId);
 
   if (occurrence.status === "paid") {
@@ -98,7 +105,13 @@ function ChipAmount({ occurrence }: Readonly<{ occurrence: BillOccurrence }>) {
   );
 }
 
-export function BillChip({ occurrence, onConfirm, onEdit }: Readonly<Props>) {
+export function BillChip({
+  occurrence,
+  onConfirm,
+  onEdit,
+  onMarkDone,
+  markingDone = null,
+}: Readonly<Props>) {
   const { t } = useTranslation();
   const ShapeIcon = shapeIcons[occurrence.shape];
   const tone = statusTones[occurrence.status];
@@ -108,6 +121,8 @@ export function BillChip({ occurrence, onConfirm, onEdit }: Readonly<Props>) {
     occurrence.unconfirmed ? t("recurringBills.calendar.unconfirmed") : null,
     occurrence.accountNotVisible ? t("recurringBills.calendar.accountNotVisible") : null,
   ].filter(Boolean);
+  const canMarkDone =
+    occurrence.status === "paid" && occurrence.unconfirmed && occurrence.isNextDue;
 
   return (
     <div
@@ -134,6 +149,18 @@ export function BillChip({ occurrence, onConfirm, onEdit }: Readonly<Props>) {
         {tone ? <Tag tone={tone}>{status}</Tag> : <span className="sr-only">{status}</span>}
       </p>
       {note.length > 0 ? <p className="text-muted-foreground">{note.join(" · ")}</p> : null}
+      {canMarkDone ? (
+        <Button
+          type="button"
+          variant="link"
+          size="inline"
+          aria-label={`${t("recurringBills.markDone")}: ${occurrence.name}`}
+          pending={markingDone === occurrence.billId}
+          onClick={() => onMarkDone(occurrence)}
+        >
+          <span className="text-xs">{t("recurringBills.markDone")}</span>
+        </Button>
+      ) : null}
     </div>
   );
 }

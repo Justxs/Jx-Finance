@@ -130,6 +130,8 @@ A token created with Read and write access, since 2026-10-01, also reaches the r
 | `POST /api/transfers`, `PUT /api/transfers/{id}`, `DELETE /api/transfers/{id}` | records, changes and deletes a transfer |
 | `POST /api/recurring-bills/{id}/confirm` | confirms the due occurrence of a recurring entry |
 
+Marking a recurring occurrence done without recording it (`POST /api/recurring-bills/{id}/skip`, since 2026-10-01) is not on the list, because it records no row and would let a token move schedules forward and silence their reminders.
+
 Anything else answers 403 `token.notAllowed`, with "API tokens cannot use this route; it needs a browser session." in `reason`; a write with a read-only token answers the same code with "This token can only read; create a read-and-write token to record entries." Imports, attachments, receipts, the Trash, settings, users, households, backups, categories, categorization rules, budgets, goals and, since 2026-10-01, [transaction groups](transaction-groups.md) stay browser-only, so a leaked token can add noise to the ledger but cannot reshape the books or read files. The request bodies, validation, visibility and feature switches are those of the browser: under `X-Active-Household` a write that names an account outside that household answers `reference.notFound`.
 
 Three consequences follow from sharing the browser's code:

@@ -1854,6 +1854,8 @@
     "priceRise": "Charged {{amount}} on {{date}}, expected {{expected}}",
     "updateExpected": "Update expected amount",
     "expectedUpdated": "Expected amount updated",
+    "markDone": "Mark as done",
+    "markedDone": "Marked as done. The entry moved to its next date.",
     "category": "Category",
     "noCategory": "No category",
     "transferNoCategory": "A transfer has no category: the money stays between your own accounts.",

@@ -6,7 +6,7 @@ Related: feature page [Recurring entries](../features/recurring-bills.md); archi
 
 ### Recurring entries
 
-Three shapes — expense, income and transfer between two of your own accounts — each fixed or variable; no auto-posting; expected occurrence date required for confirmation; inactive entries reject confirmation; repeats notify once per day; a transfer confirmation goes through the ordinary transfer create path, so the cross-currency rules are the same ones; stored as `RecurringBill` under `/api/recurring-bills` although the user-facing name changed
+Three shapes — expense, income and transfer between two of your own accounts — each fixed or variable; no auto-posting; expected occurrence date required for confirmation; inactive entries reject confirmation; repeats notify once per day; a transfer confirmation goes through the ordinary transfer create path, so the cross-currency rules are the same ones; an occurrence a bank row already paid, or one skipped, is marked done through its own `skip` route with the confirmation's lock and stale check, writing no row and linking the paying row to a tracked debt; stored as `RecurringBill` under `/api/recurring-bills` although the user-facing name changed
 
 ### Bills calendar
 
@@ -23,6 +23,16 @@ Stored per user and per group — the account and the normalized description —
 ## Log
 
 Newest first. Each entry is a choice between real alternatives: what was chosen, what was rejected, and why.
+
+- **2026-10-01.** Marking an occurrence done is its own route, `POST /api/recurring-bills/{id}/skip`, with `expectedDueDate` and an optional `transactionId`, sharing the confirmation's lock, inactive refusal and stale check (`LockDueAsync`) and its advance and reminder read (`AdvanceAsync`). Decided while the owner was away, to be reviewed
+  - Rejected: An option on confirm that writes nothing; the names `mark-paid` and `mark-done`
+  - Why: Confirm's body (amount, account, received amount) and answer (`transactionId`, `transferId`) mean nothing for an occurrence that writes no row, so a flag would make half of each depend on another field, and token access is decided per route. "Skip" covers both the occurrence a bank row paid and one skipped on purpose, where "paid" would be wrong; the screen says "Mark as done"
+- **2026-10-01.** When the entry pays a tracked debt and the mark names the row that paid it, that row is linked to the debt as a regular payment in the same transaction, under the confirmation's conditions, if it is a visible non-split expense with a positive amount that pays no debt yet (trashed links included); otherwise nothing is linked and the mark still succeeds. Decided while the owner was away, to be reviewed
+  - Rejected: Never linking and leaving it to the debt's payment candidates; refusing the mark when the row cannot be linked; choosing regular or extra by month as the debt's own link does
+  - Why: Confirming such an entry lowers the debt's tracked balance, so marking the same occurrence done without a link would leave the balance high with no hint. A row that already pays a debt was linked on purpose, and failing a schedule change over a side effect would strand the entry. Regular is what a confirmation writes
+- **2026-10-01.** The calendar offers "Mark as done" only on a paid, not confirmed chip on the entry's next due date, sending the chip's row; the list offers it in the row actions of an active entry that is overdue or due this week, without a row. Neither asks for confirmation; a toast says the entry moved on. Decided while the owner was away, to be reviewed
+  - Rejected: The link on every paid, not confirmed chip; a confirmation dialog or an undo toast; a visible button beside Record payment
+  - Why: Only the next due occurrence passes the stale check, so a link on a later chip could only fail. The mark writes nothing to the ledger and editing the next due date undoes it, so a dialog would slow the common case. A third button beside Record payment does not fit a phone row, so the row's actions fold into the menu the ledger already uses at three actions; later entries keep their two icons
 
 - **2026-09-30.** The bills calendar decides "paid" by matching bank text when it is read: a row with the entry's match keys (`PriceRiseMatcher.KeysOf`), on its account when it has one, within 5 days of the date (2 for a weekly entry), each row paying only its nearest occurrence, ties going to the lower entry id
   - Rejected: A stored confirmation table linking each occurrence to its row; counting only confirmed occurrences as paid

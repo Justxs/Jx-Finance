@@ -1,9 +1,10 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, userEvent, within } from "storybook/test";
+import { expect, fn, screen, userEvent, waitFor, within } from "storybook/test";
 import { getAccountsMockHandler } from "@/api/generated/accounts/accounts.msw";
 import {
   getDeleteRecurringBillMockHandler,
   getRecurringBillsMockHandler,
+  getSkipRecurringBillMockHandler,
   getSubscriptionCandidatesMockHandler,
 } from "@/api/generated/recurring-bills/recurring-bills.msw";
 import { toIso } from "@/lib/calendar";
@@ -11,6 +12,7 @@ import { withPageFrame } from "@/storybook/decorators";
 import {
   dueSoonBill,
   inactiveBill,
+  overdueBill,
   recurringBills,
   many,
   subscriptionCandidates,
@@ -24,10 +26,12 @@ import {
   pending,
   withHandlers,
 } from "@/storybook/handlers";
-import { type Canvas, openedDialog } from "@/storybook/interactions";
+import { readBody } from "@/storybook/handlers/http";
+import { type Canvas, chooseMenuItem, openedDialog } from "@/storybook/interactions";
 import { RecurringBillsPage } from "./recurring-bills-page";
 
 const manyBills = many(recurringBills, 18);
+const skipped = fn();
 
 function daysFromNow(days: number) {
   const date = new Date();
@@ -154,10 +158,38 @@ async function openFromRow(canvas: Canvas, billName: string, label: RegExp) {
 
 export const EditDialogOpen: Story = {
   play: async ({ canvas }) => {
-    const dialog = await openFromRow(canvas, dueSoonBill.name, /^(edit|redaguoti):/i);
+    await chooseMenuItem(
+      await canvas.findByRole("button", { name: `Actions: ${dueSoonBill.name}` }),
+      "Edit",
+    );
+    const dialog = await openedDialog();
     await expect(within(dialog).getByLabelText(/^(name|pavadinimas)$/i)).toHaveValue(
       dueSoonBill.name,
     );
+  },
+};
+
+export const MarkDoneFromTheList: Story = {
+  parameters: withHandlers(
+    getSkipRecurringBillMockHandler(async ({ request }) => {
+      skipped(await readBody(request));
+      return { ...overdueBill, nextDueDate: "2026-10-16" };
+    }),
+  ),
+  play: async ({ canvas }) => {
+    await chooseMenuItem(
+      await canvas.findByRole("button", { name: `Actions: ${overdueBill.name}` }),
+      "Mark as done",
+    );
+    await waitFor(() =>
+      expect(skipped).toHaveBeenCalledWith({
+        expectedDueDate: overdueBill.nextDueDate,
+        transactionId: null,
+      }),
+    );
+    await expect(
+      await screen.findByText("Marked as done. The entry moved to its next date."),
+    ).toBeVisible();
   },
 };
 

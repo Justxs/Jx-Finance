@@ -522,3 +522,62 @@ export const ConfirmRecurringBillResponse = zod.object({
   transactionId: zod.uuid().nullable(),
   transferId: zod.uuid().nullable(),
 });
+
+/**
+ * Rolls the next due date forward by the cadence without writing a transaction or a transfer, for an occurrence a bank row already paid or one deliberately skipped, and marks the entry's unread reminders read. expectedDueDate identifies the occurrence, as it does for a confirmation. When the entry pays a debt that tracks payments and transactionId names a visible expense that pays no debt yet, that row is linked to the debt as a regular payment, as a confirmation links the row it writes.
+ * @summary Mark a due occurrence as done
+ */
+export const SkipRecurringBillBody = zod.object({
+  expectedDueDate: zod.iso.date(),
+  transactionId: zod
+    .uuid()
+    .nullish()
+    .describe(
+      "The ledger row that paid the occurrence, when known; only used to link a debt payment.",
+    ),
+});
+
+export const skipRecurringBillResponseAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const skipRecurringBillResponseLatestMatchTwoAmountRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const skipRecurringBillResponseLatestMatchTwoExpectedRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+
+export const SkipRecurringBillResponse = zod.object({
+  id: zod.uuid(),
+  name: zod.string(),
+  shape: zod
+    .enum(["expense", "income", "transfer"])
+    .describe("Expense, Income, or Transfer. Decides what a confirmation writes."),
+  kind: zod
+    .enum(["fixed", "variable"])
+    .describe("Fixed when the amount is always the same; Variable when it changes each time."),
+  amount: zod.stringFormat("decimal", skipRecurringBillResponseAmountRegExp).nullable(),
+  categoryId: zod.uuid().nullable(),
+  accountId: zod.uuid().nullable(),
+  toAccountId: zod.uuid().nullable(),
+  cadence: zod
+    .enum(["weekly", "monthly", "quarterly", "yearly"])
+    .describe("Weekly, Monthly, Quarterly, or Yearly."),
+  nextDueDate: zod.iso.date(),
+  remindDaysBefore: zod.int(),
+  isActive: zod.boolean(),
+  matchKey: zod.string().nullable(),
+  latestMatch: zod.union([
+    zod.null(),
+    zod.object({
+      date: zod.iso.date(),
+      amount: zod.stringFormat("decimal", skipRecurringBillResponseLatestMatchTwoAmountRegExp),
+      expected: zod
+        .stringFormat("decimal", skipRecurringBillResponseLatestMatchTwoExpectedRegExp)
+        .nullable(),
+      isPriceRise: zod.boolean(),
+    }),
+  ]),
+  debtId: zod.uuid().nullable(),
+  scope: zod.enum(["personal", "shared"]),
+  householdId: zod.uuid().nullable(),
+  spreadMonths: zod.int().nullish(),
+});

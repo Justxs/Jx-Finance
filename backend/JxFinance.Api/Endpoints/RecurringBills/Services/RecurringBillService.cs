@@ -25,6 +25,7 @@ using JxFinance.Endpoints.RecurringBills.GetBillsCalendar;
 using JxFinance.Endpoints.RecurringBills.Interfaces;
 using JxFinance.Endpoints.RecurringBills.Mappers;
 using JxFinance.Endpoints.RecurringBills.Shared;
+using JxFinance.Endpoints.RecurringBills.SkipRecurringBill;
 using JxFinance.Endpoints.RecurringBills.UpdateRecurringBill;
 using JxFinance.Endpoints.Transfers.CreateTransfer;
 using JxFinance.Endpoints.Transfers.Interfaces;
@@ -185,16 +186,11 @@ public sealed class RecurringBillService(
         CancellationToken cancellationToken)
     {
         await using var dbTransaction = await db.Database.BeginTransactionAsync(cancellationToken);
-        await db.Database.LockAsync(request.Id, cancellationToken);
-        if (await FindAsync(request.Id, cancellationToken) is not { } bill)
+        var due = await LockDueAsync(request.Id, request.ExpectedDueDate, cancellationToken);
+        if (!due.TryGetValue(out var bill))
         {
-            return NotFound;
+            return due.Error;
         }
-
-        if (!bill.IsActive)
-            return new DomainError(ErrorCodes.RecurringBillInactive, "This recurring entry is inactive.");
-        if (request.ExpectedDueDate != bill.NextDueDate)
-            return new DomainError(ErrorCodes.ConflictStale, "This occurrence has changed or was already confirmed. Refresh the entry.");
 
         var amount = ResolveAmount(bill, request);
         if (amount.IsFailure)
@@ -216,27 +212,84 @@ public sealed class RecurringBillService(
             if (posted.IsFailure) return posted.Error;
             transactionId = posted.Value;
             var paidFrom = request.AccountId is { } chosen ? new AccountId(chosen) : bill.AccountId;
-            if (bill.DebtId is { } debtId && settings.Current.IsEnabled(Feature.NetWorth)
-                && await db.Debts.AnyAsync(
-                    d => d.Id == debtId
-                        && d.TracksPayments
-                        && (d.Scope == Scope.Personal
-                            || db.Accounts.Any(a => a.Id == paidFrom && a.Scope == Scope.Shared && a.HouseholdId == d.HouseholdId)),
-                    cancellationToken))
+            await LinkDebtPaymentAsync(bill, new TransactionId(posted.Value), paidFrom, cancellationToken);
+        }
+
+        await AdvanceAsync(bill, cancellationToken);
+        await dbTransaction.CommitAsync(cancellationToken);
+        return new ConfirmRecurringBillResponse(await ResponseAsync(bill, cancellationToken), transactionId, transferId);
+    }
+
+    public async Task<Result<RecurringBillResponse>> SkipAsync(
+        SkipRecurringBillRequest request,
+        CancellationToken cancellationToken)
+    {
+        await using var dbTransaction = await db.Database.BeginTransactionAsync(cancellationToken);
+        var due = await LockDueAsync(request.Id, request.ExpectedDueDate, cancellationToken);
+        if (!due.TryGetValue(out var bill))
+        {
+            return due.Error;
+        }
+
+        if (bill.DebtId is not null && request.TransactionId is { } matched)
+        {
+            var rowId = new TransactionId(matched);
+            var paidFrom = await db.Transactions
+                .Where(t => t.Id == rowId && t.Type == FlowType.Expense && !t.IsSplit && t.Amount.Amount > 0)
+                .Select(t => (AccountId?)t.AccountId)
+                .FirstOrDefaultAsync(cancellationToken);
+            if (paidFrom is not null
+                && !await db.DebtPayments.IgnoreQueryFilters(QueryFilters.OwnerOnly).AnyAsync(p => p.TransactionId == rowId, cancellationToken))
             {
-                db.DebtPayments.Add(new DebtPayment { DebtId = debtId, TransactionId = new TransactionId(posted.Value), Kind = DebtPaymentKind.Regular });
+                await LinkDebtPaymentAsync(bill, rowId, paidFrom, cancellationToken);
             }
         }
 
-        bill.Advance();
-
-        await db.Notifications.Where(n => n.RelatedType == NotificationRelated.RecurringBill && n.RelatedId == request.Id && !n.IsRead)
-            .ExecuteUpdateAsync(s => s.SetProperty(n => n.IsRead, true), cancellationToken);
-
-        await db.SaveChangesAsync(cancellationToken);
-
+        await AdvanceAsync(bill, cancellationToken);
         await dbTransaction.CommitAsync(cancellationToken);
-        return new ConfirmRecurringBillResponse(await ResponseAsync(bill, cancellationToken), transactionId, transferId);
+        return await ResponseAsync(bill, cancellationToken);
+    }
+
+    private async Task<Result<RecurringBill>> LockDueAsync(Guid id, DateOnly expectedDueDate, CancellationToken cancellationToken)
+    {
+        await db.Database.LockAsync(id, cancellationToken);
+        if (await FindAsync(id, cancellationToken) is not { } bill)
+        {
+            return NotFound;
+        }
+
+        if (!bill.IsActive)
+            return new DomainError(ErrorCodes.RecurringBillInactive, "This recurring entry is inactive.");
+        if (expectedDueDate != bill.NextDueDate)
+            return new DomainError(ErrorCodes.ConflictStale, "This occurrence has changed or was already confirmed. Refresh the entry.");
+
+        return bill;
+    }
+
+    private async Task LinkDebtPaymentAsync(
+        RecurringBill bill,
+        TransactionId transactionId,
+        AccountId? paidFrom,
+        CancellationToken cancellationToken)
+    {
+        if (bill.DebtId is { } debtId && settings.Current.IsEnabled(Feature.NetWorth)
+            && await db.Debts.AnyAsync(
+                d => d.Id == debtId
+                    && d.TracksPayments
+                    && (d.Scope == Scope.Personal
+                        || db.Accounts.Any(a => a.Id == paidFrom && a.Scope == Scope.Shared && a.HouseholdId == d.HouseholdId)),
+                cancellationToken))
+        {
+            db.DebtPayments.Add(new DebtPayment { DebtId = debtId, TransactionId = transactionId, Kind = DebtPaymentKind.Regular });
+        }
+    }
+
+    private async Task AdvanceAsync(RecurringBill bill, CancellationToken cancellationToken)
+    {
+        bill.Advance();
+        await db.Notifications.Where(n => n.RelatedType == NotificationRelated.RecurringBill && n.RelatedId == bill.Id.Value && !n.IsRead)
+            .ExecuteUpdateAsync(s => s.SetProperty(n => n.IsRead, true), cancellationToken);
+        await db.SaveChangesAsync(cancellationToken);
     }
 
     public async Task<Result<BillsCalendarResponse>> GetCalendarAsync(string? month, CancellationToken cancellationToken)

@@ -169,6 +169,7 @@ describe("invalidateAfterMutation", () => {
     ["updateRecurringBill", api.getUpdateRecurringBillMutationKey],
     ["deleteRecurringBill", api.getDeleteRecurringBillMutationKey],
     ["confirmRecurringBill", api.getConfirmRecurringBillMutationKey],
+    ["skipRecurringBill", api.getSkipRecurringBillMutationKey],
     ["createTransfer", api.getCreateTransferMutationKey],
   ])("%s refreshes the cash-flow forecast", async (_name, getMutationKey) => {
     const client = seededClient();
@@ -182,6 +183,7 @@ describe("invalidateAfterMutation", () => {
 
   test.each([
     ["confirmRecurringBill", api.getConfirmRecurringBillMutationKey],
+    ["skipRecurringBill", api.getSkipRecurringBillMutationKey],
     ["updateRecurringBill", api.getUpdateRecurringBillMutationKey],
     ["createTransaction", api.getCreateTransactionMutationKey],
     ["deleteTransaction", api.getDeleteTransactionMutationKey],
