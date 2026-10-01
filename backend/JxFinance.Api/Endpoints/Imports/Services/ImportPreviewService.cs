@@ -326,7 +326,7 @@ public sealed class ImportPreviewService(
             }
 
             var categoryId = suggestions[index]?.CategoryId is { } suggested ? new CategoryId(suggested) : (CategoryId?)null;
-            candidates.Add((index, new UnusualCandidate(accountId, categoryId, row.Date, valued.ReportingAmount, row.Description)));
+            candidates.Add((index, new UnusualCandidate(accountId, categoryId, row.Date, valued.ReportingAmount, SubscriptionDescription.Normalize(row.Description))));
         }
 
         var evaluated = await unusualAmounts.EvaluateAsync(candidates.Select(c => c.Candidate).ToList(), cancellationToken);

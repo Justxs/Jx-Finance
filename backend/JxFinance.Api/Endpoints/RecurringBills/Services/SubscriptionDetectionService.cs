@@ -27,17 +27,14 @@ public sealed class SubscriptionDetectionService(
         var from = today.AddMonths(-SubscriptionDetection.LookBackMonths);
 
         var occurrences = await db.Transactions
-            .Where(t => t.Type == FlowType.Expense && !t.IsSplit && t.Amount.Amount > 0 && t.Date >= from && t.Description != null)
+            .Where(t => t.Type == FlowType.Expense && !t.IsSplit && t.Amount.Amount > 0 && t.Date >= from && t.PayeeKey != null && t.PayeeKey != "")
             .Where(t => db.Accounts.Any(a => a.Id == t.AccountId && a.StartingBalance.Currency == t.Amount.Currency))
             .OrderByDescending(t => t.Date)
-            .Select(t => new Occurrence(t.AccountId, t.CategoryId, t.Date, t.Amount.Amount, t.Description!))
+            .Select(t => new Occurrence(t.AccountId, t.CategoryId, t.Date, t.Amount.Amount, t.PayeeKey!))
             .Take(SubscriptionDetection.MaxScannedTransactions)
             .ToListAsync(cancellationToken);
 
-        var groups = occurrences
-            .Select(o => (Key: new GroupKey(o.AccountId, SubscriptionDescription.Normalize(o.Description)), Occurrence: o))
-            .Where(pair => pair.Key.Description.Length > 0)
-            .ToLookup(pair => pair.Key, pair => pair.Occurrence);
+        var groups = occurrences.ToLookup(o => new GroupKey(o.AccountId, o.PayeeKey));
 
         var covered = await CoveredAsync(cancellationToken);
         var dismissed = await DismissedAsync(cancellationToken);
@@ -152,7 +149,7 @@ public sealed class SubscriptionDetectionService(
         CategoryId? CategoryId,
         DateOnly Date,
         decimal Amount,
-        string Description);
+        string PayeeKey);
 
     private readonly record struct GroupKey(AccountId AccountId, string Description);
 

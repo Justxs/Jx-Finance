@@ -91,7 +91,7 @@ public sealed class RecurringBillService(
             .Select(a => new { Key = a.Id, Value = a.StartingBalance.Currency })
             .ToDictionaryAsync(x => x.Key, x => x.Value, cancellationToken);
         var keys = eligible.SelectMany(PriceRiseMatcher.KeysOf).Distinct().ToList();
-        var charges = await PriceRiseMatcher.LoadChargesAsync(db.Transactions, accountIds, clock.Today, FlowType.Expense, cancellationToken, keys);
+        var charges = await PriceRiseMatcher.LoadChargesAsync(db.Transactions, accountIds, keys, clock.Today, FlowType.Expense, cancellationToken);
 
         var matches = new Dictionary<RecurringBillId, RecurringBillMatchResponse>();
         foreach (var bill in eligible)

@@ -45,20 +45,19 @@ public static class PriceRiseMatcher
     public static Task<List<BankCharge>> LoadChargesAsync(
         IQueryable<Transaction> transactions,
         IReadOnlyCollection<AccountId> accountIds,
+        IReadOnlyCollection<string> keys,
         DateOnly since,
         FlowType type,
-        CancellationToken cancellationToken,
-        IReadOnlyCollection<string>? keys = null)
+        CancellationToken cancellationToken)
     {
         var from = since.AddMonths(-PriceRiseRule.LookBackMonths);
         return transactions
             .AsNoTracking()
-            .Where(t => keys == null || keys.Contains(t.PayeeKey!))
             .Where(t => accountIds.Contains(t.AccountId)
+                && keys.Contains(t.PayeeKey!)
                 && t.Type == type
                 && !t.IsSplit
                 && t.Amount.Amount > 0
-                && t.Description != null
                 && t.Date >= from)
             .OrderByDescending(t => t.Date)
             .ThenByDescending(t => t.CreatedAt)
@@ -69,7 +68,7 @@ public static class PriceRiseMatcher
                 t.Date,
                 t.Amount.Amount,
                 t.Amount.Currency,
-                SubscriptionDescription.Normalize(t.Description)))
+                t.PayeeKey!))
             .ToListAsync(cancellationToken);
     }
 

@@ -8,4 +8,4 @@ public sealed record UnusualCandidate(
     CategoryId? CategoryId,
     DateOnly Date,
     decimal ReportingAmount,
-    string? Description);
+    string? PayeeKey);

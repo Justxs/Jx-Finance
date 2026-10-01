@@ -2,7 +2,6 @@ using System.Globalization;
 using JxFinance.Common;
 using JxFinance.Common.Notifications;
 using JxFinance.Common.Settings;
-using JxFinance.Common.Subscriptions;
 using JxFinance.Common.Unusual;
 using JxFinance.Domain.Accounts;
 using JxFinance.Domain.Categories;
@@ -61,7 +60,7 @@ public sealed class UnusualAmountJob(
                         row.CategoryId,
                         row.Date,
                         row.ReportingAmount,
-                        row.Description))
+                        row.PayeeKey))
                     .ToList();
                 var verdicts = await ownerScope.ServiceProvider.GetRequiredService<IUnusualAmountService>().EvaluateAsync(candidates, ct);
                 await pass.StoreAsync(owner.ToList(), verdicts, ct);
@@ -93,6 +92,7 @@ public sealed class UnusualAmountJob(
              t.Amount.Amount,
              t.Amount.Currency,
              t.Description,
+             t.PayeeKey,
              t.Unusual != null,
              t.UnusualDismissedAt != null,
              t.UpdatedAt))
@@ -258,7 +258,7 @@ public sealed class UnusualAmountJob(
                     row.Date,
                     row.Amount,
                     row.Currency,
-                    SubscriptionDescription.Normalize(row.Description)))
+                    row.PayeeKey!))
                 .ToList();
             var accountIds = charges.Select(charge => charge.AccountId).Distinct().ToList();
             if (accountIds.Count == 0)
@@ -285,6 +285,7 @@ public sealed class UnusualAmountJob(
             var history = await PriceRiseMatcher.LoadChargesAsync(
                 db.Transactions.IgnoreQueryFilters(QueryFilters.OwnerOnly),
                 matched.Select(m => m.charge.AccountId).Distinct().ToList(),
+                matched.SelectMany(m => m.Target.Keys).Distinct().ToList(),
                 matched.Min(m => m.charge.Date),
                 FlowType.Expense,
                 ct);
@@ -310,6 +311,7 @@ public sealed class UnusualAmountJob(
         decimal Amount,
         Currency Currency,
         string? Description,
+        string? PayeeKey,
         bool WasFlagged,
         bool Dismissed,
         DateTimeOffset UpdatedAt);

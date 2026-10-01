@@ -1,5 +1,4 @@
 using FastEndpoints;
-using JxFinance.Common.Subscriptions;
 using JxFinance.Domain.Accounts;
 using JxFinance.Domain.Categories;
 using JxFinance.Domain.Common;
@@ -34,13 +33,10 @@ public sealed class UnusualAmountService(AppDbContext db) : IUnusualAmountServic
             .Where(t => accountIds.Contains(t.AccountId) || categoryIds.Contains(t.CategoryId))
             .OrderByDescending(t => t.Date)
             .Take(MaxHistoryRows)
-            .Select(t => new HistoryRow(t.AccountId, t.CategoryId, t.Date, t.ReportingAmount, t.Description))
+            .Select(t => new HistoryRow(t.AccountId, t.CategoryId, t.Date, t.ReportingAmount, t.PayeeKey))
             .ToListAsync(cancellationToken);
 
-        var byPayee = rows
-            .Select(row => (Row: row, Key: SubscriptionDescription.Normalize(row.Description)))
-            .Where(entry => entry.Key.Length > 0)
-            .ToLookup(entry => (entry.Row.AccountId, entry.Key), entry => entry.Row);
+        var byPayee = rows.ToLookup(row => (row.AccountId, row.PayeeKey));
         var byCategory = rows
             .Where(row => row.CategoryId is not null)
             .ToLookup(row => row.CategoryId!.Value);
@@ -50,7 +46,7 @@ public sealed class UnusualAmountService(AppDbContext db) : IUnusualAmountServic
 
     private static UnusualVerdict? Evaluate(
         UnusualCandidate candidate,
-        ILookup<(AccountId AccountId, string Key), HistoryRow> byPayee,
+        ILookup<(AccountId AccountId, string? PayeeKey), HistoryRow> byPayee,
         ILookup<CategoryId, HistoryRow> byCategory)
     {
         if (candidate.ReportingAmount <= 0)
@@ -58,8 +54,7 @@ public sealed class UnusualAmountService(AppDbContext db) : IUnusualAmountServic
             return null;
         }
 
-        var key = SubscriptionDescription.Normalize(candidate.Description);
-        if (key.Length > 0)
+        if (candidate.PayeeKey is { Length: > 0 } key)
         {
             var payee = History(byPayee[(candidate.AccountId, key)], candidate);
             if (payee.Count >= UnusualAmountRule.PayeeMinimumHistory)
@@ -90,5 +85,5 @@ public sealed class UnusualAmountService(AppDbContext db) : IUnusualAmountServic
         CategoryId? CategoryId,
         DateOnly Date,
         decimal ReportingAmount,
-        string? Description);
+        string? PayeeKey);
 }
