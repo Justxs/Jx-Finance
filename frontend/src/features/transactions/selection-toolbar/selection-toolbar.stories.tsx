@@ -18,6 +18,7 @@ const meta = {
     tagPending: false,
     onApply: fn(),
     onApplyTags: fn(),
+    onGroup: fn(),
     onClear: fn(),
   },
   decorators: [withWidth("w-[min(56rem,92vw)]")],

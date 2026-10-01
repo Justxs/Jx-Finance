@@ -1,5 +1,9 @@
 import { HttpResponse } from "msw";
-import type { TransactionLineResponse, TransactionResponse } from "@/api/generated/model";
+import type {
+  TransactionGroupSummary,
+  TransactionLineResponse,
+  TransactionResponse,
+} from "@/api/generated/model";
 import {
   getBulkCategorizeTransactionsMockHandler,
   getBulkTagTransactionsMockHandler,
@@ -9,6 +13,7 @@ import {
   getExportTransactionsMockHandler,
   getRestoreUnusualAmountMockHandler,
   getExportTransactionsPdfMockHandler,
+  getLedgerMockHandler,
   getPlacesMockHandler,
   getTransactionMockHandler,
   getTransactionsMockHandler,
@@ -21,9 +26,12 @@ import {
   accounts,
   buildTransactionsSummary,
   checkingAccount,
+  ledgerItemsOf,
   placeSuggestions,
   transactions,
   transactionsCsv,
+  tripGroup,
+  tripGroupMembers,
 } from "@/storybook/fixtures";
 import { categoryName } from "./categories";
 import { notFound, onRouteOf, query, readBody, text } from "./http";
@@ -74,7 +82,10 @@ function compareTransactions(sort: string | null) {
   };
 }
 
-function filterTransactions(params: URLSearchParams): TransactionResponse[] {
+export function filterRows(
+  rows: readonly TransactionResponse[],
+  params: URLSearchParams,
+): TransactionResponse[] {
   const accountId = params.get("accountId");
   const categoryId = params.get("categoryId");
   const tagIds = params.get("tagIds");
@@ -85,7 +96,7 @@ function filterTransactions(params: URLSearchParams): TransactionResponse[] {
   const dateTo = params.get("dateTo");
   const unusualOnly = params.get("unusual") === "true";
   const uncategorizedOnly = params.get("uncategorized") === "true";
-  const filtered = transactions.filter(
+  const filtered = rows.filter(
     (item) =>
       (!accountId || item.accountId === accountId) &&
       (!categoryId || matchesCategory(item, categoryId)) &&
@@ -103,6 +114,31 @@ function filterTransactions(params: URLSearchParams): TransactionResponse[] {
   );
   const sorted = filtered.toSorted(compareTransactions(params.get("sort")));
   return applyDirection(sorted, params, "desc");
+}
+
+function filterTransactions(params: URLSearchParams): TransactionResponse[] {
+  return filterRows(transactions, params);
+}
+
+function matchingTripGroup(params: URLSearchParams): TransactionGroupSummary[] {
+  const matching = filterRows(tripGroupMembers, params);
+  if (matching.length === 0) {
+    return [];
+  }
+  const dates = matching.map((item) => item.date).toSorted();
+  const net = matching.reduce(
+    (sum, item) => sum + (item.type === "income" ? 1 : -1) * toCents(item.reportingAmount),
+    0,
+  );
+  return [
+    {
+      ...tripGroup,
+      matchingCount: matching.length,
+      firstDate: dates[0] ?? tripGroup.firstDate,
+      lastDate: dates.at(-1) ?? tripGroup.lastDate,
+      netReportingAmount: (net / 100).toFixed(2),
+    },
+  ];
 }
 
 function toLines(value: unknown): TransactionLineResponse[] | null {
@@ -156,6 +192,10 @@ export const transactionHandlers = [
   getTransactionsMockHandler(({ request }) => {
     const params = query(request);
     return paginate(filterTransactions(params), params);
+  }),
+  getLedgerMockHandler(({ request }) => {
+    const params = query(request);
+    return paginate(ledgerItemsOf(filterTransactions(params), matchingTripGroup(params)), params);
   }),
   getCreateTransactionMockHandler(async ({ request }) => {
     const base: TransactionResponse = {

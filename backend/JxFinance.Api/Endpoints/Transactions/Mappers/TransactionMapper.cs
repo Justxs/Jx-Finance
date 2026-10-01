@@ -94,7 +94,8 @@ public static class TransactionMapper
         SpreadUntil: transaction.SpreadUntil,
         Place: transaction.Place,
         Latitude: transaction.Latitude,
-        Longitude: transaction.Longitude);
+        Longitude: transaction.Longitude,
+        GroupId: transaction.GroupId?.Value);
 
     public static UnusualAmountResponse? ToResponse(this UnusualVerdict? verdict) =>
         verdict is null ? null : new(verdict.Basis, verdict.TypicalAmount, verdict.Factor, verdict.SampleSize);

@@ -101,7 +101,8 @@ A token reaches only `GET` routes of the groups that opt in with `ApiGroup(…, 
 | Group | Readable with a token |
 | --- | --- |
 | Accounts | the list, archived accounts, one account, the cash-flow forecast, reconciliations and the reconciliation preview |
-| Transactions | the ledger, one transaction, the summary, the CSV and PDF exports |
+| Transactions | the ledger, one transaction, the summary, the CSV and PDF exports, and since 2026-10-01 the ledger with groups folded, `GET /api/transactions/ledger` |
+| Transaction groups | since 2026-10-01 the list of your [groups](transaction-groups.md) and the members of one |
 | Transfers, Conversions, Categories, Tags, Payees | their lists; payee names since 2026-09-30 |
 | Reports | the summary, spending by payee included |
 | Dashboard | the summary, the monthly trend and the category breakdown; not the dashboard layout, which is a personal setting |
@@ -129,7 +130,7 @@ A token created with Read and write access, since 2026-10-01, also reaches the r
 | `POST /api/transfers`, `PUT /api/transfers/{id}`, `DELETE /api/transfers/{id}` | records, changes and deletes a transfer |
 | `POST /api/recurring-bills/{id}/confirm` | confirms the due occurrence of a recurring entry |
 
-Anything else answers 403 `token.notAllowed`, with "API tokens cannot use this route; it needs a browser session." in `reason`; a write with a read-only token answers the same code with "This token can only read; create a read-and-write token to record entries." Imports, attachments, receipts, the Trash, settings, users, households, backups, categories, categorization rules, budgets and goals stay browser-only, so a leaked token can add noise to the ledger but cannot reshape the books or read files. The request bodies, validation, visibility and feature switches are those of the browser: under `X-Active-Household` a write that names an account outside that household answers `reference.notFound`.
+Anything else answers 403 `token.notAllowed`, with "API tokens cannot use this route; it needs a browser session." in `reason`; a write with a read-only token answers the same code with "This token can only read; create a read-and-write token to record entries." Imports, attachments, receipts, the Trash, settings, users, households, backups, categories, categorization rules, budgets, goals and, since 2026-10-01, [transaction groups](transaction-groups.md) stay browser-only, so a leaked token can add noise to the ledger but cannot reshape the books or read files. The request bodies, validation, visibility and feature switches are those of the browser: under `X-Active-Household` a write that names an account outside that household answers `reference.notFound`.
 
 Three consequences follow from sharing the browser's code:
 

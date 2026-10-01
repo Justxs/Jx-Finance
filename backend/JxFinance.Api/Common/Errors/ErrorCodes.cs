@@ -80,6 +80,7 @@ public static class ErrorCodes
     public const string TransactionRefundOriginalInvalid = "transaction.refundOriginalInvalid";
     public const string TransactionSpreadRefund = "transaction.spreadRefund";
     public const string TransactionLocationInvalid = "transaction.locationInvalid";
+    public const string TransactionGroupMemberTaken = "transactionGroup.memberTaken";
     public const string RecurringBillInactive = "recurringBill.inactive";
     public const string RecurringBillDebtShape = "recurringBill.debtShape";
     public const string HoldingOversold = "holding.oversold";
@@ -168,7 +169,7 @@ public static class ErrorCodes
         ConflictDuplicate or ConflictStale or ConflictBusy or SetupAlreadyCompleted or RestoreSlotTaken
             or RestoreNameTaken or AttachmentLimitReached or MonthCloseNotEnded or DebtPaymentTaken or PasskeyLimitReached
             or TokenLimitReached or SettleUpAlreadySplit or SettleUpTransferTaken or TwoFactorAlreadyEnabled
-            or ImportAlreadyPresent or IdempotencyKeyReused => StatusCodes.Status409Conflict,
+            or ImportAlreadyPresent or IdempotencyKeyReused or TransactionGroupMemberTaken => StatusCodes.Status409Conflict,
         AccessForbidden or UserSelfChange or UserLastAdministrator or SecurityNotHeld or SessionCurrent
             or TokenNotAllowed => StatusCodes.Status403Forbidden,
         CredentialsInvalid or TokenInvalid or TwoFactorInvalidCode => StatusCodes.Status401Unauthorized,

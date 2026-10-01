@@ -596,6 +596,34 @@
       "timeout": "Nepavyko laiku nustatyti jūsų vietos. Bandykite dar kartą arba įrašykite vietą.",
       "unavailable": "Jūsų vieta dabar nepasiekiama. Įrašykite vietą.",
       "usePhotoLocation": "Naudoti nuotraukos vietą"
+    },
+    "groups": {
+      "group": "Grupuoti",
+      "addToGroup": "Įtraukti į grupę…",
+      "removeFromGroup": "Pašalinti iš grupės",
+      "rename": "Pervadinti grupę",
+      "ungroup": "Išgrupuoti",
+      "ungroupHint": "Visos eilutės lieka žurnale tokios, kokios yra. Grupė perkeliama į šiukšlinę, iš kurios ją galima atkurti.",
+      "dialogTitle": "Grupuoti eilutes",
+      "newGroup": "Nauja grupė",
+      "existingGroup": "Esama grupė",
+      "name": "Grupės pavadinimas",
+      "namePlaceholder": "Kelionė į Rygą",
+      "rows_one": "{{count}} operacija",
+      "rows_few": "{{count}} operacijos",
+      "rows_many": "{{count}} operacijos",
+      "rows_other": "{{count}} operacijų",
+      "matching_one": "Atitinka {{matching}} iš {{count}}",
+      "matching_few": "Atitinka {{matching}} iš {{count}}",
+      "matching_many": "Atitinka {{matching}} iš {{count}}",
+      "matching_other": "Atitinka {{matching}} iš {{count}}",
+      "showRows_one": "Rodyti {{count}} grupės „{{name}}“ operaciją",
+      "showRows_few": "Rodyti {{count}} grupės „{{name}}“ operacijas",
+      "showRows_many": "Rodyti {{count}} grupės „{{name}}“ operacijos",
+      "showRows_other": "Rodyti {{count}} grupės „{{name}}“ operacijų",
+      "noGroups": "Grupių dar neturite. Pavadinkite naują ir ji prasidės nuo šios eilutės.",
+      "grouped": "Sugrupuota",
+      "truncated": "Rodomos tik pirmosios 200 operacijų. Susiaurinkite filtrus, kad pamatytumėte kitas."
     }
   },
   "receipts": {
@@ -653,7 +681,8 @@
       "attachment": "Failas",
       "csvImportMapping": "CSV susiejimas",
       "sharedExpense": "Padalinta išlaida",
-      "settlement": "Namų ūkio mokėjimas"
+      "settlement": "Namų ūkio mokėjimas",
+      "transactionGroup": "Operacijų grupė"
     }
   },
   "theme": {
@@ -2876,6 +2905,9 @@
       "accountOwner": "Pinigai turi išeiti iš mokėtojo sąskaitos ir ateiti į gavėjo sąskaitą.",
       "currencyMismatch": "Abiejose sąskaitose turi būti mokėjimo valiuta.",
       "transferTaken": "Šis pervedimas jau padengia kitą mokėjimą."
+    },
+    "transactionGroup": {
+      "memberTaken": "Eilutė jau yra kitoje grupėje. Pirmiausia pašalinkite ją iš tos grupės."
     }
   },
   "export": {

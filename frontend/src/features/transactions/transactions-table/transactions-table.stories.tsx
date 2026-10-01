@@ -5,6 +5,7 @@ import { expect, fn, screen, userEvent, waitFor } from "storybook/test";
 import type { TransactionResponse } from "@/api/generated/model";
 import { getDebtsMockHandler } from "@/api/generated/net-worth/net-worth.msw";
 import { getBulkCategorizeTransactionsMockHandler } from "@/api/generated/transactions/transactions.msw";
+import { transactionRow } from "@/features/transactions/ledger-groups/ledger-rows";
 import { useTransactionRowDialogs } from "@/features/transactions/transaction-row-actions/transaction-row-actions";
 import { useTransactionFilters } from "@/features/transactions/use-transaction-filters";
 import {
@@ -73,7 +74,7 @@ function TransactionsTableHarness({
   return (
     <div className="p-6 lg:p-10">
       <TransactionsTable
-        data={data}
+        rows={data.map(transactionRow)}
         columns={columns}
         isPlaceholder={isPlaceholder}
         columnFilters={columnHeaders.byColumn}

@@ -48,7 +48,9 @@ import {
 import { getReportSummaryMockHandler } from "@/api/generated/reports/reports.msw";
 import { getSetupStatusMockHandler } from "@/api/generated/setup/setup.msw";
 import { getTagsMockHandler } from "@/api/generated/tags/tags.msw";
+import { getTransactionGroupsMockHandler } from "@/api/generated/transaction-groups/transaction-groups.msw";
 import {
+  getLedgerMockHandler,
   getTransactionsMockHandler,
   getTransactionsSummaryMockHandler,
 } from "@/api/generated/transactions/transactions.msw";
@@ -95,6 +97,7 @@ import { reportHandlers } from "./reports";
 import { settingsHandlers } from "./settings";
 import { setupHandlers } from "./setup";
 import { tagHandlers } from "./tags";
+import { transactionGroupHandlers } from "./transaction-groups";
 import { transactionHandlers } from "./transactions";
 import { transferHandlers } from "./transfers";
 import { trashHandlers } from "./trash";
@@ -131,6 +134,7 @@ export const handlers: RequestHandler[] = [
   ...settingsHandlers,
   ...setupHandlers,
   ...tagHandlers,
+  ...transactionGroupHandlers,
   ...transactionHandlers,
   ...transferHandlers,
   ...trashHandlers,
@@ -186,6 +190,8 @@ export const emptyHandlers: RequestHandler[] = [
   getUsersMockHandler([currentUser]),
   getTransactionsSummaryMockHandler(emptyTransactionsSummary),
   getTransactionsMockHandler(emptyPage),
+  getLedgerMockHandler(emptyPage),
+  getTransactionGroupsMockHandler([]),
   getTransfersMockHandler(emptyPage),
   getConversionsMockHandler(emptyPage),
   getDashboardSummaryMockHandler(emptyDashboardSummary),

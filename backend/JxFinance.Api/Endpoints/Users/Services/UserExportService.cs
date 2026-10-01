@@ -283,11 +283,17 @@ public sealed class UserExportService(
             .Where(tag => db.TransactionTags.Any(x => x.TagId == tag.Id && transactions.Any(t => t.Id == x.TransactionId)))
             .Select(tag => new { tag.Id, tag.Name })
             .ToListAsync(cancellationToken);
+        var groups = await db.TransactionGroups
+            .IgnoreQueryFilters(QueryFilters.OwnerOnly)
+            .Where(g => g.UserId == userId)
+            .Select(g => new { g.Id, g.Name })
+            .ToListAsync(cancellationToken);
 
         return new ExportNames(
             accounts.ToDictionary(a => a.Id.Value, a => a.Name),
             categories.ToDictionary(c => c.Id.Value, c => c.Name),
-            tags.ToDictionary(t => t.Id.Value, t => t.Name));
+            tags.ToDictionary(t => t.Id.Value, t => t.Name),
+            groups.ToDictionary(g => g.Id.Value, g => g.Name));
     }
 
     private IQueryable<AccountId> LiveOwnAccounts(Guid userId) =>

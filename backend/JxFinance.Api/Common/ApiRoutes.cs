@@ -85,6 +85,9 @@ public static class ApiRoutes
     public const string Tags = "tags";
     public const string TagsPath = Base + "/" + Tags;
 
+    public const string TransactionGroups = "transaction-groups";
+    public const string TransactionGroupsPath = Base + "/" + TransactionGroups;
+
     public const string Transactions = "transactions";
     public const string TransactionsPath = Base + "/" + Transactions;
 

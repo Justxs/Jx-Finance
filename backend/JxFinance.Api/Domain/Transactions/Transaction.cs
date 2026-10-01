@@ -28,6 +28,7 @@ public sealed class Transaction : OwnableEntity, IAccountScoped, IDated
     public string? Place { get; set; }
     public decimal? Latitude { get; set; }
     public decimal? Longitude { get; set; }
+    public TransactionGroupId? GroupId { get; set; }
     public List<TransactionTag> Tags { get; set; } = [];
 
     public void RecheckUnusual()

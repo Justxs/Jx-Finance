@@ -12,6 +12,8 @@ interface Rule {
 
 const ledger = [
   api.getTransactionsQueryKey,
+  api.getLedgerQueryKey,
+  api.getTransactionGroupsQueryKey,
   api.getAccountsQueryKey,
   api.getDashboardSummaryQueryKey,
   api.getCategoryBreakdownQueryKey,
@@ -60,6 +62,16 @@ const rules: readonly Rule[] = [
       api.getBillsCalendarQueryKey,
       api.getPlacesQueryKey,
     ],
+  },
+  {
+    after: [
+      api.getCreateTransactionGroupMutationKey,
+      api.getRenameTransactionGroupMutationKey,
+      api.getAddToTransactionGroupMutationKey,
+      api.getRemoveFromTransactionGroupMutationKey,
+    ],
+    deleted: [api.getUngroupTransactionGroupMutationKey],
+    refresh: [...ledger, api.getTransactionsSummaryQueryKey],
   },
   {
     after: [api.getSetPayeeNameMutationKey],

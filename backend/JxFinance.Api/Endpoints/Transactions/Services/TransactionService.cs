@@ -22,6 +22,7 @@ using JxFinance.Endpoints.Transactions.BulkCategorizeTransactions;
 using JxFinance.Endpoints.Transactions.BulkTagTransactions;
 using JxFinance.Endpoints.Transactions.CreateTransaction;
 using JxFinance.Endpoints.Transactions.ExportTransactions;
+using JxFinance.Endpoints.Transactions.GetLedger;
 using JxFinance.Endpoints.Transactions.GetTransactions;
 using JxFinance.Endpoints.Transactions.GetTransactionsSummary;
 using JxFinance.Endpoints.Transactions.Interfaces;
@@ -60,10 +61,96 @@ public sealed class TransactionService(
         return page.Map(await ResponderAsync(page.Items, cancellationToken));
     }
 
+    public async Task<PagedResponse<LedgerItemResponse>> GetLedgerPageAsync(
+        GetLedgerRequest request,
+        CancellationToken cancellationToken)
+    {
+        var filtered = Filtered(request);
+        var sort = request.Sort ?? TransactionSortField.Date;
+        var descending = (request.Direction ?? SortDirection.Desc) == SortDirection.Desc;
+        var page = await LedgerKeys.Of(db, filtered, sort)
+            .ToPageAsync(request, keys => LedgerKeys.Sorted(keys, sort, descending), cancellationToken);
+
+        var transactionIds = page.Items
+            .Where(k => k.Kind == LedgerItemKind.Transaction)
+            .Select(k => new TransactionId(k.Id))
+            .ToList();
+        var transactions = transactionIds.Count == 0
+            ? []
+            : await db.Transactions.AsNoTracking().Where(t => transactionIds.Contains(t.Id)).ToListAsync(cancellationToken);
+        var respond = await ResponderAsync(transactions, cancellationToken);
+        var responses = transactions.ToDictionary(t => t.Id.Value, respond);
+        var groups = await GroupSummariesAsync(
+            filtered,
+            page.Items.Where(k => k.Kind == LedgerItemKind.Group).Select(k => new TransactionGroupId(k.Id)).ToList(),
+            cancellationToken);
+
+        return page.Map(k => k.Kind == LedgerItemKind.Group
+            ? new LedgerItemResponse(LedgerItemKind.Group, null, groups[k.Id])
+            : new LedgerItemResponse(LedgerItemKind.Transaction, responses[k.Id], null));
+    }
+
+    public async Task<IReadOnlyList<TransactionResponse>> ListGroupMembersAsync(
+        TransactionGroupId groupId,
+        TransactionFilterRequest filter,
+        int limit,
+        CancellationToken cancellationToken)
+    {
+        var members = await Filtered(filter)
+            .Where(t => t.GroupId == groupId)
+            .OrderByDescending(t => t.Date)
+            .ThenByDescending(t => t.CreatedAt)
+            .AsNoTracking()
+            .Take(limit)
+            .ToListAsync(cancellationToken);
+        var respond = await ResponderAsync(members, cancellationToken);
+
+        return members.Select(respond).ToList();
+    }
+
+    private async Task<Dictionary<Guid, TransactionGroupSummary>> GroupSummariesAsync(
+        IQueryable<Transaction> filtered,
+        List<TransactionGroupId> ids,
+        CancellationToken cancellationToken)
+    {
+        if (ids.Count == 0)
+        {
+            return [];
+        }
+
+        var groups = await db.TransactionGroups
+            .Where(g => ids.Contains(g.Id))
+            .Select(g => new
+            {
+                g.Id,
+                g.Name,
+                Members = db.Transactions.Count(t => t.GroupId == g.Id),
+                Matching = filtered.Count(t => t.GroupId == g.Id),
+                First = filtered.Where(t => t.GroupId == g.Id).Min(t => (DateOnly?)t.Date),
+                Last = filtered.Where(t => t.GroupId == g.Id).Max(t => (DateOnly?)t.Date),
+                Net = filtered
+                    .Where(t => t.GroupId == g.Id)
+                    .Sum(t => t.Type == FlowType.Income ? t.ReportingAmount : -t.ReportingAmount),
+            })
+            .ToListAsync(cancellationToken);
+
+        return groups.ToDictionary(
+            g => g.Id.Value,
+            g => new TransactionGroupSummary(
+                g.Id.Value,
+                g.Name,
+                g.First ?? default,
+                g.Last ?? default,
+                g.Members,
+                g.Matching,
+                Money.Round(g.Net)));
+    }
+
     public async Task<ExportNames> ExportNamesAsync(CancellationToken cancellationToken) => new(
         await db.Accounts.Select(a => new { a.Id, a.Name }).ToDictionaryAsync(a => a.Id.Value, a => a.Name, cancellationToken),
         await db.Categories.Select(c => new { c.Id, c.Name }).ToDictionaryAsync(c => c.Id.Value, c => c.Name, cancellationToken),
-        await db.Tags.Select(t => new { t.Id, t.Name }).ToDictionaryAsync(t => t.Id.Value, t => t.Name, cancellationToken));
+        await db.Tags.Select(t => new { t.Id, t.Name }).ToDictionaryAsync(t => t.Id.Value, t => t.Name, cancellationToken),
+        await db.TransactionGroups.Select(g => new { g.Id, g.Name }).ToDictionaryAsync(g => g.Id.Value, g => g.Name, cancellationToken));
 
     public async IAsyncEnumerable<TransactionResponse> StreamExportAsync(
         GetTransactionsRequest request,
@@ -529,6 +616,8 @@ public sealed class TransactionService(
         var refunds = await RefundMarksAsync(transactions, cancellationToken);
         var splits = await SharedExpensesOfAsync(transactions, cancellationToken);
         var payeeNames = await db.PayeeNamesForAsync(transactions.Select(t => t.PayeeKey), cancellationToken);
+        var groups = await VisibleGroupsAsync(transactions, cancellationToken);
+        var callerId = currentUser.Id;
 
         return t => Shown(refunds.Apply(t, t.ToResponse(
             linesByTransaction.GetValueOrDefault(t.Id),
@@ -538,7 +627,22 @@ public sealed class TransactionService(
             DebtPayment = debtPayments.GetValueOrDefault(t.Id),
             SharedExpense = splits.GetValueOrDefault(t.Id),
             PayeeName = t.PayeeKey is { } key ? payeeNames.GetValueOrDefault(key) : null,
+            GroupId = t.GroupId is { } groupId && groups.Contains(groupId) ? groupId.Value : null,
+            EnteredByMe = t.UserId == callerId,
         }));
+    }
+
+    private async Task<HashSet<TransactionGroupId>> VisibleGroupsAsync(
+        IReadOnlyCollection<Transaction> transactions,
+        CancellationToken cancellationToken)
+    {
+        var ids = transactions.Select(t => t.GroupId).OfType<TransactionGroupId>().Distinct().ToList();
+        if (ids.Count == 0)
+        {
+            return [];
+        }
+
+        return [.. await db.TransactionGroups.Where(g => ids.Contains(g.Id)).Select(g => g.Id).ToListAsync(cancellationToken)];
     }
 
     private async Task<DomainError?> ValidateReferencesAsync(

@@ -34,7 +34,9 @@ public sealed record TransactionResponse(
     DateOnly? SpreadUntil = null,
     string? Place = null,
     decimal? Latitude = null,
-    decimal? Longitude = null);
+    decimal? Longitude = null,
+    Guid? GroupId = null,
+    bool EnteredByMe = false);
 
 public sealed record TransactionDebtPaymentResponse(Guid Id, Guid DebtId, string DebtName);
 

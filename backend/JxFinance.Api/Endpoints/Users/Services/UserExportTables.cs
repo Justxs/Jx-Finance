@@ -43,6 +43,7 @@ public static class UserExportTables
         ["Tags"] = new Referenced(AlsoOwned: true, [("TransactionTags", "TagId")]),
         [Transactions] = new OnOwnedAccounts(AccountId),
         ["TransactionAttachments"] = new ChildOf(Transactions, TransactionId),
+        ["TransactionGroups"] = new Owned(),
         ["TransactionLines"] = new ChildOf(Transactions, TransactionId),
         ["TransactionTags"] = new ChildOf(Transactions, TransactionId),
         ["TransferImports"] = new OnOwnedAccounts(AccountId),

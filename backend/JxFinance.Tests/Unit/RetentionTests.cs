@@ -142,6 +142,7 @@ public sealed class RetentionTests
                 "Transfers",
                 "TransactionAttachments",
                 "Transactions",
+                "TransactionGroups",
                 "Budgets",
                 "Goals",
                 "Assets",

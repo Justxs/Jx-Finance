@@ -5,11 +5,11 @@ import { useTranslation } from "react-i18next";
 import {
   getExportTransactionsPdfUrl,
   getExportTransactionsUrl,
-  getTransactionsQueryKey,
+  getLedgerQueryKey,
   useAccountsSuspense,
   useCategoriesSuspense,
+  useLedgerSuspense,
   useTagsSuspense,
-  useTransactionsSuspense,
 } from "@/api/generated";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog/confirm-delete-dialog";
 import { PageHeader } from "@/components/page-header/page-header";
@@ -21,6 +21,8 @@ import { TextLink } from "@/components/ui/text-link/text-link";
 import { useSuggestedRuleToast } from "@/features/categorization-rules/suggested-rule-toast/use-suggested-rule-toast";
 import { ImportDialog } from "@/features/imports/import-dialog/import-dialog";
 import { ActiveFilters } from "@/features/transactions/active-filters/active-filters";
+import { ledgerTransactions } from "@/features/transactions/ledger-groups/ledger-rows";
+import { useLedgerGroups } from "@/features/transactions/ledger-groups/use-ledger-groups";
 import { SelectionToolbar } from "@/features/transactions/selection-toolbar/selection-toolbar";
 import { signedAmount } from "@/features/transactions/transaction-amount/transaction-amount";
 import { transactionName } from "@/features/transactions/transaction-amount/transaction-row";
@@ -71,10 +73,12 @@ export function TransactionsPage() {
   const [shown, stale] = useDeferredParams(view);
   const navigate = useNavigate({ from: "/transactions" });
   const [importOpen, setImportOpen] = useState(false);
-  const selection = useTransactionSelection(JSON.stringify(view));
+  const viewKey = JSON.stringify(view);
+  const selection = useTransactionSelection(viewKey);
 
   const listParams = transactionListParams(shown, pageSize);
-  const listKey = getTransactionsQueryKey(listParams);
+  const filterParams = transactionFilterParams(shown);
+  const listKey = getLedgerQueryKey(listParams);
   const exportCsvUrl = useExportUrl(getExportTransactionsUrl(listParams));
   const exportPdfUrl = useExportUrl(getExportTransactionsPdfUrl(listParams));
 
@@ -82,8 +86,9 @@ export function TransactionsPage() {
   const { data: categories } = useCategoriesSuspense();
   const { data: tags } = useTagsSuspense();
   const {
-    data: { items, total },
-  } = useTransactionsSuspense(listParams);
+    data: { items: ledgerItems, total },
+  } = useLedgerSuspense(listParams);
+  const items = ledgerTransactions(ledgerItems);
   const suggestedRule = useSuggestedRuleToast(categories);
   const filters = useTransactionFilters({ accounts, categories });
   const columnHeaders = useTransactionColumnHeaders(filters, tags);
@@ -91,6 +96,12 @@ export function TransactionsPage() {
   const inlineCategory = useInlineCategory(suggestedRule.offerAfterSave);
 
   const mutations = useTransactionMutations({ listKey, onBulkApplied: selection.clear });
+  const groups = useLedgerGroups({
+    viewKey,
+    items: ledgerItems,
+    filter: filterParams,
+    onGrouped: selection.clear,
+  });
   const formSection = useTransactionFormSection({
     accounts,
     categories,
@@ -105,7 +116,7 @@ export function TransactionsPage() {
   const selectedIds = selectedItems.map((item) => item.id);
   const remove = useConfirmedDelete(
     mutations.remove,
-    items,
+    [...items, ...groups.memberTransactions],
     (item) =>
       metaLine(
         formatDate(item.date),
@@ -194,18 +205,22 @@ export function TransactionsPage() {
             onApplyTags={(tagIds) =>
               mutations.bulkTag.mutate({ data: { transactionIds: selectedIds, tagIds } })
             }
+            onGroup={() =>
+              groups.openGroupDialog({ kind: "selection", transactionIds: selectedIds })
+            }
             onClear={selection.clear}
           />
         ) : (
           <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
-            <TransactionsTotals params={transactionFilterParams(shown)} stale={stale} />
+            <TransactionsTotals params={filterParams} stale={stale} />
             <TransactionsFiltersDialog filters={filters} tags={tags} className="md:hidden" />
           </div>
         )}
 
         <div className="hidden md:block">
           <TransactionsTable
-            data={items}
+            rows={groups.rows}
+            groups={groups.handlers}
             columns={columns}
             isPlaceholder={stale}
             columnFilters={columnHeaders.byColumn}
@@ -223,7 +238,8 @@ export function TransactionsPage() {
         </div>
         <div className="md:hidden">
           <TransactionsList
-            data={items}
+            rows={groups.rows}
+            groups={groups.handlers}
             isPlaceholder={stale}
             filtered={columnHeaders.active}
             onClearFilters={columnHeaders.clearAll}
@@ -241,6 +257,7 @@ export function TransactionsPage() {
 
       {formSection.dialogs}
       {rowDialogs.dialogs}
+      {groups.dialogs}
       <ConfirmDeleteDialog {...remove.dialogProps} />
       {features.import ? (
         <ImportDialog open={importOpen} onOpenChange={setImportOpen} accounts={accounts} />

@@ -76,7 +76,24 @@ public sealed record TransactionDto(
     List<TransactionLineDto>? Lines,
     string Currency,
     string ReportingAmount,
-    List<Guid> TagIds);
+    List<Guid> TagIds,
+    Guid? GroupId = null,
+    bool EnteredByMe = false);
+
+public sealed record TransactionGroupDto(Guid Id, string Name, int MemberCount, DateOnly FirstDate, DateOnly LastDate);
+
+public sealed record GroupSummaryDto(
+    Guid Id,
+    string Name,
+    DateOnly FirstDate,
+    DateOnly LastDate,
+    int MemberCount,
+    int MatchingCount,
+    string NetReportingAmount);
+
+public sealed record LedgerItemDto(string Kind, TransactionDto? Transaction, GroupSummaryDto? Group);
+
+public sealed record GroupMembersDto(List<TransactionDto> Items, bool Truncated);
 
 public sealed record TransferDto(
     Guid Id,

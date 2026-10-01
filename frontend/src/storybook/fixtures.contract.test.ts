@@ -31,6 +31,10 @@ function asSplitTransaction(fixture: unknown) {
   return { ...fixtures.splitTransaction, lines: fixture };
 }
 
+function asLedgerGroup(fixture: unknown) {
+  return asPage([{ kind: "group", transaction: null, group: fixture }]);
+}
+
 function asCategoryBreakdown(fixture: unknown) {
   return { ...fixtures.emptyCategoryBreakdown, items: fixture };
 }
@@ -144,6 +148,12 @@ const contracts: Record<string, Contract> = {
   transactions: { schema: schemas.TransactionsResponse, toResponse: asPage },
   monthTransactions: { schema: schemas.TransactionsResponse, toResponse: asPage },
   emptyTransactionsSummary: { schema: schemas.TransactionsSummaryResponse },
+  tripGroupMembers: { schema: schemas.TransactionsResponse, toResponse: asPage },
+  tripGroupMembersResponse: { schema: schemas.TransactionGroupMembersResponse },
+  tripGroup: { schema: schemas.LedgerResponse, toResponse: asLedgerGroup },
+  partlyMatchingTripGroup: { schema: schemas.LedgerResponse, toResponse: asLedgerGroup },
+  transactionGroups: { schema: schemas.TransactionGroupsResponse },
+  ledgerItems: { schema: schemas.LedgerResponse, toResponse: asPage },
   transfers: { schema: schemas.TransfersResponse, toResponse: asPage },
   manualTransfer: { schema: schemas.UpdateTransferResponse },
   crossCurrencyTransfer: { schema: schemas.UpdateTransferResponse },

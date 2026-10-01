@@ -31,6 +31,8 @@ import type {
   CreateTransactionRequest,
   ExportTransactionsParams,
   ExportTransactionsPdfParams,
+  LedgerParams,
+  PagedResponseOfLedgerItemResponse,
   PagedResponseOfTransactionResponse,
   PlaceSuggestionResponse,
   PlacesParams,
@@ -779,6 +781,129 @@ export function useExportTransactionsPdfSuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
   const queryOptions = getExportTransactionsPdfSuspenseQueryOptions(params, options);
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export const getLedgerUrl = (params: LedgerParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/transactions/ledger?${stringifiedParams}`
+    : `/api/transactions/ledger`;
+};
+
+/**
+ * Returns a page of the ledger in which the members of each of your transaction groups are folded into one item of kind Group, and every other transaction is an item of kind Transaction. Filters apply to the members: a group appears when at least one member matches, and its matchingCount, date range and net count only the matching members, while memberCount counts them all. The net is the sum of the members' reporting amounts with income positive. Sorting by date places a group at its newest matching member, by amount at the size of its net, by description at its name, and by category or account after every transaction, by name. The total counts ledger items, not transactions; GET /api/transactions/summary still counts transactions. A group is personal, so a housemate sees its members on a shared account as ordinary transactions. GET /api/transactions is unchanged and never folds anything.
+ * @summary List the ledger with transaction groups folded
+ */
+export const ledger = async (
+  params: LedgerParams,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<PagedResponseOfLedgerItemResponse> => {
+  return customFetch<PagedResponseOfLedgerItemResponse>(getLedgerUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getLedgerQueryKey = (params?: LedgerParams) => {
+  return [`/api/transactions/ledger`, ...(params ? [params] : [])] as const;
+};
+
+export const getLedgerSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof ledger>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  params: LedgerParams,
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof ledger>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getLedgerQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof ledger>>> = ({ signal }) =>
+    ledger(params, { signal, ...requestOptions });
+
+  return queryOptionsBuilder({
+    queryKey,
+    ...queryOptions,
+    queryFn: queryOptions?.queryFn ?? queryFn,
+  }) as UseSuspenseQueryOptions<Awaited<ReturnType<typeof ledger>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  } & {
+    throwOnError?: ((this: never, error: TError) => boolean) & { readonly __inferenceOnly: never };
+  };
+};
+
+export type LedgerSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof ledger>>>;
+export type LedgerSuspenseQueryError = ErrorType<ProblemDetails>;
+
+export function useLedgerSuspense<
+  TData = Awaited<ReturnType<typeof ledger>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  params: LedgerParams,
+  options: {
+    query: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof ledger>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useLedgerSuspense<
+  TData = Awaited<ReturnType<typeof ledger>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  params: LedgerParams,
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof ledger>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useLedgerSuspense<
+  TData = Awaited<ReturnType<typeof ledger>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  params: LedgerParams,
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof ledger>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List the ledger with transaction groups folded
+ */
+
+export function useLedgerSuspense<
+  TData = Awaited<ReturnType<typeof ledger>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  params: LedgerParams,
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof ledger>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getLedgerSuspenseQueryOptions(params, options);
 
   const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
     TData,

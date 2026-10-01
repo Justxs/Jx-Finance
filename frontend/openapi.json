@@ -14999,6 +14999,758 @@
         ]
       }
     },
+    "/api/transaction-groups": {
+      "post": {
+        "tags": [
+          "TransactionGroups"
+        ],
+        "summary": "Group transactions",
+        "description": "Creates a personal group, such as \"Trip to Riga\", and puts the listed transactions in it, so that GET /api/transactions/ledger folds them into one item. Grouping changes only how the ledger reads: every member keeps its own date, category and amount in reports, budgets, balances, the month close and the exports, and the member's last-updated time is left as it was. Every transaction must be one you entered, and none may already be in another group; remove it from that group first. Names need not be unique. The ledger offers grouping for two or more selected rows, while a row's own actions start a group with that row alone. Only a browser session can group; a personal API token cannot.",
+        "operationId": "CreateTransactionGroup",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTransactionGroupRequest"
+              },
+              "example": {
+                "name": "Trip to Riga",
+                "transactionIds": [
+                  "00000000-0000-0000-0000-000000000000",
+                  "00000000-0000-0000-0000-000000000000"
+                ]
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "The group was created. The Location header points at it.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransactionGroupResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "A transaction was entered by someone else, such as a housemate on a shared account.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "A transaction is not visible to you.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "A transaction is already in another group.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      },
+      "get": {
+        "tags": [
+          "TransactionGroups"
+        ],
+        "summary": "List your transaction groups",
+        "description": "Returns your own transaction groups that still hold at least one live transaction you can see, the one with the newest member first, each with its member count and the dates of its first and last member. Groups are personal: a housemate never sees them.",
+        "operationId": "GetTransactionGroups",
+        "responses": {
+          "200": {
+            "description": "Your transaction groups.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TransactionGroupResponse"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          },
+          {
+            "PersonalApiToken": [ ]
+          }
+        ]
+      }
+    },
+    "/api/transaction-groups/{id}": {
+      "put": {
+        "tags": [
+          "TransactionGroups"
+        ],
+        "summary": "Rename a transaction group",
+        "description": "Changes the name of one of your groups. Its members are untouched.",
+        "operationId": "RenameTransactionGroup",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The group id. Takes precedence over the id in the body.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "example": "00000000-0000-0000-0000-000000000000"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RenameTransactionGroupRequest"
+              },
+              "example": {
+                "name": "Trip to Riga"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "The renamed group.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransactionGroupResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "You have no such group.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "TransactionGroups"
+        ],
+        "summary": "Ungroup",
+        "description": "Removes one of your groups and keeps every member as an ordinary transaction. The group goes to the trash with the members it held, and POST /api/trash/restore with kind transactionGroup puts back the name and the members that are still live and in no other group.",
+        "operationId": "UngroupTransactionGroup",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The group id.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "The group is gone and its members are ordinary transactions."
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "You have no such group.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      }
+    },
+    "/api/transaction-groups/{id}/members": {
+      "post": {
+        "tags": [
+          "TransactionGroups"
+        ],
+        "summary": "Add transactions to a group",
+        "description": "Puts the listed transactions in one of your groups; split transactions are accepted. Every transaction must be one you entered and in no other group; a transaction already in this group is left as it is. Nothing is written when one of them is refused.",
+        "operationId": "AddToTransactionGroup",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The group id. Takes precedence over the id in the body.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "example": "00000000-0000-0000-0000-000000000000"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddToTransactionGroupRequest"
+              },
+              "example": {
+                "transactionIds": [
+                  "00000000-0000-0000-0000-000000000000"
+                ]
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "The transactions are in the group."
+          },
+          "400": {
+            "description": "Validation failed.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "A transaction was entered by someone else.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "You have no such group, or a transaction is not visible to you.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "A transaction is already in another group.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      },
+      "get": {
+        "tags": [
+          "TransactionGroups"
+        ],
+        "summary": "List the members of a group",
+        "description": "Returns the members of one of your groups that match the same filters as the ledger, newest first, so an expanded group row shows exactly the members that made it appear. The list is not paged: at most 200 members are returned, and truncated says whether more matched.",
+        "operationId": "GetTransactionGroupMembers",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The group id.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "accountId",
+            "in": "query",
+            "description": "Keep only transactions on this account.",
+            "schema": {
+              "type": [
+                "null",
+                "string"
+              ],
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "categoryId",
+            "in": "query",
+            "description": "Keep only transactions in this category, including split lines filed under it.",
+            "schema": {
+              "type": [
+                "null",
+                "string"
+              ],
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "tagIds",
+            "in": "query",
+            "description": "Comma-separated tag ids, at most ten. A transaction is kept only when it carries every one of them, so adding a tag always narrows the list. Tags sit on the transaction, never on a split line.",
+            "schema": {
+              "type": [
+                "null",
+                "string"
+              ]
+            }
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "description": "Income or Expense.",
+            "schema": {
+              "$ref": "#/components/schemas/FlowType"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "description": "Case-insensitive match against the description, the note, your name for the payee or, while the locations feature is on, the place.",
+            "schema": {
+              "type": [
+                "null",
+                "string"
+              ]
+            }
+          },
+          {
+            "name": "payee",
+            "in": "query",
+            "description": "Keep only transactions whose normalized description equals the normalized value: lowercase words, punctuation dropped and tokens with three or more digits dropped. Send a payeeKey from the report's expenseByPayee or a raw description. A value with nothing left after normalizing is ignored.",
+            "schema": {
+              "type": [
+                "null",
+                "string"
+              ]
+            }
+          },
+          {
+            "name": "place",
+            "in": "query",
+            "description": "Keep only transactions whose place contains this text, ignoring case, at most 120 characters. Ignored while the locations feature is off.",
+            "schema": {
+              "type": [
+                "null",
+                "string"
+              ]
+            }
+          },
+          {
+            "name": "dateFrom",
+            "in": "query",
+            "description": "Inclusive start date as YYYY-MM-DD.",
+            "schema": {
+              "type": [
+                "null",
+                "string"
+              ],
+              "format": "date"
+            }
+          },
+          {
+            "name": "dateTo",
+            "in": "query",
+            "description": "Inclusive end date as YYYY-MM-DD.",
+            "schema": {
+              "type": [
+                "null",
+                "string"
+              ],
+              "format": "date"
+            }
+          },
+          {
+            "name": "amountMin",
+            "in": "query",
+            "description": "Inclusive lowest amount, compared with the size of the amount in the transaction's own currency, so a refund of 49.00 matches like a purchase of 49.00.",
+            "schema": {
+              "type": [
+                "null",
+                "number"
+              ],
+              "format": "decimal"
+            }
+          },
+          {
+            "name": "amountMax",
+            "in": "query",
+            "description": "Inclusive highest amount, compared the same way as amountMin.",
+            "schema": {
+              "type": [
+                "null",
+                "number"
+              ],
+              "format": "decimal"
+            }
+          },
+          {
+            "name": "unusual",
+            "in": "query",
+            "description": "true keeps only expenses flagged as unusual and not marked \"not unusual\". Ignored while the unusualAmounts feature is off.",
+            "schema": {
+              "type": [
+                "null",
+                "boolean"
+              ]
+            }
+          },
+          {
+            "name": "uncategorized",
+            "in": "query",
+            "description": "true keeps only transactions without a category, and split transactions with at least one line without one.",
+            "schema": {
+              "type": [
+                "null",
+                "boolean"
+              ]
+            }
+          },
+          {
+            "name": "spreadOverlap",
+            "in": "query",
+            "description": "true also keeps transactions dated before the range that are spread over months with a monthly slice inside it, so a figure from a report or a budget leads to every row that makes it up. Ignored unless both dateFrom and dateTo are set.",
+            "schema": {
+              "type": [
+                "null",
+                "boolean"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The matching members.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GroupMembersResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "You have no such group.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          },
+          {
+            "PersonalApiToken": [ ]
+          }
+        ]
+      }
+    },
+    "/api/transaction-groups/{id}/members/{transactionId}": {
+      "delete": {
+        "tags": [
+          "TransactionGroups"
+        ],
+        "summary": "Remove a transaction from a group",
+        "description": "Takes one transaction out of one of your groups, so the ledger shows it as an ordinary row again. The group stays, even with a single member left.",
+        "operationId": "RemoveFromTransactionGroup",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The group id.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "transactionId",
+            "in": "path",
+            "description": "The transaction to take out.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "The transaction is no longer in the group."
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "You have no such group, or the transaction is not visible or not in it.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      }
+    },
     "/api/transactions": {
       "post": {
         "tags": [
@@ -15976,6 +16728,259 @@
           },
           "400": {
             "description": "More rows match than a PDF may hold.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          },
+          {
+            "PersonalApiToken": [ ]
+          }
+        ]
+      }
+    },
+    "/api/transactions/ledger": {
+      "get": {
+        "tags": [
+          "Transactions"
+        ],
+        "summary": "List the ledger with transaction groups folded",
+        "description": "Returns a page of the ledger in which the members of each of your transaction groups are folded into one item of kind Group, and every other transaction is an item of kind Transaction. Filters apply to the members: a group appears when at least one member matches, and its matchingCount, date range and net count only the matching members, while memberCount counts them all. The net is the sum of the members' reporting amounts with income positive. Sorting by date places a group at its newest matching member, by amount at the size of its net, by description at its name, and by category or account after every transaction, by name. The total counts ledger items, not transactions; GET /api/transactions/summary still counts transactions. A group is personal, so a housemate sees its members on a shared account as ordinary transactions. GET /api/transactions is unchanged and never folds anything.",
+        "operationId": "GetLedger",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "One-based page number. Defaults to 1.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "description": "Rows per page. Defaults to 20.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/TransactionSortField"
+            }
+          },
+          {
+            "name": "direction",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/SortDirection"
+            }
+          },
+          {
+            "name": "accountId",
+            "in": "query",
+            "description": "Keep only transactions on this account.",
+            "schema": {
+              "type": [
+                "null",
+                "string"
+              ],
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "categoryId",
+            "in": "query",
+            "description": "Keep only transactions in this category, including split lines filed under it.",
+            "schema": {
+              "type": [
+                "null",
+                "string"
+              ],
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "tagIds",
+            "in": "query",
+            "description": "Comma-separated tag ids, at most ten. A transaction is kept only when it carries every one of them, so adding a tag always narrows the list. Tags sit on the transaction, never on a split line.",
+            "schema": {
+              "type": [
+                "null",
+                "string"
+              ]
+            }
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "description": "Income or Expense.",
+            "schema": {
+              "$ref": "#/components/schemas/FlowType"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "description": "Case-insensitive match against the description, the note, your name for the payee or, while the locations feature is on, the place.",
+            "schema": {
+              "type": [
+                "null",
+                "string"
+              ]
+            }
+          },
+          {
+            "name": "payee",
+            "in": "query",
+            "description": "Keep only transactions whose normalized description equals the normalized value: lowercase words, punctuation dropped and tokens with three or more digits dropped. Send a payeeKey from the report's expenseByPayee or a raw description. A value with nothing left after normalizing is ignored.",
+            "schema": {
+              "type": [
+                "null",
+                "string"
+              ]
+            }
+          },
+          {
+            "name": "place",
+            "in": "query",
+            "description": "Keep only transactions whose place contains this text, ignoring case, at most 120 characters. Ignored while the locations feature is off.",
+            "schema": {
+              "type": [
+                "null",
+                "string"
+              ]
+            }
+          },
+          {
+            "name": "dateFrom",
+            "in": "query",
+            "description": "Inclusive start date as YYYY-MM-DD.",
+            "schema": {
+              "type": [
+                "null",
+                "string"
+              ],
+              "format": "date"
+            }
+          },
+          {
+            "name": "dateTo",
+            "in": "query",
+            "description": "Inclusive end date as YYYY-MM-DD.",
+            "schema": {
+              "type": [
+                "null",
+                "string"
+              ],
+              "format": "date"
+            }
+          },
+          {
+            "name": "amountMin",
+            "in": "query",
+            "description": "Inclusive lowest amount, compared with the size of the amount in the transaction's own currency, so a refund of 49.00 matches like a purchase of 49.00.",
+            "schema": {
+              "type": [
+                "null",
+                "number"
+              ],
+              "format": "decimal"
+            }
+          },
+          {
+            "name": "amountMax",
+            "in": "query",
+            "description": "Inclusive highest amount, compared the same way as amountMin.",
+            "schema": {
+              "type": [
+                "null",
+                "number"
+              ],
+              "format": "decimal"
+            }
+          },
+          {
+            "name": "unusual",
+            "in": "query",
+            "description": "true keeps only expenses flagged as unusual and not marked \"not unusual\". Ignored while the unusualAmounts feature is off.",
+            "schema": {
+              "type": [
+                "null",
+                "boolean"
+              ]
+            }
+          },
+          {
+            "name": "uncategorized",
+            "in": "query",
+            "description": "true keeps only transactions without a category, and split transactions with at least one line without one.",
+            "schema": {
+              "type": [
+                "null",
+                "boolean"
+              ]
+            }
+          },
+          {
+            "name": "spreadOverlap",
+            "in": "query",
+            "description": "true also keeps transactions dated before the range that are spread over months with a monthly slice inside it, so a figure from a report or a budget leads to every row that makes it up. Ignored unless both dateFrom and dateTo are set.",
+            "schema": {
+              "type": [
+                "null",
+                "boolean"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A page of ledger items with the total item count.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResponseOfLedgerItemResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -19153,6 +20158,31 @@
           "name": "Chrome on Windows"
         }
       },
+      "AddToTransactionGroupRequest": {
+        "required": [
+          "transactionIds"
+        ],
+        "type": "object",
+        "properties": {
+          "transactionIds": {
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "The transactions to add, 1 to 200.",
+            "example": [
+              "00000000-0000-0000-0000-000000000000"
+            ]
+          }
+        },
+        "example": {
+          "transactionIds": [
+            "00000000-0000-0000-0000-000000000000"
+          ]
+        }
+      },
       "AmortizationType": {
         "enum": [
           "annuity",
@@ -21801,6 +22831,42 @@
           "householdId": null
         }
       },
+      "CreateTransactionGroupRequest": {
+        "required": [
+          "name",
+          "transactionIds"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "maxLength": 120,
+            "minLength": 0,
+            "type": "string",
+            "description": "The group's name, 1 to 120 characters.",
+            "example": "Trip to Riga"
+          },
+          "transactionIds": {
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "The transactions to group, 1 to 200.",
+            "example": [
+              "00000000-0000-0000-0000-000000000000",
+              "00000000-0000-0000-0000-000000000000"
+            ]
+          }
+        },
+        "example": {
+          "name": "Trip to Riga",
+          "transactionIds": [
+            "00000000-0000-0000-0000-000000000000",
+            "00000000-0000-0000-0000-000000000000"
+          ]
+        }
+      },
       "CreateTransactionRequest": {
         "required": [
           "accountId",
@@ -23094,6 +24160,7 @@
           "transaction.refundOriginalInvalid",
           "transaction.splitNotAllowed",
           "transaction.spreadRefund",
+          "transactionGroup.memberTaken",
           "transfer.amountMismatch",
           "transfer.receivedAmountRequired",
           "transfer.sameAccount",
@@ -23463,6 +24530,24 @@
               "string"
             ],
             "format": "uuid"
+          }
+        }
+      },
+      "GroupMembersResponse": {
+        "required": [
+          "items",
+          "truncated"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TransactionResponse"
+            }
+          },
+          "truncated": {
+            "type": "boolean"
           }
         }
       },
@@ -24395,6 +25480,46 @@
           "split"
         ],
         "type": "string"
+      },
+      "LedgerItemKind": {
+        "enum": [
+          "transaction",
+          "group"
+        ],
+        "type": "string"
+      },
+      "LedgerItemResponse": {
+        "required": [
+          "kind",
+          "transaction",
+          "group"
+        ],
+        "type": "object",
+        "properties": {
+          "kind": {
+            "$ref": "#/components/schemas/LedgerItemKind"
+          },
+          "transaction": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/TransactionResponse"
+              }
+            ]
+          },
+          "group": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/TransactionGroupSummary"
+              }
+            ]
+          }
+        }
       },
       "LinkDebtPaymentRequest": {
         "required": [
@@ -25510,6 +26635,35 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/InvestmentTransactionResponse"
+            }
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "total": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "PagedResponseOfLedgerItemResponse": {
+        "required": [
+          "items",
+          "page",
+          "pageSize",
+          "total"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LedgerItemResponse"
             }
           },
           "page": {
@@ -26879,6 +28033,24 @@
         },
         "example": {
           "name": "Phone"
+        }
+      },
+      "RenameTransactionGroupRequest": {
+        "required": [
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "maxLength": 120,
+            "minLength": 0,
+            "type": "string",
+            "description": "The new name, 1 to 120 characters.",
+            "example": "Trip to Riga"
+          }
+        },
+        "example": {
+          "name": "Trip to Riga"
         }
       },
       "ReportComparisonMode": {
@@ -28639,6 +29811,74 @@
           }
         }
       },
+      "TransactionGroupResponse": {
+        "required": [
+          "id",
+          "name",
+          "memberCount",
+          "firstDate",
+          "lastDate"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "memberCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "firstDate": {
+            "$ref": "#/components/schemas/DateOnly"
+          },
+          "lastDate": {
+            "$ref": "#/components/schemas/DateOnly"
+          }
+        }
+      },
+      "TransactionGroupSummary": {
+        "required": [
+          "id",
+          "name",
+          "firstDate",
+          "lastDate",
+          "memberCount",
+          "matchingCount",
+          "netReportingAmount"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "firstDate": {
+            "$ref": "#/components/schemas/DateOnly"
+          },
+          "lastDate": {
+            "$ref": "#/components/schemas/DateOnly"
+          },
+          "memberCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "matchingCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "netReportingAmount": {
+            "type": "string",
+            "format": "decimal"
+          }
+        }
+      },
       "TransactionLineRequest": {
         "required": [
           "categoryId",
@@ -28909,6 +30149,17 @@
               "number"
             ],
             "format": "double"
+          },
+          "groupId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "enteredByMe": {
+            "type": "boolean",
+            "default": false
           }
         }
       },
@@ -29105,7 +30356,8 @@
           "attachment",
           "csvImportMapping",
           "sharedExpense",
-          "settlement"
+          "settlement",
+          "transactionGroup"
         ],
         "type": "string",
         "description": "Which kind of record to bring back, as listed by GET /api/trash."
@@ -31054,6 +32306,9 @@
     {
       "name": "Tags",
       "description": "Free-form labels that transactions can be marked with."
+    },
+    {
+      "name": "TransactionGroups"
     },
     {
       "name": "Transactions",

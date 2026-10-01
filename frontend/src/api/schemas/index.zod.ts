@@ -24,6 +24,7 @@ export * from "./reports/reports.zod";
 export * from "./settings/settings.zod";
 export * from "./setup/setup.zod";
 export * from "./tags/tags.zod";
+export * from "./transaction-groups/transaction-groups.zod";
 export * from "./transactions/transactions.zod";
 export * from "./transfers/transfers.zod";
 export * from "./trash/trash.zod";

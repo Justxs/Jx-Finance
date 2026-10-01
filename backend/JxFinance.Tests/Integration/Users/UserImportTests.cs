@@ -109,6 +109,39 @@ public sealed partial class UserImportTests(ApiFixture fixture) : IntegrationTes
     }
 
     [Fact]
+    public async Task A_group_keeps_its_members_through_an_export_and_an_import_and_the_csv_names_it()
+    {
+        using var source = await CreateUserClientAsync();
+        var account = await CreateAccountAsync(client: source);
+        var hotel = await CreateTransactionAsync(source, account, null, "expense", "40.00", "2026-07-03", "Hotel");
+        var bus = await CreateTransactionAsync(source, account, null, "expense", "12.00", "2026-07-04", "Bus");
+        await CreateTransactionAsync(source, account, null, "expense", "5.00", "2026-07-05", "Coffee");
+        await PostAsync<TransactionGroupDto>(source, "/api/transaction-groups", new { name = "Trip to Riga", transactionIds = new[] { hotel.Id, bus.Id } });
+        var export = await DownloadAsync(source);
+        string csv;
+        string journal;
+        using (var archive = new ZipArchive(new MemoryStream(export), ZipArchiveMode.Read))
+        {
+            csv = await new StreamReader(archive.GetEntry(UserExportService.TransactionsEntry)!.Open()).ReadToEndAsync(TestContext.Current.CancellationToken);
+            journal = await new StreamReader(archive.GetEntry(UserExportService.JournalEntry)!.Open()).ReadToEndAsync(TestContext.Current.CancellationToken);
+        }
+
+        using var target = await CreateUserClientAsync();
+
+        await ReadOkAsync<ImportDto>(await ImportAsync(target, WithNewIds(export)));
+        var groups = (await target.GetFromJsonAsync<List<TransactionGroupDto>>("/api/transaction-groups", TestContext.Current.CancellationToken))!;
+        var ledger = (await target.GetFromJsonAsync<PageDto<LedgerItemDto>>("/api/transactions/ledger", TestContext.Current.CancellationToken))!;
+
+        var group = Assert.Single(groups);
+        Assert.Equal(("Trip to Riga", 2), (group.Name, group.MemberCount));
+        Assert.Equal(["transaction", "group"], ledger.Items.Select(item => item.Kind));
+        var lines = csv.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        Assert.EndsWith(",Place,Group", lines[0], StringComparison.Ordinal);
+        Assert.Equal(2, lines.Count(line => line.EndsWith(",Trip to Riga", StringComparison.Ordinal)));
+        Assert.DoesNotContain("Trip to Riga", journal, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public async Task A_security_the_import_adds_arrives_without_a_price_source()
     {
         using var source = await CreateUserClientAsync();

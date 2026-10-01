@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, fireEvent, fn, userEvent, waitFor, within } from "storybook/test";
-import { getTransactionsQueryKey } from "@/api/generated";
+import { getLedgerQueryKey } from "@/api/generated";
 import {
   getCreateTransactionMockHandler,
   getUpdateTransactionMockHandler,
@@ -16,7 +16,7 @@ const offerRule = fn();
 
 function FormSectionHarness() {
   const mutations = useTransactionMutations({
-    listKey: getTransactionsQueryKey(),
+    listKey: getLedgerQueryKey(),
     onBulkApplied: fn(),
   });
   const section = useTransactionFormSection({

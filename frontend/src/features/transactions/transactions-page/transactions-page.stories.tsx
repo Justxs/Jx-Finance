@@ -1,9 +1,10 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, fireEvent, screen, userEvent, waitFor, within } from "storybook/test";
+import { expect, fireEvent, fn, screen, userEvent, waitFor, within } from "storybook/test";
+import { getCreateTransactionGroupMockHandler } from "@/api/generated/transaction-groups/transaction-groups.msw";
 import { getCreateTransactionMockHandler } from "@/api/generated/transactions/transactions.msw";
 import { savedFilters, transactionTemplates } from "@/features/transactions/transaction-views";
 import { withPageFrame } from "@/storybook/decorators";
-import { ids, splitTransaction } from "@/storybook/fixtures";
+import { ids, splitTransaction, transactionGroups } from "@/storybook/fixtures";
 import {
   emptyHandlers,
   errorHandlers,
@@ -72,6 +73,42 @@ export const BulkSelection: Story = {
     await userEvent.click(enabled[1]!);
     await expect(enabled[1]).toHaveFocus();
     await expect(await canvas.findByText("2 selected")).toBeVisible();
+  },
+};
+
+const grouped = fn();
+
+export const GroupingTwoSelectedRows: Story = {
+  parameters: withHandlers(
+    getCreateTransactionGroupMockHandler(async ({ request }) => {
+      grouped(await request.json());
+      return first(transactionGroups);
+    }),
+  ),
+  play: async ({ canvas }) => {
+    await expect(
+      await canvas.findAllByRole("button", { name: "Show the 3 rows of Kelionė į Rygą" }),
+    ).not.toHaveLength(0);
+    const boxes = await canvas.findAllByRole("checkbox", { name: /^Select: / });
+    const enabled = boxes.filter((box) => box.getAttribute("aria-disabled") !== "true");
+    await userEvent.click(enabled[0]!);
+    await userEvent.click(enabled[1]!);
+    const toolbar = within(canvas.getByRole("group", { name: "Selected transactions" }));
+    await userEvent.click(toolbar.getByRole("button", { name: "Group" }));
+
+    const dialog = within(await openedDialog());
+    await fireEvent.change(dialog.getByLabelText("Group name"), {
+      target: { value: "Kelionė į Klaipėdą" },
+    });
+    await userEvent.click(dialog.getByRole("button", { name: "Group" }));
+
+    await waitFor(() =>
+      expect(grouped).toHaveBeenCalledWith({
+        name: "Kelionė į Klaipėdą",
+        transactionIds: [expect.any(String), expect.any(String)],
+      }),
+    );
+    await waitFor(() => expect(canvas.queryByText("2 selected")).not.toBeInTheDocument());
   },
 };
 

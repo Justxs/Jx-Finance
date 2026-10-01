@@ -820,6 +820,7 @@ export const debtPaymentCandidatesResponseSharedExpenseTwoSharesItemAmountRegExp
 export const debtPaymentCandidatesResponseSharedExpenseTwoMyShareRegExp = new RegExp(
   "^-?\\d+(\\.\\d{1,8})?$",
 );
+export const debtPaymentCandidatesResponseEnteredByMeDefault = false;
 
 export const DebtPaymentCandidatesResponseItem = zod.object({
   id: zod.uuid(),
@@ -947,6 +948,8 @@ export const DebtPaymentCandidatesResponseItem = zod.object({
   place: zod.string().nullish(),
   latitude: zod.number().nullish(),
   longitude: zod.number().nullish(),
+  groupId: zod.uuid().nullish(),
+  enteredByMe: zod.boolean().default(debtPaymentCandidatesResponseEnteredByMeDefault),
 });
 export const DebtPaymentCandidatesResponse = zod.array(DebtPaymentCandidatesResponseItem);
 

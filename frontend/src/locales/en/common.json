@@ -564,6 +564,28 @@
       "timeout": "Your location could not be found in time. Try again, or type the place.",
       "unavailable": "Your location is not available right now. Type the place instead.",
       "usePhotoLocation": "Use the photo's location"
+    },
+    "groups": {
+      "group": "Group",
+      "addToGroup": "Add to group…",
+      "removeFromGroup": "Remove from group",
+      "rename": "Rename group",
+      "ungroup": "Ungroup",
+      "ungroupHint": "Every row stays in the ledger as it is. The group goes to the trash, where it can be restored.",
+      "dialogTitle": "Group rows",
+      "newGroup": "New group",
+      "existingGroup": "Existing group",
+      "name": "Group name",
+      "namePlaceholder": "Trip to Riga",
+      "rows_one": "{{count}} row",
+      "rows_other": "{{count}} rows",
+      "matching_one": "{{matching}} of {{count}} match",
+      "matching_other": "{{matching}} of {{count}} match",
+      "showRows_one": "Show the {{count}} row of {{name}}",
+      "showRows_other": "Show the {{count}} rows of {{name}}",
+      "noGroups": "You have no groups yet. Name a new one to start it with this row.",
+      "grouped": "Grouped",
+      "truncated": "Only the first 200 rows are shown. Narrow the filters to see the rest."
     }
   },
   "receipts": {
@@ -621,7 +643,8 @@
       "attachment": "File",
       "csvImportMapping": "CSV mapping",
       "sharedExpense": "Split expense",
-      "settlement": "Household payment"
+      "settlement": "Household payment",
+      "transactionGroup": "Transaction group"
     }
   },
   "theme": {
@@ -2790,6 +2813,9 @@
       "accountOwner": "The money must leave an account of the payer and arrive in an account of the payee.",
       "currencyMismatch": "Both accounts must be held in the payment's currency.",
       "transferTaken": "That transfer already settles another payment."
+    },
+    "transactionGroup": {
+      "memberTaken": "A row is already in another group. Remove it from that group first."
     }
   },
   "export": {

@@ -144,6 +144,7 @@ export const createTransactionResponseSharedExpenseTwoSharesItemAmountRegExp = n
 export const createTransactionResponseSharedExpenseTwoMyShareRegExp = new RegExp(
   "^-?\\d+(\\.\\d{1,8})?$",
 );
+export const createTransactionResponseEnteredByMeDefault = false;
 
 export const CreateTransactionResponse = zod.object({
   id: zod.uuid(),
@@ -271,6 +272,8 @@ export const CreateTransactionResponse = zod.object({
   place: zod.string().nullish(),
   latitude: zod.number().nullish(),
   longitude: zod.number().nullish(),
+  groupId: zod.uuid().nullish(),
+  enteredByMe: zod.boolean().default(createTransactionResponseEnteredByMeDefault),
 });
 
 /**
@@ -296,6 +299,7 @@ export const transactionsResponseItemsItemSharedExpenseTwoSharesItemAmountRegExp
 export const transactionsResponseItemsItemSharedExpenseTwoMyShareRegExp = new RegExp(
   "^-?\\d+(\\.\\d{1,8})?$",
 );
+export const transactionsResponseItemsItemEnteredByMeDefault = false;
 
 export const TransactionsResponse = zod.object({
   items: zod.array(
@@ -428,6 +432,8 @@ export const TransactionsResponse = zod.object({
       place: zod.string().nullish(),
       latitude: zod.number().nullish(),
       longitude: zod.number().nullish(),
+      groupId: zod.uuid().nullish(),
+      enteredByMe: zod.boolean().default(transactionsResponseItemsItemEnteredByMeDefault),
     }),
   ),
   page: zod.int(),
@@ -484,6 +490,201 @@ export const ExportTransactionsResponse = zod.unknown();
 export const ExportTransactionsPdfResponse = zod.unknown();
 
 /**
+ * Returns a page of the ledger in which the members of each of your transaction groups are folded into one item of kind Group, and every other transaction is an item of kind Transaction. Filters apply to the members: a group appears when at least one member matches, and its matchingCount, date range and net count only the matching members, while memberCount counts them all. The net is the sum of the members' reporting amounts with income positive. Sorting by date places a group at its newest matching member, by amount at the size of its net, by description at its name, and by category or account after every transaction, by name. The total counts ledger items, not transactions; GET /api/transactions/summary still counts transactions. A group is personal, so a housemate sees its members on a shared account as ordinary transactions. GET /api/transactions is unchanged and never folds anything.
+ * @summary List the ledger with transaction groups folded
+ */
+export const ledgerResponseItemsItemTransactionTwoAmountRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const ledgerResponseItemsItemTransactionTwoLinesItemAmountRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const ledgerResponseItemsItemTransactionTwoReportingAmountRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const ledgerResponseItemsItemTransactionTwoUnusualTwoTypicalAmountRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const ledgerResponseItemsItemTransactionTwoRefundedAmountRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const ledgerResponseItemsItemTransactionTwoSharedExpenseTwoSharesItemAmountRegExp =
+  new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const ledgerResponseItemsItemTransactionTwoSharedExpenseTwoMyShareRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const ledgerResponseItemsItemTransactionTwoEnteredByMeDefault = false;
+export const ledgerResponseItemsItemGroupTwoNetReportingAmountRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+
+export const LedgerResponse = zod.object({
+  items: zod.array(
+    zod.object({
+      kind: zod.enum(["transaction", "group"]),
+      transaction: zod.union([
+        zod.null(),
+        zod.object({
+          id: zod.uuid(),
+          accountId: zod.uuid(),
+          categoryId: zod.uuid().nullable(),
+          type: zod.enum(["income", "expense"]),
+          amount: zod.stringFormat("decimal", ledgerResponseItemsItemTransactionTwoAmountRegExp),
+          date: zod.iso.date(),
+          description: zod.string().nullable(),
+          source: zod.enum(["manual", "imported", "api"]),
+          isSplit: zod.boolean(),
+          createdAt: zod.iso.datetime({ offset: true }),
+          lines: zod
+            .array(
+              zod.object({
+                id: zod.uuid(),
+                categoryId: zod.uuid().nullable(),
+                amount: zod.stringFormat(
+                  "decimal",
+                  ledgerResponseItemsItemTransactionTwoLinesItemAmountRegExp,
+                ),
+                description: zod.string().nullable(),
+              }),
+            )
+            .nullable(),
+          currency: zod.enum([
+            "eur",
+            "usd",
+            "gbp",
+            "chf",
+            "pln",
+            "sek",
+            "nok",
+            "dkk",
+            "czk",
+            "huf",
+            "ron",
+            "isk",
+            "try",
+            "jpy",
+            "cny",
+            "hkd",
+            "sgd",
+            "krw",
+            "inr",
+            "idr",
+            "myr",
+            "php",
+            "thb",
+            "aud",
+            "nzd",
+            "cad",
+            "mxn",
+            "brl",
+            "ils",
+            "zar",
+          ]),
+          reportingAmount: zod.stringFormat(
+            "decimal",
+            ledgerResponseItemsItemTransactionTwoReportingAmountRegExp,
+          ),
+          tagIds: zod.array(zod.uuid()),
+          attachmentCount: zod.int(),
+          unusual: zod.union([
+            zod.null(),
+            zod.object({
+              basis: zod.enum(["payee", "category"]),
+              typicalAmount: zod.stringFormat(
+                "decimal",
+                ledgerResponseItemsItemTransactionTwoUnusualTwoTypicalAmountRegExp,
+              ),
+              factor: zod.number(),
+              sampleSize: zod.int(),
+            }),
+          ]),
+          unusualDismissed: zod.boolean(),
+          debtPayment: zod
+            .union([
+              zod.null(),
+              zod.object({
+                id: zod.uuid(),
+                debtId: zod.uuid(),
+                debtName: zod.string(),
+              }),
+            ])
+            .optional(),
+          refundOf: zod
+            .union([
+              zod.null(),
+              zod.object({
+                id: zod.uuid(),
+                date: zod.iso.date(),
+                description: zod.string().nullable(),
+              }),
+            ])
+            .optional(),
+          refundedAmount: zod
+            .stringFormat("decimal", ledgerResponseItemsItemTransactionTwoRefundedAmountRegExp)
+            .nullish(),
+          sharedExpense: zod
+            .union([
+              zod.null(),
+              zod.object({
+                id: zod.uuid(),
+                householdId: zod.uuid(),
+                householdName: zod.string(),
+                method: zod.enum(["equal", "shares", "exact"]).describe("Equal, Shares or Exact."),
+                shares: zod.array(
+                  zod.object({
+                    userId: zod.uuid(),
+                    name: zod.string(),
+                    weight: zod.int().nullable(),
+                    amount: zod.stringFormat(
+                      "decimal",
+                      ledgerResponseItemsItemTransactionTwoSharedExpenseTwoSharesItemAmountRegExp,
+                    ),
+                  }),
+                ),
+                myShare: zod.stringFormat(
+                  "decimal",
+                  ledgerResponseItemsItemTransactionTwoSharedExpenseTwoMyShareRegExp,
+                ),
+                amountDiffers: zod.boolean(),
+              }),
+            ])
+            .optional(),
+          note: zod.string().nullish(),
+          payeeName: zod.string().nullish(),
+          spreadMonths: zod.int().nullish(),
+          spreadUntil: zod.union([zod.null(), zod.iso.date()]).optional(),
+          place: zod.string().nullish(),
+          latitude: zod.number().nullish(),
+          longitude: zod.number().nullish(),
+          groupId: zod.uuid().nullish(),
+          enteredByMe: zod
+            .boolean()
+            .default(ledgerResponseItemsItemTransactionTwoEnteredByMeDefault),
+        }),
+      ]),
+      group: zod.union([
+        zod.null(),
+        zod.object({
+          id: zod.uuid(),
+          name: zod.string(),
+          firstDate: zod.iso.date(),
+          lastDate: zod.iso.date(),
+          memberCount: zod.int(),
+          matchingCount: zod.int(),
+          netReportingAmount: zod.stringFormat(
+            "decimal",
+            ledgerResponseItemsItemGroupTwoNetReportingAmountRegExp,
+          ),
+        }),
+      ]),
+    }),
+  ),
+  page: zod.int(),
+  pageSize: zod.int(),
+  total: zod.int(),
+});
+
+/**
  * Answers up to 20 distinct places of the transactions you can see, narrowed by the active household, most used first. Places that differ only in case or surrounding spaces are one entry, named by the newest spelling, with the number of transactions and the average of the coordinates stored with them (null when none has any). With lat and lon, the nearest place within 150 metres comes first with nearby true, so a position taken in a shop can be named after the shop. Nothing is looked up outside the installation. Needs the locations feature.
  * @summary Suggest places used before
  */
@@ -532,6 +733,7 @@ export const transactionResponseSharedExpenseTwoSharesItemAmountRegExp = new Reg
 export const transactionResponseSharedExpenseTwoMyShareRegExp = new RegExp(
   "^-?\\d+(\\.\\d{1,8})?$",
 );
+export const transactionResponseEnteredByMeDefault = false;
 
 export const TransactionResponse = zod.object({
   id: zod.uuid(),
@@ -651,6 +853,8 @@ export const TransactionResponse = zod.object({
   place: zod.string().nullish(),
   latitude: zod.number().nullish(),
   longitude: zod.number().nullish(),
+  groupId: zod.uuid().nullish(),
+  enteredByMe: zod.boolean().default(transactionResponseEnteredByMeDefault),
 });
 
 /**
@@ -775,6 +979,7 @@ export const updateTransactionResponseSharedExpenseTwoSharesItemAmountRegExp = n
 export const updateTransactionResponseSharedExpenseTwoMyShareRegExp = new RegExp(
   "^-?\\d+(\\.\\d{1,8})?$",
 );
+export const updateTransactionResponseEnteredByMeDefault = false;
 
 export const UpdateTransactionResponse = zod.object({
   id: zod.uuid(),
@@ -902,6 +1107,8 @@ export const UpdateTransactionResponse = zod.object({
   place: zod.string().nullish(),
   latitude: zod.number().nullish(),
   longitude: zod.number().nullish(),
+  groupId: zod.uuid().nullish(),
+  enteredByMe: zod.boolean().default(updateTransactionResponseEnteredByMeDefault),
 });
 
 /**

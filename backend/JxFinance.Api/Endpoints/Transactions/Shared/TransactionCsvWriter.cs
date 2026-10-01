@@ -7,7 +7,7 @@ namespace JxFinance.Endpoints.Transactions.Shared;
 
 public static class TransactionCsvWriter
 {
-    public const string Header = "Date,Description,Account,Category,Tags,Type,Amount,Currency,Note,Spread months,Place";
+    public const string Header = "Date,Description,Account,Category,Tags,Type,Amount,Currency,Note,Spread months,Place,Group";
 
     public static string Row(TransactionResponse transaction, ExportNames names)
     {
@@ -23,6 +23,7 @@ public static class TransactionCsvWriter
             CsvCell.Value(transaction.Currency.ToCode()),
             CsvCell.Text(transaction.Note),
             CsvCell.Value(transaction.SpreadMonths?.ToString(CultureInfo.InvariantCulture)),
-            CsvCell.Text(transaction.Place));
+            CsvCell.Text(transaction.Place),
+            CsvCell.Text(names.GroupName(transaction.GroupId)));
     }
 }

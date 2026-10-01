@@ -17,4 +17,5 @@ public enum DeletionChangeKind
     RecurringBillShare,
     AssetShare,
     DebtShare,
+    GroupMember,
 }

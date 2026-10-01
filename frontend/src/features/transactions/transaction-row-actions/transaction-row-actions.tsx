@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import type { TransactionResponse } from "@/api/generated/model";
 import { type RowAction, RowActions } from "@/components/row-actions/row-actions";
 import { useDebtPaymentLinks } from "@/features/transactions/debt-payment/debt-payment";
+import { useGroupRowActions } from "@/features/transactions/group-dialog/group-dialog";
 import { usePayeeNaming } from "@/features/transactions/payee-naming/payee-naming";
 import { useSharedExpenseSplits } from "@/features/transactions/shared-expense/shared-expense";
 import {
@@ -14,12 +15,14 @@ export function useTransactionRowDialogs() {
   const debt = useDebtPaymentLinks();
   const split = useSharedExpenseSplits();
   const payee = usePayeeNaming();
+  const group = useGroupRowActions();
 
   function moreActions(transaction: TransactionResponse) {
     return [
       debt.actionFor(transaction),
       split.actionFor(transaction),
       payee.actionFor(transaction),
+      group.actionFor(transaction),
     ].filter((action) => action !== undefined);
   }
 
@@ -31,6 +34,7 @@ export function useTransactionRowDialogs() {
         {debt.dialog}
         {split.dialog}
         {payee.dialog}
+        {group.dialog}
       </>
     ),
   };

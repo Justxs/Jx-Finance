@@ -1,9 +1,11 @@
 using JxFinance.Common;
 using JxFinance.Domain.Common;
+using JxFinance.Domain.Transactions;
 using JxFinance.Endpoints.Transactions.BulkCategorizeTransactions;
 using JxFinance.Endpoints.Transactions.BulkTagTransactions;
 using JxFinance.Endpoints.Transactions.CreateTransaction;
 using JxFinance.Endpoints.Transactions.ExportTransactions;
+using JxFinance.Endpoints.Transactions.GetLedger;
 using JxFinance.Endpoints.Transactions.GetTransactions;
 using JxFinance.Endpoints.Transactions.GetTransactionsSummary;
 using JxFinance.Endpoints.Transactions.Shared;
@@ -15,6 +17,16 @@ public interface ITransactionService
 {
     Task<PagedResponse<TransactionResponse>> GetPageAsync(
         GetTransactionsRequest request,
+        CancellationToken cancellationToken);
+
+    Task<PagedResponse<LedgerItemResponse>> GetLedgerPageAsync(
+        GetLedgerRequest request,
+        CancellationToken cancellationToken);
+
+    Task<IReadOnlyList<TransactionResponse>> ListGroupMembersAsync(
+        TransactionGroupId groupId,
+        TransactionFilterRequest filter,
+        int limit,
         CancellationToken cancellationToken);
 
     Task<TransactionsSummaryResponse> GetSummaryAsync(

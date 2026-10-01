@@ -2,12 +2,12 @@
 
 Back to the [feature walkthrough](README.md). See also [decisions](../decisions/transactions.md), [architecture: Transactions, imports and receipts](../architecture/transactions.md), [architecture: Frontend data, loading and tables](../architecture/frontend-data.md).
 
-Backend `Transactions`, page `/transactions`. One `Filtered` method builds the query for the list, the summary, the CSV and the PDF, so the four cannot disagree.
+Backend `Transactions`, page `/transactions`. One `Filtered` method builds the query for the list, the summary, the CSV and the PDF, so the four cannot disagree. Since 2026-10-01 the page reads its rows from `GET /api/transactions/ledger`, which takes the same filters and folds the members of each of your [transaction groups](transaction-groups.md) into one item; `GET /api/transactions` stays the plain list that the dashboard and the import review read.
 
 ```mermaid
 flowchart TD
     Url["Search params<br/>text, payee, place, account, category, tags, type, dateFrom, dateTo, amountMin, amountMax, unusual, uncategorized, spreadOverlap, sort, direction, page"] --> Defer["useDeferredParams"]
-    Defer --> List["GET /api/transactions"]
+    Defer --> List["GET /api/transactions/ledger"]
     Defer --> Summary["GET /api/transactions/summary"]
     Url --> Csv["GET /api/transactions/export"]
     Url --> Pdf["GET /api/transactions/export/pdf"]
@@ -28,6 +28,10 @@ When [receipt reading](receipt-reading.md) is on and Tesseract is installed, the
 Since 2026-09-26 an expense far above what its payee or its category usually costs carries a stored verdict, checked by a background job once when the row is recorded and again after an edit to its amount, account, category, type, date, description or split. Every transaction response carries `unusual` and `unusualDismissed`, the ledger shows a rising-arrow badge beside the paperclip whose popover explains the verdict and marks the row "Not unusual" with undo, and `unusual=true` is a filter on the same four endpoints, offered as "Unusual only" in the amount column's filter and in the phone filters dialog. All of it is behind the `UnusualAmounts` switch and described on its own page: [Unusual amounts](unusual-amounts.md).
 
 Since 2026-09-27 an expense can pay one of the signed-in user's debts that track payments. Rows of `GET /api/transactions` carry `debtPayment` (the link id, the debt id and the debt name) only for the owner of the link; a housemate who sees the same row on a shared account gets null. The ledger shows a small debt mark beside the badges that opens the debt's page, and the row's actions menu offers "Link to debt" on an unlinked, unsplit expense when some debt tracks payments (a dialog with the debt, the kind and an optional principal from the statement) and "Unlink from debt" on a linked one. The row itself stays an ordinary expense everywhere. See [Debt amortization](debt-amortization.md#tracking-payments).
+
+## Ledger items and groups
+
+The ledger endpoint answers `items` whose `kind` is `transaction`, with the same `transaction` as the list, or `group`, with a `group` summary (`id`, `name`, `firstDate`, `lastDate`, `memberCount`, `matchingCount`, `netReportingAmount`); the other part is null. Its `total` counts items, while the totals line above the table still counts transactions through the summary. A group appears when at least one member matches the filters, sorts by its newest matching member, the size of its net or its name, and follows every transaction when sorting by category or account. Every transaction response, from either endpoint, carries `groupId`, set only when the group is yours, and `enteredByMe`. The table renders a group as one row with a chevron that expands its members in place, the selection toolbar has **Group**, and a row's menu has **Add to group…** or **Remove from group**. The optimistic create and delete of `use-transaction-mutations.ts` add and remove a `transaction` item on the cached ledger page; a group's rows are refreshed by the refetch. Everything else is on [Transaction groups](transaction-groups.md).
 
 ## Refunds
 

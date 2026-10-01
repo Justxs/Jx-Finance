@@ -98,6 +98,13 @@ export const duplicateTagProblem = problemOf(
   { instance: "/api/tags" },
 );
 
+export const memberTakenProblem = problemOf(
+  409,
+  "transactionGroup.memberTaken",
+  "A transaction is already in another group. Remove it from that group first.",
+  { instance: "/api/transaction-groups" },
+);
+
 export const debtPaymentTooSmallProblem = problemOf(
   400,
   "debt.paymentTooSmall",

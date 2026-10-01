@@ -147,10 +147,10 @@ public sealed class TransactionLocationTests(ApiFixture fixture) : IntegrationTe
         Assert.Equal(["Rimi Ozas"], searched!.Items.Select(t => t.Place));
         Assert.Equal((2, "15.00"), (summary!.Count, summary.TotalExpense));
         var lines = csv.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-        Assert.EndsWith(",Spread months,Place", lines[0]);
+        Assert.EndsWith(",Spread months,Place,Group", lines[0]);
         Assert.Equal(3, lines.Length);
-        Assert.Contains(lines, line => line.EndsWith(",\"Maxima, Ozo g. 18, Vilnius\"", StringComparison.Ordinal));
-        Assert.Contains(lines, line => line.EndsWith(",MAXIMA Akropolis", StringComparison.Ordinal));
+        Assert.Contains(lines, line => line.EndsWith(",\"Maxima, Ozo g. 18, Vilnius\",", StringComparison.Ordinal));
+        Assert.Contains(lines, line => line.EndsWith(",MAXIMA Akropolis,", StringComparison.Ordinal));
         pdf.EnsureSuccessStatusCode();
     }
 

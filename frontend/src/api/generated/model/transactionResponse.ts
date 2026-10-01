@@ -55,4 +55,7 @@ export interface TransactionResponse {
   latitude?: number | null;
   /** @nullable */
   longitude?: number | null;
+  /** @nullable */
+  groupId?: string | null;
+  enteredByMe?: boolean;
 }

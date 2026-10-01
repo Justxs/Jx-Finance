@@ -165,6 +165,11 @@ public static class TrashRestorers
             (db, id) => db.Settlements.Where(s => s.Id == id),
             check: (r, s) => MemberOfAsync(r, s.HouseholdId),
             restore: RestoreSettlementAsync),
+        [TrashKind.TransactionGroup] = Owned<TransactionGroup, TransactionGroupId>(
+            null,
+            (db, id) => db.TransactionGroups.Where(g => g.Id == id),
+            restore: RestoreTransactionGroupAsync,
+            usesChanges: true),
     }.ToFrozenDictionary();
 
     public static TrashRestorer? Of(TrashKind kind) => All.GetValueOrDefault(kind);
@@ -475,6 +480,22 @@ public static class TrashRestorers
                 budget.IsDeleted = false;
             }
         }
+
+        return Result.Success();
+    }
+
+    private static async Task<Result> RestoreTransactionGroupAsync(TrashRestore r, TransactionGroup group)
+    {
+        var db = r.Db;
+        var ownerId = group.UserId;
+        TransactionGroupId? restoredId = group.Id;
+        var remembered = r.Entry.Remembered<TransactionId>(DeletionChangeKind.GroupMember);
+        await db.Transactions
+            .IgnoreQueryFilters(QueryFilters.OwnerOnly)
+            .Where(t => remembered.Contains(t.Id)
+                && t.UserId == ownerId
+                && (t.GroupId == null || !db.TransactionGroups.IgnoreQueryFilters(QueryFilters.OwnerOnly).Any(g => g.Id == t.GroupId)))
+            .ExecuteUpdateAsync(setters => setters.SetProperty(t => t.GroupId, restoredId), r.CancellationToken);
 
         return Result.Success();
     }

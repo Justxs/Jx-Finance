@@ -23,6 +23,7 @@ export * from "./reports/reports";
 export * from "./settings/settings";
 export * from "./setup/setup";
 export * from "./tags/tags";
+export * from "./transaction-groups/transaction-groups";
 export * from "./transactions/transactions";
 export * from "./transfers/transfers";
 export * from "./trash/trash";

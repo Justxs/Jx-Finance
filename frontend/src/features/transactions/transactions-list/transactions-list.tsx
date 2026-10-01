@@ -1,11 +1,20 @@
 import { useDeferredValue } from "react";
 import { useTranslation } from "react-i18next";
-import type { TransactionResponse } from "@/api/generated/model";
+import { RowActions } from "@/components/row-actions/row-actions";
 import { RowTransition } from "@/components/row-transition/row-transition";
 import { TagChips } from "@/components/tag-chips/tag-chips";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { Rows } from "@/components/ui/rows/rows";
 import { DebtPaymentMarker } from "@/features/transactions/debt-payment/debt-payment";
+import {
+  GroupMembersStatus,
+  GroupNet,
+  GroupToggle,
+  useGroupCount,
+  useGroupDates,
+} from "@/features/transactions/ledger-groups/group-row";
+import { type LedgerRow, ledgerRowKey } from "@/features/transactions/ledger-groups/ledger-rows";
+import type { LedgerGroupHandlers } from "@/features/transactions/ledger-groups/use-ledger-groups";
 import { RefundMark } from "@/features/transactions/refund-mark/refund-mark";
 import { SharedExpenseMark } from "@/features/transactions/shared-expense/shared-expense";
 import { SpreadMark } from "@/features/transactions/spread-mark/spread-mark";
@@ -23,14 +32,15 @@ import { useIsoDate } from "@/hooks/use-formatters";
 import { cn, metaLine } from "@/lib/utils";
 
 interface Props extends TransactionRowHandlers {
-  data: TransactionResponse[];
+  rows: LedgerRow[];
   isPlaceholder: boolean;
   filtered: boolean;
   onClearFilters?: () => void;
+  groups?: LedgerGroupHandlers;
 }
 
 export function TransactionsList({
-  data,
+  rows: data,
   accountNames,
   categoryById,
   tagById,
@@ -44,9 +54,12 @@ export function TransactionsList({
   deletingId,
   moreActions,
   onUpdateSplit,
+  groups,
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const formatDate = useIsoDate();
+  const groupDates = useGroupDates();
+  const groupCount = useGroupCount();
   const rows = useDeferredValue(data);
 
   if (rows.length === 0) {
@@ -63,7 +76,44 @@ export function TransactionsList({
       aria-label={t("transactions.title")}
       aria-busy={isPlaceholder}
     >
-      {rows.map((row) => {
+      {rows.map((ledgerRow) => {
+        if (ledgerRow.kind === "group") {
+          const { group } = ledgerRow;
+          return groups ? (
+            <li key={ledgerRowKey(ledgerRow)} className="py-2 text-sm" data-kind="group">
+              <div className="flex items-center gap-2">
+                <GroupToggle
+                  group={group}
+                  expanded={ledgerRow.expanded}
+                  onToggle={groups.onToggle}
+                />
+                <p className="min-w-0 flex-1 truncate font-medium" title={group.name}>
+                  {group.name}
+                </p>
+                <GroupNet group={group} className="shrink-0 text-right" />
+              </div>
+              <div className="flex items-center gap-2">
+                <p className="min-w-0 flex-1 truncate text-xs text-muted-foreground tabular-nums">
+                  {metaLine(groupDates(group), groupCount(group))}
+                </p>
+                <RowActions
+                  label={group.name}
+                  actions={groups.actions(group)}
+                  className="-mr-2 gap-0"
+                />
+              </div>
+            </li>
+          ) : null;
+        }
+        if (ledgerRow.kind !== "transaction") {
+          return (
+            <li key={ledgerRowKey(ledgerRow)} className="border-l-2 py-2 pl-4">
+              <GroupMembersStatus status={ledgerRow} />
+            </li>
+          );
+        }
+        const row = ledgerRow.transaction;
+        const focusRef = groups?.focusRef(row.id);
         const name = transactionName(row, categoryById, t);
         const optimistic = isOptimistic(row);
         const categoryLabel = transactionCategoryLabel(row, categoryById, t);
@@ -76,7 +126,14 @@ export function TransactionsList({
         return (
           <RowTransition key={row.id}>
             <li
-              className={cn("py-2 text-sm", optimistic && "stale")}
+              ref={focusRef}
+              tabIndex={focusRef ? -1 : undefined}
+              data-kind={ledgerRow.member ? "member" : undefined}
+              className={cn(
+                "py-2 text-sm",
+                ledgerRow.member && "border-l-2 pl-4",
+                optimistic && "stale",
+              )}
               aria-busy={optimistic || undefined}
             >
               <div className="flex items-baseline gap-3">

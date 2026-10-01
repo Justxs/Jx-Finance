@@ -19,4 +19,5 @@ public enum TrashKind
     CsvImportMapping,
     SharedExpense,
     Settlement,
+    TransactionGroup,
 }

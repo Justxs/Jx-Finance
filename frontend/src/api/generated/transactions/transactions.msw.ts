@@ -10,6 +10,7 @@ import type { RequestHandlerOptions } from "msw";
 import type {
   BulkCategorizeTransactionsResponse,
   BulkTagTransactionsResponse,
+  PagedResponseOfLedgerItemResponse,
   PagedResponseOfTransactionResponse,
   PlaceSuggestionResponse,
   TransactionResponse,
@@ -155,6 +156,30 @@ export const getExportTransactionsPdfMockHandler = (
         status: 200,
         headers: { "Content-Type": "application/pdf" },
       });
+    },
+    options,
+  );
+};
+
+export const getLedgerMockHandler = (
+  overrideResponse?:
+    | PagedResponseOfLedgerItemResponse
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<PagedResponseOfLedgerItemResponse> | PagedResponseOfLedgerItemResponse),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/transactions/ledger",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : undefined,
+        { status: 200 },
+      );
     },
     options,
   );
@@ -319,6 +344,7 @@ export const getTransactionsMock = () => [
   getBulkTagTransactionsMockHandler(),
   getExportTransactionsMockHandler(),
   getExportTransactionsPdfMockHandler(),
+  getLedgerMockHandler(),
   getPlacesMockHandler(),
   getTransactionsSummaryMockHandler(),
   getDeleteTransactionMockHandler(),

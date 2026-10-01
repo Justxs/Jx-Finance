@@ -2,8 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import {
   getAccountsSuspenseQueryOptions,
   getCategoriesSuspenseQueryOptions,
+  getLedgerSuspenseQueryOptions,
   getTransactionsSummarySuspenseQueryOptions,
-  getTransactionsSuspenseQueryOptions,
 } from "@/api/generated";
 import {
   transactionFilterParams,
@@ -26,7 +26,7 @@ export const Route = createFileRoute("/transactions")({
     warmWithSettings(queryClient, (settings) => {
       warm(
         queryClient,
-        getTransactionsSuspenseQueryOptions(
+        getLedgerSuspenseQueryOptions(
           transactionListParams(deps, readPreferences().pageSize ?? settings.defaultPageSize),
         ),
       );

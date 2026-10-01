@@ -32,6 +32,7 @@ public sealed class TrashRestorersTests
     [InlineData(TrashKind.CsvImportMapping, Feature.Import)]
     [InlineData(TrashKind.SharedExpense, Feature.Households)]
     [InlineData(TrashKind.Settlement, Feature.Households)]
+    [InlineData(TrashKind.TransactionGroup, null)]
     public void Each_kind_belongs_to_its_feature(TrashKind kind, Feature? feature) =>
         Assert.Equal(feature, TrashRestorers.FeatureOf(kind));
 
@@ -40,6 +41,7 @@ public sealed class TrashRestorersTests
     [InlineData(TrashKind.Tag)]
     [InlineData(TrashKind.CategorizationRule)]
     [InlineData(TrashKind.Household)]
+    [InlineData(TrashKind.TransactionGroup)]
     public void Kinds_that_record_changes_load_them(TrashKind kind) =>
         Assert.True(TrashRestorers.Of(kind)!.UsesChanges);
 }

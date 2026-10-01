@@ -66,6 +66,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, ICurren
     public DbSet<TransactionLine> TransactionLines => Set<TransactionLine>();
     public DbSet<TransactionTag> TransactionTags => Set<TransactionTag>();
     public DbSet<TransactionAttachment> TransactionAttachments => Set<TransactionAttachment>();
+    public DbSet<TransactionGroup> TransactionGroups => Set<TransactionGroup>();
     public DbSet<TransferImport> TransferImports => Set<TransferImport>();
     public DbSet<Transfer> Transfers => Set<Transfer>();
     public DbSet<CurrencyConversion> CurrencyConversions => Set<CurrencyConversion>();

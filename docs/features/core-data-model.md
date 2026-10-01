@@ -28,6 +28,8 @@ erDiagram
     Account ||--o{ Transaction : holds
     Account ||--o{ AccountReconciliation : "statement balance, one per date"
     Transaction ||--o{ TransactionLine : "optional split"
+    AppUser ||--o{ TransactionGroup : "owns, personal"
+    TransactionGroup |o--o{ Transaction : "folds in the ledger"
     Category ||--o{ Transaction : categorizes
     Category ||--o{ TransactionLine : categorizes
     Category ||--o{ Budget : limits

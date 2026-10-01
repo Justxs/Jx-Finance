@@ -19,8 +19,8 @@ public sealed class MemberImport(AppDbContext db, Guid userId, int lockTimeoutSe
         "CategorizationRules", "CategorizationRuleTags", "CsvImportMappings", "CurrencyConversions", "DebtPayments",
         "Debts", "Goals", "InvestmentTransactions", "NetWorthSnapshots", "PayeeNames", "ReceiptItemCategories",
         "ReceiptReadings", "RecurringBills", "Securities", "SubscriptionDismissals", "SuggestedRuleDismissals",
-        "Tags", "Transactions", "TransactionAttachments", "TransactionLines", "TransactionTags", "TransferImports",
-        "Transfers",
+        "Tags", "Transactions", "TransactionAttachments", "TransactionGroups", "TransactionLines", "TransactionTags",
+        "TransferImports", "Transfers",
     };
 
     private const string SecuritiesTable = "Securities";

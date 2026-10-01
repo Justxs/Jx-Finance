@@ -1,0 +1,5 @@
+using JxFinance.Endpoints.Transactions.Shared;
+
+namespace JxFinance.Endpoints.TransactionGroups.GetTransactionGroupMembers;
+
+public sealed class GetTransactionGroupMembersValidator : TransactionFilterValidator<GetTransactionGroupMembersRequest>;

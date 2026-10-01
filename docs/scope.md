@@ -26,7 +26,7 @@ Fill from receipt in the form of an expense reads one receipt photo with Tessera
 
 ## Trash and undo
 
-Deleting a transaction, transfer, currency conversion, budget, goal, asset, debt, recurring entry, investment entry, category, tag, categorization rule, household, split expense or settle-up payment shows a toast with Undo, and the same delete stays in the Trash section of Settings for 30 days with a Restore button; a restored transaction brings its split lines, tags and attachments with it and counts again in balances, budgets and reports, a restored conversion brings back its fee transaction, and a restored category, tag, rule or household puts back the rows its delete rewrote where they are still sound. Restoring is refused, with a reason, when the account was archived, the category is gone, a conversion's fee was deleted on its own, another budget took the category and period, a tag's name was taken again or a restored investment entry would oversell a holding. Archiving an account is still its own operation, undone from the accounts page. After the 30 days a nightly job removes the record for good, so a delete really is a delete in the end
+Deleting a transaction, transfer, currency conversion, budget, goal, asset, debt, recurring entry, investment entry, category, tag, categorization rule, household, split expense or settle-up payment, or ungrouping a transaction group, shows a toast with Undo, and the same delete stays in the Trash section of Settings for 30 days with a Restore button; a restored transaction brings its split lines, tags and attachments with it and counts again in balances, budgets and reports, a restored conversion brings back its fee transaction, and a restored category, tag, rule or household puts back the rows its delete rewrote where they are still sound. Restoring is refused, with a reason, when the account was archived, the category is gone, a conversion's fee was deleted on its own, another budget took the category and period, a tag's name was taken again or a restored investment entry would oversell a holding. Archiving an account is still its own operation, undone from the accounts page. After the 30 days a nightly job removes the record for good, so a delete really is a delete in the end
 
 ## Categories
 
@@ -39,6 +39,10 @@ Free labels beside the category, owned like a category with personal or shared s
 ## Categorization rules
 
 Personal, ordered rules that read a description (contains, starts with or equals, ignoring case) and set a category, a set of tags or both, optionally narrowed to one account and an amount range; the first matching rule decides a row; a rule fills in a suggestion in the import preview that the user can still change, and a separate on-demand run fills only transactions that carry no category, with a per-rule preview and an explicit apply, plus a clearly labelled option that also replaces categories already set
+
+## Transaction groups
+
+Since 2026-10-01 a member folds rows that belong together, such as a trip or a renovation, into one named ledger row with the date range, the number of rows and the net in the reporting currency, which expands in place to show its members. A group is started from two or more selected rows or from one row's Add to group…, holds only rows the member entered, across accounts and currencies, and is personal: a housemate sees the members as ordinary rows. Filters apply to the members, so a group shows when one member matches and reads "3 of 14 match". Reports, budgets, balances, the month close and the exports count every member as the row it is; the CSV gains a Group column. Ungroup keeps every row and goes to the trash with undo. See [Transaction groups](features/transaction-groups.md).
 
 ## Payee names
 

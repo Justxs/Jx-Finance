@@ -27,7 +27,7 @@ Before changing behaviour that a page here covers, read that page. When you choo
 | [Households and sharing](households-and-sharing.md) | Sharing, Member removal, Settle-up | 15 | [Households and sharing](../features/households-and-sharing.md), [Household settle-up](../features/household-settle-up.md) |
 | [Dashboard](dashboard.md) | Dashboard layout | 7 | [Dashboard](../features/dashboard.md) |
 | [Reports](reports.md) | none | 4 | [Reports](../features/reports.md) |
-| [Exports](exports.md) | Data export per user | 13 | [Exports](../features/exports.md), [Data export per user](../features/data-export-per-user.md) |
+| [Exports](exports.md) | Data export per user | 14 | [Exports](../features/exports.md), [Data export per user](../features/data-export-per-user.md) |
 | [Investments](investments.md) | Investments | 16 | [Investments](../features/investments.md) |
 | [Installation settings and feature switches](installation-settings.md) | none | 1 | [Installation settings and feature switches](../features/installation-settings.md) |
 | [Backup and restore](backup-and-restore.md) | Backup and restore | 4 | [Backup and restore](../features/backup-and-restore.md) |
@@ -40,9 +40,10 @@ Before changing behaviour that a page here covers, read that page. When you choo
 | [Categories](categories.md) | Categories | 1 | [Categories](../features/categories.md) |
 | [Tags](tags.md) | Tags | 6 | [Tags](../features/tags.md) |
 | [Categorization rules](categorization-rules.md) | Categorization rules | 10 | [Categorization rules](../features/categorization-rules.md) |
-| [Trash and undo](trash-and-undo.md) | Trash and undo | 10 | [Trash and undo](../features/trash-and-undo.md) |
+| [Trash and undo](trash-and-undo.md) | Trash and undo | 11 | [Trash and undo](../features/trash-and-undo.md) |
 | [Attachments](attachments.md) | none | 3 | [Attachments](../features/attachments.md) |
 | [Receipt reading](receipt-reading.md) | Receipt reading | 16 | [Receipt reading](../features/receipt-reading.md) |
 | [Transaction locations](transaction-locations.md) | Places, Photo location, The map | 7 | [Transaction locations](../features/transaction-locations.md) |
+| [Transaction groups](transaction-groups.md) | Meaning, Ledger, Writes | 19 | [Transaction groups](../features/transaction-groups.md) |
 | [Audit log](audit-log.md) | none | 6 | [Audit log](../features/audit-log.md) |
 | [Debt amortization](debt-amortization.md) | none | 13 | [Debt amortization](../features/debt-amortization.md) |

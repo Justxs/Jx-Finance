@@ -29,4 +29,5 @@ export const TrashKind = {
   csvImportMapping: "csvImportMapping",
   sharedExpense: "sharedExpense",
   settlement: "settlement",
+  transactionGroup: "transactionGroup",
 } as const;

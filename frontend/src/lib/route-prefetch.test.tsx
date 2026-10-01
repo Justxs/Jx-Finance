@@ -2,7 +2,7 @@ import { act, screen, waitFor } from "@testing-library/react";
 import { beforeEach, expect, test, vi } from "vitest";
 import type {
   CurrenciesResponse,
-  PagedResponseOfTransactionResponse,
+  PagedResponseOfLedgerItemResponse,
   TransactionsSummaryResponse,
 } from "@/api/generated/model";
 import { setAuthenticated } from "@/lib/auth-gate";
@@ -24,7 +24,7 @@ const summary: TransactionsSummaryResponse = {
   totalExpense: "0.00",
 };
 
-function emptyPage(url: URL): PagedResponseOfTransactionResponse {
+function emptyPage(url: URL): PagedResponseOfLedgerItemResponse {
   return {
     items: [],
     page: Number(url.searchParams.get("page")),
@@ -42,7 +42,7 @@ function bodyFor(url: URL): unknown {
       return settingsFixture();
     case "/api/currencies":
       return currencies;
-    case "/api/transactions":
+    case "/api/transactions/ledger":
       return emptyPage(url);
     case "/api/transactions/summary":
       return summary;
@@ -88,8 +88,8 @@ test("the transactions route asks for each primary endpoint once", async () => {
   await screen.findByRole("heading", { level: 1, name: "Transactions" }, appWait);
   await settled(queryClient);
 
-  expect(requestsTo("/api/transactions")).toEqual([
-    "/api/transactions?page=1&pageSize=20&type=expense",
+  expect(requestsTo("/api/transactions/ledger")).toEqual([
+    "/api/transactions/ledger?page=1&pageSize=20&type=expense",
   ]);
   expect(requestsTo("/api/transactions/summary")).toEqual([
     "/api/transactions/summary?type=expense",
@@ -109,18 +109,20 @@ test("changing the page asks only for the new page", async () => {
   await act(() => router.navigate({ to: "/transactions", search: { page: 2 } }));
   await settled(queryClient);
 
-  expect(requestsTo("/api/transactions")).toEqual(["/api/transactions?page=2&pageSize=20"]);
+  expect(requestsTo("/api/transactions/ledger")).toEqual([
+    "/api/transactions/ledger?page=2&pageSize=20",
+  ]);
   expect(requestsTo("/api/accounts")).toHaveLength(0);
   expect(requestsTo("/api/categories")).toHaveLength(0);
 });
 
 test("a failing endpoint leaves the route loaded and the failure to the page", async () => {
-  failing = new Set(["/api/transactions"]);
+  failing = new Set(["/api/transactions/ledger"]);
   const { queryClient, router } = mountApp("/transactions");
 
   await settled(queryClient);
   await waitFor(() => expect(router.state.status).toBe("idle"), appWait);
 
   expect(router.state.matches.map((match) => match.status)).toEqual(["success", "success"]);
-  expect(requestsTo("/api/transactions")).toHaveLength(1);
+  expect(requestsTo("/api/transactions/ledger")).toHaveLength(1);
 });

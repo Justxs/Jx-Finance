@@ -27,6 +27,7 @@ public static class ApiTags
     public const string Settings = "Settings";
     public const string Setup = "Setup";
     public const string Tags = "Tags";
+    public const string TransactionGroups = "TransactionGroups";
     public const string Transactions = "Transactions";
     public const string Transfers = "Transfers";
     public const string Trash = "Trash";

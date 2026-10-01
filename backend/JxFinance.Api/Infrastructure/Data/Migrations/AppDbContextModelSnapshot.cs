@@ -2113,6 +2113,9 @@ namespace JxFinance.Infrastructure.Data.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
 
+                    b.Property<Guid?>("GroupId")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("ImportRef")
                         .HasMaxLength(64)
                         .HasColumnType("character varying(64)");
@@ -2217,6 +2220,9 @@ namespace JxFinance.Infrastructure.Data.Migrations
 
                     b.HasIndex("CategoryId");
 
+                    b.HasIndex("GroupId")
+                        .HasFilter("\"GroupId\" IS NOT NULL");
+
                     b.HasIndex("RefundOfTransactionId")
                         .HasFilter("\"RefundOfTransactionId\" IS NOT NULL");
 
@@ -2302,6 +2308,35 @@ namespace JxFinance.Infrastructure.Data.Migrations
                     b.HasIndex("TransactionId", "CreatedAt");
 
                     b.ToTable("TransactionAttachments");
+                });
+
+            modelBuilder.Entity("JxFinance.Domain.Transactions.TransactionGroup", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("TransactionGroups");
                 });
 
             modelBuilder.Entity("JxFinance.Domain.Transactions.TransactionLine", b =>
@@ -3420,6 +3455,11 @@ namespace JxFinance.Infrastructure.Data.Migrations
                         .HasForeignKey("CategoryId")
                         .OnDelete(DeleteBehavior.Restrict);
 
+                    b.HasOne("JxFinance.Domain.Transactions.TransactionGroup", null)
+                        .WithMany()
+                        .HasForeignKey("GroupId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("JxFinance.Domain.Transactions.Transaction", null)
                         .WithMany()
                         .HasForeignKey("RefundOfTransactionId")
@@ -3440,6 +3480,15 @@ namespace JxFinance.Infrastructure.Data.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("JxFinance.Infrastructure.Auth.AppUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("JxFinance.Domain.Transactions.TransactionGroup", b =>
+                {
                     b.HasOne("JxFinance.Infrastructure.Auth.AppUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")

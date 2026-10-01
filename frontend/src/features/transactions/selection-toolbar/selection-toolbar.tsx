@@ -1,3 +1,4 @@
+import { Group } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { CategoryResponse, TagResponse, TransactionResponse } from "@/api/generated/model";
@@ -16,6 +17,7 @@ interface Props {
   tagPending: boolean;
   onApply: (categoryId: string | null) => void;
   onApplyTags: (tagIds: string[]) => void;
+  onGroup: () => void;
   onClear: () => void;
 }
 
@@ -27,6 +29,7 @@ export function SelectionToolbar({
   tagPending,
   onApply,
   onApplyTags,
+  onGroup,
   onClear,
 }: Readonly<Props>) {
   const { t } = useTranslation();
@@ -43,6 +46,7 @@ export function SelectionToolbar({
     UNCATEGORIZED_OPTION,
   );
   const value = !mixed && options.some((option) => option.value === choice) ? choice : "";
+  const groupable = selected.length >= 2 && selected.every((item) => item.enteredByMe);
 
   return (
     <div
@@ -101,6 +105,10 @@ export function SelectionToolbar({
           </div>
         </PopoverContent>
       </Popover>
+      <Button type="button" variant="outline" disabled={pending || !groupable} onClick={onGroup}>
+        <Group />
+        {t("transactions.groups.group")}
+      </Button>
       <Button type="button" variant="outline" disabled={pending} onClick={onClear}>
         {t("transactions.clearSelection")}
       </Button>

@@ -1,8 +1,12 @@
 import type {
+  GroupMembersResponse,
+  LedgerItemResponse,
   PayeeBreakdownItem,
   PlaceBreakdownItem,
   PlaceSuggestionResponse,
   TagBreakdownItem,
+  TransactionGroupResponse,
+  TransactionGroupSummary,
   TransactionLineResponse,
   TransactionResponse,
   TransactionsSummaryResponse,
@@ -63,6 +67,7 @@ function transactionFrom(source: TransactionResponse["source"]) {
       attachmentCount,
       unusual: null,
       unusualDismissed: false,
+      enteredByMe: true,
     };
   };
 }
@@ -302,6 +307,77 @@ export const transactions: TransactionResponse[] = [
   manual(25, "08-20", checking, transport, -29, "Trafi – mėnesinis viešojo transporto bilietas"),
   imported(26, "08-10", checking, salary, 2850, "UAB „Baltijos sprendimai“ – darbo užmokestis"),
 ];
+
+const tripGroupId = uid("57575757", 1);
+const kitchenGroupId = uid("57575757", 2);
+
+function grouped(transaction: TransactionResponse): TransactionResponse {
+  return { ...transaction, groupId: tripGroupId };
+}
+
+export const tripGroupMembers: TransactionResponse[] = [
+  grouped(imported(901, "09-14", checking, entertainment, -180, "Hotel Bergs, Ryga", [holiday])),
+  grouped(imported(902, "09-13", checking, cafes, -58, "Restoranas Vincents, Ryga", [holiday])),
+  grouped(imported(903, "09-12", checking, transport, -62.4, "Circle K Ryga – degalai", [holiday])),
+];
+
+export const tripGroup: TransactionGroupSummary = {
+  id: tripGroupId,
+  name: "Kelionė į Rygą",
+  firstDate: "2026-09-12",
+  lastDate: "2026-09-14",
+  memberCount: 3,
+  matchingCount: 3,
+  netReportingAmount: "-300.40",
+};
+
+export const partlyMatchingTripGroup: TransactionGroupSummary = {
+  ...tripGroup,
+  firstDate: "2026-09-12",
+  lastDate: "2026-09-12",
+  matchingCount: 1,
+  netReportingAmount: "-62.40",
+};
+
+export const tripGroupMembersResponse: GroupMembersResponse = {
+  items: tripGroupMembers,
+  truncated: false,
+};
+
+export const transactionGroups: TransactionGroupResponse[] = [
+  {
+    id: tripGroupId,
+    name: tripGroup.name,
+    memberCount: tripGroup.memberCount,
+    firstDate: tripGroup.firstDate,
+    lastDate: tripGroup.lastDate,
+  },
+  {
+    id: kitchenGroupId,
+    name: "Virtuvės remontas",
+    memberCount: 6,
+    firstDate: "2026-07-02",
+    lastDate: "2026-08-27",
+  },
+];
+
+export function ledgerItemsOf(
+  rows: readonly TransactionResponse[],
+  groups: readonly TransactionGroupSummary[] = [],
+): LedgerItemResponse[] {
+  const items = rows.map((transaction): LedgerItemResponse => ({
+    kind: "transaction",
+    transaction,
+    group: null,
+  }));
+  for (const group of groups) {
+    const at = items.findIndex((item) => (item.transaction?.date ?? "") < group.lastDate);
+    items.splice(at === -1 ? items.length : at, 0, { kind: "group", transaction: null, group });
+  }
+  return items;
+}
+
+export const ledgerItems: LedgerItemResponse[] = ledgerItemsOf(transactions, [tripGroup]);
 
 export function buildTransactionsSummary(
   items: TransactionResponse[],

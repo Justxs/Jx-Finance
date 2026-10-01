@@ -19,7 +19,7 @@ export function signedAmount(money: ReturnType<typeof useMoney>, transaction: Tr
 }
 
 interface Props {
-  transaction: TransactionResponse;
+  transaction: Pick<TransactionResponse, "id" | "amount" | "type" | "currency" | "reportingAmount">;
   showReporting?: boolean;
   className?: string;
 }

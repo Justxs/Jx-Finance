@@ -172,6 +172,7 @@ export const ProblemDetailsResponse = zod
                 "transaction.refundOriginalInvalid",
                 "transaction.splitNotAllowed",
                 "transaction.spreadRefund",
+                "transactionGroup.memberTaken",
                 "transfer.amountMismatch",
                 "transfer.receivedAmountRequired",
                 "transfer.sameAccount",

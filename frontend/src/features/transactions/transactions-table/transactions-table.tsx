@@ -1,4 +1,5 @@
 import { useTable } from "@tanstack/react-table";
+import { CornerDownRight } from "lucide-react";
 import { type ReactNode, ViewTransition } from "react";
 import { useTranslation } from "react-i18next";
 import type { TransactionResponse } from "@/api/generated/model";
@@ -14,6 +15,9 @@ import {
   TableEmptyRow,
 } from "@/components/ui/table/table";
 import { Tooltip } from "@/components/ui/tooltip/tooltip";
+import { GroupRow, GroupStatusRow } from "@/features/transactions/ledger-groups/group-row";
+import { type LedgerRow, ledgerRowKey } from "@/features/transactions/ledger-groups/ledger-rows";
+import type { LedgerGroupHandlers } from "@/features/transactions/ledger-groups/use-ledger-groups";
 import { isOptimistic } from "@/features/transactions/transaction-amount/transaction-row";
 import { cn } from "@/lib/utils";
 import { transactionTableFeatures } from "./table-features";
@@ -33,7 +37,7 @@ const columnWidth: Record<string, string> = {
 };
 
 interface Props {
-  data: TransactionResponse[];
+  rows: LedgerRow[];
   columns: ReturnType<typeof useTransactionColumns>;
   isPlaceholder: boolean;
   columnFilters: Record<string, ReactNode>;
@@ -41,6 +45,7 @@ interface Props {
   filtered: boolean;
   onClearFilters?: () => void;
   selection?: TransactionSelection;
+  groups?: LedgerGroupHandlers;
 }
 
 interface SelectCellProps {
@@ -98,7 +103,7 @@ function SelectPageCheckbox({ selection }: Readonly<SelectPageProps>) {
 }
 
 export function TransactionsTable({
-  data,
+  rows,
   columns,
   isPlaceholder,
   columnFilters,
@@ -106,34 +111,42 @@ export function TransactionsTable({
   filtered,
   onClearFilters,
   selection,
+  groups,
 }: Readonly<Props>) {
   "use no memo";
   const table = useTable({
     features: transactionTableFeatures,
-    data,
+    data: rows.flatMap((row) => (row.kind === "transaction" ? [row.transaction] : [])),
     columns,
+    getRowId: (transaction) => transaction.id,
   });
   const { t } = useTranslation();
   const columnCount = table.getAllColumns().length + (selection ? 1 : 0);
+  const tableRows = new Map(table.getRowModel().rows.map((row) => [row.id, row]));
 
-  let body: ReactNode;
-  if (table.getRowModel().rows.length === 0) {
-    body = (
-      <TableEmptyRow colSpan={columnCount} filtered={filtered} onClearFilters={onClearFilters}>
-        {t("transactions.empty")}
-      </TableEmptyRow>
-    );
-  } else {
-    body = table.getRowModel().rows.map((row) => (
+  function transactionRow(transaction: TransactionResponse, member: boolean) {
+    const row = tableRows.get(transaction.id);
+    if (!row) {
+      return null;
+    }
+    const focusRef = groups?.focusRef(transaction.id);
+    return (
       <TableRow
         key={row.id}
-        className={isOptimistic(row.original) ? "stale" : undefined}
-        aria-busy={isOptimistic(row.original) || undefined}
-        data-state={selection?.selectedIds.has(row.original.id) ? "selected" : undefined}
+        ref={focusRef}
+        tabIndex={focusRef ? -1 : undefined}
+        data-kind={member ? "member" : undefined}
+        className={isOptimistic(transaction) ? "stale" : undefined}
+        aria-busy={isOptimistic(transaction) || undefined}
+        data-state={selection?.selectedIds.has(transaction.id) ? "selected" : undefined}
       >
         {selection ? (
           <TableCell className="pr-0">
-            <SelectCell row={row.original} selection={selection} />
+            {member ? (
+              <CornerDownRight className="ml-1 size-3.5 text-muted-foreground" aria-hidden="true" />
+            ) : (
+              <SelectCell row={transaction} selection={selection} />
+            )}
           </TableCell>
         ) : null}
         {row.getAllCells().map((cell) => (
@@ -142,7 +155,37 @@ export function TransactionsTable({
           </TableCell>
         ))}
       </TableRow>
-    ));
+    );
+  }
+
+  function ledgerRow(row: LedgerRow) {
+    switch (row.kind) {
+      case "transaction":
+        return transactionRow(row.transaction, row.member);
+      case "group":
+        return groups ? (
+          <GroupRow
+            key={ledgerRowKey(row)}
+            group={row.group}
+            expanded={row.expanded}
+            selectable={selection !== undefined}
+            handlers={groups}
+          />
+        ) : null;
+      default:
+        return <GroupStatusRow key={ledgerRowKey(row)} status={row} columnCount={columnCount} />;
+    }
+  }
+
+  let body: ReactNode;
+  if (rows.length === 0) {
+    body = (
+      <TableEmptyRow colSpan={columnCount} filtered={filtered} onClearFilters={onClearFilters}>
+        {t("transactions.empty")}
+      </TableEmptyRow>
+    );
+  } else {
+    body = rows.map(ledgerRow);
   }
 
   return (

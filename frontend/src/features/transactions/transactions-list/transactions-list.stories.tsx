@@ -1,14 +1,18 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { fn } from "storybook/test";
+import { expect, fn } from "storybook/test";
+import { transactionRow } from "@/features/transactions/ledger-groups/ledger-rows";
 import { withWidth } from "@/storybook/decorators";
 import {
   accounts,
   categories,
   longDescriptionTransaction,
+  partlyMatchingTripGroup,
   refundTransactions,
   splitTransaction,
   tags,
   transactions,
+  tripGroup,
+  tripGroupMembers,
   uncategorisedTransaction,
 } from "@/storybook/fixtures";
 import { TransactionsList } from "./transactions-list";
@@ -21,7 +25,7 @@ const meta = {
   title: "Features/Transactions/TransactionsList",
   component: TransactionsList,
   args: {
-    data: transactions.slice(0, 8),
+    rows: transactions.slice(0, 8).map(transactionRow),
     accountNames,
     categoryById,
     tagById,
@@ -46,7 +50,7 @@ export const Default: Story = {};
 
 export const LongLithuanianText: Story = {
   args: {
-    data: [
+    rows: [
       longDescriptionTransaction,
       {
         ...longDescriptionTransaction,
@@ -62,14 +66,14 @@ export const LongLithuanianText: Story = {
       },
       splitTransaction,
       uncategorisedTransaction,
-    ],
+    ].map(transactionRow),
   },
   globals: { locale: "lt" },
 };
 
-export const Empty: Story = { args: { data: [] } };
+export const Empty: Story = { args: { rows: [] } };
 
-export const FilteredNoMatches: Story = { args: { data: [], filtered: true } };
+export const FilteredNoMatches: Story = { args: { rows: [], filtered: true } };
 
 export const Placeholder: Story = {
   args: { isPlaceholder: true },
@@ -79,12 +83,53 @@ export const Deleting: Story = { args: { deletingId: transactions[1]?.id ?? null
 
 export const OptimisticRow: Story = {
   args: {
-    data: transactions
+    rows: transactions
       .slice(0, 4)
       .map((item, index) =>
         index === 0 ? { ...item, id: "optimistic-1", description: "Saving in progress" } : item,
-      ),
+      )
+      .map(transactionRow),
   },
 };
 
-export const Refunds: Story = { args: { data: refundTransactions } };
+export const Refunds: Story = { args: { rows: refundTransactions.map(transactionRow) } };
+
+const groupHandlers = {
+  onToggle: fn(),
+  actions: () => [],
+  pendingId: null,
+  focusRef: () => undefined,
+};
+
+export const WithGroup: Story = {
+  args: {
+    rows: [
+      transactionRow(transactions[0]!),
+      { kind: "group", group: tripGroup, expanded: false },
+      transactionRow(transactions[1]!),
+    ],
+    groups: groupHandlers,
+  },
+  play: async ({ canvas }) => {
+    const toggle = canvas.getByRole("button", { name: "Show the 3 rows of Kelionė į Rygą" });
+    await expect(toggle).toHaveAttribute("aria-expanded", "false");
+    await expect(canvas.getByText("−€300.40")).toBeInTheDocument();
+  },
+};
+
+export const WithExpandedGroup: Story = {
+  args: {
+    rows: [
+      { kind: "group", group: partlyMatchingTripGroup, expanded: true },
+      { kind: "transaction", transaction: tripGroupMembers[2]!, member: true },
+      transactionRow(transactions[1]!),
+    ],
+    groups: groupHandlers,
+  },
+  play: async ({ canvas }) => {
+    await expect(
+      canvas.getByRole("button", { name: "Show the 3 rows of Kelionė į Rygą" }),
+    ).toHaveAttribute("aria-expanded", "true");
+    await expect(canvas.getByText(/1 of 3 match/)).toBeInTheDocument();
+  },
+};

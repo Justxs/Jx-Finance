@@ -29,6 +29,7 @@ internal static class Retention
         TrashKind.CsvImportMapping,
         TrashKind.SharedExpense,
         TrashKind.Settlement,
+        TrashKind.TransactionGroup,
     ];
 
     internal static IReadOnlyList<TrashKind> KeptKinds { get; } =
@@ -98,6 +99,7 @@ internal static class Retention
             db.TransactionAttachments.IgnoreQueryFilters().Where(a => transactions.Any(t => t.Id == a.TransactionId)),
             ct);
         purged += await PurgeAsync(transactions, ct);
+        purged += await PurgeAsync(Expired(db.TransactionGroups, cutoff), ct);
         purged += await PurgeAsync(Expired(db.Budgets, cutoff), ct);
         purged += await PurgeAsync(Expired(db.Goals, cutoff), ct);
         purged += await PurgeAsync(Expired(db.Assets, cutoff), ct);
