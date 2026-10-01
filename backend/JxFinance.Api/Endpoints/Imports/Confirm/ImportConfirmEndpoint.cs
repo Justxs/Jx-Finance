@@ -11,6 +11,7 @@ public sealed class ImportConfirmEndpoint(IImportConfirmService importService)
     {
         Post(ApiRoutes.Import + "/confirm");
         Group<ImportsGroup>();
+        Description(d => d.ProducesProblemDetails(403).ProducesProblemDetails(404).ProducesProblemDetails(409));
     }
 
     public override async Task HandleAsync(ImportConfirmRequest req, CancellationToken ct) =>

@@ -10531,7 +10531,7 @@
           "Imports"
         ],
         "summary": "Commit previewed statement rows",
-        "description": "Writes the rows the user kept from a preview into the ledger. Rows the preview flagged as already present are skipped rather than duplicated, and the response reports how many were imported and how many were skipped. A row's tagIds are written as they arrive, whether a rule suggested them in the preview or the user picked them, so an empty list imports the row with no tags. A row with existingTransactionId adds nothing: the bank entry is linked to that transaction, which keeps its date, category, tags and description and is then treated as imported, so the same entry is a duplicate next time. The audit entry names the format the rows came from, and for genericCsv the mapping. For a camt.053 file or a mapped CSV with a balance column, statement echoes the preview's closing date, balance and currency, and that balance is recorded as a reconciliation of the account in that currency after the rows are written, replacing one on the same date and currency, and returned with its difference from the ledger. An incoming row sent with asRefund is written as a refund: an expense with the negated amount in the expense category given, linked to refundOfTransactionId when that is set. A row written as a transaction may carry spreadMonths and spreadDirection, which spread it over months as on a transaction created by hand; a transfer or a linked row cannot be spread (value.mustBeEmpty).",
+        "description": "Writes the rows the user kept from a preview into the ledger. Rows the preview flagged as already present are skipped rather than duplicated, and the response reports how many were imported and how many were skipped. A row's tagIds are written as they arrive, whether a rule suggested them in the preview or the user picked them, so an empty list imports the row with no tags. A row with existingTransactionId adds nothing: the bank entry is linked to that transaction, which keeps its date, category, tags and description and is then treated as imported, so the same entry is a duplicate next time. The audit entry names the format the rows came from, and for genericCsv the mapping. For a camt.053 file or a mapped CSV with a balance column, statement echoes the preview's closing date, balance and currency, and that balance is recorded as a reconciliation of the account in that currency after the rows are written, replacing one on the same date and currency, and returned with its difference from the ledger. An incoming row sent with asRefund is written as a refund: an expense with the negated amount in the expense category given, linked to refundOfTransactionId when that is set. A row written as a transaction may carry spreadMonths and spreadDirection, which spread it over months as on a transaction created by hand; a transfer or a linked row cannot be spread (value.mustBeEmpty). With group, every row written as a transaction and every linked row is put in one transaction group in the same database transaction: an existing group by id, under the rules of POST /api/transaction-groups/{id}/members, or a new group by name, shared with the household of the account when the account is shared and personal otherwise. Transfers and skipped duplicates are not grouped, and nothing is written when the group refuses a row.",
         "operationId": "ImportConfirm",
         "requestBody": {
           "content": {
@@ -10555,7 +10555,7 @@
             }
           },
           "400": {
-            "description": "Validation failed, a tag is not visible to you, the account is not visible to the signed-in user, or a transaction to link no longer matches its bank entry or is already linked (import.entryMismatch), asRefund was sent on a row that is not an incoming transaction (import.refundInvalid), or the refunded purchase is not a visible expense (transaction.refundOriginalInvalid).",
+            "description": "Validation failed, a tag is not visible to you, the account is not visible to the signed-in user, or a transaction to link no longer matches its bank entry or is already linked (import.entryMismatch), asRefund was sent on a row that is not an incoming transaction (import.refundInvalid), or the refunded purchase is not a visible expense (transaction.refundOriginalInvalid), or the group is shared and the account is not shared with its household (household.referenceNotShared).",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -10566,6 +10566,36 @@
           },
           "401": {
             "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The group is personal and a linked row was entered by someone else.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The group is not visible to you.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "A linked row is already in another group (transactionGroup.memberTaken).",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -28579,6 +28609,28 @@
           }
         }
       },
+      "ImportConfirmGroup": {
+        "required": [
+          "id",
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "name": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "ImportConfirmRequest": {
         "required": [
           "accountId",
@@ -28621,6 +28673,17 @@
             ],
             "description": "The saved CSV column mapping the preview used; required for genericCsv, whose audit entry names it.",
             "format": "uuid"
+          },
+          "group": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ImportConfirmGroup"
+              }
+            ],
+            "description": "Optional. The group to put the imported rows in: id of an existing group, or name of a new one, 1 to 120 characters."
           }
         }
       },

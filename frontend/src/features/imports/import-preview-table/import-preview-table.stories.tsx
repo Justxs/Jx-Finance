@@ -1,13 +1,14 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import { toast } from "sonner";
-import { expect, screen, userEvent, within } from "storybook/test";
+import { expect, fn, screen, userEvent, waitFor, within } from "storybook/test";
 import {
   accounts,
   categories,
   ids,
   importPreviewRows,
   tags,
+  transactionGroups,
   transactions,
 } from "@/storybook/fixtures";
 import { chooseOption, first } from "@/storybook/interactions";
@@ -19,6 +20,8 @@ interface HarnessProps {
   confirmPending?: boolean;
   withCategories?: boolean;
 }
+
+const confirmed = fn();
 
 const defaultRows: PreviewRowState[] = toPreviewRows(importPreviewRows, [], categories);
 
@@ -97,12 +100,14 @@ function PreviewTableHarness({
         accounts={accounts}
         categories={withCategories ? categories : []}
         tags={tags}
+        groups={transactionGroups}
         onRowChange={handleRowChange}
         onRowsChange={setRows}
         onCancel={() => toast.message("Cancelled")}
-        onConfirm={() =>
-          toast.success(`Confirmed ${rows.filter((row) => row.selected).length} rows`)
-        }
+        onConfirm={(group) => {
+          confirmed(group);
+          toast.success(`Confirmed ${rows.filter((row) => row.selected).length} rows`);
+        }}
         confirmPending={confirmPending}
       />
     </div>
@@ -166,6 +171,34 @@ export const SpreadARow: Story = {
     );
 
     await expect(trigger).toHaveTextContent("Spread · 12 months");
+  },
+};
+
+export const GroupingTheSelectedRows: Story = {
+  play: async ({ canvas }) => {
+    const group = first(transactionGroups);
+    await chooseOption(
+      canvas.getByRole("combobox", { name: "Put the selected rows in a group" }),
+      group.name,
+    );
+    await userEvent.click(canvas.getByRole("button", { name: /^Import \d+ rows?$/ }));
+    await waitFor(() => expect(confirmed).toHaveBeenCalledWith({ id: group.id, name: null }));
+  },
+};
+
+export const NamingANewGroup: Story = {
+  play: async ({ canvas }) => {
+    await chooseOption(
+      canvas.getByRole("combobox", { name: "Put the selected rows in a group" }),
+      "New group",
+    );
+    const confirm = canvas.getByRole("button", { name: /^Import \d+ rows?$/ });
+    await expect(confirm).toBeDisabled();
+    await userEvent.type(canvas.getByRole("textbox", { name: "Group name" }), "Kelionė į Rygą");
+    await userEvent.click(confirm);
+    await waitFor(() =>
+      expect(confirmed).toHaveBeenCalledWith({ id: null, name: "Kelionė į Rygą" }),
+    );
   },
 };
 

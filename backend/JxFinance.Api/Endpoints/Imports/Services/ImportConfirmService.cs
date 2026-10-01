@@ -4,6 +4,7 @@ using JxFinance.Common.Errors;
 using JxFinance.Common.ExchangeRates;
 using JxFinance.Common.References;
 using JxFinance.Common.Refunds;
+using JxFinance.Common.Sharing;
 using JxFinance.Common.Transfers;
 using JxFinance.Common.Trash;
 using JxFinance.Domain.Accounts;
@@ -17,6 +18,9 @@ using JxFinance.Endpoints.Accounts.Interfaces;
 using JxFinance.Endpoints.Imports.Confirm;
 using JxFinance.Endpoints.Imports.Interfaces;
 using JxFinance.Endpoints.Imports.Matching;
+using JxFinance.Endpoints.TransactionGroups.AddToTransactionGroup;
+using JxFinance.Endpoints.TransactionGroups.CreateTransactionGroup;
+using JxFinance.Endpoints.TransactionGroups.Interfaces;
 using JxFinance.Endpoints.Transactions.Mappers;
 using JxFinance.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
@@ -30,7 +34,8 @@ public sealed class ImportConfirmService(
     ITransactionValuation valuations,
     ITransferAmountResolver transferAmounts,
     IReferenceGuard references,
-    IReconciliationService reconciliations) : IImportConfirmService
+    IReconciliationService reconciliations,
+    ITransactionGroupService groups) : IImportConfirmService
 {
     public async Task<Result<ImportConfirmResponse>> ConfirmAsync(
         ImportConfirmRequest request,
@@ -41,7 +46,7 @@ public sealed class ImportConfirmService(
         var accountId = new AccountId(request.AccountId);
         var target = await db.Accounts
             .Where(a => a.Id == accountId)
-            .Select(a => new { Currency = (Currency?)a.StartingBalance.Currency, a.Name })
+            .Select(a => new { Currency = (Currency?)a.StartingBalance.Currency, a.Name, a.Scope, a.HouseholdId })
             .FirstOrDefaultAsync(cancellationToken);
         var accountCurrency = target?.Currency;
         if (target is null || accountCurrency is null)
@@ -78,6 +83,13 @@ public sealed class ImportConfirmService(
 
         await db.SaveChangesAsync(cancellationToken);
 
+        if (request.Group is { } group
+            && totals.Grouped.Count > 0
+            && await GroupAsync(group, new SharingState(target.Scope, target.HouseholdId), totals.Grouped, cancellationToken) is { } groupError)
+        {
+            return groupError;
+        }
+
         var reconciliation = request is { Format: not StatementFormat.SwedbankCsv, Statement: { } closing }
             ? (await reconciliations.RecordAsync(
                 request.AccountId,
@@ -90,6 +102,24 @@ public sealed class ImportConfirmService(
 
         await transaction.CommitAsync(cancellationToken);
         return new ImportConfirmResponse(totals.Imported, totals.Skipped, totals.Linked, reconciliation);
+    }
+
+    private async Task<DomainError?> GroupAsync(
+        ImportConfirmGroup group,
+        SharingState sharing,
+        IReadOnlyList<Guid> transactionIds,
+        CancellationToken cancellationToken)
+    {
+        if (group.Id is { } groupId)
+        {
+            var added = await groups.AddAsync(new AddToTransactionGroupRequest(groupId, transactionIds), cancellationToken);
+            return added.IsFailure ? added.Error : null;
+        }
+
+        var created = await groups.CreateAsync(
+            new CreateTransactionGroupRequest(group.Name!, transactionIds, sharing.Scope, sharing.HouseholdId?.Value),
+            cancellationToken);
+        return created.IsFailure ? created.Error : null;
     }
 
     private async Task<string> FormatLabelAsync(ImportConfirmRequest request, CancellationToken cancellationToken) => request.Format switch
@@ -195,6 +225,7 @@ public sealed class ImportConfirmService(
         var imported = 0;
         var skipped = 0;
         var linked = 0;
+        var grouped = new List<Guid>();
         var matchedTransfers = new HashSet<TransferId>();
 
         foreach (var row in rows)
@@ -214,6 +245,7 @@ public sealed class ImportConfirmService(
                 }
 
                 linked++;
+                grouped.Add(entryId);
                 continue;
             }
 
@@ -272,9 +304,10 @@ public sealed class ImportConfirmService(
             db.Transactions.Add(created);
             db.TransactionTags.AddRange(row.TagIds.ToTransactionTags(created.Id));
             imported++;
+            grouped.Add(created.Id.Value);
         }
 
-        return new ImportTotals(imported, skipped, linked);
+        return new ImportTotals(imported, skipped, linked, grouped);
     }
 
     private static DomainError? LinkEntry(AccountId accountId, ImportConfirmRow row, Currency currency, Transaction? entry)
@@ -377,5 +410,5 @@ public sealed class ImportConfirmService(
         IReadOnlyDictionary<TransactionId, Transaction> Entries,
         IReadOnlySet<TransactionId> RefundOriginals);
 
-    private sealed record ImportTotals(int Imported, int Skipped, int Linked);
+    private sealed record ImportTotals(int Imported, int Skipped, int Linked, IReadOnlyList<Guid> Grouped);
 }

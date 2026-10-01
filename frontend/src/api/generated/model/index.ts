@@ -167,6 +167,7 @@ export * from "./householdResponse";
 export * from "./householdRole";
 export * from "./householdSettlementResponse";
 export * from "./importBrokerReportRequest";
+export * from "./importConfirmGroup";
 export * from "./importConfirmRequest";
 export * from "./importConfirmResponse";
 export * from "./importConfirmRow";

@@ -6,6 +6,7 @@ import {
   useCategoriesSuspense,
   useDismissImportInboxFile,
   useTagsSuspense,
+  useTransactionGroupsSuspense,
   useTransactionsSuspense,
   useImportConfirm,
   useImportPreview,
@@ -15,6 +16,7 @@ import {
 import type {
   AccountResponse,
   CsvMappingResponse,
+  ImportConfirmGroup,
   ImportStatementSummary,
   InspectCsvResponse,
   StatementFormat,
@@ -83,6 +85,7 @@ export function ImportSection({
   const tags = useTagsSuspense();
   const tagList = tags.data;
   const history = useTransactionsSuspense(recallParams);
+  const groups = useTransactionGroupsSuspense();
   const mappings = useListCsvMappingsSuspense();
 
   const [result, setResult] = useState<ImportResult | null>(null);
@@ -209,7 +212,7 @@ export function ImportSection({
     onEditedChange(true);
   }
 
-  function handleConfirm() {
+  function handleConfirm(group: ImportConfirmGroup | null) {
     if (!rows) {
       return;
     }
@@ -220,6 +223,7 @@ export function ImportSection({
         accountId,
         format,
         mappingId: mapping?.id ?? null,
+        group,
         statement:
           closingDate && closingBalance && closingCurrency
             ? { closingDate, closingBalance, closingCurrency }
@@ -336,6 +340,7 @@ export function ImportSection({
             accounts={accounts}
             categories={categoryList}
             tags={tagList}
+            groups={groups.data}
             onRowChange={updateRow}
             onRowsChange={editRows}
             onConfirm={handleConfirm}

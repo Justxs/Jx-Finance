@@ -5,6 +5,7 @@ using JxFinance.Common.Validation;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Imports;
 using JxFinance.Domain.Transactions;
+using JxFinance.Endpoints.TransactionGroups.Shared;
 
 namespace JxFinance.Endpoints.Imports.Confirm;
 
@@ -48,6 +49,14 @@ public sealed class ImportConfirmValidator : Validator<ImportConfirmRequest>
             statement.RuleFor(s => s.ClosingDate).IsRequired();
             statement.RuleFor(s => s.ClosingBalance).IsMoney();
             statement.RuleFor(s => s.ClosingCurrency).IsKnownEnum();
+        });
+        RuleFor(r => r.Group!).ChildRules(group =>
+        {
+            group.RuleFor(g => g.Name).IsGroupName().When(g => g.Id is null);
+            group.RuleFor(g => g.Name)
+                .IsAbsent()
+                .WithMessage("Name a new group or choose an existing one, not both.")
+                .When(g => g.Id is not null);
         });
     }
 }

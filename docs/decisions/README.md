@@ -45,6 +45,6 @@ Before changing behaviour that a page here covers, read that page. When you choo
 | [Attachments](attachments.md) | none | 3 | [Attachments](../features/attachments.md) |
 | [Receipt reading](receipt-reading.md) | Receipt reading | 16 | [Receipt reading](../features/receipt-reading.md) |
 | [Transaction locations](transaction-locations.md) | Places, Photo location, The map | 7 | [Transaction locations](../features/transaction-locations.md) |
-| [Transaction groups](transaction-groups.md) | Meaning, Ledger, Writes, Sharing | 26 | [Transaction groups](../features/transaction-groups.md) |
+| [Transaction groups](transaction-groups.md) | Meaning, Ledger, Writes, Sharing | 28 | [Transaction groups](../features/transaction-groups.md) |
 | [Audit log](audit-log.md) | none | 6 | [Audit log](../features/audit-log.md) |
 | [Debt amortization](debt-amortization.md) | none | 13 | [Debt amortization](../features/debt-amortization.md) |

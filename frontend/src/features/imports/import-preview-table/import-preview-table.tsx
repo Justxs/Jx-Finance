@@ -1,6 +1,12 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import type { AccountResponse, CategoryResponse, TagResponse } from "@/api/generated/model";
+import type {
+  AccountResponse,
+  CategoryResponse,
+  ImportConfirmGroup,
+  TagResponse,
+  TransactionGroupResponse,
+} from "@/api/generated/model";
 import { Pagination } from "@/components/pagination/pagination";
 import { Button } from "@/components/ui/button/button";
 import { Checkbox } from "@/components/ui/checkbox/checkbox";
@@ -19,7 +25,12 @@ import {
 import { Tooltip } from "@/components/ui/tooltip/tooltip";
 import { usePageClamp } from "@/hooks/use-paged-list";
 import { ImportRow } from "./import-row";
-import { ImportSummaryBar } from "./import-summary-bar";
+import {
+  ImportSummaryBar,
+  NO_GROUP,
+  importGroupPayload,
+  importGroupReady,
+} from "./import-summary-bar";
 import {
   applyCategory,
   type PreviewRowState,
@@ -39,9 +50,10 @@ interface Props {
   accounts: AccountResponse[];
   categories: CategoryResponse[];
   tags: TagResponse[];
+  groups: TransactionGroupResponse[];
   onRowChange: (index: number, patch: Partial<PreviewRowState>) => void;
   onRowsChange: (rows: PreviewRowState[]) => void;
-  onConfirm: () => void;
+  onConfirm: (group: ImportConfirmGroup | null) => void;
   onCancel: () => void;
   confirmPending: boolean;
 }
@@ -52,6 +64,7 @@ export function ImportPreviewTable({
   accountId,
   categories,
   tags,
+  groups,
   onRowChange,
   onRowsChange,
   onConfirm,
@@ -62,6 +75,7 @@ export function ImportPreviewTable({
   const [page, setPage] = useState(1);
   const [view, setView] = useState<PreviewView>("all");
   const [query, setQuery] = useState("");
+  const [group, setGroup] = useState(NO_GROUP);
   const visible = visibleRowIndexes(rows, view, query);
   const pages = usePageClamp({ page, setPage }, visible.length, PREVIEW_PAGE_SIZE);
 
@@ -108,8 +122,11 @@ export function ImportPreviewTable({
       <ImportSummaryBar
         rows={rows}
         categories={categories}
+        groups={groups}
+        group={group}
         disabled={confirmPending}
         onApplyCategory={(category) => onRowsChange(applyCategory(rows, category))}
+        onGroupChange={setGroup}
       />
       {summary.selectableCount === 0 ? (
         <p className="text-sm text-foreground">{t("imports.allDuplicates")}</p>
@@ -193,7 +210,11 @@ export function ImportPreviewTable({
         <Button variant="outline" disabled={confirmPending} onClick={onCancel}>
           {t("actions.cancel")}
         </Button>
-        <Button pending={confirmPending} disabled={summary.selected === 0} onClick={onConfirm}>
+        <Button
+          pending={confirmPending}
+          disabled={summary.selected === 0 || !importGroupReady(group)}
+          onClick={() => onConfirm(importGroupPayload(group))}
+        >
           {t("imports.confirmCount", { count: summary.selected })}
         </Button>
       </div>

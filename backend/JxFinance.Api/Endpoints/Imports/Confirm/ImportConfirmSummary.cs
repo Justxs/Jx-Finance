@@ -21,15 +21,24 @@ public sealed class ImportConfirmSummary : Summary<ImportConfirmEndpoint, Import
             + "and returned with its difference from the ledger. An incoming row sent with asRefund is written as a refund: an expense "
             + "with the negated amount in the expense category given, linked to refundOfTransactionId when that is set. A row written as a transaction may carry "
             + "spreadMonths and spreadDirection, which spread it over months as on a transaction created by hand; a transfer or a linked row "
-            + "cannot be spread (value.mustBeEmpty).";
+            + "cannot be spread (value.mustBeEmpty). With group, every row written as a transaction and every linked row is put in "
+            + "one transaction group in the same database transaction: an existing group by id, under the rules of POST "
+            + "/api/transaction-groups/{id}/members, or a new group by name, shared with the household of the account when the "
+            + "account is shared and personal otherwise. Transfers and skipped duplicates are not grouped, and nothing is written "
+            + "when the group refuses a row.";
         RequestParam(r => r.AccountId, "The account the rows post to; must be the one previewed.");
         RequestParam(r => r.Rows, "The rows to import, as returned by preview, with any category and tag corrections applied.");
         RequestParam(r => r.Format, ImportFormatText.Format);
         RequestParam(r => r.MappingId, "The saved CSV column mapping the preview used; required for genericCsv, whose audit entry names it.");
         RequestParam(r => r.Statement, "Optional. The closing balance the camt.053 or mapped CSV preview answered; ignored for Swedbank CSV.");
+        RequestParam(r => r.Group, "Optional. The group to put the imported rows in: id of an existing group, or name of a new one, 1 to 120 characters.");
         Responses[200] = "Counts of imported, linked and skipped rows, and the recorded reconciliation when there is one.";
         Responses[400] = "Validation failed, a tag is not visible to you, the account is not visible to the signed-in user, "
             + "or a transaction to link no longer matches its bank entry or is already linked (import.entryMismatch), asRefund was sent on a row "
-            + "that is not an incoming transaction (import.refundInvalid), or the refunded purchase is not a visible expense (transaction.refundOriginalInvalid).";
+            + "that is not an incoming transaction (import.refundInvalid), or the refunded purchase is not a visible expense (transaction.refundOriginalInvalid), or the group is shared and the account is not "
+            + "shared with its household (household.referenceNotShared).";
+        Responses[403] = "The group is personal and a linked row was entered by someone else.";
+        Responses[404] = "The group is not visible to you.";
+        Responses[409] = "A linked row is already in another group (transactionGroup.memberTaken).";
     }
 }

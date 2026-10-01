@@ -8,7 +8,7 @@ Related: feature page [Transaction groups](../features/transaction-groups.md); a
 
 **Ledger.** `GET /api/transactions/ledger` answers flat items with a `kind` of `transaction` or `group`, paged and sorted in SQL over a union of ungrouped transactions and the groups the caller can see with a matching member. A group sorts by its newest matching member, the size of its net, or its name, and after every transaction for category and account. The pager counts items and the totals line counts transactions. `GET /api/transactions` is unchanged.
 
-**Writes.** Membership is written with `ExecuteUpdateAsync` on `GroupId` alone, so `UpdatedAt` stays and a closed month does not drift. A row is in at most one group. A group may start with one row and keeps its name with one member or none. Ungroup goes to the trash and records its members; only the owner ungroups. The group routes are readable with a personal API token and writable only from the browser session.
+**Writes.** Since 2026-10-02 the import review can put the rows it imports in a new or an existing group within the confirm. Membership is written with `ExecuteUpdateAsync` on `GroupId` alone, so `UpdatedAt` stays and a closed month does not drift. A row is in at most one group. A group may start with one row and keeps its name with one member or none. Ungroup goes to the trash and records its members; only the owner ungroups. The group routes are readable with a personal API token and writable only from the browser session.
 
 **Sharing.** Since 2026-10-02 a group is personal or shared with one household, like a goal or a tag. A personal group holds only rows its owner entered. A shared group holds rows on accounts shared with its household, whoever entered them; every member of the household sees it fold in their ledger, can add a row they see on such an account and can take any row out. Any member renames it; only the owner changes its sharing, ungroups it or restores it. Making it personal again takes out the rows other people entered. Its create, rename and membership changes reach the household's activity log, the membership ones as one summarising row each. It belongs to its owner's member export.
 
@@ -16,6 +16,12 @@ Related: feature page [Transaction groups](../features/transaction-groups.md); a
 
 Newest first. Each entry is a choice between real alternatives: what was chosen, what was rejected, and why.
 
+- **2026-10-02.** The import review can put the rows it imports in a group, a new one by name or an existing one, carried in the confirm request as `group` and applied by `ImportConfirmService` through `ITransactionGroupService` in the same database transaction as the rows. This supersedes the 2026-10-01 entry that left grouping to the ledger
+  - Rejected: Grouping afterwards in the ledger; a follow-up call from the browser after the confirm answers
+  - Why: The owner asked for it: a statement often holds a whole trip, and the review is where those rows are already in view. Inside the confirm a refused group rolls the import back, while a follow-up call could leave the rows imported and ungrouped and would need the new transaction ids sent back to the browser
+- **2026-10-02.** Decided while the owner was away, to be reviewed. Every row the confirm writes as a transaction and every row it links to a hand-entered entry joins the group; transfers and skipped duplicates do not. A new group takes the account's sharing, and a group the rows cannot join refuses the whole import
+  - Rejected: A group checkbox per row; asking for the sharing of a new group in the review; skipping the rows the group refuses
+  - Why: The review's selection already says which rows the user wants, and the rows that are not written as transactions cannot be members. All rows of one import sit on one account, so the account's sharing is the one that always fits them, and the owner can change it later from the ledger. Importing some rows and grouping fewer would be a result nobody asked for
 - **2026-10-02.** A group can be shared with a household: `TransactionGroup` is `IShareable`, with `SharingFields` in the group dialog, the shared tag on the group row, a line in `ShareableSet.All` and the sharing guard. This supersedes the 2026-10-01 entry that kept groups personal
   - Rejected: Keeping groups personal; a household-scoped group that belongs to the household rather than to a member
   - Why: The owner asked for a household to share a group, such as a joint holiday paid from the shared card and a personal one. Using the shareable pattern gives the group the filter, the guard, member removal, household deletion and restore that every other shared record already has, without a second kind of sharing
@@ -91,6 +97,6 @@ Newest first. Each entry is a choice between real alternatives: what was chosen,
 - **2026-10-01.** Names are not unique, at most 120 characters
   - Rejected: A unique name per owner
   - Why: Two trips to Riga in different years are two groups with the same honest name, and the dialog lists them with their dates
-- **2026-10-01.** Rows are grouped afterwards in the ledger, not in the import review
+- **2026-10-01, superseded on 2026-10-02.** Rows are grouped afterwards in the ledger, not in the import review. The review can now group them; see the 2026-10-02 entries above
   - Rejected: Grouping from the import review
   - Why: The review already carries categories, tags, transfers and refunds. Grouping a statement's rows afterwards takes one selection

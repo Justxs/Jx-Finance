@@ -201,6 +201,12 @@ Since 2026-10-02 a row that will be written as a transaction, a refund included,
 
 A confirm row takes `spreadMonths` (2 to 36, `range.invalid`) and `spreadDirection` (`forward` by default, or `backward`), and `ImportConfirmService` writes them onto the transaction it creates, so reports and budgets count its slices from the first import. A row with a transfer account, a matched transfer or an entry to link answers 400 `value.mustBeEmpty` when it carries `spreadMonths`.
 
+## Grouping the imported rows
+
+Since 2026-10-02 the bar above the review has "Put the selected rows in a group" beside "Set category for selected": No group (the default), New group, which asks for a group name, or one of the [transaction groups](transaction-groups.md) you can see. The Import button stays disabled while New group has no name. The confirm then carries `group`, `{ id }` for an existing group or `{ name }` for a new one, and `ImportConfirmService` puts every row it wrote as a transaction and every row it linked to your own entry in that group, through `ITransactionGroupService`, after the rows are saved and inside the same database transaction. Transfers and skipped duplicates stay out, because a group holds transactions and a duplicate was imported before.
+
+A new group takes the sharing of the account: shared with the account's household when the account is shared, personal otherwise, so the rows always fit it. An existing group applies its own rules: a personal group refuses a linked entry a housemate entered (403 `access.forbidden`), a shared group refuses an account not shared with its household (400 `household.referenceNotShared`), and a linked entry already in another group answers 409 `transactionGroup.memberTaken`. A refusal rolls the whole import back, so nothing is half imported. A shared group writes its own activity row next to the import's.
+
 ## Views, search and leaving a review
 
 The rows sit under a switch of four counted views: All, Needs attention, Transfers and Duplicates. Needs attention holds the selected rows that are not recorded as a transfer or linked to your own entry and have no category, which would otherwise enter the ledger uncategorized. Transfers holds suspected transfers and rows recorded as one, and Duplicates the rows already imported. A search box narrows any view to rows whose description or payee contains the text, ignoring case.

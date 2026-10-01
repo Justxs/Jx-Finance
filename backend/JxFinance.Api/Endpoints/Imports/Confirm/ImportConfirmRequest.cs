@@ -7,4 +7,5 @@ public sealed record ImportConfirmRequest(
     IReadOnlyList<ImportConfirmRow> Rows,
     StatementFormat Format,
     ImportStatementBalance? Statement = null,
-    Guid? MappingId = null);
+    Guid? MappingId = null,
+    ImportConfirmGroup? Group = null);

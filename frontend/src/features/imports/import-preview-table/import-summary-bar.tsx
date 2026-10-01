@@ -1,24 +1,56 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import type { CategoryResponse } from "@/api/generated/model";
+import type {
+  CategoryResponse,
+  ImportConfirmGroup,
+  TransactionGroupResponse,
+} from "@/api/generated/model";
+import { createTransactionGroupBodyNameMax } from "@/api/schemas/transaction-groups/transaction-groups.zod";
 import { ComboboxField } from "@/components/combobox-field/combobox-field";
 import { Button } from "@/components/ui/button/button";
+import { Input } from "@/components/ui/input/input";
 import { useMoney } from "@/hooks/use-formatters";
 import { EXPENSE_TONE, INCOME_TONE } from "@/lib/tone";
 import { cn } from "@/lib/utils";
 import { categoryTargetCount, type PreviewRowState, summarizeSelection } from "./preview-rows";
 
+const NEW_GROUP = "new";
+
+export interface ImportGroupChoice {
+  groupId: string;
+  name: string;
+}
+
+export const NO_GROUP: ImportGroupChoice = { groupId: "", name: "" };
+
+export function importGroupPayload(choice: ImportGroupChoice): ImportConfirmGroup | null {
+  if (choice.groupId === NEW_GROUP) {
+    return { id: null, name: choice.name.trim() };
+  }
+  return choice.groupId ? { id: choice.groupId, name: null } : null;
+}
+
+export function importGroupReady(choice: ImportGroupChoice) {
+  return choice.groupId !== NEW_GROUP || choice.name.trim() !== "";
+}
+
 interface Props {
   rows: PreviewRowState[];
   categories: CategoryResponse[];
+  groups: TransactionGroupResponse[];
+  group: ImportGroupChoice;
   onApplyCategory: (category: CategoryResponse) => void;
+  onGroupChange: (group: ImportGroupChoice) => void;
   disabled?: boolean;
 }
 
 export function ImportSummaryBar({
   rows,
   categories,
+  groups,
+  group,
   onApplyCategory,
+  onGroupChange,
   disabled = false,
 }: Readonly<Props>) {
   const { t } = useTranslation();
@@ -87,6 +119,37 @@ export function ImportSummaryBar({
             ? t("imports.bulkApplyCount", { count: targetCount })
             : t("imports.bulkApply")}
         </Button>
+        <div className="w-full max-w-64 min-w-0 space-y-1.5">
+          <label className="text-xs text-muted-foreground" htmlFor="import-group">
+            {t("imports.groupLabel")}
+          </label>
+          <ComboboxField
+            id="import-group"
+            value={group.groupId}
+            disabled={disabled}
+            onChange={(groupId) => onGroupChange({ ...group, groupId })}
+            options={[
+              { value: "", label: t("imports.noGroup") },
+              { value: NEW_GROUP, label: t("transactions.groups.newGroup") },
+              ...groups.map((item) => ({ value: item.id, label: item.name })),
+            ]}
+          />
+        </div>
+        {group.groupId === NEW_GROUP ? (
+          <div className="w-full max-w-64 min-w-0 space-y-1.5">
+            <label className="text-xs text-muted-foreground" htmlFor="import-group-name">
+              {t("transactions.groups.name")}
+            </label>
+            <Input
+              id="import-group-name"
+              value={group.name}
+              maxLength={createTransactionGroupBodyNameMax}
+              placeholder={t("transactions.groups.namePlaceholder")}
+              disabled={disabled}
+              onChange={(event) => onGroupChange({ ...group, name: event.target.value })}
+            />
+          </div>
+        ) : null}
       </div>
     </div>
   );

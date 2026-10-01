@@ -2530,6 +2530,8 @@
     "bulkCategory": "Set category for selected",
     "bulkCategoryPlaceholder": "Choose a category",
     "bulkApply": "Apply",
+    "groupLabel": "Put the selected rows in a group",
+    "noGroup": "No group",
     "bulkApplyCount_one": "Apply to {{count}} row",
     "bulkApplyCount_other": "Apply to {{count}} rows",
     "confirmCount_one": "Import {{count}} row",

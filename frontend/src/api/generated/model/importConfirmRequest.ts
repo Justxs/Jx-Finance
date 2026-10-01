@@ -5,6 +5,7 @@
  * Personal and household finance ledger. Every route lives under /api and answers JSON. Money is carried as a decimal string with at most two decimal places so nothing is lost to floating point; dates are YYYY-MM-DD in the instance time zone. Collections that can grow are paged with page and pageSize and answer with items, page, pageSize, and total. Authentication is a session cookie from POST /api/auth/login, so browser clients must send credentials. Failures answer application/problem+json with a machine-readable code per error; see the ProblemDetails schema.
  * OpenAPI spec version: v1
  */
+import type { ImportConfirmGroup } from "./importConfirmGroup";
 import type { ImportConfirmRow } from "./importConfirmRow";
 import type { ImportStatementBalance } from "./importStatementBalance";
 import type { StatementFormat } from "./statementFormat";
@@ -25,4 +26,6 @@ export interface ImportConfirmRequest {
    * @nullable
    */
   mappingId?: string | null;
+  /** Optional. The group to put the imported rows in: id of an existing group, or name of a new one, 1 to 120 characters. */
+  group?: null | ImportConfirmGroup;
 }

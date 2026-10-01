@@ -2624,6 +2624,8 @@
     "bulkCategory": "Priskirti kategoriją pasirinktoms eilutėms",
     "bulkCategoryPlaceholder": "Pasirinkite kategoriją",
     "bulkApply": "Taikyti",
+    "groupLabel": "Pasirinktas eilutes sudėti į grupę",
+    "noGroup": "Be grupės",
     "bulkApplyCount_one": "Taikyti {{count}} eilutei",
     "bulkApplyCount_few": "Taikyti {{count}} eilutėms",
     "bulkApplyCount_many": "Taikyti {{count}} eilutės",
