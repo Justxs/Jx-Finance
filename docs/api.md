@@ -137,6 +137,7 @@ Every 201 goes through `CreatedAsync`, which sets `Location` to a path built fro
 | GET | `/api/assets/{id}/value-history` |
 | DELETE | `/api/attachments/{id}` |
 | GET | `/api/attachments/{id}/content` |
+| PUT | `/api/attachments/{id}/warranty` |
 | POST | `/api/auth/2fa/disable` |
 | POST | `/api/auth/2fa/enable` |
 | POST | `/api/auth/2fa/setup` |
@@ -259,6 +260,7 @@ Every 201 goes through `CreatedAsync`, which sets `Location` to a path built fro
 | DELETE | `/api/investments/connections/{accountId}` |
 | POST | `/api/investments/connections/{accountId}/sync` |
 | POST | `/api/investments/import/interactive-brokers` |
+| POST | `/api/investments/import/trade-csv` |
 | GET | `/api/investments/portfolio` |
 | GET | `/api/investments/tax-summary` |
 | GET | `/api/investments/tax-summary/export` |
@@ -286,9 +288,13 @@ Every 201 goes through `CreatedAsync`, which sets `Location` to a path built fro
 | GET | `/api/notifications` |
 | POST | `/api/notifications/read-all` |
 | PATCH | `/api/notifications/{id}/read` |
+| GET | `/api/payees` |
+| PUT | `/api/payees` |
+| DELETE | `/api/payees/{id}` |
 | GET | `/api/ping` |
 | GET | `/api/receipts/item-categories` |
 | DELETE | `/api/receipts/item-categories/{id}` |
+| GET | `/api/receipts/items` |
 | POST | `/api/receipts/read` |
 | PUT | `/api/receipts/{id}/categories` |
 | GET | `/api/recurring-bills` |
