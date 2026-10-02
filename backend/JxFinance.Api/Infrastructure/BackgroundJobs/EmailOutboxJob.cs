@@ -16,8 +16,7 @@ public sealed class EmailOutboxJob(
 {
     protected override string Name => "Email outbox drain";
 
-    protected override TimeSpan Interval =>
-        TimeSpan.FromSeconds(options.Value.Email.OutboxIntervalSeconds);
+    protected override JobSchedule Schedule => JobSchedule.Every(TimeSpan.FromSeconds(options.Value.Email.OutboxIntervalSeconds));
 
     protected override async Task RunAsync(IServiceProvider services, CancellationToken ct)
     {

@@ -18,7 +18,7 @@ public sealed class LowBalanceJob(
 
     protected override string Name => "Low balance forecast scan";
 
-    protected override TimeSpan Interval => TimeSpan.FromHours(6);
+    protected override JobSchedule Schedule => JobSchedule.Every(TimeSpan.FromHours(6));
 
     protected override Feature? RequiredFeature => Feature.RecurringBills;
 

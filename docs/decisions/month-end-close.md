@@ -10,6 +10,9 @@ Implemented 2026-09-27 behind the `MonthClose` switch, on by default. A soft clo
 
 Newest first. Each entry is a choice between real alternatives: what was chosen, what was rejected, and why.
 
+- **2026-10-02.** `MonthCloseReminderJob` runs daily at 08:00 in the installation time zone, and once at startup, and still does nothing outside days 1 to 5 of a month
+  - Rejected: Keeping the hourly pass of 2026-09-27
+  - Why: `PeriodicJob` can now wait for a local time of day (see the [general decisions](general.md)), which removes the reason for the hourly pass. A morning reminder arrives when it is read rather than just after midnight, and the startup pass still catches up after a server that was off at 08:00
 - **2026-10-01.** The checklist gains `duplicates`, the month's rows that have a possible duplicate counted through the ledger summary with `duplicates=true`; it counts toward "N things need attention" and toward the open items that make closing ask first, and the monthly digest leaves it out. Decided while the owner was away, to be reviewed
   - Rejected: Counting pairs instead of rows; treating it as a hint like the account lines; adding it to the digest's "Still to do"
   - Why: The count has to equal the rows its link opens, as for every other line. A duplicate is a row to fix before the month's figures are right, like an uncategorized one, not a statement still to arrive. The digest's payload, texts and tests would all change for a check that is new and untuned; it can follow once the trial shows the line is worth an email
@@ -33,7 +36,7 @@ Newest first. Each entry is a choice between real alternatives: what was chosen,
 - **2026-09-27.** The `uncategorized` filter lives on the shared `TransactionFilterRequest`, so the list, the summary, the CSV and the PDF all honour it through `Filtered`
   - Rejected: A property of `GetTransactionsRequest` only, as planned
   - Why: The checklist counts through the summary, and the count has to equal the rows its link opens; the totals line and the exports would otherwise disagree with the list, which is what the shared filter exists to prevent. The same choice was made for `unusual`
-- **2026-09-27.** `MonthCloseReminderJob` runs hourly and does nothing outside days 1 to 5 of a month
+- **2026-09-27.** `MonthCloseReminderJob` runs hourly and does nothing outside days 1 to 5 of a month (replaced on 2026-10-02 by the daily 08:00 pass above)
   - Rejected: A daily job, as planned
   - Why: `PeriodicJob` counts its interval from the process start, so a daily pass lands at an arbitrary hour and moves with every restart. Hourly passes find the new month within an hour of it starting in the installation time zone; a pass on any other day returns before touching the database, and the deduplication per user and month makes the repeated passes harmless
 - **2026-09-27.** The dashboard card "August is ready to close" with the checklist counts was left out of v1

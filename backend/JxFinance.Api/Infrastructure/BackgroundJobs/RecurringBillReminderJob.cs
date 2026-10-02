@@ -14,7 +14,7 @@ public sealed class RecurringBillReminderJob(
 {
     protected override string Name => "Recurring bill reminder scan";
 
-    protected override TimeSpan Interval => TimeSpan.FromMinutes(15);
+    protected override JobSchedule Schedule => JobSchedule.Every(TimeSpan.FromMinutes(15));
 
     protected override Feature? RequiredFeature => Feature.RecurringBills;
 

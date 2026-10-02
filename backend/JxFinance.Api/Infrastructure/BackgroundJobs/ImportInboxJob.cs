@@ -12,7 +12,7 @@ public sealed class ImportInboxJob(
 {
     protected override string Name => "Import inbox";
 
-    protected override TimeSpan Interval => TimeSpan.FromMinutes(5);
+    protected override JobSchedule Schedule => JobSchedule.Every(TimeSpan.FromMinutes(5));
 
     protected override Feature? RequiredFeature => Feature.Import;
 

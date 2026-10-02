@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <PackageReference Include="AspNetCore.HealthChecks.NpgSql" />
+    <PackageReference Include="Cronos" />
     <PackageReference Include="CsvHelper" />
     <PackageReference Include="FastEndpoints" />
     <PackageReference Include="FastEndpoints.Generator">

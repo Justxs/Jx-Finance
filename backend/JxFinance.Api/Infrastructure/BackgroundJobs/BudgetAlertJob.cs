@@ -22,7 +22,7 @@ public sealed class BudgetAlertJob(
 
     protected override string Name => "Budget alert scan";
 
-    protected override TimeSpan Interval => TimeSpan.FromHours(1);
+    protected override JobSchedule Schedule => JobSchedule.Every(TimeSpan.FromHours(1));
 
     protected override Feature? RequiredFeature => Feature.Budgets;
 

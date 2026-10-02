@@ -8,7 +8,7 @@ public sealed class ExchangeRateSyncJob(IServiceScopeFactory scopes, ILogger<Exc
 {
     protected override string Name => "Exchange rate sync";
 
-    protected override TimeSpan Interval => TimeSpan.FromHours(6);
+    protected override JobSchedule Schedule => JobSchedule.Every(TimeSpan.FromHours(6));
 
     protected override async Task RunAsync(IServiceProvider services, CancellationToken ct)
     {

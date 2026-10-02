@@ -21,7 +21,7 @@ public sealed class DiscordOutboxJob(
 
     protected override string Name => "Discord outbox drain";
 
-    protected override TimeSpan Interval => TimeSpan.FromSeconds(30);
+    protected override JobSchedule Schedule => JobSchedule.Every(TimeSpan.FromSeconds(30));
 
     protected override async Task RunAsync(IServiceProvider services, CancellationToken ct)
     {

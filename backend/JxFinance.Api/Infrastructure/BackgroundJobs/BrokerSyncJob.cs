@@ -10,7 +10,7 @@ public sealed class BrokerSyncJob(IServiceScopeFactory scopes, ILogger<BrokerSyn
 {
     protected override string Name => "Broker sync";
 
-    protected override TimeSpan Interval => TimeSpan.FromHours(24);
+    protected override JobSchedule Schedule => JobSchedule.Every(TimeSpan.FromHours(24));
 
     protected override Feature? RequiredFeature => Feature.Investments;
 

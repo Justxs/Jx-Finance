@@ -9,8 +9,8 @@ flowchart TD
     Bills["RecurringBillReminderJob<br/>every 15 min, needs RecurringBills"] --> Dedupe
     Budgets["BudgetAlertJob<br/>hourly, needs Budgets"] --> Dedupe
     Unusual["UnusualAmountJob<br/>every 15 min, needs UnusualAmounts;<br/>price rises also need RecurringBills"] --> Dedupe
-    Close["MonthCloseReminderJob<br/>hourly on days 1 to 5, needs MonthClose"] --> Dedupe
-    Digest["MonthlyDigestJob<br/>hourly on days 1 to 5, needs MonthClose,<br/>only for members who ticked it"] --> Dedupe
+    Close["MonthCloseReminderJob<br/>daily at 08:00 on days 1 to 5, needs MonthClose"] --> Dedupe
+    Digest["MonthlyDigestJob<br/>daily at 08:00 on days 1 to 5, needs MonthClose,<br/>only for members who ticked it"] --> Dedupe
     Dedupe["Publish under an advisory lock<br/>unless the same row already exists in the same period"] --> Pub["INotificationPublisher.Publish<br/>in the job's own transaction"]
     Pub --> Row["Notification: user, kind, title, typed payload, related row"]
     Pub --> Discord["A DiscordMessages row when Discord is allowed<br/>and the owner's webhook takes that kind"]

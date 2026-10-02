@@ -27,7 +27,7 @@ public sealed class UnusualAmountJob(
 
     protected override string Name => "Unusual amount scan";
 
-    protected override TimeSpan Interval => TimeSpan.FromMinutes(15);
+    protected override JobSchedule Schedule => JobSchedule.Every(TimeSpan.FromMinutes(15));
 
     protected override Feature? RequiredFeature => Feature.UnusualAmounts;
 

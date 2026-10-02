@@ -8,7 +8,7 @@ In the first days of a month, each member who asked for it receives one message 
 
 ```mermaid
 flowchart TD
-    Job["MonthlyDigestJob<br/>hourly on days 1 to 5, needs MonthClose"] --> Pick["Active members who ticked monthlyDigest<br/>for email, or whose enabled webhook takes it<br/>while Discord is allowed; one entry per chosen scope<br/>(Everything, and each household while Households is on)<br/>without a digest for the month"]
+    Job["MonthlyDigestJob<br/>daily at 08:00, acts on days 1 to 5, needs MonthClose"] --> Pick["Active members who ticked monthlyDigest<br/>for email, or whose enabled webhook takes it<br/>while Discord is allowed; one entry per chosen scope<br/>(Everything, and each household while Households is on)<br/>without a digest for the month"]
     Pick --> Scope["RunAsUserAsync(member, household):<br/>a scope where ICurrentUser is FixedUser(member, household),<br/>no household for Everything"]
     Scope --> Lock["Transaction, AppLock.MonthlyDigest,<br/>deduplication checked again"]
     Lock --> Review["IMonthCloseService.GetMonthAsync(last month):<br/>figures with PreviousMonth and the checklist"]
@@ -27,7 +27,7 @@ Since 2026-10-01 a member who belongs to a household also sees "Monthly digest f
 
 ## When it is sent
 
-`MonthlyDigestJob` is a `PeriodicJob` with `RequiredFeature = MonthClose` that runs every hour and returns at once unless today, in the installation time zone, is day 1 to 5 of a month (`ClosingMonth.LastDay = 5`), the same catch-up window as the [reminder](month-end-close.md#the-reminder), so a server that was off on the 1st still sends it. The first pass that finds no digest for a member and month sends it. The deduplication is a `MonthlyDigest` notification created since the start of the current month for the member and scope, deleted ones included: the scope is the notification's `RelatedId`, null for "Everything" and the household's id with `RelatedType` `Household` for a household. It is checked once when the members and scopes are picked and again inside the member's transaction under `AppLock.MonthlyDigest` (`738192443`). Each member and scope runs in its own try block, so one failure is logged with the user id and the others still get theirs.
+`MonthlyDigestJob` is a `PeriodicJob` with `RequiredFeature = MonthClose` that runs daily at 08:00 in the installation time zone, and once at startup, and returns at once unless today, in the installation time zone, is day 1 to 5 of a month (`ClosingMonth.LastDay = 5`), the same catch-up window as the [reminder](month-end-close.md#the-reminder), so a server that was off on the 1st still sends it. The first pass that finds no digest for a member and month sends it. The deduplication is a `MonthlyDigest` notification created since the start of the current month for the member and scope, deleted ones included: the scope is the notification's `RelatedId`, null for "Everything" and the household's id with `RelatedType` `Household` for a household. It is checked once when the members and scopes are picked and again inside the member's transaction under `AppLock.MonthlyDigest` (`738192443`). Each member and scope runs in its own try block, so one failure is logged with the user id and the others still get theirs.
 
 The reminder `MonthReadyToClose` is unchanged, and both can arrive on the same day: the reminder is a to-do for people who close their months, the digest a summary for anyone. A member who wants one message unticks the other's channels.
 

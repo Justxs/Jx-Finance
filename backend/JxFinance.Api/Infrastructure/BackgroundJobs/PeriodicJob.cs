@@ -1,4 +1,5 @@
 using JxFinance.Common.Settings;
+using JxFinance.Domain.Common;
 using JxFinance.Domain.Households;
 using JxFinance.Domain.Settings;
 using JxFinance.Infrastructure.Auth;
@@ -11,7 +12,7 @@ public abstract class PeriodicJob(IServiceScopeFactory scopes, ILogger logger) :
 {
     protected abstract string Name { get; }
 
-    protected abstract TimeSpan Interval { get; }
+    protected abstract JobSchedule Schedule { get; }
 
     protected virtual Feature? RequiredFeature => null;
 
@@ -72,8 +73,10 @@ public abstract class PeriodicJob(IServiceScopeFactory scopes, ILogger logger) :
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        using var timer = new PeriodicTimer(Interval);
-        do
+        await using var scope = scopes.CreateAsyncScope();
+        var clock = scope.ServiceProvider.GetRequiredService<IClock>();
+        var due = clock.UtcNow;
+        while (true)
         {
             try
             {
@@ -87,7 +90,10 @@ public abstract class PeriodicJob(IServiceScopeFactory scopes, ILogger logger) :
             {
                 logger.LogError(ex, "{Job} failed.", Name);
             }
+
+            var now = clock.UtcNow;
+            due = Schedule.Next(due, now, clock.TimeZone);
+            await Task.Delay(due - now, stoppingToken);
         }
-        while (await timer.WaitForNextTickAsync(stoppingToken));
     }
 }

@@ -20,6 +20,9 @@ Apply EF migrations directly on startup; the `pg_dump` based dump, the backup sc
 
 Newest first. Each entry is a choice between real alternatives: what was chosen, what was rejected, and why.
 
+- **2026-10-02.** A job declares a `JobSchedule`: a fixed interval, or a cron expression parsed by Cronos and read in the installation time zone. `RetentionJob` runs at 03:00, `MonthCloseReminderJob` and `MonthlyDigestJob` at 08:00, the rest keep their intervals, and every job still makes one pass at startup
+  - Rejected: Hangfire, Quartz.NET, TickerQ or Coravel; computing the next local time by hand from `IClock.StartOfDay`; a cron expression for every job; no startup pass for cron jobs
+  - Why: The outbox tables and advisory locks already give the durability and the single run a job library sells, while each library brings its own tables, dashboard or job activation beside `CreateUserScope`. A local time of day computed by hand has to get daylight saving right twice a year, which Cronos already does. Cron cannot express an interval in seconds that a setting chooses, such as the email outbox's. Without the startup pass, a server that is off every night would never run the retention
 - **2026-10-01.** Machine-learned categorization leaves the deferred list: a suggestion-only naive Bayes model trained per request inside the API, behind a `LearnedCategories` switch that is off by default, built although its evaluation gate could not be measured, because the owner waived it; the evaluation on the owner's ledger is still to run before the switch goes on. See [Learned categories](learned-categories.md)
   - Rejected: Keeping it out of scope because rules and the recall of the last category cover the need
   - Why: The owner asked for the whole feature on 2026-10-01; nothing leaves the installation and the switch keeps it off until the evaluation has run

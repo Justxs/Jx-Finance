@@ -127,7 +127,7 @@ The account lines answer whether each account's statement for the month is in. `
 
 ## The reminder
 
-`MonthCloseReminderJob` is a `PeriodicJob` that runs every hour with `RequiredFeature = MonthClose`, and returns at once unless today, in the installation time zone, is day 1 to 5 of a month (`ClosingMonth.LastDay = 5`, shared with the monthly digest). On those days, in one transaction holding `AppLock.MonthCloseReminders` (`738192442`), one query picks the active users who:
+`MonthCloseReminderJob` is a `PeriodicJob` that runs daily at 08:00 in the installation time zone, and once at startup, with `RequiredFeature = MonthClose`, and returns at once unless today, in the installation time zone, is day 1 to 5 of a month (`ClosingMonth.LastDay = 5`, shared with the monthly digest). On those days, in one transaction holding `AppLock.MonthCloseReminders` (`738192442`), one query picks the active users who:
 
 1. have closed at least one month, in any scope: having closed once is the opt-in, so nobody who never used the page is reminded;
 2. have not closed the previous month in any scope;

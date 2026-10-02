@@ -2,7 +2,7 @@
 
 Back to the [feature walkthrough](README.md). See also [architecture: Background work and notifications](../architecture/background-jobs.md).
 
-Every job derives from `PeriodicJob`: a `PeriodicTimer` loop, a fresh service scope per pass, an optional feature gate, one pass immediately at startup, failures logged as "{Job} failed.".
+Every job derives from `PeriodicJob`: a loop that waits for the next time its `JobSchedule` names, a fresh service scope per pass, an optional feature gate, one pass immediately at startup, failures logged as "{Job} failed.".
 
 ```mermaid
 flowchart LR
@@ -11,8 +11,8 @@ flowchart LR
         R["RecurringBillReminderJob<br/>every 15 min, needs RecurringBills"]
         A["BudgetAlertJob<br/>hourly, needs Budgets"]
         U["UnusualAmountJob<br/>every 15 min, needs UnusualAmounts"]
-        C["MonthCloseReminderJob<br/>hourly, acts on days 1 to 5, needs MonthClose"]
-        G["MonthlyDigestJob<br/>hourly, acts on days 1 to 5, needs MonthClose"]
+        C["MonthCloseReminderJob<br/>daily at 08:00, acts on days 1 to 5, needs MonthClose"]
+        G["MonthlyDigestJob<br/>daily at 08:00, acts on days 1 to 5, needs MonthClose"]
         N["NetWorthSnapshotJob<br/>hourly, needs NetWorth"]
         E["ExchangeRateSyncJob<br/>every 6 h, obeys the auto-sync setting"]
         B["BrokerSyncJob<br/>daily, needs Investments"]
@@ -20,7 +20,7 @@ flowchart LR
         M["EmailOutboxJob<br/>every minute, needs a mail server"]
         D["DiscordOutboxJob<br/>every 30 s, needs the Discord setting"]
         I["ImportInboxJob<br/>every 5 min, needs Import and App:ImportInbox"]
-        L["RetentionJob<br/>daily, no feature gate"]
+        L["RetentionJob<br/>daily at 03:00, no feature gate"]
     end
     R --> Pub["INotificationPublisher, in the producer's transaction"]
     I --> Pub
@@ -44,24 +44,24 @@ flowchart LR
     B --> Imp["ImportAsync per enabled connection, failures isolated;<br/>each statement is one audit row for the owner"]
     Q --> Prices["Missing closing prices of held, mapped securities<br/>from EODHD and Kraken, within the daily call limit"]
     L --> Prune["seven steps: AuditEvents over 400 days,<br/>expired and revoked UserSessions,<br/>API tokens expired over 30 days ago,<br/>API retry keys over a day old,<br/>import inbox rows over 90 days old,<br/>records soft-deleted over 30 days ago,<br/>then the DeletionEntries that described them"]
-    P --> Purge["deletes attachments deleted over 30 days ago, their files,<br/>and files no row refers to after an hour"]
+    L --> Purge["deletes attachments deleted over 30 days ago, their files,<br/>and files no row refers to after an hour"]
 ```
 
-| Job | Interval | Feature | Why that interval |
+| Job | Schedule | Feature | Why that schedule |
 | --- | --- | --- | --- |
 | `RecurringBillReminderJob` | 15 minutes | `RecurringBills` | A reminder is dated to a day; a quarter of an hour makes the reminder appear promptly after a bill is created or edited |
 | `BudgetAlertJob` | 1 hour | `Budgets` | Spending only moves when a transaction is entered or imported, and an alert is not urgent to the minute. Each pass recomputes the usage of every budget, which for a rollover budget reads up to twelve windows of attributions, so hourly keeps the cost small and matches `NetWorthSnapshotJob` |
 | `LowBalanceJob` | 6 hours | `RecurringBills` | The forecast only moves when a row or a recurring entry changes, and a warning about a day up to 30 days away is not urgent to the hour. Each pass runs the forecast once per active user, a handful of queries, and deduplicates per account and crossing date, see [Notifications](notifications.md#low-balance-alerts) |
 | `WarrantyReminderJob` | 6 hours | none | A warranty date is a day a month away, so a quarter of the day is prompt enough; a pass reads the attachments whose date falls in the next 30 days over the whole installation and deduplicates per attachment and date |
 | `UnusualAmountJob` | 15 minutes | `UnusualAmounts`; the price-rise half also needs `RecurringBills` | An unusual charge is worth hearing about soon after it is imported, and a pass that finds no unchecked row is one query over a partial index. It takes at most 40 pages of 500 rows, so a backfill of a large ledger is spread over several passes |
-| `MonthCloseReminderJob` | 1 hour, acting only on days 1 to 5 of a month | `MonthClose` | The reminder belongs to the first days of a month in the installation time zone. `PeriodicJob` counts its interval from the process start, so a daily interval would land at an arbitrary hour and a restart would move it; hourly passes find the new month within an hour of it starting, a pass on day 6 or later returns before touching the database, and the deduplication per user and month makes the extra passes harmless |
-| `MonthlyDigestJob` | 1 hour, acting only on days 1 to 5 of a month | `MonthClose`; only members who ticked the digest for email or Discord | The same reasoning as the reminder: the first pass of a month sends the digest within an hour of the month starting, a server that was off on the 1st catches up until the 5th, and the deduplication per member and month makes later passes harmless. Each member's review is a handful of report queries, run once a month |
+| `MonthCloseReminderJob` | 08:00 daily in the installation time zone, acting only on days 1 to 5 of a month | `MonthClose` | The reminder belongs to the first days of a month in the installation time zone, and a morning pass sends it when people read it rather than just after midnight. A pass on day 6 or later returns before touching the database, the pass at startup catches up after a server that was off at 08:00, and the deduplication per user and month makes the extra passes harmless |
+| `MonthlyDigestJob` | 08:00 daily in the installation time zone, acting only on days 1 to 5 of a month | `MonthClose`; only members who ticked the digest for email or Discord | The same reasoning as the reminder: the 08:00 pass on the 1st sends the digest, a server that was off on the 1st catches up until the 5th, and the deduplication per member and month makes later passes harmless. Each member's review is a handful of report queries, run once a month |
 | `NetWorthSnapshotJob` | 1 hour | `NetWorth` | One point per day; an hour is enough to have today's point before anyone looks |
 | `ExchangeRateSyncJob` | 6 hours | none, obeys the auto-sync setting | The ECB publishes once per working day |
 | `BrokerSyncJob` | 24 hours | `Investments` | The Flex Web Service is rate limited and the statement changes once a day |
 | `PriceSyncJob` | 6 hours | `Investments`; returns before any query or request while Fetch closing prices daily is off | Closing prices appear once a trading day at different hours per exchange. A pass asks only for held, mapped securities without a price on the last weekday before today (yesterday for Kraken, which has a close every day), each at most once a day and a failed one after 24 hours, under `AppLock.PriceSync` and the day's EODHD call limit, so four passes a day cost what one would. See [Live security prices](live-prices.md#what-is-fetched-and-when) |
 | `ImportInboxJob` | 5 minutes | `Import`; does nothing while `App:ImportInbox` is unset | A bank's scheduled export lands a few times a month and nobody waits for it to the minute, but five minutes keeps a statement dropped in by hand from looking lost. An idle pass is one directory listing and no query; a file written in the last minute waits for the next pass. See [Bank statement import](bank-statement-import.md#import-inbox) |
-| `RetentionJob` | 24 hours | none | Every window it enforces is measured in days — 400 for the audit log, 30 for the trash — so a day's delay is irrelevant. It runs whatever any feature switch says, because rows written while a feature was on still have to age out |
+| `RetentionJob` | 03:00 daily in the installation time zone | none | Every window it enforces is measured in days — 400 for the audit log, 30 for the trash — so a day's delay is irrelevant, and a night-time pass keeps the deletes away from the hours the ledger is used. It runs whatever any feature switch says, because rows written while a feature was on still have to age out |
 | `EmailOutboxJob` | 1 minute (`App:Email:OutboxIntervalSeconds`) | none, sends nothing while the mail server is off or incomplete | A password reset link is useless if it arrives in an hour. A minute is the shortest interval that still leaves a dead mail server cheap: a pass that finds nothing due is one indexed query. It prunes before it looks at the mail server, so rows sent while SMTP was configured still age out after it is switched off |
 | `DiscordOutboxJob` | 30 seconds | none, sends nothing while `DiscordEnabled` is off | A notification in a chat channel is expected to arrive about when it happened, and an idle pass is one indexed query. Discord rate-limits each webhook, so a pass takes at most five rows per user and the short interval drains a backlog without bursting. It deletes every row older than 7 days before it looks at the setting, sent or not, so posts queued before the switch went off are dropped rather than sent late |
 

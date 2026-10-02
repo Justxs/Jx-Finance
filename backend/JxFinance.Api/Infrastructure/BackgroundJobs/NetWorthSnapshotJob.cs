@@ -10,7 +10,7 @@ public sealed class NetWorthSnapshotJob(
 {
     protected override string Name => "Net worth snapshot";
 
-    protected override TimeSpan Interval => TimeSpan.FromHours(1);
+    protected override JobSchedule Schedule => JobSchedule.Every(TimeSpan.FromHours(1));
 
     protected override Feature? RequiredFeature => Feature.NetWorth;
 

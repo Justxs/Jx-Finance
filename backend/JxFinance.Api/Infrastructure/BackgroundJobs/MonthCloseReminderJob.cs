@@ -17,7 +17,7 @@ public sealed class MonthCloseReminderJob(
 {
     protected override string Name => "Month-end close reminder";
 
-    protected override TimeSpan Interval => TimeSpan.FromHours(1);
+    protected override JobSchedule Schedule => JobSchedule.Cron("0 8 * * *");
 
     protected override Feature? RequiredFeature => Feature.MonthClose;
 

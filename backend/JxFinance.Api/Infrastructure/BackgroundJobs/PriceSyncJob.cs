@@ -8,7 +8,7 @@ public sealed class PriceSyncJob(IServiceScopeFactory scopes, ILogger<PriceSyncJ
 {
     protected override string Name => "Price sync";
 
-    protected override TimeSpan Interval => TimeSpan.FromHours(6);
+    protected override JobSchedule Schedule => JobSchedule.Every(TimeSpan.FromHours(6));
 
     protected override Feature? RequiredFeature => Feature.Investments;
 

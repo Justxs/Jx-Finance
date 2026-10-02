@@ -15,7 +15,7 @@ public sealed class RetentionJob(IServiceScopeFactory scopes, ILogger<RetentionJ
 {
     protected override string Name => "Retention";
 
-    protected override TimeSpan Interval => TimeSpan.FromHours(24);
+    protected override JobSchedule Schedule => JobSchedule.Cron("0 3 * * *");
 
     protected override async Task RunAsync(IServiceProvider services, CancellationToken ct)
     {

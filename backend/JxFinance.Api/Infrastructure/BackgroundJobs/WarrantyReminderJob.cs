@@ -15,7 +15,7 @@ public sealed class WarrantyReminderJob(
 
     protected override string Name => "Warranty reminder";
 
-    protected override TimeSpan Interval => TimeSpan.FromHours(6);
+    protected override JobSchedule Schedule => JobSchedule.Every(TimeSpan.FromHours(6));
 
     protected override async Task RunAsync(IServiceProvider services, CancellationToken ct)
     {

@@ -342,7 +342,7 @@ public sealed class MonthlyDigestTests(ApiFixture fixture) : EmailTestBase(fixtu
 
         protected override string Name => "Probe";
 
-        protected override TimeSpan Interval => TimeSpan.FromHours(1);
+        protected override JobSchedule Schedule => JobSchedule.Every(TimeSpan.FromHours(1));
 
         protected override Task RunAsync(IServiceProvider services, CancellationToken ct)
         {
