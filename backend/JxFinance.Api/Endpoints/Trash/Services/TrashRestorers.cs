@@ -352,25 +352,31 @@ public static class TrashRestorers
             .Where(s => s.Id == securityId)
             .Select(s => (Currency?)s.Currency)
             .FirstOrDefaultAsync(r.CancellationToken);
-        if (currency is null)
+        var relatedCurrency = investment.RelatedSecurityId is { } relatedId
+            ? await r.Db.Securities
+                .Where(s => s.Id == relatedId)
+                .Select(s => (Currency?)s.Currency)
+                .FirstOrDefaultAsync(r.CancellationToken)
+            : currency;
+        if (currency is null || relatedCurrency is null)
         {
             return SecurityGone;
         }
 
-        if (investment.Type is InvestmentTransactionType.Buy or InvestmentTransactionType.Sell
-            && investment.CashAmount.Currency != currency)
+        if ((investment.Type is InvestmentTransactionType.Buy or InvestmentTransactionType.Sell
+                && investment.CashAmount.Currency != currency)
+            || relatedCurrency != currency)
         {
             return SecurityChanged;
         }
 
-        var oversold = await r.Ledger.FirstOversoldSaleAsync(
+        var oversold = await r.Ledger.NewlyOversoldAsync(
             investment.AccountId,
-            securityId,
             history => history.Append(investment),
             r.CancellationToken);
-        if (oversold is { } saleId)
+        if (oversold.Count > 0)
         {
-            return saleId == investment.Id ? SaleUncovered : LaterSalesDepend;
+            return oversold.Contains(investment.Id) ? SaleUncovered : LaterSalesDepend;
         }
 
         return Result.Success();

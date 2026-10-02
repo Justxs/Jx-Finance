@@ -8,6 +8,7 @@ public sealed class InvestmentTransaction : OwnableEntity, IAccountScoped, IDate
     public InvestmentTransactionId Id { get; set; } = InvestmentTransactionId.New();
     public AccountId AccountId { get; set; }
     public SecurityId? SecurityId { get; set; }
+    public SecurityId? RelatedSecurityId { get; set; }
     public InvestmentTransactionType Type { get; set; }
     public DateOnly Date { get; set; }
     public decimal Quantity { get; set; }

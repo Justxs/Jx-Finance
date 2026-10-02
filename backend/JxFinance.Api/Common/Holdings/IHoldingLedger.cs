@@ -5,9 +5,8 @@ namespace JxFinance.Common.Holdings;
 
 public interface IHoldingLedger
 {
-    Task<InvestmentTransactionId?> FirstOversoldSaleAsync(
+    Task<IReadOnlyCollection<InvestmentTransactionId>> NewlyOversoldAsync(
         AccountId accountId,
-        SecurityId securityId,
         Func<IEnumerable<InvestmentTransaction>, IEnumerable<InvestmentTransaction>> change,
         CancellationToken cancellationToken);
 }

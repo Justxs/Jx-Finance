@@ -351,6 +351,10 @@ const contracts: Record<string, Contract> = {
     toResponse: asPage,
   },
   splitEntry: { schema: schemas.CreateInvestmentTransactionResponse },
+  corporateActionEntries: {
+    schema: schemas.InvestmentTransactionsResponse,
+    toResponse: asPage,
+  },
   taxSummary: { schema: schemas.TaxSummaryResponse },
   emptyTaxSummary: { schema: schemas.TaxSummaryResponse },
   incompleteTaxSummary: { schema: schemas.TaxSummaryResponse },

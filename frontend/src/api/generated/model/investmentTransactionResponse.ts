@@ -17,6 +17,10 @@ export interface InvestmentTransactionResponse {
   securityId: string | null;
   /** @nullable */
   symbol: string | null;
+  /** @nullable */
+  relatedSecurityId: string | null;
+  /** @nullable */
+  relatedSymbol: string | null;
   type: InvestmentTransactionType;
   date: DateOnly;
   quantity: string;

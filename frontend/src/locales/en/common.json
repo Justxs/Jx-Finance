@@ -1748,6 +1748,7 @@
       "imported": "IBKR",
       "importedLocked": "Imported from the broker. Correct it there and import again.",
       "splitRatio": "{{ratio}} for 1",
+      "movedTo": "{{quantity}} to {{symbol}}",
       "noCash": "No cash"
     },
     "types": {
@@ -1757,7 +1758,8 @@
       "withholdingTax": "Withholding tax",
       "interest": "Interest",
       "fee": "Fee",
-      "split": "Split"
+      "split": "Split",
+      "symbolChange": "Symbol change"
     },
     "securityTypes": {
       "stock": "Stock",
@@ -1779,6 +1781,9 @@
       "quantity": "Quantity",
       "ratio": "New shares per old share",
       "ratioHint": "2 for a 2-for-1 split.",
+      "relatedSecurity": "Moves to",
+      "sharesMoved": "Shares moved",
+      "sharesMovedHint": "The oldest lots move with their cost and purchase dates.",
       "price": "Price per share",
       "priceIn": "Price per share ({{currency}})",
       "fee": "Fee (optional)",
@@ -1799,6 +1804,8 @@
       "quantity": "Enter a quantity greater than 0 with up to 8 decimals, e.g. 2.5.",
       "ratio": "Enter the ratio as new shares per old share, e.g. 2.",
       "security": "Choose a security.",
+      "relatedSecurity": "Choose the security the holding moves to.",
+      "sameSecurity": "Choose a different security.",
       "isin": "Enter a valid ISIN, e.g. IE00BK5BQT80."
     },
     "securities": {
@@ -1865,12 +1872,14 @@
         "skipped_one": "{{count}} row skipped.",
         "skipped_other": "{{count}} rows skipped.",
         "splits_one": "{{count}} stock split booked.",
-        "splits_other": "{{count}} stock splits booked."
+        "splits_other": "{{count}} stock splits booked.",
+        "corporateActions_one": "{{count}} corporate action booked.",
+        "corporateActions_other": "{{count}} corporate actions booked."
       },
       "help": {
         "title": "How to create the Flex Query",
         "create": "In Interactive Brokers Client Portal open Performance & Reports, then Flex Queries, and create an Activity Flex Query.",
-        "sections": "Add the sections Trades (with Executions selected), Cash Transactions and Open Positions.",
+        "sections": "Add the sections Trades (with Executions selected), Cash Transactions, Corporate Actions and Open Positions.",
         "format": "Set the format to XML and the date format to yyyyMMdd.",
         "period": "Choose a period, for example Last 365 days, then save the query and run it to download the file.",
         "token": "For automatic sync, open Flex Web Service on the same page, enable it and copy the token.",
@@ -1902,7 +1911,7 @@
         "symbol": "Symbol",
         "brokerQuantity": "At the broker",
         "replayedQuantity": "From your entries",
-        "mismatchAdvice": "A corporate action may be missing, or the history starts before the first imported period. A split can be entered by hand with Add entry, type Split."
+        "mismatchAdvice": "A corporate action may be missing, or the history starts before the first imported period. A split or a symbol change can be entered by hand with Add entry."
       },
       "tradeCsv": {
         "intro": "For any other broker: put the trades in a CSV with a header row. Date, Type (buy, sell, dividend, withholdingTax, interest or fee) and Currency are required; buys and sells need Symbol, Quantity and Price, the others Amount. Fee, Name, Isin, SecurityType (stock, etf or fund) and Id are optional.",
@@ -2356,6 +2365,7 @@
       "fromAmount": "amount sold",
       "toAmount": "amount bought",
       "security": "security",
+      "relatedSecurity": "moves to",
       "quantity": "quantity",
       "price": "price",
       "fee": "fee",
@@ -2911,6 +2921,7 @@
       "notManual": "This goal follows its funding account. To type an amount, edit the goal so progress comes from an amount you type."
     },
     "holding": {
+      "currencyDiffers": "Both securities must trade in the same currency.",
       "dependentSales": "Later sales depend on this entry.",
       "oversold": "This would sell more than was held on that date."
     },

@@ -10,6 +10,7 @@ import type {
   AccountResponse,
   Currency,
   InvestmentTransactionResponse,
+  InvestmentTransactionType,
   SecurityResponse,
 } from "@/api/generated/model";
 import { MoneyPairField, useServerForm } from "@/components/form";
@@ -19,12 +20,15 @@ import { type CashEffectInput, cashEffect } from "@/features/investments/cash-ef
 import {
   entryTypes,
   isTrade,
+  movesHolding,
+  movesNoCash,
   requiresSecurity,
   usesAmount,
 } from "@/features/investments/investment-types";
 import { SecurityModal } from "@/features/investments/security-form/security-modal";
 import { EMPTY_VALUE, useMoney } from "@/hooks/use-formatters";
 import { useToday } from "@/hooks/use-settings";
+import type { TranslationKey } from "@/lib/i18n";
 import { silentMutation, upsert } from "@/lib/mutations";
 import { namedOptions, optionsOf } from "@/lib/options";
 import { INCOME_TONE } from "@/lib/tone";
@@ -44,6 +48,24 @@ interface CashEffectProps {
   currency: Currency;
 }
 
+type SecurityField = "securityId" | "relatedSecurityId";
+
+function quantityLabel(type: InvestmentTransactionType): TranslationKey {
+  if (type === "split") {
+    return "investments.entry.ratio";
+  }
+
+  return type === "symbolChange" ? "investments.entry.sharesMoved" : "investments.entry.quantity";
+}
+
+function quantityHint(type: InvestmentTransactionType): TranslationKey | undefined {
+  if (type === "split") {
+    return "investments.entry.ratioHint";
+  }
+
+  return type === "symbolChange" ? "investments.entry.sharesMovedHint" : undefined;
+}
+
 function CashEffectLine({ input, currency }: Readonly<CashEffectProps>) {
   const { t } = useTranslation();
   const money = useMoney();
@@ -51,7 +73,7 @@ function CashEffectLine({ input, currency }: Readonly<CashEffectProps>) {
   const effect = effectText === null ? null : Number(effectText);
 
   let text = EMPTY_VALUE;
-  if (input.type === "split") {
+  if (movesNoCash(input.type)) {
     text = t("investments.entry.noCash");
   } else if (effect !== null) {
     text = money.formatSigned(effect, "auto", currency);
@@ -89,7 +111,7 @@ export function InvestmentEntryForm({ accounts, accountId, editing, onClose }: R
       mutation: { ...silentMutation, onSuccess: () => closeWith(t("investments.entry.corrected")) },
     }),
   );
-  const [securityOpen, setSecurityOpen] = useState(false);
+  const [addingFor, setAddingFor] = useState<SecurityField | null>(null);
   const [created, setCreated] = useState<SecurityResponse[]>([]);
 
   const knownIds = new Set(securities.map((security) => security.id));
@@ -151,25 +173,38 @@ export function InvestmentEntryForm({ accounts, accountId, editing, onClose }: R
                     field={field}
                     securities={allSecurities}
                     required={requiresSecurity(type)}
-                    onAdd={() => setSecurityOpen(true)}
+                    onAdd={() => setAddingFor("securityId")}
                   />
                 )}
               </form.Field>
 
+              {movesHolding(type) ? (
+                <form.Field name="relatedSecurityId">
+                  {(field) => (
+                    <SecurityPicker
+                      field={field}
+                      securities={allSecurities}
+                      required
+                      id="entry-related-security"
+                      label={t("investments.entry.relatedSecurity")}
+                      onAdd={() => setAddingFor("relatedSecurityId")}
+                    />
+                  )}
+                </form.Field>
+              ) : null}
+
               {usesAmount(type) ? null : (
                 <form.Field name="quantity">
                   {(field) => {
-                    const split = type === "split";
+                    const hint = quantityHint(type);
 
                     return (
                       <field.MoneyInputField
                         id="entry-quantity"
-                        label={
-                          split ? t("investments.entry.ratio") : t("investments.entry.quantity")
-                        }
-                        hint={split ? t("investments.entry.ratioHint") : undefined}
-                        className={split ? "col-span-full" : undefined}
-                        placeholder={split ? "2" : "0"}
+                        label={t(quantityLabel(type))}
+                        hint={hint ? t(hint) : undefined}
+                        className={hint ? "col-span-full" : undefined}
+                        placeholder={type === "split" ? "2" : "0"}
                       />
                     );
                   }}
@@ -281,11 +316,15 @@ export function InvestmentEntryForm({ accounts, accountId, editing, onClose }: R
         />
 
         <SecurityModal
-          open={securityOpen}
-          onOpenChange={setSecurityOpen}
+          open={addingFor !== null}
+          onOpenChange={(open) => {
+            if (!open) {
+              setAddingFor(null);
+            }
+          }}
           onSaved={(security) => {
             setCreated((previous) => [...previous, security]);
-            form.setFieldValue("securityId", security.id);
+            form.setFieldValue(addingFor ?? "securityId", security.id);
           }}
         />
       </form.FormShell>

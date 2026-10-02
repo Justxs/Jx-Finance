@@ -12,6 +12,7 @@ public static partial class FlexParser
     public const string ResponseRoot = "FlexQueryResponse";
     public const string ForwardSplit = "FS";
     public const string ReverseSplit = "RS";
+    public const string IssueChange = "IC";
 
     private static readonly string[] DateInputFormats = ["yyyyMMdd", DateFormats.IsoDate];
     private static readonly string[] SummaryTradeRows = ["ORDER", "CLOSED_LOT", "SYMBOL_SUMMARY", "ASSET_SUMMARY", "WASH_SALE"];

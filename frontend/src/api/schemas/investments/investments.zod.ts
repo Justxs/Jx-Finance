@@ -135,6 +135,7 @@ export const SyncBrokerConnectionResponse = zod.object({
   securitiesCreated: zod.int(),
   pricesUpdated: zod.int(),
   splits: zod.int(),
+  corporateActions: zod.int(),
   skippedCorporateActions: zod.array(
     zod.object({
       type: zod.string(),
@@ -159,7 +160,7 @@ export const SyncBrokerConnectionResponse = zod.object({
 });
 
 /**
- * Reads the Trades, Cash Transactions, Corporate Actions and Open Positions sections of a Flex Query XML report. Stock, ETF and fund trades become buys and sells; currency trades become in-account conversions; dividends, withholding tax, interest and fees become cash entries; forward and reverse splits become split entries with the ratio as new shares per old share; open positions update last prices. Deposits and withdrawals become transfers when a funding account is given and are skipped otherwise. Every entry is matched by its broker id, so importing overlapping periods never duplicates. The import is all or nothing. Other corporate actions (mergers, spin-offs, stock dividends, symbol changes) are not booked: they are counted in skipped and listed per type in skippedCorporateActions. When the report has an Open Positions section, positionMismatches lists every security whose quantity replayed from the entries differs from the quantity the broker reports, which is how an action that was not booked becomes visible; it is null when the report has no Open Positions section.
+ * Reads the Trades, Cash Transactions, Corporate Actions and Open Positions sections of a Flex Query XML report. Stock, ETF and fund trades become buys and sells; currency trades become in-account conversions; dividends, withholding tax, interest and fees become cash entries; forward and reverse splits become split entries with the ratio as new shares per old share; an issue change (IC) to another symbol becomes a symbol change that carries the holding to the new security, counted in corporateActions; open positions update last prices. Deposits and withdrawals become transfers when a funding account is given and are skipped otherwise. Every entry is matched by its broker id, so importing overlapping periods never duplicates. The import is all or nothing. Other corporate actions (mergers, spin-offs, stock dividends, rights) are not booked: they are counted in skipped and listed per type in skippedCorporateActions. When the report has an Open Positions section, positionMismatches lists every security whose quantity replayed from the entries differs from the quantity the broker reports, which is how an action that was not booked becomes visible; it is null when the report has no Open Positions section.
  * @summary Import an Interactive Brokers Flex Query report
  */
 export const ImportBrokerReportBody = zod.object({
@@ -188,6 +189,7 @@ export const ImportBrokerReportResponse = zod.object({
   securitiesCreated: zod.int(),
   pricesUpdated: zod.int(),
   splits: zod.int(),
+  corporateActions: zod.int(),
   skippedCorporateActions: zod.array(
     zod.object({
       type: zod.string(),
@@ -237,6 +239,7 @@ export const ImportTradeCsvResponse = zod.object({
   securitiesCreated: zod.int(),
   pricesUpdated: zod.int(),
   splits: zod.int(),
+  corporateActions: zod.int(),
   skippedCorporateActions: zod.array(
     zod.object({
       type: zod.string(),
@@ -1050,7 +1053,16 @@ export const TaxSummaryResponse = zod.object({
       id: zod.uuid(),
       date: zod.iso.date(),
       accountId: zod.uuid(),
-      type: zod.enum(["buy", "sell", "dividend", "withholdingTax", "interest", "fee", "split"]),
+      type: zod.enum([
+        "buy",
+        "sell",
+        "dividend",
+        "withholdingTax",
+        "interest",
+        "fee",
+        "split",
+        "symbolChange",
+      ]),
       symbol: zod.string().nullable(),
       description: zod.string().nullable(),
       currency: zod.enum([
@@ -1102,7 +1114,7 @@ export const TaxSummaryResponse = zod.object({
 export const ExportTaxSummaryResponse = zod.unknown();
 
 /**
- * Buys and sells need a security, quantity and price, and move quantity times price plus or minus the fee in the security's currency. Dividends, withholding tax, interest and fees need an amount. A split needs a security and a ratio in Quantity and moves no cash. The cash effect lands on the account's balance in that currency and never counts as income or expense in reports or budgets.
+ * Buys and sells need a security, quantity and price, and move quantity times price plus or minus the fee in the security's currency. Dividends, withholding tax, interest and fees need an amount. A split needs a security and a ratio in Quantity and moves no cash. A symbol change needs the security the holding leaves, the one it moves to in RelatedSecurityId, in the same currency, and the shares moved in Quantity; the oldest lots move with their cost and acquisition dates and no cash moves. The cash effect lands on the account's balance in that currency and never counts as income or expense in reports or budgets.
  * @summary Record an investment transaction
  */
 
@@ -1115,13 +1127,24 @@ export const createInvestmentTransactionBodyDescriptionMax = 500;
 
 export const CreateInvestmentTransactionBody = zod.object({
   accountId: zod.uuid().min(1),
-  type: zod.enum(["buy", "sell", "dividend", "withholdingTax", "interest", "fee", "split"]),
+  type: zod.enum([
+    "buy",
+    "sell",
+    "dividend",
+    "withholdingTax",
+    "interest",
+    "fee",
+    "split",
+    "symbolChange",
+  ]),
   date: zod.iso.date(),
   securityId: zod.uuid().nullish(),
   quantity: zod
     .stringFormat("decimal", createInvestmentTransactionBodyQuantityRegExp)
     .nullish()
-    .describe("Shares for a buy or sell; new shares per old share for a split."),
+    .describe(
+      "Shares for a buy or sell; new shares per old share for a split; shares moved for a symbol change.",
+    ),
   price: zod.stringFormat("decimal", createInvestmentTransactionBodyPriceRegExp).nullish(),
   amount: zod
     .stringFormat("decimal", createInvestmentTransactionBodyAmountRegExp)
@@ -1173,6 +1196,10 @@ export const CreateInvestmentTransactionBody = zod.object({
     .min(createInvestmentTransactionBodyDescriptionMin)
     .max(createInvestmentTransactionBodyDescriptionMax)
     .nullish(),
+  relatedSecurityId: zod
+    .uuid()
+    .nullish()
+    .describe("For a symbol change: the security the holding moves to."),
 });
 
 export const createInvestmentTransactionResponseQuantityRegExp = new RegExp(
@@ -1189,7 +1216,18 @@ export const CreateInvestmentTransactionResponse = zod.object({
   accountId: zod.uuid(),
   securityId: zod.uuid().nullable(),
   symbol: zod.string().nullable(),
-  type: zod.enum(["buy", "sell", "dividend", "withholdingTax", "interest", "fee", "split"]),
+  relatedSecurityId: zod.uuid().nullable(),
+  relatedSymbol: zod.string().nullable(),
+  type: zod.enum([
+    "buy",
+    "sell",
+    "dividend",
+    "withholdingTax",
+    "interest",
+    "fee",
+    "split",
+    "symbolChange",
+  ]),
   date: zod.iso.date(),
   quantity: zod.stringFormat("decimal", createInvestmentTransactionResponseQuantityRegExp),
   price: zod.stringFormat("decimal", createInvestmentTransactionResponsePriceRegExp),
@@ -1233,7 +1271,7 @@ export const CreateInvestmentTransactionResponse = zod.object({
 });
 
 /**
- * Pages through trades, dividends, withholding tax, interest, fees and splits on accounts visible to you, newest first. CashAmount is signed: negative when cash left the account.
+ * Pages through trades, dividends, withholding tax, interest, fees, splits and corporate actions on accounts visible to you, newest first. CashAmount is signed: negative when cash left the account. A corporate action that moves a holding names the security it moves to in RelatedSecurityId.
  * @summary List investment transactions
  */
 export const investmentTransactionsResponseItemsItemQuantityRegExp = new RegExp(
@@ -1256,7 +1294,18 @@ export const InvestmentTransactionsResponse = zod.object({
       accountId: zod.uuid(),
       securityId: zod.uuid().nullable(),
       symbol: zod.string().nullable(),
-      type: zod.enum(["buy", "sell", "dividend", "withholdingTax", "interest", "fee", "split"]),
+      relatedSecurityId: zod.uuid().nullable(),
+      relatedSymbol: zod.string().nullable(),
+      type: zod.enum([
+        "buy",
+        "sell",
+        "dividend",
+        "withholdingTax",
+        "interest",
+        "fee",
+        "split",
+        "symbolChange",
+      ]),
       date: zod.iso.date(),
       quantity: zod.stringFormat("decimal", investmentTransactionsResponseItemsItemQuantityRegExp),
       price: zod.stringFormat("decimal", investmentTransactionsResponseItemsItemPriceRegExp),
@@ -1327,13 +1376,24 @@ export const updateInvestmentTransactionBodyDescriptionMax = 500;
 
 export const UpdateInvestmentTransactionBody = zod.object({
   accountId: zod.uuid().min(1),
-  type: zod.enum(["buy", "sell", "dividend", "withholdingTax", "interest", "fee", "split"]),
+  type: zod.enum([
+    "buy",
+    "sell",
+    "dividend",
+    "withholdingTax",
+    "interest",
+    "fee",
+    "split",
+    "symbolChange",
+  ]),
   date: zod.iso.date(),
   securityId: zod.uuid().nullish(),
   quantity: zod
     .stringFormat("decimal", updateInvestmentTransactionBodyQuantityRegExp)
     .nullish()
-    .describe("Shares for a buy or sell; new shares per old share for a split."),
+    .describe(
+      "Shares for a buy or sell; new shares per old share for a split; shares moved for a symbol change.",
+    ),
   price: zod.stringFormat("decimal", updateInvestmentTransactionBodyPriceRegExp).nullish(),
   amount: zod
     .stringFormat("decimal", updateInvestmentTransactionBodyAmountRegExp)
@@ -1385,6 +1445,10 @@ export const UpdateInvestmentTransactionBody = zod.object({
     .min(updateInvestmentTransactionBodyDescriptionMin)
     .max(updateInvestmentTransactionBodyDescriptionMax)
     .nullish(),
+  relatedSecurityId: zod
+    .uuid()
+    .nullish()
+    .describe("For a symbol change: the security the holding moves to."),
 });
 
 export const updateInvestmentTransactionResponseQuantityRegExp = new RegExp(
@@ -1401,7 +1465,18 @@ export const UpdateInvestmentTransactionResponse = zod.object({
   accountId: zod.uuid(),
   securityId: zod.uuid().nullable(),
   symbol: zod.string().nullable(),
-  type: zod.enum(["buy", "sell", "dividend", "withholdingTax", "interest", "fee", "split"]),
+  relatedSecurityId: zod.uuid().nullable(),
+  relatedSymbol: zod.string().nullable(),
+  type: zod.enum([
+    "buy",
+    "sell",
+    "dividend",
+    "withholdingTax",
+    "interest",
+    "fee",
+    "split",
+    "symbolChange",
+  ]),
   date: zod.iso.date(),
   quantity: zod.stringFormat("decimal", updateInvestmentTransactionResponseQuantityRegExp),
   price: zod.stringFormat("decimal", updateInvestmentTransactionResponsePriceRegExp),

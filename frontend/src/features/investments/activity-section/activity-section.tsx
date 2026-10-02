@@ -15,7 +15,7 @@ import { Section, SectionHeader } from "@/components/ui/section/section";
 import { HintTag } from "@/components/ui/tag/tag";
 import { InvestmentEntryModal } from "@/features/investments/investment-entry-form/investment-entry-modal";
 import { ACTIVITY_PAGE_SIZE, activityParams } from "@/features/investments/investment-queries";
-import { entryTypes, isTrade } from "@/features/investments/investment-types";
+import { entryTypes, isTrade, movesNoCash } from "@/features/investments/investment-types";
 import { useConfirmedDelete } from "@/hooks/use-confirmed-delete";
 import { useDeferredParams } from "@/hooks/use-deferred-params";
 import {
@@ -65,6 +65,13 @@ export function ActivitySection({ accounts, accountId }: Readonly<Props>) {
   function volume(entry: InvestmentTransactionResponse) {
     if (isTrade(entry.type)) {
       return `${quantityFormat.format(Number(entry.quantity))} × ${formatPrice(Number(entry.price), entry.currency)}`;
+    }
+
+    if (entry.type === "symbolChange") {
+      return t("investments.activity.movedTo", {
+        quantity: quantityFormat.format(Number(entry.quantity)),
+        symbol: entry.relatedSymbol ?? "",
+      });
     }
 
     return entry.type === "split"
@@ -150,10 +157,10 @@ export function ActivitySection({ accounts, accountId }: Readonly<Props>) {
                   className={cn(
                     "shrink-0 text-right font-semibold whitespace-nowrap tabular-nums",
                     amount > 0 && INCOME_TONE,
-                    entry.type === "split" && "font-normal text-muted-foreground",
+                    movesNoCash(entry.type) && "font-normal text-muted-foreground",
                   )}
                 >
-                  {entry.type === "split" ? t("investments.activity.noCash") : cash(entry)}
+                  {movesNoCash(entry.type) ? t("investments.activity.noCash") : cash(entry)}
                 </span>
                 <RowActions
                   label={label}

@@ -7,6 +7,12 @@ public static class Portfolio
         InvestmentTransactionType.Buy,
         InvestmentTransactionType.Sell,
         InvestmentTransactionType.Split,
+        InvestmentTransactionType.SymbolChange,
+    ];
+
+    public static readonly InvestmentTransactionType[] CorporateActionTypes =
+    [
+        InvestmentTransactionType.SymbolChange,
     ];
 
     public static IReadOnlyDictionary<SecurityId, Position> Positions(IEnumerable<InvestmentTransaction> transactions)
@@ -26,10 +32,14 @@ public static class Portfolio
             .ThenBy(t => t.Type switch
             {
                 InvestmentTransactionType.Split => 0,
+                _ when CorporateActionTypes.Contains(t.Type) => 0,
                 InvestmentTransactionType.Sell => 2,
                 _ => 1,
             })
             .ThenBy(t => t.CreatedAt);
+
+    public static IEnumerable<SecurityId> SecuritiesOf(InvestmentTransaction transaction) =>
+        new[] { transaction.SecurityId, transaction.RelatedSecurityId }.OfType<SecurityId>();
 
     public static void Apply(Dictionary<SecurityId, Position> positions, InvestmentTransaction transaction)
     {
@@ -38,11 +48,7 @@ public static class Portfolio
             return;
         }
 
-        if (!positions.TryGetValue(securityId, out var position))
-        {
-            position = positions[securityId] = new Position(securityId);
-        }
-
+        var position = Book(positions, securityId);
         switch (transaction.Type)
         {
             case InvestmentTransactionType.Buy:
@@ -63,6 +69,9 @@ public static class Portfolio
             case InvestmentTransactionType.Split:
                 position.Split(transaction.Quantity);
                 break;
+            case InvestmentTransactionType.SymbolChange when transaction.RelatedSecurityId is { } successor:
+                Book(positions, successor).Receive(position.Take(transaction.Id, transaction.Quantity), 1m);
+                break;
             default:
                 break;
         }
@@ -77,4 +86,7 @@ public static class Portfolio
             InvestmentTransactionType.WithholdingTax or InvestmentTransactionType.Fee => -amount,
             _ => 0m,
         };
+
+    private static Position Book(Dictionary<SecurityId, Position> positions, SecurityId securityId) =>
+        positions.TryGetValue(securityId, out var position) ? position : positions[securityId] = new Position(securityId);
 }

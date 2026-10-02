@@ -63,7 +63,10 @@ public sealed record JournalInvestment(
     decimal SoldQuantity = 0m,
     decimal SoldCost = 0m,
     IReadOnlyList<Position.Lot>? OpenLots = null,
-    Currency? CostCurrency = null);
+    Currency? CostCurrency = null,
+    IReadOnlyList<JournalLotChange>? LotChanges = null);
+
+public sealed record JournalLotChange(Guid SecurityId, IReadOnlyList<Position.Lot> Before, IReadOnlyList<Position.Lot> After);
 
 public sealed record JournalValuation(DateOnly Date, decimal Value, string? Note);
 

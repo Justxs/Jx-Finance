@@ -73,6 +73,7 @@ export const ErrorCode = {
   exporttooManyRows: "export.tooManyRows",
   featuredisabled: "feature.disabled",
   goalnotManual: "goal.notManual",
+  holdingcurrencyDiffers: "holding.currencyDiffers",
   holdingdependentSales: "holding.dependentSales",
   holdingoversold: "holding.oversold",
   householdlastOwner: "household.lastOwner",

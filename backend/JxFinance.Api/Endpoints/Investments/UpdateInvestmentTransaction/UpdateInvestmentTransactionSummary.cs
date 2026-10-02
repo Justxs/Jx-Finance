@@ -21,7 +21,8 @@ public sealed class UpdateInvestmentTransactionSummary
             10m,
             104.52m,
             Fee: 1.25m);
-        RequestParam(r => r.Quantity, "Shares for a buy or sell; new shares per old share for a split.");
+        RequestParam(r => r.Quantity, "Shares for a buy or sell; new shares per old share for a split; shares moved for a symbol change.");
+        RequestParam(r => r.RelatedSecurityId, "For a symbol change: the security the holding moves to.");
         RequestParam(r => r.Amount, "Cash amount for dividend, withholding tax, interest and fee entries.");
         RequestParam(r => r.Currency, "Currency for entries without a security. Defaults to the security's currency, then the account's.");
         Responses[200] = "The entry was corrected.";

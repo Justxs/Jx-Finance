@@ -90,6 +90,7 @@ public static class ErrorCodes
     public const string RecurringBillDebtShape = "recurringBill.debtShape";
     public const string HoldingOversold = "holding.oversold";
     public const string HoldingDependentSales = "holding.dependentSales";
+    public const string HoldingCurrencyDiffers = "holding.currencyDiffers";
     public const string SecurityNotHeld = "security.notHeld";
     public const string AllocationShareInvalid = "allocation.shareInvalid";
     public const string AllocationSharesTotal = "allocation.sharesTotal";

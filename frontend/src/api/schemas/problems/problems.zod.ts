@@ -98,6 +98,7 @@ export const ProblemDetailsResponse = zod
                 "export.tooManyRows",
                 "feature.disabled",
                 "goal.notManual",
+                "holding.currencyDiffers",
                 "holding.dependentSales",
                 "holding.oversold",
                 "household.lastOwner",

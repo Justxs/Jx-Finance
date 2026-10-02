@@ -58,8 +58,12 @@ internal sealed class AuditCollector(AppDbContext db, Guid actorId, string? viaT
         Audited.Of<InvestmentTransaction>(
             AuditEntityKind.InvestmentTransaction,
             Route.Scoped,
-            (collector, i) => TrashLabel.Investment(i, i.SecurityId is { } id ? collector.securities.GetValueOrDefault(id) : null),
+            (collector, i) => TrashLabel.Investment(
+                i,
+                i.SecurityId is { } id ? collector.securities.GetValueOrDefault(id) : null,
+                i.RelatedSecurityId is { } relatedId ? collector.securities.GetValueOrDefault(relatedId) : null),
             nameof(InvestmentTransaction.Date), nameof(InvestmentTransaction.Type), nameof(InvestmentTransaction.SecurityId),
+            nameof(InvestmentTransaction.RelatedSecurityId),
             nameof(InvestmentTransaction.Quantity), nameof(InvestmentTransaction.Price), nameof(InvestmentTransaction.Fee),
             nameof(InvestmentTransaction.CashAmount), nameof(InvestmentTransaction.Description),
             nameof(InvestmentTransaction.AccountId)),
@@ -648,7 +652,8 @@ internal sealed class AuditCollector(AppDbContext db, Guid actorId, string? viaT
 
         var securityIds = entries
             .Where(e => e.Entity is InvestmentTransaction)
-            .SelectMany(e => BothValues<SecurityId>(e, nameof(InvestmentTransaction.SecurityId)))
+            .SelectMany(e => BothValues<SecurityId>(e, nameof(InvestmentTransaction.SecurityId))
+                .Concat(BothValues<SecurityId>(e, nameof(InvestmentTransaction.RelatedSecurityId))))
             .OfType<SecurityId>()
             .Distinct()
             .ToList();

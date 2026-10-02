@@ -17,7 +17,7 @@ export interface UpdateInvestmentTransactionRequest {
   /** @nullable */
   securityId?: string | null;
   /**
-   * Shares for a buy or sell; new shares per old share for a split.
+   * Shares for a buy or sell; new shares per old share for a split; shares moved for a symbol change.
    * @nullable
    */
   quantity?: string | null;
@@ -38,4 +38,9 @@ export interface UpdateInvestmentTransactionRequest {
    * @nullable
    */
   description?: string | null;
+  /**
+   * For a symbol change: the security the holding moves to.
+   * @nullable
+   */
+  relatedSecurityId?: string | null;
 }

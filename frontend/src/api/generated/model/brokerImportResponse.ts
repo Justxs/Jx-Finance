@@ -18,6 +18,7 @@ export interface BrokerImportResponse {
   securitiesCreated: number;
   pricesUpdated: number;
   splits: number;
+  corporateActions: number;
   skippedCorporateActions: SkippedCorporateActionResponse[];
   /** @nullable */
   positionMismatches: PositionMismatchResponse[] | null;

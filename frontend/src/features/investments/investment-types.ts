@@ -12,8 +12,16 @@ export function isTrade(type: InvestmentTransactionType): boolean {
   return type === "buy" || type === "sell";
 }
 
+export function movesHolding(type: InvestmentTransactionType): boolean {
+  return type === "symbolChange";
+}
+
+export function movesNoCash(type: InvestmentTransactionType): boolean {
+  return type === "split" || type === "symbolChange";
+}
+
 function usesQuantity(type: InvestmentTransactionType): boolean {
-  return isTrade(type) || type === "split";
+  return isTrade(type) || movesNoCash(type);
 }
 
 export function usesAmount(type: InvestmentTransactionType): boolean {

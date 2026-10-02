@@ -6,23 +6,33 @@ import { FieldShell, fieldAria } from "@/components/form/field-shell/field-shell
 import { SelectField } from "@/components/select-field/select-field";
 import { Button } from "@/components/ui/button/button";
 
-const PICKER_ID = "entry-security";
-
 interface Props {
   field: FieldWithValue<string>;
   securities: readonly SecurityResponse[];
   required: boolean;
   onAdd: () => void;
+  id?: string;
+  label?: string;
 }
 
-export function SecurityPicker({ field, securities, required, onAdd }: Readonly<Props>) {
+export function SecurityPicker({
+  field,
+  securities,
+  required,
+  onAdd,
+  id = "entry-security",
+  label,
+}: Readonly<Props>) {
   const { t } = useTranslation();
-  const { error, ...aria } = fieldAria(field, { id: PICKER_ID });
+  const { error, ...aria } = fieldAria(field, { id });
 
   return (
     <FieldShell
-      id={PICKER_ID}
-      label={required ? t("investments.entry.security") : t("investments.entry.securityOptional")}
+      id={id}
+      label={
+        label ??
+        (required ? t("investments.entry.security") : t("investments.entry.securityOptional"))
+      }
       error={error}
       className="col-span-full"
     >
@@ -30,7 +40,7 @@ export function SecurityPicker({ field, securities, required, onAdd }: Readonly<
         <div className="min-w-48 flex-1">
           <SelectField
             {...aria}
-            id={PICKER_ID}
+            id={id}
             value={field.value}
             placeholder={t("investments.entry.chooseSecurity")}
             onBlur={field.handleBlur}

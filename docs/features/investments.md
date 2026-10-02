@@ -10,10 +10,11 @@ The page has two views of one route. The portfolio view carries the account filt
 
 ```mermaid
 flowchart TD
-    Entries["Buys, sells, splits of an account"] --> Order["Order by date; within a day: splits, then buys, then sells"]
+    Entries["Buys, sells, splits and corporate actions of an account"] --> Order["Order by date; within a day: splits and corporate actions,<br/>then buys, then sells"]
     Order --> Kind{"Entry type"}
     Kind -->|"Buy"| Lot["push a lot: quantity, total cost incl. commission,<br/>total cost in the reporting currency at the buy-date rate"]
     Kind -->|"Split"| Ratio["every lot: quantity times ratio, its total cost unchanged"]
+    Kind -->|"Symbol change"| Move["take the oldest lots of the old security, up to the shares moved,<br/>and slot them into the new security by acquisition date,<br/>cost and dates unchanged"]
     Kind -->|"Sell"| Fifo["consume the oldest lots first"]
     Fifo --> Cover{"Enough shares?"}
     Cover -->|"no, manual entry"| Reject["rejected"]
@@ -21,12 +22,27 @@ flowchart TD
     Cover -->|"yes"| Realised["realised gain = proceeds minus commission minus lot cost"]
     Lot --> Pos["Position.Value: quantity times last price,<br/>converted at the newest rate"]
     Ratio --> Pos
+    Move --> Pos
     Realised --> Totals["Portfolio: market value, unrealised, realised,<br/>dividends, tax, standalone fees, income by year"]
     Pos --> Totals
     Pos --> AccBal["AccountResponse.HoldingsValue through HoldingsValuation"]
 ```
 
 A lot keeps its total cost, not a cost per share, in the security's currency and in the reporting currency. A sale that takes part of a lot takes cost times the quantity taken divided by the lot's quantity and leaves the lot the exact remainder; a sale that takes the whole lot takes whatever cost is left. Selling a lot in any number of pieces therefore adds up to exactly what it cost, which a per-share cost multiplied back could miss by a fraction of a cent. The portfolio's reporting-currency cost basis is this frozen buy-date cost, the same figure the value chart and the tax summary use, while market value is converted at the newest rate. A holding's dividends are in the security's currency; a dividend recorded in another currency is converted at the rate on its own date, and one with no rate marks the portfolio incomplete.
+
+## Corporate actions
+
+A split changes the quantity of one holding. Since 2026-10-02 a corporate action that moves a holding from one security to another is an entry of its own that names both, the security it leaves in `securityId` and the one it moves to in `relatedSecurityId`, so the replay carries the lots across and every earlier entry stays on the security it was recorded against. Editing the security instead would rewrite the history: the old trades would show the new symbol, and a price history kept under the old symbol would value the new one.
+
+**Symbol change.** An issuer renames a security, or its ISIN changes with a new symbol, and the holding continues. Add entry, type Symbol change, takes the security, "Moves to" (the new security, in the same currency) and "Shares moved". The replay takes that many shares from the oldest lots of the old security, exactly as a sale would, and slots them into the new security in acquisition-date order with their cost in both currencies and their acquisition dates unchanged, so a later sale of the new security reports the date of the original purchase in the tax summary. No cash moves, nothing is realised, and it is not a flow of the annualized return. Shares moved beyond what is held make the entry oversold like a sale: a typed entry is refused with `holding.oversold`, an imported one marks the portfolio incomplete. The activity list shows it as "Symbol change ASML" with "6 to ASMLN" in its details and No cash in place of an amount.
+
+| Rule | Error code |
+| --- | --- |
+| A symbol change has a security, a security it moves to and a quantity above 0 | `required`, `quantity.positive` |
+| The security it moves to is another one | `value.mustDiffer` |
+| Both securities trade in the same currency, because the cost moves from one to the other | `holding.currencyDiffers` |
+
+The checks that guard sales guard these entries too. Every create, edit, delete and restore replays the whole account, because lots now pass between securities, and refuses a change that leaves an entry of any security of the account oversold that was not oversold before: deleting a symbol change that a later sale of the new security depends on answers `holding.dependentSales`, as deleting a buy does. A security whose currency is locked by its entries counts an entry that names it as the security moved to.
 
 ## What feeds reports and the dashboard
 
@@ -208,9 +224,9 @@ The printable view is the page itself under a print stylesheet, not a second doc
 
 ## Deleting and restoring an entry
 
-Since 2026-09-21 deleting any entry — buy, sell, split, dividend, withholding tax, interest or fee — writes a trash entry through `IDeletionRecorder` beside the soft delete, so the activity list raises the same undo toast as every other delete screen and the entry stays restorable for 30 days from the trash on the profile ([Trash and undo](trash-and-undo.md)). Deleting a buy or a split is still refused with `holding.dependentSales` when later sales depend on it.
+Since 2026-09-21 deleting any entry — buy, sell, split, corporate action, dividend, withholding tax, interest or fee — writes a trash entry through `IDeletionRecorder` beside the soft delete, so the activity list raises the same undo toast as every other delete screen and the entry stays restorable for 30 days from the trash on the profile ([Trash and undo](trash-and-undo.md)). Deleting a buy or a split is still refused with `holding.dependentSales` when later sales depend on it.
 
-Restoring an entry is not a matter of flipping the flag back. The holding may have moved on while the entry was in the trash: the shares a deleted sale freed may have been sold again, or the purchase it drew on may itself have been deleted or moved later. The restore therefore replays the whole ledger of that security on that account, with the entry back in its original place, before it lets it in.
+Restoring an entry is not a matter of flipping the flag back. The holding may have moved on while the entry was in the trash: the shares a deleted sale freed may have been sold again, or the purchase it drew on may itself have been deleted or moved later. The restore therefore replays the whole ledger of that account, with the entry back in its original place, before it lets it in; since 2026-10-02 the whole account rather than one security, because a corporate action moves lots from one security to another.
 
 ```mermaid
 flowchart TD
@@ -223,27 +239,25 @@ flowchart TD
     Sec -->|"no: interest, fee without one"| Flip["IsDeleted = false, RestoredAt = now"]
     Sec -->|"yes"| Stored{"security still stored?"}
     Stored -->|"no"| Missing
-    Stored -->|"yes"| Cur{"buy or sell in a currency<br/>other than the security's now?"}
+    Stored -->|"yes"| Cur{"buy or sell in a currency other than the security's now,<br/>or a security moved to in another currency?"}
     Cur -->|"yes"| Changed["400 restore.securityChanged"]
-    Cur -->|"no"| Ledger["IHoldingLedger: every live entry of that security<br/>on that account, plus the restored one"]
-    Ledger --> Before{"ledger already oversold<br/>without it?"}
-    Before -->|"yes, an incomplete import"| Flip
-    Before -->|"no"| Replay["Portfolio.Positions: by date, splits then buys then sells,<br/>then creation time, first in first out"]
-    Replay --> First{"first sale that sells<br/>more than is held"}
+    Cur -->|"no"| Ledger["IHoldingLedger: every live buy, sell, split and corporate action<br/>on that account, plus the restored one"]
+    Ledger --> Replay["Portfolio.Positions: by date, splits and corporate actions<br/>then buys then sells, then creation time, first in first out"]
+    Replay --> First{"a security whose first entry that takes<br/>more than is held is new with the restored one?<br/>a security already oversold without it is not blamed"}
     First -->|"none"| Flip
-    First -->|"the restored sale"| Oversold["400 holding.oversold"]
+    First -->|"the restored entry"| Oversold["400 holding.oversold"]
     First -->|"a later sale"| Dependent["400 holding.dependentSales"]
 ```
 
-The replay is the one the create, edit and delete paths already ran, moved out of `InvestmentService` into `IHoldingLedger` in `Common/Holdings` so that `TrashService` calls the same code rather than a copy. `Position` now remembers the first sale that found too few lots, and the ledger answers that sale's id, which is what tells the two refusals apart. The restored row keeps its date and its creation time, so it lands exactly where it was in the order, and the check is over every point in time rather than the final quantity: a sale on 3 June is refused when the only purchase has since been moved to 10 June, although the holding ends with enough shares. As on the other paths, a ledger that is already oversold before the change — an imported sale with no recorded purchase — is not blamed on the entry being restored.
+The replay is the one the create, edit and delete paths already ran, moved out of `InvestmentService` into `IHoldingLedger` in `Common/Holdings` so that `TrashService` calls the same code rather than a copy. `Position` now remembers the first sale that found too few lots, and the ledger answers, for every security that became oversold with the change, that entry's id, which is what tells the two refusals apart. The restored row keeps its date and its creation time, so it lands exactly where it was in the order, and the check is over every point in time rather than the final quantity: a sale on 3 June is refused when the only purchase has since been moved to 10 June, although the holding ends with enough shares. As on the other paths, a ledger that is already oversold before the change — an imported sale with no recorded purchase — is not blamed on the entry being restored.
 
-Restoring a buy can never oversell, and neither can a dividend, withholding tax, interest or fee, because none of them removes shares; a split with a ratio above one only adds them. A reverse split is the other entry that removes shares, and it answers `holding.dependentSales` when a later sale now needs them. The remaining questions each have a deliberate answer:
+Restoring a buy can never oversell, and neither can a dividend, withholding tax, interest or fee, because none of them removes shares; a split with a ratio above one only adds them. A reverse split is the other entry that removes shares, and it answers `holding.dependentSales` when a later sale now needs them. A symbol change takes shares from one security like a sale and answers `holding.oversold` when they are no longer there, or `holding.dependentSales` when a later entry of either security now finds too few. The remaining questions each have a deliberate answer:
 
 | Could make a restore unsound | Answer |
 | --- | --- |
 | The account was archived | refused with `restore.referenceMissing`; restore the account first from the accounts page, then the entry |
-| The security is gone | refused with `restore.referenceMissing`. Securities have no delete operation, so this answers a state nothing in the product can reach today, and exists so that a future delete cannot bring an entry back pointing at nothing |
-| The security's currency was changed | refused with `restore.securityChanged` for a buy or sell. A security's currency is locked only while live entries exist, so deleting the last one unlocks it; a restored trade would then carry cash in a currency the security no longer has. A dividend, tax, interest or fee may be recorded in any currency and is not affected |
+| The security is gone | refused with `restore.referenceMissing`, also when the security a corporate action moved to is gone. Securities have no delete operation, so this answers a state nothing in the product can reach today, and exists so that a future delete cannot bring an entry back pointing at nothing |
+| The security's currency was changed | refused with `restore.securityChanged` for a buy or sell, and for a corporate action whose two securities no longer share a currency. A security's currency is locked only while live entries exist, so deleting the last one unlocks it; a restored trade would then carry cash in a currency the security no longer has. A dividend, tax, interest or fee may be recorded in any currency and is not affected |
 | An imported entry was imported again | cannot happen. The unique index on (AccountId, ExternalId) covers deleted rows, and the importer reads the known broker ids with the query filters off, so a re-import counts the deleted entry as a duplicate and skips it. The restored row is the only one with that id |
 | Its currency has been disabled since | not refused. Existing rows in a disabled currency stay valid everywhere else — an edit that keeps the currency is allowed — and the entry's `ReportingAmount` was frozen at its own date, so bringing it back converts nothing |
 | The Investments feature is off | the row leaves the trash list and a restore answers 404 `feature.disabled`, as every kind of a switched-off feature does |
@@ -264,7 +278,7 @@ sequenceDiagram
         Imp->>Run: new StatementImport
         Run->>Db: begin transaction, advisory lock on the account
         Run->>Run: fetch the exchange-rate range once, refuse disabled currencies
-        Run->>Run: corporate actions first: FS and RS become Split entries ibkr:ca:id,<br/>ratio from SPLIT n FOR m, other types counted as skipped
+        Run->>Run: corporate actions first: FS and RS become Split entries ibkr:ca:id,<br/>ratio from SPLIT n FOR m, IC to a new symbol a SymbolChange entry,<br/>other types counted as skipped
         Run->>Run: trades: resolve security by conid, then ISIN, then symbol in the currency<br/>stock, ETF, fund become buy or sell, FX trades become conversions with fee
         Run->>Run: cash: dividends, withholding tax, interest, fees<br/>deposits and withdrawals become transfers when a funding account is set,<br/>its side in its own currency at the rate of the day
         Run->>Run: every entry deduplicated by broker id, deleted ones stay deleted
@@ -273,9 +287,11 @@ sequenceDiagram
         Run->>Run: replay quantities to the report date, compare with Open Positions,<br/>differences above 0.0001 become positionMismatches
         Run->>Db: commit
     end
-    Imp-->>Src: counts, splits, skippedCorporateActions, positionMismatches
+    Imp-->>Src: counts, splits, corporateActions, skippedCorporateActions, positionMismatches
     Note over Imp: still colliding after 3 attempts: 409 conflict.busy, nothing imported<br/>missing exchange rate: whole import fails with date and currency named
 ```
+
+Since 2026-10-02 an issue change (`IC`) is booked as well. Its two rows, the old contract leaving with a negative quantity and the new one arriving, become one `SymbolChange` entry with `ExternalId` `ibkr:ca:<id>` on the report date, from the security of the leaving row to the security of the arriving row, created when the application does not have it yet, with the leaving quantity as the shares moved. When the arriving row resolves to the same security, because only the ISIN or the contract changed and the symbol stayed, that security takes over the new identifiers as after a reverse split and no entry is written. An issue change whose new security trades in another currency, or that lacks one of its two rows, stays counted as skipped. The result counts booked corporate actions other than splits in `corporateActions`, "1 corporate action booked."
 
 The broker report is not bound by the app's own validators, so `StatementImport` fits its text to the columns instead of letting one long value fail the whole import: a new security's symbol is cut to 32 characters (the same cut is used when looking a security up), its name and exchange are shortened with an ellipsis to 200 and 32, and entry and transfer descriptions to 500.
 

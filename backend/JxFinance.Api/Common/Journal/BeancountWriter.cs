@@ -301,6 +301,37 @@ public static class BeancountWriter
                     }
 
                     break;
+                case InvestmentTransactionType.SymbolChange when entry.LotChanges is { } changes:
+                    if (cash.Amount == 0 && changes.All(c => c.Before.Count == 0 && c.After.Count == 0))
+                    {
+                        return;
+                    }
+
+                    var released = 0m;
+                    foreach (var change in changes)
+                    {
+                        var commodity = commodities[change.SecurityId];
+                        if (change.Before.Count > 0)
+                        {
+                            var removed = booksNone ? TotalCost(change.Before.Sum(l => l.Cost), costCurrency) : "{}";
+                            row.Post(account, Quantity(-change.Before.Sum(l => l.Quantity)), commodity, removed);
+                        }
+
+                        foreach (var lot in change.After)
+                        {
+                            row.Post(account, Quantity(lot.Quantity), commodity, TotalCost(lot.Cost, costCurrency, lot.AcquiredOn));
+                        }
+
+                        released += change.Before.Sum(l => l.Cost) - change.After.Sum(l => l.Cost);
+                    }
+
+                    PostCash(row, account, cash);
+                    if (released != cash.Amount)
+                    {
+                        row.Elide(Gains);
+                    }
+
+                    break;
                 default:
                     if (cash.Amount == 0)
                     {

@@ -238,14 +238,18 @@ public sealed class MemberImport(AppDbContext db, Guid userId, int lockTimeoutSe
     {
         foreach (var (id, symbol, currency) in securities)
         {
-            await ExecuteAsync(
-                $"UPDATE {Q("InvestmentTransactions")} SET {Q("SecurityId")} = "
-                + $"(SELECT s.{Q("Id")} FROM {Q(SecuritiesTable)} s WHERE s.{Q("Symbol")} = $2 AND s.{Q("Currency")}::text = $3 LIMIT 1) "
-                + $"WHERE {Q("SecurityId")}::text = $1 AND NOT EXISTS (SELECT 1 FROM {Q(SecuritiesTable)} WHERE {Q("Id")}::text = $1)",
-                cancellationToken,
-                new NpgsqlParameter { NpgsqlDbType = NpgsqlDbType.Text, Value = id },
-                new NpgsqlParameter { NpgsqlDbType = NpgsqlDbType.Text, Value = symbol },
-                new NpgsqlParameter { NpgsqlDbType = NpgsqlDbType.Text, Value = currency });
+            foreach (var column in new[] { "SecurityId", "RelatedSecurityId" })
+            {
+                await ExecuteAsync(
+                    $"UPDATE {Q("InvestmentTransactions")} SET {Q(column)} = "
+                    + $"(SELECT s.{Q("Id")} FROM {Q(SecuritiesTable)} s WHERE s.{Q("Symbol")} = $2 AND s.{Q("Currency")}::text = $3 LIMIT 1) "
+                    + $"WHERE {Q(column)}::text = $1 AND NOT EXISTS (SELECT 1 FROM {Q(SecuritiesTable)} WHERE {Q("Id")}::text = $1)",
+                    cancellationToken,
+                    new NpgsqlParameter { NpgsqlDbType = NpgsqlDbType.Text, Value = id },
+                    new NpgsqlParameter { NpgsqlDbType = NpgsqlDbType.Text, Value = symbol },
+                    new NpgsqlParameter { NpgsqlDbType = NpgsqlDbType.Text, Value = currency });
+            }
+
             await ExecuteAsync(
                 $"UPDATE {Q("AllocationTargets")} SET {Q("Key")} = COALESCE("
                 + $"(SELECT s.{Q("Id")}::text FROM {Q(SecuritiesTable)} s WHERE s.{Q("Symbol")} = $2 AND s.{Q("Currency")}::text = $3 LIMIT 1), {Q("Key")}) "

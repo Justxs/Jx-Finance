@@ -23,7 +23,7 @@ public static class TrashLabel
                 .Select(part => $"{part.Count.ToString(CultureInfo.InvariantCulture)} {(part.Count == 1 ? part.One : part.Many)}")
                 .Prepend(name));
 
-    public static string Investment(InvestmentTransaction entry, string? symbol)
+    public static string Investment(InvestmentTransaction entry, string? symbol, string? relatedSymbol = null)
     {
         var security = symbol is null ? string.Empty : $" {symbol}";
         var what = entry.Type switch
@@ -31,6 +31,8 @@ public static class TrashLabel
             InvestmentTransactionType.Buy or InvestmentTransactionType.Sell =>
                 $"{Verb(entry.Type)} {Quantity(entry.Quantity)}{security}",
             InvestmentTransactionType.Split => $"{Verb(entry.Type)}{security}, ratio {Quantity(entry.Quantity)}",
+            InvestmentTransactionType.SymbolChange =>
+                $"{Verb(entry.Type)} {Quantity(entry.Quantity)}{security} to {relatedSymbol ?? "another security"}",
             _ => $"{Verb(entry.Type)}{security}, {Amount(new Money(Math.Abs(entry.CashAmount.Amount), entry.CashAmount.Currency))}",
         };
         return $"{what}, {DateFormats.Iso(entry.Date)}";
@@ -45,6 +47,7 @@ public static class TrashLabel
         InvestmentTransactionType.Interest => "Interest",
         InvestmentTransactionType.Fee => "Fee",
         InvestmentTransactionType.Split => "Split",
+        InvestmentTransactionType.SymbolChange => "Symbol change",
         _ => type.ToString(),
     };
 

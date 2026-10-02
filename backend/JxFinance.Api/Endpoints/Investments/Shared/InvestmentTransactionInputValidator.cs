@@ -49,6 +49,22 @@ public abstract class InvestmentTransactionInputValidator<TRequest> : Validator<
                 .WithMessage(SplitMessage);
         });
 
+        When(r => r.Type is InvestmentTransactionType.SymbolChange, () =>
+        {
+            RuleFor(r => r.SecurityId).IsRequired().WithMessage("Choose the security the holding leaves.");
+            RuleFor(r => r.RelatedSecurityId).IsRequired().WithMessage("Choose the security the holding moves to.");
+            RuleFor(r => r.Quantity)
+                .IsPresent()
+                .WithMessage(QuantityMessage)
+                .IsPositiveQuantity()
+                .WithMessage(QuantityMessage);
+        });
+
+        RuleFor(r => r.RelatedSecurityId)
+            .DiffersFrom(r => r.SecurityId)
+            .When(r => r.RelatedSecurityId is not null)
+            .WithMessage("Choose a security other than the one the holding leaves.");
+
         When(
             r => r.Type is InvestmentTransactionType.Dividend or InvestmentTransactionType.WithholdingTax
                 or InvestmentTransactionType.Interest or InvestmentTransactionType.Fee,

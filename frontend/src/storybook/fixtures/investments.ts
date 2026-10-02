@@ -379,6 +379,7 @@ interface EntrySeed {
   type: InvestmentTransactionType;
   date: string;
   security?: SecurityResponse;
+  related?: SecurityResponse;
   quantity?: string;
   price?: string;
   fee?: string;
@@ -394,6 +395,8 @@ function entry(n: number, seed: EntrySeed): InvestmentTransactionResponse {
     accountId: brokerAccount.id,
     securityId: seed.security?.id ?? null,
     symbol: seed.security?.symbol ?? null,
+    relatedSecurityId: seed.related?.id ?? null,
+    relatedSymbol: seed.related?.symbol ?? null,
     type: seed.type,
     date: seed.date,
     quantity: seed.quantity ?? "0",
@@ -535,6 +538,18 @@ export const splitEntry: InvestmentTransactionResponse = entry(90, {
   source: "manual",
 });
 
+export const corporateActionEntries: InvestmentTransactionResponse[] = [
+  entry(91, {
+    type: "symbolChange",
+    date: "2026-05-04",
+    security: closedStock,
+    related: unpricedStock,
+    quantity: "6",
+    cashAmount: "0.00",
+    description: "ASML(NL0010273215) CUSIP/ISIN CHANGE TO (NL0010273216)",
+  }),
+];
+
 const brokerConnection: BrokerConnectionResponse = {
   accountId: brokerAccount.id,
   fundingAccountId: checkingAccount.id,
@@ -563,6 +578,7 @@ export const brokerImportResult: BrokerImportResponse = {
   securitiesCreated: 1,
   pricesUpdated: 3,
   splits: 0,
+  corporateActions: 0,
   skippedCorporateActions: [],
   positionMismatches: null,
 };
@@ -570,6 +586,7 @@ export const brokerImportResult: BrokerImportResponse = {
 export const brokerImportWithWarnings: BrokerImportResponse = {
   ...brokerImportResult,
   splits: 2,
+  corporateActions: 1,
   skippedCorporateActions: [
     { type: "TC", count: 1 },
     { type: "SO", count: 2 },
@@ -591,6 +608,7 @@ export const brokerImportNothingNew: BrokerImportResponse = {
   securitiesCreated: 0,
   pricesUpdated: 0,
   splits: 0,
+  corporateActions: 0,
   skippedCorporateActions: [],
   positionMismatches: null,
 };

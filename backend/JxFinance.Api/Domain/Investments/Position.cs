@@ -69,8 +69,21 @@ public sealed class Position(SecurityId securityId)
         decimal proceeds,
         decimal reportingProceeds)
     {
+        var consumed = Take(id, quantity);
+        sales.Add(new RealizedSale(
+            id,
+            date,
+            quantity,
+            proceeds,
+            reportingProceeds,
+            consumed.Sum(l => l.Cost),
+            consumed.Sum(l => l.ReportingCost),
+            consumed));
+    }
+
+    public IReadOnlyList<ConsumedLot> Take(InvestmentTransactionId id, decimal quantity)
+    {
         var remaining = quantity;
-        var (cost, reportingCost) = (0m, 0m);
         var consumed = new List<ConsumedLot>();
         while (remaining > 0 && lots.First is { } first)
         {
@@ -80,8 +93,6 @@ public sealed class Position(SecurityId securityId)
             var takenCost = isWhole ? lot.Cost : lot.Cost * taken / lot.Quantity;
             var takenReportingCost = isWhole ? lot.ReportingCost : lot.ReportingCost * taken / lot.Quantity;
             consumed.Add(new ConsumedLot(lot.AcquiredOn, taken, takenCost, takenReportingCost));
-            cost += takenCost;
-            reportingCost += takenReportingCost;
             remaining -= taken;
             if (isWhole)
             {
@@ -102,7 +113,29 @@ public sealed class Position(SecurityId securityId)
             FirstOversoldSale ??= id;
         }
 
-        sales.Add(new RealizedSale(id, date, quantity, proceeds, reportingProceeds, cost, reportingCost, consumed));
+        return consumed;
+    }
+
+    public void Receive(IEnumerable<ConsumedLot> taken, decimal ratio)
+    {
+        foreach (var lot in taken)
+        {
+            var received = new Lot(lot.AcquiredOn, lot.Quantity * ratio, lot.Cost, lot.ReportingCost);
+            var later = lots.First;
+            while (later is not null && later.Value.AcquiredOn <= received.AcquiredOn)
+            {
+                later = later.Next;
+            }
+
+            if (later is null)
+            {
+                lots.AddLast(received);
+            }
+            else
+            {
+                lots.AddBefore(later, received);
+            }
+        }
     }
 
     public void Split(decimal ratio)

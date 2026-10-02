@@ -191,7 +191,7 @@ public sealed class InvestmentService(
         if (request.SecurityId is { } securityId)
         {
             var typedSecurityId = new SecurityId(securityId);
-            query = query.Where(t => t.SecurityId == typedSecurityId);
+            query = query.Where(t => t.SecurityId == typedSecurityId || t.RelatedSecurityId == typedSecurityId);
         }
 
         if (request.Type is { } type)
@@ -204,13 +204,15 @@ public sealed class InvestmentService(
             sorted => sorted.OrderByDescending(t => t.Date).ThenByDescending(t => t.CreatedAt),
             cancellationToken);
 
-        var securityIds = page.Items.Where(t => t.SecurityId is not null).Select(t => t.SecurityId!.Value).Distinct().ToList();
+        var securityIds = page.Items.SelectMany(Portfolio.SecuritiesOf).Distinct().ToList();
         var symbols = await db.Securities
             .Where(s => securityIds.Contains(s.Id))
             .Select(s => new { Key = s.Id, Value = s.Symbol })
             .ToDictionaryAsync(x => x.Key, x => x.Value, cancellationToken);
 
-        return page.Map(t => t.ToResponse(t.SecurityId is { } id ? symbols.GetValueOrDefault(id) : null));
+        return page.Map(t => t.ToResponse(
+            t.SecurityId is { } id ? symbols.GetValueOrDefault(id) : null,
+            t.RelatedSecurityId is { } relatedId ? symbols.GetValueOrDefault(relatedId) : null));
     }
 
     public async Task<Result<InvestmentTransactionResponse>> CreateTransactionAsync(
@@ -223,9 +225,9 @@ public sealed class InvestmentService(
             return built.Error;
         }
 
-        var (transaction, security) = built.Value;
-        if (transaction.SecurityId is { } tradedId
-            && await IsOversoldAsync(transaction.AccountId, tradedId, history => history.Append(transaction), cancellationToken))
+        var (transaction, security, related) = built.Value;
+        if (transaction.SecurityId is not null
+            && await IsOversoldAsync(transaction.AccountId, history => history.Append(transaction), cancellationToken))
         {
             return new DomainError(ErrorCodes.HoldingOversold, OversoldMessage);
         }
@@ -233,7 +235,7 @@ public sealed class InvestmentService(
         db.InvestmentTransactions.Add(transaction);
         await db.SaveChangesAsync(cancellationToken);
 
-        return transaction.ToResponse(security?.Symbol);
+        return transaction.ToResponse(security?.Symbol, related?.Symbol);
     }
 
     public async Task<Result<InvestmentTransactionResponse>> UpdateTransactionAsync(
@@ -259,15 +261,14 @@ public sealed class InvestmentService(
             return built.Error;
         }
 
-        var (corrected, security) = built.Value;
+        var (corrected, security, related) = built.Value;
         corrected.Id = transactionId;
 
-        var movedAway = transaction.SecurityId is { } previousId
-            && (previousId != corrected.SecurityId || transaction.AccountId != corrected.AccountId);
+        var movedAway = transaction.AccountId != corrected.AccountId
+            || Portfolio.SecuritiesOf(transaction).Except(Portfolio.SecuritiesOf(corrected)).Any();
         if (movedAway
             && await IsOversoldAsync(
                 transaction.AccountId,
-                transaction.SecurityId!.Value,
                 history => history.Where(t => t.Id != transactionId),
                 cancellationToken))
         {
@@ -276,10 +277,9 @@ public sealed class InvestmentService(
                 "Later sales depend on this entry. Correct those first.");
         }
 
-        if (corrected.SecurityId is { } correctedId
+        if (corrected.SecurityId is not null
             && await IsOversoldAsync(
                 corrected.AccountId,
-                correctedId,
                 history => history.Where(t => t.Id != transactionId).Append(corrected),
                 cancellationToken))
         {
@@ -288,6 +288,7 @@ public sealed class InvestmentService(
 
         transaction.AccountId = corrected.AccountId;
         transaction.SecurityId = corrected.SecurityId;
+        transaction.RelatedSecurityId = corrected.RelatedSecurityId;
         transaction.Type = corrected.Type;
         transaction.Date = corrected.Date;
         transaction.Quantity = corrected.Quantity;
@@ -298,10 +299,10 @@ public sealed class InvestmentService(
         transaction.Description = corrected.Description;
         await db.SaveChangesAsync(cancellationToken);
 
-        return transaction.ToResponse(security?.Symbol);
+        return transaction.ToResponse(security?.Symbol, related?.Symbol);
     }
 
-    private async Task<Result<(InvestmentTransaction Transaction, Security? Security)>> BuildTransactionAsync(
+    private async Task<Result<(InvestmentTransaction Transaction, Security? Security, Security? Related)>> BuildTransactionAsync(
         IInvestmentTransactionInput request,
         Currency? keptCurrency,
         CancellationToken cancellationToken)
@@ -312,15 +313,18 @@ public sealed class InvestmentService(
             return accountFound.Error;
         }
 
-        Security? security = null;
-        if (request.SecurityId is { } securityId)
+        var security = await SecurityAsync(request.SecurityId, cancellationToken);
+        var related = await SecurityAsync(request.RelatedSecurityId, cancellationToken);
+        if ((request.SecurityId is not null && security is null) || (request.RelatedSecurityId is not null && related is null))
         {
-            var typedSecurityId = new SecurityId(securityId);
-            security = await db.Securities.FirstOrDefaultAsync(s => s.Id == typedSecurityId, cancellationToken);
-            if (security is null)
-            {
-                return new DomainError(ErrorCodes.ReferenceNotFound, "Security does not exist.");
-            }
+            return new DomainError(ErrorCodes.ReferenceNotFound, "Security does not exist.");
+        }
+
+        if (related is not null && related.Currency != security?.Currency)
+        {
+            return new DomainError(
+                ErrorCodes.HoldingCurrencyDiffers,
+                "Both securities must trade in the same currency, because the cost basis moves from one to the other.");
         }
 
         var isTrade = request.Type is InvestmentTransactionType.Buy or InvestmentTransactionType.Sell;
@@ -338,7 +342,18 @@ public sealed class InvestmentService(
         }
 
         transaction.ReportingAmount = reportingAmount.Value;
-        return (transaction, security);
+        return (transaction, security, related);
+    }
+
+    private async Task<Security?> SecurityAsync(Guid? id, CancellationToken cancellationToken)
+    {
+        if (id is not { } value)
+        {
+            return null;
+        }
+
+        var securityId = new SecurityId(value);
+        return await db.Securities.FirstOrDefaultAsync(s => s.Id == securityId, cancellationToken);
     }
 
     public async Task<Result<Guid>> DeleteTransactionAsync(Guid id, CancellationToken cancellationToken)
@@ -349,20 +364,28 @@ public sealed class InvestmentService(
             return TransactionNotFound;
         }
 
-        if (transaction.SecurityId is { } securityId
-            && transaction.Type is InvestmentTransactionType.Buy or InvestmentTransactionType.Split
-            && await IsOversoldAsync(transaction.AccountId, securityId, history => history.Where(t => t.Id != transactionId), cancellationToken))
+        if (transaction.SecurityId is not null
+            && transaction.Type != InvestmentTransactionType.Sell
+            && Portfolio.PositionTypes.Contains(transaction.Type)
+            && await IsOversoldAsync(transaction.AccountId, history => history.Where(t => t.Id != transactionId), cancellationToken))
         {
             return new DomainError(
                 ErrorCodes.HoldingDependentSales,
                 "Later sales depend on this entry. Delete those first.");
         }
 
-        var symbol = transaction.SecurityId is { } heldId
-            ? await db.Securities.Where(s => s.Id == heldId).Select(s => s.Symbol).FirstOrDefaultAsync(cancellationToken)
-            : null;
+        var securityIds = Portfolio.SecuritiesOf(transaction).ToList();
+        var symbols = await db.Securities
+            .Where(s => securityIds.Contains(s.Id))
+            .ToDictionaryAsync(s => s.Id, s => s.Symbol, cancellationToken);
         db.InvestmentTransactions.Remove(transaction);
-        deletions.Record(TrashKind.InvestmentTransaction, id, TrashLabel.Investment(transaction, symbol));
+        deletions.Record(
+            TrashKind.InvestmentTransaction,
+            id,
+            TrashLabel.Investment(
+                transaction,
+                transaction.SecurityId is { } heldId ? symbols.GetValueOrDefault(heldId) : null,
+                transaction.RelatedSecurityId is { } relatedId ? symbols.GetValueOrDefault(relatedId) : null));
         await db.SaveChangesAsync(cancellationToken);
 
         return id;
@@ -437,7 +460,7 @@ public sealed class InvestmentService(
         if (security.Currency != request.Currency
             && await db.InvestmentTransactions
                 .IgnoreQueryFilters(QueryFilters.OwnerOnly)
-                .AnyAsync(t => t.SecurityId == id, cancellationToken))
+                .AnyAsync(t => t.SecurityId == id || t.RelatedSecurityId == id, cancellationToken))
         {
             return new DomainError(
                 ErrorCodes.ValueLocked,
@@ -484,10 +507,9 @@ public sealed class InvestmentService(
 
     private async Task<bool> IsOversoldAsync(
         AccountId accountId,
-        SecurityId securityId,
         Func<IEnumerable<InvestmentTransaction>, IEnumerable<InvestmentTransaction>> change,
         CancellationToken cancellationToken) =>
-        await ledger.FirstOversoldSaleAsync(accountId, securityId, change, cancellationToken) is not null;
+        (await ledger.NewlyOversoldAsync(accountId, change, cancellationToken)).Count > 0;
 
     private sealed class YearTotals
     {

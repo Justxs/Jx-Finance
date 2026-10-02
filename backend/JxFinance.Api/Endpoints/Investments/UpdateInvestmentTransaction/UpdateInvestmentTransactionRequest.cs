@@ -16,4 +16,5 @@ public sealed record UpdateInvestmentTransactionRequest(
     [property: Money] decimal? Amount = null,
     [property: Money] decimal? Fee = null,
     Currency? Currency = null,
-    string? Description = null) : IInvestmentTransactionInput;
+    string? Description = null,
+    Guid? RelatedSecurityId = null) : IInvestmentTransactionInput;

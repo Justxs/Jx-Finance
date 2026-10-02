@@ -9,6 +9,8 @@ public sealed record InvestmentTransactionResponse(
     Guid AccountId,
     Guid? SecurityId,
     string? Symbol,
+    Guid? RelatedSecurityId,
+    string? RelatedSymbol,
     InvestmentTransactionType Type,
     DateOnly Date,
     [property: Quantity] decimal Quantity,

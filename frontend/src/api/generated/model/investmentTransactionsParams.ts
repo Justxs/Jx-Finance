@@ -14,7 +14,7 @@ export type InvestmentTransactionsParams = {
    */
   accountId?: string | null;
   /**
-   * Only entries for this security.
+   * Only entries for this security, as the security or as the related security.
    * @nullable
    */
   securityId?: string | null;

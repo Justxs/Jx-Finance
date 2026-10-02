@@ -21,6 +21,7 @@ public static class InvestmentMapper
         {
             AccountId = new AccountId(request.AccountId),
             SecurityId = request.SecurityId is { } id ? new SecurityId(id) : null,
+            RelatedSecurityId = request.RelatedSecurityId is { } relatedId ? new SecurityId(relatedId) : null,
             Type = request.Type,
             Date = request.Date,
             Quantity = quantity,
@@ -32,11 +33,16 @@ public static class InvestmentMapper
         };
     }
 
-    public static InvestmentTransactionResponse ToResponse(this InvestmentTransaction transaction, string? symbol) => new(
+    public static InvestmentTransactionResponse ToResponse(
+        this InvestmentTransaction transaction,
+        string? symbol,
+        string? relatedSymbol) => new(
         transaction.Id.Value,
         transaction.AccountId.Value,
         transaction.SecurityId?.Value,
         symbol,
+        transaction.RelatedSecurityId?.Value,
+        relatedSymbol,
         transaction.Type,
         transaction.Date,
         transaction.Quantity,

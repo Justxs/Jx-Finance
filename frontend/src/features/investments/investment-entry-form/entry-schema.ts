@@ -10,6 +10,7 @@ import { createInvestmentTransactionBodyDescriptionMax } from "@/api/schemas/inv
 import {
   defaultInvestmentAccount,
   isTrade,
+  movesHolding,
   requiresSecurity,
   usesAmount,
 } from "@/features/investments/investment-types";
@@ -29,6 +30,7 @@ interface EntryFormValues {
   accountId: string;
   date: string;
   securityId: string;
+  relatedSecurityId: string;
   quantity: string;
   price: string;
   fee: string;
@@ -51,6 +53,7 @@ export function entrySchema(t: Translate) {
       accountId: requiredValue(t),
       date: requiredValue(t),
       securityId: z.string(),
+      relatedSecurityId: z.string(),
       quantity: z.string(),
       price: z.string(),
       fee: z.string(),
@@ -80,6 +83,16 @@ export function entrySchema(t: Translate) {
       if (value.type === "split" && !isPositiveQuantity(value.quantity)) {
         fail("quantity", t("investments.validation.ratio"));
       }
+      if (movesHolding(value.type)) {
+        if (value.relatedSecurityId === "") {
+          fail("relatedSecurityId", t("investments.validation.relatedSecurity"));
+        } else if (value.relatedSecurityId === value.securityId) {
+          fail("relatedSecurityId", t("investments.validation.sameSecurity"));
+        }
+        if (!isPositiveQuantity(value.quantity)) {
+          fail("quantity", t("investments.validation.quantity"));
+        }
+      }
       if (usesAmount(value.type) && !isPositiveMoney(value.amount)) {
         fail("amount", t("validation.positiveMoney"));
       }
@@ -98,6 +111,7 @@ export function entryDefaults({
       accountId: editing.accountId,
       date: editing.date,
       securityId: editing.securityId ?? "",
+      relatedSecurityId: editing.relatedSecurityId ?? "",
       quantity: usesAmount(editing.type) ? "" : editing.quantity,
       price: isTrade(editing.type) ? editing.price : "",
       fee: isTrade(editing.type) && Number(editing.fee) > 0 ? editing.fee : "",
@@ -114,6 +128,7 @@ export function entryDefaults({
     accountId: initialAccount?.id ?? "",
     date: today,
     securityId: "",
+    relatedSecurityId: "",
     quantity: "",
     price: "",
     fee: "",
@@ -133,6 +148,7 @@ export function toRequest(value: EntryFormValues): CreateInvestmentTransactionRe
     type: value.type,
     date: value.date,
     securityId,
+    relatedSecurityId: movesHolding(value.type) ? value.relatedSecurityId || null : null,
     quantity: cash ? null : value.quantity,
     price: trade ? value.price : null,
     fee: trade && value.fee.trim() !== "" ? value.fee : null,

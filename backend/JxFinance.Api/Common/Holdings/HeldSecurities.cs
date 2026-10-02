@@ -24,8 +24,9 @@ public static class HeldSecurities
             .ToHashSet();
 
         return entries
-            .Where(t => held.Contains(t.SecurityId!.Value))
-            .GroupBy(t => t.SecurityId!.Value)
+            .SelectMany(t => Portfolio.SecuritiesOf(t).Select(id => (Id: id, t.Date)))
+            .Where(t => held.Contains(t.Id))
+            .GroupBy(t => t.Id)
             .ToDictionary(g => g.Key, g => g.Min(t => t.Date));
     }
 }

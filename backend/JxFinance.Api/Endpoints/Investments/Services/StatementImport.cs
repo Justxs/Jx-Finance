@@ -88,6 +88,7 @@ public sealed class StatementImport(
             counts.SecuritiesCreated,
             counts.PricesUpdated,
             counts.Splits,
+            counts.CorporateActions,
             counts.SkippedActions
                 .OrderBy(a => a.Key, StringComparer.Ordinal)
                 .Select(a => new SkippedCorporateActionResponse(a.Key, a.Value))
@@ -97,7 +98,7 @@ public sealed class StatementImport(
 
     private async Task SummariseAsync(CancellationToken cancellationToken)
     {
-        var entries = counts.Trades + counts.CashEntries + counts.Conversions + counts.Transfers + counts.Splits;
+        var entries = counts.Trades + counts.CashEntries + counts.Conversions + counts.Transfers + counts.Splits + counts.CorporateActions;
         if (entries == 0)
         {
             return;
@@ -116,7 +117,8 @@ public sealed class StatementImport(
                 (counts.CashEntries, "cash entry", "cash entries"),
                 (counts.Conversions, "conversion", "conversions"),
                 (counts.Transfers, "transfer", "transfers"),
-                (counts.Splits, "split", "splits")),
+                (counts.Splits, "split", "splits"),
+                (counts.CorporateActions, "corporate action", "corporate actions")),
             entries,
             account.Value,
             [account]);
@@ -146,50 +148,107 @@ public sealed class StatementImport(
             var rows = action.Where(a => SecurityCategories.Contains(a.Instrument.AssetCategory)).ToList();
             var reference = ActionRefPrefix + action.Key;
             var type = action.First().Type;
-            if (rows.Count == 0
-                || !rows[0].IsSplit
-                || rows.Select(r => r.Ratio).FirstOrDefault(r => r is not null) is not { } ratio
-                || reference.Length > MaxRefLength)
+            var booked = rows.Count > 0 && reference.Length <= MaxRefLength && type switch
+            {
+                FlexParser.ForwardSplit or FlexParser.ReverseSplit => BookSplit(rows, reference),
+                FlexParser.IssueChange => BookSymbolChange(rows, reference),
+                _ => false,
+            };
+            if (!booked)
             {
                 counts.Skipped++;
                 counts.SkippedActions[type] = counts.SkippedActions.GetValueOrDefault(type) + 1;
-                continue;
             }
+        }
+    }
 
-            var successor = rows.OrderByDescending(r => r.Quantity).First().Instrument;
-            var security = rows.Select(r => Find(r.Instrument)).FirstOrDefault(s => s is not null) ?? Resolve(successor);
-            security.BrokerContractId = successor.ContractId ?? security.BrokerContractId;
-            security.Isin = successor.Isin?.ToUpperInvariant() ?? security.Isin;
-            foreach (var row in rows)
+    private bool BookSplit(List<FlexCorporateAction> rows, string reference)
+    {
+        if (rows.Select(r => r.Ratio).FirstOrDefault(r => r is not null) is not { } ratio)
+        {
+            return false;
+        }
+
+        var successor = rows.OrderByDescending(r => r.Quantity).First().Instrument;
+        var security = rows.Select(r => Find(r.Instrument)).FirstOrDefault(s => s is not null) ?? Resolve(successor);
+        TakeOver(security, successor, rows);
+        if (!entryRefs.Add(reference))
+        {
+            counts.Duplicates++;
+            return true;
+        }
+
+        AddEntry(
+            reference,
+            InvestmentTransactionType.Split,
+            security,
+            rows[0].Date,
+            new Money(0m, security.Currency),
+            0m,
+            rows[0].Description,
+            ratio);
+        counts.Splits++;
+        return true;
+    }
+
+    private bool BookSymbolChange(List<FlexCorporateAction> rows, string reference)
+    {
+        var leaving = rows.Where(r => r.Quantity < 0m).ToList();
+        var arriving = rows.Where(r => r.Quantity > 0m).ToList();
+        if (leaving.Count == 0 || arriving.Count == 0)
+        {
+            return false;
+        }
+
+        var source = Resolve(leaving[0].Instrument);
+        var successor = Find(arriving[0].Instrument);
+        if (successor == source)
+        {
+            TakeOver(source, arriving[0].Instrument, rows);
+            return true;
+        }
+
+        successor ??= Resolve(arriving[0].Instrument);
+        if (successor.Currency != source.Currency)
+        {
+            return false;
+        }
+
+        if (!entryRefs.Add(reference))
+        {
+            counts.Duplicates++;
+            return true;
+        }
+
+        AddEntry(
+            reference,
+            InvestmentTransactionType.SymbolChange,
+            source,
+            leaving[0].Date,
+            new Money(0m, source.Currency),
+            0m,
+            leaving[0].Description,
+            -leaving.Sum(r => r.Quantity),
+            related: successor);
+        counts.CorporateActions++;
+        return true;
+    }
+
+    private void TakeOver(Security security, FlexInstrument successor, List<FlexCorporateAction> rows)
+    {
+        security.BrokerContractId = successor.ContractId ?? security.BrokerContractId;
+        security.Isin = successor.Isin?.ToUpperInvariant() ?? security.Isin;
+        foreach (var row in rows)
+        {
+            if (row.Instrument.ContractId is { } contractId)
             {
-                if (row.Instrument.ContractId is { } contractId)
-                {
-                    renamedContracts[contractId] = security;
-                }
-
-                if (row.Instrument.Isin is { } isin)
-                {
-                    renamedIsins[(isin.ToUpperInvariant(), row.Instrument.Currency)] = security;
-                }
+                renamedContracts[contractId] = security;
             }
 
-            if (!entryRefs.Add(reference))
+            if (row.Instrument.Isin is { } isin)
             {
-                counts.Duplicates++;
-                continue;
+                renamedIsins[(isin.ToUpperInvariant(), row.Instrument.Currency)] = security;
             }
-
-            var description = rows[0].Description;
-            AddEntry(
-                reference,
-                InvestmentTransactionType.Split,
-                security,
-                rows[0].Date,
-                new Money(0m, security.Currency),
-                0m,
-                description,
-                ratio);
-            counts.Splits++;
         }
     }
 
@@ -449,12 +508,14 @@ public sealed class StatementImport(
         string? description,
         decimal quantity = 0m,
         decimal price = 0m,
-        decimal fee = 0m)
+        decimal fee = 0m,
+        Security? related = null)
     {
         db.InvestmentTransactions.Add(new InvestmentTransaction
         {
             AccountId = account,
             SecurityId = security?.Id,
+            RelatedSecurityId = related?.Id,
             Type = type,
             Date = date,
             Quantity = quantity,
@@ -598,6 +659,7 @@ public sealed class StatementImport(
         public int SecuritiesCreated { get; set; }
         public int PricesUpdated { get; set; }
         public int Splits { get; set; }
+        public int CorporateActions { get; set; }
         public Dictionary<string, int> SkippedActions { get; } = [];
     }
 }

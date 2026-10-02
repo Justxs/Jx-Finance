@@ -1,4 +1,5 @@
 import type { InvestmentTransactionType } from "@/api/generated/model";
+import { movesNoCash } from "@/features/investments/investment-types";
 import { isNonNegativeMoney, isQuantity, normalizeMoney } from "@/lib/validation";
 
 export interface CashEffectInput {
@@ -39,7 +40,7 @@ function formatCents(cents: bigint): string {
 }
 
 export function cashEffect({ type, quantity, price, fee, amount }: CashEffectInput): string | null {
-  if (type === "split") {
+  if (movesNoCash(type)) {
     return formatCents(0n);
   }
 

@@ -10,5 +10,6 @@ public sealed record BrokerImportResponse(
     int SecuritiesCreated,
     int PricesUpdated,
     int Splits,
+    int CorporateActions,
     IReadOnlyList<SkippedCorporateActionResponse> SkippedCorporateActions,
     IReadOnlyList<PositionMismatchResponse>? PositionMismatches);

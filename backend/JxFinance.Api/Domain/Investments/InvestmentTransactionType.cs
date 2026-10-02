@@ -9,4 +9,5 @@ public enum InvestmentTransactionType
     Interest,
     Fee,
     Split,
+    SymbolChange,
 }

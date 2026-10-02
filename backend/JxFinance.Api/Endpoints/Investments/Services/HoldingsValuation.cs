@@ -47,8 +47,10 @@ public sealed class HoldingsValuation(AppDbContext db, IExchangeRateService rate
                 && (asOf == null || t.Date <= asOf))
             .Select(t => new
             {
+                t.Id,
                 t.AccountId,
                 t.SecurityId,
+                t.RelatedSecurityId,
                 t.Type,
                 t.Date,
                 t.CreatedAt,
@@ -69,7 +71,11 @@ public sealed class HoldingsValuation(AppDbContext db, IExchangeRateService rate
             return;
         }
 
-        var securityIds = rows.Select(t => t.SecurityId!.Value).Distinct().ToList();
+        var securityIds = rows
+            .SelectMany(t => new[] { t.SecurityId, t.RelatedSecurityId })
+            .OfType<SecurityId>()
+            .Distinct()
+            .ToList();
         var securities = await db.Securities
             .AsNoTracking()
             .Where(s => securityIds.Contains(s.Id))
@@ -86,8 +92,10 @@ public sealed class HoldingsValuation(AppDbContext db, IExchangeRateService rate
         {
             var entries = account.Select(t => new InvestmentTransaction
             {
+                Id = t.Id,
                 AccountId = t.AccountId,
                 SecurityId = t.SecurityId,
+                RelatedSecurityId = t.RelatedSecurityId,
                 Type = t.Type,
                 Date = t.Date,
                 CreatedAt = t.CreatedAt,

@@ -12,6 +12,7 @@ interface Props {
 const resultKeys = [
   "trades",
   "splits",
+  "corporateActions",
   "cashEntries",
   "conversions",
   "transfers",
@@ -44,7 +45,12 @@ export function BrokerImportResult({ result }: Readonly<Props>) {
   const quantity = useQuantityFormat();
   const lines = resultKeys.filter((key) => result[key] > 0);
   const imported =
-    result.trades + result.splits + result.cashEntries + result.conversions + result.transfers;
+    result.trades +
+    result.splits +
+    result.corporateActions +
+    result.cashEntries +
+    result.conversions +
+    result.transfers;
   const skippedActions = result.skippedCorporateActions;
   const mismatches = result.positionMismatches ?? [];
 

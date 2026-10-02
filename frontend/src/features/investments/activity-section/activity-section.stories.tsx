@@ -2,7 +2,13 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, screen, userEvent, waitFor, within } from "storybook/test";
 import { getInvestmentTransactionsMockHandler } from "@/api/generated/investments/investments.msw";
 import { withWidth } from "@/storybook/decorators";
-import { accounts, brokerAccount, investmentTransactions, splitEntry } from "@/storybook/fixtures";
+import {
+  accounts,
+  brokerAccount,
+  corporateActionEntries,
+  investmentTransactions,
+  splitEntry,
+} from "@/storybook/fixtures";
 import {
   errorHandlers,
   investmentsEmptyHandlers,
@@ -35,6 +41,21 @@ export const WithSplit: Story = {
       total: 5,
     }),
   ),
+};
+
+export const WithCorporateActions: Story = {
+  parameters: withHandlers(
+    getInvestmentTransactionsMockHandler({
+      items: [...corporateActionEntries, ...investmentTransactions.slice(0, 2)],
+      page: 1,
+      pageSize: 15,
+      total: corporateActionEntries.length + 2,
+    }),
+  ),
+  play: async ({ canvas }) => {
+    await expect(await canvas.findByText("Symbol change")).toBeInTheDocument();
+    await expect(canvas.getByText(/6 to IGN1L/)).toBeInTheDocument();
+  },
 };
 
 export const Empty: Story = { parameters: { msw: { handlers: investmentsEmptyHandlers } } };

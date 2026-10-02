@@ -1814,6 +1814,7 @@
       "imported": "IBKR",
       "importedLocked": "Importuota iš brokerio. Pataisykite ten ir importuokite dar kartą.",
       "splitRatio": "{{ratio}} už 1",
+      "movedTo": "{{quantity}} į {{symbol}}",
       "noCash": "Be pinigų judėjimo"
     },
     "types": {
@@ -1823,7 +1824,8 @@
       "withholdingTax": "Išskaičiuotas mokestis",
       "interest": "Palūkanos",
       "fee": "Komisiniai",
-      "split": "Akcijų skaidymas"
+      "split": "Akcijų skaidymas",
+      "symbolChange": "Simbolio pakeitimas"
     },
     "securityTypes": {
       "stock": "Akcija",
@@ -1845,6 +1847,9 @@
       "quantity": "Kiekis",
       "ratio": "Naujų akcijų už vieną seną akciją",
       "ratioHint": "2, kai skaidoma santykiu 2 už 1.",
+      "relatedSecurity": "Perkeliama į",
+      "sharesMoved": "Perkeliamas akcijų kiekis",
+      "sharesMovedHint": "Seniausios partijos perkeliamos su savikaina ir pirkimo datomis.",
       "price": "Vieneto kaina",
       "priceIn": "Vieneto kaina ({{currency}})",
       "fee": "Komisiniai (neprivaloma)",
@@ -1865,6 +1870,8 @@
       "quantity": "Įveskite už 0 didesnį kiekį, iki 8 skaitmenų po kablelio, pvz., 2,5.",
       "ratio": "Įveskite santykį – kiek naujų akcijų tenka vienai senai, pvz., 2.",
       "security": "Pasirinkite vertybinį popierių.",
+      "relatedSecurity": "Pasirinkite vertybinį popierių, į kurį perkeliamas turimas kiekis.",
+      "sameSecurity": "Pasirinkite kitą vertybinį popierių.",
       "isin": "Įveskite teisingą ISIN, pvz., IE00BK5BQT80."
     },
     "securities": {
@@ -1949,12 +1956,16 @@
         "splits_one": "Įrašytas {{count}} akcijų skaidymas.",
         "splits_few": "Įrašyti {{count}} akcijų skaidymai.",
         "splits_many": "Įrašyta {{count}} akcijų skaidymo.",
-        "splits_other": "Įrašyta {{count}} akcijų skaidymų."
+        "splits_other": "Įrašyta {{count}} akcijų skaidymų.",
+        "corporateActions_one": "Įrašytas {{count}} korporatyvinis veiksmas.",
+        "corporateActions_few": "Įrašyti {{count}} korporatyviniai veiksmai.",
+        "corporateActions_many": "Įrašyta {{count}} korporatyvinio veiksmo.",
+        "corporateActions_other": "Įrašyta {{count}} korporatyvinių veiksmų."
       },
       "help": {
         "title": "Kaip sukurti „Flex Query“",
         "create": "„Interactive Brokers“ „Client Portal“ atverkite „Performance & Reports“, tada „Flex Queries“ ir sukurkite „Activity Flex Query“.",
-        "sections": "Pridėkite skiltis „Trades“ (pažymėję „Executions“), „Cash Transactions“ ir „Open Positions“.",
+        "sections": "Pridėkite skiltis „Trades“ (pažymėję „Executions“), „Cash Transactions“, „Corporate Actions“ ir „Open Positions“.",
         "format": "Pasirinkite XML formatą ir datos formatą yyyyMMdd.",
         "period": "Pasirinkite laikotarpį, pavyzdžiui, „Last 365 days“, išsaugokite užklausą ir paleiskite ją, kad atsisiųstumėte failą.",
         "token": "Automatiniam sinchronizavimui tame pačiame puslapyje atverkite „Flex Web Service“, įjunkite jį ir nusikopijuokite prieigos raktą.",
@@ -1986,7 +1997,7 @@
         "symbol": "Simbolis",
         "brokerQuantity": "Pas brokerį",
         "replayedQuantity": "Pagal jūsų įrašus",
-        "mismatchAdvice": "Gali trūkti korporatyvinio veiksmo arba istorija prasideda anksčiau nei pirmasis importuotas laikotarpis. Akcijų skaidymą galima įvesti rankiniu būdu: „Pridėti įrašą“, tipas „Akcijų skaidymas“."
+        "mismatchAdvice": "Gali trūkti korporatyvinio veiksmo arba istorija prasideda anksčiau nei pirmasis importuotas laikotarpis. Akcijų skaidymą ar simbolio pakeitimą galima įvesti rankiniu būdu: „Pridėti įrašą“."
       },
       "tradeCsv": {
         "intro": "Bet kuriam kitam brokeriui: surašykite sandorius į CSV su antraštės eilute. Privalomi stulpeliai Date, Type (buy, sell, dividend, withholdingTax, interest ar fee) ir Currency; pirkimams ir pardavimams reikia Symbol, Quantity ir Price, kitiems – Amount. Fee, Name, Isin, SecurityType (stock, etf ar fund) ir Id neprivalomi.",
@@ -2446,6 +2457,7 @@
       "fromAmount": "parduota suma",
       "toAmount": "pirkta suma",
       "security": "vertybinis popierius",
+      "relatedSecurity": "perkelta į",
       "quantity": "kiekis",
       "price": "kaina",
       "fee": "mokestis",
@@ -3023,6 +3035,7 @@
       "notManual": "Šio tikslo pažanga skaičiuojama pagal kaupimo sąskaitą. Kad galėtumėte įvesti sumą, redaguokite tikslą ir pasirinkite, kad pažanga būtų skaičiuojama pagal jūsų įvestą sumą."
     },
     "holding": {
+      "currencyDiffers": "Abu vertybiniai popieriai turi būti prekiaujami ta pačia valiuta.",
       "dependentSales": "Nuo šio įrašo priklauso vėlesni pardavimai.",
       "oversold": "Taip būtų parduota daugiau, nei tą dieną turėta."
     },

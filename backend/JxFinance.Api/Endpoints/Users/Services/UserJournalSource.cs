@@ -55,7 +55,7 @@ public sealed class UserJournalSource(AppDbContext db, IExchangeRateService rate
             .Where(a => outsideIds.Contains(a.Id))
             .Select(a => new { a.Id, a.Name })
             .ToListAsync(cancellationToken);
-        var securityIds = investments.Select(i => i.SecurityId).OfType<SecurityId>().Distinct().ToList();
+        var securityIds = investments.SelectMany(Portfolio.SecuritiesOf).Distinct().ToList();
         var securities = await db.Securities.IgnoreQueryFilters().AsNoTracking()
             .Where(s => securityIds.Contains(s.Id))
             .OrderBy(s => s.Symbol).ThenBy(s => s.Id)
@@ -171,7 +171,17 @@ public sealed class UserJournalSource(AppDbContext db, IExchangeRateService rate
                     costCurrencies[bought] = entry.CashAmount.Currency;
                 }
 
+                var moved = Portfolio.CorporateActionTypes.Contains(entry.Type) ? Portfolio.SecuritiesOf(entry).ToList() : [];
+                var movedBefore = moved.Select(id => positions.TryGetValue(id, out var held) ? held.Lots.ToList() : []).ToList();
                 Portfolio.Apply(positions, entry);
+                if (entry.RelatedSecurityId is { } successor && security is { } source && costCurrencies.TryGetValue(source, out var carried))
+                {
+                    costCurrencies.TryAdd(successor, carried);
+                }
+
+                List<JournalLotChange>? lotChanges = moved.Count == 0
+                    ? null
+                    : [.. moved.Select((id, index) => new JournalLotChange(id.Value, movedBefore[index], [.. positions[id].Lots]))];
                 var sale = entry.Type == InvestmentTransactionType.Sell && security is { } sold ? positions[sold].Sales[^1] : null;
                 entries.Add(new JournalInvestment(
                     entry.Id.Value,
@@ -186,7 +196,8 @@ public sealed class UserJournalSource(AppDbContext db, IExchangeRateService rate
                     sale?.Lots.Sum(l => l.Quantity) ?? 0m,
                     sale?.Cost ?? 0m,
                     lotsBefore,
-                    security is { } traded && costCurrencies.TryGetValue(traded, out var currency) ? currency : null));
+                    security is { } traded && costCurrencies.TryGetValue(traded, out var currency) ? currency : null,
+                    lotChanges));
             }
 
             if (positions.Values.Select(p => p.FirstOversoldSale).FirstOrDefault(s => s is not null) is { } first)

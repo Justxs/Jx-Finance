@@ -9,21 +9,21 @@ namespace JxFinance.Common.Holdings;
 [RegisterService<IHoldingLedger>(LifeTime.Scoped)]
 public sealed class HoldingLedger(AppDbContext db) : IHoldingLedger
 {
-    public async Task<InvestmentTransactionId?> FirstOversoldSaleAsync(
+    public async Task<IReadOnlyCollection<InvestmentTransactionId>> NewlyOversoldAsync(
         AccountId accountId,
-        SecurityId securityId,
         Func<IEnumerable<InvestmentTransaction>, IEnumerable<InvestmentTransaction>> change,
         CancellationToken cancellationToken)
     {
         var history = await db.InvestmentTransactions
             .AsNoTracking()
-            .Where(t => t.AccountId == accountId && t.SecurityId == securityId)
+            .Where(t => t.AccountId == accountId && t.SecurityId != null && Portfolio.PositionTypes.Contains(t.Type))
             .ToListAsync(cancellationToken);
-        if (Portfolio.Positions(history).GetValueOrDefault(securityId)?.IsOversold == true)
-        {
-            return null;
-        }
+        var before = Portfolio.Positions(history);
 
-        return Portfolio.Positions(change(history)).GetValueOrDefault(securityId)?.FirstOversoldSale;
+        return Portfolio.Positions(change(history)).Values
+            .Where(position => before.GetValueOrDefault(position.SecurityId)?.IsOversold != true)
+            .Select(position => position.FirstOversoldSale)
+            .OfType<InvestmentTransactionId>()
+            .ToList();
     }
 }

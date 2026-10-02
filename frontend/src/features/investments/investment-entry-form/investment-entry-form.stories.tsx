@@ -9,6 +9,7 @@ import {
   accounts,
   brokerAccount,
   investmentTransactions,
+  unpricedStock,
   usStock,
   worldEtf,
 } from "@/storybook/fixtures";
@@ -54,6 +55,8 @@ export const Fee: Story = ofType("Fee");
 
 export const Split: Story = ofType("Split");
 
+export const SymbolChange: Story = ofType("Symbol change");
+
 export const Pending: Story = {
   parameters: withHandlers(getCreateInvestmentTransactionMockHandler(pending)),
   play: async ({ canvas, args }) => {
@@ -98,6 +101,39 @@ export const SwitchingTypeChangesFields: Story = {
 };
 
 const sent = fn();
+
+const sentSymbolChange = fn();
+
+export const SymbolChangeMovesTheHolding: Story = {
+  parameters: withHandlers(
+    getCreateInvestmentTransactionMockHandler(async ({ request }) => {
+      sentSymbolChange(await request.json());
+      return investmentTransactions[0]!;
+    }),
+  ),
+  play: async ({ canvas, args }) => {
+    await choose(canvas, "Entry type", "Symbol change");
+    await choose(canvas, "Security", new RegExp(`^${worldEtf.symbol}`));
+    await choose(canvas, "Moves to", new RegExp(`^${worldEtf.symbol}`));
+    await userEvent.type(await canvas.findByLabelText("Shares moved"), "10");
+    await expect(canvas.getByText("No cash movement")).toBeInTheDocument();
+    await userEvent.click(canvas.getByRole("button", { name: "Add entry" }));
+    await expect(await canvas.findByText("Choose a different security.")).toBeInTheDocument();
+
+    await choose(canvas, "Moves to", new RegExp(`^${unpricedStock.symbol}`));
+    await userEvent.click(canvas.getByRole("button", { name: "Add entry" }));
+    await waitFor(() => expect(args.onClose).toHaveBeenCalled());
+    await expect(sentSymbolChange).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: "symbolChange",
+        securityId: worldEtf.id,
+        relatedSecurityId: unpricedStock.id,
+        quantity: "10",
+        amount: null,
+      }),
+    );
+  },
+};
 
 export const BuyShowsCashEffect: Story = {
   parameters: withHandlers(

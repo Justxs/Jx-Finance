@@ -164,7 +164,7 @@ public sealed class SecurityPriceService(AppDbContext db, IExchangeRateService r
         }
 
         var start = from < entries[0].Date ? entries[0].Date : from;
-        var securityIds = entries.Select(t => t.SecurityId!.Value).Distinct().ToList();
+        var securityIds = entries.SelectMany(Portfolio.SecuritiesOf).Distinct().ToList();
         var currencies = await db.Securities
             .AsNoTracking()
             .Where(s => securityIds.Contains(s.Id))
@@ -272,7 +272,10 @@ public sealed class SecurityPriceService(AppDbContext db, IExchangeRateService r
     {
         var history = await db.InvestmentTransactions
             .AsNoTracking()
-            .Where(t => t.SecurityId == securityId && Portfolio.PositionTypes.Contains(t.Type))
+            .Where(t => t.SecurityId != null
+                && Portfolio.PositionTypes.Contains(t.Type)
+                && db.InvestmentTransactions.Any(o => o.AccountId == t.AccountId
+                    && (o.SecurityId == securityId || o.RelatedSecurityId == securityId)))
             .ToListAsync(cancellationToken);
 
         return history

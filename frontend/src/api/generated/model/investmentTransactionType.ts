@@ -17,4 +17,5 @@ export const InvestmentTransactionType = {
   interest: "interest",
   fee: "fee",
   split: "split",
+  symbolChange: "symbolChange",
 } as const;

@@ -91,7 +91,7 @@ export const investmentHandlers = [
     const items = investmentTransactions.filter(
       (item) =>
         (!accountId || item.accountId === accountId) &&
-        (!securityId || item.securityId === securityId) &&
+        (!securityId || item.securityId === securityId || item.relatedSecurityId === securityId) &&
         (!type || item.type === type),
     );
     return paginate(items, params);
@@ -99,6 +99,7 @@ export const investmentHandlers = [
   getCreateInvestmentTransactionMockHandler(async ({ request }) => {
     const body = await readBody(request);
     const security = securities.find((item) => item.id === body.securityId);
+    const related = securities.find((item) => item.id === body.relatedSecurityId);
     const type = investmentType.parse(body.type);
     const quantity = Number(text(body.quantity) ?? 0);
     const held = portfolio.holdings.find((holding) => holding.security.id === security?.id);
@@ -117,12 +118,15 @@ export const investmentHandlers = [
       withholdingTax: -amount,
       fee: -amount,
       split: 0,
+      symbolChange: 0,
     };
     return {
       id: NEW_ID,
       accountId: text(body.accountId) ?? "",
       securityId: security?.id ?? null,
       symbol: security?.symbol ?? null,
+      relatedSecurityId: related?.id ?? null,
+      relatedSymbol: related?.symbol ?? null,
       type,
       date: text(body.date) ?? FIXTURE_TODAY,
       quantity: text(body.quantity) ?? "0",
