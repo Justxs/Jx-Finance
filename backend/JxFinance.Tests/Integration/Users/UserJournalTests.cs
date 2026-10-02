@@ -242,6 +242,29 @@ public sealed class UserJournalTests(ApiFixture fixture) : IntegrationTestBase(f
     }
 
     [Fact]
+    public async Task A_debt_opens_at_its_earliest_recorded_balance_and_revalues_at_each_later_one()
+    {
+        using var client = await CreateUserClientAsync();
+        var debt = (await PostAsync<IdDto>(client, "/api/debts", new { name = "Car loan", type = "loan", outstandingAmount = "800.00", asOf = "2026-05-01" })).Id;
+        (await client.PutAsJsonAsync($"/api/debts/{debt}/balances/2026-03-01", new { amount = "1000.00", note = "Signed" }, TestContext.Current.CancellationToken))
+            .EnsureSuccessStatusCode();
+        (await client.PutAsJsonAsync($"/api/debts/{debt}/balances/2026-07-01", new { amount = "850.00", note = "Fee added" }, TestContext.Current.CancellationToken))
+            .EnsureSuccessStatusCode();
+
+        var journal = await AcceptedAsync(client);
+
+        Assert.Contains(journal.Opens, o => o.Account == "Liabilities:Debts:Car-loan" && o.Date == new DateOnly(2026, 3, 1));
+        var opening = Assert.Single(journal.Transactions, t => t.Postings.Any(p => p.Account == "Liabilities:Debts:Car-loan") && t.Narration == "Opening balance");
+        Assert.Equal(("Signed", (decimal?)-1000m), (opening.Meta["note"], opening.Postings.Single(p => p.Account == "Liabilities:Debts:Car-loan").Number));
+        var recorded = journal.Transactions.Where(t => t.Narration == "Recorded balance").OrderBy(t => t.Date).ToList();
+        Assert.Equal([new DateOnly(2026, 5, 1), new DateOnly(2026, 7, 1)], recorded.Select(t => t.Date));
+        Assert.Equal([200m, -50m], recorded.Select(t => t.Postings.Single(p => p.Account == "Liabilities:Debts:Car-loan").Number));
+        Assert.All(recorded, t => Assert.Contains(t.Postings, p => p.Account == "Equity:Revaluation"));
+        Assert.Equal("Fee added", recorded[1].Meta["note"]);
+        Assert.Equal(-850m, Assert.Single(journal.Assertions, a => a.Account == "Liabilities:Debts:Car-loan").Number);
+    }
+
+    [Fact]
     public async Task A_split_payment_linked_to_a_debt_counts_wholly_as_spending_as_in_the_app()
     {
         var user = await CreateUserAsync();

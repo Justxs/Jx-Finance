@@ -214,6 +214,26 @@ public sealed partial class UserImportTests(ApiFixture fixture) : IntegrationTes
         Assert.Equal([("eur", "20.00")], person.Balances.Select(b => (b.Currency, b.Amount)));
     }
 
+    [Fact]
+    public async Task A_debts_recorded_balances_travel_with_the_member()
+    {
+        using var source = await CreateUserClientAsync();
+        var debt = (await PostAsync<IdDto>(source, "/api/debts", new { name = "Car loan", type = "loan", outstandingAmount = "1000.00", asOf = "2026-03-01" })).Id;
+        (await source.PutAsJsonAsync($"/api/debts/{debt}/balances/2026-05-01", new { amount = "800.00", note = "Statement" }, TestContext.Current.CancellationToken))
+            .EnsureSuccessStatusCode();
+        var export = await DownloadAsync(source);
+        using var target = await CreateUserClientAsync();
+
+        await ReadOkAsync<ImportDto>(await ImportAsync(target, WithNewIds(export)));
+        var moved = Assert.Single((await target.GetFromJsonAsync<List<DebtDto>>("/api/debts", TestContext.Current.CancellationToken))!);
+        var balances = (await target.GetFromJsonAsync<List<DebtBalanceDto>>($"/api/debts/{moved.Id}/balances", TestContext.Current.CancellationToken))!;
+
+        Assert.Equal(("800.00", new DateOnly(2026, 5, 1)), (moved.OutstandingAmount, moved.AsOf));
+        Assert.Equal(
+            [new DebtBalanceDto(new DateOnly(2026, 5, 1), "800.00", "Statement"), new DebtBalanceDto(new DateOnly(2026, 3, 1), "1000.00", null)],
+            balances);
+    }
+
     private static async Task<byte[]> DownloadAsync(HttpClient client)
     {
         var response = await client.GetAsync("/api/users/me/export?attachments=true", TestContext.Current.CancellationToken);
@@ -292,4 +312,8 @@ public sealed partial class UserImportTests(ApiFixture fixture) : IntegrationTes
     private sealed record PersonBalanceDto(string Currency, string Amount);
 
     private sealed record PersonDto(string Name, List<PersonBalanceDto> Balances);
+
+    private sealed record DebtDto(Guid Id, string OutstandingAmount, DateOnly AsOf);
+
+    private sealed record DebtBalanceDto(DateOnly Date, string Amount, string? Note);
 }

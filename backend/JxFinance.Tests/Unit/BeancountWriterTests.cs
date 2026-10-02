@@ -62,6 +62,7 @@ public sealed class BeancountWriterTests
         "asset",
         "debt",
         "debt payment in another currency",
+        "debt with recorded balances",
         "assertions",
     ];
 
@@ -348,6 +349,29 @@ public sealed class BeancountWriterTests
                 Balances = [Balance(Main, 900m), Balance(Loan, -895.5m, Currency.Usd)],
             },
             ["  Assets:Bank:Main  -100.00 EUR\n  Liabilities:Debts:Dollar-loan  104.50 USD @@ 95.00 EUR\n  Expenses:Loans  5.00 EUR\n"]),
+        "debt with recorded balances" => (
+            Empty with
+            {
+                Debts =
+                [
+                    new JournalDebt(
+                        Loan,
+                        "Car loan",
+                        Currency.Eur,
+                        [
+                            new JournalValuation(new DateOnly(2026, 7, 1), 850m, "Fee added"),
+                            new JournalValuation(new DateOnly(2026, 1, 1), 1000m, "Signed"),
+                            new JournalValuation(new DateOnly(2026, 4, 1), 800m, null),
+                        ]),
+                ],
+                Balances = [Balance(Loan, -850m)],
+            },
+            [
+                "2026-01-01 open Liabilities:Debts:Car-loan\n",
+                "2026-01-01 * \"Opening balance\"\n  note: \"Signed\"\n  Liabilities:Debts:Car-loan  -1000.00 EUR\n  Equity:Opening-Balances  1000.00 EUR\n",
+                "2026-04-01 * \"Recorded balance\"\n  Liabilities:Debts:Car-loan  200.00 EUR\n  Equity:Revaluation  -200.00 EUR\n",
+                "2026-07-01 * \"Recorded balance\"\n  note: \"Fee added\"\n  Liabilities:Debts:Car-loan  -50.00 EUR\n  Equity:Revaluation  50.00 EUR\n",
+            ]),
         "assertions" => (
             WithMain(100m) with
             {
