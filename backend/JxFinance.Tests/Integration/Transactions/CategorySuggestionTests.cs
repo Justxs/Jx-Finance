@@ -77,9 +77,9 @@ public sealed class CategorySuggestionTests(ApiFixture fixture) : IntegrationTes
         await using var on = await LearnedCategoriesOnAsync();
         using var pair = await CreateHouseholdPairAsync();
         var shared = await CreateAccountAsync("500.00", householdId: pair.HouseholdId, client: pair.OwnerClient);
-        var personal = await CreateAccountAsync("500.00", client: pair.OwnerClient);
+        var elsewhere = await CreateAccountAsync("500.00", householdId: await Seed.HouseholdAsync(pair.OwnerClient), client: pair.OwnerClient);
         var category = await CreateCategoryAsync(client: pair.OwnerClient);
-        await HistoryAsync(pair.OwnerClient, personal, category, "BOLT RIDE 0012", 4);
+        await HistoryAsync(pair.OwnerClient, elsewhere, category, "BOLT RIDE 0012", 4);
 
         var everything = await SuggestAsync(pair.OwnerClient, shared, "BOLT RIDE 0013");
         var scoped = await ReadOkAsync<SuggestionDto>(await SendScopedAsync(

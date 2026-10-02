@@ -50,17 +50,19 @@ public sealed class PlaceSuggestionTests(ApiFixture fixture) : IntegrationTestBa
         using var stranger = await CreateUserClientAsync();
         var shared = await CreateAccountAsync("100.00", householdId: pair.HouseholdId, client: pair.OwnerClient);
         var personal = await CreateAccountAsync("100.00", client: pair.OwnerClient);
+        var elsewhere = await CreateAccountAsync("100.00", householdId: await Seed.HouseholdAsync(pair.OwnerClient), client: pair.OwnerClient);
         await PlaceAsync(pair.PartnerClient, shared, "Iki Žirmūnai", "2026-09-02", null, null);
         await PlaceAsync(pair.OwnerClient, personal, "Pharmacy", "2026-09-03", null, null);
+        await PlaceAsync(pair.OwnerClient, elsewhere, "Lidl Šeškinė", "2026-09-04", null, null);
         await PlaceAsync(stranger, await CreateAccountAsync("100.00", client: stranger), "Stranger's shop", "2026-09-03", null, null);
 
         var owner = await PlacesAsync(pair.OwnerClient, "");
         var partner = await PlacesAsync(pair.PartnerClient, "");
         var scoped = await GetScopedAsync<List<PlaceDto>>(pair.OwnerClient, "/api/transactions/places", pair.HouseholdId);
 
-        Assert.Equal(["Iki Žirmūnai", "Pharmacy"], owner.Select(p => p.Name));
+        Assert.Equal(["Iki Žirmūnai", "Lidl Šeškinė", "Pharmacy"], owner.Select(p => p.Name));
         Assert.Equal(["Iki Žirmūnai"], partner.Select(p => p.Name));
-        Assert.Equal(["Iki Žirmūnai"], scoped.Select(p => p.Name));
+        Assert.Equal(["Iki Žirmūnai", "Pharmacy"], scoped.Select(p => p.Name));
     }
 
     [Fact]

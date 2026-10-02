@@ -25,7 +25,7 @@ The model is about 140 lines of C# with no package. It is trained inside the API
 `LearnedCategoryService.SuggestAsync` takes a list of candidates (account, flow type, amount, description) and runs one query: the categorized, unsplit transactions with a positive amount the caller can see through `db.Transactions`, dated within `LookBackMonths` (24) of today, newest first, at most `MaxTrainingRows` (10,000), whose category is visible through `db.Categories` and has the row's flow type. It trains on them and predicts every candidate that has a description and a positive amount.
 
 - **Sharing.** A housemate's rows on a shared account count, because on a shared account the useful answer is how the household files it, and the row is one the caller could open anyway. A housemate's personal category is never suggested: such a row's category is not visible to the caller, so the row is left out of the training.
-- **Active household.** The query goes through the ordinary filters, so with a household chosen in the switcher only that household's rows train the model.
+- **Active household.** The query goes through the ordinary filters, so with a household chosen in the switcher the rows of other households' shared accounts leave the training, while the caller's personal accounts stay in it as everywhere else.
 - **Refunds and splits.** A [refund](transactions.md#refunds) is neither trained on nor guessed for, because the import files a refund in the category of the purchase it refunds. A split parent is left out, because its categories live on its lines, and split lines are never trained on or suggested.
 - **The switch.** With `LearnedCategories` off the service answers nothing without querying.
 
