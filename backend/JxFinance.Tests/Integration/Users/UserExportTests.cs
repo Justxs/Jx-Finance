@@ -108,6 +108,17 @@ public sealed class UserExportTests(ApiFixture fixture) : IntegrationTestBase(fi
     }
 
     [Fact]
+    public async Task The_member_row_carries_the_choice_to_count_open_balances()
+    {
+        using var member = await CreateUserClientAsync();
+        (await member.PutAsJsonAsync("/api/networth/open-balances", new { count = true }, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
+
+        using var export = await ExportAsync(member);
+
+        Assert.Equal("true", Assert.Single(export.Tables["AspNetUsers"].Rows)["CountOpenBalancesInNetWorth"]);
+    }
+
+    [Fact]
     public async Task The_active_household_does_not_change_the_export()
     {
         using var pair = await CreateHouseholdPairAsync();
