@@ -7,6 +7,7 @@ import {
   budgetExceededNotification,
   budgetWarningNotification,
   expenseDueNotification,
+  importWaitingNotification,
   incomeDueNotification,
   monthReadyNotification,
   monthlyDigestNotification,
@@ -173,6 +174,19 @@ export const MonthlyDigest: Story = {
     await expect(entry).toHaveTextContent("August 2026");
     await expect(entry).toHaveTextContent(/Income €3,200\.00, expenses €2,450\.00, net €750\.00/u);
     await expect(entry).toHaveAttribute("href", expect.stringContaining("month=2026-08"));
+  },
+};
+
+export const StatementWaitingInTheInbox: Story = {
+  parameters: withHandlers(notificationsHandler([importWaitingNotification])),
+  play: async ({ canvas }) => {
+    await userEvent.click(canvas.getByRole("button", { name: /1 unread/i }));
+
+    const entry = await within(await openedDialog()).findByRole("link");
+
+    await expect(entry).toHaveTextContent(importWaitingNotification.title);
+    await expect(entry).toHaveTextContent("A bank statement is waiting for review");
+    await expect(entry).toHaveAttribute("href", "/profile?section=import");
   },
 };
 

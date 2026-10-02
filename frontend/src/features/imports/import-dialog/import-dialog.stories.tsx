@@ -1,12 +1,17 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, screen, userEvent, waitFor, within } from "storybook/test";
+import { expect, fn, screen, userEvent, waitFor, within } from "storybook/test";
 import {
+  getDismissImportInboxFileMockHandler,
   getImportPreviewMockHandler,
   getInspectCsvMockHandler,
+  getListImportInboxMockHandler,
 } from "@/api/generated/imports/imports.msw";
+import { IMPORT_FILE_INPUT_ID } from "@/features/imports/import-section/import-upload-form";
 import {
   accounts,
+  camtPreview,
   ids,
+  inboxFiles,
   mappedCsvPreview,
   missingColumnsProblem,
   revolutInspectionFitting,
@@ -15,6 +20,8 @@ import { failWith, withHandlers } from "@/storybook/handlers";
 import { uploadAndPreview } from "@/storybook/import-play";
 import { first, openedDialog } from "@/storybook/interactions";
 import { ImportDialog } from "./import-dialog";
+
+const inboxDismissed = fn();
 
 const meta = {
   title: "Features/Imports/ImportDialog",
@@ -163,5 +170,56 @@ export const DeleteSavedMapping: Story = {
     const confirm = await openedDialog("alertdialog");
     await userEvent.click(within(confirm).getByRole("button", { name: /^(delete|ištrinti)$/i }));
     await expect(await screen.findByText(/deleted revolut|ištrinta revolut/i)).toBeVisible();
+  },
+};
+
+export const ReviewFromTheInbox: Story = {
+  parameters: withHandlers(
+    getListImportInboxMockHandler(inboxFiles),
+    getImportPreviewMockHandler(camtPreview),
+    getDismissImportInboxFileMockHandler(({ params }) => {
+      inboxDismissed(params.id);
+    }),
+  ),
+  play: async () => {
+    const waiting = first(inboxFiles);
+    const inbox = within(await screen.findByRole("region", { name: "Waiting in the inbox" }));
+    await userEvent.click(first(inbox.getAllByRole("button", { name: "Review" })));
+
+    const dialog = within(await openedDialog());
+    await expect(
+      await dialog.findByRole("region", { name: /review rows|eilučių peržiūra/i }),
+    ).toBeVisible();
+    await expect(
+      dialog.getByRole("heading", { name: "Import from Bank statement XML (ISO 20022)" }),
+    ).toBeVisible();
+    await expect(document.getElementById(IMPORT_FILE_INPUT_ID)).toHaveTextContent(waiting.fileName);
+    await expect(dialog.getByRole("combobox", { name: "Account" })).toHaveTextContent(
+      "Swedbank einamoji",
+    );
+    await expect(inboxDismissed).not.toHaveBeenCalled();
+
+    await userEvent.click(await dialog.findByRole("button", { name: /^Import \d+ rows?$/u }));
+    await waitFor(() => expect(inboxDismissed).toHaveBeenCalledWith(waiting.id));
+  },
+};
+
+export const InboxPreviewFails: Story = {
+  parameters: withHandlers(
+    getListImportInboxMockHandler(inboxFiles),
+    getImportPreviewMockHandler(failWith(missingColumnsProblem)),
+  ),
+  play: async () => {
+    const waiting = inboxFiles[1]!;
+    const inbox = within(await screen.findByRole("region", { name: "Waiting in the inbox" }));
+    await userEvent.click(inbox.getAllByRole("button", { name: "Review" })[1]!);
+
+    await expect(await screen.findByText(/The file has no column named/u)).toBeVisible();
+    await expect(
+      within(screen.getByRole("region", { name: "Waiting in the inbox" })).getByText(
+        waiting.fileName,
+      ),
+    ).toBeVisible();
+    await expect(screen.getByRole("button", { name: /^Swedbank/u })).toBeVisible();
   },
 };

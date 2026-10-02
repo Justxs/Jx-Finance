@@ -144,6 +144,7 @@ export const ids = {
     augustDigest: uid("aaaaaaaa", 13),
     everydayLow: uid("aaaaaaaa", 14),
     laptopWarranty: uid("aaaaaaaa", 15),
+    inboxStatement: uid("aaaaaaaa", 16),
   },
   assets: {
     apartment: uid("bbbbbbbb", 1),

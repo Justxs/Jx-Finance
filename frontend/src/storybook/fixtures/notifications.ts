@@ -214,6 +214,19 @@ export const warrantyNotification: NotificationResponse = {
   createdAt: "2026-09-18T10:00:00Z",
 };
 
+export const importWaitingNotification: NotificationResponse = {
+  id: ids.notifications.inboxStatement,
+  type: "importWaiting",
+  title: "swedbank-2026-09.xml",
+  message: "",
+  payload: {},
+  relatedType: "ImportInboxFile",
+  relatedId: uid("4c4c4c4c", 1),
+  channel: "inApp",
+  isRead: false,
+  createdAt: "2026-09-18T06:05:00Z",
+};
+
 export const notifications: NotificationResponse[] = [
   expenseDueNotification,
   budgetExceededNotification,

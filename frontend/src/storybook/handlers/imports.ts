@@ -2,6 +2,7 @@ import {
   getCreateCsvMappingMockHandler,
   getDeleteCsvMappingMockHandler,
   getDismissImportInboxFileMockHandler,
+  getDownloadImportInboxFileMockHandler,
   getImportConfirmMockHandler,
   getImportInboxStatusMockHandler,
   getImportPreviewMockHandler,
@@ -49,5 +50,6 @@ export const importHandlers = [
   getInspectCsvMockHandler(revolutInspection),
   getListImportInboxMockHandler([]),
   getDismissImportInboxFileMockHandler(),
+  getDownloadImportInboxFileMockHandler(new Blob(["<Document />"], { type: "application/xml" })),
   getImportInboxStatusMockHandler(importInboxStatus),
 ];

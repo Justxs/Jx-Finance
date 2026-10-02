@@ -237,6 +237,7 @@ const contracts: Record<string, Contract> = {
   receiptItems: { schema: schemas.ReceiptItemsResponse },
   noReceiptItems: { schema: schemas.ReceiptItemsResponse },
   warrantyNotification: { schema: schemas.NotificationsResponseItem },
+  importWaitingNotification: { schema: schemas.NotificationsResponseItem },
   monthReadyNotification: { schema: schemas.NotificationsResponseItem },
   monthlyDigestNotification: { schema: schemas.NotificationsResponseItem },
   monthCloseYear: { schema: schemas.MonthCloseYearResponse },
