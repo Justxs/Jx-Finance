@@ -186,8 +186,64 @@ public sealed class ReconciliationTests(ApiFixture fixture) : IntegrationTestBas
         Assert.Equal("-10.00", Assert.Single(preview.Rows).Amount);
     }
 
-    private static Task<ReconciliationDto> RecordAsync(HttpClient client, Guid account, string date, string balance) =>
-        PostAsync<ReconciliationDto>(client, $"/api/accounts/{account}/reconciliations", new { date, balance });
+    [Fact]
+    public async Task Another_currency_is_previewed_and_recorded_against_its_own_ledger_without_the_starting_balance()
+    {
+        using var client = await CreateUserClientAsync();
+        var account = await CreateAccountAsync("100.00", client: client);
+        var paid = await RecordTransactionAsync(client, new { accountId = account, type = "income", amount = "50.00", currency = "usd", date = "2025-06-10" });
+        var spent = await RecordTransactionAsync(client, new { accountId = account, type = "expense", amount = "5.00", currency = "usd", date = "2025-06-12" });
+        await CreateTransactionAsync(client, account, null, "expense", "10.00", "2025-06-11");
+
+        var preview = (await client.GetFromJsonAsync<PreviewDto>(
+            $"/api/accounts/{account}/reconciliations/preview?date=2025-06-30&currency=usd",
+            TestContext.Current.CancellationToken))!;
+        var recorded = await RecordAsync(client, account, "2025-06-30", "47.00", "usd");
+
+        Assert.Equal(("45.00", "usd"), (preview.LedgerBalance, preview.Currency));
+        Assert.Equal([(spent.Id, "-5.00"), (paid.Id, "50.00")], preview.Rows.Select(r => (r.Id, r.Amount)));
+        Assert.Equal(("usd", "47.00", "45.00", "2.00"), (recorded.Currency, recorded.Balance, recorded.LedgerBalance, recorded.Difference));
+    }
+
+    [Fact]
+    public async Task Each_currency_keeps_its_own_row_on_a_date_and_is_listed_against_its_own_ledger()
+    {
+        using var client = await CreateUserClientAsync();
+        var account = await CreateAccountAsync("100.00", client: client);
+        await RecordTransactionAsync(client, new { accountId = account, type = "income", amount = "50.00", currency = "usd", date = "2025-06-10" });
+        await RecordAsync(client, account, "2025-06-30", "100.00");
+        await RecordAsync(client, account, "2025-06-30", "40.00", "usd");
+
+        await RecordAsync(client, account, "2025-06-30", "50.00", "usd");
+        var listed = await ListAsync(client, account);
+
+        Assert.Equal(
+            [("eur", "100.00", "0.00"), ("usd", "50.00", "0.00")],
+            listed.Select(r => (r.Currency, r.Balance, r.Difference)).Order());
+    }
+
+    [Fact]
+    public async Task The_import_preview_compares_a_statement_in_another_currency_with_that_currency()
+    {
+        using var client = await CreateUserClientAsync();
+        var iban = $"LT{Random.Shared.NextInt64(100_000_000_000_000_000, 999_999_999_999_999_999)}";
+        var account = (await PostAsync<IdDto>(
+            client,
+            "/api/accounts",
+            new { name = $"Account {Guid.NewGuid():N}", type = "checking", startingBalance = "100.00", iban, scope = "personal" })).Id;
+        await RecordTransactionAsync(client, new { accountId = account, type = "income", amount = "30.00", currency = "usd", date = "2025-06-10" });
+        var xml = SampleCamt053.Document(SampleCamt053.Statement(SampleCamt053.Entry(SampleCamt053.Detail()), iban))
+            .Replace("2026-09-30", "2025-06-30", StringComparison.Ordinal)
+            .Replace("Ccy=\"EUR\"", "Ccy=\"USD\"", StringComparison.Ordinal)
+            .Replace("<Ccy>EUR</Ccy>", "<Ccy>USD</Ccy>", StringComparison.Ordinal);
+
+        var imported = await ReadOkAsync<CamtPreviewDto>(await UploadCamtAsync(client, account, xml));
+
+        Assert.Equal("30.00", imported.Statement.LedgerBalanceAtClose);
+    }
+
+    private static Task<ReconciliationDto> RecordAsync(HttpClient client, Guid account, string date, string balance, string? currency = null) =>
+        PostAsync<ReconciliationDto>(client, $"/api/accounts/{account}/reconciliations", new { date, balance, currency });
 
     private static async Task<List<ReconciliationDto>> ListAsync(HttpClient client, Guid account) =>
         (await client.GetFromJsonAsync<List<ReconciliationDto>>(

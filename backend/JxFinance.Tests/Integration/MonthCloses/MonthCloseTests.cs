@@ -404,6 +404,25 @@ public sealed class MonthCloseTests(ApiFixture fixture) : IntegrationTestBase(fi
         }
     }
 
+    [Fact]
+    public async Task The_main_currency_decides_the_line_and_other_currencies_are_notes()
+    {
+        using var member = await CreateUserClientAsync();
+        var both = await CreateAccountAsync("100.00", client: member);
+        var dollarsOnly = await CreateAccountAsync("0.00", client: member);
+        await RecordTransactionAsync(member, new { accountId = both, type = "income", amount = "50.00", currency = "usd", date = "2025-03-10" });
+        await ReconcileAsync(member, both, "2025-03-31", "100.00");
+        await PostAsync<ReconciliationDto>(member, $"/api/accounts/{both}/reconciliations", new { date = "2025-03-31", balance = "47.00", currency = "usd" });
+        await PostAsync<ReconciliationDto>(member, $"/api/accounts/{dollarsOnly}/reconciliations", new { date = "2025-02-28", balance = "0.00", currency = "usd" });
+
+        var accounts = (await ReviewAsync(member, March)).Checklist.Accounts;
+
+        Assert.Equal(("reconciled", new DateOnly(2025, 3, 31), "0.00"), State(accounts, both));
+        Assert.Equal([new CurrencyCoverageDto("usd", "differs", new DateOnly(2025, 3, 31), "-3.00")], accounts.Single(a => a.AccountId == both).OtherCurrencies);
+        Assert.Equal(("behind", (DateOnly?)null, (string?)null), State(accounts, dollarsOnly));
+        Assert.Equal([new CurrencyCoverageDto("usd", "behind", new DateOnly(2025, 2, 28), null)], accounts.Single(a => a.AccountId == dollarsOnly).OtherCurrencies);
+    }
+
     private static (string, DateOnly?, string?) State(List<AccountCoverageDto> accounts, Guid id)
     {
         var account = accounts.Single(a => a.AccountId == id);
@@ -457,7 +476,9 @@ public sealed class MonthCloseTests(ApiFixture fixture) : IntegrationTestBase(fi
 
     private sealed record ChecklistDto(int Uncategorized, int? UnconfirmedRecurring, int? Unusual, int Duplicates, List<AccountCoverageDto> Accounts);
 
-    private sealed record AccountCoverageDto(Guid AccountId, string State, DateOnly? Date, string? Difference);
+    private sealed record AccountCoverageDto(Guid AccountId, string State, DateOnly? Date, string? Difference, List<CurrencyCoverageDto> OtherCurrencies);
+
+    private sealed record CurrencyCoverageDto(string Currency, string State, DateOnly Date, string? Difference);
 
     private sealed record BudgetDto(string Spent, string CarriedAmount, string WindowStart, string WindowEnd);
 
