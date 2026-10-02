@@ -72,3 +72,20 @@ test("columns the chosen amount style does not read are sent empty", () => {
     "Fee",
   ]);
 });
+
+test("a new mapping for a card account starts on the card statement amount style", () => {
+  const source = sourceOf(cardInspection, undefined);
+
+  expect(draftOf(source, undefined).amountStyle).toBe("signedNegativeIsExpense");
+  expect(draftOf(source, undefined, "signedPositiveIsExpense").amountStyle).toBe(
+    "signedPositiveIsExpense",
+  );
+});
+
+test("a saved mapping keeps its own amount style on a card account", () => {
+  const source = sourceOf(revolutInspection, revolutMapping);
+
+  expect(draftOf(source, revolutMapping, "signedPositiveIsExpense").amountStyle).toBe(
+    revolutMapping.amountStyle,
+  );
+});
