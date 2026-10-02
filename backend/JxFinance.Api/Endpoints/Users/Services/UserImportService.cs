@@ -40,6 +40,11 @@ public sealed class UserImportService(
             return TargetNotEmpty;
         }
 
+        if (await BackupArchive.DetectAsync(input, cancellationToken) != BackupContainer.Zip)
+        {
+            return new DomainError(ErrorCodes.ImportInvalidFile, NotAnExport);
+        }
+
         await using var import = new MemberImport(db, userId, options.Value.BackupLockTimeoutSeconds);
         using var staging = files.BeginStaging();
         int removed;
