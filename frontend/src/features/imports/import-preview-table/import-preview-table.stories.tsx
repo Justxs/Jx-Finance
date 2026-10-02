@@ -170,6 +170,12 @@ export const SpreadARow: Story = {
       "Up to the date's month",
     );
 
+    await expect(screen.getByRole("combobox", { name: "Spread over" })).toHaveTextContent(
+      "12 months",
+    );
+    await expect(screen.getByRole("combobox", { name: "Months counted" })).toHaveTextContent(
+      "Up to the date's month",
+    );
     await expect(trigger).toHaveTextContent("Spread · 12 months");
   },
 };
