@@ -166,6 +166,27 @@ public sealed partial class UserImportTests(ApiFixture fixture) : IntegrationTes
     }
 
     [Fact]
+    public async Task A_shared_group_on_the_members_account_comes_back_personal()
+    {
+        using var pair = await CreateHouseholdPairAsync();
+        var shared = await CreateAccountAsync(householdId: pair.HouseholdId, client: pair.OwnerClient);
+        var hotel = await CreateTransactionAsync(pair.OwnerClient, shared, null, "expense", "40.00", "2026-07-03", "Hotel");
+        var bus = await CreateTransactionAsync(pair.OwnerClient, shared, null, "expense", "12.00", "2026-07-04", "Bus");
+        var dinner = await CreateTransactionAsync(pair.PartnerClient, shared, null, "expense", "30.00", "2026-07-05", "Dinner");
+        await PostAsync<IdDto>(
+            pair.OwnerClient,
+            "/api/transaction-groups",
+            new { name = "Trip to Riga", transactionIds = new[] { hotel.Id, bus.Id, dinner.Id }, scope = "shared", householdId = pair.HouseholdId });
+        var export = await DownloadAsync(pair.OwnerClient);
+        using var target = await CreateUserClientAsync();
+
+        await ReadOkAsync<ImportDto>(await ImportAsync(target, WithNewIds(export)));
+        var group = Assert.Single((await target.GetFromJsonAsync<List<SharedGroupDto>>("/api/transaction-groups", TestContext.Current.CancellationToken))!);
+
+        Assert.Equal(("Trip to Riga", 3, "personal", (Guid?)null), (group.Name, group.MemberCount, group.Scope, group.HouseholdId));
+    }
+
+    [Fact]
     public async Task A_security_the_import_adds_arrives_without_a_price_source()
     {
         using var source = await CreateUserClientAsync();
@@ -338,6 +359,8 @@ public sealed partial class UserImportTests(ApiFixture fixture) : IntegrationTes
     private sealed record PersonDto(string Name, List<PersonBalanceDto> Balances);
 
     private sealed record DebtDto(Guid Id, string OutstandingAmount, DateOnly AsOf);
+
+    private sealed record SharedGroupDto(string Name, int MemberCount, string Scope, Guid? HouseholdId);
 
     private sealed record DebtBalanceDto(DateOnly Date, string Amount, string? Note);
 }
