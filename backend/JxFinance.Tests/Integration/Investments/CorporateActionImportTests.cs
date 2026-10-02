@@ -16,28 +16,28 @@ public sealed class CorporateActionImportTests(ApiFixture fixture) : Integration
 
         var first = await UploadAsync(broker, report.Xml);
 
-        Assert.Equal((6, 3, 0, 3, 4), (first.Trades, first.Splits, first.Duplicates, first.Skipped, first.SecuritiesCreated));
-        Assert.Equal([new SkippedDto("SD", 1), new SkippedDto("TC", 1)], first.SkippedCorporateActions);
-        Assert.Equal([new MismatchDto(report.Merged, "0", "10")], first.PositionMismatches);
+        Assert.Equal((6, 3, 1, 0, 2, 4), (first.Trades, first.Splits, first.CorporateActions, first.Duplicates, first.Skipped, first.SecuritiesCreated));
+        Assert.Equal([new SkippedDto("SD", 1)], first.SkippedCorporateActions);
+        Assert.Empty(first.PositionMismatches!);
 
         var holdings = (await Client.GetFromJsonAsync<PortfolioDto>($"/api/investments/portfolio?accountId={broker}", TestContext.Current.CancellationToken))!.Holdings
             .ToDictionary(h => h.Security.Symbol, h => (h.Quantity, h.CostBasis));
         Assert.Equal(("25", "1250.00"), holdings[report.Forward]);
         Assert.Equal(("6", "60.00"), holdings[report.Reverse]);
         Assert.Equal(("15", "300.00"), holdings[report.Fractional]);
-        Assert.Equal(("10", "200.00"), holdings[report.Merged]);
+        Assert.Equal(("0", "0.00"), holdings[report.Merged]);
 
         var splits = (await Client.GetFromJsonAsync<PageDto<EntryDto>>($"/api/investments/transactions?accountId={broker}&type=split&pageSize=50", TestContext.Current.CancellationToken))!.Items;
         Assert.Equal(
             [(report.Forward, "2", new DateOnly(2026, 6, 10)), (report.Reverse, "0.1", new DateOnly(2026, 6, 15)), (report.Fractional, "1.5", new DateOnly(2026, 6, 16))],
             splits.OrderBy(s => s.Date).Select(s => (s.Symbol, s.Quantity, s.Date)));
         Assert.All(splits, s => Assert.Equal(("interactiveBrokers", "0.00"), (s.Source, s.CashAmount)));
-        Assert.Equal("8198.00", await CurrentBalanceAsync(broker));
+        Assert.Equal("8448.00", await CurrentBalanceAsync(broker));
 
         var second = await UploadAsync(broker, report.Xml);
 
-        Assert.Equal((0, 0, 9, 3), (second.Trades, second.Splits, second.Duplicates, second.Skipped));
-        Assert.Equal([new MismatchDto(report.Merged, "0", "10")], second.PositionMismatches);
+        Assert.Equal((0, 0, 0, 10, 2), (second.Trades, second.Splits, second.CorporateActions, second.Duplicates, second.Skipped));
+        Assert.Empty(second.PositionMismatches!);
     }
 
     [Fact]
@@ -52,10 +52,8 @@ public sealed class CorporateActionImportTests(ApiFixture fixture) : Integration
         Assert.Equal(HttpStatusCode.NoContent, (await Client.DeleteAsync($"/api/investments/transactions/{fractional.Id}", TestContext.Current.CancellationToken)).StatusCode);
         var again = await UploadAsync(broker, report.Xml);
 
-        Assert.Equal((0, 9), (again.Splits, again.Duplicates));
-        Assert.Equal(
-            [new MismatchDto(report.Fractional, "15", "10"), new MismatchDto(report.Merged, "0", "10")],
-            again.PositionMismatches);
+        Assert.Equal((0, 10), (again.Splits, again.Duplicates));
+        Assert.Equal([new MismatchDto(report.Fractional, "15", "10")], again.PositionMismatches);
     }
 
     [Fact]
@@ -103,7 +101,7 @@ public sealed class CorporateActionImportTests(ApiFixture fixture) : Integration
 
         var again = await UploadAsync(broker, report.Xml);
 
-        Assert.Equal((0, 0, 9, 0), (again.Trades, again.Splits, again.Duplicates, again.SecuritiesCreated));
+        Assert.Equal((0, 0, 10, 0), (again.Trades, again.Splits, again.Duplicates, again.SecuritiesCreated));
     }
 
     [Fact]
@@ -135,6 +133,7 @@ public sealed class CorporateActionImportTests(ApiFixture fixture) : Integration
     private sealed record ImportDto(
         int Trades,
         int Splits,
+        int CorporateActions,
         int Duplicates,
         int Skipped,
         int SecuritiesCreated,
