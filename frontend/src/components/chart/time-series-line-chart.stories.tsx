@@ -49,8 +49,8 @@ type Story = StoryObj<typeof meta>;
 
 export const Dates: Story = {};
 
-export const WithBaseline: Story = {
-  args: { series: valueSeries.slice(0, 1), legend: false, baseline: true },
+export const SingleLine: Story = {
+  args: { series: valueSeries.slice(0, 1), legend: false },
 };
 
 export const DayStepsWithComparison: Story = {

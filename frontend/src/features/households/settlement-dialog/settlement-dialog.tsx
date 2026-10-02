@@ -137,7 +137,7 @@ export function SettlementForm({ household, payment, onClose }: Readonly<Props>)
             />
           )}
         </form.Field>
-        <form.Field name="currency">
+        <form.Field name="currency" listeners={[{ triggers: ["change"], run: clearAccounts }]}>
           {(field) => (
             <field.CurrencyField
               id="settlement-currency"

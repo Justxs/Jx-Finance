@@ -2,6 +2,7 @@ import { QueryClient } from "@tanstack/react-query";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import { UserRole } from "@/lib/user-role";
 import { freshModuleLoader } from "@/test/fresh-module";
+import { seedPreferences, storedPreferences } from "@/test/preferences";
 
 const fetchMock = vi.fn<typeof fetch>();
 
@@ -107,6 +108,42 @@ describe("checkIsAuthenticated", () => {
     gate.setAuthenticated(false);
     await expect(gate.checkIsAuthenticated(queryClient())).resolves.toBe(false);
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+});
+
+describe("endSession", () => {
+  test("signs out, forgets the user's own preferences and keeps the device's", async () => {
+    seedPreferences({
+      theme: "dark",
+      pageSize: 50,
+      activeHouseholdId: "8f14e45f-ceea-467a-9f5b-2a1b7c3d4e5f",
+      lastAccountId: "1679091c-5a88-4faf-9b4c-3d2e1f0a9b8c",
+      commandRecents: ["accounts"],
+      paceMilestones: [100_000],
+      monthClosePromptHidden: "2026-09",
+    });
+    const gate = await loadGate();
+    gate.setAuthenticated(true);
+    const client = queryClient();
+    client.setQueryData(["/api/accounts"], []);
+    const navigate = vi.fn();
+
+    gate.endSession(client, navigate);
+
+    expect(gate.hasSession()).toBe(false);
+    expect(client.getQueryData(["/api/accounts"])).toBeUndefined();
+    expect(navigate).toHaveBeenCalledWith({ to: "/login" });
+    const stored = storedPreferences();
+    expect(stored).toEqual(expect.objectContaining({ theme: "dark", pageSize: 50 }));
+    for (const forgotten of [
+      "activeHouseholdId",
+      "lastAccountId",
+      "commandRecents",
+      "paceMilestones",
+      "monthClosePromptHidden",
+    ]) {
+      expect(stored).not.toHaveProperty(forgotten);
+    }
   });
 });
 

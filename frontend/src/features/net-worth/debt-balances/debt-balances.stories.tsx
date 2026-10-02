@@ -98,7 +98,7 @@ export const EditingABalance: Story = {
   play: async ({ canvas }) => {
     await userEvent.click(await canvas.findByRole("button", { name: /^Edit: €101,760\.40, / }));
     const dialog = within(await openedDialog());
-    await expect(dialog.getByText("Edit balance")).toBeVisible();
+    await expect(dialog.getByText(/^Edit balance: €101,760\.40, /)).toBeVisible();
     const amount = dialog.getByLabelText("Outstanding amount (EUR)");
     await expect(amount).toHaveValue("101760.40");
     await expect(dialog.getByLabelText("Date")).toBeDisabled();

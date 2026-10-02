@@ -139,15 +139,19 @@ export function CloseForm({ month, review }: Readonly<Props>) {
                 />
               }
             >
-              <ChevronDown className="transition-transform duration-200 ease-out-expo" />
+              <ChevronDown className="transition-transform duration-base ease-out-expo" />
             </Collapsible.Trigger>
           </div>
         </div>
 
         <FormError error={reopenMutation.error} />
 
-        <Collapsible.Panel className="h-(--collapsible-panel-height) overflow-hidden transition-all duration-200 ease-out-expo data-ending-style:h-0 data-starting-style:h-0 motion-reduce:transition-none">
-          <CloseChecklist month={month} checklist={review.checklist} className="mt-4" />
+        <Collapsible.Panel className="transition-opacity duration-base ease-out-expo data-ending-style:opacity-0 data-starting-style:opacity-0 motion-reduce:transition-none">
+          <div className="collapse-rows motion-reduce:transition-none">
+            <div>
+              <CloseChecklist month={month} checklist={review.checklist} className="mt-4" />
+            </div>
+          </div>
         </Collapsible.Panel>
       </Collapsible.Root>
 

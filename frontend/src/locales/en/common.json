@@ -91,6 +91,8 @@
     "cashFlowLowest": "Lowest {{amount}} on {{date}}",
     "cashFlowBelowZero": "Below zero on {{date}}",
     "cashFlowMayGoBelowZero": "May go below zero around {{date}}",
+    "goalsCurrentOnly": "Goals are shown on the current month.",
+    "goalProgress": "{{name}}, {{percent}} of {{target}}",
     "pace": {
       "title": "Spending pace",
       "day": "Day {{day}}",
@@ -465,7 +467,7 @@
     "lineAmount": "Amount",
     "lineCategory": "Category",
     "lineDescription": "Label",
-    "removeLine": "Remove line",
+    "removeLine": "Remove line {{number}}",
     "splitTotalMismatch": "Lines total {{linesTotal}}, but the transaction is {{total}}.",
     "count_one": "{{count}} transaction",
     "count_other": "{{count}} transactions",
@@ -721,6 +723,7 @@
   },
   "backup": {
     "title": "Backups",
+    "listLabel": "Backup list",
     "description": "A backup is one file with everything in this installation: users, settings and the books of every user. Backups are kept on the server; download a copy now and then, because a backup stored next to the database is lost together with it. The file holds password hashes, so treat it as a secret.",
     "last": "Last backup",
     "never": "No backup has been taken yet.",
@@ -739,7 +742,6 @@
     "download": "Download",
     "editNote": "Edit note",
     "noteSaved": "Note saved.",
-    "delete": "Delete backup",
     "deleted": "Backup deleted.",
     "restoreAction": "Restore",
     "uploadTitle": "Add a backup file",
@@ -1218,7 +1220,6 @@
       "enabled": "Send email from this installation",
       "enabledHint": "Turn off to stop every outgoing message without losing the settings.",
       "host": "Server",
-      "hostHint": "The SMTP host name, for example smtp.example.com.",
       "port": "Port",
       "encryption": "Encryption",
       "encryptions": {
@@ -1232,7 +1233,6 @@
       "passwordHint": "Stored encrypted and never shown again. Leave empty to keep the stored one.",
       "passwordStored": "A password is stored.",
       "fromAddress": "Sender address",
-      "fromAddressHint": "The address recipients see, for example finance@example.com.",
       "fromName": "Sender name",
       "fromNameHint": "Shown beside the sender address. Leave empty to use the address alone.",
       "saved": "Mail server saved",
@@ -1390,7 +1390,6 @@
     "chooseAccount": "Choose an account",
     "fundingSharePercent": "Share of the balance (%)",
     "needAccount": "Add an account first, or track this goal by hand.",
-    "manualHint": "Raise the current amount yourself as you save.",
     "fundedFrom": "From {{account}}",
     "fundedShareFrom": "From {{percent}}% of {{account}}",
     "unavailableAccount": "Unavailable account",
@@ -1469,7 +1468,7 @@
       "paidOff": "paid off {{date}}"
     },
     "schedule": {
-      "open": "Balance history and schedule: {{name}}",
+      "open": "Balance history and schedule",
       "back": "Net worth",
       "notFound": "This debt no longer exists.",
       "incomplete": "Add the loan amount, interest rate, first payment and a term or a monthly payment to this debt to see its schedule.",
@@ -1530,7 +1529,7 @@
       "perMonth": "↓ {{amount}} per month"
     },
     "asset": {
-      "open": "Value history: {{name}}",
+      "open": "Value history",
       "notFound": "This asset no longer exists.",
       "valueToday": "Value today",
       "lastValuation": "Last valuation",
@@ -2526,7 +2525,8 @@
       "mapLabel": "Map of spending by place: {{places}}",
       "mapLabelEmpty": "Map of spending by place; no place has a location yet",
       "noCoordinates": "None of these places has a location yet. Use my location in the transaction form saves one.",
-      "mapFailed": "The map could not be drawn in this browser. The list has the same places."
+      "mapFailed": "The map could not be drawn in this browser. The list has the same places.",
+      "toggleAttribution": "Show or hide map credits"
     }
   },
   "imports": {
@@ -2615,6 +2615,7 @@
     "chooseTags": "Tags",
     "spread": "Spread over months",
     "spreadFor": "Spread over months: {{row}}",
+    "pickerValue": "{{label}}: {{value}}",
     "reversal": "Reversal",
     "formats": {
       "swedbankCsv": {

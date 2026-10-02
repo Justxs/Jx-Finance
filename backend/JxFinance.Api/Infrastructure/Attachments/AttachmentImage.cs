@@ -22,6 +22,8 @@ public static class AttachmentImage
         ResourceLimits.Width = MaxPixelEdge;
         ResourceLimits.Height = MaxPixelEdge;
         ResourceLimits.Memory = 512UL * 1024 * 1024;
+        ResourceLimits.Area = 128UL * 1024 * 1024;
+        ResourceLimits.Disk = 1024UL * 1024 * 1024;
     }
 
     public static Result<CleanImage> WithoutMetadata(byte[] content, string contentType)

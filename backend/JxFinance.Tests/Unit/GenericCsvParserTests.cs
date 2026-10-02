@@ -144,6 +144,19 @@ public sealed class GenericCsvParserTests
     }
 
     [Theory]
+    [InlineData("2026-09-01,A,-1.00,99.00\n2026-09-01,B,-2.00,97.00\n")]
+    [InlineData("2026-09-01,B,-2.00,97.00\n2026-09-01,A,-1.00,99.00\n")]
+    [InlineData("2026-09-01,C,-2.00,97.00\n2026-09-01,B,-1.00,99.00\n2026-08-31,A,-1.00,100.00\n")]
+    public void The_closing_balance_is_the_newest_entry_in_either_order_even_on_one_day(string rows)
+    {
+        var mapping = Mapping("Date,Text,Amount") with { Balance = "Balance" };
+
+        var statement = Parse("Date,Text,Amount,Balance\n" + rows, mapping.Build());
+
+        Assert.Equal((new DateOnly(2026, 9, 1), new Money(97.00m, Currency.Eur)), (statement.ClosingDate, statement.ClosingBalance));
+    }
+
+    [Theory]
     [InlineData("utf-8")]
     [InlineData("utf-16")]
     public void A_byte_order_mark_decides_the_encoding(string name)

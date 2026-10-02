@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { useExchangeRate } from "@/api/generated";
 import type { Currency } from "@/api/generated/model";
+import { RuledLine } from "@/components/ui/ruled-line/ruled-line";
 import { EMPTY_VALUE, useIsoDate, useRateFormat } from "@/hooks/use-formatters";
 import { silentQuery } from "@/lib/query-client";
 import { isPositiveMoney, normalizeMoney } from "@/lib/validation";
@@ -38,7 +39,7 @@ export function ConversionRate({
     : null;
 
   return (
-    <dl className="col-span-full space-y-1 border-y border-rule py-2.5 text-sm">
+    <RuledLine as="dl" tone="ink" className="col-span-full space-y-1">
       <div className="flex justify-between gap-3">
         <dt className="text-muted-foreground">{t("conversions.yourRate")}</dt>
         <dd className="font-semibold tabular-nums">
@@ -53,6 +54,6 @@ export function ConversionRate({
             : EMPTY_VALUE}
         </dd>
       </div>
-    </dl>
+    </RuledLine>
   );
 }

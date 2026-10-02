@@ -6,7 +6,7 @@ Backend `Backups` (`BackupService`, `BackupArchive`, `BackupStore`, `BackupReade
 
 Since [attachments](attachments.md) a backup is a zip archive: `backup.json`, the same JSON document as before, deflated, and one uncompressed entry `attachments/<id>` per attached file. A restore writes the files back after checking each one's SHA-256 against its restored row. Backups taken before are gzip-compressed JSON and are still listed, downloaded and uploaded as they are. The archive is about as large as the attachment directory plus the compressed data, so an upload may now be 2 GB, and the decompressed-size guard applies to `backup.json` alone.
 
-Five tables are transient and never exported: `UserSessions`, `ApiIdempotencyKeys` (since 2026-10-01), `EmailMessages`, `DiscordMessages` and `ImportInboxFiles` (since 2026-10-01), the `transient` list in `BackupDatabase.ReadShapes`. A session belongs to one browser on one installation, a retry key of a [personal API token](personal-api-tokens.md#retries-and-idempotency-key) matters for a day at most, and a queued email or Discord post is work in flight rather than a fact about the household: a backup taken mid-send must not resend a month-old reminder when it is restored somewhere else. A restore still truncates them like every other table, so no outbox survives one. Secrets that describe outside systems do travel, encrypted with the key ring of the installation that wrote them — the broker's Flex token, the SMTP password in `InstanceSettings` and each member's Discord webhook URL in `DiscordWebhooks`. Under another key ring they cannot be decrypted, and each asks to be typed again: `broker.tokenRequired`, `email.passwordUnreadable` and `discord.webhookUnreadable`. The receipt readings, the remembered item categories and the monthly read counts are ordinary tables and travel too, as do the household settle-up tables `SharedExpenses`, `SharedExpenseShares` and `Settlements` since 2026-09-29, and so do `PersonalApiTokens`: a [personal API token](personal-api-tokens.md) is a durable credential its member chose to create, so it keeps working after a restore, and the file holds only its prefix and the hash of its secret.
+Six tables are transient and never exported: `UserSessions`, `PersonalApiTokens` (since 2026-10-01), `ApiIdempotencyKeys` (since 2026-10-01), `EmailMessages`, `DiscordMessages` and `ImportInboxFiles` (since 2026-10-01), the `transient` list in `BackupDatabase.ReadShapes`. A session belongs to one browser on one installation, a [personal API token](personal-api-tokens.md#backup-and-restore) ends with a restore like a session so that a token revoked after the backup was taken cannot come back, a retry key of a [personal API token](personal-api-tokens.md#retries-and-idempotency-key) matters for a day at most, and a queued email or Discord post is work in flight rather than a fact about the household: a backup taken mid-send must not resend a month-old reminder when it is restored somewhere else. A restore still truncates them like every other table, so no session, token or outbox survives one, and a file that still carries one of them, such as a backup taken before tokens were left out, restores with that table's rows skipped. Secrets that describe outside systems do travel, encrypted with the key ring of the installation that wrote them — the broker's Flex token, the SMTP password in `InstanceSettings` and each member's Discord webhook URL in `DiscordWebhooks`. Under another key ring they cannot be decrypted, and each asks to be typed again: `broker.tokenRequired`, `email.passwordUnreadable` and `discord.webhookUnreadable`. The receipt readings, the remembered item categories and the monthly read counts are ordinary tables and travel too, as do the household settle-up tables `SharedExpenses`, `SharedExpenseShares` and `Settlements` since 2026-09-29.
 
 [Passkeys](passkeys.md) travel the same way: `AspNetUserPasskeys` is an ordinary table beside the password hashes and two-factor secrets, and a restored passkey works only under the same relying party id, that is the same `SITE_ADDRESS`. `BackupEndpointTests` removes a passkey after the backup and signs in with it after the restore.
 
@@ -19,7 +19,7 @@ Five tables are transient and never exported: `UserSessions`, `ApiIdempotencyKey
 ```mermaid
 flowchart TD
     Take["POST /api/backups"] --> Snap["One REPEATABLE READ transaction"]
-    Snap --> Tables["Every table of the EF model, each value as column::text<br/>transient tables left out: UserSessions, ApiIdempotencyKeys, EmailMessages, DiscordMessages, ImportInboxFiles"]
+    Snap --> Tables["Every table of the EF model, each value as column::text<br/>transient tables left out: UserSessions, PersonalApiTokens, ApiIdempotencyKeys, EmailMessages, DiscordMessages, ImportInboxFiles"]
     Tables --> Tmp["write id.tmp as a zip: backup.json with format, version, createdAt, migration, tables"]
     Tmp --> Files["then attachments/id for every attachment row whose file exists, stored uncompressed"]
     Files --> Rename["rename to id.zip, then write id.info.json"]
@@ -30,6 +30,8 @@ flowchart TD
     Flag -->|"yes"| Restorable["restorable true"]
     Flag -->|"no"| NotRestorable["listed and downloadable, restore answers backup.schemaMismatch"]
 ```
+
+The Backups section lists them in a table that scrolls sideways on a narrow screen. Each row folds Download, Edit note, Restore and Delete into one action menu; Restore is disabled for a backup taken by another version, whose "Other version" tag says why in its tooltip. The upload form below the table ends in a right-aligned Upload button.
 
 ## Restore
 
@@ -66,7 +68,7 @@ sequenceDiagram
             Rd->>Db: commit, or roll back with backup.invalidFile when a hash differs
             Rd->>Rd: move the staged files into the attachment directory
             Api->>Api: reload the instance settings snapshot
-            Api-->>Dlg: cookies cleared
+            Api-->>Dlg: cookies cleared, every session and API token ended
             Dlg->>Dlg: clear the query cache, go to the sign-in page
         end
     end

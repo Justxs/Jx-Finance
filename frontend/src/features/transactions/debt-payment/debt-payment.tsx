@@ -8,6 +8,7 @@ import type { TransactionResponse } from "@/api/generated/model";
 import { EditModal } from "@/components/modal";
 import type { RowAction } from "@/components/row-actions/row-actions";
 import { buttonVariants } from "@/components/ui/button/button";
+import { Tooltip } from "@/components/ui/tooltip/tooltip";
 import { DebtPaymentForm } from "@/features/net-worth/debt-payment-form/debt-payment-form";
 import {
   isOptimistic,
@@ -31,15 +32,16 @@ export function DebtPaymentMarker({
 
   const label = t("netWorth.payments.pays", { name: paid.debtName });
   return (
-    <Link
-      to="/net-worth/debts/$debtId"
-      params={{ debtId: paid.debtId }}
-      aria-label={label}
-      title={label}
-      className={buttonVariants({ variant: "link", size: "inline", className })}
-    >
-      <Landmark className="size-3.5" aria-hidden="true" />
-    </Link>
+    <Tooltip content={label}>
+      <Link
+        to="/net-worth/debts/$debtId"
+        params={{ debtId: paid.debtId }}
+        aria-label={label}
+        className={buttonVariants({ variant: "link", size: "inline", className })}
+      >
+        <Landmark className="size-3.5" aria-hidden="true" />
+      </Link>
+    </Tooltip>
   );
 }
 

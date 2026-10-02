@@ -1,10 +1,9 @@
-import { Link } from "@tanstack/react-router";
+import { useNavigate } from "@tanstack/react-router";
 import { ChartLine } from "lucide-react";
 import { useDeferredValue } from "react";
 import { useTranslation } from "react-i18next";
 import { getAssetsQueryKey, useDeleteAsset, useAssetsSuspense } from "@/api/generated";
 import type { AssetResponse } from "@/api/generated/model";
-import { buttonVariants } from "@/components/ui/button/button";
 import { BalanceItemsSection } from "@/features/net-worth/balance-items-section/balance-items-section";
 import { useIsoDate, useMoney } from "@/hooks/use-formatters";
 import { optimisticRemoval } from "@/lib/optimistic";
@@ -16,27 +15,12 @@ export function AssetsSection() {
   const formatDate = useIsoDate();
   const money = useMoney();
   const assets = useAssetsSuspense();
+  const navigate = useNavigate();
 
   const deleteMutation = useDeleteAsset({
     mutation: optimisticRemoval<AssetResponse>(getAssetsQueryKey()),
   });
   const assetList = useDeferredValue(assets.data);
-
-  function historyLink(asset: AssetResponse) {
-    const label = t("netWorth.asset.open", { name: asset.name });
-
-    return (
-      <Link
-        to="/net-worth/assets/$assetId"
-        params={{ assetId: asset.id }}
-        aria-label={label}
-        title={label}
-        className={buttonVariants({ variant: "ghost", size: "icon" })}
-      >
-        <ChartLine />
-      </Link>
-    );
-  }
 
   return (
     <BalanceItemsSection
@@ -59,7 +43,12 @@ export function AssetsSection() {
         amount: Number(asset.value),
         currency: asset.currency,
         record: asset,
-        action: historyLink(asset),
+        action: {
+          icon: ChartLine,
+          label: t("netWorth.asset.open"),
+          onSelect: () =>
+            navigate({ to: "/net-worth/assets/$assetId", params: { assetId: asset.id } }),
+        },
         scope: asset.scope,
         householdId: asset.householdId,
       }))}

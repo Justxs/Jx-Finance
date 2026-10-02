@@ -52,8 +52,7 @@ export function BudgetsPage() {
 
       <EditModal
         {...budgets.editProps}
-        title={t("budgets.editTitle")}
-        description={(budget) => budget.name}
+        title={(budget) => `${t("budgets.editTitle")}: ${budget.name}`}
       >
         {(budget, close) => (
           <BudgetForm initial={budget} categories={categoryList} tags={tagList} onClose={close} />

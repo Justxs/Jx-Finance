@@ -184,11 +184,7 @@ export function DebtForm({ editing, onClose }: Readonly<BalanceItemFormProps<Deb
 
         <form.Field name="interestRate">
           {(field) => (
-            <field.MoneyInputField
-              id={`${idPrefix}-rate`}
-              label={t("netWorth.interestRate")}
-              placeholder="0.0"
-            />
+            <field.MoneyInputField id={`${idPrefix}-rate`} label={t("netWorth.interestRate")} />
           )}
         </form.Field>
 

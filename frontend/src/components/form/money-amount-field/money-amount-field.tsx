@@ -6,6 +6,7 @@ import { CurrencySelect } from "@/components/currency-select/currency-select";
 import { FieldShell, fieldAria } from "@/components/form/field-shell/field-shell";
 import { FieldError } from "@/components/ui/field-error";
 import { Input } from "@/components/ui/input/input";
+import { useNumberFormat } from "@/hooks/use-formatters";
 
 interface Props {
   field: FieldWithValue<string>;
@@ -31,7 +32,7 @@ export function MoneyAmountField({
   label,
   currencyLabel,
   hint,
-  placeholder = "0.00",
+  placeholder,
   disabled,
   blankWhenDisabled,
   touchedOnly,
@@ -41,6 +42,7 @@ export function MoneyAmountField({
   onCurrencyChange,
 }: Readonly<Props>) {
   const { t } = useTranslation();
+  const zero = useNumberFormat({ minimumFractionDigits: 2 }).format(0);
   const { error, ...aria } = fieldAria(field, { id, hint, touchedOnly });
   const currencyId = `${id}-currency`;
   const { error: currencyError, ...currencyAria } = fieldAria(currencyField, { id: currencyId });
@@ -59,7 +61,7 @@ export function MoneyAmountField({
           id={id}
           ref={ref}
           inputMode="decimal"
-          placeholder={placeholder}
+          placeholder={placeholder ?? zero}
           className="min-w-0 flex-1"
           disabled={disabled}
           value={disabled && blankWhenDisabled ? "" : field.value}

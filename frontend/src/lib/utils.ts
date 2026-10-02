@@ -6,6 +6,9 @@ const twMerge = extendTailwindMerge({
     theme: {
       text: ["2xs", "page-title", "stat", "stat-lg"],
     },
+    classGroups: {
+      duration: [{ duration: ["quick", "base", "view", "slow"] }],
+    },
   },
 });
 

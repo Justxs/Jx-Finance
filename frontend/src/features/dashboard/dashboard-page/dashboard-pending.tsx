@@ -68,9 +68,10 @@ export const cardSkeletons: Record<
   spendingPace: <ChartSkeleton legend />,
   budgets: <ShareRowsSkeleton rows={5} share={false} />,
   netWorth: <NetWorthSkeleton />,
-  accounts: <ShareRowsSkeleton rows={6} />,
+  accounts: <ShareRowsSkeleton rows={6} wideAmount />,
   upcomingBills: <RowsSkeleton rows={5} />,
   cashFlow: <RowsSkeleton rows={2} lines={2} />,
+  goals: <ShareRowsSkeleton rows={3} share={false} />,
 };
 
 export function DashboardSkeleton() {

@@ -10,12 +10,12 @@ import type { SpendingShare } from "./spendingShare";
 
 export type ReportSummaryParams = {
   /**
-   * Inclusive start date as YYYY-MM-DD. Defaults to the start of the current month.
+   * Inclusive start date as YYYY-MM-DD, from 2000-01-01 to 2999-12-31 and not after the end date (today when dateTo is omitted). Defaults to the first day of the end date's month.
    * @nullable
    */
   dateFrom?: string | null;
   /**
-   * Inclusive end date as YYYY-MM-DD. Defaults to today.
+   * Inclusive end date as YYYY-MM-DD, from 2000-01-01 to 2999-12-31. Defaults to today.
    * @nullable
    */
   dateTo?: string | null;

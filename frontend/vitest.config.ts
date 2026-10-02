@@ -11,7 +11,7 @@ export default defineConfig({
         test: {
           name: "unit",
           environment: "node",
-          include: ["src/**/*.test.ts"],
+          include: ["src/**/*.test.ts", "lint/**/*.test.mjs"],
           exclude: ["src/**/*.dom.test.ts", "src/test/stories/**"],
         },
       },

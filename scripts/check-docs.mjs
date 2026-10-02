@@ -1,6 +1,7 @@
 import { execFileSync } from "node:child_process";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
+import { designProblems } from "./design-drift.mjs";
 import { fail, root, run } from "./run.mjs";
 
 const maxLine = 2000;
@@ -122,6 +123,8 @@ for (const file of files) {
     }
   }
 }
+
+if (files.includes("DESIGN.md")) problems.push(...designProblems(indexed.get("DESIGN.md") ?? readDisk("DESIGN.md")));
 
 if (problems.length) fail(problems.join("\n"));
 console.log(`Checked ${files.length} Markdown files.`);

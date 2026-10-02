@@ -19,9 +19,11 @@ export function TwoFactorRecoveryCodes({ codes, onDone }: Readonly<Props>) {
           <li key={code}>{code}</li>
         ))}
       </ul>
-      <Button type="button" onClick={onDone}>
-        {t("profile.recoveryCodesDone")}
-      </Button>
+      <div className="flex justify-end">
+        <Button type="button" onClick={onDone}>
+          {t("profile.recoveryCodesDone")}
+        </Button>
+      </div>
     </Section>
   );
 }

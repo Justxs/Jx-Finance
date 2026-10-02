@@ -8,7 +8,8 @@ public sealed class ForgotPasswordSummary : Summary<ForgotPasswordEndpoint, Forg
     {
         Summary = "Ask for a password reset link";
         Description = "Queues an email with a single-use reset link when the address belongs to an active user of this "
-            + "installation and the mail server is configured. The answer is 204 in every case, including an unknown "
+            + "installation, the mail server is configured and App:SiteUrl names the address the link points at. "
+            + "The answer is 204 in every case, including an unknown "
             + "address, a deactivated user and an installation that cannot send mail, so the screen cannot be used to "
             + "find out which addresses exist. The link is valid for one hour and stops working as soon as it is used, "
             + "because the token carries the user's security stamp and a completed reset changes that stamp. Asking for "

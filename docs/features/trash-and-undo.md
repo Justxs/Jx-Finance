@@ -21,7 +21,7 @@ The first question is not how to restore but which deletes are reversible at all
 | Recurring entry | soft delete | yes | the occurrences it already posted are ordinary rows and were never touched |
 | CSV import mapping | soft delete | yes | no other row changes; rows imported through it never pointed at it |
 | Split expense, settle-up payment | soft delete; the shares of a split stay, and a payment's transfer is left alone | yes, by the payer of a split or the member who deleted a payment, while they are still a member of the household | nothing else changes; the balances derive from what is stored (see [Household settle-up](household-settle-up.md)) |
-| Person, split with people, payment with a person | soft delete; a person's shares and payments stay, and a split's shares stay | yes, by the member; a payment while its person exists, a split while its transaction exists and is not split again | nothing else changes; a deleted person's shares stop counting and come back with them (see [Money with people outside the household](money-with-people.md)) |
+| Person, split with people, payment with a person | soft delete; a person's shares and payments stay, and a split's shares stay | yes, by the member; a payment while its person exists, a split while its transaction exists, is still an expense on an account the member owns, and is not split again | nothing else changes; a deleted person's shares stop counting and come back with them (see [Money with people outside the household](money-with-people.md)) |
 | Category | soft delete, **and** `CategoryId` is set to null on every transaction, split line and recurring entry, and every budget on it is soft-deleted | yes | the ids of the transactions, lines and recurring entries it cleared and of the budgets it retired are recorded; a restore puts the category back only on rows that are still uncategorised |
 | Tag | soft delete, **and** its `TransactionTags` rows are deleted outright | yes | the transaction ids of the links are recorded; a restore links the tag again to every one of them that is still stored |
 | Categorization rule | soft delete, **and** its `CategorizationRuleTags` rows are deleted outright and every remaining rule is renumbered | yes | the tag ids are recorded; the soft-deleted rule keeps its own `Position`, so a restore reinserts it there, clamped to the end of the list, and renumbers the others |
@@ -173,6 +173,8 @@ A restore never brings back a broken row. Each refusal has a code, a sentence in
 | `access.forbidden` | 403 | you are no longer an owner of the household being restored |
 | `household.notMember` | 400 | you are no longer a member of the household a split or payment belongs to |
 | `settleUp.alreadySplit` | 409 | the transaction of a restored split has been split again since |
+| `settleUp.notPayer` | 400 | the transaction of a restored split is now on an account its payer does not own |
+| `settleUp.notExpense` | 400 | the transaction of a restored split is now income or a refund |
 | `settleUp.transferTaken` | 409 | the transfer of a restored payment settles another payment now |
 | `restore.securityChanged` | 400 | the security of a restored buy or sell has another currency now, so the entry's cash amount would no longer be in the security's currency |
 | `holding.oversold` | 400 | a restored sale would itself sell more than is held on its date, because a purchase it drew on was deleted or moved later |

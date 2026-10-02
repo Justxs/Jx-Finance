@@ -213,6 +213,7 @@ export function ReconcileForm({ account, onClose }: Readonly<Props>) {
                 {(field) => (
                   <field.MoneyInputField
                     id="reconcile-balance"
+                    className={held.length > 1 ? "col-span-full" : undefined}
                     label={t("accounts.reconcile.balance", { currency: currency.toUpperCase() })}
                   />
                 )}

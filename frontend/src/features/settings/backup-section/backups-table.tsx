@@ -1,8 +1,8 @@
-import { Download, History, Pencil, Trash2 } from "lucide-react";
+import { Download, History, Pencil } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { getDownloadBackupUrl } from "@/api/generated";
 import type { BackupResponse } from "@/api/generated/model";
-import { Button, buttonVariants } from "@/components/ui/button/button";
+import { RowActions } from "@/components/row-actions/row-actions";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import {
   Table,
@@ -12,8 +12,15 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table/table";
-import { Tag } from "@/components/ui/tag/tag";
+import { HintTag, Tag } from "@/components/ui/tag/tag";
 import { useBytes, useDateTime, useNumberFormat } from "@/hooks/use-formatters";
+
+function download(url: string) {
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "";
+  link.click();
+}
 
 interface Props {
   backups: BackupResponse[];
@@ -40,7 +47,7 @@ export function BackupsTable({
   }
 
   return (
-    <Table>
+    <Table label={t("backup.listLabel")} className="min-w-160">
       <TableHeader>
         <TableRow>
           <TableHead>{t("backup.date")}</TableHead>
@@ -64,9 +71,9 @@ export function BackupsTable({
                 <span className="ml-2 inline-flex gap-1 align-middle">
                   {backup.uploaded ? <Tag>{t("backup.uploadedTag")}</Tag> : null}
                   {backup.restorable ? null : (
-                    <span title={t("backup.otherVersionHint")}>
-                      <Tag tone="negative">{t("backup.otherVersionTag")}</Tag>
-                    </span>
+                    <HintTag tone="negative" hint={t("backup.otherVersionHint")}>
+                      {t("backup.otherVersionTag")}
+                    </HintTag>
                   )}
                 </span>
               </TableCell>
@@ -77,52 +84,31 @@ export function BackupsTable({
               <TableCell numeric>{count.format(backup.rows)}</TableCell>
               <TableCell numeric>{count.format(backup.attachments)}</TableCell>
               <TableCell>
-                <div className="flex justify-end gap-1">
-                  <a
-                    href={getDownloadBackupUrl(backup.id)}
-                    download
-                    aria-label={`${t("backup.download")}: ${taken}`}
-                    title={t("backup.download")}
-                    className={buttonVariants({
-                      variant: "ghost",
-                      size: "icon-sm",
-                    })}
-                  >
-                    <Download />
-                  </a>
-                  <Button
-                    variant="ghost"
-                    size="icon-sm"
-                    disabled={busyId !== null}
-                    onClick={() => onEditNote(backup)}
-                    aria-label={`${t("backup.editNote")}: ${taken}`}
-                    tooltip={t("backup.editNote")}
-                  >
-                    <Pencil />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon-sm"
-                    disabled={!backup.restorable || busyId !== null}
-                    onClick={() => onRestore(backup)}
-                    aria-label={`${t("backup.restoreAction")}: ${taken}`}
-                    tooltip={
-                      backup.restorable ? t("backup.restoreAction") : t("backup.otherVersionHint")
-                    }
-                  >
-                    <History />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon-sm"
-                    disabled={busyId !== null}
-                    onClick={() => onDelete(backup)}
-                    aria-label={`${t("backup.delete")}: ${taken}`}
-                    tooltip={t("backup.delete")}
-                  >
-                    <Trash2 />
-                  </Button>
-                </div>
+                <RowActions
+                  label={taken}
+                  className="justify-end"
+                  actions={[
+                    {
+                      icon: Download,
+                      label: t("backup.download"),
+                      onSelect: () => download(getDownloadBackupUrl(backup.id)),
+                    },
+                    {
+                      icon: Pencil,
+                      label: t("backup.editNote"),
+                      onSelect: () => onEditNote(backup),
+                      disabled: busyId !== null,
+                    },
+                    {
+                      icon: History,
+                      label: t("backup.restoreAction"),
+                      onSelect: () => onRestore(backup),
+                      disabled: !backup.restorable || busyId !== null,
+                    },
+                  ]}
+                  onDelete={() => onDelete(backup)}
+                  deleteDisabled={busyId !== null}
+                />
               </TableCell>
             </TableRow>
           );

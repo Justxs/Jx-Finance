@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, fireEvent, screen, userEvent, waitFor, within } from "storybook/test";
+import { expect, fireEvent, fn, screen, userEvent, waitFor, within } from "storybook/test";
 import {
   getDeleteExchangeRateMockHandler,
   getExchangeRateEntriesMockHandler,
@@ -9,6 +9,7 @@ import { withWidth } from "@/storybook/decorators";
 import {
   exchangeRateEntries,
   exchangeRateFutureDateProblem,
+  FIXTURE_TODAY,
   serverErrorProblem,
 } from "@/storybook/fixtures";
 import { failWith, pending, withHandlers } from "@/storybook/handlers";
@@ -31,6 +32,7 @@ export const Default: Story = {
     await expect(within(list).getAllByRole("listitem")).toHaveLength(4);
     await expect(within(list).getAllByText("Entered by hand")).toHaveLength(2);
     await expect(within(list).getByText("ECB rate 1.0831")).toBeVisible();
+    await expect(within(list).getByText("1 EUR = 1.0842 USD")).toBeVisible();
     await expect(within(list).getAllByRole("button", { name: /^Delete: / })).toHaveLength(2);
     await expect(within(list).getAllByRole("button", { name: /^Edit: / })).toHaveLength(4);
   },
@@ -91,6 +93,31 @@ export const EntersRate: Story = {
     await fireEvent.change(dialog.getByLabelText("USD per euro"), { target: { value: "1.0875" } });
     await userEvent.click(dialog.getByRole("button", { name: "Save" }));
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+  },
+};
+
+const sentRate = fn();
+
+export const AcceptsDecimalComma: Story = {
+  parameters: withHandlers(
+    getSetExchangeRateMockHandler(async ({ request }) => {
+      sentRate(await request.json());
+      return {
+        date: FIXTURE_TODAY,
+        currency: "usd",
+        rate: "1.5",
+        source: "manual",
+        syncedRate: null,
+      };
+    }),
+  ),
+  play: async ({ canvas }) => {
+    await userEvent.click(await canvas.findByRole("button", { name: "Enter rate" }));
+    const dialog = within(await openedDialog());
+    await fireEvent.change(dialog.getByLabelText("USD per euro"), { target: { value: "1,5" } });
+    await userEvent.click(dialog.getByRole("button", { name: "Save" }));
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+    await expect(sentRate).toHaveBeenCalledWith({ rate: "1.5" });
   },
 };
 

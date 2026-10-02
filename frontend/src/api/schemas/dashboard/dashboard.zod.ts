@@ -92,6 +92,7 @@ export const DashboardLayoutResponse = zod.object({
       "recentTransactions",
       "upcomingBills",
       "cashFlow",
+      "goals",
     ]),
   ),
   hidden: zod.array(
@@ -106,6 +107,7 @@ export const DashboardLayoutResponse = zod.object({
       "recentTransactions",
       "upcomingBills",
       "cashFlow",
+      "goals",
     ]),
   ),
   isDefault: zod.boolean(),
@@ -128,6 +130,7 @@ export const ResetDashboardLayoutResponse = zod.object({
       "recentTransactions",
       "upcomingBills",
       "cashFlow",
+      "goals",
     ]),
   ),
   hidden: zod.array(
@@ -142,6 +145,7 @@ export const ResetDashboardLayoutResponse = zod.object({
       "recentTransactions",
       "upcomingBills",
       "cashFlow",
+      "goals",
     ]),
   ),
   isDefault: zod.boolean(),
@@ -175,6 +179,7 @@ export const SaveDashboardLayoutResponse = zod.object({
       "recentTransactions",
       "upcomingBills",
       "cashFlow",
+      "goals",
     ]),
   ),
   hidden: zod.array(
@@ -189,6 +194,7 @@ export const SaveDashboardLayoutResponse = zod.object({
       "recentTransactions",
       "upcomingBills",
       "cashFlow",
+      "goals",
     ]),
   ),
   isDefault: zod.boolean(),

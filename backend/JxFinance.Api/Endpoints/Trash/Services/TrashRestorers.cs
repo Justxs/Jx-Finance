@@ -588,9 +588,19 @@ public static class TrashRestorers
 
     private static async Task<Result> RestoreSplitAsync(TrashRestore r, TransactionId transactionId, Guid splitId)
     {
-        if (!await r.Db.Transactions.IgnoreQueryFilters(QueryFilters.OwnerOnly).AnyAsync(t => t.Id == transactionId, r.CancellationToken))
+        await r.Db.Database.LockAsync(transactionId.Value, r.CancellationToken);
+        var transaction = await r.Db.Transactions
+            .IgnoreQueryFilters(QueryFilters.OwnerOnly)
+            .AsNoTracking()
+            .FirstOrDefaultAsync(t => t.Id == transactionId, r.CancellationToken);
+        if (transaction is null)
         {
             return SplitTransactionGone;
+        }
+
+        if (await SplitRules.RefusedAsync(r.Db, r.UserId, transaction, r.CancellationToken) is { } refused)
+        {
+            return refused;
         }
 
         return await SplitRules.IsSplitAsync(r.Db, transactionId, splitId, r.CancellationToken) ? SplitAgain : Result.Success();

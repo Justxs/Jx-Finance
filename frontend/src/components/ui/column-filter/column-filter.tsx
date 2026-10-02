@@ -62,7 +62,7 @@ export function ColumnFilter<T>({
           aria-label={triggerLabel}
           data-shortcut={shortcut}
           className={cn(
-            "rounded p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground pointer-coarse:p-3",
+            "rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground pointer-coarse:p-3",
             active && "bg-primary/15 text-primary",
           )}
         >
@@ -126,6 +126,7 @@ export function TextColumnFilter({
     >
       {(draft, setDraft) => (
         <Input
+          aria-label={label}
           placeholder={placeholder ?? label}
           value={draft}
           onChange={(event) => setDraft(event.target.value)}

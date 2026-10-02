@@ -16,7 +16,7 @@ export function MyShareToggle() {
   return (
     <Button
       type="button"
-      variant={myShare ? "default" : "outline"}
+      variant="outline"
       aria-pressed={myShare}
       tooltip={t("households.myShare.hint")}
       onClick={toggleMyShare}

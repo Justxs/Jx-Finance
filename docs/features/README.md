@@ -22,7 +22,7 @@ Every feature the current code implements, one page per feature under `features/
 | 9 | [Multi-currency, conversions, exchange rates](multi-currency.md) | `MultiCurrency` | `Conversions`, `Currencies`, `Infrastructure/ExchangeRates` | `accounts` (Currency conversions section) |
 | 10 | [Bank statement import](bank-statement-import.md) | `Import`; the inbox also needs `App:ImportInbox` | `Imports` | `imports` (dialog from Settings › Personal › Import and export), `settings/import-inbox-section` |
 | 11 | [Budgets](budgets.md) | `Budgets` | `Budgets` | `budgets` |
-| 12 | [Goals](goals.md) | `Goals` | `Goals` | `goals` |
+| 12 | [Goals](goals.md) | `Goals` | `Goals` | `goals`, `dashboard` (`goals-snapshot`) |
 | 13 | [Recurring entries](recurring-bills.md) | `RecurringBills` | `RecurringBills` | `recurring-bills` |
 | 14 | [Notifications](notifications.md) | always on; each producer follows its own feature | `Notifications` | notification bell in the sidebar, `profile` (`notifications-section`: channels per kind) |
 | 15 | [Net worth, assets, debts](net-worth.md) | `NetWorth` | `NetWorth` | `net-worth` |

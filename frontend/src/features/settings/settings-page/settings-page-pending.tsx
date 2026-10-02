@@ -131,7 +131,10 @@ export function SmtpFormSkeleton() {
   return (
     <div aria-hidden="true" className="mt-4 space-y-5">
       <CheckboxFieldSkeleton className="max-w-prose" />
-      <FormGridSkeleton fields={7} hints className="max-w-3xl" />
+      <div className="max-w-3xl space-y-4">
+        <FormGridSkeleton fields={1} />
+        <FormGridSkeleton fields={6} hints />
+      </div>
       <div className="flex flex-wrap items-center gap-3">
         <ButtonSkeleton className="w-32" />
         <TextSkeleton size="sm" width="w-56" />
@@ -145,7 +148,7 @@ export function DiscordFormSkeleton() {
   return (
     <div aria-hidden="true" className="mt-4 space-y-5">
       <CheckboxFieldSkeleton className="max-w-prose" />
-      <div className="flex justify-end">
+      <div className="flex justify-end pt-2">
         <ButtonSkeleton className="w-20" />
       </div>
     </div>
@@ -205,7 +208,9 @@ function BackupSkeleton() {
         <TextSkeleton size="sm" width="w-40" />
         <TextSkeleton size="sm" width="w-3/4" />
         <FormGridSkeleton fields={1} />
-        <ButtonSkeleton />
+        <div className="flex justify-end">
+          <ButtonSkeleton />
+        </div>
       </div>
     </TitledSkeleton>
   );

@@ -43,7 +43,8 @@ The development machine is Windows with Windows PowerShell 5.1 (`powershell.exe`
 | `just migrate-add <Name>` | Create an EF migration after a model change |
 | `just new-endpoint <Tag> <Name> <verb> "<route>"`, `just new-component <feature> <name>` | Scaffold a backend slice or a frontend component with story and test |
 | `just fix` | Auto-fix lint and formatting on both sides |
-| `just check-docs` | Check every Markdown link and heading anchor |
+| `just check-docs` | Check every Markdown link and heading anchor, and DESIGN.md against the code |
+| `just diagrams` | Render the PlantUML system diagrams in `docs/architecture/diagrams` to SVG; needs Java |
 
 Put a wall-clock timeout on long commands. Never start Storybook browser test runs (Vitest browser mode or Playwright over stories): they crashed and hung before. Playwright is only for `frontend/e2e` through `just e2e`.
 

@@ -79,7 +79,7 @@ export function UnusualAmountBadge({
             variant={dismissed ? "link-muted" : "link"}
             size="inline"
             aria-label={label}
-            title={label}
+            tooltip={label}
             className={className}
           />
         }

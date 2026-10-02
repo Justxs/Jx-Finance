@@ -222,7 +222,9 @@ export function DebtPayments({ debt }: Readonly<DebtProps>) {
       )}
       <EditModal
         item={payments.find((payment) => payment.id === editId) ?? null}
-        title={t("netWorth.payments.edit")}
+        title={(payment) =>
+          `${t("netWorth.payments.edit")}: ${formatDate(payment.date)}, ${format(payment.amount)}`
+        }
         onClose={() => setEditId(null)}
       >
         {(payment, close) => <DebtPaymentForm debts={[debt]} payment={payment} onClose={close} />}

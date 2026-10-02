@@ -154,7 +154,7 @@ export function DebtBalances({ debt }: Readonly<Props>) {
       </Rows>
       <EditModal
         item={editing}
-        title={t("netWorth.debtBalances.edit")}
+        title={(point) => `${t("netWorth.debtBalances.edit")}: ${label(point)}`}
         onClose={() => setEditDate(null)}
       >
         {(point, close) => <BalanceForm debt={debt} editing={point} onClose={close} />}

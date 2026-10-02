@@ -3,9 +3,9 @@ import { useImportInboxStatusSuspense } from "@/api/generated";
 import type { ImportInboxStatusResponse } from "@/api/generated/model";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
+import { RuledLine } from "@/components/ui/ruled-line/ruled-line";
 import { TitledSection } from "@/components/ui/section/section";
 import {
-  ScrollRegion,
   Table,
   TableBody,
   TableCell,
@@ -26,8 +26,8 @@ function Failures({ status }: Readonly<{ status: ImportInboxStatusResponse }>) {
       {status.failures.length === 0 ? (
         <EmptyText size="sm">{t("settings.importInbox.noFailures")}</EmptyText>
       ) : (
-        <ScrollRegion aria-label={t("settings.importInbox.failures")} className="mt-2">
-          <Table className="min-w-120">
+        <div className="mt-2">
+          <Table label={t("settings.importInbox.failures")} className="min-w-120">
             <TableHeader>
               <TableRow>
                 <TableHead>{t("settings.importInbox.file")}</TableHead>
@@ -47,7 +47,7 @@ function Failures({ status }: Readonly<{ status: ImportInboxStatusResponse }>) {
               ))}
             </TableBody>
           </Table>
-        </ScrollRegion>
+        </div>
       )}
     </div>
   );
@@ -63,10 +63,10 @@ function InboxStatus() {
 
   return (
     <>
-      <p className="mt-4 rounded-md bg-background px-4 py-3 text-sm">
+      <RuledLine as="p" className="mt-4">
         <span className="text-muted-foreground">{t("settings.importInbox.folder")}</span>{" "}
         <span className="font-mono font-semibold wrap-break-word">{status.directory}</span>
-      </p>
+      </RuledLine>
       <Failures status={status} />
     </>
   );

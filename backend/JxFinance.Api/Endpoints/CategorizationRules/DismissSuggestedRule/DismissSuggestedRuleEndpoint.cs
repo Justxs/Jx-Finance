@@ -11,6 +11,7 @@ public sealed class DismissSuggestedRuleEndpoint(ISuggestedRuleService suggestio
     {
         Post(ApiRoutes.CategorizationRules + "/suggested/dismiss");
         Group<CategorizationRulesGroup>();
+        Description(d => d.ProducesProblemDetails(409));
     }
 
     public override async Task HandleAsync(DismissSuggestedRuleRequest req, CancellationToken ct) =>

@@ -59,7 +59,9 @@ export const RenameDialog: Story = {
   play: async ({ canvas }) => {
     await userEvent.click(await canvas.findByRole("button", { name: "Edit: Maxima Ukmerges" }));
     const dialog = within(await openedDialog());
-    await expect(dialog.getByRole("heading", { name: "Rename place" })).toBeVisible();
+    await expect(
+      dialog.getByRole("heading", { name: "Rename place: Maxima Ukmerges" }),
+    ).toBeVisible();
     await expect(dialog.getByRole("textbox", { name: "Place" })).toHaveValue("Maxima Ukmerges");
     await expect(
       dialog.getByText("2 transactions you entered will read this place."),

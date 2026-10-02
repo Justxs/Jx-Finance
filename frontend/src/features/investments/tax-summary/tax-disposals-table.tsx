@@ -4,7 +4,6 @@ import { DualCurrencyAmount } from "@/components/approximate-amount/dual-currenc
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { Rows } from "@/components/ui/rows/rows";
 import {
-  ScrollRegion,
   Table,
   TableBody,
   TableCell,
@@ -70,8 +69,8 @@ export function TaxDisposalsTable({ disposals, reportingCurrency, accountNames }
 
   return (
     <>
-      <ScrollRegion className="-mx-3 hidden lg:block" aria-label={t("investments.tax.disposals")}>
-        <Table>
+      <div className="hidden lg:block">
+        <Table label={t("investments.tax.disposals")}>
           <TableHeader>
             <TableRow>
               <TableHead wrap>{t("investments.tax.soldOn")}</TableHead>
@@ -126,7 +125,7 @@ export function TaxDisposalsTable({ disposals, reportingCurrency, accountNames }
             )}
           </TableBody>
         </Table>
-      </ScrollRegion>
+      </div>
 
       {disposals.length === 0 ? (
         <EmptyText className="lg:hidden">{t("investments.tax.noDisposals")}</EmptyText>

@@ -15,9 +15,10 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
+  tags: ["browser-only"],
   play: async ({ canvas }) => {
     await expect(
-      await canvas.findByRole("img", { name: /^Map of spending by place: Maxima X/u }),
+      await canvas.findByRole("region", { name: /^Map of spending by place: Maxima X/u }),
     ).toBeInTheDocument();
   },
 };

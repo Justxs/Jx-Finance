@@ -48,7 +48,7 @@ export function DebtScheduleSkeleton({ tracked = false }: Readonly<{ tracked?: b
       </div>
       <Section aria-hidden="true">
         <TextSkeleton size="title" className="mb-2" width="w-40" />
-        <TableSkeleton rows={12} columns={6} className="-mx-3" />
+        <TableSkeleton rows={12} columns={6} />
         <PaginationSkeleton goTo />
       </Section>
       {tracked ? <DebtPaymentsSkeleton /> : null}

@@ -72,7 +72,6 @@ export function ForecastWhatIf({
           <Input
             id={`${id}-amount`}
             inputMode="decimal"
-            placeholder="0.00"
             value={amount}
             aria-invalid={amount !== "" && !isPositiveMoney(amount)}
             onChange={(event) => setAmount(event.target.value)}
@@ -81,7 +80,7 @@ export function ForecastWhatIf({
         <FieldShell id={`${id}-date`} label={t("forecast.date")} className="w-44">
           <DatePicker id={`${id}-date`} value={date} onChange={setDate} />
         </FieldShell>
-        <Button type="submit" size="sm" disabled={!valid}>
+        <Button type="submit" variant="outline" size="sm" disabled={!valid}>
           {t("forecast.whatIfTry")}
         </Button>
         <p className="basis-full text-xs text-muted-foreground">

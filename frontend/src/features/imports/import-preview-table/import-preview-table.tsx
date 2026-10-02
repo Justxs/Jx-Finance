@@ -7,6 +7,7 @@ import type {
   TagResponse,
   TransactionGroupResponse,
 } from "@/api/generated/model";
+import { FormActions } from "@/components/form/form-actions/form-actions";
 import { Pagination } from "@/components/pagination/pagination";
 import { Button } from "@/components/ui/button/button";
 import { Checkbox } from "@/components/ui/checkbox/checkbox";
@@ -14,14 +15,7 @@ import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { Input } from "@/components/ui/input/input";
 import { Rows } from "@/components/ui/rows/rows";
 import { SegmentedControl } from "@/components/ui/segmented-control/segmented-control";
-import {
-  Table,
-  TableBody,
-  TableHead,
-  TableHeader,
-  TableRow,
-  ScrollRegion,
-} from "@/components/ui/table/table";
+import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table/table";
 import { Tooltip } from "@/components/ui/tooltip/tooltip";
 import { usePageClamp } from "@/hooks/use-paged-list";
 import { ImportRow } from "./import-row";
@@ -171,32 +165,34 @@ export function ImportPreviewTable({
         </Rows>
       </div>
 
-      <div className="-mx-3 hidden md:block">
-        <ScrollRegion aria-label={t("imports.preview")}>
-          <Table className="min-w-176">
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-10">{selectAll}</TableHead>
-                <TableHead>{t("transactions.date")}</TableHead>
-                <TableHead>{t("transactions.description")}</TableHead>
-                <TableHead numeric>{t("transactions.amount")}</TableHead>
-                <TableHead>{t("transactions.category")}</TableHead>
-                <TableHead>{t("tags.field")}</TableHead>
-                <TableHead>{t("imports.recordAs")}</TableHead>
-                <TableHead>{t("imports.flags")}</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {pageRows.map(({ row, index }) => (
-                <ImportRow
-                  key={`${row.importRef}-${index}`}
-                  variant="table"
-                  {...rowProps(row, index)}
-                />
-              ))}
-            </TableBody>
-          </Table>
-        </ScrollRegion>
+      <div className="hidden md:block">
+        <Table
+          label={t("imports.preview")}
+          columns={["w-10", "w-27", undefined, "w-30", "w-44", "w-36", "w-52", "w-40"]}
+          className="min-w-268"
+        >
+          <TableHeader>
+            <TableRow>
+              <TableHead>{selectAll}</TableHead>
+              <TableHead>{t("transactions.date")}</TableHead>
+              <TableHead>{t("transactions.description")}</TableHead>
+              <TableHead numeric>{t("transactions.amount")}</TableHead>
+              <TableHead>{t("transactions.category")}</TableHead>
+              <TableHead>{t("tags.field")}</TableHead>
+              <TableHead>{t("imports.recordAs")}</TableHead>
+              <TableHead>{t("imports.flags")}</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {pageRows.map(({ row, index }) => (
+              <ImportRow
+                key={`${row.importRef}-${index}`}
+                variant="table"
+                {...rowProps(row, index)}
+              />
+            ))}
+          </TableBody>
+        </Table>
       </div>
 
       <Pagination
@@ -206,10 +202,7 @@ export function ImportPreviewTable({
         onPageChange={setPage}
       />
 
-      <div className="flex flex-wrap justify-end gap-2">
-        <Button variant="outline" disabled={confirmPending} onClick={onCancel}>
-          {t("actions.cancel")}
-        </Button>
+      <FormActions cancelDisabled={confirmPending} onCancel={onCancel}>
         <Button
           pending={confirmPending}
           disabled={summary.selected === 0 || !importGroupReady(group)}
@@ -217,7 +210,7 @@ export function ImportPreviewTable({
         >
           {t("imports.confirmCount", { count: summary.selected })}
         </Button>
-      </div>
+      </FormActions>
     </>
   );
 }

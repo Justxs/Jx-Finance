@@ -36,7 +36,7 @@ export function SectionNav({ labelKey, current, groups }: Readonly<Props>) {
   return (
     <nav
       aria-label={t(labelKey)}
-      className="-mx-1 flex gap-1 overflow-x-auto px-1 pb-1 lg:sticky lg:top-6 lg:mx-0 lg:flex-col lg:gap-5 lg:self-start lg:overflow-visible lg:p-0"
+      className="-mx-1 -mt-1 flex gap-1 overflow-x-auto p-1 lg:sticky lg:top-6 lg:m-0 lg:flex-col lg:gap-5 lg:self-start lg:overflow-visible lg:p-0"
     >
       {groups.map((group) => (
         <div
@@ -56,7 +56,7 @@ export function SectionNav({ labelKey, current, groups }: Readonly<Props>) {
                 {...link}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "flex shrink-0 items-center gap-2.5 rounded-md px-3 py-2 text-sm text-muted-foreground transition-all duration-200 ease-out-expo hover:text-foreground pointer-coarse:py-3",
+                  "flex shrink-0 items-center gap-2.5 rounded-md px-3 py-2 text-sm text-muted-foreground focus-ring transition-colors duration-base ease-out-expo hover:text-foreground pointer-coarse:py-3",
                   active && "bg-muted font-semibold text-foreground dark:bg-card",
                 )}
               >

@@ -15,7 +15,6 @@ import { FormSection } from "@/components/form/form-section/form-section";
 import { Button } from "@/components/ui/button/button";
 import { FormGrid } from "@/components/ui/form-grid/form-grid";
 import {
-  ScrollRegion,
   Table,
   TableBody,
   TableCell,
@@ -166,7 +165,7 @@ export function CsvMappingForm({
     <form.AppForm>
       <form.FormShell className="space-y-4">
         {fits.length > 0 && onUse ? (
-          <div className="flex flex-wrap items-center gap-2 rounded-md bg-muted px-3 py-2 text-sm">
+          <div className="flex flex-wrap items-center gap-2 border-b pb-3 text-sm">
             <span>{t("imports.mapping.fits")}</span>
             {fits.map((mapping) => (
               <Button
@@ -407,28 +406,26 @@ export function CsvMappingForm({
 
         {source.samples.length > 0 ? (
           <FormSection title={t("imports.mapping.samples")}>
-            <ScrollRegion aria-label={t("imports.mapping.samples")}>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    {source.columns.map((column) => (
-                      <TableHead key={column.name}>{columnTitle(column.name)}</TableHead>
+            <Table label={t("imports.mapping.samples")}>
+              <TableHeader>
+                <TableRow>
+                  {source.columns.map((column) => (
+                    <TableHead key={column.name}>{columnTitle(column.name)}</TableHead>
+                  ))}
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {source.samples.slice(0, SAMPLE_ROWS).map((row) => (
+                  <TableRow key={row.join("|")}>
+                    {source.columns.map((column, index) => (
+                      <TableCell key={column.name} className="whitespace-nowrap">
+                        {row[index]}
+                      </TableCell>
                     ))}
                   </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {source.samples.slice(0, SAMPLE_ROWS).map((row) => (
-                    <TableRow key={row.join("|")}>
-                      {source.columns.map((column, index) => (
-                        <TableCell key={column.name} className="whitespace-nowrap">
-                          {row[index]}
-                        </TableCell>
-                      ))}
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </ScrollRegion>
+                ))}
+              </TableBody>
+            </Table>
           </FormSection>
         ) : null}
 

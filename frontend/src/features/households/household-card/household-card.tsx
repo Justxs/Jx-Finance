@@ -10,7 +10,7 @@ import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { RowActions } from "@/components/row-actions/row-actions";
 import { Button } from "@/components/ui/button/button";
 import { Rows } from "@/components/ui/rows/rows";
-import { Section, SectionHeader } from "@/components/ui/section/section";
+import { Section } from "@/components/ui/section/section";
 import { CreateHouseholdForm } from "@/features/households/create-household-form/create-household-form";
 import { HouseholdActivity } from "@/features/households/household-activity/household-activity";
 import { SettleUpSection, SettleUpSkeleton } from "@/features/households/settle-up/settle-up";
@@ -50,7 +50,10 @@ export function HouseholdCard({ household }: Readonly<Props>) {
 
   return (
     <Section>
-      <SectionHeader title={household.name} titleClassName="min-w-0 wrap-break-word">
+      <div className="mb-2 flex flex-wrap items-center justify-between gap-3">
+        <h3 className="min-w-0 text-lg leading-6 font-semibold wrap-break-word">
+          {household.name}
+        </h3>
         {isOwner ? (
           <RowActions
             label={household.name}
@@ -58,9 +61,13 @@ export function HouseholdCard({ household }: Readonly<Props>) {
             {...remove.deleteProps(household.id)}
           />
         ) : null}
-      </SectionHeader>
+      </div>
 
-      <Modal open={renaming} onOpenChange={setRenaming} title={t("actions.edit")}>
+      <Modal
+        open={renaming}
+        onOpenChange={setRenaming}
+        title={`${t("actions.edit")}: ${household.name}`}
+      >
         <CreateHouseholdForm initial={household} onClose={() => setRenaming(false)} />
       </Modal>
 

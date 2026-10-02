@@ -252,7 +252,7 @@ export function ReceiptReview({
           </section>
         ) : null}
 
-        <div className="space-y-1 rounded-md bg-muted/50 px-4 py-3 text-sm">
+        <div className="space-y-1 border-t pt-3 text-sm">
           <p className="font-medium">
             {result.isReturn ? t("receipts.refundLine") : t("receipts.lines")}
           </p>

@@ -30,7 +30,7 @@ export function Meter({ value, max, tone = "primary", label, mark, className }: 
     >
       <div
         className={cn(
-          "h-full w-(--meter-fill) transition-width duration-300 ease-out-expo",
+          "h-full origin-left scale-x-(--meter-fill) transition-transform duration-slow ease-out-expo",
           tones[tone],
         )}
         style={{ "--meter-fill": `${ratio * 100}%` }}

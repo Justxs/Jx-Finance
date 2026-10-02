@@ -1,0 +1,23 @@
+@startuml code-generation
+!include style.iuml
+
+start
+:Change a FastEndpoints request,
+response or summary;
+:just gen exports the contract
+to frontend/openapi.json;
+:Orval reads the contract;
+fork
+  :api/generated
+  TanStack Query hooks and models;
+fork again
+  :MSW handlers
+  for stories and tests;
+fork again
+  :api/schemas
+  zod schemas;
+end fork
+:Commit contract and generated code
+with the backend and frontend change;
+stop
+@enduml

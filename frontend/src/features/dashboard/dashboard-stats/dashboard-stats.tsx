@@ -1,13 +1,11 @@
 import { useTranslation } from "react-i18next";
 import { useDashboardSummarySuspense } from "@/api/generated";
+import { SignedAmount } from "@/components/signed-amount/signed-amount";
 import { useMoney, usePercent } from "@/hooks/use-formatters";
 import { useTodayDate } from "@/hooks/use-settings";
 import { currentMonthKey } from "@/lib/calendar";
-import { EXPENSE_TONE, gainTone } from "@/lib/tone";
-import { cn } from "@/lib/utils";
 import { useShare, withShare } from "@/stores/my-share-store";
 
-const NEUTRAL_TONE = "text-foreground";
 const RING_RADIUS = 44;
 const RING_LENGTH = 2 * Math.PI * RING_RADIUS;
 
@@ -29,7 +27,7 @@ function IncomeRing({ share, overspent, value, caption, label }: Readonly<RingPr
           r={RING_RADIUS}
           fill="none"
           strokeWidth="8"
-          className="stroke-muted"
+          className="stroke-border"
         />
         {share > 0 ? (
           <circle
@@ -38,12 +36,8 @@ function IncomeRing({ share, overspent, value, caption, label }: Readonly<RingPr
             r={RING_RADIUS}
             fill="none"
             strokeWidth="8"
-            strokeLinecap="round"
             strokeDasharray={`${RING_LENGTH * share} ${RING_LENGTH}`}
-            className={cn(
-              "transition-all duration-500 ease-out-expo motion-reduce:transition-none",
-              overspent ? "stroke-(--chart-3)" : "stroke-(--chart-2)",
-            )}
+            className={overspent ? "stroke-(--chart-3)" : "stroke-(--chart-2)"}
           />
         ) : null}
       </svg>
@@ -94,22 +88,10 @@ export function DashboardStats({ month }: Readonly<Props>) {
   }
 
   const rows = [
-    {
-      label: t("dashboard.monthIncome"),
-      value: money.formatSigned(income, "+"),
-      tone: gainTone(income) ?? NEUTRAL_TONE,
-    },
-    {
-      label: t("dashboard.monthExpense"),
-      value: money.formatSigned(expense, "−"),
-      tone: expense === 0 ? NEUTRAL_TONE : EXPENSE_TONE,
-    },
-    {
-      label: t("dashboard.monthNet"),
-      value: money.formatSigned(net, "auto"),
-      tone: gainTone(net) ?? NEUTRAL_TONE,
-    },
-  ];
+    { label: t("dashboard.monthIncome"), value: income, sign: "+" },
+    { label: t("dashboard.monthExpense"), value: -expense, sign: "auto" },
+    { label: t("dashboard.monthNet"), value: net, sign: "auto" },
+  ] as const;
 
   return (
     <div className="flex h-full flex-col gap-6">
@@ -136,8 +118,8 @@ export function DashboardStats({ month }: Readonly<Props>) {
           {rows.map((row) => (
             <div key={row.label} className="flex items-baseline justify-between gap-4">
               <dt className="min-w-0 text-sm text-muted-foreground">{row.label}</dt>
-              <dd className={cn("shrink-0 text-lg font-semibold tabular-nums", row.tone)}>
-                {row.value}
+              <dd className="shrink-0 text-lg font-semibold">
+                <SignedAmount value={row.value} sign={row.sign} />
               </dd>
             </div>
           ))}

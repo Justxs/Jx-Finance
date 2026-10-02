@@ -62,7 +62,7 @@ export function Brand({
       <span
         aria-hidden="true"
         className={cn(
-          "max-w-full truncate font-serif leading-none font-semibold tracking-tight",
+          "max-w-full truncate font-serif leading-tight font-semibold tracking-tight",
           sizes[size].text,
         )}
       >

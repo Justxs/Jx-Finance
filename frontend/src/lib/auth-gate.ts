@@ -6,6 +6,7 @@ import {
 } from "@/api/generated";
 import type { UserProfileResponse } from "@/api/generated/model";
 import { UserRole } from "@/lib/user-role";
+import { forgetUserPreferences } from "@/stores/preferences";
 
 let authenticatedCache: boolean | null = null;
 
@@ -26,6 +27,7 @@ export function endSession(
   navigate: (options: { to: "/login" }) => unknown,
 ) {
   setAuthenticated(false);
+  forgetUserPreferences();
   queryClient.clear();
   void navigate({ to: "/login" });
 }

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useTestCategorizationRule } from "@/api/generated";
 import type { DescriptionMatch } from "@/api/generated/model";
+import { FormError } from "@/components/form-error/form-error";
 import { FieldShell } from "@/components/form/field-shell/field-shell";
 import { Button } from "@/components/ui/button/button";
 import { Input } from "@/components/ui/input/input";
@@ -88,6 +89,7 @@ export function RuleTester({ match, pattern, minAmount, maxAmount, action }: Rea
       <p role="status" className="max-w-prose text-sm text-muted-foreground">
         {verdict}
       </p>
+      <FormError error={testMutation.error} />
     </fieldset>
   );
 }

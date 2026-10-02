@@ -137,6 +137,7 @@ const rules: readonly Rule[] = [
       api.getTagsQueryKey,
       api.getTransactionsQueryKey,
       api.getTransactionsSummaryQueryKey,
+      api.getBudgetsQueryKey,
       api.getReportSummaryQueryKey,
     ],
   },

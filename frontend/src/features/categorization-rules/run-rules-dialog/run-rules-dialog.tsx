@@ -5,6 +5,7 @@ import { usePreviewCategorizationRun, useRunCategorizationRules } from "@/api/ge
 import type { AccountResponse } from "@/api/generated/model";
 import { FormError } from "@/components/form-error/form-error";
 import { FieldShell } from "@/components/form/field-shell/field-shell";
+import { FormActions } from "@/components/form/form-actions/form-actions";
 import { SelectField } from "@/components/select-field/select-field";
 import { Button } from "@/components/ui/button/button";
 import { Checkbox } from "@/components/ui/checkbox/checkbox";
@@ -107,10 +108,7 @@ export function RunRulesDialog({ accounts, hasRules, onClose }: Readonly<Props>)
 
       {hasRules ? null : <EmptyText>{t("categorizationRules.runNeedsRules")}</EmptyText>}
 
-      <div className="flex flex-wrap justify-end gap-2 pt-2">
-        <Button type="button" variant="outline" onClick={onClose}>
-          {t("actions.cancel")}
-        </Button>
+      <FormActions onCancel={onClose}>
         <Button
           type="button"
           variant="outline"
@@ -130,7 +128,7 @@ export function RunRulesDialog({ accounts, hasRules, onClose }: Readonly<Props>)
             ? t("categorizationRules.runApplyCount", { count: preview.total })
             : t("categorizationRules.runApply")}
         </Button>
-      </div>
+      </FormActions>
     </div>
   );
 }

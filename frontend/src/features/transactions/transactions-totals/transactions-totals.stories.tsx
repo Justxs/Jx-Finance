@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { expect } from "storybook/test";
 import { getTransactionsSummaryMockHandler } from "@/api/generated/transactions/transactions.msw";
 import { withWidth } from "@/storybook/decorators";
 import { emptyHandlers, errorHandlers, pending, withHandlers } from "@/storybook/handlers";
@@ -30,6 +31,13 @@ export const Loading: Story = {
 };
 
 export const ServerError: Story = { parameters: { msw: { handlers: errorHandlers } } };
+
+export const RefundsOutweighSpending: Story = {
+  render: () => <TransactionsTotalsLine count={2} totalIncome="0" totalExpense="-12.50" />,
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText("+€12.50")).toBeVisible();
+  },
+};
 
 export const LargeAmountsNarrow: Story = {
   render: () => (

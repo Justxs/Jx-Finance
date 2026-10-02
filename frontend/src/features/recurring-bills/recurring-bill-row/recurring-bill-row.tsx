@@ -14,14 +14,14 @@ import { BillRowLayout } from "@/features/recurring-bills/bill-row-layout";
 import { useIsoDate, useMoney, useRelativeDays } from "@/hooks/use-formatters";
 import { useToday } from "@/hooks/use-settings";
 import { daysBetween } from "@/lib/calendar";
-import { EXPENSE_TONE } from "@/lib/tone";
+import { EXPENSE_TONE, INCOME_TONE } from "@/lib/tone";
 import { cn, metaLine } from "@/lib/utils";
 
 const shapeTone = {
-  expense: "negative",
+  expense: "neutral",
   income: "positive",
   transfer: "accent",
-} as const satisfies Record<RecurringBillShape, "negative" | "positive" | "accent">;
+} as const satisfies Record<RecurringBillShape, "neutral" | "positive" | "accent">;
 
 interface Props extends DeleteProps {
   bill: RecurringBillResponse;
@@ -63,6 +63,7 @@ export function RecurringBillRow({
   const overdue = bill.isActive && urgency === "overdue";
   const soon = bill.isActive && days !== null && urgency !== "later" ? relativeDays(days) : null;
   const isTransfer = bill.shape === "transfer";
+  const isIncome = bill.shape === "income";
   const rise = bill.latestMatch?.isPriceRise && bill.latestMatch.expected ? bill.latestMatch : null;
   const currency = account?.currency;
   const markDone =
@@ -150,10 +151,13 @@ export function RecurringBillRow({
           <span
             className={cn(
               "text-right text-sm font-semibold whitespace-nowrap tabular-nums",
+              isIncome && INCOME_TONE,
               !bill.isActive && "text-muted-foreground",
             )}
           >
-            {money.format(Number(bill.amount))}
+            {isIncome
+              ? money.formatSigned(Number(bill.amount), "+", currency)
+              : money.format(Number(bill.amount), currency)}
           </span>
         ) : (
           <span className="text-right text-sm text-muted-foreground">

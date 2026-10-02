@@ -17,11 +17,13 @@ public sealed class UploadAttachmentEndpoint(IAttachmentService attachmentServic
         Group<AttachmentsGroup>();
         AllowFileUploads();
         MaxRequestBodySize(MaxRequestBytes);
+        Throttle(hitLimit: 30, durationSeconds: 300);
         Description(d => d
             .ProducesCreated<AttachmentResponse>()
             .ProducesProblemDetails(404)
             .ProducesProblemDetails(409)
-            .Produces(413));
+            .Produces(413)
+            .Produces(429));
     }
 
     public override async Task HandleAsync(UploadAttachmentRequest req, CancellationToken ct)

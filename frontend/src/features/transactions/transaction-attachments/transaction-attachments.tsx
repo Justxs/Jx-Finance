@@ -22,6 +22,7 @@ import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { FileInput } from "@/components/ui/file-input/file-input";
 import { Rows } from "@/components/ui/rows/rows";
 import { Skeleton, TextSkeleton } from "@/components/ui/skeleton/skeleton";
+import { Tooltip } from "@/components/ui/tooltip/tooltip";
 import { useConfirmedDelete } from "@/hooks/use-confirmed-delete";
 import { useBytes, useDateTime } from "@/hooks/use-formatters";
 import { silentMutation } from "@/lib/mutations";
@@ -125,15 +126,16 @@ function AttachmentRow({ attachment, removing, disabled, onRemove }: Readonly<Ro
           <WarrantyDate attachment={attachment} />
         </div>
         <div className="flex shrink-0 gap-1">
-          <a
-            href={getDownloadAttachmentUrl(attachment.id)}
-            download={name}
-            aria-label={`${t("transactions.attachments.download")}: ${name}`}
-            title={t("transactions.attachments.download")}
-            className={buttonVariants({ variant: "ghost", size: "icon-sm" })}
-          >
-            <Download />
-          </a>
+          <Tooltip content={`${t("transactions.attachments.download")}: ${name}`}>
+            <a
+              href={getDownloadAttachmentUrl(attachment.id)}
+              download={name}
+              aria-label={`${t("transactions.attachments.download")}: ${name}`}
+              className={buttonVariants({ variant: "ghost", size: "icon-sm" })}
+            >
+              <Download />
+            </a>
+          </Tooltip>
           <Button
             variant="ghost"
             size="icon-sm"

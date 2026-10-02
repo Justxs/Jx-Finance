@@ -1,0 +1,42 @@
+@startuml components
+!include style.iuml
+
+package "Frontend SPA, React 19" {
+  component "routes\nTanStack Router" as routes
+  component "features/*" as features
+  component "components\ncomponents/ui" as ui
+  component "stores\nTanStack Store, DB" as stores
+  component "locales\nen, lt" as i18n
+  component "api/generated\nOrval, TanStack Query" as client
+}
+
+package "Backend API, ASP.NET Core 10" {
+  interface "/api JSON" as apiif
+  component "Common/Middleware\nauth, active household,\nfeature gate, idempotency" as mw
+  component "Endpoints\nFastEndpoints,\nFluentValidation" as endpoints
+  component "Feature services\nbehind interfaces" as services
+  component "Common\nerrors, notifications,\nsharing, money" as common
+  component "Infrastructure\nAppDbContext, jobs,\nauth, integrations" as infra
+  component "Domain\nentities, Money, Result" as domain
+}
+
+database "PostgreSQL 16" as db
+storage "Volumes\nkeys, backups,\nattachments, inbox" as fs
+
+routes --> features
+features --> ui
+features --> stores
+features --> i18n
+features --> client
+client --> apiif
+apiif - mw
+mw --> endpoints
+endpoints --> services
+services --> common
+services --> infra
+services --> domain
+common --> domain
+infra --> domain
+infra --> db : EF Core,\nquery filters
+infra --> fs
+@enduml

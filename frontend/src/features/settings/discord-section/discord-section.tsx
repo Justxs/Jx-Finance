@@ -35,11 +35,7 @@ function DiscordSettingsForm({ enabled }: Readonly<{ enabled: boolean }>) {
           )}
         </form.Field>
         <FormError error={saveMutation.error} />
-        <div className="flex justify-end">
-          <form.SubmitButton pending={saveMutation.isPending}>
-            {t("actions.save")}
-          </form.SubmitButton>
-        </div>
+        <form.FormActions submitLabel={t("actions.save")} pending={saveMutation.isPending} />
       </form.FormShell>
     </form.AppForm>
   );

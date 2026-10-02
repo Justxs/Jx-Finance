@@ -71,7 +71,11 @@ function RateList({ currency }: Readonly<{ currency: Currency }>) {
                         : null}
                     </span>
                   }
-                  amount={rateFormat.format(Number(row.rate))}
+                  amount={t("conversions.rateLine", {
+                    from: Currency.eur.toUpperCase(),
+                    rate: rateFormat.format(Number(row.rate)),
+                    to: code,
+                  })}
                   label={`${code} ${formatDate(row.date)}`}
                   {...props}
                   onDelete={row.source === "manual" ? props.onDelete : undefined}

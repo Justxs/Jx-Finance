@@ -87,7 +87,7 @@ function RootLayout() {
 
   if (!authenticatedArea) {
     return (
-      <main className="relative flex min-h-screen items-center justify-center bg-background px-4">
+      <main className="relative flex min-h-screen items-center justify-center bg-background px-4 py-16">
         {instanceName ? <title>{instanceName}</title> : null}
         <div className="absolute top-3 right-3 flex gap-0.5">
           <LanguageToggle />
@@ -107,7 +107,7 @@ function RootLayout() {
         {t("nav.skip")}
       </a>
       <div className="contents print:hidden">
-        <QueryBoundary fallback={<AppSidebarSkeleton />}>
+        <QueryBoundary fallback={<AppSidebarSkeleton />} error={<AppSidebarSkeleton />}>
           <AppSidebar />
         </QueryBoundary>
         <QueryBoundary fallback={null} error={null}>

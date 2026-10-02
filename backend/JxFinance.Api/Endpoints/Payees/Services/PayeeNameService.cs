@@ -1,5 +1,6 @@
 using FastEndpoints;
 using JxFinance.Common;
+using JxFinance.Common.Errors;
 using JxFinance.Common.Subscriptions;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Payees;
@@ -24,7 +25,7 @@ public sealed class PayeeNameService(AppDbContext db) : IPayeeNameService
             .Select(p => new PayeeNameResponse(p.Id.Value, p.PayeeKey, p.Name))
             .ToListAsync(cancellationToken);
 
-    public async Task<PayeeNameResponse> SetAsync(SetPayeeNameRequest request, CancellationToken cancellationToken)
+    public async Task<Result<PayeeNameResponse>> SetAsync(SetPayeeNameRequest request, CancellationToken cancellationToken)
     {
         var key = SubscriptionDescription.Normalize(request.Payee)!;
         var name = request.Name.Trim();
@@ -39,7 +40,11 @@ public sealed class PayeeNameService(AppDbContext db) : IPayeeNameService
             payee.Name = name;
         }
 
-        await db.SaveChangesAsync(cancellationToken);
+        if (await db.SaveOrConflictAsync(new DomainError(ErrorCodes.ConflictBusy, "This payee was named from another window just now. Try again."), cancellationToken) is { } conflict)
+        {
+            return conflict;
+        }
+
         return new PayeeNameResponse(payee.Id.Value, payee.PayeeKey, payee.Name);
     }
 

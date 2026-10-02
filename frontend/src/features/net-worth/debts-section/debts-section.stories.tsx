@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { userEvent, within } from "storybook/test";
+import { screen, userEvent, within } from "storybook/test";
 import {
   getDeleteDebtMockHandler,
   getDebtsMockHandler,
@@ -50,10 +50,9 @@ export const AddDialogOpen: Story = {
 export const DeletePending: Story = {
   parameters: withHandlers(getDeleteDebtMockHandler(pending)),
   play: async ({ canvas }) => {
-    const deleteButtons = await canvas.findAllByRole("button", {
-      name: /^(delete|ištrinti)(:|$)/i,
-    });
-    await userEvent.click(deleteButtons[0]!);
+    const menus = await canvas.findAllByRole("button", { name: /^(actions|veiksmai):/i });
+    await userEvent.click(menus[0]!);
+    await userEvent.click(await screen.findByRole("menuitem", { name: /^(delete|ištrinti)$/i }));
     const dialog = await openedDialog("alertdialog");
     await userEvent.click(within(dialog).getByRole("button", { name: /delete|ištrinti/i }));
   },

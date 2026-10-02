@@ -45,7 +45,7 @@ export function ColumnHeader<K extends string>({
               column: label,
             })}
             className={cn(
-              "inline-flex items-center gap-1 rounded px-1 py-1 transition-colors hover:text-foreground",
+              "inline-flex items-center gap-1 rounded-lg px-1 py-1 transition-colors hover:text-foreground",
               sorted && "text-foreground",
             )}
           >

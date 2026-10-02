@@ -49,7 +49,10 @@ export function CategoriesPage() {
         </CreateDialog>
       </PageHeader>
 
-      <EditModal {...categories.editProps} title={t("categories.editTitle")}>
+      <EditModal
+        {...categories.editProps}
+        title={(category) => `${t("categories.editTitle")}: ${category.name}`}
+      >
         {(category, close) => (
           <CategoryForm categories={categoryList} initial={category} onClose={close} />
         )}

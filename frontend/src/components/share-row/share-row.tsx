@@ -68,12 +68,14 @@ interface SkeletonProps {
   rows: number;
   share?: boolean;
   compared?: boolean;
+  wideAmount?: boolean;
 }
 
 export function ShareRowsSkeleton({
   rows,
   share = true,
   compared = false,
+  wideAmount = false,
 }: Readonly<SkeletonProps>) {
   return (
     <ul data-slot="share-rows-skeleton" aria-hidden="true" className="space-y-3.5">
@@ -84,7 +86,11 @@ export function ShareRowsSkeleton({
             {share ? (
               <TextSkeleton size="xs" className="w-10 shrink-0 justify-end" width="w-8" />
             ) : null}
-            <TextSkeleton size="sm" className="w-24 shrink-0 justify-end" width="w-20" />
+            <TextSkeleton
+              size="sm"
+              className={cn("shrink-0 justify-end", wideAmount ? "w-28" : "w-24")}
+              width="w-20"
+            />
           </div>
           <Skeleton className="mt-1.5 h-1.5 w-full rounded-none" />
           {compared ? <TextSkeleton size="xs" className="mt-1 justify-end" width="w-36" /> : null}

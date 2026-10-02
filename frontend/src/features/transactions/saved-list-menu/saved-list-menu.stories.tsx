@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { Bookmark } from "lucide-react";
-import { expect, fn, screen, userEvent } from "storybook/test";
+import { expect, fn, screen, userEvent, within } from "storybook/test";
 import { withWidth } from "@/storybook/decorators";
-import type { Canvas } from "@/storybook/interactions";
+import { type Canvas, openedDialog } from "@/storybook/interactions";
 import { SavedListMenu } from "./saved-list-menu";
 
 const items = [
@@ -81,6 +81,20 @@ export const Renaming: Story = {
     await userEvent.click(screen.getByRole("button", { name: "Save" }));
 
     await expect(args.onRename).toHaveBeenCalledWith("2", "Kitchen");
+  },
+};
+
+export const DeletingAsksFirst: Story = {
+  play: async ({ args, canvas }) => {
+    await openMenu(canvas);
+    await userEvent.click(await screen.findByRole("button", { name: "Delete: Renovation" }));
+    const dialog = within(await openedDialog("alertdialog"));
+
+    await expect(dialog.getByText("Renovation")).toBeVisible();
+    await expect(args.onDelete).not.toHaveBeenCalled();
+    await userEvent.click(dialog.getByRole("button", { name: "Delete" }));
+
+    await expect(args.onDelete).toHaveBeenCalledWith("2");
   },
 };
 

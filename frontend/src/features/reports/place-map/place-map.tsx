@@ -14,6 +14,7 @@ import type { PlaceBreakdownItem } from "@/api/generated/model";
 import latinExtFont from "@/assets/fonts/source-sans-3-latin-ext-wght-normal.woff2?url";
 import latinFont from "@/assets/fonts/source-sans-3-latin-wght-normal.woff2?url";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
+import { usePalette, useTheme } from "@/stores/theme-store";
 import { MAP_TILES_PATH } from "./map-tiles";
 import { type PlaceFeatureCollection, placeFeatures, topPlaceNames } from "./place-features";
 
@@ -137,7 +138,9 @@ function mapStyle(colors: MapColors, places: PlaceFeatureCollection): StyleSpeci
 }
 
 export function PlaceMap({ items, onSelect }: Readonly<Props>) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const { theme } = useTheme();
+  const { palette } = usePalette();
   const [failed, setFailed] = useState(false);
   const places = placeFeatures(items);
   const names = topPlaceNames(places);
@@ -157,6 +160,10 @@ export function PlaceMap({ items, onSelect }: Readonly<Props>) {
         bounds: LITHUANIA,
         maxBounds: AROUND_LITHUANIA,
         attributionControl: { compact: true },
+        locale: {
+          "Map.Title": label,
+          "AttributionControl.ToggleAttribution": t("reports.expenseByPlace.toggleAttribution"),
+        },
         dragRotate: false,
         pitchWithRotate: false,
       });
@@ -182,8 +189,7 @@ export function PlaceMap({ items, onSelect }: Readonly<Props>) {
   return (
     <div className="space-y-2">
       <div
-        role="img"
-        aria-label={label}
+        key={`${theme}-${palette}-${i18n.resolvedLanguage}`}
         ref={failed ? undefined : draw}
         className="h-90 w-full overflow-hidden rounded-lg bg-muted/50"
       />

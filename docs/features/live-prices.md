@@ -40,7 +40,7 @@ flowchart TD
     Held --> Mapped["with a price source"]
     Mapped --> Due{"due?"}
     Due -->|"never fetched"| Fetch
-    Due -->|"price on the last weekday before today"| Skip["skipped"]
+    Due -->|"price on the target day: the last weekday before today,<br/>or yesterday for Kraken"| Skip["skipped"]
     Due -->|"failed less than 24 hours ago, not Fetch now"| Skip
     Due -->|"already asked today, not Fetch now"| Skip
     Due -->|"stale"| Fetch["oldest last price first"]
@@ -52,7 +52,7 @@ flowchart TD
     Currency -->|"yes"| Book["SecurityPriceBook with source Feed"]
 ```
 
-A security is due when it has never been fetched, or when its last price is older than the last weekday before today and it was not already asked today. So a run on a holiday, when the provider has nothing new, costs one call per security that day and none on the next runs. A failure waits 24 hours before it is tried again, except on Fetch now. EODHD calls are counted on the settings row (`PriceCallsDate`, `PriceCallsUsed`), including Find; a fetch that would need more calls than are left is not made, so the day's count never passes the limit. The first fetch of an EODHD symbol costs two calls, because EODHD's end-of-day answer carries no currency and the provider asks its search once for the listing's currency. The answer is stored on the security as `PriceQuoteCurrency`, so every later fetch costs one call, across restarts, until the source or the symbol changes. A symbol chosen from Find's list costs one call on its first fetch too, because the API keeps Find's answers in memory and the first fetch stores the remembered currency; only a restart between Find and that first fetch brings the second call back, once.
+A security is due when it has never been fetched, or when its last price is older than its target day and it was not already asked today. The target day of an EODHD security is the last weekday before today, because exchanges close at weekends; the target day of a Kraken security is yesterday, because crypto has a close every calendar day, so Saturday's and Sunday's closes arrive on the next day's run rather than waiting for Tuesday. So a run on a holiday, when the provider has nothing new, costs one call per security that day and none on the next runs. A failure waits 24 hours before it is tried again, except on Fetch now. EODHD calls are counted on the settings row (`PriceCallsDate`, `PriceCallsUsed`), including Find; a fetch that would need more calls than are left is not made, so the day's count never passes the limit. The first fetch of an EODHD symbol costs two calls, because EODHD's end-of-day answer carries no currency and the provider asks its search once for the listing's currency. The answer is stored on the security as `PriceQuoteCurrency`, so every later fetch costs one call, across restarts, until the source or the symbol changes. A symbol chosen from Find's list costs one call on its first fetch too, because the API keeps Find's answers in memory and the first fetch stores the remembered currency; only a restart between Find and that first fetch brings the second call back, once.
 
 The run stores `PriceSyncedAt`, `PriceSyncError` and, for EODHD, `PriceQuoteCurrency` on each security it asked and `PriceSyncRunAt` on the settings row, and answers how many securities it checked, how many prices it wrote, how many failed and how many EODHD calls are left. A failure is logged as a warning and listed in the settings section; there is no notification, because the price date shown next to every price already says when it is stale.
 
@@ -92,4 +92,4 @@ The three settings routes are for administrators only and are not behind the fea
 
 ## What changes downstream
 
-Nothing reads a fetched price differently from any other. With a price on every weekday, the value chart, account balances, the dashboard total, net worth and its snapshots stop being partial for want of a price, and the member export's journal writes its `price` directive from the newest `LastPrice` as before.
+Nothing reads a fetched price differently from any other. With a price on every weekday, and every day for a Kraken security, the value chart, account balances, the dashboard total, net worth and its snapshots stop being partial for want of a price, and the member export's journal writes its `price` directive from the newest `LastPrice` as before.

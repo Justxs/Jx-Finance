@@ -46,11 +46,7 @@ export function GoalsPage() {
           />
         ))}
       </PanelRows>
-      <EditModal
-        {...goals.editProps}
-        title={t("goals.editTitle")}
-        description={(goal) => goal.name}
-      >
+      <EditModal {...goals.editProps} title={(goal) => `${t("goals.editTitle")}: ${goal.name}`}>
         {(goal, close) => <GoalForm initial={goal} accounts={accountList} onClose={close} />}
       </EditModal>
       <ConfirmDeleteDialog {...goals.dialogProps} />

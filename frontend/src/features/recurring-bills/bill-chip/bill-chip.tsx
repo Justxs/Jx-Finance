@@ -10,6 +10,7 @@ import type {
 import { TransactionsLink } from "@/components/transactions-link/transactions-link";
 import { Button } from "@/components/ui/button/button";
 import { Tag } from "@/components/ui/tag/tag";
+import { Tooltip } from "@/components/ui/tooltip/tooltip";
 import { useMoney } from "@/hooks/use-formatters";
 import { INCOME_TONE } from "@/lib/tone";
 import { cn } from "@/lib/utils";
@@ -28,7 +29,7 @@ const statusTones = {
 } as const satisfies Record<BillOccurrenceStatus, "negative" | "positive" | "neutral" | null>;
 
 const nameClass =
-  "min-w-0 truncate rounded-sm text-left font-medium underline-offset-4 outline-none hover:underline focus-visible:ring-3 focus-visible:ring-ring/50";
+  "min-w-0 truncate rounded-sm text-left font-medium underline-offset-4 hover:underline focus-ring";
 
 interface Props {
   occurrence: BillOccurrence;
@@ -68,14 +69,15 @@ function ChipName({
   }
 
   return (
-    <button
-      type="button"
-      title={occurrence.name}
-      className={nameClass}
-      onClick={() => (occurrence.isNextDue ? onConfirm(bill) : onEdit(bill))}
-    >
-      {occurrence.name}
-    </button>
+    <Tooltip content={occurrence.name}>
+      <button
+        type="button"
+        className={nameClass}
+        onClick={() => (occurrence.isNextDue ? onConfirm(bill) : onEdit(bill))}
+      >
+        {occurrence.name}
+      </button>
+    </Tooltip>
   );
 }
 

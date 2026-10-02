@@ -17,7 +17,6 @@ interface Props {
   series: readonly NetWorthSeries[];
   ariaLabel: string;
   legend?: boolean;
-  baseline?: boolean;
   yDomain?: ["auto", "auto"];
   until?: string;
   pace?: boolean;

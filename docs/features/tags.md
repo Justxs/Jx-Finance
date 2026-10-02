@@ -36,7 +36,7 @@ erDiagram
 
 ## Unique names
 
-A name is unique per owner, ignoring case. `TagService` checks it with a case-insensitive `ILIKE` over the owner's rows and answers 409 `conflict.duplicate` with the name in the message. A filtered unique index on `(UserId, Name)` where `IsDeleted = false` backs that up against two requests racing; it is case-sensitive, so it only catches the exact duplicate, and the service is what makes "Holiday" and "holiday" the same name. The filter is what lets a deleted name be used again.
+A name is unique per owner, ignoring case. `TagService` checks it with a case-insensitive `ILIKE` over the owner's rows and answers 409 `conflict.duplicate` with the name in the message. A filtered unique index on `(UserId, Name)` where `IsDeleted = false` backs that up against two requests racing, and the create and update save through `SaveOrConflictAsync`, so the losing request of a double submit also answers 409 `conflict.duplicate` instead of a server error. The index is case-sensitive, so it only catches the exact duplicate, and the service is what makes "Holiday" and "holiday" the same name. The filter is what lets a deleted name be used again.
 
 Two people may own a tag of the same name, including inside one household. The owner is part of the rule because the rule protects one person's list from having two entries they cannot tell apart, not the household from having two similar words.
 
@@ -102,7 +102,7 @@ This is the rule [Categories](categories.md) already has, applied to the join ta
 
 Before the join rows go, the ids of the transactions they pointed at are recorded beside the trash entry, so the delete is undoable: the toast offers Undo, the trash lists `Holiday, 7 transactions`, and a restore links the tag again to every one of those transactions that is still stored, soft-deleted ones included. A restore is refused with 409 `restore.nameTaken` when another live tag of the owner has taken the name meanwhile, ignoring case, because the unique-name rule would otherwise be broken by the restore itself; rename or delete the other one first. See [Trash and undo](trash-and-undo.md#deletes-that-rewrite-other-rows).
 
-Since 2026-09-30 the delete also retires the tag's [budgets](budgets.md#budgets-on-a-tag), recording them beside the trash entry, which then reads `Holiday, 7 transactions, 1 budget`, and a restore brings each back while its period is still free.
+Since 2026-09-30 the delete also retires the tag's [budgets](budgets.md#budgets-on-a-tag), recording them beside the trash entry, which then reads `Holiday, 7 transactions, 1 budget`, and a restore brings each back while its period is still free. Creating, renaming or deleting a tag refreshes the budgets list along with the tags, the ledger and its totals.
 
 A household member who did not create a shared tag may rename it, like a shared category, but only the owner may delete it or change its sharing.
 

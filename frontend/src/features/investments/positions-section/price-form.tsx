@@ -38,12 +38,10 @@ export function PriceForm({ security, onClose }: Readonly<Props>) {
       <form.FormShell as={FormGrid}>
         <form.Field name="lastPrice">
           {(field) => (
-            <field.TextField
+            <field.MoneyInputField
               id="price-form-price"
               label={t("investments.price.label", { currency: security.currency.toUpperCase() })}
               hint={t("investments.price.hint")}
-              inputMode="decimal"
-              placeholder="0.00"
             />
           )}
         </form.Field>

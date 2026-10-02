@@ -89,7 +89,6 @@ export function DebtExtraPayments({
           <Input
             id={`${idPrefix}-monthly`}
             inputMode="decimal"
-            placeholder="0.00"
             value={monthly.draft}
             {...shellAria({ id: `${idPrefix}-monthly`, error: monthlyError })}
             onChange={(event) => monthly.change(event.target.value)}
@@ -103,7 +102,6 @@ export function DebtExtraPayments({
           <Input
             id={`${idPrefix}-lump-sum`}
             inputMode="decimal"
-            placeholder="0.00"
             value={lumpSum.draft}
             {...shellAria({ id: `${idPrefix}-lump-sum`, error: lumpSumError })}
             onChange={(event) => lumpSum.change(event.target.value)}

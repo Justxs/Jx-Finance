@@ -27,6 +27,8 @@ flowchart LR
     Compare --> Api
 ```
 
+`dateTo` defaults to today and `dateFrom` to the first day of `dateTo`'s month. `GetReportSummaryValidator` answers 400 `range.invalid` for a date outside 2000-01-01 to 2999-12-31, the years `MonthKey` supports, and for a `dateFrom` after the end, which is today when `dateTo` is left out. Before it, a start after the end returned an empty report without saying why, and a date at the edge of what `DateOnly` holds failed with a server error when the range or the earlier comparison period was worked out. `ReportEndpointTests` cover each refusal.
+
 ## Comparing with an earlier period
 
 A report can carry a second period beside the one it was asked for. The client sends `comparison=previousPeriod`, `comparison=previousMonth` or `comparison=previousYear`; without the parameter nothing about the answer changes and nothing extra is read.
@@ -152,7 +154,7 @@ Each side shows the rows of the list above it: `breakdownCut` in `components/cat
 
 Clicking an income or expense category, or a group, opens `/transactions` with the same search the list row's link builds: `categoryId`, `type` and the range. A group's id includes its sub-categories, as the ledger's category filter already does. Investment income, investment taxes and fees, Uncategorized, Other, Money in, Money back, From savings and Saved are not clickable. The chart stays out of the tab order like every chart; keyboard users reach the same ledger views through the lists. Names come from `useCategoryName` and amounts from `useMoney`, so Hide amounts masks the labels, the tooltip and the Money back line.
 
-Below `md` the section is hidden and the lists stay the view: a horizontal flow of long Lithuanian names does not fit a phone. When both totals are zero the section shows "Nothing recorded in this period." instead of the chart. The month-end review does not show it yet; the component takes a report summary, so it can be reused there without change.
+Below `lg` the section is hidden and the lists stay the view: a horizontal flow of long Lithuanian names does not fit a phone, and at `md` width the plot between the labels was too narrow to read. When both totals are zero the section shows "Nothing recorded in this period." instead of the chart. The month-end review does not show it yet; the component takes a report summary, so it can be reused there without change.
 
 ## My share
 

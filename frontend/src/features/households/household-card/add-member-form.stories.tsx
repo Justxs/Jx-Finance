@@ -47,7 +47,7 @@ export const UnknownEmailAfterSubmit: Story = {
     ),
   ),
   play: async ({ args, canvas }) => {
-    await fireEvent.change(canvas.getByPlaceholderText("Member's email"), {
+    await fireEvent.change(canvas.getByLabelText("Email"), {
       target: { value: "nobody@example.lt" },
     });
     await userEvent.click(canvas.getByRole("button", { name: "Add" }));

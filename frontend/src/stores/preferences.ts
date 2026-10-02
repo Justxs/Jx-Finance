@@ -81,6 +81,18 @@ export function savePreferences(patch: PreferencesPatch) {
   }
 }
 
+export function forgetUserPreferences() {
+  if (preferencesCollection.has(ROW_ID)) {
+    savePreferences({
+      activeHouseholdId: undefined,
+      lastAccountId: undefined,
+      commandRecents: undefined,
+      paceMilestones: undefined,
+      monthClosePromptHidden: undefined,
+    });
+  }
+}
+
 export function onPreferencesChange(listener: () => void) {
   const subscription = preferencesCollection.subscribeChanges(listener);
   return () => subscription.unsubscribe();

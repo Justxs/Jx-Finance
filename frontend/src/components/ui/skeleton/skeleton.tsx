@@ -18,7 +18,7 @@ const textSizes = {
   xs: "text-xs",
   sm: "text-sm",
   base: "text-base",
-  label: "text-sm leading-none",
+  label: "text-sm leading-5",
   title: "text-lg leading-6",
   xl: "text-xl",
   page: "font-serif text-page-title",

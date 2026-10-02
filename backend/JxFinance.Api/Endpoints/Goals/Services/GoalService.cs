@@ -5,6 +5,7 @@ using JxFinance.Common.References;
 using JxFinance.Common.Settings;
 using JxFinance.Common.Sharing;
 using JxFinance.Common.Trash;
+using JxFinance.Common.Validation;
 using JxFinance.Domain.Accounts;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Goals;
@@ -40,6 +41,10 @@ public sealed class GoalService(
     private static readonly DomainError BelowZero = new(
         ErrorCodes.MoneyNonNegative,
         "The goal's saved amount cannot fall below zero.");
+
+    private static readonly DomainError TooLarge = new(
+        ErrorCodes.MoneyInvalid,
+        "The goal's saved amount would grow past the largest amount that can be stored.");
 
     public async Task<IReadOnlyList<GoalResponse>> GetAllAsync(CancellationToken cancellationToken)
     {
@@ -107,6 +112,11 @@ public sealed class GoalService(
         if (amount < 0)
         {
             return BelowZero;
+        }
+
+        if (!DecimalRules.FitsMoney(amount))
+        {
+            return TooLarge;
         }
 
         goal.CurrentAmount = new Money(amount, settings.Current.ReportingCurrency);

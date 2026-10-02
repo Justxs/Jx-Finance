@@ -172,7 +172,9 @@ export const MonthlyDigest: Story = {
     const entry = await within(await openedDialog()).findByRole("link");
 
     await expect(entry).toHaveTextContent("August 2026");
-    await expect(entry).toHaveTextContent(/Income €3,200\.00, expenses €2,450\.00, net €750\.00/u);
+    await expect(entry).toHaveTextContent(
+      /Income €3,200\.00, expenses €2,450\.00, net \+€750\.00/u,
+    );
     await expect(entry).toHaveAttribute("href", expect.stringContaining("month=2026-08"));
   },
 };

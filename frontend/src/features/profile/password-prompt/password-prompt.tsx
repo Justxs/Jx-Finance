@@ -6,7 +6,7 @@ import { FormError } from "@/components/form-error/form-error";
 interface Props {
   id: string;
   submitLabel: string;
-  variant?: "default" | "destructive";
+  variant?: "default" | "outline" | "destructive";
   pending: boolean;
   error: unknown;
   message?: string;
@@ -52,13 +52,15 @@ export function PasswordPrompt({
 
         <FormError error={error} message={message} />
 
-        <form.Subscribe selector={(state) => state.values.password !== ""}>
-          {(ready) => (
-            <form.SubmitButton variant={variant} pending={pending} disabled={!ready}>
-              {submitLabel}
-            </form.SubmitButton>
-          )}
-        </form.Subscribe>
+        <form.FormActions>
+          <form.Subscribe selector={(state) => state.values.password !== ""}>
+            {(ready) => (
+              <form.SubmitButton variant={variant} pending={pending} disabled={!ready}>
+                {submitLabel}
+              </form.SubmitButton>
+            )}
+          </form.Subscribe>
+        </form.FormActions>
       </form.FormShell>
     </form.AppForm>
   );

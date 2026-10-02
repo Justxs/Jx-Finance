@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import type { Currency, PortfolioYear } from "@/api/generated/model";
+import { SignedAmount } from "@/components/signed-amount/signed-amount";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { Rows } from "@/components/ui/rows/rows";
 import { TitledSection } from "@/components/ui/section/section";
@@ -10,12 +11,9 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-  ScrollRegion,
 } from "@/components/ui/table/table";
 import { chargeSign } from "@/features/investments/investment-types";
 import { useMoney } from "@/hooks/use-formatters";
-import { gainTone } from "@/lib/tone";
-import { cn } from "@/lib/utils";
 
 interface Props {
   years: readonly PortfolioYear[];
@@ -37,8 +35,8 @@ export function IncomeByYear({ years, currency }: Readonly<Props>) {
         <EmptyText>{t("investments.years.empty")}</EmptyText>
       ) : (
         <>
-          <ScrollRegion className="-mx-3 hidden sm:block" aria-label={t("investments.years.table")}>
-            <Table>
+          <div className="hidden sm:block">
+            <Table label={t("investments.years.table")}>
               <TableHeader>
                 <TableRow>
                   <TableHead>{t("investments.years.year")}</TableHead>
@@ -58,28 +56,21 @@ export function IncomeByYear({ years, currency }: Readonly<Props>) {
                     <TableCell numeric>{money.format(Number(row.interest), currency)}</TableCell>
                     <TableCell numeric>{charge(row.fees)}</TableCell>
                     <TableCell numeric className="font-semibold">
-                      <span className={gainTone(Number(row.realizedGain))}>
-                        {money.formatSigned(Number(row.realizedGain), "auto", currency)}
-                      </span>
+                      <SignedAmount value={Number(row.realizedGain)} currency={currency} />
                     </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
-          </ScrollRegion>
+          </div>
           <Rows className="sm:hidden">
             {rows.map((row) => (
               <li key={row.year} className="py-2.5 text-sm">
                 <div className="flex items-baseline justify-between gap-3">
                   <h3 className="font-semibold tabular-nums">{row.year}</h3>
-                  <p
-                    className={cn(
-                      "font-semibold whitespace-nowrap tabular-nums",
-                      gainTone(Number(row.realizedGain)),
-                    )}
-                  >
+                  <p className="font-semibold whitespace-nowrap">
                     <span className="sr-only">{t("investments.years.realizedGain")}: </span>
-                    {money.formatSigned(Number(row.realizedGain), "auto", currency)}
+                    <SignedAmount value={Number(row.realizedGain)} currency={currency} />
                   </p>
                 </div>
                 <dl className="mt-1 grid grid-cols-2 gap-x-6 gap-y-0.5 text-xs">

@@ -72,7 +72,7 @@ export function MoneyFlow({ summary }: Readonly<Props>) {
   ).length;
 
   return (
-    <TitledSection title={t("reports.moneyFlow.title")} bodyGap="md" className="hidden md:block">
+    <TitledSection title={t("reports.moneyFlow.title")} bodyGap="md" className="hidden lg:block">
       {empty ? (
         <EmptyText>{t("charts.empty")}</EmptyText>
       ) : (

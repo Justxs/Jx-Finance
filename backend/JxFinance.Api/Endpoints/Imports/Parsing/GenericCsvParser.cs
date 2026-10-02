@@ -151,10 +151,28 @@ public static class GenericCsvParser
                 return (null, null);
             }
 
-            var latest = rows[0].Row.Date > rows[^1].Row.Date ? rows[0] : rows[^1];
-            var balance = mapping.AmountStyle == CsvAmountStyle.SignedPositiveIsExpense ? -latest.Balance : latest.Balance;
-            return (latest.Row.Date, balance is { } amount ? new Money(amount, latest.Row.Currency) : null);
+            var latest = NewestFirst(rows) ? rows[0] : rows[^1];
+            return (latest.Row.Date, Booked(latest.Balance) is { } amount ? new Money(amount, latest.Row.Currency) : null);
         }
+
+        private bool NewestFirst(List<(ParsedRow Row, decimal? Balance)> rows)
+        {
+            var first = rows[0].Row.Date;
+            var differing = rows.FindIndex(entry => entry.Row.Date != first);
+            if (differing > 0)
+            {
+                return rows[differing].Row.Date < first;
+            }
+
+            return rows.Count > 1
+                && Booked(rows[0].Balance) - Booked(rows[1].Balance) == Movement(rows[0].Row)
+                && Booked(rows[1].Balance) - Booked(rows[0].Balance) != Movement(rows[1].Row);
+        }
+
+        private decimal? Booked(decimal? balance) =>
+            mapping.AmountStyle == CsvAmountStyle.SignedPositiveIsExpense ? -balance : balance;
+
+        private static decimal Movement(ParsedRow row) => row.Type == FlowType.Expense ? -row.Amount : row.Amount;
 
         private decimal? Signed(string[] cells)
         {

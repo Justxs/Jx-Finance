@@ -159,7 +159,7 @@ The outstanding amount stays what the owner recorded, and net worth keeps subtra
 
 ```mermaid
 flowchart TD
-    List["Net worth, Debts section"] --> Link["calendar button on every row, and 'paid off' in its details when payoffDate is set"]
+    List["Net worth, Debts section"] --> Link["'Balance history and schedule' in every row's actions menu, and 'paid off' in its details when payoffDate is set"]
     List --> Form["Add or edit a debt: name, type, outstanding amount, rate,<br/>Repayment terms: loan amount, first payment, term or monthly payment, type"]
     Link --> Page["/net-worth/debts/$debtId"]
     Page --> Summary["payoff date, monthly payment, rate, total interest, total paid,<br/>scheduled balance beside the recorded one"]

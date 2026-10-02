@@ -46,7 +46,7 @@ export function ShortcutsHelp() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="gap-4 sm:max-w-lg">
-        <DialogTitle className="text-lg leading-6">{t("shortcuts.title")}</DialogTitle>
+        <DialogTitle>{t("shortcuts.title")}</DialogTitle>
         {groups.map(({ group, listClassName }) => (
           <section key={group} aria-labelledby={`shortcuts-${group}`}>
             <h3 id={`shortcuts-${group}`} className="text-xs font-medium text-muted-foreground">

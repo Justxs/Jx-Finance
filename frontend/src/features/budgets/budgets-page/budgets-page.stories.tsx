@@ -134,8 +134,7 @@ export const EditDialogOpen: Story = {
     const editButtons = await canvas.findAllByRole("button", { name: /^(edit|redaguoti):/i });
     await userEvent.click(editButtons[0]!);
     const dialog = await openedDialog();
-    await expect(dialog).toHaveAccessibleName("Edit budget");
-    await expect(dialog).toHaveAccessibleDescription(budgets[0]!.name);
+    await expect(dialog).toHaveAccessibleName(`Edit budget: ${budgets[0]!.name}`);
   },
 };
 

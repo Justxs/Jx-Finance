@@ -81,7 +81,6 @@ export function DebtBalanceChart({ plan, withExtra, tracked, currency }: Readonl
       ariaLabel={t("netWorth.schedule.balanceChartLabel")}
       currency={currency}
       legend={series.length > 1}
-      baseline
     />
   );
 }

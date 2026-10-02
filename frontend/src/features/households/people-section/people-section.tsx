@@ -138,7 +138,10 @@ export function PeopleSection() {
         </Rows>
       )}
 
-      <EditModal {...people.editProps} title={t("households.people.rename")}>
+      <EditModal
+        {...people.editProps}
+        title={(contact) => `${t("households.people.rename")}: ${contact.name}`}
+      >
         {(contact, close) => <ContactForm initial={contact} onClose={close} />}
       </EditModal>
       <Modal

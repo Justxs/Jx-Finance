@@ -118,9 +118,9 @@ export function HouseholdActivity({ householdId, members }: Readonly<Props>) {
   return (
     <section aria-labelledby={titleId} className="space-y-3 border-t pt-4">
       <div className="space-y-1">
-        <h3 id={titleId} className="text-sm font-semibold">
+        <h4 id={titleId} className="text-sm font-semibold">
           {t("audit.title")}
-        </h3>
+        </h4>
         <p className="max-w-prose text-sm text-muted-foreground">
           {t("audit.description", { days: AUDIT_RETENTION_DAYS })}
         </p>

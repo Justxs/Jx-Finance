@@ -16,6 +16,7 @@ import type {
 import { MoneyPairField, useServerForm } from "@/components/form";
 import { FormError } from "@/components/form-error/form-error";
 import { FormGrid } from "@/components/ui/form-grid/form-grid";
+import { RuledLine } from "@/components/ui/ruled-line/ruled-line";
 import { type CashEffectInput, cashEffect } from "@/features/investments/cash-effect";
 import {
   entryTypes,
@@ -98,7 +99,7 @@ function CashEffectLine({ input, currency }: Readonly<CashEffectProps>) {
   }
 
   return (
-    <dl className="col-span-full border-y border-rule py-2.5 text-sm">
+    <RuledLine as="dl" tone="ink" className="col-span-full">
       <div className="flex justify-between gap-3">
         <dt className="text-muted-foreground">{t("investments.entry.cashEffect")}</dt>
         <dd
@@ -107,7 +108,7 @@ function CashEffectLine({ input, currency }: Readonly<CashEffectProps>) {
           {text}
         </dd>
       </div>
-    </dl>
+    </RuledLine>
   );
 }
 

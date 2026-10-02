@@ -11,8 +11,9 @@ public sealed class SetPayeeNameEndpoint(IPayeeNameService payeeNames) : Endpoin
     {
         Put(ApiRoutes.Payees);
         Group<PayeesGroup>();
+        Description(d => d.ProducesProblemDetails(409));
     }
 
     public override async Task HandleAsync(SetPayeeNameRequest req, CancellationToken ct) =>
-        await Send.OkAsync(await payeeNames.SetAsync(req, ct), ct);
+        await Send.OkOrProblemAsync(await payeeNames.SetAsync(req, ct), ct);
 }

@@ -26,7 +26,7 @@ export function ActiveFilters({ filters, tags }: Readonly<Props>) {
             type="button"
             onClick={summary.clear}
             aria-label={t("filters.remove", { column: summary.label, value: summary.value })}
-            className="inline-flex max-w-72 items-center gap-1 rounded-full border bg-muted/40 py-0.5 pr-1.5 pl-2.5 leading-5 transition-colors hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none pointer-coarse:min-h-11"
+            className="inline-flex max-w-72 items-center gap-1 rounded-sm border bg-muted/40 py-0.5 pr-1.5 pl-2.5 leading-5 focus-ring transition-colors hover:bg-muted pointer-coarse:min-h-11"
           >
             <span className="shrink-0 text-muted-foreground">{summary.label}</span>
             <span className="truncate font-medium">{summary.value}</span>

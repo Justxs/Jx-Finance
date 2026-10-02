@@ -78,7 +78,7 @@ export function AccountMenu({
             type="button"
             aria-label={`${name}, ${t("nav.accountMenu")}`}
             className={cn(
-              "flex min-w-0 items-center gap-2.5 rounded-md p-1.5 text-left transition-colors outline-none hover:bg-accent focus-visible:ring-3 focus-visible:ring-ring/50 data-popup-open:bg-accent",
+              "flex min-w-0 items-center gap-2.5 rounded-md p-1.5 text-left focus-ring transition-colors hover:bg-accent data-popup-open:bg-accent",
               className,
             )}
           />

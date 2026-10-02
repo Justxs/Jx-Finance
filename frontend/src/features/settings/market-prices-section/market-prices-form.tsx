@@ -26,11 +26,16 @@ function SavedKey({ action, onChange }: Readonly<KeyStateProps>) {
       <div className="flex flex-wrap items-center gap-2">
         {action === "keep" ? (
           <>
-            <Tag tone="positive">{t("settings.marketPrices.keySaved")}</Tag>
+            <Tag tone="neutral">{t("settings.marketPrices.keySaved")}</Tag>
             <Button type="button" variant="outline" size="sm" onClick={() => onChange("replace")}>
               {t("settings.marketPrices.replace")}
             </Button>
-            <Button type="button" variant="outline" size="sm" onClick={() => onChange("remove")}>
+            <Button
+              type="button"
+              variant="outline-destructive"
+              size="sm"
+              onClick={() => onChange("remove")}
+            >
               {t("settings.marketPrices.remove")}
             </Button>
           </>

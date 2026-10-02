@@ -92,6 +92,7 @@ function TokenRow({ token, pending, disabled, onRevoke }: Readonly<RowProps>) {
         </dl>
       }
       icon={Trash2}
+      variant="outline-destructive"
       actionLabel={t("profile.apiTokens.revoke")}
       itemLabel={token.name}
       pending={pending}

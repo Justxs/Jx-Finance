@@ -49,7 +49,7 @@ export function ReportsPending() {
           <ChartSkeleton height={280} legend />
         </SectionSkeleton>
       </SplitColumns>
-      <SectionSkeleton className="hidden md:block">
+      <SectionSkeleton className="hidden lg:block">
         <ChartSkeleton height={MONEY_FLOW_HEIGHT} />
       </SectionSkeleton>
     </PagePending>

@@ -9,7 +9,7 @@ pre-commit:
       stage_fixed: true
     - name: lint
       root: frontend/
-      glob: "*.{ts,tsx}"
+      glob: "*.{ts,tsx,mjs}"
       run: node_modules/.bin/oxlint --no-error-on-unmatched-pattern {staged_files}
     - name: backend format
       glob: "backend/**/*.cs"

@@ -7,11 +7,9 @@ import type {
 } from "@/api/generated/model";
 import { createTransactionGroupBodyNameMax } from "@/api/schemas/transaction-groups/transaction-groups.zod";
 import { ComboboxField } from "@/components/combobox-field/combobox-field";
+import { SignedAmount } from "@/components/signed-amount/signed-amount";
 import { Button } from "@/components/ui/button/button";
 import { Input } from "@/components/ui/input/input";
-import { useMoney } from "@/hooks/use-formatters";
-import { EXPENSE_TONE, INCOME_TONE } from "@/lib/tone";
-import { cn } from "@/lib/utils";
 import { categoryTargetCount, type PreviewRowState, summarizeSelection } from "./preview-rows";
 
 const NEW_GROUP = "new";
@@ -54,7 +52,6 @@ export function ImportSummaryBar({
   disabled = false,
 }: Readonly<Props>) {
   const { t } = useTranslation();
-  const money = useMoney();
   const [bulkCategoryId, setBulkCategoryId] = useState("");
 
   const summary = summarizeSelection(rows);
@@ -81,16 +78,12 @@ export function ImportSummaryBar({
         <p className="flex flex-wrap items-baseline justify-end gap-x-3 gap-y-1 text-sm">
           <span className="text-muted-foreground">{t("imports.netSelected")}</span>
           {nets.map((net) => (
-            <span
+            <SignedAmount
               key={net.currency ?? ""}
-              className={cn(
-                "border-b-3 border-double border-rule pb-0.5 text-base font-semibold whitespace-nowrap tabular-nums",
-                net.cents > 0 && INCOME_TONE,
-                net.cents < 0 && EXPENSE_TONE,
-              )}
-            >
-              {money.formatSigned(net.cents / 100, "auto", net.currency)}
-            </span>
+              value={net.cents / 100}
+              currency={net.currency}
+              className="border-b-3 border-double border-rule pb-0.5 text-base font-semibold whitespace-nowrap"
+            />
           ))}
         </p>
       </div>

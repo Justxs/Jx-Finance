@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { TagResponse } from "@/api/generated/model";
 import { FieldShell } from "@/components/form/field-shell/field-shell";
+import { FormActions } from "@/components/form/form-actions/form-actions";
 import { Modal } from "@/components/modal";
 import { SelectField } from "@/components/select-field/select-field";
 import { TagPicker } from "@/components/tag-picker/tag-picker";
@@ -144,14 +145,14 @@ export function TransactionsFiltersDialog({ filters, tags, className }: Readonly
 
           <FilterSelect id="tx-filter-sort" field={fields.sort} />
 
-          <div className="flex flex-wrap justify-end gap-2 pt-2">
+          <FormActions>
             <Button type="button" variant="outline" disabled={activeCount === 0} onClick={clearAll}>
               {t("transactions.clearFilters")}
             </Button>
             <Button type="button" onClick={() => setOpen(false)}>
               {t("transactions.done")}
             </Button>
-          </div>
+          </FormActions>
         </div>
       </Modal>
     </>

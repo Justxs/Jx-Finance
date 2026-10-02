@@ -134,12 +134,17 @@ export function GoalForm({ initial, accounts, onClose }: Readonly<Props>) {
                 id="goal-name"
                 label={t("goals.name")}
                 placeholder={t("goals.namePlaceholder")}
+                className="col-span-full"
               />
             )}
           </form.Field>
 
           <form.Field name="targetAmount">
             {(field) => <field.MoneyInputField id="goal-target" label={t("goals.targetAmount")} />}
+          </form.Field>
+
+          <form.Field name="targetDate">
+            {(field) => <field.DateField id="goal-date" label={t("goals.targetDate")} />}
           </form.Field>
 
           <form.Field name="funding">
@@ -159,11 +164,7 @@ export function GoalForm({ initial, accounts, onClose }: Readonly<Props>) {
               funding === "manual" ? (
                 <form.Field name="currentAmount">
                   {(field) => (
-                    <field.MoneyInputField
-                      id="goal-current"
-                      label={t("goals.currentAmount")}
-                      hint={t("goals.manualHint")}
-                    />
+                    <field.MoneyInputField id="goal-current" label={t("goals.currentAmount")} />
                   )}
                 </form.Field>
               ) : (
@@ -195,10 +196,6 @@ export function GoalForm({ initial, accounts, onClose }: Readonly<Props>) {
               )
             }
           </form.Subscribe>
-
-          <form.Field name="targetDate">
-            {(field) => <field.DateField id="goal-date" label={t("goals.targetDate")} />}
-          </form.Field>
 
           <SharingFields
             form={form}

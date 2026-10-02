@@ -71,6 +71,7 @@ export function DebtPaymentSplitChart({ plan }: Readonly<Props>) {
           maxBarSize={24}
           dataKey={item.key}
           fill={item.color}
+          radius={item === series.at(-1) ? [1, 1, 0, 0] : undefined}
         />
       ))}
     </BarChartFrame>

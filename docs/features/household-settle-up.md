@@ -36,6 +36,8 @@ The server refuses:
 
 Transfers, conversions and investment entries are not transactions of the ledger's expense kind, so they never offer the action.
 
+A transaction is split once, with a household or with people, but the two kinds live in separate tables with a unique index on `TransactionId` each, so no index stops one of each. Both create paths therefore open a database transaction and take the advisory lock keyed on the transaction id (`AdvisoryLock.LockAsync`, as goal progress does) before `SplitRules.IsSplitAsync` looks; a household split and a split with people of the same row at the same moment run one after the other, and the second answers `settleUp.alreadySplit`. Restoring a split from the trash takes the same lock.
+
 ### The three methods
 
 Each member's amount is computed once, when the split is saved, and stored in `SharedExpenseShares`. Stored amounts keep the history readable when someone joins or leaves later.
@@ -93,7 +95,7 @@ Worked example: Rūta pays 90.00 EUR for groceries from her personal card and sp
 
 ## Recording a payment
 
-"Record payment" opens a dialog prefilled from the suggestion: paid by, paid to, amount, currency, today's date and an optional note of at most 200 characters. "Also record a transfer" offers an account of the payer and an account of the payee, each filtered to the accounts the recorder can see that belong to that member and are held in the payment's currency. When there is none, the dialog says so and only the payment can be recorded.
+"Record payment" opens a dialog prefilled from the suggestion: paid by, paid to, amount, currency, today's date and an optional note of at most 200 characters. "Also record a transfer" offers an account of the payer and an account of the payee, each filtered to the accounts the recorder can see that belong to that member and are held in the payment's currency. When there is none, the dialog says so and only the payment can be recorded. Changing either person or the currency empties both account choices, so the dialog never keeps an account its pickers no longer offer.
 
 ```mermaid
 flowchart TD
@@ -123,7 +125,7 @@ Removing a member is not refused while they have an open balance: removal is an 
 
 ## Trash, audit and retention
 
-Deleting a split or a payment is a soft delete with a trash entry (`TrashKind.SharedExpense`, `TrashKind.Settlement`) and the undo toast; the entry belongs to whoever deleted it. Restoring needs the restorer to be a current member of the household. A split whose transaction is deleted or purged answers `restore.referenceMissing`, and one whose transaction was split again since answers `settleUp.alreadySplit`; a payment whose transfer settles another payment now answers `settleUp.transferTaken`. The retention job purges both kinds 30 days after the delete, see [Background jobs](background-jobs.md).
+Deleting a split or a payment is a soft delete with a trash entry (`TrashKind.SharedExpense`, `TrashKind.Settlement`) and the undo toast; the entry belongs to whoever deleted it. Restoring needs the restorer to be a current member of the household. A split whose transaction is deleted or purged answers `restore.referenceMissing`. The restore runs the create rules of `SplitRules.RefusedAsync` again, so a split whose transaction moved meanwhile to an account the payer does not own answers `settleUp.notPayer`, and one whose transaction became income or a refund answers `settleUp.notExpense`; one whose transaction was split again since answers `settleUp.alreadySplit`; a payment whose transfer settles another payment now answers `settleUp.transferTaken`. The retention job purges both kinds 30 days after the delete, see [Background jobs](background-jobs.md).
 
 Both kinds are in the household's [activity log](audit-log.md) with the household taken from the row: created, updated, deleted and restored, described as "Maxima, 90.00 EUR, 2 shares" and "Jonas paid Ona 30.00 EUR". A change to the members or their amounts is folded into its split as one `shares` field, the way split lines are folded into a transaction.
 

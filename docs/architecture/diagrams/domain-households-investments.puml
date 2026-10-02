@@ -1,0 +1,60 @@
+@startuml domain-households-investments
+!include style.iuml
+hide empty methods
+
+package "Households" {
+  class Household {
+    Name : string
+  }
+  class SharedExpense {
+    Amount : Money
+    Method : SplitMethod
+  }
+  class SharedExpenseShare {
+    UserId : Guid
+    Weight : int?
+    Amount : decimal
+  }
+  class Settlement {
+    FromUserId : Guid
+    ToUserId : Guid
+    Amount : Money
+  }
+}
+
+package "Investments" {
+  class Security {
+    Symbol : string
+    Currency : Currency
+    PriceSource : PriceSource
+  }
+  class SecurityPrice {
+    Date : DateOnly
+    Price : decimal
+  }
+  class InvestmentTransaction {
+    Type : InvestmentTransactionType
+    Quantity : decimal
+    Price : decimal
+    CashAmount : Money
+  }
+  class BrokerConnection {
+    QueryId : string
+    IsEnabled : bool
+  }
+}
+
+class Account
+class Transaction
+class Transfer
+
+Household "1" -- "*" SharedExpense
+SharedExpense "1" *-- "*" SharedExpenseShare
+SharedExpense "*" --> "1" Transaction
+Household "1" -- "*" Settlement
+Settlement "*" --> "0..1" Transfer
+Account "1" -- "*" InvestmentTransaction
+InvestmentTransaction "*" --> "0..1" Security
+Security "1" *-- "*" SecurityPrice
+BrokerConnection "*" --> "1" Account
+@enduml

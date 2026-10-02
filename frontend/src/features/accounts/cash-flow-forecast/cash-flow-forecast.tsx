@@ -11,7 +11,6 @@ import { Rows } from "@/components/ui/rows/rows";
 import { Section, SectionHeader } from "@/components/ui/section/section";
 import { StaleRegion } from "@/components/ui/stale-region/stale-region";
 import {
-  ScrollRegion,
   Table,
   TableBody,
   TableCell,
@@ -97,55 +96,51 @@ function EntriesTable({
   const label = t("forecast.entriesLabel", { account: account.accountName, days });
 
   return (
-    <ScrollRegion aria-label={label} className="-mx-3">
-      <Table className="min-w-120 table-fixed" aria-label={label}>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="w-24">{t("forecast.date")}</TableHead>
-            <TableHead>{t("forecast.entry")}</TableHead>
-            <TableHead numeric className="w-32">
-              {t("forecast.amount")}
-            </TableHead>
-            <TableHead numeric className="w-32">
-              {t("forecast.balanceAfter")}
-            </TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {account.entries.map((entry) => {
-            const amount = Number(entry.amount);
-            return (
-              <TableRow key={`${entry.date}-${entry.billId ?? "ledger"}-${entry.balanceAfter}`}>
-                <TableCell className="tabular-nums">{formatDay(entry.date)}</TableCell>
-                <TableCell>
-                  <span className="flex min-w-0 items-center gap-2">
-                    <span className="truncate" title={entryName(t, entry)}>
-                      {entryName(t, entry)}
-                    </span>
-                    {entry.overdue ? <Tag tone="negative">{t("forecast.overdue")}</Tag> : null}
+    <Table
+      label={label}
+      columns={["w-24", undefined, "w-32", "w-32"]}
+      className="min-w-120"
+      aria-label={label}
+    >
+      <TableHeader>
+        <TableRow>
+          <TableHead>{t("forecast.date")}</TableHead>
+          <TableHead>{t("forecast.entry")}</TableHead>
+          <TableHead numeric>{t("forecast.amount")}</TableHead>
+          <TableHead numeric>{t("forecast.balanceAfter")}</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {account.entries.map((entry) => {
+          const amount = Number(entry.amount);
+          return (
+            <TableRow key={`${entry.date}-${entry.billId ?? "ledger"}-${entry.balanceAfter}`}>
+              <TableCell className="tabular-nums">{formatDay(entry.date)}</TableCell>
+              <TableCell>
+                <span className="flex min-w-0 items-center gap-2">
+                  <span className="truncate" title={entryName(t, entry)}>
+                    {entryName(t, entry)}
                   </span>
-                </TableCell>
-                <TableCell numeric className={cn(amount > 0 && "text-income")}>
-                  {entry.estimated ? (
-                    <>
-                      <span aria-hidden="true">≈ </span>
-                      <span className="sr-only">{t("forecast.estimated")} </span>
-                    </>
-                  ) : null}
-                  {money.formatSigned(amount, "auto", account.currency)}
-                </TableCell>
-                <TableCell
-                  numeric
-                  className={cn(toCents(entry.balanceAfter) < 0 && "text-expense")}
-                >
-                  {money.format(Number(entry.balanceAfter), account.currency)}
-                </TableCell>
-              </TableRow>
-            );
-          })}
-        </TableBody>
-      </Table>
-    </ScrollRegion>
+                  {entry.overdue ? <Tag tone="negative">{t("forecast.overdue")}</Tag> : null}
+                </span>
+              </TableCell>
+              <TableCell numeric className={cn(amount > 0 && "text-income")}>
+                {entry.estimated ? (
+                  <>
+                    <span aria-hidden="true">≈ </span>
+                    <span className="sr-only">{t("forecast.estimated")} </span>
+                  </>
+                ) : null}
+                {money.formatSigned(amount, "auto", account.currency)}
+              </TableCell>
+              <TableCell numeric className={cn(toCents(entry.balanceAfter) < 0 && "text-expense")}>
+                {money.format(Number(entry.balanceAfter), account.currency)}
+              </TableCell>
+            </TableRow>
+          );
+        })}
+      </TableBody>
+    </Table>
   );
 }
 

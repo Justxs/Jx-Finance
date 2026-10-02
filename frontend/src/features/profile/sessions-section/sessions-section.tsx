@@ -61,6 +61,7 @@ function SessionRow({ session, pending, disabled, onSignOut }: Readonly<SessionR
         </dl>
       }
       icon={LogOut}
+      variant="outline-destructive"
       actionLabel={t("profile.sessions.signOut")}
       itemLabel={label}
       pending={pending}

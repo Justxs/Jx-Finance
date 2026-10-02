@@ -91,7 +91,7 @@ export function ImportRow({
     <span
       className={cn(
         "font-semibold whitespace-nowrap tabular-nums",
-        row.type === "income" ? INCOME_TONE : "text-foreground",
+        row.type === "income" && !row.asRefund ? INCOME_TONE : "text-foreground",
       )}
     >
       {money.formatSigned(Number(row.amount), row.type === "income" ? "+" : "−", row.currency)}
@@ -205,9 +205,9 @@ export function ImportRow({
     <TableRow>
       <TableCell>{checkbox}</TableCell>
       <TableCell className="text-muted-foreground tabular-nums">{formatDate(row.date)}</TableCell>
-      <TableCell className="whitespace-normal">
+      <TableCell>
         <span
-          className="line-clamp-2 min-w-40 font-medium wrap-break-word"
+          className="block truncate font-medium"
           title={row.payee || row.description || undefined}
         >
           {name}
@@ -216,7 +216,7 @@ export function ImportRow({
       <TableCell className="text-right">{amount}</TableCell>
       <TableCell>{category}</TableCell>
       <TableCell>{tagPicker}</TableCell>
-      <TableCell>
+      <TableCell className="whitespace-normal">
         <div className="flex flex-col items-start gap-1">
           {transfer}
           {spread}

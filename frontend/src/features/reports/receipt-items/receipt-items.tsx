@@ -6,16 +6,15 @@ import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { Input } from "@/components/ui/input/input";
 import { TitledSection } from "@/components/ui/section/section";
-import { TextSkeleton } from "@/components/ui/skeleton/skeleton";
 import { StaleRegion } from "@/components/ui/stale-region/stale-region";
 import {
-  ScrollRegion,
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
   TableRow,
+  TableSkeleton,
 } from "@/components/ui/table/table";
 import { useDebouncedDraft } from "@/hooks/use-debounced-draft";
 import { useIsoDate, useMoney } from "@/hooks/use-formatters";
@@ -48,33 +47,33 @@ function ItemsTable({ dateFrom, dateTo, search }: Readonly<RangeProps & { search
   }
 
   return (
-    <ScrollRegion aria-label={t("reports.receiptItems.table")} className="-mx-3">
-      <Table className="min-w-100" aria-label={t("reports.receiptItems.table")}>
-        <TableHeader>
-          <TableRow>
-            <TableHead>{t("reports.receiptItems.item")}</TableHead>
-            <TableHead numeric>{t("reports.receiptItems.bought")}</TableHead>
-            <TableHead numeric>{t("reports.receiptItems.amount")}</TableHead>
+    <Table
+      label={t("reports.receiptItems.table")}
+      className="min-w-100"
+      aria-label={t("reports.receiptItems.table")}
+    >
+      <TableHeader>
+        <TableRow>
+          <TableHead>{t("reports.receiptItems.item")}</TableHead>
+          <TableHead numeric>{t("reports.receiptItems.bought")}</TableHead>
+          <TableHead numeric>{t("reports.receiptItems.amount")}</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {items.map((item) => (
+          <TableRow key={`${item.key}-${item.currency}`}>
+            <TableCell className="whitespace-normal">
+              <span className="block font-medium">{item.name}</span>
+              <span className="block text-xs text-muted-foreground">
+                {t("reports.receiptItems.last", { date: isoDate(item.lastBought) })}
+              </span>
+            </TableCell>
+            <TableCell numeric>{t("reports.receiptItems.times", { count: item.count })}</TableCell>
+            <TableCell numeric>{money.format(Number(item.amount), item.currency)}</TableCell>
           </TableRow>
-        </TableHeader>
-        <TableBody>
-          {items.map((item) => (
-            <TableRow key={`${item.key}-${item.currency}`}>
-              <TableCell className="whitespace-normal">
-                <span className="block font-medium">{item.name}</span>
-                <span className="block text-xs text-muted-foreground">
-                  {t("reports.receiptItems.last", { date: isoDate(item.lastBought) })}
-                </span>
-              </TableCell>
-              <TableCell numeric>
-                {t("reports.receiptItems.times", { count: item.count })}
-              </TableCell>
-              <TableCell numeric>{money.format(Number(item.amount), item.currency)}</TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </ScrollRegion>
+        ))}
+      </TableBody>
+    </Table>
   );
 }
 
@@ -97,7 +96,7 @@ export function ReceiptItems({ dateFrom, dateTo }: Readonly<RangeProps>) {
         />
       </FieldShell>
       <QueryBoundary
-        fallback={<TextSkeleton size="sm" width="w-2/3" />}
+        fallback={<TableSkeleton rows={5} columns={3} lines={2} />}
         errorSubject={t("reports.receiptItems.title")}
       >
         <StaleRegion stale={shownSearch !== search}>

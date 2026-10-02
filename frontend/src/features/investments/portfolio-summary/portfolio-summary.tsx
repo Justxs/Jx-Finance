@@ -24,13 +24,11 @@ export function PortfolioSummary({ portfolio }: Readonly<Props>) {
       key: "investments.summary.unrealizedGain",
       value: portfolio.unrealizedGain,
       sign: "auto",
-      tone: gainTone(Number(portfolio.unrealizedGain)),
     },
     {
       key: "investments.summary.realizedGain",
       value: portfolio.realizedGain,
       sign: "auto",
-      tone: gainTone(Number(portfolio.realizedGain)),
     },
     { key: "investments.summary.dividends", value: portfolio.dividends },
     {

@@ -17,7 +17,7 @@ export function OpenBalancesToggle() {
   return (
     <Button
       type="button"
-      variant={counted ? "default" : "outline"}
+      variant="outline"
       aria-pressed={counted}
       pending={mutation.isPending}
       tooltip={t("netWorth.openBalances.hint")}

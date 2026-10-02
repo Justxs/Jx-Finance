@@ -4,7 +4,7 @@ import { buttonVariants } from "@/components/ui/button/button";
 import { cn } from "@/lib/utils";
 
 const pickerClass =
-  "cursor-pointer has-focus-visible:border-ring has-focus-visible:ring-3 has-focus-visible:ring-ring/50 has-disabled:pointer-events-none has-disabled:opacity-50";
+  "cursor-pointer has-focus-visible:border-ring has-focus-visible:ring-3 has-focus-visible:ring-ring/60 has-disabled:pointer-events-none has-disabled:opacity-50";
 
 const zoneClass =
   "relative flex min-h-28 w-full flex-col items-center justify-center gap-1.5 rounded-lg border border-dashed border-input bg-muted/40 px-3 py-3 text-center text-sm text-muted-foreground transition-colors hover:border-primary hover:bg-accent hover:text-accent-foreground data-dragging:border-primary data-dragging:bg-accent data-dragging:text-accent-foreground";

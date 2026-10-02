@@ -14,7 +14,7 @@ interface Props {
 const NO_ICON = "";
 
 const tileClass =
-  "flex h-8 items-center justify-center rounded-md border text-muted-foreground transition-colors outline-none hover:bg-accent hover:text-accent-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 data-checked:border-primary data-checked:bg-primary/10 data-checked:text-primary pointer-coarse:h-11";
+  "flex h-8 items-center justify-center rounded-md border text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:border-ring focus-ring data-checked:border-primary data-checked:bg-primary/10 data-checked:text-primary pointer-coarse:h-11";
 
 export function IconPicker({ value, onChange, "aria-labelledby": labelledBy }: Readonly<Props>) {
   const { t } = useTranslation();

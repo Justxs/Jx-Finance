@@ -12,6 +12,7 @@ import { FileInput } from "@/components/ui/file-input/file-input";
 import { FormGrid } from "@/components/ui/form-grid/form-grid";
 import { Input } from "@/components/ui/input/input";
 import { Label } from "@/components/ui/label/label";
+import { useNumberFormat } from "@/hooks/use-formatters";
 
 const meta = { title: "UI/Form controls" } satisfies Meta;
 
@@ -30,12 +31,13 @@ function FormExample() {
   const [date, setDate] = useState("2026-09-18");
   const [range, setRange] = useState<DateRange>({ from: "2026-09-01", to: "2026-09-18" });
   const [split, setSplit] = useState(false);
+  const zero = useNumberFormat({ minimumFractionDigits: 2 }).format(0);
 
   return (
     <FormGrid className="w-[min(90vw,40rem)]">
       <div className="space-y-1.5">
         <Label htmlFor="story-amount">Amount</Label>
-        <Input id="story-amount" inputMode="decimal" placeholder="0.00" />
+        <Input id="story-amount" inputMode="decimal" placeholder={zero} />
       </div>
       <div className="space-y-1.5">
         <Label htmlFor="story-invalid">Invalid amount</Label>

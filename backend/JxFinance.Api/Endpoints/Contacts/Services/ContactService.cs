@@ -183,6 +183,8 @@ public sealed class ContactService(AppDbContext db, ICurrentUser currentUser, ID
         CancellationToken cancellationToken)
     {
         var transactionId = new TransactionId(request.TransactionId);
+        await using var dbTransaction = await db.Database.BeginTransactionAsync(cancellationToken);
+        await db.Database.LockAsync(request.TransactionId, cancellationToken);
         var transaction = await db.Transactions.AsNoTracking().FirstOrDefaultAsync(t => t.Id == transactionId, cancellationToken);
         if (await SplitRules.RefusedAsync(db, Me, transaction, cancellationToken) is { } refused)
         {
@@ -209,6 +211,7 @@ public sealed class ContactService(AppDbContext db, ICurrentUser currentUser, ID
             return conflict;
         }
 
+        await dbTransaction.CommitAsync(cancellationToken);
         return await ContactSplitMarks.OfAsync(db, split, cancellationToken);
     }
 

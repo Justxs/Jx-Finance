@@ -47,7 +47,7 @@ export function TagsPage() {
         </CreateDialog>
       </PageHeader>
 
-      <EditModal {...tags.editProps} title={t("tags.editTitle")}>
+      <EditModal {...tags.editProps} title={(tag) => `${t("tags.editTitle")}: ${tag.name}`}>
         {(tag, close) => <TagForm initial={tag} onClose={close} />}
       </EditModal>
 
@@ -68,7 +68,7 @@ export function TagsPage() {
         ))}
       </ListSection>
 
-      <EditModal {...payees.editProps} title={t("payees.editTitle")}>
+      <EditModal {...payees.editProps} title={(payee) => `${t("payees.editTitle")}: ${payee.name}`}>
         {(payee, close) => (
           <PayeeNameForm payee={payee.payeeKey} initialName={payee.name} onClose={close} />
         )}

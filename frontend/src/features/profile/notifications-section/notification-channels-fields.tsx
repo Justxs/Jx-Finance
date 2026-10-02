@@ -41,11 +41,11 @@ function NotificationChannelsGroup({ fields, off }: Readonly<Props>) {
         <TableHeader>
           <TableRow>
             <TableHead>{t("profile.notifications.kind")}</TableHead>
-            <TableHead className="w-16 text-center sm:w-24">
+            <TableHead wrap className="w-18 px-1 text-center sm:w-24">
               {t("profile.notifications.inApp")}
             </TableHead>
             {channels.map((channel) => (
-              <TableHead key={channel} className="w-16 text-center sm:w-24">
+              <TableHead key={channel} wrap className="w-18 px-1 text-center sm:w-24">
                 {t(`profile.notifications.${channel}`)}
               </TableHead>
             ))}

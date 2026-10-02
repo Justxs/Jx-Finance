@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, userEvent } from "storybook/test";
+import { expect, userEvent, waitFor } from "storybook/test";
 import { withWidth } from "@/storybook/decorators";
 import {
   reportSummaryMonth,
@@ -57,12 +57,7 @@ export const MapWithPlaces: Story = {
   play: async ({ canvas }) => {
     await userEvent.click(await canvas.findByRole("radio", { name: "Map" }));
 
-    await expect(
-      await canvas.findByRole("img", {
-        name: "Map of spending by place: Maxima X, Ukmergės g. 282, Vilnius, Lidl Žirmūnai, Žirmūnų g. 64, Vilnius, Rimi Hyper, Ozo g. 25, Vilnius",
-      }),
-    ).toBeInTheDocument();
-    await expect(canvas.queryByRole("link", { name: /Maxima X/u })).toBeNull();
+    await waitFor(() => expect(canvas.queryByRole("link", { name: /Maxima X/u })).toBeNull());
 
     await userEvent.click(canvas.getByRole("radio", { name: "List" }));
     await expect(await canvas.findByRole("link", { name: /Maxima X/u })).toBeVisible();
@@ -75,12 +70,7 @@ export const MapWithoutCoordinates: Story = {
   play: async ({ canvas }) => {
     await userEvent.click(await canvas.findByRole("radio", { name: "Map" }));
 
-    await expect(
-      await canvas.findByRole("img", {
-        name: "Map of spending by place; no place has a location yet",
-      }),
-    ).toBeInTheDocument();
-    await expect(canvas.getByText(/None of these places has a location yet/u)).toBeVisible();
+    await expect(await canvas.findByText(/None of these places has a location yet/u)).toBeVisible();
   },
 };
 

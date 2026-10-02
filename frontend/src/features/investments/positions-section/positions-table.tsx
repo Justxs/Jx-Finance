@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import type { Currency, HoldingResponse, SecurityResponse } from "@/api/generated/model";
 import { DualCurrencyAmount } from "@/components/approximate-amount/dual-currency-amount";
+import { SignedAmount } from "@/components/signed-amount/signed-amount";
 import { Rows } from "@/components/ui/rows/rows";
 import {
   Table,
@@ -9,7 +10,6 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-  ScrollRegion,
 } from "@/components/ui/table/table";
 import { PriceWithDate } from "@/features/investments/security-identity/price-with-date";
 import { SecurityIdentity } from "@/features/investments/security-identity/security-identity";
@@ -21,8 +21,7 @@ import {
   useQuantityFormat,
   useRatePercent,
 } from "@/hooks/use-formatters";
-import { gainTone } from "@/lib/tone";
-import { cn, metaLine } from "@/lib/utils";
+import { metaLine } from "@/lib/utils";
 
 interface Props {
   label: string;
@@ -35,7 +34,7 @@ interface Props {
 }
 
 const priceButtonClass =
-  "inline-flex min-h-6 flex-col items-end justify-center group/price rounded-sm text-right outline-none focus-visible:ring-3 focus-visible:ring-ring/50 pointer-coarse:min-h-11";
+  "inline-flex min-h-6 flex-col items-end justify-center group/price rounded-sm text-right focus-ring pointer-coarse:min-h-11";
 
 function rowKey(holding: HoldingResponse) {
   return `${holding.accountId}:${holding.security.id}`;
@@ -121,24 +120,25 @@ export function PositionsTable({
       return <span className="text-muted-foreground">{EMPTY_VALUE}</span>;
     }
 
-    const gain = Number(holding.unrealizedGain);
-
     return (
-      <span className={cn("whitespace-nowrap tabular-nums", gainTone(gain))}>
-        {money.formatSigned(gain, "auto", holding.security.currency)}
+      <SignedAmount
+        value={Number(holding.unrealizedGain)}
+        currency={holding.security.currency}
+        className="whitespace-nowrap"
+      >
         {holding.unrealizedPercent === null ? null : (
           <span className="block text-xs">
             {signed(Number(holding.unrealizedPercent), formatRate)}
           </span>
         )}
-      </span>
+      </SignedAmount>
     );
   }
 
   return (
     <>
-      <ScrollRegion className="-mx-3 hidden lg:block" aria-label={label}>
-        <Table>
+      <div className="hidden lg:block">
+        <Table label={label}>
           <TableHeader>
             <TableRow>
               <TableHead wrap>{t("investments.holdings.security")}</TableHead>
@@ -201,7 +201,7 @@ export function PositionsTable({
             })}
           </TableBody>
         </Table>
-      </ScrollRegion>
+      </div>
 
       <Rows className="lg:hidden" aria-label={label}>
         {holdings.map((holding) => {

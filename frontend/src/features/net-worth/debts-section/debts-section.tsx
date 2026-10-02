@@ -1,10 +1,9 @@
-import { Link } from "@tanstack/react-router";
+import { useNavigate } from "@tanstack/react-router";
 import { CalendarRange } from "lucide-react";
 import { useDeferredValue } from "react";
 import { useTranslation } from "react-i18next";
 import { getDebtsQueryKey, useDeleteDebt, useDebtsSuspense } from "@/api/generated";
 import type { DebtResponse } from "@/api/generated/model";
-import { buttonVariants } from "@/components/ui/button/button";
 import { BalanceItemsSection } from "@/features/net-worth/balance-items-section/balance-items-section";
 import { useIsoDate, useRatePercent } from "@/hooks/use-formatters";
 import { optimisticRemoval } from "@/lib/optimistic";
@@ -16,27 +15,12 @@ export function DebtsSection() {
   const formatDate = useIsoDate();
   const formatRate = useRatePercent();
   const debts = useDebtsSuspense();
+  const navigate = useNavigate();
 
   const deleteMutation = useDeleteDebt({
     mutation: optimisticRemoval<DebtResponse>(getDebtsQueryKey()),
   });
   const debtList = useDeferredValue(debts.data);
-
-  function scheduleLink(debt: DebtResponse) {
-    const label = t("netWorth.schedule.open", { name: debt.name });
-
-    return (
-      <Link
-        to="/net-worth/debts/$debtId"
-        params={{ debtId: debt.id }}
-        aria-label={label}
-        title={label}
-        className={buttonVariants({ variant: "ghost", size: "icon" })}
-      >
-        <CalendarRange />
-      </Link>
-    );
-  }
 
   return (
     <BalanceItemsSection
@@ -58,7 +42,11 @@ export function DebtsSection() {
         amount: Number(debt.trackedBalance ?? debt.outstandingAmount),
         currency: debt.currency,
         record: debt,
-        action: scheduleLink(debt),
+        action: {
+          icon: CalendarRange,
+          label: t("netWorth.schedule.open"),
+          onSelect: () => navigate({ to: "/net-worth/debts/$debtId", params: { debtId: debt.id } }),
+        },
         scope: debt.scope,
         householdId: debt.householdId,
       }))}

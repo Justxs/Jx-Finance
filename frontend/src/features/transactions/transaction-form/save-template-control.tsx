@@ -53,11 +53,11 @@ export function SaveTemplateControl({ onSave }: Readonly<Props>) {
             }
           }}
         />
-        <Button type="button" variant="outline" disabled={!name.trim()} onClick={save}>
-          {t("transactions.saveTemplate")}
-        </Button>
         <Button type="button" variant="outline" onClick={() => setNaming(false)}>
           {t("actions.cancel")}
+        </Button>
+        <Button type="button" variant="outline" disabled={!name.trim()} onClick={save}>
+          {t("transactions.saveTemplate")}
         </Button>
       </div>
     </div>

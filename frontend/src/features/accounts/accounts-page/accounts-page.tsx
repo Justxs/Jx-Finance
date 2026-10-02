@@ -77,7 +77,7 @@ export function AccountsPage() {
 
       <EditModal
         item={editingAccount ?? null}
-        title={t("actions.edit")}
+        title={(account) => `${t("actions.edit")}: ${account.name}`}
         onClose={() => setEditingId(null)}
       >
         {(account, close) => <AccountForm initial={account} onClose={close} />}

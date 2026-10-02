@@ -6,6 +6,7 @@ import { useAccountsSuspense, useSyncExchangeRates } from "@/api/generated";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { type SettingsSection, SettingsLayout } from "@/components/settings-layout/settings-layout";
 import { Button } from "@/components/ui/button/button";
+import { RuledLine } from "@/components/ui/ruled-line/ruled-line";
 import { BackupSection } from "@/features/settings/backup-section/backup-section";
 import { DiscordSection } from "@/features/settings/discord-section/discord-section";
 import { ExchangeRatesSection } from "@/features/settings/exchange-rates-section/exchange-rates-section";
@@ -36,7 +37,7 @@ function SettingsContent({ section }: Readonly<{ section: SettingsSection }>) {
   });
 
   const exchangeRates = (
-    <div className="mt-5 flex max-w-3xl flex-wrap items-center gap-x-6 gap-y-3 rounded-md bg-background px-4 py-3 text-sm">
+    <RuledLine className="mt-5 flex max-w-3xl flex-wrap items-center gap-x-6 gap-y-3">
       <p>
         <span className="text-muted-foreground">{t("settings.rates.newest")}</span>{" "}
         <span className="font-semibold tabular-nums">
@@ -54,7 +55,7 @@ function SettingsContent({ section }: Readonly<{ section: SettingsSection }>) {
         <RefreshCw />
         {t("settings.rates.syncNow")}
       </Button>
-    </div>
+    </RuledLine>
   );
 
   return (

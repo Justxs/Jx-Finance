@@ -197,6 +197,27 @@ public sealed class ContactTests(ApiFixture fixture) : IntegrationTestBase(fixtu
     }
 
     [Fact]
+    public async Task A_restored_split_is_refused_when_the_expense_became_income_meanwhile()
+    {
+        using var client = await CreateUserClientAsync();
+        var account = await CreateAccountAsync(client: client);
+        var jonas = await ContactAsync(client, "Jonas");
+        var dinner = await ExpenseAsync(client, account, "40.00", "Dinner");
+        var split = await SplitAsync(client, Split(dinner, jonas));
+        (await client.DeleteAsync($"/api/contacts/splits/{split.Id}", TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
+        (await client.PutAsJsonAsync(
+            $"/api/transactions/{dinner}",
+            new { accountId = account, type = "income", amount = "40.00", date = "2026-09-10", description = "Dinner" },
+            TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
+
+        await AssertProblemAsync(
+            await client.PostAsJsonAsync("/api/trash/restore", new { kind = "contactSplit", entityId = split.Id }, TestContext.Current.CancellationToken),
+            HttpStatusCode.BadRequest,
+            "settleUp.notExpense");
+        Assert.Null(Balance(await PeopleAsync(client), jonas));
+    }
+
+    [Fact]
     public async Task A_split_with_a_person_stays_when_the_row_moves_to_another_account_of_the_payer_only()
     {
         using var pair = await CreateHouseholdPairAsync();

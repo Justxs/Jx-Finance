@@ -4,7 +4,6 @@ import { DualCurrencyAmount } from "@/components/approximate-amount/dual-currenc
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { Rows } from "@/components/ui/rows/rows";
 import {
-  ScrollRegion,
   Table,
   TableBody,
   TableCell,
@@ -52,8 +51,8 @@ export function TaxCashTable({
 
   return (
     <>
-      <ScrollRegion className="-mx-3 hidden sm:block" aria-label={label}>
-        <Table>
+      <div className="hidden sm:block">
+        <Table label={label}>
           <TableHeader>
             <TableRow>
               <TableHead>{t("investments.tax.date")}</TableHead>
@@ -79,7 +78,7 @@ export function TaxCashTable({
             )}
           </TableBody>
         </Table>
-      </ScrollRegion>
+      </div>
 
       {entries.length === 0 ? <EmptyText className="sm:hidden">{empty}</EmptyText> : null}
       <Rows className="sm:hidden" aria-label={label}>

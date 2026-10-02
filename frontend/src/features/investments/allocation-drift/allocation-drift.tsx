@@ -108,7 +108,6 @@ export function AllocationDrift({ rows, currency }: Readonly<Props>) {
         <Input
           id={`${id}-amount`}
           inputMode="decimal"
-          placeholder="0.00"
           value={amount}
           {...shellAria({ id: `${id}-amount`, error })}
           onChange={(event) => setAmount(event.target.value)}

@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
+import { expect } from "storybook/test";
 import { Card } from "@/components/ui/card/card";
 import { accounts } from "@/storybook/fixtures";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./table";
@@ -133,7 +134,7 @@ export const LongCellContent: Story = {
 
 export const WideScrolling: Story = {
   render: () => (
-    <Table>
+    <Table label="Spending by month">
       <TableHeader>
         <TableRow>
           <TableHead>Category</TableHead>
@@ -158,6 +159,27 @@ export const WideScrolling: Story = {
       </TableBody>
     </Table>
   ),
+  play: async ({ canvas }) => {
+    const region = canvas.getByRole("region", { name: "Spending by month" });
+    await expect(region).toHaveAttribute("tabindex", "0");
+    await expect(region).toContainElement(canvas.getByRole("table"));
+  },
+};
+
+export const FixedColumns: Story = {
+  render: () => (
+    <Table label="Accounts" columns={["w-40", undefined, "w-28", "w-32"]} className="min-w-120">
+      <AccountHeader />
+      <TableBody>
+        <AccountRows />
+      </TableBody>
+    </Table>
+  ),
+  play: async ({ canvas }) => {
+    const table = canvas.getByRole("table");
+    await expect(table).toHaveClass("table-fixed");
+    await expect(table.querySelectorAll("col")).toHaveLength(4);
+  },
 };
 
 export const WrappingNumericHeaders: Story = {

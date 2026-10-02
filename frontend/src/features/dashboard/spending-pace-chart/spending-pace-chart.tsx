@@ -116,7 +116,7 @@ export function SpendingPaceChart({ month }: Readonly<Props>) {
       key: "average",
       label: t("dashboard.pace.average", span),
       color: CHART_COLOR_MUTED,
-      shape: "line",
+      shape: "dotted",
       comparison: true,
     },
   ];

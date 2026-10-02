@@ -16,7 +16,7 @@ export function AssetValueChart({ assetId }: Readonly<{ assetId: string }>) {
       key: "valuation",
       label: t("netWorth.asset.valuation"),
       color: CHART_COLOR_POSITIVE,
-      shape: "bar",
+      shape: "dot",
       markers: true,
     },
   ];
@@ -34,7 +34,6 @@ export function AssetValueChart({ assetId }: Readonly<{ assetId: string }>) {
       currency={history.currency}
       curve="stepAfter"
       legend
-      baseline
     />
   );
 }

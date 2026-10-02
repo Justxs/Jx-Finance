@@ -30,7 +30,7 @@ function ProfileFormSkeleton() {
       <FieldSkeleton />
       <FieldSkeleton />
       <FieldSkeleton />
-      <div className="flex justify-end">
+      <div className="flex justify-end pt-2">
         <ButtonSkeleton />
       </div>
     </Section>
@@ -43,7 +43,9 @@ function TwoFactorSkeleton() {
       <TextSkeleton size="title" width="w-48" />
       <TextSkeleton size="sm" width="w-3/4" />
       <FieldSkeleton />
-      <ButtonSkeleton className="w-40" />
+      <div className="flex justify-end">
+        <ButtonSkeleton className="w-40" />
+      </div>
     </Section>
   );
 }
@@ -104,7 +106,7 @@ export function NotificationsSkeleton() {
           </div>
         </div>
       </Section>
-      <div className="flex justify-end">
+      <div className="flex justify-end pt-2">
         <ButtonSkeleton className="w-20" />
       </div>
     </div>

@@ -46,7 +46,7 @@ export function UsersPending() {
             </li>
           ))}
         </Rows>
-        <TableSkeleton rows={USER_ROWS} columns={4} lines={2} className="-mx-3 hidden md:block" />
+        <TableSkeleton rows={USER_ROWS} columns={4} lines={2} className="hidden md:block" />
       </Section>
     </SettingsPending>
   );

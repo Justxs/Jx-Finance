@@ -10,10 +10,10 @@ import type {
 } from "@/api/generated/model";
 import { MoneyPairField } from "@/components/form";
 import { FormError } from "@/components/form-error/form-error";
+import { FieldShell } from "@/components/form/field-shell/field-shell";
 import { TagPicker } from "@/components/tag-picker/tag-picker";
 import { Button } from "@/components/ui/button/button";
 import { FormGrid } from "@/components/ui/form-grid/form-grid";
-import { Label } from "@/components/ui/label/label";
 import { heldCurrencies } from "@/features/accounts/held-currencies";
 import { ClosedMonthHint } from "@/features/month-close/closed-month-hint/closed-month-hint";
 import { CategorySuggestion } from "@/features/transactions/category-suggestion/category-suggestion";
@@ -209,10 +209,19 @@ export function TransactionForm({
                 { value: "refund", label: t("transactions.refund") },
               ]}
               onValueChange={(next) => {
-                const categoryId = form.getFieldValue("categoryId");
                 const type = categoryTypeOf(next);
-                if (categoryId && !categories.some((c) => c.id === categoryId && c.type === type)) {
-                  form.setFieldValue("categoryId", "");
+                function clearOtherType(name: "categoryId" | `lines[${number}].categoryId`) {
+                  const categoryId = form.getFieldValue(name);
+                  if (
+                    categoryId &&
+                    !categories.some((c) => c.id === categoryId && c.type === type)
+                  ) {
+                    form.setFieldValue(name, "");
+                  }
+                }
+                clearOtherType("categoryId");
+                for (const index of form.getFieldValue("lines").keys()) {
+                  clearOtherType(`lines[${index}].categoryId`);
                 }
                 if (next === "refund") {
                   form.setFieldValue("isSplit", false);
@@ -248,7 +257,7 @@ export function TransactionForm({
           {(isSplit) =>
             isSplit ? (
               <div className="space-y-1.5">
-                <Label>{t("transactions.category")}</Label>
+                <p className="text-sm leading-5 font-medium">{t("transactions.category")}</p>
                 <p className="pt-2 text-xs text-muted-foreground">
                   {t("transactions.splitTransaction")}
                 </p>
@@ -353,15 +362,15 @@ export function TransactionForm({
         {tags.length > 0 ? (
           <form.Field name="tagIds">
             {(field) => (
-              <div className="col-span-full space-y-1.5">
-                <Label>{t("tags.field")}</Label>
+              <FieldShell id="tx-tags" label={t("tags.field")} className="col-span-full">
                 <TagPicker
+                  id="tx-tags"
                   tags={tags}
                   value={field.value}
                   onChange={field.handleChange}
                   aria-label={t("tags.field")}
                 />
-              </div>
+              </FieldShell>
             )}
           </form.Field>
         ) : null}

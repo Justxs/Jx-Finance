@@ -118,7 +118,7 @@ function SplitLineRow({ fields, categories, index, remaining, onRemove }: Readon
         type="button"
         variant="ghost"
         size="icon"
-        aria-label={t("transactions.removeLine")}
+        aria-label={t("transactions.removeLine", { number: index + 1 })}
         onClick={onRemove}
       >
         <X />

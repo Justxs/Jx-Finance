@@ -390,7 +390,7 @@ export const getForgotPasswordUrl = () => {
 };
 
 /**
- * Queues an email with a single-use reset link when the address belongs to an active user of this installation and the mail server is configured. The answer is 204 in every case, including an unknown address, a deactivated user and an installation that cannot send mail, so the screen cannot be used to find out which addresses exist. The link is valid for one hour and stops working as soon as it is used, because the token carries the user's security stamp and a completed reset changes that stamp. Asking for a reset never counts toward the failed-attempt lockout: otherwise anyone could lock an account by repeating the request. Rate limited to 5 calls per five minutes per client.
+ * Queues an email with a single-use reset link when the address belongs to an active user of this installation, the mail server is configured and App:SiteUrl names the address the link points at. The answer is 204 in every case, including an unknown address, a deactivated user and an installation that cannot send mail, so the screen cannot be used to find out which addresses exist. The link is valid for one hour and stops working as soon as it is used, because the token carries the user's security stamp and a completed reset changes that stamp. Asking for a reset never counts toward the failed-attempt lockout: otherwise anyone could lock an account by repeating the request. Rate limited to 5 calls per five minutes per client.
  * @summary Ask for a password reset link
  */
 export const forgotPassword = async (
@@ -1672,7 +1672,7 @@ export const getSendVerificationEmailUrl = () => {
 };
 
 /**
- * Queues a new confirmation link for the caller's own address. Answers 400 email.alreadyVerified when the address is already confirmed and 400 email.notConfigured when this installation has no mail server yet, so the screen can say which of the two it is. The message leaves through the outbox, so the call returns without waiting for the mail server. Rate limited to 5 calls per five minutes per client.
+ * Queues a new confirmation link for the caller's own address. Answers 400 email.alreadyVerified when the address is already confirmed and 400 email.notConfigured when this installation has no mail server or no site address (App:SiteUrl) for the link yet, so the screen can say which of the two it is. The message leaves through the outbox, so the call returns without waiting for the mail server. Rate limited to 5 calls per five minutes per client.
  * @summary Send the confirmation email again
  */
 export const sendVerificationEmail = async (

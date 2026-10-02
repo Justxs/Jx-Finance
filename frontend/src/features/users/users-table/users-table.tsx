@@ -12,7 +12,6 @@ import {
   TableHeader,
   TableRow,
   TableEmptyRow,
-  ScrollRegion,
 } from "@/components/ui/table/table";
 import { ResetPasswordDialog } from "@/features/users/reset-password-dialog/reset-password-dialog";
 import { useSearchTable } from "@/hooks/use-search-table";
@@ -73,55 +72,57 @@ export function UsersTable({ users, stale }: Readonly<Props>) {
         filtered={filters.filtered}
         controls={controls}
       />
-      <section className="-mx-3 hidden md:block">
+      <section className="hidden md:block">
         <ViewTransition name="users-rows" enter="none" exit="none">
-          <ScrollRegion aria-label={t("users.title")}>
-            <Table className={cn("min-w-160", stale && "stale")} aria-busy={stale}>
-              <TableHeader>
-                <TableRow>
-                  <SortableTableHead
-                    label={t("users.displayName")}
-                    {...table.sortProps("displayName")}
-                    filter={
-                      <TextColumnFilter
-                        label={t("users.displayName")}
-                        value={filters.text.value}
-                        onChange={filters.text.set}
-                      />
-                    }
-                  />
-                  <SortableTableHead
-                    label={t("users.role")}
-                    {...table.sortProps("role")}
-                    filter={
-                      <SelectColumnFilter
-                        label={t("users.role")}
-                        value={filters.role.value}
-                        onChange={filters.role.set}
-                        options={filters.role.options}
-                      />
-                    }
-                  />
-                  <SortableTableHead
-                    label={t("users.status")}
-                    {...table.sortProps("status")}
-                    filter={
-                      <SelectColumnFilter
-                        label={t("users.status")}
-                        value={filters.status.value}
-                        onChange={filters.status.set}
-                        options={filters.status.options}
-                      />
-                    }
-                  />
-                  <TableHead>
-                    <span className="sr-only">{t("common.actions")}</span>
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>{body}</TableBody>
-            </Table>
-          </ScrollRegion>
+          <Table
+            label={t("users.title")}
+            className={cn("min-w-160", stale && "stale")}
+            aria-busy={stale}
+          >
+            <TableHeader>
+              <TableRow>
+                <SortableTableHead
+                  label={t("users.displayName")}
+                  {...table.sortProps("displayName")}
+                  filter={
+                    <TextColumnFilter
+                      label={t("users.displayName")}
+                      value={filters.text.value}
+                      onChange={filters.text.set}
+                    />
+                  }
+                />
+                <SortableTableHead
+                  label={t("users.role")}
+                  {...table.sortProps("role")}
+                  filter={
+                    <SelectColumnFilter
+                      label={t("users.role")}
+                      value={filters.role.value}
+                      onChange={filters.role.set}
+                      options={filters.role.options}
+                    />
+                  }
+                />
+                <SortableTableHead
+                  label={t("users.status")}
+                  {...table.sortProps("status")}
+                  filter={
+                    <SelectColumnFilter
+                      label={t("users.status")}
+                      value={filters.status.value}
+                      onChange={filters.status.set}
+                      options={filters.status.options}
+                    />
+                  }
+                />
+                <TableHead>
+                  <span className="sr-only">{t("common.actions")}</span>
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>{body}</TableBody>
+          </Table>
         </ViewTransition>
       </section>
 

@@ -41,7 +41,7 @@ The server refuses:
 | No person takes part | 400 `contact.noPerson` |
 | Exact amounts that do not add up to the expense | 400 `settleUp.sharesMismatch` |
 
-The household split now refuses a transaction split with people with the same `settleUp.alreadySplit`, through the shared `SplitRules.IsSplitAsync`.
+The household split now refuses a transaction split with people with the same `settleUp.alreadySplit`, through the shared `SplitRules.IsSplitAsync`. Both create paths hold the advisory lock on the transaction id while they check and write, so a household split and a split with people of the same row at the same moment cannot both land; see [Household settle-up](household-settle-up.md#splitting-an-expense).
 
 ## Recording a payment
 
@@ -68,7 +68,7 @@ The balances never enter reports, budgets, the dashboard or the month-end close,
 
 ## Deleting, trash and retention
 
-Deleting a person, a split or a payment is a soft delete with a trash entry (`TrashKind.Contact`, `ContactSplit`, `ContactPayment`) and the undo toast. A deleted person disappears with their balances and history, and their shares stop counting in balances; restoring them brings everything back. Saving a split again while one of its people is deleted drops that person's share. A payment cannot be restored while its person is deleted (`restore.referenceMissing`); a split cannot while its transaction is deleted (`restore.referenceMissing`) or once the transaction is split again (`settleUp.alreadySplit`).
+Deleting a person, a split or a payment is a soft delete with a trash entry (`TrashKind.Contact`, `ContactSplit`, `ContactPayment`) and the undo toast. A deleted person disappears with their balances and history, and their shares stop counting in balances; restoring them brings everything back. Saving a split again while one of its people is deleted drops that person's share. A payment cannot be restored while its person is deleted (`restore.referenceMissing`); a split cannot while its transaction is deleted (`restore.referenceMissing`), once the transaction is on an account the member does not own (`settleUp.notPayer`) or is no longer an expense (`settleUp.notExpense`), or once the transaction is split again (`settleUp.alreadySplit`).
 
 The retention job purges the three kinds 30 days after the delete. Purging a person takes their payments and shares with them through cascading foreign keys, and a split left with nobody purges with them, see [Background jobs](background-jobs.md). Purging a transaction takes its split, as for a household split.
 

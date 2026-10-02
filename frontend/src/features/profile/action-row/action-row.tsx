@@ -9,6 +9,7 @@ interface Props {
   title: ReactNode;
   details: ReactNode;
   icon: LucideIcon;
+  variant?: "outline" | "outline-destructive";
   actionLabel: string;
   itemLabel: string;
   pending: boolean;
@@ -20,6 +21,7 @@ export function ActionRow({
   title,
   details,
   icon: Icon,
+  variant = "outline",
   actionLabel,
   itemLabel,
   pending,
@@ -37,7 +39,7 @@ export function ActionRow({
         </div>
         {onAction ? (
           <Button
-            variant="outline"
+            variant={variant}
             size="sm"
             className="self-start sm:self-auto"
             pending={pending}

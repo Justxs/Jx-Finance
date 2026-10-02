@@ -1,0 +1,28 @@
+@startuml notification-fan-out
+!include style.iuml
+
+participant "Producer job\nbudget, bill, balance..." as J
+participant "INotificationPublisher" as N
+database "PostgreSQL" as P
+participant "EmailOutboxJob\nevery minute" as EO
+participant "DiscordOutboxJob\nevery 30 s" as DO
+participant "SMTP server" as M
+participant "Discord" as D
+
+group one transaction
+  J -> P : advisory lock, read per-user state
+  J -> N : PreloadAsync(owners)
+  J -> N : Publish(notification)
+  N -> P : Notification, EmailMessages,\nDiscordMessages rows
+end
+
+loop drain the outboxes
+  EO -> P : claim due rows under lock,\ncount attempt, commit
+  EO -> M : send, 20 s cap
+  opt failure
+    EO -> P : retry at 4, 16, 64, 240 min
+  end
+  DO -> P : claim up to 50 rows,\nfive per user
+  DO -> D : post, no mentions parsed
+end
+@enduml

@@ -41,7 +41,7 @@ export function AppSidebar() {
   return (
     <aside
       className={cn(
-        "sticky top-0 hidden h-screen shrink-0 flex-col border-r bg-sidebar transition-width duration-200 ease-out-expo md:flex",
+        "sticky top-0 hidden h-screen shrink-0 flex-col border-r bg-sidebar transition-width duration-base ease-out-expo md:flex",
         collapsed ? "w-16" : "w-58",
       )}
     >
@@ -64,7 +64,7 @@ export function AppSidebar() {
         {collapsed ? <ChevronRight /> : <ChevronLeft />}
       </Button>
 
-      <div className={cn("px-3 pb-3", collapsed && "px-2")}>
+      <div className={cn("px-3 pb-2", collapsed && "px-2")}>
         <QueryBoundary
           fallback={<Skeleton className="h-8 w-full rounded-md pointer-coarse:h-11" />}
           error={null}
@@ -75,7 +75,7 @@ export function AppSidebar() {
 
       <nav
         aria-label={t("nav.main")}
-        className="flex min-h-0 flex-1 flex-col overflow-y-auto px-3 pb-3"
+        className="flex min-h-0 flex-1 flex-col overflow-y-auto px-3 pt-1 pb-3"
       >
         {entries.map((entry, index) => {
           const active = isEntryActive(entry, pathname);

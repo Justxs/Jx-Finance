@@ -357,6 +357,28 @@ public sealed class SettleUpTests(ApiFixture fixture) : IntegrationTestBase(fixt
         Assert.Contains(" paid ", paymentRows[^1].Description);
     }
 
+    [Fact]
+    public async Task A_restored_split_is_refused_when_the_expense_moved_to_another_members_account_meanwhile()
+    {
+        using var pair = await CreateHouseholdPairAsync();
+        var mine = await CreateAccountAsync(client: pair.OwnerClient);
+        var partners = await CreateAccountAsync(householdId: pair.HouseholdId, client: pair.PartnerClient);
+        var groceries = await ExpenseAsync(pair.OwnerClient, mine, "90.00", "Maxima");
+        var split = await SplitAsync(pair.OwnerClient, pair.HouseholdId, groceries, "equal", Share(pair.Owner.Id), Share(pair.Partner.Id));
+        (await pair.OwnerClient.DeleteAsync($"/api/households/{pair.HouseholdId}/shared-expenses/{split.Id}", TestContext.Current.CancellationToken))
+            .EnsureSuccessStatusCode();
+        (await pair.OwnerClient.PostAsJsonAsync(
+            "/api/transactions/bulk-account",
+            new { transactionIds = new[] { groceries }, accountId = partners },
+            TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
+
+        await AssertProblemAsync(
+            await pair.OwnerClient.PostAsJsonAsync("/api/trash/restore", new { kind = "sharedExpense", entityId = split.Id }, TestContext.Current.CancellationToken),
+            HttpStatusCode.BadRequest,
+            "settleUp.notPayer");
+        Assert.Empty((await BalancesAsync(pair.OwnerClient, pair.HouseholdId)).Balances);
+    }
+
     private static object Share(Guid userId, int? weight = null, string? amount = null) => new { userId, weight, amount };
 
     private static async Task<Guid> ExpenseAsync(HttpClient client, Guid account, string amount, string description) =>

@@ -2,6 +2,7 @@ using System.IO.Compression;
 using System.Net;
 using System.Net.Http.Json;
 using System.Text;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using JxFinance.Domain.Notifications;
 using JxFinance.Endpoints.Backups.Services;
@@ -406,6 +407,40 @@ public sealed class BackupEndpointTests(ApiFixture fixture) : IntegrationTestBas
     }
 
     [Fact]
+    public async Task Restore_ends_every_api_token_even_one_an_older_backup_still_carries()
+    {
+        var member = await CreateUserAsync();
+        await IssueTokenAsync(member.Id);
+        var carried = await WithDbAsync(async db =>
+        {
+            var shape = BackupDatabase.ReadShapes(db).Single(t => t.Name == "PersonalApiTokens");
+            await db.Database.OpenConnectionAsync(TestContext.Current.CancellationToken);
+            using var buffer = new MemoryStream();
+            await using (var json = new Utf8JsonWriter(buffer))
+            {
+                await BackupDatabase.WriteTableAsync(
+                    (NpgsqlConnection)db.Database.GetDbConnection(), shape, json, null, [], TestContext.Current.CancellationToken);
+            }
+
+            return JsonNode.Parse(buffer.ToArray())!;
+        });
+        var document = Unzip(await DownloadAsync((await CreateBackupAsync()).Id));
+        document[BackupJsonNames.Tables]!.AsArray().Add(carried);
+        var older = await StoreAsync(document);
+
+        try
+        {
+            Assert.Equal(HttpStatusCode.OK, (await RestoreAsync(older.Id)).StatusCode);
+        }
+        finally
+        {
+            await SignInAgainAsync();
+        }
+
+        Assert.Equal(0, await WithDbAsync(db => db.PersonalApiTokens.CountAsync(t => t.UserId == member.Id, TestContext.Current.CancellationToken)));
+    }
+
+    [Fact]
     public async Task Restore_keeps_discord_webhooks_month_closes_and_reconciliations_and_drops_queued_discord_messages()
     {
         const string discordUrl = "/api/users/me/discord";
@@ -536,7 +571,7 @@ public sealed class BackupEndpointTests(ApiFixture fixture) : IntegrationTestBas
     }
 
     [Fact]
-    public async Task Download_is_a_zip_archive_without_sessions()
+    public async Task Download_is_a_zip_archive_without_sessions_or_api_tokens()
     {
         var backup = await CreateBackupAsync();
 
@@ -560,11 +595,11 @@ public sealed class BackupEndpointTests(ApiFixture fixture) : IntegrationTestBas
         Assert.Contains("ReceiptReadings", tables);
         Assert.Contains("ReceiptItemCategories", tables);
         Assert.Contains("AspNetUserPasskeys", tables);
-        Assert.Contains("PersonalApiTokens", tables);
         Assert.Contains("SharedExpenses", tables);
         Assert.Contains("SharedExpenseShares", tables);
         Assert.Contains("Settlements", tables);
         Assert.DoesNotContain("UserSessions", tables);
+        Assert.DoesNotContain("PersonalApiTokens", tables);
         Assert.DoesNotContain("ApiIdempotencyKeys", tables);
         Assert.DoesNotContain("EmailMessages", tables);
     }

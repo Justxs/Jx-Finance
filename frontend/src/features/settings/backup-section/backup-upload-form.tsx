@@ -64,9 +64,11 @@ export function BackupUploadForm() {
         />
       </FieldShell>
       <FormError error={uploadMutation.error} />
-      <Button type="submit" variant="outline" pending={uploadMutation.isPending}>
-        {t("backup.upload")}
-      </Button>
+      <div className="flex justify-end">
+        <Button type="submit" variant="outline" pending={uploadMutation.isPending}>
+          {t("backup.upload")}
+        </Button>
+      </div>
     </form>
   );
 }

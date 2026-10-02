@@ -1,7 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/oxc-project/oxc/main/npm/oxlint/configuration_schema.json",
   "plugins": ["react", "typescript", "import", "jsx-a11y", "unicorn", "oxc", "promise"],
-  "jsPlugins": ["@shadcn/lint"],
+  "jsPlugins": ["@shadcn/lint", "./lint/design-rules.mjs"],
   "env": {
     "browser": true,
     "es2024": true
@@ -37,7 +37,7 @@
         "allow": ["layout", "stale"],
         "contracts": [
           {
-            "pattern": "^(Card|Section|StaleRegion|SplitColumns|ScrollRegion)$|(Content|Header|Footer|Group|Panel)$",
+            "pattern": "^(Card|Section|StaleRegion|SplitColumns|ScrollRegion|RuledLine)$|(Content|Header|Footer|Group|Panel)$",
             "allow": ["layout", "stale", "spacing"]
           },
           {
@@ -258,7 +258,14 @@
   },
   "overrides": [
     {
-      "files": ["**/*.stories.tsx", ".storybook/**", "*.config.ts", "src/routes/**", "e2e/**"],
+      "files": [
+        "**/*.stories.tsx",
+        ".storybook/**",
+        "*.config.ts",
+        "src/routes/**",
+        "e2e/**",
+        "lint/**"
+      ],
       "rules": {
         "import/no-default-export": "off"
       }
@@ -272,8 +279,38 @@
       }
     },
     {
+      "files": ["src/**"],
+      "rules": {
+        "jx/no-rounded-full": "error",
+        "jx/no-text-ghost-button": "error",
+        "jx/no-transition-all": "error",
+        "jx/no-literal-number-placeholder": "error",
+        "jx/no-destructive-text": "error"
+      }
+    },
+    {
+      "files": [
+        "src/components/splash/splash.tsx",
+        "src/components/ui/button/button.tsx",
+        "src/components/notification-bell/notification-bell.tsx",
+        "src/components/chart/chart-tooltip.tsx",
+        "src/components/ui/skeleton/skeleton.stories.tsx",
+        "src/features/month-close/month-close-review/month-close-review-skeleton.tsx"
+      ],
+      "rules": {
+        "jx/no-rounded-full": "off"
+      }
+    },
+    {
+      "files": ["src/features/**", "src/components/**"],
+      "rules": {
+        "jx/no-native-title": "error"
+      }
+    },
+    {
       "files": ["src/components/ui/**"],
       "rules": {
+        "jx/no-native-title": "off",
         "shadcn/no-restyle": "off",
         "shadcn/no-arbitrary-values": "off",
         "shadcn/require-static-classes": "off",

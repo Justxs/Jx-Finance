@@ -6,6 +6,7 @@ import { type LayoutDraft, moveCard, setCardShown, shownCards } from "./dashboar
 const allOn: FeatureFlags = {
   ...settingsFixture().features,
   budgets: true,
+  goals: true,
   netWorth: true,
   recurringBills: true,
   reports: true,
@@ -33,7 +34,12 @@ describe("shownCards", () => {
 
     expect(shown).not.toContain("cashFlow");
     expect(shown).not.toContain("upcomingBills");
-    expect(shownCards(draft, allOn).at(-1)).toBe("cashFlow");
+    expect(shownCards(draft, allOn).at(-2)).toBe("cashFlow");
+  });
+
+  test("leaves out the goals card while goals are off", () => {
+    expect(shownCards(draft, { ...allOn, goals: false })).not.toContain("goals");
+    expect(shownCards(draft, allOn).at(-1)).toBe("goals");
   });
 });
 

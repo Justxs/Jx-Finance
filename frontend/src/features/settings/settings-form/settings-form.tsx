@@ -213,23 +213,25 @@ export function SettingsForm({ section, settings, accounts, exchangeRates }: Rea
         <form.Subscribe selector={(state) => [state.isDirty, state.canSubmit] as const}>
           {([isDirty, canSubmit]) =>
             isDirty ? (
-              <div className="sticky bottom-4 flex flex-wrap items-center justify-end gap-3 rounded-lg border bg-popover px-4 py-3 shadow-lg">
-                <p className="mr-auto text-sm font-medium" role="status">
-                  {t("settings.unsaved")}
-                </p>
-                <Button
-                  type="button"
-                  variant="outline"
-                  disabled={pending}
-                  onClick={() => form.reset()}
-                >
-                  {t("settings.discard")}
-                </Button>
-                <Button type="submit" pending={pending} disabled={!canSubmit}>
-                  {t("actions.save")}
-                </Button>
-                <FormError error={updateMutation.error} className="basis-full" />
-              </div>
+              <>
+                <FormError error={updateMutation.error} />
+                <div className="sticky bottom-4 flex flex-wrap items-center justify-end gap-3 rounded-lg border bg-popover px-4 py-3 shadow-lg">
+                  <p className="mr-auto text-sm font-medium" role="status">
+                    {t("settings.unsaved")}
+                  </p>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={pending}
+                    onClick={() => form.reset()}
+                  >
+                    {t("settings.discard")}
+                  </Button>
+                  <Button type="submit" pending={pending} disabled={!canSubmit}>
+                    {t("actions.save")}
+                  </Button>
+                </div>
+              </>
             ) : null
           }
         </form.Subscribe>

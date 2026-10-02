@@ -13,6 +13,7 @@ import type {
 import { EditModal, Modal } from "@/components/modal";
 import type { ReceiptCandidateSplit } from "@/features/transactions/receipt-reading/fill-from-receipt";
 import { SourceMark } from "@/features/transactions/source-mark/source-mark";
+import { transactionName } from "@/features/transactions/transaction-amount/transaction-row";
 import { TransactionAttachments } from "@/features/transactions/transaction-attachments/transaction-attachments";
 import {
   type TransactionDraft,
@@ -24,6 +25,7 @@ import {
 } from "@/features/transactions/transaction-form/transaction-form";
 import { transactionTemplates } from "@/features/transactions/transaction-views";
 import type { useTransactionMutations } from "@/features/transactions/transactions-page/use-transaction-mutations";
+import { byId } from "@/lib/options";
 import { savePreferences } from "@/stores/preferences";
 
 interface Options {
@@ -163,7 +165,9 @@ export function useTransactionFormSection({
       <EditModal
         item={editing}
         onClose={() => setEditing(null)}
-        title={t("transactions.editTitle")}
+        title={(transaction) =>
+          `${t("transactions.editTitle")}: ${transactionName(transaction, byId(categories), t)}`
+        }
         className="max-w-2xl"
       >
         {(transaction, close) => (

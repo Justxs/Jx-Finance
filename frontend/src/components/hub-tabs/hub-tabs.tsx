@@ -1,5 +1,6 @@
 import { Link, useLocation } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
+import { tabsListClass, tabsTabClass } from "@/components/ui/tabs/tabs";
 import { useSettings } from "@/hooks/use-settings";
 import { isPageEnabled, navHubs, navPages } from "@/lib/navigation";
 import { cn } from "@/lib/utils";
@@ -37,7 +38,7 @@ export function HubTabs({ current, pages }: Readonly<Props>) {
   return (
     <nav
       aria-label={t(navHubs[current.hub].key)}
-      className="hub-tabs flex flex-wrap gap-x-5 border-b border-rule"
+      className={cn("hub-tabs", tabsListClass)}
       style={{ "--hub-tabs": `hub-tabs-${current.hub}` }}
     >
       {pages.map((page) => {
@@ -48,17 +49,14 @@ export function HubTabs({ current, pages }: Readonly<Props>) {
             to={page.to}
             preload="render"
             aria-current={active ? "page" : undefined}
-            className={cn(
-              "relative flex h-9 shrink-0 items-center gap-2 text-sm font-medium whitespace-nowrap text-muted-foreground transition-all duration-200 ease-out-expo outline-none hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:ring-inset pointer-coarse:h-11",
-              active && "font-semibold text-foreground",
-            )}
+            className={cn("relative", tabsTabClass, active && "font-semibold text-foreground")}
           >
             <page.icon aria-hidden="true" className="size-4 shrink-0" />
             {t(page.key)}
             {active ? (
               <span
                 aria-hidden="true"
-                className="hub-tab-indicator absolute inset-x-0 -bottom-px h-0.5 bg-foreground"
+                className="hub-tab-indicator absolute inset-x-0 bottom-0 h-0.5 bg-foreground"
                 style={{ "--hub-tab-indicator": `hub-tab-indicator-${current.hub}` }}
               />
             ) : null}

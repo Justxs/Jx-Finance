@@ -19,7 +19,6 @@ export function NetWorthHistoryChart({ until, pace }: Readonly<Props>) {
       series={series}
       ariaLabel={t("charts.netWorthLabel")}
       yDomain={["auto", "auto"]}
-      baseline
       until={until}
       pace={pace}
     />

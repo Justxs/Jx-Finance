@@ -189,8 +189,7 @@ export function RecurringBillsPage() {
       />
       <EditModal
         {...bills.editProps}
-        title={t("recurringBills.editTitle")}
-        description={(bill) => bill.name}
+        title={(bill) => `${t("recurringBills.editTitle")}: ${bill.name}`}
       >
         {(bill, close) => (
           <RecurringBillForm

@@ -28,11 +28,13 @@ export function RouteError({ title, error }: Readonly<Props>) {
     void router.invalidate();
   }
 
+  const Heading = title ? "h2" : "h1";
+
   const message = (
     <div role="alert" className="max-w-md">
-      <h2 className="text-lg leading-6 font-semibold text-balance">
+      <Heading className="text-lg leading-6 font-semibold text-balance">
         {title ? t("errors.loadFailedNamed", { subject: title }) : t("errors.pageFailedTitle")}
-      </h2>
+      </Heading>
       <p className="mt-2 text-sm text-pretty text-muted-foreground">{t("errors.pageFailedBody")}</p>
       <div className="mt-5 flex flex-wrap gap-2">
         <Button type="button" onClick={retry}>

@@ -239,6 +239,11 @@
   --color-kofi-ink: #0f2540;
   --color-kofi-cup: #ffffff;
   --color-kofi-heart: #ff5e5b;
+
+  --transition-duration-quick: 100ms;
+  --transition-duration-base: 200ms;
+  --transition-duration-view: 220ms;
+  --transition-duration-slow: 300ms;
 }
 
 @theme inline {
@@ -305,8 +310,44 @@
   transition-duration: var(--default-transition-duration);
 }
 
+@utility collapse-rows {
+  display: grid;
+  grid-template-rows: 1fr;
+  transition-property: grid-template-rows;
+  transition-timing-function: var(--ease-out-expo);
+  transition-duration: var(--transition-duration-base);
+
+  [data-starting-style] > &,
+  [data-ending-style] > & {
+    grid-template-rows: 0fr;
+  }
+
+  & > * {
+    min-height: 0;
+    overflow: hidden;
+  }
+}
+
+@utility transition-reveal {
+  transition-property: opacity, translate, visibility;
+  transition-timing-function: var(--default-transition-timing-function);
+  transition-duration: var(--default-transition-duration);
+}
+
 @utility stale {
-  @apply cursor-progress opacity-55 transition-opacity delay-150 duration-200;
+  @apply cursor-progress opacity-75 transition-opacity delay-150 duration-base;
+}
+
+@utility focus-ring {
+  &:focus-visible {
+    @apply ring-3 ring-ring/60 outline-none;
+  }
+}
+
+@utility focus-ring-inset {
+  &:focus-visible {
+    @apply ring-3 ring-ring/60 outline-none ring-inset;
+  }
 }
 
 @utility bg-dashed-swatch {
@@ -314,6 +355,14 @@
     to right,
     var(--swatch-color) 0 3px,
     transparent 3px 6px
+  );
+}
+
+@utility bg-dotted-swatch {
+  background-image: repeating-linear-gradient(
+    to right,
+    var(--swatch-color) 0 2px,
+    transparent 2px 4px
   );
 }
 
@@ -401,6 +450,7 @@
     *::before,
     *::after {
       animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
       transition-duration: 0.01ms !important;
     }
   }
@@ -429,7 +479,7 @@
 }
 
 ::view-transition-new(page) {
-  animation: page-in 220ms ease-out both;
+  animation: page-in var(--transition-duration-view) ease-out both;
 }
 
 :root:active-view-transition-type(page) .nav-link {
@@ -438,7 +488,7 @@
 }
 
 ::view-transition-group(.nav-link) {
-  animation-duration: 220ms;
+  animation-duration: var(--transition-duration-view);
   animation-timing-function: var(--ease-out-expo);
 }
 
@@ -475,7 +525,7 @@
 }
 
 ::view-transition-new(.hub-strip) {
-  animation: rows-in 200ms ease-out both;
+  animation: rows-in var(--transition-duration-base) ease-out both;
 }
 
 ::view-transition-old(.hub-part):only-child,
@@ -485,7 +535,7 @@
 
 ::view-transition-new(.hub-part):only-child,
 ::view-transition-new(.hub-slide):only-child {
-  animation: page-in 220ms ease-out both;
+  animation: page-in var(--transition-duration-view) ease-out both;
 }
 
 ::view-transition-old(transactions-rows),
@@ -532,7 +582,7 @@
 }
 
 ::view-transition-new(.reveal-in) {
-  animation: rows-in 220ms ease-out both;
+  animation: rows-in var(--transition-duration-view) ease-out both;
 }
 
 @keyframes row-in {
@@ -548,11 +598,11 @@
   }
 
   ::view-transition-old(*) {
-    animation: rows-out 100ms linear both !important;
+    animation: rows-out var(--transition-duration-quick) linear both !important;
   }
 
   ::view-transition-new(*) {
-    animation: rows-in 100ms linear both !important;
+    animation: rows-in var(--transition-duration-quick) linear both !important;
   }
 
   ::view-transition-old(.hub-part),
@@ -564,11 +614,11 @@
 
   ::view-transition-old(.hub-part):only-child,
   ::view-transition-old(.hub-slide):only-child {
-    animation: rows-out 100ms linear both !important;
+    animation: rows-out var(--transition-duration-quick) linear both !important;
   }
 
   ::view-transition-new(.hub-part):only-child,
   ::view-transition-new(.hub-slide):only-child {
-    animation: rows-in 100ms linear both !important;
+    animation: rows-in var(--transition-duration-quick) linear both !important;
   }
 }

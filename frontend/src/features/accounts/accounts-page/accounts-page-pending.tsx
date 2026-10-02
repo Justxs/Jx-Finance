@@ -48,12 +48,7 @@ export function AccountsPending() {
     <PagePending actions={1}>
       <Section as="div" aria-hidden="true">
         <AccountRowsSkeleton />
-        <TableSkeleton
-          rows={ACCOUNT_ROWS}
-          columns={5}
-          lines={2}
-          className="-mx-3 hidden md:block"
-        />
+        <TableSkeleton rows={ACCOUNT_ROWS} columns={6} lines={2} className="hidden md:block" />
       </Section>
       {features.recurringBills ? (
         <SectionSkeleton>

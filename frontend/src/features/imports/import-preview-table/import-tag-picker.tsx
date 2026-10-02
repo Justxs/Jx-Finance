@@ -21,6 +21,10 @@ export function ImportTagPicker({ tags, value, label, disabled, onChange }: Read
     return null;
   }
 
+  const tagById = byId(tags);
+  const names = value.flatMap((id) => tagById.get(id)?.name ?? []).join(", ");
+  const triggerLabel = names ? t("imports.pickerValue", { label, value: names }) : label;
+
   return (
     <Popover>
       <PopoverTrigger
@@ -30,7 +34,7 @@ export function ImportTagPicker({ tags, value, label, disabled, onChange }: Read
             type="button"
             variant="link-muted"
             size="inline"
-            aria-label={label}
+            aria-label={triggerLabel}
             className="min-h-6 max-w-full"
           />
         }
@@ -38,7 +42,7 @@ export function ImportTagPicker({ tags, value, label, disabled, onChange }: Read
         {value.length === 0 ? (
           t("imports.chooseTags")
         ) : (
-          <TagChips tagIds={value} tagById={byId(tags)} />
+          <TagChips tagIds={value} tagById={tagById} />
         )}
       </PopoverTrigger>
       <PopoverContent align="start" aria-label={label} className="w-64">

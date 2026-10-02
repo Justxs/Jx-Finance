@@ -60,7 +60,7 @@ export function SettleUpSection({ household }: Readonly<Props>) {
   return (
     <div className="space-y-3 border-t pt-4">
       <div className="space-y-1">
-        <h3 className="text-sm font-semibold">{t("households.settleUp.title")}</h3>
+        <h4 className="text-sm font-semibold">{t("households.settleUp.title")}</h4>
         <p className="max-w-prose text-sm text-muted-foreground">
           {t("households.settleUp.description")}
         </p>
@@ -82,7 +82,7 @@ export function SettleUpSection({ household }: Readonly<Props>) {
       )}
       {payments.length > 0 ? (
         <div className="space-y-1">
-          <h4 className="text-sm font-medium">{t("households.settleUp.suggestions")}</h4>
+          <h5 className="text-sm font-medium">{t("households.settleUp.suggestions")}</h5>
           <Rows>
             {payments.map((payment) => (
               <li

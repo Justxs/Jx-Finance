@@ -21,6 +21,7 @@ public sealed class DashboardLayoutTests(ApiFixture fixture) : IntegrationTestBa
         "recentTransactions",
         "upcomingBills",
         "cashFlow",
+        "goals",
     ];
 
     [Fact]
@@ -129,7 +130,7 @@ public sealed class DashboardLayoutTests(ApiFixture fixture) : IntegrationTestBa
     }
 
     [Fact]
-    public async Task A_layout_saved_before_the_cash_flow_card_existed_shows_it_last()
+    public async Task A_layout_saved_before_the_cash_flow_and_goals_cards_existed_shows_them_last()
     {
         var user = await CreateUserAsync();
         using var client = await LoginAsync(user);
@@ -138,7 +139,7 @@ public sealed class DashboardLayoutTests(ApiFixture fixture) : IntegrationTestBa
 
         var layout = await client.GetFromJsonAsync<LayoutDto>(Url, TestContext.Current.CancellationToken);
 
-        Assert.Equal("cashFlow", layout!.Order[^1]);
+        Assert.Equal(["cashFlow", "goals"], layout!.Order.TakeLast(2));
         Assert.Equal(["budgets"], layout.Hidden);
     }
 

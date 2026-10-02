@@ -14,6 +14,7 @@ Startup applies pending EF migrations directly. Only in the Development environm
 
 | Page | Sections |
 | --- | --- |
+| [System diagrams](diagrams.md) | System context; Deployment; Components; Backend layering; Request lifecycle; Notification fan-out; Core domain; Contract and code generation |
 | [Frontend data, loading and tables](frontend-data.md) | Table filtering and sorting; Frontend loading and failure states |
 | [Frontend components and forms](frontend-components.md) | Frontend file layout; UI components; Forms |
 | [Visual system and motion](visual-system.md) | Visual system; Brand assets; Motion |

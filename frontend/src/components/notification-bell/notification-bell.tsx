@@ -113,7 +113,8 @@ const producers = {
   { feature: FeatureKey | undefined; link: (payload: NotificationPayload) => unknown }
 >;
 
-const entryClassName = "block w-full px-4 py-3 text-left text-sm hover:bg-accent";
+const entryClassName =
+  "block w-full px-4 py-3 text-left text-sm hover:bg-accent focus-visible:bg-accent focus-ring-inset";
 
 function noNotifications(): NotificationResponse[] {
   return [];
@@ -228,7 +229,7 @@ export function NotificationBell({ sidebar }: Readonly<Props>) {
           ? t("notifications.monthlyDigest", {
               income: money.format(Number(digest.income), digest.currency),
               expense: money.format(Number(digest.expense), digest.currency),
-              net: money.format(Number(digest.net), digest.currency),
+              net: money.formatSigned(Number(digest.net), "auto", digest.currency),
             })
           : serverMessage(notification);
       default:
@@ -370,7 +371,9 @@ export function NotificationBellSlot(props: Readonly<Props>) {
     <QueryBoundary
       fallback={
         props.sidebar ? (
-          <Skeleton className="h-9 w-full rounded-md" />
+          <Skeleton
+            className={cn("w-full rounded-md", props.sidebar === "expanded" ? "h-10" : "h-8.5")}
+          />
         ) : (
           <IconButtonSkeleton size="md" />
         )

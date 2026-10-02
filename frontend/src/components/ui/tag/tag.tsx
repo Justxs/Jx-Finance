@@ -18,13 +18,14 @@ interface Props {
 export function Tag({ tone = "neutral", className, children }: Readonly<Props>) {
   return (
     <span
+      title={typeof children === "string" ? children : undefined}
       className={cn(
-        "inline-flex shrink-0 items-center rounded-sm border px-1.5 text-xs leading-5 font-medium whitespace-nowrap",
+        "inline-flex max-w-full min-w-0 shrink-0 items-center rounded-sm border px-1.5 text-xs leading-5 font-medium whitespace-nowrap",
         tones[tone],
         className,
       )}
     >
-      {children}
+      <span className="truncate">{children}</span>
     </span>
   );
 }
@@ -38,12 +39,12 @@ interface HintTagProps {
 export function HintTag({ hint, tone, children }: Readonly<HintTagProps>) {
   return (
     <Tooltip content={hint}>
-      <span className="inline-flex">
+      <button type="button" className="inline-flex max-w-full cursor-default rounded-sm focus-ring">
         <Tag tone={tone}>
           {children}
           <span className="sr-only">. {hint}</span>
         </Tag>
-      </span>
+      </button>
     </Tooltip>
   );
 }

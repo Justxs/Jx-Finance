@@ -45,7 +45,6 @@ export function ValueChart({ params }: Readonly<Props>) {
         ariaLabel={t("investments.valueChart.label")}
         yDomain={["auto", "auto"]}
         legend
-        baseline
       />
       {points.some((point) => point.isPartial) ? (
         <p className="text-xs text-muted-foreground">{t("investments.valueChart.partial")}</p>

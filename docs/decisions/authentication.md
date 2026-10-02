@@ -10,6 +10,12 @@ Admin-created users; optional 2FA; optional passkeys through ASP.NET Core Identi
 
 Newest first. Each entry is a choice between real alternatives: what was chosen, what was rejected, and why.
 
+- **2026-10-01.** An authenticator code is accepted once: `AuthenticatorCode.ConsumeAsync` keeps the time and SHA-256 of the last accepted code in Identity's `AspNetUserTokens` and refuses the same code for three minutes, at sign-in and on enable
+  - Rejected: A column on `AspNetUsers` with a migration; remembering the last accepted 30-second step and refusing every older step, as RFC 6238 suggests; leaving replay to the throttle and the lockout
+  - Why: The user-token table is already in the model, backed up and excluded from the member export, so no migration or export rule was needed. Refusing older steps would mean computing the TOTP steps ourselves, because Identity's provider only answers yes or no; the same code within the window that Identity accepts (about two and a half minutes) is the replay that matters. The throttle and the lockout limit guessing, not reuse of a code that is right
+- **2026-10-01.** Backups leave `PersonalApiTokens` out like `UserSessions`, and a restore ends every token; a file that still holds the table restores with its rows skipped. This reverses the 2026-09-29 entry that carried the table
+  - Rejected: Keeping tokens in backups and only documenting that a restore brings back tokens revoked after the backup
+  - Why: A token is usually revoked because it leaked, and restoring an older backup would make that leaked token valid again without anyone noticing. Creating a token again takes a minute; a revocation silently undone cannot be seen from the list
 - **2026-10-01.** A read-and-write token may move a manual goal's progress through `PATCH /api/goals/{id}/progress`, the only goal route on the write allowlist. This narrows the entry below that kept goals browser-only because their update needs the whole goal. Decided while the owner was away, to be reviewed
   - Rejected: Allowing the full `PUT /api/goals/{id}`; keeping goals browser-only
   - Why: The progress route touches one amount on one goal the member can already change, like a recorded expense, while the full update lets a leaked token rename, retarget or repoint a goal at another account. Home Assistant moving a savings goal when money is put aside is the use the backlog named
@@ -79,7 +85,7 @@ Newest first. Each entry is a choice between real alternatives: what was chosen,
 - **2026-09-29.** Tokens are limited to 60 requests a minute each by ASP.NET Core's rate limiter partitioned by the token id; `LastUsedAt` is written at most once a minute; no per-request audit
   - Rejected: FastEndpoints `Throttle`; a write on every request; storing the client address; an audit table of token reads
   - Why: `Throttle` counts per endpoint and per client address, while a script loop needs one budget per token across all routes. A write per request is waste, and the address is personal data the list does not need. Tokens only read, so the household activity log has nothing to record; the request log's `TokenPrefix` answers what a token read
-- **2026-09-29.** No antiforgery for tokens; backups carry `PersonalApiTokens`
+- **2026-09-29.** No antiforgery for tokens; backups carry `PersonalApiTokens` (reversed for backups on 2026-10-01)
   - Rejected: Antiforgery tokens; leaving the table out of backups like `UserSessions`
   - Why: A browser never adds an `Authorization` header to a cross-site request by itself and there is no CORS policy, while the cookies stay SameSite=Strict. A token is a durable credential its member chose to create, not state of one browser, and only its hash is stored
 - **2026-09-29.** The OpenAPI document lists a `PersonalApiToken` bearer scheme on the readable `GET` operations, beside `Cookie`

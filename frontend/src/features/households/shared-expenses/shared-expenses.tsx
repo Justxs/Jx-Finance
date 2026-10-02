@@ -136,15 +136,15 @@ export function SharedExpenses({ householdId }: Readonly<Props>) {
 
   return (
     <div className="space-y-4 border-t pt-4">
-      <h3 className="text-sm font-semibold">{t("households.shared.title")}</h3>
+      <h4 className="text-sm font-semibold">{t("households.shared.title")}</h4>
       <div className="space-y-2">
-        <h4 className="text-sm font-medium">{t("households.shared.splits")}</h4>
+        <h5 className="text-sm font-medium">{t("households.shared.splits")}</h5>
         <QueryBoundary fallback={<RecordRowsSkeleton />}>
           <SplitList householdId={householdId} />
         </QueryBoundary>
       </div>
       <div className="space-y-2">
-        <h4 className="text-sm font-medium">{t("households.shared.payments")}</h4>
+        <h5 className="text-sm font-medium">{t("households.shared.payments")}</h5>
         <QueryBoundary fallback={<RecordRowsSkeleton rows={2} />}>
           <PaymentList householdId={householdId} />
         </QueryBoundary>

@@ -52,7 +52,7 @@ How each part of the application treats a refund. Totals net it, and the checks 
 | Place | Treats a refund |
 | --- | --- |
 | Account balance, `AccountMovements.SumAsync` and `ListAsync` | Raises it: `-Amount` of a negative expense is positive. Reconciliation (`ReconciliationService`) and the statement's ledger balance use the same movements |
-| Ledger summary, `TransactionService.GetSummaryAsync` | Nets the expense total |
+| Ledger summary, `TransactionService.GetSummaryAsync` | Nets the expense total; the totals line shows it with a minus, and with a plus when refunds outweigh the spending |
 | Reports: totals, trend, category, tag and payee breakdowns (`ReportService`, `CategoryAttributionService`, `CategoryBreakdownBuilder`) | Nets. A category, tag or payee whose refunds exceed its spending keeps its negative net and sorts last. A payee's count includes its refunds |
 | Payee ledger filter (`PayeeKey`) | Lists the refund when its description normalizes to the payee's key |
 | Dashboard month totals, trend and category breakdown (`DashboardService`) | Nets |
@@ -91,7 +91,7 @@ The create and edit dialogs, with the prefill of a duplicate, a refund or a temp
 
 While the `Import` switch is on, the header also holds "Import bank statement" beside "Add transaction"; it opens the dialog described in [Bank statement import](bank-statement-import.md).
 
-In the transaction form, Type is an Expense / Income / Refund segmented control, and Category, like the category of each split line, is a searchable combobox.
+In the transaction form, Type is an Expense / Income / Refund segmented control, and Category, like the category of each split line, is a searchable combobox. Changing the type empties the category and every split line's category that is not of the new type, since the pickers only offer categories of the type and the server refuses the other with `category.wrongType`.
 
 When a filter leaves no rows, the empty table and the phone list say so and offer "Clear filters", which runs the same reset as the chip line. Without an account the page says so and links to the accounts page with the create dialog open. Below the rows, the pager shows the range and the total, such as "51–100 of 438", and from five pages on a page number field, where typing a number and Enter jumps to it, clamped to the last page. A page past the last one, from a link such as `?page=999` or after deleting the only row of the last page, moves to the last real page through `usePageClamp`, replacing the history entry rather than adding one.
 
@@ -258,7 +258,7 @@ The page clears the selection after either action and shows one toast: "5 transa
 
 ## Saved filters
 
-A saved filter is a name put on the filter half of the search params. It lives in the browser, in the `jx-saved-filters` TanStack DB local-storage collection of `features/transactions/transaction-views.ts`, next to the preferences row; there is no table, no endpoint and nothing to invalidate. The menu sits in the page header beside the export menu, holds the whole list, and saves, renames, deletes and applies.
+A saved filter is a name put on the filter half of the search params. It lives in the browser, in the `jx-saved-filters` TanStack DB local-storage collection of `features/transactions/transaction-views.ts`, next to the preferences row; there is no table, no endpoint and nothing to invalidate. The menu sits in the page header beside the export menu, holds the whole list, and saves, renames, deletes and applies. Deleting a saved filter or a template asks first in a confirmation that names it, because a browser-side list has no trash and no undo.
 
 ```mermaid
 flowchart TD

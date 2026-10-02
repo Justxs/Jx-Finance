@@ -8,6 +8,7 @@ import {
   getCategoryBreakdownSuspenseQueryOptions,
   getDashboardLayoutSuspenseQueryOptions,
   getDashboardSummarySuspenseQueryOptions,
+  getGoalsSuspenseQueryOptions,
   getMonthlyTrendSuspenseQueryOptions,
   getMonthReviewSuspenseQueryOptions,
   getNetWorthHistorySuspenseQueryOptions,
@@ -47,6 +48,7 @@ const cardFeature: Partial<Record<DashboardCard, FeatureKey>> = {
   netWorth: "netWorth",
   upcomingBills: "recurringBills",
   cashFlow: "recurringBills",
+  goals: "goals",
 };
 
 function isCardAvailable(card: DashboardCard, features: FeatureFlags): boolean {
@@ -145,6 +147,11 @@ function warmCard(
     case "cashFlow":
       if (month === currentMonthKey(today)) {
         warm(queryClient, getCashFlowForecastSuspenseQueryOptions({ days: FORECAST_DAYS }));
+      }
+      break;
+    case "goals":
+      if (month === currentMonthKey(today)) {
+        warm(queryClient, getGoalsSuspenseQueryOptions());
       }
       break;
   }

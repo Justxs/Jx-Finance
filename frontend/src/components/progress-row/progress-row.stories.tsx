@@ -34,7 +34,7 @@ export const Default: Story = {};
 export const Over: Story = {
   args: {
     primary: <ProgressAmount amount="€512.90" of="of €450.00" />,
-    secondary: <p className="text-xs text-destructive tabular-nums">€62.90 over</p>,
+    secondary: <p className="text-xs text-expense tabular-nums">€62.90 over</p>,
     meter: { value: 512.9, max: 450, tone: "negative" },
   },
 };

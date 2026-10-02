@@ -1,3 +1,5 @@
+using System.Globalization;
+using System.Net;
 using System.Net.Http.Json;
 using JxFinance.Tests.Support;
 
@@ -68,6 +70,31 @@ public sealed class ReportEndpointTests(ApiFixture fixture) : IntegrationTestBas
 
         Assert.Equal(new DateOnly(Today.Year, Today.Month, 1), report!.PeriodStart);
         Assert.Equal(Today, report.PeriodEnd);
+    }
+
+    [Theory]
+    [InlineData("dateFrom=2026-03-10&dateTo=2026-03-01")]
+    [InlineData("dateTo=9999-12-31")]
+    [InlineData("dateFrom=0001-01-02&dateTo=2026-01-31&comparison=previousYear")]
+    [InlineData("dateFrom=1999-12-31&dateTo=2026-01-31")]
+    public async Task Summary_refuses_a_start_after_the_end_or_a_date_outside_the_supported_years(string query)
+    {
+        using var member = await CreateUserClientAsync();
+
+        var response = await member.GetAsync($"/api/reports/summary?{query}", TestContext.Current.CancellationToken);
+
+        await AssertProblemAsync(response, HttpStatusCode.BadRequest, "range.invalid");
+    }
+
+    [Fact]
+    public async Task Summary_refuses_a_start_after_today_when_the_end_is_left_out()
+    {
+        using var member = await CreateUserClientAsync();
+        var tomorrow = Today.AddDays(1).ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+
+        var response = await member.GetAsync($"/api/reports/summary?dateFrom={tomorrow}", TestContext.Current.CancellationToken);
+
+        await AssertValidationErrorAsync(response, "dateFrom");
     }
 
     private sealed record CategoryDto(Guid? CategoryId, string Amount);

@@ -20,6 +20,7 @@ public static class BackupDatabase
         string?[] transient =
         [
             db.Model.FindEntityType(typeof(UserSession))!.GetTableName(),
+            db.Model.FindEntityType(typeof(PersonalApiToken))!.GetTableName(),
             db.Model.FindEntityType(typeof(ApiIdempotencyKey))!.GetTableName(),
             db.Model.FindEntityType(typeof(EmailMessage))!.GetTableName(),
             db.Model.FindEntityType(typeof(DiscordMessage))!.GetTableName(),

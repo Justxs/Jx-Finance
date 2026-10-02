@@ -5,6 +5,7 @@ import { useBrokerConnectionsSuspense } from "@/api/generated";
 import type { AccountResponse } from "@/api/generated/model";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog/confirm-delete-dialog";
 import { Button } from "@/components/ui/button/button";
+import { RuledLine } from "@/components/ui/ruled-line/ruled-line";
 import { useDateTime } from "@/hooks/use-formatters";
 import { ConnectionForm } from "./connection-form";
 import { BrokerImportStatus } from "./import-result";
@@ -46,7 +47,7 @@ export function ConnectionPanel({ accounts, accountId, mutations }: Readonly<Pro
       </p>
 
       {connection ? (
-        <dl className="space-y-1 border-y border-rule py-2.5 text-sm">
+        <RuledLine as="dl" tone="ink" className="space-y-1">
           <div className="flex flex-wrap justify-between gap-x-3">
             <dt className="text-muted-foreground">{t("investments.connection.lastSync")}</dt>
             <dd className="tabular-nums">
@@ -61,7 +62,7 @@ export function ConnectionPanel({ accounts, accountId, mutations }: Readonly<Pro
               <dd className="wrap-break-word text-expense">{connection.lastError}</dd>
             </div>
           ) : null}
-        </dl>
+        </RuledLine>
       ) : null}
 
       <ConnectionForm

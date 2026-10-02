@@ -21,7 +21,29 @@ public sealed class PriceSyncRulesTests
     [InlineData("2026-09-26", "2026-09-25")]
     public void The_target_is_the_last_weekday_before_today(string today, string target)
     {
-        Assert.Equal(DateOnly.Parse(target), PriceSyncRules.Target(DateOnly.Parse(today)));
+        Assert.Equal(DateOnly.Parse(target), PriceSyncRules.Target(DateOnly.Parse(today), PriceSource.Eodhd));
+    }
+
+    [Theory]
+    [InlineData("2026-09-30", "2026-09-29")]
+    [InlineData("2026-09-28", "2026-09-27")]
+    [InlineData("2026-09-27", "2026-09-26")]
+    [InlineData("2026-09-26", "2026-09-25")]
+    public void The_kraken_target_is_yesterday_even_on_a_weekend(string today, string target)
+    {
+        Assert.Equal(DateOnly.Parse(target), PriceSyncRules.Target(DateOnly.Parse(today), PriceSource.Kraken));
+    }
+
+    [Fact]
+    public void A_kraken_security_priced_on_friday_is_due_on_monday()
+    {
+        var monday = new TestClock(new DateTimeOffset(2026, 9, 28, 10, 0, 0, TimeSpan.Zero));
+        var friday = new DateOnly(2026, 9, 25);
+        var coin = Mapped(friday, monday.UtcNow.AddDays(-1));
+        coin.PriceSource = PriceSource.Kraken;
+
+        Assert.False(PriceSyncRules.IsDue(Mapped(friday, monday.UtcNow.AddDays(-1)), monday, force: false));
+        Assert.True(PriceSyncRules.IsDue(coin, monday, force: false));
     }
 
     [Fact]

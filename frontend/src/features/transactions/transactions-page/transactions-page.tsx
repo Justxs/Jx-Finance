@@ -158,7 +158,7 @@ export function TransactionsPage() {
   const columns = useTransactionColumns({ ...rowHandlers, categories, inlineCategory });
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <PageHeader title={t("transactions.title")}>
         <TransactionsToolbar
           filters={filters}

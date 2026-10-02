@@ -13,6 +13,7 @@ import {
   settlementAccountOwnerProblem,
 } from "@/storybook/fixtures";
 import { failWith, pending, withHandlers } from "@/storybook/handlers";
+import { chooseOption } from "@/storybook/interactions";
 import { SettlementForm } from "./settlement-dialog";
 
 const meta = {
@@ -63,6 +64,23 @@ export const WithATransfer: Story = {
     await userEvent.click(await canvas.findByRole("checkbox", { name: "Also record a transfer" }));
     await expect(await canvas.findByRole("combobox", { name: "From account" })).toBeVisible();
     await expect(canvas.getByRole("combobox", { name: "To account" })).toBeVisible();
+  },
+};
+
+export const ChangingTheCurrencyClearsTheAccounts: Story = {
+  parameters: withHandlers(getAccountsMockHandler([...accounts, partnerSharedAccount])),
+  play: async ({ canvas }) => {
+    await userEvent.click(await canvas.findByRole("checkbox", { name: "Also record a transfer" }));
+    const from = await canvas.findByRole("combobox", { name: "From account" });
+    await chooseOption(from, partnerSharedAccount.name);
+    await expect(from).toHaveTextContent(partnerSharedAccount.name);
+
+    await chooseOption(canvas.getByRole("combobox", { name: "Currency" }), /^USD/);
+    await chooseOption(canvas.getByRole("combobox", { name: "Currency" }), /^EUR/);
+
+    await expect(await canvas.findByRole("combobox", { name: "From account" })).toHaveTextContent(
+      "Choose an account",
+    );
   },
 };
 

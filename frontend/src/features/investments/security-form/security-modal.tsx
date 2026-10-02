@@ -19,7 +19,11 @@ export function SecurityModal({ open, security, onOpenChange, onSaved }: Readonl
     <Modal
       open={open}
       onOpenChange={onOpenChange}
-      title={shown ? t("investments.securities.edit") : t("investments.securities.add")}
+      title={
+        shown
+          ? `${t("investments.securities.edit")}: ${shown.symbol}`
+          : t("investments.securities.add")
+      }
       description={shown ? undefined : t("investments.securities.addDescription")}
     >
       <SecurityForm

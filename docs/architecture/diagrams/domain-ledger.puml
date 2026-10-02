@@ -1,0 +1,82 @@
+@startuml domain-ledger
+!include style.iuml
+hide empty methods
+
+class AppUser {
+  Id : Guid
+  Email : string
+}
+class Household {
+  Name : string
+}
+class HouseholdMembership {
+  Role : HouseholdRole
+}
+class Account {
+  Name : string
+  Type : AccountType
+  StartingBalance : Money
+  Scope : Scope
+}
+class Transaction {
+  Type : FlowType
+  Amount : Money
+  ReportingAmount : decimal
+  Date : DateOnly
+  Source : TransactionSource
+  IsSplit : bool
+}
+class TransactionLine {
+  Amount : Money
+  Position : int
+}
+class Category {
+  Name : string
+  Type : FlowType
+}
+class Tag {
+  Name : string
+}
+class Transfer {
+  Amount : Money
+  ReceivedAmount : Money
+  Date : DateOnly
+}
+class CurrencyConversion {
+  FromAmount : Money
+  ToAmount : Money
+}
+class Budget {
+  LimitAmount : Money
+  Period : BudgetPeriod
+  RolloverEnabled : bool
+}
+class Goal {
+  TargetAmount : Money
+  Funding : GoalFunding
+}
+class RecurringBill {
+  Cadence : RecurringBillCadence
+  NextDueDate : DateOnly
+}
+
+AppUser "1" -- "*" HouseholdMembership
+Household "1" -- "*" HouseholdMembership
+AppUser "1" -- "*" Account : owns >
+Household "0..1" -- "*" Account : shares >
+Account "1" -- "*" Transaction
+Transaction "1" *-- "*" TransactionLine : split
+Transaction "*" --> "0..1" Category
+TransactionLine "*" --> "0..1" Category
+Transaction "*" --> "*" Tag
+Transaction "0..1" <-- "*" Transaction : refund of
+Category "0..1" <-- "*" Category : parent
+Transfer "*" --> "1" Account : from
+Transfer "*" --> "1" Account : to
+CurrencyConversion "*" --> "1" Account
+Budget "*" --> "0..1" Category
+Budget "*" --> "0..1" Tag
+Goal "*" --> "0..1" Account : funding
+RecurringBill "*" --> "0..1" Account
+RecurringBill "*" --> "0..1" Category
+@enduml

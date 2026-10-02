@@ -489,7 +489,7 @@ export const getUploadAttachmentUrl = (transactionId: string) => {
 };
 
 /**
- * Stores one receipt or document with the transaction. Send it as multipart/form-data in the field file. JPEG, PNG, WebP and HEIC images and PDF documents are accepted, at most 10 MB each and 10 per transaction. The type is read from the file's first bytes, not trusted from the upload: a declared type that disagrees with the content is refused. The file is kept under a generated id; the name you sent is only shown back, with path parts, control characters and reserved characters removed and an extension that matches the content. On a shared account the household's activity log records the upload.
+ * Stores one receipt or document with the transaction. Send it as multipart/form-data in the field file. JPEG, PNG, WebP and HEIC images and PDF documents are accepted, at most 10 MB each and 10 per transaction. The type is read from the file's first bytes, not trusted from the upload: a declared type that disagrees with the content is refused. The file is kept under a generated id; the name you sent is only shown back, with path parts, control characters and reserved characters removed and an extension that matches the content. On a shared account the household's activity log records the upload. Rate limited to 30 calls per five minutes per client.
  * @summary Attach a file to a transaction
  */
 export const uploadAttachment = async (

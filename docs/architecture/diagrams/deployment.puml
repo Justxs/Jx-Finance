@@ -1,0 +1,49 @@
+@startuml deployment
+!include style.iuml
+
+node "Client device" <<device>> as client {
+  node "Web browser" <<execution environment>> as browser
+  node "AI client" <<execution environment>> as aiclient {
+    artifact "jx-mcp\nNode 24, stdio" as mcp
+  }
+}
+
+node "Docker host on a private network" <<device>> as host {
+  node "frontend\ncaddy:2-alpine" <<container>> as fe {
+    component "Caddy\nTLS, headers, CSP\npublished :443" as caddy
+    artifact "SPA bundle\n/usr/share/caddy" as spa
+  }
+  node "api\ndotnet/aspnet:10.0, user app" <<container>> as api {
+    component "ASP.NET Core API\nFastEndpoints :8080" as kestrel
+    component "15 hosted jobs" as jobs
+    artifact "tesseract\nghostscript" as ocr
+  }
+  node "db\npostgres:16" <<container>> as dbc {
+    database "PostgreSQL\n:5432" as pg
+  }
+  node "aspire\nprofile telemetry" <<container>> as aspire
+
+  storage "maps\nread-only" <<volume>> as vmaps
+  storage "caddy_data\ncaddy_config" <<volume>> as vcaddy
+  storage "auth_keys\nbackups\nattachments" <<volume>> as vapi
+  storage "import_inbox" <<volume>> as vinbox
+  storage "db_data" <<volume>> as vdb
+}
+
+cloud "External services\nSMTP, Discord, Frankfurter,\nEODHD, Kraken, Interactive Brokers" as ext
+
+browser --> caddy : HTTPS :443
+mcp --> caddy : HTTPS :443 /api\nAuthorization header
+caddy --> spa : static files
+caddy --> vmaps : /maps/*
+caddy -- vcaddy
+caddy --> kestrel : /api/* HTTP
+kestrel --> pg : Npgsql
+jobs --> pg : Npgsql
+kestrel ..> ocr : process
+kestrel -- vapi
+jobs -- vinbox
+pg -- vdb
+kestrel ..> aspire : OTLP, optional
+jobs --> ext : HTTPS
+@enduml

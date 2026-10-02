@@ -1,6 +1,6 @@
 # Jx Finance documentation
 
-These pages describe the current code, not a wishlist. Where a page and the code disagree, the code is right and the page needs fixing. Diagrams are Mermaid: they render in Gitea and GitHub, and in the VS Code Markdown preview with a Mermaid extension. Installation and commands are in the [repository README](../README.md); rules for coding agents are in [AGENTS.md](../AGENTS.md).
+These pages describe the current code, not a wishlist. Where a page and the code disagree, the code is right and the page needs fixing. Diagrams are Mermaid: they render in Gitea and GitHub, and in the VS Code Markdown preview with a Mermaid extension. The top-level UML views in [System diagrams](architecture/diagrams.md) are PlantUML, committed with their rendered SVGs. Installation and commands are in the [repository README](../README.md); rules for coding agents are in [AGENTS.md](../AGENTS.md).
 
 ## Where to look
 
@@ -29,4 +29,4 @@ These pages describe the current code, not a wishlist. Where a page and the code
 - `plans/`: designs for features not built yet, deleted once the feature ships.
 - The top-level pages cover the whole product.
 
-File names are lowercase kebab-case without numbers, so that paths stay stable and need no quoting. `just check-docs` checks every link and heading anchor.
+File names are lowercase kebab-case without numbers, so that paths stay stable and need no quoting. `just check-docs` checks every link and heading anchor, and that the components, paths, CSS variables and frontmatter colors named in [DESIGN.md](../DESIGN.md) still match the code ([Developer tooling](architecture/developer-tooling.md)).

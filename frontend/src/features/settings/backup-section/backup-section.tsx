@@ -68,8 +68,7 @@ function BackupList() {
 
       <EditModal
         item={editing}
-        title={t("backup.editNote")}
-        description={(backup) => formatDateTime(backup.createdAt)}
+        title={(backup) => `${t("backup.editNote")}: ${formatDateTime(backup.createdAt)}`}
         onClose={() => setEditing(null)}
       >
         {(backup) => (

@@ -306,15 +306,10 @@ export function NotificationsForm({ profile, discord, households }: Readonly<Pro
           }
         />
 
-        <div className="flex justify-end">
-          <form.SubmitButton
-            pending={
-              emailMutation.isPending || digestMutation.isPending || discordMutation.isPending
-            }
-          >
-            {t("actions.save")}
-          </form.SubmitButton>
-        </div>
+        <form.FormActions
+          submitLabel={t("actions.save")}
+          pending={emailMutation.isPending || digestMutation.isPending || discordMutation.isPending}
+        />
       </form.FormShell>
 
       <ConfirmDeleteDialog

@@ -1,3 +1,4 @@
+import { useId } from "react";
 import { useTranslation } from "react-i18next";
 import { Input } from "@/components/ui/input/input";
 import {
@@ -14,6 +15,7 @@ interface Props {
 
 export function AmountRangeFields({ label, value, onChange, onBlur }: Readonly<Props>) {
   const { t } = useTranslation();
+  const hintId = useId();
   const bounds = [
     { key: "min", label: t("filters.amountFrom") },
     { key: "max", label: t("filters.amountTo") },
@@ -28,7 +30,7 @@ export function AmountRangeFields({ label, value, onChange, onBlur }: Readonly<P
             {bound.label}
             <Input
               inputMode="decimal"
-              placeholder="0.00"
+              aria-describedby={hintId}
               value={value[bound.key]}
               aria-invalid={!isAmountText(value[bound.key])}
               onChange={(event) => onChange({ ...value, [bound.key]: event.target.value })}
@@ -37,7 +39,9 @@ export function AmountRangeFields({ label, value, onChange, onBlur }: Readonly<P
           </label>
         ))}
       </div>
-      <p className="text-xs text-muted-foreground">{t("filters.amountHint")}</p>
+      <p id={hintId} className="text-xs text-muted-foreground">
+        {t("filters.amountHint")}
+      </p>
     </fieldset>
   );
 }

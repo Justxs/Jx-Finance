@@ -9,7 +9,7 @@ import type {
 import { ListSection } from "@/components/list-section/list-section";
 import { EditModal } from "@/components/modal";
 import { RecurringBillForm } from "@/features/recurring-bills/recurring-bill-form/recurring-bill-form";
-import { nameById } from "@/lib/options";
+import { byId, nameById } from "@/lib/options";
 import { SubscriptionSuggestionRow, suggestedName } from "./subscription-suggestion-row";
 
 function candidateKey(accountId: string, description: string) {
@@ -37,7 +37,7 @@ export function SubscriptionSuggestions({ candidates, accounts, categories }: Re
 
   const pending = dismiss.isPending ? dismiss.variables?.data : undefined;
   const pendingKey = pending ? candidateKey(pending.accountId, pending.description) : null;
-  const accountNames = nameById(accounts);
+  const accountById = byId(accounts);
   const categoryNames = nameById(categories);
 
   return (
@@ -54,7 +54,7 @@ export function SubscriptionSuggestions({ candidates, accounts, categories }: Re
             <SubscriptionSuggestionRow
               key={key}
               candidate={candidate}
-              accountNames={accountNames}
+              accountById={accountById}
               categoryNames={categoryNames}
               onCreate={() => setCreating({ id: key, candidate })}
               onDismiss={() =>

@@ -42,8 +42,11 @@ public sealed class GetReportSummarySummary : Summary<GetReportSummaryEndpoint, 
             + "every comparison field is null and the response is the one it always was. The difference "
             + "and its percentage are the client's to compute, because a change from zero has no "
             + "percentage to show.";
-        RequestParam(r => r.DateFrom, "Inclusive start date as YYYY-MM-DD. Defaults to the start of the current month.");
-        RequestParam(r => r.DateTo, "Inclusive end date as YYYY-MM-DD. Defaults to today.");
+        RequestParam(
+            r => r.DateFrom,
+            "Inclusive start date as YYYY-MM-DD, from 2000-01-01 to 2999-12-31 and not after the end date "
+                + "(today when dateTo is omitted). Defaults to the first day of the end date's month.");
+        RequestParam(r => r.DateTo, "Inclusive end date as YYYY-MM-DD, from 2000-01-01 to 2999-12-31. Defaults to today.");
         RequestParam(
             r => r.Comparison,
             "Which earlier period to answer beside this one: previousPeriod for the same number of days "
@@ -56,5 +59,6 @@ public sealed class GetReportSummarySummary : Summary<GetReportSummaryEndpoint, 
                 + "it at your own share, your part of what you paid and your share of a household split another member paid, which is dated "
                 + "on the split's date while you cannot see its transaction.");
         Responses[200] = "Totals and the per-category split for the range.";
+        Responses[400] = "A date falls outside 2000-01-01 to 2999-12-31, or the start is after the end (range.invalid).";
     }
 }

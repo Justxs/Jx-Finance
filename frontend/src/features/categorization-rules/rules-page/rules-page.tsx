@@ -88,7 +88,10 @@ export function RulesPage() {
         </CreateDialog>
       </PageHeader>
 
-      <EditModal {...rules.editProps} title={t("categorizationRules.editTitle")}>
+      <EditModal
+        {...rules.editProps}
+        title={(rule) => `${t("categorizationRules.editTitle")}: ${rule.name}`}
+      >
         {(rule, close) => (
           <RuleForm
             accounts={accounts.data}

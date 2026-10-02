@@ -108,11 +108,7 @@ export function ProfileForm({ profile }: Readonly<Props>) {
 
         <FormError error={updateMutation.error} />
 
-        <div className="flex justify-end">
-          <form.SubmitButton pending={updateMutation.isPending}>
-            {t("profile.save")}
-          </form.SubmitButton>
-        </div>
+        <form.FormActions submitLabel={t("profile.save")} pending={updateMutation.isPending} />
       </form.FormShell>
     </form.AppForm>
   );

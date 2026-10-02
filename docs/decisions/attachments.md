@@ -6,6 +6,9 @@ Related: feature page [Attachments](../features/attachments.md); architecture [T
 
 Newest first. Each entry is a choice between real alternatives: what was chosen, what was rejected, and why.
 
+- **2026-10-01.** Image decoding is bounded by Magick.NET area (128 Mi pixels) and disk (1 GB) limits beside the width, height and memory limits, and the upload is throttled to 30 calls per five minutes per client like reading a receipt
+  - Rejected: A Magick.NET time limit; a separate, lower throttle for images than for PDFs
+  - Why: ImageMagick measures its time limit from the first pixel cache of the process and ends the process when it is reached, so on a long-running API it would take the server down instead of refusing one file. The area limit matches the memory limit at four bytes a pixel, and the disk limit keeps an image that spills out of memory from filling the volume. The type is only known once the bytes are read, and one budget for the route is what the receipt endpoint already uses
 - **2026-09-30.** Files stored before images were cleaned are not rewritten: there is no one-off backfill
   - Rejected: A backfill as a migration, a startup step or a `just` recipe that cleans every stored image and updates its size, SHA-256, type and name
   - Why: The application has not been released, so the only stored files are the developer's own test uploads, which can be removed and uploaded again. A backfill would rewrite files outside any database transaction, change the SHA-256 that receipt readings, ETags and backups are keyed on, and rename HEIC rows to JPEG, and it still could not clean the backups taken before it, which keep the original bytes and bring them back on restore. Had there been users, it would be a recipe the administrator runs once, followed by a fresh backup and deleting the older ones

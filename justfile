@@ -90,9 +90,13 @@ check-mcp:
     nub run --cwd tools/jx-mcp test
     nub run --cwd tools/jx-mcp build
 
-# Fail on a broken link or heading anchor in the Markdown docs, a docs file name with spaces or capitals, or a line too long for an agent to read whole.
+# Fail on a broken link or heading anchor in the Markdown docs, a docs file name with spaces or capitals, or a line too long for an agent to read whole, and on DESIGN.md naming a component, path, CSS variable or color the code no longer has.
 check-docs:
     node scripts/check-docs.mjs
+
+# Render the PlantUML system diagrams in docs/architecture/diagrams to SVG; needs Java and downloads the pinned PlantUML jar to .local on first use.
+diagrams:
+    node scripts/render-diagrams.mjs
 
 # Fail when backend code is not formatted or breaks a code style rule.
 format-check-backend:

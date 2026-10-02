@@ -115,6 +115,34 @@ describe("writing", () => {
   });
 });
 
+describe("forgetting the user", () => {
+  test("nothing stored stays unwritten", async () => {
+    const preferences = await loadPreferences();
+
+    preferences.forgetUserPreferences();
+
+    expect(localStorage.getItem(PREFERENCES_STORAGE_KEY)).toBeNull();
+  });
+
+  test("clears what belongs to the signed-in user and keeps the device's choices", async () => {
+    const preferences = await loadPreferences();
+    preferences.savePreferences({
+      theme: "dark",
+      amountsHidden: true,
+      lastAccountId: "1679091c-5a88-4faf-9b4c-3d2e1f0a9b8c",
+      paceMilestones: [100_000],
+    });
+
+    preferences.forgetUserPreferences();
+
+    expect(preferences.readPreferences()).toEqual({
+      ...defaults,
+      theme: "dark",
+      amountsHidden: true,
+    });
+  });
+});
+
 describe("blocked storage", () => {
   test("loads with the defaults and keeps changes for the session", async () => {
     blockStorage();

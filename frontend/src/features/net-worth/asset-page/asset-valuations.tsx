@@ -158,7 +158,7 @@ export function AssetValuations({ asset }: Readonly<Props>) {
       </Rows>
       <EditModal
         item={editing}
-        title={t("netWorth.valuations.edit")}
+        title={(point) => `${t("netWorth.valuations.edit")}: ${label(point)}`}
         onClose={() => setEditDate(null)}
       >
         {(point, close) => <ValuationForm asset={asset} editing={point} onClose={close} />}

@@ -68,10 +68,12 @@ export function IncomeExpenseChart({ data, height = 280 }: Readonly<Props>) {
   const partialLabels = new Set(data.filter((point) => point.partial).map((point) => point.label));
 
   function partialAwareBar(props: BarShapeProps) {
+    const partial = data[props.index]?.partial === true;
     return (
       <Rectangle
         {...props}
-        fillOpacity={data[props.index]?.partial ? PARTIAL_OPACITY : undefined}
+        fillOpacity={partial ? PARTIAL_OPACITY : undefined}
+        stroke={partial ? props.fill : undefined}
       />
     );
   }

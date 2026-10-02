@@ -21,7 +21,7 @@ export function MobileNav({ pages }: Readonly<Props>) {
   return (
     <>
       <header className="flex h-14 shrink-0 items-center gap-0.5 border-b bg-sidebar px-4 sm:px-6 md:hidden print:hidden">
-        <Link to="/" className="mr-auto flex items-center">
+        <Link to="/" className="mr-auto flex min-h-11 items-center">
           <Brand size="sm" />
         </Link>
         <QueryBoundary fallback={null} error={null}>

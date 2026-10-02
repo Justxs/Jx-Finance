@@ -6,6 +6,10 @@ Related: architecture [API contract and generated client](../architecture/api-co
 
 Newest first. Each entry is a choice between real alternatives: what was chosen, what was rejected, and why.
 
+- **2026-10-02.** The top-level system diagrams (context, deployment, components, layering, request and notification sequences, core domain, code generation) are PlantUML sources in `docs/architecture/diagrams`, rendered to committed SVGs by `just diagrams` with the pinned PlantUML jar and its built-in Smetana layout; feature pages keep their Mermaid diagrams
+  - Rejected: Mermaid flowcharts with UML stereotypes in the labels; the public PlantUML server; installing Graphviz
+  - Why: Mermaid has no deployment or component diagram type, and its flowchart layout squeezed the deployment view and tangled the domain class diagram. The public server would send the architecture to a third party, and Smetana lays these diagrams out without another native install. Gitea does not render PlantUML inline, so the SVGs are committed next to their sources
+
 - **2026-10-01.** Every text file is checked out with LF through `* text=auto eol=lf` in `.gitattributes`, whatever `core.autocrlf` says, instead of only the C# and project files
   - Rejected: Leaving the per-extension rules for `.cs`, `.csproj`, `.props` and `.slnx` alone; asking every clone to set `core.autocrlf false`
   - Why: With `core.autocrlf true` on the Windows machine, docs, scripts, YAML and EF migrations were written to the working copy with CRLF and normalized only at commit, so every commit warned about line endings and tools reading the working copy saw CRLF, against the repository rule of UTF-8 with LF. A repository rule works for every clone without a local setting, and `text=auto` leaves binary files such as the map tile fixture untouched

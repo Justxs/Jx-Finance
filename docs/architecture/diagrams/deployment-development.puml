@@ -1,0 +1,21 @@
+@startuml deployment-development
+!include style.iuml
+left to right direction
+
+node "Developer machine" <<device>> {
+  node "Web browser" <<execution environment>> as browser
+  node "Vite dev server\nHMR" <<process>> as vite
+  node "dotnet API\nlocalhost:8091" <<process>> as dotnet
+  node "Docker" <<execution environment>> {
+    node "db\npostgres:16" <<container>> {
+      database "PostgreSQL\n127.0.0.1:5432" as pg
+    }
+    node "aspire\ndashboard :18888" <<container>> as aspire
+  }
+}
+
+browser --> vite : HTTP
+vite --> dotnet : proxy /api
+dotnet --> pg : Npgsql
+dotnet ..> aspire : OTLP 127.0.0.1:4317
+@enduml

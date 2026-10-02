@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import type { BrokerImportResponse } from "@/api/generated/model";
 import { FormError } from "@/components/form-error/form-error";
+import { RuledLine } from "@/components/ui/ruled-line/ruled-line";
 import { ScrollRegion } from "@/components/ui/table/table";
 import { useQuantityFormat } from "@/hooks/use-formatters";
 import type { TranslationKey } from "@/lib/i18n";
@@ -61,7 +62,7 @@ export function BrokerImportResult({ result }: Readonly<Props>) {
   }
 
   return (
-    <div className="border-y border-rule py-3 text-sm">
+    <RuledLine tone="ink">
       <p className="font-semibold">
         {imported > 0
           ? t("investments.import.result.done")
@@ -150,7 +151,7 @@ export function BrokerImportResult({ result }: Readonly<Props>) {
           ) : null}
         </div>
       ) : null}
-    </div>
+    </RuledLine>
   );
 }
 

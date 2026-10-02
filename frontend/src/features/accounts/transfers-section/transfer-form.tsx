@@ -203,7 +203,7 @@ export function TransferForm({ accounts, transfer, onClose }: Readonly<Props>) {
                 id="transfer-received"
                 label={t("transfers.received")}
                 currencyLabel={t("transfers.receivedCurrency")}
-                placeholder={currency === receivedCurrency ? t("transfers.sameAsSent") : "0.00"}
+                placeholder={currency === receivedCurrency ? t("transfers.sameAsSent") : undefined}
                 hint={toLocked && currency !== receivedCurrency ? lockedHint : undefined}
                 disabled={toLocked || currency === receivedCurrency}
                 blankWhenDisabled={currency === receivedCurrency}

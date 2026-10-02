@@ -1,6 +1,6 @@
 import { Plus, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import type { SubscriptionCandidateResponse } from "@/api/generated/model";
+import type { AccountResponse, SubscriptionCandidateResponse } from "@/api/generated/model";
 import { updateRecurringBillBodyNameMax } from "@/api/schemas/recurring-bills/recurring-bills.zod";
 import { Button } from "@/components/ui/button/button";
 import { Tag } from "@/components/ui/tag/tag";
@@ -17,7 +17,7 @@ export function suggestedName(description: string) {
 
 interface Props {
   candidate: SubscriptionCandidateResponse;
-  accountNames: ReadonlyMap<string, string>;
+  accountById: ReadonlyMap<string, AccountResponse>;
   categoryNames: ReadonlyMap<string, string>;
   onCreate: () => void;
   onDismiss: () => void;
@@ -27,7 +27,7 @@ interface Props {
 
 export function SubscriptionSuggestionRow({
   candidate,
-  accountNames,
+  accountById,
   categoryNames,
   onCreate,
   onDismiss,
@@ -39,7 +39,7 @@ export function SubscriptionSuggestionRow({
   const formatDate = useIsoDate();
 
   const name = candidate.name ?? suggestedName(candidate.description);
-  const account = accountNames.get(candidate.accountId);
+  const account = accountById.get(candidate.accountId);
   const category = categoryNames.get(candidate.categoryId ?? "");
   const listed = metaLine(...candidate.occurrenceDates.slice(-MAX_LISTED_DATES).map(formatDate));
 
@@ -57,7 +57,7 @@ export function SubscriptionSuggestionRow({
             <span className="text-foreground tabular-nums">
               {t("subscriptions.nextExpected")}: {formatDate(candidate.nextExpectedDate)}
             </span>
-            {account ? ` · ${account}` : ""}
+            {account ? ` · ${account.name}` : ""}
             {category ? ` · ${category}` : ""}
           </p>
           <p className="text-xs wrap-break-word text-muted-foreground">
@@ -68,7 +68,7 @@ export function SubscriptionSuggestionRow({
       }
       amount={
         <span className="text-right text-sm font-semibold whitespace-nowrap tabular-nums">
-          {money.format(Number(candidate.typicalAmount))}
+          {money.format(Number(candidate.typicalAmount), account?.currency)}
         </span>
       }
       actions={

@@ -21,7 +21,6 @@ import {
   TableHeader,
   TableRow,
   TableEmptyRow,
-  ScrollRegion,
 } from "@/components/ui/table/table";
 import { accountTypes } from "@/features/accounts/account-types";
 import { useUsableCurrencies } from "@/hooks/use-currencies";
@@ -82,7 +81,7 @@ export function AccountsTable({
     filtered,
     onClearFilters: () => patchSearch({ search: undefined, iban: undefined, type: undefined }),
     action: onCreate ? (
-      <Button type="button" size="sm" onClick={onCreate}>
+      <Button type="button" variant="outline" size="sm" onClick={onCreate}>
         <Plus />
         {t("accounts.add")}
       </Button>
@@ -153,23 +152,24 @@ export function AccountsTable({
     );
   }
 
-  function shareLine(account: AccountResponse) {
+  function shareCell(account: AccountResponse) {
     const amount = Number(account.reportingBalance);
-    if (amount <= 0 || positiveTotal <= 0) {
-      return null;
-    }
     return (
-      <div className="mt-1.5 flex items-center justify-end gap-2 font-normal">
-        <Meter
-          value={amount}
-          max={positiveTotal}
-          label={`${t("accounts.shareOfTotal")}: ${account.name}`}
-          className="w-16"
-        />
-        <span className="w-9 text-xs text-muted-foreground tabular-nums">
-          {percent.format(amount / positiveTotal)}
-        </span>
-      </div>
+      <TableCell className="hidden lg:table-cell">
+        {amount > 0 && positiveTotal > 0 ? (
+          <div className="flex items-center gap-2">
+            <Meter
+              value={amount}
+              max={positiveTotal}
+              label={`${t("accounts.shareOfTotal")}: ${account.name}`}
+              className="w-16"
+            />
+            <span className="w-9 text-right text-xs text-muted-foreground tabular-nums">
+              {percent.format(amount / positiveTotal)}
+            </span>
+          </div>
+        ) : null}
+      </TableCell>
     );
   }
 
@@ -178,7 +178,7 @@ export function AccountsTable({
   let body: ReactNode;
   if (accounts.length === 0) {
     body = (
-      <TableEmptyRow colSpan={6} {...emptyProps}>
+      <TableEmptyRow colSpan={7} {...emptyProps}>
         {t("accounts.empty")}
       </TableEmptyRow>
     );
@@ -220,8 +220,8 @@ export function AccountsTable({
         </TableCell>
         <TableCell className="text-right font-semibold tabular-nums">
           <span className={balanceTone(account)}>{balanceLines(account)}</span>
-          {shareLine(account)}
         </TableCell>
+        {shareCell(account)}
         <TableCell>{actions(account)}</TableCell>
       </TableRow>
     ));
@@ -270,88 +270,92 @@ export function AccountsTable({
           </Rows>
         )}
       </StaleRegion>
-      <div className="-mx-3 hidden md:block">
+      <div className="hidden md:block">
         <ViewTransition name="accounts-rows" enter="none" exit="none">
-          <ScrollRegion aria-label={t("accounts.title")}>
-            <Table className={cn("min-w-160", stale && "stale")} aria-busy={stale}>
-              <TableHeader>
-                <TableRow>
-                  <SortableTableHead
-                    label={t("accounts.name")}
-                    {...table.sortProps("name")}
-                    filter={
-                      <TextColumnFilter
-                        label={t("accounts.name")}
-                        value={search.search ?? ""}
-                        onChange={(value) => patchSearch({ search: value || undefined })}
-                      />
-                    }
-                  />
-                  <SortableTableHead
-                    label={t("accounts.iban")}
-                    {...table.sortProps("iban")}
-                    filter={
-                      <TextColumnFilter
-                        label={t("accounts.iban")}
-                        value={search.iban ?? ""}
-                        onChange={(value) => patchSearch({ iban: value || undefined })}
-                      />
-                    }
-                  />
-                  <SortableTableHead
-                    label={t("accounts.type")}
-                    {...table.sortProps("type")}
-                    filter={
-                      <SelectColumnFilter
-                        label={t("accounts.type")}
-                        value={search.type ?? ""}
-                        onChange={(value) => patchSearch({ type: value || undefined })}
-                        options={[
-                          { value: "", label: t("accounts.allTypes") },
-                          ...optionsOf(accountTypes, (type) => t(`accounts.types.${type}`)),
-                        ]}
-                      />
-                    }
-                  />
-                  <SortableTableHead
-                    className="hidden text-right xl:table-cell"
-                    label={t("accounts.startingBalance")}
-                    {...table.sortProps("startingBalance")}
-                  />
-                  <SortableTableHead
-                    className="text-right"
-                    label={t("accounts.currentBalance")}
-                    {...table.sortProps("currentBalance")}
-                  />
-                  <TableHead>
-                    <span className="sr-only">{t("common.actions")}</span>
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>{body}</TableBody>
-              {accounts.length > 1 ? (
-                <tfoot>
-                  <tr className="border-t">
-                    <TableCell colSpan={3} className="font-medium">
-                      {t("accounts.total")}
-                    </TableCell>
-                    <TableCell className="hidden xl:table-cell" />
-                    <TableCell className="text-right">
-                      <span
-                        className={cn(
-                          "border-b-3 border-double border-rule pb-0.5 font-semibold tabular-nums",
-                          listedTotal < 0 && EXPENSE_TONE,
-                        )}
-                      >
-                        {money.format(listedTotal)}
-                      </span>
-                    </TableCell>
-                    <TableCell />
-                  </tr>
-                </tfoot>
-              ) : null}
-            </Table>
-          </ScrollRegion>
+          <Table
+            label={t("accounts.title")}
+            className={cn("min-w-160", stale && "stale")}
+            aria-busy={stale}
+          >
+            <TableHeader>
+              <TableRow>
+                <SortableTableHead
+                  label={t("accounts.name")}
+                  {...table.sortProps("name")}
+                  filter={
+                    <TextColumnFilter
+                      label={t("accounts.name")}
+                      value={search.search ?? ""}
+                      onChange={(value) => patchSearch({ search: value || undefined })}
+                    />
+                  }
+                />
+                <SortableTableHead
+                  label={t("accounts.iban")}
+                  {...table.sortProps("iban")}
+                  filter={
+                    <TextColumnFilter
+                      label={t("accounts.iban")}
+                      value={search.iban ?? ""}
+                      onChange={(value) => patchSearch({ iban: value || undefined })}
+                    />
+                  }
+                />
+                <SortableTableHead
+                  label={t("accounts.type")}
+                  {...table.sortProps("type")}
+                  filter={
+                    <SelectColumnFilter
+                      label={t("accounts.type")}
+                      value={search.type ?? ""}
+                      onChange={(value) => patchSearch({ type: value || undefined })}
+                      options={[
+                        { value: "", label: t("accounts.allTypes") },
+                        ...optionsOf(accountTypes, (type) => t(`accounts.types.${type}`)),
+                      ]}
+                    />
+                  }
+                />
+                <SortableTableHead
+                  className="hidden text-right xl:table-cell"
+                  label={t("accounts.startingBalance")}
+                  {...table.sortProps("startingBalance")}
+                />
+                <SortableTableHead
+                  className="text-right"
+                  label={t("accounts.currentBalance")}
+                  {...table.sortProps("currentBalance")}
+                />
+                <TableHead className="hidden lg:table-cell">{t("accounts.shareOfTotal")}</TableHead>
+                <TableHead>
+                  <span className="sr-only">{t("common.actions")}</span>
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>{body}</TableBody>
+            {accounts.length > 1 ? (
+              <tfoot>
+                <tr className="border-t">
+                  <TableCell colSpan={3} className="font-medium">
+                    {t("accounts.total")}
+                  </TableCell>
+                  <TableCell className="hidden xl:table-cell" />
+                  <TableCell className="text-right">
+                    <span
+                      className={cn(
+                        "border-b-3 border-double border-rule pb-0.5 font-semibold tabular-nums",
+                        listedTotal < 0 && EXPENSE_TONE,
+                      )}
+                    >
+                      {money.format(listedTotal)}
+                    </span>
+                  </TableCell>
+                  <TableCell className="hidden lg:table-cell" />
+                  <TableCell />
+                </tr>
+              </tfoot>
+            ) : null}
+          </Table>
         </ViewTransition>
       </div>
     </>

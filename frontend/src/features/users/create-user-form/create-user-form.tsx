@@ -86,7 +86,12 @@ export function CreateUserForm({ onClose }: Readonly<Props>) {
 
           <form.Field name="password">
             {(field) => (
-              <field.TextField id="user-password" label={t("users.password")} type="password" />
+              <field.TextField
+                id="user-password"
+                label={t("users.password")}
+                type="password"
+                autoComplete="new-password"
+              />
             )}
           </form.Field>
         </FormGrid>

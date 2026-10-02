@@ -628,7 +628,7 @@ export const getDismissSuggestedRuleUrl = () => {
 };
 
 /**
- * Stops offering one suggested rule to the signed-in user, on every device. The dismissal is stored against the normalized description key and the category, not against the transactions behind it, so later rows of the same payee do not bring the suggestion back. Dismissing the same pair twice changes nothing. It is not a deletion and has no trash entry.
+ * Stops offering one suggested rule to the signed-in user, on every device. The dismissal is stored against the normalized description key and the category, not against the transactions behind it, so later rows of the same payee do not bring the suggestion back. Dismissing the same pair twice changes nothing, except that two dismissals at the same moment answer the later one with 409. It is not a deletion and has no trash entry.
  * @summary Dismiss a suggested categorization rule
  */
 export const dismissSuggestedRule = async (

@@ -10,6 +10,7 @@ import {
   TextSkeleton,
   rowWidth,
 } from "@/components/ui/skeleton/skeleton";
+import { NetWorthPaceSkeleton } from "@/features/net-worth/net-worth-pace/net-worth-pace";
 
 export function BalanceItemsSkeleton() {
   return (
@@ -29,8 +30,6 @@ export function BalanceItemsSkeleton() {
             <div className="flex shrink-0 items-center gap-1">
               <TextSkeleton className="w-24 justify-end" width="w-20" />
               <IconButtonSkeleton size="md" />
-              <IconButtonSkeleton size="md" />
-              <IconButtonSkeleton size="md" />
             </div>
           </li>
         ))}
@@ -45,7 +44,8 @@ export function NetWorthPending() {
       <SummaryStatsSkeleton items={3} />
       <div className="grid gap-5 lg:grid-cols-2">
         <SectionSkeleton>
-          <ChartSkeleton />
+          <ChartSkeleton legend />
+          <NetWorthPaceSkeleton />
         </SectionSkeleton>
         <SectionSkeleton>
           <ChartSkeleton legend />

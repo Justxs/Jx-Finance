@@ -15,5 +15,6 @@ public sealed class SetPayeeNameSummary : Summary<SetPayeeNameEndpoint, SetPayee
         RequestParam(r => r.Name, "The display name, at most 100 characters.");
         Responses[200] = "The payee's name as stored.";
         Responses[400] = "Validation failed, or nothing is left of the payee after normalizing (text.invalidFormat).";
+        Responses[409] = "The same payee was named from another window at the same moment (conflict.busy). Try again.";
     }
 }

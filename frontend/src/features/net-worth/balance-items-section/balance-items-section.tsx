@@ -4,7 +4,7 @@ import type { Scope, TrashKind } from "@/api/generated/model";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog/confirm-delete-dialog";
 import { CreateDialog } from "@/components/create-dialog/create-dialog";
 import { EditModal } from "@/components/modal";
-import { RowActions } from "@/components/row-actions/row-actions";
+import { type RowAction, RowActions } from "@/components/row-actions/row-actions";
 import { RowTransition } from "@/components/row-transition/row-transition";
 import { SharedScopeTag } from "@/components/shared-scope-tag/shared-scope-tag";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
@@ -22,7 +22,7 @@ export interface BalanceItem<TRecord> {
   amount: number;
   currency: string;
   record: TRecord;
-  action?: ReactNode;
+  action?: RowAction;
   scope?: Scope;
   householdId?: string | null;
 }
@@ -91,13 +91,13 @@ export function BalanceItemsSection<TRecord>({
               <RowActions
                 label={item.name}
                 size="icon"
+                actions={item.action ? [item.action] : undefined}
                 onEdit={() => setEditTarget(item.id)}
                 {...remove.deleteProps(item.id)}
               >
                 <span className={cn("text-right", amountClass)}>
                   {money.format(item.amount, item.currency)}
                 </span>
-                {item.action}
               </RowActions>
             </li>
           </RowTransition>

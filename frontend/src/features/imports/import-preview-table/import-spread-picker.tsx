@@ -29,6 +29,7 @@ export function ImportSpreadPicker({
   onChange,
 }: Readonly<Props>) {
   const { t } = useTranslation();
+  const chip = spreadMonths ? t("transactions.spread.chip", { months: spreadMonths }) : "";
 
   return (
     <Popover>
@@ -38,14 +39,12 @@ export function ImportSpreadPicker({
             type="button"
             variant="link-muted"
             size="inline"
-            aria-label={label}
+            aria-label={chip ? t("imports.pickerValue", { label, value: chip }) : label}
             className="min-h-6"
           />
         }
       >
-        {spreadMonths
-          ? t("transactions.spread.chip", { months: spreadMonths })
-          : t("imports.spread")}
+        {chip || t("imports.spread")}
       </PopoverTrigger>
       <PopoverContent align="start" aria-label={label} className="w-64 space-y-3">
         <FieldShell id={`${id}-months`} label={t("transactions.spread.label")}>

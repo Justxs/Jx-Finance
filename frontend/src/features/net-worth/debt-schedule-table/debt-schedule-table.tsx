@@ -3,7 +3,6 @@ import { useTranslation } from "react-i18next";
 import type { Currency, DebtSchedulePlan } from "@/api/generated/model";
 import { Pagination } from "@/components/pagination/pagination";
 import {
-  ScrollRegion,
   Table,
   TableBody,
   TableCell,
@@ -45,39 +44,34 @@ export function DebtScheduleTable({ plan, asOf, currency }: Readonly<Props>) {
 
   return (
     <>
-      <ScrollRegion className="-mx-3" aria-label={t("netWorth.schedule.table")}>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead numeric>{t("netWorth.schedule.number")}</TableHead>
-              <TableHead>{t("netWorth.schedule.date")}</TableHead>
-              <TableHead numeric>{t("netWorth.schedule.payment")}</TableHead>
-              <TableHead numeric>{t("netWorth.schedule.interest")}</TableHead>
-              <TableHead numeric>{t("netWorth.schedule.principal")}</TableHead>
-              {withExtra ? <TableHead numeric>{t("netWorth.schedule.extra")}</TableHead> : null}
-              <TableHead numeric>{t("netWorth.schedule.balance")}</TableHead>
+      <Table label={t("netWorth.schedule.table")}>
+        <TableHeader>
+          <TableRow>
+            <TableHead numeric>{t("netWorth.schedule.number")}</TableHead>
+            <TableHead>{t("netWorth.schedule.date")}</TableHead>
+            <TableHead numeric>{t("netWorth.schedule.payment")}</TableHead>
+            <TableHead numeric>{t("netWorth.schedule.interest")}</TableHead>
+            <TableHead numeric>{t("netWorth.schedule.principal")}</TableHead>
+            {withExtra ? <TableHead numeric>{t("netWorth.schedule.extra")}</TableHead> : null}
+            <TableHead numeric>{t("netWorth.schedule.balance")}</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {rows.map((row) => (
+            <TableRow key={row.number} className={cn(row.date <= asOf && "text-muted-foreground")}>
+              <TableCell numeric>{row.number}</TableCell>
+              <TableCell className="tabular-nums">{formatDate(row.date)}</TableCell>
+              <TableCell numeric className="font-medium">
+                {amount(row.payment)}
+              </TableCell>
+              <TableCell numeric>{amount(row.interest)}</TableCell>
+              <TableCell numeric>{amount(row.principal)}</TableCell>
+              {withExtra ? <TableCell numeric>{amount(row.extra)}</TableCell> : null}
+              <TableCell numeric>{amount(row.balance)}</TableCell>
             </TableRow>
-          </TableHeader>
-          <TableBody>
-            {rows.map((row) => (
-              <TableRow
-                key={row.number}
-                className={cn(row.date <= asOf && "text-muted-foreground")}
-              >
-                <TableCell numeric>{row.number}</TableCell>
-                <TableCell className="tabular-nums">{formatDate(row.date)}</TableCell>
-                <TableCell numeric className="font-medium">
-                  {amount(row.payment)}
-                </TableCell>
-                <TableCell numeric>{amount(row.interest)}</TableCell>
-                <TableCell numeric>{amount(row.principal)}</TableCell>
-                {withExtra ? <TableCell numeric>{amount(row.extra)}</TableCell> : null}
-                <TableCell numeric>{amount(row.balance)}</TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </ScrollRegion>
+          ))}
+        </TableBody>
+      </Table>
       <Pagination
         page={page}
         pages={pages}

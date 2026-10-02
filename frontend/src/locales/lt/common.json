@@ -93,6 +93,8 @@
     "cashFlowLowest": "Mažiausias {{amount}} {{date}}",
     "cashFlowBelowZero": "Neigiamas nuo {{date}}",
     "cashFlowMayGoBelowZero": "Gali tapti neigiamas apie {{date}}",
+    "goalsCurrentOnly": "Tikslai rodomi einamajame mėnesyje.",
+    "goalProgress": "{{name}}, {{percent}} iš {{target}}",
     "pace": {
       "title": "Išlaidų tempas",
       "day": "{{day}} d.",
@@ -485,7 +487,7 @@
     "lineAmount": "Suma",
     "lineCategory": "Kategorija",
     "lineDescription": "Pastaba",
-    "removeLine": "Pašalinti eilutę",
+    "removeLine": "Pašalinti eilutę Nr. {{number}}",
     "splitTotalMismatch": "Eilučių suma – {{linesTotal}}, o operacijos suma – {{total}}.",
     "count_one": "{{count}} operacija",
     "count_few": "{{count}} operacijos",
@@ -777,6 +779,7 @@
   },
   "backup": {
     "title": "Atsarginės kopijos",
+    "listLabel": "Atsarginių kopijų sąrašas",
     "description": "Atsarginė kopija – tai vienas failas su visais šios sistemos duomenimis: naudotojais, nustatymais ir kiekvieno naudotojo apskaita. Kopijos laikomos serveryje; retkarčiais atsisiųskite kopiją, nes šalia duomenų bazės laikoma kopija prarandama kartu su ja. Faile yra slaptažodžių maišos reikšmės, todėl saugokite jį kaip slaptą informaciją.",
     "last": "Paskutinė kopija",
     "never": "Dar nesukurta nė viena kopija.",
@@ -795,7 +798,6 @@
     "download": "Atsisiųsti",
     "editNote": "Redaguoti pastabą",
     "noteSaved": "Pastaba išsaugota.",
-    "delete": "Ištrinti kopiją",
     "deleted": "Kopija ištrinta.",
     "restoreAction": "Atkurti",
     "uploadTitle": "Pridėti kopijos failą",
@@ -1278,7 +1280,6 @@
       "enabled": "Siųsti laiškus iš šios sistemos",
       "enabledHint": "Išjunkite, jei norite sustabdyti visus siunčiamus laiškus neprarasdami nustatymų.",
       "host": "Serveris",
-      "hostHint": "SMTP serverio adresas, pavyzdžiui, smtp.example.com.",
       "port": "Prievadas",
       "encryption": "Šifravimas",
       "encryptions": {
@@ -1292,7 +1293,6 @@
       "passwordHint": "Saugomas užšifruotas ir daugiau nerodomas. Palikite tuščią, jei nenorite keisti išsaugotojo.",
       "passwordStored": "Slaptažodis išsaugotas.",
       "fromAddress": "Siuntėjo adresas",
-      "fromAddressHint": "Adresas, kurį mato gavėjai, pavyzdžiui, finance@example.com.",
       "fromName": "Siuntėjo vardas",
       "fromNameHint": "Rodomas šalia siuntėjo adreso. Palikite tuščią, jei norite rodyti tik adresą.",
       "saved": "Pašto serveris išsaugotas",
@@ -1450,7 +1450,6 @@
     "chooseAccount": "Pasirinkite sąskaitą",
     "fundingSharePercent": "Likučio dalis (%)",
     "needAccount": "Pirmiausia sukurkite sąskaitą arba stebėkite šį tikslą rankiniu būdu.",
-    "manualHint": "Taupydami dabartinę sumą didinkite patys.",
     "fundedFrom": "Iš sąskaitos „{{account}}“",
     "fundedShareFrom": "{{percent}}% sąskaitos „{{account}}“ likučio",
     "unavailableAccount": "Nepasiekiama sąskaita",
@@ -1529,7 +1528,7 @@
       "paidOff": "grąžinta {{date}}"
     },
     "schedule": {
-      "open": "Likučių istorija ir grafikas: {{name}}",
+      "open": "Likučių istorija ir grafikas",
       "back": "Grynasis turtas",
       "notFound": "Šios skolos nebėra.",
       "incomplete": "Kad matytumėte grafiką, šiai skolai įveskite paskolos sumą, palūkanų normą, pirmosios įmokos datą ir terminą arba mėnesio įmoką.",
@@ -1592,7 +1591,7 @@
       "perMonth": "↓ {{amount}} per mėnesį"
     },
     "asset": {
-      "open": "Vertės istorija: {{name}}",
+      "open": "Vertės istorija",
       "notFound": "Šio turto nebėra.",
       "valueToday": "Vertė šiandien",
       "lastValuation": "Paskutinis įvertinimas",
@@ -2622,7 +2621,8 @@
       "mapLabel": "Išlaidų pagal vietą žemėlapis: {{places}}",
       "mapLabelEmpty": "Išlaidų pagal vietą žemėlapis; nė viena vieta dar neturi padėties",
       "noCoordinates": "Nė viena iš šių vietų dar neturi padėties. Ją išsaugo „Naudoti mano vietą“ operacijos formoje.",
-      "mapFailed": "Šioje naršyklėje žemėlapio nupiešti nepavyko. Tos pačios vietos yra sąraše."
+      "mapFailed": "Šioje naršyklėje žemėlapio nupiešti nepavyko. Tos pačios vietos yra sąraše.",
+      "toggleAttribution": "Rodyti arba slėpti žemėlapio šaltinius"
     }
   },
   "imports": {
@@ -2721,6 +2721,7 @@
     "chooseTags": "Žymos",
     "spread": "Paskirstyti per mėnesius",
     "spreadFor": "Paskirstymas per mėnesius: {{row}}",
+    "pickerValue": "{{label}}: {{value}}",
     "reversal": "Atšaukimas",
     "formats": {
       "swedbankCsv": {

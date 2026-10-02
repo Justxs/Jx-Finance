@@ -80,7 +80,9 @@ export function PlacesSection() {
       <EditModal
         item={renaming}
         title={(item) =>
-          item.places.length > 1 ? t("places.mergeTitle") : t("places.renameTitle")
+          item.places.length > 1
+            ? t("places.mergeTitle")
+            : `${t("places.renameTitle")}: ${item.places[0]?.name ?? ""}`
         }
         onClose={() => setRenaming(null)}
       >

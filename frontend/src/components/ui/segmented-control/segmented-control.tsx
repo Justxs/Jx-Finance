@@ -46,7 +46,7 @@ export function SegmentedControl<T extends string>({
         }
       }}
       className={cn(
-        "inline-flex max-w-full gap-0.5 overflow-x-auto rounded-lg border border-input bg-muted/40 p-0.5 dark:bg-input/30",
+        "inline-flex max-w-full gap-0.5 overflow-x-auto rounded-lg border border-input bg-muted/40 p-px dark:bg-input/30",
         className,
       )}
     >
@@ -54,7 +54,7 @@ export function SegmentedControl<T extends string>({
         <Radio.Root
           key={option.value}
           value={option.value}
-          className="inline-flex h-7 shrink-0 items-center justify-center gap-1.5 rounded-md px-3 text-sm whitespace-nowrap text-muted-foreground transition-colors outline-none hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 data-checked:bg-background data-checked:font-medium data-checked:text-foreground data-checked:shadow-sm data-disabled:pointer-events-none data-disabled:opacity-50 dark:data-checked:bg-input/60 pointer-coarse:h-10"
+          className="inline-flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-md px-3 text-sm whitespace-nowrap text-muted-foreground focus-ring-inset transition-colors hover:text-foreground data-checked:bg-background data-checked:font-medium data-checked:text-foreground data-disabled:pointer-events-none data-disabled:opacity-50 dark:data-checked:bg-input/60 pointer-coarse:h-10"
         >
           {option.label}
         </Radio.Root>

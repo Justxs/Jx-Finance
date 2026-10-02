@@ -3,14 +3,40 @@ import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { Skeleton, TextSkeleton, rowWidth } from "@/components/ui/skeleton/skeleton";
 import { cn } from "@/lib/utils";
 
-function Table({ className, ...props }: ComponentProps<"table">) {
+interface TableProps extends ComponentProps<"table"> {
+  label?: string;
+  columns?: readonly (`w-${string}` | undefined)[];
+}
+
+function Table({ label, columns, className, children, ...props }: Readonly<TableProps>) {
+  const table = (
+    <table
+      data-slot="table"
+      className={cn("w-full caption-bottom text-sm", columns && "table-fixed", className)}
+      {...props}
+    >
+      {columns ? (
+        <colgroup>
+          {Object.entries(columns).map(([position, width]) => (
+            <col key={position} className={width} />
+          ))}
+        </colgroup>
+      ) : null}
+      {children}
+    </table>
+  );
+
+  if (label) {
+    return (
+      <ScrollRegion aria-label={label} className="relative -mx-3">
+        {table}
+      </ScrollRegion>
+    );
+  }
+
   return (
     <div data-slot="table-container" className="relative w-full">
-      <table
-        data-slot="table"
-        className={cn("w-full caption-bottom text-sm", className)}
-        {...props}
-      />
+      {table}
     </div>
   );
 }
@@ -144,7 +170,7 @@ function TableSkeleton({
   const cells = Array.from({ length: columns }, (_, index) => index);
 
   return (
-    <div data-slot="table-skeleton" aria-hidden="true" className={cn("text-sm", className)}>
+    <div data-slot="table-skeleton" aria-hidden="true" className={cn("-mx-3 text-sm", className)}>
       <div className="flex h-9 items-center gap-6 border-b px-3">
         {cells.map((cell) => (
           <TextSkeleton key={cell} size="xs" className="flex-1" width="w-16" />

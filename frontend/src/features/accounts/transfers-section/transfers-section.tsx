@@ -112,7 +112,7 @@ export function TransfersSection({ accounts, addOpen, onAddOpenChange }: Readonl
       {content}
       <EditModal
         item={items.find((transfer) => transfer.id === editTarget) ?? null}
-        title={t("transfers.editTitle")}
+        title={(transfer) => `${t("transfers.editTitle")}: ${transferRoute(transfer)}`}
         onClose={() => setEditTarget(null)}
       >
         {(transfer, close) => (

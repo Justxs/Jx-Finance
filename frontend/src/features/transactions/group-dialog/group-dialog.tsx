@@ -221,7 +221,7 @@ export function useGroupDialog(onGrouped?: () => void) {
       onClose={() => setOpen(null)}
       title={(item) =>
         item.target.kind === "rename"
-          ? t("transactions.groups.rename")
+          ? `${t("transactions.groups.rename")}: ${item.target.group.name}`
           : t("transactions.groups.dialogTitle")
       }
     >

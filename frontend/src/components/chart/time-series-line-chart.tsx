@@ -28,6 +28,13 @@ const X_AXES = {
   },
 } as const;
 
+function strokePattern(item: TimeSeriesLine) {
+  if (item.shape === "dotted") {
+    return "1.5 3";
+  }
+  return item.comparison ? "4 3" : undefined;
+}
+
 type TimeSeriesPoint = Readonly<Record<string, string | number | undefined>>;
 
 export interface TimeSeriesLine extends ChartSeries {
@@ -40,7 +47,6 @@ interface Props {
   series: readonly TimeSeriesLine[];
   ariaLabel: string;
   legend?: boolean;
-  baseline?: boolean;
   zeroLine?: boolean;
   yDomain?: ["auto", "auto"];
   xAxis?: keyof typeof X_AXES;
@@ -54,7 +60,6 @@ export function TimeSeriesLineChart({
   series,
   ariaLabel,
   legend = false,
-  baseline = false,
   zeroLine = false,
   yDomain,
   xAxis = "date",
@@ -75,7 +80,7 @@ export function TimeSeriesLineChart({
     (a, b) => Number(Boolean(b.comparison)) - Number(Boolean(a.comparison)),
   );
   const swatchSeries = series.map((item) =>
-    item.comparison ? { ...item, shape: "dashed" as const } : item,
+    item.comparison && item.shape !== "dotted" ? { ...item, shape: "dashed" as const } : item,
   );
 
   const chart = (
@@ -93,7 +98,6 @@ export function TimeSeriesLineChart({
             tickFormatter={xAxis === "date" ? (value) => formatTick(String(value)) : undefined}
             minTickGap={axis.minTickGap}
             interval={axis.interval}
-            axisLine={baseline ? { stroke: "var(--rule)" } : false}
             tickMargin={8}
           />
           <YAxis
@@ -124,7 +128,7 @@ export function TimeSeriesLineChart({
               dataKey={item.key}
               stroke={item.markers ? "none" : item.color}
               strokeWidth={item === series[0] ? 2 : 1.5}
-              strokeDasharray={item.comparison ? "4 3" : undefined}
+              strokeDasharray={strokePattern(item)}
               dot={
                 item.markers
                   ? { r: 4, fill: item.color, stroke: "var(--background)", strokeWidth: 2 }

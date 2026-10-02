@@ -20,11 +20,15 @@ public sealed class BackupRestorer(
     private readonly Dictionary<string, TableShape> exported =
         shapes.Where(t => t.Exported).ToDictionary(t => t.Name, StringComparer.Ordinal);
 
+    private readonly HashSet<string> transient =
+        shapes.Where(t => !t.Exported).Select(t => t.Name).ToHashSet(StringComparer.Ordinal);
+
     private readonly HashSet<string> restored = new(StringComparer.Ordinal);
     private readonly List<IReadOnlyList<string?>> pending = new(InsertBatchSize);
     private IDbContextTransaction? transaction;
     private string insertSql = "";
     private int columnCount;
+    private bool skipping;
 
     public BackupHeader? Header { get; private set; }
 
@@ -57,6 +61,9 @@ public sealed class BackupRestorer(
 
     public Task BeginTableAsync(string name, IReadOnlyList<string> columns, CancellationToken cancellationToken)
     {
+        skipping = transient.Contains(name);
+        if (skipping) return Task.CompletedTask;
+
         if (!exported.TryGetValue(name, out var shape)
             || !restored.Add(name)
             || !columns.Order(StringComparer.Ordinal).SequenceEqual(
@@ -75,6 +82,7 @@ public sealed class BackupRestorer(
 
     public Task RowAsync(IReadOnlyList<string?> row, CancellationToken cancellationToken)
     {
+        if (skipping) return Task.CompletedTask;
         if (row.Count != columnCount) throw Mismatch();
 
         pending.Add(row);

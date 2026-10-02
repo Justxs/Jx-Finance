@@ -104,7 +104,9 @@ sequenceDiagram
     alt active user with a password
         Id-->>Api: user
         Api->>Id: GeneratePasswordResetTokenAsync
-        Api->>Queue: queue the message with the link
+        Api->>Queue: queue the message with the link to App:SiteUrl
+    else App:SiteUrl is empty
+        Note over Api: nothing is queued, a warning is logged
     else unknown address, deactivated user, or no mail server
         Note over Api: nothing is queued and nothing is logged about the address
     end
@@ -128,7 +130,8 @@ The choices about throttling and lockout, which the sign-in page already thinks 
 - Consuming a link is throttled to 10 calls per five minutes per client and also does not count toward the lockout. The token is a 32-byte protected payload; guessing it is not the attack that a five-try counter defends against, and counting failures would give the same free lockout.
 - A completed reset does the opposite: it clears the counter and any temporary lockout, because the person proved control of the mailbox. A deactivation is left in place, exactly as the administrator reset leaves it.
 - Every rejection answers the same code with the same words. An unknown address, a deactivated user, an expired token and a tampered token are indistinguishable from outside.
-- The 204 from `forgot-password` is unconditional, including when this installation has no mail server at all. The sign-in screen only offers the link when `GET /api/settings/public` says `emailEnabled`, so a user is not sent down a dead end, but the endpoint itself never varies.
+- The link is built only from `App:SiteUrl`, never from the request: with `AllowedHosts` at `*` anyone could send `forgot-password` with `Host: evil.example` and have the victim mailed a working reset token on a site they control. Without `App:SiteUrl` no reset or confirmation message is queued and the API logs a warning (since 2026-10-01).
+- The 204 from `forgot-password` is unconditional, including when this installation has no mail server at all or no `App:SiteUrl`. The sign-in screen only offers the link when `GET /api/settings/public` says `emailEnabled`, so a user is not sent down a dead end, but the endpoint itself never varies.
 
 ## Email verification
 
@@ -180,7 +183,7 @@ The backend has no translation mechanism of its own and none was added. Server t
 
 | Key | Default | What it does |
 | --- | --- | --- |
-| `App:SiteUrl` | empty | The address the links point at. When empty the current request's scheme and host are used, which is right behind the production reverse proxy and wrong in development, where the API and Vite sit on different ports. `docker-compose.production.yml` sets it from `SITE_ADDRESS` |
+| `App:SiteUrl` | empty | The address the links point at. Since 2026-10-01 nothing falls back to the request's host: while it is empty no reset or confirmation message is sent (a warning is logged and a resend answers `email.notConfigured`) and notification emails carry no link. `docker-compose.production.yml` sets it from `SITE_ADDRESS`; in development set `App__SiteUrl` to the Vite address only while trying the links, because an `http` address switches [passkeys](passkeys.md) off |
 | `App:Email:SendTimeoutSeconds` | 20 | Bounds a single connect-authenticate-send, both in the outbox and in the test message |
 | `App:Email:OutboxIntervalSeconds` | 60 | How often the drain runs, at least 5 |
 | `App:Email:OutboxBatchSize` | 20 | Messages claimed per pass |
@@ -193,7 +196,7 @@ The API refuses to start when `OutboxIntervalSeconds` is below 5 or `SendTimeout
 
 | Code | When |
 | --- | --- |
-| `email.notConfigured` | The mail server is off or incomplete; answered by the test send and by a resend request |
+| `email.notConfigured` | The mail server is off or incomplete, answered by the test send and by a resend request; a resend also answers it while `App:SiteUrl` is empty |
 | `email.passwordUnreadable` | The stored password cannot be decrypted with this installation's data protection keys |
 | `email.passwordRequired` | The host or the user name changed and no new password was sent, so the stored one would have gone to another server or account |
 | `email.insecureConnection` | A user name with encryption `none` on save, or a connection that is not encrypted at the moment the transport would authenticate |

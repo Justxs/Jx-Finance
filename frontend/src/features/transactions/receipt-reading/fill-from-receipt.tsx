@@ -367,7 +367,7 @@ export function FillFromReceipt({
           />
         )}
         {readMutation.isPending ? (
-          <Button type="button" variant="ghost" size="sm" onClick={cancel}>
+          <Button type="button" variant="outline" size="sm" onClick={cancel}>
             {t("actions.cancel")}
           </Button>
         ) : null}

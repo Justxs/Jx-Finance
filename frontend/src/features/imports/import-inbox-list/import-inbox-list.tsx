@@ -59,7 +59,7 @@ export function ImportInboxList({ items, accounts, onReview }: Readonly<Props>) 
   }
 
   return (
-    <section aria-labelledby="import-inbox-title" className="mb-4 rounded-md bg-muted/50 px-3 py-2">
+    <section aria-labelledby="import-inbox-title" className="mb-4 border-b pb-3">
       <h3 id="import-inbox-title" className="flex items-center gap-2 py-1 text-sm font-semibold">
         <Inbox aria-hidden="true" className="size-4 text-muted-foreground" />
         {t("imports.inbox.title")}
@@ -77,6 +77,7 @@ export function ImportInboxList({ items, accounts, onReview }: Readonly<Props>) 
               </span>
             </span>
             <Button
+              variant="outline"
               size="sm"
               pending={pendingId(reviewMutation) === item.id}
               disabled={reviewMutation.isPending}

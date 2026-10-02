@@ -19,7 +19,8 @@ public sealed class AuthService(
     RoleManager<AppRole> roleManager,
     AppDbContext db,
     ICurrentUser currentUser,
-    ISessionService sessions) : IAuthService
+    ISessionService sessions,
+    IClock clock) : IAuthService
 {
     private static readonly DomainError UserMissing = EntityLookup.NotFound("The signed-in user no longer exists.");
 
@@ -219,7 +220,7 @@ public sealed class AuthService(
 
         var failure = await AttemptAsync(
             user,
-            () => userManager.VerifyTwoFactorTokenAsync(user, TokenOptions.DefaultAuthenticatorProvider, code),
+            () => AuthenticatorCode.ConsumeAsync(userManager, user, code, clock.UtcNow),
             InvalidCode,
             completesSignIn: true);
         if (failure is not null)
@@ -251,7 +252,7 @@ public sealed class AuthService(
     private Task<DomainError?> ConsumeTwoFactorCodeAsync(AppUser user, string code) =>
         AttemptAsync(
             user,
-            async () => await userManager.VerifyTwoFactorTokenAsync(user, TokenOptions.DefaultAuthenticatorProvider, code)
+            async () => await AuthenticatorCode.ConsumeAsync(userManager, user, code, clock.UtcNow)
                 || (await userManager.RedeemTwoFactorRecoveryCodeAsync(user, code)).Succeeded,
             InvalidCode,
             completesSignIn: true);

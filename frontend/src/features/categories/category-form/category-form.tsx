@@ -106,6 +106,7 @@ export function CategoryForm({ categories, initial, onClose }: Readonly<Props>) 
                   options={optionsOf(["expense", "income"] as const, (type) =>
                     t(`categories.${type}`),
                   )}
+                  onValueChange={() => form.setFieldValue("parentId", "")}
                 />
               )}
             </form.Field>

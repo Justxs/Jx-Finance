@@ -108,6 +108,11 @@ describe("invalidateAfterMutation", () => {
         api.getTransactionsQueryKey,
       ],
     ],
+    [
+      "deleteTag",
+      api.getDeleteTagMutationKey,
+      [api.getTagsQueryKey, api.getBudgetsQueryKey, api.getTransactionsQueryKey],
+    ],
     ["syncExchangeRates", api.getSyncExchangeRatesMutationKey, balances],
     ["reactivateUser", api.getReactivateUserMutationKey, [api.getUsersQueryKey]],
     ["resetUserPassword", api.getResetUserPasswordMutationKey, [api.getUsersQueryKey]],

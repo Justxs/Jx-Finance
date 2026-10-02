@@ -97,7 +97,7 @@ The lines above the header offer 0 to the generated `createCsvMappingBodySkipLin
 | Description | The description column clipped to 500 characters, else the payee |
 | Reference | The reference cell when it is not empty and at most 64 characters, stored unprefixed like camt.053 references. Otherwise `h:` plus the hash of the raw date cell, the signed amount, the currency, the description, the payee and the raw balance cell; a repeat inside the file is told apart by `ImportReferences.Disambiguate` |
 | Skipped | A row whose date, number or currency cannot be read counts in `unreadable`, so a card statement's total line does not fail the file; a row whose amount is zero after the fee counts in `notBooked`. A file with neither a row nor a filtered one answers `import.invalidFile` |
-| Closing balance | With a balance column, the balance of the row with the latest date, the first row when the file is newest first and the last otherwise, in that row's currency; a card statement's balance is negated, because a positive one is money owed |
+| Closing balance | With a balance column, the balance of the newest entry: the first row when the file is newest first and the last otherwise, in that row's currency; a card statement's balance is negated, because a positive one is money owed. The first date that differs from the first row's says the order. When every row has one date, the file is newest first only when the first two rows' balances run that way (the first balance is the second plus the first amount, and not the other way round); otherwise the last row closes |
 
 The raw date cell keeps Revolut's time of day and the balance cell tells two equal coffees apart, so the hash of a row stays the same when an overlapping export is imported next month, and the overlap is flagged as duplicates. The hash does not include the mapping, so recreating a deleted mapping does not import everything again.
 
@@ -180,7 +180,7 @@ Confirm sends `existingTransactionId`. Instead of adding a transaction, the impo
 
 ## Refunds
 
-Since 2026-09-29 an incoming bank row can be recorded as a [refund](transactions.md#refunds): money back into an expense category instead of income. The row's "Record as" picker offers "Refund" for every incoming row, and "Refund of {date} {description}" when the preview found a purchase it probably refunds. Choosing either switches the row's category list to the expense categories and adds a "Refund" mark to its flags; the linked choice also takes the purchase's category. Going back to "Income / expense" or a transfer clears the category, because an expense category does not fit income.
+Since 2026-09-29 an incoming bank row can be recorded as a [refund](transactions.md#refunds): money back into an expense category instead of income. The row's "Record as" picker offers "Refund" for every incoming row, and "Refund of {date} {description}" when the preview found a purchase it probably refunds. Choosing either switches the row's category list to the expense categories and adds a "Refund" mark to its flags, and the amount keeps its "+" but turns from income green to ink, as a refund reads everywhere; the linked choice also takes the purchase's category. Going back to "Income / expense" or a transfer clears the category, because an expense category does not fit income.
 
 The preview answers `refundCandidate` (`id`, `date`, `description`, `categoryId`, the shape of `matchedTransaction`) on an incoming row that is neither a duplicate nor matched to your own entry, when the account has an expense that:
 

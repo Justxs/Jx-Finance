@@ -241,7 +241,7 @@ function CommandPaletteContent({ onClose }: Readonly<ContentProps>) {
       <DialogTitle className="sr-only">{t("commandPalette.title")}</DialogTitle>
       <DialogDescription className="sr-only">{t("commandPalette.description")}</DialogDescription>
 
-      <div className="flex shrink-0 items-center gap-2 border-b px-3">
+      <div className="flex shrink-0 items-center gap-2 border-b px-3 transition-colors has-[input:focus-visible]:border-ring">
         <Search aria-hidden="true" className="size-4 shrink-0 text-muted-foreground" />
         <input
           autoFocus

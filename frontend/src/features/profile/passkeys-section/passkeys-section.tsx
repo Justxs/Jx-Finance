@@ -153,7 +153,7 @@ function PasskeyList() {
       ) : null}
       <EditModal
         item={passkeys.find((passkey) => passkey.id === renamingId) ?? null}
-        title={t("profile.passkeys.renameTitle")}
+        title={(passkey) => `${t("profile.passkeys.renameTitle")}: ${passkey.name}`}
         onClose={() => setRenamingId(null)}
       >
         {(passkey, close) => <RenameForm passkey={passkey} onClose={close} />}
@@ -197,6 +197,7 @@ function AddPasskey() {
     <PasswordPrompt
       id="passkey-password"
       submitLabel={t("profile.passkeys.add")}
+      variant="outline"
       pending={begin.isPending || add.isPending}
       error={begin.error ?? add.error}
       message={failure && failure !== "cancelled" ? t(failureText[failure]) : undefined}

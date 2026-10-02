@@ -3,7 +3,6 @@ import { z } from "zod";
 import { useEnableTwoFactor } from "@/api/generated";
 import { useServerForm } from "@/components/form";
 import { FormError } from "@/components/form-error/form-error";
-import { Button } from "@/components/ui/button/button";
 import { Section, SectionTitle } from "@/components/ui/section/section";
 import { silentMutation } from "@/lib/mutations";
 
@@ -45,6 +44,7 @@ export function TwoFactorSetup({ qrDataUrl, sharedKey, onEnabled, onCancel }: Re
               id="two-factor-code"
               label={t("profile.enterCode")}
               inputMode="numeric"
+              autoComplete="one-time-code"
               maxLength={6}
             />
           )}
@@ -52,18 +52,16 @@ export function TwoFactorSetup({ qrDataUrl, sharedKey, onEnabled, onCancel }: Re
 
         <FormError error={enableMutation.error} />
 
-        <div className="flex flex-wrap gap-2">
-          <form.Subscribe selector={(state) => state.values.code.length === 6}>
-            {(ready) => (
-              <form.SubmitButton pending={enableMutation.isPending} disabled={!ready}>
-                {t("profile.confirmAndEnable")}
-              </form.SubmitButton>
-            )}
-          </form.Subscribe>
-          <Button type="button" variant="outline" onClick={onCancel}>
-            {t("actions.cancel")}
-          </Button>
-        </div>
+        <form.Subscribe selector={(state) => state.values.code.length === 6}>
+          {(ready) => (
+            <form.FormActions
+              submitLabel={t("profile.confirmAndEnable")}
+              pending={enableMutation.isPending}
+              disabled={!ready}
+              onCancel={onCancel}
+            />
+          )}
+        </form.Subscribe>
       </form.FormShell>
     </form.AppForm>
   );

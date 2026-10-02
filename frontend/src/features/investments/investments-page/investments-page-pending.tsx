@@ -28,7 +28,7 @@ function TableSectionSkeleton({ rows, columns, description = false }: Readonly<T
     <Section aria-hidden="true">
       <TextSkeleton size="title" className="mb-2" width="w-40" />
       {description ? <TextSkeleton size="sm" className="mb-2" width="w-3/4 max-w-prose" /> : null}
-      <TableSkeleton rows={rows} columns={columns} className="-mx-3" />
+      <TableSkeleton rows={rows} columns={columns} />
     </Section>
   );
 }
@@ -45,18 +45,24 @@ function SelectHeaderSkeleton() {
 function AllocationSkeleton() {
   return (
     <SectionSkeleton>
-      <ul className="space-y-3.5">
-        {Array.from({ length: 4 }, (_, index) => (
-          <li key={index}>
-            <div className="flex gap-3">
-              <TextSkeleton size="sm" className="flex-1" width={rowWidth(index)} />
-              <TextSkeleton size="xs" className="w-10 shrink-0 justify-end" width="w-8" />
-              <TextSkeleton size="sm" className="w-28 shrink-0 justify-end" width="w-20" />
-            </div>
-            <Skeleton className="mt-1.5 h-1.5 w-full rounded-none" />
-          </li>
-        ))}
-      </ul>
+      <div className="space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <ButtonSkeleton className="w-64" />
+          <ButtonSkeleton size="sm" className="w-32" />
+        </div>
+        <ul className="space-y-3.5">
+          {Array.from({ length: 4 }, (_, index) => (
+            <li key={index}>
+              <div className="flex gap-3">
+                <TextSkeleton size="sm" className="flex-1" width={rowWidth(index)} />
+                <TextSkeleton size="xs" className="w-10 shrink-0 justify-end" width="w-8" />
+                <TextSkeleton size="sm" className="w-28 shrink-0 justify-end" width="w-20" />
+              </div>
+              <Skeleton className="mt-1.5 h-1.5 w-full rounded-none" />
+            </li>
+          ))}
+        </ul>
+      </div>
     </SectionSkeleton>
   );
 }

@@ -20,10 +20,7 @@ export function EmailVerificationBanner() {
   }
 
   return (
-    <div
-      role="status"
-      className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-lg border border-dashed bg-sidebar px-4 py-3"
-    >
+    <div role="status" className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b pb-4">
       <MailWarning className="size-4 shrink-0 text-muted-foreground" aria-hidden />
       <div className="min-w-0 flex-1">
         <p className="text-sm font-medium">{t("profile.emailUnconfirmedTitle")}</p>

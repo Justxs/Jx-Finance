@@ -44,13 +44,19 @@ public sealed class AccountEmailService(
 
         var settings = store.Current;
         var token = await userManager.GeneratePasswordResetTokenAsync(user);
+        if (links.PasswordReset(user.Email!, token) is not { } link)
+        {
+            logger.LogWarning("A password reset link was not sent because App:SiteUrl is not set.");
+            return;
+        }
+
         await outbox.EnqueueAndSaveAsync(
             EmailKind.PasswordReset,
             EmailTexts.PasswordReset(
                 user.Language ?? settings.DefaultLanguage,
                 user.Email!,
                 user.DisplayName,
-                links.PasswordReset(user.Email!, token),
+                link,
                 options.Value.Email.PasswordResetMinutes,
                 EmailTexts.Product(settings.InstanceName)),
             cancellationToken);
@@ -105,13 +111,21 @@ public sealed class AccountEmailService(
         }
 
         var token = await userManager.GenerateEmailConfirmationTokenAsync(user);
+        if (links.EmailVerification(user.Email, token) is not { } link)
+        {
+            logger.LogWarning("An email verification link was not sent because App:SiteUrl is not set.");
+            return new DomainError(
+                ErrorCodes.EmailNotConfigured,
+                "This installation has no site address for the link yet. Ask an administrator to set App:SiteUrl.");
+        }
+
         await outbox.EnqueueAndSaveAsync(
             EmailKind.EmailVerification,
             EmailTexts.Verification(
                 user.Language ?? settings.DefaultLanguage,
                 user.Email,
                 user.DisplayName,
-                links.EmailVerification(user.Email, token),
+                link,
                 EmailTexts.Product(settings.InstanceName)),
             cancellationToken);
 

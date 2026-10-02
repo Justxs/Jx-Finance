@@ -3,6 +3,7 @@ import { Section } from "@/components/ui/section/section";
 import { TextSkeleton } from "@/components/ui/skeleton/skeleton";
 import { SplitColumns } from "@/components/ui/split-columns/split-columns";
 import { EMPTY_VALUE, type MoneySign, useMoney } from "@/hooks/use-formatters";
+import { gainTone } from "@/lib/tone";
 import { cn } from "@/lib/utils";
 
 interface SummaryStat {
@@ -26,6 +27,13 @@ function restGrid(count: number) {
     "grid min-w-0 gap-x-8 gap-y-4",
     count === 4 ? "grid-cols-2" : "grid-cols-[repeat(auto-fit,minmax(min(100%,8rem),1fr))]",
   );
+}
+
+function toneOf(item: SummaryStat) {
+  if (item.tone !== undefined || item.sign !== "auto" || item.value === undefined) {
+    return item.tone;
+  }
+  return gainTone(Number(item.value));
 }
 
 export function SummaryStats({ items, currency }: Readonly<Props>) {
@@ -55,7 +63,7 @@ export function SummaryStats({ items, currency }: Readonly<Props>) {
           <dd
             className={cn(
               "mt-1 max-w-full font-serif text-stat font-semibold wrap-break-word lining-nums tabular-nums",
-              lead.tone,
+              toneOf(lead),
             )}
           >
             {formatValue(lead)}
@@ -71,7 +79,10 @@ export function SummaryStats({ items, currency }: Readonly<Props>) {
           <div key={item.label} className="min-w-0">
             <dt className="text-sm text-muted-foreground">{item.label}</dt>
             <dd
-              className={cn("mt-0.5 text-xl font-semibold wrap-break-word tabular-nums", item.tone)}
+              className={cn(
+                "mt-0.5 text-xl font-semibold wrap-break-word tabular-nums",
+                toneOf(item),
+              )}
             >
               {formatValue(item)}
             </dd>

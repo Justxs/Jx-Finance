@@ -69,6 +69,38 @@ public sealed class TwoFactorEndpointTests(ApiFixture fixture) : IntegrationTest
     }
 
     [Fact]
+    public async Task An_authenticator_code_opens_a_session_only_once()
+    {
+        var enrolled = await EnrollAsync();
+        using var client = enrolled.Client;
+        var code = Totp.GenerateCode(enrolled.SharedKey);
+
+        var first = await LoginAsync(client, enrolled.User, code);
+        await client.PostAsync("/api/auth/logout", null, TestContext.Current.CancellationToken);
+        var second = await LoginAsync(client, enrolled.User, code);
+        var padded = await LoginAsync(client, enrolled.User, $"0{code}");
+
+        Assert.Equal(HttpStatusCode.OK, first.StatusCode);
+        await AssertProblemAsync(second, HttpStatusCode.Unauthorized, "twoFactor.invalidCode");
+        await AssertProblemAsync(padded, HttpStatusCode.Unauthorized, "twoFactor.invalidCode");
+    }
+
+    [Fact]
+    public async Task The_code_that_turned_two_factor_on_cannot_sign_in()
+    {
+        var user = await CreateUserAsync();
+        using var client = await LoginAsync(user);
+        var setup = await PostAsync<SetupDto>(client, "/api/auth/2fa/setup", new { password = user.Password });
+        var code = Totp.GenerateCode(setup.SharedKey);
+        await PostAsync<EnableDto>(client, "/api/auth/2fa/enable", new { code });
+        using var other = CreateClient();
+
+        var login = await TryLoginAsync(other, user.Email, user.Password, code);
+
+        await AssertProblemAsync(login, HttpStatusCode.Unauthorized, "twoFactor.invalidCode");
+    }
+
+    [Fact]
     public async Task A_recovery_code_opens_a_session_once()
     {
         var enrolled = await EnrollAsync();
@@ -141,7 +173,10 @@ public sealed class TwoFactorEndpointTests(ApiFixture fixture) : IntegrationTest
         var user = await CreateUserAsync();
         var client = await LoginAsync(user);
         var setup = await PostAsync<SetupDto>(client, "/api/auth/2fa/setup", new { password = user.Password });
-        var enabled = await PostAsync<EnableDto>(client, "/api/auth/2fa/enable", new { code = Totp.GenerateCode(setup.SharedKey) });
+        var enabled = await PostAsync<EnableDto>(
+            client,
+            "/api/auth/2fa/enable",
+            new { code = Totp.GenerateCode(setup.SharedKey, DateTimeOffset.UtcNow.AddSeconds(-30)) });
         await client.PostAsync("/api/auth/logout", null);
         return new Enrollment(client, user, setup.SharedKey, enabled.RecoveryCodes);
     }

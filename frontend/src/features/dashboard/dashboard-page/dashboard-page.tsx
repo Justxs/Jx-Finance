@@ -86,7 +86,7 @@ function MonthHeader({ month, current, onChange }: Readonly<MonthHeaderProps>) {
         <nav aria-label={t("dashboard.month.label")} className="flex items-center gap-1">
           <span
             className={cn(
-              "transition-all duration-200 ease-out-expo motion-reduce:transition-none",
+              "transition-reveal duration-base ease-out-expo motion-reduce:transition-none",
               month === current && "invisible translate-x-2 opacity-0",
             )}
           >

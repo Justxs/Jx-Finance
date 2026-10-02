@@ -8,7 +8,6 @@ import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { Rows } from "@/components/ui/rows/rows";
 import { TitledSection } from "@/components/ui/section/section";
 import {
-  ScrollRegion,
   Table,
   TableBody,
   TableCell,
@@ -96,44 +95,40 @@ export function DriftPanel({ drift, figures }: Readonly<Props>) {
           <p className="text-sm text-muted-foreground">{t("monthClose.drift.figuresUnchanged")}</p>
         ) : null}
         {changed.length > 0 || countChanged ? (
-          <ScrollRegion aria-label={t("monthClose.drift.description")}>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>
-                    <span className="sr-only">{t("monthClose.drift.figure")}</span>
-                  </TableHead>
-                  <TableHead numeric>{t("monthClose.drift.closed")}</TableHead>
-                  <TableHead numeric>{t("monthClose.drift.now")}</TableHead>
-                  <TableHead numeric>{t("monthClose.drift.difference")}</TableHead>
+          <Table label={t("monthClose.drift.description")}>
+            <TableHeader>
+              <TableRow>
+                <TableHead>
+                  <span className="sr-only">{t("monthClose.drift.figure")}</span>
+                </TableHead>
+                <TableHead numeric>{t("monthClose.drift.closed")}</TableHead>
+                <TableHead numeric>{t("monthClose.drift.now")}</TableHead>
+                <TableHead numeric>{t("monthClose.drift.difference")}</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {changed.map((row) => (
+                <TableRow key={row.key}>
+                  <TableCell className="font-medium">{t(`monthClose.drift.${row.key}`)}</TableCell>
+                  <TableCell numeric>{money.format(Number(row.closed))}</TableCell>
+                  <TableCell numeric>{money.format(Number(row.now))}</TableCell>
+                  <TableCell numeric>
+                    <ChangeBadge change={changeOf(row.now, row.closed)} good={row.good} />
+                  </TableCell>
                 </TableRow>
-              </TableHeader>
-              <TableBody>
-                {changed.map((row) => (
-                  <TableRow key={row.key}>
-                    <TableCell className="font-medium">
-                      {t(`monthClose.drift.${row.key}`)}
-                    </TableCell>
-                    <TableCell numeric>{money.format(Number(row.closed))}</TableCell>
-                    <TableCell numeric>{money.format(Number(row.now))}</TableCell>
-                    <TableCell numeric>
-                      <ChangeBadge change={changeOf(row.now, row.closed)} good={row.good} />
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {totals && countChanged ? (
-                  <TableRow>
-                    <TableCell className="font-medium">{t("monthClose.drift.count")}</TableCell>
-                    <TableCell numeric>{count.format(totals.closedCount)}</TableCell>
-                    <TableCell numeric>{count.format(totals.currentCount)}</TableCell>
-                    <TableCell numeric className="text-muted-foreground">
-                      {count.format(totals.currentCount - totals.closedCount)}
-                    </TableCell>
-                  </TableRow>
-                ) : null}
-              </TableBody>
-            </Table>
-          </ScrollRegion>
+              ))}
+              {totals && countChanged ? (
+                <TableRow>
+                  <TableCell className="font-medium">{t("monthClose.drift.count")}</TableCell>
+                  <TableCell numeric>{count.format(totals.closedCount)}</TableCell>
+                  <TableCell numeric>{count.format(totals.currentCount)}</TableCell>
+                  <TableCell numeric className="text-muted-foreground">
+                    {count.format(totals.currentCount - totals.closedCount)}
+                  </TableCell>
+                </TableRow>
+              ) : null}
+            </TableBody>
+          </Table>
         ) : null}
 
         {drift.categories.length > 0 ? (

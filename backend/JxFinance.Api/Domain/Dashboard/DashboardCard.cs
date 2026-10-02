@@ -12,4 +12,5 @@ public enum DashboardCard
     RecentTransactions,
     UpcomingBills,
     CashFlow,
+    Goals,
 }

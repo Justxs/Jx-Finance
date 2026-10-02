@@ -11,6 +11,7 @@ import type {
   UncategorizedSuggestionsParams,
 } from "@/api/generated/model";
 import { FormError } from "@/components/form-error/form-error";
+import { FormActions } from "@/components/form/form-actions/form-actions";
 import { Modal } from "@/components/modal";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { RecordRowsSkeleton } from "@/components/record-row/record-row";
@@ -19,8 +20,8 @@ import { Checkbox } from "@/components/ui/checkbox/checkbox";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { Rows } from "@/components/ui/rows/rows";
 import { confidencePercent } from "@/features/transactions/category-suggestion/confidence";
-import { signedAmount } from "@/features/transactions/transaction-amount/transaction-amount";
-import { EMPTY_VALUE, useIsoDate, useMoney } from "@/hooks/use-formatters";
+import { TransactionAmount } from "@/features/transactions/transaction-amount/transaction-amount";
+import { EMPTY_VALUE, useIsoDate } from "@/hooks/use-formatters";
 import { silentMutation } from "@/lib/mutations";
 
 interface SuggestionGroup {
@@ -64,7 +65,6 @@ function groupSuggestions(
 
 function SuggestionGroups({ filter, categories, onClose }: Readonly<ContentProps>) {
   const { t } = useTranslation();
-  const money = useMoney();
   const formatDate = useIsoDate();
   const { data } = useUncategorizedSuggestionsSuspense(filter);
   const [ticked, setTicked] = useState<ReadonlySet<string>>(new Set());
@@ -145,7 +145,7 @@ function SuggestionGroups({ filter, categories, onClose }: Readonly<ContentProps
                       EMPTY_VALUE}
                   </span>
                   <span className="shrink-0 tabular-nums">
-                    {signedAmount(money, item.transaction)}
+                    <TransactionAmount transaction={item.transaction} />
                     {item.source === "learned" ? (
                       <span className="ml-2 text-xs text-muted-foreground">
                         {t("transactions.categorySuggestion.sure", {
@@ -163,10 +163,7 @@ function SuggestionGroups({ filter, categories, onClose }: Readonly<ContentProps
 
       <FormError error={bulk.error} />
 
-      <div className="flex flex-wrap justify-end gap-2 pt-2">
-        <Button type="button" variant="outline" onClick={onClose}>
-          {t("actions.cancel")}
-        </Button>
+      <FormActions onCancel={onClose}>
         <Button
           type="button"
           disabled={chosen.length === 0}
@@ -177,7 +174,7 @@ function SuggestionGroups({ filter, categories, onClose }: Readonly<ContentProps
             count: chosen.reduce((total, group) => total + group.items.length, 0),
           })}
         </Button>
-      </div>
+      </FormActions>
     </div>
   );
 }

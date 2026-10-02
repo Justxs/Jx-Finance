@@ -84,7 +84,7 @@ export function SuggestedRules({ suggestions, accounts, categories, tags }: Read
                 </Button>
                 <Button
                   variant="ghost"
-                  size="icon"
+                  size="icon-sm"
                   pending={pendingKey === key}
                   disabled={dismiss.isPending}
                   onClick={() =>

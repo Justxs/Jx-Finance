@@ -1,0 +1,81 @@
+!pragma layout smetana
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName Arial
+skinparam defaultFontSize 12
+skinparam defaultFontColor #1c2329
+skinparam shadowing false
+skinparam roundCorner 4
+skinparam nodesep 40
+skinparam ranksep 50
+skinparam ArrowColor #5d6872
+skinparam ArrowFontColor #5d6872
+skinparam ArrowFontSize 11
+skinparam StereotypeFontColor #5d6872
+skinparam StereotypeFontSize 10
+skinparam node {
+  BackgroundColor #f1f3f5
+  BorderColor #253e52
+}
+skinparam component {
+  BackgroundColor #ffffff
+  BorderColor #253e52
+}
+skinparam artifact {
+  BackgroundColor #ffffff
+  BorderColor #808c97
+}
+skinparam database {
+  BackgroundColor #e6ebef
+  BorderColor #253e52
+}
+skinparam storage {
+  BackgroundColor #eef1f3
+  BorderColor #808c97
+}
+skinparam cloud {
+  BackgroundColor #ffffff
+  BorderColor #808c97
+}
+skinparam rectangle {
+  BackgroundColor #ffffff
+  BorderColor #253e52
+}
+skinparam package {
+  BackgroundColor #fbfbfc
+  BorderColor #253e52
+}
+skinparam interface {
+  BackgroundColor #ffffff
+  BorderColor #253e52
+}
+skinparam actor {
+  BackgroundColor #e6ebef
+  BorderColor #253e52
+}
+skinparam class {
+  BackgroundColor #ffffff
+  BorderColor #253e52
+  HeaderBackgroundColor #e6ebef
+}
+skinparam sequence {
+  ParticipantBackgroundColor #e6ebef
+  ParticipantBorderColor #253e52
+  ActorBackgroundColor #e6ebef
+  ActorBorderColor #253e52
+  LifeLineBorderColor #808c97
+  GroupBorderColor #808c97
+  GroupBackgroundColor #f1f3f5
+  BoxBorderColor #dfe4e8
+}
+skinparam activity {
+  BackgroundColor #ffffff
+  BorderColor #253e52
+  StartColor #253e52
+  EndColor #253e52
+  BarColor #253e52
+}
+skinparam note {
+  BackgroundColor #f1f3f5
+  BorderColor #808c97
+}
+hide circle

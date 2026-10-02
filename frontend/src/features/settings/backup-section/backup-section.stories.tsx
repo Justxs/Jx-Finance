@@ -21,7 +21,7 @@ import {
   pending,
   withHandlers,
 } from "@/storybook/handlers";
-import { type Canvas, first, openedDialog } from "@/storybook/interactions";
+import { type Canvas, chooseMenuItem, first, openedDialog } from "@/storybook/interactions";
 import { BackupSection } from "./backup-section";
 
 const meta = {
@@ -34,8 +34,10 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 async function confirmRestoreOfNewest(canvas: Canvas, password = backupRestorePassword) {
-  const restore = first(await canvas.findAllByRole("button", { name: /^Restore:/u }));
-  await userEvent.click(restore);
+  await chooseMenuItem(
+    first(await canvas.findAllByRole("button", { name: /^Actions:/u })),
+    "Restore",
+  );
 
   const dialog = within(await openedDialog("alertdialog"));
   const confirm = dialog.getByRole("button", { name: "Replace all data" });
@@ -62,8 +64,12 @@ export const Default: Story = {
     await expect(await canvas.findByText("Before the Swedbank import")).toBeVisible();
     await expect(canvas.getByText("403 KB")).toBeVisible();
     await expect(canvas.getByText("5.6 MB")).toBeVisible();
-    const restoreButtons = canvas.getAllByRole("button", { name: /^Restore:/u });
-    await expect(restoreButtons[2]).toBeDisabled();
+    const menus = canvas.getAllByRole("button", { name: /^Actions:/u });
+    await userEvent.click(menus[2] ?? first(menus));
+    await expect(await screen.findByRole("menuitem", { name: "Restore" })).toHaveAttribute(
+      "aria-disabled",
+      "true",
+    );
   },
 };
 
@@ -92,8 +98,10 @@ export const BackUpNow: Story = {
 
 export const EditNote: Story = {
   play: async ({ canvas }) => {
-    const edit = first(await canvas.findAllByRole("button", { name: /^Edit note:/u }));
-    await userEvent.click(edit);
+    await chooseMenuItem(
+      first(await canvas.findAllByRole("button", { name: /^Actions:/u })),
+      "Edit note",
+    );
     const dialog = within(await openedDialog());
     await expect(dialog.getByLabelText("Note")).toHaveValue("Before the Swedbank import");
   },
@@ -101,8 +109,10 @@ export const EditNote: Story = {
 
 export const DeleteAsksFirst: Story = {
   play: async ({ canvas }) => {
-    const remove = first(await canvas.findAllByRole("button", { name: /^Delete backup:/u }));
-    await userEvent.click(remove);
+    await chooseMenuItem(
+      first(await canvas.findAllByRole("button", { name: /^Actions:/u })),
+      "Delete",
+    );
     await openedDialog("alertdialog");
   },
 };

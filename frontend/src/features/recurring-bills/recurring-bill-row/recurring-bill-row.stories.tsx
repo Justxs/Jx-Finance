@@ -5,6 +5,7 @@ import { byId, nameById } from "@/lib/options";
 import {
   accounts,
   categories,
+  checkingAccount,
   dueSoonBill,
   familyHousehold,
   inactiveBill,
@@ -78,6 +79,13 @@ export const PriceRiseOnAVariableEntry: Story = {
   },
 };
 
+export const InTheAccountCurrency: Story = {
+  args: { accountById: byId([{ ...checkingAccount, currency: "usd" }]) },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText("$24.99")).toBeVisible();
+  },
+};
+
 export const Variable: Story = { args: { bill: variableBill } };
 
 export const PossiblyCancelled: Story = {
@@ -96,6 +104,7 @@ export const Income: Story = {
   args: { bill: incomeBill },
   play: async ({ canvas }) => {
     await expect(canvas.getByText("Income")).toBeVisible();
+    await expect(canvas.getByText("+€2,180.00")).toBeVisible();
     await expect(canvas.getByRole("button", { name: "Record income" })).toBeVisible();
   },
 };

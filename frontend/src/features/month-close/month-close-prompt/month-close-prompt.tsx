@@ -6,6 +6,7 @@ import type { MonthReviewResponse } from "@/api/generated/model";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog/confirm-delete-dialog";
 import { FormError } from "@/components/form-error/form-error";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
+import { SignedAmount } from "@/components/signed-amount/signed-amount";
 import { Button, buttonVariants } from "@/components/ui/button/button";
 import { Section, SectionTitle } from "@/components/ui/section/section";
 import {
@@ -15,7 +16,7 @@ import {
 } from "@/features/month-close/close-checklist/close-checklist";
 import { useMonthCloser } from "@/features/month-close/close-form/use-month-closer";
 import { statusMarkers } from "@/features/month-close/status-markers";
-import { useMoney, useMonthName, usePercent } from "@/hooks/use-formatters";
+import { useMonthName, usePercent } from "@/hooks/use-formatters";
 import { useFeature, useTodayDate } from "@/hooks/use-settings";
 import { latestEndedMonth } from "@/lib/calendar";
 import { cn } from "@/lib/utils";
@@ -34,7 +35,6 @@ interface PanelProps {
 function PromptPanel({ month, review }: Readonly<PanelProps>) {
   const { t } = useTranslation();
   const titleId = useId();
-  const money = useMoney();
   const percent = usePercent();
   const monthName = useMonthName()(month);
   const closer = useMonthCloser(month, review);
@@ -106,8 +106,8 @@ function PromptPanel({ month, review }: Readonly<PanelProps>) {
           <dl className="flex gap-x-8">
             <div>
               <dt className="text-xs text-muted-foreground">{t("monthClose.prompt.net")}</dt>
-              <dd className="text-xl font-semibold tabular-nums">
-                {money.formatSigned(Number(review.figures.net), "auto")}
+              <dd className="text-xl font-semibold">
+                <SignedAmount value={Number(review.figures.net)} />
               </dd>
             </div>
             {rate === null ? null : (

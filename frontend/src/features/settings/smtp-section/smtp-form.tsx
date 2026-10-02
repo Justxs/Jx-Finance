@@ -127,7 +127,7 @@ export function SmtpForm({ settings }: Readonly<{ settings: SmtpSettingsResponse
               <field.TextField
                 id="smtp-host"
                 label={t("settings.smtp.host")}
-                hint={t("settings.smtp.hostHint")}
+                className="col-span-full"
                 placeholder="smtp.example.com"
               />
             )}
@@ -181,7 +181,6 @@ export function SmtpForm({ settings }: Readonly<{ settings: SmtpSettingsResponse
               <field.TextField
                 id="smtp-from-address"
                 label={t("settings.smtp.fromAddress")}
-                hint={t("settings.smtp.fromAddressHint")}
                 type="email"
               />
             )}

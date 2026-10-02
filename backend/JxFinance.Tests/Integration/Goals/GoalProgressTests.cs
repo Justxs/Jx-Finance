@@ -30,6 +30,20 @@ public sealed class GoalProgressTests(ApiFixture fixture) : IntegrationTestBase(
     }
 
     [Fact]
+    public async Task A_delta_that_would_take_the_amount_past_the_largest_storable_amount_is_refused()
+    {
+        using var member = await CreateUserClientAsync();
+        var goal = await PostAsync<GoalDto>(member, "/api/goals", new { name = "Moon", targetAmount = "1000.00" });
+        await ReadOkAsync<GoalDto>(await PatchAsync(member, goal.Id, new { currentAmount = "9999999999999999.99" }));
+
+        var overflow = await PatchAsync(member, goal.Id, new { delta = "0.01" });
+
+        await AssertProblemAsync(overflow, HttpStatusCode.BadRequest, "money.invalid");
+        var stored = Assert.Single((await member.GetFromJsonAsync<List<GoalDto>>("/api/goals", TestContext.Current.CancellationToken))!);
+        Assert.Equal("9999999999999999.99", stored.CurrentAmount);
+    }
+
+    [Fact]
     public async Task A_funded_goal_is_refused_and_another_users_goal_is_not_found()
     {
         using var pair = await CreateHouseholdPairAsync();

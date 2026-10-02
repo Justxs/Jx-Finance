@@ -30,7 +30,7 @@ export const WideAmount: Story = { args: { amount: "€1,234,567.89", wideAmount
 export const WithNote: Story = {
   args: {
     note: (
-      <span className="shrink-0 text-right text-xs text-destructive tabular-nums">€62.90 over</span>
+      <span className="shrink-0 text-right text-xs text-expense tabular-nums">€62.90 over</span>
     ),
     value: 512.9,
     tone: "negative",

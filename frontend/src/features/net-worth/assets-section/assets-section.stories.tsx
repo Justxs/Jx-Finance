@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, userEvent, within } from "storybook/test";
+import { expect, screen, userEvent, within } from "storybook/test";
 import {
   getDeleteAssetMockHandler,
   getAssetsMockHandler,
@@ -57,10 +57,9 @@ export const AddDialogOpen: Story = {
 export const DeletePending: Story = {
   parameters: withHandlers(getDeleteAssetMockHandler(pending)),
   play: async ({ canvas }) => {
-    const deleteButtons = await canvas.findAllByRole("button", {
-      name: /^(delete|ištrinti)(:|$)/i,
-    });
-    await userEvent.click(deleteButtons[0]!);
+    const menus = await canvas.findAllByRole("button", { name: /^(actions|veiksmai):/i });
+    await userEvent.click(menus[0]!);
+    await userEvent.click(await screen.findByRole("menuitem", { name: /^(delete|ištrinti)$/i }));
     const dialog = await openedDialog("alertdialog");
     await userEvent.click(within(dialog).getByRole("button", { name: /delete|ištrinti/i }));
   },

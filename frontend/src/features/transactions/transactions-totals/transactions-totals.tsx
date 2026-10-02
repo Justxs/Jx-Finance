@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import { useTransactionsSummarySuspense } from "@/api/generated";
 import type { TransactionsSummaryParams } from "@/api/generated/model";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
+import { SignedAmount } from "@/components/signed-amount/signed-amount";
 import { TransactionsTotalsSkeleton } from "@/features/transactions/transactions-page/transactions-page-pending";
 import { useMoney } from "@/hooks/use-formatters";
 import { cn } from "@/lib/utils";
@@ -36,9 +37,7 @@ export function TransactionsTotalsLine({
         ·
       </span>
       <span className="whitespace-nowrap">
-        <span className="font-semibold text-income">
-          {money.formatSigned(Number(totalIncome), "+")}
-        </span>{" "}
+        <SignedAmount value={Number(totalIncome)} sign="+" className="font-semibold" />{" "}
         {t("transactions.totalIncome")}
       </span>
       <span aria-hidden="true" className="hidden sm:inline">
@@ -46,7 +45,7 @@ export function TransactionsTotalsLine({
       </span>
       <span className="whitespace-nowrap">
         <span className="font-semibold text-foreground">
-          {money.formatSigned(Number(totalExpense), "−")}
+          {money.formatSigned(-Number(totalExpense))}
         </span>{" "}
         {t("transactions.totalExpense")}
       </span>

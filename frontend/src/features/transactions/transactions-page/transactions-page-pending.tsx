@@ -45,7 +45,7 @@ export function TransactionsPending() {
 
   return (
     <PagePending
-      className="space-y-6"
+      className="space-y-5"
       actions={
         <>
           <div className="flex flex-wrap items-center gap-1">
@@ -63,7 +63,7 @@ export function TransactionsPending() {
           <TransactionsTotalsSkeleton />
           <ButtonSkeleton size="sm" className="md:hidden" />
         </div>
-        <TableSkeleton rows={rows} columns={6} lines={2} className="-mx-3 hidden md:block" />
+        <TableSkeleton rows={rows} columns={6} lines={2} className="hidden md:block" />
         <TransactionRowsSkeleton rows={rows} />
         <PaginationSkeleton />
       </Section>

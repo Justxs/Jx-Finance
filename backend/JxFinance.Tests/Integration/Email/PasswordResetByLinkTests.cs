@@ -189,6 +189,29 @@ public sealed class PasswordResetByLinkTests(ApiFixture fixture) : EmailTestBase
     }
 
     [Fact]
+    public async Task The_link_ignores_the_host_the_request_was_sent_to()
+    {
+        try
+        {
+            await EnableEmailAsync();
+            var user = await CreateUserAsync();
+            using var forged = CreateClient();
+            forged.DefaultRequestHeaders.Host = "evil.example";
+
+            Assert.Equal(HttpStatusCode.NoContent, (await AskAsync(forged, user.Email)).StatusCode);
+            await DrainAsync();
+
+            var body = ResetMessageFor(user.Email);
+            Assert.NotEmpty(TokenFrom(body, "reset-password"));
+            Assert.DoesNotContain("evil.example", body, StringComparison.Ordinal);
+        }
+        finally
+        {
+            await DisableEmailAsync();
+        }
+    }
+
+    [Fact]
     public async Task Without_a_mail_server_the_answer_is_still_the_same()
     {
         await DisableEmailAsync();

@@ -7,7 +7,7 @@ export interface ChartSeries {
   color: string;
   sign?: MoneySign;
   tone?: string;
-  shape?: "bar" | "line" | "dashed";
+  shape?: "bar" | "dot" | "line" | "dashed" | "dotted";
 }
 
 interface TooltipEntry {
@@ -25,17 +25,19 @@ interface Props {
   currency?: string;
 }
 
-export function ChartSwatch({ series }: Readonly<{ series: ChartSeries }>) {
-  const flat = series.shape === "line" || series.shape === "dashed";
+const SWATCH_SHAPES = {
+  bar: "size-2 bg-(--swatch-color)",
+  dot: "size-2 rounded-full bg-(--swatch-color)",
+  line: "h-0.5 w-3 bg-(--swatch-color)",
+  dashed: "h-0.5 w-3 bg-dashed-swatch",
+  dotted: "h-0.5 w-3 bg-dotted-swatch",
+} as const;
 
+export function ChartSwatch({ series }: Readonly<{ series: ChartSeries }>) {
   return (
     <span
       aria-hidden="true"
-      className={cn(
-        "inline-block shrink-0",
-        flat ? "h-0.5 w-3" : "size-2",
-        series.shape === "dashed" ? "bg-dashed-swatch" : "bg-(--swatch-color)",
-      )}
+      className={cn("inline-block shrink-0", SWATCH_SHAPES[series.shape ?? "bar"])}
       style={{ "--swatch-color": series.color }}
     />
   );

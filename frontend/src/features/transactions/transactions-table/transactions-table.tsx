@@ -11,7 +11,6 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-  ScrollRegion,
   TableEmptyRow,
 } from "@/components/ui/table/table";
 import { Tooltip } from "@/components/ui/tooltip/tooltip";
@@ -27,7 +26,7 @@ import {
   type useTransactionColumns,
 } from "./use-transaction-columns";
 
-const columnWidth: Record<string, string> = {
+const columnWidth: Record<string, `w-${string}`> = {
   date: "w-27",
   categoryId: "w-48",
   tagIds: "w-36",
@@ -188,50 +187,40 @@ export function TransactionsTable({
     body = rows.map(ledgerRow);
   }
 
+  const columnWidths = table.getAllColumns().map((column) => columnWidth[column.id]);
+
   return (
     <ViewTransition name="transactions-rows" enter="none" exit="none">
-      <div className="-mx-3">
-        <ScrollRegion aria-label={t("transactions.title")}>
-          <Table
-            className={cn(
-              "table-fixed",
-              selection ? "min-w-228" : "min-w-220",
-              isPlaceholder && "stale",
-            )}
-            aria-busy={isPlaceholder}
-          >
-            <colgroup>
-              {selection ? <col className="w-10" /> : null}
-              {table.getAllColumns().map((column) => (
-                <col key={column.id} className={columnWidth[column.id]} />
+      <Table
+        label={t("transactions.title")}
+        columns={selection ? ["w-10", ...columnWidths] : columnWidths}
+        className={cn(selection ? "min-w-228" : "min-w-220", isPlaceholder && "stale")}
+        aria-busy={isPlaceholder}
+      >
+        <TableHeader>
+          {table.getHeaderGroups().map((headerGroup) => (
+            <TableRow key={headerGroup.id}>
+              {selection ? (
+                <TableHead className="pr-0">
+                  <SelectPageCheckbox selection={selection} />
+                </TableHead>
+              ) : null}
+              {headerGroup.headers.map((header) => (
+                <TableHead
+                  key={header.id}
+                  className={header.column.id === "amount" ? "text-right" : undefined}
+                  aria-sort={columnAriaSort?.[header.column.id]}
+                >
+                  {header.isPlaceholder
+                    ? null
+                    : (columnFilters[header.column.id] ?? <table.FlexRender header={header} />)}
+                </TableHead>
               ))}
-            </colgroup>
-            <TableHeader>
-              {table.getHeaderGroups().map((headerGroup) => (
-                <TableRow key={headerGroup.id}>
-                  {selection ? (
-                    <TableHead className="pr-0">
-                      <SelectPageCheckbox selection={selection} />
-                    </TableHead>
-                  ) : null}
-                  {headerGroup.headers.map((header) => (
-                    <TableHead
-                      key={header.id}
-                      className={header.column.id === "amount" ? "text-right" : undefined}
-                      aria-sort={columnAriaSort?.[header.column.id]}
-                    >
-                      {header.isPlaceholder
-                        ? null
-                        : (columnFilters[header.column.id] ?? <table.FlexRender header={header} />)}
-                    </TableHead>
-                  ))}
-                </TableRow>
-              ))}
-            </TableHeader>
-            <TableBody>{body}</TableBody>
-          </Table>
-        </ScrollRegion>
-      </div>
+            </TableRow>
+          ))}
+        </TableHeader>
+        <TableBody>{body}</TableBody>
+      </Table>
     </ViewTransition>
   );
 }

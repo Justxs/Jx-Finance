@@ -1,0 +1,28 @@
+@startuml system-context
+!include style.iuml
+left to right direction
+
+actor "Household member" as member
+actor "Administrator" as admin
+actor "AI client\nwith jx-mcp" as ai
+rectangle "Bank statement\nexports" <<external>> as bank
+
+rectangle "Jx Finance installation\n\nSPA, API, PostgreSQL" <<system>> as jx
+
+rectangle "SMTP server" <<external>> as smtp
+rectangle "Discord webhooks" <<external>> as discord
+rectangle "Frankfurter\nexchange rates" <<external>> as frankfurter
+rectangle "EODHD, Kraken\nmarket prices" <<external>> as prices
+rectangle "Interactive Brokers\nFlex Web Service" <<external>> as ibkr
+
+member --> jx : HTTPS,\ncookie session
+admin --> jx : HTTPS settings and users,\nrecovery command
+ai --> jx : HTTPS,\npersonal API token
+bank ..> jx : files in the import inbox\nor uploaded by hand
+
+jx --> smtp : notification and\naccount emails
+jx --> discord : notification posts
+jx --> frankfurter : daily rates
+jx --> prices : security prices
+jx --> ibkr : trades and cash
+@enduml

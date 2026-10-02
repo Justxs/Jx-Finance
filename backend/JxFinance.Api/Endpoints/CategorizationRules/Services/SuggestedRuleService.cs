@@ -1,5 +1,7 @@
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Common.CategorizationRules;
+using JxFinance.Common.Errors;
 using JxFinance.Common.References;
 using JxFinance.Common.Subscriptions;
 using JxFinance.Common.Unusual;
@@ -96,7 +98,10 @@ public sealed class SuggestedRuleService(
 
         var dismissal = new SuggestedRuleDismissal { Key = key, CategoryId = categoryId };
         db.SuggestedRuleDismissals.Add(dismissal);
-        await db.SaveChangesAsync(cancellationToken);
+        if (await db.SaveOrConflictAsync(new DomainError(ErrorCodes.ConflictDuplicate, "This suggestion was dismissed from another window just now."), cancellationToken) is { } conflict)
+        {
+            return conflict;
+        }
 
         return dismissal.Id.Value;
     }

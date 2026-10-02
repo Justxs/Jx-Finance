@@ -16,6 +16,7 @@ import {
 import { pastMonthEnd } from "@/features/dashboard/dashboard-queries";
 import { DashboardSection } from "@/features/dashboard/dashboard-section/dashboard-section";
 import { DashboardStats } from "@/features/dashboard/dashboard-stats/dashboard-stats";
+import { GoalsSnapshot } from "@/features/dashboard/goals-snapshot/goals-snapshot";
 import { MonthlyTrendChart } from "@/features/dashboard/monthly-trend-chart/monthly-trend-chart";
 import { NetWorthMonth } from "@/features/dashboard/net-worth-month/net-worth-month";
 import { RecentTransactionsList } from "@/features/dashboard/recent-transactions-list/recent-transactions-list";
@@ -40,6 +41,7 @@ const titleKeys = {
   recentTransactions: "dashboard.recent",
   upcomingBills: "dashboard.upcomingBills",
   cashFlow: "dashboard.cashFlow",
+  goals: "goals.title",
 } as const satisfies Record<DashboardCardId, TranslationKey>;
 
 interface CardView {
@@ -101,6 +103,12 @@ const sectionCards: Record<
     link: { to: "/accounts", label: "nav.accounts" },
     content: ({ until }) =>
       until ? <CurrentMonthOnly text="dashboard.cashFlowCurrentOnly" /> : <CashFlowCard />,
+  },
+  goals: {
+    span: "narrow",
+    link: { to: "/goals", label: "nav.goals" },
+    content: ({ until }) =>
+      until ? <CurrentMonthOnly text="dashboard.goalsCurrentOnly" /> : <GoalsSnapshot />,
   },
 };
 

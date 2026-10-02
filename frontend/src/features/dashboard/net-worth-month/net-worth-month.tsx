@@ -1,10 +1,8 @@
 import { useTranslation } from "react-i18next";
 import { useNetWorthHistorySuspense } from "@/api/generated";
 import type { NetWorthSnapshotItem } from "@/api/generated/model";
+import { SignedAmount } from "@/components/signed-amount/signed-amount";
 import { NetWorthHistoryChart } from "@/features/net-worth/net-worth-history-chart";
-import { useMoney } from "@/hooks/use-formatters";
-import { gainTone } from "@/lib/tone";
-import { cn } from "@/lib/utils";
 
 function monthChange(
   items: readonly NetWorthSnapshotItem[],
@@ -27,7 +25,6 @@ interface Props {
 
 export function NetWorthMonth({ month, until }: Readonly<Props>) {
   const { t } = useTranslation();
-  const money = useMoney();
   const history = useNetWorthHistorySuspense();
   const change = monthChange(history.data.items, month, until);
 
@@ -35,9 +32,7 @@ export function NetWorthMonth({ month, until }: Readonly<Props>) {
     <div className="space-y-3">
       {change === undefined ? null : (
         <p className="text-sm text-muted-foreground">
-          <span className={cn("font-semibold tabular-nums", gainTone(change))}>
-            {money.formatSigned(change, "auto")}
-          </span>{" "}
+          <SignedAmount value={change} className="font-semibold" />{" "}
           {until === undefined ? t("dashboard.netWorthSoFar") : t("dashboard.netWorthOverMonth")}
         </p>
       )}

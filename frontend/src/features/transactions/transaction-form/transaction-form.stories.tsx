@@ -114,6 +114,25 @@ export const SplitTotalMismatch: Story = {
   },
 };
 
+export const SplitTurnedIntoIncomeDropsExpenseCategories: Story = {
+  args: { initial: splitTransaction },
+  play: async ({ canvas, args }) => {
+    await userEvent.click(await canvas.findByRole("radio", { name: "Income" }));
+    await submitForm(canvas);
+
+    await waitFor(() =>
+      expect(args.onSubmit).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: "income",
+          lines: splitTransaction.lines?.map((line) =>
+            expect.objectContaining({ amount: line.amount, categoryId: null }),
+          ),
+        }),
+      ),
+    );
+  },
+};
+
 export const Pending: Story = { args: { initial: transactions[0], pending: true } };
 
 export const WithStatementPayee: Story = {

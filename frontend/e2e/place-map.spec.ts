@@ -33,7 +33,9 @@ test("the map of spending by place draws from the tile file without leaving the 
     await page.getByRole("radio", { name: "Map" }).click();
 
     await expect(
-      page.getByRole("img", { name: new RegExp(`^Map of spending by place: .*${place}`, "u") }),
+      page.getByRole("region", {
+        name: new RegExp(`^Map of spending by place: .*${place}`, "u"),
+      }),
     ).toBeVisible();
     await expect(page.locator("canvas.maplibregl-canvas")).toBeVisible();
     await tiles;

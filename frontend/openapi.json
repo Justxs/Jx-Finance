@@ -2274,7 +2274,7 @@
           "Auth"
         ],
         "summary": "Ask for a password reset link",
-        "description": "Queues an email with a single-use reset link when the address belongs to an active user of this installation and the mail server is configured. The answer is 204 in every case, including an unknown address, a deactivated user and an installation that cannot send mail, so the screen cannot be used to find out which addresses exist. The link is valid for one hour and stops working as soon as it is used, because the token carries the user's security stamp and a completed reset changes that stamp. Asking for a reset never counts toward the failed-attempt lockout: otherwise anyone could lock an account by repeating the request. Rate limited to 5 calls per five minutes per client.",
+        "description": "Queues an email with a single-use reset link when the address belongs to an active user of this installation, the mail server is configured and App:SiteUrl names the address the link points at. The answer is 204 in every case, including an unknown address, a deactivated user and an installation that cannot send mail, so the screen cannot be used to find out which addresses exist. The link is valid for one hour and stops working as soon as it is used, because the token carries the user's security stamp and a completed reset changes that stamp. Asking for a reset never counts toward the failed-attempt lockout: otherwise anyone could lock an account by repeating the request. Rate limited to 5 calls per five minutes per client.",
         "operationId": "ForgotPassword",
         "requestBody": {
           "content": {
@@ -3124,7 +3124,7 @@
           "Auth"
         ],
         "summary": "Send the confirmation email again",
-        "description": "Queues a new confirmation link for the caller's own address. Answers 400 email.alreadyVerified when the address is already confirmed and 400 email.notConfigured when this installation has no mail server yet, so the screen can say which of the two it is. The message leaves through the outbox, so the call returns without waiting for the mail server. Rate limited to 5 calls per five minutes per client.",
+        "description": "Queues a new confirmation link for the caller's own address. Answers 400 email.alreadyVerified when the address is already confirmed and 400 email.notConfigured when this installation has no mail server or no site address (App:SiteUrl) for the link yet, so the screen can say which of the two it is. The message leaves through the outbox, so the call returns without waiting for the mail server. Rate limited to 5 calls per five minutes per client.",
         "operationId": "SendVerificationEmail",
         "responses": {
           "204": {
@@ -5374,7 +5374,7 @@
           "CategorizationRules"
         ],
         "summary": "Dismiss a suggested categorization rule",
-        "description": "Stops offering one suggested rule to the signed-in user, on every device. The dismissal is stored against the normalized description key and the category, not against the transactions behind it, so later rows of the same payee do not bring the suggestion back. Dismissing the same pair twice changes nothing. It is not a deletion and has no trash entry.",
+        "description": "Stops offering one suggested rule to the signed-in user, on every device. The dismissal is stored against the normalized description key and the category, not against the transactions behind it, so later rows of the same payee do not bring the suggestion back. Dismissing the same pair twice changes nothing, except that two dismissals at the same moment answer the later one with 409. It is not a deletion and has no trash entry.",
         "operationId": "DismissSuggestedRule",
         "requestBody": {
           "content": {
@@ -5402,6 +5402,16 @@
           },
           "401": {
             "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The same suggestion was dismissed from another window at the same moment (conflict.duplicate).",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -8852,7 +8862,7 @@
             }
           },
           "400": {
-            "description": "Validation failed. Also goal.notManual for a goal funded from an account, and money.nonNegative when a delta would take the amount below zero.",
+            "description": "Validation failed. Also goal.notManual for a goal funded from an account, money.nonNegative when a delta would take the amount below zero, and money.invalid when it would take the amount past the largest storable amount.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -14336,6 +14346,16 @@
               }
             }
           },
+          "409": {
+            "description": "The same payee was named from another window at the same moment (conflict.busy). Try again.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
           "500": {
             "description": "Server Error",
             "content": {
@@ -15761,7 +15781,7 @@
           {
             "name": "dateFrom",
             "in": "query",
-            "description": "Inclusive start date as YYYY-MM-DD. Defaults to the start of the current month.",
+            "description": "Inclusive start date as YYYY-MM-DD, from 2000-01-01 to 2999-12-31 and not after the end date (today when dateTo is omitted). Defaults to the first day of the end date's month.",
             "schema": {
               "type": [
                 "null",
@@ -15773,7 +15793,7 @@
           {
             "name": "dateTo",
             "in": "query",
-            "description": "Inclusive end date as YYYY-MM-DD. Defaults to today.",
+            "description": "Inclusive end date as YYYY-MM-DD, from 2000-01-01 to 2999-12-31. Defaults to today.",
             "schema": {
               "type": [
                 "null",
@@ -15811,7 +15831,7 @@
             }
           },
           "400": {
-            "description": "Bad Request",
+            "description": "A date falls outside 2000-01-01 to 2999-12-31, or the start is after the end (range.invalid).",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -20897,7 +20917,7 @@
           "Attachments"
         ],
         "summary": "Attach a file to a transaction",
-        "description": "Stores one receipt or document with the transaction. Send it as multipart/form-data in the field file. JPEG, PNG, WebP and HEIC images and PDF documents are accepted, at most 10 MB each and 10 per transaction. The type is read from the file's first bytes, not trusted from the upload: a declared type that disagrees with the content is refused. The file is kept under a generated id; the name you sent is only shown back, with path parts, control characters and reserved characters removed and an extension that matches the content. On a shared account the household's activity log records the upload.",
+        "description": "Stores one receipt or document with the transaction. Send it as multipart/form-data in the field file. JPEG, PNG, WebP and HEIC images and PDF documents are accepted, at most 10 MB each and 10 per transaction. The type is read from the file's first bytes, not trusted from the upload: a declared type that disagrees with the content is refused. The file is kept under a generated id; the name you sent is only shown back, with path parts, control characters and reserved characters removed and an extension that matches the content. On a shared account the household's activity log records the upload. Rate limited to 30 calls per five minutes per client.",
         "operationId": "UploadAttachment",
         "parameters": [
           {
@@ -20974,6 +20994,9 @@
           },
           "413": {
             "description": "The request body is larger than an attachment can be."
+          },
+          "429": {
+            "description": "Too many calls from this client; wait and retry."
           },
           "500": {
             "description": "Server Error",
@@ -27269,7 +27292,8 @@
           "accounts",
           "recentTransactions",
           "upcomingBills",
-          "cashFlow"
+          "cashFlow",
+          "goals"
         ],
         "type": "string"
       },

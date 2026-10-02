@@ -1,0 +1,41 @@
+@startuml request-lifecycle
+!include style.iuml
+autonumber
+
+actor Member as U
+participant "SPA" as S
+participant "Caddy" as C
+box "api container" #fbfbfc
+participant "Auth and\nmiddleware" as A
+participant "Endpoint" as E
+participant "Validator" as V
+participant "Feature\nservice" as Svc
+participant "AppDbContext" as Db
+end box
+database "PostgreSQL" as P
+
+U -> S : submit form
+S -> C : POST /api/... with HttpOnly JWT cookie
+C -> A : reverse_proxy api:8080
+A -> A : JWT cookie or personal API token
+alt access token expired
+  A --> S : 401
+  S -> C : POST /api/auth/refresh, then retry
+end
+A -> E : user and active household
+E -> V : validate request
+alt invalid
+  V --> S : 400 problem details with error codes
+end
+E -> Svc : call through interface
+Svc -> Db : query
+Db -> P : SQL with Owner and SoftDelete filters
+P --> Db : rows
+Svc -> Db : change entities, SaveChangesAsync
+Db -> Db : audit collector, UpdatedAt stamps
+Db -> P : one transaction
+Svc --> E : Result
+E --> S : 200 JSON
+S -> S : invalidate TanStack Query keys
+S --> U : updated view
+@enduml

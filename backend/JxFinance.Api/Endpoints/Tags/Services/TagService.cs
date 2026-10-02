@@ -41,7 +41,10 @@ public sealed class TagService(
 
         var tag = request.ToEntity();
         db.Tags.Add(tag);
-        await db.SaveChangesAsync(cancellationToken);
+        if (await db.SaveOrConflictAsync(Duplicate(tag.Name), cancellationToken) is { } conflict)
+        {
+            return conflict;
+        }
 
         return tag.ToResponse();
     }
@@ -61,7 +64,10 @@ public sealed class TagService(
         }
 
         request.ApplyTo(tag);
-        await db.SaveChangesAsync(cancellationToken);
+        if (await db.SaveOrConflictAsync(Duplicate(tag.Name), cancellationToken) is { } conflict)
+        {
+            return conflict;
+        }
 
         return tag.ToResponse();
     }
@@ -128,8 +134,9 @@ public sealed class TagService(
         var name = input.NormalizedName();
         var taken = await TagNames.TakenAsync(db, ownerId, name, existing?.Id, cancellationToken);
 
-        return taken
-            ? new DomainError(ErrorCodes.ConflictDuplicate, $"You already have a tag named \"{name}\".")
-            : null;
+        return taken ? Duplicate(name) : null;
     }
+
+    private static DomainError Duplicate(string name) =>
+        new(ErrorCodes.ConflictDuplicate, $"You already have a tag named \"{name}\".");
 }

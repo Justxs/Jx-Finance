@@ -7,9 +7,9 @@ import { FormError } from "@/components/form-error/form-error";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { Button } from "@/components/ui/button/button";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
+import { RuledLine } from "@/components/ui/ruled-line/ruled-line";
 import { TitledSection } from "@/components/ui/section/section";
 import {
-  ScrollRegion,
   Table,
   TableBody,
   TableCell,
@@ -43,7 +43,7 @@ function FetchStatus({ settings }: Readonly<{ settings: MarketPriceSettingsRespo
 
   return (
     <div className="mt-5 max-w-3xl space-y-3">
-      <div className="flex flex-wrap items-center gap-x-6 gap-y-3 rounded-md bg-background px-4 py-3 text-sm">
+      <RuledLine className="flex flex-wrap items-center gap-x-6 gap-y-3">
         <p>
           <span className="text-muted-foreground">{t("settings.marketPrices.lastRun")}</span>{" "}
           <span className="font-semibold tabular-nums">
@@ -67,7 +67,7 @@ function FetchStatus({ settings }: Readonly<{ settings: MarketPriceSettingsRespo
           <RefreshCw />
           {t("settings.marketPrices.fetchNow")}
         </Button>
-      </div>
+      </RuledLine>
       <FormError error={syncMutation.error} />
     </div>
   );
@@ -83,8 +83,8 @@ function Failures({ settings }: Readonly<{ settings: MarketPriceSettingsResponse
       {settings.failures.length === 0 ? (
         <EmptyText size="sm">{t("settings.marketPrices.noFailures")}</EmptyText>
       ) : (
-        <ScrollRegion aria-label={t("settings.marketPrices.failures")} className="mt-2">
-          <Table className="min-w-120">
+        <div className="mt-2">
+          <Table label={t("settings.marketPrices.failures")} className="min-w-120">
             <TableHeader>
               <TableRow>
                 <TableHead>{t("settings.marketPrices.security")}</TableHead>
@@ -105,7 +105,7 @@ function Failures({ settings }: Readonly<{ settings: MarketPriceSettingsResponse
               ))}
             </TableBody>
           </Table>
-        </ScrollRegion>
+        </div>
       )}
     </div>
   );

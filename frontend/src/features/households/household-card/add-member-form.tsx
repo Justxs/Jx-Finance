@@ -5,7 +5,7 @@ import { HouseholdRole } from "@/api/generated/model";
 import { addMemberBodyEmailMax } from "@/api/schemas/households/households.zod";
 import { useServerForm } from "@/components/form";
 import { FormError } from "@/components/form-error/form-error";
-import { Button } from "@/components/ui/button/button";
+import { FormGrid } from "@/components/ui/form-grid/form-grid";
 import { householdRoleOptions } from "@/features/households/household-roles";
 import { silentMutation } from "@/lib/mutations";
 import { requiredEmail } from "@/lib/validation";
@@ -44,38 +44,37 @@ export function AddMemberForm({ householdId, onClose }: Readonly<Props>) {
 
   return (
     <form.AppForm>
-      <form.FormShell className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-end">
-        <form.Field name="email">
-          {(field) => (
-            <field.TextField
-              id={`member-email-${householdId}`}
-              className="flex-1"
-              placeholder={t("households.memberEmailPlaceholder")}
-            />
-          )}
-        </form.Field>
+      <form.FormShell className="space-y-4">
+        <FormGrid>
+          <form.Field name="email">
+            {(field) => (
+              <field.TextField
+                id={`member-email-${householdId}`}
+                label={t("users.email")}
+                type="email"
+                placeholder={t("households.memberEmailPlaceholder")}
+              />
+            )}
+          </form.Field>
 
-        <form.Field name="role">
-          {(field) => (
-            <field.SelectFieldControl
-              id={`member-role-${householdId}`}
-              aria-label={t("users.role")}
-              className="min-w-0"
-              fitContent
-              options={householdRoleOptions(t, ["member", "owner"])}
-            />
-          )}
-        </form.Field>
+          <form.Field name="role">
+            {(field) => (
+              <field.SelectFieldControl
+                id={`member-role-${householdId}`}
+                label={t("users.role")}
+                options={householdRoleOptions(t, ["member", "owner"])}
+              />
+            )}
+          </form.Field>
+        </FormGrid>
 
-        <Button type="button" variant="outline" size="sm" onClick={onClose}>
-          {t("actions.cancel")}
-        </Button>
+        <FormError error={addMutation.error} />
 
-        <form.SubmitButton size="sm" pending={addMutation.isPending}>
-          {t("households.addMember")}
-        </form.SubmitButton>
-
-        <FormError error={addMutation.error} className="sm:basis-full" />
+        <form.FormActions
+          pending={addMutation.isPending}
+          submitLabel={t("households.addMember")}
+          onCancel={onClose}
+        />
       </form.FormShell>
     </form.AppForm>
   );

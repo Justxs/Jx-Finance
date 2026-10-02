@@ -185,6 +185,20 @@ public sealed class AttachmentEndpointTests(ApiFixture fixture) : IntegrationTes
     }
 
     [Fact]
+    public async Task Uploading_is_rate_limited_per_client()
+    {
+        using var member = await CreateUserClientAsync();
+        var transaction = await NewTransactionAsync(member);
+
+        for (var attempt = 1; attempt <= 30; attempt++)
+        {
+            Assert.Equal(HttpStatusCode.BadRequest, (await PostEmptyFileAsync(member, transaction)).StatusCode);
+        }
+
+        Assert.Equal(HttpStatusCode.TooManyRequests, (await PostEmptyFileAsync(member, transaction)).StatusCode);
+    }
+
+    [Fact]
     public async Task A_removed_file_goes_to_the_trash_stays_on_disk_and_comes_back()
     {
         using var member = await CreateUserClientAsync();
@@ -447,6 +461,12 @@ public sealed class AttachmentEndpointTests(ApiFixture fixture) : IntegrationTes
         return (await response.Content.ReadFromJsonAsync<AttachmentDto>())!;
     }
 
+    private static async Task<HttpResponseMessage> PostEmptyFileAsync(HttpClient client, Guid transactionId)
+    {
+        using var content = new MultipartFormDataContent { { new ByteArrayContent([]), "file", "empty.png" } };
+        return await client.PostAsync($"/api/transactions/{transactionId}/attachments", content);
+    }
+
     private static async Task<HttpResponseMessage> UploadAsync(HttpClient client, Guid transactionId, byte[] file, string name, string? contentType)
     {
         using var content = new MultipartFormDataContent();
@@ -457,7 +477,9 @@ public sealed class AttachmentEndpointTests(ApiFixture fixture) : IntegrationTes
         }
 
         content.Add(fileContent, "file", name);
-        return await client.PostAsync($"/api/transactions/{transactionId}/attachments", content);
+        using var request = new HttpRequestMessage(HttpMethod.Post, $"/api/transactions/{transactionId}/attachments") { Content = content };
+        request.Headers.Add("X-Forwarded-For", Guid.NewGuid().ToString());
+        return await client.SendAsync(request);
     }
 
     private sealed record AttachmentDto(

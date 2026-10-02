@@ -68,7 +68,7 @@ export function ComboboxField<T extends string>({
           <Combobox.Positioner align="start" sideOffset={4} className="isolate z-50">
             <Combobox.Popup
               aria-label={ariaLabel}
-              className="flex max-h-[min(24rem,var(--available-height))] w-(--anchor-width) min-w-56 origin-(--transform-origin) flex-col overflow-hidden rounded-lg bg-popover text-popover-foreground shadow-md ring-1 ring-foreground/10 duration-100 data-ending-style:opacity-0 data-starting-style:opacity-0"
+              className="flex max-h-[min(24rem,var(--available-height))] w-(--anchor-width) min-w-56 origin-(--transform-origin) flex-col overflow-hidden rounded-lg bg-popover text-popover-foreground shadow-md ring-1 ring-foreground/10 duration-quick data-ending-style:opacity-0 data-starting-style:opacity-0"
             >
               <div className="relative border-b">
                 <Search

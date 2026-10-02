@@ -151,7 +151,7 @@ export function ConversionsSection({
       {content}
       <EditModal
         item={items.find((conversion) => conversion.id === editTarget) ?? null}
-        title={t("conversions.editTitle")}
+        title={(conversion) => `${t("conversions.editTitle")}: ${amounts(conversion)}`}
         onClose={() => setEditTarget(null)}
       >
         {(conversion, close) => (

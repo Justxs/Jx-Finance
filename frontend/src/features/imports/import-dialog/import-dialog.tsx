@@ -92,7 +92,6 @@ export function ImportDialog({ open, onOpenChange, accounts, initialAccountId }:
         <Button
           variant="outline"
           size="sm"
-          className="-ml-2"
           onClick={() =>
             confirmDiscard(() => {
               setProvider(null);

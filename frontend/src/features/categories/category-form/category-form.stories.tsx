@@ -13,6 +13,7 @@ import {
   pending,
   withHandlers,
 } from "@/storybook/handlers";
+import { chooseOption } from "@/storybook/interactions";
 import { CategoryForm } from "./category-form";
 
 const personalCategory = categories.find((item) => item.id === ids.categories.food)!;
@@ -39,6 +40,18 @@ export const GroupUnderAParent: Story = {
     const parent = await canvas.findByRole("combobox", { name: "Group under" });
     await expect(parent).toHaveTextContent("No group (top level)");
     await expect(canvas.getByText(/include its sub-categories/u)).toBeVisible();
+  },
+};
+
+export const ChangingTheTypeClearsTheGroup: Story = {
+  play: async ({ canvas }) => {
+    const parent = await canvas.findByRole("combobox", { name: "Group under" });
+    await chooseOption(parent, "Transportas");
+    await expect(parent).toHaveTextContent("Transportas");
+
+    await userEvent.click(canvas.getByRole("radio", { name: "Income" }));
+
+    await expect(parent).toHaveTextContent("No group (top level)");
   },
 };
 

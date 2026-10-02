@@ -18,7 +18,6 @@ import { chargeSign } from "@/features/investments/investment-types";
 import { useDeferredParams } from "@/hooks/use-deferred-params";
 import { useExportUrl } from "@/hooks/use-export-url";
 import { nameById } from "@/lib/options";
-import { gainTone } from "@/lib/tone";
 import { TaxAccountPicker } from "./tax-account-picker";
 import { TaxCashTable } from "./tax-cash-table";
 import { TaxDisposalsTable } from "./tax-disposals-table";
@@ -55,7 +54,6 @@ export function TaxSummarySection({ accounts }: Readonly<Props>) {
       value: summary.totals.realizedGain,
       sign: "auto",
       lead: true,
-      tone: gainTone(Number(summary.totals.realizedGain)),
     },
     { key: "investments.tax.dividends", value: summary.totals.dividends },
     { key: "investments.tax.interest", value: summary.totals.interest },

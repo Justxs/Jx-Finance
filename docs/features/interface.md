@@ -15,6 +15,9 @@ flowchart TD
     Pref --> Prompt["monthClosePromptHidden: the yyyy-MM month whose dashboard close prompt was put off"]
     Pref --> Size["pageSize: 10, 20, 50 or 100 ledger rows, absent means the installation default"]
     Pref --> Amounts["amountsHidden: money amounts shown as •••••"]
+    Pref --> Pace["paceMilestones: the net worth milestones to date"]
+    End["Session ends: sign out, restore or expiry"] --> Forget["forgetUserPreferences: activeHouseholdId, lastAccountId, commandRecents, paceMilestones, monthClosePromptHidden removed"]
+    Forget --> Pref
     Init["public/theme-init.js, before the bundle"] --> Html["class dark and data-* attributes on html, no flash"]
     Theme --> Html
     Palette --> Html
@@ -27,6 +30,8 @@ flowchart TD
 Since 2026-09-30 `pageSize` in this row sets how many rows a ledger page holds. Settings › Personal › Appearance ends with a "Ledger" section whose "Rows per page" offers "Installation default (20)", with the administrator's number, and 10, 20, 50 and 100; the default removes the key. The ledger page, its pending skeleton and the route loader's prefetch all read `pageSize ?? defaultPageSize`, so the warmed query is the one the page asks for, and any other stored value parses as absent. It is per browser, like the text size, because the right number depends on the screen.
 
 The language is read from `locale` in this row, per browser, and falls back to the installation default. Since 2026-09-29 `setLocale` also saves a signed-in member's pick on the server with `PUT /api/users/me/language`, ignoring a failure, so that email and Discord messages reach them in the language they read; the root route's loader sends an earlier pick once when the profile has no language yet. The server copy is never read back into the interface. See [Monthly digest](monthly-digest.md#the-members-language).
+
+Since 2026-10-01 the row splits into the device's choices and the signed-in member's. `endSession` in `src/lib/auth-gate.ts` is the one way a session ends in the browser: sign out from the account menu or the command palette, a backup restore, and the client's expired-session handler all call it. It calls `forgetUserPreferences` from `src/stores/preferences.ts` before it clears the query cache, which removes `activeHouseholdId`, `lastAccountId`, `commandRecents`, `paceMilestones` and `monthClosePromptHidden`. The next person to sign in on a shared computer starts from Everything, with no recents, milestones, quick add account or put-off close prompt of the last one. The theme, palette, font, text size, sidebar, language, rows per page and hidden amounts belong to the device and stay. Nothing is written when the browser has no stored row yet.
 
 Two more collections sit beside the preferences row and follow the same rules: a zod schema per row, an explicit storage key, the same in-memory fallback, and the same cross-tab updates. They hold the saved ledger filters and the transaction templates described in [Transactions](transactions.md). Unlike `jx-preferences` they are lists, so each row carries its own id and name; nothing in them ever reaches the server.
 
@@ -82,7 +87,7 @@ Every page in the main navigation is a row of `navPages` in `lib/navigation.ts`,
 
 `navEntries` in `lib/navigation.ts` folds the visible pages into one entry per hub, in the order of the table. The entry links to the hub's first visible page and is marked current when the path is inside any of its pages (`isPathIn`, so `/net-worth/debts/…` keeps Wealth current). A tabbed hub with a single visible page, such as Wealth with investments switched off, shows that page's own name and icon instead of the hub's. For a user the sidebar reads Dashboard, Transactions, Accounts, Categories, Plan, Wealth and Reports, with Settings at the bottom (`mt-auto`); the phone header and navigation strip, `MobileNav` in `components/app-sidebar/mobile-nav.tsx`, are built from the same entries. `useVisibleNav` in `src/hooks` gives both the pages the user may see, and `isPageEnabled` in `lib/navigation.ts` is the one feature-switch check that the sidebar and the hub tabs share. The user tile in the sidebar foot opens `AccountMenu` (`components/account-menu`): the profile, the language, the theme and whether amounts are hidden with their current values, keyboard shortcuts and sign-out. The phone header shows the same menu behind the initials.
 
-`useHubTabs` in `components/hub-tabs` looks up the current path. When it is exactly a page of a tabbed hub and the hub has more than one visible page, `PageHeader` shows the hub's name in the `h1` instead of the page title, draws `HubTabs` (links with the page icons, `aria-current="page"` on the current one, `preload="render"` so the sibling tabs' code and queries load as soon as the strip appears) under the title row and drops the page's description line. Sub-routes such as `/net-worth/debts/$debtId` are not pages of a hub and keep their own title. Settings is not tabbed: its pages share `SettingsLayout` and a grouped section nav, described in [Installation settings](installation-settings.md#one-settings-page).
+`useHubTabs` in `components/hub-tabs` looks up the current path. When it is exactly a page of a tabbed hub and the hub has more than one visible page, `PageHeader` shows the hub's name in the `h1` instead of the page title, draws `HubTabs` (links with the page icons, `aria-current="page"` on the current one, `preload="render"` so the sibling tabs' code and queries load as soon as the strip appears) under the title row, styled with the `tabsListClass` and `tabsTabClass` that `TabsList` uses, in one row that scrolls sideways rather than wrapping, and drops the page's description line. Sub-routes such as `/net-worth/debts/$debtId` are not pages of a hub and keep their own title. Settings is not tabbed: its pages share `SettingsLayout` and a grouped section nav, described in [Installation settings](installation-settings.md#one-settings-page).
 
 Routes, URLs and shortcuts did not change with the hubs: `/budgets` is still `/budgets`, and `g b` still opens it. The shortcuts and the command palette read the page tables, not the entries, so the palette still lists every page, including `/profile`, whether or not the page has its own sidebar entry.
 
@@ -155,7 +160,7 @@ flowchart TD
     Kind -->|"theme, language or amounts"| Pref["savePreferences, the same call the account menu and Appearance make"]
     Kind -->|"active household"| Scope["setActiveHousehold, then every query is invalidated"]
     Kind -->|"back up now"| Backup["POST /api/backups, with a toast"]
-    Kind -->|"sign out"| Out["POST /api/auth/logout, clear the cache, go to /login"]
+    Kind -->|"sign out"| Out["POST /api/auth/logout, forget the member's preferences, clear the cache, go to /login"]
     Kind -->|"quick add"| Quick["Pick the category, then /transactions?new=true with the draft in history state"]
 ```
 

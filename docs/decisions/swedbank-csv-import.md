@@ -37,6 +37,9 @@ Newest first. Each entry is a choice between real alternatives: what was chosen,
 - **2026-10-01.** Decided while the owner was away, to be reviewed. Each accepted file raises one `importWaiting` notification for the account's owner, through `INotificationPublisher`, linking to Settings › Personal › Import and export
   - Rejected: One summary notification per pass; no notification
   - Why: A statement arrives rarely, a few a month, and the file name in the title is what the member needs to recognise it; going through the publisher lets a member choose email or Discord for it like any other kind
+- **2026-10-01.** A mapped CSV's closing balance is the newest entry's: the first date that differs from the first row's tells a newest-first file from an oldest-first one, and on a file of one day the first two balances do, falling back to the last row when they cannot tell
+  - Rejected: Comparing only the first and last rows' dates; always the last row when the dates cannot tell
+  - Why: A newest-first export of a single day has equal first and last dates, and taking its last row recorded the balance after the day's oldest entry as the reconciliation. The running balance is in the file already and says which row came last
 - **2026-09-29.** Decided while the owner was away; review it. Credit cards get no `AccountType.CreditCard`: a card is an account of type Other with a negative starting balance, imported through a mapping with the "Card statement" amount style, and paying it is a transfer. Superseded on 2026-10-01: cards have their own type
   - Rejected: A card account type shown as a liability in net worth and preselecting the card amount style
   - Why: Balances are already signed, so net worth counts a card's debt correctly without a type; a type would change the icon and label, and a migration plus a new enum value is not the least code for that. This was the plan's open question; the conservative answer was taken

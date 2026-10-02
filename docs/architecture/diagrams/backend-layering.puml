@@ -1,0 +1,29 @@
+@startuml backend-layering
+!include style.iuml
+hide empty members
+
+class "FeatureEndpoint" as endpoint <<Endpoints/Tag/Operation>> {
+  thin, never touches AppDbContext
+}
+interface "IFeatureService" as iface <<Endpoints/Tag/Interfaces>>
+class "FeatureService" as service <<Endpoints/Tag/Services>>
+class "PeriodicJob subclass" as job <<Infrastructure/BackgroundJobs>>
+interface "INotificationPublisher" as pub <<Common/Notifications>> {
+  only writer of notifications
+}
+class "AppDbContext" as ctx <<Infrastructure/Data>> {
+  Owner and SoftDelete query filters
+}
+package "Domain" <<no framework references>> {
+  class "Entities, Money, Result" as entities
+}
+
+endpoint ..> iface : calls
+job ..> iface : calls
+service ..|> iface
+service ..> ctx
+service ..> pub
+service ..> entities
+pub ..> ctx
+ctx ..> entities
+@enduml

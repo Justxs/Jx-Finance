@@ -13,10 +13,10 @@ public static class PriceSyncRules
     private const string GreatBritishPence = "GBX";
     private const decimal PencePerPound = 100m;
 
-    public static DateOnly Target(DateOnly today)
+    public static DateOnly Target(DateOnly today, PriceSource source)
     {
         var day = today.AddDays(-1);
-        while (day.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday)
+        while (source != PriceSource.Kraken && day.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday)
         {
             day = day.AddDays(-1);
         }
@@ -36,7 +36,7 @@ public static class PriceSyncRules
             return false;
         }
 
-        if (security.LastPriceDate is { } last && last >= Target(clock.Today))
+        if (security.LastPriceDate is { } last && last >= Target(clock.Today, security.PriceSource))
         {
             return false;
         }

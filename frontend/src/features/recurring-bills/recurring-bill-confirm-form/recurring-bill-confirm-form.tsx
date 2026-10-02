@@ -62,7 +62,7 @@ export function RecurringBillConfirmForm({ bill, accounts, onClose }: Readonly<P
   const sentence = {
     name: bill.name,
     date: formatDate(bill.nextDueDate),
-    amount: bill.amount ? money.format(Number(bill.amount)) : "",
+    amount: bill.amount ? money.format(Number(bill.amount), fromAccount?.currency) : "",
     from: fromAccount?.name ?? "",
     to: toAccount?.name ?? "",
   };
