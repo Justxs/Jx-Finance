@@ -76,6 +76,70 @@ public sealed class ReceiptReadingTests(ApiFixture fixture) : IntegrationTestBas
     }
 
     [Fact]
+    public async Task A_tall_screenshot_is_read_one_part_at_a_time()
+    {
+        Reader.Reset();
+        using var member = await CreateUserClientAsync();
+        using var screenshot = new MagickImage(new MagickColor("#f4f1ea"), 400, 1500);
+
+        var reading = await ReadOkAsync(await ReadUploadAsync(member, screenshot.ToByteArray(MagickFormat.Png), "image/png", "screenshot.png"));
+
+        Assert.Equal(4, Reader.Calls.Count);
+        Assert.All(Reader.Calls, part => Assert.Equal(MagickFormat.Png, new MagickImageInfo(part).Format));
+        Assert.Equal("MAXIMA LT, UAB", reading.Result.Merchant);
+    }
+
+    [Fact]
+    public async Task A_scanned_pdf_is_read_through_the_engine_where_ghostscript_renders_it()
+    {
+        Reader.Reset();
+        using var member = await CreateUserClientAsync();
+        var scan = SampleReceiptPdf.Scanned(blankPagesAfter: 1);
+
+        var response = await ReadUploadAsync(member, scan, "application/pdf", "scan.pdf");
+
+        if (SampleReceiptPdf.CanRender(scan))
+        {
+            var reading = await ReadOkAsync(response);
+            Assert.Single(Reader.Calls);
+            Assert.Equal((2, 2), (reading.Result.PagesRead, reading.Result.PageCount));
+        }
+        else
+        {
+            await AssertProblemAsync(response, HttpStatusCode.BadRequest, ErrorCodes.ReceiptPdfWithoutText);
+            Assert.Empty(Reader.Calls);
+        }
+    }
+
+    [Fact]
+    public async Task An_html_receipt_is_read_without_the_engine_and_never_stored()
+    {
+        Reader.Reset();
+        Reader.IsAvailable = false;
+        using var member = await CreateUserClientAsync();
+        var html = System.Text.Encoding.UTF8.GetBytes($"""
+            <html><body>
+              <div style="display:none">Ačiū {Guid.NewGuid():N}</div>
+              <h1>RIMI LIETUVA</h1><p>2026-09-20 11:05</p>
+              <table>
+                <tr><td>Makaronai 500 g</td><td>0,99 A</td></tr>
+                <tr><td>Kefyras 500 g</td><td>1,09 A</td></tr>
+                <tr><td>IŠ VISO</td><td>2,08</td></tr>
+              </table>
+            </body></html>
+            """);
+
+        var reading = await ReadOkAsync(await ReadUploadAsync(member, html, "application/octet-stream", "kvitas.html"));
+
+        Assert.Equal(("RIMI LIETUVA", "2.08"), (reading.Result.Merchant, reading.Result.Total));
+        Assert.Equal(["Makaronai 500 g", "Kefyras 500 g"], reading.Result.Items.Select(i => i.Name));
+        Assert.Empty(Reader.Calls);
+        var sha = Convert.ToHexStringLower(SHA256.HashData(html));
+        Assert.False(await WithDbAsync(db => db.TransactionAttachments.IgnoreQueryFilters()
+            .AnyAsync(a => a.Sha256 == sha, TestContext.Current.CancellationToken)));
+    }
+
+    [Fact]
     public async Task Reading_an_attachment_answers_the_items_with_the_callers_rule_categories()
     {
         Reader.Reset();

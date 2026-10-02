@@ -45,6 +45,42 @@ public sealed class ReceiptImageTests
     }
 
     [Fact]
+    public void A_tall_screenshot_is_cut_into_several_parts_each_as_wide_as_tesseract_reads_best()
+    {
+        using var photo = new MagickImage(new MagickColor("#d8d2c0"), 400, 1500);
+
+        var prepared = ReceiptImage.Prepare(photo.ToByteArray(MagickFormat.Png), AttachmentContent.Png).Value!;
+
+        var parts = Assert.Single(prepared.Pages).Select(bytes => new MagickImage(bytes)).ToList();
+        Assert.Equal([2000u, 2000u, 2000u, 450u], parts.Select(part => part.Height));
+        Assert.All(parts, part => Assert.Equal((uint)ReceiptImage.OcrWidth, part.Width));
+        parts.ForEach(part => part.Dispose());
+    }
+
+    [Fact]
+    public void A_scanned_pdf_page_is_rendered_like_a_photo_and_a_white_page_is_skipped()
+    {
+        var scan = SampleReceiptPdf.Scanned(blankPagesAfter: 1);
+        Assert.SkipUnless(SampleReceiptPdf.CanRender(scan), "Ghostscript is not installed where the tests run.");
+
+        var prepared = ReceiptImage.Prepare(scan, AttachmentContent.Pdf).Value!;
+
+        Assert.Null(prepared.Text);
+        Assert.Equal((2, 2), (prepared.PagesRead, prepared.PageCount));
+        using var page = new MagickImage(Assert.Single(Assert.Single(prepared.Pages)));
+        Assert.Equal((uint)ReceiptImage.OcrWidth, page.Width);
+    }
+
+    [Fact]
+    public void Without_ghostscript_a_scanned_pdf_answers_pdf_without_text()
+    {
+        var scan = SampleReceiptPdf.Scanned();
+        Assert.SkipWhen(SampleReceiptPdf.CanRender(scan), "Ghostscript is installed where the tests run.");
+
+        Assert.Equal(ErrorCodes.ReceiptPdfWithoutText, ReceiptImage.Prepare(scan, AttachmentContent.Pdf).ErrorCode);
+    }
+
+    [Fact]
     public void A_tiny_photo_is_refused()
     {
         using var photo = new MagickImage(MagickColors.White, 150, 600);
