@@ -121,7 +121,7 @@ public sealed class SharedPlanTests(ApiFixture fixture) : IntegrationTestBase(fi
 
         var goalsBefore = await pair.PartnerClient.GetFromJsonAsync<List<IdDto>>("/api/goals", TestContext.Current.CancellationToken);
         var billsBefore = await pair.PartnerClient.GetFromJsonAsync<List<IdDto>>("/api/recurring-bills", TestContext.Current.CancellationToken);
-        (await pair.OwnerClient.DeleteAsync($"/api/households/{pair.HouseholdId}", TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
+        (await Client.DeleteAsync($"/api/households/{pair.HouseholdId}", TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
         var goalsAfter = await pair.PartnerClient.GetFromJsonAsync<List<IdDto>>("/api/goals", TestContext.Current.CancellationToken);
         var ownerGoals = await pair.OwnerClient.GetFromJsonAsync<List<IdDto>>("/api/goals", TestContext.Current.CancellationToken);
 
