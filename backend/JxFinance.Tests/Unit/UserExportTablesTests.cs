@@ -25,6 +25,15 @@ public sealed partial class UserExportTablesTests
     }
 
     [Fact]
+    public async Task The_import_inbox_is_left_out_of_backups_and_the_member_download()
+    {
+        await using var db = ModelWithPasskeys();
+
+        Assert.False(BackupDatabase.ReadShapes(db).Single(t => t.Name == "ImportInboxFiles").Exported);
+        Assert.Null(UserExportTables.Condition("ImportInboxFiles"));
+    }
+
+    [Fact]
     public async Task No_exported_column_is_named_like_a_secret()
     {
         await using var db = ModelWithPasskeys();
