@@ -56,7 +56,8 @@ public sealed class ContactTests(ApiFixture fixture) : IntegrationTestBase(fixtu
         using var pair = await CreateHouseholdPairAsync();
         var jonas = await ContactAsync(pair.OwnerClient, "Jonas");
         var shared = await CreateAccountAsync(householdId: pair.HouseholdId, client: pair.OwnerClient);
-        var housematesRow = await ExpenseAsync(pair.PartnerClient, shared, "20.00", "Paid by the partner");
+        var partners = await CreateAccountAsync(householdId: pair.HouseholdId, client: pair.PartnerClient);
+        var housematesRow = await ExpenseAsync(pair.PartnerClient, partners, "20.00", "Paid by the partner");
         var mine = await ExpenseAsync(pair.OwnerClient, shared, "20.00", "Paid by the owner");
         var income = (await CreateTransactionAsync(pair.OwnerClient, shared, null, "income", "20.00", "2026-09-10")).Id;
 
