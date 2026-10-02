@@ -160,6 +160,8 @@ public sealed class UserJournalSource(AppDbContext db, IExchangeRateService rate
         {
             var positions = new Dictionary<SecurityId, Position>();
             var costCurrencies = new Dictionary<SecurityId, Currency>();
+            List<Position.Lot> LotsOf(SecurityId id) => positions.TryGetValue(id, out var held) ? [.. held.Lots] : [];
+
             foreach (var entry in Portfolio.InOrder(account))
             {
                 var security = entry.SecurityId;
@@ -172,7 +174,7 @@ public sealed class UserJournalSource(AppDbContext db, IExchangeRateService rate
                 }
 
                 var moved = Portfolio.CorporateActionTypes.Contains(entry.Type) ? Portfolio.SecuritiesOf(entry).ToList() : [];
-                var movedBefore = moved.Select(id => positions.TryGetValue(id, out var held) ? held.Lots.ToList() : []).ToList();
+                var movedBefore = moved.Select(LotsOf).ToList();
                 Portfolio.Apply(positions, entry);
                 if (entry.RelatedSecurityId is { } successor && security is { } source && costCurrencies.TryGetValue(source, out var carried))
                 {
@@ -181,7 +183,7 @@ public sealed class UserJournalSource(AppDbContext db, IExchangeRateService rate
 
                 List<JournalLotChange>? lotChanges = moved.Count == 0
                     ? null
-                    : [.. moved.Select((id, index) => new JournalLotChange(id.Value, movedBefore[index], [.. positions[id].Lots]))];
+                    : [.. moved.Select((id, index) => new JournalLotChange(id.Value, movedBefore[index], LotsOf(id)))];
                 var sale = entry.Type == InvestmentTransactionType.Sell && security is { } sold ? positions[sold].Sales[^1] : null;
                 entries.Add(new JournalInvestment(
                     entry.Id.Value,

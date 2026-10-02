@@ -14,6 +14,7 @@ public static partial class FlexParser
     public const string ReverseSplit = "RS";
     public const string IssueChange = "IC";
     public const string Merger = "TC";
+    public const string SpinOff = "SO";
 
     private static readonly string[] DateInputFormats = ["yyyyMMdd", DateFormats.IsoDate];
     private static readonly string[] SummaryTradeRows = ["ORDER", "CLOSED_LOT", "SYMBOL_SUMMARY", "ASSET_SUMMARY", "WASH_SALE"];
@@ -141,8 +142,18 @@ public static partial class FlexParser
             SplitRatio(actionDescription) ?? SplitRatio(description),
             actionDescription ?? description,
             Number(node, "proceeds") ?? 0m,
-            Number(node, "value") ?? 0m);
+            Number(node, "value") ?? 0m,
+            SourceIsin(actionDescription) ?? SourceIsin(description));
     }
+
+    private static string? SourceIsin(string? description)
+    {
+        var match = description is null ? Match.Empty : SourceTerms().Match(description);
+        return match.Success ? match.Groups[1].Value.ToUpperInvariant() : null;
+    }
+
+    [GeneratedRegex(@"^\s*[^\s(]+\(([A-Za-z]{2}[A-Za-z0-9]{9}[0-9])\)", RegexOptions.CultureInvariant)]
+    private static partial Regex SourceTerms();
 
     private static decimal? SplitRatio(string? description)
     {

@@ -159,6 +159,7 @@ public sealed class StatementImport(
                     FlexParser.ForwardSplit or FlexParser.ReverseSplit => BookSplit(rows, reference),
                     FlexParser.IssueChange => BookSymbolChange(rows, reference),
                     FlexParser.Merger => await BookMergerAsync(rows, reference, cancellationToken),
+                    FlexParser.SpinOff => BookSpinOff(rows, reference),
                     _ => false,
                 };
             if (booked.IsFailure)
@@ -300,6 +301,44 @@ public sealed class StatementImport(
             return error;
         }
 
+        counts.CorporateActions++;
+        return true;
+    }
+
+    private bool BookSpinOff(List<FlexCorporateAction> rows, string reference)
+    {
+        var arriving = rows.Where(r => r.Quantity > 0m).ToList();
+        if (arriving.Count == 0 || arriving[0].SourceIsin is not { } parentIsin)
+        {
+            return false;
+        }
+
+        var currency = arriving[0].Instrument.Currency;
+        var parent = renamedIsins.GetValueOrDefault((parentIsin, currency))
+            ?? securities.FirstOrDefault(s => s.Isin == parentIsin && s.Currency == currency);
+        if (parent is null || Find(arriving[0].Instrument) == parent)
+        {
+            return false;
+        }
+
+        var child = Resolve(arriving[0].Instrument);
+        if (!entryRefs.Add(reference))
+        {
+            counts.Duplicates++;
+            return true;
+        }
+
+        AddEntry(
+            reference,
+            InvestmentTransactionType.SpinOff,
+            parent,
+            arriving[0].Date,
+            new Money(0m, parent.Currency),
+            0m,
+            arriving[0].Description,
+            related: child,
+            relatedQuantity: arriving.Sum(r => r.Quantity));
+        counts.CostSharesMissing.Add(child.Symbol);
         counts.CorporateActions++;
         return true;
     }

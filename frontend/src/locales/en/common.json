@@ -1751,6 +1751,7 @@
       "splitRatio": "{{ratio}} for 1",
       "movedTo": "{{quantity}} to {{symbol}}",
       "mergedInto": "{{quantity}} into {{received}} {{symbol}}",
+      "spunOff": "{{received}} {{symbol}} received",
       "costShareMissing": "Cost share not set",
       "costShareMissingHint": "Correct the entry to set how much of the cost moved to the new shares.",
       "noCash": "No cash"
@@ -1764,7 +1765,8 @@
       "fee": "Fee",
       "split": "Split",
       "symbolChange": "Symbol change",
-      "merger": "Merger"
+      "merger": "Merger",
+      "spinOff": "Spin-off"
     },
     "securityTypes": {
       "stock": "Stock",
@@ -1797,7 +1799,10 @@
       "cashReceivedHint": "Leave empty when the merger paid in shares only.",
       "costShare": "Cost carried into the new shares (%)",
       "costShareHint": "The rest of the cost is set against the cash as a disposal. The merger documents state the split.",
-      "costShareOnly": "This entry was imported. Only the share of the cost carried into the new shares can be set here.",
+      "costShareOnly": "This entry was imported. Only the share of the cost that moves to the new security can be set here.",
+      "spunOffSecurity": "New security",
+      "spinOffCostShare": "Cost moved to the new security (%)",
+      "spinOffCostShareHint": "The issuer publishes this allocation. The lots keep their purchase dates. Leave it empty to set it later; until then the new shares count at no cost.",
       "price": "Price per share",
       "priceIn": "Price per share ({{currency}})",
       "fee": "Fee (optional)",

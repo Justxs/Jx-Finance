@@ -161,7 +161,7 @@ export const SyncBrokerConnectionResponse = zod.object({
 });
 
 /**
- * Reads the Trades, Cash Transactions, Corporate Actions and Open Positions sections of a Flex Query XML report. Stock, ETF and fund trades become buys and sells; currency trades become in-account conversions; dividends, withholding tax, interest and fees become cash entries; forward and reverse splits become split entries with the ratio as new shares per old share; an issue change (IC) to another symbol becomes a symbol change that carries the holding to the new security, and a merger (TC) a merger entry with the cash proceeds and the shares received, both counted in corporateActions; a merger paid in shares and cash takes its cost share from the value of the shares received and, without one, lists the received security in costSharesMissing; open positions update last prices. Deposits and withdrawals become transfers when a funding account is given and are skipped otherwise. Every entry is matched by its broker id, so importing overlapping periods never duplicates. The import is all or nothing. Other corporate actions (spin-offs, stock dividends, rights, tender offers) are not booked: they are counted in skipped and listed per type in skippedCorporateActions. When the report has an Open Positions section, positionMismatches lists every security whose quantity replayed from the entries differs from the quantity the broker reports, which is how an action that was not booked becomes visible; it is null when the report has no Open Positions section.
+ * Reads the Trades, Cash Transactions, Corporate Actions and Open Positions sections of a Flex Query XML report. Stock, ETF and fund trades become buys and sells; currency trades become in-account conversions; dividends, withholding tax, interest and fees become cash entries; forward and reverse splits become split entries with the ratio as new shares per old share; an issue change (IC) to another symbol becomes a symbol change that carries the holding to the new security, and a merger (TC) a merger entry with the cash proceeds and the shares received, both counted in corporateActions; a merger paid in shares and cash takes its cost share from the value of the shares received and, without one, lists the received security in costSharesMissing; a spin-off (SO) whose parent the description names by ISIN becomes a spin-off entry with the new shares at no cost, also listed in costSharesMissing, because the report carries no cost allocation; open positions update last prices. Deposits and withdrawals become transfers when a funding account is given and are skipped otherwise. Every entry is matched by its broker id, so importing overlapping periods never duplicates. The import is all or nothing. Other corporate actions (stock dividends, rights issues, tender offers, delistings) are not booked: they are counted in skipped and listed per type in skippedCorporateActions. When the report has an Open Positions section, positionMismatches lists every security whose quantity replayed from the entries differs from the quantity the broker reports, which is how an action that was not booked becomes visible; it is null when the report has no Open Positions section.
  * @summary Import an Interactive Brokers Flex Query report
  */
 export const ImportBrokerReportBody = zod.object({
@@ -992,6 +992,7 @@ export const TaxSummaryResponse = zod.object({
         "split",
         "symbolChange",
         "merger",
+        "spinOff",
       ]),
       date: zod.iso.date(),
       accountId: zod.uuid(),
@@ -1077,6 +1078,7 @@ export const TaxSummaryResponse = zod.object({
         "split",
         "symbolChange",
         "merger",
+        "spinOff",
       ]),
       symbol: zod.string().nullable(),
       description: zod.string().nullable(),
@@ -1129,7 +1131,7 @@ export const TaxSummaryResponse = zod.object({
 export const ExportTaxSummaryResponse = zod.unknown();
 
 /**
- * Buys and sells need a security, quantity and price, and move quantity times price plus or minus the fee in the security's currency. Dividends, withholding tax, interest and fees need an amount. A split needs a security and a ratio in Quantity and moves no cash. A symbol change needs the security the holding leaves, the one it moves to in RelatedSecurityId, in the same currency, and the shares moved in Quantity; the oldest lots move with their cost and acquisition dates and no cash moves. A merger needs the security taken over and the shares given up in Quantity, and either the cash received in Amount, the security received in RelatedSecurityId with its shares in RelatedQuantity, or both; with both, CostShare is the percentage of the cost basis carried into the new shares and the rest is set against the cash as a disposal. The cash effect lands on the account's balance in that currency and never counts as income or expense in reports or budgets.
+ * Buys and sells need a security, quantity and price, and move quantity times price plus or minus the fee in the security's currency. Dividends, withholding tax, interest and fees need an amount. A split needs a security and a ratio in Quantity and moves no cash. A symbol change needs the security the holding leaves, the one it moves to in RelatedSecurityId, in the same currency, and the shares moved in Quantity; the oldest lots move with their cost and acquisition dates and no cash moves. A merger needs the security taken over and the shares given up in Quantity, and either the cash received in Amount, the security received in RelatedSecurityId with its shares in RelatedQuantity, or both; with both, CostShare is the percentage of the cost basis carried into the new shares and the rest is set against the cash as a disposal. A spin-off needs the parent security, the new security in RelatedSecurityId and its shares in RelatedQuantity; CostShare, the percentage of the parent's cost basis that moves to the new security, may be left out and set later, and counts as 0 until then. The cash effect lands on the account's balance in that currency and never counts as income or expense in reports or budgets.
  * @summary Record an investment transaction
  */
 
@@ -1157,6 +1159,7 @@ export const CreateInvestmentTransactionBody = zod.object({
     "split",
     "symbolChange",
     "merger",
+    "spinOff",
   ]),
   date: zod.iso.date(),
   securityId: zod.uuid().nullish(),
@@ -1223,17 +1226,17 @@ export const CreateInvestmentTransactionBody = zod.object({
     .uuid()
     .nullish()
     .describe(
-      "For a symbol change: the security the holding moves to; for a merger: the security received.",
+      "For a symbol change: the security the holding moves to; for a merger: the security received; for a spin-off: the new security.",
     ),
   relatedQuantity: zod
     .stringFormat("decimal", createInvestmentTransactionBodyRelatedQuantityRegExp)
     .nullish()
-    .describe("For a merger: the shares of the security received."),
+    .describe("For a merger or a spin-off: the shares of the security received."),
   costShare: zod
     .stringFormat("decimal", createInvestmentTransactionBodyCostShareRegExp)
     .nullish()
     .describe(
-      "For a merger paid in shares and cash: the percentage of the cost basis carried into the new shares, 0 to 100.",
+      "For a merger paid in shares and cash, or a spin-off: the percentage of the cost basis carried into the new shares, 0 to 100.",
     ),
 });
 
@@ -1269,6 +1272,7 @@ export const CreateInvestmentTransactionResponse = zod.object({
     "split",
     "symbolChange",
     "merger",
+    "spinOff",
   ]),
   date: zod.iso.date(),
   quantity: zod.stringFormat("decimal", createInvestmentTransactionResponseQuantityRegExp),
@@ -1361,6 +1365,7 @@ export const InvestmentTransactionsResponse = zod.object({
         "split",
         "symbolChange",
         "merger",
+        "spinOff",
       ]),
       date: zod.iso.date(),
       quantity: zod.stringFormat("decimal", investmentTransactionsResponseItemsItemQuantityRegExp),
@@ -1426,7 +1431,7 @@ export const InvestmentTransactionsResponse = zod.object({
 export const DeleteInvestmentTransactionResponse = zod.void();
 
 /**
- * Replaces every field of an entry that was recorded by hand, under the same rules as recording one. Entries imported from a broker are corrected at the broker and imported again, except that the CostShare of an imported merger paid in shares and cash can be set here; the rest of the body is then ignored. A correction that would leave a later sale without enough shares is refused.
+ * Replaces every field of an entry that was recorded by hand, under the same rules as recording one. Entries imported from a broker are corrected at the broker and imported again, except that the CostShare of an imported spin-off or merger paid in shares and cash can be set here; the rest of the body is then ignored. A correction that would leave a later sale without enough shares is refused.
  * @summary Correct an investment transaction
  */
 
@@ -1454,6 +1459,7 @@ export const UpdateInvestmentTransactionBody = zod.object({
     "split",
     "symbolChange",
     "merger",
+    "spinOff",
   ]),
   date: zod.iso.date(),
   securityId: zod.uuid().nullish(),
@@ -1520,17 +1526,17 @@ export const UpdateInvestmentTransactionBody = zod.object({
     .uuid()
     .nullish()
     .describe(
-      "For a symbol change: the security the holding moves to; for a merger: the security received.",
+      "For a symbol change: the security the holding moves to; for a merger: the security received; for a spin-off: the new security.",
     ),
   relatedQuantity: zod
     .stringFormat("decimal", updateInvestmentTransactionBodyRelatedQuantityRegExp)
     .nullish()
-    .describe("For a merger: the shares of the security received."),
+    .describe("For a merger or a spin-off: the shares of the security received."),
   costShare: zod
     .stringFormat("decimal", updateInvestmentTransactionBodyCostShareRegExp)
     .nullish()
     .describe(
-      "For a merger paid in shares and cash: the percentage of the cost basis carried into the new shares, 0 to 100.",
+      "For a merger paid in shares and cash, or a spin-off: the percentage of the cost basis carried into the new shares, 0 to 100.",
     ),
 });
 
@@ -1566,6 +1572,7 @@ export const UpdateInvestmentTransactionResponse = zod.object({
     "split",
     "symbolChange",
     "merger",
+    "spinOff",
   ]),
   date: zod.iso.date(),
   quantity: zod.stringFormat("decimal", updateInvestmentTransactionResponseQuantityRegExp),

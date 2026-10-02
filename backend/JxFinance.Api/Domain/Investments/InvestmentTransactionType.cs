@@ -11,4 +11,5 @@ public enum InvestmentTransactionType
     Split,
     SymbolChange,
     Merger,
+    SpinOff,
 }

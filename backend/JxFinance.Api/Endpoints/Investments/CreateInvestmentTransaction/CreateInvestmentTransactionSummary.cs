@@ -17,7 +17,9 @@ public sealed class CreateInvestmentTransactionSummary
             + "taken over and the shares given up in Quantity, and either the cash received in Amount, the security "
             + "received in RelatedSecurityId with its shares in RelatedQuantity, or both; with both, CostShare is the "
             + "percentage of the cost basis carried into the new shares and the rest is set against the cash as a "
-            + "disposal. The cash effect lands on the account's "
+            + "disposal. A spin-off needs the parent security, the new security in RelatedSecurityId and its shares in "
+            + "RelatedQuantity; CostShare, the percentage of the parent's cost basis that moves to the new security, "
+            + "may be left out and set later, and counts as 0 until then. The cash effect lands on the account's "
             + "balance in that currency and never counts as income or expense in reports or budgets.";
         ExampleRequest = new CreateInvestmentTransactionRequest(
             Guid.Empty,
@@ -28,9 +30,9 @@ public sealed class CreateInvestmentTransactionSummary
             104.52m,
             Fee: 1.25m);
         RequestParam(r => r.Quantity, "Shares for a buy or sell; new shares per old share for a split; shares moved for a symbol change.");
-        RequestParam(r => r.RelatedSecurityId, "For a symbol change: the security the holding moves to; for a merger: the security received.");
-        RequestParam(r => r.RelatedQuantity, "For a merger: the shares of the security received.");
-        RequestParam(r => r.CostShare, "For a merger paid in shares and cash: the percentage of the cost basis carried into the new shares, 0 to 100.");
+        RequestParam(r => r.RelatedSecurityId, "For a symbol change: the security the holding moves to; for a merger: the security received; for a spin-off: the new security.");
+        RequestParam(r => r.RelatedQuantity, "For a merger or a spin-off: the shares of the security received.");
+        RequestParam(r => r.CostShare, "For a merger paid in shares and cash, or a spin-off: the percentage of the cost basis carried into the new shares, 0 to 100.");
         RequestParam(r => r.Amount, "Cash amount for dividend, withholding tax, interest and fee entries; cash received for a merger.");
         RequestParam(r => r.Currency, "Currency for entries without a security. Defaults to the security's currency, then the account's.");
         Responses[201] = "The entry was recorded.";

@@ -11,12 +11,13 @@ public static class InvestmentMapper
 {
     public static InvestmentTransaction ToEntity(this IInvestmentTransactionInput request, Currency currency)
     {
-        var quantity = request.Quantity ?? 0m;
+        var quantity = request.Type == InvestmentTransactionType.SpinOff ? 0m : request.Quantity ?? 0m;
         var price = request.Price ?? 0m;
         var amount = request.Amount ?? 0m;
         var fee = request.Fee ?? 0m;
         var isTrade = request.Type is InvestmentTransactionType.Buy or InvestmentTransactionType.Sell;
-        var receives = request.Type == InvestmentTransactionType.Merger && request.RelatedSecurityId is not null;
+        var receives = request.Type == InvestmentTransactionType.SpinOff
+            || (request.Type == InvestmentTransactionType.Merger && request.RelatedSecurityId is not null);
 
         var transaction = new InvestmentTransaction
         {

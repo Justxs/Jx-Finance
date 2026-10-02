@@ -19,4 +19,5 @@ export const InvestmentTransactionType = {
   split: "split",
   symbolChange: "symbolChange",
   merger: "merger",
+  spinOff: "spinOff",
 } as const;

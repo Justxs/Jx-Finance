@@ -124,6 +124,20 @@ public sealed class Position(SecurityId securityId)
         return consumed;
     }
 
+    public IReadOnlyList<ConsumedLot> Carve(decimal share)
+    {
+        var carved = new List<ConsumedLot>();
+        for (var node = lots.First; node is not null; node = node.Next)
+        {
+            var lot = node.Value;
+            var part = new ConsumedLot(lot.AcquiredOn, lot.Quantity, lot.Cost * share, lot.ReportingCost * share);
+            carved.Add(part);
+            node.Value = lot with { Cost = lot.Cost - part.Cost, ReportingCost = lot.ReportingCost - part.ReportingCost };
+        }
+
+        return carved;
+    }
+
     public void Receive(IEnumerable<ConsumedLot> taken, decimal ratio)
     {
         foreach (var lot in taken)

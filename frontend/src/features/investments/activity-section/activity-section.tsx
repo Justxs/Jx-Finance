@@ -84,6 +84,13 @@ export function ActivitySection({ accounts, accountId }: Readonly<Props>) {
       return `${quantityFormat.format(Number(entry.quantity))} × ${formatPrice(Number(entry.price), entry.currency)}`;
     }
 
+    if (entry.type === "spinOff") {
+      return t("investments.activity.spunOff", {
+        received: quantityFormat.format(Number(entry.relatedQuantity)),
+        symbol: entry.relatedSymbol ?? "",
+      });
+    }
+
     if (entry.type === "merger") {
       return entry.relatedSymbol
         ? t("investments.activity.mergedInto", {

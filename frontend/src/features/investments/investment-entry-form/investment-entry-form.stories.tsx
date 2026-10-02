@@ -60,6 +60,8 @@ export const SymbolChange: Story = ofType("Symbol change");
 
 export const Merger: Story = ofType("Merger");
 
+export const SpinOff: Story = ofType("Spin-off");
+
 export const Pending: Story = {
   parameters: withHandlers(getCreateInvestmentTransactionMockHandler(pending)),
   play: async ({ canvas, args }) => {
@@ -108,6 +110,37 @@ const sent = fn();
 const sentSymbolChange = fn();
 
 const sentMerger = fn();
+
+const sentSpinOff = fn();
+
+export const SpinOffWithoutAllocation: Story = {
+  parameters: withHandlers(
+    getCreateInvestmentTransactionMockHandler(async ({ request }) => {
+      sentSpinOff(await request.json());
+      return corporateActionEntries[2]!;
+    }),
+  ),
+  play: async ({ canvas, args }) => {
+    await choose(canvas, "Entry type", "Spin-off");
+    await expect(canvas.queryByLabelText("Quantity")).toBeNull();
+    await choose(canvas, "Security", new RegExp(`^${worldEtf.symbol}`));
+    await choose(canvas, "New security", new RegExp(`^${unpricedStock.symbol}`));
+    await userEvent.type(await canvas.findByLabelText("Shares received"), "3");
+    await expect(canvas.getByText("No cash movement")).toBeInTheDocument();
+    await userEvent.click(canvas.getByRole("button", { name: "Add entry" }));
+    await waitFor(() => expect(args.onClose).toHaveBeenCalled());
+    await expect(sentSpinOff).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: "spinOff",
+        securityId: worldEtf.id,
+        relatedSecurityId: unpricedStock.id,
+        quantity: null,
+        relatedQuantity: "3",
+        costShare: null,
+      }),
+    );
+  },
+};
 
 export const MergerForSharesAndCash: Story = {
   parameters: withHandlers(

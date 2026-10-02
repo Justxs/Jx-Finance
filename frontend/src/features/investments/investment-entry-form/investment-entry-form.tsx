@@ -27,6 +27,7 @@ import {
   requiresSecurity,
   takesCostShare,
   usesAmount,
+  usesQuantity,
 } from "@/features/investments/investment-types";
 import { SecurityModal } from "@/features/investments/security-form/security-modal";
 import { EMPTY_VALUE, useMoney } from "@/hooks/use-formatters";
@@ -63,6 +64,16 @@ function quantityLabel(type: InvestmentTransactionType): TranslationKey {
   }
 
   return type === "symbolChange" ? "investments.entry.sharesMoved" : "investments.entry.quantity";
+}
+
+function relatedSecurityLabel(type: InvestmentTransactionType): TranslationKey {
+  if (type === "spinOff") {
+    return "investments.entry.spunOffSecurity";
+  }
+
+  return type === "merger"
+    ? "investments.entry.receivedSecurity"
+    : "investments.entry.relatedSecurity";
 }
 
 function quantityHint(type: InvestmentTransactionType): TranslationKey | undefined {
@@ -137,14 +148,22 @@ export function InvestmentEntryForm({ accounts, accountId, editing, onClose }: R
     return allSecurities.find((security) => security.id === securityId)?.currency;
   }
 
-  function costShareField() {
+  function costShareField(type: InvestmentTransactionType) {
+    const spinOff = type === "spinOff";
+
     return (
       <form.Field name="costShare">
         {(field) => (
           <field.MoneyInputField
             id="entry-cost-share"
-            label={t("investments.entry.costShare")}
-            hint={t("investments.entry.costShareHint")}
+            label={
+              spinOff ? t("investments.entry.spinOffCostShare") : t("investments.entry.costShare")
+            }
+            hint={
+              spinOff
+                ? t("investments.entry.spinOffCostShareHint")
+                : t("investments.entry.costShareHint")
+            }
             className="col-span-full"
             placeholder="0"
           />
@@ -163,7 +182,7 @@ export function InvestmentEntryForm({ accounts, accountId, editing, onClose }: R
             <p className="col-span-full text-sm text-muted-foreground">
               {t("investments.entry.costShareOnly")}
             </p>
-            {costShareField()}
+            {costShareField(editing.type)}
           </>
         ) : (
           <>
@@ -220,18 +239,14 @@ export function InvestmentEntryForm({ accounts, accountId, editing, onClose }: R
                           securities={allSecurities}
                           required={requiresRelatedSecurity(type)}
                           id="entry-related-security"
-                          label={
-                            requiresRelatedSecurity(type)
-                              ? t("investments.entry.relatedSecurity")
-                              : t("investments.entry.receivedSecurity")
-                          }
+                          label={t(relatedSecurityLabel(type))}
                           onAdd={() => setAddingFor("relatedSecurityId")}
                         />
                       )}
                     </form.Field>
                   ) : null}
 
-                  {usesAmount(type) ? null : (
+                  {usesQuantity(type) ? (
                     <form.Field name="quantity">
                       {(field) => {
                         const hint = quantityHint(type);
@@ -247,7 +262,7 @@ export function InvestmentEntryForm({ accounts, accountId, editing, onClose }: R
                         );
                       }}
                     </form.Field>
-                  )}
+                  ) : null}
 
                   {receivesShares(type) ? (
                     <form.Subscribe selector={(state) => state.values.relatedSecurityId}>
@@ -300,10 +315,12 @@ export function InvestmentEntryForm({ accounts, accountId, editing, onClose }: R
                           )
                         }
                       >
-                        {(needed) => (needed ? costShareField() : null)}
+                        {(needed) => (needed ? costShareField(type) : null)}
                       </form.Subscribe>
                     </>
                   ) : null}
+
+                  {type === "spinOff" ? costShareField(type) : null}
 
                   {isTrade(type) ? (
                     <>

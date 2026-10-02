@@ -34,6 +34,8 @@ public static class TrashLabel
             InvestmentTransactionType.SymbolChange =>
                 $"{Verb(entry.Type)} {Quantity(entry.Quantity)}{security} to {relatedSymbol ?? "another security"}",
             InvestmentTransactionType.Merger => Merger(entry, security, relatedSymbol),
+            InvestmentTransactionType.SpinOff =>
+                $"{Verb(entry.Type)} {Quantity(entry.RelatedQuantity)} {relatedSymbol ?? "new shares"} from{security}",
             _ => $"{Verb(entry.Type)}{security}, {Amount(new Money(Math.Abs(entry.CashAmount.Amount), entry.CashAmount.Currency))}",
         };
         return $"{what}, {DateFormats.Iso(entry.Date)}";
@@ -50,6 +52,7 @@ public static class TrashLabel
         InvestmentTransactionType.Split => "Split",
         InvestmentTransactionType.SymbolChange => "Symbol change",
         InvestmentTransactionType.Merger => "Merger",
+        InvestmentTransactionType.SpinOff => "Spin-off",
         _ => type.ToString(),
     };
 

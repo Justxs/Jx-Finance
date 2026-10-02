@@ -1817,6 +1817,7 @@
       "splitRatio": "{{ratio}} už 1",
       "movedTo": "{{quantity}} į {{symbol}}",
       "mergedInto": "{{quantity}} į {{received}} {{symbol}}",
+      "spunOff": "gauta {{received}} {{symbol}}",
       "costShareMissing": "Savikainos dalis nenustatyta",
       "costShareMissingHint": "Pataisykite įrašą ir nurodykite, kokia savikainos dalis perkelta į naujas akcijas.",
       "noCash": "Be pinigų judėjimo"
@@ -1830,7 +1831,8 @@
       "fee": "Komisiniai",
       "split": "Akcijų skaidymas",
       "symbolChange": "Simbolio pakeitimas",
-      "merger": "Susijungimas"
+      "merger": "Susijungimas",
+      "spinOff": "Atskyrimas"
     },
     "securityTypes": {
       "stock": "Akcija",
@@ -1863,7 +1865,10 @@
       "cashReceivedHint": "Palikite tuščią, jei už akcijas atsiskaityta tik akcijomis.",
       "costShare": "Į naujas akcijas perkeliama savikainos dalis (%)",
       "costShareHint": "Likusi savikaina priskiriama gautiems pinigams kaip perleidimas. Dalis nurodyta susijungimo dokumentuose.",
-      "costShareOnly": "Šis įrašas importuotas. Čia galima nustatyti tik į naujas akcijas perkeliamą savikainos dalį.",
+      "costShareOnly": "Šis įrašas importuotas. Čia galima nustatyti tik į naują vertybinį popierių perkeliamą savikainos dalį.",
+      "spunOffSecurity": "Naujas vertybinis popierius",
+      "spinOffCostShare": "Į naują vertybinį popierių perkeliama savikaina (%)",
+      "spinOffCostShareHint": "Šį paskirstymą skelbia emitentas. Partijos išlaiko pirkimo datas. Palikite tuščią, jei nurodysite vėliau; iki tol naujos akcijos skaičiuojamos be savikainos.",
       "price": "Vieneto kaina",
       "priceIn": "Vieneto kaina ({{currency}})",
       "fee": "Komisiniai (neprivaloma)",

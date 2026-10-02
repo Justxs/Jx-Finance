@@ -564,6 +564,15 @@ export const corporateActionEntries: InvestmentTransactionResponse[] = [
     cashAmount: "250.00",
     description: "IGN1L(LT0000115768) MERGED(Acquisition) WITH VWCE 3 FOR 10 AND EUR 6.25",
   }),
+  entry(93, {
+    type: "spinOff",
+    date: "2026-07-01",
+    security: closedStock,
+    related: unpricedStock,
+    relatedQuantity: "3",
+    cashAmount: "0.00",
+    description: "ASML(NL0010273215) SPINOFF 1 FOR 2 (IGN1L, IGNITIS GRUPE, LT0000115768)",
+  }),
 ];
 
 const brokerConnection: BrokerConnectionResponse = {

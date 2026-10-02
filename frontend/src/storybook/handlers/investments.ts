@@ -120,6 +120,7 @@ export const investmentHandlers = [
       split: 0,
       symbolChange: 0,
       merger: amount,
+      spinOff: 0,
     };
     return {
       id: NEW_ID,

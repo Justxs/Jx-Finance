@@ -87,6 +87,17 @@ public abstract class InvestmentTransactionInputValidator<TRequest> : Validator<
                 .When(r => r.RelatedSecurityId is not null && r.Amount is > 0m);
         });
 
+        When(r => r.Type is InvestmentTransactionType.SpinOff, () =>
+        {
+            RuleFor(r => r.SecurityId).IsRequired().WithMessage("Choose the security the new one was spun off from.");
+            RuleFor(r => r.RelatedSecurityId).IsRequired().WithMessage("Choose the security that was spun off.");
+            RuleFor(r => r.RelatedQuantity)
+                .IsPresent()
+                .WithMessage(QuantityMessage)
+                .IsPositiveQuantity()
+                .WithMessage(QuantityMessage);
+        });
+
         RuleFor(r => r.CostShare)
             .Must(share => share is null || (share is >= 0m and <= Portfolio.WholeCost && decimal.Round(share.Value, 6) == share))
             .WithErrorCode(ErrorCodes.RangeInvalid)

@@ -16,6 +16,7 @@ import {
   requiresSecurity,
   takesCostShare,
   usesAmount,
+  usesQuantity,
 } from "@/features/investments/investment-types";
 import { DEFAULT_CURRENCY } from "@/lib/currency";
 import type { Translate } from "@/lib/i18n";
@@ -108,7 +109,7 @@ export function entrySchema(t: Translate) {
         } else if (value.relatedSecurityId !== "" && value.relatedSecurityId === value.securityId) {
           fail("relatedSecurityId", t("investments.validation.sameSecurity"));
         }
-        if (!isPositiveQuantity(value.quantity)) {
+        if (usesQuantity(value.type) && !isPositiveQuantity(value.quantity)) {
           fail("quantity", t("investments.validation.quantity"));
         }
       }
@@ -128,6 +129,7 @@ export function entrySchema(t: Translate) {
       }
       if (
         takesCostShare(value.type, value.relatedSecurityId, value.amount) &&
+        !(value.type === "spinOff" && value.costShare.trim() === "") &&
         !isCostShare(value.costShare)
       ) {
         fail("costShare", t("investments.validation.costShare"));
@@ -151,7 +153,7 @@ export function entryDefaults({
       date: editing.date,
       securityId: editing.securityId ?? "",
       relatedSecurityId: editing.relatedSecurityId ?? "",
-      quantity: usesAmount(editing.type) ? "" : editing.quantity,
+      quantity: usesQuantity(editing.type) ? editing.quantity : "",
       relatedQuantity: receivesShares(editing.type) ? editing.relatedQuantity : "",
       costShare: editing.costShare ?? "",
       price: isTrade(editing.type) ? editing.price : "",
@@ -196,9 +198,11 @@ export function toRequest(value: EntryFormValues): CreateInvestmentTransactionRe
     date: value.date,
     securityId,
     relatedSecurityId,
-    quantity: cash ? null : value.quantity,
+    quantity: usesQuantity(value.type) ? value.quantity : null,
     relatedQuantity: receivesShares(value.type) && relatedSecurityId ? value.relatedQuantity : null,
-    costShare: takesCostShare(value.type, relatedSecurityId, value.amount) ? value.costShare : null,
+    costShare: takesCostShare(value.type, relatedSecurityId, value.amount)
+      ? value.costShare.trim() || null
+      : null,
     price: trade ? value.price : null,
     fee: trade && value.fee.trim() !== "" ? value.fee : null,
     amount: cash || (merger && value.amount.trim() !== "") ? value.amount : null,
