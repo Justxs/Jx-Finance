@@ -108,6 +108,25 @@ public sealed class MyShareTests(ApiFixture fixture) : IntegrationTestBase(fixtu
     }
 
     [Fact]
+    public async Task The_active_household_counts_only_the_shares_of_its_own_splits()
+    {
+        using var pair = await CreateHouseholdPairAsync();
+        var sibling = await CreateUserAsync();
+        using var siblingClient = await LoginAsync(sibling);
+        var other = await CreateHouseholdAsync(pair.Partner, sibling);
+        var ownerAccount = await CreateAccountAsync("1000.00", client: pair.OwnerClient);
+        var siblingAccount = await CreateAccountAsync("1000.00", client: siblingClient);
+        await SplitAsync(pair.OwnerClient, pair.HouseholdId, await ExpenseAsync(pair.OwnerClient, ownerAccount, null, "90.00", "Groceries"), Share(pair.Owner.Id), Share(pair.Partner.Id));
+        await SplitAsync(siblingClient, other, await ExpenseAsync(siblingClient, siblingAccount, null, "40.00", "Cinema"), Share(sibling.Id), Share(pair.Partner.Id));
+
+        var everything = await ReportAsync(pair.PartnerClient, $"{September}&share=mine");
+        var first = await GetScopedAsync<ReportDto>(pair.PartnerClient, $"/api/reports/summary?{September}&share=mine", pair.HouseholdId);
+        var second = await GetScopedAsync<ReportDto>(pair.PartnerClient, $"/api/reports/summary?{September}&share=mine", other);
+
+        Assert.Equal(("65.00", "45.00", "20.00"), (everything.TotalExpense, first.TotalExpense, second.TotalExpense));
+    }
+
+    [Fact]
     public async Task A_personal_budget_counts_my_share_and_a_household_budget_keeps_the_households_figure()
     {
         using var pair = await CreateHouseholdPairAsync();
