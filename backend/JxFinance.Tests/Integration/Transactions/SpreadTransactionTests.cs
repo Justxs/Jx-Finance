@@ -13,6 +13,10 @@ public sealed class SpreadTransactionTests(ApiFixture fixture) : IntegrationTest
         using var member = await CreateUserClientAsync();
         var account = await CreateAccountAsync("1000.00", client: member);
         var row = await SpreadAsync(member, account, "360.00", Today, 12);
+        await PostAsync<IdDto>(
+            member,
+            "/api/recurring-bills",
+            new { name = "Rent", shape = "expense", kind = "fixed", amount = "100.00", accountId = account, cadence = "monthly", nextDueDate = Today.AddDays(10), remindDaysBefore = 0 });
         var month = new DateOnly(Today.Year, Today.Month, 1);
 
         var summary = (await member.GetFromJsonAsync<SummaryDto>(
@@ -49,7 +53,7 @@ public sealed class SpreadTransactionTests(ApiFixture fixture) : IntegrationTest
     }
 
     [Fact]
-    public async Task A_split_or_a_refund_cannot_be_spread_and_the_months_stay_within_range()
+    public async Task A_split_or_a_refund_can_be_spread_and_the_months_stay_within_range()
     {
         using var member = await CreateUserClientAsync();
         var account = await CreateAccountAsync("1000.00", client: member);
@@ -81,8 +85,7 @@ public sealed class SpreadTransactionTests(ApiFixture fixture) : IntegrationTest
             new { accountId = account, type = "expense", amount = "50.00", date = "2026-03-03", spreadMonths = 37 },
             TestContext.Current.CancellationToken);
 
-        await AssertProblemAsync(split, HttpStatusCode.BadRequest, "transaction.splitNotAllowed");
-        await AssertProblemAsync(refund, HttpStatusCode.BadRequest, "transaction.spreadRefund");
+        Assert.Equal((3, 3), ((await ReadOkAsync<SpreadRowDto>(split)).SpreadMonths, (await ReadOkAsync<SpreadRowDto>(refund)).SpreadMonths));
         await AssertProblemAsync(one, HttpStatusCode.BadRequest, "range.invalid");
         await AssertProblemAsync(tooMany, HttpStatusCode.BadRequest, "range.invalid");
     }
