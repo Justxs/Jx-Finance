@@ -1649,7 +1649,6 @@
     },
     "priceSource": {
       "label": "Price source",
-      "hint": "Where the server fetches the daily closing price.",
       "none": "None",
       "eodhd": "EODHD",
       "kraken": "Kraken",

@@ -235,7 +235,6 @@ export function SecurityForm({ initial, onClose, onSaved }: Readonly<Props>) {
                     <field.SelectFieldControl
                       id="security-price-source"
                       label={t("investments.priceSource.label")}
-                      hint={t("investments.priceSource.hint")}
                       options={optionsOf(priceSources(type, currency), (item) =>
                         t(`investments.priceSource.${item}`),
                       )}

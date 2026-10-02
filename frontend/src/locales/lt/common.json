@@ -1715,7 +1715,6 @@
     },
     "priceSource": {
       "label": "Kainų šaltinis",
-      "hint": "Iš kur serveris gauna dienos uždarymo kainą.",
       "none": "Nėra",
       "eodhd": "EODHD",
       "kraken": "Kraken",
