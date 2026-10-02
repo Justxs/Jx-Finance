@@ -35,7 +35,7 @@ test("an expense split with the household shows who owes whom until the payment 
   await createTransaction(page.request, accountId, description, "30.00");
 
   await page.goto(`/transactions?search=${encodeURIComponent(description)}`);
-  const row = page.getByRole("row", { name: new RegExp(escaped(description)) });
+  const row = page.getByRole("row").filter({ hasText: description });
   await row.getByRole("button", { name: /^Actions: / }).click();
   await page.getByRole("menuitem", { name: "Split with household" }).click();
   const split = page.getByRole("dialog");
