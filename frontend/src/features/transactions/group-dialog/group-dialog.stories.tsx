@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, fireEvent, fn, userEvent, waitFor } from "storybook/test";
 import {
   getCreateTransactionGroupMockHandler,
+  getRenameTransactionGroupMockHandler,
   getTransactionGroupsMockHandler,
 } from "@/api/generated/transaction-groups/transaction-groups.msw";
 import { withWidth } from "@/storybook/decorators";
@@ -19,6 +20,7 @@ import { chooseOption, first } from "@/storybook/interactions";
 import { GroupForm } from "./group-dialog";
 
 const created = fn();
+const renamed = fn();
 
 const meta = {
   title: "Features/Transactions/GroupDialog",
@@ -83,6 +85,28 @@ export const FromARowWithNone: Story = {
 
 export const Renaming: Story = {
   args: { target: { kind: "rename", group: tripGroup } },
+  parameters: withHandlers(
+    getRenameTransactionGroupMockHandler(async ({ params, request }) => {
+      renamed(params.id, await request.json());
+      return { ...tripGroup, name: "Kelionė į Taliną" };
+    }),
+  ),
+  play: async ({ canvas, args }) => {
+    const name = canvas.getByLabelText("Group name");
+    await expect(name).toHaveValue(tripGroup.name);
+    await expect(canvas.queryByRole("radiogroup")).toBeNull();
+    await fireEvent.change(name, { target: { value: "Kelionė į Taliną" } });
+    await userEvent.click(canvas.getByRole("button", { name: "Save" }));
+    await waitFor(() =>
+      expect(renamed).toHaveBeenCalledWith(tripGroup.id, {
+        name: "Kelionė į Taliną",
+        scope: "personal",
+        householdId: null,
+      }),
+    );
+    await waitFor(() => expect(args.onClose).toHaveBeenCalled());
+    await expect(args.onGrouped).not.toHaveBeenCalled();
+  },
 };
 
 export const SharingWithTheHousehold: Story = {
