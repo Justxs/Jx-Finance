@@ -22,6 +22,15 @@ public sealed class SubscriptionDescriptionTests
         Assert.Equal(expected, SubscriptionDescription.Normalize(raw));
 
     [Theory]
+    [InlineData("MAXIMA LT, UAB", "PIRKINYS *1234 VILNIUS", "maxima lt uab")]
+    [InlineData(null, "PIRKINYS *1234 VILNIUS", "pirkinys vilnius")]
+    [InlineData("   ", "Lidl 0042", "lidl")]
+    [InlineData("2026-09-21", "Lidl 0042", "lidl")]
+    [InlineData(null, null, "")]
+    public void The_key_is_the_payee_while_anything_is_left_of_it_and_else_the_description(string? payee, string? description, string expected) =>
+        Assert.Equal(expected, SubscriptionDescription.KeyOf(payee, description));
+
+    [Theory]
     [InlineData("NETFLIX.COM  ref 000112233")]
     [InlineData("Telia 21.09.2026 sąskaita")]
     [InlineData("o2 Arena 3M tape")]

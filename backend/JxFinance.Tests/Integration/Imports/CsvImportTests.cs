@@ -182,6 +182,70 @@ public sealed class CsvImportTests(ApiFixture fixture) : IntegrationTestBase(fix
         await AssertValidationErrorAsync(withoutMapping, "mappingId");
     }
 
+    [Fact]
+    public async Task A_mapping_without_a_header_row_names_columns_by_position_previews_and_can_go_back_to_names()
+    {
+        using var member = await CreateUserClientAsync();
+        var account = await CreateAccountAsync("100.00", client: member);
+        var created = await ReadOkAsync<MappingDto>(await member.PostAsJsonAsync("/api/import/csv-mappings", PositionalBody(), TestContext.Current.CancellationToken));
+
+        var preview = await ReadOkAsync<PreviewDto>(await PreviewAsync(member, account, created.Id, $"2026-09-02;Lidl {Guid.NewGuid():N};-15,77\n2026-09-04;Salary;2000,00\n"));
+        var renamed = await ReadOkAsync<MappingDto>(await member.PutAsJsonAsync(
+            $"/api/import/csv-mappings/{created.Id}",
+            PositionalBody(noHeaderRow: false, date: "Data", amount: "Suma"),
+            TestContext.Current.CancellationToken));
+
+        Assert.Equal(("1", true), (created.Columns.Date, created.NoHeaderRow));
+        Assert.Equal([("15.77", "expense"), ("2000.00", "income")], preview.Rows.Select(r => (r.Amount, r.Type)));
+        Assert.Equal(0, preview.Statement.Unreadable);
+        Assert.Equal(("Data", false), (renamed.Columns.Date, renamed.NoHeaderRow));
+    }
+
+    [Theory]
+    [InlineData("Data", "2")]
+    [InlineData("0", "2")]
+    [InlineData("1", "101")]
+    public async Task Without_a_header_row_every_column_must_be_a_position(string date, string amount)
+    {
+        using var member = await CreateUserClientAsync();
+
+        var response = await member.PostAsJsonAsync("/api/import/csv-mappings", PositionalBody(date: date, amount: amount), TestContext.Current.CancellationToken);
+
+        await AssertRejectedAsync(response, "text.invalidFormat");
+    }
+
+    [Fact]
+    public async Task Inspect_names_only_the_mappings_that_read_a_header_row_as_the_file_does()
+    {
+        using var member = await CreateUserClientAsync();
+        var positional = (await PostAsync<IdDto>(member, "/api/import/csv-mappings", PositionalBody())).Id;
+        var named = (await PostAsync<IdDto>(member, "/api/import/csv-mappings", PositionalBody(noHeaderRow: false, date: "1", amount: "3"))).Id;
+        var headerless = SampleCsv.Utf8("2026-09-02;Lidl;-15,77\n2026-09-04;Salary;2000,00\n");
+
+        var proposed = await ReadOkAsync<InspectDto>(await UploadAsync(member, "/api/import/csv/inspect", headerless));
+        var asHeader = await ReadOkAsync<InspectDto>(await UploadAsync(member, "/api/import/csv/inspect", headerless, ("noHeaderRow", "false")));
+
+        Assert.True(proposed.NoHeaderRow);
+        Assert.Equal(["1", "2", "3"], proposed.Columns.Select(c => c.Name));
+        Assert.Equal([positional], proposed.MatchingMappingIds);
+        Assert.False(asHeader.NoHeaderRow);
+        Assert.DoesNotContain(positional, asHeader.MatchingMappingIds);
+        Assert.DoesNotContain(named, asHeader.MatchingMappingIds);
+    }
+
+    private static object PositionalBody(bool noHeaderRow = true, string date = "1", string amount = "3") => new
+    {
+        name = $"Card {Guid.NewGuid():N}"[..20],
+        encoding = "utf8",
+        delimiter = ";",
+        skipLines = 0,
+        noHeaderRow,
+        amountStyle = "signedNegativeIsExpense",
+        dateFormat = "yyyy-MM-dd",
+        decimalSeparator = "comma",
+        columns = new { date, description = noHeaderRow ? "2" : null, amount },
+    };
+
     private async Task<Guid> CreateMappingAsync() =>
         (await PostAsync<IdDto>(Client, "/api/import/csv-mappings", SampleCsv.RevolutBody($"Revolut {Guid.NewGuid():N}"[..20]))).Id;
 
@@ -216,11 +280,11 @@ public sealed class CsvImportTests(ApiFixture fixture) : IntegrationTestBase(fix
 
     private sealed record ColumnsDto(string Date, string? BookedValues);
 
-    private sealed record MappingDto(Guid Id, string Name, string AmountStyle, ColumnsDto Columns);
+    private sealed record MappingDto(Guid Id, string Name, string AmountStyle, ColumnsDto Columns, bool NoHeaderRow = false);
 
     private sealed record InspectColumnDto(string Name);
 
-    private sealed record InspectDto(string Encoding, string Delimiter, int SkipLines, List<InspectColumnDto> Columns, List<Guid> MatchingMappingIds);
+    private sealed record InspectDto(string Encoding, string Delimiter, int SkipLines, List<InspectColumnDto> Columns, List<Guid> MatchingMappingIds, bool NoHeaderRow = false);
 
     private sealed record LinkDto(Guid Id);
 
