@@ -84,6 +84,14 @@ export const PayingExtra: Story = {
 
 export const IncompleteTerms: Story = {
   args: { debtId: ids.debts.carLease },
+  play: async ({ canvas }) => {
+    await expect(await canvas.findByText(/^Add the loan amount, interest rate/u)).toBeVisible();
+    await expect(
+      await canvas.findByRole("heading", { name: "Recorded balances" }),
+    ).toBeInTheDocument();
+    await expect(canvas.getByText("€6,200.00")).toBeVisible();
+    await expect(canvas.getByRole("button", { name: "Add balance" })).toBeVisible();
+  },
 };
 
 export const UnknownDebt: Story = {
