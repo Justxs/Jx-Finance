@@ -187,6 +187,30 @@ public sealed partial class UserImportTests(ApiFixture fixture) : IntegrationTes
     }
 
     [Fact]
+    public async Task A_symbol_change_keeps_the_security_it_moves_to_through_an_export_and_an_import()
+    {
+        using var source = await CreateUserClientAsync();
+        var broker = await CreateAccountAsync("5000.00", "investment", client: source);
+        var old = await CreateSecurityAsync(source);
+        var renamed = await CreateSecurityAsync(source);
+        await RecordInvestmentAsync(source, new { accountId = broker, securityId = old, type = "buy", date = "2026-05-04", quantity = "10", price = "50" });
+        await RecordInvestmentAsync(source, new { accountId = broker, type = "symbolChange", date = "2026-06-01", securityId = old, relatedSecurityId = renamed, quantity = "10" });
+        var export = await DownloadAsync(source);
+        using var target = await CreateUserClientAsync();
+
+        await ReadOkAsync<ImportDto>(await ImportAsync(target, WithNewIds(export)));
+        var entries = (await target.GetFromJsonAsync<PageDto<MovedEntryDto>>("/api/investments/transactions?pageSize=50", TestContext.Current.CancellationToken))!.Items;
+        var change = Assert.Single(entries, e => e.Type == "symbolChange");
+        var bought = Assert.Single(entries, e => e.Type == "buy");
+        var holdings = (await target.GetFromJsonAsync<MovedPortfolioDto>("/api/investments/portfolio", TestContext.Current.CancellationToken))!.Holdings;
+
+        Assert.Equal(bought.SecurityId, change.SecurityId);
+        Assert.NotNull(change.RelatedSecurityId);
+        Assert.NotEqual(change.SecurityId, change.RelatedSecurityId);
+        Assert.Equal(("10", "500.00"), holdings.Where(h => h.Security.Id == change.RelatedSecurityId).Select(h => (h.Quantity, h.CostBasis)).Single());
+    }
+
+    [Fact]
     public async Task A_security_the_import_adds_arrives_without_a_price_source()
     {
         using var source = await CreateUserClientAsync();
@@ -361,6 +385,14 @@ public sealed partial class UserImportTests(ApiFixture fixture) : IntegrationTes
     private sealed record DebtDto(Guid Id, string OutstandingAmount, DateOnly AsOf);
 
     private sealed record SharedGroupDto(string Name, int MemberCount, string Scope, Guid? HouseholdId);
+
+    private sealed record MovedEntryDto(string Type, Guid? SecurityId, Guid? RelatedSecurityId);
+
+    private sealed record MovedSecurityDto(Guid Id);
+
+    private sealed record MovedHoldingDto(MovedSecurityDto Security, string Quantity, string CostBasis);
+
+    private sealed record MovedPortfolioDto(List<MovedHoldingDto> Holdings);
 
     private sealed record DebtBalanceDto(DateOnly Date, string Amount, string? Note);
 }

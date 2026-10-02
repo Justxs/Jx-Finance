@@ -89,6 +89,27 @@ public sealed class FlexParserTests
         Assert.Equal(ratio is null ? null : decimal.Parse(ratio, System.Globalization.CultureInfo.InvariantCulture), action.Ratio);
     }
 
+    [Theory]
+    [InlineData("actionDescription=\"asml(nl0010273215) SPINOFF 1 FOR 10 (NEWCO, NEW CO, US0000000009)\" description=\"ignored\"", "NL0010273215")]
+    [InlineData("description=\"ASML(NL0010273215) SPINOFF 1 FOR 10 (NEWCO, NEW CO, US0000000009)\"", "NL0010273215")]
+    [InlineData("description=\"SPINOFF FROM ASML (NEWCO, NEW CO, US0000000009)\"", null)]
+    [InlineData("description=\"ASML(NOTANISIN) SPINOFF 1 FOR 10\"", null)]
+    public async Task A_spin_off_names_its_parent_by_the_isin_at_the_start_of_its_description(string attributes, string? parent)
+    {
+        var xml = $"""
+            <FlexQueryResponse><FlexStatements><FlexStatement accountId="U1">
+              <CorporateActions>
+                <CorporateAction currency="EUR" assetCategory="STK" symbol="NEWCO" conid="9" isin="US0000000009" reportDate="2026-03-02" quantity="3" proceeds="0" value="45" type="SO" transactionID="78" {attributes} />
+              </CorporateActions>
+            </FlexStatement></FlexStatements></FlexQueryResponse>
+            """;
+        using var stream = new MemoryStream(Encoding.UTF8.GetBytes(xml));
+
+        var action = Assert.Single((await FlexParser.ParseAsync(stream, CancellationToken.None)).Value!.CorporateActions);
+
+        Assert.Equal(("SO", 3m, 45m, parent), (action.Type, action.Quantity, action.Value, action.SourceIsin));
+    }
+
     [Fact]
     public async Task A_document_type_declaration_is_refused()
     {

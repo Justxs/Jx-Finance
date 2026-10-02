@@ -6,6 +6,7 @@ namespace JxFinance.Tests.Unit;
 public sealed class PortfolioTests
 {
     private static readonly SecurityId Fund = SecurityId.New();
+    private static readonly SecurityId Successor = SecurityId.New();
 
     private static InvestmentTransaction Entry(
         InvestmentTransactionType type,
@@ -214,4 +215,154 @@ public sealed class PortfolioTests
 
         Assert.Equal([10m, 20m, 5m], quantities);
     }
+
+    [Fact]
+    public void A_partial_symbol_change_moves_the_oldest_lots_with_their_cost_and_dates()
+    {
+        var positions = Portfolio.Positions(
+        [
+            Entry(InvestmentTransactionType.Buy, 1, 10m, 100m),
+            Entry(InvestmentTransactionType.Buy, 2, 10m, 120m),
+            Action(InvestmentTransactionType.SymbolChange, 3, Fund, 15m, Successor),
+        ]);
+
+        Assert.Equal((5m, 600m), (positions[Fund].Quantity, positions[Fund].CostBasis));
+        Assert.Equal(
+            [(new DateOnly(2026, 6, 1), 10m, 1000m), (new DateOnly(2026, 6, 2), 5m, 600m)],
+            positions[Successor].Lots.Select(l => (l.AcquiredOn, l.Quantity, l.Cost)));
+        Assert.Empty(positions[Fund].Sales);
+    }
+
+    [Fact]
+    public void A_whole_symbol_change_slots_the_lots_among_the_ones_the_new_security_holds()
+    {
+        var heldAlready = Entry(InvestmentTransactionType.Buy, 2, 5m, 50m);
+        heldAlready.SecurityId = Successor;
+        var soldAfter = Entry(InvestmentTransactionType.Sell, 5, 10m, 130m);
+        soldAfter.SecurityId = Successor;
+
+        var positions = Portfolio.Positions(
+        [
+            Entry(InvestmentTransactionType.Buy, 1, 10m, 100m),
+            Entry(InvestmentTransactionType.Buy, 3, 10m, 120m),
+            heldAlready,
+            Action(InvestmentTransactionType.SymbolChange, 4, Fund, 20m, Successor),
+            soldAfter,
+        ]);
+
+        Assert.Equal(0m, positions[Fund].Quantity);
+        Assert.Equal([2, 3], positions[Successor].Lots.Select(l => l.AcquiredOn.Day));
+        var sale = Assert.Single(positions[Successor].Sales);
+        Assert.Equal((new DateOnly(2026, 6, 1), 1000m), (Assert.Single(sale.Lots).AcquiredOn, sale.Cost));
+    }
+
+    [Fact]
+    public void Moving_more_shares_than_are_held_marks_the_symbol_change_oversold()
+    {
+        var change = Action(InvestmentTransactionType.SymbolChange, 2, Fund, 30m, Successor);
+
+        var positions = Portfolio.Positions([Entry(InvestmentTransactionType.Buy, 1, 20m, 10m), change]);
+
+        Assert.Equal(change.Id, positions[Fund].FirstOversoldSale);
+        Assert.Equal(20m, positions[Successor].Quantity);
+    }
+
+    [Fact]
+    public void A_cash_merger_is_a_disposal_at_the_cash_received()
+    {
+        var merger = Action(InvestmentTransactionType.Merger, 2, Fund, 10m, null, cash: 1500m);
+
+        var position = Portfolio.Positions([Entry(InvestmentTransactionType.Buy, 1, 10m, 100m), merger])[Fund];
+
+        Assert.Equal(0m, position.Quantity);
+        var sale = Assert.Single(position.Sales);
+        Assert.Equal((merger.Id, 10m, 1500m, 1000m, 500m), (sale.Id, sale.Quantity, sale.Proceeds, sale.Cost, sale.Gain));
+    }
+
+    [Fact]
+    public void A_stock_merger_carries_the_whole_cost_into_the_acquirer_at_the_ratio()
+    {
+        var positions = Portfolio.Positions(
+        [
+            Entry(InvestmentTransactionType.Buy, 1, 10m, 100m),
+            Action(InvestmentTransactionType.Merger, 2, Fund, 10m, Successor, received: 4m),
+        ]);
+
+        Assert.Equal(0m, positions[Fund].Quantity);
+        Assert.Empty(positions[Fund].Sales);
+        Assert.Equal((4m, 1000m, new DateOnly(2026, 6, 1)), (positions[Successor].Quantity, positions[Successor].CostBasis, positions[Successor].Lots.Single().AcquiredOn));
+    }
+
+    [Theory]
+    [InlineData(80d, 800d, 2d, 200d, 100d)]
+    [InlineData(null, 1000d, 0d, 0d, 300d)]
+    public void A_mixed_merger_divides_the_cost_by_its_share_and_counts_100_percent_while_it_is_not_set(
+        double? costShare,
+        double carriedCost,
+        double disposedQuantity,
+        double disposedCost,
+        double gain)
+    {
+        var merger = Action(InvestmentTransactionType.Merger, 2, Fund, 10m, Successor, received: 4m, cash: 300m, costShare: (decimal?)costShare);
+
+        var positions = Portfolio.Positions([Entry(InvestmentTransactionType.Buy, 1, 10m, 100m), merger]);
+
+        Assert.Equal((4m, (decimal)carriedCost), (positions[Successor].Quantity, positions[Successor].CostBasis));
+        var sale = Assert.Single(positions[Fund].Sales);
+        Assert.Equal(((decimal)disposedQuantity, (decimal)disposedCost, 300m, (decimal)gain), (sale.Quantity, sale.Cost, sale.Proceeds, sale.Gain));
+    }
+
+    [Theory]
+    [InlineData(25d, 150d, 450d)]
+    [InlineData(null, 0d, 600d)]
+    public void A_spin_off_carves_its_cost_share_out_of_every_lot_and_counts_0_percent_while_it_is_not_set(
+        double? costShare,
+        double childLotCost,
+        double parentLotCost)
+    {
+        var positions = Portfolio.Positions(
+        [
+            Entry(InvestmentTransactionType.Buy, 1, 6m, 100m),
+            Entry(InvestmentTransactionType.Buy, 2, 4m, 150m),
+            Action(InvestmentTransactionType.SpinOff, 3, Fund, 0m, Successor, received: 5m, costShare: (decimal?)costShare),
+        ]);
+
+        Assert.Equal(10m, positions[Fund].Quantity);
+        Assert.All(positions[Fund].Lots, lot => Assert.Equal((decimal)parentLotCost, lot.Cost));
+        Assert.Equal(
+            [(new DateOnly(2026, 6, 1), 3m, (decimal)childLotCost), (new DateOnly(2026, 6, 2), 2m, (decimal)childLotCost)],
+            positions[Successor].Lots.Select(l => (l.AcquiredOn, l.Quantity, l.Cost)));
+    }
+
+    [Fact]
+    public void A_spin_off_from_an_empty_parent_books_the_new_shares_at_no_cost_on_its_date()
+    {
+        var positions = Portfolio.Positions([Action(InvestmentTransactionType.SpinOff, 3, Fund, 0m, Successor, received: 5m, costShare: 25m)]);
+
+        var lot = Assert.Single(positions[Successor].Lots);
+        Assert.Equal((new DateOnly(2026, 6, 3), 5m, 0m), (lot.AcquiredOn, lot.Quantity, lot.Cost));
+    }
+
+
+    private static InvestmentTransaction Action(
+        InvestmentTransactionType type,
+        int day,
+        SecurityId security,
+        decimal quantity,
+        SecurityId? to,
+        decimal received = 0m,
+        decimal cash = 0m,
+        decimal? costShare = null) => new()
+        {
+            SecurityId = security,
+            RelatedSecurityId = to,
+            Type = type,
+            Date = new DateOnly(2026, 6, day),
+            CreatedAt = new DateTimeOffset(2026, 6, day, 0, 0, 0, TimeSpan.Zero),
+            Quantity = quantity,
+            RelatedQuantity = received,
+            CostShare = costShare,
+            CashAmount = new Money(cash, Currency.Eur),
+            ReportingAmount = cash,
+        };
 }

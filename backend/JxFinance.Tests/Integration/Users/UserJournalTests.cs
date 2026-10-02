@@ -157,6 +157,38 @@ public sealed class UserJournalTests(ApiFixture fixture) : IntegrationTestBase(f
     }
 
     [Fact]
+    public async Task A_symbol_change_a_mixed_merger_and_a_spin_off_balance()
+    {
+        using var client = await CreateUserClientAsync();
+        var broker = await CreateAccountAsync("5000.00", type: "investment", client: client);
+        var old = await CreateSecurityAsync(client);
+        var renamed = NewSymbol();
+        var renamedId = await CreateSecurityAsync(client, renamed);
+        var target = await CreateSecurityAsync(client);
+        var acquirer = NewSymbol();
+        var acquirerId = await CreateSecurityAsync(client, acquirer);
+        var parent = await CreateSecurityAsync(client);
+        var child = NewSymbol();
+        var childId = await CreateSecurityAsync(client, child);
+        foreach (var security in new[] { old, target, parent })
+        {
+            await RecordInvestmentAsync(client, new { accountId = broker, securityId = security, type = "buy", date = "2026-05-04", quantity = "10", price = "50" });
+        }
+
+        await RecordInvestmentAsync(client, new { accountId = broker, type = "symbolChange", date = "2026-06-01", securityId = old, relatedSecurityId = renamedId, quantity = "10" });
+        await RecordInvestmentAsync(client, new { accountId = broker, type = "merger", date = "2026-06-02", securityId = target, quantity = "10", relatedSecurityId = acquirerId, relatedQuantity = "4", amount = "100", costShare = "80" });
+        await RecordInvestmentAsync(client, new { accountId = broker, type = "spinOff", date = "2026-06-03", securityId = parent, relatedSecurityId = childId, relatedQuantity = "5", costShare = "20" });
+        await RecordInvestmentAsync(client, new { accountId = broker, securityId = renamedId, type = "sell", date = "2026-06-10", quantity = "4", price = "60" });
+
+        var journal = await AcceptedAsync(client);
+
+        Assert.Single(journal.Assertions, a => a.Commodity == renamed && a.Number == 6m);
+        Assert.Single(journal.Assertions, a => a.Commodity == acquirer && a.Number == 4m);
+        Assert.Single(journal.Assertions, a => a.Commodity == child && a.Number == 5m);
+        AssertAgree(journal, await AccountsAsync(client));
+    }
+
+    [Fact]
     public async Task A_sell_across_two_lots_and_a_split_followed_by_a_sell_balance()
     {
         using var client = await CreateUserClientAsync();
