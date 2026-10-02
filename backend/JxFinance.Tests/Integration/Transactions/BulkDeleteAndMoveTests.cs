@@ -98,8 +98,8 @@ public sealed class BulkDeleteAndMoveTests(ApiFixture fixture) : IntegrationTest
 
         Assert.Equal(1, result.Restored);
         Assert.Equal(
-            [(onArchived.Id, "restore.referenceMissing"), (neverDeleted.Id, "resource.notFound")],
-            result.Refused.Select(r => (r.TransactionId, r.Code)).OrderBy(r => r.Code));
+            [(neverDeleted.Id, "resource.notFound"), (onArchived.Id, "restore.referenceMissing")],
+            result.Refused.Select(r => (r.TransactionId, r.Code)).OrderBy(r => r.Code, StringComparer.Ordinal));
         Assert.Equal(onArchived.Id, Assert.Single(trash!.Items).EntityId);
         (await member.GetAsync($"/api/transactions/{onKept.Id}", TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
     }
