@@ -19,6 +19,8 @@ public sealed class MonthlyDigestTests(ApiFixture fixture) : EmailTestBase(fixtu
 {
     private const string LanguageUrl = "/api/users/me/language";
 
+    private const string DigestScopesUrl = "/api/users/me/digest-scopes";
+
     private static readonly string[] DigestOnly = ["monthlyDigest"];
 
     private static readonly DateTimeOffset FirstOfOctober = new(2026, 10, 1, 8, 0, 0, TimeSpan.Zero);
@@ -118,6 +120,99 @@ public sealed class MonthlyDigestTests(ApiFixture fixture) : EmailTestBase(fixtu
         Assert.Equal("420.00", everything!.Figures.TotalExpense);
         Assert.Equal("350.00", household.Figures.TotalExpense);
         Assert.Equal(everything.Figures.TotalExpense, digest.Expense);
+    }
+
+    [Fact]
+    public async Task A_household_digest_carries_that_households_figures_and_name_beside_everything_once_each()
+    {
+        using var pair = await CreateHouseholdPairAsync();
+        await ChooseEmailKindsAsync(pair.OwnerClient, "monthlyDigest");
+        await SpendInSeptemberAsync(pair.OwnerClient, "Rent", "300.00");
+        await SpendInSeptemberAsync(pair.PartnerClient, "Rent", "50.00", pair.HouseholdId);
+        var sibling = await CreateUserAsync();
+        using var siblingClient = await LoginAsync(sibling);
+        await SpendInSeptemberAsync(siblingClient, "Rent", "70.00", await CreateHouseholdAsync(pair.Owner, sibling));
+        await ScopesAsync(pair.OwnerClient, true, pair.HouseholdId);
+        var everything = await pair.OwnerClient.GetFromJsonAsync<ReviewDto>("/api/month-close/2026-09", TestContext.Current.CancellationToken);
+        var household = await GetScopedAsync<ReviewDto>(pair.OwnerClient, "/api/month-close/2026-09", pair.HouseholdId);
+        var name = await HouseholdNameAsync(pair.OwnerClient, pair.HouseholdId);
+
+        await RunAsync(FirstOfOctober);
+        await RunAsync(FirstOfOctober.AddHours(1));
+
+        var digests = await DigestsAsync(pair.Owner.Id);
+        Assert.Equal(2, digests.Count);
+        var whole = Assert.Single(digests, d => d.RelatedId is null);
+        var shared = Assert.Single(digests, d => d.RelatedId == pair.HouseholdId);
+        Assert.Equal((everything!.Figures.TotalExpense, (string?)null), (whole.Payload!.Digest!.Expense, whole.Payload.Household));
+        Assert.Equal((household.Figures.TotalExpense, name, "Household"), (shared.Payload!.Digest!.Expense, shared.Payload.Household, shared.RelatedType));
+        Assert.Equal($"September 2026, {name}", shared.Title);
+        Assert.NotEqual(whole.Payload.Digest.Expense, shared.Payload.Digest.Expense);
+    }
+
+    [Fact]
+    public async Task Everything_switched_off_leaves_only_the_household_digest()
+    {
+        using var pair = await CreateHouseholdPairAsync();
+        await ChooseEmailKindsAsync(pair.PartnerClient, "monthlyDigest");
+        await SpendInSeptemberAsync(pair.PartnerClient, "Rent", "50.00", pair.HouseholdId);
+        await ScopesAsync(pair.PartnerClient, false, pair.HouseholdId);
+
+        await RunAsync(FirstOfOctober);
+
+        Assert.Equal(pair.HouseholdId, Assert.Single(await DigestsAsync(pair.Partner.Id)).RelatedId);
+    }
+
+    [Fact]
+    public async Task A_household_the_member_left_or_a_switched_off_households_feature_sends_no_household_digest()
+    {
+        using var pair = await CreateHouseholdPairAsync();
+        await ChooseEmailKindsAsync(pair.PartnerClient, "monthlyDigest");
+        await ChooseEmailKindsAsync(pair.OwnerClient, "monthlyDigest");
+        await SpendInSeptemberAsync(pair.PartnerClient, "Rent", "50.00");
+        await SpendInSeptemberAsync(pair.OwnerClient, "Rent", "60.00", pair.HouseholdId);
+        await ScopesAsync(pair.PartnerClient, true, pair.HouseholdId);
+        await ScopesAsync(pair.OwnerClient, true, pair.HouseholdId);
+        (await Client.DeleteAsync($"/api/households/{pair.HouseholdId}/members/{pair.Partner.Id}", TestContext.Current.CancellationToken))
+            .EnsureSuccessStatusCode();
+
+        await using (await FeatureOffAsync("households"))
+        {
+            await RunAsync(FirstOfOctober);
+        }
+
+        await RunAsync(FirstOfOctober.AddHours(1));
+
+        Assert.Null(Assert.Single(await DigestsAsync(pair.Partner.Id)).RelatedId);
+        var ownerDigests = await DigestsAsync(pair.Owner.Id);
+        Assert.Equal(2, ownerDigests.Count);
+        Assert.True(ownerDigests.Single(d => d.RelatedId is null).CreatedAt < ownerDigests.Single(d => d.RelatedId == pair.HouseholdId).CreatedAt);
+    }
+
+    [Fact]
+    public async Task The_scopes_start_on_everything_and_refuse_a_missing_list_a_repeat_or_a_household_of_others()
+    {
+        using var pair = await CreateHouseholdPairAsync();
+        var foreign = await CreateHouseholdAsync();
+
+        var profile = await pair.PartnerClient.GetFromJsonAsync<DigestProfileDto>("/api/auth/me", TestContext.Current.CancellationToken);
+        Assert.Equal((true, 0), (profile!.MonthlyDigestEverything, profile.MonthlyDigestHouseholdIds.Count));
+
+        await AssertValidationErrorAsync(
+            await pair.PartnerClient.PutAsJsonAsync(DigestScopesUrl, new { everything = true }, TestContext.Current.CancellationToken),
+            "householdIds");
+        await AssertProblemAsync(
+            await pair.PartnerClient.PutAsJsonAsync(DigestScopesUrl, new { everything = true, householdIds = new[] { pair.HouseholdId, pair.HouseholdId } }, TestContext.Current.CancellationToken),
+            HttpStatusCode.BadRequest,
+            ErrorCodes.CollectionInvalidSize);
+        await AssertProblemAsync(
+            await pair.PartnerClient.PutAsJsonAsync(DigestScopesUrl, new { everything = true, householdIds = new[] { foreign } }, TestContext.Current.CancellationToken),
+            HttpStatusCode.BadRequest,
+            ErrorCodes.HouseholdNotMember);
+
+        var saved = await ScopesAsync(pair.PartnerClient, false, pair.HouseholdId);
+        Assert.False(saved.MonthlyDigestEverything);
+        Assert.Equal([pair.HouseholdId], saved.MonthlyDigestHouseholdIds);
     }
 
     [Fact]
@@ -226,6 +321,12 @@ public sealed class MonthlyDigestTests(ApiFixture fixture) : EmailTestBase(fixtu
             .Where(n => n.UserId == userId && n.Type == NotificationType.MonthlyDigest)
             .ToListAsync(TestContext.Current.CancellationToken));
 
+    private static async Task<DigestProfileDto> ScopesAsync(HttpClient client, bool everything, params Guid[] householdIds) =>
+        await ReadOkAsync<DigestProfileDto>(await client.PutAsJsonAsync(DigestScopesUrl, new { everything, householdIds }, TestContext.Current.CancellationToken));
+
+    private static async Task<string> HouseholdNameAsync(HttpClient client, Guid householdId) =>
+        (await client.GetFromJsonAsync<List<NamedRow>>("/api/households", TestContext.Current.CancellationToken))!.Single(h => h.Id == householdId).Name;
+
     private static async Task<Guid> MeAsync(HttpClient client) =>
         (await client.GetFromJsonAsync<ProfileDto>("/api/auth/me", TestContext.Current.CancellationToken))!.Id;
 
@@ -255,6 +356,8 @@ public sealed class MonthlyDigestTests(ApiFixture fixture) : EmailTestBase(fixtu
     }
 
     private sealed record ProfileDto(Guid Id, string? Language);
+
+    private sealed record DigestProfileDto(bool MonthlyDigestEverything, List<Guid> MonthlyDigestHouseholdIds);
 
     private sealed record FiguresDto(string TotalIncome, string TotalExpense, string Net);
 

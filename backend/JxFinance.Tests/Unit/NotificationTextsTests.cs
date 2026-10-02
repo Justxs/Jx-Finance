@@ -191,6 +191,19 @@ public sealed class NotificationTextsTests
     }
 
     [Theory]
+    [InlineData("en", "August 2026, Kazlauskų šeima")]
+    [InlineData("lt", "2026 m. rugpjūtis, Kazlauskų šeima")]
+    public void A_household_digest_names_its_household_after_the_month_everywhere(string language, string title)
+    {
+        var notification = Sample(NotificationType.MonthlyDigest);
+        notification.Payload = notification.Payload! with { Household = "Kazlauskų šeima" };
+
+        Assert.Equal(title, NotificationTexts.Title(language, notification));
+        Assert.StartsWith($"{title}: ", NotificationTexts.Sentence(language, notification), StringComparison.Ordinal);
+        Assert.StartsWith($"**{title}**\n{title}: ", NotificationTexts.Discord(language, notification, null), StringComparison.Ordinal);
+    }
+
+    [Theory]
     [InlineData(NotificationType.MonthReadyToClose, "lt", "2026 m. rugpjūtis")]
     [InlineData(NotificationType.MonthlyDigest, "en", "August 2026")]
     [InlineData(NotificationType.BudgetExceeded, "lt", "Groceries")]
