@@ -5,7 +5,6 @@ import type {
   TransactionResponse,
 } from "@/api/generated/model";
 import { uid } from "./base";
-import { problemOf } from "./problems";
 import { sharedPurchase } from "./settle-up";
 
 const jonas = uid("5c5c5c5c", 1);
@@ -85,13 +84,3 @@ export const contactSplitPurchase: TransactionResponse = {
   sharedExpense: null,
   contactSplit: dinnerSplit,
 };
-
-export const contactNoPersonProblem = problemOf(
-  400,
-  "contact.noPerson",
-  "Split with at least one person.",
-  {
-    instance: "/api/contacts/splits",
-    name: "shares",
-  },
-);

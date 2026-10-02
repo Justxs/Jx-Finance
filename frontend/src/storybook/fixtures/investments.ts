@@ -730,12 +730,6 @@ export const marketPricesUnavailableProblem = problemOf(
   "EODHD could not be reached. Try again later.",
 );
 
-export const marketPricesKeyRequiredProblem = problemOf(
-  400,
-  "marketPrices.keyRequired",
-  "Save an EODHD API key under Settings, Market prices first.",
-);
-
 export const marketPriceSettings: MarketPriceSettingsResponse = {
   enabled: true,
   hasKey: true,
