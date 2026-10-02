@@ -77,5 +77,40 @@ public sealed class SpreadSlicesTests
         Assert.Equal(SpreadSlices.Of(start, 100m, months)[^1].Date, SpreadSlices.Range(start, months, SpreadDirection.Forward).Until);
     }
 
+    [Fact]
+    public void A_backward_spread_ends_on_the_payment_and_reaches_back_with_the_day_clamped()
+    {
+        var slices = SpreadSlices.Of(new DateOnly(2026, 3, 31), 90m, 3, SpreadDirection.Backward);
+
+        DateOnly[] expected = [new DateOnly(2026, 1, 31), new DateOnly(2026, 2, 28), new DateOnly(2026, 3, 31)];
+        Assert.Equal(expected, slices.Select(slice => slice.Date));
+        Assert.All(slices, slice => Assert.Equal(30m, slice.Amount));
+    }
+
+    [Fact]
+    public void A_negative_amount_is_spread_as_negative_slices_that_add_up()
+    {
+        var slices = SpreadSlices.Of(new DateOnly(2026, 1, 15), -100m, 3, SpreadDirection.Backward);
+
+        Assert.Equal([-33.34m, -33.33m, -33.33m], slices.Select(slice => slice.Amount));
+        Assert.Equal(-100m, slices.Sum(slice => slice.Amount));
+    }
+
+    [Theory]
+    [InlineData("2026-03-31", 3, SpreadDirection.Forward, "2026-03-31", "2026-05-31")]
+    [InlineData("2026-03-31", 3, SpreadDirection.Backward, "2026-01-31", "2026-03-31")]
+    [InlineData("2026-01-15", 12, SpreadDirection.Backward, "2025-02-15", "2026-01-15")]
+    [InlineData("2026-01-15", 1, SpreadDirection.Backward, "2026-01-15", "2026-01-15")]
+    public void The_range_runs_from_the_first_slice_to_the_last_in_either_direction(string date, int months, SpreadDirection direction, string from, string until)
+    {
+        var start = DateOnly.Parse(date, CultureInfo.InvariantCulture);
+        var slices = SpreadSlices.Of(start, 100m, months, direction);
+
+        var range = SpreadSlices.Range(start, months, direction);
+
+        Assert.Equal((DateOnly.Parse(from, CultureInfo.InvariantCulture), DateOnly.Parse(until, CultureInfo.InvariantCulture)), range);
+        Assert.Equal((slices[0].Date, slices[^1].Date), range);
+    }
+
     private static decimal Parse(string value) => decimal.Parse(value, CultureInfo.InvariantCulture);
 }

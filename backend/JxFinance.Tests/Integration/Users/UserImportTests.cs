@@ -109,6 +109,30 @@ public sealed partial class UserImportTests(ApiFixture fixture) : IntegrationTes
     }
 
     [Fact]
+    public async Task A_backward_spread_keeps_its_direction_and_first_month_through_an_export_and_an_import()
+    {
+        using var source = await CreateUserClientAsync();
+        var account = await CreateAccountAsync(client: source);
+        await RecordTransactionAsync(source, new
+        {
+            accountId = account,
+            type = "expense",
+            amount = "90.00",
+            date = "2026-04-10",
+            description = "Water",
+            spreadMonths = 3,
+            spreadDirection = "backward",
+        });
+        var export = await DownloadAsync(source);
+        using var target = await CreateUserClientAsync();
+
+        await ReadOkAsync<ImportDto>(await ImportAsync(target, WithNewIds(export)));
+        var moved = Assert.Single((await target.GetFromJsonAsync<PageDto<SpreadEntryDto>>("/api/transactions", TestContext.Current.CancellationToken))!.Items);
+
+        Assert.Equal((3, "backward", new DateOnly(2026, 2, 10), new DateOnly(2026, 4, 10)), (moved.SpreadMonths, moved.SpreadDirection, moved.SpreadFrom, moved.SpreadUntil));
+    }
+
+    [Fact]
     public async Task A_group_keeps_its_members_through_an_export_and_an_import_and_the_csv_names_it()
     {
         using var source = await CreateUserClientAsync();
@@ -303,7 +327,7 @@ public sealed partial class UserImportTests(ApiFixture fixture) : IntegrationTes
 
     private sealed record EntryDto(Guid Id, List<Guid> TagIds);
 
-    private sealed record SpreadEntryDto(Guid Id, int? SpreadMonths, DateOnly? SpreadUntil);
+    private sealed record SpreadEntryDto(Guid Id, int? SpreadMonths, DateOnly? SpreadUntil, string? SpreadDirection = null, DateOnly? SpreadFrom = null);
 
     private sealed record AllocationTargetDto(string Key, string Share);
 

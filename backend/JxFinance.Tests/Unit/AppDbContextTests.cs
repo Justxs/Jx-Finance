@@ -122,6 +122,46 @@ public sealed class AppDbContextTests
         Assert.Null(transaction.SpreadUntil);
     }
 
+    [Fact]
+    public async Task An_added_spread_starts_on_its_date_and_a_backward_one_ends_there()
+    {
+        var forward = NewTransaction("Insurance");
+        forward.Date = new DateOnly(2026, 1, 31);
+        forward.SpreadMonths = 3;
+        var backward = NewTransaction("Electricity");
+        backward.Date = new DateOnly(2026, 3, 31);
+        backward.SpreadMonths = 3;
+        backward.SpreadDirection = SpreadDirection.Backward;
+
+        foreach (var transaction in new[] { forward, backward })
+        {
+            await using var capture = new SqlCapture();
+            capture.Db.Transactions.Add(transaction);
+            await ApplyRulesAsync(capture);
+        }
+
+        Assert.Equal((new DateOnly(2026, 1, 31), new DateOnly(2026, 3, 31)), (forward.SpreadFrom, forward.SpreadUntil));
+        Assert.Equal((new DateOnly(2026, 1, 31), new DateOnly(2026, 3, 31)), (backward.SpreadFrom, backward.SpreadUntil));
+    }
+
+    [Fact]
+    public async Task Turning_a_spread_backward_moves_both_ends_and_clearing_it_clears_both()
+    {
+        await using var capture = new SqlCapture();
+        var transaction = Spread(new DateOnly(2026, 4, 10), 3);
+        capture.Db.Transactions.Attach(transaction);
+
+        transaction.SpreadDirection = SpreadDirection.Backward;
+        await ApplyRulesAsync(capture);
+
+        Assert.Equal((new DateOnly(2026, 2, 10), new DateOnly(2026, 4, 10)), (transaction.SpreadFrom, transaction.SpreadUntil));
+
+        transaction.SpreadMonths = null;
+        await ApplyRulesAsync(capture);
+
+        Assert.Equal(((DateOnly?)null, (DateOnly?)null), (transaction.SpreadFrom, transaction.SpreadUntil));
+    }
+
     private static Transaction Spread(DateOnly date, short months)
     {
         var transaction = NewTransaction("Insurance", "insurance");

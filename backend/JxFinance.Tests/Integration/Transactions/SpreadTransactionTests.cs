@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
+using JxFinance.Infrastructure.Data;
 using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Transactions;
@@ -187,6 +188,48 @@ public sealed class SpreadTransactionTests(ApiFixture fixture) : IntegrationTest
         Assert.Equal("-45.00", balances.Balances.Single(b => b.UserId == pair.Partner.Id && b.Currency == "eur").Amount);
     }
 
+    [Fact]
+    public async Task A_backward_row_paid_after_a_range_is_drilled_into_from_it_and_an_update_without_a_direction_spreads_forward()
+    {
+        using var member = await CreateUserClientAsync();
+        var account = await CreateAccountAsync("1000.00", client: member);
+        var water = await PostAsync<SpreadRowDto>(
+            member,
+            "/api/transactions",
+            new { accountId = account, type = "expense", amount = "90.00", date = "2026-04-10", description = "Water", spreadMonths = 3, spreadDirection = "backward" });
+        const string range = "dateFrom=2026-03-01&dateTo=2026-03-31";
+
+        var overlapping = await LedgerAsync(member, $"{range}&spreadOverlap=true");
+        var forward = await ReadOkAsync<SpreadRowDto>(await member.PutAsJsonAsync(
+            $"/api/transactions/{water.Id}",
+            new { id = water.Id, accountId = account, type = "expense", amount = "90.00", date = "2026-04-10", description = "Water", spreadMonths = 3 },
+            TestContext.Current.CancellationToken));
+        var afterwards = await LedgerAsync(member, $"{range}&spreadOverlap=true");
+
+        Assert.Equal(("backward", new DateOnly(2026, 2, 10), new DateOnly(2026, 4, 10)), (water.SpreadDirection, water.SpreadFrom, water.SpreadUntil));
+        Assert.Equal([water.Id], overlapping.Items.Select(t => t.Id));
+        Assert.Equal(("forward", new DateOnly(2026, 4, 10), new DateOnly(2026, 6, 10)), (forward.SpreadDirection, forward.SpreadFrom, forward.SpreadUntil));
+        Assert.Empty(afterwards.Items);
+    }
+
+    [Fact]
+    public async Task A_row_that_is_not_spread_has_no_direction_and_the_backfill_starts_old_spreads_on_their_date()
+    {
+        using var member = await CreateUserClientAsync();
+        var account = await CreateAccountAsync("1000.00", client: member);
+        var plain = await PostAsync<SpreadRowDto>(member, "/api/transactions", new { accountId = account, type = "expense", amount = "9.00", date = "2026-03-05" });
+        var spread = await SpreadAsync(member, account, "120.00", new DateOnly(2026, 1, 15), 4);
+        await SqlAsync($"""UPDATE "Transactions" SET "SpreadFrom" = NULL WHERE "Id" = {spread.Id}""");
+
+        await WithDbAsync(db => SpreadFromBackfill.RunAsync(db, TestContext.Current.CancellationToken));
+        var again = await WithDbAsync(db => SpreadFromBackfill.RunAsync(db, TestContext.Current.CancellationToken));
+
+        Assert.Equal(((string?)null, (DateOnly?)null, (DateOnly?)null), (plain.SpreadDirection, plain.SpreadFrom, plain.SpreadUntil));
+        Assert.Equal(0, again);
+        var stored = (await member.GetFromJsonAsync<SpreadRowDto>($"/api/transactions/{spread.Id}", TestContext.Current.CancellationToken))!;
+        Assert.Equal((new DateOnly(2026, 1, 15), new DateOnly(2026, 4, 15)), (stored.SpreadFrom, stored.SpreadUntil));
+    }
+
     private static Task<SpreadRowDto> SpreadAsync(HttpClient client, Guid accountId, string amount, DateOnly date, int spreadMonths) =>
         PostAsync<SpreadRowDto>(
             client,
@@ -199,7 +242,7 @@ public sealed class SpreadTransactionTests(ApiFixture fixture) : IntegrationTest
     private static async Task<ReportDto> ReportAsync(HttpClient client, string query) =>
         (await client.GetFromJsonAsync<ReportDto>($"/api/reports/summary?{query}", TestContext.Current.CancellationToken))!;
 
-    private sealed record SpreadRowDto(Guid Id, DateOnly Date, int? SpreadMonths, DateOnly? SpreadUntil);
+    private sealed record SpreadRowDto(Guid Id, DateOnly Date, int? SpreadMonths, DateOnly? SpreadUntil, string? SpreadDirection = null, DateOnly? SpreadFrom = null);
 
     private sealed record SummaryDto(int Count, string TotalIncome, string TotalExpense);
 

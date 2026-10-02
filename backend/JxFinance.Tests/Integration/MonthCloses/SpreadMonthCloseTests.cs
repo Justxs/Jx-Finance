@@ -66,6 +66,32 @@ public sealed class SpreadMonthCloseTests(ApiFixture fixture) : IntegrationTestB
         Assert.Equal("closedChanged", year.Months[2].Status);
     }
 
+    [Fact]
+    public async Task A_backward_row_paid_after_the_close_changes_the_closed_month_it_reaches()
+    {
+        using var member = await CreateUserClientAsync();
+        var account = await CreateAccountAsync("1000.00", client: member);
+        await CreateTransactionAsync(member, account, null, "expense", "9.00", "2025-03-05");
+        var closed = await CloseAsync(member, March);
+
+        var water = await RecordTransactionAsync(member, new
+        {
+            accountId = account,
+            type = "expense",
+            amount = "90.00",
+            date = "2025-04-10",
+            description = "Water",
+            spreadMonths = 3,
+            spreadDirection = "backward",
+        });
+        var review = await ReviewAsync(member, March);
+
+        Assert.Equal("9.00", closed.Figures.TotalExpense);
+        Assert.Equal("closedChanged", review.Status);
+        Assert.Equal(("9.00", "39.00"), (review.Drift!.Totals!.ClosedExpense, review.Figures.TotalExpense));
+        Assert.Equal((water.Id, "created"), (Assert.Single(review.Drift.Rows).Id, review.Drift.Rows[0].Change));
+    }
+
     private static Task<IdDto> SpreadAsync(HttpClient client, Guid accountId, string amount, string date, int spreadMonths) =>
         PostAsync<IdDto>(
             client,

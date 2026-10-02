@@ -91,6 +91,37 @@ public sealed class SpreadBudgetTests(ApiFixture fixture) : IntegrationTestBase(
         Assert.Equal("100.00", (await BudgetsAsync(pair.PartnerClient)).Single(b => b.Id == budget.Id).Spent);
     }
 
+    [Fact]
+    public async Task Backward_split_and_refund_spreads_count_their_slice_of_the_month()
+    {
+        using var member = await CreateUserClientAsync();
+        var account = await CreateAccountAsync("5000.00", client: member);
+        var water = await CreateCategoryAsync(client: member);
+        var food = await CreateCategoryAsync(client: member);
+        var home = await CreateCategoryAsync(client: member);
+        await RecordTransactionAsync(member, new { accountId = account, categoryId = water, type = "expense", amount = "90.00", date = "2026-08-10", spreadMonths = 3, spreadDirection = "backward" });
+        await RecordTransactionAsync(member, new { accountId = account, categoryId = water, type = "expense", amount = "90.00", date = "2026-08-10", spreadMonths = 3 });
+        await RecordTransactionAsync(member, new
+        {
+            accountId = account,
+            type = "expense",
+            amount = "60.00",
+            date = "2026-06-01",
+            spreadMonths = 3,
+            lines = new object[] { new { categoryId = food, amount = "45.00" }, new { categoryId = home, amount = "15.00" } },
+        });
+        await RecordTransactionAsync(member, new { accountId = account, categoryId = food, type = "expense", amount = "-30.00", date = "2026-07-01", spreadMonths = 3 });
+        var forWater = await PostAsync<IdDto>(member, "/api/budgets", new { categoryId = water, limitAmount = "100.00", period = "monthly" });
+        var forFood = await PostAsync<IdDto>(member, "/api/budgets", new { categoryId = food, limitAmount = "100.00", period = "monthly" });
+        var forHome = await PostAsync<IdDto>(member, "/api/budgets", new { categoryId = home, limitAmount = "100.00", period = "monthly" });
+
+        var budgets = await BudgetsAsync(member);
+
+        Assert.Equal("30.00", budgets.Single(b => b.Id == forWater.Id).Spent);
+        Assert.Equal("5.00", budgets.Single(b => b.Id == forFood.Id).Spent);
+        Assert.Equal("5.00", budgets.Single(b => b.Id == forHome.Id).Spent);
+    }
+
     private static async Task<List<SpreadBudgetDto>> BudgetsAsync(HttpClient client) =>
         (await client.GetFromJsonAsync<List<SpreadBudgetDto>>($"/api/budgets?asOf={AsOf}", TestContext.Current.CancellationToken))!;
 

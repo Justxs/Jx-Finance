@@ -107,6 +107,78 @@ public sealed class SpreadReportTests(ApiFixture fixture) : IntegrationTestBase(
         Assert.Equal("120.00", Assert.Single(year.ExpenseByTag, item => item.TagId == car).Amount);
     }
 
+    [Fact]
+    public async Task A_backward_spread_counts_in_the_months_up_to_the_payment()
+    {
+        using var member = await CreateUserClientAsync();
+        var account = await CreateAccountAsync("1000.00", client: member);
+        var water = await CreateCategoryAsync(client: member);
+        await RecordTransactionAsync(member, new
+        {
+            accountId = account,
+            categoryId = water,
+            type = "expense",
+            amount = "90.00",
+            date = "2026-03-31",
+            description = "Water",
+            spreadMonths = 3,
+            spreadDirection = "backward",
+        });
+
+        var january = await ReportAsync(member, "dateFrom=2026-01-01&dateTo=2026-01-31");
+        var february = await ReportAsync(member, February);
+        var april = await ReportAsync(member, "dateFrom=2026-04-01&dateTo=2026-04-30");
+
+        Assert.Equal(("30.00", "30.00", "0.00"), (january.TotalExpense, february.TotalExpense, april.TotalExpense));
+        Assert.Equal("30.00", Amount(january.ExpenseByCategory, water));
+    }
+
+    [Fact]
+    public async Task A_spread_split_divides_each_months_slice_among_its_lines()
+    {
+        using var member = await CreateUserClientAsync();
+        var account = await CreateAccountAsync("1000.00", client: member);
+        var food = await CreateCategoryAsync(client: member);
+        var home = await CreateCategoryAsync(client: member);
+        await RecordTransactionAsync(member, new
+        {
+            accountId = account,
+            type = "expense",
+            amount = "50.00",
+            date = "2026-01-03",
+            spreadMonths = 3,
+            lines = new object[] { new { categoryId = food, amount = "30.00" }, new { categoryId = home, amount = "20.00" } },
+        });
+
+        var months = new List<ReportDto>();
+        foreach (var month in new[] { "01", "02", "03" })
+        {
+            months.Add(await ReportAsync(member, $"dateFrom=2026-{month}-01&dateTo=2026-{month}-28"));
+        }
+
+        var year = await ReportAsync(member, Year);
+
+        Assert.Equal(["16.67", "16.67", "16.66"], months.Select(m => m.TotalExpense));
+        Assert.All(months, month => Assert.Equal(Parse(month.TotalExpense), month.ExpenseByCategory.Sum(item => Parse(item.Amount))));
+        Assert.Equal(("30.00", "20.00"), (Amount(year.ExpenseByCategory, food), Amount(year.ExpenseByCategory, home)));
+    }
+
+    [Fact]
+    public async Task A_spread_refund_takes_its_slices_off_each_month()
+    {
+        using var member = await CreateUserClientAsync();
+        var account = await CreateAccountAsync("1000.00", client: member);
+        var gym = await CreateCategoryAsync(client: member);
+        await CreateTransactionAsync(member, account, gym, "expense", "50.00", "2026-02-05", "Gym");
+        await SpreadAsync(member, account, gym, "expense", "-60.00", "2026-01-20", 3, "Gym refund");
+
+        var february = await ReportAsync(member, February);
+        var year = await ReportAsync(member, Year);
+
+        Assert.Equal(("30.00", "30.00"), (Amount(february.ExpenseByCategory, gym), february.TotalExpense));
+        Assert.Equal("-10.00", Amount(year.ExpenseByCategory, gym));
+    }
+
     private static Task<TransactionDto> SpreadAsync(
         HttpClient client,
         Guid accountId,

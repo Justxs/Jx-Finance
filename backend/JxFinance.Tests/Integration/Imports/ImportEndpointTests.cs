@@ -365,6 +365,35 @@ public sealed class ImportEndpointTests(ApiFixture fixture) : IntegrationTestBas
         await AssertRejectedAsync(response, "import.invalidFile");
     }
 
+    [Fact]
+    public async Task A_confirmed_row_can_be_spread_but_a_transfer_or_a_linked_row_cannot()
+    {
+        using var member = await CreateUserClientAsync();
+        var account = await CreateAccountAsync("100.00", client: member);
+        var savings = await CreateAccountAsync(client: member);
+        var reference = $"SPREAD-{Guid.NewGuid():N}";
+
+        var confirmed = await PostAsync<ConfirmDto>(member, "/api/import/confirm", new
+        {
+            accountId = account,
+            rows = new[] { new { importRef = reference, date = "2026-04-10", description = "Water", amount = "90.00", type = "expense", spreadMonths = 3, spreadDirection = "backward" } },
+        });
+        var transfer = await member.PostAsJsonAsync(
+            "/api/import/confirm",
+            new
+            {
+                accountId = account,
+                rows = new[] { new { importRef = $"{reference}-T", date = "2026-04-11", amount = "20.00", type = "expense", transferAccountId = savings, spreadMonths = 3 } },
+            },
+            TestContext.Current.CancellationToken);
+        var ledger = await member.GetFromJsonAsync<PageDto<SpreadRowDto>>($"/api/transactions?accountId={account}", TestContext.Current.CancellationToken);
+
+        Assert.Equal(1, confirmed.Imported);
+        var row = Assert.Single(ledger!.Items);
+        Assert.Equal((3, "backward", new DateOnly(2026, 2, 10), new DateOnly(2026, 4, 10)), (row.SpreadMonths, row.SpreadDirection, row.SpreadFrom, row.SpreadUntil));
+        await AssertProblemAsync(transfer, HttpStatusCode.BadRequest, "value.mustBeEmpty");
+    }
+
     private async Task<(Guid Id, string Iban)> CreateAccountWithIbanAsync(string startingBalance)
     {
         var iban = $"LT{Random.Shared.NextInt64(100_000_000_000_000_000, 999_999_999_999_999_999)}";
@@ -461,6 +490,8 @@ public sealed class ImportEndpointTests(ApiFixture fixture) : IntegrationTestBas
     private sealed record CamtPreviewDto(List<CamtRowDto> Rows, StatementDto Statement);
 
     private sealed record ConfirmDto(int Imported, int SkippedDuplicates, int Linked);
+
+    private sealed record SpreadRowDto(Guid Id, int? SpreadMonths, string? SpreadDirection, DateOnly? SpreadFrom, DateOnly? SpreadUntil);
 
     private sealed record ReconciledConfirmDto(int Imported, ReconciliationDto? Reconciliation);
 }
