@@ -65,7 +65,7 @@ public sealed class ReceiptItemReportTests(ApiFixture fixture) : IntegrationTest
     private static async Task<string> UploadAsync(HttpClient client, Guid transactionId, byte marker)
     {
         using var content = new MultipartFormDataContent();
-        var file = new ByteArrayContent([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, marker, 2, 3]);
+        var file = new ByteArrayContent(SamplePhoto.Png(marker));
         file.Headers.ContentType = new MediaTypeHeaderValue("image/png");
         content.Add(file, "file", "receipt.png");
         var response = await client.PostAsync($"/api/transactions/{transactionId}/attachments", content, TestContext.Current.CancellationToken);

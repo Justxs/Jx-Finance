@@ -11,8 +11,6 @@ namespace JxFinance.Tests.Integration.Notifications;
 [Collection<IntegrationCollection>]
 public sealed class WarrantyReminderTests(ApiFixture fixture) : IntegrationTestBase(fixture)
 {
-    private static readonly byte[] Png = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 1, 2, 3, 4];
-
     [Fact]
     public async Task A_warranty_ending_within_thirty_days_is_announced_once_and_a_later_one_not_yet()
     {
@@ -44,7 +42,7 @@ public sealed class WarrantyReminderTests(ApiFixture fixture) : IntegrationTestB
     private static async Task<Guid> UploadAsync(HttpClient client, Guid transactionId)
     {
         using var content = new MultipartFormDataContent();
-        var file = new ByteArrayContent(Png);
+        var file = new ByteArrayContent(SamplePhoto.Png(1));
         file.Headers.ContentType = new MediaTypeHeaderValue("image/png");
         content.Add(file, "file", "receipt.png");
         var response = await client.PostAsync($"/api/transactions/{transactionId}/attachments", content, TestContext.Current.CancellationToken);

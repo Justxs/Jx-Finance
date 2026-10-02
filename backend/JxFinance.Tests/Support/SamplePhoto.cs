@@ -23,6 +23,12 @@ public static class SamplePhoto
 
     public static byte[] VilniusReceipt() => JpegAt((54, 41, 1300), "N", (25, 17, 2100), "E");
 
+    public static byte[] Png(byte shade)
+    {
+        using var image = new MagickImage(new MagickColor(shade, shade, shade), 16, 16);
+        return image.ToByteArray(MagickFormat.Png);
+    }
+
     private static Rational[] Sexagesimal((uint Degrees, uint Minutes, uint HundredthsOfSeconds) value) =>
         [new Rational(value.Degrees, 1), new Rational(value.Minutes, 1), new Rational(value.HundredthsOfSeconds, 100)];
 }
