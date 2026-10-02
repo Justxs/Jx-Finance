@@ -19,6 +19,7 @@ const defaults = {
   sidebarCollapsed: false,
   supportLinkHidden: false,
   amountsHidden: false,
+  myShare: false,
 };
 
 describe("reading", () => {
