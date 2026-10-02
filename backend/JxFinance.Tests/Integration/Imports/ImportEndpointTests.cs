@@ -305,7 +305,7 @@ public sealed class ImportEndpointTests(ApiFixture fixture) : IntegrationTestBas
     }
 
     [Fact]
-    public async Task A_camt_confirm_records_its_closing_balance_in_the_account_currency_only()
+    public async Task A_camt_confirm_records_its_closing_balance_in_the_statement_currency()
     {
         var (account, _) = await CreateAccountWithIbanAsync("100.00");
 
@@ -316,12 +316,14 @@ public sealed class ImportEndpointTests(ApiFixture fixture) : IntegrationTestBas
         Assert.Equal(
             (new DateOnly(2025, 6, 30), "statement", "84.23", "0.00"),
             (camt.Reconciliation!.Date, camt.Reconciliation.Source, camt.Reconciliation.Balance, camt.Reconciliation.Difference));
-        Assert.Null(dollars.Reconciliation);
+        Assert.Equal(
+            (new DateOnly(2025, 7, 31), "usd", "70.00", "0.00", "70.00"),
+            (dollars.Reconciliation!.Date, dollars.Reconciliation.Currency, dollars.Reconciliation.Balance, dollars.Reconciliation.LedgerBalance, dollars.Reconciliation.Difference));
         Assert.Null(csv.Reconciliation);
         var listed = await Client.GetFromJsonAsync<List<ReconciliationDto>>(
             $"/api/accounts/{account}/reconciliations",
             TestContext.Current.CancellationToken);
-        Assert.Equal(camt.Reconciliation.Id, Assert.Single(listed!).Id);
+        Assert.Equal([dollars.Reconciliation.Id, camt.Reconciliation.Id], listed!.Select(r => r.Id));
     }
 
     [Fact]
