@@ -7,6 +7,7 @@ import {
   itemWeight,
   linesFromReceipt,
   receiptTotals,
+  refundCategory,
   shareByWeight,
   shortName,
 } from "./receipt-split";
@@ -129,6 +130,52 @@ describe("linesFromReceipt", () => {
     };
 
     expect(linesOf("18.21", long).every((line) => line.description.length <= 500)).toBe(true);
+  });
+});
+
+describe("refundCategory", () => {
+  test("takes the category of the heaviest group of items", () => {
+    expect(refundCategory(maximaReceipt.items, choices)).toBe(FOOD);
+    expect(
+      refundCategory(maximaReceipt.items, [
+        HYGIENE,
+        HYGIENE,
+        HYGIENE,
+        HYGIENE,
+        HYGIENE,
+        FOOD,
+        FOOD,
+      ]),
+    ).toBe(HYGIENE);
+  });
+
+  test("weighs items the way the split does, net of discounts", () => {
+    const discounted = maximaReceipt.items.map((item, index) =>
+      index < 5 ? { ...item, discount: item.amount } : item,
+    );
+
+    expect(refundCategory(discounted, choices)).toBe(HYGIENE);
+  });
+
+  test("keeps the first group on a tie", () => {
+    const twins = [bread(), bread()];
+
+    expect(refundCategory(twins, [HYGIENE, FOOD])).toBe(HYGIENE);
+    expect(refundCategory(twins, [FOOD, HYGIENE])).toBe(FOOD);
+  });
+
+  test("gives no category when the heaviest items have none", () => {
+    expect(
+      refundCategory(maximaReceipt.items, [null, null, null, null, null, HYGIENE, HYGIENE]),
+    ).toBe("");
+    expect(refundCategory(maximaReceipt.items, [])).toBe("");
+    expect(refundCategory([], [])).toBe("");
+  });
+
+  test("changes when an item moves to another category", () => {
+    const moved = [FOOD, FOOD, HYGIENE, FOOD, FOOD, HYGIENE, HYGIENE];
+
+    expect(refundCategory(maximaReceipt.items, moved)).toBe(HYGIENE);
   });
 });
 
