@@ -10,6 +10,8 @@ public interface IInvestmentTransactionInput
     DateOnly Date { get; }
     Guid? SecurityId { get; }
     Guid? RelatedSecurityId { get; }
+    decimal? RelatedQuantity { get; }
+    decimal? CostShare { get; }
     decimal? Quantity { get; }
     decimal? Price { get; }
     decimal? Amount { get; }

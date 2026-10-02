@@ -14,6 +14,7 @@ import {
   TableRow,
 } from "@/components/ui/table/table";
 import { useIsoDate, useMoney, useQuantityFormat } from "@/hooks/use-formatters";
+import { metaLine } from "@/lib/utils";
 
 interface Props {
   disposals: readonly TaxDisposalResponse[];
@@ -99,6 +100,9 @@ export function TaxDisposalsTable({ disposals, reportingCurrency, accountNames }
                   <TableCell className="tabular-nums">{formatDate(disposal.date)}</TableCell>
                   <TableCell className="max-w-64 whitespace-normal">
                     <p className="font-semibold">{disposal.symbol}</p>
+                    {disposal.type === "merger" ? (
+                      <p className="text-xs text-muted-foreground">{t("investments.tax.merger")}</p>
+                    ) : null}
                     <p className="truncate text-xs text-muted-foreground" title={disposal.name}>
                       {disposal.name}
                     </p>
@@ -134,7 +138,11 @@ export function TaxDisposalsTable({ disposals, reportingCurrency, accountNames }
               <div className="min-w-0">
                 <p className="font-semibold">{disposal.symbol}</p>
                 <p className="truncate text-xs text-muted-foreground">
-                  {formatDate(disposal.date)} · {quantity.format(Number(disposal.quantity))}
+                  {metaLine(
+                    formatDate(disposal.date),
+                    quantity.format(Number(disposal.quantity)),
+                    disposal.type === "merger" ? t("investments.tax.merger") : null,
+                  )}
                 </p>
               </div>
               <div className="shrink-0 text-right">{gain(disposal)}</div>

@@ -12,6 +12,8 @@ public sealed class InvestmentTransaction : OwnableEntity, IAccountScoped, IDate
     public InvestmentTransactionType Type { get; set; }
     public DateOnly Date { get; set; }
     public decimal Quantity { get; set; }
+    public decimal RelatedQuantity { get; set; }
+    public decimal? CostShare { get; set; }
     public decimal Price { get; set; }
     public decimal Fee { get; set; }
     public Money CashAmount { get; set; }

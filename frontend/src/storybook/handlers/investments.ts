@@ -119,6 +119,7 @@ export const investmentHandlers = [
       fee: -amount,
       split: 0,
       symbolChange: 0,
+      merger: amount,
     };
     return {
       id: NEW_ID,
@@ -130,6 +131,8 @@ export const investmentHandlers = [
       type,
       date: text(body.date) ?? FIXTURE_TODAY,
       quantity: text(body.quantity) ?? "0",
+      relatedQuantity: text(body.relatedQuantity) ?? "0",
+      costShare: text(body.costShare),
       price: text(body.price) ?? "0",
       fee: fee.toFixed(2),
       cashAmount: cashByType[type].toFixed(2),

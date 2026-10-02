@@ -44,7 +44,9 @@ public sealed record FlexCorporateAction(
     DateOnly Date,
     decimal Quantity,
     decimal? Ratio,
-    string? Description)
+    string? Description,
+    decimal Proceeds = 0m,
+    decimal Value = 0m)
 {
     public bool IsSplit => Type is FlexParser.ForwardSplit or FlexParser.ReverseSplit;
 }

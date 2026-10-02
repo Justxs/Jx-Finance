@@ -3,6 +3,7 @@ using System.Net.Mime;
 using FastEndpoints;
 using JxFinance.Common;
 using JxFinance.Domain.Common;
+using JxFinance.Domain.Investments;
 using JxFinance.Endpoints.Investments.GetTaxSummary;
 using JxFinance.Endpoints.Investments.Interfaces;
 using JxFinance.Endpoints.Investments.Shared;
@@ -53,7 +54,7 @@ public sealed class ExportTaxSummaryEndpoint(ITaxSummaryService taxSummaryServic
         IReadOnlyDictionary<Guid, string> accounts,
         string reporting) =>
         CsvCell.Row(
-            CsvCell.Value("Disposal"),
+            CsvCell.Value(disposal.Type == InvestmentTransactionType.Merger ? "Merger" : "Disposal"),
             CsvCell.Date(disposal.Date),
             CsvCell.Text(accounts.GetValueOrDefault(disposal.AccountId)),
             CsvCell.Text(disposal.Symbol),

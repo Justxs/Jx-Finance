@@ -1,5 +1,6 @@
 using FastEndpoints;
 using FluentValidation;
+using JxFinance.Common.Errors;
 using JxFinance.Common.Validation;
 using JxFinance.Domain.Investments;
 
@@ -12,6 +13,7 @@ public abstract class InvestmentTransactionInputValidator<TRequest> : Validator<
     private const string PriceMessage = "Price must be a decimal of 0 or more with at most 8 decimal places.";
     private const string SplitMessage = "Enter the split ratio as new shares per old share, for example 2 for a 2-for-1 split.";
     private const string AmountMessage = "Amount must be a decimal greater than 0 with at most 2 decimal places.";
+    private const string CostShareMessage = "Enter the share of the cost basis that moves to the new security, from 0 to 100 percent with at most 6 decimals.";
 
     protected InvestmentTransactionInputValidator()
     {
@@ -59,6 +61,36 @@ public abstract class InvestmentTransactionInputValidator<TRequest> : Validator<
                 .IsPositiveQuantity()
                 .WithMessage(QuantityMessage);
         });
+
+        When(r => r.Type is InvestmentTransactionType.Merger, () =>
+        {
+            RuleFor(r => r.SecurityId).IsRequired().WithMessage("Choose the security that was taken over.");
+            RuleFor(r => r.Quantity)
+                .IsPresent()
+                .WithMessage(QuantityMessage)
+                .IsPositiveQuantity()
+                .WithMessage(QuantityMessage);
+            RuleFor(r => r.RelatedQuantity)
+                .IsPresent()
+                .WithMessage(QuantityMessage)
+                .IsPositiveQuantity()
+                .WithMessage(QuantityMessage)
+                .When(r => r.RelatedSecurityId is not null);
+            RuleFor(r => r.Amount)
+                .IsPresent()
+                .WithMessage("Enter the cash received, or choose the security received.")
+                .When(r => r.RelatedSecurityId is null);
+            RuleFor(r => r.Amount).IsPositiveMoney().WithMessage(AmountMessage);
+            RuleFor(r => r.CostShare)
+                .IsPresent()
+                .WithMessage(CostShareMessage)
+                .When(r => r.RelatedSecurityId is not null && r.Amount is > 0m);
+        });
+
+        RuleFor(r => r.CostShare)
+            .Must(share => share is null || (share is >= 0m and <= Portfolio.WholeCost && decimal.Round(share.Value, 6) == share))
+            .WithErrorCode(ErrorCodes.RangeInvalid)
+            .WithMessage(CostShareMessage);
 
         RuleFor(r => r.RelatedSecurityId)
             .DiffersFrom(r => r.SecurityId)

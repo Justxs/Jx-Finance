@@ -15,7 +15,12 @@ import { Section, SectionHeader } from "@/components/ui/section/section";
 import { HintTag } from "@/components/ui/tag/tag";
 import { InvestmentEntryModal } from "@/features/investments/investment-entry-form/investment-entry-modal";
 import { ACTIVITY_PAGE_SIZE, activityParams } from "@/features/investments/investment-queries";
-import { entryTypes, isTrade, movesNoCash } from "@/features/investments/investment-types";
+import {
+  entryTypes,
+  isTrade,
+  movesNoCash,
+  takesCostShare,
+} from "@/features/investments/investment-types";
 import { useConfirmedDelete } from "@/hooks/use-confirmed-delete";
 import { useDeferredParams } from "@/hooks/use-deferred-params";
 import {
@@ -33,6 +38,18 @@ import { cn, metaLine } from "@/lib/utils";
 interface Props {
   accounts: readonly AccountResponse[];
   accountId?: string;
+}
+
+function movedNoCash(entry: InvestmentTransactionResponse) {
+  return movesNoCash(entry.type) || (entry.type === "merger" && Number(entry.cashAmount) === 0);
+}
+
+function setsCostShare(entry: InvestmentTransactionResponse) {
+  return takesCostShare(entry.type, entry.relatedSecurityId, entry.cashAmount);
+}
+
+function editable(entry: InvestmentTransactionResponse) {
+  return entry.source === "manual" || setsCostShare(entry);
 }
 
 export function ActivitySection({ accounts, accountId }: Readonly<Props>) {
@@ -65,6 +82,16 @@ export function ActivitySection({ accounts, accountId }: Readonly<Props>) {
   function volume(entry: InvestmentTransactionResponse) {
     if (isTrade(entry.type)) {
       return `${quantityFormat.format(Number(entry.quantity))} × ${formatPrice(Number(entry.price), entry.currency)}`;
+    }
+
+    if (entry.type === "merger") {
+      return entry.relatedSymbol
+        ? t("investments.activity.mergedInto", {
+            quantity: quantityFormat.format(Number(entry.quantity)),
+            received: quantityFormat.format(Number(entry.relatedQuantity)),
+            symbol: entry.relatedSymbol,
+          })
+        : quantityFormat.format(Number(entry.quantity));
     }
 
     if (entry.type === "symbolChange") {
@@ -148,6 +175,11 @@ export function ActivitySection({ accounts, accountId }: Readonly<Props>) {
                         {t("investments.activity.imported")}
                       </HintTag>
                     )}
+                    {setsCostShare(entry) && entry.costShare === null ? (
+                      <HintTag hint={t("investments.activity.costShareMissingHint")}>
+                        {t("investments.activity.costShareMissing")}
+                      </HintTag>
+                    ) : null}
                   </p>
                   <p className="text-xs wrap-break-word text-muted-foreground tabular-nums">
                     {details(entry)}
@@ -157,18 +189,18 @@ export function ActivitySection({ accounts, accountId }: Readonly<Props>) {
                   className={cn(
                     "shrink-0 text-right font-semibold whitespace-nowrap tabular-nums",
                     amount > 0 && INCOME_TONE,
-                    movesNoCash(entry.type) && "font-normal text-muted-foreground",
+                    movedNoCash(entry) && "font-normal text-muted-foreground",
                   )}
                 >
-                  {movesNoCash(entry.type) ? t("investments.activity.noCash") : cash(entry)}
+                  {movedNoCash(entry) ? t("investments.activity.noCash") : cash(entry)}
                 </span>
                 <RowActions
                   label={label}
                   className="-mr-2 gap-3"
-                  onEdit={entry.source === "manual" ? () => setEditing(entry) : undefined}
+                  onEdit={editable(entry) ? () => setEditing(entry) : undefined}
                   {...remove.deleteProps(entry.id)}
                 >
-                  {entry.source === "manual" ? null : (
+                  {editable(entry) ? null : (
                     <span className="size-8 shrink-0 max-sm:hidden" aria-hidden="true" />
                   )}
                 </RowActions>

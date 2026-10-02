@@ -14,6 +14,7 @@ public sealed record TaxLotResponse(
 
 public sealed record TaxDisposalResponse(
     Guid Id,
+    InvestmentTransactionType Type,
     DateOnly Date,
     Guid AccountId,
     Guid SecurityId,

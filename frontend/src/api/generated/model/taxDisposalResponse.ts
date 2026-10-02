@@ -7,10 +7,12 @@
  */
 import type { Currency } from "./currency";
 import type { DateOnly } from "./dateOnly";
+import type { InvestmentTransactionType } from "./investmentTransactionType";
 import type { TaxLotResponse } from "./taxLotResponse";
 
 export interface TaxDisposalResponse {
   id: string;
+  type: InvestmentTransactionType;
   date: DateOnly;
   accountId: string;
   securityId: string;

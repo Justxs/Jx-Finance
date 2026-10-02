@@ -1797,6 +1797,7 @@
       "gain": "Pelnas arba nuostolis",
       "lots": "Panaudotos partijos",
       "lot": "{{date}} · {{quantity}} · {{cost}}",
+      "merger": "Pinigai už susijungimą",
       "income": "Gauti dividendai ir palūkanos",
       "noIncome": "Šiais metais dividendų ar palūkanų nebuvo.",
       "charges": "Sumokėtas išskaičiuotas mokestis ir komisiniai",
@@ -1815,6 +1816,9 @@
       "importedLocked": "Importuota iš brokerio. Pataisykite ten ir importuokite dar kartą.",
       "splitRatio": "{{ratio}} už 1",
       "movedTo": "{{quantity}} į {{symbol}}",
+      "mergedInto": "{{quantity}} į {{received}} {{symbol}}",
+      "costShareMissing": "Savikainos dalis nenustatyta",
+      "costShareMissingHint": "Pataisykite įrašą ir nurodykite, kokia savikainos dalis perkelta į naujas akcijas.",
       "noCash": "Be pinigų judėjimo"
     },
     "types": {
@@ -1825,7 +1829,8 @@
       "interest": "Palūkanos",
       "fee": "Komisiniai",
       "split": "Akcijų skaidymas",
-      "symbolChange": "Simbolio pakeitimas"
+      "symbolChange": "Simbolio pakeitimas",
+      "merger": "Susijungimas"
     },
     "securityTypes": {
       "stock": "Akcija",
@@ -1850,6 +1855,15 @@
       "relatedSecurity": "Perkeliama į",
       "sharesMoved": "Perkeliamas akcijų kiekis",
       "sharesMovedHint": "Seniausios partijos perkeliamos su savikaina ir pirkimo datomis.",
+      "receivedSecurity": "Gautas vertybinis popierius (neprivaloma)",
+      "sharesGivenUp": "Atiduota akcijų",
+      "sharesReceived": "Gauta akcijų",
+      "cashReceived": "Gauta pinigų",
+      "cashReceivedIn": "Gauta pinigų ({{currency}})",
+      "cashReceivedHint": "Palikite tuščią, jei už akcijas atsiskaityta tik akcijomis.",
+      "costShare": "Į naujas akcijas perkeliama savikainos dalis (%)",
+      "costShareHint": "Likusi savikaina priskiriama gautiems pinigams kaip perleidimas. Dalis nurodyta susijungimo dokumentuose.",
+      "costShareOnly": "Šis įrašas importuotas. Čia galima nustatyti tik į naujas akcijas perkeliamą savikainos dalį.",
       "price": "Vieneto kaina",
       "priceIn": "Vieneto kaina ({{currency}})",
       "fee": "Komisiniai (neprivaloma)",
@@ -1872,6 +1886,8 @@
       "security": "Pasirinkite vertybinį popierių.",
       "relatedSecurity": "Pasirinkite vertybinį popierių, į kurį perkeliamas turimas kiekis.",
       "sameSecurity": "Pasirinkite kitą vertybinį popierių.",
+      "mergerCash": "Įveskite gautą pinigų sumą arba pasirinkite gautą vertybinį popierių.",
+      "costShare": "Įveskite procentą nuo 0 iki 100, iki 6 skaitmenų po kablelio.",
       "isin": "Įveskite teisingą ISIN, pvz., IE00BK5BQT80."
     },
     "securities": {
@@ -1992,6 +2008,7 @@
       "warning": {
         "title": "Patikrinkite turimas pozicijas",
         "skippedActions": "Šie korporatyviniai veiksmai yra ataskaitoje, bet nebuvo įrašyti. Jų poveikį įveskite rankiniu būdu:",
+        "costShares": "Šie korporatyviniai veiksmai įrašyti be savikainos dalies, perkeliamos į naujas akcijas. Nurodykite ją kiekviename įraše skiltyje „Įrašai“: {{symbols}}.",
         "mismatches": "Šių vertybinių popierių kiekis, apskaičiuotas iš jūsų įrašų, skiriasi nuo brokerio nurodyto:",
         "mismatchTable": "Pozicijos, kurios skiriasi nuo brokerio duomenų",
         "symbol": "Simbolis",
@@ -2459,6 +2476,8 @@
       "security": "vertybinis popierius",
       "relatedSecurity": "perkelta į",
       "quantity": "kiekis",
+      "relatedQuantity": "gauta akcijų",
+      "costShare": "savikainos dalis",
       "price": "kaina",
       "fee": "mokestis",
       "cashAmount": "pinigų suma",

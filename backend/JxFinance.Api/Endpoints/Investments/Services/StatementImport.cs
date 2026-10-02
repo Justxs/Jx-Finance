@@ -62,9 +62,10 @@ public sealed class StatementImport(
         await db.Database.LockAsync(account.Value, cancellationToken);
 
         await LoadAsync(cancellationToken);
-        ImportCorporateActions();
 
-        var error = await ImportTradesAsync(cancellationToken) ?? await ImportCashTransactionsAsync(cancellationToken);
+        var error = await ImportCorporateActionsAsync(cancellationToken)
+            ?? await ImportTradesAsync(cancellationToken)
+            ?? await ImportCashTransactionsAsync(cancellationToken);
         if (error is not null)
         {
             return error;
@@ -93,7 +94,10 @@ public sealed class StatementImport(
                 .OrderBy(a => a.Key, StringComparer.Ordinal)
                 .Select(a => new SkippedCorporateActionResponse(a.Key, a.Value))
                 .ToList(),
-            mismatches);
+            mismatches)
+        {
+            CostSharesMissing = counts.CostSharesMissing,
+        };
     }
 
     private async Task SummariseAsync(CancellationToken cancellationToken)
@@ -141,25 +145,35 @@ public sealed class StatementImport(
         securities = await db.Securities.ToListAsync(cancellationToken);
     }
 
-    private void ImportCorporateActions()
+    private async Task<DomainError?> ImportCorporateActionsAsync(CancellationToken cancellationToken)
     {
         foreach (var action in statement.CorporateActions.GroupBy(a => a.Id))
         {
             var rows = action.Where(a => SecurityCategories.Contains(a.Instrument.AssetCategory)).ToList();
             var reference = ActionRefPrefix + action.Key;
             var type = action.First().Type;
-            var booked = rows.Count > 0 && reference.Length <= MaxRefLength && type switch
+            Result<bool> booked = rows.Count == 0 || reference.Length > MaxRefLength
+                ? false
+                : type switch
+                {
+                    FlexParser.ForwardSplit or FlexParser.ReverseSplit => BookSplit(rows, reference),
+                    FlexParser.IssueChange => BookSymbolChange(rows, reference),
+                    FlexParser.Merger => await BookMergerAsync(rows, reference, cancellationToken),
+                    _ => false,
+                };
+            if (booked.IsFailure)
             {
-                FlexParser.ForwardSplit or FlexParser.ReverseSplit => BookSplit(rows, reference),
-                FlexParser.IssueChange => BookSymbolChange(rows, reference),
-                _ => false,
-            };
-            if (!booked)
+                return booked.Error;
+            }
+
+            if (!booked.Value)
             {
                 counts.Skipped++;
                 counts.SkippedActions[type] = counts.SkippedActions.GetValueOrDefault(type) + 1;
             }
         }
+
+        return null;
     }
 
     private bool BookSplit(List<FlexCorporateAction> rows, string reference)
@@ -230,6 +244,62 @@ public sealed class StatementImport(
             leaving[0].Description,
             -leaving.Sum(r => r.Quantity),
             related: successor);
+        counts.CorporateActions++;
+        return true;
+    }
+
+    private async Task<Result<bool>> BookMergerAsync(
+        List<FlexCorporateAction> rows,
+        string reference,
+        CancellationToken cancellationToken)
+    {
+        var leaving = rows.Where(r => r.Quantity < 0m).ToList();
+        var arriving = rows.Where(r => r.Quantity > 0m).ToList();
+        if (leaving.Count == 0)
+        {
+            return false;
+        }
+
+        var target = Resolve(leaving[0].Instrument);
+        var acquirer = arriving.Count == 0 ? null : Resolve(arriving[0].Instrument);
+        var cash = rows.Sum(r => r.Proceeds);
+        if (acquirer == target || (acquirer is not null && acquirer.Currency != target.Currency) || cash < 0m)
+        {
+            return false;
+        }
+
+        if (!entryRefs.Add(reference))
+        {
+            counts.Duplicates++;
+            return true;
+        }
+
+        var value = arriving.Sum(r => Math.Abs(r.Value));
+        decimal? costShare = acquirer is not null && cash > 0m && value > 0m
+            ? decimal.Round(value / (value + cash) * Portfolio.WholeCost, 6)
+            : null;
+        if (acquirer is not null && cash > 0m && costShare is null)
+        {
+            counts.CostSharesMissing.Add(acquirer.Symbol);
+        }
+
+        var error = await AddEntryAsync(
+            reference,
+            InvestmentTransactionType.Merger,
+            target,
+            leaving[0].Date,
+            new Money(cash, target.Currency),
+            leaving[0].Description,
+            cancellationToken,
+            -leaving.Sum(r => r.Quantity),
+            related: acquirer,
+            relatedQuantity: arriving.Sum(r => r.Quantity),
+            costShare: costShare);
+        if (error is not null)
+        {
+            return error;
+        }
+
         counts.CorporateActions++;
         return true;
     }
@@ -486,7 +556,10 @@ public sealed class StatementImport(
         CancellationToken cancellationToken,
         decimal quantity = 0m,
         decimal price = 0m,
-        decimal fee = 0m)
+        decimal fee = 0m,
+        Security? related = null,
+        decimal relatedQuantity = 0m,
+        decimal? costShare = null)
     {
         var reporting = await rates.ToReportingAsync(cash, date, cancellationToken);
         if (reporting.IsFailure)
@@ -494,7 +567,7 @@ public sealed class StatementImport(
             return reporting.Error;
         }
 
-        AddEntry(reference, type, security, date, cash, reporting.Value, description, quantity, price, fee);
+        AddEntry(reference, type, security, date, cash, reporting.Value, description, quantity, price, fee, related, relatedQuantity, costShare);
         return null;
     }
 
@@ -509,7 +582,9 @@ public sealed class StatementImport(
         decimal quantity = 0m,
         decimal price = 0m,
         decimal fee = 0m,
-        Security? related = null)
+        Security? related = null,
+        decimal relatedQuantity = 0m,
+        decimal? costShare = null)
     {
         db.InvestmentTransactions.Add(new InvestmentTransaction
         {
@@ -519,6 +594,8 @@ public sealed class StatementImport(
             Type = type,
             Date = date,
             Quantity = quantity,
+            RelatedQuantity = relatedQuantity,
+            CostShare = costShare,
             Price = price,
             Fee = fee,
             CashAmount = cash,
@@ -660,6 +737,7 @@ public sealed class StatementImport(
         public int PricesUpdated { get; set; }
         public int Splits { get; set; }
         public int CorporateActions { get; set; }
+        public List<string> CostSharesMissing { get; } = [];
         public Dictionary<string, int> SkippedActions { get; } = [];
     }
 }

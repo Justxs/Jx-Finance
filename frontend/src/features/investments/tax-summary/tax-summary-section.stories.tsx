@@ -3,7 +3,7 @@ import { expect, screen, userEvent } from "storybook/test";
 import { getExportTaxSummaryUrl } from "@/api/generated";
 import { getTaxSummaryMockHandler } from "@/api/generated/investments/investments.msw";
 import { withPageFrame } from "@/storybook/decorators";
-import { accounts, incompleteTaxSummary } from "@/storybook/fixtures";
+import { accounts, incompleteTaxSummary, taxSummary } from "@/storybook/fixtures";
 import { errorHandlers, loadingHandlers, withHandlers } from "@/storybook/handlers";
 import { TaxSummarySection } from "./tax-summary-section";
 
@@ -43,6 +43,20 @@ export const Incomplete: Story = {
   parameters: withHandlers(getTaxSummaryMockHandler(incompleteTaxSummary)),
   play: async ({ canvas }) => {
     await expect(await canvas.findByText(/sold without a recorded purchase/)).toBeVisible();
+  },
+};
+
+export const MergerDisposal: Story = {
+  parameters: withHandlers(
+    getTaxSummaryMockHandler({
+      ...taxSummary,
+      disposals: taxSummary.disposals.map((disposal, index) =>
+        index === 0 ? { ...disposal, type: "merger" } : disposal,
+      ),
+    }),
+  ),
+  play: async ({ canvas }) => {
+    await expect((await canvas.findAllByText(/Cash from a merger/)).length).toBeGreaterThan(0);
   },
 };
 

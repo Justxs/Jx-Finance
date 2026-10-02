@@ -22,4 +22,5 @@ export interface BrokerImportResponse {
   skippedCorporateActions: SkippedCorporateActionResponse[];
   /** @nullable */
   positionMismatches: PositionMismatchResponse[] | null;
+  costSharesMissing?: string[];
 }

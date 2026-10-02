@@ -14,6 +14,8 @@ public sealed record InvestmentTransactionResponse(
     InvestmentTransactionType Type,
     DateOnly Date,
     [property: Quantity] decimal Quantity,
+    [property: Quantity] decimal RelatedQuantity,
+    [property: Quantity] decimal? CostShare,
     [property: Quantity] decimal Price,
     [property: Money] decimal Fee,
     [property: Money] decimal CashAmount,

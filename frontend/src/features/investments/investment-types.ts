@@ -4,6 +4,7 @@ import {
   SecurityType,
 } from "@/api/generated/model";
 import type { MoneySign } from "@/hooks/use-formatters";
+import { normalizeMoney } from "@/lib/validation";
 
 export const entryTypes = Object.values(InvestmentTransactionType);
 export const securityTypes = Object.values(SecurityType);
@@ -12,20 +13,39 @@ export function isTrade(type: InvestmentTransactionType): boolean {
   return type === "buy" || type === "sell";
 }
 
+const cashTypes = new Set<InvestmentTransactionType>([
+  "dividend",
+  "withholdingTax",
+  "interest",
+  "fee",
+]);
+
 export function movesHolding(type: InvestmentTransactionType): boolean {
+  return type === "symbolChange" || type === "merger";
+}
+
+export function requiresRelatedSecurity(type: InvestmentTransactionType): boolean {
   return type === "symbolChange";
+}
+
+export function receivesShares(type: InvestmentTransactionType): boolean {
+  return type === "merger";
 }
 
 export function movesNoCash(type: InvestmentTransactionType): boolean {
   return type === "split" || type === "symbolChange";
 }
 
-function usesQuantity(type: InvestmentTransactionType): boolean {
-  return isTrade(type) || movesNoCash(type);
+export function takesCostShare(
+  type: InvestmentTransactionType,
+  relatedSecurityId: string | null,
+  cash: string,
+): boolean {
+  return type === "merger" && Boolean(relatedSecurityId) && Number(normalizeMoney(cash)) > 0;
 }
 
 export function usesAmount(type: InvestmentTransactionType): boolean {
-  return !usesQuantity(type);
+  return cashTypes.has(type);
 }
 
 export function requiresSecurity(type: InvestmentTransactionType): boolean {

@@ -43,7 +43,7 @@ public sealed class TaxSummaryService(AppDbContext db, IExchangeRateService rate
         var securities = await db.Securities.AsNoTracking().ToDictionaryAsync(s => s.Id, cancellationToken);
 
         var availableYears = entries
-            .Where(t => t.Type == InvestmentTransactionType.Sell || CashTypes.Contains(t.Type))
+            .Where(t => t.Type is InvestmentTransactionType.Sell or InvestmentTransactionType.Merger || CashTypes.Contains(t.Type))
             .Select(t => t.Date.Year)
             .Distinct()
             .OrderDescending()
@@ -56,6 +56,7 @@ public sealed class TaxSummaryService(AppDbContext db, IExchangeRateService rate
             .ThenBy(a => a.Id)
             .ToList();
 
+        var types = entries.ToDictionary(t => t.Id, t => t.Type);
         var disposals = new List<TaxDisposalResponse>();
         var isComplete = true;
         foreach (var account in entries.Where(t => t.SecurityId is not null).GroupBy(t => t.AccountId))
@@ -68,6 +69,7 @@ public sealed class TaxSummaryService(AppDbContext db, IExchangeRateService rate
                 {
                     disposals.Add(new TaxDisposalResponse(
                         sale.Id.Value,
+                        types[sale.Id],
                         sale.Date,
                         account.Key.Value,
                         security.Id.Value,

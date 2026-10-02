@@ -22,7 +22,10 @@ import {
   isTrade,
   movesHolding,
   movesNoCash,
+  receivesShares,
+  requiresRelatedSecurity,
   requiresSecurity,
+  takesCostShare,
   usesAmount,
 } from "@/features/investments/investment-types";
 import { SecurityModal } from "@/features/investments/security-form/security-modal";
@@ -55,6 +58,10 @@ function quantityLabel(type: InvestmentTransactionType): TranslationKey {
     return "investments.entry.ratio";
   }
 
+  if (type === "merger") {
+    return "investments.entry.sharesGivenUp";
+  }
+
   return type === "symbolChange" ? "investments.entry.sharesMoved" : "investments.entry.quantity";
 }
 
@@ -73,7 +80,7 @@ function CashEffectLine({ input, currency }: Readonly<CashEffectProps>) {
   const effect = effectText === null ? null : Number(effectText);
 
   let text = EMPTY_VALUE;
-  if (movesNoCash(input.type)) {
+  if (movesNoCash(input.type) || (input.type === "merger" && input.amount.trim() === "")) {
     text = t("investments.entry.noCash");
   } else if (effect !== null) {
     text = money.formatSigned(effect, "auto", currency);
@@ -130,181 +137,270 @@ export function InvestmentEntryForm({ accounts, accountId, editing, onClose }: R
     return allSecurities.find((security) => security.id === securityId)?.currency;
   }
 
+  function costShareField() {
+    return (
+      <form.Field name="costShare">
+        {(field) => (
+          <field.MoneyInputField
+            id="entry-cost-share"
+            label={t("investments.entry.costShare")}
+            hint={t("investments.entry.costShareHint")}
+            className="col-span-full"
+            placeholder="0"
+          />
+        )}
+      </form.Field>
+    );
+  }
+
+  const costShareOnly = editing !== undefined && editing.source !== "manual";
+
   return (
     <form.AppForm>
       <form.FormShell as={FormGrid}>
-        <form.Field name="type">
-          {(field) => (
-            <field.SelectFieldControl
-              id="entry-type"
-              label={t("investments.entry.type")}
-              options={optionsOf(entryTypes, (type) => t(`investments.types.${type}`))}
-            />
-          )}
-        </form.Field>
-
-        <form.Field name="date">
-          {(field) => <field.DateField id="entry-date" label={t("transactions.date")} />}
-        </form.Field>
-
-        <form.Field name="accountId">
-          {(field) => (
-            <field.SelectFieldControl
-              id="entry-account"
-              label={t("transactions.account")}
-              className="col-span-full"
-              options={namedOptions(accounts)}
-              onValueChange={(value) => {
-                const next = accounts.find((account) => account.id === value);
-                if (next) {
-                  form.setFieldValue("currency", next.currency);
-                }
-              }}
-            />
-          )}
-        </form.Field>
-
-        <form.Subscribe selector={(state) => state.values.type}>
-          {(type) => (
-            <>
-              <form.Field name="securityId">
-                {(field) => (
-                  <SecurityPicker
-                    field={field}
-                    securities={allSecurities}
-                    required={requiresSecurity(type)}
-                    onAdd={() => setAddingFor("securityId")}
-                  />
-                )}
-              </form.Field>
-
-              {movesHolding(type) ? (
-                <form.Field name="relatedSecurityId">
-                  {(field) => (
-                    <SecurityPicker
-                      field={field}
-                      securities={allSecurities}
-                      required
-                      id="entry-related-security"
-                      label={t("investments.entry.relatedSecurity")}
-                      onAdd={() => setAddingFor("relatedSecurityId")}
-                    />
-                  )}
-                </form.Field>
-              ) : null}
-
-              {usesAmount(type) ? null : (
-                <form.Field name="quantity">
-                  {(field) => {
-                    const hint = quantityHint(type);
-
-                    return (
-                      <field.MoneyInputField
-                        id="entry-quantity"
-                        label={t(quantityLabel(type))}
-                        hint={hint ? t(hint) : undefined}
-                        className={hint ? "col-span-full" : undefined}
-                        placeholder={type === "split" ? "2" : "0"}
-                      />
-                    );
-                  }}
-                </form.Field>
+        {costShareOnly ? (
+          <>
+            <p className="col-span-full text-sm text-muted-foreground">
+              {t("investments.entry.costShareOnly")}
+            </p>
+            {costShareField()}
+          </>
+        ) : (
+          <>
+            <form.Field name="type">
+              {(field) => (
+                <field.SelectFieldControl
+                  id="entry-type"
+                  label={t("investments.entry.type")}
+                  options={optionsOf(entryTypes, (type) => t(`investments.types.${type}`))}
+                />
               )}
+            </form.Field>
 
-              {isTrade(type) ? (
+            <form.Field name="date">
+              {(field) => <field.DateField id="entry-date" label={t("transactions.date")} />}
+            </form.Field>
+
+            <form.Field name="accountId">
+              {(field) => (
+                <field.SelectFieldControl
+                  id="entry-account"
+                  label={t("transactions.account")}
+                  className="col-span-full"
+                  options={namedOptions(accounts)}
+                  onValueChange={(value) => {
+                    const next = accounts.find((account) => account.id === value);
+                    if (next) {
+                      form.setFieldValue("currency", next.currency);
+                    }
+                  }}
+                />
+              )}
+            </form.Field>
+
+            <form.Subscribe selector={(state) => state.values.type}>
+              {(type) => (
                 <>
-                  <form.Subscribe selector={(state) => state.values.securityId}>
-                    {(securityId) => (
-                      <form.Field name="price">
-                        {(field) => {
-                          const code = securityCurrency(securityId)?.toUpperCase();
-
-                          return (
-                            <field.MoneyInputField
-                              id="entry-price"
-                              label={
-                                code
-                                  ? t("investments.entry.priceIn", { currency: code })
-                                  : t("investments.entry.price")
-                              }
-                            />
-                          );
-                        }}
-                      </form.Field>
-                    )}
-                  </form.Subscribe>
-
-                  <form.Field name="fee">
+                  <form.Field name="securityId">
                     {(field) => (
-                      <field.MoneyInputField
-                        id="entry-fee"
-                        label={t("investments.entry.fee")}
-                        hint={t("investments.entry.feeHint")}
+                      <SecurityPicker
+                        field={field}
+                        securities={allSecurities}
+                        required={requiresSecurity(type)}
+                        onAdd={() => setAddingFor("securityId")}
                       />
                     )}
                   </form.Field>
+
+                  {movesHolding(type) ? (
+                    <form.Field name="relatedSecurityId">
+                      {(field) => (
+                        <SecurityPicker
+                          field={field}
+                          securities={allSecurities}
+                          required={requiresRelatedSecurity(type)}
+                          id="entry-related-security"
+                          label={
+                            requiresRelatedSecurity(type)
+                              ? t("investments.entry.relatedSecurity")
+                              : t("investments.entry.receivedSecurity")
+                          }
+                          onAdd={() => setAddingFor("relatedSecurityId")}
+                        />
+                      )}
+                    </form.Field>
+                  ) : null}
+
+                  {usesAmount(type) ? null : (
+                    <form.Field name="quantity">
+                      {(field) => {
+                        const hint = quantityHint(type);
+
+                        return (
+                          <field.MoneyInputField
+                            id="entry-quantity"
+                            label={t(quantityLabel(type))}
+                            hint={hint ? t(hint) : undefined}
+                            className={hint ? "col-span-full" : undefined}
+                            placeholder={type === "split" ? "2" : "0"}
+                          />
+                        );
+                      }}
+                    </form.Field>
+                  )}
+
+                  {receivesShares(type) ? (
+                    <form.Subscribe selector={(state) => state.values.relatedSecurityId}>
+                      {(relatedSecurityId) =>
+                        relatedSecurityId === "" ? null : (
+                          <form.Field name="relatedQuantity">
+                            {(field) => (
+                              <field.MoneyInputField
+                                id="entry-related-quantity"
+                                label={t("investments.entry.sharesReceived")}
+                                placeholder="0"
+                              />
+                            )}
+                          </form.Field>
+                        )
+                      }
+                    </form.Subscribe>
+                  ) : null}
+
+                  {type === "merger" ? (
+                    <>
+                      <form.Subscribe selector={(state) => state.values.securityId}>
+                        {(securityId) => (
+                          <form.Field name="amount">
+                            {(field) => {
+                              const code = securityCurrency(securityId)?.toUpperCase();
+
+                              return (
+                                <field.MoneyInputField
+                                  id="entry-amount"
+                                  label={
+                                    code
+                                      ? t("investments.entry.cashReceivedIn", { currency: code })
+                                      : t("investments.entry.cashReceived")
+                                  }
+                                  hint={t("investments.entry.cashReceivedHint")}
+                                  className="col-span-full"
+                                />
+                              );
+                            }}
+                          </form.Field>
+                        )}
+                      </form.Subscribe>
+                      <form.Subscribe
+                        selector={(state) =>
+                          takesCostShare(
+                            state.values.type,
+                            state.values.relatedSecurityId,
+                            state.values.amount,
+                          )
+                        }
+                      >
+                        {(needed) => (needed ? costShareField() : null)}
+                      </form.Subscribe>
+                    </>
+                  ) : null}
+
+                  {isTrade(type) ? (
+                    <>
+                      <form.Subscribe selector={(state) => state.values.securityId}>
+                        {(securityId) => (
+                          <form.Field name="price">
+                            {(field) => {
+                              const code = securityCurrency(securityId)?.toUpperCase();
+
+                              return (
+                                <field.MoneyInputField
+                                  id="entry-price"
+                                  label={
+                                    code
+                                      ? t("investments.entry.priceIn", { currency: code })
+                                      : t("investments.entry.price")
+                                  }
+                                />
+                              );
+                            }}
+                          </form.Field>
+                        )}
+                      </form.Subscribe>
+
+                      <form.Field name="fee">
+                        {(field) => (
+                          <field.MoneyInputField
+                            id="entry-fee"
+                            label={t("investments.entry.fee")}
+                            hint={t("investments.entry.feeHint")}
+                          />
+                        )}
+                      </form.Field>
+                    </>
+                  ) : null}
+
+                  {usesAmount(type) ? (
+                    <form.Subscribe selector={(state) => state.values.securityId}>
+                      {(securityId) => {
+                        const code = securityCurrency(securityId)?.toUpperCase();
+
+                        if (code) {
+                          return (
+                            <form.Field name="amount">
+                              {(field) => (
+                                <field.MoneyInputField
+                                  id="entry-amount"
+                                  label={t("investments.entry.amountIn", { currency: code })}
+                                />
+                              )}
+                            </form.Field>
+                          );
+                        }
+
+                        return (
+                          <MoneyPairField
+                            form={form}
+                            fields={{ amount: "amount", currency: "currency" }}
+                            id="entry-amount"
+                            label={t("transactions.amount")}
+                            currencyLabel={t("investments.entry.currency")}
+                          />
+                        );
+                      }}
+                    </form.Subscribe>
+                  ) : null}
                 </>
-              ) : null}
+              )}
+            </form.Subscribe>
 
-              {usesAmount(type) ? (
-                <form.Subscribe selector={(state) => state.values.securityId}>
-                  {(securityId) => {
-                    const code = securityCurrency(securityId)?.toUpperCase();
+            <form.Field name="description">
+              {(field) => (
+                <field.TextField
+                  id="entry-description"
+                  label={t("investments.entry.note")}
+                  className="col-span-full"
+                />
+              )}
+            </form.Field>
 
-                    if (code) {
-                      return (
-                        <form.Field name="amount">
-                          {(field) => (
-                            <field.MoneyInputField
-                              id="entry-amount"
-                              label={t("investments.entry.amountIn", { currency: code })}
-                            />
-                          )}
-                        </form.Field>
-                      );
-                    }
-
-                    return (
-                      <MoneyPairField
-                        form={form}
-                        fields={{ amount: "amount", currency: "currency" }}
-                        id="entry-amount"
-                        label={t("transactions.amount")}
-                        currencyLabel={t("investments.entry.currency")}
-                      />
-                    );
-                  }}
-                </form.Subscribe>
-              ) : null}
-            </>
-          )}
-        </form.Subscribe>
-
-        <form.Field name="description">
-          {(field) => (
-            <field.TextField
-              id="entry-description"
-              label={t("investments.entry.note")}
-              className="col-span-full"
-            />
-          )}
-        </form.Field>
-
-        <form.Subscribe
-          selector={(state) => ({
-            type: state.values.type,
-            quantity: state.values.quantity,
-            price: state.values.price,
-            fee: state.values.fee,
-            amount: state.values.amount,
-            securityId: state.values.securityId,
-            currency: state.values.currency,
-          })}
-        >
-          {({ securityId, currency, ...input }) => (
-            <CashEffectLine input={input} currency={securityCurrency(securityId) ?? currency} />
-          )}
-        </form.Subscribe>
+            <form.Subscribe
+              selector={(state) => ({
+                type: state.values.type,
+                quantity: state.values.quantity,
+                price: state.values.price,
+                fee: state.values.fee,
+                amount: state.values.amount,
+                securityId: state.values.securityId,
+                currency: state.values.currency,
+              })}
+            >
+              {({ securityId, currency, ...input }) => (
+                <CashEffectLine input={input} currency={securityCurrency(securityId) ?? currency} />
+              )}
+            </form.Subscribe>
+          </>
+        )}
 
         <FormError error={error} />
 

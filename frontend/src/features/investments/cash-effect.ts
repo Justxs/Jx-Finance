@@ -40,7 +40,7 @@ function formatCents(cents: bigint): string {
 }
 
 export function cashEffect({ type, quantity, price, fee, amount }: CashEffectInput): string | null {
-  if (movesNoCash(type)) {
+  if (movesNoCash(type) || (type === "merger" && amount.trim() === "")) {
     return formatCents(0n);
   }
 
@@ -62,5 +62,7 @@ export function cashEffect({ type, quantity, price, fee, amount }: CashEffectInp
     return null;
   }
 
-  return formatCents(type === "dividend" || type === "interest" ? cash : -cash);
+  return formatCents(
+    type === "dividend" || type === "interest" || type === "merger" ? cash : -cash,
+  );
 }

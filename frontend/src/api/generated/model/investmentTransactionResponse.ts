@@ -24,6 +24,9 @@ export interface InvestmentTransactionResponse {
   type: InvestmentTransactionType;
   date: DateOnly;
   quantity: string;
+  relatedQuantity: string;
+  /** @nullable */
+  costShare: string | null;
   price: string;
   fee: string;
   cashAmount: string;

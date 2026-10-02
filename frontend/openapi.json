@@ -11836,7 +11836,7 @@
           "Investments"
         ],
         "summary": "Import an Interactive Brokers Flex Query report",
-        "description": "Reads the Trades, Cash Transactions, Corporate Actions and Open Positions sections of a Flex Query XML report. Stock, ETF and fund trades become buys and sells; currency trades become in-account conversions; dividends, withholding tax, interest and fees become cash entries; forward and reverse splits become split entries with the ratio as new shares per old share; an issue change (IC) to another symbol becomes a symbol change that carries the holding to the new security, counted in corporateActions; open positions update last prices. Deposits and withdrawals become transfers when a funding account is given and are skipped otherwise. Every entry is matched by its broker id, so importing overlapping periods never duplicates. The import is all or nothing. Other corporate actions (mergers, spin-offs, stock dividends, rights) are not booked: they are counted in skipped and listed per type in skippedCorporateActions. When the report has an Open Positions section, positionMismatches lists every security whose quantity replayed from the entries differs from the quantity the broker reports, which is how an action that was not booked becomes visible; it is null when the report has no Open Positions section.",
+        "description": "Reads the Trades, Cash Transactions, Corporate Actions and Open Positions sections of a Flex Query XML report. Stock, ETF and fund trades become buys and sells; currency trades become in-account conversions; dividends, withholding tax, interest and fees become cash entries; forward and reverse splits become split entries with the ratio as new shares per old share; an issue change (IC) to another symbol becomes a symbol change that carries the holding to the new security, and a merger (TC) a merger entry with the cash proceeds and the shares received, both counted in corporateActions; a merger paid in shares and cash takes its cost share from the value of the shares received and, without one, lists the received security in costSharesMissing; open positions update last prices. Deposits and withdrawals become transfers when a funding account is given and are skipped otherwise. Every entry is matched by its broker id, so importing overlapping periods never duplicates. The import is all or nothing. Other corporate actions (spin-offs, stock dividends, rights, tender offers) are not booked: they are counted in skipped and listed per type in skippedCorporateActions. When the report has an Open Positions section, positionMismatches lists every security whose quantity replayed from the entries differs from the quantity the broker reports, which is how an action that was not booked becomes visible; it is null when the report has no Open Positions section.",
         "operationId": "ImportBrokerReport",
         "requestBody": {
           "content": {
@@ -12833,7 +12833,7 @@
           "Investments"
         ],
         "summary": "Get the yearly investment tax summary",
-        "description": "Returns one calendar year of recorded investment activity on the accounts the caller can see: every disposal with its proceeds, first-in-first-out cost basis, gain or loss and the acquisition date, quantity and cost of each lot it consumed, and every dividend, interest, withholding tax and standalone fee of that year. Every amount is given both in the currency it was recorded in and in the reporting currency at the rate frozen on the entry's date; withholding tax and fees are reported as positive amounts paid. AvailableYears lists the years that hold anything, newest first, and Year falls back to the newest of them, or to the current year when nothing is recorded. A year with nothing recorded answers an empty summary rather than an error. This is a summary of recorded data, not tax advice: no tax, allowance or rate is applied.",
+        "description": "Returns one calendar year of recorded investment activity on the accounts the caller can see: every disposal, a sale or the cash part of a merger, with its proceeds, first-in-first-out cost basis, gain or loss and the acquisition date, quantity and cost of each lot it consumed, and every dividend, interest, withholding tax and standalone fee of that year. Every amount is given both in the currency it was recorded in and in the reporting currency at the rate frozen on the entry's date; withholding tax and fees are reported as positive amounts paid. AvailableYears lists the years that hold anything, newest first, and Year falls back to the newest of them, or to the current year when nothing is recorded. A year with nothing recorded answers an empty summary rather than an error. This is a summary of recorded data, not tax advice: no tax, allowance or rate is applied.",
         "operationId": "GetTaxSummary",
         "parameters": [
           {
@@ -13004,7 +13004,7 @@
           "Investments"
         ],
         "summary": "Record an investment transaction",
-        "description": "Buys and sells need a security, quantity and price, and move quantity times price plus or minus the fee in the security's currency. Dividends, withholding tax, interest and fees need an amount. A split needs a security and a ratio in Quantity and moves no cash. A symbol change needs the security the holding leaves, the one it moves to in RelatedSecurityId, in the same currency, and the shares moved in Quantity; the oldest lots move with their cost and acquisition dates and no cash moves. The cash effect lands on the account's balance in that currency and never counts as income or expense in reports or budgets.",
+        "description": "Buys and sells need a security, quantity and price, and move quantity times price plus or minus the fee in the security's currency. Dividends, withholding tax, interest and fees need an amount. A split needs a security and a ratio in Quantity and moves no cash. A symbol change needs the security the holding leaves, the one it moves to in RelatedSecurityId, in the same currency, and the shares moved in Quantity; the oldest lots move with their cost and acquisition dates and no cash moves. A merger needs the security taken over and the shares given up in Quantity, and either the cash received in Amount, the security received in RelatedSecurityId with its shares in RelatedQuantity, or both; with both, CostShare is the percentage of the cost basis carried into the new shares and the rest is set against the cash as a disposal. The cash effect lands on the account's balance in that currency and never counts as income or expense in reports or budgets.",
         "operationId": "CreateInvestmentTransaction",
         "requestBody": {
           "content": {
@@ -13023,7 +13023,9 @@
                 "fee": "1.25",
                 "currency": null,
                 "description": null,
-                "relatedSecurityId": null
+                "relatedSecurityId": null,
+                "relatedQuantity": null,
+                "costShare": null
               }
             }
           },
@@ -13262,7 +13264,7 @@
           "Investments"
         ],
         "summary": "Correct an investment transaction",
-        "description": "Replaces every field of an entry that was recorded by hand, under the same rules as recording one. Entries imported from a broker are corrected at the broker and imported again. A correction that would leave a later sale without enough shares is refused.",
+        "description": "Replaces every field of an entry that was recorded by hand, under the same rules as recording one. Entries imported from a broker are corrected at the broker and imported again, except that the CostShare of an imported merger paid in shares and cash can be set here; the rest of the body is then ignored. A correction that would leave a later sale without enough shares is refused.",
         "operationId": "UpdateInvestmentTransaction",
         "parameters": [
           {
@@ -13293,7 +13295,9 @@
                 "fee": "1.25",
                 "currency": null,
                 "description": null,
-                "relatedSecurityId": null
+                "relatedSecurityId": null,
+                "relatedQuantity": null,
+                "costShare": null
               }
             }
           },
@@ -24186,6 +24190,12 @@
             "items": {
               "$ref": "#/components/schemas/PositionMismatchResponse"
             }
+          },
+          "costSharesMissing": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         }
       },
@@ -26243,7 +26253,7 @@
               "null",
               "string"
             ],
-            "description": "Cash amount for dividend, withholding tax, interest and fee entries.",
+            "description": "Cash amount for dividend, withholding tax, interest and fee entries; cash received for a merger.",
             "format": "decimal"
           },
           "fee": {
@@ -26278,8 +26288,24 @@
               "null",
               "string"
             ],
-            "description": "For a symbol change: the security the holding moves to.",
+            "description": "For a symbol change: the security the holding moves to; for a merger: the security received.",
             "format": "uuid"
+          },
+          "relatedQuantity": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "For a merger: the shares of the security received.",
+            "format": "decimal"
+          },
+          "costShare": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "For a merger paid in shares and cash: the percentage of the cost basis carried into the new shares, 0 to 100.",
+            "format": "decimal"
           }
         },
         "example": {
@@ -26293,7 +26319,9 @@
           "fee": "1.25",
           "currency": null,
           "description": null,
-          "relatedSecurityId": null
+          "relatedSecurityId": null,
+          "relatedQuantity": null,
+          "costShare": null
         }
       },
       "CreatePersonalApiTokenRequest": {
@@ -29552,6 +29580,8 @@
           "type",
           "date",
           "quantity",
+          "relatedQuantity",
+          "costShare",
           "price",
           "fee",
           "cashAmount",
@@ -29606,6 +29636,17 @@
             "type": "string",
             "format": "decimal"
           },
+          "relatedQuantity": {
+            "type": "string",
+            "format": "decimal"
+          },
+          "costShare": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "decimal"
+          },
           "price": {
             "type": "string",
             "format": "decimal"
@@ -29645,7 +29686,8 @@
           "interest",
           "fee",
           "split",
-          "symbolChange"
+          "symbolChange",
+          "merger"
         ],
         "type": "string"
       },
@@ -34123,6 +34165,7 @@
       "TaxDisposalResponse": {
         "required": [
           "id",
+          "type",
           "date",
           "accountId",
           "securityId",
@@ -34143,6 +34186,9 @@
           "id": {
             "type": "string",
             "format": "uuid"
+          },
+          "type": {
+            "$ref": "#/components/schemas/InvestmentTransactionType"
           },
           "date": {
             "$ref": "#/components/schemas/DateOnly"
@@ -36095,7 +36141,7 @@
               "null",
               "string"
             ],
-            "description": "Cash amount for dividend, withholding tax, interest and fee entries.",
+            "description": "Cash amount for dividend, withholding tax, interest and fee entries; cash received for a merger.",
             "format": "decimal"
           },
           "fee": {
@@ -36130,8 +36176,24 @@
               "null",
               "string"
             ],
-            "description": "For a symbol change: the security the holding moves to.",
+            "description": "For a symbol change: the security the holding moves to; for a merger: the security received.",
             "format": "uuid"
+          },
+          "relatedQuantity": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "For a merger: the shares of the security received.",
+            "format": "decimal"
+          },
+          "costShare": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "For a merger paid in shares and cash: the percentage of the cost basis carried into the new shares, 0 to 100.",
+            "format": "decimal"
           }
         },
         "example": {
@@ -36145,7 +36207,9 @@
           "fee": "1.25",
           "currency": null,
           "description": null,
-          "relatedSecurityId": null
+          "relatedSecurityId": null,
+          "relatedQuantity": null,
+          "costShare": null
         }
       },
       "UpdateMarketPriceSettingsRequest": {

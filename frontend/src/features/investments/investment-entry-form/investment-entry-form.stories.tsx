@@ -8,6 +8,7 @@ import { withWidth } from "@/storybook/decorators";
 import {
   accounts,
   brokerAccount,
+  corporateActionEntries,
   investmentTransactions,
   unpricedStock,
   usStock,
@@ -57,6 +58,8 @@ export const Split: Story = ofType("Split");
 
 export const SymbolChange: Story = ofType("Symbol change");
 
+export const Merger: Story = ofType("Merger");
+
 export const Pending: Story = {
   parameters: withHandlers(getCreateInvestmentTransactionMockHandler(pending)),
   play: async ({ canvas, args }) => {
@@ -103,6 +106,61 @@ export const SwitchingTypeChangesFields: Story = {
 const sent = fn();
 
 const sentSymbolChange = fn();
+
+const sentMerger = fn();
+
+export const MergerForSharesAndCash: Story = {
+  parameters: withHandlers(
+    getCreateInvestmentTransactionMockHandler(async ({ request }) => {
+      sentMerger(await request.json());
+      return corporateActionEntries[1]!;
+    }),
+  ),
+  play: async ({ canvas, args }) => {
+    await choose(canvas, "Entry type", "Merger");
+    await choose(canvas, "Security", new RegExp(`^${unpricedStock.symbol}`));
+    await userEvent.type(await canvas.findByLabelText("Shares given up"), "40");
+    await userEvent.click(canvas.getByRole("button", { name: "Add entry" }));
+    await expect(
+      await canvas.findByText("Enter the cash received, or choose the security received."),
+    ).toBeInTheDocument();
+
+    await choose(canvas, "Security received (optional)", new RegExp(`^${worldEtf.symbol}`));
+    await userEvent.type(await canvas.findByLabelText("Shares received"), "12");
+    await expect(canvas.queryByLabelText("Cost carried into the new shares (%)")).toBeNull();
+    await userEvent.type(canvas.getByLabelText("Cash received (EUR)"), "250");
+    await expect(await canvas.findByText("+€250.00")).toBeInTheDocument();
+    await userEvent.type(
+      await canvas.findByLabelText("Cost carried into the new shares (%)"),
+      "62,5",
+    );
+    await userEvent.click(canvas.getByRole("button", { name: "Add entry" }));
+    await waitFor(() => expect(args.onClose).toHaveBeenCalled());
+    await expect(sentMerger).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: "merger",
+        securityId: unpricedStock.id,
+        relatedSecurityId: worldEtf.id,
+        quantity: "40",
+        relatedQuantity: "12",
+        amount: "250",
+        costShare: "62.5",
+      }),
+    );
+  },
+};
+
+export const ImportedMergerTakesOnlyTheCostShare: Story = {
+  args: { editing: corporateActionEntries[1] },
+  play: async ({ canvas }) => {
+    await expect(await canvas.findByText(/Only the share of the cost/)).toBeInTheDocument();
+    await expect(canvas.queryByLabelText("Entry type")).toBeNull();
+    await userEvent.click(canvas.getByRole("button", { name: "Save" }));
+    await expect(
+      await canvas.findByText("Enter a percentage from 0 to 100 with up to 6 decimals."),
+    ).toBeInTheDocument();
+  },
+};
 
 export const SymbolChangeMovesTheHolding: Story = {
   parameters: withHandlers(

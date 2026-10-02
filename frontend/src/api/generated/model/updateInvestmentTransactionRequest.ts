@@ -24,7 +24,7 @@ export interface UpdateInvestmentTransactionRequest {
   /** @nullable */
   price?: string | null;
   /**
-   * Cash amount for dividend, withholding tax, interest and fee entries.
+   * Cash amount for dividend, withholding tax, interest and fee entries; cash received for a merger.
    * @nullable
    */
   amount?: string | null;
@@ -39,8 +39,18 @@ export interface UpdateInvestmentTransactionRequest {
    */
   description?: string | null;
   /**
-   * For a symbol change: the security the holding moves to.
+   * For a symbol change: the security the holding moves to; for a merger: the security received.
    * @nullable
    */
   relatedSecurityId?: string | null;
+  /**
+   * For a merger: the shares of the security received.
+   * @nullable
+   */
+  relatedQuantity?: string | null;
+  /**
+   * For a merger paid in shares and cash: the percentage of the cost basis carried into the new shares, 0 to 100.
+   * @nullable
+   */
+  costShare?: string | null;
 }

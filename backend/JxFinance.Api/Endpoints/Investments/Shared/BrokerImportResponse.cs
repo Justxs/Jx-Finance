@@ -12,4 +12,7 @@ public sealed record BrokerImportResponse(
     int Splits,
     int CorporateActions,
     IReadOnlyList<SkippedCorporateActionResponse> SkippedCorporateActions,
-    IReadOnlyList<PositionMismatchResponse>? PositionMismatches);
+    IReadOnlyList<PositionMismatchResponse>? PositionMismatches)
+{
+    public IReadOnlyList<string> CostSharesMissing { get; init; } = [];
+}

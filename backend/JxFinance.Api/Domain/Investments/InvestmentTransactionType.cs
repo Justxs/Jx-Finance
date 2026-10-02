@@ -10,4 +10,5 @@ public enum InvestmentTransactionType
     Fee,
     Split,
     SymbolChange,
+    Merger,
 }

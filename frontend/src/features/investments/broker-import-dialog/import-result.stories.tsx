@@ -31,6 +31,8 @@ export const WithWarnings: Story = {
   args: { result: brokerImportWithWarnings },
   play: async ({ canvas }) => {
     await expect(canvas.getByText("2 stock splits booked.")).toBeVisible();
+    await expect(canvas.getByText("1 corporate action booked.")).toBeVisible();
+    await expect(canvas.getByText(/without the share of the cost.+: VWCE\./u)).toBeVisible();
     await expect(canvas.getByText("Merger or takeover: 1")).toBeVisible();
     await expect(canvas.getByText("Spin-off: 2")).toBeVisible();
     await expect(canvas.getByText("Other corporate action (XX): 1")).toBeVisible();
@@ -39,7 +41,9 @@ export const WithWarnings: Story = {
     const nvda = within(table.getByRole("row", { name: /NVDA/u }));
     await expect(nvda.getByText("40")).toBeVisible();
     await expect(nvda.getByText("4")).toBeVisible();
-    await expect(canvas.getByText(/A split can be entered by hand/u)).toBeVisible();
+    await expect(
+      canvas.getByText(/A split or a symbol change can be entered by hand/u),
+    ).toBeVisible();
   },
 };
 

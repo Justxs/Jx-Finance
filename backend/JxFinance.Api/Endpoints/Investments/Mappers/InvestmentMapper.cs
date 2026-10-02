@@ -16,8 +16,9 @@ public static class InvestmentMapper
         var amount = request.Amount ?? 0m;
         var fee = request.Fee ?? 0m;
         var isTrade = request.Type is InvestmentTransactionType.Buy or InvestmentTransactionType.Sell;
+        var receives = request.Type == InvestmentTransactionType.Merger && request.RelatedSecurityId is not null;
 
-        return new InvestmentTransaction
+        var transaction = new InvestmentTransaction
         {
             AccountId = new AccountId(request.AccountId),
             SecurityId = request.SecurityId is { } id ? new SecurityId(id) : null,
@@ -25,12 +26,15 @@ public static class InvestmentMapper
             Type = request.Type,
             Date = request.Date,
             Quantity = quantity,
+            RelatedQuantity = receives ? request.RelatedQuantity ?? 0m : 0m,
             Price = price,
             Fee = isTrade ? fee : 0m,
             CashAmount = new Money(Portfolio.CashEffect(request.Type, quantity, price, amount, fee), currency),
             Description = OptionalText.Normalize(request.Description),
             Source = InvestmentSource.Manual,
         };
+        transaction.CostShare = Portfolio.TakesCostShare(transaction) ? request.CostShare : null;
+        return transaction;
     }
 
     public static InvestmentTransactionResponse ToResponse(
@@ -46,6 +50,8 @@ public static class InvestmentMapper
         transaction.Type,
         transaction.Date,
         transaction.Quantity,
+        transaction.RelatedQuantity,
+        transaction.CostShare,
         transaction.Price,
         transaction.Fee,
         transaction.CashAmount.Amount,

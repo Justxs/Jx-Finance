@@ -1731,6 +1731,7 @@
       "gain": "Gain or loss",
       "lots": "Lots consumed",
       "lot": "{{date}} · {{quantity}} · {{cost}}",
+      "merger": "Cash from a merger",
       "income": "Dividends and interest received",
       "noIncome": "No dividends or interest in this year.",
       "charges": "Withholding tax and fees paid",
@@ -1749,6 +1750,9 @@
       "importedLocked": "Imported from the broker. Correct it there and import again.",
       "splitRatio": "{{ratio}} for 1",
       "movedTo": "{{quantity}} to {{symbol}}",
+      "mergedInto": "{{quantity}} into {{received}} {{symbol}}",
+      "costShareMissing": "Cost share not set",
+      "costShareMissingHint": "Correct the entry to set how much of the cost moved to the new shares.",
       "noCash": "No cash"
     },
     "types": {
@@ -1759,7 +1763,8 @@
       "interest": "Interest",
       "fee": "Fee",
       "split": "Split",
-      "symbolChange": "Symbol change"
+      "symbolChange": "Symbol change",
+      "merger": "Merger"
     },
     "securityTypes": {
       "stock": "Stock",
@@ -1784,6 +1789,15 @@
       "relatedSecurity": "Moves to",
       "sharesMoved": "Shares moved",
       "sharesMovedHint": "The oldest lots move with their cost and purchase dates.",
+      "receivedSecurity": "Security received (optional)",
+      "sharesGivenUp": "Shares given up",
+      "sharesReceived": "Shares received",
+      "cashReceived": "Cash received",
+      "cashReceivedIn": "Cash received ({{currency}})",
+      "cashReceivedHint": "Leave empty when the merger paid in shares only.",
+      "costShare": "Cost carried into the new shares (%)",
+      "costShareHint": "The rest of the cost is set against the cash as a disposal. The merger documents state the split.",
+      "costShareOnly": "This entry was imported. Only the share of the cost carried into the new shares can be set here.",
       "price": "Price per share",
       "priceIn": "Price per share ({{currency}})",
       "fee": "Fee (optional)",
@@ -1806,6 +1820,8 @@
       "security": "Choose a security.",
       "relatedSecurity": "Choose the security the holding moves to.",
       "sameSecurity": "Choose a different security.",
+      "mergerCash": "Enter the cash received, or choose the security received.",
+      "costShare": "Enter a percentage from 0 to 100 with up to 6 decimals.",
       "isin": "Enter a valid ISIN, e.g. IE00BK5BQT80."
     },
     "securities": {
@@ -1907,6 +1923,7 @@
         "title": "Check your holdings",
         "skippedActions": "These corporate actions are in the report but were not booked. Enter their effect by hand:",
         "mismatches": "For these securities the quantity calculated from your entries differs from what the broker reports:",
+        "costShares": "These corporate actions were booked without the share of the cost that moves to the new shares. Set it on each entry under Activity: {{symbols}}.",
         "mismatchTable": "Holdings that differ from the broker",
         "symbol": "Symbol",
         "brokerQuantity": "At the broker",
@@ -2367,6 +2384,8 @@
       "security": "security",
       "relatedSecurity": "moves to",
       "quantity": "quantity",
+      "relatedQuantity": "shares received",
+      "costShare": "cost share",
       "price": "price",
       "fee": "fee",
       "cashAmount": "cash amount",

@@ -250,9 +250,11 @@ public sealed class InvestmentService(
 
         if (transaction.Source != InvestmentSource.Manual)
         {
-            return new DomainError(
-                ErrorCodes.ResourceReadOnly,
-                "This entry was imported from a broker. Correct it there and import again.");
+            return Portfolio.TakesCostShare(transaction)
+                ? await SetCostShareAsync(transaction, request.CostShare, cancellationToken)
+                : new DomainError(
+                    ErrorCodes.ResourceReadOnly,
+                    "This entry was imported from a broker. Correct it there and import again.");
         }
 
         var built = await BuildTransactionAsync(request, transaction.CashAmount.Currency, cancellationToken);
@@ -292,6 +294,8 @@ public sealed class InvestmentService(
         transaction.Type = corrected.Type;
         transaction.Date = corrected.Date;
         transaction.Quantity = corrected.Quantity;
+        transaction.RelatedQuantity = corrected.RelatedQuantity;
+        transaction.CostShare = corrected.CostShare;
         transaction.Price = corrected.Price;
         transaction.Fee = corrected.Fee;
         transaction.CashAmount = corrected.CashAmount;
@@ -300,6 +304,31 @@ public sealed class InvestmentService(
         await db.SaveChangesAsync(cancellationToken);
 
         return transaction.ToResponse(security?.Symbol, related?.Symbol);
+    }
+
+    private async Task<Result<InvestmentTransactionResponse>> SetCostShareAsync(
+        InvestmentTransaction transaction,
+        decimal? costShare,
+        CancellationToken cancellationToken)
+    {
+        transaction.CostShare = costShare;
+        await db.SaveChangesAsync(cancellationToken);
+
+        var (symbol, relatedSymbol) = await SymbolsAsync(transaction, cancellationToken);
+        return transaction.ToResponse(symbol, relatedSymbol);
+    }
+
+    private async Task<(string? Symbol, string? RelatedSymbol)> SymbolsAsync(
+        InvestmentTransaction transaction,
+        CancellationToken cancellationToken)
+    {
+        var securityIds = Portfolio.SecuritiesOf(transaction).ToList();
+        var symbols = await db.Securities
+            .Where(s => securityIds.Contains(s.Id))
+            .ToDictionaryAsync(s => s.Id, s => s.Symbol, cancellationToken);
+        return (
+            transaction.SecurityId is { } id ? symbols.GetValueOrDefault(id) : null,
+            transaction.RelatedSecurityId is { } relatedId ? symbols.GetValueOrDefault(relatedId) : null);
     }
 
     private async Task<Result<(InvestmentTransaction Transaction, Security? Security, Security? Related)>> BuildTransactionAsync(
@@ -327,8 +356,9 @@ public sealed class InvestmentService(
                 "Both securities must trade in the same currency, because the cost basis moves from one to the other.");
         }
 
-        var isTrade = request.Type is InvestmentTransactionType.Buy or InvestmentTransactionType.Sell;
-        var currency = (isTrade ? null : request.Currency) ?? security?.Currency ?? request.Currency ?? accountCurrency;
+        var inSecurityCurrency = request.Type is InvestmentTransactionType.Buy or InvestmentTransactionType.Sell
+            || Portfolio.CorporateActionTypes.Contains(request.Type);
+        var currency = (inSecurityCurrency ? null : request.Currency) ?? security?.Currency ?? request.Currency ?? accountCurrency;
         if (currency != keptCurrency && rates.UnusableReason(currency) is { } currencyError)
         {
             return new DomainError(ErrorCodes.CurrencyDisabled, currencyError);
@@ -374,18 +404,9 @@ public sealed class InvestmentService(
                 "Later sales depend on this entry. Delete those first.");
         }
 
-        var securityIds = Portfolio.SecuritiesOf(transaction).ToList();
-        var symbols = await db.Securities
-            .Where(s => securityIds.Contains(s.Id))
-            .ToDictionaryAsync(s => s.Id, s => s.Symbol, cancellationToken);
+        var (symbol, relatedSymbol) = await SymbolsAsync(transaction, cancellationToken);
         db.InvestmentTransactions.Remove(transaction);
-        deletions.Record(
-            TrashKind.InvestmentTransaction,
-            id,
-            TrashLabel.Investment(
-                transaction,
-                transaction.SecurityId is { } heldId ? symbols.GetValueOrDefault(heldId) : null,
-                transaction.RelatedSecurityId is { } relatedId ? symbols.GetValueOrDefault(relatedId) : null));
+        deletions.Record(TrashKind.InvestmentTransaction, id, TrashLabel.Investment(transaction, symbol, relatedSymbol));
         await db.SaveChangesAsync(cancellationToken);
 
         return id;

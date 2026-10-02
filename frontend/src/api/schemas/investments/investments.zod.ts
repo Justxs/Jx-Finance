@@ -157,10 +157,11 @@ export const SyncBrokerConnectionResponse = zod.object({
       }),
     )
     .nullable(),
+  costSharesMissing: zod.array(zod.string()).optional(),
 });
 
 /**
- * Reads the Trades, Cash Transactions, Corporate Actions and Open Positions sections of a Flex Query XML report. Stock, ETF and fund trades become buys and sells; currency trades become in-account conversions; dividends, withholding tax, interest and fees become cash entries; forward and reverse splits become split entries with the ratio as new shares per old share; an issue change (IC) to another symbol becomes a symbol change that carries the holding to the new security, counted in corporateActions; open positions update last prices. Deposits and withdrawals become transfers when a funding account is given and are skipped otherwise. Every entry is matched by its broker id, so importing overlapping periods never duplicates. The import is all or nothing. Other corporate actions (mergers, spin-offs, stock dividends, rights) are not booked: they are counted in skipped and listed per type in skippedCorporateActions. When the report has an Open Positions section, positionMismatches lists every security whose quantity replayed from the entries differs from the quantity the broker reports, which is how an action that was not booked becomes visible; it is null when the report has no Open Positions section.
+ * Reads the Trades, Cash Transactions, Corporate Actions and Open Positions sections of a Flex Query XML report. Stock, ETF and fund trades become buys and sells; currency trades become in-account conversions; dividends, withholding tax, interest and fees become cash entries; forward and reverse splits become split entries with the ratio as new shares per old share; an issue change (IC) to another symbol becomes a symbol change that carries the holding to the new security, and a merger (TC) a merger entry with the cash proceeds and the shares received, both counted in corporateActions; a merger paid in shares and cash takes its cost share from the value of the shares received and, without one, lists the received security in costSharesMissing; open positions update last prices. Deposits and withdrawals become transfers when a funding account is given and are skipped otherwise. Every entry is matched by its broker id, so importing overlapping periods never duplicates. The import is all or nothing. Other corporate actions (spin-offs, stock dividends, rights, tender offers) are not booked: they are counted in skipped and listed per type in skippedCorporateActions. When the report has an Open Positions section, positionMismatches lists every security whose quantity replayed from the entries differs from the quantity the broker reports, which is how an action that was not booked becomes visible; it is null when the report has no Open Positions section.
  * @summary Import an Interactive Brokers Flex Query report
  */
 export const ImportBrokerReportBody = zod.object({
@@ -211,6 +212,7 @@ export const ImportBrokerReportResponse = zod.object({
       }),
     )
     .nullable(),
+  costSharesMissing: zod.array(zod.string()).optional(),
 });
 
 /**
@@ -261,6 +263,7 @@ export const ImportTradeCsvResponse = zod.object({
       }),
     )
     .nullable(),
+  costSharesMissing: zod.array(zod.string()).optional(),
 });
 
 /**
@@ -885,7 +888,7 @@ export const ImportSecurityPricesResponse = zod.object({
 export const DeleteSecurityPriceResponse = zod.void();
 
 /**
- * Returns one calendar year of recorded investment activity on the accounts the caller can see: every disposal with its proceeds, first-in-first-out cost basis, gain or loss and the acquisition date, quantity and cost of each lot it consumed, and every dividend, interest, withholding tax and standalone fee of that year. Every amount is given both in the currency it was recorded in and in the reporting currency at the rate frozen on the entry's date; withholding tax and fees are reported as positive amounts paid. AvailableYears lists the years that hold anything, newest first, and Year falls back to the newest of them, or to the current year when nothing is recorded. A year with nothing recorded answers an empty summary rather than an error. This is a summary of recorded data, not tax advice: no tax, allowance or rate is applied.
+ * Returns one calendar year of recorded investment activity on the accounts the caller can see: every disposal, a sale or the cash part of a merger, with its proceeds, first-in-first-out cost basis, gain or loss and the acquisition date, quantity and cost of each lot it consumed, and every dividend, interest, withholding tax and standalone fee of that year. Every amount is given both in the currency it was recorded in and in the reporting currency at the rate frozen on the entry's date; withholding tax and fees are reported as positive amounts paid. AvailableYears lists the years that hold anything, newest first, and Year falls back to the newest of them, or to the current year when nothing is recorded. A year with nothing recorded answers an empty summary rather than an error. This is a summary of recorded data, not tax advice: no tax, allowance or rate is applied.
  * @summary Get the yearly investment tax summary
  */
 export const taxSummaryResponseTotalsProceedsRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
@@ -979,6 +982,17 @@ export const TaxSummaryResponse = zod.object({
   disposals: zod.array(
     zod.object({
       id: zod.uuid(),
+      type: zod.enum([
+        "buy",
+        "sell",
+        "dividend",
+        "withholdingTax",
+        "interest",
+        "fee",
+        "split",
+        "symbolChange",
+        "merger",
+      ]),
       date: zod.iso.date(),
       accountId: zod.uuid(),
       securityId: zod.uuid(),
@@ -1062,6 +1076,7 @@ export const TaxSummaryResponse = zod.object({
         "fee",
         "split",
         "symbolChange",
+        "merger",
       ]),
       symbol: zod.string().nullable(),
       description: zod.string().nullable(),
@@ -1114,7 +1129,7 @@ export const TaxSummaryResponse = zod.object({
 export const ExportTaxSummaryResponse = zod.unknown();
 
 /**
- * Buys and sells need a security, quantity and price, and move quantity times price plus or minus the fee in the security's currency. Dividends, withholding tax, interest and fees need an amount. A split needs a security and a ratio in Quantity and moves no cash. A symbol change needs the security the holding leaves, the one it moves to in RelatedSecurityId, in the same currency, and the shares moved in Quantity; the oldest lots move with their cost and acquisition dates and no cash moves. The cash effect lands on the account's balance in that currency and never counts as income or expense in reports or budgets.
+ * Buys and sells need a security, quantity and price, and move quantity times price plus or minus the fee in the security's currency. Dividends, withholding tax, interest and fees need an amount. A split needs a security and a ratio in Quantity and moves no cash. A symbol change needs the security the holding leaves, the one it moves to in RelatedSecurityId, in the same currency, and the shares moved in Quantity; the oldest lots move with their cost and acquisition dates and no cash moves. A merger needs the security taken over and the shares given up in Quantity, and either the cash received in Amount, the security received in RelatedSecurityId with its shares in RelatedQuantity, or both; with both, CostShare is the percentage of the cost basis carried into the new shares and the rest is set against the cash as a disposal. The cash effect lands on the account's balance in that currency and never counts as income or expense in reports or budgets.
  * @summary Record an investment transaction
  */
 
@@ -1124,6 +1139,11 @@ export const createInvestmentTransactionBodyAmountRegExp = new RegExp("^-?\\d+(\
 export const createInvestmentTransactionBodyFeeRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 export const createInvestmentTransactionBodyDescriptionMin = 0;
 export const createInvestmentTransactionBodyDescriptionMax = 500;
+
+export const createInvestmentTransactionBodyRelatedQuantityRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const createInvestmentTransactionBodyCostShareRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 
 export const CreateInvestmentTransactionBody = zod.object({
   accountId: zod.uuid().min(1),
@@ -1136,6 +1156,7 @@ export const CreateInvestmentTransactionBody = zod.object({
     "fee",
     "split",
     "symbolChange",
+    "merger",
   ]),
   date: zod.iso.date(),
   securityId: zod.uuid().nullish(),
@@ -1149,7 +1170,9 @@ export const CreateInvestmentTransactionBody = zod.object({
   amount: zod
     .stringFormat("decimal", createInvestmentTransactionBodyAmountRegExp)
     .nullish()
-    .describe("Cash amount for dividend, withholding tax, interest and fee entries."),
+    .describe(
+      "Cash amount for dividend, withholding tax, interest and fee entries; cash received for a merger.",
+    ),
   fee: zod.stringFormat("decimal", createInvestmentTransactionBodyFeeRegExp).nullish(),
   currency: zod
     .union([
@@ -1199,10 +1222,28 @@ export const CreateInvestmentTransactionBody = zod.object({
   relatedSecurityId: zod
     .uuid()
     .nullish()
-    .describe("For a symbol change: the security the holding moves to."),
+    .describe(
+      "For a symbol change: the security the holding moves to; for a merger: the security received.",
+    ),
+  relatedQuantity: zod
+    .stringFormat("decimal", createInvestmentTransactionBodyRelatedQuantityRegExp)
+    .nullish()
+    .describe("For a merger: the shares of the security received."),
+  costShare: zod
+    .stringFormat("decimal", createInvestmentTransactionBodyCostShareRegExp)
+    .nullish()
+    .describe(
+      "For a merger paid in shares and cash: the percentage of the cost basis carried into the new shares, 0 to 100.",
+    ),
 });
 
 export const createInvestmentTransactionResponseQuantityRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const createInvestmentTransactionResponseRelatedQuantityRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const createInvestmentTransactionResponseCostShareRegExp = new RegExp(
   "^-?\\d+(\\.\\d{1,8})?$",
 );
 export const createInvestmentTransactionResponsePriceRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
@@ -1227,9 +1268,17 @@ export const CreateInvestmentTransactionResponse = zod.object({
     "fee",
     "split",
     "symbolChange",
+    "merger",
   ]),
   date: zod.iso.date(),
   quantity: zod.stringFormat("decimal", createInvestmentTransactionResponseQuantityRegExp),
+  relatedQuantity: zod.stringFormat(
+    "decimal",
+    createInvestmentTransactionResponseRelatedQuantityRegExp,
+  ),
+  costShare: zod
+    .stringFormat("decimal", createInvestmentTransactionResponseCostShareRegExp)
+    .nullable(),
   price: zod.stringFormat("decimal", createInvestmentTransactionResponsePriceRegExp),
   fee: zod.stringFormat("decimal", createInvestmentTransactionResponseFeeRegExp),
   cashAmount: zod.stringFormat("decimal", createInvestmentTransactionResponseCashAmountRegExp),
@@ -1277,6 +1326,12 @@ export const CreateInvestmentTransactionResponse = zod.object({
 export const investmentTransactionsResponseItemsItemQuantityRegExp = new RegExp(
   "^-?\\d+(\\.\\d{1,8})?$",
 );
+export const investmentTransactionsResponseItemsItemRelatedQuantityRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const investmentTransactionsResponseItemsItemCostShareRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
 export const investmentTransactionsResponseItemsItemPriceRegExp = new RegExp(
   "^-?\\d+(\\.\\d{1,8})?$",
 );
@@ -1305,9 +1360,17 @@ export const InvestmentTransactionsResponse = zod.object({
         "fee",
         "split",
         "symbolChange",
+        "merger",
       ]),
       date: zod.iso.date(),
       quantity: zod.stringFormat("decimal", investmentTransactionsResponseItemsItemQuantityRegExp),
+      relatedQuantity: zod.stringFormat(
+        "decimal",
+        investmentTransactionsResponseItemsItemRelatedQuantityRegExp,
+      ),
+      costShare: zod
+        .stringFormat("decimal", investmentTransactionsResponseItemsItemCostShareRegExp)
+        .nullable(),
       price: zod.stringFormat("decimal", investmentTransactionsResponseItemsItemPriceRegExp),
       fee: zod.stringFormat("decimal", investmentTransactionsResponseItemsItemFeeRegExp),
       cashAmount: zod.stringFormat(
@@ -1363,7 +1426,7 @@ export const InvestmentTransactionsResponse = zod.object({
 export const DeleteInvestmentTransactionResponse = zod.void();
 
 /**
- * Replaces every field of an entry that was recorded by hand, under the same rules as recording one. Entries imported from a broker are corrected at the broker and imported again. A correction that would leave a later sale without enough shares is refused.
+ * Replaces every field of an entry that was recorded by hand, under the same rules as recording one. Entries imported from a broker are corrected at the broker and imported again, except that the CostShare of an imported merger paid in shares and cash can be set here; the rest of the body is then ignored. A correction that would leave a later sale without enough shares is refused.
  * @summary Correct an investment transaction
  */
 
@@ -1373,6 +1436,11 @@ export const updateInvestmentTransactionBodyAmountRegExp = new RegExp("^-?\\d+(\
 export const updateInvestmentTransactionBodyFeeRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 export const updateInvestmentTransactionBodyDescriptionMin = 0;
 export const updateInvestmentTransactionBodyDescriptionMax = 500;
+
+export const updateInvestmentTransactionBodyRelatedQuantityRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const updateInvestmentTransactionBodyCostShareRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 
 export const UpdateInvestmentTransactionBody = zod.object({
   accountId: zod.uuid().min(1),
@@ -1385,6 +1453,7 @@ export const UpdateInvestmentTransactionBody = zod.object({
     "fee",
     "split",
     "symbolChange",
+    "merger",
   ]),
   date: zod.iso.date(),
   securityId: zod.uuid().nullish(),
@@ -1398,7 +1467,9 @@ export const UpdateInvestmentTransactionBody = zod.object({
   amount: zod
     .stringFormat("decimal", updateInvestmentTransactionBodyAmountRegExp)
     .nullish()
-    .describe("Cash amount for dividend, withholding tax, interest and fee entries."),
+    .describe(
+      "Cash amount for dividend, withholding tax, interest and fee entries; cash received for a merger.",
+    ),
   fee: zod.stringFormat("decimal", updateInvestmentTransactionBodyFeeRegExp).nullish(),
   currency: zod
     .union([
@@ -1448,10 +1519,28 @@ export const UpdateInvestmentTransactionBody = zod.object({
   relatedSecurityId: zod
     .uuid()
     .nullish()
-    .describe("For a symbol change: the security the holding moves to."),
+    .describe(
+      "For a symbol change: the security the holding moves to; for a merger: the security received.",
+    ),
+  relatedQuantity: zod
+    .stringFormat("decimal", updateInvestmentTransactionBodyRelatedQuantityRegExp)
+    .nullish()
+    .describe("For a merger: the shares of the security received."),
+  costShare: zod
+    .stringFormat("decimal", updateInvestmentTransactionBodyCostShareRegExp)
+    .nullish()
+    .describe(
+      "For a merger paid in shares and cash: the percentage of the cost basis carried into the new shares, 0 to 100.",
+    ),
 });
 
 export const updateInvestmentTransactionResponseQuantityRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const updateInvestmentTransactionResponseRelatedQuantityRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const updateInvestmentTransactionResponseCostShareRegExp = new RegExp(
   "^-?\\d+(\\.\\d{1,8})?$",
 );
 export const updateInvestmentTransactionResponsePriceRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
@@ -1476,9 +1565,17 @@ export const UpdateInvestmentTransactionResponse = zod.object({
     "fee",
     "split",
     "symbolChange",
+    "merger",
   ]),
   date: zod.iso.date(),
   quantity: zod.stringFormat("decimal", updateInvestmentTransactionResponseQuantityRegExp),
+  relatedQuantity: zod.stringFormat(
+    "decimal",
+    updateInvestmentTransactionResponseRelatedQuantityRegExp,
+  ),
+  costShare: zod
+    .stringFormat("decimal", updateInvestmentTransactionResponseCostShareRegExp)
+    .nullable(),
   price: zod.stringFormat("decimal", updateInvestmentTransactionResponsePriceRegExp),
   fee: zod.stringFormat("decimal", updateInvestmentTransactionResponseFeeRegExp),
   cashAmount: zod.stringFormat("decimal", updateInvestmentTransactionResponseCashAmountRegExp),

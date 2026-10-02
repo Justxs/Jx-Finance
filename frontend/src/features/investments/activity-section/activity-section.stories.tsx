@@ -55,6 +55,9 @@ export const WithCorporateActions: Story = {
   play: async ({ canvas }) => {
     await expect(await canvas.findByText("Symbol change")).toBeInTheDocument();
     await expect(canvas.getByText(/6 to IGN1L/)).toBeInTheDocument();
+    await expect(canvas.getByText(/40 into 12 VWCE/)).toBeInTheDocument();
+    await expect(canvas.getByText("Cost share not set")).toBeInTheDocument();
+    await expect(canvas.getByRole("button", { name: /^Edit: Merger · IGN1L/ })).toBeInTheDocument();
   },
 };
 

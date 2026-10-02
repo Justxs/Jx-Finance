@@ -279,6 +279,7 @@ export const taxSummary: TaxSummaryResponse = {
   disposals: [
     {
       id: uid("d1d1d1d1", 1),
+      type: "sell",
       date: "2026-05-04",
       accountId: brokerAccount.id,
       securityId: worldEtf.id,
@@ -299,6 +300,7 @@ export const taxSummary: TaxSummaryResponse = {
     },
     {
       id: uid("d1d1d1d1", 2),
+      type: "sell",
       date: "2026-07-15",
       accountId: brokerAccount.id,
       securityId: usStock.id,
@@ -381,6 +383,8 @@ interface EntrySeed {
   security?: SecurityResponse;
   related?: SecurityResponse;
   quantity?: string;
+  relatedQuantity?: string;
+  costShare?: string;
   price?: string;
   fee?: string;
   cashAmount: string;
@@ -400,6 +404,8 @@ function entry(n: number, seed: EntrySeed): InvestmentTransactionResponse {
     type: seed.type,
     date: seed.date,
     quantity: seed.quantity ?? "0",
+    relatedQuantity: seed.relatedQuantity ?? "0",
+    costShare: seed.costShare ?? null,
     price: seed.price ?? "0",
     fee: seed.fee ?? "0.00",
     cashAmount: seed.cashAmount,
@@ -548,6 +554,16 @@ export const corporateActionEntries: InvestmentTransactionResponse[] = [
     cashAmount: "0.00",
     description: "ASML(NL0010273215) CUSIP/ISIN CHANGE TO (NL0010273216)",
   }),
+  entry(92, {
+    type: "merger",
+    date: "2026-06-18",
+    security: unpricedStock,
+    related: worldEtf,
+    quantity: "40",
+    relatedQuantity: "12",
+    cashAmount: "250.00",
+    description: "IGN1L(LT0000115768) MERGED(Acquisition) WITH VWCE 3 FOR 10 AND EUR 6.25",
+  }),
 ];
 
 const brokerConnection: BrokerConnectionResponse = {
@@ -587,6 +603,7 @@ export const brokerImportWithWarnings: BrokerImportResponse = {
   ...brokerImportResult,
   splits: 2,
   corporateActions: 1,
+  costSharesMissing: ["VWCE"],
   skippedCorporateActions: [
     { type: "TC", count: 1 },
     { type: "SO", count: 2 },

@@ -69,17 +69,25 @@ public sealed class Position(SecurityId securityId)
         decimal proceeds,
         decimal reportingProceeds)
     {
-        var consumed = Take(id, quantity);
+        Realize(id, date, quantity, Take(id, quantity), proceeds, reportingProceeds);
+    }
+
+    public void Realize(
+        InvestmentTransactionId id,
+        DateOnly date,
+        decimal quantity,
+        IReadOnlyList<ConsumedLot> lots,
+        decimal proceeds,
+        decimal reportingProceeds) =>
         sales.Add(new RealizedSale(
             id,
             date,
             quantity,
             proceeds,
             reportingProceeds,
-            consumed.Sum(l => l.Cost),
-            consumed.Sum(l => l.ReportingCost),
-            consumed));
-    }
+            lots.Sum(l => l.Cost),
+            lots.Sum(l => l.ReportingCost),
+            lots));
 
     public IReadOnlyList<ConsumedLot> Take(InvestmentTransactionId id, decimal quantity)
     {

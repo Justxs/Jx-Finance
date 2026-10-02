@@ -301,7 +301,7 @@ public static class BeancountWriter
                     }
 
                     break;
-                case InvestmentTransactionType.SymbolChange when entry.LotChanges is { } changes:
+                case InvestmentTransactionType.SymbolChange or InvestmentTransactionType.Merger when entry.LotChanges is { } changes:
                     if (cash.Amount == 0 && changes.All(c => c.Before.Count == 0 && c.After.Count == 0))
                     {
                         return;

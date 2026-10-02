@@ -15,6 +15,11 @@ flowchart TD
     Kind -->|"Buy"| Lot["push a lot: quantity, total cost incl. commission,<br/>total cost in the reporting currency at the buy-date rate"]
     Kind -->|"Split"| Ratio["every lot: quantity times ratio, its total cost unchanged"]
     Kind -->|"Symbol change"| Move["take the oldest lots of the old security, up to the shares moved,<br/>and slot them into the new security by acquisition date,<br/>cost and dates unchanged"]
+    Kind -->|"Merger"| Merge["take the oldest lots of the target, up to the shares given up"]
+    Merge --> Shares["shares received: the lots join the acquirer at the ratio,<br/>with the cost share of their cost and their dates"]
+    Merge --> CashPart["cash received: a disposal of the rest of the cost,<br/>realised gain = cash minus that cost"]
+    Shares --> Pos
+    CashPart --> Totals
     Kind -->|"Sell"| Fifo["consume the oldest lots first"]
     Fifo --> Cover{"Enough shares?"}
     Cover -->|"no, manual entry"| Reject["rejected"]
@@ -39,8 +44,18 @@ A split changes the quantity of one holding. Since 2026-10-02 a corporate action
 | Rule | Error code |
 | --- | --- |
 | A symbol change has a security, a security it moves to and a quantity above 0 | `required`, `quantity.positive` |
+| A merger has a security and shares given up above 0, and a security received with shares above 0, cash received above 0, or both | `required`, `quantity.positive`, `money.positive` |
+| A merger paid in shares and cash has a cost share from 0 to 100 percent with at most six decimals | `required`, `range.invalid` |
 | The security it moves to is another one | `value.mustDiffer` |
 | Both securities trade in the same currency, because the cost moves from one to the other | `holding.currencyDiffers` |
+
+**Merger.** A company is taken over and the holding ends, paid in cash, in the acquirer's shares, or in both. Add entry, type Merger, takes the security taken over, "Shares given up", "Security received (optional)" with "Shares received", and "Cash received", which is left empty for a merger paid in shares only and is the entry's cash effect. The replay takes the shares given up from the oldest lots like a sale, then:
+
+- paid in cash only, the lots are a disposal: the cash is its proceeds, the lots' cost its cost basis and the difference a realised gain, exactly as a sale at the merger price, so the tax summary lists it with the lots and their purchase dates;
+- paid in shares only, the lots join the acquirer at the ratio shares received to shares given up, with their whole cost and their purchase dates, and nothing is realised;
+- paid in both, "Cost carried into the new shares (%)" decides how the cost divides: that share of each lot's cost goes with the lot into the acquirer and the rest is set against the cash as a disposal of that part of the holding. The merger documents of the acquirer state the split, usually as the value of the new shares against the cash on the closing day; a small cash payment for a fraction of a share is entered the same way.
+
+The cash counts in the annualized return as a sale's proceeds do, and in reports neither as income nor as expense. The activity list shows "Merger IGN1L" with "40 into 12 VWCE" and the cash received.
 
 The checks that guard sales guard these entries too. Every create, edit, delete and restore replays the whole account, because lots now pass between securities, and refuses a change that leaves an entry of any security of the account oversold that was not oversold before: deleting a symbol change that a later sale of the new security depends on answers `holding.dependentSales`, as deleting a buy does. A security whose currency is locked by its entries counts an entry that names it as the security moved to.
 
@@ -53,7 +68,7 @@ flowchart TD
     Switch -->|"yes"| Kind{"Entry type"}
     Kind -->|"Dividend, Interest"| Income["income, at the frozen ReportingAmount"]
     Kind -->|"WithholdingTax, standalone Fee"| Expense["expense, at the frozen ReportingAmount"]
-    Kind -->|"Buy, Sell, Split"| Out["not income or expense<br/>commission stays inside cost or proceeds<br/>realised gain stays in the portfolio view"]
+    Kind -->|"Buy, Sell, Split, corporate actions"| Out["not income or expense<br/>commission stays inside cost or proceeds<br/>realised gain stays in the portfolio view"]
     Income --> Reports["Reports: totals, trend,<br/>group 'Investment income' in incomeByCategory"]
     Expense --> Reports2["Reports: totals, trend,<br/>group 'Investment taxes and fees' in expenseByCategory"]
     Income --> Dash["Dashboard: month income, monthly trend"]
@@ -201,12 +216,14 @@ Where each number comes from:
 
 | On the page | Read from | Frozen at |
 | --- | --- | --- |
-| Proceeds of a disposal | the sell entry's `CashAmount` (price times quantity less commission) | `ReportingAmount`, the rate of the sell date |
-| Cost basis of a disposal | the buy entries the first-in-first-out replay consumed, commission included | each buy's `ReportingAmount`, the rate of its own buy date |
+| Proceeds of a disposal | the sell entry's `CashAmount` (price times quantity less commission), or a merger's cash received | `ReportingAmount`, the rate of the sell or merger date |
+| Cost basis of a disposal | the buy entries the first-in-first-out replay consumed, commission included; for a merger paid in shares and cash, the part of their cost not carried into the new shares | each buy's `ReportingAmount`, the rate of its own buy date |
 | Gain or loss | proceeds minus cost basis | the same two |
 | A consumed lot | one buy entry, or the remainder of one, after every split that followed it | as above |
 | Dividends, interest | `CashAmount` of `Dividend` and `Interest` entries | `ReportingAmount` |
 | Withholding tax, fees | `CashAmount` of `WithholdingTax` and standalone `Fee` entries, sign flipped to the amount paid | `ReportingAmount` |
+
+Since 2026-10-02 a disposal carries `type`, `sell` or `merger`; a merger's shows "Cash from a merger" under the security, its CSV row is a `Merger` row in place of `Disposal`, and a year with a merger counts as a year that holds something.
 
 Nothing here reads a price. `SecurityPrice` and `Security.LastPrice` decide unrealised value only, so adding, changing or deleting a price cannot move a figure on this page. The price history described above and this summary never meet.
 
@@ -251,7 +268,7 @@ flowchart TD
 
 The replay is the one the create, edit and delete paths already ran, moved out of `InvestmentService` into `IHoldingLedger` in `Common/Holdings` so that `TrashService` calls the same code rather than a copy. `Position` now remembers the first sale that found too few lots, and the ledger answers, for every security that became oversold with the change, that entry's id, which is what tells the two refusals apart. The restored row keeps its date and its creation time, so it lands exactly where it was in the order, and the check is over every point in time rather than the final quantity: a sale on 3 June is refused when the only purchase has since been moved to 10 June, although the holding ends with enough shares. As on the other paths, a ledger that is already oversold before the change — an imported sale with no recorded purchase — is not blamed on the entry being restored.
 
-Restoring a buy can never oversell, and neither can a dividend, withholding tax, interest or fee, because none of them removes shares; a split with a ratio above one only adds them. A reverse split is the other entry that removes shares, and it answers `holding.dependentSales` when a later sale now needs them. A symbol change takes shares from one security like a sale and answers `holding.oversold` when they are no longer there, or `holding.dependentSales` when a later entry of either security now finds too few. The remaining questions each have a deliberate answer:
+Restoring a buy can never oversell, and neither can a dividend, withholding tax, interest or fee, because none of them removes shares; a split with a ratio above one only adds them. A reverse split is the other entry that removes shares, and it answers `holding.dependentSales` when a later sale now needs them. A symbol change or a merger takes shares from one security like a sale and answers `holding.oversold` when they are no longer there, or `holding.dependentSales` when a later entry of either security now finds too few. The remaining questions each have a deliberate answer:
 
 | Could make a restore unsound | Answer |
 | --- | --- |
@@ -292,6 +309,8 @@ sequenceDiagram
 ```
 
 Since 2026-10-02 an issue change (`IC`) is booked as well. Its two rows, the old contract leaving with a negative quantity and the new one arriving, become one `SymbolChange` entry with `ExternalId` `ibkr:ca:<id>` on the report date, from the security of the leaving row to the security of the arriving row, created when the application does not have it yet, with the leaving quantity as the shares moved. When the arriving row resolves to the same security, because only the ISIN or the contract changed and the symbol stayed, that security takes over the new identifiers as after a reverse split and no entry is written. An issue change whose new security trades in another currency, or that lacks one of its two rows, stays counted as skipped. The result counts booked corporate actions other than splits in `corporateActions`, "1 corporate action booked."
+
+A merger (`TC`) is booked the same day as a `Merger` entry. Its leaving rows give the security taken over and the shares given up, its arriving rows, if any, the security received and the shares received, and the `proceeds` of all its rows the cash received. A merger paid in both takes its cost share from the `value` the broker reports for the arriving shares, value divided by value plus cash, rounded to six decimals. Without a value the entry is booked with no cost share, which counts as 100% carried into the new shares and the cash wholly as gain, and the result lists the received security under "These corporate actions were booked without the share of the cost that moves to the new shares", as `costSharesMissing`. Such an imported entry shows "Cost share not set" in the activity list and, unlike every other imported entry, opens for correction: the form then offers only the cost share, and `PUT /api/investments/transactions/{id}` applies only `costShare` to it. A merger into a security in another currency, one whose received security is the same, or one with negative proceeds stays counted as skipped.
 
 The broker report is not bound by the app's own validators, so `StatementImport` fits its text to the columns instead of letting one long value fail the whole import: a new security's symbol is cut to 32 characters (the same cut is used when looking a security up), its name and exchange are shortened with an ellipsis to 200 and 32, and entry and transfer descriptions to 500.
 

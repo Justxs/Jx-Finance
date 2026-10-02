@@ -53,6 +53,7 @@ export function BrokerImportResult({ result }: Readonly<Props>) {
     result.transfers;
   const skippedActions = result.skippedCorporateActions;
   const mismatches = result.positionMismatches ?? [];
+  const costSharesMissing = result.costSharesMissing ?? [];
 
   function actionName(type: string) {
     const key = corporateActionNames[type.toUpperCase()];
@@ -79,9 +80,17 @@ export function BrokerImportResult({ result }: Readonly<Props>) {
         </ul>
       ) : null}
 
-      {skippedActions.length > 0 || mismatches.length > 0 ? (
+      {skippedActions.length > 0 || mismatches.length > 0 || costSharesMissing.length > 0 ? (
         <div className="mt-3 space-y-3 border-t border-expense pt-2">
           <p className="font-medium text-expense">{t("investments.import.warning.title")}</p>
+
+          {costSharesMissing.length > 0 ? (
+            <p>
+              {t("investments.import.warning.costShares", {
+                symbols: costSharesMissing.join(", "),
+              })}
+            </p>
+          ) : null}
 
           {skippedActions.length > 0 ? (
             <div>

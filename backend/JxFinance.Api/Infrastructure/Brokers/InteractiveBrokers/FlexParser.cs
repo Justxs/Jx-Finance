@@ -13,6 +13,7 @@ public static partial class FlexParser
     public const string ForwardSplit = "FS";
     public const string ReverseSplit = "RS";
     public const string IssueChange = "IC";
+    public const string Merger = "TC";
 
     private static readonly string[] DateInputFormats = ["yyyyMMdd", DateFormats.IsoDate];
     private static readonly string[] SummaryTradeRows = ["ORDER", "CLOSED_LOT", "SYMBOL_SUMMARY", "ASSET_SUMMARY", "WASH_SALE"];
@@ -138,7 +139,9 @@ public static partial class FlexParser
             date,
             Number(node, "quantity") ?? 0m,
             SplitRatio(actionDescription) ?? SplitRatio(description),
-            actionDescription ?? description);
+            actionDescription ?? description,
+            Number(node, "proceeds") ?? 0m,
+            Number(node, "value") ?? 0m);
     }
 
     private static decimal? SplitRatio(string? description)

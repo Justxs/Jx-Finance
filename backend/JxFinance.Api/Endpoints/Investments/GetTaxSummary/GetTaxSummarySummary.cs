@@ -8,7 +8,7 @@ public sealed class GetTaxSummarySummary : Summary<GetTaxSummaryEndpoint, GetTax
     {
         Summary = "Get the yearly investment tax summary";
         Description = "Returns one calendar year of recorded investment activity on the accounts the caller can see: "
-            + "every disposal with its proceeds, first-in-first-out cost basis, gain or loss and the acquisition date, "
+            + "every disposal, a sale or the cash part of a merger, with its proceeds, first-in-first-out cost basis, gain or loss and the acquisition date, "
             + "quantity and cost of each lot it consumed, and every dividend, interest, withholding tax and standalone "
             + "fee of that year. Every amount is given both in the currency it was recorded in and in the reporting "
             + "currency at the rate frozen on the entry's date; withholding tax and fees are reported as positive "

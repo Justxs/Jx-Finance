@@ -55,6 +55,8 @@ public sealed class HoldingsValuation(AppDbContext db, IExchangeRateService rate
                 t.Date,
                 t.CreatedAt,
                 t.Quantity,
+                t.RelatedQuantity,
+                t.CostShare,
                 Cash = t.CashAmount.Amount,
                 t.CashAmount.Currency,
                 t.ReportingAmount,
@@ -100,6 +102,8 @@ public sealed class HoldingsValuation(AppDbContext db, IExchangeRateService rate
                 Date = t.Date,
                 CreatedAt = t.CreatedAt,
                 Quantity = t.Quantity,
+                RelatedQuantity = t.RelatedQuantity,
+                CostShare = t.CostShare,
                 CashAmount = new Money(t.Cash, t.Currency),
                 ReportingAmount = t.ReportingAmount,
             });
