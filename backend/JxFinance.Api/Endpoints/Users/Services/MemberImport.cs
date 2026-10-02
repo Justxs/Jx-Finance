@@ -74,14 +74,7 @@ public sealed class MemberImport(AppDbContext db, Guid userId, int lockTimeoutSe
             throw new BackupFileException(ErrorCodes.ImportInvalidFile, "The file is not a Jx Finance data export.");
         }
 
-        if (!string.Equals(header.Migration, BackupDatabase.CurrentMigration(db), StringComparison.Ordinal))
-        {
-            throw new BackupFileException(
-                ErrorCodes.BackupSchemaMismatch,
-                $"The export was taken at database version '{header.Migration}', but this application runs "
-                + $"'{BackupDatabase.CurrentMigration(db)}'. Import it into the same application version.");
-        }
-
+        EnsureKnownMigration(header.Migration ?? "");
         transaction = await db.Database.BeginTransactionAsync(cancellationToken);
         await BackupDatabase.ExecuteAsync(Connection, $"SET LOCAL lock_timeout = '{lockTimeoutSeconds}s'", cancellationToken);
         await BackupDatabase.SetForeignKeysAsync(Connection, shapes, "DEFERRABLE INITIALLY DEFERRED", cancellationToken);
@@ -199,6 +192,7 @@ public sealed class MemberImport(AppDbContext db, Guid userId, int lockTimeoutSe
             }
         }
 
+        await FillAddedColumnsAsync(cancellationToken);
         return removed;
     }
 
@@ -215,6 +209,31 @@ public sealed class MemberImport(AppDbContext db, Guid userId, int lockTimeoutSe
         {
             await transaction.DisposeAsync();
         }
+    }
+
+    private void EnsureKnownMigration(string migration)
+    {
+        if (db.Database.GetMigrations().Contains(migration, StringComparer.Ordinal))
+        {
+            return;
+        }
+
+        var current = BackupDatabase.CurrentMigration(db);
+        throw string.CompareOrdinal(migration, current) > 0
+            ? new BackupFileException(
+                ErrorCodes.ImportNewerVersion,
+                $"The export was taken on a newer version of Jx Finance (database version '{migration}', this "
+                + $"application runs '{current}'). Upgrade this installation, then import it.")
+            : new BackupFileException(
+                ErrorCodes.ImportUnknownVersion,
+                $"The export was taken at database version '{migration}', which this application does not know.");
+    }
+
+    private async Task FillAddedColumnsAsync(CancellationToken cancellationToken)
+    {
+        await PayeeKeyBackfill.RunAsync(db, cancellationToken);
+        await DebtBalanceBackfill.RunAsync(db, cancellationToken);
+        await SpreadFromBackfill.RunAsync(db, cancellationToken);
     }
 
     private async Task ClearStartingDataAsync(CancellationToken cancellationToken)

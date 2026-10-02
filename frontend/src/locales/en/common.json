@@ -898,7 +898,7 @@
       "title": "Import a download",
       "description": "Moving from another installation? Load a zip you downloaded there into this member. It works only while you have no accounts or tags, and everything becomes your own, personal data.",
       "file": "Data export",
-      "fileHint": "The jx-finance-export zip, from the same app version.",
+      "fileHint": "The jx-finance-export zip, from this app version or an older one.",
       "chooseFile": "Choose a zip file",
       "fileRequired": "Choose the zip file first.",
       "fileEmpty": "The file is empty.",
@@ -2973,7 +2973,9 @@
       "mappingIncomplete": "Choose the columns this amount style needs, and the booked values when a status column is set.",
       "invalidDateFormat": "Choose one of the listed date formats.",
       "targetNotEmpty": "You already have accounts or tags. Import into a new, empty member instead.",
-      "alreadyPresent": "Some of these records already exist here, so nothing was imported."
+      "alreadyPresent": "Some of these records already exist here, so nothing was imported.",
+      "newerVersion": "This download comes from a newer version of Jx Finance. Upgrade this installation, then import it.",
+      "unknownVersion": "This download comes from a version of Jx Finance this installation does not know, so it cannot be imported."
     },
     "money": {
       "invalid": "Enter a valid amount, e.g. 12.34.",

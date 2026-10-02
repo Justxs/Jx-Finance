@@ -954,7 +954,7 @@
       "title": "Importuoti atsisiųstus duomenis",
       "description": "Keliatės iš kitos diegties? Įkelkite ten atsisiųstą zip failą į šį narį. Tai veikia tik kol neturite sąskaitų ar žymių, o visi duomenys tampa jūsų asmeniniais.",
       "file": "Duomenų eksportas",
-      "fileHint": "jx-finance-export zip failas iš tos pačios programos versijos.",
+      "fileHint": "jx-finance-export zip failas iš šios arba senesnės programos versijos.",
       "chooseFile": "Pasirinkite zip failą",
       "fileRequired": "Pirmiausia pasirinkite zip failą.",
       "fileEmpty": "Failas tuščias.",
@@ -3087,7 +3087,9 @@
       "mappingIncomplete": "Pasirinkite šiam sumos būdui reikalingus stulpelius ir, jei nurodytas būsenos stulpelis, įvykdytos būsenos reikšmes.",
       "invalidDateFormat": "Pasirinkite vieną iš išvardytų datos formatų.",
       "targetNotEmpty": "Jau turite sąskaitų ar žymių. Importuokite į naują, tuščią narį.",
-      "alreadyPresent": "Kai kurie šie įrašai čia jau yra, todėl niekas neimportuota."
+      "alreadyPresent": "Kai kurie šie įrašai čia jau yra, todėl niekas neimportuota.",
+      "newerVersion": "Šis atsisiuntimas sukurtas naujesnės Jx Finance versijos. Atnaujinkite šią įdiegtį, tada importuokite jį.",
+      "unknownVersion": "Šis atsisiuntimas sukurtas Jx Finance versijos, kurios ši įdiegtis nežino, todėl jo importuoti negalima."
     },
     "money": {
       "invalid": "Įveskite teisingą sumą, pvz., 12,34.",

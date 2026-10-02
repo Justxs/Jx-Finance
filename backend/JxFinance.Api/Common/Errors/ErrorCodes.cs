@@ -107,6 +107,8 @@ public static class ErrorCodes
     public const string ImportInvalidDateFormat = "import.invalidDateFormat";
     public const string ImportTargetNotEmpty = "import.targetNotEmpty";
     public const string ImportAlreadyPresent = "import.alreadyPresent";
+    public const string ImportNewerVersion = "import.newerVersion";
+    public const string ImportUnknownVersion = "import.unknownVersion";
     public const string RestoreExpired = "restore.expired";
     public const string RestoreReferenceMissing = "restore.referenceMissing";
     public const string RestoreCompanionDeleted = "restore.companionDeleted";
