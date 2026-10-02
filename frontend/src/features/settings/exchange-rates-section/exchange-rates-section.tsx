@@ -130,7 +130,10 @@ export function ExchangeRatesSection() {
         </CreateDialog>
       </div>
       <div className="mt-4 max-w-3xl">
-        <QueryBoundary fallback={<RecordRowsSkeleton />}>
+        <QueryBoundary
+          fallback={<RecordRowsSkeleton />}
+          errorSubject={t("settings.rates.entries.title")}
+        >
           <RateList currency={shown} />
         </QueryBoundary>
       </div>

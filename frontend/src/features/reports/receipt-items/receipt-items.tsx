@@ -96,7 +96,10 @@ export function ReceiptItems({ dateFrom, dateTo }: Readonly<RangeProps>) {
           onChange={(event) => text.change(event.target.value)}
         />
       </FieldShell>
-      <QueryBoundary fallback={<TextSkeleton size="sm" width="w-2/3" />}>
+      <QueryBoundary
+        fallback={<TextSkeleton size="sm" width="w-2/3" />}
+        errorSubject={t("reports.receiptItems.title")}
+      >
         <StaleRegion stale={shownSearch !== search}>
           <ItemsTable dateFrom={dateFrom} dateTo={dateTo} search={shownSearch} />
         </StaleRegion>

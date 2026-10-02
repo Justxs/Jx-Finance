@@ -80,7 +80,10 @@ export function ImportInboxSection() {
       title={t("settings.importInbox.title")}
       description={t("settings.importInbox.description")}
     >
-      <QueryBoundary fallback={<ImportInboxSkeleton />}>
+      <QueryBoundary
+        fallback={<ImportInboxSkeleton />}
+        errorSubject={t("settings.importInbox.title")}
+      >
         <InboxStatus />
       </QueryBoundary>
     </TitledSection>

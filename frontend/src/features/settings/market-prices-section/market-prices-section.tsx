@@ -135,7 +135,10 @@ export function MarketPricesSection() {
       title={t("settings.marketPrices.title")}
       description={t("settings.marketPrices.description")}
     >
-      <QueryBoundary fallback={<MarketPricesFormSkeleton />}>
+      <QueryBoundary
+        fallback={<MarketPricesFormSkeleton />}
+        errorSubject={t("settings.marketPrices.title")}
+      >
         <MarketPriceSettings />
       </QueryBoundary>
     </TitledSection>

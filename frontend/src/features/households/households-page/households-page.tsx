@@ -29,7 +29,7 @@ export function HouseholdsPage() {
         householdList.map((household) => <HouseholdCard key={household.id} household={household} />)
       )}
 
-      <QueryBoundary fallback={<PeopleSkeleton />}>
+      <QueryBoundary fallback={<PeopleSkeleton />} errorSubject={t("households.people.title")}>
         <PeopleSection />
       </QueryBoundary>
     </SettingsLayout>

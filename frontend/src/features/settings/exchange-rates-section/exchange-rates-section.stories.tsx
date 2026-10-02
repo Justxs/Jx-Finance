@@ -51,6 +51,9 @@ export const Loading: Story = {
 
 export const ServerError: Story = {
   parameters: withHandlers(getExchangeRateEntriesMockHandler(failWith(serverErrorProblem))),
+  play: async ({ canvas }) => {
+    await expect(await canvas.findByText("Stored rates could not be loaded.")).toBeVisible();
+  },
 };
 
 export const Lithuanian: Story = { globals: { locale: "lt" } };
