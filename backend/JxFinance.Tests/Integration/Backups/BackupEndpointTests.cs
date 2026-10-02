@@ -354,6 +354,9 @@ public sealed class BackupEndpointTests(ApiFixture fixture) : IntegrationTestBas
         var restored = Assert.Single((await Client.GetFromJsonAsync<List<RestoredDebtDto>>("/api/debts", TestContext.Current.CancellationToken))!, d => d.Id == debt.Id);
         Assert.Equal(debt with { TrackedBalance = "98812.50" }, restored);
         Assert.Equal(link, Assert.Single((await Client.GetFromJsonAsync<List<IdDto>>(payments, TestContext.Current.CancellationToken))!));
+        Assert.Equal(
+            [new RestoredBalanceDto(Today.AddDays(-5), "99000.00")],
+            await Client.GetFromJsonAsync<List<RestoredBalanceDto>>($"/api/debts/{debt.Id}/balances", TestContext.Current.CancellationToken));
         Assert.Equal(HttpStatusCode.OK, (await Client.GetAsync($"/api/debts/{debt.Id}/schedule", TestContext.Current.CancellationToken)).StatusCode);
         var restoredAsset = Assert.Single((await Client.GetFromJsonAsync<List<RestoredAssetDto>>("/api/assets", TestContext.Current.CancellationToken))!, a => a.Id == asset.Id);
         Assert.Equal(new RestoredAssetDto(asset.Id, "11000.00", depreciation), restoredAsset);
@@ -363,6 +366,8 @@ public sealed class BackupEndpointTests(ApiFixture fixture) : IntegrationTestBas
     }
 
     private sealed record RestoredValuationDto(DateOnly Date, string Value);
+
+    private sealed record RestoredBalanceDto(DateOnly Date, string Amount);
 
     private sealed record RestoredAssetDto(Guid Id, string CurrentValue, RestoredDepreciationDto? Depreciation);
 
