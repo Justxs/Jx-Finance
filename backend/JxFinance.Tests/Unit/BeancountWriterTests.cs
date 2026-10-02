@@ -63,6 +63,7 @@ public sealed class BeancountWriterTests
         "debt",
         "debt payment in another currency",
         "debt with recorded balances",
+        "credit card",
         "assertions",
     ];
 
@@ -371,6 +372,19 @@ public sealed class BeancountWriterTests
                 "2026-01-01 * \"Opening balance\"\n  note: \"Signed\"\n  Liabilities:Debts:Car-loan  -1000.00 EUR\n  Equity:Opening-Balances  1000.00 EUR\n",
                 "2026-04-01 * \"Recorded balance\"\n  Liabilities:Debts:Car-loan  200.00 EUR\n  Equity:Revaluation  -200.00 EUR\n",
                 "2026-07-01 * \"Recorded balance\"\n  note: \"Fee added\"\n  Liabilities:Debts:Car-loan  -50.00 EUR\n  Equity:Revaluation  50.00 EUR\n",
+            ]),
+        "credit card" => (
+            Empty with
+            {
+                Accounts = [new JournalAccount(Main, "Visa", AccountType.CreditCard, new Money(-200m, Currency.Eur), Created)],
+                Transactions = [Expense(Id(100), 50m, "Zara", new DateOnly(2026, 2, 1), Food)],
+                Balances = [Balance(Main, -250m)],
+            },
+            [
+                "2026-01-10 open Liabilities:CreditCards:Visa\n  name: \"Visa\"\n",
+                "  Liabilities:CreditCards:Visa  -200.00 EUR\n  Equity:Opening-Balances  200.00 EUR\n",
+                "  Liabilities:CreditCards:Visa  -50.00 EUR\n  Expenses:Home:Food  50.00 EUR\n",
+                "2026-10-01 balance Liabilities:CreditCards:Visa  -250.00 EUR\n",
             ]),
         "assertions" => (
             WithMain(100m) with

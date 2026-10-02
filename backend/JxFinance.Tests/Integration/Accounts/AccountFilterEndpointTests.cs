@@ -35,6 +35,20 @@ public sealed class AccountFilterEndpointTests(ApiFixture fixture) : Integration
     }
 
     [Fact]
+    public async Task A_credit_card_owes_a_negative_balance_and_filters_by_its_type()
+    {
+        using var member = await CreateUserClientAsync();
+        var card = await CreateAccountAsync("-450.20", type: "creditCard", client: member);
+        await CreateAccountAsync("100.00", client: member);
+        await CreateTransactionAsync(member, card, null, "expense", "49.80", "2026-09-05", "Zara");
+
+        var cards = await member.GetFromJsonAsync<List<AccountDto>>("/api/accounts?type=creditCard", TestContext.Current.CancellationToken);
+
+        var listed = Assert.Single(cards!);
+        Assert.Equal((card, "creditCard", "-500.00"), (listed.Id, listed.Type, listed.CurrentBalance));
+    }
+
+    [Fact]
     public async Task Name_search_treats_pattern_characters_as_text()
     {
         var marker = Guid.NewGuid().ToString("N")[..8];

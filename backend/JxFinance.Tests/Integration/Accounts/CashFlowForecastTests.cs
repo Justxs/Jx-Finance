@@ -42,6 +42,24 @@ public sealed class CashFlowForecastTests(ApiFixture fixture) : IntegrationTestB
     }
 
     [Fact]
+    public async Task A_credit_card_is_projected_below_zero_without_a_warning()
+    {
+        using var client = await CreateUserClientAsync();
+        var card = await CreateAccountAsync("-200.00", type: "creditCard", client: client);
+        var main = await CreateAccountAsync("50.00", client: client);
+        await BillAsync(client, "Streaming", "expense", "100.00", card, Today.AddDays(5));
+        await BillAsync(client, "Gym", "expense", "100.00", main, Today.AddDays(5));
+
+        var forecast = await ForecastAsync(client, 30);
+
+        var projected = Of(forecast, card);
+        Assert.Equal(("-200.00", "-300.00", Today.AddDays(5)), (projected.StartBalance, projected.LowestBalance, projected.LowestOn));
+        Assert.Null(projected.BelowZeroOn);
+        Assert.Null(projected.BelowZeroWithSpendingOn);
+        Assert.Equal(Today.AddDays(5), Of(forecast, main).BelowZeroOn);
+    }
+
+    [Fact]
     public async Task A_transfer_between_currencies_arrives_at_the_newest_rate_as_an_estimate()
     {
         using var client = await CreateUserClientAsync();
