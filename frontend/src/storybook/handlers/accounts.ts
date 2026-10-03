@@ -102,7 +102,7 @@ export const accountHandlers = [
   getRestoreAccountMockHandler(({ params }) => {
     const archived = found(byId(archivedAccounts, params.id));
     return withBalance(
-      { ...archived, createdAt: CREATED_AT, ownerId: checkingAccount.ownerId },
+      { ...archived, createdAt: CREATED_AT, ownerId: checkingAccount.ownerId, version: 1 },
       archived.startingBalance,
     );
   }),

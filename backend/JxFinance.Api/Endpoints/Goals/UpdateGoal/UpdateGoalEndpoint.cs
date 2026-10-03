@@ -11,7 +11,7 @@ public sealed class UpdateGoalEndpoint(IGoalService goalService) : Endpoint<Upda
     {
         Put(ApiRoutes.Goals + "/{id}");
         Group<GoalsGroup>();
-        Description(d => d.ProducesProblemDetails(404));
+        Description(d => d.ProducesProblemDetails(404).ProducesProblemDetails(409));
     }
 
     public override async Task HandleAsync(UpdateGoalRequest req, CancellationToken ct) =>

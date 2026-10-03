@@ -25,6 +25,7 @@ public sealed record TransactionResponse(
     int AttachmentCount,
     UnusualAmountResponse? Unusual,
     bool UnusualDismissed,
+    uint Version,
     TransactionDebtPaymentResponse? DebtPayment = null,
     TransactionRefundOfResponse? RefundOf = null,
     [property: Money] decimal? RefundedAmount = null,

@@ -13,7 +13,7 @@ public sealed class UpdateTransactionEndpoint(ITransactionWriteService transacti
         Put(ApiRoutes.Transactions + "/{id}");
         Group<TransactionsGroup>();
         Options(b => b.WithMetadata(TokenWritable.Yes));
-        Description(d => d.ProducesProblemDetails(404));
+        Description(d => d.ProducesProblemDetails(404).ProducesProblemDetails(409));
     }
 
     public override async Task HandleAsync(UpdateTransactionRequest req, CancellationToken ct) =>

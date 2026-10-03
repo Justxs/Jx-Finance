@@ -71,6 +71,7 @@ function transactionFrom(source: TransactionResponse["source"]) {
       unusual: null,
       unusualDismissed: false,
       enteredByMe: true,
+      version: 1,
     };
   };
 }

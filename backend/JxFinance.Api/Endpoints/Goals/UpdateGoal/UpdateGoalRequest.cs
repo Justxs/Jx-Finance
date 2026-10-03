@@ -14,5 +14,6 @@ public sealed record UpdateGoalRequest(
     GoalFunding Funding,
     Guid? FundingAccountId,
     int? FundingSharePercent,
+    uint Version,
     Scope Scope = Scope.Personal,
     Guid? HouseholdId = null) : IGoalInput;

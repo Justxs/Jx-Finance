@@ -10,5 +10,6 @@ public sealed class GoalConfiguration : IEntityTypeConfiguration<Goal>
     {
         builder.Property(g => g.Name).HasMaxLength(100);
         builder.Property(g => g.FundingSharePercent).HasDefaultValue(100);
+        builder.Property(g => g.Version).IsRowVersion();
     }
 }

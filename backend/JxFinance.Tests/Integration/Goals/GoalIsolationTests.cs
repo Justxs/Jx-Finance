@@ -15,7 +15,7 @@ public sealed class GoalIsolationTests(NetWorthFixture fixture) : IntegrationTes
         var goal = await PostAsync<GoalDto>(ownerClient, "/api/goals", new { name = "Private goal", targetAmount = "500.00", currentAmount = "50.00" });
 
         var listed = await partnerClient.GetFromJsonAsync<List<GoalDto>>("/api/goals", TestContext.Current.CancellationToken);
-        var update = await partnerClient.PutAsJsonAsync($"/api/goals/{goal.Id}", new { name = "Taken over", targetAmount = "1.00", currentAmount = "1.00" }, TestContext.Current.CancellationToken);
+        var update = await PutVersionedAsync(partnerClient, $"/api/goals/{goal.Id}", new { name = "Taken over", targetAmount = "1.00", currentAmount = "1.00" });
         var delete = await partnerClient.DeleteAsync($"/api/goals/{goal.Id}", TestContext.Current.CancellationToken);
         var administratorList = await Client.GetFromJsonAsync<List<GoalDto>>("/api/goals", TestContext.Current.CancellationToken);
 
@@ -32,9 +32,9 @@ public sealed class GoalIsolationTests(NetWorthFixture fixture) : IntegrationTes
         using var member = await CreateUserClientAsync();
 
         var goal = await PostAsync<GoalDto>(member, "/api/goals", new { name = "Holiday", targetAmount = "100.00", targetDate = "2027-01-31" });
-        var update = await member.PutAsJsonAsync(
+        var update = await PutVersionedAsync(member,
             $"/api/goals/{goal.Id}",
-            new { name = "Overfunded", targetAmount = "100.00", currentAmount = "150.00" }, TestContext.Current.CancellationToken);
+            new { name = "Overfunded", targetAmount = "100.00", currentAmount = "150.00" });
 
         Assert.Equal("0.00", goal.CurrentAmount);
         Assert.Equal(new DateOnly(2027, 1, 31), goal.TargetDate);
@@ -59,7 +59,7 @@ public sealed class GoalIsolationTests(NetWorthFixture fixture) : IntegrationTes
         var body = new Dictionary<string, object?> { ["name"] = "Changed", ["targetAmount"] = "200.00", ["currentAmount"] = "20.00" };
         body[field] = value;
 
-        var response = await member.PutAsJsonAsync($"/api/goals/{goal.Id}", body, TestContext.Current.CancellationToken);
+        var response = await PutVersionedAsync(member, $"/api/goals/{goal.Id}", body);
 
         await AssertValidationErrorAsync(response, field);
         Assert.Equal(goal, Assert.Single((await member.GetFromJsonAsync<List<GoalDto>>("/api/goals", TestContext.Current.CancellationToken))!));

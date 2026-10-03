@@ -68,10 +68,9 @@ public sealed class RefundTests(LedgerFixture fixture) : IntegrationTestBase(fix
             await AssertProblemAsync(await PostRawAsync(member, Body(account, food, "expense", "-10.00", original)), HttpStatusCode.BadRequest, "transaction.refundOriginalInvalid");
         }
 
-        var ownLink = await member.PutAsJsonAsync(
+        var ownLink = await PutVersionedAsync(member,
             $"/api/transactions/{refund.Id}",
-            new { id = refund.Id, accountId = account, categoryId = food, type = "expense", amount = "-10.00", date = "2026-03-03", refundOfTransactionId = refund.Id },
-            TestContext.Current.CancellationToken);
+            new { id = refund.Id, accountId = account, categoryId = food, type = "expense", amount = "-10.00", date = "2026-03-03", refundOfTransactionId = refund.Id });
         await AssertProblemAsync(ownLink, HttpStatusCode.BadRequest, "transaction.refundOriginalInvalid");
     }
 

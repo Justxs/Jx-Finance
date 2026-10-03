@@ -1,5 +1,6 @@
 import type { GoalResponse } from "@/api/generated/model";
 import { ids } from "./base";
+import { problemOf } from "./problems";
 
 export const goalWithTargetDate: GoalResponse = {
   id: ids.goals.vacation,
@@ -12,6 +13,7 @@ export const goalWithTargetDate: GoalResponse = {
   fundingSharePercent: 100,
   scope: "personal",
   householdId: null,
+  version: 1,
   progressAmount: "1875.50",
 };
 
@@ -26,6 +28,7 @@ export const openEndedGoal: GoalResponse = {
   fundingSharePercent: 100,
   scope: "personal",
   householdId: null,
+  version: 1,
   progressAmount: "12500.00",
 };
 
@@ -40,6 +43,7 @@ export const completedGoal: GoalResponse = {
   fundingSharePercent: 100,
   scope: "personal",
   householdId: null,
+  version: 1,
   progressAmount: "900.00",
 };
 
@@ -54,6 +58,7 @@ export const accountFundedGoal: GoalResponse = {
   fundingSharePercent: 100,
   scope: "personal",
   householdId: null,
+  version: 1,
   progressAmount: "12500.00",
 };
 
@@ -68,6 +73,7 @@ export const sharedFundedGoal: GoalResponse = {
   fundingSharePercent: 40,
   scope: "personal",
   householdId: null,
+  version: 1,
   progressAmount: "1137.27",
 };
 
@@ -82,6 +88,7 @@ export const unavailableFundedGoal: GoalResponse = {
   fundingSharePercent: 100,
   scope: "personal",
   householdId: null,
+  version: 1,
   progressAmount: null,
 };
 
@@ -92,3 +99,9 @@ export const goals: GoalResponse[] = [
   accountFundedGoal,
   sharedFundedGoal,
 ];
+
+export const goalStaleProblem = problemOf(
+  409,
+  "conflict.stale",
+  "Someone else changed this in the meantime. Load it again and redo your change.",
+);

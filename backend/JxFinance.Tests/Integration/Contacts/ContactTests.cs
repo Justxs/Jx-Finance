@@ -108,10 +108,9 @@ public sealed class ContactTests(ImportsFixture fixture) : IntegrationTestBase(f
         Assert.Null(split.OwnAmount);
         Assert.Equal("100.00", Balance(await PeopleAsync(client), jonas));
 
-        (await client.PutAsJsonAsync(
+        (await PutVersionedAsync(client,
             $"/api/transactions/{loan}",
-            new { accountId = account, type = "expense", amount = "120.00", date = "2026-09-10", description = "To Jonas and Ona" },
-            TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
+            new { accountId = account, type = "expense", amount = "120.00", date = "2026-09-10", description = "To Jonas and Ona" })).EnsureSuccessStatusCode();
         Assert.Equal("100.00", Balance(await PeopleAsync(client), jonas));
 
         var edited = await ReadOkAsync<ContactSplitDto>(await client.PutAsJsonAsync(
@@ -205,10 +204,9 @@ public sealed class ContactTests(ImportsFixture fixture) : IntegrationTestBase(f
         var dinner = await ExpenseAsync(client, account, "40.00", "Dinner");
         var split = await SplitAsync(client, Split(dinner, jonas));
         (await client.DeleteAsync($"/api/contacts/splits/{split.Id}", TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
-        (await client.PutAsJsonAsync(
+        (await PutVersionedAsync(client,
             $"/api/transactions/{dinner}",
-            new { accountId = account, type = "income", amount = "40.00", date = "2026-09-10", description = "Dinner" },
-            TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
+            new { accountId = account, type = "income", amount = "40.00", date = "2026-09-10", description = "Dinner" })).EnsureSuccessStatusCode();
 
         await AssertProblemAsync(
             await client.PostAsJsonAsync("/api/trash/restore", new { kind = "contactSplit", entityId = split.Id }, TestContext.Current.CancellationToken),

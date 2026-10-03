@@ -78,9 +78,9 @@ public sealed class BackupEndpointTests(DataFixture fixture) : IntegrationTestBa
         var goal = await Seed.GoalAsync(Client, "Restored goal", "900.00", "100.00");
         var backup = await CreateBackupAsync();
 
-        (await Client.PutAsJsonAsync(
+        (await PutVersionedAsync(Client,
             $"/api/transactions/{edited.Id}",
-            new { accountId = account, type = "expense", amount = "99.99", date = "2026-07-01", description = "After the backup" }, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
+            new { accountId = account, type = "expense", amount = "99.99", date = "2026-07-01", description = "After the backup" })).EnsureSuccessStatusCode();
         (await Client.DeleteAsync($"/api/transactions/{deleted.Id}", TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
         (await Client.DeleteAsync($"/api/categories/{category}", TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
         (await Client.DeleteAsync($"/api/goals/{goal}", TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();

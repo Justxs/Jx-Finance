@@ -159,7 +159,10 @@ public sealed class AccountService(
         }
 
         request.ApplyTo(account);
-        await db.SaveChangesAsync(cancellationToken);
+        if (await db.SaveOrStaleAsync(account, request.Version, cancellationToken) is { } stale)
+        {
+            return stale;
+        }
 
         return account.ToResponse(await BalanceAsync(account, cancellationToken));
     }

@@ -5,7 +5,11 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using FastEndpoints.Testing;
+using JxFinance.Domain.Accounts;
+using JxFinance.Domain.Budgets;
 using JxFinance.Domain.Common;
+using JxFinance.Domain.Goals;
+using JxFinance.Domain.Transactions;
 using JxFinance.Infrastructure.Auth;
 using JxFinance.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
@@ -178,6 +182,44 @@ public abstract class IntegrationTestBase(ApiFixture fixture)
 
     protected static async Task<T> GetScopedAsync<T>(HttpClient client, string url, Guid? household) =>
         await ReadOkAsync<T>(await SendScopedAsync(client, HttpMethod.Get, url, household));
+
+    protected async Task<HttpResponseMessage> PutVersionedAsync(HttpClient client, string url, object body, uint? version = null)
+    {
+        var json = body is JsonObject given
+            ? given.DeepClone().AsObject()
+            : JsonSerializer.SerializeToNode(body, JsonSerializerOptions.Web)!.AsObject();
+        json["version"] ??= version ?? await VersionOfAsync(url);
+        return await client.PutAsJsonAsync(url, json, TestContext.Current.CancellationToken);
+    }
+
+    protected async Task AssertStaleUpdateRefusedAsync(string url, Func<int, object> edit)
+    {
+        var read = await VersionOfAsync(url);
+        await AssertValidationErrorAsync(await Client.PutAsJsonAsync(url, edit(0), TestContext.Current.CancellationToken), "version");
+
+        var first = await ReadOkAsync<JsonObject>(await PutVersionedAsync(Client, url, edit(1), read));
+        var second = await PutVersionedAsync(Client, url, edit(2), read);
+
+        await AssertProblemAsync(second, HttpStatusCode.Conflict, "conflict.stale");
+        var fresh = first["version"]!.GetValue<uint>();
+        Assert.NotEqual(read, fresh);
+        Assert.Equal(fresh, await VersionOfAsync(url));
+        (await PutVersionedAsync(Client, url, edit(3), fresh)).EnsureSuccessStatusCode();
+    }
+
+    protected Task<uint> VersionOfAsync(string url)
+    {
+        var segments = url.Split('/', StringSplitOptions.RemoveEmptyEntries);
+        var id = Guid.Parse(segments[2]);
+        return WithDbAsync(db => (segments[1] switch
+        {
+            "transactions" => db.Transactions.IgnoreQueryFilters().Where(t => t.Id == new TransactionId(id)).Select(t => t.Version),
+            "accounts" => db.Accounts.IgnoreQueryFilters().Where(a => a.Id == new AccountId(id)).Select(a => a.Version),
+            "budgets" => db.Budgets.IgnoreQueryFilters().Where(b => b.Id == new BudgetId(id)).Select(b => b.Version),
+            "goals" => db.Goals.IgnoreQueryFilters().Where(g => g.Id == new GoalId(id)).Select(g => g.Version),
+            _ => throw new ArgumentException($"{url} names no versioned record.", nameof(url)),
+        }).SingleAsync(TestContext.Current.CancellationToken));
+    }
 
     protected static async Task<T> ReadOkAsync<T>(HttpResponseMessage response)
     {

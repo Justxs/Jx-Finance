@@ -22,6 +22,7 @@ import {
 import { transactionTemplates } from "@/features/transactions/transaction-views";
 import type { useTransactionMutations } from "@/features/transactions/transactions-page/use-transaction-mutations";
 import { useFeature } from "@/hooks/use-settings";
+import { hasServerErrorCode } from "@/lib/form-server-errors";
 import { byId } from "@/lib/options";
 import type { TransactionDraft } from "@/lib/transaction-draft";
 import { transactionName } from "@/lib/transaction-row";
@@ -131,8 +132,18 @@ export function useTransactionFormSection({
     toast.success(t("transactions.templateSaved"));
   }
 
+  async function reloadIfStale(error: unknown, id: string) {
+    if (hasServerErrorCode(error, "conflict.stale")) {
+      const fresh = await queryClient.query(getTransactionSuspenseQueryOptions(id));
+      setEditing((current) => (current?.id === id ? fresh : current));
+    }
+  }
+
   async function handleUpdate(transaction: TransactionResponse, values: TransactionFormValues) {
-    const saved = await update.mutateAsync({ id: transaction.id, data: values });
+    const saved = await update.mutateAsync(
+      { id: transaction.id, data: { ...values, version: transaction.version } },
+      { onError: (error) => void reloadIfStale(error, transaction.id) },
+    );
     setEditing(null);
     offerRule(saved, transaction.categoryId);
   }

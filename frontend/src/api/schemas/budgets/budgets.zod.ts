@@ -65,6 +65,7 @@ export const CreateBudgetResponse = zod.object({
   windowEnd: zod.iso.date(),
   scope: zod.enum(["personal", "shared"]),
   householdId: zod.uuid().nullable(),
+  version: zod.int(),
 });
 
 /**
@@ -95,6 +96,7 @@ export const BudgetsResponseItem = zod.object({
   windowEnd: zod.iso.date(),
   scope: zod.enum(["personal", "shared"]),
   householdId: zod.uuid().nullable(),
+  version: zod.int(),
 });
 export const BudgetsResponse = zod.array(BudgetsResponseItem);
 
@@ -163,6 +165,11 @@ export const UpdateBudgetBody = zod.object({
   rolloverEnabled: zod
     .boolean()
     .describe("Whether the previous window's remainder adjusts this window's limit."),
+  version: zod
+    .int()
+    .describe(
+      "The version of the record you read. Any later change to the record gives it a new version.",
+    ),
   tagId: zod.uuid().nullish(),
   scope: zod.enum(["personal", "shared"]).optional(),
   householdId: zod.uuid().nullish(),
@@ -192,4 +199,5 @@ export const UpdateBudgetResponse = zod.object({
   windowEnd: zod.iso.date(),
   scope: zod.enum(["personal", "shared"]),
   householdId: zod.uuid().nullable(),
+  version: zod.int(),
 });

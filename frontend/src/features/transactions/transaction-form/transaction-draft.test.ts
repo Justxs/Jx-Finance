@@ -26,6 +26,7 @@ const split: TransactionResponse = {
   attachmentCount: 0,
   unusual: null,
   unusualDismissed: false,
+  version: 1,
   lines: [
     { id: "line-a", categoryId: "category-1", amount: "74.15", description: "Food" },
     { id: "line-b", categoryId: null, amount: "54.25", description: null },

@@ -22,15 +22,15 @@ public sealed class TransactionTagEndpointTests(LedgerFixture fixture) : Integra
 
         Assert.Equal(new[] { holiday, reimbursable }.OrderBy(id => id), created.TagIds.OrderBy(id => id));
 
-        var edited = await member.PutAsJsonAsync(
+        var edited = await PutVersionedAsync(member,
             $"/api/transactions/{created.Id}",
-            new { accountId = account, type = "expense", amount = "20.00", date = "2026-06-01", tagIds = new[] { holiday } }, TestContext.Current.CancellationToken);
+            new { accountId = account, type = "expense", amount = "20.00", date = "2026-06-01", tagIds = new[] { holiday } });
         edited.EnsureSuccessStatusCode();
         var afterEdit = (await edited.Content.ReadFromJsonAsync<TransactionDto>(TestContext.Current.CancellationToken))!;
 
-        var cleared = await member.PutAsJsonAsync(
+        var cleared = await PutVersionedAsync(member,
             $"/api/transactions/{created.Id}",
-            new { accountId = account, type = "expense", amount = "20.00", date = "2026-06-01", tagIds = Array.Empty<Guid>() }, TestContext.Current.CancellationToken);
+            new { accountId = account, type = "expense", amount = "20.00", date = "2026-06-01", tagIds = Array.Empty<Guid>() });
         cleared.EnsureSuccessStatusCode();
         var reread = await member.GetFromJsonAsync<TransactionDto>($"/api/transactions/{created.Id}", TestContext.Current.CancellationToken);
 

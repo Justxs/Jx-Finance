@@ -123,7 +123,7 @@ A token created with Read and write access, since 2026-10-01, also reaches the r
 | Route | Does |
 | --- | --- |
 | `POST /api/transactions` | records a transaction; answers 201 with `Location` |
-| `PUT /api/transactions/{id}` | changes one; the body is the whole transaction, as for the browser |
+| `PUT /api/transactions/{id}` | changes one; the body is the whole transaction with the `version` read from it, as for the browser, and 409 `conflict.stale` means it changed since |
 | `DELETE /api/transactions/{id}` | moves one to the Trash |
 | `POST /api/transactions/bulk-category` | sets or clears the category of many transactions |
 | `POST /api/transactions/bulk-tags` | replaces the tags of many transactions with the ones sent |

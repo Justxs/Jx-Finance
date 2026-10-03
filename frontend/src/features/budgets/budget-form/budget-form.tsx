@@ -151,7 +151,9 @@ export function BudgetForm({ categories, tags, initial, onClose }: Readonly<Prop
         tagId: target === "tag" ? tagId : null,
         ...sharingPayload({ scope, householdId }),
       };
-      return initial?.id ? update({ id: initial.id, data }) : create({ data });
+      return initial
+        ? update({ id: initial.id, data: { ...data, version: initial.version } })
+        : create({ data });
     },
   });
 

@@ -3,7 +3,7 @@ using JxFinance.Domain.Households;
 
 namespace JxFinance.Domain.Accounts;
 
-public sealed class Account : OwnableEntity, IShareable
+public sealed class Account : OwnableEntity, IShareable, IVersioned
 {
     public AccountId Id { get; set; } = AccountId.New();
     public required string Name { get; set; }
@@ -14,4 +14,5 @@ public sealed class Account : OwnableEntity, IShareable
     public Currency Currency => StartingBalance.Currency;
     public Scope Scope { get; set; } = Scope.Personal;
     public HouseholdId? HouseholdId { get; set; }
+    public uint Version { get; set; }
 }

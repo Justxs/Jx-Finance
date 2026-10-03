@@ -18,9 +18,9 @@ public sealed class GoalEndpointTests(NetWorthFixture fixture) : IntegrationTest
         Assert.Equal("5000.00", goal!.TargetAmount);
         Assert.Equal("1000.00", goal.CurrentAmount);
 
-        var updateResponse = await Client.PutAsJsonAsync(
+        var updateResponse = await PutVersionedAsync(Client,
             $"/api/goals/{goal.Id}",
-            new { name = "Emergency fund", targetAmount = "5000.00", currentAmount = "1500.00" }, TestContext.Current.CancellationToken);
+            new { name = "Emergency fund", targetAmount = "5000.00", currentAmount = "1500.00" });
         updateResponse.EnsureSuccessStatusCode();
         var updated = await updateResponse.Content.ReadFromJsonAsync<GoalDto>(TestContext.Current.CancellationToken);
         Assert.Equal("1500.00", updated!.CurrentAmount);
@@ -33,6 +33,16 @@ public sealed class GoalEndpointTests(NetWorthFixture fixture) : IntegrationTest
 
         var afterDelete = await Client.GetFromJsonAsync<List<GoalDto>>("/api/goals", TestContext.Current.CancellationToken);
         Assert.DoesNotContain(afterDelete!, g => g.Id == goal.Id);
+    }
+
+    [Fact]
+    public async Task An_update_from_a_version_someone_already_changed_is_refused()
+    {
+        var goal = await PostAsync<IdDto>(Client, "/api/goals", new { name = "Contested", targetAmount = "900.00", currentAmount = "0.00" });
+
+        await AssertStaleUpdateRefusedAsync(
+            $"/api/goals/{goal.Id}",
+            step => new { name = $"Contested {step}", targetAmount = "900.00", currentAmount = "0.00" });
     }
 
     private sealed record GoalDto(Guid Id, string TargetAmount, string CurrentAmount);

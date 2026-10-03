@@ -19,6 +19,7 @@ function budget(name: string, period: BudgetPeriod, limit: string, spent: string
     windowEnd: "2026-09-30",
     scope: "personal",
     householdId: null,
+    version: 1,
   };
 }
 

@@ -13,5 +13,6 @@ public sealed class UpdateGoalValidator : GoalInputValidator<UpdateGoalRequest>
             .IsPresent()
             .WithMessage("Current amount is required.")
             .When(r => r.Funding == GoalFunding.Manual);
+        RuleFor(r => r.Version).IsReadVersion();
     }
 }

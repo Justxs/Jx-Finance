@@ -40,6 +40,7 @@ export interface TransactionResponse {
   attachmentCount: number;
   unusual: null | UnusualAmountResponse;
   unusualDismissed: boolean;
+  version: number;
   debtPayment?: null | TransactionDebtPaymentResponse;
   refundOf?: null | TransactionRefundOfResponse;
   /** @nullable */

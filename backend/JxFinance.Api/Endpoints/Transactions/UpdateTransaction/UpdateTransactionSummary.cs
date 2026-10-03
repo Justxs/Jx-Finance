@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common.OpenApi;
 using JxFinance.Domain.Common;
 
 namespace JxFinance.Endpoints.Transactions.UpdateTransaction;
@@ -25,17 +26,20 @@ public sealed class UpdateTransactionSummary : Summary<UpdateTransactionEndpoint
             42.50m,
             new DateOnly(2026, 9, 12),
             "Weekly shop",
-            null);
+            null,
+            2041u);
         RequestParam(r => r.SpreadMonths, "Optional, from 2 to 36: count the amount in equal monthly slices over this many months, starting with the month of the date, or ending with it when spreadDirection is backward. A split spreads each line's share, and a refund spreads negative slices.");
         RequestParam(r => r.SpreadDirection, "Optional, with spreadMonths: forward (the default) counts from the month of the date on, backward counts the months up to and including it, for a bill paid in arrears.");
         RequestParam(r => r.Place, "Optional place of your own, such as a shop and its address, at most 120 characters. Stored only while the locations feature is on.");
         RequestParam(r => r.Latitude, "Optional latitude from -90 to 90, sent together with longitude and kept to five decimals. Stored only while the locations feature is on.");
         RequestParam(r => r.Longitude, "Optional longitude from -180 to 180, sent together with latitude and kept to five decimals.");
+        RequestParam(r => r.Version, SummaryText.ReadVersion);
         Params["id"] = "The transaction id. Takes precedence over the id in the body.";
         Responses[200] = "The updated transaction.";
         Responses[400] = "Validation failed, the split lines do not add up, a refund has lines (transaction.splitNotAllowed) or names an original that is not a visible purchase "
             + "(transaction.refundOriginalInvalid), "
             + "coordinates are out of range or come without their pair (transaction.locationInvalid), or the account, category or a tag is not visible to you.";
         Responses[404] = "No such transaction is visible to the signed-in user.";
+        Responses[409] = SummaryText.StaleVersion;
     }
 }

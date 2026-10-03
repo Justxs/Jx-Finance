@@ -26,6 +26,7 @@ function account(id: string, type: AccountType): AccountResponse {
     balances: [],
     reportingBalance: "0.00",
     holdingsValue: "0.00",
+    version: 1,
   };
 }
 

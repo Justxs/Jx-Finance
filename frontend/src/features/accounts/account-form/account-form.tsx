@@ -94,7 +94,9 @@ export function AccountForm({ initial, onClose }: Readonly<Props>) {
     schema,
     submit: (value) => {
       const data = buildValues(value);
-      return initial ? update({ id: initial.id, data }) : create({ data });
+      return initial
+        ? update({ id: initial.id, data: { ...data, version: initial.version } })
+        : create({ data });
     },
   });
 

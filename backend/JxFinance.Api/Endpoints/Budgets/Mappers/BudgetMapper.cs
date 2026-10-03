@@ -46,6 +46,7 @@ public static class BudgetMapper
             usage.Window.Start,
             usage.Window.LastDay,
             budget.Scope,
-            budget.HouseholdId?.Value);
+            budget.HouseholdId?.Value,
+            budget.Version);
     }
 }

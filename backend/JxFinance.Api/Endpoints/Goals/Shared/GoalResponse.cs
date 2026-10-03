@@ -15,4 +15,5 @@ public sealed record GoalResponse(
     int FundingSharePercent,
     [property: Money] decimal? ProgressAmount,
     Scope Scope,
-    Guid? HouseholdId);
+    Guid? HouseholdId,
+    uint Version);

@@ -51,10 +51,9 @@ public sealed class SplitTransactionEndpointTests(LedgerFixture fixture) : Integ
         Assert.Equal(entered, created.Lines!.Select(l => l.Amount));
         await AssertLineOrderAsync(account, created.Id, entered);
 
-        var updateResponse = await Client.PutAsJsonAsync(
+        var updateResponse = await PutVersionedAsync(Client,
             $"/api/transactions/{created.Id}",
-            SplitBody(account, category, reordered),
-            TestContext.Current.CancellationToken);
+            SplitBody(account, category, reordered));
         var updated = await ReadOkAsync<TransactionDto>(updateResponse);
         Assert.Equal(reordered, updated.Lines!.Select(l => l.Amount));
         await AssertLineOrderAsync(account, created.Id, reordered);
@@ -127,7 +126,7 @@ public sealed class SplitTransactionEndpointTests(LedgerFixture fixture) : Integ
         var created = await createResponse.Content.ReadFromJsonAsync<TransactionDto>(TestContext.Current.CancellationToken);
         var firstLineId = created!.Lines![0].Id;
 
-        var updateResponse = await Client.PutAsJsonAsync(
+        var updateResponse = await PutVersionedAsync(Client,
             $"/api/transactions/{created.Id}",
             new
             {
@@ -140,7 +139,7 @@ public sealed class SplitTransactionEndpointTests(LedgerFixture fixture) : Integ
                     new { categoryId = categoryB, amount = "15.00" },
                     new { categoryId = categoryB, amount = "25.00" },
                 },
-            }, TestContext.Current.CancellationToken);
+            });
         updateResponse.EnsureSuccessStatusCode();
         var updated = await updateResponse.Content.ReadFromJsonAsync<TransactionDto>(TestContext.Current.CancellationToken);
 
@@ -166,7 +165,7 @@ public sealed class SplitTransactionEndpointTests(LedgerFixture fixture) : Integ
             }, TestContext.Current.CancellationToken);
         var created = await createResponse.Content.ReadFromJsonAsync<TransactionDto>(TestContext.Current.CancellationToken);
 
-        var updateResponse = await Client.PutAsJsonAsync(
+        var updateResponse = await PutVersionedAsync(Client,
             $"/api/transactions/{created!.Id}",
             new
             {
@@ -176,7 +175,7 @@ public sealed class SplitTransactionEndpointTests(LedgerFixture fixture) : Integ
                 amount = "20.00",
                 date = "2026-06-07",
                 lines = Array.Empty<object>(),
-            }, TestContext.Current.CancellationToken);
+            });
         updateResponse.EnsureSuccessStatusCode();
         var updated = await updateResponse.Content.ReadFromJsonAsync<TransactionDto>(TestContext.Current.CancellationToken);
 

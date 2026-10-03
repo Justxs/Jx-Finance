@@ -558,6 +558,7 @@
                 "startingBalance": "1250.00",
                 "scope": "personal",
                 "householdId": null,
+                "version": 2041,
                 "currency": null
               }
             }
@@ -597,6 +598,16 @@
           },
           "404": {
             "description": "No such account is visible to the signed-in user.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Someone changed the record after you read it (conflict.stale). Read it again and resend with the new version.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -4628,6 +4639,7 @@
                 "limitAmount": "450.00",
                 "period": "monthly",
                 "rolloverEnabled": true,
+                "version": 2041,
                 "tagId": null,
                 "scope": "personal",
                 "householdId": null
@@ -4678,7 +4690,7 @@
             }
           },
           "409": {
-            "description": "Another budget already covers that category for the same period.",
+            "description": "Another budget already covers that category for the same period (conflict.duplicate), or Someone changed the record after you read it (conflict.stale). Read it again and resend with the new version.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -8749,6 +8761,7 @@
                 "funding": "manual",
                 "fundingAccountId": null,
                 "fundingSharePercent": null,
+                "version": 2041,
                 "scope": "personal",
                 "householdId": null
               }
@@ -8789,6 +8802,16 @@
           },
           "404": {
             "description": "No such goal belongs to the signed-in user.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Someone changed the record after you read it (conflict.stale). Read it again and resend with the new version.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -20698,6 +20721,7 @@
                 "date": "2026-09-12",
                 "description": "Weekly shop",
                 "lines": null,
+                "version": 2041,
                 "tagIds": null,
                 "currency": null,
                 "refundOfTransactionId": null,
@@ -20745,6 +20769,16 @@
           },
           "404": {
             "description": "No such transaction is visible to the signed-in user.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Someone changed the record after you read it (conflict.stale). Read it again and resend with the new version.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -23221,7 +23255,8 @@
           "balances",
           "reportingBalance",
           "holdingsValue",
-          "ownerId"
+          "ownerId",
+          "version"
         ],
         "type": "object",
         "properties": {
@@ -23289,6 +23324,10 @@
           "ownerId": {
             "type": "string",
             "format": "uuid"
+          },
+          "version": {
+            "type": "integer",
+            "format": "uint32"
           }
         }
       },
@@ -24213,7 +24252,8 @@
           "windowStart",
           "windowEnd",
           "scope",
-          "householdId"
+          "householdId",
+          "version"
         ],
         "type": "object",
         "properties": {
@@ -24279,6 +24319,10 @@
               "string"
             ],
             "format": "uuid"
+          },
+          "version": {
+            "type": "integer",
+            "format": "uint32"
           }
         }
       },
@@ -28492,7 +28536,8 @@
           "fundingSharePercent",
           "progressAmount",
           "scope",
-          "householdId"
+          "householdId",
+          "version"
         ],
         "type": "object",
         "properties": {
@@ -28551,6 +28596,10 @@
               "string"
             ],
             "format": "uuid"
+          },
+          "version": {
+            "type": "integer",
+            "format": "uint32"
           }
         }
       },
@@ -34736,7 +34785,8 @@
           "tagIds",
           "attachmentCount",
           "unusual",
-          "unusualDismissed"
+          "unusualDismissed",
+          "version"
         ],
         "type": "object",
         "properties": {
@@ -34820,6 +34870,10 @@
           },
           "unusualDismissed": {
             "type": "boolean"
+          },
+          "version": {
+            "type": "integer",
+            "format": "uint32"
           },
           "debtPayment": {
             "oneOf": [
@@ -35259,7 +35313,8 @@
           "type",
           "startingBalance",
           "scope",
-          "householdId"
+          "householdId",
+          "version"
         ],
         "type": "object",
         "properties": {
@@ -35303,6 +35358,12 @@
             ],
             "format": "uuid"
           },
+          "version": {
+            "type": "integer",
+            "description": "The version of the record you read. Any later change to the record gives it a new version.",
+            "format": "uint32",
+            "example": 2041
+          },
           "currency": {
             "oneOf": [
               {
@@ -35322,6 +35383,7 @@
           "startingBalance": "1250.00",
           "scope": "personal",
           "householdId": null,
+          "version": 2041,
           "currency": null
         }
       },
@@ -35405,7 +35467,8 @@
           "categoryId",
           "limitAmount",
           "period",
-          "rolloverEnabled"
+          "rolloverEnabled",
+          "version"
         ],
         "type": "object",
         "properties": {
@@ -35430,6 +35493,12 @@
             "description": "Whether the previous window's remainder adjusts this window's limit.",
             "example": true
           },
+          "version": {
+            "type": "integer",
+            "description": "The version of the record you read. Any later change to the record gives it a new version.",
+            "format": "uint32",
+            "example": 2041
+          },
           "tagId": {
             "type": [
               "null",
@@ -35453,6 +35522,7 @@
           "limitAmount": "450.00",
           "period": "monthly",
           "rolloverEnabled": true,
+          "version": 2041,
           "tagId": null,
           "scope": "personal",
           "householdId": null
@@ -36007,7 +36077,8 @@
           "targetDate",
           "funding",
           "fundingAccountId",
-          "fundingSharePercent"
+          "fundingSharePercent",
+          "version"
         ],
         "type": "object",
         "properties": {
@@ -36063,6 +36134,12 @@
             "description": "The share of that account's balance that counts, as a whole percentage from 1 to 100. Defaults to 100.",
             "format": "int32"
           },
+          "version": {
+            "type": "integer",
+            "description": "The version of the record you read. Any later change to the record gives it a new version.",
+            "format": "uint32",
+            "example": 2041
+          },
           "scope": {
             "$ref": "#/components/schemas/Scope"
           },
@@ -36082,6 +36159,7 @@
           "funding": "manual",
           "fundingAccountId": null,
           "fundingSharePercent": null,
+          "version": 2041,
           "scope": "personal",
           "householdId": null
         }
@@ -36788,7 +36866,8 @@
           "amount",
           "date",
           "description",
-          "lines"
+          "lines",
+          "version"
         ],
         "type": "object",
         "properties": {
@@ -36834,6 +36913,12 @@
             "items": {
               "$ref": "#/components/schemas/TransactionLineRequest"
             }
+          },
+          "version": {
+            "type": "integer",
+            "description": "The version of the record you read. Any later change to the record gives it a new version.",
+            "format": "uint32",
+            "example": 2041
           },
           "tagIds": {
             "type": [
@@ -36925,6 +37010,7 @@
           "date": "2026-09-12",
           "description": "Weekly shop",
           "lines": null,
+          "version": 2041,
           "tagIds": null,
           "currency": null,
           "refundOfTransactionId": null,

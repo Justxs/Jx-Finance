@@ -6,8 +6,11 @@ namespace JxFinance.Infrastructure.Data.Configurations;
 
 public sealed class BudgetConfiguration : IEntityTypeConfiguration<Budget>
 {
-    public void Configure(EntityTypeBuilder<Budget> builder) =>
+    public void Configure(EntityTypeBuilder<Budget> builder)
+    {
+        builder.Property(b => b.Version).IsRowVersion();
         builder.ToTable(table => table.HasCheckConstraint(
             "CK_Budgets_CategoryOrTag",
             """("CategoryId" IS NULL) <> ("TagId" IS NULL)"""));
+    }
 }

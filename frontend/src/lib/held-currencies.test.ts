@@ -21,6 +21,7 @@ const account: AccountResponse = {
   ],
   reportingBalance: "13.80",
   holdingsValue: "0.00",
+  version: 1,
 };
 
 test("lists the currencies an account holds in balance order", () => {

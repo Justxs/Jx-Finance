@@ -227,6 +227,7 @@ export const CreateTransactionResponse = zod.object({
     }),
   ]),
   unusualDismissed: zod.boolean(),
+  version: zod.int(),
   debtPayment: zod
     .union([
       zod.null(),
@@ -429,6 +430,7 @@ export const TransactionsResponse = zod.object({
         }),
       ]),
       unusualDismissed: zod.boolean(),
+      version: zod.int(),
       debtPayment: zod
         .union([
           zod.null(),
@@ -739,6 +741,7 @@ export const LedgerResponse = zod.object({
             }),
           ]),
           unusualDismissed: zod.boolean(),
+          version: zod.int(),
           debtPayment: zod
             .union([
               zod.null(),
@@ -1054,6 +1057,7 @@ export const UncategorizedSuggestionsResponseItem = zod.object({
       }),
     ]),
     unusualDismissed: zod.boolean(),
+    version: zod.int(),
     debtPayment: zod
       .union([
         zod.null(),
@@ -1259,6 +1263,7 @@ export const TransactionResponse = zod.object({
     }),
   ]),
   unusualDismissed: zod.boolean(),
+  version: zod.int(),
   debtPayment: zod
     .union([
       zod.null(),
@@ -1390,6 +1395,11 @@ export const UpdateTransactionBody = zod.object({
       }),
     )
     .nullable(),
+  version: zod
+    .int()
+    .describe(
+      "The version of the record you read. Any later change to the record gives it a new version.",
+    ),
   tagIds: zod.array(zod.uuid()).nullable(),
   currency: zod
     .union([
@@ -1556,6 +1566,7 @@ export const UpdateTransactionResponse = zod.object({
     }),
   ]),
   unusualDismissed: zod.boolean(),
+  version: zod.int(),
   debtPayment: zod
     .union([
       zod.null(),

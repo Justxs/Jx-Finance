@@ -79,6 +79,7 @@ function transaction(
     attachmentCount: 0,
     unusual: null,
     unusualDismissed: false,
+    version: 1,
   };
 }
 

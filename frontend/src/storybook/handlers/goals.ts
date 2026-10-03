@@ -23,6 +23,7 @@ export const goalHandlers = [
     progressAmount: "0.00",
     scope: "personal" as const,
     householdId: null,
+    version: 1,
     ...(await readBody(request)),
   })),
   getUpdateGoalMockHandler(updateFrom(goals)),

@@ -148,7 +148,10 @@ public sealed class TransactionWriteService(
 
         AddChildren(request, transactionId, currency);
 
-        await db.SaveChangesAsync(cancellationToken);
+        if (await db.SaveOrStaleAsync(transaction, request.Version, cancellationToken) is { } stale)
+        {
+            return stale;
+        }
 
         return await TransactionResponses.ResponseAsync(db, currentUser, settings, transaction, cancellationToken);
     }

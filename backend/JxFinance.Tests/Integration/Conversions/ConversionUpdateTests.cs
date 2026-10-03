@@ -101,9 +101,9 @@ public sealed class ConversionUpdateTests(InvestmentsFixture fixture) : Integrat
         var deleted = await CreateAsync(member, account, "2.00", "eur");
         var renamed = await CreateAsync(member, account, "2.00", "eur");
         (await member.DeleteAsync($"/api/transactions/{deleted.FeeTransactionId}", TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
-        (await member.PutAsJsonAsync(
+        (await PutVersionedAsync(member,
             $"/api/transactions/{renamed.FeeTransactionId}",
-            new { accountId = account, type = "expense", amount = "2.00", date = "2026-06-05", description = "Bank charge" }, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
+            new { accountId = account, type = "expense", amount = "2.00", date = "2026-06-05", description = "Bank charge" })).EnsureSuccessStatusCode();
 
         var rebooked = await PutAsync(member, deleted.Id, Body("500.00", "eur", "400.00", "gbp", "2026-06-05", "1.00", "eur"));
         var kept = await PutAsync(member, renamed.Id, Body("500.00", "eur", "400.00", "gbp", "2026-06-05", "1.00", "eur"));
@@ -122,7 +122,7 @@ public sealed class ConversionUpdateTests(InvestmentsFixture fixture) : Integrat
         var first = await CreateCategoryAsync(client: member);
         var second = await CreateCategoryAsync(client: member);
         var conversion = await CreateAsync(member, account, "2.00", "eur");
-        (await member.PutAsJsonAsync(
+        (await PutVersionedAsync(member,
             $"/api/transactions/{conversion.FeeTransactionId}",
             new
             {
@@ -131,7 +131,7 @@ public sealed class ConversionUpdateTests(InvestmentsFixture fixture) : Integrat
                 amount = "2.00",
                 date = "2026-06-05",
                 lines = new[] { new { categoryId = first, amount = "1.50" }, new { categoryId = second, amount = "0.50" } },
-            }, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
+            })).EnsureSuccessStatusCode();
 
         var newFee = await member.PutAsJsonAsync($"/api/conversions/{conversion.Id}", Body("500.00", "eur", "550.00", "usd", "2026-06-05", "3.00", "eur"), TestContext.Current.CancellationToken);
         var newDate = await member.PutAsJsonAsync($"/api/conversions/{conversion.Id}", Body("500.00", "eur", "550.00", "usd", "2026-06-06", "2.00", "eur"), TestContext.Current.CancellationToken);

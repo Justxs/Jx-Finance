@@ -22,6 +22,7 @@ function transaction(overrides: Partial<TransactionResponse>): TransactionRespon
     attachmentCount: 0,
     unusual: null,
     unusualDismissed: false,
+    version: 1,
     ...overrides,
   };
 }

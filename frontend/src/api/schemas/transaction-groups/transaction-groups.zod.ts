@@ -208,6 +208,7 @@ export const TransactionGroupMembersResponse = zod.object({
         }),
       ]),
       unusualDismissed: zod.boolean(),
+      version: zod.int(),
       debtPayment: zod
         .union([
           zod.null(),

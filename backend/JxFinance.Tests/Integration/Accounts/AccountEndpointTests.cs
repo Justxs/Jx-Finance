@@ -18,9 +18,9 @@ public sealed class AccountEndpointTests(InvestmentsFixture fixture) : Integrati
         var listed = await Client.GetFromJsonAsync<List<AccountDto>>("/api/accounts", TestContext.Current.CancellationToken);
         Assert.Contains(listed!, a => a.Id == created.Id);
 
-        var updateResponse = await Client.PutAsJsonAsync(
+        var updateResponse = await PutVersionedAsync(Client,
             $"/api/accounts/{created.Id}",
-            new { name = "Renamed", type = "savings", startingBalance = "900.50" }, TestContext.Current.CancellationToken);
+            new { name = "Renamed", type = "savings", startingBalance = "900.50" });
         updateResponse.EnsureSuccessStatusCode();
         var updated = await updateResponse.Content.ReadFromJsonAsync<AccountDto>(TestContext.Current.CancellationToken);
         Assert.Equal("Renamed", updated!.Name);
@@ -94,5 +94,15 @@ public sealed class AccountEndpointTests(InvestmentsFixture fixture) : Integrati
             new { name, type, startingBalance });
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
         return (await response.Content.ReadFromJsonAsync<AccountDto>())!;
+    }
+
+    [Fact]
+    public async Task An_update_from_a_version_someone_already_changed_is_refused()
+    {
+        var created = await CreateAccountAsync("Contested", "checking", "10.00");
+
+        await AssertStaleUpdateRefusedAsync(
+            $"/api/accounts/{created.Id}",
+            step => new { name = $"Contested {step}", type = "checking", startingBalance = "10.00" });
     }
 }

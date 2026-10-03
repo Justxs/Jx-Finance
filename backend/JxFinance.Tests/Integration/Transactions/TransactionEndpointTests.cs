@@ -30,7 +30,7 @@ public sealed class TransactionEndpointTests(LedgerFixture fixture) : Integratio
         Assert.Equal(new DateOnly(2026, 6, 2), created.Date);
         Assert.False(created.IsSplit);
 
-        var updateResponse = await Client.PutAsJsonAsync(
+        var updateResponse = await PutVersionedAsync(Client,
             $"/api/transactions/{created.Id}",
             new
             {
@@ -39,7 +39,7 @@ public sealed class TransactionEndpointTests(LedgerFixture fixture) : Integratio
                 amount = "18.20",
                 date = "2026-06-03",
                 description = "Lidl fixed",
-            }, TestContext.Current.CancellationToken);
+            });
         updateResponse.EnsureSuccessStatusCode();
         var updated = await updateResponse.Content.ReadFromJsonAsync<TransactionDto>(TestContext.Current.CancellationToken);
         Assert.Equal("18.20", updated!.Amount);
@@ -195,5 +195,16 @@ public sealed class TransactionEndpointTests(LedgerFixture fixture) : Integratio
 
         var pdf = await response.Content.ReadAsByteArrayAsync(TestContext.Current.CancellationToken);
         Assert.Equal("%PDF-", System.Text.Encoding.ASCII.GetString(pdf, 0, 5));
+    }
+
+    [Fact]
+    public async Task An_update_from_a_version_someone_already_changed_is_refused()
+    {
+        var account = await CreateAccountAsync();
+        var created = await CreateTransactionAsync(Client, account, null, "expense", "9.00", "2026-06-04");
+
+        await AssertStaleUpdateRefusedAsync(
+            $"/api/transactions/{created.Id}",
+            step => new { accountId = account, type = "expense", amount = "9.00", date = "2026-06-04", description = $"Edit {step}" });
     }
 }

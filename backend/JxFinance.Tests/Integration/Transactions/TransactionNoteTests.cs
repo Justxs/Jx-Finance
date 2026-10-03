@@ -16,7 +16,7 @@ public sealed class TransactionNoteTests(LedgerFixture fixture) : IntegrationTes
 
         var found = (await member.GetFromJsonAsync<PageDto<NoteRowDto>>("/api/transactions?search=birthday", TestContext.Current.CancellationToken))!;
         var csv = await member.GetStringAsync("/api/transactions/export?search=birthday", TestContext.Current.CancellationToken);
-        var updated = await ReadOkAsync<NoteRowDto>(await member.PutAsJsonAsync($"/api/transactions/{created.Id}", Body(account, null), TestContext.Current.CancellationToken));
+        var updated = await ReadOkAsync<NoteRowDto>(await PutVersionedAsync(member, $"/api/transactions/{created.Id}", Body(account, null)));
 
         Assert.Equal("Tom's birthday gift", created.Note);
         Assert.Equal([created.Id], found.Items.Select(t => t.Id));

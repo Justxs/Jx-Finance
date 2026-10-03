@@ -80,6 +80,7 @@ export const budgetHandlers = [
       windowEnd: budgetWindows.monthly.end,
       scope: "personal",
       householdId: null,
+      version: 1,
     };
     return mergeBudget(base, await readBody(request));
   }),

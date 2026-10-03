@@ -46,5 +46,6 @@ public static class GoalMapper
         goal.FundingSharePercent,
         progressAmount,
         goal.Scope,
-        goal.HouseholdId?.Value);
+        goal.HouseholdId?.Value,
+        goal.Version);
 }

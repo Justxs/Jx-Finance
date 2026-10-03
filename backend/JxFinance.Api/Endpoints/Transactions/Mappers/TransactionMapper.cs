@@ -91,6 +91,7 @@ public static class TransactionMapper
         attachmentCount,
         transaction.Unusual.ToResponse(),
         transaction.Unusual is not null && transaction.UnusualDismissedAt is not null,
+        transaction.Version,
         Note: transaction.Note,
         Payee: transaction.Payee,
         SpreadMonths: transaction.SpreadMonths,

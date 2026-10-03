@@ -10,6 +10,8 @@ public static class SummaryText
     public const string FlowType = "Income or Expense.";
     public const string Page = "One-based page number. Defaults to 1.";
     public const string PageSize = "Rows per page. Defaults to 20.";
+    public const string ReadVersion = "The version of the record you read. Any later change to the record gives it a new version.";
+    public const string StaleVersion = "Someone changed the record after you read it (conflict.stale). Read it again and resend with the new version.";
 
     public static void DescribePaging<TRequest>(this EndpointSummary<TRequest> summary)
         where TRequest : IPagedRequest

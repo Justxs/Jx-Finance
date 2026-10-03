@@ -21,7 +21,9 @@ public sealed class UpdateGoalSummary : Summary<UpdateGoalEndpoint, UpdateGoalRe
             new DateOnly(2027, 1, 1),
             GoalFunding.Manual,
             null,
-            null);
+            null,
+            2041u);
+        RequestParam(r => r.Version, SummaryText.ReadVersion);
         Params["id"] = "The goal id. Takes precedence over the id in the body.";
         RequestParam(r => r.CurrentAmount, "Amount saved so far, zero or more. Required for a manual goal, ignored for a goal funded from an account.");
         RequestParam(r => r.Funding, "Where progress comes from: manual or account.");
@@ -30,5 +32,6 @@ public sealed class UpdateGoalSummary : Summary<UpdateGoalEndpoint, UpdateGoalRe
         Responses[200] = "The updated goal.";
         Responses[400] = SummaryText.ValidationFailed;
         Responses[404] = "No such goal belongs to the signed-in user.";
+        Responses[409] = SummaryText.StaleVersion;
     }
 }

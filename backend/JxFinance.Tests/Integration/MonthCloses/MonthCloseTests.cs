@@ -446,7 +446,7 @@ public sealed class MonthCloseTests(ReportsFixture fixture) : IntegrationTestBas
     private static async Task<ReviewDto> ReviewAsync(HttpClient client, string month) =>
         (await client.GetFromJsonAsync<ReviewDto>($"/api/month-close/{month}", TestContext.Current.CancellationToken))!;
 
-    private static async Task<TransactionDto> UpdateAsync(
+    private async Task<TransactionDto> UpdateAsync(
         HttpClient client,
         TransactionDto row,
         Guid accountId,
@@ -454,10 +454,9 @@ public sealed class MonthCloseTests(ReportsFixture fixture) : IntegrationTestBas
         string amount,
         string date,
         string? description) =>
-        await ReadOkAsync<TransactionDto>(await client.PutAsJsonAsync(
+        await ReadOkAsync<TransactionDto>(await PutVersionedAsync(client,
             $"/api/transactions/{row.Id}",
-            new { id = row.Id, accountId, categoryId, type = "expense", amount, date, description },
-            TestContext.Current.CancellationToken));
+            new { id = row.Id, accountId, categoryId, type = "expense", amount, date, description }));
 
     private Task<DateTimeOffset> UpdatedAtAsync(Guid id) =>
         SqlValueAsync<DateTimeOffset>($"""SELECT "UpdatedAt" AS "Value" FROM "Transactions" WHERE "Id" = {id}""");

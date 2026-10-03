@@ -105,7 +105,7 @@ public sealed class TransactionLocationTests(LedgerFixture fixture) : Integratio
                 TestContext.Current.CancellationToken));
         }
 
-        var updated = await member.PutAsJsonAsync($"/api/transactions/{stored.Id}", Body(account, null, null, null, "13.00"), TestContext.Current.CancellationToken);
+        var updated = await PutVersionedAsync(member, $"/api/transactions/{stored.Id}", Body(account, null, null, null, "13.00"));
         updated.EnsureSuccessStatusCode();
 
         await using var on = await LocationsOnAsync();
@@ -121,7 +121,7 @@ public sealed class TransactionLocationTests(LedgerFixture fixture) : Integratio
         var account = await CreateAccountAsync(client: member);
         var stored = await ReadOkAsync<LocatedDto>(await member.PostAsJsonAsync("/api/transactions", Body(account, "Rimi", 54.7m, 25.3m), TestContext.Current.CancellationToken));
 
-        var cleared = await ReadOkAsync<LocatedDto>(await member.PutAsJsonAsync($"/api/transactions/{stored.Id}", Body(account, null, null, null), TestContext.Current.CancellationToken));
+        var cleared = await ReadOkAsync<LocatedDto>(await PutVersionedAsync(member, $"/api/transactions/{stored.Id}", Body(account, null, null, null)));
 
         Assert.Equal((null, null, null), (cleared.Place, cleared.Latitude, cleared.Longitude));
     }
@@ -181,10 +181,9 @@ public sealed class TransactionLocationTests(LedgerFixture fixture) : Integratio
             Body(shared, "Rimi", 54.7m, 25.3m),
             TestContext.Current.CancellationToken));
 
-        var updated = await pair.OwnerClient.PutAsJsonAsync(
+        var updated = await PutVersionedAsync(pair.OwnerClient,
             $"/api/transactions/{created.Id}",
-            Body(shared, "Rimi Ozas", 54.71m, 25.31m),
-            TestContext.Current.CancellationToken);
+            Body(shared, "Rimi Ozas", 54.71m, 25.31m));
         updated.EnsureSuccessStatusCode();
 
         var audit = await ReadOkAsync<PageDto<AuditDto>>(await pair.OwnerClient.GetAsync(
@@ -208,10 +207,9 @@ public sealed class TransactionLocationTests(LedgerFixture fixture) : Integratio
             "/api/transactions",
             Body(account, "Maxima", 54.7m, 25.3m),
             TestContext.Current.CancellationToken));
-        var edited = await ReadOkAsync<LocatedDto>(await script.PutAsJsonAsync(
+        var edited = await ReadOkAsync<LocatedDto>(await PutVersionedAsync(script,
             $"/api/transactions/{created.Id}",
-            Body(account, "Maxima Ozas", null, null),
-            TestContext.Current.CancellationToken));
+            Body(account, "Maxima Ozas", null, null)));
         var places = await script.GetFromJsonAsync<List<PlaceDto>>("/api/transactions/places", TestContext.Current.CancellationToken);
 
         Assert.Equal(("Maxima", 54.7m, 25.3m), (created.Place, created.Latitude, created.Longitude));

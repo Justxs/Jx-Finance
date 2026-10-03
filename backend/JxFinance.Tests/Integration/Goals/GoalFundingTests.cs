@@ -42,7 +42,7 @@ public sealed class GoalFundingTests(NetWorthFixture fixture) : IntegrationTestB
                 fundingAccountId = accountId,
             });
 
-        var halved = await member.PutAsJsonAsync(
+        var halved = await PutVersionedAsync(member,
             $"/api/goals/{goal.Id}",
             new
             {
@@ -51,7 +51,7 @@ public sealed class GoalFundingTests(NetWorthFixture fixture) : IntegrationTestB
                 funding = "account",
                 fundingAccountId = accountId,
                 fundingSharePercent = 50,
-            }, TestContext.Current.CancellationToken);
+            });
         var shared = await halved.Content.ReadFromJsonAsync<GoalDto>(TestContext.Current.CancellationToken);
 
         Assert.Equal("1400.00", goal.ProgressAmount);
@@ -130,14 +130,14 @@ public sealed class GoalFundingTests(NetWorthFixture fixture) : IntegrationTestB
             "/api/goals",
             new { name = "Car", targetAmount = "9000.00", currentAmount = "1750.00" });
 
-        var toAccount = await member.PutAsJsonAsync(
+        var toAccount = await PutVersionedAsync(member,
             $"/api/goals/{goal.Id}",
-            new { name = "Car", targetAmount = "9000.00", funding = "account", fundingAccountId = accountId }, TestContext.Current.CancellationToken);
+            new { name = "Car", targetAmount = "9000.00", funding = "account", fundingAccountId = accountId });
         var funded = await toAccount.Content.ReadFromJsonAsync<GoalDto>(TestContext.Current.CancellationToken);
 
-        var backToManual = await member.PutAsJsonAsync(
+        var backToManual = await PutVersionedAsync(member,
             $"/api/goals/{goal.Id}",
-            new { name = "Car", targetAmount = "9000.00", currentAmount = funded!.CurrentAmount, funding = "manual" }, TestContext.Current.CancellationToken);
+            new { name = "Car", targetAmount = "9000.00", currentAmount = funded!.CurrentAmount, funding = "manual" });
         var manual = await backToManual.Content.ReadFromJsonAsync<GoalDto>(TestContext.Current.CancellationToken);
 
         Assert.Equal(("1750.00", "800.00"), (funded.CurrentAmount, funded.ProgressAmount));

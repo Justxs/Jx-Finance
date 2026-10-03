@@ -387,6 +387,7 @@ export const CloseMonthResponse = zod.object({
         windowEnd: zod.iso.date(),
         scope: zod.enum(["personal", "shared"]),
         householdId: zod.uuid().nullable(),
+        version: zod.int(),
       }),
     )
     .nullable(),
@@ -889,6 +890,7 @@ export const MonthReviewResponse = zod.object({
         windowEnd: zod.iso.date(),
         scope: zod.enum(["personal", "shared"]),
         householdId: zod.uuid().nullable(),
+        version: zod.int(),
       }),
     )
     .nullable(),
@@ -1440,6 +1442,7 @@ export const UpdateMonthNoteResponse = zod.object({
         windowEnd: zod.iso.date(),
         scope: zod.enum(["personal", "shared"]),
         householdId: zod.uuid().nullable(),
+        version: zod.int(),
       }),
     )
     .nullable(),

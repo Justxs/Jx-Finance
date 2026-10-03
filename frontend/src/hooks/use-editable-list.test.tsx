@@ -30,6 +30,21 @@ test("opens the edit modal on a row's item and closes it again", () => {
   expect(result.current.editProps.item).toBeNull();
 });
 
+test("keeps the edit modal on the newest copy of the row", () => {
+  const { Wrapper } = createQueryWrapper();
+  const { result, rerender } = renderHook(
+    ({ items }) =>
+      useEditableList(items, { mutate: vi.fn(), isPending: false }, (goal) => goal.name),
+    { wrapper: Wrapper, initialProps: { items: goals } },
+  );
+
+  act(() => result.current.rowProps(goals[1]!).onEdit());
+  const refreshed = { id: "g2", name: "Car, renamed elsewhere" };
+  rerender({ items: [goals[0]!, refreshed] });
+
+  expect(result.current.editProps.item).toBe(refreshed);
+});
+
 test("asks before deleting a row and deletes it on confirm", () => {
   const { result, mutate } = setup();
 

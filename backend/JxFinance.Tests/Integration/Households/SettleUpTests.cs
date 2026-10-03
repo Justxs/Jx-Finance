@@ -83,10 +83,9 @@ public sealed class SettleUpTests(PeopleFixture fixture) : IntegrationTestBase(f
             "access.forbidden");
         Assert.Equal(HttpStatusCode.Forbidden, (await pair.PartnerClient.DeleteAsync(url, TestContext.Current.CancellationToken)).StatusCode);
 
-        var corrected = await ReadOkAsync<LedgerRowDto>(await pair.OwnerClient.PutAsJsonAsync(
+        var corrected = await ReadOkAsync<LedgerRowDto>(await PutVersionedAsync(pair.OwnerClient,
             $"/api/transactions/{groceries}",
-            new { accountId = account, type = "expense", amount = "96.00", date = "2026-09-10", description = "Maxima" },
-            TestContext.Current.CancellationToken));
+            new { accountId = account, type = "expense", amount = "96.00", date = "2026-09-10", description = "Maxima" }));
         Assert.True(corrected.SharedExpense!.AmountDiffers);
         var ledger = await ReadOkAsync<PageDto<LedgerRowDto>>(await pair.OwnerClient.GetAsync("/api/transactions?pageSize=200", TestContext.Current.CancellationToken));
         Assert.True(ledger.Items.Single(t => t.Id == groceries).SharedExpense!.AmountDiffers);

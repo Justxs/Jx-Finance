@@ -13,5 +13,6 @@ public sealed class AccountConfiguration : IEntityTypeConfiguration<Account>
         builder.Property(a => a.Iban).HasMaxLength(34);
         builder.ComplexProperty(a => a.StartingBalance, money => money.HasColumns("StartingBalance", DbSchema.CurrencyColumn));
         builder.Ignore(a => a.Currency);
+        builder.Property(a => a.Version).IsRowVersion();
     }
 }

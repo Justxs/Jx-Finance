@@ -107,10 +107,14 @@ export function GoalForm({ initial, accounts, onClose }: Readonly<Props>) {
         ...sharingPayload(value),
       };
 
-      return initial?.id
+      return initial
         ? update({
             id: initial.id,
-            data: { ...data, currentAmount: fromAccount ? null : value.currentAmount || "0" },
+            data: {
+              ...data,
+              currentAmount: fromAccount ? null : value.currentAmount || "0",
+              version: initial.version,
+            },
           })
         : create({
             data: { ...data, currentAmount: fromAccount ? null : value.currentAmount || null },

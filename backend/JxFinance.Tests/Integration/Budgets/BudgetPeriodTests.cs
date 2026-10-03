@@ -148,19 +148,19 @@ public sealed class BudgetPeriodTests(NetWorthFixture fixture) : IntegrationTest
             new { categoryId = category, limitAmount = "60.00", period = "weekly" });
         Assert.Equal("weekly", weekly.Period);
 
-        var collide = await Client.PutAsJsonAsync(
+        var collide = await PutVersionedAsync(Client,
             $"/api/budgets/{weekly.Id}",
-            new { categoryId = category, limitAmount = "60.00", period = "monthly" }, TestContext.Current.CancellationToken);
+            new { categoryId = category, limitAmount = "60.00", period = "monthly" });
         await AssertProblemAsync(collide, HttpStatusCode.Conflict, "conflict.duplicate");
 
-        var moved = await Client.PutAsJsonAsync(
+        var moved = await PutVersionedAsync(Client,
             $"/api/budgets/{weekly.Id}",
-            new { categoryId = category, limitAmount = "60.00", period = "yearly" }, TestContext.Current.CancellationToken);
+            new { categoryId = category, limitAmount = "60.00", period = "yearly" });
         moved.EnsureSuccessStatusCode();
 
-        var unchanged = await Client.PutAsJsonAsync(
+        var unchanged = await PutVersionedAsync(Client,
             $"/api/budgets/{monthly.Id}",
-            new { categoryId = category, limitAmount = "250.00", period = "monthly" }, TestContext.Current.CancellationToken);
+            new { categoryId = category, limitAmount = "250.00", period = "monthly" });
         unchanged.EnsureSuccessStatusCode();
     }
 

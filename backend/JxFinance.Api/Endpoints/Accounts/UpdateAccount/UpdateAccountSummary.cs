@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common.OpenApi;
 using JxFinance.Domain.Accounts;
 using JxFinance.Domain.Common;
 
@@ -20,10 +21,13 @@ public sealed class UpdateAccountSummary : Summary<UpdateAccountEndpoint, Update
             AccountType.Checking,
             1250.00m,
             Scope.Personal,
-            null);
+            null,
+            2041u);
+        RequestParam(r => r.Version, SummaryText.ReadVersion);
         Params["id"] = "The account id. Takes precedence over the id in the body.";
         Responses[200] = "The updated account.";
         Responses[400] = "Validation failed, or the named household is not one of yours.";
         Responses[404] = "No such account is visible to the signed-in user.";
+        Responses[409] = SummaryText.StaleVersion;
     }
 }

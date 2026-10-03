@@ -4,7 +4,7 @@ using JxFinance.Domain.Common;
 
 namespace JxFinance.Domain.Transactions;
 
-public sealed class Transaction : OwnableEntity, IAccountScoped, IDated
+public sealed class Transaction : OwnableEntity, IAccountScoped, IDated, IVersioned
 {
     public TransactionId Id { get; set; } = TransactionId.New();
     public AccountId AccountId { get; set; }
@@ -33,6 +33,7 @@ public sealed class Transaction : OwnableEntity, IAccountScoped, IDated
     public decimal? Longitude { get; set; }
     public TransactionGroupId? GroupId { get; set; }
     public List<TransactionTag> Tags { get; set; } = [];
+    public uint Version { get; set; }
 
     public void RecheckUnusual()
     {

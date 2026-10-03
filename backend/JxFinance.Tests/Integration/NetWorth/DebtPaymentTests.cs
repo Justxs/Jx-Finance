@@ -72,10 +72,9 @@ public sealed class DebtPaymentTests(NetWorthFixture fixture) : IntegrationTestB
         var payment = await CreateTransactionAsync(pair.PartnerClient, account, null, "expense", "100.00", "2026-05-10", "Loan");
         await LinkAsync(pair.OwnerClient, debt, payment.Id);
 
-        (await pair.PartnerClient.PutAsJsonAsync(
+        (await PutVersionedAsync(pair.PartnerClient,
             $"/api/transactions/{payment.Id}",
-            new { id = payment.Id, accountId = account, type = "expense", amount = "150.00", date = "2026-05-10", description = "Loan" },
-            TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
+            new { id = payment.Id, accountId = account, type = "expense", amount = "150.00", date = "2026-05-10", description = "Loan" })).EnsureSuccessStatusCode();
 
         Assert.Equal("850.00", (await DebtAsync(pair.OwnerClient, debt)).TrackedBalance);
         var marker = (await LedgerRowAsync(pair.OwnerClient, payment.Id)).DebtPayment!;

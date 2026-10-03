@@ -67,6 +67,7 @@ export const CreateGoalResponse = zod.object({
   progressAmount: zod.stringFormat("decimal", createGoalResponseProgressAmountRegExp).nullable(),
   scope: zod.enum(["personal", "shared"]),
   householdId: zod.uuid().nullable(),
+  version: zod.int(),
 });
 
 /**
@@ -89,6 +90,7 @@ export const GoalsResponseItem = zod.object({
   progressAmount: zod.stringFormat("decimal", goalsResponseProgressAmountRegExp).nullable(),
   scope: zod.enum(["personal", "shared"]),
   householdId: zod.uuid().nullable(),
+  version: zod.int(),
 });
 export const GoalsResponse = zod.array(GoalsResponseItem);
 
@@ -134,6 +136,11 @@ export const UpdateGoalBody = zod.object({
     .describe(
       "The share of that account's balance that counts, as a whole percentage from 1 to 100. Defaults to 100.",
     ),
+  version: zod
+    .int()
+    .describe(
+      "The version of the record you read. Any later change to the record gives it a new version.",
+    ),
   scope: zod.enum(["personal", "shared"]).optional(),
   householdId: zod.uuid().nullish(),
 });
@@ -154,6 +161,7 @@ export const UpdateGoalResponse = zod.object({
   progressAmount: zod.stringFormat("decimal", updateGoalResponseProgressAmountRegExp).nullable(),
   scope: zod.enum(["personal", "shared"]),
   householdId: zod.uuid().nullable(),
+  version: zod.int(),
 });
 
 /**
@@ -194,4 +202,5 @@ export const UpdateGoalProgressResponse = zod.object({
     .nullable(),
   scope: zod.enum(["personal", "shared"]),
   householdId: zod.uuid().nullable(),
+  version: zod.int(),
 });

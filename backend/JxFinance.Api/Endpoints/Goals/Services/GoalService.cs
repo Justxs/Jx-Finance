@@ -86,7 +86,10 @@ public sealed class GoalService(
         }
 
         request.ApplyTo(goal, settings.Current.ReportingCurrency);
-        await db.SaveChangesAsync(cancellationToken);
+        if (await db.SaveOrStaleAsync(goal, request.Version, cancellationToken) is { } stale)
+        {
+            return stale;
+        }
 
         return await ToResponseAsync(goal, cancellationToken);
     }

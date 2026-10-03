@@ -47,10 +47,9 @@ public sealed class PersonalApiTokenWriteTests(PeopleFixture fixture) : Integrat
             await script.PostAsJsonAsync("/api/transactions", Expense(account, "12.40", "2026-09-01", "Maxima"), TestContext.Current.CancellationToken));
         Assert.Equal("api", created.Source);
 
-        var edited = await ReadOkAsync<TransactionDto>(await script.PutAsJsonAsync(
+        var edited = await ReadOkAsync<TransactionDto>(await PutVersionedAsync(script,
             $"/api/transactions/{created.Id}",
-            Expense(account, "13.10", "2026-09-01", "Maxima"),
-            TestContext.Current.CancellationToken));
+            Expense(account, "13.10", "2026-09-01", "Maxima")));
         Assert.Equal(("13.10", "api"), (edited.Amount, edited.Source));
 
         var categorized = await ReadOkAsync<BulkDto>(await script.PostAsJsonAsync(

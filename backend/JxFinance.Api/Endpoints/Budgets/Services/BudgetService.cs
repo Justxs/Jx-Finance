@@ -88,7 +88,10 @@ public sealed class BudgetService(
         }
 
         request.ApplyTo(budget, settings.Current.ReportingCurrency);
-        await db.SaveChangesAsync(cancellationToken);
+        if (await db.SaveOrStaleAsync(budget, request.Version, cancellationToken) is { } stale)
+        {
+            return stale;
+        }
 
         return await ToResponseAsync(budget, cancellationToken);
     }

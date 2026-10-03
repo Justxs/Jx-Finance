@@ -49,6 +49,7 @@ export function optimisticTransaction(
     longitude: data.longitude,
     groupId: null,
     enteredByMe: true,
+    version: 0,
   };
 }
 

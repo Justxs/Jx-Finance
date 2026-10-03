@@ -34,10 +34,9 @@ public sealed class SpreadMonthCloseTests(ReportsFixture fixture) : IntegrationT
         var row = await SpreadAsync(member, account, "360.00", "2025-01-15", 12);
         await CloseAsync(member, March);
 
-        (await member.PutAsJsonAsync(
+        (await PutVersionedAsync(member,
             $"/api/transactions/{row.Id}",
-            new { id = row.Id, accountId = account, type = "expense", amount = "480.00", date = "2025-01-15", description = "Insurance", spreadMonths = 12 },
-            TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
+            new { id = row.Id, accountId = account, type = "expense", amount = "480.00", date = "2025-01-15", description = "Insurance", spreadMonths = 12 })).EnsureSuccessStatusCode();
         var review = await ReviewAsync(member, March);
         var year = (await member.GetFromJsonAsync<YearDto>("/api/month-close?year=2025", TestContext.Current.CancellationToken))!;
 

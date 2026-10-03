@@ -27,6 +27,8 @@ export interface UpdateTransactionRequest {
   description: string | null;
   /** @nullable */
   lines: TransactionLineRequest[] | null;
+  /** The version of the record you read. Any later change to the record gives it a new version. */
+  version: number;
   /** @nullable */
   tagIds: string[] | null;
   currency?: null | Currency;

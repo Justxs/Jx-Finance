@@ -180,6 +180,7 @@ export const CreateAccountResponse = zod.object({
   reportingBalance: zod.stringFormat("decimal", createAccountResponseReportingBalanceRegExp),
   holdingsValue: zod.stringFormat("decimal", createAccountResponseHoldingsValueRegExp),
   ownerId: zod.uuid(),
+  version: zod.int(),
 });
 
 /**
@@ -279,6 +280,7 @@ export const AccountsResponseItem = zod.object({
   reportingBalance: zod.stringFormat("decimal", accountsResponseReportingBalanceRegExp),
   holdingsValue: zod.stringFormat("decimal", accountsResponseHoldingsValueRegExp),
   ownerId: zod.uuid(),
+  version: zod.int(),
 });
 export const AccountsResponse = zod.array(AccountsResponseItem);
 
@@ -550,6 +552,7 @@ export const AccountResponse = zod.object({
   reportingBalance: zod.stringFormat("decimal", accountResponseReportingBalanceRegExp),
   holdingsValue: zod.stringFormat("decimal", accountResponseHoldingsValueRegExp),
   ownerId: zod.uuid(),
+  version: zod.int(),
 });
 
 /**
@@ -580,6 +583,11 @@ export const UpdateAccountBody = zod.object({
   startingBalance: zod.stringFormat("decimal", updateAccountBodyStartingBalanceRegExp),
   scope: zod.enum(["personal", "shared"]),
   householdId: zod.uuid().nullable(),
+  version: zod
+    .int()
+    .describe(
+      "The version of the record you read. Any later change to the record gives it a new version.",
+    ),
   currency: zod
     .union([
       zod.null(),
@@ -712,6 +720,7 @@ export const UpdateAccountResponse = zod.object({
   reportingBalance: zod.stringFormat("decimal", updateAccountResponseReportingBalanceRegExp),
   holdingsValue: zod.stringFormat("decimal", updateAccountResponseHoldingsValueRegExp),
   ownerId: zod.uuid(),
+  version: zod.int(),
 });
 
 /**
@@ -1086,4 +1095,5 @@ export const RestoreAccountResponse = zod.object({
   reportingBalance: zod.stringFormat("decimal", restoreAccountResponseReportingBalanceRegExp),
   holdingsValue: zod.stringFormat("decimal", restoreAccountResponseHoldingsValueRegExp),
   ownerId: zod.uuid(),
+  version: zod.int(),
 });

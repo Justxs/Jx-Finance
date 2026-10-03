@@ -90,9 +90,9 @@ public sealed class BudgetRolloverTests(NetWorthFixture fixture) : IntegrationTe
         var read = await ReadAsync(budget.Id);
         Assert.Equal(("0.00", "100.00", "0.00"), (read.CarriedAmount, read.EffectiveLimit, read.Spent));
 
-        var switchedOn = await Client.PutAsJsonAsync(
+        var switchedOn = await PutVersionedAsync(Client,
             $"/api/budgets/{budget.Id}",
-            new { categoryId = category, limitAmount = "100.00", period = "weekly", rolloverEnabled = true }, TestContext.Current.CancellationToken);
+            new { categoryId = category, limitAmount = "100.00", period = "weekly", rolloverEnabled = true });
         switchedOn.EnsureSuccessStatusCode();
 
         var after = (await switchedOn.Content.ReadFromJsonAsync<BudgetDto>(TestContext.Current.CancellationToken))!;

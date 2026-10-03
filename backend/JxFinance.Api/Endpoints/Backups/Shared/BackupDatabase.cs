@@ -5,6 +5,7 @@ using JxFinance.Domain.Notifications;
 using JxFinance.Infrastructure.Auth;
 using JxFinance.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata;
 using Npgsql;
 
 namespace JxFinance.Endpoints.Backups.Shared;
@@ -32,11 +33,14 @@ public static class BackupDatabase
             .Select(t => new TableShape(
                 t.Name,
                 t.Schema is null ? Quote(t.Name) : $"{Quote(t.Schema)}.{Quote(t.Name)}",
-                t.Columns.Select(c => new ColumnShape(c.Name, c.StoreType)).ToList(),
+                t.Columns.Where(c => !IsRowVersion(c)).Select(c => new ColumnShape(c.Name, c.StoreType)).ToList(),
                 t.ForeignKeyConstraints.Select(f => f.Name).ToList(),
                 !transient.Contains(t.Name, StringComparer.Ordinal)))
             .ToList();
     }
+
+    private static bool IsRowVersion(IColumn column) =>
+        column.PropertyMappings.Any(m => m.Property.IsConcurrencyToken && m.Property.ValueGenerated == ValueGenerated.OnAddOrUpdate);
 
     public static async Task SetForeignKeysAsync(
         NpgsqlConnection connection,

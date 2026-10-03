@@ -28,9 +28,9 @@ public sealed class GoalValidationTests(NetWorthFixture fixture) : IntegrationTe
     {
         var goal = await PostAsync<GoalDto>(Client, "/api/goals", new { name = "Goal", targetAmount = "100.00", currentAmount = "40.00" });
 
-        var response = await Client.PutAsJsonAsync(
+        var response = await PutVersionedAsync(Client,
             $"/api/goals/{goal.Id}",
-            new { name = "Goal", targetAmount = "100.00", currentAmount = "-5.00" }, TestContext.Current.CancellationToken);
+            new { name = "Goal", targetAmount = "100.00", currentAmount = "-5.00" });
 
         await AssertValidationErrorAsync(response, "currentAmount");
         Assert.Contains("money.nonNegative", await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));

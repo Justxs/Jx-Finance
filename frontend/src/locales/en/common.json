@@ -841,9 +841,7 @@
     "setNewPassword": "Set new password",
     "resetDone": "Your password was changed. Sign in with it.",
     "verifyTitle": "Confirming your address",
-    "verifyPending": "One moment.",
     "verifyDone": "Your address is confirmed.",
-    "verifyFailed": "This link is no longer valid. Sign in and ask for a new one on your profile.",
     "confirmAddress": "Confirm this address",
     "signInWithPasskey": "Sign in with a passkey",
     "usePasskeyInstead": "Use a passkey instead",
@@ -2903,7 +2901,7 @@
     "conflict": {
       "busy": "The database was busy with other work. Nothing was changed; try again in a moment.",
       "duplicate": "This already exists.",
-      "stale": "This changed in the meantime. Refresh and try again."
+      "stale": "This was changed elsewhere in the meantime. The latest version is loaded; check it and try again."
     },
     "credentials": {
       "invalid": "Wrong email or password.",

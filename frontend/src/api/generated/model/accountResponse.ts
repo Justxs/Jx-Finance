@@ -29,4 +29,5 @@ export interface AccountResponse {
   reportingBalance: string;
   holdingsValue: string;
   ownerId: string;
+  version: number;
 }

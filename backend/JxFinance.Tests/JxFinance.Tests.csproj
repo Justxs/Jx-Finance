@@ -7,15 +7,11 @@
 
   <ItemGroup>
     <PackageReference Include="FastEndpoints.Testing" />
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" />
     <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" />
     <PackageReference Include="NetArchTest.eNhancedEdition" />
     <PackageReference Include="Testcontainers.PostgreSql" />
-    <!-- Overrides Testcontainers' transitive version; GHSA-q939-rpr3-3284 is fixed in 2026.0.0. -->
     <PackageReference Include="SSH.NET" />
     <PackageReference Include="xunit.v3" />
-    <PackageReference Include="xunit.runner.visualstudio" />
   </ItemGroup>
 
   <ItemGroup>

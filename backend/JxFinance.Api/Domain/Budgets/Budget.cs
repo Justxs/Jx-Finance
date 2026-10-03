@@ -5,7 +5,7 @@ using JxFinance.Domain.Tags;
 
 namespace JxFinance.Domain.Budgets;
 
-public sealed class Budget : OwnableEntity, IShareable
+public sealed class Budget : OwnableEntity, IShareable, IVersioned
 {
     public BudgetId Id { get; set; } = BudgetId.New();
     public CategoryId? CategoryId { get; set; }
@@ -15,4 +15,5 @@ public sealed class Budget : OwnableEntity, IShareable
     public bool RolloverEnabled { get; set; }
     public Scope Scope { get; set; } = Scope.Personal;
     public HouseholdId? HouseholdId { get; set; }
+    public uint Version { get; set; }
 }

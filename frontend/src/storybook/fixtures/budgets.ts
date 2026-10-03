@@ -57,6 +57,7 @@ function budget(
     windowEnd: window.end,
     scope: "personal",
     householdId: null,
+    version: 1,
   };
 }
 
@@ -89,6 +90,7 @@ export const holidayTagBudget: BudgetResponse = {
   windowEnd: budgetWindows.yearly.end,
   scope: "personal",
   householdId: null,
+  version: 1,
 };
 
 export const budgets: BudgetResponse[] = [

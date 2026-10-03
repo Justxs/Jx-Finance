@@ -12,7 +12,7 @@ public sealed class UpdateAccountEndpoint(IAccountService accountService)
     {
         Put(ApiRoutes.Accounts + "/{id}");
         Group<AccountsGroup>();
-        Description(d => d.ProducesProblemDetails(404));
+        Description(d => d.ProducesProblemDetails(404).ProducesProblemDetails(409));
     }
 
     public override async Task HandleAsync(UpdateAccountRequest req, CancellationToken ct) =>

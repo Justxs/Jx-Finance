@@ -15,6 +15,8 @@ export interface UpdateBudgetRequest {
   period: BudgetPeriod;
   /** Whether the previous window's remainder adjusts this window's limit. */
   rolloverEnabled: boolean;
+  /** The version of the record you read. Any later change to the record gives it a new version. */
+  version: number;
   /** @nullable */
   tagId?: string | null;
   scope?: Scope;

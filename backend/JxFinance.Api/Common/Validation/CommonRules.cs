@@ -12,6 +12,9 @@ public static class CommonRules
     public static IRuleBuilderOptions<T, TProperty> IsPresent<T, TProperty>(this IRuleBuilder<T, TProperty> rule) =>
         rule.NotNull().WithErrorCode(ErrorCodes.Required);
 
+    public static IRuleBuilderOptions<T, uint> IsReadVersion<T>(this IRuleBuilder<T, uint> rule) =>
+        rule.NotEmpty().WithErrorCode(ErrorCodes.Required).WithMessage("Send the version of the record you read.");
+
     public static IRuleBuilderOptions<T, TProperty> IsAbsent<T, TProperty>(this IRuleBuilder<T, TProperty> rule) =>
         rule.Null().WithErrorCode(ErrorCodes.ValueMustBeEmpty);
 

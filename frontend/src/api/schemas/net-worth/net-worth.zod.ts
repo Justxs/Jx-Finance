@@ -1000,6 +1000,7 @@ export const DebtPaymentCandidatesResponseItem = zod.object({
     }),
   ]),
   unusualDismissed: zod.boolean(),
+  version: zod.int(),
   debtPayment: zod
     .union([
       zod.null(),

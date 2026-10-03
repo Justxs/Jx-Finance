@@ -4,6 +4,8 @@ Back to the [feature walkthrough](README.md).
 
 Backend `Accounts`, page `/accounts`. Personal or shared scope, archive instead of delete, only the owner archives, restores or changes sharing.
 
+Every account response carries `version`, and since 2026-10-03 `PUT /api/accounts/{id}` requires the one the form read: when another member saved the account in the meantime the update answers 409 `conflict.stale`, the edit dialog shows the message over the typed values, and saving again uses the refreshed version. See [Concurrent edits](../architecture/api-contract.md#concurrent-edits).
+
 ```mermaid
 flowchart LR
     Start["Starting balance<br/>main currency"] --> Sum

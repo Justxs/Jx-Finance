@@ -81,7 +81,7 @@ public sealed class BudgetEndpointTests(NetWorthFixture fixture) : IntegrationTe
         var budget = await PostAsync<BudgetDto>(Client, "/api/budgets", new { categoryId = await CreateCategoryAsync(), limitAmount = "200.00" });
         var otherCategory = await CreateCategoryAsync();
 
-        var response = await Client.PutAsJsonAsync($"/api/budgets/{budget.Id}", new { categoryId = otherCategory, limitAmount = "350.00" }, TestContext.Current.CancellationToken);
+        var response = await PutVersionedAsync(Client, $"/api/budgets/{budget.Id}", new { categoryId = otherCategory, limitAmount = "350.00" });
 
         response.EnsureSuccessStatusCode();
         var updated = await response.Content.ReadFromJsonAsync<BudgetDto>(TestContext.Current.CancellationToken);
@@ -91,10 +91,21 @@ public sealed class BudgetEndpointTests(NetWorthFixture fixture) : IntegrationTe
     [Fact]
     public async Task Updating_or_deleting_an_unknown_budget_answers_not_found()
     {
-        var update = await Client.PutAsJsonAsync($"/api/budgets/{Guid.NewGuid()}", new { categoryId = await CreateCategoryAsync(), limitAmount = "1.00" }, TestContext.Current.CancellationToken);
+        var update = await Client.PutAsJsonAsync($"/api/budgets/{Guid.NewGuid()}", new { categoryId = await CreateCategoryAsync(), limitAmount = "1.00", version = 1u }, TestContext.Current.CancellationToken);
         var delete = await Client.DeleteAsync($"/api/budgets/{Guid.NewGuid()}", TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.NotFound, update.StatusCode);
         Assert.Equal(HttpStatusCode.NotFound, delete.StatusCode);
+    }
+
+    [Fact]
+    public async Task An_update_from_a_version_someone_already_changed_is_refused()
+    {
+        var category = await CreateCategoryAsync();
+        var budget = await PostAsync<IdDto>(Client, "/api/budgets", new { categoryId = category, limitAmount = "100.00" });
+
+        await AssertStaleUpdateRefusedAsync(
+            $"/api/budgets/{budget.Id}",
+            step => new { categoryId = category, limitAmount = $"{step + 1}00.00" });
     }
 }

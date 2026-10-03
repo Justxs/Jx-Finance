@@ -33,6 +33,8 @@ The dashboard has a Goals card on the current month that lists every goal with i
 
 A goal can be shared with a household; members see and update it, and a goal funded from an account needs an account shared with the same household. See [Households and sharing](households-and-sharing.md#shared-budgets-goals-and-recurring-entries).
 
+Every goal response carries `version`, and since 2026-10-03 `PUT /api/goals/{id}` requires the one the form read: when another member saved the goal in the meantime, moved its progress, or a reporting-currency change converted its amounts, the update answers 409 `conflict.stale`, the edit dialog shows the message over the typed values, and saving again uses the refreshed version. Moving progress below takes no version, because a delta does not overwrite anyone. See [Concurrent edits](../architecture/api-contract.md#concurrent-edits).
+
 ## Moving progress without the whole goal
 
 Since 2026-10-01 `PATCH /api/goals/{id}/progress` changes only the saved amount of a manual goal, so a script or Home Assistant can record money put aside without sending the name, target, date and funding back. The body holds exactly one of two fields:

@@ -11,6 +11,7 @@ public sealed record UpdateBudgetRequest(
     [property: Money] decimal LimitAmount,
     BudgetPeriod Period,
     bool RolloverEnabled,
+    uint Version,
     Guid? TagId = null,
     Scope Scope = Scope.Personal,
     Guid? HouseholdId = null) : IBudgetInput;

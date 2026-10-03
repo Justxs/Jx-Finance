@@ -147,10 +147,9 @@ public sealed class UnusualAmountTests(LedgerFixture fixture) : IntegrationTestB
         await ScanAsync();
         Assert.NotNull(await CheckedAtAsync(row));
 
-        (await member.PutAsJsonAsync(
+        (await PutVersionedAsync(member,
             $"/api/transactions/{row}",
-            new { accountId = account, type = "expense", amount = "7.40", date = Today.AddDays(-1), description = "Bolt", tagIds = new[] { tag } },
-            TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
+            new { accountId = account, type = "expense", amount = "7.40", date = Today.AddDays(-1), description = "Bolt", tagIds = new[] { tag } })).EnsureSuccessStatusCode();
 
         Assert.NotNull(await CheckedAtAsync(row));
     }
@@ -356,13 +355,12 @@ public sealed class UnusualAmountTests(LedgerFixture fixture) : IntegrationTestB
             "/api/transactions",
             new { accountId = account, categoryId, type = "expense", amount, date, description })).Id;
 
-    private static async Task UpdateAsync(HttpClient client, Guid id, Guid account, string description, string amount)
+    private async Task UpdateAsync(HttpClient client, Guid id, Guid account, string description, string amount)
     {
         var current = await GetAsync(client, id);
-        var response = await client.PutAsJsonAsync(
+        var response = await PutVersionedAsync(client,
             $"/api/transactions/{id}",
-            new { accountId = account, type = "expense", amount, date = current.Date, description },
-            TestContext.Current.CancellationToken);
+            new { accountId = account, type = "expense", amount, date = current.Date, description });
         Assert.True(response.IsSuccessStatusCode, await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
     }
 

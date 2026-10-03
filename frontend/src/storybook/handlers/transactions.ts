@@ -255,6 +255,7 @@ export const transactionHandlers = [
       attachmentCount: 0,
       unusual: null,
       unusualDismissed: false,
+      version: 1,
     };
     return mergeTransaction(base, await readBody(request));
   }),

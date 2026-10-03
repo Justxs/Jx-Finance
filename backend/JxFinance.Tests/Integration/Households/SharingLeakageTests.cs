@@ -67,10 +67,10 @@ public sealed class SharingLeakageTests(PeopleFixture fixture) : IntegrationTest
         var transaction = (await CreateTransactionAsync(memberClient, account, null, "expense", "10.00", "2026-09-01")).Id;
         var makePersonal = new { name = "Now personal", type = "checking", startingBalance = "100.00", scope = "personal" };
 
-        var byMember = await memberClient.PutAsJsonAsync($"/api/accounts/{account}", makePersonal, TestContext.Current.CancellationToken);
+        var byMember = await PutVersionedAsync(memberClient, $"/api/accounts/{account}", makePersonal);
         Assert.Equal(HttpStatusCode.Forbidden, byMember.StatusCode);
 
-        (await Client.PutAsJsonAsync($"/api/accounts/{account}", makePersonal, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
+        (await PutVersionedAsync(Client, $"/api/accounts/{account}", makePersonal)).EnsureSuccessStatusCode();
 
         Assert.Equal(HttpStatusCode.NotFound, (await memberClient.GetAsync($"/api/transactions/{transaction}", TestContext.Current.CancellationToken)).StatusCode);
         Assert.Equal(HttpStatusCode.NotFound, (await memberClient.DeleteAsync($"/api/transactions/{transaction}", TestContext.Current.CancellationToken)).StatusCode);

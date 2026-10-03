@@ -89,9 +89,9 @@ public sealed class RecordedChangesTrashTests(NetWorthFixture fixture) : Integra
         var moved = await CreateTransactionAsync(member, account, food, "expense", "6.00", Date);
 
         await member.DeleteAsync($"/api/categories/{food}", TestContext.Current.CancellationToken);
-        (await member.PutAsJsonAsync(
+        (await PutVersionedAsync(member,
             $"/api/transactions/{moved.Id}",
-            new { accountId = account, categoryId = travel, type = "expense", amount = "6.00", date = Date }, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
+            new { accountId = account, categoryId = travel, type = "expense", amount = "6.00", date = Date })).EnsureSuccessStatusCode();
         var restore = await RestoreAsync(member, "category", food);
 
         Assert.Equal(HttpStatusCode.NoContent, restore.StatusCode);
@@ -348,9 +348,9 @@ public sealed class RecordedChangesTrashTests(NetWorthFixture fixture) : Integra
         await ownerClient.DeleteAsync($"/api/households/{household}", TestContext.Current.CancellationToken);
         await ownerClient.DeleteAsync($"/api/accounts/{archived}", TestContext.Current.CancellationToken);
         var elsewhere = await Seed.HouseholdAsync(housemateClient);
-        (await housemateClient.PutAsJsonAsync(
+        (await PutVersionedAsync(housemateClient,
             $"/api/accounts/{moved}",
-            new { name = "Kitur", type = "checking", startingBalance = "0.00", scope = "shared", householdId = elsewhere }, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
+            new { name = "Kitur", type = "checking", startingBalance = "0.00", scope = "shared", householdId = elsewhere })).EnsureSuccessStatusCode();
         var restore = await RestoreAsync(ownerClient, "household", household);
         var sharing = await SharingAsync(owner.Id, household);
 

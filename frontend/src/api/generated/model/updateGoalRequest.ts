@@ -35,6 +35,8 @@ export interface UpdateGoalRequest {
    * @nullable
    */
   fundingSharePercent: number | null;
+  /** The version of the record you read. Any later change to the record gives it a new version. */
+  version: number;
   scope?: Scope;
   /** @nullable */
   householdId?: string | null;

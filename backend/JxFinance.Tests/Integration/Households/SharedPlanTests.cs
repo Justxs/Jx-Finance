@@ -41,14 +41,12 @@ public sealed class SharedPlanTests(PeopleFixture fixture) : IntegrationTestBase
             "/api/budgets",
             new { categoryId = category, limitAmount = "300.00", period = "monthly", scope = "shared", householdId = pair.HouseholdId });
 
-        var edited = await pair.PartnerClient.PutAsJsonAsync(
+        var edited = await PutVersionedAsync(pair.PartnerClient,
             $"/api/budgets/{budget.Id}",
-            new { categoryId = category, limitAmount = "350.00", period = "monthly", scope = "shared", householdId = pair.HouseholdId },
-            TestContext.Current.CancellationToken);
-        var unshared = await pair.PartnerClient.PutAsJsonAsync(
+            new { categoryId = category, limitAmount = "350.00", period = "monthly", scope = "shared", householdId = pair.HouseholdId });
+        var unshared = await PutVersionedAsync(pair.PartnerClient,
             $"/api/budgets/{budget.Id}",
-            new { categoryId = category, limitAmount = "350.00", period = "monthly", scope = "personal" },
-            TestContext.Current.CancellationToken);
+            new { categoryId = category, limitAmount = "350.00", period = "monthly", scope = "personal" });
         var deleted = await pair.PartnerClient.DeleteAsync($"/api/budgets/{budget.Id}", TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.OK, edited.StatusCode);

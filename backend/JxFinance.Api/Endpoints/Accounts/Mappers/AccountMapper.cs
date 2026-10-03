@@ -35,7 +35,8 @@ public static class AccountMapper
             .ToList(),
         balance.Reporting.Amount,
         balance.Holdings.Amount,
-        account.UserId);
+        account.UserId,
+        account.Version);
 
     private static void Apply(IAccountInput input, Account account, Currency fallbackCurrency)
     {

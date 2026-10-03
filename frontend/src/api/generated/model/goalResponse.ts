@@ -24,4 +24,5 @@ export interface GoalResponse {
   scope: Scope;
   /** @nullable */
   householdId: string | null;
+  version: number;
 }

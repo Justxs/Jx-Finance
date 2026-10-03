@@ -301,6 +301,7 @@ function uncategorizedRow(
     unusual: null,
     unusualDismissed: false,
     enteredByMe: true,
+    version: 1,
   };
 }
 

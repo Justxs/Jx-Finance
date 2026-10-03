@@ -14,4 +14,5 @@ public sealed record UpdateAccountRequest(
     [property: Money(NotNull = true)] decimal? StartingBalance,
     Scope Scope,
     Guid? HouseholdId,
+    uint Version,
     Currency? Currency = null) : IAccountInput;

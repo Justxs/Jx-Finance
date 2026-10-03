@@ -897,9 +897,7 @@
     "setNewPassword": "Nustatyti naują slaptažodį",
     "resetDone": "Slaptažodis pakeistas. Prisijunkite nauju slaptažodžiu.",
     "verifyTitle": "Tvirtinamas adresas",
-    "verifyPending": "Palaukite akimirką…",
     "verifyDone": "Jūsų adresas patvirtintas.",
-    "verifyFailed": "Ši nuoroda nebegalioja. Prisijunkite ir naujos nuorodos paprašykite savo profilyje.",
     "confirmAddress": "Patvirtinti šį adresą",
     "signInWithPasskey": "Prisijungti su prieigos raktu",
     "usePasskeyInstead": "Naudoti prieigos raktą",
@@ -3023,7 +3021,7 @@
     "conflict": {
       "busy": "Duomenų bazė buvo užimta. Niekas nepakeista; po akimirkos bandykite dar kartą.",
       "duplicate": "Toks įrašas jau yra.",
-      "stale": "Duomenys tuo metu pasikeitė. Atnaujinkite puslapį ir bandykite dar kartą."
+      "stale": "Tai tuo metu buvo pakeista kitur. Įkelta naujausia versija – patikrinkite ir bandykite dar kartą."
     },
     "credentials": {
       "invalid": "Neteisingas el. paštas arba slaptažodis.",

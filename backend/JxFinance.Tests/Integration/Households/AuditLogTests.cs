@@ -22,7 +22,7 @@ public sealed class AuditLogTests(PeopleFixture fixture) : IntegrationTestBase(f
         var groceries = await CreateNamedCategoryAsync(memberClient, $"Groceries {Guid.NewGuid():N}"[..18]);
 
         var transaction = await CreateTransactionAsync(memberClient, account, food.Id, "expense", "40.00", "2026-09-01", "Maxima");
-        var update = await memberClient.PutAsJsonAsync(
+        var update = await PutVersionedAsync(memberClient,
             $"/api/transactions/{transaction.Id}",
             new
             {
@@ -33,7 +33,7 @@ public sealed class AuditLogTests(PeopleFixture fixture) : IntegrationTestBase(f
                 amount = "42.18",
                 date = "2026-09-01",
                 description = "Maxima",
-            }, TestContext.Current.CancellationToken);
+            });
         update.EnsureSuccessStatusCode();
         (await memberClient.DeleteAsync($"/api/transactions/{transaction.Id}", TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
         (await memberClient.PostAsJsonAsync("/api/trash/restore", new { kind = "transaction", entityId = transaction.Id }, TestContext.Current.CancellationToken))
@@ -85,13 +85,13 @@ public sealed class AuditLogTests(PeopleFixture fixture) : IntegrationTestBase(f
         var account = await CreateAccountAsync("5.00");
         var name = $"Joint {Guid.NewGuid():N}"[..14];
 
-        (await Client.PutAsJsonAsync(
+        (await PutVersionedAsync(Client,
             $"/api/accounts/{account}",
-            new { name, type = "checking", startingBalance = "5.00", scope = "shared", householdId = household }, TestContext.Current.CancellationToken))
+            new { name, type = "checking", startingBalance = "5.00", scope = "shared", householdId = household }))
             .EnsureSuccessStatusCode();
-        (await Client.PutAsJsonAsync(
+        (await PutVersionedAsync(Client,
             $"/api/accounts/{account}",
-            new { name, type = "checking", startingBalance = "5.00", scope = "personal" }, TestContext.Current.CancellationToken))
+            new { name, type = "checking", startingBalance = "5.00", scope = "personal" }))
             .EnsureSuccessStatusCode();
         (await Client.PutAsJsonAsync($"/api/households/{household}/members/{member.Id}", new { role = "owner" }, TestContext.Current.CancellationToken))
             .EnsureSuccessStatusCode();

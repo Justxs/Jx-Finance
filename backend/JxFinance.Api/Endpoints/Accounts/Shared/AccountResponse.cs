@@ -19,4 +19,5 @@ public sealed record AccountResponse(
     IReadOnlyList<CurrencyBalance> Balances,
     [property: Money] decimal ReportingBalance,
     [property: Money] decimal HoldingsValue,
-    Guid OwnerId);
+    Guid OwnerId,
+    uint Version);

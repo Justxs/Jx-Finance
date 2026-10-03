@@ -1,9 +1,18 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, fireEvent, fn, userEvent, waitFor } from "storybook/test";
-import { getCreateGoalMockHandler } from "@/api/generated/goals/goals.msw";
+import {
+  getCreateGoalMockHandler,
+  getUpdateGoalMockHandler,
+} from "@/api/generated/goals/goals.msw";
 import { withWidth } from "@/storybook/decorators";
-import { accounts, sharedFundedGoal, unavailableFundedGoal } from "@/storybook/fixtures";
-import { pending, withHandlers } from "@/storybook/handlers";
+import {
+  accounts,
+  goalStaleProblem,
+  goalWithTargetDate,
+  sharedFundedGoal,
+  unavailableFundedGoal,
+} from "@/storybook/fixtures";
+import { failWith, pending, withHandlers } from "@/storybook/handlers";
 import { chooseOption } from "@/storybook/interactions";
 import { GoalForm } from "./goal-form";
 
@@ -119,5 +128,18 @@ export const SubmitPending: Story = {
     await fireEvent.change(name!, { target: { value: "New bicycle" } });
     await fireEvent.change(target!, { target: { value: "900" } });
     await userEvent.click(canvas.getByRole("button", { name: /add goal|pridėti tikslą/i }));
+  },
+};
+
+export const ChangedElsewhere: Story = {
+  args: { initial: goalWithTargetDate },
+  parameters: withHandlers(getUpdateGoalMockHandler(failWith(goalStaleProblem))),
+  play: async ({ canvas, args }) => {
+    await userEvent.click(canvas.getByRole("button", { name: /^save$|^išsaugoti$/i }));
+
+    await expect(await canvas.findByRole("alert")).toHaveTextContent(
+      /changed elsewhere|pakeista kitur/i,
+    );
+    await expect(args.onClose).not.toHaveBeenCalled();
   },
 };

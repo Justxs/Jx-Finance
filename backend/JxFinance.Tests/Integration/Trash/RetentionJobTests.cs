@@ -6,6 +6,7 @@ using JxFinance.Infrastructure.Auth;
 using JxFinance.Infrastructure.BackgroundJobs;
 using JxFinance.Tests.Support;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 
 namespace JxFinance.Tests.Integration.Trash;
 
@@ -152,6 +153,37 @@ public sealed class RetentionJobTests(NetWorthFixture fixture) : IntegrationTest
         Assert.Equal(0, await CountAsync(db => db.UserSessions.Where(s => s.Id == expired)));
         Assert.Equal(1, await CountAsync(db => db.UserSessions.Where(s => s.UserId == user.Id)));
         (await member.GetAsync("/api/auth/sessions", TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
+    }
+
+    [Fact]
+    public async Task A_failing_step_does_not_stop_the_steps_after_it()
+    {
+        using var member = await CreateUserClientAsync();
+        var account = await CreateAccountAsync(client: member);
+        var transaction = await CreateTransactionAsync(member, account, null, "expense", "4.00", Date, "Kioskas");
+        (await member.DeleteAsync($"/api/transactions/{transaction.Id}", TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
+        await BackdateAsync(transaction.Id);
+
+        await SqlAsync($"""
+            CREATE FUNCTION refuse_audit_pruning() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'audit pruning refused'; END $$;
+            CREATE TRIGGER refuse_audit_pruning BEFORE DELETE ON "AuditEvents" FOR EACH STATEMENT EXECUTE FUNCTION refuse_audit_pruning();
+            """);
+        try
+        {
+            await Assert.ThrowsAsync<PostgresException>(() => SqlAsync($"""DELETE FROM "AuditEvents" WHERE false"""));
+            await RunAsync();
+        }
+        finally
+        {
+            await SqlAsync($"""
+                DROP TRIGGER refuse_audit_pruning ON "AuditEvents";
+                DROP FUNCTION refuse_audit_pruning();
+                """);
+        }
+
+        var typedId = new Domain.Transactions.TransactionId(transaction.Id);
+        Assert.Equal(0, await CountAsync(db => db.Transactions.IgnoreQueryFilters().Where(t => t.Id == typedId)));
+        Assert.Equal(0, await CountAsync(db => db.DeletionEntries.IgnoreQueryFilters().Where(e => e.EntityId == transaction.Id)));
     }
 
     private Task RunAsync() => Job<RetentionJob>().RunOnceAsync(TestContext.Current.CancellationToken);

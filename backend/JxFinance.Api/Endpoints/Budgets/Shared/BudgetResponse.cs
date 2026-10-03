@@ -19,4 +19,5 @@ public sealed record BudgetResponse(
     DateOnly WindowStart,
     DateOnly WindowEnd,
     Scope Scope,
-    Guid? HouseholdId);
+    Guid? HouseholdId,
+    uint Version);
