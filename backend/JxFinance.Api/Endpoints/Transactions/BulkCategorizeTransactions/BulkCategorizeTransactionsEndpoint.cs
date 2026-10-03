@@ -4,7 +4,7 @@ using JxFinance.Endpoints.Transactions.Interfaces;
 
 namespace JxFinance.Endpoints.Transactions.BulkCategorizeTransactions;
 
-public sealed class BulkCategorizeTransactionsEndpoint(ITransactionService transactionService)
+public sealed class BulkCategorizeTransactionsEndpoint(ITransactionWriteService transactionService)
     : Endpoint<BulkCategorizeTransactionsRequest, BulkCategorizeTransactionsResponse>
 {
     public override void Configure()

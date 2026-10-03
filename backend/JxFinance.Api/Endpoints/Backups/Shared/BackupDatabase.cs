@@ -7,7 +7,7 @@ using JxFinance.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 
-namespace JxFinance.Endpoints.Backups.Services;
+namespace JxFinance.Endpoints.Backups.Shared;
 
 public static class BackupDatabase
 {

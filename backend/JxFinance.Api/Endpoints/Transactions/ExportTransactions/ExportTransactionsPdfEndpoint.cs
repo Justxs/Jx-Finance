@@ -8,7 +8,7 @@ using JxFinance.Endpoints.Transactions.Interfaces;
 namespace JxFinance.Endpoints.Transactions.ExportTransactions;
 
 public sealed class ExportTransactionsPdfEndpoint(
-    ITransactionService transactionService,
+    ITransactionQueryService transactionService,
     IInstanceSettingsStore settings) : Endpoint<GetTransactionsRequest>
 {
     public override void Configure()

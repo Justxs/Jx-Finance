@@ -4,10 +4,12 @@ using JxFinance.Domain.Investments;
 using JxFinance.Domain.Settings;
 using JxFinance.Infrastructure.MarketPrices;
 
-namespace JxFinance.Endpoints.Investments.Services;
+namespace JxFinance.Common.MarketPrices;
 
 public static class PriceSyncRules
 {
+    public const string KeyPurpose = "JxFinance.MarketPrices.EodhdKey";
+
     public static readonly TimeSpan FailureBackOff = TimeSpan.FromHours(24);
 
     private const string GreatBritishPence = "GBX";

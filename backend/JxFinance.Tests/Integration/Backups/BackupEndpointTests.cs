@@ -6,6 +6,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using JxFinance.Domain.Notifications;
 using JxFinance.Endpoints.Backups.Services;
+using JxFinance.Endpoints.Backups.Shared;
 using JxFinance.Infrastructure.Backups;
 using JxFinance.Infrastructure.Configuration;
 using JxFinance.Tests.Support;

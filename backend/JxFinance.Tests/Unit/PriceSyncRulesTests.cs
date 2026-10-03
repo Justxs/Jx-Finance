@@ -1,9 +1,9 @@
+using JxFinance.Common.MarketPrices;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Investments;
 using JxFinance.Domain.Settings;
 using JxFinance.Endpoints.Investments.Mappers;
 using JxFinance.Endpoints.Investments.SaveSecurity;
-using JxFinance.Endpoints.Investments.Services;
 using JxFinance.Infrastructure.MarketPrices;
 using JxFinance.Tests.Support;
 

@@ -4,7 +4,7 @@ using JxFinance.Endpoints.NetWorth.Interfaces;
 
 namespace JxFinance.Endpoints.NetWorth.DeleteAssetValuation;
 
-public sealed class DeleteAssetValuationEndpoint(INetWorthService netWorthService) : Endpoint<DeleteAssetValuationRequest>
+public sealed class DeleteAssetValuationEndpoint(IAssetService assetService) : Endpoint<DeleteAssetValuationRequest>
 {
     public override void Configure()
     {
@@ -14,5 +14,5 @@ public sealed class DeleteAssetValuationEndpoint(INetWorthService netWorthServic
     }
 
     public override async Task HandleAsync(DeleteAssetValuationRequest req, CancellationToken ct) =>
-        await Send.NoContentOrProblemAsync(await netWorthService.DeleteValuationAsync(req, ct), ct);
+        await Send.NoContentOrProblemAsync(await assetService.DeleteValuationAsync(req, ct), ct);
 }

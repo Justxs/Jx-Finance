@@ -6,7 +6,7 @@ using JxFinance.Infrastructure.Auth;
 
 namespace JxFinance.Endpoints.Settings.SendTestEmail;
 
-public sealed class SendTestEmailEndpoint(ISettingsService settingsService)
+public sealed class SendTestEmailEndpoint(ISmtpSettingsService smtpSettings)
     : EndpointWithoutRequest<SmtpTestResponse>
 {
     public override void Configure()
@@ -19,5 +19,5 @@ public sealed class SendTestEmailEndpoint(ISettingsService settingsService)
     }
 
     public override async Task HandleAsync(CancellationToken ct) =>
-        await Send.OkOrProblemAsync(await settingsService.SendTestEmailAsync(ct), ct);
+        await Send.OkOrProblemAsync(await smtpSettings.SendTestEmailAsync(ct), ct);
 }

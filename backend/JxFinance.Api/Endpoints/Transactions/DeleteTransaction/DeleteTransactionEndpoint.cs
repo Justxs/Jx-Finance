@@ -5,7 +5,7 @@ using JxFinance.Endpoints.Transactions.Interfaces;
 
 namespace JxFinance.Endpoints.Transactions.DeleteTransaction;
 
-public sealed class DeleteTransactionEndpoint(ITransactionService transactionService) : DeleteEndpoint
+public sealed class DeleteTransactionEndpoint(ITransactionWriteService transactionService) : DeleteEndpoint
 {
     public override void Configure()
     {

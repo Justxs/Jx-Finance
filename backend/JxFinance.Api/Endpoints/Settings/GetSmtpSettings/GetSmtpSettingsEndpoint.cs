@@ -6,7 +6,7 @@ using JxFinance.Infrastructure.Auth;
 
 namespace JxFinance.Endpoints.Settings.GetSmtpSettings;
 
-public sealed class GetSmtpSettingsEndpoint(ISettingsService settingsService)
+public sealed class GetSmtpSettingsEndpoint(ISmtpSettingsService smtpSettings)
     : EndpointWithoutRequest<SmtpSettingsResponse>
 {
     public override void Configure()
@@ -17,5 +17,5 @@ public sealed class GetSmtpSettingsEndpoint(ISettingsService settingsService)
     }
 
     public override async Task HandleAsync(CancellationToken ct) =>
-        await Send.OkAsync(settingsService.GetSmtp(), ct);
+        await Send.OkAsync(smtpSettings.GetSmtp(), ct);
 }

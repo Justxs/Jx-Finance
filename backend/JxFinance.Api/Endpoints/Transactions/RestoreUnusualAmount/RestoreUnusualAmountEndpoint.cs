@@ -8,7 +8,7 @@ using JxFinance.Endpoints.Transactions.Interfaces;
 
 namespace JxFinance.Endpoints.Transactions.RestoreUnusualAmount;
 
-public sealed class RestoreUnusualAmountEndpoint(ITransactionService transactionService) : DeleteEndpoint
+public sealed class RestoreUnusualAmountEndpoint(ITransactionWriteService transactionService) : DeleteEndpoint
 {
     public override void Configure()
     {

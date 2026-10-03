@@ -5,7 +5,7 @@ using JxFinance.Endpoints.Transactions.Interfaces;
 
 namespace JxFinance.Endpoints.Transactions.KeepPossibleDuplicates;
 
-public sealed class KeepPossibleDuplicatesEndpoint(ITransactionService transactionService) : DeleteEndpoint
+public sealed class KeepPossibleDuplicatesEndpoint(ITransactionWriteService transactionService) : DeleteEndpoint
 {
     public override void Configure()
     {

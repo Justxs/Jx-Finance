@@ -26,7 +26,7 @@ public sealed class TransactionGroupService(
     ICurrentUser currentUser,
     IDeletionRecorder deletions,
     ISharingGuard sharing,
-    ITransactionService transactions) : ITransactionGroupService
+    ITransactionQueryService transactions) : ITransactionGroupService
 {
     private static readonly DomainError GroupNotFound = EntityLookup.NotFound("Transaction group not found.");
 

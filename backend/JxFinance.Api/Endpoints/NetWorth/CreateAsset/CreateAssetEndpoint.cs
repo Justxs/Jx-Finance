@@ -5,7 +5,7 @@ using JxFinance.Endpoints.NetWorth.Shared;
 
 namespace JxFinance.Endpoints.NetWorth.CreateAsset;
 
-public sealed class CreateAssetEndpoint(INetWorthService netWorthService) : Endpoint<CreateAssetRequest, AssetResponse>
+public sealed class CreateAssetEndpoint(IAssetService assetService) : Endpoint<CreateAssetRequest, AssetResponse>
 {
     public override void Configure()
     {
@@ -15,5 +15,5 @@ public sealed class CreateAssetEndpoint(INetWorthService netWorthService) : Endp
     }
 
     public override async Task HandleAsync(CreateAssetRequest req, CancellationToken ct) =>
-        await Send.CreatedOrProblemAsync(await netWorthService.CreateAssetAsync(req, ct), asset => asset.Id, ct);
+        await Send.CreatedOrProblemAsync(await assetService.CreateAssetAsync(req, ct), asset => asset.Id, ct);
 }

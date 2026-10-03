@@ -6,7 +6,7 @@ using JxFinance.Infrastructure.Auth;
 
 namespace JxFinance.Endpoints.Settings.GetDiscordSettings;
 
-public sealed class GetDiscordSettingsEndpoint(ISettingsService settingsService)
+public sealed class GetDiscordSettingsEndpoint(IDiscordSettingsService discordSettings)
     : EndpointWithoutRequest<DiscordSettingsResponse>
 {
     public override void Configure()
@@ -17,5 +17,5 @@ public sealed class GetDiscordSettingsEndpoint(ISettingsService settingsService)
     }
 
     public override async Task HandleAsync(CancellationToken ct) =>
-        await Send.OkAsync(await settingsService.GetDiscordAsync(ct), ct);
+        await Send.OkAsync(await discordSettings.GetDiscordAsync(ct), ct);
 }

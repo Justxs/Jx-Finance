@@ -5,7 +5,7 @@ using JxFinance.Endpoints.Transactions.Shared;
 
 namespace JxFinance.Endpoints.Transactions.CreateTransaction;
 
-public sealed class CreateTransactionEndpoint(ITransactionService transactionService)
+public sealed class CreateTransactionEndpoint(ITransactionWriteService transactionService)
     : Endpoint<CreateTransactionRequest, TransactionResponse>
 {
     public override void Configure()

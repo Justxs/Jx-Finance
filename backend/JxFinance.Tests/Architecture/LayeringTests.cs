@@ -53,6 +53,35 @@ public class LayeringTests
     }
 
     [Fact]
+    public void Common_does_not_depend_on_endpoints()
+    {
+        var result = Types.InAssembly(ApiAssembly)
+            .That().ResideInNamespace("JxFinance.Common")
+            .ShouldNot().HaveDependencyOnAny("JxFinance.Endpoints")
+            .GetResult();
+
+        Assert.True(result.IsSuccessful, FailureMessage(result));
+    }
+
+    [Fact]
+    public void A_tag_reaches_another_tag_only_through_its_interfaces_and_shared_types()
+    {
+        var tags = EndpointTags();
+        Assert.Contains("Transactions", tags);
+
+        var failing = tags
+            .SelectMany(tag => Types.InAssembly(ApiAssembly)
+                .That().ResideInNamespaceMatching($@"^JxFinance\.Endpoints\.{tag}(\..+)?$")
+                .ShouldNot().HaveDependencyOnAny([.. tags.Where(other => other != tag).Select(other => $"JxFinance.Endpoints.{other}.Services")])
+                .GetResult()
+                .FailingTypes ?? [])
+            .Select(type => type.FullName)
+            .ToList();
+
+        Assert.True(failing.Count == 0, $"Reach into another tag's Services in: {string.Join(", ", failing)}");
+    }
+
+    [Fact]
     public void Endpoints_validators_and_services_are_sealed()
     {
         var result = Types.InAssembly(ApiAssembly)
@@ -88,6 +117,15 @@ public class LayeringTests
 
         Assert.True(result.IsSuccessful, FailureMessage(result));
     }
+
+    private static List<string> EndpointTags() =>
+        ApiAssembly.GetTypes()
+            .Select(type => type.Namespace?.Split('.'))
+            .Where(parts => parts is ["JxFinance", "Endpoints", _, ..])
+            .Select(parts => parts![2])
+            .Distinct()
+            .Order(StringComparer.Ordinal)
+            .ToList();
 
     private static IEnumerable<Type> BaseTypes(Type type)
     {

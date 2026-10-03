@@ -2,7 +2,7 @@
 
 Back to the [feature walkthrough](README.md). See also [decisions](../decisions/net-worth.md).
 
-Backend `NetWorth` (net worth, assets, debts), page `/net-worth`. Assets and debts are personal unless shared with a household, which they can be since 2026-09-30; a shared one counts in full in the net worth of every member who can see it, as a shared account does (see [Shared assets and debts](households-and-sharing.md#shared-assets-and-debts)). Each takes the reporting currency of the day it is created, keeps it through later edits and answers it as `currency`.
+Backend `NetWorth` (`NetWorthService` for the totals and the history, `AssetService` for assets and their valuations, `DebtService` for debts, their balance entries, schedule and payments, each behind its own interface), page `/net-worth`. Assets and debts are personal unless shared with a household, which they can be since 2026-09-30; a shared one counts in full in the net worth of every member who can see it, as a shared account does (see [Shared assets and debts](households-and-sharing.md#shared-assets-and-debts)). Each takes the reporting currency of the day it is created, keeps it through later edits and answers it as `currency`.
 
 ```mermaid
 flowchart TD

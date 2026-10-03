@@ -4,7 +4,7 @@ using JxFinance.Endpoints.Transactions.Interfaces;
 
 namespace JxFinance.Endpoints.Transactions.BulkTagTransactions;
 
-public sealed class BulkTagTransactionsEndpoint(ITransactionService transactionService)
+public sealed class BulkTagTransactionsEndpoint(ITransactionWriteService transactionService)
     : Endpoint<BulkTagTransactionsRequest, BulkTagTransactionsResponse>
 {
     public override void Configure()

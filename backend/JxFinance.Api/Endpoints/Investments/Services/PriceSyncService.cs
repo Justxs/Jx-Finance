@@ -2,6 +2,7 @@ using FastEndpoints;
 using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Common.Holdings;
+using JxFinance.Common.MarketPrices;
 using JxFinance.Common.Settings;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Investments;
@@ -27,8 +28,6 @@ public sealed class PriceSyncService(
     IOptions<AppOptions> options,
     ILogger<PriceSyncService> logger) : IPriceSyncService
 {
-    public const string KeyPurpose = "JxFinance.MarketPrices.EodhdKey";
-
     private static readonly DomainError KeyUnreadable = new(
         ErrorCodes.MarketPricesKeyUnreadable,
         "The saved EODHD key can no longer be read on this installation. Enter it again.");
@@ -159,7 +158,7 @@ public sealed class PriceSyncService(
             return MarketPriceErrors.KeyRequired;
         }
 
-        if (protection.TryUnprotect(KeyPurpose, settings.EodhdProtectedKey) is not { } key)
+        if (protection.TryUnprotect(PriceSyncRules.KeyPurpose, settings.EodhdProtectedKey) is not { } key)
         {
             return KeyUnreadable;
         }

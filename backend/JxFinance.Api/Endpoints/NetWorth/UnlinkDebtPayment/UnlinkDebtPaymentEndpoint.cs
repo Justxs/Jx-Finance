@@ -4,7 +4,7 @@ using JxFinance.Endpoints.NetWorth.Interfaces;
 
 namespace JxFinance.Endpoints.NetWorth.UnlinkDebtPayment;
 
-public sealed class UnlinkDebtPaymentEndpoint(INetWorthService netWorthService) : Endpoint<UnlinkDebtPaymentRequest>
+public sealed class UnlinkDebtPaymentEndpoint(IDebtService debtService) : Endpoint<UnlinkDebtPaymentRequest>
 {
     public override void Configure()
     {
@@ -14,5 +14,5 @@ public sealed class UnlinkDebtPaymentEndpoint(INetWorthService netWorthService) 
     }
 
     public override async Task HandleAsync(UnlinkDebtPaymentRequest req, CancellationToken ct) =>
-        await Send.NoContentOrProblemAsync(await netWorthService.UnlinkDebtPaymentAsync(req, ct), ct);
+        await Send.NoContentOrProblemAsync(await debtService.UnlinkDebtPaymentAsync(req, ct), ct);
 }

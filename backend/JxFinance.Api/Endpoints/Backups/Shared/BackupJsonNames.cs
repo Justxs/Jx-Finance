@@ -1,4 +1,4 @@
-namespace JxFinance.Endpoints.Backups.Services;
+namespace JxFinance.Endpoints.Backups.Shared;
 
 public static class BackupJsonNames
 {

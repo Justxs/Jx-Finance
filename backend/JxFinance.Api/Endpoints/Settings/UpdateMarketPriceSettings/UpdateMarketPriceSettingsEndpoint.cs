@@ -6,7 +6,7 @@ using JxFinance.Infrastructure.Auth;
 
 namespace JxFinance.Endpoints.Settings.UpdateMarketPriceSettings;
 
-public sealed class UpdateMarketPriceSettingsEndpoint(ISettingsService settingsService)
+public sealed class UpdateMarketPriceSettingsEndpoint(IMarketPriceSettingsService marketPriceSettings)
     : Endpoint<UpdateMarketPriceSettingsRequest, MarketPriceSettingsResponse>
 {
     public override void Configure()
@@ -17,5 +17,5 @@ public sealed class UpdateMarketPriceSettingsEndpoint(ISettingsService settingsS
     }
 
     public override async Task HandleAsync(UpdateMarketPriceSettingsRequest req, CancellationToken ct) =>
-        await Send.OkAsync(await settingsService.UpdateMarketPricesAsync(req, ct), ct);
+        await Send.OkAsync(await marketPriceSettings.UpdateMarketPricesAsync(req, ct), ct);
 }

@@ -4,7 +4,6 @@ using FastEndpoints;
 using JxFinance.Common.Errors;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Transactions;
-using JxFinance.Endpoints.Backups.Services;
 using JxFinance.Endpoints.Backups.Shared;
 using JxFinance.Endpoints.Users.ImportMyData;
 using JxFinance.Endpoints.Users.Interfaces;

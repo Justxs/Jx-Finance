@@ -7,7 +7,7 @@ using JxFinance.Endpoints.Transactions.Interfaces;
 
 namespace JxFinance.Endpoints.Transactions.DismissUnusualAmount;
 
-public sealed class DismissUnusualAmountEndpoint(ITransactionService transactionService) : DeleteEndpoint
+public sealed class DismissUnusualAmountEndpoint(ITransactionWriteService transactionService) : DeleteEndpoint
 {
     public const string Route = ApiRoutes.Transactions + "/{id}/unusual/dismiss";
 

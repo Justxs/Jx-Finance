@@ -5,7 +5,7 @@ using JxFinance.Infrastructure.Auth;
 
 namespace JxFinance.Endpoints.Settings.SendTestDiscord;
 
-public sealed class SendTestDiscordEndpoint(ISettingsService settingsService) : EndpointWithoutRequest
+public sealed class SendTestDiscordEndpoint(IDiscordSettingsService discordSettings) : EndpointWithoutRequest
 {
     public override void Configure()
     {
@@ -17,5 +17,5 @@ public sealed class SendTestDiscordEndpoint(ISettingsService settingsService) : 
     }
 
     public override async Task HandleAsync(CancellationToken ct) =>
-        await Send.NoContentOrProblemAsync(await settingsService.SendTestDiscordAsync(ct), ct);
+        await Send.NoContentOrProblemAsync(await discordSettings.SendTestDiscordAsync(ct), ct);
 }

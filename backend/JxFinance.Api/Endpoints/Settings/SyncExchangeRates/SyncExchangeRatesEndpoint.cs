@@ -6,7 +6,7 @@ using JxFinance.Infrastructure.Auth;
 
 namespace JxFinance.Endpoints.Settings.SyncExchangeRates;
 
-public sealed class SyncExchangeRatesEndpoint(ISettingsService settingsService)
+public sealed class SyncExchangeRatesEndpoint(IExchangeRateSyncService exchangeRateSync)
     : EndpointWithoutRequest<ExchangeRateSyncResponse>
 {
     public override void Configure()
@@ -17,5 +17,5 @@ public sealed class SyncExchangeRatesEndpoint(ISettingsService settingsService)
     }
 
     public override async Task HandleAsync(CancellationToken ct) =>
-        await Send.OkAsync(await settingsService.SyncExchangeRatesAsync(ct), ct);
+        await Send.OkAsync(await exchangeRateSync.SyncExchangeRatesAsync(ct), ct);
 }

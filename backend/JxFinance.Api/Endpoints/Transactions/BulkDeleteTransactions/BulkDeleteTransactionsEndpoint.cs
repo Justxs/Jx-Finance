@@ -4,7 +4,7 @@ using JxFinance.Endpoints.Transactions.Interfaces;
 
 namespace JxFinance.Endpoints.Transactions.BulkDeleteTransactions;
 
-public sealed class BulkDeleteTransactionsEndpoint(ITransactionService transactionService)
+public sealed class BulkDeleteTransactionsEndpoint(ITransactionWriteService transactionService)
     : Endpoint<BulkDeleteTransactionsRequest, BulkDeleteTransactionsResponse>
 {
     public override void Configure()

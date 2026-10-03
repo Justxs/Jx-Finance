@@ -5,7 +5,7 @@ using JxFinance.Endpoints.NetWorth.Shared;
 
 namespace JxFinance.Endpoints.NetWorth.CreateDebt;
 
-public sealed class CreateDebtEndpoint(INetWorthService netWorthService) : Endpoint<CreateDebtRequest, DebtResponse>
+public sealed class CreateDebtEndpoint(IDebtService debtService) : Endpoint<CreateDebtRequest, DebtResponse>
 {
     public override void Configure()
     {
@@ -15,5 +15,5 @@ public sealed class CreateDebtEndpoint(INetWorthService netWorthService) : Endpo
     }
 
     public override async Task HandleAsync(CreateDebtRequest req, CancellationToken ct) =>
-        await Send.CreatedOrProblemAsync(await netWorthService.CreateDebtAsync(req, ct), debt => debt.Id, ct);
+        await Send.CreatedOrProblemAsync(await debtService.CreateDebtAsync(req, ct), debt => debt.Id, ct);
 }

@@ -32,7 +32,7 @@ public sealed class MonthCloseService(
     IClock clock,
     IInstanceSettingsStore settings,
     IReportService reports,
-    ITransactionService transactions,
+    ITransactionQueryService transactions,
     IBudgetService budgetService,
     INetWorthService netWorth,
     IInvestmentCashFlowService investmentCashFlows,

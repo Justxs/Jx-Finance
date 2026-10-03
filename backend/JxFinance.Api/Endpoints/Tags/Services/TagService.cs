@@ -110,7 +110,7 @@ public sealed class TagService(
         var now = clock.UtcNow;
         await db.TransactionTags.Where(t => t.TagId == tagId).ExecuteDeleteAsync(cancellationToken);
         await db.Budgets.IgnoreQueryFilters(QueryFilters.OwnerOnly).Where(b => b.TagId == tagId)
-            .ExecuteUpdateAsync(s => s.SetProperty(b => b.IsDeleted, true).SetProperty(b => b.UpdatedAt, now), cancellationToken);
+            .SoftDeleteAsync(now, cancellationToken);
         db.Tags.Remove(tag);
         await db.SaveChangesAsync(cancellationToken);
 

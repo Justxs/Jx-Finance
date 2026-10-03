@@ -4,7 +4,7 @@ using JxFinance.Endpoints.Transactions.Interfaces;
 
 namespace JxFinance.Endpoints.Transactions.BulkMoveTransactions;
 
-public sealed class BulkMoveTransactionsEndpoint(ITransactionService transactionService)
+public sealed class BulkMoveTransactionsEndpoint(ITransactionWriteService transactionService)
     : Endpoint<BulkMoveTransactionsRequest, BulkMoveTransactionsResponse>
 {
     public override void Configure()

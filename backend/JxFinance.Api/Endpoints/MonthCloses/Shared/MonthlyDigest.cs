@@ -1,9 +1,8 @@
 using System.Globalization;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Notifications;
-using JxFinance.Endpoints.MonthCloses.Shared;
 
-namespace JxFinance.Common.Notifications;
+namespace JxFinance.Endpoints.MonthCloses.Shared;
 
 public static class MonthlyDigest
 {

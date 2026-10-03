@@ -6,6 +6,7 @@ using JxFinance.Domain.Households;
 using JxFinance.Domain.Notifications;
 using JxFinance.Domain.Settings;
 using JxFinance.Endpoints.MonthCloses.Interfaces;
+using JxFinance.Endpoints.MonthCloses.Shared;
 using JxFinance.Infrastructure.Auth;
 using JxFinance.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;

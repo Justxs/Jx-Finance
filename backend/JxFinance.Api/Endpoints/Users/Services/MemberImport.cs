@@ -1,7 +1,6 @@
 using JxFinance.Common.Errors;
 using JxFinance.Domain.Investments;
 using JxFinance.Endpoints.Backups.Interfaces;
-using JxFinance.Endpoints.Backups.Services;
 using JxFinance.Endpoints.Backups.Shared;
 using JxFinance.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;

@@ -53,7 +53,7 @@ Split lines do not carry tags. A split exists to divide one payment between cate
 ```mermaid
 flowchart TD
     Url["tagIds=a,b in the search params"] --> Parse["TagFilter.Parse: up to ten ids"]
-    Parse --> Loop["one EXISTS per tag inside TransactionService.Filtered"]
+    Parse --> Loop["one EXISTS per tag inside TransactionQueryService.Filtered"]
     Loop --> Sql["WHERE EXISTS (SELECT 1 FROM TransactionTags<br/>WHERE TransactionId = t.Id AND TagId = @tag)"]
     Sql --> Index["index (TagId, TransactionId)"]
     Index --> Page["the existing paged query, sort and count"]

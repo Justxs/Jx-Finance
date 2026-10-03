@@ -1,8 +1,7 @@
 using System.Text.Json;
 using JxFinance.Endpoints.Backups.Interfaces;
-using JxFinance.Endpoints.Backups.Shared;
 
-namespace JxFinance.Endpoints.Backups.Services;
+namespace JxFinance.Endpoints.Backups.Shared;
 
 public sealed class BackupReader(IBackupVisitor visitor)
 {

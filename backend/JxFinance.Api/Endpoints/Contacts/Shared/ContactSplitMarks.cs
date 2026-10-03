@@ -1,10 +1,9 @@
 using JxFinance.Domain.Contacts;
 using JxFinance.Domain.Transactions;
-using JxFinance.Endpoints.Contacts.Shared;
 using JxFinance.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
-namespace JxFinance.Endpoints.Contacts.Services;
+namespace JxFinance.Endpoints.Contacts.Shared;
 
 public static class ContactSplitMarks
 {

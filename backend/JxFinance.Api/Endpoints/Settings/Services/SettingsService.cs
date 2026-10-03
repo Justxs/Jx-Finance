@@ -1,28 +1,17 @@
 using FastEndpoints;
 using JxFinance.Common;
-using JxFinance.Common.Discord;
-using JxFinance.Common.Email;
 using JxFinance.Common.Errors;
 using JxFinance.Common.ExchangeRates;
-using JxFinance.Common.Notifications;
 using JxFinance.Common.Receipts;
 using JxFinance.Common.Settings;
 using JxFinance.Domain.Accounts;
 using JxFinance.Domain.Common;
-using JxFinance.Domain.Investments;
-using JxFinance.Domain.Settings;
-using JxFinance.Endpoints.Auth.Interfaces;
-using JxFinance.Endpoints.Investments.Services;
 using JxFinance.Endpoints.Settings.Interfaces;
 using JxFinance.Endpoints.Settings.Shared;
-using JxFinance.Endpoints.Settings.UpdateDiscordSettings;
-using JxFinance.Endpoints.Settings.UpdateMarketPriceSettings;
 using JxFinance.Endpoints.Settings.UpdateSettings;
-using JxFinance.Endpoints.Settings.UpdateSmtpSettings;
 using JxFinance.Infrastructure.Auth;
 using JxFinance.Infrastructure.Configuration;
 using JxFinance.Infrastructure.Data;
-using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
@@ -34,11 +23,7 @@ public sealed class SettingsService(
     IInstanceSettingsStore store,
     IExchangeRateService rates,
     IReportingRevaluation revaluation,
-    IEmailDelivery emails,
-    IAuthService authService,
-    IDataProtectionProvider protection,
     IReceiptReader receipts,
-    IDiscordWebhookClient discord,
     IClock clock,
     IOptions<AppOptions> options) : ISettingsService
 {
@@ -71,7 +56,9 @@ public sealed class SettingsService(
             }
         }
 
-        var failed = await UpdateStoredAsync(
+        var failed = await StoredSettings.UpdateAsync(
+            db,
+            store,
             async settings =>
             {
                 if (settings.ReportingCurrency != request.ReportingCurrency
@@ -106,203 +93,6 @@ public sealed class SettingsService(
         }
 
         return await GetAsync(cancellationToken);
-    }
-
-    public SmtpSettingsResponse GetSmtp() => ToResponse(store.Current.Smtp);
-
-    public async Task<Result<SmtpSettingsResponse>> UpdateSmtpAsync(
-        UpdateSmtpSettingsRequest request,
-        CancellationToken cancellationToken) =>
-        await UpdateStoredAsync(settings => Task.FromResult(ApplySmtp(request, settings)), cancellationToken) is { } error
-            ? error
-            : ToResponse(store.Current.Smtp);
-
-    private DomainError? ApplySmtp(UpdateSmtpSettingsRequest request, InstanceSettings settings)
-    {
-        var userName = OptionalText.Normalize(request.UserName);
-        var host = OptionalText.Normalize(request.Host);
-        var password = OptionalText.Normalize(request.Password);
-        if (userName is not null
-            && password is null
-            && settings.SmtpProtectedPassword.Length > 0
-            && (!SameText(host, settings.SmtpHost, StringComparison.OrdinalIgnoreCase)
-                || !SameText(userName, settings.SmtpUserName, StringComparison.Ordinal)))
-        {
-            return new DomainError(
-                ErrorCodes.EmailPasswordRequired,
-                "Enter the password again: the stored one is only kept for the same mail server and user name.");
-        }
-
-        settings.SmtpEnabled = request.Enabled;
-        settings.SmtpHost = host;
-        settings.SmtpPort = request.Port;
-        settings.SmtpEncryption = request.Encryption;
-        settings.SmtpUserName = userName;
-        settings.SmtpFromAddress = OptionalText.Normalize(request.FromAddress);
-        settings.SmtpFromName = OptionalText.Normalize(request.FromName);
-
-        if (userName is null)
-        {
-            settings.SmtpProtectedPassword = string.Empty;
-        }
-        else if (password is not null)
-        {
-            settings.SmtpProtectedPassword = protection.Protect(EmailDelivery.ProtectorPurpose, password);
-        }
-
-        return null;
-    }
-
-    public async Task<Result<SmtpTestResponse>> SendTestEmailAsync(CancellationToken cancellationToken)
-    {
-        if (await authService.CurrentAsync(cancellationToken) is not { Email: { } address } administrator)
-        {
-            return EntityLookup.NotFound("User not found.");
-        }
-
-        var settings = store.Current;
-        var sent = await emails.SendAsync(
-            EmailTexts.Test(
-                administrator.Language ?? settings.DefaultLanguage,
-                address,
-                administrator.DisplayName,
-                EmailTexts.Product(settings.InstanceName)),
-            cancellationToken);
-
-        return sent.IsSuccess ? new SmtpTestResponse(address) : sent.Error;
-    }
-
-    public async Task<MarketPriceSettingsResponse> GetMarketPricesAsync(CancellationToken cancellationToken)
-    {
-        var settings = await db.InstanceSettings.AsNoTracking().FirstOrDefaultAsync(s => s.Id == InstanceSettings.SingletonId, cancellationToken)
-            ?? store.Defaults();
-        var failures = await db.Securities
-            .AsNoTracking()
-            .Where(s => s.PriceSource != PriceSource.None && s.PriceSyncError != null && s.PriceSyncedAt != null)
-            .OrderBy(s => s.Symbol)
-            .Select(s => new { s.Id, s.Symbol, s.Name, s.PriceSyncError, s.PriceSyncedAt })
-            .ToListAsync(cancellationToken);
-        return new MarketPriceSettingsResponse(
-            settings.PriceSyncEnabled,
-            settings.EodhdProtectedKey.Length > 0,
-            settings.PriceSyncRunAt,
-            PriceSyncRules.CallsLeft(settings, clock.Today, options.Value.MarketPrices.EodhdDailyLimit),
-            [.. failures.Select(f => new PriceSyncFailure(f.Id.Value, f.Symbol, f.Name, f.PriceSyncError!, f.PriceSyncedAt!.Value))]);
-    }
-
-    public async Task<MarketPriceSettingsResponse> UpdateMarketPricesAsync(
-        UpdateMarketPriceSettingsRequest request,
-        CancellationToken cancellationToken)
-    {
-        await UpdateStoredAsync(
-            settings =>
-            {
-                settings.PriceSyncEnabled = request.Enabled;
-                if (request.EodhdApiKey is { } key)
-                {
-                    settings.EodhdProtectedKey = key.Trim().Length == 0
-                        ? string.Empty
-                        : protection.Protect(PriceSyncService.KeyPurpose, key.Trim());
-                }
-
-                return Task.FromResult<DomainError?>(null);
-            },
-            cancellationToken);
-        return await GetMarketPricesAsync(cancellationToken);
-    }
-
-    public async Task<DiscordSettingsResponse> GetDiscordAsync(CancellationToken cancellationToken)
-    {
-        var settings = await db.InstanceSettings.AsNoTracking().FirstOrDefaultAsync(s => s.Id == InstanceSettings.SingletonId, cancellationToken)
-            ?? store.Defaults();
-        var hasWebhook = settings.DiscordProtectedUrl.Length > 0;
-        return new DiscordSettingsResponse(
-            settings.DiscordEnabled,
-            hasWebhook,
-            settings.DiscordLastDeliveredAt,
-            settings.DiscordLastError,
-            settings.DiscordDisabledByDiscordAt is not null,
-            hasWebhook && DiscordWebhookSecret.Read(protection, settings.DiscordProtectedUrl).IsFailure);
-    }
-
-    public async Task<Result<DiscordSettingsResponse>> UpdateDiscordAsync(
-        UpdateDiscordSettingsRequest request,
-        CancellationToken cancellationToken)
-    {
-        var url = OptionalText.Normalize(request.WebhookUrl);
-        var failed = await UpdateStoredAsync(
-            settings =>
-            {
-                if (request.Enabled && url is null && settings.DiscordProtectedUrl.Length == 0)
-                {
-                    return Task.FromResult<DomainError?>(new DomainError(
-                        ErrorCodes.DiscordInvalidWebhook,
-                        "Paste the webhook URL Discord gave you; it starts with https://discord.com/api/webhooks/."));
-                }
-
-                if (url is not null)
-                {
-                    settings.DiscordProtectedUrl = DiscordWebhookSecret.Protect(protection, url);
-                    settings.DiscordDisabledByDiscordAt = null;
-                    settings.DiscordLastError = null;
-                }
-
-                settings.DiscordEnabled = request.Enabled;
-                return Task.FromResult<DomainError?>(null);
-            },
-            cancellationToken);
-        return failed is null ? await GetDiscordAsync(cancellationToken) : failed;
-    }
-
-    public async Task<Result> SendTestDiscordAsync(CancellationToken cancellationToken)
-    {
-        var stored = await db.InstanceSettings.FirstOrDefaultAsync(s => s.Id == InstanceSettings.SingletonId, cancellationToken);
-        if (stored is not { DiscordProtectedUrl.Length: > 0 })
-        {
-            return EntityLookup.NotFound("No Discord webhook is saved.");
-        }
-
-        var target = DiscordWebhookSecret.Read(protection, stored.DiscordProtectedUrl);
-        if (!target.TryGetValue(out var destination))
-        {
-            return target.Error;
-        }
-
-        var settings = store.Current;
-        var product = EmailTexts.Product(settings.InstanceName);
-        var language = (await authService.CurrentAsync(cancellationToken))?.Language ?? settings.DefaultLanguage;
-        var sent = await discord.SendAsync(
-            destination,
-            new DiscordPost(NotificationTexts.DiscordTest(language, product), DiscordText.Username(product)),
-            cancellationToken);
-
-        stored.RecordDiscordSend(clock.UtcNow, sent.Error?.Message, sent.Error?.Code == ErrorCodes.DiscordWebhookGone);
-        await db.SaveChangesAsync(cancellationToken);
-        return sent.IsSuccess ? Result.Success() : sent.Error!;
-    }
-
-    private async Task<DomainError?> UpdateStoredAsync(
-        Func<InstanceSettings, Task<DomainError?>> change,
-        CancellationToken cancellationToken)
-    {
-        await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
-        var settings = await LoadOrCreateAsync(cancellationToken);
-        if (await change(settings) is { } error)
-        {
-            return error;
-        }
-
-        await db.SaveChangesAsync(cancellationToken);
-        await transaction.CommitAsync(cancellationToken);
-        store.Set(settings);
-        return null;
-    }
-
-    public async Task<ExchangeRateSyncResponse> SyncExchangeRatesAsync(CancellationToken cancellationToken)
-    {
-        var added = await rates.SyncAsync(force: true, cancellationToken);
-        var latest = await rates.GetLatestAsync(cancellationToken);
-        return new ExchangeRateSyncResponse(added, latest.AsOf);
     }
 
     private async Task<string?> RevalueAsync(Currency previousCurrency, Currency reportingCurrency, CancellationToken cancellationToken)
@@ -375,28 +165,4 @@ public sealed class SettingsService(
         settings.SupportLinkEnabled,
         settings.Features.ReceiptReading && receipts.IsAvailable);
 
-    private async Task<InstanceSettings> LoadOrCreateAsync(CancellationToken cancellationToken)
-    {
-        if (await db.InstanceSettings.FirstOrDefaultAsync(s => s.Id == InstanceSettings.SingletonId, cancellationToken) is { } stored)
-        {
-            return stored;
-        }
-
-        var created = store.Defaults();
-        db.InstanceSettings.Add(created);
-        return created;
-    }
-
-    private static bool SameText(string? requested, string? stored, StringComparison comparison) =>
-        string.Equals(requested, OptionalText.Normalize(stored), comparison);
-
-    private static SmtpSettingsResponse ToResponse(SmtpSettingsSnapshot smtp) => new(
-        smtp.Enabled,
-        smtp.Host,
-        smtp.Port,
-        smtp.Encryption,
-        smtp.UserName,
-        smtp.HasPassword,
-        smtp.FromAddress,
-        smtp.FromName);
 }

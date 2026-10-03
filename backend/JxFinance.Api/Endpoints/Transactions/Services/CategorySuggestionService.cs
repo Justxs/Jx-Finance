@@ -18,7 +18,7 @@ namespace JxFinance.Endpoints.Transactions.Services;
 public sealed class CategorySuggestionService(
     ICategorizationRuleService rules,
     ILearnedCategoryService learned,
-    ITransactionService transactions,
+    ITransactionQueryService transactions,
     IReferenceGuard references,
     IInstanceSettingsStore settings) : ICategorySuggestionService
 {

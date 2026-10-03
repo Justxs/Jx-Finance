@@ -5,7 +5,7 @@ using JxFinance.Endpoints.NetWorth.Shared;
 
 namespace JxFinance.Endpoints.NetWorth.LinkDebtPayment;
 
-public sealed class LinkDebtPaymentEndpoint(INetWorthService netWorthService)
+public sealed class LinkDebtPaymentEndpoint(IDebtService debtService)
     : Endpoint<LinkDebtPaymentRequest, DebtResponse>
 {
     public override void Configure()
@@ -16,5 +16,5 @@ public sealed class LinkDebtPaymentEndpoint(INetWorthService netWorthService)
     }
 
     public override async Task HandleAsync(LinkDebtPaymentRequest req, CancellationToken ct) =>
-        await Send.OkOrProblemAsync(await netWorthService.LinkDebtPaymentAsync(req, ct), ct);
+        await Send.OkOrProblemAsync(await debtService.LinkDebtPaymentAsync(req, ct), ct);
 }

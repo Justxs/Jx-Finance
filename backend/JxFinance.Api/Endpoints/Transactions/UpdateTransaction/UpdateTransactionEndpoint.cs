@@ -5,7 +5,7 @@ using JxFinance.Endpoints.Transactions.Shared;
 
 namespace JxFinance.Endpoints.Transactions.UpdateTransaction;
 
-public sealed class UpdateTransactionEndpoint(ITransactionService transactionService)
+public sealed class UpdateTransactionEndpoint(ITransactionWriteService transactionService)
     : Endpoint<UpdateTransactionRequest, TransactionResponse>
 {
     public override void Configure()

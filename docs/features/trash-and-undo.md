@@ -33,7 +33,7 @@ The first question is not how to restore but which deletes are reversible at all
 | Security price, broker connection, backup | hard delete, or a file | no | nothing is kept to restore |
 | Notification, session, outbox message | never deleted by a user, or deleted on purpose | n/a | there is nothing a person asked to undo; an expired or revoked session is swept by `RetentionJob` (see [Background jobs](background-jobs.md)) |
 
-Two deletes changed to make the first row of that table true. `TransactionService.DeleteAsync` no longer removes the split lines, and `ConversionService.DeleteAsync` no longer removes the lines of a split fee. Editing a split still replaces its lines, which is where that rule belongs: an edit has a new set of lines to put in their place, a delete does not. The cost is a handful of orphaned line rows per deleted split transaction, which is the same cost the soft-deleted transaction itself already had, and nothing reads them — `ICategoryAttributionService` selects lines only for transactions its own filtered query returned.
+Two deletes changed to make the first row of that table true. `TransactionWriteService.DeleteAsync` no longer removes the split lines, and `ConversionService.DeleteAsync` no longer removes the lines of a split fee. Editing a split still replaces its lines, which is where that rule belongs: an edit has a new set of lines to put in their place, a delete does not. The cost is a handful of orphaned line rows per deleted split transaction, which is the same cost the soft-deleted transaction itself already had, and nothing reads them — `ICategoryAttributionService` selects lines only for transactions its own filtered query returned.
 
 ## The model
 

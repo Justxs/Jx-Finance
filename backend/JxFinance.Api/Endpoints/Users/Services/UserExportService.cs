@@ -12,7 +12,7 @@ using JxFinance.Domain.Accounts;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Transactions;
 using JxFinance.Domain.Transfers;
-using JxFinance.Endpoints.Backups.Services;
+using JxFinance.Endpoints.Backups.Shared;
 using JxFinance.Endpoints.Transactions.ExportTransactions;
 using JxFinance.Endpoints.Transactions.Mappers;
 using JxFinance.Endpoints.Transactions.Shared;

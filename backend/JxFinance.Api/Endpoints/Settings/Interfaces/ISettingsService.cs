@@ -1,9 +1,6 @@
 using JxFinance.Domain.Common;
 using JxFinance.Endpoints.Settings.Shared;
-using JxFinance.Endpoints.Settings.UpdateDiscordSettings;
-using JxFinance.Endpoints.Settings.UpdateMarketPriceSettings;
 using JxFinance.Endpoints.Settings.UpdateSettings;
-using JxFinance.Endpoints.Settings.UpdateSmtpSettings;
 
 namespace JxFinance.Endpoints.Settings.Interfaces;
 
@@ -13,29 +10,5 @@ public interface ISettingsService
 
     PublicSettingsResponse GetPublic();
 
-    SmtpSettingsResponse GetSmtp();
-
-    Task<Result<SmtpSettingsResponse>> UpdateSmtpAsync(
-        UpdateSmtpSettingsRequest request,
-        CancellationToken cancellationToken);
-
-    Task<Result<SmtpTestResponse>> SendTestEmailAsync(CancellationToken cancellationToken);
-
-    Task<MarketPriceSettingsResponse> GetMarketPricesAsync(CancellationToken cancellationToken);
-
-    Task<MarketPriceSettingsResponse> UpdateMarketPricesAsync(
-        UpdateMarketPriceSettingsRequest request,
-        CancellationToken cancellationToken);
-
-    Task<DiscordSettingsResponse> GetDiscordAsync(CancellationToken cancellationToken);
-
-    Task<Result<DiscordSettingsResponse>> UpdateDiscordAsync(
-        UpdateDiscordSettingsRequest request,
-        CancellationToken cancellationToken);
-
-    Task<Result> SendTestDiscordAsync(CancellationToken cancellationToken);
-
     Task<Result<SettingsResponse>> UpdateAsync(UpdateSettingsRequest request, CancellationToken cancellationToken);
-
-    Task<ExchangeRateSyncResponse> SyncExchangeRatesAsync(CancellationToken cancellationToken);
 }

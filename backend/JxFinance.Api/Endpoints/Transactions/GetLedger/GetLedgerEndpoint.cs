@@ -4,7 +4,7 @@ using JxFinance.Endpoints.Transactions.Interfaces;
 
 namespace JxFinance.Endpoints.Transactions.GetLedger;
 
-public sealed class GetLedgerEndpoint(ITransactionService transactionService)
+public sealed class GetLedgerEndpoint(ITransactionQueryService transactionService)
     : Endpoint<GetLedgerRequest, PagedResponse<LedgerItemResponse>>
 {
     public override void Configure()

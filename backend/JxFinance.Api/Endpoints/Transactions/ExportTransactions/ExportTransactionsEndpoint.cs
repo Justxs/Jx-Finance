@@ -8,7 +8,7 @@ using JxFinance.Endpoints.Transactions.Shared;
 namespace JxFinance.Endpoints.Transactions.ExportTransactions;
 
 public sealed class ExportTransactionsEndpoint(
-    ITransactionService transactionService) : Endpoint<GetTransactionsRequest>
+    ITransactionQueryService transactionService) : Endpoint<GetTransactionsRequest>
 {
     public override void Configure()
     {

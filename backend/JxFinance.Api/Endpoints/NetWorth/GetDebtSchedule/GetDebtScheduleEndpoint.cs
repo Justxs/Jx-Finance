@@ -7,7 +7,7 @@ using JxFinance.Endpoints.NetWorth.Shared;
 
 namespace JxFinance.Endpoints.NetWorth.GetDebtSchedule;
 
-public sealed class GetDebtScheduleEndpoint(INetWorthService netWorthService) : Endpoint<GetDebtScheduleRequest, DebtScheduleResponse>
+public sealed class GetDebtScheduleEndpoint(IDebtService debtService) : Endpoint<GetDebtScheduleRequest, DebtScheduleResponse>
 {
     public override void Configure()
     {
@@ -22,6 +22,6 @@ public sealed class GetDebtScheduleEndpoint(INetWorthService netWorthService) : 
             DecimalRules.ParseMoneyText(req.ExtraMonthly) ?? 0,
             DecimalRules.ParseMoneyText(req.LumpSum) ?? 0,
             req.LumpSumDate);
-        await Send.OkOrProblemAsync(await netWorthService.GetDebtScheduleAsync(req.Id, extra, ct), ct);
+        await Send.OkOrProblemAsync(await debtService.GetDebtScheduleAsync(req.Id, extra, ct), ct);
     }
 }

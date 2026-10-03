@@ -5,7 +5,7 @@ using JxFinance.Endpoints.Transactions.Shared;
 
 namespace JxFinance.Endpoints.Transactions.GetTransactions;
 
-public sealed class GetTransactionsEndpoint(ITransactionService transactionService)
+public sealed class GetTransactionsEndpoint(ITransactionQueryService transactionService)
     : Endpoint<GetTransactionsRequest, PagedResponse<TransactionResponse>>
 {
     public override void Configure()

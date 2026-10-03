@@ -1,8 +1,7 @@
 using System.IO.Compression;
 using JxFinance.Domain.Transactions;
-using JxFinance.Endpoints.Backups.Shared;
 
-namespace JxFinance.Endpoints.Backups.Services;
+namespace JxFinance.Endpoints.Backups.Shared;
 
 public enum BackupContainer
 {

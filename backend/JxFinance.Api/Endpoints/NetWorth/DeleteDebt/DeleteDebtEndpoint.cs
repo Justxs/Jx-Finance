@@ -5,7 +5,7 @@ using JxFinance.Endpoints.NetWorth.Interfaces;
 
 namespace JxFinance.Endpoints.NetWorth.DeleteDebt;
 
-public sealed class DeleteDebtEndpoint(INetWorthService netWorthService) : DeleteEndpoint
+public sealed class DeleteDebtEndpoint(IDebtService debtService) : DeleteEndpoint
 {
     public override void Configure()
     {
@@ -15,5 +15,5 @@ public sealed class DeleteDebtEndpoint(INetWorthService netWorthService) : Delet
     }
 
     protected override Task<Result<Guid>> DeleteAsync(Guid id, CancellationToken ct) =>
-        netWorthService.DeleteDebtAsync(id, ct);
+        debtService.DeleteDebtAsync(id, ct);
 }

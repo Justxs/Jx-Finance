@@ -5,7 +5,7 @@ using JxFinance.Endpoints.Transactions.Shared;
 
 namespace JxFinance.Endpoints.Transactions.GetTransactionsSummary;
 
-public sealed class GetTransactionsSummaryEndpoint(ITransactionService transactionService)
+public sealed class GetTransactionsSummaryEndpoint(ITransactionQueryService transactionService)
     : Endpoint<GetTransactionsSummaryRequest, TransactionsSummaryResponse>
 {
     public override void Configure()

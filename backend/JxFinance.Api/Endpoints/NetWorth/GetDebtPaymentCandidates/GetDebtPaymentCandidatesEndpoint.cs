@@ -5,7 +5,7 @@ using JxFinance.Endpoints.Transactions.Shared;
 
 namespace JxFinance.Endpoints.NetWorth.GetDebtPaymentCandidates;
 
-public sealed class GetDebtPaymentCandidatesEndpoint(INetWorthService netWorthService)
+public sealed class GetDebtPaymentCandidatesEndpoint(IDebtService debtService)
     : Endpoint<GetDebtPaymentCandidatesRequest, IReadOnlyList<TransactionResponse>>
 {
     public override void Configure()
@@ -16,5 +16,5 @@ public sealed class GetDebtPaymentCandidatesEndpoint(INetWorthService netWorthSe
     }
 
     public override async Task HandleAsync(GetDebtPaymentCandidatesRequest req, CancellationToken ct) =>
-        await Send.OkOrProblemAsync(await netWorthService.GetDebtPaymentCandidatesAsync(req, ct), ct);
+        await Send.OkOrProblemAsync(await debtService.GetDebtPaymentCandidatesAsync(req, ct), ct);
 }
