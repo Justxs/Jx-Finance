@@ -9,8 +9,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace JxFinance.Tests.Integration.Auth;
 
-[Collection<IntegrationCollection>]
-public sealed class IdempotencyKeyTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<PeopleCollection>]
+public sealed class IdempotencyKeyTests(PeopleFixture fixture) : IntegrationTestBase(fixture)
 {
     private const string TransactionsPath = "/api/transactions";
 

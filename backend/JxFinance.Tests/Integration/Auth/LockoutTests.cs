@@ -5,8 +5,8 @@ using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Auth;
 
-[Collection<IntegrationCollection>]
-public sealed class LockoutTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<PeopleCollection>]
+public sealed class LockoutTests(PeopleFixture fixture) : IntegrationTestBase(fixture)
 {
     private const string WrongPassword = "Wrong-Password-123!";
 

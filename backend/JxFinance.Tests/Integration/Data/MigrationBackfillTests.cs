@@ -9,8 +9,8 @@ using Npgsql;
 
 namespace JxFinance.Tests.Integration.Data;
 
-[Collection<IntegrationCollection>]
-public sealed class MigrationBackfillTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<DataCollection>]
+public sealed class MigrationBackfillTests(DataFixture fixture) : IntegrationTestBase(fixture)
 {
     [Fact]
     public async Task The_migration_backfills_one_history_point_per_priced_security()

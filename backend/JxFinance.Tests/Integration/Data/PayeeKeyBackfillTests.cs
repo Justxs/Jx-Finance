@@ -5,8 +5,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace JxFinance.Tests.Integration.Data;
 
-[Collection<IntegrationCollection>]
-public sealed class PayeeKeyBackfillTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<DataCollection>]
+public sealed class PayeeKeyBackfillTests(DataFixture fixture) : IntegrationTestBase(fixture)
 {
     [Fact]
     public async Task Rows_without_a_key_get_one_deleted_rows_included_and_their_UpdatedAt_stays()

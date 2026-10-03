@@ -4,8 +4,8 @@ using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Investments;
 
-[Collection<IntegrationCollection>]
-public sealed class InvestmentEndpointTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<InvestmentsCollection>]
+public sealed class InvestmentEndpointTests(InvestmentsFixture fixture) : IntegrationTestBase(fixture)
 {
     [Fact]
     public async Task Manual_trades_move_cash_and_build_a_fifo_holding()

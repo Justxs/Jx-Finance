@@ -5,8 +5,8 @@ using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Transactions;
 
-[Collection<IntegrationCollection>]
-public sealed class SpreadTransactionTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<LedgerCollection>]
+public sealed class SpreadTransactionTests(LedgerFixture fixture) : IntegrationTestBase(fixture)
 {
     [Fact]
     public async Task A_spread_row_keeps_its_whole_amount_in_the_ledger_summary_the_balance_and_the_forecast()

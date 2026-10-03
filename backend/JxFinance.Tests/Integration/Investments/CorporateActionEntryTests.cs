@@ -4,8 +4,8 @@ using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Investments;
 
-[Collection<IntegrationCollection>]
-public sealed class CorporateActionEntryTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<InvestmentsCollection>]
+public sealed class CorporateActionEntryTests(InvestmentsFixture fixture) : IntegrationTestBase(fixture)
 {
     private const string EntriesUrl = "/api/investments/transactions";
 

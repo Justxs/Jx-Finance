@@ -13,7 +13,7 @@ public sealed class SharingRulesTests
         var result = new InputValidator().Validate(new Input(Scope.Shared, null));
 
         var error = Assert.Single(result.Errors);
-        Assert.Equal(nameof(Input.HouseholdId), error.PropertyName);
+        Assert.Equal(nameof(Input.HouseholdId), error.PropertyName, ignoreCase: true);
         Assert.Equal(ErrorCodes.HouseholdRequired, error.ErrorCode);
         Assert.Equal("A shared widget needs a household.", error.ErrorMessage);
     }

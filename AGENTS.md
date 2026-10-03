@@ -36,7 +36,8 @@ The development machine is Windows with Windows PowerShell 5.1 (`powershell.exe`
 | --- | --- |
 | `just setup`, `just dev` | First checkout; run PostgreSQL, API and Vite together |
 | `just check-fast` | Docs links, backend format and build, frontend types, lint, format and unit tests; no Docker |
-| `just test` | Backend tests; needs Docker |
+| `just test` | Backend tests; needs Docker; about two and a half minutes |
+| `just test-unit`, `just test-class <Name>` | Backend unit and architecture tests without Docker; one backend test class |
 | `just test-stories` | Every story's `play` function plus an axe scan, in jsdom; about three minutes |
 | `just check` | Everything CI runs except end-to-end tests |
 | `just gen` | After an API change: export the contract and regenerate the client, MSW handlers and zod schemas |

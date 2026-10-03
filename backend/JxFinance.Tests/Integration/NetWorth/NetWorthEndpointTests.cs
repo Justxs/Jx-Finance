@@ -6,8 +6,8 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace JxFinance.Tests.Integration.NetWorth;
 
-[Collection<IntegrationCollection>]
-public sealed class NetWorthEndpointTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<NetWorthCollection>]
+public sealed class NetWorthEndpointTests(NetWorthFixture fixture) : IntegrationTestBase(fixture)
 {
     [Fact]
     public async Task Net_worth_combines_accounts_assets_and_debts()

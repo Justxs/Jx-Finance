@@ -8,8 +8,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace JxFinance.Tests.Integration.NetWorth;
 
-[Collection<IntegrationCollection>]
-public sealed class AssetValuationTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<NetWorthCollection>]
+public sealed class AssetValuationTests(NetWorthFixture fixture) : IntegrationTestBase(fixture)
 {
     [Fact]
     public async Task Creating_an_asset_writes_a_valuation_and_a_new_date_adds_another()

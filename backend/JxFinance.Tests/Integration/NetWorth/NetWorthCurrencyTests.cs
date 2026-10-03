@@ -4,8 +4,8 @@ using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.NetWorth;
 
-[Collection<IntegrationCollection>]
-public sealed class NetWorthCurrencyTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<NetWorthCollection>]
+public sealed class NetWorthCurrencyTests(NetWorthFixture fixture) : IntegrationTestBase(fixture)
 {
     [Fact]
     public async Task Assets_and_debts_keep_the_currency_they_were_entered_in_and_net_worth_converts_them()

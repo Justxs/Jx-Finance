@@ -3,8 +3,8 @@ using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.MonthCloses;
 
-[Collection<IntegrationCollection>]
-public sealed class SpreadMonthCloseTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<ReportsCollection>]
+public sealed class SpreadMonthCloseTests(ReportsFixture fixture) : IntegrationTestBase(fixture)
 {
     private const string March = "2025-03";
 

@@ -23,8 +23,8 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace JxFinance.Tests.Integration.Users;
 
-[Collection<IntegrationCollection>]
-public sealed class UserExportTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<PeopleCollection>]
+public sealed class UserExportTests(PeopleFixture fixture) : IntegrationTestBase(fixture)
 {
     private const string ExportUrl = "/api/users/me/export";
 

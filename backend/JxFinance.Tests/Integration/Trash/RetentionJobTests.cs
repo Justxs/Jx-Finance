@@ -9,8 +9,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace JxFinance.Tests.Integration.Trash;
 
-[Collection<IntegrationCollection>]
-public sealed class RetentionJobTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<NetWorthCollection>]
+public sealed class RetentionJobTests(NetWorthFixture fixture) : IntegrationTestBase(fixture)
 {
     private const string Date = "2026-06-05";
 

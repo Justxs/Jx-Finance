@@ -7,8 +7,8 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace JxFinance.Tests.Integration.Trash;
 
-[Collection<IntegrationCollection>]
-public sealed class TrashEndpointTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<NetWorthCollection>]
+public sealed class TrashEndpointTests(NetWorthFixture fixture) : IntegrationTestBase(fixture)
 {
     private const string Date = "2026-06-05";
 

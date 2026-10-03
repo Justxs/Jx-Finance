@@ -4,8 +4,8 @@ using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Transfers;
 
-[Collection<IntegrationCollection>]
-public sealed class TransferScopeTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<InvestmentsCollection>]
+public sealed class TransferScopeTests(InvestmentsFixture fixture) : IntegrationTestBase(fixture)
 {
     [Fact]
     public async Task Deleting_a_cross_currency_transfer_returns_both_amounts()

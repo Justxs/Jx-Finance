@@ -3,8 +3,8 @@ using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Transactions;
 
-[Collection<IntegrationCollection>]
-public sealed class TransactionSortEndpointTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<LedgerCollection>]
+public sealed class TransactionSortEndpointTests(LedgerFixture fixture) : IntegrationTestBase(fixture)
 {
     [Fact]
     public async Task Sorts_by_amount_and_description_in_both_directions()

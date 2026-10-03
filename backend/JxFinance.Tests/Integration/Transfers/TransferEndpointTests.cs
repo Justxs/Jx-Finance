@@ -4,8 +4,8 @@ using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Transfers;
 
-[Collection<IntegrationCollection>]
-public sealed class TransferEndpointTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<InvestmentsCollection>]
+public sealed class TransferEndpointTests(InvestmentsFixture fixture) : IntegrationTestBase(fixture)
 {
     [Fact]
     public async Task Transfer_moves_balance_between_accounts_and_nets_to_zero_overall()

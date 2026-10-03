@@ -3,8 +3,8 @@ using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Goals;
 
-[Collection<IntegrationCollection>]
-public sealed class GoalValidationTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<NetWorthCollection>]
+public sealed class GoalValidationTests(NetWorthFixture fixture) : IntegrationTestBase(fixture)
 {
     [Theory]
     [InlineData("name", "")]

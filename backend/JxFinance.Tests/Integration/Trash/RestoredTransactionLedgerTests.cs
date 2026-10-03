@@ -4,8 +4,8 @@ using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Trash;
 
-[Collection<IntegrationCollection>]
-public sealed class RestoredTransactionLedgerTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<NetWorthCollection>]
+public sealed class RestoredTransactionLedgerTests(NetWorthFixture fixture) : IntegrationTestBase(fixture)
 {
     [Fact]
     public async Task A_restored_transaction_counts_again_in_the_balance_the_budget_and_the_report()

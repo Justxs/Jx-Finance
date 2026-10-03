@@ -5,8 +5,8 @@ using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.RecurringBills;
 
-[Collection<IntegrationCollection>]
-public sealed class SkipRecurringBillTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<ImportsCollection>]
+public sealed class SkipRecurringBillTests(ImportsFixture fixture) : IntegrationTestBase(fixture)
 {
     [Fact]
     public async Task Marking_an_occurrence_done_advances_the_entry_without_writing_a_row()

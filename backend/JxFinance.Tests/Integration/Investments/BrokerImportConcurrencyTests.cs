@@ -4,8 +4,8 @@ using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Investments;
 
-[Collection<IntegrationCollection>]
-public sealed class BrokerImportConcurrencyTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<InvestmentsCollection>]
+public sealed class BrokerImportConcurrencyTests(InvestmentsFixture fixture) : IntegrationTestBase(fixture)
 {
     [Fact]
     public async Task Concurrent_uploads_that_introduce_the_same_security_all_succeed_and_create_it_once()

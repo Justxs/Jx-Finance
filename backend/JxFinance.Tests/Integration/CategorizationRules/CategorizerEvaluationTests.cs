@@ -9,8 +9,8 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace JxFinance.Tests.Integration.CategorizationRules;
 
-[Collection<IntegrationCollection>]
-public sealed class CategorizerEvaluationTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<ImportsCollection>]
+public sealed class CategorizerEvaluationTests(ImportsFixture fixture) : IntegrationTestBase(fixture)
 {
     [Fact]
     public async Task The_evaluation_prints_counts_and_never_a_description_or_a_category_name()

@@ -7,8 +7,8 @@ using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Receipts;
 
-[Collection<IntegrationCollection>]
-public sealed class ReceiptItemReportTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<DataCollection>]
+public sealed class ReceiptItemReportTests(DataFixture fixture) : IntegrationTestBase(fixture)
 {
     [Fact]
     public async Task Items_of_read_receipts_add_up_by_name_within_the_range_and_can_be_searched()

@@ -4,8 +4,8 @@ using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Categories;
 
-[Collection<IntegrationCollection>]
-public sealed class CategoryEndpointTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<LedgerCollection>]
+public sealed class CategoryEndpointTests(LedgerFixture fixture) : IntegrationTestBase(fixture)
 {
     [Fact]
     public async Task Starter_categories_are_seeded_with_icons()

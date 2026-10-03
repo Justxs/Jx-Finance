@@ -4,8 +4,8 @@ using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Contacts;
 
-[Collection<IntegrationCollection>]
-public sealed class ContactTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<ImportsCollection>]
+public sealed class ContactTests(ImportsFixture fixture) : IntegrationTestBase(fixture)
 {
     [Fact]
     public async Task A_shared_dinner_a_loan_and_a_repayment_add_up_per_person_and_currency()

@@ -3,8 +3,8 @@ using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Transactions;
 
-[Collection<IntegrationCollection>]
-public sealed class TransactionSearchEndpointTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<LedgerCollection>]
+public sealed class TransactionSearchEndpointTests(LedgerFixture fixture) : IntegrationTestBase(fixture)
 {
     [Fact]
     public async Task Filters_by_search_text_type_category_and_date_range()

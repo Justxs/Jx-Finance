@@ -7,8 +7,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace JxFinance.Tests.Integration.Reports;
 
-[Collection<IntegrationCollection>]
-public sealed class CategoryAttributionTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<ReportsCollection>]
+public sealed class CategoryAttributionTests(ReportsFixture fixture) : IntegrationTestBase(fixture)
 {
     private static readonly DateOnly Start = new(2026, 4, 1);
     private static readonly DateOnly End = new(2026, 5, 1);

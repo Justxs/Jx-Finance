@@ -5,8 +5,8 @@ using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Settings;
 
-[Collection<IntegrationCollection>]
-public sealed class SettingsEndpointTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<InvestmentsCollection>]
+public sealed class SettingsEndpointTests(InvestmentsFixture fixture) : IntegrationTestBase(fixture)
 {
     [Fact]
     public async Task Defaults_enable_every_feature()

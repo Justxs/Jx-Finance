@@ -5,8 +5,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace JxFinance.Tests.Integration.Settings;
 
-[Collection<IntegrationCollection>]
-public sealed class ManualExchangeRateTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<InvestmentsCollection>]
+public sealed class ManualExchangeRateTests(InvestmentsFixture fixture) : IntegrationTestBase(fixture)
 {
     private const string Url = "/api/settings/exchange-rates";
 
@@ -19,7 +19,7 @@ public sealed class ManualExchangeRateTests(ApiFixture fixture) : IntegrationTes
         var onTheDay = await CreateTransactionAsync(Client, pounds, null, "expense", "80.00", "2023-05-10");
         var otherCurrency = await CreateTransactionAsync(Client, dollars, null, "expense", "110.00", "2023-05-10");
         await WithDbAsync(db => db.Database.ExecuteSqlAsync(
-            $"""INSERT INTO "ExchangeRates" ("Date", "Currency", "Rate") VALUES ({new DateOnly(2023, 5, 12)}, 'GBP', 0.80) ON CONFLICT DO NOTHING""",
+            $"""INSERT INTO "ExchangeRates" ("Date", "Currency", "Rate") VALUES ({new DateOnly(2023, 5, 10)}, 'GBP', 0.80), ({new DateOnly(2023, 5, 12)}, 'GBP', 0.80) ON CONFLICT DO NOTHING""",
             TestContext.Current.CancellationToken));
         var afterNextRate = await CreateTransactionAsync(Client, pounds, null, "expense", "80.00", "2023-05-12");
         Assert.Equal("100.00", onTheDay.ReportingAmount);

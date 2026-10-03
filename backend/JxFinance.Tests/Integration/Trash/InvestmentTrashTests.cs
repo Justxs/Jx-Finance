@@ -4,8 +4,8 @@ using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Trash;
 
-[Collection<IntegrationCollection>]
-public sealed class InvestmentTrashTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<NetWorthCollection>]
+public sealed class InvestmentTrashTests(NetWorthFixture fixture) : IntegrationTestBase(fixture)
 {
     private const string Kind = "investmentTransaction";
 

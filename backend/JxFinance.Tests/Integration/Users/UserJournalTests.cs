@@ -16,8 +16,8 @@ using JxFinance.Tests.Support.Journal;
 
 namespace JxFinance.Tests.Integration.Users;
 
-[Collection<IntegrationCollection>]
-public sealed class UserJournalTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<PeopleCollection>]
+public sealed class UserJournalTests(PeopleFixture fixture) : IntegrationTestBase(fixture)
 {
     private static readonly HashSet<string> CurrencyCodes = Enum.GetValues<Currency>().Select(c => c.ToCode()).ToHashSet(StringComparer.Ordinal);
 

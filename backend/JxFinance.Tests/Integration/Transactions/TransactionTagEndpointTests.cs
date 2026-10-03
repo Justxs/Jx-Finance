@@ -4,8 +4,8 @@ using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Transactions;
 
-[Collection<IntegrationCollection>]
-public sealed class TransactionTagEndpointTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<LedgerCollection>]
+public sealed class TransactionTagEndpointTests(LedgerFixture fixture) : IntegrationTestBase(fixture)
 {
     [Fact]
     public async Task Tags_are_set_when_creating_and_replaced_when_editing()

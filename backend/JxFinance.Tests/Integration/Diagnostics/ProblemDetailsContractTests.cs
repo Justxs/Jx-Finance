@@ -9,8 +9,8 @@ using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Diagnostics;
 
-[Collection<IntegrationCollection>]
-public sealed class ProblemDetailsContractTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<NotificationsCollection>]
+public sealed class ProblemDetailsContractTests(NotificationsFixture fixture) : IntegrationTestBase(fixture)
 {
     [Fact]
     public async Task Validation_failures_answer_problem_json_with_the_offending_field()

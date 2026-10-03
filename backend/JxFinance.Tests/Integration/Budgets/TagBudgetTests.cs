@@ -4,8 +4,8 @@ using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Budgets;
 
-[Collection<IntegrationCollection>]
-public sealed class TagBudgetTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<NetWorthCollection>]
+public sealed class TagBudgetTests(NetWorthFixture fixture) : IntegrationTestBase(fixture)
 {
     [Fact]
     public async Task A_tag_budget_counts_whole_tagged_expenses_across_categories_and_refunds_lower_it()

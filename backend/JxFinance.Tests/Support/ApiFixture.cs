@@ -12,19 +12,18 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using Testcontainers.PostgreSql;
 
 namespace JxFinance.Tests.Support;
 
-public sealed class ApiFixture : AppFixture<Program>
+public abstract class ApiFixture : AppFixture<Program>
 {
     public const string TestAdminEmail = "test-admin@localhost";
     public const string TestAdminPassword = "Test-Password-123!";
     public const long BackupMaxDecompressedBytes = 32L * 1024 * 1024;
     public const int PdfExportMaxRows = 5;
     public const string SiteUrl = "https://finance.test";
+    public const string JwtSigningKey = "jx-finance-integration-tests-share-one-signing-key-across-every-app";
 
-    private PostgreSqlContainer? _db;
     private readonly string _keyDirectory = Path.Combine(Path.GetTempPath(), "jx-test-keys", Guid.NewGuid().ToString("N"));
 
     public HttpClient Api { get; private set; } = default!;
@@ -33,25 +32,15 @@ public sealed class ApiFixture : AppFixture<Program>
 
     public string ConnectionString { get; private set; } = default!;
 
-    protected override async ValueTask PreSetupAsync()
-    {
-        var externalConnection = Environment.GetEnvironmentVariable("JX_TEST_POSTGRES");
-        if (string.IsNullOrWhiteSpace(externalConnection))
-        {
-            _db = new PostgreSqlBuilder("postgres:16").Build();
-            await _db.StartAsync();
-        }
-        else if (!new Npgsql.NpgsqlConnectionStringBuilder(externalConnection).Database!.StartsWith("jx_test_", StringComparison.Ordinal))
-            throw new InvalidOperationException("External integration databases must use the disposable jx_test_ prefix.");
-
-        ConnectionString = _db?.GetConnectionString() ?? externalConnection!;
-    }
+    protected override async ValueTask PreSetupAsync() =>
+        ConnectionString = await TestDatabases.CreateAsync(GetType().Name);
 
     protected override void ConfigureApp(IWebHostBuilder builder)
     {
         builder.UseSetting(ConfigKeys.DefaultConnectionSetting, ConnectionString);
         builder.UseSetting(ConfigKeys.BackgroundJobs, "false");
         builder.UseSetting(ConfigKeys.DataProtectionDirectory, _keyDirectory);
+        builder.UseSetting(ConfigKeys.JwtSigningKey, JwtSigningKey);
         builder.UseSetting(ConfigKeys.BackupDirectory, Path.Combine(_keyDirectory, "backups"));
         builder.UseSetting(ConfigKeys.AttachmentDirectory, AttachmentDirectory);
         builder.UseSetting("App:BackupMaxDecompressedBytes", BackupMaxDecompressedBytes.ToString(System.Globalization.CultureInfo.InvariantCulture));
@@ -105,9 +94,6 @@ public sealed class ApiFixture : AppFixture<Program>
     protected override async ValueTask TearDownAsync()
     {
         Api?.Dispose();
-        if (_db is not null)
-            await _db.DisposeAsync();
+        await TestDatabases.DropAsync(ConnectionString);
     }
 }
-
-public sealed class IntegrationCollection : TestCollection<ApiFixture>;

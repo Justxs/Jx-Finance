@@ -10,8 +10,8 @@ using Npgsql;
 
 namespace JxFinance.Tests.Integration.NetWorth;
 
-[Collection<IntegrationCollection>]
-public sealed class DebtBalanceHistoryTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<NetWorthCollection>]
+public sealed class DebtBalanceHistoryTests(NetWorthFixture fixture) : IntegrationTestBase(fixture)
 {
     [Fact]
     public async Task Creating_and_editing_a_debt_records_balances_and_an_earlier_date_only_adds_history()

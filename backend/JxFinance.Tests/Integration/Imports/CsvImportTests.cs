@@ -5,8 +5,8 @@ using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Imports;
 
-[Collection<IntegrationCollection>]
-public sealed class CsvImportTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<ImportsCollection>]
+public sealed class CsvImportTests(ImportsFixture fixture) : IntegrationTestBase(fixture)
 {
     [Fact]
     public async Task A_mapping_is_created_listed_updated_deleted_and_restored()

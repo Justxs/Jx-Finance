@@ -4,8 +4,8 @@ using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Goals;
 
-[Collection<IntegrationCollection>]
-public sealed class GoalFundingTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<NetWorthCollection>]
+public sealed class GoalFundingTests(NetWorthFixture fixture) : IntegrationTestBase(fixture)
 {
     [Fact]
     public async Task A_manual_goal_keeps_the_typed_amount_as_its_progress()

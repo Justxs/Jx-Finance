@@ -13,8 +13,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace JxFinance.Tests.Integration.Users;
 
-[Collection<IntegrationCollection>]
-public sealed partial class UserImportTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<PeopleCollection>]
+public sealed partial class UserImportTests(PeopleFixture fixture) : IntegrationTestBase(fixture)
 {
     private const string ImportUrl = "/api/users/me/import";
     private const string OlderMigration = "20261001175018_AddImportInbox";

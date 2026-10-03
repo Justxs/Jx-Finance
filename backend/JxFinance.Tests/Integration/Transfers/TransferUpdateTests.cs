@@ -4,8 +4,8 @@ using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Transfers;
 
-[Collection<IntegrationCollection>]
-public sealed class TransferUpdateTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<InvestmentsCollection>]
+public sealed class TransferUpdateTests(InvestmentsFixture fixture) : IntegrationTestBase(fixture)
 {
     [Fact]
     public async Task Update_moves_the_money_to_the_new_accounts_date_and_amount()

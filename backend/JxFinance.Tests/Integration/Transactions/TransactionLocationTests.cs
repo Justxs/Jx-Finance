@@ -7,8 +7,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace JxFinance.Tests.Integration.Transactions;
 
-[Collection<IntegrationCollection>]
-public sealed class TransactionLocationTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<LedgerCollection>]
+public sealed class TransactionLocationTests(LedgerFixture fixture) : IntegrationTestBase(fixture)
 {
     [Theory]
     [InlineData(54.687, null)]

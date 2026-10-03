@@ -5,8 +5,8 @@ using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Notifications;
 
-[Collection<IntegrationCollection>]
-public sealed class NotificationIsolationTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<NotificationsCollection>]
+public sealed class NotificationIsolationTests(NotificationsFixture fixture) : IntegrationTestBase(fixture)
 {
     [Fact]
     public async Task A_reminder_reaches_only_the_owner_of_the_bill_and_only_the_owner_can_mark_it_read()

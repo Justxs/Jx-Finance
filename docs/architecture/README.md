@@ -23,7 +23,7 @@ Startup applies pending EF migrations directly. Only in the Development environm
 | [Frontend components and forms](frontend-components.md) | Frontend file layout; UI components; Forms |
 | [Visual system and motion](visual-system.md) | Visual system; Brand assets; Motion |
 | [Accessibility and keyboard shortcuts](accessibility.md) | Accessibility conventions; Keyboard shortcuts |
-| [Frontend tests and Storybook](testing.md) | Frontend tests; Storybook |
+| [Tests and Storybook](testing.md) | Backend tests; Frontend tests; Storybook |
 | [Developer tooling and package updates](developer-tooling.md) | Developer tooling; Package updates |
 | [API contract and generated client](api-contract.md) | API contract and generated client |
 | [Authentication](authentication.md) | Authentication |

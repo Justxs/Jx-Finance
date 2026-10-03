@@ -3,8 +3,8 @@ using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Investments;
 
-[Collection<IntegrationCollection>]
-public sealed class PortfolioValueHistoryTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<InvestmentsCollection>]
+public sealed class PortfolioValueHistoryTests(InvestmentsFixture fixture) : IntegrationTestBase(fixture)
 {
     [Fact]
     public async Task Value_and_cost_follow_a_buy_a_price_change_a_split_and_a_sell()

@@ -4,8 +4,8 @@ using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Auth;
 
-[Collection<IntegrationCollection>]
-public sealed class SessionListEndpointTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<PeopleCollection>]
+public sealed class SessionListEndpointTests(PeopleFixture fixture) : IntegrationTestBase(fixture)
 {
     [Fact]
     public async Task List_shows_every_signed_in_browser_and_marks_the_current_one()

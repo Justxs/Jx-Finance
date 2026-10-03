@@ -4,8 +4,8 @@ using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Investments;
 
-[Collection<IntegrationCollection>]
-public sealed class SecurityAuthorizationTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<InvestmentsCollection>]
+public sealed class SecurityAuthorizationTests(InvestmentsFixture fixture) : IntegrationTestBase(fixture)
 {
     [Fact]
     public async Task A_member_cannot_change_the_details_of_a_security()

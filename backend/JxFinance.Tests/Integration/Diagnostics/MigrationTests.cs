@@ -3,8 +3,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace JxFinance.Tests.Integration.Diagnostics;
 
-[Collection<IntegrationCollection>]
-public sealed class MigrationTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<NotificationsCollection>]
+public sealed class MigrationTests(NotificationsFixture fixture) : IntegrationTestBase(fixture)
 {
     [Fact]
     public async Task Migrations_are_applied_on_startup()

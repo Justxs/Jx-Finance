@@ -4,8 +4,8 @@ using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Reports;
 
-[Collection<IntegrationCollection>]
-public sealed class SpreadReportTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<ReportsCollection>]
+public sealed class SpreadReportTests(ReportsFixture fixture) : IntegrationTestBase(fixture)
 {
     private const string February = "dateFrom=2026-02-01&dateTo=2026-02-28";
     private const string Year = "dateFrom=2026-01-01&dateTo=2026-12-31";

@@ -14,8 +14,8 @@ using Microsoft.Extensions.Logging;
 
 namespace JxFinance.Tests.Integration.Notifications;
 
-[Collection<IntegrationCollection>]
-public sealed class MonthlyDigestTests(ApiFixture fixture) : EmailTestBase(fixture)
+[Collection<NotificationsCollection>]
+public sealed class MonthlyDigestTests(NotificationsFixture fixture) : EmailTestBase(fixture)
 {
     private const string LanguageUrl = "/api/users/me/language";
 

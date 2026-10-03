@@ -4,8 +4,8 @@ using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Reports;
 
-[Collection<IntegrationCollection>]
-public sealed class MyShareTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<ReportsCollection>]
+public sealed class MyShareTests(ReportsFixture fixture) : IntegrationTestBase(fixture)
 {
     private const string September = "dateFrom=2026-09-01&dateTo=2026-09-30";
 

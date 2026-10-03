@@ -3,8 +3,8 @@ using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Diagnostics;
 
-[Collection<IntegrationCollection>]
-public sealed class CorrelationIdTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<NotificationsCollection>]
+public sealed class CorrelationIdTests(NotificationsFixture fixture) : IntegrationTestBase(fixture)
 {
     [Fact]
     public async Task Response_carries_a_generated_correlation_id()

@@ -4,8 +4,8 @@ using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Households;
 
-[Collection<IntegrationCollection>]
-public sealed class HouseholdOwnershipTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<PeopleCollection>]
+public sealed class HouseholdOwnershipTests(PeopleFixture fixture) : IntegrationTestBase(fixture)
 {
     [Fact]
     public async Task Owner_can_rename_the_household()

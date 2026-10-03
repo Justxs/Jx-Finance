@@ -5,8 +5,8 @@ using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Dashboard;
 
-[Collection<IntegrationCollection>]
-public sealed class DashboardEndpointTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<ReportsCollection>]
+public sealed class DashboardEndpointTests(ReportsFixture fixture) : IntegrationTestBase(fixture)
 {
     [Fact]
     public async Task Summary_reflects_new_accounts_and_this_months_transactions()

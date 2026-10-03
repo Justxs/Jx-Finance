@@ -4,8 +4,8 @@ using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Budgets;
 
-[Collection<IntegrationCollection>]
-public sealed class BudgetEndpointTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<NetWorthCollection>]
+public sealed class BudgetEndpointTests(NetWorthFixture fixture) : IntegrationTestBase(fixture)
 {
     [Fact]
     public async Task Create_budget_tracks_this_months_spend_including_split_lines()

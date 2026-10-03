@@ -8,8 +8,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace JxFinance.Tests.Integration.Email;
 
-[Collection<IntegrationCollection>]
-public sealed class NotificationEmailTests(ApiFixture fixture) : EmailTestBase(fixture)
+[Collection<NotificationsCollection>]
+public sealed class NotificationEmailTests(NotificationsFixture fixture) : EmailTestBase(fixture)
 {
     private const string EmailNotificationsUrl = "/api/users/me/email-notifications";
 

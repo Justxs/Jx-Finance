@@ -4,8 +4,8 @@ using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Transactions;
 
-[Collection<IntegrationCollection>]
-public sealed class PlaceSuggestionTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<LedgerCollection>]
+public sealed class PlaceSuggestionTests(LedgerFixture fixture) : IntegrationTestBase(fixture)
 {
     private const decimal Latitude = 54.68700m;
     private const decimal Longitude = 25.28000m;

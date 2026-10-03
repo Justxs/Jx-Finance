@@ -5,8 +5,8 @@ using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Notifications;
 
-[Collection<IntegrationCollection>]
-public sealed class LowBalanceAlertTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<NotificationsCollection>]
+public sealed class LowBalanceAlertTests(NotificationsFixture fixture) : IntegrationTestBase(fixture)
 {
     [Fact]
     public async Task An_account_forecast_to_go_below_zero_raises_one_alert_and_no_repeat()

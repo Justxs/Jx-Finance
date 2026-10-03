@@ -4,8 +4,8 @@ using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Accounts;
 
-[Collection<IntegrationCollection>]
-public sealed class ReconciliationTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<InvestmentsCollection>]
+public sealed class ReconciliationTests(InvestmentsFixture fixture) : IntegrationTestBase(fixture)
 {
     [Fact]
     public async Task The_preview_ledger_balance_equals_the_import_preview_on_the_same_date()

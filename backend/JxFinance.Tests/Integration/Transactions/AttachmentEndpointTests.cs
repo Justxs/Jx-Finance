@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace JxFinance.Tests.Integration.Transactions;
 
-[Collection<IntegrationCollection>]
-public sealed class AttachmentEndpointTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<LedgerCollection>]
+public sealed class AttachmentEndpointTests(LedgerFixture fixture) : IntegrationTestBase(fixture)
 {
     private const string Date = "2026-06-05";
 

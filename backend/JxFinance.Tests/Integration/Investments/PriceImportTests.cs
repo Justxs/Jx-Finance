@@ -6,8 +6,8 @@ using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Investments;
 
-[Collection<IntegrationCollection>]
-public sealed class PriceImportTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<InvestmentsCollection>]
+public sealed class PriceImportTests(InvestmentsFixture fixture) : IntegrationTestBase(fixture)
 {
     private const string File = """
         date;price

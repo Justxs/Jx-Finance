@@ -3,8 +3,8 @@ using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Budgets;
 
-[Collection<IntegrationCollection>]
-public sealed class BudgetSuggestionTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<NetWorthCollection>]
+public sealed class BudgetSuggestionTests(NetWorthFixture fixture) : IntegrationTestBase(fixture)
 {
     [Fact]
     public async Task The_monthly_median_comes_from_the_six_complete_months_split_lines_by_share()

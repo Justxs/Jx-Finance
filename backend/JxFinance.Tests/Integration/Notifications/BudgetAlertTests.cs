@@ -10,8 +10,8 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace JxFinance.Tests.Integration.Notifications;
 
-[Collection<IntegrationCollection>]
-public sealed class BudgetAlertTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<NotificationsCollection>]
+public sealed class BudgetAlertTests(NotificationsFixture fixture) : IntegrationTestBase(fixture)
 {
     private static readonly string[] BothKinds = ["budgetExceeded", "budgetWarning"];
 

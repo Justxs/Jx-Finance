@@ -3,8 +3,8 @@ using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Diagnostics;
 
-[Collection<IntegrationCollection>]
-public sealed class HealthCheckTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<NotificationsCollection>]
+public sealed class HealthCheckTests(NotificationsFixture fixture) : IntegrationTestBase(fixture)
 {
     [Fact]
     public async Task Health_reports_healthy_when_database_is_reachable()

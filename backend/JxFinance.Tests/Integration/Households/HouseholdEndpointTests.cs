@@ -4,8 +4,8 @@ using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Households;
 
-[Collection<IntegrationCollection>]
-public sealed class HouseholdEndpointTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<PeopleCollection>]
+public sealed class HouseholdEndpointTests(PeopleFixture fixture) : IntegrationTestBase(fixture)
 {
     [Fact]
     public async Task Create_household_makes_the_creator_its_owner()

@@ -5,8 +5,8 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace JxFinance.Tests.Integration.Budgets;
 
-[Collection<IntegrationCollection>]
-public sealed class BudgetRolloverTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<NetWorthCollection>]
+public sealed class BudgetRolloverTests(NetWorthFixture fixture) : IntegrationTestBase(fixture)
 {
     [Fact]
     public async Task What_is_left_of_the_previous_window_raises_this_windows_limit()

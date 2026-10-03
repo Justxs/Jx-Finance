@@ -3,8 +3,8 @@ using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Investments;
 
-[Collection<IntegrationCollection>]
-public sealed class PortfolioCurrencyTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<InvestmentsCollection>]
+public sealed class PortfolioCurrencyTests(InvestmentsFixture fixture) : IntegrationTestBase(fixture)
 {
     private const decimal UsdPerEuroInMarch2019 = 1.25m;
 

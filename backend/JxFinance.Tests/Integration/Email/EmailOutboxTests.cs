@@ -6,8 +6,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace JxFinance.Tests.Integration.Email;
 
-[Collection<IntegrationCollection>]
-public sealed class EmailOutboxTests(ApiFixture fixture) : EmailTestBase(fixture)
+[Collection<NotificationsCollection>]
+public sealed class EmailOutboxTests(NotificationsFixture fixture) : EmailTestBase(fixture)
 {
     [Fact]
     public async Task A_failure_with_a_long_message_is_recorded_cut_to_the_column()

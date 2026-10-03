@@ -3,8 +3,8 @@ using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Reports;
 
-[Collection<IntegrationCollection>]
-public sealed class PayeeBreakdownTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<ReportsCollection>]
+public sealed class PayeeBreakdownTests(ReportsFixture fixture) : IntegrationTestBase(fixture)
 {
     private const string March = "dateFrom=2026-03-01&dateTo=2026-03-31";
 

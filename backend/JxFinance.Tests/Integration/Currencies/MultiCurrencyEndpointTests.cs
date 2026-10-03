@@ -4,8 +4,8 @@ using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Currencies;
 
-[Collection<IntegrationCollection>]
-public sealed class MultiCurrencyEndpointTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<InvestmentsCollection>]
+public sealed class MultiCurrencyEndpointTests(InvestmentsFixture fixture) : IntegrationTestBase(fixture)
 {
     [Fact]
     public async Task Currencies_endpoint_reports_the_reporting_currency()

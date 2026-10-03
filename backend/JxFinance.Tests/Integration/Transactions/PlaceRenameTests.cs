@@ -4,8 +4,8 @@ using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Transactions;
 
-[Collection<IntegrationCollection>]
-public sealed class PlaceRenameTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<LedgerCollection>]
+public sealed class PlaceRenameTests(LedgerFixture fixture) : IntegrationTestBase(fixture)
 {
     private const string RenameUrl = "/api/transactions/places/rename";
 

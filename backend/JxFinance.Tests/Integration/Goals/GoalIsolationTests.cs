@@ -4,8 +4,8 @@ using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Goals;
 
-[Collection<IntegrationCollection>]
-public sealed class GoalIsolationTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<NetWorthCollection>]
+public sealed class GoalIsolationTests(NetWorthFixture fixture) : IntegrationTestBase(fixture)
 {
     [Fact]
     public async Task A_goal_cannot_be_read_changed_or_deleted_by_another_user_even_in_the_same_household()
@@ -71,6 +71,7 @@ public sealed class GoalIsolationTests(ApiFixture fixture) : IntegrationTestBase
         using var member = await CreateUserClientAsync();
 
         var goal = await PostAsync<GoalDto>(member, "/api/goals", new { name = "Moonshot", targetAmount = "9999999999999999.99" });
+        await SqlAsync($"""DELETE FROM "Goals" WHERE "Id" = {goal.Id}""");
 
         Assert.Equal("9999999999999999.99", goal.TargetAmount);
     }

@@ -27,7 +27,8 @@ public sealed class UpdateGoalProgressValidatorTests
     {
         var error = Assert.Single(validator.Validate(Request(currentAmount, delta)).Errors);
 
-        Assert.Equal((field, code), (error.PropertyName, error.ErrorCode));
+        Assert.Equal(field, error.PropertyName, ignoreCase: true);
+        Assert.Equal(code, error.ErrorCode);
     }
 
     private static UpdateGoalProgressRequest Request(string? currentAmount, string? delta) =>

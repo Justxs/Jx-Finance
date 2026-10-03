@@ -4,8 +4,8 @@ using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.NetWorth;
 
-[Collection<IntegrationCollection>]
-public sealed class DebtScheduleEndpointTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<NetWorthCollection>]
+public sealed class DebtScheduleEndpointTests(NetWorthFixture fixture) : IntegrationTestBase(fixture)
 {
     [Fact]
     public async Task A_thirty_year_mortgage_has_the_known_level_payment_and_split()

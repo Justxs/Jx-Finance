@@ -3,8 +3,8 @@ using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Households;
 
-[Collection<IntegrationCollection>]
-public sealed class UserIsolationTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<PeopleCollection>]
+public sealed class UserIsolationTests(PeopleFixture fixture) : IntegrationTestBase(fixture)
 {
     [Theory]
     [InlineData("budgets")]

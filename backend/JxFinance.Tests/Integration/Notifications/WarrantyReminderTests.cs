@@ -8,8 +8,8 @@ using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Notifications;
 
-[Collection<IntegrationCollection>]
-public sealed class WarrantyReminderTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<NotificationsCollection>]
+public sealed class WarrantyReminderTests(NotificationsFixture fixture) : IntegrationTestBase(fixture)
 {
     [Fact]
     public async Task A_warranty_ending_within_thirty_days_is_announced_once_and_a_later_one_not_yet()

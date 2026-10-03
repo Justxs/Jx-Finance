@@ -3,8 +3,8 @@ using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Accounts;
 
-[Collection<IntegrationCollection>]
-public sealed class AccountFilterEndpointTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<InvestmentsCollection>]
+public sealed class AccountFilterEndpointTests(InvestmentsFixture fixture) : IntegrationTestBase(fixture)
 {
     [Fact]
     public async Task Filters_by_name_and_type_and_sorts_by_current_balance()

@@ -5,8 +5,8 @@ using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Goals;
 
-[Collection<IntegrationCollection>]
-public sealed class GoalProgressTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<NetWorthCollection>]
+public sealed class GoalProgressTests(NetWorthFixture fixture) : IntegrationTestBase(fixture)
 {
     [Fact]
     public async Task A_manual_goal_takes_a_new_amount_or_a_delta_and_may_pass_its_target_but_not_fall_below_zero()
@@ -37,9 +37,10 @@ public sealed class GoalProgressTests(ApiFixture fixture) : IntegrationTestBase(
         await ReadOkAsync<GoalDto>(await PatchAsync(member, goal.Id, new { currentAmount = "9999999999999999.99" }));
 
         var overflow = await PatchAsync(member, goal.Id, new { delta = "0.01" });
+        var stored = Assert.Single((await member.GetFromJsonAsync<List<GoalDto>>("/api/goals", TestContext.Current.CancellationToken))!);
+        await SqlAsync($"""DELETE FROM "Goals" WHERE "Id" = {goal.Id}""");
 
         await AssertProblemAsync(overflow, HttpStatusCode.BadRequest, "money.invalid");
-        var stored = Assert.Single((await member.GetFromJsonAsync<List<GoalDto>>("/api/goals", TestContext.Current.CancellationToken))!);
         Assert.Equal("9999999999999999.99", stored.CurrentAmount);
     }
 

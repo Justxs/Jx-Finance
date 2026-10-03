@@ -8,8 +8,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace JxFinance.Tests.Integration.Households;
 
-[Collection<IntegrationCollection>]
-public sealed class AuditLogTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<PeopleCollection>]
+public sealed class AuditLogTests(PeopleFixture fixture) : IntegrationTestBase(fixture)
 {
     [Fact]
     public async Task Creating_editing_deleting_and_restoring_a_shared_transaction_is_logged_with_old_and_new_values()

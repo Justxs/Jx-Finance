@@ -16,8 +16,8 @@ using Npgsql;
 
 namespace JxFinance.Tests.Integration.Backups;
 
-[Collection<IntegrationCollection>]
-public sealed class BackupEndpointTests(ApiFixture fixture) : IntegrationTestBase(fixture), IDisposable
+[Collection<DataCollection>]
+public sealed class BackupEndpointTests(DataFixture fixture) : IntegrationTestBase(fixture), IDisposable
 {
     private static readonly string[] DiscordKinds = ["billDue"];
 
@@ -879,8 +879,12 @@ public sealed class BackupEndpointTests(ApiFixture fixture) : IntegrationTestBas
 
     private async Task SignInAgainAsync()
     {
-        var response = await TryLoginAsync(Client, ApiFixture.TestAdminEmail, ApiFixture.TestAdminPassword);
-        response.EnsureSuccessStatusCode();
+        using var request = new HttpRequestMessage(HttpMethod.Post, "/api/auth/login")
+        {
+            Content = JsonContent.Create(new { email = ApiFixture.TestAdminEmail, password = ApiFixture.TestAdminPassword, rememberMe = false }),
+        };
+        request.Headers.Add("X-Forwarded-For", Guid.NewGuid().ToString());
+        (await Client.SendAsync(request, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
     }
 
     private static JsonNode Unzip(byte[] file)

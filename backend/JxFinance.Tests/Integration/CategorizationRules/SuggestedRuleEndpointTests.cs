@@ -6,8 +6,8 @@ using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.CategorizationRules;
 
-[Collection<IntegrationCollection>]
-public sealed class SuggestedRuleEndpointTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<ImportsCollection>]
+public sealed class SuggestedRuleEndpointTests(ImportsFixture fixture) : IntegrationTestBase(fixture)
 {
     private const string Suggested = "/api/categorization-rules/suggested";
 

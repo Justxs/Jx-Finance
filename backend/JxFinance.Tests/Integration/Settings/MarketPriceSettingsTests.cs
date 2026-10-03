@@ -4,8 +4,8 @@ using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Settings;
 
-[Collection<IntegrationCollection>]
-public sealed class MarketPriceSettingsTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<InvestmentsCollection>]
+public sealed class MarketPriceSettingsTests(InvestmentsFixture fixture) : IntegrationTestBase(fixture)
 {
     private const string Url = "/api/settings/market-prices";
 
@@ -96,7 +96,7 @@ public sealed class MarketPriceSettingsTests(ApiFixture fixture) : IntegrationTe
         var security = await PostAsync<IdDto>(
             Client,
             "/api/investments/securities",
-            new { symbol = NewSymbol(), name = "World fund", type = "etf", currency = "eur", isin = "IE00BK5BQT80" });
+            new { symbol = NewSymbol(), name = "World fund", type = "etf", currency = "eur", isin = "IE00B4L5Y983" });
 
         var candidates = await ReadOkAsync<List<CandidateDto>>(await Client.PostAsync(
             $"/api/investments/securities/{security.Id}/price-symbol/find",
@@ -115,7 +115,7 @@ public sealed class MarketPriceSettingsTests(ApiFixture fixture) : IntegrationTe
         var security = await PostAsync<IdDto>(
             Client,
             "/api/investments/securities",
-            new { symbol = NewSymbol(), name = "Mapped fund", type = "etf", currency = "eur", isin = "IE00BK5BQT80", priceSource = "eodhd", priceSymbol = $"{NewSymbol()}.XETRA" });
+            new { symbol = NewSymbol(), name = "Mapped fund", type = "etf", currency = "eur", isin = "IE00B4L5Y983", priceSource = "eodhd", priceSymbol = $"{NewSymbol()}.XETRA" });
         var account = await CreateAccountAsync("1000.00", "investment");
         await RecordInvestmentAsync(Client, new { accountId = account, securityId = security.Id, type = "buy", date = "2026-06-01", quantity = "1", price = "100" });
         await SqlAsync($"""UPDATE "InstanceSettings" SET "EodhdProtectedKey" = 'CfDJ8-from-another-key-ring'""");

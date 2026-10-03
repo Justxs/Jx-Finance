@@ -6,8 +6,8 @@ using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Investments;
 
-[Collection<IntegrationCollection>]
-public sealed class TradeCsvImportTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<InvestmentsCollection>]
+public sealed class TradeCsvImportTests(InvestmentsFixture fixture) : IntegrationTestBase(fixture)
 {
     private const string Csv = """
         Date,Type,Symbol,Name,Security type,Quantity,Price,Amount,Fee,Currency

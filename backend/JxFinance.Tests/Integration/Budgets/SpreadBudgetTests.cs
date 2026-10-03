@@ -5,8 +5,8 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace JxFinance.Tests.Integration.Budgets;
 
-[Collection<IntegrationCollection>]
-public sealed class SpreadBudgetTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<NetWorthCollection>]
+public sealed class SpreadBudgetTests(NetWorthFixture fixture) : IntegrationTestBase(fixture)
 {
     private const string AsOf = "2026-07-15";
 

@@ -7,8 +7,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace JxFinance.Tests.Integration.Imports;
 
-[Collection<IntegrationCollection>]
-public sealed class StatementPayeeTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<ImportsCollection>]
+public sealed class StatementPayeeTests(ImportsFixture fixture) : IntegrationTestBase(fixture)
 {
     private const string Header = "\"Sąskaitos Nr.\",\"\",\"Data\",\"Gavėjas\",\"Paaiškinimai\",\"Suma\",\"Valiuta\",\"D/K\",\"Įrašo Nr.\"\n";
 

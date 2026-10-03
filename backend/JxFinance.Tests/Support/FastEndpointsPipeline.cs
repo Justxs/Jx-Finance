@@ -22,6 +22,7 @@ public sealed class FastEndpointsPipeline
         {
             [ConfigKeys.DefaultConnectionSetting] = "Host=localhost;Database=jx_test_unused",
             [ConfigKeys.BackgroundJobs] = "false",
+            [ConfigKeys.JwtSigningKey] = ApiFixture.JwtSigningKey,
         });
         builder.AddApiServices();
         builder.Services.AddInfrastructure(builder.Configuration);

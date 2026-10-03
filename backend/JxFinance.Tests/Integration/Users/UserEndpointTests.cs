@@ -4,8 +4,8 @@ using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Users;
 
-[Collection<IntegrationCollection>]
-public sealed class UserEndpointTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<PeopleCollection>]
+public sealed class UserEndpointTests(PeopleFixture fixture) : IntegrationTestBase(fixture)
 {
     [Fact]
     public async Task Admin_can_create_list_and_change_role_of_a_user()

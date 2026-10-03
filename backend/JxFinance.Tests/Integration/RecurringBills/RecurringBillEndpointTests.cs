@@ -5,8 +5,8 @@ using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.RecurringBills;
 
-[Collection<IntegrationCollection>]
-public sealed class RecurringBillEndpointTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<ImportsCollection>]
+public sealed class RecurringBillEndpointTests(ImportsFixture fixture) : IntegrationTestBase(fixture)
 {
     [Fact]
     public async Task Create_a_fixed_bill_requires_an_amount()

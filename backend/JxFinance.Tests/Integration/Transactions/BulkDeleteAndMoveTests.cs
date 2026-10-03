@@ -4,8 +4,8 @@ using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Transactions;
 
-[Collection<IntegrationCollection>]
-public sealed class BulkDeleteAndMoveTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<LedgerCollection>]
+public sealed class BulkDeleteAndMoveTests(LedgerFixture fixture) : IntegrationTestBase(fixture)
 {
     private const string Date = "2026-06-05";
 

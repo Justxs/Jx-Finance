@@ -5,8 +5,8 @@ using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.CategorizationRules;
 
-[Collection<IntegrationCollection>]
-public sealed class CategorizationRuleEndpointTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<ImportsCollection>]
+public sealed class CategorizationRuleEndpointTests(ImportsFixture fixture) : IntegrationTestBase(fixture)
 {
     private const string SampleCsv =
         "\"Sąskaitos Nr.\",\"\",\"Data\",\"Gavėjas\",\"Paaiškinimai\",\"Suma\",\"Valiuta\",\"D/K\",\"Įrašo Nr.\"\n"

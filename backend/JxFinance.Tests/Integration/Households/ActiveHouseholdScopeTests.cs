@@ -4,8 +4,8 @@ using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Households;
 
-[Collection<IntegrationCollection>]
-public sealed class ActiveHouseholdScopeTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<PeopleCollection>]
+public sealed class ActiveHouseholdScopeTests(PeopleFixture fixture) : IntegrationTestBase(fixture)
 {
     [Fact]
     public async Task Without_a_header_the_caller_sees_every_household_at_once()

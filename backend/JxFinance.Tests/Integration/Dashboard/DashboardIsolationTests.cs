@@ -4,8 +4,8 @@ using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Dashboard;
 
-[Collection<IntegrationCollection>]
-public sealed class DashboardIsolationTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<ReportsCollection>]
+public sealed class DashboardIsolationTests(ReportsFixture fixture) : IntegrationTestBase(fixture)
 {
     [Fact]
     public async Task Summary_breakdown_and_trend_count_only_what_the_caller_can_see()

@@ -3,8 +3,8 @@ using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Reports;
 
-[Collection<IntegrationCollection>]
-public sealed class ReportComparisonTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<ReportsCollection>]
+public sealed class ReportComparisonTests(ReportsFixture fixture) : IntegrationTestBase(fixture)
 {
     [Fact]
     public async Task The_previous_period_is_the_same_number_of_days_immediately_before_the_range()

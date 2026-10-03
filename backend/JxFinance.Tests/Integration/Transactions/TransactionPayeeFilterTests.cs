@@ -3,8 +3,8 @@ using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Transactions;
 
-[Collection<IntegrationCollection>]
-public sealed class TransactionPayeeFilterTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<LedgerCollection>]
+public sealed class TransactionPayeeFilterTests(LedgerFixture fixture) : IntegrationTestBase(fixture)
 {
     private const string Range = "dateFrom=2026-04-01&dateTo=2026-04-30&type=expense";
 

@@ -6,8 +6,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace JxFinance.Tests.Integration.Transactions;
 
-[Collection<IntegrationCollection>]
-public sealed class PossibleDuplicateTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<LedgerCollection>]
+public sealed class PossibleDuplicateTests(LedgerFixture fixture) : IntegrationTestBase(fixture)
 {
     private const string Range = "dateFrom=2026-05-01&dateTo=2026-05-31";
 

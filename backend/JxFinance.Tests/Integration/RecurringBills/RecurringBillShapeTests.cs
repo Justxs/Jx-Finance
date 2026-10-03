@@ -7,8 +7,8 @@ using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.RecurringBills;
 
-[Collection<IntegrationCollection>]
-public sealed class RecurringBillShapeTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<ImportsCollection>]
+public sealed class RecurringBillShapeTests(ImportsFixture fixture) : IntegrationTestBase(fixture)
 {
     [Fact]
     public async Task Confirming_an_income_entry_creates_an_income_transaction()

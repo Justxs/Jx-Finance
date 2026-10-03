@@ -10,8 +10,8 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace JxFinance.Tests.Integration.Receipts;
 
-[Collection<IntegrationCollection>]
-public sealed class RememberedItemTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<DataCollection>]
+public sealed class RememberedItemTests(DataFixture fixture) : IntegrationTestBase(fixture)
 {
     private FakeReceiptReader Reader => Services.GetRequiredService<FakeReceiptReader>();
 

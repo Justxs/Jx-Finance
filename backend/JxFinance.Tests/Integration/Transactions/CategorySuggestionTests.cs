@@ -5,8 +5,8 @@ using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Transactions;
 
-[Collection<IntegrationCollection>]
-public sealed class CategorySuggestionTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<LedgerCollection>]
+public sealed class CategorySuggestionTests(LedgerFixture fixture) : IntegrationTestBase(fixture)
 {
     private const string SuggestUrl = "/api/transactions/suggest-category";
     private const string UncategorizedUrl = "/api/transactions/uncategorized-suggestions";

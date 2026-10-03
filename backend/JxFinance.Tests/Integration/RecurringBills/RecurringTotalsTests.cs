@@ -8,8 +8,8 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace JxFinance.Tests.Integration.RecurringBills;
 
-[Collection<IntegrationCollection>]
-public sealed class RecurringTotalsTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<ImportsCollection>]
+public sealed class RecurringTotalsTests(ImportsFixture fixture) : IntegrationTestBase(fixture)
 {
     private const string Url = "/api/recurring-bills/totals";
 

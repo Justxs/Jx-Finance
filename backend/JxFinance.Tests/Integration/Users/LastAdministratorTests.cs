@@ -11,8 +11,8 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace JxFinance.Tests.Integration.Users;
 
-[Collection<IntegrationCollection>]
-public sealed class LastAdministratorTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<PeopleCollection>]
+public sealed class LastAdministratorTests(PeopleFixture fixture) : IntegrationTestBase(fixture)
 {
     [Fact]
     public async Task The_last_active_administrator_cannot_be_demoted_or_deactivated()

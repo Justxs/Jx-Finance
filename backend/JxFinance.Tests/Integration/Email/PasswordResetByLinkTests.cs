@@ -6,8 +6,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace JxFinance.Tests.Integration.Email;
 
-[Collection<IntegrationCollection>]
-public sealed class PasswordResetByLinkTests(ApiFixture fixture) : EmailTestBase(fixture)
+[Collection<NotificationsCollection>]
+public sealed class PasswordResetByLinkTests(NotificationsFixture fixture) : EmailTestBase(fixture)
 {
     private const string NewPassword = "Another-Test-Password-456!";
 

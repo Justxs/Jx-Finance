@@ -5,8 +5,8 @@ using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Users;
 
-[Collection<IntegrationCollection>]
-public sealed class UserRecoveryTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<PeopleCollection>]
+public sealed class UserRecoveryTests(PeopleFixture fixture) : IntegrationTestBase(fixture)
 {
     private const string WrongPassword = "Wrong-Password-123!";
     private const string TemporaryPassword = "Temporary-Password-456!";

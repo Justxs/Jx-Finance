@@ -10,8 +10,8 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace JxFinance.Tests.Integration.Auth;
 
-[Collection<IntegrationCollection>]
-public sealed class PasskeyTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<PeopleCollection>]
+public sealed class PasskeyTests(PeopleFixture fixture) : IntegrationTestBase(fixture)
 {
     private const string WrongPassword = "Wrong-Password-123!";
     private const string TemporaryPassword = "Temporary-Password-456!";

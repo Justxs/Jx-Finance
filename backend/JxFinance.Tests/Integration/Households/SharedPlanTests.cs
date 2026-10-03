@@ -4,8 +4,8 @@ using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Households;
 
-[Collection<IntegrationCollection>]
-public sealed class SharedPlanTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<PeopleCollection>]
+public sealed class SharedPlanTests(PeopleFixture fixture) : IntegrationTestBase(fixture)
 {
     private const string AsOf = "2026-07-15";
 

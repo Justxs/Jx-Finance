@@ -4,8 +4,8 @@ using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Accounts;
 
-[Collection<IntegrationCollection>]
-public sealed class AccountRestoreTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<InvestmentsCollection>]
+public sealed class AccountRestoreTests(InvestmentsFixture fixture) : IntegrationTestBase(fixture)
 {
     [Fact]
     public async Task An_archived_account_is_listed_and_restoring_it_brings_back_everything_posted_to_it()

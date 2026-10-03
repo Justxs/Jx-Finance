@@ -4,8 +4,8 @@ using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Imports;
 
-[Collection<IntegrationCollection>]
-public sealed class RefundImportTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<ImportsCollection>]
+public sealed class RefundImportTests(ImportsFixture fixture) : IntegrationTestBase(fixture)
 {
     private const string Header = "\"Sąskaitos Nr.\",\"\",\"Data\",\"Gavėjas\",\"Paaiškinimai\",\"Suma\",\"Valiuta\",\"D/K\",\"Įrašo Nr.\"\n";
 

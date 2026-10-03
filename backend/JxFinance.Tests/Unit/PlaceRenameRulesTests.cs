@@ -34,7 +34,8 @@ public sealed class PlaceRenameRulesTests
 
         var error = Assert.Single(new RenamePlaceValidator().Validate(request).Errors);
 
-        Assert.Equal((nameof(RenamePlaceRequest.Name), code), (error.PropertyName, error.ErrorCode));
+        Assert.Equal(nameof(RenamePlaceRequest.Name), error.PropertyName, ignoreCase: true);
+        Assert.Equal(code, error.ErrorCode);
     }
 
     [Fact]

@@ -4,8 +4,8 @@ using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Imports;
 
-[Collection<IntegrationCollection>]
-public sealed class ImportGroupingTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<ImportsCollection>]
+public sealed class ImportGroupingTests(ImportsFixture fixture) : IntegrationTestBase(fixture)
 {
     [Fact]
     public async Task A_new_group_takes_the_imported_and_linked_rows_but_not_transfers_or_duplicates()

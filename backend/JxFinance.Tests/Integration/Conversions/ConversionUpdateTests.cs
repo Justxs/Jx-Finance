@@ -6,8 +6,8 @@ using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Conversions;
 
-[Collection<IntegrationCollection>]
-public sealed class ConversionUpdateTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<InvestmentsCollection>]
+public sealed class ConversionUpdateTests(InvestmentsFixture fixture) : IntegrationTestBase(fixture)
 {
     [Fact]
     public async Task Update_replaces_amounts_currencies_date_and_description()

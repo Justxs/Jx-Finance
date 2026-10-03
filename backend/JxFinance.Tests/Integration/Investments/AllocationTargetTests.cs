@@ -4,8 +4,8 @@ using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Investments;
 
-[Collection<IntegrationCollection>]
-public sealed class AllocationTargetTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<InvestmentsCollection>]
+public sealed class AllocationTargetTests(InvestmentsFixture fixture) : IntegrationTestBase(fixture)
 {
     private const string Url = "/api/investments/allocation-targets";
 

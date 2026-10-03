@@ -4,8 +4,8 @@ using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.RecurringBills;
 
-[Collection<IntegrationCollection>]
-public sealed class SpreadRecurringBillTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<ImportsCollection>]
+public sealed class SpreadRecurringBillTests(ImportsFixture fixture) : IntegrationTestBase(fixture)
 {
     [Fact]
     public async Task Confirming_a_spread_entry_writes_a_spread_transaction()

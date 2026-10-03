@@ -3,8 +3,8 @@ using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Reports;
 
-[Collection<IntegrationCollection>]
-public sealed class InvestmentIncomeReportTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<ReportsCollection>]
+public sealed class InvestmentIncomeReportTests(ReportsFixture fixture) : IntegrationTestBase(fixture)
 {
     private const string Range = "dateFrom=2026-03-01&dateTo=2026-03-31";
 

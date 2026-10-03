@@ -4,8 +4,8 @@ using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Imports;
 
-[Collection<IntegrationCollection>]
-public sealed class ImportEndpointTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<ImportsCollection>]
+public sealed class ImportEndpointTests(ImportsFixture fixture) : IntegrationTestBase(fixture)
 {
     private const string SampleCsv =
         "\"Sąskaitos Nr.\",\"\",\"Data\",\"Gavėjas\",\"Paaiškinimai\",\"Suma\",\"Valiuta\",\"D/K\",\"Įrašo Nr.\"\n"

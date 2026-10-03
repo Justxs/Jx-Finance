@@ -4,8 +4,8 @@ using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Email;
 
-[Collection<IntegrationCollection>]
-public sealed class SmtpSettingsTests(ApiFixture fixture) : EmailTestBase(fixture)
+[Collection<NotificationsCollection>]
+public sealed class SmtpSettingsTests(NotificationsFixture fixture) : EmailTestBase(fixture)
 {
     [Fact]
     public async Task Settings_round_trip_without_ever_returning_the_password()

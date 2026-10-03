@@ -9,8 +9,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace JxFinance.Tests.Integration.MonthCloses;
 
-[Collection<IntegrationCollection>]
-public sealed class MonthCloseTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<ReportsCollection>]
+public sealed class MonthCloseTests(ReportsFixture fixture) : IntegrationTestBase(fixture)
 {
     private const string March = "2025-03";
 

@@ -6,8 +6,8 @@ using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Accounts;
 
-[Collection<IntegrationCollection>]
-public sealed class CashFlowForecastTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<InvestmentsCollection>]
+public sealed class CashFlowForecastTests(InvestmentsFixture fixture) : IntegrationTestBase(fixture)
 {
     private const string Url = "/api/accounts/forecast";
 

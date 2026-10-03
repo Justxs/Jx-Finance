@@ -4,8 +4,8 @@ using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Payees;
 
-[Collection<IntegrationCollection>]
-public sealed class PayeeNameTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<LedgerCollection>]
+public sealed class PayeeNameTests(LedgerFixture fixture) : IntegrationTestBase(fixture)
 {
     [Fact]
     public async Task A_name_given_from_a_raw_description_shows_on_every_row_of_that_payee_and_in_the_report()

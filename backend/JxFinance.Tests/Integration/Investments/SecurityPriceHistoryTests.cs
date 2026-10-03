@@ -4,8 +4,8 @@ using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Investments;
 
-[Collection<IntegrationCollection>]
-public sealed class SecurityPriceHistoryTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<InvestmentsCollection>]
+public sealed class SecurityPriceHistoryTests(InvestmentsFixture fixture) : IntegrationTestBase(fixture)
 {
     [Fact]
     public async Task A_manual_price_is_written_to_the_history()
@@ -181,12 +181,13 @@ public sealed class SecurityPriceHistoryTests(ApiFixture fixture) : IntegrationT
         await UploadAsync(newer, SampleFlexReport.Xml);
         await UploadAsync(older, olderReport);
 
-        var fund = (await Client.GetFromJsonAsync<List<SecurityDto>>("/api/investments/securities?search=IE00BK5BQT80", TestContext.Current.CancellationToken))!.Single();
-        var points = await PricesAsync(Client, fund.Id);
+        var portfolio = await Client.GetFromJsonAsync<PortfolioDto>($"/api/investments/portfolio?accountId={newer}", TestContext.Current.CancellationToken);
+        var fund = portfolio!.Holdings.Single(h => h.Security.Symbol == "VWCE").Security.Id;
+        var points = await PricesAsync(Client, fund);
         Assert.Contains(new PriceDto(new DateOnly(2026, 6, 30), "120"), points);
         Assert.Contains(new PriceDto(new DateOnly(2026, 5, 31), "90"), points);
         Assert.DoesNotContain(points, p => p.Price == "100" || p.Price == "110");
-        Assert.Equal(("120", new DateOnly(2026, 6, 30)), (fund.LastPrice, fund.LastPriceDate));
+        Assert.Equal(("120", new DateOnly(2026, 6, 30)), await LastPriceAsync(fund));
     }
 
     [Fact]
@@ -228,4 +229,10 @@ public sealed class SecurityPriceHistoryTests(ApiFixture fixture) : IntegrationT
     private sealed record PriceDto(DateOnly Date, string Price);
 
     private sealed record SecurityDto(Guid Id, string? LastPrice, DateOnly? LastPriceDate);
+
+    private sealed record HeldSecurityDto(Guid Id, string Symbol);
+
+    private sealed record HoldingDto(HeldSecurityDto Security);
+
+    private sealed record PortfolioDto(List<HoldingDto> Holdings);
 }

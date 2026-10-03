@@ -5,8 +5,8 @@ using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Reports;
 
-[Collection<IntegrationCollection>]
-public sealed class ReportEndpointTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<ReportsCollection>]
+public sealed class ReportEndpointTests(ReportsFixture fixture) : IntegrationTestBase(fixture)
 {
     [Fact]
     public async Task Summary_totals_the_range_and_attributes_split_lines_to_their_categories()

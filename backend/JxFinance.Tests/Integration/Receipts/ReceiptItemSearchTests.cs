@@ -7,8 +7,8 @@ using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Receipts;
 
-[Collection<IntegrationCollection>]
-public sealed class ReceiptItemSearchTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<DataCollection>]
+public sealed class ReceiptItemSearchTests(DataFixture fixture) : IntegrationTestBase(fixture)
 {
     [Fact]
     public async Task An_item_name_finds_the_purchase_in_the_ledger_the_list_the_summary_and_the_export()

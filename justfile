@@ -111,6 +111,14 @@ test:
     cd backend; dotnet tool restore
     dotnet test --solution backend/JxFinance.slnx -c Release
 
+# Run the backend unit and architecture tests only; no Docker needed.
+test-unit:
+    dotnet test --project backend/JxFinance.Tests -c Release --filter-namespace JxFinance.Tests.Unit --filter-namespace JxFinance.Tests.Architecture
+
+# Run one backend test class by its name: just test-class ManualExchangeRateTests.
+test-class name:
+    dotnet test --project backend/JxFinance.Tests -c Release --filter-class "*.{{name}}"
+
 # Every story's play function and an axe scan, run in jsdom by Vitest (no browser needed).
 test-stories:
     nub run --cwd frontend test:stories

@@ -4,8 +4,8 @@ using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Dashboard;
 
-[Collection<IntegrationCollection>]
-public sealed class DashboardLayoutTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<ReportsCollection>]
+public sealed class DashboardLayoutTests(ReportsFixture fixture) : IntegrationTestBase(fixture)
 {
     private const string Url = "/api/users/me/dashboard-layout";
 

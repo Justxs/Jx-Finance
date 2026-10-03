@@ -5,8 +5,8 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace JxFinance.Tests.Integration.Receipts;
 
-[Collection<IntegrationCollection>]
-public sealed class ReceiptReturnTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<DataCollection>]
+public sealed class ReceiptReturnTests(DataFixture fixture) : IntegrationTestBase(fixture)
 {
     private FakeReceiptReader Reader => Services.GetRequiredService<FakeReceiptReader>();
 

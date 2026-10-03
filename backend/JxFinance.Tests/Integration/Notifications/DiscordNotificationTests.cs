@@ -12,8 +12,8 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace JxFinance.Tests.Integration.Notifications;
 
-[Collection<IntegrationCollection>]
-public sealed class DiscordNotificationTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<NotificationsCollection>]
+public sealed class DiscordNotificationTests(NotificationsFixture fixture) : IntegrationTestBase(fixture)
 {
     private const string SettingsUrl = "/api/settings/discord";
     private const string TestUrl = SettingsUrl + "/test";

@@ -4,8 +4,8 @@ using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Conversions;
 
-[Collection<IntegrationCollection>]
-public sealed class ConversionEndpointTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<InvestmentsCollection>]
+public sealed class ConversionEndpointTests(InvestmentsFixture fixture) : IntegrationTestBase(fixture)
 {
     [Theory]
     [InlineData(null, "eur", "497.50", "550.00", "2.50")]

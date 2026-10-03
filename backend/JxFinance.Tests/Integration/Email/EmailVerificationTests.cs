@@ -4,8 +4,8 @@ using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Email;
 
-[Collection<IntegrationCollection>]
-public sealed class EmailVerificationTests(ApiFixture fixture) : EmailTestBase(fixture)
+[Collection<NotificationsCollection>]
+public sealed class EmailVerificationTests(NotificationsFixture fixture) : EmailTestBase(fixture)
 {
     [Fact]
     public async Task A_new_user_starts_unconfirmed_and_the_link_confirms_the_address()

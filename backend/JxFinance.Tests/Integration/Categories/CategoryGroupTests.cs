@@ -4,8 +4,8 @@ using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Categories;
 
-[Collection<IntegrationCollection>]
-public sealed class CategoryGroupTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<LedgerCollection>]
+public sealed class CategoryGroupTests(LedgerFixture fixture) : IntegrationTestBase(fixture)
 {
     [Fact]
     public async Task A_parent_rolls_up_its_sub_categories_in_the_ledger_a_budget_and_the_report()

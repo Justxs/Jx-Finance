@@ -6,8 +6,8 @@ using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Diagnostics;
 
-[Collection<IntegrationCollection>]
-public sealed class ApiDocsTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<NotificationsCollection>]
+public sealed class ApiDocsTests(NotificationsFixture fixture) : IntegrationTestBase(fixture)
 {
     private static readonly string[] LeakedCollectionPrefixes = ["IReadOnlyListOf", "IEnumerableOf", "ListOf", "IListOf", "ICollectionOf"];
 

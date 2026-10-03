@@ -3,8 +3,8 @@ using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Dashboard;
 
-[Collection<IntegrationCollection>]
-public sealed class ChartsEndpointTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<ReportsCollection>]
+public sealed class ChartsEndpointTests(ReportsFixture fixture) : IntegrationTestBase(fixture)
 {
     [Fact]
     public async Task Category_breakdown_attributes_split_lines_and_unsplit_transactions()

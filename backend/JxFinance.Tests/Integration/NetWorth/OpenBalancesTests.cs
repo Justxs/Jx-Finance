@@ -3,8 +3,8 @@ using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.NetWorth;
 
-[Collection<IntegrationCollection>]
-public sealed class OpenBalancesTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<NetWorthCollection>]
+public sealed class OpenBalancesTests(NetWorthFixture fixture) : IntegrationTestBase(fixture)
 {
     private const string OpenBalancesUrl = "/api/networth/open-balances";
 

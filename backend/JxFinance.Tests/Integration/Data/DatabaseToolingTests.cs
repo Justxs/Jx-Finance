@@ -9,8 +9,8 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace JxFinance.Tests.Integration.Data;
 
-[Collection<IntegrationCollection>]
-public sealed class DatabaseToolingTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<DataCollection>]
+public sealed class DatabaseToolingTests(DataFixture fixture) : IntegrationTestBase(fixture)
 {
     [Fact]
     public void Model_has_no_changes_without_a_migration()

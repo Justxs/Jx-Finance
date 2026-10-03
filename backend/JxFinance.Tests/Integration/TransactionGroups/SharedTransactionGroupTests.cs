@@ -6,8 +6,8 @@ using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.TransactionGroups;
 
-[Collection<IntegrationCollection>]
-public sealed class SharedTransactionGroupTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<ReportsCollection>]
+public sealed class SharedTransactionGroupTests(ReportsFixture fixture) : IntegrationTestBase(fixture)
 {
     private const string GroupsUrl = "/api/transaction-groups";
 

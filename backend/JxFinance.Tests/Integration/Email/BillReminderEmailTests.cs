@@ -2,8 +2,8 @@ using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Email;
 
-[Collection<IntegrationCollection>]
-public sealed class BillReminderEmailTests(ApiFixture fixture) : EmailTestBase(fixture)
+[Collection<NotificationsCollection>]
+public sealed class BillReminderEmailTests(NotificationsFixture fixture) : EmailTestBase(fixture)
 {
     [Fact]
     public async Task No_email_is_sent_while_bill_reminders_are_not_ticked()

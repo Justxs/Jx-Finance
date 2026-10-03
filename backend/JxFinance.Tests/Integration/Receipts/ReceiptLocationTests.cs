@@ -5,8 +5,8 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace JxFinance.Tests.Integration.Receipts;
 
-[Collection<IntegrationCollection>]
-public sealed class ReceiptLocationTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<DataCollection>]
+public sealed class ReceiptLocationTests(DataFixture fixture) : IntegrationTestBase(fixture)
 {
     private const decimal PhotoLatitude = 54.68694m;
     private const decimal PhotoLongitude = 25.28917m;

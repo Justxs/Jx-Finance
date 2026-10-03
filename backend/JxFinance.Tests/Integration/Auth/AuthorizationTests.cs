@@ -5,8 +5,8 @@ using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Auth;
 
-[Collection<IntegrationCollection>]
-public sealed class AuthorizationTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+[Collection<PeopleCollection>]
+public sealed class AuthorizationTests(PeopleFixture fixture) : IntegrationTestBase(fixture)
 {
     private static readonly HashSet<string> AnonymousRoutes =
     [

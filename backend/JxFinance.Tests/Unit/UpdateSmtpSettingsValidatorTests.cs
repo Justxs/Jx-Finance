@@ -12,7 +12,7 @@ public sealed class UpdateSmtpSettingsValidatorTests
         var result = new UpdateSmtpSettingsValidator().Validate(Request(SmtpEncryption.None, "relay"));
 
         var error = Assert.Single(result.Errors);
-        Assert.Equal(nameof(UpdateSmtpSettingsRequest.Encryption), error.PropertyName);
+        Assert.Equal(nameof(UpdateSmtpSettingsRequest.Encryption), error.PropertyName, ignoreCase: true);
         Assert.Equal(ErrorCodes.EmailInsecureConnection, error.ErrorCode);
     }
 

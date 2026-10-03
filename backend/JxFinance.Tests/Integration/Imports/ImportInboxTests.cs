@@ -8,8 +8,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace JxFinance.Tests.Integration.Imports;
 
-[Collection<IntegrationCollection>]
-public sealed class ImportInboxTests(ApiFixture fixture) : IntegrationTestBase(fixture), IDisposable
+[Collection<ImportsCollection>]
+public sealed class ImportInboxTests(ImportsFixture fixture) : IntegrationTestBase(fixture), IDisposable
 {
     private readonly string _root = Path.Combine(Path.GetTempPath(), "jx-inbox-job", Guid.NewGuid().ToString("N"));
 
