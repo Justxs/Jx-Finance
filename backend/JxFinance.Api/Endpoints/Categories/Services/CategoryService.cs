@@ -157,7 +157,7 @@ public sealed class CategoryService(
         await db.RecurringBills.IgnoreQueryFilters().Where(b => b.CategoryId == categoryId)
             .ExecuteUpdateAsync(s => s.SetProperty(b => b.CategoryId, (CategoryId?)null), cancellationToken);
         await db.Budgets.IgnoreQueryFilters(QueryFilters.OwnerOnly).Where(b => b.CategoryId == categoryId)
-            .ExecuteUpdateAsync(s => s.SetProperty(b => b.IsDeleted, true), cancellationToken);
+            .ExecuteUpdateAsync(s => s.SetProperty(b => b.IsDeleted, true).SetProperty(b => b.UpdatedAt, now), cancellationToken);
         await db.Categories.IgnoreQueryFilters().Where(c => c.ParentId == categoryId)
             .ExecuteUpdateAsync(s => s.SetProperty(c => c.ParentId, (CategoryId?)null), cancellationToken);
         db.Categories.Remove(category);

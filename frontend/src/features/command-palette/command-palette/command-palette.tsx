@@ -36,7 +36,7 @@ import { notify } from "@/lib/mutations";
 import { silentQuery } from "@/lib/query-client";
 import { UserRole } from "@/lib/user-role";
 import { cn } from "@/lib/utils";
-import { switchHousehold, useActiveHouseholdId } from "@/stores/active-household-store";
+import { setActiveHousehold, useActiveHouseholdId } from "@/stores/active-household-store";
 import { setLocale, useLocale } from "@/stores/app-store";
 import {
   rememberCommand,
@@ -160,7 +160,7 @@ function CommandPaletteContent({ onClose }: Readonly<ContentProps>) {
         break;
       }
       case "household": {
-        switchHousehold(queryClient, target.householdId);
+        setActiveHousehold(target.householdId);
         break;
       }
       case "backup": {

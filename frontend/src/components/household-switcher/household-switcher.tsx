@@ -1,4 +1,3 @@
-import { useQueryClient } from "@tanstack/react-query";
 import { House } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useHouseholdsSuspense } from "@/api/generated";
@@ -6,7 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/u
 import { Tooltip } from "@/components/ui/tooltip/tooltip";
 import { namedOptions } from "@/lib/options";
 import { cn } from "@/lib/utils";
-import { switchHousehold, useActiveHouseholdId } from "@/stores/active-household-store";
+import { setActiveHousehold, useActiveHouseholdId } from "@/stores/active-household-store";
 
 const EVERYTHING = "everything";
 
@@ -17,7 +16,6 @@ interface Props {
 
 export function HouseholdSwitcher({ collapsed = false, className }: Readonly<Props>) {
   const { t } = useTranslation();
-  const queryClient = useQueryClient();
   const households = useHouseholdsSuspense().data ?? [];
   const storedId = useActiveHouseholdId();
 
@@ -36,7 +34,7 @@ export function HouseholdSwitcher({ collapsed = false, className }: Readonly<Pro
     if (!chosen) {
       return;
     }
-    switchHousehold(queryClient, chosen.value === EVERYTHING ? undefined : chosen.value);
+    setActiveHousehold(chosen.value === EVERYTHING ? undefined : chosen.value);
   }
 
   return (

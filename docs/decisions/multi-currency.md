@@ -4,12 +4,15 @@ Related: feature page [Multi-currency](../features/multi-currency.md); architect
 
 ## Current
 
-Amount plus ISO currency; one installation-wide reporting currency (default EUR); ECB daily rates, which an administrator can override or fill in by hand per currency and date, a hand rate winning on its own date and revaluing the rows that depend on it; only the 30 currencies of the `Currency` enum; income and expenses valued at the transaction-date rate, holdings at the newest rate; decimal/numeric(18,2); canonical strings over HTTP; comma input normalized at the client
+Amount plus ISO currency; one installation-wide reporting currency (default EUR); ECB daily rates, which an administrator can override or fill in by hand per currency and date, a hand rate winning on its own date and revaluing the rows that depend on it; only the 30 currencies of the `Currency` enum; income and expenses valued at the transaction-date rate, holdings at the newest rate; decimal/numeric(18,2); canonical strings over HTTP; comma input normalized at the client; a change of reporting currency revalues history at each date's rate and converts budget limits and goal amounts at today's rate
 
 ## Log
 
 Newest first. Each entry is a choice between real alternatives: what was chosen, what was rejected, and why.
 
+- **2026-10-03.** Changing the reporting currency converts every budget limit and goal target and saved amount at today's rate, in the same transaction as the revaluation of history.
+  - Rejected: Keeping the numbers and leaving the owner to review them by hand, which is what the app did; stamping a currency on each budget and goal and converting whenever one is read.
+  - Why: A limit has no currency of its own and is read as an amount in the reporting currency, so keeping the number silently changed what it meant, and the budget alerts fired at the wrong spending. A plan is a figure for now rather than a record of a past day, so today's rate is the right one, and converting once keeps every reader of `LimitAmount` unchanged where a stored currency would have needed a conversion in each.
 - **2026-10-01.** Rates entered by hand are kept in their own `ManualExchangeRates` table, and a hand rate wins over the synced ECB rate of the same date. Decided while the owner was away, to be reviewed
   - Rejected: A `Source` column on `ExchangeRates` with one row per date and currency, as security prices keep one row per date with its source; a source column inside the key, with two rows per date
   - Why: One row per date would overwrite the ECB value, so deleting a hand rate could only fall back by fetching again, which fails while sync is off, the very case a hand rate is for. Two rows in one table would make every coverage, sync and lookup query filter by source, and a hand rate would count as a fetched day. A table of its own leaves the sync untouched. The precedence mirrors live prices, where a typed price is never replaced by a fetched one

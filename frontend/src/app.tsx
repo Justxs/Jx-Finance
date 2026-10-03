@@ -12,6 +12,7 @@ import { pageViewTransition } from "@/lib/page-transition";
 import { queryClient } from "@/lib/query-client";
 import { type FeatureKey, publicSettingsQueryOptions, settingsQueryOptions } from "@/lib/settings";
 import { type ShortcutRouter, registerShortcuts } from "@/lib/shortcuts";
+import { onActiveHouseholdChange } from "@/stores/active-household-store";
 import { initLocale } from "@/stores/app-store";
 import { isCommandPaletteOpen, toggleCommandPalette } from "@/stores/command-palette-store";
 import { isShortcutsHelpOpen, toggleShortcutsHelp } from "@/stores/shortcuts-help-store";
@@ -48,6 +49,12 @@ function handleSessionExpired() {
 }
 
 onSessionExpired(handleSessionExpired);
+
+function refreshForHousehold() {
+  void queryClient.invalidateQueries();
+}
+
+onActiveHouseholdChange(refreshForHousehold);
 
 function isFeatureOn(feature: FeatureKey) {
   const settings = queryClient.getQueryData(settingsQueryOptions().queryKey);

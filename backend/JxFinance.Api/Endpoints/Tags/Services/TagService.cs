@@ -21,7 +21,8 @@ public sealed class TagService(
     AppDbContext db,
     ICurrentUser currentUser,
     ISharingGuard sharing,
-    IDeletionRecorder deletions) : ITagService
+    IDeletionRecorder deletions,
+    IClock clock) : ITagService
 {
     private static readonly DomainError NotFound = EntityLookup.NotFound("Tag not found.");
 
@@ -106,9 +107,10 @@ public sealed class TagService(
         entry.Remember(DeletionChangeKind.TransactionTag, linked.Select(t => t.Value));
         entry.Remember(DeletionChangeKind.Budget, budgets.Select(b => b.Value));
 
+        var now = clock.UtcNow;
         await db.TransactionTags.Where(t => t.TagId == tagId).ExecuteDeleteAsync(cancellationToken);
         await db.Budgets.IgnoreQueryFilters(QueryFilters.OwnerOnly).Where(b => b.TagId == tagId)
-            .ExecuteUpdateAsync(s => s.SetProperty(b => b.IsDeleted, true), cancellationToken);
+            .ExecuteUpdateAsync(s => s.SetProperty(b => b.IsDeleted, true).SetProperty(b => b.UpdatedAt, now), cancellationToken);
         db.Tags.Remove(tag);
         await db.SaveChangesAsync(cancellationToken);
 

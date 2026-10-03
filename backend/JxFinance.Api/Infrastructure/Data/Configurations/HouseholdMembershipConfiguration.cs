@@ -9,7 +9,7 @@ public sealed class HouseholdMembershipConfiguration : IEntityTypeConfiguration<
 {
     public void Configure(EntityTypeBuilder<HouseholdMembership> builder)
     {
-        builder.HasIndex(m => new { m.HouseholdId, m.UserId }).IsUnique();
+        builder.HasIndex(m => new { m.HouseholdId, m.UserId }).IsUnique().HasFilter(DbSchema.NotDeletedFilter);
         builder.HasOne<AppUser>().WithMany().HasForeignKey(m => m.UserId).OnDelete(DeleteBehavior.Restrict);
     }
 }

@@ -1,6 +1,10 @@
-import type { QueryClient } from "@tanstack/react-query";
 import type { Scope } from "@/api/generated/model";
-import { readPreferences, savePreferences, usePreferences } from "./preferences";
+import {
+  onPreferencesChange,
+  readPreferences,
+  savePreferences,
+  usePreferences,
+} from "./preferences";
 
 interface SharingDefaults {
   scope: Scope;
@@ -15,9 +19,15 @@ export function setActiveHousehold(activeHouseholdId: string | undefined) {
   savePreferences({ activeHouseholdId });
 }
 
-export function switchHousehold(queryClient: QueryClient, activeHouseholdId: string | undefined) {
-  setActiveHousehold(activeHouseholdId);
-  void queryClient.invalidateQueries();
+export function onActiveHouseholdChange(listener: () => void) {
+  let current = readActiveHouseholdId();
+  return onPreferencesChange(() => {
+    const next = readActiveHouseholdId();
+    if (next !== current) {
+      current = next;
+      listener();
+    }
+  });
 }
 
 export function useActiveHouseholdId(): string | undefined {

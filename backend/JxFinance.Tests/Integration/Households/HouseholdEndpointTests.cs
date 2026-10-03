@@ -35,6 +35,22 @@ public sealed class HouseholdEndpointTests(ApiFixture fixture) : IntegrationTest
     }
 
     [Fact]
+    public async Task Owner_can_add_back_a_member_they_removed()
+    {
+        var household = await CreateHouseholdAsync();
+        var user = await CreateUserAsync();
+        await PostAsync<HouseholdDto>(Client, $"/api/households/{household}/members", new { email = user.Email, role = "member" });
+        (await Client.DeleteAsync($"/api/households/{household}/members/{user.Id}", TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
+
+        var updated = await PostAsync<HouseholdDto>(
+            Client,
+            $"/api/households/{household}/members",
+            new { email = user.Email, role = "owner" });
+
+        Assert.Contains(updated.Members, m => m.Email == user.Email && m.Role == "owner");
+    }
+
+    [Fact]
     public async Task Adding_an_unknown_email_fails()
     {
         var household = await CreateHouseholdAsync();

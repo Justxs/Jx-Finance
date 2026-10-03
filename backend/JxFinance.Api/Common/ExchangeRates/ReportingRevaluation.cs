@@ -13,6 +13,7 @@ namespace JxFinance.Common.ExchangeRates;
 public sealed class ReportingRevaluation(
     AppDbContext db,
     IExchangeRateService rates,
+    IClock clock,
     IOptions<AppOptions> options) : IReportingRevaluation
 {
     private const string LockRevaluedTables =
@@ -40,6 +41,37 @@ public sealed class ReportingRevaluation(
             (t, value) => t.ReportingAmount = value,
             reportingCurrency,
             cancellationToken);
+
+    public async Task<string?> ConvertPlansAsync(Currency from, Currency to, CancellationToken cancellationToken)
+    {
+        var budgets = await db.Budgets.IgnoreQueryFilters().ToListAsync(cancellationToken);
+        var goals = await db.Goals.IgnoreQueryFilters().ToListAsync(cancellationToken);
+        if (budgets.Count == 0 && goals.Count == 0)
+        {
+            return null;
+        }
+
+        var today = clock.Today;
+        var table = await rates.GetForDateAsync(today, cancellationToken);
+        if (!rates.IsFresh(table, today) || table.Rate(from, to) is not { } rate)
+        {
+            return $"No exchange rate is available for {from.ToCode()} to {to.ToCode()} on {today:yyyy-MM-dd}. Sync exchange rates and try again.";
+        }
+
+        foreach (var budget in budgets)
+        {
+            budget.LimitAmount = new Money(Money.Round(budget.LimitAmount.Amount * rate), to);
+        }
+
+        foreach (var goal in goals)
+        {
+            goal.TargetAmount = new Money(Money.Round(goal.TargetAmount.Amount * rate), to);
+            goal.CurrentAmount = new Money(Money.Round(goal.CurrentAmount.Amount * rate), to);
+        }
+
+        await db.SaveChangesAsync(cancellationToken);
+        return null;
+    }
 
     private async Task<string?> RevalueInBatchesAsync<T, TId>(
         Func<TId?, int, IQueryable<T>> page,

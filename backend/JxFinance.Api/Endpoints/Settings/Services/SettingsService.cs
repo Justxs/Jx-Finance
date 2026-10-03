@@ -75,7 +75,7 @@ public sealed class SettingsService(
             async settings =>
             {
                 if (settings.ReportingCurrency != request.ReportingCurrency
-                    && await RevalueAsync(request.ReportingCurrency, cancellationToken) is { } error)
+                    && await RevalueAsync(settings.ReportingCurrency, request.ReportingCurrency, cancellationToken) is { } error)
                 {
                     return new DomainError(ErrorCodes.ExchangeRateUnavailable, error);
                 }
@@ -305,7 +305,7 @@ public sealed class SettingsService(
         return new ExchangeRateSyncResponse(added, latest.AsOf);
     }
 
-    private async Task<string?> RevalueAsync(Currency reportingCurrency, CancellationToken cancellationToken)
+    private async Task<string?> RevalueAsync(Currency previousCurrency, Currency reportingCurrency, CancellationToken cancellationToken)
     {
         await revaluation.LockAsync(cancellationToken);
 
@@ -357,7 +357,7 @@ public sealed class SettingsService(
             .Where(t => t.UnusualCheckedAt != null)
             .ExecuteUpdateAsync(s => s.SetProperty(t => t.UnusualCheckedAt, (DateTimeOffset?)null), cancellationToken);
 
-        return null;
+        return await revaluation.ConvertPlansAsync(previousCurrency, reportingCurrency, cancellationToken);
     }
 
     private SettingsResponse ToResponse(InstanceSettingsSnapshot settings, DateOnly? ratesAsOf) => new(

@@ -95,6 +95,34 @@ public sealed class RetentionJobTests(ApiFixture fixture) : IntegrationTestBase(
         Assert.Equal(1, await CountAsync(db => db.Transactions.IgnoreQueryFilters().Where(t => t.Id == keptId && !t.IsDeleted)));
     }
 
+    [Theory]
+    [InlineData("category")]
+    [InlineData("tag")]
+    public async Task A_long_unedited_budget_survives_retention_while_its_deleted_owner_can_return(string kind)
+    {
+        using var member = await CreateUserClientAsync();
+        var owner = kind == "category" ? await CreateCategoryAsync(client: member) : await CreateTagAsync(client: member);
+        object request = kind == "category"
+            ? new { categoryId = owner, limitAmount = "200.00" }
+            : new { tagId = owner, limitAmount = "200.00" };
+        var budget = await PostAsync<IdDto>(member, "/api/budgets", request);
+        var budgetId = new Domain.Budgets.BudgetId(budget.Id);
+        await WithDbAsync(db => db.Budgets.IgnoreQueryFilters().Where(b => b.Id == budgetId).ExecuteUpdateAsync(
+            s => s.SetProperty(b => b.UpdatedAt, DateTimeOffset.UtcNow.AddDays(-DeletionEntry.RetentionDays - 1)),
+            TestContext.Current.CancellationToken));
+
+        var path = kind == "category" ? "categories" : "tags";
+        (await member.DeleteAsync($"/api/{path}/{owner}", TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
+        await RunAsync();
+        var restore = await member.PostAsJsonAsync(
+            "/api/trash/restore",
+            new { kind, entityId = owner },
+            TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.NoContent, restore.StatusCode);
+        Assert.Equal(1, await CountAsync(db => db.Budgets.IgnoreQueryFilters().Where(b => b.Id == budgetId && !b.IsDeleted)));
+    }
+
     [Fact]
     public async Task An_expired_session_goes_and_the_signed_in_one_stays()
     {

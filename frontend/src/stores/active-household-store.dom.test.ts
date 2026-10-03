@@ -1,4 +1,3 @@
-import { QueryClient } from "@tanstack/react-query";
 import { act, renderHook } from "@testing-library/react";
 import { expect, test, vi } from "vitest";
 import { freshModuleLoader } from "@/test/fresh-module";
@@ -51,13 +50,18 @@ test("sharing defaults follow the active household and ignore one the user left"
   expect(stale).toEqual({ scope: "personal", householdId: "" });
 });
 
-test("switching the household refreshes every query", async () => {
+test("a change of household is announced once, and other preferences are not", async () => {
   const store = await loadStore();
-  const queryClient = new QueryClient();
-  const invalidate = vi.spyOn(queryClient, "invalidateQueries");
+  const preferences = await import("./preferences");
+  const listener = vi.fn();
+  const stop = store.onActiveHouseholdChange(listener);
 
-  store.switchHousehold(queryClient, family);
+  store.setActiveHousehold(family);
+  preferences.savePreferences({ sidebarCollapsed: true });
+  store.setActiveHousehold(family);
+  await vi.waitFor(() => expect(listener).toHaveBeenCalledOnce());
 
-  expect(store.readActiveHouseholdId()).toBe(family);
-  expect(invalidate).toHaveBeenCalledOnce();
+  store.setActiveHousehold(undefined);
+  await vi.waitFor(() => expect(listener).toHaveBeenCalledTimes(2));
+  stop();
 });

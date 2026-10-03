@@ -13,4 +13,6 @@ public interface IReportingRevaluation
         IQueryable<InvestmentTransaction> entries,
         Currency reportingCurrency,
         CancellationToken cancellationToken);
+
+    Task<string?> ConvertPlansAsync(Currency from, Currency to, CancellationToken cancellationToken);
 }

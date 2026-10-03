@@ -161,7 +161,7 @@ flowchart TD
     Kind -->|"a page or a record"| Nav["Navigate to its route and search parameters"]
     Kind -->|"a create action"| Url["The same navigation with new=true, new=transfer or new=account"]
     Kind -->|"theme, language or amounts"| Pref["savePreferences, the same call the account menu and Appearance make"]
-    Kind -->|"active household"| Scope["setActiveHousehold, then every query is invalidated"]
+    Kind -->|"active household"| Scope["setActiveHousehold; the app invalidates every query"]
     Kind -->|"back up now"| Backup["POST /api/backups, with a toast"]
     Kind -->|"sign out"| Out["POST /api/auth/logout, forget the member's preferences, clear the cache, go to /login"]
     Kind -->|"quick add"| Quick["Pick the category, then /transactions?new=true with the draft in history state"]
@@ -198,4 +198,4 @@ The dialog is a Base UI dialog with an `sr-only` title and description; the box 
 
 Below the `md` breakpoint the sidebar becomes a compact header with a scrolling navigation strip of the same hub entries, tables become lists (`TransactionsList`) and filters move into a dialog; both layouts share one data source and the switch is CSS only.
 
-`activeHouseholdId` is the only preference the server reads: the API client puts it on every request as `X-Active-Household`, and `HouseholdSwitcher` invalidates every query after a change so the whole application reloads under the new scope. It sits under the brand in the sidebar and beside the brand in the phone header, shows the current scope, and renders nothing for a user with no household. See [Households and sharing](households-and-sharing.md).
+`activeHouseholdId` is the only preference the server reads: the API client puts it on every request as `X-Active-Household`, and `app.tsx` listens for a change of it through `onActiveHouseholdChange` and invalidates every query, so the whole application reloads under the new scope. The listener sits on the preferences collection rather than in the switcher, so it also fires in every other open tab, which picks up the change through the browser's storage event; until 2026-10-03 only the tab that switched refreshed, and another tab kept showing the old household's data under the new scope. It sits under the brand in the sidebar and beside the brand in the phone header, shows the current scope, and renders nothing for a user with no household. See [Households and sharing](households-and-sharing.md).

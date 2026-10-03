@@ -104,7 +104,12 @@ flowchart TD
     Batch --> Missing{"Any rate missing?"}
     Missing -->|"yes"| Rollback["Roll back everything, settings unchanged"]
     Missing -->|"no"| Same["One UPDATE per table for rows already in the new currency"]
-    Same --> Commit["Commit, settings snapshot replaced"]
-    Commit --> Manual["Budgets, goals, bills keep their numbers:<br/>review by hand"]
+    Same --> Plans["Budget limits and goal amounts, deleted ones included,<br/>converted at today's rate"]
+    Plans --> Today{"Today's rate fresh?"}
+    Today -->|"no"| Rollback
+    Today -->|"yes"| Commit["Commit, settings snapshot replaced"]
     Commit --> Kept["Assets, debts, snapshots keep their own currency,<br/>converted whenever net worth is read"]
+    Commit --> Bills["Recurring entries keep their numbers:<br/>they are in their account's currency"]
 ```
+
+Since 2026-10-03 budget limits and goal targets and saved amounts follow the change. They have no currency column and are always read as amounts in the reporting currency, so before that a limit of 300 set in euros was read as 300 dollars after a switch to dollars, and the budget alerts fired at the wrong spending. Now each one is multiplied by today's rate from the old currency to the new one and rounded half away from zero, in the same transaction, so 300 EUR becomes 330 USD at 1.10. A missing or stale rate for today rolls the whole change back with `exchangeRate.unavailable`, as a missing transaction rate does, but only when there is a budget or goal to convert.

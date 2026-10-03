@@ -227,6 +227,38 @@ public sealed class SettingsEndpointTests(ApiFixture fixture) : IntegrationTestB
         Assert.Equal(10.00m, await StoredEntryReportingAmountAsync(entry));
     }
 
+    [Fact]
+    public async Task Changing_the_reporting_currency_converts_budget_limits_and_goal_amounts()
+    {
+        var original = await ReadAsync();
+        var category = await CreateCategoryAsync();
+        var budget = await PostAsync<IdDto>(Client, "/api/budgets", new { categoryId = category, limitAmount = "200.00" });
+        var goal = await PostAsync<IdDto>(Client, "/api/goals", new { name = "Kelionė", targetAmount = "500.00", currentAmount = "50.00" });
+        (await Client.DeleteAsync($"/api/goals/{goal.Id}", TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
+
+        try
+        {
+            await SaveAsync(original with { ReportingCurrency = "usd" });
+
+            Assert.Equal(220.00m, await StoredLimitAsync(budget.Id));
+            Assert.Equal((550.00m, 55.00m), await StoredGoalAmountsAsync(goal.Id));
+        }
+        finally
+        {
+            await SaveAsync(original);
+        }
+
+        Assert.Equal(200.00m, await StoredLimitAsync(budget.Id));
+        Assert.Equal((500.00m, 50.00m), await StoredGoalAmountsAsync(goal.Id));
+    }
+
+    private Task<decimal> StoredLimitAsync(Guid id) =>
+        SqlValueAsync<decimal>($"""SELECT "LimitAmount" AS "Value" FROM "Budgets" WHERE "Id" = {id}""");
+
+    private async Task<(decimal Target, decimal Current)> StoredGoalAmountsAsync(Guid id) =>
+        (await SqlValueAsync<decimal>($"""SELECT "TargetAmount" AS "Value" FROM "Goals" WHERE "Id" = {id}"""),
+            await SqlValueAsync<decimal>($"""SELECT "CurrentAmount" AS "Value" FROM "Goals" WHERE "Id" = {id}"""));
+
     private Task<decimal> StoredEntryReportingAmountAsync(Guid id) =>
         SqlValueAsync<decimal>($"""SELECT "ReportingAmount" AS "Value" FROM "InvestmentTransactions" WHERE "Id" = {id}""");
 
