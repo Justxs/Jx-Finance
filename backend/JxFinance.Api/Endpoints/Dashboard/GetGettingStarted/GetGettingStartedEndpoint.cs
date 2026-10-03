@@ -14,7 +14,7 @@ public sealed class GetGettingStartedEndpoint(IGettingStartedService gettingStar
     {
         Get(ApiRoutes.Users + "/me/getting-started");
         Group<DashboardGroup>();
-        Options(b => b.WithMetadata(TokenReadable.No));
+        Metadata(TokenReadable.No);
     }
 
     public override async Task HandleAsync(CancellationToken ct) =>

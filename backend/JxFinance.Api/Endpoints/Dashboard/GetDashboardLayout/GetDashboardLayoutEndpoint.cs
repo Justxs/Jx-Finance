@@ -13,7 +13,7 @@ public sealed class GetDashboardLayoutEndpoint(IDashboardLayoutService layouts, 
     {
         Get(ApiRoutes.Users + "/me/dashboard-layout");
         Group<DashboardGroup>();
-        Options(b => b.WithMetadata(TokenReadable.No));
+        Metadata(TokenReadable.No);
     }
 
     public override async Task HandleAsync(CancellationToken ct) =>

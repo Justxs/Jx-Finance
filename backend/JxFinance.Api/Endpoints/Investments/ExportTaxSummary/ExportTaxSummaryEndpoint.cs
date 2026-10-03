@@ -20,7 +20,7 @@ public sealed class ExportTaxSummaryEndpoint(ITaxSummaryService taxSummaryServic
     {
         Get(ApiRoutes.Investments + "/tax-summary/export");
         Group<InvestmentsGroup>();
-        Options(b => b.WithMetadata(QueryHouseholdScope.Instance));
+        Metadata(QueryHouseholdScope.Instance);
         Description(d => d.ProducesFile(MediaTypeNames.Text.Csv));
     }
 

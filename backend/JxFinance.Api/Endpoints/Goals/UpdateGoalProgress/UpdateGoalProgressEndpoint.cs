@@ -11,7 +11,7 @@ public sealed class UpdateGoalProgressEndpoint(IGoalService goalService) : Endpo
     {
         Patch(ApiRoutes.Goals + "/{id}/progress");
         Group<GoalsGroup>();
-        Options(b => b.WithMetadata(TokenWritable.Yes));
+        Metadata(TokenWritable.Yes);
         Description(d => d.ProducesProblemDetails(404));
     }
 

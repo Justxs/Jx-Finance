@@ -2,7 +2,7 @@
 
 Back to the [feature walkthrough](README.md). See also [decisions](../decisions/authentication.md), [architecture: Authentication](../architecture/authentication.md#personal-api-tokens), [Sign-in, sessions and lockout](sign-in-and-sessions.md) and [API surface](../api.md#authorization-header).
 
-Backend `Auth/Tokens` (`GetPersonalApiTokens`, `CreatePersonalApiToken`, `RevokePersonalApiToken`, group `ApiTokensGroup`), `Auth/Services/PersonalApiTokenService.cs`, `Infrastructure/Auth` (`PersonalApiToken`, `TokenAccess`, `ApiIdempotencyKey`, `PersonalApiTokenFormat`, `PersonalApiTokenAuthenticationHandler`, the policy scheme in `JwtCookieAuthentication`), `Common/Middleware` (`PersonalApiTokenGateMiddleware`, `PersonalApiTokenRateLimit`, `IdempotencyMiddleware`), `Common/TokenReadable.cs` and `Common/TokenWritable.cs`. Frontend `profile/api-tokens-section` and `transactions/source-mark`. The read-only MCP server is `tools/jx-mcp`. Feature switch `ApiTokens`, off by default.
+Backend `Auth/Tokens` (`GetPersonalApiTokens`, `CreatePersonalApiToken`, `RevokePersonalApiToken`, group `ApiTokensGroup`), `Auth/Services/PersonalApiTokenService.cs`, `Infrastructure/Auth` (`PersonalApiToken`, `TokenAccess`, `ApiIdempotencyKey`, `PersonalApiTokenFormat`, `PersonalApiTokenAuthenticationHandler`, the policy scheme in `JwtCookieAuthentication`), `Common/Middleware` (`PersonalApiTokenGateMiddleware`, `PersonalApiTokenRateLimit`, `IdempotencyMiddleware`), `Common/TokenReadable.cs` and `Common/TokenWritable.cs`. Frontend `profile/api-tokens-section` and `transactions/source-mark`. MCP is served from `Common/Mcp` (`McpTools`, `McpRoute`) on `FastEndpoints.Mcp`. Feature switch `ApiTokens`, off by default.
 
 A personal API token lets a script, a spreadsheet, Home Assistant or an iOS Shortcut on the member's own devices read what the member reads in the browser. A token created with read-and-write access can also record, change and delete transactions and transfers, set their category or tags in bulk, confirm recurring entries and move the saved amount of a manual goal. Nothing administrative, personal to the account, structural (categories, rules, budgets) or stored as a file can be reached with any token, even when the token belongs to an administrator.
 
@@ -298,41 +298,36 @@ Since 2026-10-01 `PersonalApiTokens` is transient like the sessions: backups lea
 
 ## MCP server for an AI client
 
-`tools/jx-mcp` is a small [Model Context Protocol](https://modelcontextprotocol.io) server that runs on the member's own computer and lets an AI client the member chooses, such as Claude Desktop, read the ledger through a token. It speaks MCP over stdio, reads `JX_URL` and `JX_TOKEN` from its environment and only ever sends `GET` requests, so even a read-and-write token given to it cannot write, the goal progress route included; give it a read-only token anyway. Its seven tools map one to one to readable routes, with descriptions taken from the contract's summaries: `list_accounts` (`GET /api/accounts`), `list_transactions` (`GET /api/transactions` with the ledger filters and paging), `get_report_summary` (`GET /api/reports/summary`), `list_budgets`, `list_goals`, `get_net_worth` (`GET /api/networth`) and `list_recurring_entries` (`GET /api/recurring-bills`). A problem answer from the installation reaches the client as a tool error with its code.
+Since 2026-10-03 the API itself serves the [Model Context Protocol](https://modelcontextprotocol.io) at `/api/mcp` over streamable HTTP, built on `FastEndpoints.Mcp`. It replaced `tools/jx-mcp`, a separate Node server that ran over stdio on the member's computer and could only read. An AI client sends the token in `Authorization: Bearer` like any script, and the 60 requests a minute and `LastUsedAt` count each MCP request.
 
-The installation still sends nothing anywhere. Whatever the AI client does with the answers is the member's choice: a client that runs a hosted model sends the ledger data it reads to that model's provider. Revoke the token when you stop using the server.
+Not reachable yet: `PersonalApiTokenGateMiddleware` still answers a token's `POST` to `/api/mcp` with 403 `token.notAllowed`, because the route carries neither `TokenReadable` nor `TokenWritable`. The route carries `McpRoute`, and the gate has to let a route with that mark through; see the [backlog](../backlog.md#6-technical-follow-ups).
 
-It is a separate Node package with its own `package.json`, outside the frontend build and lint. Build it once (Node 24 or newer):
+### Tools
 
-```powershell
-cd tools/jx-mcp
-nub install
-nub run build
-nub run test
+`McpTools.OptIn` runs in the global endpoint configurator and makes a tool of every route a token can reach, so the list follows `TokenReadableTests` and `TokenWritableTests` without a list of its own: 69 tools, the readable `GET` routes less the three file downloads, and the ten writable routes. `McpToolTests` pins them. A route that names roles never becomes a tool.
+
+Each tool is named after its endpoint in snake case (`get_transactions`, `create_transaction`, `update_goal_progress`). Its title is the endpoint summary, its description the summary's description, and its arguments carry the summary's `RequestParam` texts, added to the listed input schema by a list-tools filter. Reads are marked read-only; `PUT` and `DELETE` are marked destructive; none reaches outside the installation.
+
+### Who sees which tool
+
+A tool call runs the endpoint in-process, outside the ASP.NET Core middleware, so `McpTools.IsVisible` repeats the checks on every list and call. The caller must hold a token, so a browser session lists no tools. The token must be allowed the route as the gate would allow it, so a read-only token sees only reads. Every feature the route requires must be on, so a switched-off feature hides its tools. Validation, services, visibility rules and the token's name in the activity log are those of the browser.
+
+Two things do not reach a tool call. `X-Active-Household` is not passed on, so tools answer in the all-households scope. `Idempotency-Key` does not apply, so a client that retries a write may record it twice.
+
+### Connecting a client
+
+Claude Code, on a computer that trusts Caddy's root certificate (`NODE_EXTRA_CA_CERTS`, see [Using a token](#using-a-token)):
+
+```sh
+claude mcp add --transport http jx-finance https://finance.home.lan/api/mcp --header "Authorization: Bearer jxp_..."
 ```
 
-Then register `node <path to the checkout>/tools/jx-mcp/dist/index.js` with the client. For Claude Desktop, add it to `claude_desktop_config.json` (Settings › Developer › Edit Config) and restart the app:
+Other clients that speak streamable HTTP take the same address and header. The client's configuration holds the token in clear; treat it like the token.
 
-```json
-{
-  "mcpServers": {
-    "jx-finance": {
-      "command": "node",
-      "args": ["C:/path/to/Jx-Finance/tools/jx-mcp/dist/index.js"],
-      "env": {
-        "JX_URL": "https://finance.home.lan",
-        "JX_TOKEN": "jxp_...",
-        "NODE_EXTRA_CA_CERTS": "C:/path/to/jx-root.crt"
-      }
-    }
-  }
-}
-```
-
-`NODE_EXTRA_CA_CERTS` makes Node trust Caddy's root certificate (see [Using a token](#using-a-token)). Other MCP clients take the same three things: the command `node`, the path to `dist/index.js` and the environment; Claude Code, for example, with `claude mcp add jx-finance --env JX_URL=https://finance.home.lan --env JX_TOKEN=jxp_... -- node C:/path/to/Jx-Finance/tools/jx-mcp/dist/index.js`. The config file holds the token in clear; treat it like the token. `nub run test` type-checks the package and runs each tool against a recorded response through the SDK's in-memory transport.
+The installation still sends nothing anywhere. Whatever the AI client does with the answers is the member's choice: a client that runs a hosted model sends the ledger data it reads to that model's provider. Give the client a read-only token unless it should record entries, and revoke the token when you stop using it.
 
 ## Tests
 
-`PersonalApiTokenTests` (integration, PostgreSQL) cover the secret shown once and never listed, the password that counts toward the lockout, the name and expiry rules, the eleventh token and an expired one that does not count, revocation and another member's token, the same transactions with and without `X-Active-Household` as the owner's cookie and the CSV with `activeHousehold`, writes and private routes refused for an administrator's token, every documented operation checked against the readable list, expired, unknown, tampered and malformed tokens, deactivation, an administrator reset against an own password change, `--recover-admin`, the switch off and on, the 61st request, `LastUsedAt` at most once a minute, and a token sent beside a cookie. `TokenReadableTests` pins the readable routes and `TokenWritableTests` the writable ones, with no write route under a private prefix, categories, budgets or households; `PersonalApiTokenGateTests` covers the gate's decision by method, access and marks, and `IdempotencyRequestHashTests` the request hash. `PersonalApiTokenFormatTests` pins the parsing, `SecretRedactionTests` the two records, `RetentionTests` the clean-up queries and `BackupEndpointTests` that neither the token table nor the retry keys travel and that a restore of a file still holding tokens leaves none.
+`PersonalApiTokenTests` (integration, PostgreSQL) cover the secret shown once and never listed, the password that counts toward the lockout, the name and expiry rules, the eleventh token and an expired one that does not count, revocation and another member's token, the same transactions with and without `X-Active-Household` as the owner's cookie and the CSV with `activeHousehold`, writes and private routes refused for an administrator's token, every documented operation checked against the readable list, expired, unknown, tampered and malformed tokens, deactivation, an administrator reset against an own password change, `--recover-admin`, the switch off and on, the 61st request, `LastUsedAt` at most once a minute, and a token sent beside a cookie. `TokenReadableTests` pins the readable routes and `TokenWritableTests` the writable ones, with no write route under a private prefix, categories, budgets or households; `PersonalApiTokenGateTests` covers the gate's decision by method, access and marks, and `IdempotencyRequestHashTests` the request hash. `McpToolTests` pins the MCP tools and checks that each is a token-readable read or a token-writable write. `PersonalApiTokenFormatTests` pins the parsing, `SecretRedactionTests` the two records, `RetentionTests` the clean-up queries and `BackupEndpointTests` that neither the token table nor the retry keys travel and that a restore of a file still holding tokens leaves none.
 
 `PersonalApiTokenWriteTests` (integration) cover a read token refused a write, a read-and-write token creating, editing, categorizing, tagging and deleting a transaction and a transfer, the refusal of categories, attachment upload, import confirm, budgets and account deletion, a write under `X-Active-Household` naming an account outside it, the token's name on the activity events of a shared account including the bulk row, a bank import linking an API-created row, a recurring confirmation that pays a debt, the 90-day rule and the deletion of write tokens by deactivation, a password reset and `--recover-admin`. `GoalProgressTests` cover a partner's write token moving a shared goal with the token named in the activity log, a read-only token refused, and a retried `PATCH` delta added once. `IdempotencyKeyTests` cover a replayed retry leaving one row, a reused key with another body or household, a running claim answering `conflict.busy` and an abandoned one taken over, a server error that is not remembered, keys per token, malformed keys and a browser request ignoring the header, and the retention of day-old keys. The stories of `ApiTokensSection` show the list with an expired and a read-and-write token, the empty list, loading, a failed load, a created token, a read-and-write token whose expiry shrinks to 90 days, the limit and a revocation; `SourceMark` and the activity log have stories of their own.

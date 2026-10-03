@@ -14,7 +14,7 @@ public sealed class RestoreUnusualAmountEndpoint(ITransactionWriteService transa
     {
         Delete(DismissUnusualAmountEndpoint.Route);
         Group<TransactionsGroup>();
-        Options(b => b.WithMetadata(new RequiresFeature(Feature.UnusualAmounts)));
+        Metadata(new RequiresFeature(Feature.UnusualAmounts));
         Description(d => d.Produces(204).ProducesProblemDetails(404));
     }
 

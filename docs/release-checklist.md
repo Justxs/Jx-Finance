@@ -89,7 +89,7 @@ Added on 2026-09-30 and 2026-10-01, in the same way; their integration and end-t
 - [x] Hide amounts, the money flow Sankey diagram and attachment metadata stripped on upload.
 - [x] Spreading a payment across months, the bills calendar and the double-entry journal in the member download.
 - [x] Live security prices from EODHD and Kraken, and a price file import.
-- [x] Write access for personal API tokens with idempotency keys, and a read-only MCP server in `tools/jx-mcp`.
+- [x] Write access for personal API tokens with idempotency keys.
 - [x] Transaction locations with a self-hosted map, transaction groups, learned category suggestions (switched off) and split lines kept in the order entered.
 
 None of that has been through a deployment, a real SMTP server, a real Discord webhook, a real Telegram bot or a day of ordinary use; only the automated checks have run.

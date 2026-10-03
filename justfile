@@ -69,8 +69,8 @@ new-endpoint tag name verb route:
 new-component feature name:
     node scripts/new-component.mjs {{feature}} {{name}}
 
-# Everything CI checks except the end-to-end tests (just e2e): backend format, build and tests, contract drift, frontend types, lint, format, tests, story tests, app and Storybook builds, and the MCP server.
-check: format-check-backend test gen-check check-frontend test-stories check-mcp
+# Everything CI checks except the end-to-end tests (just e2e): backend format, build and tests, contract drift, frontend types, lint, format, tests, story tests, and the app and Storybook builds.
+check: format-check-backend test gen-check check-frontend test-stories
     nub run --cwd frontend build
     nub run --cwd frontend build-storybook
 
@@ -84,11 +84,6 @@ check-frontend:
     nub run --cwd frontend lint
     nub run --cwd frontend format:check
     nub run --cwd frontend test
-
-# The read-only MCP server in tools/jx-mcp: types, tests against recorded responses, and the build.
-check-mcp:
-    nub run --cwd tools/jx-mcp test
-    nub run --cwd tools/jx-mcp build
 
 # Fail on a broken link or heading anchor in the Markdown docs, a docs file name with spaces or capitals, or a line too long for an agent to read whole, and on DESIGN.md naming a component, path, CSS variable or color the code no longer has.
 check-docs:

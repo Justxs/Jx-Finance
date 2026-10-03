@@ -8,16 +8,18 @@
     <PackageVersion Include="AspNetCore.HealthChecks.NpgSql" Version="9.0.0" />
     <PackageVersion Include="Cronos" Version="0.13.0" />
     <PackageVersion Include="CsvHelper" Version="33.1.0" />
-    <PackageVersion Include="FastEndpoints" Version="8.3.0" />
-    <PackageVersion Include="FastEndpoints.Generator" Version="8.3.0" />
-    <PackageVersion Include="FastEndpoints.OpenApi" Version="8.3.0" />
-    <PackageVersion Include="FastEndpoints.Security" Version="8.3.0" />
-    <PackageVersion Include="FastEndpoints.Testing" Version="8.3.0" />
+    <PackageVersion Include="FastEndpoints" Version="8.4.0-beta.18" />
+    <PackageVersion Include="FastEndpoints.Generator" Version="8.4.0-beta.18" />
+    <PackageVersion Include="FastEndpoints.Mcp" Version="1.0.0-beta.5" />
+    <PackageVersion Include="FastEndpoints.OpenApi" Version="8.4.0-beta.18" />
+    <PackageVersion Include="FastEndpoints.Security" Version="8.4.0-beta.18" />
+    <PackageVersion Include="FastEndpoints.Testing" Version="8.4.0-beta.18" />
     <PackageVersion Include="Magick.NET-Q8-AnyCPU" Version="14.17.2" />
     <PackageVersion Include="MailKit" Version="4.18.1" />
     <PackageVersion Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.12" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="10.0.12" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.12" />
+    <PackageVersion Include="ModelContextProtocol.AspNetCore" Version="2.2.0" />
     <PackageVersion Include="Microsoft.Testing.Extensions.CodeCoverage" Version="18.11.2" />
     <PackageVersion Include="NetArchTest.eNhancedEdition" Version="1.4.5" />
     <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />

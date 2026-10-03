@@ -276,7 +276,7 @@ export const useForgetReceiptItemCategory = <
 > => {
   return useMutation(getForgetReceiptItemCategoryMutationOptions(options), queryClient);
 };
-export const getReceiptItemsUrl = (params?: ReceiptItemsParams) => {
+export const getReceiptItemsUrl = (params: ReceiptItemsParams) => {
   const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
@@ -297,7 +297,7 @@ export const getReceiptItemsUrl = (params?: ReceiptItemsParams) => {
  * @summary Spending per receipt item
  */
 export const receiptItems = async (
-  params?: ReceiptItemsParams,
+  params: ReceiptItemsParams,
   options?: Parameters<typeof customFetch>[1],
 ): Promise<GetReceiptItemsResponse> => {
   return customFetch<GetReceiptItemsResponse>(getReceiptItemsUrl(params), {
@@ -314,7 +314,7 @@ export const getReceiptItemsSuspenseQueryOptions = <
   TData = Awaited<ReturnType<typeof receiptItems>>,
   TError = ErrorType<ProblemDetails>,
 >(
-  params?: ReceiptItemsParams,
+  params: ReceiptItemsParams,
   options?: {
     query?: Partial<
       UseSuspenseQueryOptions<Awaited<ReturnType<typeof receiptItems>>, TError, TData>
@@ -347,7 +347,7 @@ export function useReceiptItemsSuspense<
   TData = Awaited<ReturnType<typeof receiptItems>>,
   TError = ErrorType<ProblemDetails>,
 >(
-  params: undefined | ReceiptItemsParams,
+  params: ReceiptItemsParams,
   options: {
     query: Partial<
       UseSuspenseQueryOptions<Awaited<ReturnType<typeof receiptItems>>, TError, TData>
@@ -360,7 +360,7 @@ export function useReceiptItemsSuspense<
   TData = Awaited<ReturnType<typeof receiptItems>>,
   TError = ErrorType<ProblemDetails>,
 >(
-  params?: ReceiptItemsParams,
+  params: ReceiptItemsParams,
   options?: {
     query?: Partial<
       UseSuspenseQueryOptions<Awaited<ReturnType<typeof receiptItems>>, TError, TData>
@@ -373,7 +373,7 @@ export function useReceiptItemsSuspense<
   TData = Awaited<ReturnType<typeof receiptItems>>,
   TError = ErrorType<ProblemDetails>,
 >(
-  params?: ReceiptItemsParams,
+  params: ReceiptItemsParams,
   options?: {
     query?: Partial<
       UseSuspenseQueryOptions<Awaited<ReturnType<typeof receiptItems>>, TError, TData>
@@ -390,7 +390,7 @@ export function useReceiptItemsSuspense<
   TData = Awaited<ReturnType<typeof receiptItems>>,
   TError = ErrorType<ProblemDetails>,
 >(
-  params?: ReceiptItemsParams,
+  params: ReceiptItemsParams,
   options?: {
     query?: Partial<
       UseSuspenseQueryOptions<Awaited<ReturnType<typeof receiptItems>>, TError, TData>

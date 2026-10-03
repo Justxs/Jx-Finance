@@ -4,7 +4,7 @@ left to right direction
 
 actor "Household member" as member
 actor "Administrator" as admin
-actor "AI client\nwith jx-mcp" as ai
+actor "AI client\nover MCP" as ai
 rectangle "Bank statement\nexports" <<external>> as bank
 
 rectangle "Jx Finance installation\n\nSPA, API, PostgreSQL" <<system>> as jx

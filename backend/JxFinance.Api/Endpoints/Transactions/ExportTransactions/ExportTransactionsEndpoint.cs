@@ -14,7 +14,7 @@ public sealed class ExportTransactionsEndpoint(
     {
         Get(ApiRoutes.Transactions + "/export");
         Group<TransactionsGroup>();
-        Options(b => b.WithMetadata(QueryHouseholdScope.Instance));
+        Metadata(QueryHouseholdScope.Instance);
         Description(d => d.ProducesFile(MediaTypeNames.Text.Csv));
     }
 

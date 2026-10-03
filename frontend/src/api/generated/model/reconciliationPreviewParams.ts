@@ -10,6 +10,7 @@ import type { Currency } from "./currency";
 export type ReconciliationPreviewParams = {
   /**
    * The statement date, as yyyy-MM-dd. Not after today.
+   * @minLength 1
    */
   date: string;
   /**

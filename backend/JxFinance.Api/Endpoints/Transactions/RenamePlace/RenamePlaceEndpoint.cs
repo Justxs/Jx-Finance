@@ -12,7 +12,7 @@ public sealed class RenamePlaceEndpoint(IPlaceService placeService) : Endpoint<R
     {
         Post(ApiRoutes.Transactions + "/places/rename");
         Group<TransactionsGroup>();
-        Options(b => b.WithMetadata(new RequiresFeature(Feature.Locations)));
+        Metadata(new RequiresFeature(Feature.Locations));
     }
 
     public override async Task HandleAsync(RenamePlaceRequest req, CancellationToken ct) =>

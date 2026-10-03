@@ -11,7 +11,7 @@ public sealed class DeleteTransferEndpoint(ITransferService transferService) : D
     {
         Delete(ApiRoutes.Transfers + "/{id}");
         Group<TransfersGroup>();
-        Options(b => b.WithMetadata(TokenWritable.Yes));
+        Metadata(TokenWritable.Yes);
         Description(d => d.ProducesProblemDetails(404));
     }
 

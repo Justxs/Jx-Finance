@@ -12,7 +12,7 @@ public sealed class CreateTransferEndpoint(ITransferService transferService)
     {
         Post(ApiRoutes.Transfers);
         Group<TransfersGroup>();
-        Options(b => b.WithMetadata(TokenWritable.Yes));
+        Metadata(TokenWritable.Yes);
         Description(d => d.ProducesCreated<TransferResponse>());
     }
 

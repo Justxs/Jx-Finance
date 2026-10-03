@@ -11,7 +11,7 @@ public sealed class DeleteTransactionEndpoint(ITransactionWriteService transacti
     {
         Delete(ApiRoutes.Transactions + "/{id}");
         Group<TransactionsGroup>();
-        Options(b => b.WithMetadata(TokenWritable.Yes));
+        Metadata(TokenWritable.Yes);
         Description(d => d.ProducesProblemDetails(404));
     }
 

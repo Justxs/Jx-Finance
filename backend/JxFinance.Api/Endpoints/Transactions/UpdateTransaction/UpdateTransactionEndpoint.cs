@@ -12,7 +12,7 @@ public sealed class UpdateTransactionEndpoint(ITransactionWriteService transacti
     {
         Put(ApiRoutes.Transactions + "/{id}");
         Group<TransactionsGroup>();
-        Options(b => b.WithMetadata(TokenWritable.Yes));
+        Metadata(TokenWritable.Yes);
         Description(d => d.ProducesProblemDetails(404).ProducesProblemDetails(409));
     }
 

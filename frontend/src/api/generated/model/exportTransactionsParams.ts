@@ -40,11 +40,15 @@ export type ExportTransactionsParams = {
   search?: string | null;
   /**
    * Keep only transactions whose normalized description equals the normalized value: lowercase words, punctuation dropped and tokens with three or more digits dropped. Send a payeeKey from the report's expenseByPayee or a raw description. A value with nothing left after normalizing is ignored.
+   * @minLength 0
+   * @maxLength 500
    * @nullable
    */
   payee?: string | null;
   /**
    * Keep only transactions whose place contains this text, ignoring case, at most 120 characters. Ignored while the locations feature is off.
+   * @minLength 0
+   * @maxLength 120
    * @nullable
    */
   place?: string | null;

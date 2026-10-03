@@ -13,7 +13,7 @@ public sealed class GetUncategorizedSuggestionsEndpoint(ICategorySuggestionServi
     {
         Get(ApiRoutes.Transactions + "/uncategorized-suggestions");
         Group<TransactionsGroup>();
-        Options(b => b.WithMetadata(new RequiresFeature(Feature.LearnedCategories)));
+        Metadata(new RequiresFeature(Feature.LearnedCategories));
         Description(d => d.ProducesProblemDetails(404));
     }
 

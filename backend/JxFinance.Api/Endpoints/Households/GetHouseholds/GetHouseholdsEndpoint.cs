@@ -13,7 +13,7 @@ public sealed class GetHouseholdsEndpoint(IHouseholdService householdService)
     {
         Get(ApiRoutes.Households);
         Group<HouseholdsGroup>();
-        Options(b => b.WithMetadata(EmptyWhenFeatureOff.Instance));
+        Metadata(EmptyWhenFeatureOff.Instance);
     }
 
     public override async Task HandleAsync(CancellationToken ct) =>

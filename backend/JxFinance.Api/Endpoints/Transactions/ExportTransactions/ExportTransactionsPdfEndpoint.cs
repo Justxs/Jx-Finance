@@ -15,7 +15,7 @@ public sealed class ExportTransactionsPdfEndpoint(
     {
         Get(ApiRoutes.Transactions + "/export/pdf");
         Group<TransactionsGroup>();
-        Options(b => b.WithMetadata(QueryHouseholdScope.Instance));
+        Metadata(QueryHouseholdScope.Instance);
         Description(d => d.ProducesFile(MediaTypeNames.Application.Pdf));
     }
 

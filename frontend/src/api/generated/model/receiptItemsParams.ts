@@ -9,16 +9,18 @@
 export type ReceiptItemsParams = {
   /**
    * Inclusive start date as YYYY-MM-DD, against the transaction's date.
-   * @nullable
+   * @minLength 1
    */
-  dateFrom?: string | null;
+  dateFrom: string;
   /**
    * Inclusive end date as YYYY-MM-DD.
-   * @nullable
+   * @minLength 1
    */
-  dateTo?: string | null;
+  dateTo: string;
   /**
    * Optional text an item's normalized name must contain, ignoring case and accents.
+   * @minLength 0
+   * @maxLength 100
    * @nullable
    */
   search?: string | null;

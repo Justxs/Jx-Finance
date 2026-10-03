@@ -22,7 +22,7 @@ public abstract class ApiGroup : Group
             {
                 ep.Description(d => d.WithTags(tag).ProducesProblemDetails(400));
                 if (role is not null) ep.Roles(role);
-                if (metadata.Count > 0) ep.Options(b => b.WithMetadata([.. metadata]));
+                if (metadata.Count > 0) ep.Metadata([.. metadata]);
             });
     }
 }

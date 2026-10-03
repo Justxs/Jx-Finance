@@ -1,7 +1,9 @@
 using FastEndpoints;
+using FastEndpoints.Mcp;
 using JxFinance.Api;
 using JxFinance.Common.Discord;
 using JxFinance.Common.ExchangeRates;
+using JxFinance.Common.Mcp;
 using JxFinance.Common.Middleware;
 using JxFinance.Common.Receipts;
 using JxFinance.Common.Telegram;
@@ -33,6 +35,9 @@ public static class ApiServiceExtensions
         builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(
             form => form.MultipartBodyLengthLimit = UploadBackupEndpoint.MaxFileBytes + (1024 * 1024));
         builder.Services.AddFastEndpoints(DiscoveredTypes.All);
+        builder.Services.AddMcp(McpTools.Configure)
+            .AddMcpServer()
+            .WithRequestFilters(filters => filters.AddListToolsFilter(McpTools.DescribeArguments));
         builder.Services.RegisterServicesFromJxFinanceApi();
         builder.Services.AddApiOpenApiDocument();
         builder.Services.AddRateLimiter(PersonalApiTokenRateLimit.Configure);

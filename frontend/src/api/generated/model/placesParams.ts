@@ -9,6 +9,8 @@
 export type PlacesParams = {
   /**
    * Optional text the place must contain, ignoring case, at most 120 characters.
+   * @minLength 0
+   * @maxLength 120
    * @nullable
    */
   search?: string | null;

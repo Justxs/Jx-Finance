@@ -13,7 +13,7 @@ public sealed class GetPlacesEndpoint(IPlaceService placeService)
     {
         Get(ApiRoutes.Transactions + "/places");
         Group<TransactionsGroup>();
-        Options(b => b.WithMetadata(new RequiresFeature(Feature.Locations)));
+        Metadata(new RequiresFeature(Feature.Locations));
     }
 
     public override async Task HandleAsync(GetPlacesRequest req, CancellationToken ct) =>

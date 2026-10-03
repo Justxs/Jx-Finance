@@ -282,6 +282,8 @@
             "description": "How many days after today to project, from 30 to 90. Defaults to 90.",
             "required": true,
             "schema": {
+              "maximum": 90,
+              "minimum": 30,
               "type": "integer",
               "format": "int32"
             }
@@ -831,6 +833,7 @@
             "description": "The statement date, as yyyy-MM-dd. Not after today.",
             "required": true,
             "schema": {
+              "minLength": 1,
               "type": "string",
               "format": "date"
             }
@@ -1571,6 +1574,7 @@
             "description": "The date of the valuation, as yyyy-MM-dd. Not in the future.",
             "required": true,
             "schema": {
+              "minLength": 1,
               "type": "string",
               "format": "date"
             }
@@ -3745,9 +3749,7 @@
         },
         "security": [
           {
-            "Cookie": [
-              "Admin"
-            ]
+            "Cookie": [ ]
           }
         ]
       },
@@ -3815,9 +3817,7 @@
         },
         "security": [
           {
-            "Cookie": [
-              "Admin"
-            ]
+            "Cookie": [ ]
           }
         ]
       }
@@ -3897,9 +3897,7 @@
         },
         "security": [
           {
-            "Cookie": [
-              "Admin"
-            ]
+            "Cookie": [ ]
           }
         ]
       }
@@ -3979,9 +3977,7 @@
         },
         "security": [
           {
-            "Cookie": [
-              "Admin"
-            ]
+            "Cookie": [ ]
           }
         ]
       },
@@ -4077,9 +4073,7 @@
         },
         "security": [
           {
-            "Cookie": [
-              "Admin"
-            ]
+            "Cookie": [ ]
           }
         ]
       }
@@ -4173,9 +4167,7 @@
         },
         "security": [
           {
-            "Cookie": [
-              "Admin"
-            ]
+            "Cookie": [ ]
           }
         ]
       }
@@ -4291,9 +4283,7 @@
         },
         "security": [
           {
-            "Cookie": [
-              "Admin"
-            ]
+            "Cookie": [ ]
           }
         ]
       }
@@ -7761,6 +7751,7 @@
             "description": "The date of the balance, as yyyy-MM-dd. Not in the future.",
             "required": true,
             "schema": {
+              "minLength": 1,
               "type": "string",
               "format": "date"
             }
@@ -11214,9 +11205,7 @@
         },
         "security": [
           {
-            "Cookie": [
-              "Admin"
-            ]
+            "Cookie": [ ]
           }
         ]
       }
@@ -12345,9 +12334,7 @@
         },
         "security": [
           {
-            "Cookie": [
-              "Admin"
-            ]
+            "Cookie": [ ]
           }
         ]
       }
@@ -12546,9 +12533,7 @@
         },
         "security": [
           {
-            "Cookie": [
-              "Admin"
-            ]
+            "Cookie": [ ]
           }
         ]
       }
@@ -14524,6 +14509,8 @@
             "in": "query",
             "description": "Optional text the normalized item name must contain, ignoring case and accents.",
             "schema": {
+              "maxLength": 100,
+              "minLength": 0,
               "type": [
                 "null",
                 "string"
@@ -14664,11 +14651,10 @@
             "name": "dateFrom",
             "in": "query",
             "description": "Inclusive start date as YYYY-MM-DD, against the transaction's date.",
+            "required": true,
             "schema": {
-              "type": [
-                "null",
-                "string"
-              ],
+              "minLength": 1,
+              "type": "string",
               "format": "date"
             }
           },
@@ -14676,11 +14662,10 @@
             "name": "dateTo",
             "in": "query",
             "description": "Inclusive end date as YYYY-MM-DD.",
+            "required": true,
             "schema": {
-              "type": [
-                "null",
-                "string"
-              ],
+              "minLength": 1,
+              "type": "string",
               "format": "date"
             }
           },
@@ -14689,6 +14674,8 @@
             "in": "query",
             "description": "Optional text an item's normalized name must contain, ignoring case and accents.",
             "schema": {
+              "maxLength": 100,
+              "minLength": 0,
               "type": [
                 "null",
                 "string"
@@ -16031,9 +16018,7 @@
         },
         "security": [
           {
-            "Cookie": [
-              "Admin"
-            ]
+            "Cookie": [ ]
           }
         ]
       }
@@ -16100,9 +16085,7 @@
         },
         "security": [
           {
-            "Cookie": [
-              "Admin"
-            ]
+            "Cookie": [ ]
           }
         ]
       },
@@ -16194,9 +16177,7 @@
         },
         "security": [
           {
-            "Cookie": [
-              "Admin"
-            ]
+            "Cookie": [ ]
           }
         ]
       }
@@ -16269,9 +16250,7 @@
         },
         "security": [
           {
-            "Cookie": [
-              "Admin"
-            ]
+            "Cookie": [ ]
           }
         ]
       }
@@ -16352,9 +16331,7 @@
         },
         "security": [
           {
-            "Cookie": [
-              "Admin"
-            ]
+            "Cookie": [ ]
           }
         ]
       }
@@ -16421,9 +16398,7 @@
         },
         "security": [
           {
-            "Cookie": [
-              "Admin"
-            ]
+            "Cookie": [ ]
           }
         ]
       }
@@ -16514,9 +16489,7 @@
         },
         "security": [
           {
-            "Cookie": [
-              "Admin"
-            ]
+            "Cookie": [ ]
           }
         ]
       },
@@ -16612,9 +16585,7 @@
         },
         "security": [
           {
-            "Cookie": [
-              "Admin"
-            ]
+            "Cookie": [ ]
           }
         ]
       }
@@ -16681,9 +16652,7 @@
         },
         "security": [
           {
-            "Cookie": [
-              "Admin"
-            ]
+            "Cookie": [ ]
           }
         ]
       },
@@ -16772,9 +16741,7 @@
         },
         "security": [
           {
-            "Cookie": [
-              "Admin"
-            ]
+            "Cookie": [ ]
           }
         ]
       }
@@ -16841,9 +16808,7 @@
         },
         "security": [
           {
-            "Cookie": [
-              "Admin"
-            ]
+            "Cookie": [ ]
           }
         ]
       }
@@ -16952,9 +16917,7 @@
         },
         "security": [
           {
-            "Cookie": [
-              "Admin"
-            ]
+            "Cookie": [ ]
           }
         ]
       },
@@ -17049,9 +17012,7 @@
         },
         "security": [
           {
-            "Cookie": [
-              "Admin"
-            ]
+            "Cookie": [ ]
           }
         ]
       }
@@ -17121,9 +17082,7 @@
         },
         "security": [
           {
-            "Cookie": [
-              "Admin"
-            ]
+            "Cookie": [ ]
           }
         ]
       }
@@ -17190,9 +17149,7 @@
         },
         "security": [
           {
-            "Cookie": [
-              "Admin"
-            ]
+            "Cookie": [ ]
           }
         ]
       },
@@ -17285,9 +17242,7 @@
         },
         "security": [
           {
-            "Cookie": [
-              "Admin"
-            ]
+            "Cookie": [ ]
           }
         ]
       }
@@ -17360,9 +17315,7 @@
         },
         "security": [
           {
-            "Cookie": [
-              "Admin"
-            ]
+            "Cookie": [ ]
           }
         ]
       }
@@ -17502,9 +17455,7 @@
         },
         "security": [
           {
-            "Cookie": [
-              "Admin"
-            ]
+            "Cookie": [ ]
           }
         ]
       },
@@ -17572,9 +17523,7 @@
         },
         "security": [
           {
-            "Cookie": [
-              "Admin"
-            ]
+            "Cookie": [ ]
           }
         ]
       }
@@ -17634,9 +17583,7 @@
         },
         "security": [
           {
-            "Cookie": [
-              "Admin"
-            ]
+            "Cookie": [ ]
           }
         ]
       }
@@ -17703,9 +17650,7 @@
         },
         "security": [
           {
-            "Cookie": [
-              "Admin"
-            ]
+            "Cookie": [ ]
           }
         ]
       }
@@ -18624,6 +18569,8 @@
             "in": "query",
             "description": "Keep only transactions whose normalized description equals the normalized value: lowercase words, punctuation dropped and tokens with three or more digits dropped. Send a payeeKey from the report's expenseByPayee or a raw description. A value with nothing left after normalizing is ignored.",
             "schema": {
+              "maxLength": 500,
+              "minLength": 0,
               "type": [
                 "null",
                 "string"
@@ -18635,6 +18582,8 @@
             "in": "query",
             "description": "Keep only transactions whose place contains this text, ignoring case, at most 120 characters. Ignored while the locations feature is off.",
             "schema": {
+              "maxLength": 120,
+              "minLength": 0,
               "type": [
                 "null",
                 "string"
@@ -19064,6 +19013,8 @@
             "in": "query",
             "description": "Keep only transactions whose normalized description equals the normalized value: lowercase words, punctuation dropped and tokens with three or more digits dropped. Send a payeeKey from the report's expenseByPayee or a raw description. A value with nothing left after normalizing is ignored.",
             "schema": {
+              "maxLength": 500,
+              "minLength": 0,
               "type": [
                 "null",
                 "string"
@@ -19075,6 +19026,8 @@
             "in": "query",
             "description": "Keep only transactions whose place contains this text, ignoring case, at most 120 characters. Ignored while the locations feature is off.",
             "schema": {
+              "maxLength": 120,
+              "minLength": 0,
               "type": [
                 "null",
                 "string"
@@ -19666,6 +19619,8 @@
             "in": "query",
             "description": "Keep only transactions whose normalized description equals the normalized value: lowercase words, punctuation dropped and tokens with three or more digits dropped. Send a payeeKey from the report's expenseByPayee or a raw description. A value with nothing left after normalizing is ignored.",
             "schema": {
+              "maxLength": 500,
+              "minLength": 0,
               "type": [
                 "null",
                 "string"
@@ -19677,6 +19632,8 @@
             "in": "query",
             "description": "Keep only transactions whose place contains this text, ignoring case, at most 120 characters. Ignored while the locations feature is off.",
             "schema": {
+              "maxLength": 120,
+              "minLength": 0,
               "type": [
                 "null",
                 "string"
@@ -19929,6 +19886,8 @@
             "in": "query",
             "description": "Keep only transactions whose normalized description equals the normalized value: lowercase words, punctuation dropped and tokens with three or more digits dropped. Send a payeeKey from the report's expenseByPayee or a raw description. A value with nothing left after normalizing is ignored.",
             "schema": {
+              "maxLength": 500,
+              "minLength": 0,
               "type": [
                 "null",
                 "string"
@@ -19940,6 +19899,8 @@
             "in": "query",
             "description": "Keep only transactions whose place contains this text, ignoring case, at most 120 characters. Ignored while the locations feature is off.",
             "schema": {
+              "maxLength": 120,
+              "minLength": 0,
               "type": [
                 "null",
                 "string"
@@ -20194,6 +20155,8 @@
             "in": "query",
             "description": "Keep only transactions whose normalized description equals the normalized value: lowercase words, punctuation dropped and tokens with three or more digits dropped. Send a payeeKey from the report's expenseByPayee or a raw description. A value with nothing left after normalizing is ignored.",
             "schema": {
+              "maxLength": 500,
+              "minLength": 0,
               "type": [
                 "null",
                 "string"
@@ -20205,6 +20168,8 @@
             "in": "query",
             "description": "Keep only transactions whose place contains this text, ignoring case, at most 120 characters. Ignored while the locations feature is off.",
             "schema": {
+              "maxLength": 120,
+              "minLength": 0,
               "type": [
                 "null",
                 "string"
@@ -20370,6 +20335,8 @@
             "in": "query",
             "description": "Optional text the place must contain, ignoring case, at most 120 characters.",
             "schema": {
+              "maxLength": 120,
+              "minLength": 0,
               "type": [
                 "null",
                 "string"
@@ -20682,6 +20649,8 @@
             "in": "query",
             "description": "Keep only transactions whose normalized description equals the normalized value: lowercase words, punctuation dropped and tokens with three or more digits dropped. Send a payeeKey from the report's expenseByPayee or a raw description. A value with nothing left after normalizing is ignored.",
             "schema": {
+              "maxLength": 500,
+              "minLength": 0,
               "type": [
                 "null",
                 "string"
@@ -20693,6 +20662,8 @@
             "in": "query",
             "description": "Keep only transactions whose place contains this text, ignoring case, at most 120 characters. Ignored while the locations feature is off.",
             "schema": {
+              "maxLength": 120,
+              "minLength": 0,
               "type": [
                 "null",
                 "string"
@@ -20912,6 +20883,8 @@
             "in": "query",
             "description": "Keep only transactions whose normalized description equals the normalized value: lowercase words, punctuation dropped and tokens with three or more digits dropped. Send a payeeKey from the report's expenseByPayee or a raw description. A value with nothing left after normalizing is ignored.",
             "schema": {
+              "maxLength": 500,
+              "minLength": 0,
               "type": [
                 "null",
                 "string"
@@ -20923,6 +20896,8 @@
             "in": "query",
             "description": "Keep only transactions whose place contains this text, ignoring case, at most 120 characters. Ignored while the locations feature is off.",
             "schema": {
+              "maxLength": 120,
+              "minLength": 0,
               "type": [
                 "null",
                 "string"
@@ -22435,9 +22410,7 @@
         },
         "security": [
           {
-            "Cookie": [
-              "Admin"
-            ]
+            "Cookie": [ ]
           }
         ]
       },
@@ -22556,9 +22529,7 @@
         },
         "security": [
           {
-            "Cookie": [
-              "Admin"
-            ]
+            "Cookie": [ ]
           }
         ]
       }
@@ -23502,9 +23473,7 @@
         },
         "security": [
           {
-            "Cookie": [
-              "Admin"
-            ]
+            "Cookie": [ ]
           }
         ]
       }
@@ -23585,9 +23554,7 @@
         },
         "security": [
           {
-            "Cookie": [
-              "Admin"
-            ]
+            "Cookie": [ ]
           }
         ]
       }
@@ -23695,9 +23662,7 @@
         },
         "security": [
           {
-            "Cookie": [
-              "Admin"
-            ]
+            "Cookie": [ ]
           }
         ]
       }
@@ -23800,9 +23765,7 @@
         },
         "security": [
           {
-            "Cookie": [
-              "Admin"
-            ]
+            "Cookie": [ ]
           }
         ]
       }
@@ -24055,16 +24018,11 @@
             "pattern": "^[^@]+@[^@]+$",
             "type": "string",
             "description": "Email address of an existing, active user.",
-            "format": "email",
-            "example": "partner@example.com"
+            "format": "email"
           },
           "role": {
             "$ref": "#/components/schemas/HouseholdRole"
           }
-        },
-        "example": {
-          "email": "partner@example.com",
-          "role": "member"
         }
       },
       "AddPasskeyRequest": {
@@ -24078,20 +24036,14 @@
             "maxLength": 65536,
             "minLength": 0,
             "type": "string",
-            "description": "JSON text of PublicKeyCredential.toJSON() from navigator.credentials.create().",
-            "example": "{\"id\":\"...\",\"type\":\"public-key\",\"response\":{}}"
+            "description": "JSON text of PublicKeyCredential.toJSON() from navigator.credentials.create()."
           },
           "name": {
             "maxLength": 100,
             "minLength": 0,
             "type": "string",
-            "description": "A name for the list, at most 100 characters; the client sends the browser's label.",
-            "example": "Chrome on Windows"
+            "description": "A name for the list, at most 100 characters; the client sends the browser's label."
           }
-        },
-        "example": {
-          "credentialJson": "{\"id\":\"...\",\"type\":\"public-key\",\"response\":{}}",
-          "name": "Chrome on Windows"
         }
       },
       "AddToTransactionGroupRequest": {
@@ -24107,16 +24059,8 @@
               "type": "string",
               "format": "uuid"
             },
-            "description": "The transactions to add, 1 to 200.",
-            "example": [
-              "00000000-0000-0000-0000-000000000000"
-            ]
+            "description": "The transactions to add, 1 to 200."
           }
-        },
-        "example": {
-          "transactionIds": [
-            "00000000-0000-0000-0000-000000000000"
-          ]
         }
       },
       "AllocationDimension": {
@@ -25113,10 +25057,7 @@
               "type": "string",
               "format": "uuid"
             },
-            "description": "Between 1 and 200 transaction ids.",
-            "example": [
-              "00000000-0000-0000-0000-000000000000"
-            ]
+            "description": "Between 1 and 200 transaction ids."
           },
           "categoryId": {
             "type": [
@@ -25124,22 +25065,13 @@
               "string"
             ],
             "description": "The category to file them under, or null to clear it.",
-            "format": "uuid",
-            "example": "00000000-0000-0000-0000-000000000000"
+            "format": "uuid"
           },
           "onlyUncategorized": {
             "type": "boolean",
             "description": "When true, leave every listed transaction that already has a category as it is. Defaults to false.",
-            "default": false,
-            "example": false
+            "default": false
           }
-        },
-        "example": {
-          "transactionIds": [
-            "00000000-0000-0000-0000-000000000000"
-          ],
-          "categoryId": "00000000-0000-0000-0000-000000000000",
-          "onlyUncategorized": false
         }
       },
       "BulkCategorizeTransactionsResponse": {
@@ -25167,16 +25099,8 @@
               "type": "string",
               "format": "uuid"
             },
-            "description": "Between 1 and 200 transaction ids.",
-            "example": [
-              "00000000-0000-0000-0000-000000000000"
-            ]
+            "description": "Between 1 and 200 transaction ids."
           }
-        },
-        "example": {
-          "transactionIds": [
-            "00000000-0000-0000-0000-000000000000"
-          ]
         }
       },
       "BulkDeleteTransactionsResponse": {
@@ -25205,24 +25129,14 @@
               "type": "string",
               "format": "uuid"
             },
-            "description": "Between 1 and 200 transaction ids.",
-            "example": [
-              "00000000-0000-0000-0000-000000000000"
-            ]
+            "description": "Between 1 and 200 transaction ids."
           },
           "accountId": {
             "minLength": 1,
             "type": "string",
             "description": "The account the transactions should be on, one you can see.",
-            "format": "uuid",
-            "example": "00000000-0000-0000-0000-000000000000"
+            "format": "uuid"
           }
-        },
-        "example": {
-          "transactionIds": [
-            "00000000-0000-0000-0000-000000000000"
-          ],
-          "accountId": "00000000-0000-0000-0000-000000000000"
         }
       },
       "BulkMoveTransactionsResponse": {
@@ -25258,10 +25172,7 @@
               "type": "string",
               "format": "uuid"
             },
-            "description": "Between 1 and 200 transaction ids.",
-            "example": [
-              "00000000-0000-0000-0000-000000000000"
-            ]
+            "description": "Between 1 and 200 transaction ids."
           },
           "tagIds": {
             "minItems": 1,
@@ -25270,19 +25181,8 @@
               "type": "string",
               "format": "uuid"
             },
-            "description": "The tags the listed transactions should carry, at most ten; an empty list clears them.",
-            "example": [
-              "00000000-0000-0000-0000-000000000000"
-            ]
+            "description": "The tags the listed transactions should carry, at most ten; an empty list clears them."
           }
-        },
-        "example": {
-          "transactionIds": [
-            "00000000-0000-0000-0000-000000000000"
-          ],
-          "tagIds": [
-            "00000000-0000-0000-0000-000000000000"
-          ]
         }
       },
       "BulkTagTransactionsResponse": {
@@ -25603,12 +25503,8 @@
               "null",
               "string"
             ],
-            "description": "At most 1000 characters.",
-            "example": "Reconciled with the bank statement."
+            "description": "At most 1000 characters."
           }
-        },
-        "example": {
-          "note": "Reconciled with the bank statement."
         }
       },
       "ConfirmRecurringBillRequest": {
@@ -25625,8 +25521,7 @@
               "string"
             ],
             "description": "Actual amount. Required for a Variable entry; defaults to the scheduled amount for a Fixed one.",
-            "format": "decimal",
-            "example": "650.00"
+            "format": "decimal"
           },
           "accountId": {
             "type": [
@@ -25647,12 +25542,6 @@
             "description": "What arrives in the destination account. Required when a Transfer crosses two currencies.",
             "format": "decimal"
           }
-        },
-        "example": {
-          "amount": "650.00",
-          "accountId": null,
-          "expectedDueDate": "2026-10-01",
-          "receivedAmount": null
         }
       },
       "ConfirmRecurringBillResponse": {
@@ -25982,12 +25871,8 @@
         "type": "object",
         "properties": {
           "count": {
-            "type": "boolean",
-            "example": true
+            "type": "boolean"
           }
-        },
-        "example": {
-          "count": true
         }
       },
       "CreateAccountRequest": {
@@ -26006,8 +25891,7 @@
             "maxLength": 100,
             "minLength": 0,
             "type": "string",
-            "description": "Display name, up to 100 characters.",
-            "example": "Everyday"
+            "description": "Display name, up to 100 characters."
           },
           "description": {
             "maxLength": 500,
@@ -26016,16 +25900,14 @@
               "null",
               "string"
             ],
-            "description": "Optional note, up to 500 characters.",
-            "example": "Salary lands here"
+            "description": "Optional note, up to 500 characters."
           },
           "iban": {
             "type": [
               "null",
               "string"
             ],
-            "description": "Optional IBAN. Validated for length and check digits; spaces are allowed.",
-            "example": "LT121000011101001000"
+            "description": "Optional IBAN. Validated for length and check digits; spaces are allowed."
           },
           "type": {
             "$ref": "#/components/schemas/AccountType"
@@ -26033,8 +25915,7 @@
           "startingBalance": {
             "type": "string",
             "description": "Decimal string with at most two decimal places, for example \"1250.00\".",
-            "format": "decimal",
-            "example": "1250.00"
+            "format": "decimal"
           },
           "scope": {
             "$ref": "#/components/schemas/Scope"
@@ -26057,16 +25938,6 @@
               }
             ]
           }
-        },
-        "example": {
-          "name": "Everyday",
-          "description": "Salary lands here",
-          "iban": "LT121000011101001000",
-          "type": "checking",
-          "startingBalance": "1250.00",
-          "scope": "personal",
-          "householdId": null,
-          "currency": null
         }
       },
       "CreateAssetRequest": {
@@ -26081,8 +25952,7 @@
           "name": {
             "maxLength": 100,
             "minLength": 0,
-            "type": "string",
-            "example": "Flat"
+            "type": "string"
           },
           "type": {
             "$ref": "#/components/schemas/AssetType"
@@ -26090,8 +25960,7 @@
           "currentValue": {
             "type": "string",
             "description": "Decimal string with at most two decimal places.",
-            "format": "decimal",
-            "example": "180000.00"
+            "format": "decimal"
           },
           "asOf": {
             "$ref": "#/components/schemas/DateOnly"
@@ -26117,15 +25986,6 @@
             ],
             "format": "uuid"
           }
-        },
-        "example": {
-          "name": "Flat",
-          "type": "property",
-          "currentValue": "180000.00",
-          "asOf": "2026-09-01",
-          "depreciation": null,
-          "scope": "personal",
-          "householdId": null
         }
       },
       "CreateBackupRequest": {
@@ -26160,22 +26020,19 @@
               "string"
             ],
             "description": "The expense category the limit applies to; must be visible to you. Send it or tagId, not both.",
-            "format": "uuid",
-            "example": "00000000-0000-0000-0000-000000000000"
+            "format": "uuid"
           },
           "limitAmount": {
             "type": "string",
             "description": "Decimal string with at most two decimal places, greater than zero.",
-            "format": "decimal",
-            "example": "400.00"
+            "format": "decimal"
           },
           "period": {
             "$ref": "#/components/schemas/BudgetPeriod"
           },
           "rolloverEnabled": {
             "type": "boolean",
-            "description": "When true, what is left of the previous window raises this window's limit and an overspend lowers it, walking back at most twelve windows or to the budget's creation.",
-            "example": false
+            "description": "When true, what is left of the previous window raises this window's limit and an overspend lowers it, walking back at most twelve windows or to the budget's creation."
           },
           "tagId": {
             "type": [
@@ -26195,15 +26052,6 @@
             ],
             "format": "uuid"
           }
-        },
-        "example": {
-          "categoryId": "00000000-0000-0000-0000-000000000000",
-          "limitAmount": "400.00",
-          "period": "monthly",
-          "rolloverEnabled": false,
-          "tagId": null,
-          "scope": "personal",
-          "householdId": null
         }
       },
       "CreateCategorizationRuleRequest": {
@@ -26219,8 +26067,7 @@
             "maxLength": 50,
             "minLength": 0,
             "type": "string",
-            "description": "What the rule is called on the rules screen and in a run's result.",
-            "example": "Groceries"
+            "description": "What the rule is called on the rules screen and in a run's result."
           },
           "match": {
             "$ref": "#/components/schemas/DescriptionMatch"
@@ -26229,8 +26076,7 @@
             "maxLength": 200,
             "minLength": 0,
             "type": "string",
-            "description": "The text the description is compared with. Per cent and underscore are literal characters, not wildcards.",
-            "example": "MAXIMA"
+            "description": "The text the description is compared with. Per cent and underscore are literal characters, not wildcards."
           },
           "tagIds": {
             "minItems": 1,
@@ -26239,8 +26085,7 @@
               "type": "string",
               "format": "uuid"
             },
-            "description": "The tags the rule adds, at most ten; an empty list adds none. A run adds them and never removes tags the row already carries.",
-            "example": [ ]
+            "description": "The tags the rule adds, at most ten; an empty list adds none. A run adds them and never removes tags the row already carries."
           },
           "accountId": {
             "type": [
@@ -26272,19 +26117,8 @@
               "string"
             ],
             "description": "The category the rule sets. Its flow type also narrows the rule: an expense category never matches income.",
-            "format": "uuid",
-            "example": "00000000-0000-0000-0000-000000000000"
+            "format": "uuid"
           }
-        },
-        "example": {
-          "name": "Groceries",
-          "match": "contains",
-          "pattern": "MAXIMA",
-          "tagIds": [ ],
-          "accountId": null,
-          "minAmount": null,
-          "maxAmount": null,
-          "categoryId": "00000000-0000-0000-0000-000000000000"
         }
       },
       "CreateCategoryRequest": {
@@ -26301,8 +26135,7 @@
             "maxLength": 100,
             "minLength": 0,
             "type": "string",
-            "description": "Display name, unique within its scope.",
-            "example": "Groceries"
+            "description": "Display name, unique within its scope."
           },
           "type": {
             "$ref": "#/components/schemas/FlowType"
@@ -26314,8 +26147,7 @@
               "null",
               "string"
             ],
-            "description": "Optional icon key rendered by the client.",
-            "example": "shopping-cart"
+            "description": "Optional icon key rendered by the client."
           },
           "scope": {
             "$ref": "#/components/schemas/Scope"
@@ -26336,14 +26168,6 @@
             "description": "Optional top-level category of the same flow type to group this one under. Categories nest one level: a sub-category cannot have sub-categories of its own. Filtering the ledger, a budget and the reports by the parent include its sub-categories.",
             "format": "uuid"
           }
-        },
-        "example": {
-          "name": "Groceries",
-          "type": "expense",
-          "icon": "shopping-cart",
-          "scope": "personal",
-          "householdId": null,
-          "parentId": null
         }
       },
       "CreateContactPaymentRequest": {
@@ -26361,8 +26185,7 @@
           "amount": {
             "type": "string",
             "description": "Decimal string with at most two decimal places, greater than zero.",
-            "format": "decimal",
-            "example": "50.00"
+            "format": "decimal"
           },
           "currency": {
             "$ref": "#/components/schemas/Currency"
@@ -26376,16 +26199,8 @@
             "type": [
               "null",
               "string"
-            ],
-            "example": "Loan until payday"
+            ]
           }
-        },
-        "example": {
-          "direction": "toContact",
-          "amount": "50.00",
-          "currency": "eur",
-          "date": "2026-10-01",
-          "note": "Loan until payday"
         }
       },
       "CreateContactRequest": {
@@ -26398,12 +26213,8 @@
             "maxLength": 100,
             "minLength": 0,
             "type": "string",
-            "description": "The name, 1 to 100 characters.",
-            "example": "Jonas"
+            "description": "The name, 1 to 100 characters."
           }
-        },
-        "example": {
-          "name": "Jonas"
         }
       },
       "CreateContactSplitRequest": {
@@ -26419,8 +26230,7 @@
             "minLength": 1,
             "type": "string",
             "description": "The expense to split. It must be on an account you own.",
-            "format": "uuid",
-            "example": "00000000-0000-0000-0000-000000000000"
+            "format": "uuid"
           },
           "method": {
             "$ref": "#/components/schemas/SplitMethod"
@@ -26434,41 +26244,15 @@
                 "$ref": "#/components/schemas/OwnShareRequest"
               }
             ],
-            "description": "Your part: a weight for Shares, an amount for Exact; null when you take no part.",
-            "example": {
-              "weight": null,
-              "amount": null
-            }
+            "description": "Your part: a weight for Shares, an amount for Exact; null when you take no part."
           },
           "shares": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/ContactShareRequest"
             },
-            "description": "One entry per person: a weight for Shares, an amount for Exact.",
-            "example": [
-              {
-                "contactId": "00000000-0000-0000-0000-000000000000",
-                "weight": null,
-                "amount": null
-              }
-            ]
+            "description": "One entry per person: a weight for Shares, an amount for Exact."
           }
-        },
-        "example": {
-          "transactionId": "00000000-0000-0000-0000-000000000000",
-          "method": "equal",
-          "own": {
-            "weight": null,
-            "amount": null
-          },
-          "shares": [
-            {
-              "contactId": "00000000-0000-0000-0000-000000000000",
-              "weight": null,
-              "amount": null
-            }
-          ]
         }
       },
       "CreateConversionRequest": {
@@ -26486,14 +26270,12 @@
           "accountId": {
             "minLength": 1,
             "type": "string",
-            "format": "uuid",
-            "example": "00000000-0000-0000-0000-000000000000"
+            "format": "uuid"
           },
           "fromAmount": {
             "type": "string",
             "description": "Amount sold, as a decimal string greater than zero.",
-            "format": "decimal",
-            "example": "1000.00"
+            "format": "decimal"
           },
           "fromCurrency": {
             "$ref": "#/components/schemas/Currency"
@@ -26501,8 +26283,7 @@
           "toAmount": {
             "type": "string",
             "description": "Amount bought, as a decimal string greater than zero.",
-            "format": "decimal",
-            "example": "1084.20"
+            "format": "decimal"
           },
           "toCurrency": {
             "$ref": "#/components/schemas/Currency"
@@ -26516,8 +26297,7 @@
             "type": [
               "null",
               "string"
-            ],
-            "example": "Fund the USD sleeve"
+            ]
           },
           "feeAmount": {
             "type": [
@@ -26525,8 +26305,7 @@
               "string"
             ],
             "description": "Optional fee. It is charged on top of the sold or bought amount.",
-            "format": "decimal",
-            "example": "2.00"
+            "format": "decimal"
           },
           "feeCurrency": {
             "oneOf": [
@@ -26537,8 +26316,7 @@
                 "$ref": "#/components/schemas/Currency"
               }
             ],
-            "description": "Currency of the fee; one of the two converted currencies. Defaults to the sold currency.",
-            "example": "eur"
+            "description": "Currency of the fee; one of the two converted currencies. Defaults to the sold currency."
           },
           "feeCategoryId": {
             "type": [
@@ -26548,18 +26326,6 @@
             "description": "Optional expense category for the fee transaction.",
             "format": "uuid"
           }
-        },
-        "example": {
-          "accountId": "00000000-0000-0000-0000-000000000000",
-          "fromAmount": "1000.00",
-          "fromCurrency": "eur",
-          "toAmount": "1084.20",
-          "toCurrency": "usd",
-          "date": "2026-09-12",
-          "description": "Fund the USD sleeve",
-          "feeAmount": "2.00",
-          "feeCurrency": "eur",
-          "feeCategoryId": null
         }
       },
       "CreateCsvMappingRequest": {
@@ -26579,8 +26345,7 @@
             "maxLength": 60,
             "minLength": 0,
             "type": "string",
-            "description": "What the provider list calls the mapping, at most 60 characters.",
-            "example": "Revolut"
+            "description": "What the provider list calls the mapping, at most 60 characters."
           },
           "encoding": {
             "$ref": "#/components/schemas/CsvEncoding"
@@ -26588,24 +26353,21 @@
           "delimiter": {
             "minLength": 1,
             "type": "string",
-            "description": "A comma, a semicolon, a tab or a pipe.",
-            "example": ","
+            "description": "A comma, a semicolon, a tab or a pipe."
           },
           "skipLines": {
             "maximum": 20,
             "minimum": 0,
             "type": "integer",
             "description": "How many non-empty lines sit above the header row, 0 to 20.",
-            "format": "int32",
-            "example": 0
+            "format": "int32"
           },
           "amountStyle": {
             "$ref": "#/components/schemas/CsvAmountStyle"
           },
           "dateFormat": {
             "type": "string",
-            "description": "One of yyyy-MM-dd, dd.MM.yyyy, dd/MM/yyyy, MM/dd/yyyy, dd-MM-yyyy, yyyy.MM.dd, yyyy/MM/dd or d.M.yyyy. A time after a space or T is ignored.",
-            "example": "yyyy-MM-dd"
+            "description": "One of yyyy-MM-dd, dd.MM.yyyy, dd/MM/yyyy, MM/dd/yyyy, dd-MM-yyyy, yyyy.MM.dd, yyyy/MM/dd or d.M.yyyy. A time after a space or T is ignored."
           },
           "decimalSeparator": {
             "$ref": "#/components/schemas/CsvDecimalSeparator"
@@ -26627,36 +26389,8 @@
           "noHeaderRow": {
             "type": "boolean",
             "description": "Optional, false by default. True for a file without a header row: every column is then named by its position, 1 for the first, and the lines skipped sit above the first entry.",
-            "default": false,
-            "example": false
+            "default": false
           }
-        },
-        "example": {
-          "name": "Revolut",
-          "encoding": "utf8",
-          "delimiter": ",",
-          "skipLines": 0,
-          "amountStyle": "signedNegativeIsExpense",
-          "dateFormat": "yyyy-MM-dd",
-          "decimalSeparator": "dot",
-          "columns": {
-            "date": "Completed Date",
-            "description": "Description",
-            "payee": null,
-            "amount": "Amount",
-            "debit": null,
-            "credit": null,
-            "direction": null,
-            "expenseValue": null,
-            "currency": "Currency",
-            "reference": null,
-            "balance": "Balance",
-            "fee": "Fee",
-            "status": "State",
-            "bookedValues": "COMPLETED"
-          },
-          "currency": null,
-          "noHeaderRow": false
         }
       },
       "CreateDebtRequest": {
@@ -26672,8 +26406,7 @@
           "name": {
             "maxLength": 100,
             "minLength": 0,
-            "type": "string",
-            "example": "Mortgage"
+            "type": "string"
           },
           "type": {
             "$ref": "#/components/schemas/DebtType"
@@ -26681,8 +26414,7 @@
           "outstandingAmount": {
             "type": "string",
             "description": "Decimal string with at most two decimal places.",
-            "format": "decimal",
-            "example": "120000.00"
+            "format": "decimal"
           },
           "interestRate": {
             "maximum": 100,
@@ -26692,8 +26424,7 @@
               "number"
             ],
             "description": "Optional annual rate as a percentage from 0 to 100 with at most 4 decimal places (debt.ratePrecision), for example 2.4.",
-            "format": "double",
-            "example": 2.4
+            "format": "double"
           },
           "asOf": {
             "$ref": "#/components/schemas/DateOnly"
@@ -26704,8 +26435,7 @@
               "string"
             ],
             "description": "Optional principal borrowed at the start, a positive decimal string.",
-            "format": "decimal",
-            "example": "150000.00"
+            "format": "decimal"
           },
           "firstPaymentDate": {
             "oneOf": [
@@ -26716,8 +26446,7 @@
                 "$ref": "#/components/schemas/NullableOfDateOnly"
               }
             ],
-            "description": "Optional date of the first monthly payment; later payments fall on the same day of the month.",
-            "example": "2020-10-15"
+            "description": "Optional date of the first monthly payment; later payments fall on the same day of the month."
           },
           "termMonths": {
             "maximum": 600,
@@ -26727,8 +26456,7 @@
               "integer"
             ],
             "description": "Optional number of monthly payments, 1 to 600. Leave monthlyPayment empty when it is set.",
-            "format": "int32",
-            "example": 360
+            "format": "int32"
           },
           "monthlyPayment": {
             "type": [
@@ -26747,14 +26475,12 @@
                 "$ref": "#/components/schemas/AmortizationType"
               }
             ],
-            "description": "annuity (level payment, the default) or linear (equal principal, needs termMonths).",
-            "example": "annuity"
+            "description": "annuity (level payment, the default) or linear (equal principal, needs termMonths)."
           },
           "tracksPayments": {
             "type": "boolean",
             "description": "When true, the balance is outstandingAmount on asOf minus the principal of the payments linked after asOf. Editing outstandingAmount or asOf sets a new starting point.",
-            "default": false,
-            "example": false
+            "default": false
           },
           "scope": {
             "$ref": "#/components/schemas/Scope"
@@ -26766,21 +26492,6 @@
             ],
             "format": "uuid"
           }
-        },
-        "example": {
-          "name": "Mortgage",
-          "type": "mortgage",
-          "outstandingAmount": "120000.00",
-          "interestRate": 2.4,
-          "asOf": "2026-09-01",
-          "loanAmount": "150000.00",
-          "firstPaymentDate": "2020-10-15",
-          "termMonths": 360,
-          "monthlyPayment": null,
-          "amortizationType": "annuity",
-          "tracksPayments": false,
-          "scope": "personal",
-          "householdId": null
         }
       },
       "CreatedPersonalApiTokenResponse": {
@@ -26832,14 +26543,12 @@
           "name": {
             "maxLength": 100,
             "minLength": 0,
-            "type": "string",
-            "example": "Emergency fund"
+            "type": "string"
           },
           "targetAmount": {
             "type": "string",
             "description": "Decimal string with at most two decimal places, greater than zero.",
-            "format": "decimal",
-            "example": "5000.00"
+            "format": "decimal"
           },
           "currentAmount": {
             "type": [
@@ -26847,8 +26556,7 @@
               "string"
             ],
             "description": "Amount already saved, zero or more. Defaults to zero when omitted, and is ignored for a goal funded from an account.",
-            "format": "decimal",
-            "example": "1200.00"
+            "format": "decimal"
           },
           "targetDate": {
             "oneOf": [
@@ -26859,8 +26567,7 @@
                 "$ref": "#/components/schemas/NullableOfDateOnly"
               }
             ],
-            "description": "Optional date to reach the target by, as YYYY-MM-DD.",
-            "example": "2027-01-01"
+            "description": "Optional date to reach the target by, as YYYY-MM-DD."
           },
           "funding": {
             "$ref": "#/components/schemas/GoalFunding"
@@ -26893,17 +26600,6 @@
             ],
             "format": "uuid"
           }
-        },
-        "example": {
-          "name": "Emergency fund",
-          "targetAmount": "5000.00",
-          "currentAmount": "1200.00",
-          "targetDate": "2027-01-01",
-          "funding": "manual",
-          "fundingAccountId": null,
-          "fundingSharePercent": null,
-          "scope": "personal",
-          "householdId": null
         }
       },
       "CreateHouseholdRequest": {
@@ -26915,12 +26611,8 @@
           "name": {
             "maxLength": 100,
             "minLength": 0,
-            "type": "string",
-            "example": "Home"
+            "type": "string"
           }
-        },
-        "example": {
-          "name": "Home"
         }
       },
       "CreateInvestmentTransactionRequest": {
@@ -26934,8 +26626,7 @@
           "accountId": {
             "minLength": 1,
             "type": "string",
-            "format": "uuid",
-            "example": "00000000-0000-0000-0000-000000000000"
+            "format": "uuid"
           },
           "type": {
             "$ref": "#/components/schemas/InvestmentTransactionType"
@@ -26948,8 +26639,7 @@
               "null",
               "string"
             ],
-            "format": "uuid",
-            "example": "00000000-0000-0000-0000-000000000000"
+            "format": "uuid"
           },
           "quantity": {
             "type": [
@@ -26957,16 +26647,14 @@
               "string"
             ],
             "description": "Shares for a buy or sell; new shares per old share for a split; shares moved for a symbol change.",
-            "format": "decimal",
-            "example": "10"
+            "format": "decimal"
           },
           "price": {
             "type": [
               "null",
               "string"
             ],
-            "format": "decimal",
-            "example": "104.52"
+            "format": "decimal"
           },
           "amount": {
             "type": [
@@ -26981,8 +26669,7 @@
               "null",
               "string"
             ],
-            "format": "decimal",
-            "example": "1.25"
+            "format": "decimal"
           },
           "currency": {
             "oneOf": [
@@ -27027,21 +26714,6 @@
             "description": "For a merger paid in shares and cash, or a spin-off: the percentage of the cost basis carried into the new shares, 0 to 100.",
             "format": "decimal"
           }
-        },
-        "example": {
-          "accountId": "00000000-0000-0000-0000-000000000000",
-          "type": "buy",
-          "date": "2026-09-12",
-          "securityId": "00000000-0000-0000-0000-000000000000",
-          "quantity": "10",
-          "price": "104.52",
-          "amount": null,
-          "fee": "1.25",
-          "currency": null,
-          "description": null,
-          "relatedSecurityId": null,
-          "relatedQuantity": null,
-          "costShare": null
         }
       },
       "CreatePersonalApiTokenRequest": {
@@ -27057,32 +26729,23 @@
             "maxLength": 60,
             "minLength": 0,
             "type": "string",
-            "description": "A name for the list, at most 60 characters.",
-            "example": "Monthly spreadsheet"
+            "description": "A name for the list, at most 60 characters."
           },
           "expiresInDays": {
             "maximum": 365,
             "minimum": 1,
             "type": "integer",
             "description": "Days until the token stops working, from 1 to 365, at most 90 for a read-and-write token.",
-            "format": "int32",
-            "example": 90
+            "format": "int32"
           },
           "password": {
             "minLength": 1,
             "type": "string",
-            "description": "The account password.",
-            "example": "correct horse battery staple"
+            "description": "The account password."
           },
           "access": {
             "$ref": "#/components/schemas/TokenAccess"
           }
-        },
-        "example": {
-          "name": "Monthly spreadsheet",
-          "expiresInDays": 90,
-          "password": "correct horse battery staple",
-          "access": "read"
         }
       },
       "CreateRecurringBillRequest": {
@@ -27103,8 +26766,7 @@
           "name": {
             "maxLength": 100,
             "minLength": 0,
-            "type": "string",
-            "example": "Rent"
+            "type": "string"
           },
           "shape": {
             "$ref": "#/components/schemas/RecurringBillShape"
@@ -27118,8 +26780,7 @@
               "string"
             ],
             "description": "Expected amount. Required for a Fixed entry, optional for a Variable one.",
-            "format": "decimal",
-            "example": "650.00"
+            "format": "decimal"
           },
           "categoryId": {
             "type": [
@@ -27156,8 +26817,7 @@
             "minimum": 0,
             "type": "integer",
             "description": "How many days ahead of the due date to raise a notification.",
-            "format": "int32",
-            "example": 3
+            "format": "int32"
           },
           "matchKey": {
             "maxLength": 200,
@@ -27205,24 +26865,6 @@
             ],
             "description": "Optional, with spreadMonths: forward (the default) or backward, the direction each written transaction is spread in."
           }
-        },
-        "example": {
-          "name": "Rent",
-          "shape": "expense",
-          "kind": "fixed",
-          "amount": "650.00",
-          "categoryId": null,
-          "accountId": null,
-          "toAccountId": null,
-          "cadence": "monthly",
-          "nextDueDate": "2026-10-01",
-          "remindDaysBefore": 3,
-          "matchKey": null,
-          "debtId": null,
-          "scope": "personal",
-          "householdId": null,
-          "spreadMonths": null,
-          "spreadDirection": null
         }
       },
       "CreateSettlementRequest": {
@@ -27238,20 +26880,17 @@
           "fromUserId": {
             "minLength": 1,
             "type": "string",
-            "format": "uuid",
-            "example": "00000000-0000-0000-0000-000000000000"
+            "format": "uuid"
           },
           "toUserId": {
             "minLength": 1,
             "type": "string",
-            "format": "uuid",
-            "example": "00000000-0000-0000-0000-000000000000"
+            "format": "uuid"
           },
           "amount": {
             "type": "string",
             "description": "Decimal string with at most two decimal places, greater than zero.",
-            "format": "decimal",
-            "example": "30.00"
+            "format": "decimal"
           },
           "currency": {
             "$ref": "#/components/schemas/Currency"
@@ -27265,8 +26904,7 @@
             "type": [
               "null",
               "string"
-            ],
-            "example": "September groceries"
+            ]
           },
           "transfer": {
             "oneOf": [
@@ -27287,16 +26925,6 @@
             "description": "Link this existing transfer instead of writing one.",
             "format": "uuid"
           }
-        },
-        "example": {
-          "fromUserId": "00000000-0000-0000-0000-000000000000",
-          "toUserId": "00000000-0000-0000-0000-000000000000",
-          "amount": "30.00",
-          "currency": "eur",
-          "date": "2026-09-29",
-          "note": "September groceries",
-          "transfer": null,
-          "transferId": null
         }
       },
       "CreateSharedExpenseRequest": {
@@ -27311,8 +26939,7 @@
             "minLength": 1,
             "type": "string",
             "description": "The expense to split. It must be on an account you own.",
-            "format": "uuid",
-            "example": "00000000-0000-0000-0000-000000000000"
+            "format": "uuid"
           },
           "method": {
             "$ref": "#/components/schemas/SplitMethod"
@@ -27322,36 +26949,8 @@
             "items": {
               "$ref": "#/components/schemas/ShareRequest"
             },
-            "description": "One entry per member taking part, the payer included when they keep a share: a weight for Shares, an amount for Exact.",
-            "example": [
-              {
-                "userId": "00000000-0000-0000-0000-000000000000",
-                "weight": 2,
-                "amount": null
-              },
-              {
-                "userId": "00000000-0000-0000-0000-000000000000",
-                "weight": 1,
-                "amount": null
-              }
-            ]
+            "description": "One entry per member taking part, the payer included when they keep a share: a weight for Shares, an amount for Exact."
           }
-        },
-        "example": {
-          "transactionId": "00000000-0000-0000-0000-000000000000",
-          "method": "shares",
-          "shares": [
-            {
-              "userId": "00000000-0000-0000-0000-000000000000",
-              "weight": 2,
-              "amount": null
-            },
-            {
-              "userId": "00000000-0000-0000-0000-000000000000",
-              "weight": 1,
-              "amount": null
-            }
-          ]
         }
       },
       "CreateTagRequest": {
@@ -27366,8 +26965,7 @@
             "maxLength": 50,
             "minLength": 0,
             "type": "string",
-            "description": "Display name, unique among your own tags whatever the casing.",
-            "example": "Holiday 2026"
+            "description": "Display name, unique among your own tags whatever the casing."
           },
           "scope": {
             "$ref": "#/components/schemas/Scope"
@@ -27380,11 +26978,6 @@
             "description": "Required when Scope is Shared; must be a household you belong to.",
             "format": "uuid"
           }
-        },
-        "example": {
-          "name": "Holiday 2026",
-          "scope": "personal",
-          "householdId": null
         }
       },
       "CreateTransactionGroupRequest": {
@@ -27398,8 +26991,7 @@
             "maxLength": 120,
             "minLength": 0,
             "type": "string",
-            "description": "The group's name, 1 to 120 characters.",
-            "example": "Trip to Riga"
+            "description": "The group's name, 1 to 120 characters."
           },
           "transactionIds": {
             "minItems": 1,
@@ -27408,11 +27000,7 @@
               "type": "string",
               "format": "uuid"
             },
-            "description": "The transactions to group, 1 to 200.",
-            "example": [
-              "00000000-0000-0000-0000-000000000000",
-              "00000000-0000-0000-0000-000000000000"
-            ]
+            "description": "The transactions to group, 1 to 200."
           },
           "scope": {
             "$ref": "#/components/schemas/Scope"
@@ -27425,15 +27013,6 @@
             "description": "The household a shared group belongs to; required when the scope is shared.",
             "format": "uuid"
           }
-        },
-        "example": {
-          "name": "Trip to Riga",
-          "transactionIds": [
-            "00000000-0000-0000-0000-000000000000",
-            "00000000-0000-0000-0000-000000000000"
-          ],
-          "scope": "personal",
-          "householdId": null
         }
       },
       "CreateTransactionRequest": {
@@ -27453,8 +27032,7 @@
             "minLength": 1,
             "type": "string",
             "description": "The account the money moved on; must be visible to you.",
-            "format": "uuid",
-            "example": "00000000-0000-0000-0000-000000000000"
+            "format": "uuid"
           },
           "categoryId": {
             "type": [
@@ -27462,8 +27040,7 @@
               "string"
             ],
             "description": "Optional category. Ignored when lines are supplied.",
-            "format": "uuid",
-            "example": "00000000-0000-0000-0000-000000000000"
+            "format": "uuid"
           },
           "type": {
             "$ref": "#/components/schemas/FlowType"
@@ -27471,8 +27048,7 @@
           "amount": {
             "type": "string",
             "description": "Decimal string with at most two decimal places. Greater than zero for income; for an expense, negative for a refund.",
-            "format": "decimal",
-            "example": "42.50"
+            "format": "decimal"
           },
           "date": {
             "$ref": "#/components/schemas/DateOnly"
@@ -27483,8 +27059,7 @@
             "type": [
               "null",
               "string"
-            ],
-            "example": "Weekly shop"
+            ]
           },
           "lines": {
             "type": [
@@ -27579,24 +27154,6 @@
             ],
             "description": "Optional, with spreadMonths: forward (the default) counts from the month of the date on, backward counts the months up to and including it, for a bill paid in arrears."
           }
-        },
-        "example": {
-          "accountId": "00000000-0000-0000-0000-000000000000",
-          "categoryId": "00000000-0000-0000-0000-000000000000",
-          "type": "expense",
-          "amount": "42.50",
-          "date": "2026-09-12",
-          "description": "Weekly shop",
-          "lines": null,
-          "tagIds": null,
-          "currency": null,
-          "refundOfTransactionId": null,
-          "note": null,
-          "spreadMonths": null,
-          "place": null,
-          "latitude": null,
-          "longitude": null,
-          "spreadDirection": null
         }
       },
       "CreateTransferRequest": {
@@ -27612,20 +27169,17 @@
           "fromAccountId": {
             "minLength": 1,
             "type": "string",
-            "format": "uuid",
-            "example": "00000000-0000-0000-0000-000000000000"
+            "format": "uuid"
           },
           "toAccountId": {
             "minLength": 1,
             "type": "string",
-            "format": "uuid",
-            "example": "00000000-0000-0000-0000-000000000000"
+            "format": "uuid"
           },
           "amount": {
             "type": "string",
             "description": "Decimal string with at most two decimal places, greater than zero.",
-            "format": "decimal",
-            "example": "200.00"
+            "format": "decimal"
           },
           "date": {
             "$ref": "#/components/schemas/DateOnly"
@@ -27636,8 +27190,7 @@
             "type": [
               "null",
               "string"
-            ],
-            "example": "To savings"
+            ]
           },
           "currency": {
             "oneOf": [
@@ -27666,16 +27219,6 @@
               }
             ]
           }
-        },
-        "example": {
-          "fromAccountId": "00000000-0000-0000-0000-000000000000",
-          "toAccountId": "00000000-0000-0000-0000-000000000000",
-          "amount": "200.00",
-          "date": "2026-09-12",
-          "description": "To savings",
-          "currency": null,
-          "receivedAmount": null,
-          "receivedCurrency": null
         }
       },
       "CreateUserRequest": {
@@ -27692,33 +27235,23 @@
             "minLength": 0,
             "pattern": "^[^@]+@[^@]+$",
             "type": "string",
-            "format": "email",
-            "example": "partner@example.com"
+            "format": "email"
           },
           "displayName": {
             "maxLength": 100,
             "minLength": 0,
-            "type": "string",
-            "example": "Partner"
+            "type": "string"
           },
           "role": {
             "type": "string",
-            "description": "Admin or Member.",
-            "example": "Member"
+            "description": "Admin or Member."
           },
           "password": {
             "maxLength": 100,
             "minLength": 8,
             "type": "string",
-            "description": "Initial password; the user can change it from their profile.",
-            "example": "correct horse battery staple"
+            "description": "Initial password; the user can change it from their profile."
           }
-        },
-        "example": {
-          "email": "partner@example.com",
-          "displayName": "Partner",
-          "role": "Member",
-          "password": "correct horse battery staple"
         }
       },
       "CsvAmountStyle": {
@@ -28663,12 +28196,8 @@
           "code": {
             "minLength": 1,
             "type": "string",
-            "description": "The six-digit code currently shown by the authenticator app.",
-            "example": "123456"
+            "description": "The six-digit code currently shown by the authenticator app."
           }
-        },
-        "example": {
-          "code": "123456"
         }
       },
       "EnableTwoFactorResponse": {
@@ -29154,12 +28683,8 @@
             "minLength": 0,
             "pattern": "^[^@]+@[^@]+$",
             "type": "string",
-            "format": "email",
-            "example": "you@example.com"
+            "format": "email"
           }
-        },
-        "example": {
-          "email": "you@example.com"
         }
       },
       "GetPingResponse": {
@@ -30558,18 +30083,15 @@
             "minLength": 0,
             "pattern": "^[^@]+@[^@]+$",
             "type": "string",
-            "format": "email",
-            "example": "you@example.com"
+            "format": "email"
           },
           "password": {
             "minLength": 1,
-            "type": "string",
-            "example": "correct horse battery staple"
+            "type": "string"
           },
           "rememberMe": {
             "type": "boolean",
-            "description": "Keeps the session for 30 days instead of one day.",
-            "example": false
+            "description": "Keeps the session for 30 days instead of one day."
           },
           "twoFactorCode": {
             "type": [
@@ -30578,12 +30100,6 @@
             ],
             "description": "Authenticator or recovery code; omit on the first call."
           }
-        },
-        "example": {
-          "email": "you@example.com",
-          "password": "correct horse battery staple",
-          "rememberMe": false,
-          "twoFactorCode": null
         }
       },
       "LoginResponse": {
@@ -31280,9 +30796,6 @@
           "direction": {
             "$ref": "#/components/schemas/MoveDirection"
           }
-        },
-        "example": {
-          "direction": "up"
         }
       },
       "MoveDirection": {
@@ -31291,8 +30804,7 @@
           "down"
         ],
         "type": "string",
-        "description": "up moves the rule earlier, down moves it later.",
-        "example": "up"
+        "description": "up moves the rule earlier, down moves it later."
       },
       "NetWorthHistoryResponse": {
         "required": [
@@ -31940,18 +31452,12 @@
             "maxLength": 65536,
             "minLength": 0,
             "type": "string",
-            "description": "JSON text of PublicKeyCredential.toJSON() from navigator.credentials.get().",
-            "example": "{\"id\":\"...\",\"type\":\"public-key\",\"response\":{}}"
+            "description": "JSON text of PublicKeyCredential.toJSON() from navigator.credentials.get()."
           },
           "rememberMe": {
             "type": "boolean",
-            "description": "Keeps the session for 30 days instead of one day.",
-            "example": false
+            "description": "Keeps the session for 30 days instead of one day."
           }
-        },
-        "example": {
-          "credentialJson": "{\"id\":\"...\",\"type\":\"public-key\",\"response\":{}}",
-          "rememberMe": false
         }
       },
       "PayeeBreakdownItem": {
@@ -32538,12 +32044,8 @@
         "type": "object",
         "properties": {
           "password": {
-            "type": "string",
-            "example": "correct horse battery staple"
+            "type": "string"
           }
-        },
-        "example": {
-          "password": "correct horse battery staple"
         }
       },
       "ReceiptAdjustmentKind": {
@@ -33251,12 +32753,8 @@
           "name": {
             "maxLength": 100,
             "minLength": 0,
-            "type": "string",
-            "example": "Phone"
+            "type": "string"
           }
-        },
-        "example": {
-          "name": "Phone"
         }
       },
       "RenamePlaceRequest": {
@@ -33273,26 +32771,14 @@
             "items": {
               "type": "string"
             },
-            "description": "Between 1 and 50 places as the place list shows them, each at most 120 characters.",
-            "example": [
-              "Maxima Ozo",
-              "maxima, ozo g. 18"
-            ]
+            "description": "Between 1 and 50 places as the place list shows them, each at most 120 characters."
           },
           "name": {
             "maxLength": 120,
             "minLength": 0,
             "type": "string",
-            "description": "The place the rows should read, trimmed, at most 120 characters.",
-            "example": "Maxima, Ozo g. 18"
+            "description": "The place the rows should read, trimmed, at most 120 characters."
           }
-        },
-        "example": {
-          "places": [
-            "Maxima Ozo",
-            "maxima, ozo g. 18"
-          ],
-          "name": "Maxima, Ozo g. 18"
         }
       },
       "RenamePlaceResponse": {
@@ -33317,8 +32803,7 @@
             "maxLength": 120,
             "minLength": 0,
             "type": "string",
-            "description": "The new name, 1 to 120 characters.",
-            "example": "Trip to Riga"
+            "description": "The new name, 1 to 120 characters."
           },
           "scope": {
             "$ref": "#/components/schemas/Scope"
@@ -33331,11 +32816,6 @@
             "description": "The household a shared group belongs to; required when the scope is shared.",
             "format": "uuid"
           }
-        },
-        "example": {
-          "name": "Trip to Riga",
-          "scope": "personal",
-          "householdId": null
         }
       },
       "ReportComparisonMode": {
@@ -33525,27 +33005,19 @@
             "minLength": 0,
             "pattern": "^[^@]+@[^@]+$",
             "type": "string",
-            "format": "email",
-            "example": "you@example.com"
+            "format": "email"
           },
           "token": {
             "maxLength": 1000,
             "minLength": 0,
             "type": "string",
-            "description": "The token from the emailed link, sent back unchanged.",
-            "example": "CfDJ8…"
+            "description": "The token from the emailed link, sent back unchanged."
           },
           "newPassword": {
             "maxLength": 100,
             "minLength": 8,
-            "type": "string",
-            "example": "correct horse battery staple"
+            "type": "string"
           }
-        },
-        "example": {
-          "email": "you@example.com",
-          "token": "CfDJ8…",
-          "newPassword": "correct horse battery staple"
         }
       },
       "ResetUserPasswordRequest": {
@@ -33559,27 +33031,19 @@
             "maxLength": 100,
             "minLength": 8,
             "type": "string",
-            "description": "The temporary password for the user, 8 to 100 characters.",
-            "example": "Temporary-Password-123!"
+            "description": "The temporary password for the user, 8 to 100 characters."
           },
           "currentPassword": {
             "maxLength": 100,
             "minLength": 0,
             "type": "string",
-            "description": "The current password of the signed-in administrator.",
-            "example": "correct horse battery staple"
+            "description": "The current password of the signed-in administrator."
           },
           "resetTwoFactor": {
             "type": "boolean",
             "description": "Also switch off two-factor authentication, invalidate the recovery codes and remove every passkey. Default false.",
-            "default": false,
-            "example": false
+            "default": false
           }
-        },
-        "example": {
-          "newPassword": "Temporary-Password-123!",
-          "currentPassword": "correct horse battery staple",
-          "resetTwoFactor": false
         }
       },
       "RestoreBackupRequest": {
@@ -33592,12 +33056,8 @@
             "maxLength": 100,
             "minLength": 0,
             "type": "string",
-            "description": "The current password of the signed-in administrator.",
-            "example": "correct horse battery staple"
+            "description": "The current password of the signed-in administrator."
           }
-        },
-        "example": {
-          "password": "correct horse battery staple"
         }
       },
       "RestoreBackupResponse": {
@@ -33641,13 +33101,8 @@
             "minLength": 1,
             "type": "string",
             "description": "The id the record had before it was deleted.",
-            "format": "uuid",
-            "example": "00000000-0000-0000-0000-000000000000"
+            "format": "uuid"
           }
-        },
-        "example": {
-          "kind": "transaction",
-          "entityId": "00000000-0000-0000-0000-000000000000"
         }
       },
       "RestoreTransactionsRequest": {
@@ -33663,16 +33118,8 @@
               "type": "string",
               "format": "uuid"
             },
-            "description": "Between 1 and 200 ids of deleted transactions.",
-            "example": [
-              "00000000-0000-0000-0000-000000000000"
-            ]
+            "description": "Between 1 and 200 ids of deleted transactions."
           }
-        },
-        "example": {
-          "transactionIds": [
-            "00000000-0000-0000-0000-000000000000"
-          ]
         }
       },
       "RestoreTransactionsResponse": {
@@ -33708,13 +33155,8 @@
           "recategorize": {
             "type": "boolean",
             "description": "false, the default, leaves every row that already carries a category alone. true also offers those rows to the rules and replaces the category on the ones that match.",
-            "default": false,
-            "example": false
+            "default": false
           }
-        },
-        "example": {
-          "accountId": null,
-          "recategorize": false
         }
       },
       "RunRulesResponse": {
@@ -33776,39 +33218,8 @@
             "items": {
               "$ref": "#/components/schemas/AllocationTargetInput"
             },
-            "description": "Each bucket at most once: a security type such as etf, a currency such as eur, or a security id; at most 100.",
-            "example": [
-              {
-                "key": "etf",
-                "share": "70"
-              },
-              {
-                "key": "bond",
-                "share": "20"
-              },
-              {
-                "key": "stock",
-                "share": "10"
-              }
-            ]
+            "description": "Each bucket at most once: a security type such as etf, a currency such as eur, or a security id; at most 100."
           }
-        },
-        "example": {
-          "dimension": "type",
-          "targets": [
-            {
-              "key": "etf",
-              "share": "70"
-            },
-            {
-              "key": "bond",
-              "share": "20"
-            },
-            {
-              "key": "stock",
-              "share": "10"
-            }
-          ]
         }
       },
       "SaveBrokerConnectionRequest": {
@@ -33855,33 +33266,15 @@
             "items": {
               "type": "string"
             },
-            "description": "Card ids from first to last: summary, monthlyTrend, spendingByCategory, spendingPace, budgets, netWorth, accounts, recentTransactions, upcomingBills. Each at most once.",
-            "example": [
-              "accounts",
-              "summary",
-              "monthlyTrend"
-            ]
+            "description": "Card ids from first to last: summary, monthlyTrend, spendingByCategory, spendingPace, budgets, netWorth, accounts, recentTransactions, upcomingBills. Each at most once."
           },
           "hidden": {
             "type": "array",
             "items": {
               "type": "string"
             },
-            "description": "Card ids the dashboard neither shows nor loads. Each at most once.",
-            "example": [
-              "netWorth"
-            ]
+            "description": "Card ids the dashboard neither shows nor loads. Each at most once."
           }
-        },
-        "example": {
-          "order": [
-            "accounts",
-            "summary",
-            "monthlyTrend"
-          ],
-          "hidden": [
-            "netWorth"
-          ]
         }
       },
       "SaveSecurityRequest": {
@@ -34201,20 +33594,14 @@
             "maxLength": 500,
             "minLength": 0,
             "type": "string",
-            "description": "A bank description or a payee key, at most 500 characters.",
-            "example": "MAXIMA LT 1234 VILNIUS"
+            "description": "A bank description or a payee key, at most 500 characters."
           },
           "name": {
             "maxLength": 100,
             "minLength": 0,
             "type": "string",
-            "description": "The display name, at most 100 characters.",
-            "example": "Maxima"
+            "description": "The display name, at most 100 characters."
           }
-        },
-        "example": {
-          "payee": "MAXIMA LT 1234 VILNIUS",
-          "name": "Maxima"
         }
       },
       "SetSecurityPriceRequest": {
@@ -34387,26 +33774,18 @@
             "minLength": 0,
             "pattern": "^[^@]+@[^@]+$",
             "type": "string",
-            "format": "email",
-            "example": "admin@example.com"
+            "format": "email"
           },
           "password": {
             "maxLength": 100,
             "minLength": 8,
-            "type": "string",
-            "example": "correct horse battery staple"
+            "type": "string"
           },
           "displayName": {
             "maxLength": 100,
             "minLength": 0,
-            "type": "string",
-            "example": "Admin"
+            "type": "string"
           }
-        },
-        "example": {
-          "email": "admin@example.com",
-          "password": "correct horse battery staple",
-          "displayName": "Admin"
         }
       },
       "SetupStatusResponse": {
@@ -34587,10 +33966,6 @@
             "description": "The ledger row that paid the occurrence, when known; only used to link a debt payment.",
             "format": "uuid"
           }
-        },
-        "example": {
-          "expectedDueDate": "2026-10-01",
-          "transactionId": null
         }
       },
       "SmtpEncryption": {
@@ -34769,8 +34144,7 @@
             "minLength": 1,
             "type": "string",
             "description": "The account the transaction is on.",
-            "format": "uuid",
-            "example": "00000000-0000-0000-0000-000000000000"
+            "format": "uuid"
           },
           "type": {
             "$ref": "#/components/schemas/FlowType"
@@ -34778,22 +34152,14 @@
           "amount": {
             "type": "string",
             "description": "The amount, zero or more, with at most two decimal places.",
-            "format": "decimal",
-            "example": "12.40"
+            "format": "decimal"
           },
           "description": {
             "maxLength": 500,
             "minLength": 0,
             "type": "string",
-            "description": "The description as typed, at most 500 characters.",
-            "example": "MAXIMA LT 0412"
+            "description": "The description as typed, at most 500 characters."
           }
-        },
-        "example": {
-          "accountId": "00000000-0000-0000-0000-000000000000",
-          "type": "expense",
-          "amount": "12.40",
-          "description": "MAXIMA LT 0412"
         }
       },
       "SuggestedPaymentResponse": {
@@ -35278,15 +34644,13 @@
             "maxLength": 200,
             "minLength": 0,
             "type": "string",
-            "description": "The text the draft rule compares with.",
-            "example": "MAXIMA"
+            "description": "The text the draft rule compares with."
           },
           "description": {
             "maxLength": 500,
             "minLength": 0,
             "type": "string",
-            "description": "The sample description typed into the form.",
-            "example": "Pirkinys MAXIMA X-123 VILNIUS"
+            "description": "The sample description typed into the form."
           },
           "amount": {
             "type": [
@@ -35312,14 +34676,6 @@
             "description": "The draft rule's highest amount.",
             "format": "decimal"
           }
-        },
-        "example": {
-          "match": "contains",
-          "pattern": "MAXIMA",
-          "description": "Pirkinys MAXIMA X-123 VILNIUS",
-          "amount": null,
-          "minAmount": null,
-          "maxAmount": null
         }
       },
       "TestCategorizationRuleResponse": {
@@ -36140,8 +35496,7 @@
           "name": {
             "maxLength": 100,
             "minLength": 0,
-            "type": "string",
-            "example": "Everyday"
+            "type": "string"
           },
           "description": {
             "maxLength": 500,
@@ -36149,23 +35504,20 @@
             "type": [
               "null",
               "string"
-            ],
-            "example": "Salary lands here"
+            ]
           },
           "iban": {
             "type": [
               "null",
               "string"
-            ],
-            "example": "LT121000011101001000"
+            ]
           },
           "type": {
             "$ref": "#/components/schemas/AccountType"
           },
           "startingBalance": {
             "type": "string",
-            "format": "decimal",
-            "example": "1250.00"
+            "format": "decimal"
           },
           "scope": {
             "$ref": "#/components/schemas/Scope"
@@ -36180,8 +35532,7 @@
           "version": {
             "type": "integer",
             "description": "The version of the record you read. Any later change to the record gives it a new version.",
-            "format": "uint32",
-            "example": 2041
+            "format": "uint32"
           },
           "currency": {
             "oneOf": [
@@ -36193,17 +35544,6 @@
               }
             ]
           }
-        },
-        "example": {
-          "name": "Everyday",
-          "description": "Salary lands here",
-          "iban": "LT121000011101001000",
-          "type": "checking",
-          "startingBalance": "1250.00",
-          "scope": "personal",
-          "householdId": null,
-          "version": 2041,
-          "currency": null
         }
       },
       "UpdateAssetRequest": {
@@ -36218,16 +35558,14 @@
           "name": {
             "maxLength": 100,
             "minLength": 0,
-            "type": "string",
-            "example": "Flat"
+            "type": "string"
           },
           "type": {
             "$ref": "#/components/schemas/AssetType"
           },
           "currentValue": {
             "type": "string",
-            "format": "decimal",
-            "example": "185000.00"
+            "format": "decimal"
           },
           "asOf": {
             "$ref": "#/components/schemas/DateOnly"
@@ -36253,15 +35591,6 @@
             ],
             "format": "uuid"
           }
-        },
-        "example": {
-          "name": "Flat",
-          "type": "property",
-          "currentValue": "185000.00",
-          "asOf": "2026-09-01",
-          "depreciation": null,
-          "scope": "personal",
-          "householdId": null
         }
       },
       "UpdateBackupRequest": {
@@ -36296,27 +35625,23 @@
               "null",
               "string"
             ],
-            "format": "uuid",
-            "example": "00000000-0000-0000-0000-000000000000"
+            "format": "uuid"
           },
           "limitAmount": {
             "type": "string",
-            "format": "decimal",
-            "example": "450.00"
+            "format": "decimal"
           },
           "period": {
             "$ref": "#/components/schemas/BudgetPeriod"
           },
           "rolloverEnabled": {
             "type": "boolean",
-            "description": "Whether the previous window's remainder adjusts this window's limit.",
-            "example": true
+            "description": "Whether the previous window's remainder adjusts this window's limit."
           },
           "version": {
             "type": "integer",
             "description": "The version of the record you read. Any later change to the record gives it a new version.",
-            "format": "uint32",
-            "example": 2041
+            "format": "uint32"
           },
           "tagId": {
             "type": [
@@ -36335,16 +35660,6 @@
             ],
             "format": "uuid"
           }
-        },
-        "example": {
-          "categoryId": "00000000-0000-0000-0000-000000000000",
-          "limitAmount": "450.00",
-          "period": "monthly",
-          "rolloverEnabled": true,
-          "version": 2041,
-          "tagId": null,
-          "scope": "personal",
-          "householdId": null
         }
       },
       "UpdateCategorizationRuleRequest": {
@@ -36359,8 +35674,7 @@
           "name": {
             "maxLength": 50,
             "minLength": 0,
-            "type": "string",
-            "example": "Groceries"
+            "type": "string"
           },
           "match": {
             "$ref": "#/components/schemas/DescriptionMatch"
@@ -36368,8 +35682,7 @@
           "pattern": {
             "maxLength": 200,
             "minLength": 0,
-            "type": "string",
-            "example": "MAXIMA"
+            "type": "string"
           },
           "tagIds": {
             "minItems": 1,
@@ -36377,8 +35690,7 @@
             "items": {
               "type": "string",
               "format": "uuid"
-            },
-            "example": [ ]
+            }
           },
           "accountId": {
             "type": [
@@ -36406,19 +35718,8 @@
               "null",
               "string"
             ],
-            "format": "uuid",
-            "example": "00000000-0000-0000-0000-000000000000"
+            "format": "uuid"
           }
-        },
-        "example": {
-          "name": "Groceries",
-          "match": "contains",
-          "pattern": "MAXIMA",
-          "tagIds": [ ],
-          "accountId": null,
-          "minAmount": null,
-          "maxAmount": null,
-          "categoryId": "00000000-0000-0000-0000-000000000000"
         }
       },
       "UpdateCategoryRequest": {
@@ -36433,8 +35734,7 @@
           "name": {
             "maxLength": 100,
             "minLength": 0,
-            "type": "string",
-            "example": "Groceries"
+            "type": "string"
           },
           "icon": {
             "maxLength": 50,
@@ -36442,8 +35742,7 @@
             "type": [
               "null",
               "string"
-            ],
-            "example": "shopping-cart"
+            ]
           },
           "scope": {
             "$ref": "#/components/schemas/Scope"
@@ -36462,13 +35761,6 @@
             ],
             "format": "uuid"
           }
-        },
-        "example": {
-          "name": "Groceries",
-          "icon": "shopping-cart",
-          "scope": "personal",
-          "householdId": null,
-          "parentId": null
         }
       },
       "UpdateContactRequest": {
@@ -36481,12 +35773,8 @@
             "maxLength": 100,
             "minLength": 0,
             "type": "string",
-            "description": "The new name, 1 to 100 characters.",
-            "example": "Jonas K."
+            "description": "The new name, 1 to 100 characters."
           }
-        },
-        "example": {
-          "name": "Jonas K."
         }
       },
       "UpdateContactSplitRequest": {
@@ -36532,8 +35820,7 @@
           "fromAmount": {
             "type": "string",
             "description": "Amount sold, as a decimal string greater than zero.",
-            "format": "decimal",
-            "example": "1000.00"
+            "format": "decimal"
           },
           "fromCurrency": {
             "$ref": "#/components/schemas/Currency"
@@ -36541,8 +35828,7 @@
           "toAmount": {
             "type": "string",
             "description": "Amount bought, as a decimal string greater than zero.",
-            "format": "decimal",
-            "example": "1084.20"
+            "format": "decimal"
           },
           "toCurrency": {
             "$ref": "#/components/schemas/Currency"
@@ -36556,8 +35842,7 @@
             "type": [
               "null",
               "string"
-            ],
-            "example": "Fund the USD sleeve"
+            ]
           },
           "feeAmount": {
             "type": [
@@ -36565,8 +35850,7 @@
               "string"
             ],
             "description": "The fee after the update. Leave it out to remove the fee.",
-            "format": "decimal",
-            "example": "2.00"
+            "format": "decimal"
           },
           "feeCurrency": {
             "oneOf": [
@@ -36577,8 +35861,7 @@
                 "$ref": "#/components/schemas/Currency"
               }
             ],
-            "description": "Currency of the fee; one of the two converted currencies. Defaults to the sold currency.",
-            "example": "eur"
+            "description": "Currency of the fee; one of the two converted currencies. Defaults to the sold currency."
           },
           "feeCategoryId": {
             "type": [
@@ -36588,17 +35871,6 @@
             "description": "Expense category of the fee transaction. Leave it out for none.",
             "format": "uuid"
           }
-        },
-        "example": {
-          "fromAmount": "1000.00",
-          "fromCurrency": "eur",
-          "toAmount": "1084.20",
-          "toCurrency": "usd",
-          "date": "2026-09-12",
-          "description": "Fund the USD sleeve",
-          "feeAmount": "2.00",
-          "feeCurrency": "eur",
-          "feeCategoryId": null
         }
       },
       "UpdateCsvMappingRequest": {
@@ -36617,30 +35889,26 @@
           "name": {
             "maxLength": 60,
             "minLength": 0,
-            "type": "string",
-            "example": "SEB card"
+            "type": "string"
           },
           "encoding": {
             "$ref": "#/components/schemas/CsvEncoding"
           },
           "delimiter": {
             "minLength": 1,
-            "type": "string",
-            "example": ";"
+            "type": "string"
           },
           "skipLines": {
             "maximum": 20,
             "minimum": 0,
             "type": "integer",
-            "format": "int32",
-            "example": 2
+            "format": "int32"
           },
           "amountStyle": {
             "$ref": "#/components/schemas/CsvAmountStyle"
           },
           "dateFormat": {
-            "type": "string",
-            "example": "dd.MM.yyyy"
+            "type": "string"
           },
           "decimalSeparator": {
             "$ref": "#/components/schemas/CsvDecimalSeparator"
@@ -36660,36 +35928,8 @@
           },
           "noHeaderRow": {
             "type": "boolean",
-            "default": false,
-            "example": false
+            "default": false
           }
-        },
-        "example": {
-          "name": "SEB card",
-          "encoding": "windows1257",
-          "delimiter": ";",
-          "skipLines": 2,
-          "amountStyle": "signedPositiveIsExpense",
-          "dateFormat": "dd.MM.yyyy",
-          "decimalSeparator": "comma",
-          "columns": {
-            "date": "Data",
-            "description": "Aprašymas",
-            "payee": null,
-            "amount": "Suma",
-            "debit": null,
-            "credit": null,
-            "direction": null,
-            "expenseValue": null,
-            "currency": null,
-            "reference": null,
-            "balance": null,
-            "fee": null,
-            "status": null,
-            "bookedValues": null
-          },
-          "currency": null,
-          "noHeaderRow": false
         }
       },
       "UpdateDebtPaymentRequest": {
@@ -36724,16 +35964,14 @@
           "name": {
             "maxLength": 100,
             "minLength": 0,
-            "type": "string",
-            "example": "Mortgage"
+            "type": "string"
           },
           "type": {
             "$ref": "#/components/schemas/DebtType"
           },
           "outstandingAmount": {
             "type": "string",
-            "format": "decimal",
-            "example": "118500.00"
+            "format": "decimal"
           },
           "interestRate": {
             "maximum": 100,
@@ -36742,8 +35980,7 @@
               "null",
               "number"
             ],
-            "format": "double",
-            "example": 2.4
+            "format": "double"
           },
           "asOf": {
             "$ref": "#/components/schemas/DateOnly"
@@ -36754,8 +35991,7 @@
               "string"
             ],
             "description": "Optional principal borrowed at the start, a positive decimal string.",
-            "format": "decimal",
-            "example": "150000.00"
+            "format": "decimal"
           },
           "firstPaymentDate": {
             "oneOf": [
@@ -36766,8 +36002,7 @@
                 "$ref": "#/components/schemas/NullableOfDateOnly"
               }
             ],
-            "description": "Optional date of the first monthly payment; later payments fall on the same day of the month.",
-            "example": "2020-10-15"
+            "description": "Optional date of the first monthly payment; later payments fall on the same day of the month."
           },
           "termMonths": {
             "maximum": 600,
@@ -36777,8 +36012,7 @@
               "integer"
             ],
             "description": "Optional number of monthly payments, 1 to 600. Leave monthlyPayment empty when it is set.",
-            "format": "int32",
-            "example": 360
+            "format": "int32"
           },
           "monthlyPayment": {
             "type": [
@@ -36797,14 +36031,12 @@
                 "$ref": "#/components/schemas/AmortizationType"
               }
             ],
-            "description": "annuity (level payment, the default) or linear (equal principal, needs termMonths).",
-            "example": "annuity"
+            "description": "annuity (level payment, the default) or linear (equal principal, needs termMonths)."
           },
           "tracksPayments": {
             "type": "boolean",
             "description": "When true, the balance is outstandingAmount on asOf minus the principal of the payments linked after asOf. Editing outstandingAmount or asOf sets a new starting point.",
-            "default": false,
-            "example": false
+            "default": false
           },
           "scope": {
             "$ref": "#/components/schemas/Scope"
@@ -36816,21 +36048,6 @@
             ],
             "format": "uuid"
           }
-        },
-        "example": {
-          "name": "Mortgage",
-          "type": "mortgage",
-          "outstandingAmount": "118500.00",
-          "interestRate": 2.4,
-          "asOf": "2026-10-01",
-          "loanAmount": "150000.00",
-          "firstPaymentDate": "2020-10-15",
-          "termMonths": 360,
-          "monthlyPayment": null,
-          "amortizationType": "annuity",
-          "tracksPayments": false,
-          "scope": "personal",
-          "householdId": null
         }
       },
       "UpdateDiscordSettingsRequest": {
@@ -36841,21 +36058,15 @@
         "type": "object",
         "properties": {
           "enabled": {
-            "type": "boolean",
-            "example": true
+            "type": "boolean"
           },
           "webhookUrl": {
             "type": [
               "null",
               "string"
             ],
-            "description": "Leave empty to keep the stored webhook.",
-            "example": "https://discord.com/api/webhooks/123456789012345678/abcdefghijklmnopqrstuvwxyz"
+            "description": "Leave empty to keep the stored webhook."
           }
-        },
-        "example": {
-          "enabled": true,
-          "webhookUrl": "https://discord.com/api/webhooks/123456789012345678/abcdefghijklmnopqrstuvwxyz"
         }
       },
       "UpdateGoalProgressRequest": {
@@ -36879,13 +36090,8 @@
               "string"
             ],
             "description": "An amount to add to the saved amount, negative to take some out. Leave empty when sending currentAmount.",
-            "format": "decimal",
-            "example": "50.00"
+            "format": "decimal"
           }
-        },
-        "example": {
-          "currentAmount": null,
-          "delta": "50.00"
         }
       },
       "UpdateGoalRequest": {
@@ -36904,13 +36110,11 @@
           "name": {
             "maxLength": 100,
             "minLength": 0,
-            "type": "string",
-            "example": "Emergency fund"
+            "type": "string"
           },
           "targetAmount": {
             "type": "string",
-            "format": "decimal",
-            "example": "5000.00"
+            "format": "decimal"
           },
           "currentAmount": {
             "type": [
@@ -36918,8 +36122,7 @@
               "string"
             ],
             "description": "Amount saved so far, zero or more. Required for a manual goal, ignored for a goal funded from an account.",
-            "format": "decimal",
-            "example": "1500.00"
+            "format": "decimal"
           },
           "targetDate": {
             "oneOf": [
@@ -36929,8 +36132,7 @@
               {
                 "$ref": "#/components/schemas/NullableOfDateOnly"
               }
-            ],
-            "example": "2027-01-01"
+            ]
           },
           "funding": {
             "$ref": "#/components/schemas/GoalFunding"
@@ -36956,8 +36158,7 @@
           "version": {
             "type": "integer",
             "description": "The version of the record you read. Any later change to the record gives it a new version.",
-            "format": "uint32",
-            "example": 2041
+            "format": "uint32"
           },
           "scope": {
             "$ref": "#/components/schemas/Scope"
@@ -36969,18 +36170,6 @@
             ],
             "format": "uuid"
           }
-        },
-        "example": {
-          "name": "Emergency fund",
-          "targetAmount": "5000.00",
-          "currentAmount": "1500.00",
-          "targetDate": "2027-01-01",
-          "funding": "manual",
-          "fundingAccountId": null,
-          "fundingSharePercent": null,
-          "version": 2041,
-          "scope": "personal",
-          "householdId": null
         }
       },
       "UpdateHouseholdRequest": {
@@ -36992,12 +36181,8 @@
           "name": {
             "maxLength": 100,
             "minLength": 0,
-            "type": "string",
-            "example": "Home"
+            "type": "string"
           }
-        },
-        "example": {
-          "name": "Home"
         }
       },
       "UpdateInvestmentTransactionRequest": {
@@ -37011,8 +36196,7 @@
           "accountId": {
             "minLength": 1,
             "type": "string",
-            "format": "uuid",
-            "example": "00000000-0000-0000-0000-000000000000"
+            "format": "uuid"
           },
           "type": {
             "$ref": "#/components/schemas/InvestmentTransactionType"
@@ -37025,8 +36209,7 @@
               "null",
               "string"
             ],
-            "format": "uuid",
-            "example": "00000000-0000-0000-0000-000000000000"
+            "format": "uuid"
           },
           "quantity": {
             "type": [
@@ -37034,16 +36217,14 @@
               "string"
             ],
             "description": "Shares for a buy or sell; new shares per old share for a split; shares moved for a symbol change.",
-            "format": "decimal",
-            "example": "10"
+            "format": "decimal"
           },
           "price": {
             "type": [
               "null",
               "string"
             ],
-            "format": "decimal",
-            "example": "104.52"
+            "format": "decimal"
           },
           "amount": {
             "type": [
@@ -37058,8 +36239,7 @@
               "null",
               "string"
             ],
-            "format": "decimal",
-            "example": "1.25"
+            "format": "decimal"
           },
           "currency": {
             "oneOf": [
@@ -37104,21 +36284,6 @@
             "description": "For a merger paid in shares and cash, or a spin-off: the percentage of the cost basis carried into the new shares, 0 to 100.",
             "format": "decimal"
           }
-        },
-        "example": {
-          "accountId": "00000000-0000-0000-0000-000000000000",
-          "type": "buy",
-          "date": "2026-09-12",
-          "securityId": "00000000-0000-0000-0000-000000000000",
-          "quantity": "10",
-          "price": "104.52",
-          "amount": null,
-          "fee": "1.25",
-          "currency": null,
-          "description": null,
-          "relatedSecurityId": null,
-          "relatedQuantity": null,
-          "costShare": null
         }
       },
       "UpdateMarketPriceSettingsRequest": {
@@ -37128,8 +36293,7 @@
         "type": "object",
         "properties": {
           "enabled": {
-            "type": "boolean",
-            "example": true
+            "type": "boolean"
           },
           "eodhdApiKey": {
             "maxLength": 200,
@@ -37138,13 +36302,8 @@
               "null",
               "string"
             ],
-            "description": "Null keeps the saved key, an empty string removes it, anything else replaces it.",
-            "example": "your-eodhd-key"
+            "description": "Null keeps the saved key, an empty string removes it, anything else replaces it."
           }
-        },
-        "example": {
-          "enabled": true,
-          "eodhdApiKey": "your-eodhd-key"
         }
       },
       "UpdateMemberRoleRequest": {
@@ -37156,9 +36315,6 @@
           "role": {
             "$ref": "#/components/schemas/HouseholdRole"
           }
-        },
-        "example": {
-          "role": "owner"
         }
       },
       "UpdateMonthNoteRequest": {
@@ -37174,12 +36330,8 @@
               "null",
               "string"
             ],
-            "description": "At most 1000 characters.",
-            "example": "Two refunds still pending."
+            "description": "At most 1000 characters."
           }
-        },
-        "example": {
-          "note": "Two refunds still pending."
         }
       },
       "UpdateMyDigestScopesRequest": {
@@ -37190,25 +36342,15 @@
         "type": "object",
         "properties": {
           "everything": {
-            "type": "boolean",
-            "example": true
+            "type": "boolean"
           },
           "householdIds": {
             "type": "array",
             "items": {
               "type": "string",
               "format": "uuid"
-            },
-            "example": [
-              "8d3c1e52-7a1f-4f53-9f2a-1b6c4e0d9a10"
-            ]
+            }
           }
-        },
-        "example": {
-          "everything": true,
-          "householdIds": [
-            "8d3c1e52-7a1f-4f53-9f2a-1b6c4e0d9a10"
-          ]
         }
       },
       "UpdateMyDiscordNotificationsRequest": {
@@ -37221,18 +36363,8 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/NotificationType"
-            },
-            "example": [
-              "billDue",
-              "budgetExceeded"
-            ]
+            }
           }
-        },
-        "example": {
-          "types": [
-            "billDue",
-            "budgetExceeded"
-          ]
         }
       },
       "UpdateMyEmailNotificationsRequest": {
@@ -37245,18 +36377,8 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/NotificationType"
-            },
-            "example": [
-              "billDue",
-              "budgetExceeded"
-            ]
+            }
           }
-        },
-        "example": {
-          "types": [
-            "billDue",
-            "budgetExceeded"
-          ]
         }
       },
       "UpdateMyLanguageRequest": {
@@ -37266,12 +36388,8 @@
         "type": "object",
         "properties": {
           "language": {
-            "type": "string",
-            "example": "lt"
+            "type": "string"
           }
-        },
-        "example": {
-          "language": "lt"
         }
       },
       "UpdateMyProfileRequest": {
@@ -37285,8 +36403,7 @@
           "displayName": {
             "maxLength": 100,
             "minLength": 0,
-            "type": "string",
-            "example": "Justas"
+            "type": "string"
           },
           "currentPassword": {
             "type": [
@@ -37304,11 +36421,6 @@
             ],
             "description": "Omit to leave the password alone."
           }
-        },
-        "example": {
-          "displayName": "Justas",
-          "currentPassword": null,
-          "newPassword": null
         }
       },
       "UpdateMyTelegramNotificationsRequest": {
@@ -37321,18 +36433,8 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/NotificationType"
-            },
-            "example": [
-              "billDue",
-              "budgetExceeded"
-            ]
+            }
           }
-        },
-        "example": {
-          "types": [
-            "billDue",
-            "budgetExceeded"
-          ]
         }
       },
       "UpdateReceiptCategoriesRequest": {
@@ -37368,8 +36470,7 @@
           "name": {
             "maxLength": 100,
             "minLength": 0,
-            "type": "string",
-            "example": "Rent"
+            "type": "string"
           },
           "shape": {
             "$ref": "#/components/schemas/RecurringBillShape"
@@ -37382,8 +36483,7 @@
               "null",
               "string"
             ],
-            "format": "decimal",
-            "example": "675.00"
+            "format": "decimal"
           },
           "categoryId": {
             "type": [
@@ -37416,12 +36516,10 @@
             "maximum": 365,
             "minimum": 0,
             "type": "integer",
-            "format": "int32",
-            "example": 3
+            "format": "int32"
           },
           "isActive": {
-            "type": "boolean",
-            "example": true
+            "type": "boolean"
           },
           "matchKey": {
             "maxLength": 200,
@@ -37469,25 +36567,6 @@
             ],
             "description": "Optional, with spreadMonths: forward (the default) or backward, the direction each written transaction is spread in."
           }
-        },
-        "example": {
-          "name": "Rent",
-          "shape": "expense",
-          "kind": "fixed",
-          "amount": "675.00",
-          "categoryId": null,
-          "accountId": null,
-          "toAccountId": null,
-          "cadence": "monthly",
-          "nextDueDate": "2026-11-01",
-          "remindDaysBefore": 3,
-          "isActive": true,
-          "matchKey": null,
-          "debtId": null,
-          "scope": "personal",
-          "householdId": null,
-          "spreadMonths": null,
-          "spreadDirection": null
         }
       },
       "UpdateSettingsRequest": {
@@ -37596,8 +36675,7 @@
         "type": "object",
         "properties": {
           "enabled": {
-            "type": "boolean",
-            "example": true
+            "type": "boolean"
           },
           "host": {
             "maxLength": 255,
@@ -37605,15 +36683,13 @@
             "type": [
               "null",
               "string"
-            ],
-            "example": "smtp.example.com"
+            ]
           },
           "port": {
             "maximum": 65535,
             "minimum": 1,
             "type": "integer",
-            "format": "int32",
-            "example": 587
+            "format": "int32"
           },
           "encryption": {
             "$ref": "#/components/schemas/SmtpEncryption"
@@ -37624,8 +36700,7 @@
             "type": [
               "null",
               "string"
-            ],
-            "example": "finance@example.com"
+            ]
           },
           "password": {
             "maxLength": 255,
@@ -37634,8 +36709,7 @@
               "null",
               "string"
             ],
-            "description": "Leave empty to keep the stored password; required when the host or user name changes.",
-            "example": "app-password"
+            "description": "Leave empty to keep the stored password; required when the host or user name changes."
           },
           "fromAddress": {
             "maxLength": 320,
@@ -37645,8 +36719,7 @@
               "null",
               "string"
             ],
-            "format": "email",
-            "example": "finance@example.com"
+            "format": "email"
           },
           "fromName": {
             "maxLength": 100,
@@ -37654,19 +36727,8 @@
             "type": [
               "null",
               "string"
-            ],
-            "example": "Jx Finance"
+            ]
           }
-        },
-        "example": {
-          "enabled": true,
-          "host": "smtp.example.com",
-          "port": 587,
-          "encryption": "startTls",
-          "userName": "finance@example.com",
-          "password": "app-password",
-          "fromAddress": "finance@example.com",
-          "fromName": "Jx Finance"
         }
       },
       "UpdateTagRequest": {
@@ -37680,8 +36742,7 @@
           "name": {
             "maxLength": 50,
             "minLength": 0,
-            "type": "string",
-            "example": "Holiday 2026"
+            "type": "string"
           },
           "scope": {
             "$ref": "#/components/schemas/Scope"
@@ -37693,11 +36754,6 @@
             ],
             "format": "uuid"
           }
-        },
-        "example": {
-          "name": "Holiday 2026",
-          "scope": "personal",
-          "householdId": null
         }
       },
       "UpdateTelegramSettingsRequest": {
@@ -37709,16 +36765,14 @@
         "type": "object",
         "properties": {
           "enabled": {
-            "type": "boolean",
-            "example": true
+            "type": "boolean"
           },
           "botToken": {
             "type": [
               "null",
               "string"
             ],
-            "description": "Leave empty to keep the stored token.",
-            "example": "123456789:AAEhBP0av18z2kPqhh1EbM3Xyh9ZNeC9Q1k"
+            "description": "Leave empty to keep the stored token."
           },
           "chatId": {
             "type": [
@@ -37726,14 +36780,8 @@
               "integer"
             ],
             "description": "The group's id; null removes it.",
-            "format": "int64",
-            "example": -1001234567890
+            "format": "int64"
           }
-        },
-        "example": {
-          "enabled": true,
-          "botToken": "123456789:AAEhBP0av18z2kPqhh1EbM3Xyh9ZNeC9Q1k",
-          "chatId": -1001234567890
         }
       },
       "UpdateTransactionRequest": {
@@ -37753,24 +36801,21 @@
           "accountId": {
             "minLength": 1,
             "type": "string",
-            "format": "uuid",
-            "example": "00000000-0000-0000-0000-000000000000"
+            "format": "uuid"
           },
           "categoryId": {
             "type": [
               "null",
               "string"
             ],
-            "format": "uuid",
-            "example": "00000000-0000-0000-0000-000000000000"
+            "format": "uuid"
           },
           "type": {
             "$ref": "#/components/schemas/FlowType"
           },
           "amount": {
             "type": "string",
-            "format": "decimal",
-            "example": "42.50"
+            "format": "decimal"
           },
           "date": {
             "$ref": "#/components/schemas/DateOnly"
@@ -37781,8 +36826,7 @@
             "type": [
               "null",
               "string"
-            ],
-            "example": "Weekly shop"
+            ]
           },
           "lines": {
             "type": [
@@ -37796,8 +36840,7 @@
           "version": {
             "type": "integer",
             "description": "The version of the record you read. Any later change to the record gives it a new version.",
-            "format": "uint32",
-            "example": 2041
+            "format": "uint32"
           },
           "tagIds": {
             "type": [
@@ -37880,25 +36923,6 @@
             ],
             "description": "Optional, with spreadMonths: forward (the default) counts from the month of the date on, backward counts the months up to and including it, for a bill paid in arrears."
           }
-        },
-        "example": {
-          "accountId": "00000000-0000-0000-0000-000000000000",
-          "categoryId": "00000000-0000-0000-0000-000000000000",
-          "type": "expense",
-          "amount": "42.50",
-          "date": "2026-09-12",
-          "description": "Weekly shop",
-          "lines": null,
-          "version": 2041,
-          "tagIds": null,
-          "currency": null,
-          "refundOfTransactionId": null,
-          "note": null,
-          "spreadMonths": null,
-          "place": null,
-          "latitude": null,
-          "longitude": null,
-          "spreadDirection": null
         }
       },
       "UpdateTransferRequest": {
@@ -37914,20 +36938,17 @@
           "fromAccountId": {
             "minLength": 1,
             "type": "string",
-            "format": "uuid",
-            "example": "00000000-0000-0000-0000-000000000000"
+            "format": "uuid"
           },
           "toAccountId": {
             "minLength": 1,
             "type": "string",
-            "format": "uuid",
-            "example": "00000000-0000-0000-0000-000000000000"
+            "format": "uuid"
           },
           "amount": {
             "type": "string",
             "description": "Decimal string with at most two decimal places, greater than zero.",
-            "format": "decimal",
-            "example": "250.00"
+            "format": "decimal"
           },
           "date": {
             "$ref": "#/components/schemas/DateOnly"
@@ -37938,8 +36959,7 @@
             "type": [
               "null",
               "string"
-            ],
-            "example": "To savings"
+            ]
           },
           "currency": {
             "oneOf": [
@@ -37969,16 +36989,6 @@
               }
             ]
           }
-        },
-        "example": {
-          "fromAccountId": "00000000-0000-0000-0000-000000000000",
-          "toAccountId": "00000000-0000-0000-0000-000000000000",
-          "amount": "250.00",
-          "date": "2026-09-12",
-          "description": "To savings",
-          "currency": null,
-          "receivedAmount": null,
-          "receivedCurrency": null
         }
       },
       "UpdateUserRoleRequest": {
@@ -37989,12 +36999,8 @@
         "properties": {
           "role": {
             "type": "string",
-            "description": "Admin or Member.",
-            "example": "Admin"
+            "description": "Admin or Member."
           }
-        },
-        "example": {
-          "role": "Admin"
         }
       },
       "UploadAttachmentRequest": {
@@ -38167,20 +37173,14 @@
             "minLength": 0,
             "pattern": "^[^@]+@[^@]+$",
             "type": "string",
-            "format": "email",
-            "example": "you@example.com"
+            "format": "email"
           },
           "token": {
             "maxLength": 1000,
             "minLength": 0,
             "type": "string",
-            "description": "The token from the emailed link, sent back unchanged.",
-            "example": "CfDJ8…"
+            "description": "The token from the emailed link, sent back unchanged."
           }
-        },
-        "example": {
-          "email": "you@example.com",
-          "token": "CfDJ8…"
         }
       }
     },

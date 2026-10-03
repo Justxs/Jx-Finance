@@ -9,6 +9,8 @@
 export type ReceiptItemCategoriesParams = {
   /**
    * Optional text the normalized item name must contain, ignoring case and accents.
+   * @minLength 0
+   * @maxLength 100
    * @nullable
    */
   search?: string | null;

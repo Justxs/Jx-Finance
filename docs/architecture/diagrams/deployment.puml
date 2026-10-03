@@ -4,7 +4,7 @@
 node "Client device" <<device>> as client {
   node "Web browser" <<execution environment>> as browser
   node "AI client" <<execution environment>> as aiclient {
-    artifact "jx-mcp\nNode 24, stdio" as mcp
+    artifact "MCP client\nstreamable HTTP" as mcp
   }
 }
 
@@ -33,7 +33,7 @@ node "Docker host on a private network" <<device>> as host {
 cloud "External services\nSMTP, Discord, Telegram, Frankfurter,\nEODHD, Kraken, Interactive Brokers" as ext
 
 browser --> caddy : HTTPS :443
-mcp --> caddy : HTTPS :443 /api\nAuthorization header
+mcp --> caddy : HTTPS :443 /api/mcp\nAuthorization header
 caddy --> spa : static files
 caddy --> vmaps : /maps/*
 caddy -- vcaddy

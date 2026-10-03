@@ -9,6 +9,8 @@
 export type CashFlowForecastParams = {
   /**
    * How many days after today to project, from 30 to 90. Defaults to 90.
+   * @minimum 30
+   * @maximum 90
    */
   days: number;
   /**

@@ -1,8 +1,10 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using FastEndpoints;
+using FastEndpoints.Mcp;
 using JxFinance.Api;
 using JxFinance.Common.Errors;
+using JxFinance.Common.Mcp;
 using JxFinance.Common.Middleware;
 using JxFinance.Infrastructure.Configuration;
 using Scalar.AspNetCore;
@@ -32,6 +34,7 @@ public static class ApiPipelineExtensions
         app.UseMiddleware<IdempotencyMiddleware>();
 
         app.UseFastEndpoints(ConfigureFastEndpoints);
+        app.UseMcp(McpTools.Path, McpTools.ConfigureRoute);
         if (ServesApiDocs(app.Configuration, app.Environment))
         {
             app.MapApiDocs();
@@ -46,12 +49,16 @@ public static class ApiPipelineExtensions
     {
         c.Endpoints.ShortNames = true;
         c.Binding.ReflectionCache.AddFromJxFinanceApi();
-        c.Endpoints.Configurator = ep => ep.Description(d =>
+        c.Endpoints.Configurator = ep =>
         {
-            d.ProducesProblemDetails(500);
-            if (ep.AnonymousVerbs is not { Length: > 0 }) d.ProducesProblemDetails(401);
-            if (ep.AllowedRoles is { Count: > 0 }) d.ProducesProblemDetails(403);
-        });
+            ep.Description(d =>
+            {
+                d.ProducesProblemDetails(500);
+                if (ep.AnonymousVerbs is not { Length: > 0 }) d.ProducesProblemDetails(401);
+                if (ep.AllowedRoles is { Count: > 0 }) d.ProducesProblemDetails(403);
+            });
+            McpTools.OptIn(ep);
+        };
         c.Serializer.Options.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase));
         c.Serializer.SerializerErrorsField = ProblemResponses.SerializerErrorsField;
         c.Errors.GeneralErrorsField = ProblemResponses.GeneralErrorsField;

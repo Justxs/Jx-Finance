@@ -15,7 +15,7 @@ public sealed class DismissUnusualAmountEndpoint(ITransactionWriteService transa
     {
         Post(Route);
         Group<TransactionsGroup>();
-        Options(b => b.WithMetadata(new RequiresFeature(Feature.UnusualAmounts)));
+        Metadata(new RequiresFeature(Feature.UnusualAmounts));
         Description(d => d.Produces(204).ProducesProblemDetails(404));
     }
 

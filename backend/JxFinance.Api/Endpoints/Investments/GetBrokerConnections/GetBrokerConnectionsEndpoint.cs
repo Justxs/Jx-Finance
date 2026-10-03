@@ -12,7 +12,7 @@ public sealed class GetBrokerConnectionsEndpoint(IBrokerImportService importServ
     {
         Get(ApiRoutes.Investments + "/connections");
         Group<InvestmentsGroup>();
-        Options(b => b.WithMetadata(TokenReadable.No));
+        Metadata(TokenReadable.No);
     }
 
     public override async Task HandleAsync(CancellationToken ct) =>
