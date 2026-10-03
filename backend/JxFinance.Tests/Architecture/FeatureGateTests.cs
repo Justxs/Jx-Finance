@@ -21,7 +21,7 @@ public sealed class FeatureGateTests
         (ApiRoutes.ReportsPath, Feature.Reports),
         (ApiRoutes.ImportPath, Feature.Import),
         (ApiRoutes.HouseholdsPath, Feature.Households),
-        (ApiRoutes.ContactsPath, Feature.Households),
+        (ApiRoutes.ContactsPath, Feature.People),
         (ApiRoutes.ConversionsPath, Feature.MultiCurrency),
         (ApiRoutes.InvestmentsPath, Feature.Investments),
         (ApiRoutes.CategorizationRulesPath, Feature.CategorizationRules),
@@ -29,9 +29,12 @@ public sealed class FeatureGateTests
         (ApiRoutes.TransactionsPath + "/places", Feature.Locations),
         (ApiRoutes.TransactionsPath + "/uncategorized-suggestions", Feature.LearnedCategories),
         (ApiRoutes.MonthClosePath, Feature.MonthClose),
-        (ApiRoutes.AccountsPath + "/forecast", Feature.RecurringBills),
+        (ApiRoutes.AccountsPath + "/forecast", Feature.CashFlowForecast),
         (ApiRoutes.ReceiptsPath, Feature.ReceiptReading),
         (ApiRoutes.AuthPath + "/tokens", Feature.ApiTokens),
+        (ApiRoutes.AttachmentsPath, Feature.Attachments),
+        (ApiRoutes.TransactionsPath + "/{transactionId}/attachments", Feature.Attachments),
+        (ApiRoutes.PayeesPath, Feature.PayeeNames),
     ];
 
     [Fact]

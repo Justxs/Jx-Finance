@@ -8,7 +8,7 @@ In the first days of a month, each member who asked for it receives one message 
 
 ```mermaid
 flowchart TD
-    Job["MonthlyDigestJob<br/>daily at 08:00, acts on days 1 to 5, needs MonthClose"] --> Pick["Active members who ticked monthlyDigest<br/>for email, or whose enabled webhook takes it<br/>while Discord is allowed; one entry per chosen scope<br/>(Everything, and each household while Households is on)<br/>without a digest for the month"]
+    Job["MonthlyDigestJob<br/>daily at 08:00, acts on days 1 to 5, needs MonthClose"] --> Pick["Active members who ticked monthlyDigest<br/>for email, or for Discord while the<br/>Discord channel is set up; one entry per chosen scope<br/>(Everything, and each household while Households is on)<br/>without a digest for the month"]
     Pick --> Scope["RunAsUserAsync(member, household):<br/>a scope where ICurrentUser is FixedUser(member, household),<br/>no household for Everything"]
     Scope --> Lock["Transaction, AppLock.MonthlyDigest,<br/>deduplication checked again"]
     Lock --> Review["IMonthCloseService.GetMonthAsync(last month):<br/>figures with PreviousMonth and the checklist"]
@@ -21,7 +21,7 @@ flowchart TD
 
 ## Opting in
 
-Settings › Personal › Notifications has a row "Monthly digest" like every other kind, because the rows come from `NotificationType`. Ticking Email or Discord is the opt-in; a member who ticks neither gets nothing, not even a bell row.
+Settings › Personal › Notifications has a row "Monthly digest" like every other kind, because the rows come from `NotificationType`, as long as at least one channel is set up on the installation; with neither email nor Discord set up the row, its note and the scopes below are hidden, because the digest is only ever sent outside the app. Ticking Email or Discord is the opt-in; a member who ticks neither gets nothing, not even a bell row. The job picks members whose `EmailNotificationTypes` contain `monthlyDigest`, and those whose `DiscordNotificationTypes` contain it while Discord is enabled.
 
 Since 2026-10-01 a member who belongs to a household also sees "Monthly digest for" under the notes: a checkbox "Everything" and one per household they belong to, from `GET /api/households`, saved with the rest of the form through `PUT /api/users/me/digest-scopes`. The choice is made once and applies to email and Discord alike. Every ticked scope is its own message. Without a household the choice is not shown and the digest covers "Everything", as before. The choice is stored on the member as `AspNetUsers.MonthlyDigestEverything` (true by default, so nothing changed for anyone) and `MonthlyDigestHouseholdIds` (a `uuid[]`, empty by default); a member who unticks every scope gets no digest even with a channel ticked. A household the member has left stays in the list until the next save, which sends only the households they still belong to, and the job skips it meanwhile. Household digests go out only while the `Households` switch is on. Its "In app" cell shows a dash labelled "Only sent by email or Discord" instead of the muted check, and a note under the table says what the digest is and when it arrives. A member who ticked Email while the mail server is off or their address is unconfirmed still gets the bell row, because the job picks members by what they ticked and the publisher decides what can leave.
 
@@ -56,7 +56,7 @@ The texts are built from the payload when the message is queued, in the recipien
 - Title (`NotificationTexts.DigestTitle`): the month, followed for a household by a comma and its name: "September 2026, Kazlauskų šeima" or "2026 m. rugsėjis, Kazlauskų šeima". The email subject, the Discord heading, the sentence and the bell title all start with it.
 - Sentence (`NotificationTexts.Sentence`): "September 2026: income 3200.00 EUR, expenses 2450.00 EUR, net 750.00 EUR, 23% kept", or "2026 m. rugsėjis: pajamos …, išlaidos …, grynai …, sutaupyta 23%".
 - Details (`NotificationTexts.DigestDetails`): "Biggest changes: Groceries 420.00 EUR (was 380.00 EUR), …"; "Still to do: uncategorised 3, accounts not reconciled 1." with only the non-zero items, or "Nothing left to do."; and "The month is closed." or "The month is not closed yet."
-- Discord: the month in bold, the sentence, the details and the link, each escaped and clipped to 2000 characters like every message.
+- Discord: the member's name and the month in bold on the first line, the sentence, the details and the link, each escaped and clipped to 2000 characters like every message.
 - Email (`EmailTexts.MonthlyDigest`): subject "your September 2026" ("mėnesio suvestinė, 2026 m. rugsėjis") after the product name, a body of the sentence, the details, the link and how to switch it off. It is stored as `EmailKind.Notification`, so the publisher's daily deduplication keys cover it.
 - Bell: the title is `DigestTitle` in the installation language and the line "Income €3,200.00, expenses €2,450.00, net €750.00" is rendered by the client from the payload in the interface language; the row links to `/reports/month?month=yyyy-MM`, the [Month page](month-end-close.md#screens), while `MonthClose` is on, in whichever household the browser has picked.
 

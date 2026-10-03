@@ -311,7 +311,9 @@ Every 201 goes through `CreatedAsync`, which sets `Location` to a path built fro
 | GET | `/api/reports/summary` |
 | GET | `/api/settings` |
 | PUT | `/api/settings` |
-| PUT | `/api/settings/discord` |
+| GET | `/api/settings/discord` (Admin) |
+| PUT | `/api/settings/discord` (Admin) |
+| POST | `/api/settings/discord/test` (Admin) |
 | GET | `/api/settings/exchange-rates` (Admin) |
 | POST | `/api/settings/exchange-rates/sync` |
 | DELETE | `/api/settings/exchange-rates/{currency}/{date}` (Admin) |
@@ -371,10 +373,7 @@ Every 201 goes through `CreatedAsync`, which sets `Location` to a path built fro
 | DELETE | `/api/users/me/dashboard-layout` |
 | GET | `/api/users/me/dashboard-layout` |
 | PUT | `/api/users/me/dashboard-layout` |
-| DELETE | `/api/users/me/discord` |
-| GET | `/api/users/me/discord` |
-| PUT | `/api/users/me/discord` |
-| POST | `/api/users/me/discord/test` |
+| PUT | `/api/users/me/discord-notifications` |
 | PUT | `/api/users/me/email-notifications` |
 | PUT | `/api/users/me/digest-scopes` |
 | GET | `/api/users/me/export` |
@@ -403,7 +402,9 @@ Since 2026-10-02 confirm also takes an optional `group`, `{ id }` of a [transact
 
 `PUT /api/users/me/language` takes `{ language }`, `en` or `lt`, the language every email and Discord message to the signed-in user is written in, and answers the profile, whose `language` is null until one is saved. Anything else is refused with 400 `enum.invalid`; it is open to every signed-in user under the `Users` tag and throttled to 20 calls per five minutes. See [Monthly digest](features/monthly-digest.md#the-members-language).
 
-`/api/users/me/discord` is the signed-in user's own Discord webhook, open to every signed-in user under the `Users` tag. `GET` answers `hasWebhook`, `isEnabled`, `types`, `lastDeliveredAt`, `lastError`, `disabledByDiscord` and `unreadable`, never the URL; `PUT` takes `webhookUrl`, `isEnabled` and `types`, where an empty URL keeps the stored one; `DELETE` removes the webhook and its unsent posts; `POST /test` posts a test message at once and answers Discord's own error. `PUT` is throttled to 20 calls and the test to 10 calls per five minutes. `GET` and `PUT /api/settings/discord` are administrators only and carry `{ enabled }`; `GET /api/settings/public` carries the same flag as `discordEnabled`. See [Discord notifications](features/discord-notifications.md).
+`/api/settings/discord` is the installation's one Discord channel, administrators only, under the `Settings` tag. `GET` answers `enabled`, `hasWebhook`, `lastDeliveredAt`, `lastError`, `disabledByDiscord` and `unreadable`, never the URL. `PUT` takes `{ enabled, webhookUrl? }`, where an empty URL keeps the stored one and a new one clears the Discord mark and the last error, and answers the same shape; an invalid URL, or switching on with no URL saved and none given, answers 400 `discord.invalidWebhook`. `POST /api/settings/discord/test` posts a test message at once in the administrator's language, also while the switch is off, and answers 204, 404 without a saved webhook, or Discord's own error. `PUT` is throttled to 20 calls and the test to 10 calls per five minutes. `GET /api/settings/public` carries `discordEnabled`, true only while the switch is on and a webhook is saved.
+
+`PUT /api/users/me/discord-notifications` takes `{ types }`, the notification kinds the signed-in user wants posted to that channel with their name in front, and answers the profile with `discordNotificationTypes`. It is open to every signed-in user under the `Users` tag, refuses a missing list with `required`, a repeated kind with `collection.invalidSize` and an unknown one with a 400, allows an empty list, which is the default, and is throttled to 20 calls per five minutes. See [Discord notifications](features/discord-notifications.md).
 
 Goal bodies carry `funding` (`manual` or `account`), `fundingAccountId` and `fundingSharePercent`, a whole percentage from 1 to 100 that defaults to 100 when omitted. `funding` defaults to `manual`, so a body written before this addition still creates the goal it used to. A funded goal must name an account and a manual goal must not, each refused by the validator with `fundingAccountId` as the field at fault, and an account that does not exist or is not visible to the caller answers 400 `reference.notFound` without naming a field, exactly as a recurring bill's account does. `currentAmount` stays required for a manual update and is ignored for a funded one, which is what preserves it across a switch. The response adds those three fields and `progressAmount`: the stored `currentAmount` for a manual goal, the computed share of the funding account's reporting balance for a funded one, never below zero, and null when that account is archived or no longer visible.
 

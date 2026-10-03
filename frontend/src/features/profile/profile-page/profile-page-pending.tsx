@@ -92,20 +92,6 @@ export function NotificationsSkeleton() {
           ))}
         </div>
       </Section>
-      <Section className="space-y-5">
-        <SectionIntroSkeleton />
-        <div className="max-w-md space-y-4">
-          <div className="space-y-1.5">
-            <TextSkeleton size="label" />
-            <Skeleton className="h-9 w-full rounded-lg pointer-coarse:h-11" />
-            <TextSkeleton size="xs" width="w-3/4" />
-          </div>
-          <div className="flex items-center gap-3">
-            <Skeleton className="size-4 shrink-0" />
-            <TextSkeleton size="sm" width="w-48" />
-          </div>
-        </div>
-      </Section>
       <div className="flex justify-end pt-2">
         <ButtonSkeleton className="w-20" />
       </div>

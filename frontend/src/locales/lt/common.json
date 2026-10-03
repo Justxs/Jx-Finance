@@ -1074,7 +1074,8 @@
     "verificationSent": "Patvirtinimo laiškas išsiųstas",
     "notifications": {
       "title": "Pranešimai",
-      "description": "Visi pranešimai rodomi prie varpelio. Pažymėkite, kuriuos taip pat norite gauti el. paštu arba į savo Discord kanalą.",
+      "description": "Visi pranešimai rodomi prie varpelio. Pažymėkite, kuriuos taip pat norite gauti už programos ribų.",
+      "descriptionInAppOnly": "Visi pranešimai rodomi prie varpelio. Administratorius gali nustatyti el. paštą arba Discord, kad jie būtų siunčiami ir už programos ribų.",
       "kind": "Pranešimas",
       "inApp": "Programoje",
       "email": "El. paštas",
@@ -1082,35 +1083,12 @@
       "alwaysInApp": "Visada rodoma programoje",
       "byEmail": "{{kind}} el. paštu",
       "byDiscord": "{{kind}} į Discord",
-      "needsEmail": "El. paštas negalimas: ši sistema dar negali siųsti laiškų. Paprašykite administratoriaus nustatyti pašto serverį.",
       "needsVerification": "El. paštas negalimas, kol nepatvirtinsite savo adreso.",
-      "discordNotAllowed": "Discord negalimas: administratorius šioje sistemoje jo neleido.",
-      "discordNotConnected": "Prijunkite Discord kanalą žemiau, kad galėtumėte naudoti Discord stulpelį.",
-      "discordPaused": "Discord pristabdytas. Pažymėkite „Siųsti pranešimus į šį kanalą“ žemiau, kad atnaujintumėte.",
       "saved": "Pranešimų nustatymai išsaugoti",
       "digestOnlyOutside": "Siunčiama tik el. paštu arba į Discord",
       "digestScopes": "Mėnesio suvestinė apie",
       "digestScopesHint": "Kiekviena pažymėta ateina atskiru pranešimu, su mėnesiu tokiu, kokį rodo pagrindinis puslapis pasirinkus tą namų ūkį.",
-      "digestNote": "Mėnesio suvestinė atkeliauja pirmosiomis mėnesio dienomis ir apibendrina pasibaigusį mėnesį: pajamas ir išlaidas, labiausiai pasikeitusias kategorijas ir tai, ką dar reikia sutvarkyti prieš jį uždarant. Pažymėkite el. paštą arba Discord, kad ją gautumėte."
-    },
-    "discord": {
-      "title": "Discord kanalas",
-      "description": "Siųskite pranešimus į savo Discord kanalą. Juos gaunate tik jūs; kiti namų ūkio nariai jūsų kanalo nemato.",
-      "webhookUrl": "Webhook nuoroda",
-      "webhookUrlHint": "Discord programoje: kanalo nustatymai, Integracijos, Webhooks, Naujas webhook, Kopijuoti webhook nuorodą.",
-      "enabled": "Siųsti pranešimus į šį kanalą",
-      "test": "Siųsti bandomąją žinutę",
-      "testSent": "Bandomoji žinutė išsiųsta į Discord",
-      "remove": "Pašalinti webhook",
-      "removeTitle": "Pašalinti Discord webhook?",
-      "removeDescription": "Dar neišsiųstos žinutės bus panaikintos. Pranešimams programoje tai neturi įtakos.",
-      "removed": "Discord webhook pašalintas",
-      "lastDelivered": "Paskutinė žinutė pristatyta {{date}}.",
-      "neverDelivered": "Kol kas nieko nepristatyta.",
-      "lastError": "Paskutinė problema: {{error}}",
-      "gone": "Discord teigia, kad šio webhook nebėra. Sukurkite naują Discord programoje ir įklijuokite jo nuorodą.",
-      "unreadable": "Išsaugoto webhook nebeįmanoma perskaityti – dažniausiai taip nutinka atkūrus kopiją iš kitos sistemos. Įklijuokite webhook nuorodą iš naujo.",
-      "webhookPlaceholder": "Išsaugota. Įklijuokite naują nuorodą, kad pakeistumėte."
+      "digestNote": "Mėnesio suvestinė atkeliauja pirmosiomis mėnesio dienomis ir apibendrina pasibaigusį mėnesį: pajamas ir išlaidas, labiausiai pasikeitusias kategorijas ir tai, ką dar reikia sutvarkyti prieš jį uždarant. Pažymėkite ją aukščiau, kad ją gautumėte."
     }
   },
   "settings": {
@@ -1198,6 +1176,22 @@
         "learnedCategories": {
           "name": "Išmoktos kategorijos",
           "hint": "Kai jokia taisyklė netinka, pasiūlo kategoriją pagal jūsų jau suskirstytas operacijas importo peržiūroje, operacijos formoje ir operacijų sąraše. Modelis sudaromas šiame serveryje kiekvienai užklausai, niekur nesaugomas ir nesiunčiamas."
+        },
+        "attachments": {
+          "name": "Čekiai ir failai",
+          "hint": "Prie operacijos prisegami čekiai, garantijos ir kiti failai, saugomi šiame serveryje. Išjungus nebesiunčiami ir priminimai apie garantijas."
+        },
+        "payeeNames": {
+          "name": "Gavėjų pavadinimai",
+          "hint": "Aiškus gavėjo pavadinimas, kuris operacijų sąraše, ataskaitose ir prenumeratų pasiūlymuose rodomas vietoj banko teksto."
+        },
+        "people": {
+          "name": "Žmonės",
+          "hint": "Pinigai, dalijami su žmonėmis už namų ūkio ribų arba jiems paskolinti: padalytos išlaidos, mokėjimai ir likučiai. Veikia tik kai įjungti namų ūkiai."
+        },
+        "cashFlowForecast": {
+          "name": "Pinigų srauto prognozė",
+          "hint": "Kiekvienos sąskaitos likutis artimiausioms savaitėms, numatytas pagal jau įrašytas būsimų dienų eilutes ir periodinius įrašus. Išjungus nebesiunčiamas ir įspėjimas apie neigiamą likutį."
         }
       }
     },
@@ -1303,12 +1297,25 @@
       "testHint": "Pirmiausia išsaugokite. Laiškas siunčiamas jūsų adresu, niekas neišsaugoma.",
       "testSent": "Bandomasis laiškas išsiųstas adresu {{email}}"
     },
+    "notificationProviders": {
+      "title": "Pranešimų teikėjai"
+    },
     "discord": {
       "title": "Discord",
-      "description": "Nariai savo profilyje gali nustatyti webhook ir siųsti savo pranešimus į Discord kanalą. Šis jungiklis leidžia arba sustabdo šį srautą visiems.",
-      "enabled": "Leisti Discord pranešimus",
-      "enabledHint": "Žinutės siunčiamos iš šio serverio į discord.com. Kol išjungta, niekas nesiunčiama, o narių webhook lieka išsaugoti.",
-      "saved": "Discord nustatymas išsaugotas"
+      "description": "Discord kanalas, į kurį ši sistema siunčia pranešimus. Nariai savo profilyje pasirenka, kuriuos savo pranešimus ten siųsti, o kiekviena žinutė prasideda jų vardu, todėl ją mato visi, kas gali skaityti kanalą.",
+      "enabled": "Siųsti pranešimus į Discord",
+      "enabledHint": "Žinutės siunčiamos iš šio serverio į discord.com. Kol išjungta, niekas nesiunčiama, o webhook lieka išsaugotas.",
+      "saved": "Discord nustatymai išsaugoti",
+      "webhookUrl": "Webhook nuoroda",
+      "webhookUrlHint": "Discord programoje: kanalo nustatymai, Integracijos, Webhooks, Naujas webhook, Kopijuoti webhook nuorodą.",
+      "webhookPlaceholder": "Išsaugota. Įklijuokite naują nuorodą, kad pakeistumėte.",
+      "test": "Siųsti bandomąją žinutę",
+      "testSent": "Bandomoji žinutė išsiųsta į Discord",
+      "lastDelivered": "Paskutinė žinutė pristatyta {{date}}.",
+      "neverDelivered": "Kol kas nieko nepristatyta.",
+      "lastError": "Paskutinė problema: {{error}}",
+      "gone": "Discord teigia, kad šio webhook nebėra. Sukurkite naują Discord programoje ir įklijuokite jo nuorodą.",
+      "unreadable": "Išsaugoto webhook nebeįmanoma perskaityti – dažniausiai taip nutinka atkūrus kopiją iš kitos sistemos. Įklijuokite webhook nuorodą iš naujo."
     },
     "marketPrices": {
       "title": "Rinkos kainos",
@@ -1428,7 +1435,7 @@
     "placeholder": "Ieškoti puslapių, įrašų ir veiksmų…",
     "resultsLabel": "Atitikmenys",
     "count": "Atitikmenų: {{count}}",
-    "empty": "Pagal jūsų užklausą nieko nerasta.",
+    "searchTransactions": "Ieškoti operacijų: „{{search}}“",
     "run": "Vykdyti",
     "goTo": "Eiti į",
     "openTransactions": "Atverti operacijas",
@@ -2323,8 +2330,13 @@
       "everything": "Viskas"
     },
     "myShare": {
-      "label": "Mano dalis",
-      "hint": "Padalintas išlaidas skaičiuoti pagal jūsų dalį"
+      "title": "Padalintos išlaidos",
+      "hint": "Kaip su namų ūkiu padalintos išlaidos skaičiuojamos suvestinėje, biudžetuose ir ataskaitose šioje naršyklėje.",
+      "count": "Skaičiuoti",
+      "states": {
+        "full": "Visa suma",
+        "mine": "Mano dalis"
+      }
     },
     "settleUp": {
       "title": "Balansai",
@@ -3036,7 +3048,6 @@
       "malformed": "Įveskite skaičių su tašku kaip dešimtainiu skirtuku, pvz., 12.34."
     },
     "discord": {
-      "disabled": "Administratorius šioje sistemoje neleido Discord pranešimų.",
       "invalidWebhook": "Įklijuokite Discord pateiktą webhook nuorodą; ji prasideda https://discord.com/api/webhooks/.",
       "rateLimited": "Discord paprašė palaukti. Bandykite po minutės.",
       "rejected": "{{reason}}",

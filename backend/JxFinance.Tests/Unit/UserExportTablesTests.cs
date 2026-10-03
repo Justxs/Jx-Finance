@@ -75,7 +75,6 @@ public sealed partial class UserExportTablesTests
         Assert.Null(UserExportTables.Condition("AspNetUserTokens"));
         Assert.Null(UserExportTables.Condition("AspNetUserPasskeys"));
         Assert.Null(UserExportTables.Condition("PersonalApiTokens"));
-        Assert.Null(UserExportTables.Condition("DiscordWebhooks"));
     }
 
     private static AppDbContext ModelWithPasskeys()

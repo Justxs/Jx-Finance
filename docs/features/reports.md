@@ -160,7 +160,7 @@ Below `lg` the section is hidden and the lists stay the view: a horizontal flow 
 
 ## My share
 
-Since 2026-10-02, with [My share](household-settle-up.md#my-share) pressed in the page header, the report asks with `share=mine`: an expense split with a household or with people counts at the member's own part, and a household split another member paid counts at the member's share, in every total, the trend, the category, tag, payee and place breakdowns and the comparison period alike. A share whose transaction the member cannot see counts on the split's date without tag, payee or place, and a payee or place keeps the count of its own rows. Without the toggle nothing changes.
+Since 2026-10-02, with [My share](household-settle-up.md#my-share) chosen in Settings › Personal › Appearance, the report asks with `share=mine`: an expense split with a household or with people counts at the member's own part, and a household split another member paid counts at the member's share, in every total, the trend, the category, tag, payee and place breakdowns and the comparison period alike. A share whose transaction the member cannot see counts on the split's date without tag, payee or place, and a payee or place keeps the count of its own rows. With "Full amount" nothing changes.
 
 ## What counts as income and expense
 

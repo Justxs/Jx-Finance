@@ -169,6 +169,7 @@ public sealed class AuthService(
         !user.IsDeactivated,
         user.EmailConfirmed,
         user.EmailNotificationTypes,
+        user.DiscordNotificationTypes,
         user.Language,
         user.MonthlyDigestEverything,
         user.MonthlyDigestHouseholdIds);

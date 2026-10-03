@@ -29,8 +29,6 @@ public sealed class UserExportTests(ApiFixture fixture) : IntegrationTestBase(fi
 {
     private const string ExportUrl = "/api/users/me/export";
 
-    private static readonly string[] DiscordKinds = ["billDue"];
-
     [Fact]
     public async Task The_export_holds_what_the_member_owns_and_nothing_of_a_partner()
     {
@@ -200,11 +198,6 @@ public sealed class UserExportTests(ApiFixture fixture) : IntegrationTestBase(fi
     {
         var member = await CreateUserAsync();
         using var client = await LoginAsync(member);
-        const string webhook = "https://discord.com/api/webhooks/4242/export-secret-webhook-token";
-        (await client.PutAsJsonAsync(
-            "/api/users/me/discord",
-            new { webhookUrl = webhook, isEnabled = true, types = DiscordKinds },
-            TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
         var investment = await CreateAccountAsync(type: "investment", client: client);
         var markers = new[] { $"authenticator-{Guid.NewGuid():N}", $"broker-{Guid.NewGuid():N}", $"token-hash-{Guid.NewGuid():N}" };
         await WithDbAsync(async db =>
@@ -226,7 +219,6 @@ public sealed class UserExportTests(ApiFixture fixture) : IntegrationTestBase(fi
         var stored = await WithDbAsync(async db => new
         {
             User = await db.Users.AsNoTracking().SingleAsync(u => u.Id == member.Id, TestContext.Current.CancellationToken),
-            Webhook = await db.DiscordWebhooks.IgnoreQueryFilters().Where(w => w.UserId == member.Id).Select(w => w.ProtectedUrl).SingleAsync(TestContext.Current.CancellationToken),
             Sessions = await db.UserSessions.Where(s => s.UserId == member.Id).Select(s => s.TokenHash).ToListAsync(TestContext.Current.CancellationToken),
         });
 
@@ -236,9 +228,6 @@ public sealed class UserExportTests(ApiFixture fixture) : IntegrationTestBase(fi
         string[] secrets =
         [
             .. markers,
-            webhook,
-            "export-secret-webhook-token",
-            stored.Webhook,
             stored.User.PasswordHash!,
             stored.User.SecurityStamp!,
             stored.User.ConcurrencyStamp!,

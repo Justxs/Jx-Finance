@@ -111,6 +111,21 @@ export const LoginResponse = zod.object({
           "importWaiting",
         ]),
       ),
+      discordNotificationTypes: zod.array(
+        zod.enum([
+          "billDue",
+          "budgetWarning",
+          "budgetExceeded",
+          "unusualAmount",
+          "unusualAmounts",
+          "recurringPriceRise",
+          "monthReadyToClose",
+          "monthlyDigest",
+          "lowBalance",
+          "warrantyExpiring",
+          "importWaiting",
+        ]),
+      ),
       language: zod.string().nullable(),
       monthlyDigestEverything: zod.boolean(),
       monthlyDigestHouseholdIds: zod.array(zod.uuid()),
@@ -137,6 +152,21 @@ export const MeResponse = zod.object({
   isActive: zod.boolean(),
   emailConfirmed: zod.boolean(),
   emailNotificationTypes: zod.array(
+    zod.enum([
+      "billDue",
+      "budgetWarning",
+      "budgetExceeded",
+      "unusualAmount",
+      "unusualAmounts",
+      "recurringPriceRise",
+      "monthReadyToClose",
+      "monthlyDigest",
+      "lowBalance",
+      "warrantyExpiring",
+      "importWaiting",
+    ]),
+  ),
+  discordNotificationTypes: zod.array(
     zod.enum([
       "billDue",
       "budgetWarning",
@@ -239,6 +269,21 @@ export const PasskeySignInResponse = zod.object({
       isActive: zod.boolean(),
       emailConfirmed: zod.boolean(),
       emailNotificationTypes: zod.array(
+        zod.enum([
+          "billDue",
+          "budgetWarning",
+          "budgetExceeded",
+          "unusualAmount",
+          "unusualAmounts",
+          "recurringPriceRise",
+          "monthReadyToClose",
+          "monthlyDigest",
+          "lowBalance",
+          "warrantyExpiring",
+          "importWaiting",
+        ]),
+      ),
+      discordNotificationTypes: zod.array(
         zod.enum([
           "billDue",
           "budgetWarning",

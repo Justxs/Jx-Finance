@@ -2,7 +2,7 @@
 
 Back to the [feature walkthrough](README.md). See also [decisions](../decisions/email.md).
 
-Backend `Settings` (`settings/smtp`, `settings/smtp/test`) and `Auth` (`forgot-password`, `reset-password`, `verify-email`, `send-verification-email`), the shared pieces in `Common/Email`, the transport in `Infrastructure/Email` and the drain in `Infrastructure/BackgroundJobs/EmailOutboxJob`. Frontend: the `email` section of `/settings`, the routes `/forgot-password`, `/reset-password` and `/verify-email`, the banner in the application shell and the Email column of the notification table in the Notifications section of `/profile`.
+Backend `Settings` (`settings/smtp`, `settings/smtp/test`) and `Auth` (`forgot-password`, `reset-password`, `verify-email`, `send-verification-email`), the shared pieces in `Common/Email`, the transport in `Infrastructure/Email` and the drain in `Infrastructure/BackgroundJobs/EmailOutboxJob`. Frontend: the Email tab of the `notificationProviders` section of `/settings` (`features/settings/smtp-section`, inside `features/settings/notification-providers-section`), the routes `/forgot-password`, `/reset-password` and `/verify-email`, the banner in the application shell and the Email column of the notification table in the Notifications section of `/profile`.
 
 Email is not a feature switch. It is one installation setting with its own enabled flag, so turning it off stops every outgoing message and leaves every route in place; nothing is gated by `FeatureGateMiddleware`. An installation that never fills the mail server in behaves exactly like the release before this one.
 
@@ -14,7 +14,7 @@ Before this change the only trace of email was `NotificationChannel.Email`, an e
 
 ```mermaid
 flowchart TD
-    Admin["Administrator: Settings, Email section"] --> Save["PUT /api/settings/smtp"]
+    Admin["Administrator: Settings, Notification providers, Email tab"] --> Save["PUT /api/settings/smtp"]
     Save --> Row[("InstanceSettings row, Id 1:<br/>host, port, encryption, user name,<br/>protected password, sender, enabled")]
     Row --> Store["IInstanceSettingsStore snapshot"]
     Store --> Delivery["IEmailDelivery: resolves the snapshot,<br/>unprotects the password, applies the timeout"]
@@ -39,7 +39,7 @@ The password is the secret, and it is handled the way `BrokerConnection` handles
 
 The stored password is kept only for the server and the account it was typed for. A save that changes the host (compared without case or surrounding spaces, as DNS does) or the user name (compared exactly) and sends no new password answers 400 `email.passwordRequired` and changes nothing. Otherwise an administrator, or anyone who got hold of an administrator session, could point the installation at a server they control and receive the saved password on the next send. The port and the encryption mode may change without it: the credential still goes to the same host, and the encryption rules below make sure it never goes there in plain text. The test send has no settings of its own — it always uses what is stored — so there is no second path around this rule.
 
-The Email section's form (`features/settings/smtp-section/smtp-form.tsx`) owns both the save and the test send. Its length limits come from the generated `updateSmtpSettingsBody*Max` constants, and the port must be a whole number from 1 to 65535, the contract's range, with the matching message. A refused save or test stays under the fields in one `FormError`; starting either clears the other's error. After a save the password field is emptied again, and the hint says a password is stored.
+The form sits on the Email tab of Settings › Installation › Notification providers (`/settings?section=notificationProviders`), where `SmtpSection` shows its description and the form with no title of its own; the route loader warms `GET /api/settings/smtp` for that section. The form (`features/settings/smtp-section/smtp-form.tsx`) owns both the save and the test send. Its length limits come from the generated `updateSmtpSettingsBody*Max` constants, and the port must be a whole number from 1 to 65535, the contract's range, with the matching message. A refused save or test stays under the fields in one `FormError`; starting either clears the other's error. After a save the password field is emptied again, and the hint says a password is stored.
 
 ### Encryption
 
@@ -143,9 +143,9 @@ The first administrator, created by first-run setup, is confirmed on the spot. T
 
 ## Notification emails
 
-Since 2026-09-27 every notification kind can also leave as an email, chosen per kind by each user, the same way Discord works. The preference is `AspNetUsers.EmailNotificationTypes`, a `jsonb` list of `NotificationType` names, empty by default, saved with `PUT /api/users/me/email-notifications` and returned on the profile as `emailNotificationTypes`. It is separate from the display name: `PUT /api/users/me` no longer carries it, and the account form no longer has the bill-reminder checkbox it used to hold.
+Since 2026-09-27 every notification kind can also leave as an email, chosen per kind by each user, the same way the Discord kinds are. The preference is `AspNetUsers.EmailNotificationTypes`, a `jsonb` list of `NotificationType` names, empty by default, saved with `PUT /api/users/me/email-notifications` and returned on the profile as `emailNotificationTypes`. It is separate from the display name: `PUT /api/users/me` no longer carries it, and the account form no longer has the bill-reminder checkbox it used to hold.
 
-Each user sets it in Settings › Personal › Notifications (`/profile?section=notifications`): one table of notification kinds against the channels "In app" (always on, a muted check, except for the monthly digest, whose dash says it is only sent by email or Discord), "Email" and "Discord", with a checkbox per kind and channel and one Save for the whole form. The Email column is disabled, with a note under the table, when the installation cannot send mail or the user's address is not confirmed. Save calls `PUT /api/users/me/email-notifications` only when the ticked email kinds changed, and that mutation refreshes the `me` query (`getMeQueryKey` in `src/api/invalidation.ts`). The Discord half of the same form is described in [Discord notifications](discord-notifications.md#screens).
+Each user sets it in Settings › Personal › Notifications (`/profile?section=notifications`): one table of notification kinds against the channels "In app" (always on, a muted check, except for the monthly digest, whose dash says it is only sent by email or Discord) and each channel set up on the installation, with a checkbox per kind and channel and one Save for the whole form. The Email column appears only while `GET /api/settings/public` says `emailEnabled`, that is while the installation has a working mail server; while the user's address is not confirmed it is disabled, with a note under the table. What the table shows when no channel is set up is described under [Choosing channels](notifications.md#choosing-channels). Save calls `PUT /api/users/me/email-notifications` only when the ticked email kinds changed, and that mutation refreshes the `me` query (`getMeQueryKey` in `src/api/invalidation.ts`). The Discord half of the same form is described in [Discord notifications](discord-notifications.md#screens).
 
 ```mermaid
 flowchart TD

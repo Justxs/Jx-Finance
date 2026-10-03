@@ -6,6 +6,10 @@ Related: feature page [Installation settings and feature switches](../features/i
 
 Newest first. Each entry is a choice between real alternatives: what was chosen, what was rejected, and why.
 
+- **2026-10-03.** Four always-on features gained switches, `Attachments`, `PayeeNames`, `People` and `CashFlowForecast`, all on by default and on for an upgraded installation; each hides its routes, its screens and its fields on read, and keeps its data
+  - Rejected: Switches for tags, transaction groups and reconciliation; starting the new switches off; clearing names, files or people's rows when a switch goes off
+  - Why: Each of the four is a screen with routes of its own, which is what a switch can hide without a second shape for rows: names, counts and markers read as null or 0, as the `Locations` and `UnusualAmounts` fields already do. Tags, groups and reconciliation keep the reasons logged on their own pages. Turning a switch on must bring everything back, so the default keeps what an installation already used
+
 - **2026-09-22.** A feature switch is declared on the endpoint group as `RequiresFeature` metadata, and the feature gate, the active-household check and the 500 handler write the same FastEndpoints problem an endpoint writes, with the code only in `errors[].code`
   - Rejected: Keeping the prefix table in `FeatureGateMiddleware`; a FastEndpoints global pre-processor; writing middleware errors through `IProblemDetailsService` with a top-level `code`
   - Why: The prefix table had to be kept in step with `ApiRoutes` by hand, while the group already names the feature's endpoints; `FeatureGateTests` now pins the old prefix-to-feature table against the mapped endpoints. A pre-processor runs after binding, so a malformed body would answer 400 before the 404 of a switched-off feature. `IProblemDetailsService` writes the MVC shape, which is a second envelope beside the one every endpoint uses; the client already reads codes from `errors[]` everywhere, so dropping the top-level `code` removes a special case instead of adding one

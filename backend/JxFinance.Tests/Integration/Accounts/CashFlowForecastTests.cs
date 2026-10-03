@@ -238,14 +238,30 @@ public sealed class CashFlowForecastTests(ApiFixture fixture) : IntegrationTestB
     }
 
     [Fact]
-    public async Task The_forecast_is_gone_while_recurring_entries_are_off()
+    public async Task The_forecast_is_gone_while_its_switch_is_off()
     {
         using var client = await CreateUserClientAsync();
-        await using var off = await FeatureOffAsync("recurringBills");
+        await using var off = await FeatureOffAsync("cashFlowForecast");
 
         var response = await client.GetAsync(Url, TestContext.Current.CancellationToken);
 
         await AssertProblemAsync(response, HttpStatusCode.NotFound, "feature.disabled");
+    }
+
+    [Fact]
+    public async Task With_recurring_entries_off_only_the_rows_dated_ahead_are_projected()
+    {
+        using var client = await CreateUserClientAsync();
+        var account = await CreateAccountAsync("1000.00", client: client);
+        await BillAsync(client, "Rent", "expense", "300.00", account, Today.AddDays(5));
+        await CreateTransactionAsync(client, account, null, "expense", "200.00", Iso(Today.AddDays(8)));
+        await using var off = await FeatureOffAsync("recurringBills");
+
+        var forecast = await ForecastAsync(client, 30);
+
+        var entry = Assert.Single(Of(forecast, account).Entries);
+        Assert.Equal((Today.AddDays(8), "ledger", "-200.00"), (entry.Date, entry.Source, entry.Amount));
+        Assert.Empty(forecast.NotCounted);
     }
 
     [Fact]

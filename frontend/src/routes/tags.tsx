@@ -13,8 +13,10 @@ export const Route = createFileRoute("/tags")({
   loader: ({ context: { queryClient } }) => {
     warm(queryClient, getTagsSuspenseQueryOptions());
     warm(queryClient, getHouseholdsSuspenseQueryOptions());
-    warm(queryClient, getPayeeNamesSuspenseQueryOptions());
     warmWithSettings(queryClient, (settings) => {
+      if (settings.features.payeeNames) {
+        warm(queryClient, getPayeeNamesSuspenseQueryOptions());
+      }
       if (settings.features.locations) {
         warm(queryClient, getPlacesSuspenseQueryOptions({ own: true }));
       }

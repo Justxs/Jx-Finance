@@ -67,7 +67,9 @@ public sealed class MonthlyDigestTests(ApiFixture fixture) : EmailTestBase(fixtu
     [Fact]
     public async Task Only_members_who_ticked_the_digest_get_it_and_discord_alone_is_enough()
     {
-        await SetDiscordAsync(true);
+        using var admin = await CreateUserClientAsync(AppRoles.Admin);
+        var webhookId = Random.Shared.NextInt64(1_000_000_000, long.MaxValue).ToString(CultureInfo.InvariantCulture);
+        await SetDiscordAsync(admin, true, $"https://discord.com/api/webhooks/{webhookId}/token-{Guid.NewGuid():N}");
         try
         {
             var silent = await CreateUserAsync();
@@ -76,10 +78,9 @@ public sealed class MonthlyDigestTests(ApiFixture fixture) : EmailTestBase(fixtu
             var listener = await CreateUserAsync();
             using var listenerClient = await LoginAsync(listener);
             await SpendInSeptemberAsync(listenerClient, "Fuel", "40.00");
-            var webhookId = Random.Shared.NextInt64(1_000_000_000, long.MaxValue).ToString(CultureInfo.InvariantCulture);
             (await listenerClient.PutAsJsonAsync(
-                "/api/users/me/discord",
-                new { webhookUrl = $"https://discord.com/api/webhooks/{webhookId}/token-{Guid.NewGuid():N}", isEnabled = true, types = DigestOnly },
+                "/api/users/me/discord-notifications",
+                new { types = DigestOnly },
                 TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
 
             await RunAsync(FirstOfOctober);
@@ -89,12 +90,12 @@ public sealed class MonthlyDigestTests(ApiFixture fixture) : EmailTestBase(fixtu
             Assert.Empty(await Seed.UnreadNotificationsAsync(silentClient));
             Assert.Single(await DigestsAsync(listener.Id));
             var post = Assert.Single(Discord.To(webhookId)).Post;
-            Assert.StartsWith("**September 2026**", post.Content, StringComparison.Ordinal);
+            Assert.StartsWith("Test User · **September 2026**", post.Content, StringComparison.Ordinal);
             Assert.Contains("expenses 40.00 EUR", post.Content, StringComparison.Ordinal);
         }
         finally
         {
-            await SetDiscordAsync(false);
+            await SetDiscordAsync(admin, false);
         }
     }
 
@@ -330,8 +331,8 @@ public sealed class MonthlyDigestTests(ApiFixture fixture) : EmailTestBase(fixtu
     private static async Task<Guid> MeAsync(HttpClient client) =>
         (await client.GetFromJsonAsync<ProfileDto>("/api/auth/me", TestContext.Current.CancellationToken))!.Id;
 
-    private async Task SetDiscordAsync(bool enabled) =>
-        (await Client.PutAsJsonAsync("/api/settings/discord", new { enabled }, TestContext.Current.CancellationToken))
+    private static async Task SetDiscordAsync(HttpClient admin, bool enabled, string? webhookUrl = null) =>
+        (await admin.PutAsJsonAsync("/api/settings/discord", new { enabled, webhookUrl }, TestContext.Current.CancellationToken))
             .EnsureSuccessStatusCode();
 
     private sealed class ProbeJob(IServiceScopeFactory scopes, ILogger<ProbeJob> logger, Guid userId) : PeriodicJob(scopes, logger)

@@ -14,9 +14,9 @@ import {
 
 export const notificationKinds = Object.values(NotificationType);
 
-type Channel = "email" | "discord";
+export const notificationChannels = ["email", "discord"] as const;
 
-const channels: readonly Channel[] = ["email", "discord"];
+type Channel = (typeof notificationChannels)[number];
 
 const channelsFieldGroup = defineAppFieldGroup(({ strict }) => ({
   email: strict<NotificationType[]>(),
@@ -25,6 +25,7 @@ const channelsFieldGroup = defineAppFieldGroup(({ strict }) => ({
 
 interface Props {
   fields: typeof channelsFieldGroup.fields;
+  channels: readonly Channel[];
   off: Record<Channel, boolean>;
 }
 
@@ -32,7 +33,7 @@ function toggled(list: readonly NotificationType[], kind: NotificationType, on: 
   return notificationKinds.filter((entry) => (entry === kind ? on : list.includes(entry)));
 }
 
-function NotificationChannelsGroup({ fields, off }: Readonly<Props>) {
+function NotificationChannelsGroup({ fields, channels, off }: Readonly<Props>) {
   const { t } = useTranslation();
 
   return (
@@ -52,48 +53,50 @@ function NotificationChannelsGroup({ fields, off }: Readonly<Props>) {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {notificationKinds.map((kind) => {
-            const name = t(`notifications.kinds.${kind}`);
-            const Icon = kind === NotificationType.monthlyDigest ? Minus : Check;
-            return (
-              <TableRow key={kind}>
-                <TableCell className="whitespace-normal">{name}</TableCell>
-                <TableCell>
-                  <Icon
-                    role="img"
-                    aria-label={t(
-                      kind === NotificationType.monthlyDigest
-                        ? "profile.notifications.digestOnlyOutside"
-                        : "profile.notifications.alwaysInApp",
-                    )}
-                    className="mx-auto size-4 text-muted-foreground"
-                  />
-                </TableCell>
-                {channels.map((channel) => (
-                  <TableCell key={channel}>
-                    <fields.Field name={channel}>
-                      {(field) => (
-                        <Checkbox
-                          className="mx-auto"
-                          aria-label={t(
-                            channel === "email"
-                              ? "profile.notifications.byEmail"
-                              : "profile.notifications.byDiscord",
-                            { kind: name },
-                          )}
-                          disabled={off[channel]}
-                          checked={field.value.includes(kind)}
-                          onCheckedChange={(on) =>
-                            field.handleChange(toggled(field.value, kind, on))
-                          }
-                        />
+          {notificationKinds
+            .filter((kind) => channels.length > 0 || kind !== NotificationType.monthlyDigest)
+            .map((kind) => {
+              const name = t(`notifications.kinds.${kind}`);
+              const Icon = kind === NotificationType.monthlyDigest ? Minus : Check;
+              return (
+                <TableRow key={kind}>
+                  <TableCell className="whitespace-normal">{name}</TableCell>
+                  <TableCell>
+                    <Icon
+                      role="img"
+                      aria-label={t(
+                        kind === NotificationType.monthlyDigest
+                          ? "profile.notifications.digestOnlyOutside"
+                          : "profile.notifications.alwaysInApp",
                       )}
-                    </fields.Field>
+                      className="mx-auto size-4 text-muted-foreground"
+                    />
                   </TableCell>
-                ))}
-              </TableRow>
-            );
-          })}
+                  {channels.map((channel) => (
+                    <TableCell key={channel}>
+                      <fields.Field name={channel}>
+                        {(field) => (
+                          <Checkbox
+                            className="mx-auto"
+                            aria-label={t(
+                              channel === "email"
+                                ? "profile.notifications.byEmail"
+                                : "profile.notifications.byDiscord",
+                              { kind: name },
+                            )}
+                            disabled={off[channel]}
+                            checked={field.value.includes(kind)}
+                            onCheckedChange={(on) =>
+                              field.handleChange(toggled(field.value, kind, on))
+                            }
+                          />
+                        )}
+                      </fields.Field>
+                    </TableCell>
+                  ))}
+                </TableRow>
+              );
+            })}
         </TableBody>
       </Table>
     </div>

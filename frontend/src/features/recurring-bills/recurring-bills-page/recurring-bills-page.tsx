@@ -31,7 +31,7 @@ import { RecurringBillRow } from "@/features/recurring-bills/recurring-bill-row/
 import { RecurringTotals } from "@/features/recurring-bills/recurring-totals/recurring-totals";
 import { SubscriptionSuggestions } from "@/features/recurring-bills/subscription-suggestions/subscription-suggestions";
 import { useEditableList } from "@/hooks/use-editable-list";
-import { useToday } from "@/hooks/use-settings";
+import { useFeature, useToday } from "@/hooks/use-settings";
 import { notify, pendingId } from "@/lib/mutations";
 import { optimisticRemoval } from "@/lib/optimistic";
 import { byId, nameById } from "@/lib/options";
@@ -43,6 +43,7 @@ export function RecurringBillsPage() {
   const navigate = useNavigate({ from: "/recurring-bills" });
   const view: BillsView = useSearch({ from: "/recurring-bills" }).view ?? "list";
   const [confirming, setConfirming] = useState<RecurringBillResponse | null>(null);
+  const forecastEnabled = useFeature("cashFlowForecast");
 
   const accounts = useAccountsSuspense();
   const categories = useCategoriesSuspense();
@@ -157,7 +158,9 @@ export function RecurringBillsPage() {
         />
       ) : null}
       {view === "list" && hasTotals ? <RecurringTotals totals={totals} /> : null}
-      {view === "list" && billList.length > 0 ? <CashFlowForecast totals /> : null}
+      {view === "list" && forecastEnabled && billList.length > 0 ? (
+        <CashFlowForecast totals />
+      ) : null}
       {view === "list" && billList.length === 0 ? (
         <EmptyText>{t("recurringBills.empty")}</EmptyText>
       ) : null}

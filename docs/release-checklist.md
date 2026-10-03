@@ -56,7 +56,7 @@ Added on 2026-09-20 and 2026-09-21, each with its own integration tests, stories
 
 Added from 2026-09-26 to 2026-09-28, in the same way:
 
-- [x] Discord notifications through a personal webhook, allowed or stopped by an administrator.
+- [x] Discord notifications to one installation channel set up by an administrator, with each member choosing their kinds.
 - [x] Unusual amounts and subscription price rises.
 - [x] Month-end close with a checklist, a snapshot and drift after the close.
 - [x] Asset valuations with straight-line depreciation, and debt payments linked to a debt.

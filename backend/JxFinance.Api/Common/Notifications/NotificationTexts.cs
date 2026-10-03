@@ -99,11 +99,11 @@ public static class NotificationTexts
         };
     }
 
-    public static string Discord(string language, Notification notification, string? siteUrl)
+    public static string Discord(string language, Notification notification, string member, string? siteUrl)
     {
         var lines = new List<string>
         {
-            $"**{DiscordText.Escape(Title(language, notification))}**",
+            $"{DiscordText.Escape(member)} · **{DiscordText.Escape(Title(language, notification))}**",
             DiscordText.Escape(Sentence(language, notification)),
         };
         lines.AddRange(DigestDetails(language, notification).Select(DiscordText.Escape));

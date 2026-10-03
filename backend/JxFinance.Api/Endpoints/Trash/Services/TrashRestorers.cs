@@ -153,7 +153,7 @@ public static class TrashRestorers
             restore: RestoreHouseholdAsync,
             usesChanges: true),
         [TrashKind.Attachment] = Stored<TransactionAttachment, TransactionAttachmentId>(
-            null,
+            Feature.Attachments,
             (db, id) => db.TransactionAttachments.Where(a => a.Id == id),
             check: CheckAttachmentTransactionAsync,
             restore: RestoreAttachmentAsync),
@@ -175,13 +175,13 @@ public static class TrashRestorers
             (db, id) => db.TransactionGroups.Where(g => g.Id == id),
             restore: RestoreTransactionGroupAsync,
             usesChanges: true),
-        [TrashKind.Contact] = Owned<Contact, ContactId>(Feature.Households, (db, id) => db.Contacts.Where(c => c.Id == id)),
+        [TrashKind.Contact] = Owned<Contact, ContactId>(Feature.People, (db, id) => db.Contacts.Where(c => c.Id == id)),
         [TrashKind.ContactSplit] = Owned<ContactSplit, ContactSplitId>(
-            Feature.Households,
+            Feature.People,
             (db, id) => db.ContactSplits.Where(s => s.Id == id),
             restore: (r, s) => RestoreSplitAsync(r, s.TransactionId, s.Id.Value)),
         [TrashKind.ContactPayment] = Owned<ContactPayment, ContactPaymentId>(
-            Feature.Households,
+            Feature.People,
             (db, id) => db.ContactPayments.Where(p => p.Id == id),
             check: CheckContactAsync),
     }.ToFrozenDictionary();

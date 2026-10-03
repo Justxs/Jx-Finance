@@ -8,6 +8,7 @@
 import { HttpResponse, http } from "msw";
 import type { RequestHandlerOptions } from "msw";
 import type {
+  DiscordSettingsResponse,
   ExchangeRateEntryResponse,
   ExchangeRateSyncResponse,
   MarketPriceSettingsResponse,
@@ -66,15 +67,63 @@ export const getUpdateSettingsMockHandler = (
   );
 };
 
+export const getDiscordSettingsMockHandler = (
+  overrideResponse?:
+    | DiscordSettingsResponse
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<DiscordSettingsResponse> | DiscordSettingsResponse),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/settings/discord",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : undefined,
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
 export const getUpdateDiscordSettingsMockHandler = (
   overrideResponse?:
-    | void
-    | ((info: Parameters<Parameters<typeof http.put>[1]>[0]) => Promise<void> | void),
+    | DiscordSettingsResponse
+    | ((
+        info: Parameters<Parameters<typeof http.put>[1]>[0],
+      ) => Promise<DiscordSettingsResponse> | DiscordSettingsResponse),
   options?: RequestHandlerOptions,
 ) => {
   return http.put(
     "*/api/settings/discord",
     async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : undefined,
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getSendTestDiscordMockHandler = (
+  overrideResponse?:
+    | void
+    | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<void> | void),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/settings/discord/test",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
       if (typeof overrideResponse === "function") {
         await overrideResponse(info);
       }
@@ -346,7 +395,9 @@ export const getSendTestEmailMockHandler = (
 export const getSettingsMock = () => [
   getSettingsMockHandler(),
   getUpdateSettingsMockHandler(),
+  getDiscordSettingsMockHandler(),
   getUpdateDiscordSettingsMockHandler(),
+  getSendTestDiscordMockHandler(),
   getExchangeRateEntriesMockHandler(),
   getSyncExchangeRatesMockHandler(),
   getDeleteExchangeRateMockHandler(),

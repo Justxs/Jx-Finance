@@ -18,4 +18,8 @@ public enum Feature
     ApiTokens,
     Locations,
     LearnedCategories,
+    Attachments,
+    PayeeNames,
+    People,
+    CashFlowForecast,
 }

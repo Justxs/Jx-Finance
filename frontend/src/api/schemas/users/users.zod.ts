@@ -59,6 +59,21 @@ export const CreateUserResponse = zod.object({
       "importWaiting",
     ]),
   ),
+  discordNotificationTypes: zod.array(
+    zod.enum([
+      "billDue",
+      "budgetWarning",
+      "budgetExceeded",
+      "unusualAmount",
+      "unusualAmounts",
+      "recurringPriceRise",
+      "monthReadyToClose",
+      "monthlyDigest",
+      "lowBalance",
+      "warrantyExpiring",
+      "importWaiting",
+    ]),
+  ),
   language: zod.string().nullable(),
   monthlyDigestEverything: zod.boolean(),
   monthlyDigestHouseholdIds: zod.array(zod.uuid()),
@@ -77,6 +92,21 @@ export const UsersResponseItem = zod.object({
   isActive: zod.boolean(),
   emailConfirmed: zod.boolean(),
   emailNotificationTypes: zod.array(
+    zod.enum([
+      "billDue",
+      "budgetWarning",
+      "budgetExceeded",
+      "unusualAmount",
+      "unusualAmounts",
+      "recurringPriceRise",
+      "monthReadyToClose",
+      "monthlyDigest",
+      "lowBalance",
+      "warrantyExpiring",
+      "importWaiting",
+    ]),
+  ),
+  discordNotificationTypes: zod.array(
     zod.enum([
       "billDue",
       "budgetWarning",
@@ -144,6 +174,21 @@ export const UpdateMyProfileResponse = zod.object({
       "importWaiting",
     ]),
   ),
+  discordNotificationTypes: zod.array(
+    zod.enum([
+      "billDue",
+      "budgetWarning",
+      "budgetExceeded",
+      "unusualAmount",
+      "unusualAmounts",
+      "recurringPriceRise",
+      "monthReadyToClose",
+      "monthlyDigest",
+      "lowBalance",
+      "warrantyExpiring",
+      "importWaiting",
+    ]),
+  ),
   language: zod.string().nullable(),
   monthlyDigestEverything: zod.boolean(),
   monthlyDigestHouseholdIds: zod.array(zod.uuid()),
@@ -181,52 +226,31 @@ export const UpdateMyDigestScopesResponse = zod.object({
       "importWaiting",
     ]),
   ),
+  discordNotificationTypes: zod.array(
+    zod.enum([
+      "billDue",
+      "budgetWarning",
+      "budgetExceeded",
+      "unusualAmount",
+      "unusualAmounts",
+      "recurringPriceRise",
+      "monthReadyToClose",
+      "monthlyDigest",
+      "lowBalance",
+      "warrantyExpiring",
+      "importWaiting",
+    ]),
+  ),
   language: zod.string().nullable(),
   monthlyDigestEverything: zod.boolean(),
   monthlyDigestHouseholdIds: zod.array(zod.uuid()),
 });
 
 /**
- * Forgets your webhook URL and drops every Discord message still waiting to be sent to it. In-app notifications are not affected.
- * @summary Remove your Discord webhook
+ * Replaces the list of notification kinds of yours that are also posted to the installation's Discord channel, with your name in front. Every in-app notification of a chosen kind then queues one Discord message, at most once per kind, subject and day. Nothing is posted while an administrator has not switched Discord on and saved a webhook. The channel is shared: everyone who can read it sees what you tick. An empty list is allowed and posts nothing.
+ * @summary Choose which notifications are posted to Discord
  */
-export const DeleteMyDiscordResponse = zod.void();
-
-/**
- * Answers whether a webhook is saved, whether it is switched on, which notification kinds it receives, when a message last reached it and the last error. The webhook URL is never part of the answer, because anyone holding it can post to the channel. disabledByDiscord is true after Discord answered that the webhook no longer exists; unreadable is true when the stored URL cannot be decrypted, which a restore into an installation with other data protection keys leaves behind. Without a saved webhook the answer lists every kind, as a starting point for the form.
- * @summary Read your Discord notification settings
- */
-export const MyDiscordResponse = zod.object({
-  hasWebhook: zod.boolean(),
-  isEnabled: zod.boolean(),
-  types: zod.array(
-    zod.enum([
-      "billDue",
-      "budgetWarning",
-      "budgetExceeded",
-      "unusualAmount",
-      "unusualAmounts",
-      "recurringPriceRise",
-      "monthReadyToClose",
-      "monthlyDigest",
-      "lowBalance",
-      "warrantyExpiring",
-      "importWaiting",
-    ]),
-  ),
-  lastDeliveredAt: zod.iso.datetime({ offset: true }).nullable(),
-  lastError: zod.string().nullable(),
-  disabledByDiscord: zod.boolean(),
-  unreadable: zod.boolean(),
-});
-
-/**
- * Stores your personal Discord webhook, whether it is switched on and which notification kinds it receives. Every in-app notification of a chosen kind is then also posted to that channel, as long as an administrator allows Discord on this installation. Only webhook URLs on discord.com, discordapp.com, ptb.discord.com or canary.discord.com of the form https://discord.com/api/webhooks/{id}/{token} are accepted; anything else answers 400 discord.invalidWebhook. The URL is encrypted before it is stored and never returned. Leaving webhookUrl empty keeps the stored one; a new URL also clears the mark Discord left on a webhook it no longer knows. The first save needs a URL. An empty list of kinds is allowed and sends nothing.
- * @summary Save your Discord notification settings
- */
-export const UpdateMyDiscordBody = zod.object({
-  webhookUrl: zod.string().nullable().describe("Leave empty to keep the stored webhook."),
-  isEnabled: zod.boolean(),
+export const UpdateMyDiscordNotificationsBody = zod.object({
   types: zod.array(
     zod.enum([
       "billDue",
@@ -244,10 +268,15 @@ export const UpdateMyDiscordBody = zod.object({
   ),
 });
 
-export const UpdateMyDiscordResponse = zod.object({
-  hasWebhook: zod.boolean(),
-  isEnabled: zod.boolean(),
-  types: zod.array(
+export const UpdateMyDiscordNotificationsResponse = zod.object({
+  id: zod.uuid(),
+  email: zod.string(),
+  displayName: zod.string(),
+  role: zod.string(),
+  twoFactorEnabled: zod.boolean(),
+  isActive: zod.boolean(),
+  emailConfirmed: zod.boolean(),
+  emailNotificationTypes: zod.array(
     zod.enum([
       "billDue",
       "budgetWarning",
@@ -262,17 +291,25 @@ export const UpdateMyDiscordResponse = zod.object({
       "importWaiting",
     ]),
   ),
-  lastDeliveredAt: zod.iso.datetime({ offset: true }).nullable(),
-  lastError: zod.string().nullable(),
-  disabledByDiscord: zod.boolean(),
-  unreadable: zod.boolean(),
+  discordNotificationTypes: zod.array(
+    zod.enum([
+      "billDue",
+      "budgetWarning",
+      "budgetExceeded",
+      "unusualAmount",
+      "unusualAmounts",
+      "recurringPriceRise",
+      "monthReadyToClose",
+      "monthlyDigest",
+      "lowBalance",
+      "warrantyExpiring",
+      "importWaiting",
+    ]),
+  ),
+  language: zod.string().nullable(),
+  monthlyDigestEverything: zod.boolean(),
+  monthlyDigestHouseholdIds: zod.array(zod.uuid()),
 });
-
-/**
- * Posts one short message to your saved webhook right away and waits for Discord's answer. Nothing is queued, so a failure is not retried. A refusal answers 400 with Discord's own words: discord.webhookGone when Discord no longer knows the webhook (which also marks it on your profile), discord.rateLimited, discord.rejected or discord.sendFailed. discord.disabled means an administrator has not allowed Discord on this installation, and discord.webhookUnreadable that the stored URL cannot be decrypted any more. Save the webhook before testing it. Rate limited to 10 calls per five minutes per client.
- * @summary Send a test message to your Discord channel
- */
-export const TestMyDiscordResponse = zod.void();
 
 /**
  * Replaces the list of notification kinds that are also sent to your email address. Every in-app notification of a chosen kind then queues one email, at most once per kind, subject and day. Nothing is sent while the installation has no working mail server or while your address is not confirmed. An empty list is allowed and sends no notification email; account mail such as password reset links does not depend on it.
@@ -319,13 +356,28 @@ export const UpdateMyEmailNotificationsResponse = zod.object({
       "importWaiting",
     ]),
   ),
+  discordNotificationTypes: zod.array(
+    zod.enum([
+      "billDue",
+      "budgetWarning",
+      "budgetExceeded",
+      "unusualAmount",
+      "unusualAmounts",
+      "recurringPriceRise",
+      "monthReadyToClose",
+      "monthlyDigest",
+      "lowBalance",
+      "warrantyExpiring",
+      "importWaiting",
+    ]),
+  ),
   language: zod.string().nullable(),
   monthlyDigestEverything: zod.boolean(),
   monthlyDigestHouseholdIds: zod.array(zod.uuid()),
 });
 
 /**
- * Streams a zip archive named jx-finance-export-<date>.zip with every record you own: data.json in the backup's table format (format jx-finance-user-export, version 1, with your user id), accounts.csv, transactions.csv and transfers.csv for a spreadsheet, and ledger.beancount, a Beancount double-entry journal of your own accounts, assets and debts with a balance assertion for each. It holds your accounts, personal, shared and archived, with everything recorded on them by anyone, the transfers that touch them, your categories, tags, rules, budgets, goals, assets, debts, recurring entries, notifications, month closes and trash, and the categories, tags and securities your records point at. It never holds passwords, two-factor secrets, passkeys, API tokens, sessions, the broker token, the Discord webhook, households, memberships or the activity log, nor another member's accounts. The active household is ignored. Nothing is kept on the server, and the answer carries no Content-Length. POST /api/users/me/import loads the file into an empty member.
+ * Streams a zip archive named jx-finance-export-<date>.zip with every record you own: data.json in the backup's table format (format jx-finance-user-export, version 1, with your user id), accounts.csv, transactions.csv and transfers.csv for a spreadsheet, and ledger.beancount, a Beancount double-entry journal of your own accounts, assets and debts with a balance assertion for each. It holds your accounts, personal, shared and archived, with everything recorded on them by anyone, the transfers that touch them, your categories, tags, rules, budgets, goals, assets, debts, recurring entries, notifications, month closes and trash, and the categories, tags and securities your records point at. It never holds passwords, two-factor secrets, passkeys, API tokens, sessions, the broker token, households, memberships or the activity log, nor another member's accounts. The active household is ignored. Nothing is kept on the server, and the answer carries no Content-Length. POST /api/users/me/import loads the file into an empty member.
  * @summary Download your own data
  */
 export const ExportMyDataResponse = zod.unknown();
@@ -362,6 +414,21 @@ export const UpdateMyLanguageResponse = zod.object({
   isActive: zod.boolean(),
   emailConfirmed: zod.boolean(),
   emailNotificationTypes: zod.array(
+    zod.enum([
+      "billDue",
+      "budgetWarning",
+      "budgetExceeded",
+      "unusualAmount",
+      "unusualAmounts",
+      "recurringPriceRise",
+      "monthReadyToClose",
+      "monthlyDigest",
+      "lowBalance",
+      "warrantyExpiring",
+      "importWaiting",
+    ]),
+  ),
+  discordNotificationTypes: zod.array(
     zod.enum([
       "billDue",
       "budgetWarning",
@@ -447,6 +514,21 @@ export const ResetUserPasswordResponse = zod.object({
       "importWaiting",
     ]),
   ),
+  discordNotificationTypes: zod.array(
+    zod.enum([
+      "billDue",
+      "budgetWarning",
+      "budgetExceeded",
+      "unusualAmount",
+      "unusualAmounts",
+      "recurringPriceRise",
+      "monthReadyToClose",
+      "monthlyDigest",
+      "lowBalance",
+      "warrantyExpiring",
+      "importWaiting",
+    ]),
+  ),
   language: zod.string().nullable(),
   monthlyDigestEverything: zod.boolean(),
   monthlyDigestHouseholdIds: zod.array(zod.uuid()),
@@ -469,6 +551,21 @@ export const UpdateUserRoleResponse = zod.object({
   isActive: zod.boolean(),
   emailConfirmed: zod.boolean(),
   emailNotificationTypes: zod.array(
+    zod.enum([
+      "billDue",
+      "budgetWarning",
+      "budgetExceeded",
+      "unusualAmount",
+      "unusualAmounts",
+      "recurringPriceRise",
+      "monthReadyToClose",
+      "monthlyDigest",
+      "lowBalance",
+      "warrantyExpiring",
+      "importWaiting",
+    ]),
+  ),
+  discordNotificationTypes: zod.array(
     zod.enum([
       "billDue",
       "budgetWarning",

@@ -30,6 +30,10 @@ export const SettingsResponse = zod.object({
     apiTokens: zod.boolean(),
     locations: zod.boolean(),
     learnedCategories: zod.boolean(),
+    attachments: zod.boolean(),
+    payeeNames: zod.boolean(),
+    people: zod.boolean(),
+    cashFlowForecast: zod.boolean(),
   }),
   reportingCurrency: zod.enum([
     "eur",
@@ -139,6 +143,10 @@ export const UpdateSettingsBody = zod.object({
     apiTokens: zod.boolean(),
     locations: zod.boolean(),
     learnedCategories: zod.boolean(),
+    attachments: zod.boolean(),
+    payeeNames: zod.boolean(),
+    people: zod.boolean(),
+    cashFlowForecast: zod.boolean(),
   }),
   reportingCurrency: zod.enum([
     "eur",
@@ -243,6 +251,10 @@ export const UpdateSettingsResponse = zod.object({
     apiTokens: zod.boolean(),
     locations: zod.boolean(),
     learnedCategories: zod.boolean(),
+    attachments: zod.boolean(),
+    payeeNames: zod.boolean(),
+    people: zod.boolean(),
+    cashFlowForecast: zod.boolean(),
   }),
   reportingCurrency: zod.enum([
     "eur",
@@ -322,14 +334,41 @@ export const UpdateSettingsResponse = zod.object({
 });
 
 /**
- * Switches outbound Discord traffic on or off for everyone. While it is off no Discord message is queued, the outbox sends nothing, and members' test buttons answer discord.disabled. Switching it off leaves every member's webhook in place; messages that were already queued are not sent late but pruned after seven days. Administrators only.
- * @summary Allow or stop Discord notifications for this installation
+ * Answers whether Discord is switched on, whether a webhook is saved, when a message last reached it and the last error. The webhook URL is never part of the answer, because anyone holding it can post to the channel. disabledByDiscord is true after Discord answered that the webhook no longer exists; unreadable is true when the stored URL cannot be decrypted, which a restore into an installation with other data protection keys leaves behind. Administrators only.
+ * @summary Read the installation's Discord channel
+ */
+export const DiscordSettingsResponse = zod.object({
+  enabled: zod.boolean(),
+  hasWebhook: zod.boolean(),
+  lastDeliveredAt: zod.iso.datetime({ offset: true }).nullable(),
+  lastError: zod.string().nullable(),
+  disabledByDiscord: zod.boolean(),
+  unreadable: zod.boolean(),
+});
+
+/**
+ * Stores the webhook of the one Discord channel this installation posts to and switches outbound Discord traffic on or off for everyone. Members then choose on their profile which of their notifications are posted there, with their name in front. Only webhook URLs on discord.com, discordapp.com, ptb.discord.com or canary.discord.com of the form https://discord.com/api/webhooks/{id}/{token} are accepted; anything else answers 400 discord.invalidWebhook, as does switching Discord on before a webhook is saved. The URL is encrypted before it is stored and never returned. Leaving webhookUrl empty keeps the stored one; a new URL also clears the mark Discord left on a webhook it no longer knows. While Discord is off nothing is queued or sent; messages that were already queued are not sent late but pruned after seven days. Administrators only.
+ * @summary Save the installation's Discord channel
  */
 export const UpdateDiscordSettingsBody = zod.object({
   enabled: zod.boolean(),
+  webhookUrl: zod.string().nullable().describe("Leave empty to keep the stored webhook."),
 });
 
-export const UpdateDiscordSettingsResponse = zod.void();
+export const UpdateDiscordSettingsResponse = zod.object({
+  enabled: zod.boolean(),
+  hasWebhook: zod.boolean(),
+  lastDeliveredAt: zod.iso.datetime({ offset: true }).nullable(),
+  lastError: zod.string().nullable(),
+  disabledByDiscord: zod.boolean(),
+  unreadable: zod.boolean(),
+});
+
+/**
+ * Posts one short message to the saved webhook right away and waits for Discord's answer, even while Discord is switched off, so the channel can be checked before members use it. Nothing is queued, so a failure is not retried. A refusal answers 400 with Discord's own words: discord.webhookGone when Discord no longer knows the webhook (which also marks it), discord.rateLimited, discord.rejected or discord.sendFailed. discord.webhookUnreadable means the stored URL cannot be decrypted any more. Rate limited to 10 calls per five minutes per client. Administrators only.
+ * @summary Send a test message to the Discord channel
+ */
+export const SendTestDiscordResponse = zod.void();
 
 /**
  * Administrators only. Returns the rates of one currency in units per euro, newest first: every rate synced from the ECB in the last 30 days and every rate an administrator entered by hand, whatever its date. A date with both shows the hand-entered rate, which wins, with the synced one beside it.

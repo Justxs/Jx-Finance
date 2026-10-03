@@ -9,12 +9,15 @@ import {
   getSmtpSettingsMockHandler,
   getSyncExchangeRatesMockHandler,
   getSyncMarketPricesMockHandler,
+  getDiscordSettingsMockHandler,
+  getSendTestDiscordMockHandler,
   getUpdateDiscordSettingsMockHandler,
   getUpdateMarketPriceSettingsMockHandler,
   getUpdateSettingsMockHandler,
   getUpdateSmtpSettingsMockHandler,
 } from "@/api/generated/settings/settings.msw";
 import {
+  discordSettings,
   exchangeRateEntries,
   FIXTURE_TODAY,
   marketPriceSettings,
@@ -64,7 +67,17 @@ export const settingsHandlers = [
     return { ...smtpSettings, ...body, hasPassword: Boolean(text(body.userName)) };
   }),
   getSendTestEmailMockHandler(smtpTestSent),
-  getUpdateDiscordSettingsMockHandler(),
+  getDiscordSettingsMockHandler(discordSettings),
+  getUpdateDiscordSettingsMockHandler(async ({ request }) => {
+    const body = await readBody(request);
+    const replaced = Boolean(text(body.webhookUrl));
+    return {
+      ...discordSettings,
+      enabled: body.enabled === true,
+      disabledByDiscord: replaced ? false : discordSettings.disabledByDiscord,
+    };
+  }),
+  getSendTestDiscordMockHandler(),
   getMarketPriceSettingsMockHandler(marketPriceSettings),
   getUpdateMarketPriceSettingsMockHandler(async ({ request }) => {
     const body = await readBody(request);

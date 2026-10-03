@@ -64,16 +64,16 @@ public sealed class NotificationTextsTests
         var notification = Sample(NotificationType.BillDue);
         notification.Title = "*Rent* @everyone [click](https://evil.example)";
 
-        var content = NotificationTexts.Discord("en", notification, "https://finance.test/");
+        var content = NotificationTexts.Discord("en", notification, "*Ona*", "https://finance.test/");
 
-        Assert.StartsWith(@"**\*Rent\* @everyone \[click\]\(https://evil.example\)**", content, StringComparison.Ordinal);
+        Assert.StartsWith(@"\*Ona\* · **\*Rent\* @everyone \[click\]\(https://evil.example\)**", content, StringComparison.Ordinal);
         Assert.EndsWith("<https://finance.test/recurring-bills>", content, StringComparison.Ordinal);
     }
 
     [Fact]
     public void Without_a_site_url_there_is_no_link_line()
     {
-        var content = NotificationTexts.Discord("en", Sample(NotificationType.BudgetExceeded), "");
+        var content = NotificationTexts.Discord("en", Sample(NotificationType.BudgetExceeded), "Ona", "");
 
         Assert.Equal(2, content.Split('\n').Length);
     }
@@ -84,7 +84,7 @@ public sealed class NotificationTextsTests
         var notification = Sample(NotificationType.BudgetExceeded);
         notification.Title = new string('x', 5000);
 
-        var content = NotificationTexts.Discord("en", notification, "https://finance.test");
+        var content = NotificationTexts.Discord("en", notification, "Ona", "https://finance.test");
 
         Assert.Equal(DiscordMessage.ContentMaxLength, content.Length);
         Assert.EndsWith("…", content, StringComparison.Ordinal);
@@ -149,7 +149,7 @@ public sealed class NotificationTextsTests
 
         Assert.Equal("August 2026 has ended and is ready to close", NotificationTexts.Sentence("en", notification));
         Assert.StartsWith("2026 m. rugpjūtis baigėsi", NotificationTexts.Sentence("lt", notification), StringComparison.Ordinal);
-        Assert.EndsWith("<https://finance.test/?month=2026-08>", NotificationTexts.Discord("en", notification, "https://finance.test"), StringComparison.Ordinal);
+        Assert.EndsWith("<https://finance.test/?month=2026-08>", NotificationTexts.Discord("en", notification, "Ona", "https://finance.test"), StringComparison.Ordinal);
     }
 
     [Fact]
@@ -165,14 +165,14 @@ public sealed class NotificationTextsTests
             NotificationTexts.Sentence("lt", notification));
         Assert.Equal(
             [
-                "**August 2026**",
+                "Ona · **August 2026**",
                 "August 2026: income 3200.00 EUR, expenses 2450.00 EUR, net 750.00 EUR, 23% kept",
                 @"Biggest changes: Groceries 420.00 EUR \(was 380.00 EUR\)",
                 "Still to do: uncategorised 3, accounts not reconciled 1.",
                 "The month is not closed yet.",
                 "<https://finance.test/?month=2026-08>",
             ],
-            NotificationTexts.Discord("en", notification, "https://finance.test").Split('\n'));
+            NotificationTexts.Discord("en", notification, "Ona", "https://finance.test").Split('\n'));
     }
 
     [Fact]
@@ -200,7 +200,7 @@ public sealed class NotificationTextsTests
 
         Assert.Equal(title, NotificationTexts.Title(language, notification));
         Assert.StartsWith($"{title}: ", NotificationTexts.Sentence(language, notification), StringComparison.Ordinal);
-        Assert.StartsWith($"**{title}**\n{title}: ", NotificationTexts.Discord(language, notification, null), StringComparison.Ordinal);
+        Assert.StartsWith($"Ona · **{title}**\n{title}: ", NotificationTexts.Discord(language, notification, "Ona", null), StringComparison.Ordinal);
     }
 
     [Theory]

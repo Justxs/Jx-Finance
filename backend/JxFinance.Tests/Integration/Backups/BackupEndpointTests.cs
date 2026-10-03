@@ -441,16 +441,20 @@ public sealed class BackupEndpointTests(ApiFixture fixture) : IntegrationTestBas
     }
 
     [Fact]
-    public async Task Restore_keeps_discord_webhooks_month_closes_and_reconciliations_and_drops_queued_discord_messages()
+    public async Task Restore_keeps_the_discord_channel_month_closes_and_reconciliations_and_drops_queued_discord_messages()
     {
-        const string discordUrl = "/api/users/me/discord";
+        const string discordUrl = "/api/settings/discord";
+        const string kindsUrl = "/api/users/me/discord-notifications";
         const string closeUrl = "/api/month-close/2025-05";
+        var administrator = await CreateUserAsync("Admin");
+        using var adminClient = await LoginAsync(administrator);
         var member = await CreateUserAsync();
         using var memberClient = await LoginAsync(member);
-        (await memberClient.PutAsJsonAsync(
+        (await adminClient.PutAsJsonAsync(
             discordUrl,
-            new { webhookUrl = "https://discord.com/api/webhooks/77/restore-token", isEnabled = true, types = DiscordKinds },
+            new { enabled = false, webhookUrl = "https://discord.com/api/webhooks/77/restore-token" },
             TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
+        (await memberClient.PutAsJsonAsync(kindsUrl, new { types = DiscordKinds }, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
         await WithDbAsync(async db =>
         {
             db.DiscordMessages.Add(new DiscordMessage
@@ -471,7 +475,11 @@ public sealed class BackupEndpointTests(ApiFixture fixture) : IntegrationTestBas
             $"/api/accounts/{account}/reconciliations",
             new { date = "2025-05-31", balance = "90.00" });
         var backup = await CreateBackupAsync();
-        (await memberClient.DeleteAsync(discordUrl, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
+        (await adminClient.PutAsJsonAsync(
+            discordUrl,
+            new { enabled = false, webhookUrl = "https://discord.com/api/webhooks/78/after-backup" },
+            TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
+        (await memberClient.PutAsJsonAsync(kindsUrl, new { types = Array.Empty<string>() }, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
         (await memberClient.DeleteAsync(closeUrl, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
         (await memberClient.DeleteAsync($"/api/accounts/{account}/reconciliations/{reconciliation.Id}", TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
 
@@ -485,9 +493,14 @@ public sealed class BackupEndpointTests(ApiFixture fixture) : IntegrationTestBas
         }
 
         using var restoredClient = await LoginAsync(member);
-        var discord = await restoredClient.GetFromJsonAsync<JsonObject>(discordUrl, TestContext.Current.CancellationToken);
+        using var restoredAdmin = await LoginAsync(administrator);
+        var discord = await restoredAdmin.GetFromJsonAsync<JsonObject>(discordUrl, TestContext.Current.CancellationToken);
         Assert.True(discord!["hasWebhook"]!.GetValue<bool>());
         Assert.False(discord["unreadable"]!.GetValue<bool>());
+        (await restoredAdmin.PostAsync($"{discordUrl}/test", null, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
+        Assert.Single(Services.GetRequiredService<FakeDiscordWebhookClient>().To("77"));
+        var me = await restoredClient.GetFromJsonAsync<JsonObject>("/api/auth/me", TestContext.Current.CancellationToken);
+        Assert.Equal(DiscordKinds, me!["discordNotificationTypes"]!.AsArray().Select(t => t!.GetValue<string>()));
         Assert.Equal(0, await WithDbAsync(db => db.DiscordMessages.CountAsync(m => m.UserId == member.Id, TestContext.Current.CancellationToken)));
         var review = await restoredClient.GetFromJsonAsync<JsonObject>(closeUrl, TestContext.Current.CancellationToken);
         Assert.Equal("closed", review!["status"]!.GetValue<string>());

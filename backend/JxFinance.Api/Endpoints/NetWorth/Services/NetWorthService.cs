@@ -765,9 +765,13 @@ public sealed class NetWorthService(
             }
         }
 
-        balances.AddRange((await contacts.GetAllAsync(cancellationToken))
-            .SelectMany(c => c.Balances)
-            .Select(b => new Money(b.Amount, b.Currency)));
+        if (settings.Current.IsEnabled(Feature.People))
+        {
+            balances.AddRange((await contacts.GetAllAsync(cancellationToken))
+                .SelectMany(c => c.Balances)
+                .Select(b => new Money(b.Amount, b.Currency)));
+        }
+
         return balances;
     }
 

@@ -1,5 +1,5 @@
 import { noop, useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useDeferredValue, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import {
@@ -116,7 +116,7 @@ function UncategorizedRows({ month, count }: Readonly<Props>) {
   const learned = useFeature("learnedCategories");
   const range = monthBounds(monthDate(month));
   const categories = useCategoriesSuspense().data;
-  const rows = useTransactionsSuspense(uncategorizedParams(month)).data.items;
+  const rows = useDeferredValue(useTransactionsSuspense(uncategorizedParams(month)).data).items;
   const suggestions = useQuery({
     ...getUncategorizedSuggestionsSuspenseQueryOptions({ ...range, uncategorized: true }),
     ...silentQuery,

@@ -2,7 +2,7 @@
 
 Back to the [feature walkthrough](README.md). See also [decisions](../decisions/cash-flow-forecast.md), [Recurring entries](recurring-bills.md) and [Accounts](accounts.md).
 
-Backend `Accounts` (`GetCashFlowForecast`, `Services/CashFlowForecastService.cs`, the pure `Shared/CashFlowProjection.cs`, and the schedule, estimate and history it shares with the [bills calendar](recurring-bills.md#calendar) in `Common/RecurringBills/`), frontend `accounts/cash-flow-forecast` and `dashboard/cash-flow-card`. One read-only route, `GET /api/accounts/forecast?days=`, behind the `RecurringBills` switch through `RequiresFeature` metadata on the endpoint, although the rest of `/api/accounts` is ungated. Nothing is stored: the forecast is computed on every read.
+Backend `Accounts` (`GetCashFlowForecast`, `Services/CashFlowForecastService.cs`, the pure `Shared/CashFlowProjection.cs`, and the schedule, estimate and history it shares with the [bills calendar](recurring-bills.md#calendar) in `Common/RecurringBills/`), frontend `accounts/cash-flow-forecast` and `dashboard/cash-flow-card`. One read-only route, `GET /api/accounts/forecast?days=`, behind its own `CashFlowForecast` switch through `RequiresFeature` metadata on the endpoint, although the rest of `/api/accounts` is ungated. Nothing is stored: the forecast is computed on every read.
 
 The forecast answers one question: will one of my accounts go below zero before the money I expect arrives? It projects every visible account from today's balance to the end of a 30, 60 or 90 day horizon, one step per scheduled occurrence of the caller's recurring entries, and draws a second, dashed line that also takes the account's usual everyday spending off day by day.
 
@@ -30,9 +30,13 @@ flowchart TD
     Line2 --> Warn
 ```
 
+## The switch
+
+Since 2026-10-03 the forecast has its own switch, `CashFlowForecast`, on by default. Off answers `feature.disabled` on the route, stops `LowBalanceJob`, drops the link on a `lowBalance` notification in the bell, and hides the section on the accounts and recurring entries pages and the dashboard card. It no longer needs `RecurringBills`: with entries off `CashFlowForecastService` reads no recurring entries, so the forecast projects only today's balance, the rows already dated ahead and the usual spending, and `notCounted` is empty. `CashFlowForecastTests` covers both.
+
 ## Where it shows
 
-- **Accounts page.** A "Next 90 days" section sits under the accounts table, before the archived accounts, while `RecurringBills` is on. The route loader warms `GET /api/accounts/forecast?days=90`.
+- **Accounts page.** A "Next 90 days" section sits under the accounts table, before the archived accounts, while `CashFlowForecast` is on. The route loader warms `GET /api/accounts/forecast?days=90`.
 - **Recurring entries page.** The same section replaces the six-month bar chart of fixed expenses that the page had until 2026-09-29, with one extra line: "Scheduled in the next 90 days: €1,240.00 out, €3,100.00 in". Out is the recurring expenses and in the recurring income of every listed account, per currency; transfers move money between the caller's own accounts and are left out of both. The section shows once there is at least one entry, as the chart did.
 - **Dashboard.** The `cashFlow` card, "Cash flow", lists each account the forecast lists: its name, today's balance, "Lowest -€361.19 on Oct 1" and, in the expense colour, "Below zero on Oct 1" or "May go below zero around Oct 1". It always asks for 90 days. Like upcoming bills it looks forward, so on an earlier month it says "The cash-flow forecast is shown on the current month." and asks for nothing. It links to the accounts page.
 
@@ -109,6 +113,6 @@ The query key starts with `/api/accounts/forecast`, which is under `/api/account
 - `CashFlowProjectionTests`: a monthly entry anchored on the 31st through February, weekly entries, an overdue occurrence on today, the paid-but-not-confirmed skip at the edge of 5 and of 2 days and not for a row dated after today, the last day of the horizon included, the 64-occurrence cap, the median of the newest six, usual spending, the exact day the balance first ends below zero, the dashed line crossing first, and a balance already below zero.
 - `AccountMovementsTests`: `SumByDateAsync` stays one `UNION ALL` round trip grouped by date.
 - `CashFlowForecastTests` (integration, real PostgreSQL): fixed expense, income and transfer on both sides with the at-risk account first; a cross-currency transfer estimated at the newest rate; a variable entry estimated from confirmed occurrences and one from imported rows through its match key; `notCounted` for no account and no history, inactive entries ignored; an occurrence confirmed early counted once; a multi-currency account; usual spending leaving out the rows of an entry, and none without three months of history; a partner's entries on a shared account staying theirs; `X-Active-Household` narrowing the accounts; `days` 29 and 91; the switch off.
-- `DashboardLayoutTests` and `dashboard-layout.test.ts`: the card is appended to a layout saved before it existed, shown, and left out while `RecurringBills` is off.
+- `DashboardLayoutTests` and `dashboard-layout.test.ts`: the card is appended to a layout saved before it existed, shown, and left out while `CashFlowForecast` is off; `recurringBills` off keeps it.
 - `forecast-series.test.ts`: the daily points, the warnings and the scheduled totals.
 - Stories: the section at risk, at risk only with usual spending, none at risk, an estimated variable entry, not-counted entries, the other-currency note, no entries, choosing an account, changing the period, loading and a server error; the card at risk, with usual spending, calm, on a past month, empty, loading and failing; the recurring page's totals line.

@@ -33,10 +33,10 @@ export const Route = createFileRoute("/recurring-bills")({
     warm(queryClient, getRecurringBillsSuspenseQueryOptions());
     warm(queryClient, getSubscriptionCandidatesSuspenseQueryOptions());
     warm(queryClient, getRecurringTotalsSuspenseQueryOptions());
-    if (deps.view !== "calendar") {
-      warm(queryClient, getCashFlowForecastSuspenseQueryOptions({ days: FORECAST_DAYS }));
-    }
     warmWithSettings(queryClient, (settings) => {
+      if (deps.view !== "calendar" && settings.features.cashFlowForecast) {
+        warm(queryClient, getCashFlowForecastSuspenseQueryOptions({ days: FORECAST_DAYS }));
+      }
       if (settings.features.netWorth) {
         warm(queryClient, getDebtsSuspenseQueryOptions());
       }

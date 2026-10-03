@@ -1,10 +1,11 @@
-import { Eye, EyeOff, Moon, Sun } from "lucide-react";
+import { Eye, EyeOff, Moon, Receipt, Split, Sun } from "lucide-react";
 import { type ComponentProps, type ReactNode, useId } from "react";
 import { useTranslation } from "react-i18next";
 import { TitledSection } from "@/components/ui/section/section";
-import { useSettings } from "@/hooks/use-settings";
+import { useFeature, useSettings } from "@/hooks/use-settings";
 import { cn } from "@/lib/utils";
 import { localeNames, useLocale } from "@/stores/app-store";
+import { useMyShare } from "@/stores/my-share-store";
 import { locales, pageSizes, savePreferences, usePreferences } from "@/stores/preferences";
 import { useAmountsHidden } from "@/stores/privacy-store";
 import {
@@ -126,6 +127,38 @@ function pageSizeOf(option: string) {
   return pageSizes.find((size) => String(size) === option);
 }
 
+const shareStates = ["full", "mine"] as const;
+
+function MyShareChoice() {
+  const { t } = useTranslation();
+  const householdsEnabled = useFeature("households");
+  const myShare = useMyShare();
+
+  if (!householdsEnabled) {
+    return null;
+  }
+
+  return (
+    <TitledSection title={t("households.myShare.title")} description={t("households.myShare.hint")}>
+      <ChoiceGroup
+        name="my-share"
+        heading={t("households.myShare.count")}
+        options={shareStates}
+        value={myShare ? "mine" : "full"}
+        onChange={(option) => savePreferences({ myShare: option === "mine" })}
+        optionLabel={(option) => t(`households.myShare.states.${option}`)}
+        renderSample={(option) =>
+          option === "mine" ? (
+            <Split aria-hidden="true" className="size-4 shrink-0" />
+          ) : (
+            <Receipt aria-hidden="true" className="size-4 shrink-0" />
+          )
+        }
+      />
+    </TitledSection>
+  );
+}
+
 export function AppearancePicker() {
   const { t } = useTranslation();
   const { theme, setTheme } = useTheme();
@@ -242,6 +275,7 @@ export function AppearancePicker() {
         />
       </TitledSection>
       <PageSizeChoice />
+      <MyShareChoice />
     </>
   );
 }

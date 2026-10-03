@@ -9,7 +9,6 @@ import {
 import type { ReportComparisonMode } from "@/api/generated/model";
 import { CategoryBreakdown } from "@/components/category-breakdown/category-breakdown";
 import { ExportMenu } from "@/components/export-menu/export-menu";
-import { MyShareToggle } from "@/components/my-share-toggle/my-share-toggle";
 import { PageHeader } from "@/components/page-header/page-header";
 import { TitledSection } from "@/components/ui/section/section";
 import { SplitColumns } from "@/components/ui/split-columns/split-columns";
@@ -29,13 +28,14 @@ import { YearReview } from "@/features/reports/year-review/year-review";
 import { useDeferredParams } from "@/hooks/use-deferred-params";
 import { useExportUrl } from "@/hooks/use-export-url";
 import { useIsoDate } from "@/hooks/use-formatters";
-import { useFeature, useTodayDate } from "@/hooks/use-settings";
+import { useFeature, useSettings, useTodayDate } from "@/hooks/use-settings";
 import { useShare, withShare } from "@/stores/my-share-store";
 
 export function ReportsPage() {
   const { t } = useTranslation();
   const netWorthEnabled = useFeature("netWorth");
-  const receiptsEnabled = useFeature("receiptReading");
+  const { features } = useSettings();
+  const receiptsEnabled = features.receiptReading && features.attachments;
   const locationsEnabled = useFeature("locations");
   const navigate = useNavigate({ from: "/reports" });
   const search = useSearch({ from: "/reports" });
@@ -75,7 +75,6 @@ export function ReportsPage() {
   return (
     <div className="space-y-5">
       <PageHeader title={t("reports.title")}>
-        <MyShareToggle />
         <ExportMenu csvUrl={csvUrl} pdfUrl={pdfUrl} />
       </PageHeader>
 

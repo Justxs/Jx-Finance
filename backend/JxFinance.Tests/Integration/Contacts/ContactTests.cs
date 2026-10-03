@@ -241,6 +241,28 @@ public sealed class ContactTests(ApiFixture fixture) : IntegrationTestBase(fixtu
         Assert.Equal(1, moved.Moved);
     }
 
+    [Fact]
+    public async Task People_follow_their_own_switch_and_the_households_switch_and_come_back_unchanged()
+    {
+        using var client = await CreateUserClientAsync();
+        var account = await CreateAccountAsync(client: client);
+        var jonas = await ContactAsync(client, "Jonas");
+        var dinner = await ExpenseAsync(client, account, "40.00", "Dinner");
+        await SplitAsync(client, Split(dinner, jonas));
+
+        foreach (var feature in new[] { "people", "households" })
+        {
+            await using (await FeatureOffAsync(feature))
+            {
+                await AssertProblemAsync(await client.GetAsync("/api/contacts", TestContext.Current.CancellationToken), HttpStatusCode.NotFound, "feature.disabled");
+                Assert.Null((await ReadOkAsync<LedgerRowDto>(await client.GetAsync($"/api/transactions/{dinner}", TestContext.Current.CancellationToken))).ContactSplit);
+            }
+        }
+
+        Assert.NotNull((await ReadOkAsync<LedgerRowDto>(await client.GetAsync($"/api/transactions/{dinner}", TestContext.Current.CancellationToken))).ContactSplit);
+        Assert.Equal("20.00", Balance(await PeopleAsync(client), jonas));
+    }
+
     private static object Share(Guid contactId, int? weight = null, string? amount = null) => new { contactId, weight, amount };
 
     private static object Split(Guid transactionId, Guid contactId) =>

@@ -7,12 +7,6 @@
  */
 import type { NotificationType } from "./notificationType";
 
-export interface UpdateMyDiscordRequest {
-  /**
-   * Leave empty to keep the stored webhook.
-   * @nullable
-   */
-  webhookUrl: string | null;
-  isEnabled: boolean;
+export interface UpdateMyDiscordNotificationsRequest {
   types: NotificationType[];
 }

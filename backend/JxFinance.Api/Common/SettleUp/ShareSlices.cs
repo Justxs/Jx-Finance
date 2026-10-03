@@ -15,6 +15,7 @@ public static class ShareSlices
         SpendingShare share,
         DateWindow window,
         DateWindow? comparison,
+        bool withPeople,
         CancellationToken cancellationToken)
     {
         if (share == SpendingShare.Full)
@@ -22,6 +23,11 @@ public static class ShareSlices
             return [];
         }
 
+        var people = withPeople
+            ? await db.ContactSplits
+                .Select(s => new { s.TransactionId, s.Date, Share = s.OwnAmount ?? 0m })
+                .ToListAsync(cancellationToken)
+            : [];
         var parts = (await db.SharedExpenses
                 .Select(e => new
                 {
@@ -33,10 +39,7 @@ public static class ShareSlices
                 })
                 .ToListAsync(cancellationToken))
             .Select(e => new Part(e.TransactionId, e.Date, e.Share, true))
-            .Concat((await db.ContactSplits
-                    .Select(s => new { s.TransactionId, s.Date, Share = s.OwnAmount ?? 0m })
-                    .ToListAsync(cancellationToken))
-                .Select(s => new Part(s.TransactionId, s.Date, s.Share, false)))
+            .Concat(people.Select(s => new Part(s.TransactionId, s.Date, s.Share, false)))
             .ToDictionary(part => part.TransactionId);
         if (parts.Count == 0)
         {

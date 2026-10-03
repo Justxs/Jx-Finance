@@ -91,20 +91,26 @@ export const KeyboardChoice: Story = {
   },
 };
 
-export const Empty: Story = {
+export const SearchTransactions: Story = {
   play: async () => {
-    const input = await type("qqqjjj");
+    await type("kavines");
+    await waitFor(async () =>
+      expect((await optionNames()).at(-1)).toContain("Search transactions for “kavines”"),
+    );
 
-    await expect(input).toHaveAttribute("aria-expanded", "false");
-    await expect(screen.queryByRole("listbox")).toBeNull();
-    await screen.findByText("Nothing matches what you typed.");
+    await type("qqqjjj");
+    await expect(await optionNames()).toEqual([
+      expect.stringContaining("Search transactions for “qqqjjj”"),
+    ]);
   },
 };
 
 export const AdministratorOnlyEntries: Story = {
   play: async () => {
-    await type("email");
-    await expect((await optionNames()).some((name) => name.includes("Email"))).toBe(true);
+    await type("notification providers");
+    await expect(
+      (await optionNames()).some((name) => name.includes("Notification providers")),
+    ).toBe(true);
 
     await type("back up");
     await expect((await optionNames()).some((name) => name.includes("Back up now"))).toBe(true);
@@ -191,6 +197,8 @@ export const QuickAddWithoutAccounts: Story = {
     );
 
     await type("12.50 maxima");
-    await screen.findByText("Nothing matches what you typed.");
+    await expect(await optionNames()).toEqual([
+      expect.stringContaining("Search transactions for “12.50 maxima”"),
+    ]);
   },
 };

@@ -14,7 +14,7 @@ public sealed class ExportMyDataSummary : Summary<ExportMyDataEndpoint, ExportMy
             + "shared and archived, with everything recorded on them by anyone, the transfers that touch them, your categories, tags, rules, "
             + "budgets, goals, assets, debts, recurring entries, notifications, month closes and trash, and the categories, "
             + "tags and securities your records point at. It never holds passwords, two-factor secrets, passkeys, API tokens, "
-            + "sessions, the broker token, the Discord webhook, households, memberships or the activity log, nor another "
+            + "sessions, the broker token, households, memberships or the activity log, nor another "
             + "member's accounts. The active household is ignored. Nothing is kept on the server, and the answer carries "
             + "no Content-Length. POST /api/users/me/import loads the file into an empty member.";
         RequestParam(

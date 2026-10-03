@@ -196,6 +196,11 @@ public sealed class ReceiptService(
 
     private async Task<Result<ReceiptFile>> LoadAttachmentAsync(Guid attachmentId, CancellationToken cancellationToken)
     {
+        if (!store.Current.IsEnabled(Feature.Attachments))
+        {
+            return new DomainError(ErrorCodes.FeatureDisabled, $"The {Feature.Attachments} feature is turned off for this installation.");
+        }
+
         var typedId = new TransactionAttachmentId(attachmentId);
         var attachment = await db.TransactionAttachments
             .AsNoTracking()

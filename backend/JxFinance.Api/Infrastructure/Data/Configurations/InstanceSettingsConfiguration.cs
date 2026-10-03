@@ -15,6 +15,10 @@ public sealed class InstanceSettingsConfiguration : IEntityTypeConfiguration<Ins
             features.Property(f => f.UnusualAmounts).HasDefaultValue(true);
             features.Property(f => f.MonthClose).HasDefaultValue(true);
             features.Property(f => f.ReceiptReading).HasDefaultValue(true);
+            features.Property(f => f.Attachments).HasDefaultValue(true);
+            features.Property(f => f.PayeeNames).HasDefaultValue(true);
+            features.Property(f => f.People).HasDefaultValue(true);
+            features.Property(f => f.CashFlowForecast).HasDefaultValue(true);
         });
         builder.Property(s => s.InstanceName).HasMaxLength(40);
         builder.Property(s => s.EnabledCurrencyCodes).HasMaxLength(200);
@@ -29,5 +33,7 @@ public sealed class InstanceSettingsConfiguration : IEntityTypeConfiguration<Ins
         builder.Property(s => s.SmtpFromName).HasMaxLength(100);
         builder.Property(s => s.SupportLinkEnabled).HasDefaultValue(true);
         builder.Property(s => s.EodhdProtectedKey).HasMaxLength(1000);
+        builder.Property(s => s.DiscordProtectedUrl).HasMaxLength(1000).IsConcurrencyToken();
+        builder.Property(s => s.DiscordLastError).HasMaxLength(InstanceSettings.DiscordErrorMaxLength);
     }
 }

@@ -122,20 +122,26 @@ test("typing narrows the list to what matches, ignoring case and accents", async
 
   fireEvent.change(searchBox(), { target: { value: "kavines" } });
 
-  expect(optionNames().some((name) => name.includes(cafes))).toBe(true);
-  expect(screen.getAllByRole("option")).toHaveLength(1);
+  expect(optionNames()).toEqual([
+    expect.stringContaining(cafes),
+    expect.stringContaining("Search transactions for “kavines”"),
+  ]);
 });
 
-test("a query nothing answers shows the empty state instead of a listbox", async () => {
-  const { queryClient } = mount();
+test("a query nothing else answers still offers a transaction search that opens the ledger", async () => {
+  const { queryClient, router } = mount();
   await settled(queryClient);
   await openPalette(queryClient);
 
   fireEvent.change(searchBox(), { target: { value: "qqqjjj" } });
+  expect(optionNames()).toEqual([expect.stringContaining("Search transactions for “qqqjjj”")]);
 
-  expect(screen.queryByRole("listbox")).toBeNull();
-  expect(searchBox()).toHaveAttribute("aria-expanded", "false");
-  await screen.findByText("Nothing matches what you typed.");
+  await act(async () => {
+    fireEvent.keyDown(searchBox(), { key: "Enter" });
+  });
+
+  await waitFor(() => expect(router.state.location.pathname).toBe("/transactions"), appWait);
+  expect(router.state.location.search).toMatchObject({ search: "qqqjjj" });
 });
 
 test("the arrow keys move the active descendant and Enter runs the entry", async () => {
@@ -183,8 +189,8 @@ test("an administrator is offered the settings sections and a backup", async () 
   await settled(queryClient);
   await openPalette(queryClient);
 
-  fireEvent.change(searchBox(), { target: { value: "email" } });
-  expect(optionNames().some((name) => name.includes("Email"))).toBe(true);
+  fireEvent.change(searchBox(), { target: { value: "notification providers" } });
+  expect(optionNames().some((name) => name.includes("Notification providers"))).toBe(true);
 
   fireEvent.change(searchBox(), { target: { value: "back up" } });
   expect(optionNames().some((name) => name.includes("Back up now"))).toBe(true);
@@ -200,14 +206,14 @@ test("a member is offered neither, and a switched-off feature keeps its pages ou
   await settled(queryClient);
   await openPalette(queryClient);
 
-  fireEvent.change(searchBox(), { target: { value: "email" } });
-  expect(optionNames().some((name) => name.includes("Email"))).toBe(false);
+  fireEvent.change(searchBox(), { target: { value: "notification providers" } });
+  expect(optionNames().some((name) => name.startsWith("Notification providers"))).toBe(false);
 
   fireEvent.change(searchBox(), { target: { value: "Back up now" } });
-  expect(optionNames().some((name) => name.includes("Back up now"))).toBe(false);
+  expect(optionNames().some((name) => name.startsWith("Back up now"))).toBe(false);
 
   fireEvent.change(searchBox(), { target: { value: "Investment tax summary" } });
-  expect(optionNames().some((name) => name.includes("Investment tax summary"))).toBe(false);
+  expect(optionNames().some((name) => name.startsWith("Investment tax summary"))).toBe(false);
 });
 
 test("an amount and a payee open the add dialog filled in, with the recalled category", async () => {

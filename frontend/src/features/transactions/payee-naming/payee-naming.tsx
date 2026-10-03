@@ -6,13 +6,15 @@ import { EditModal } from "@/components/modal";
 import type { RowAction } from "@/components/row-actions/row-actions";
 import { PayeeNameForm } from "@/features/payees/payee-name-form/payee-name-form";
 import { isOptimistic } from "@/features/transactions/transaction-amount/transaction-row";
+import { useFeature } from "@/hooks/use-settings";
 
 export function usePayeeNaming() {
   const { t } = useTranslation();
   const [naming, setNaming] = useState<TransactionResponse | null>(null);
+  const enabled = useFeature("payeeNames");
 
   function actionFor(transaction: TransactionResponse): RowAction | undefined {
-    if (!bankPayee(transaction)) {
+    if (!enabled || !bankPayee(transaction)) {
       return undefined;
     }
     return {

@@ -1,5 +1,5 @@
 import { QueryClientProvider } from "@tanstack/react-query";
-import { RouterProvider, createRouter } from "@tanstack/react-router";
+import { RouterProvider, type RouterEvents, createRouter } from "@tanstack/react-router";
 import { I18nextProvider } from "react-i18next";
 import { onSessionExpired } from "@/api/client";
 import { RouteError } from "@/components/route-error/route-error";
@@ -34,6 +34,14 @@ declare module "@tanstack/react-router" {
     router: typeof router;
   }
 }
+
+function scrollToTopOnPageChange({ pathChanged }: RouterEvents["onBeforeNavigate"]) {
+  if (pathChanged) {
+    window.scrollTo(0, 0);
+  }
+}
+
+router.subscribe("onBeforeNavigate", scrollToTopOnPageChange);
 
 function handleSessionExpired() {
   endSession(queryClient, router.navigate);

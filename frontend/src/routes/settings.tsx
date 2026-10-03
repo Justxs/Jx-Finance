@@ -35,7 +35,7 @@ export const Route = createFileRoute("/settings")({
     if (section === "importInbox") {
       warm(queryClient, getImportInboxStatusSuspenseQueryOptions());
     }
-    if (section === "email") {
+    if (section === "notificationProviders") {
       warm(queryClient, getSmtpSettingsSuspenseQueryOptions());
     }
   },

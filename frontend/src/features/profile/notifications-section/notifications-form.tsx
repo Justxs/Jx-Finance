@@ -1,39 +1,24 @@
-import { Info, Send, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { Info } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { z } from "zod";
 import {
-  useDeleteMyDiscord,
-  useTestMyDiscord,
   useUpdateMyDigestScopes,
-  useUpdateMyDiscord,
+  useUpdateMyDiscordNotifications,
   useUpdateMyEmailNotifications,
 } from "@/api/generated";
 import { NotificationType } from "@/api/generated/model";
-import type {
-  DiscordWebhookResponse,
-  HouseholdResponse,
-  UserProfileResponse,
-} from "@/api/generated/model";
-import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog/confirm-delete-dialog";
+import type { HouseholdResponse, UserProfileResponse } from "@/api/generated/model";
 import { useServerForm } from "@/components/form";
 import { FormError } from "@/components/form-error/form-error";
-import { Button } from "@/components/ui/button/button";
 import { Section, SectionTitle } from "@/components/ui/section/section";
-import { useDateTime } from "@/hooks/use-formatters";
 import { useDiscordEnabled, useEmailEnabled } from "@/hooks/use-settings";
 import { silentMutation } from "@/lib/mutations";
-import { NotificationChannelsFields } from "./notification-channels-fields";
-
-const webhookPattern =
-  /^https:\/\/(?:discord\.com|discordapp\.com|ptb\.discord\.com|canary\.discord\.com)\/api\/webhooks\/\d{1,20}\/[\w-]{1,100}$/iu;
+import { NotificationChannelsFields, notificationChannels } from "./notification-channels-fields";
 
 interface FormValues {
   email: NotificationType[];
   discord: NotificationType[];
-  webhookUrl: string;
-  discordEnabled: boolean;
   digestEverything: boolean;
   digestHouseholds: { id: string; chosen: boolean }[];
 }
@@ -44,45 +29,28 @@ function sameKinds<T>(left: readonly T[], right: readonly T[]) {
 
 interface Props {
   profile: UserProfileResponse;
-  discord: DiscordWebhookResponse;
   households: HouseholdResponse[];
 }
 
-export function NotificationsForm({ profile, discord, households }: Readonly<Props>) {
+export function NotificationsForm({ profile, households }: Readonly<Props>) {
   const { t } = useTranslation();
-  const formatDateTime = useDateTime();
-  const emailServer = useEmailEnabled();
-  const discordAllowed = useDiscordEnabled();
-  const [confirmingRemove, setConfirmingRemove] = useState(false);
+  const available = { email: useEmailEnabled(), discord: useDiscordEnabled() };
+  const channels = notificationChannels.filter((channel) => available[channel]);
 
   const emailMutation = useUpdateMyEmailNotifications({ mutation: silentMutation });
-  const discordMutation = useUpdateMyDiscord({ mutation: silentMutation });
+  const discordMutation = useUpdateMyDiscordNotifications({ mutation: silentMutation });
   const digestMutation = useUpdateMyDigestScopes({ mutation: silentMutation });
-  const testMutation = useTestMyDiscord({
-    mutation: { ...silentMutation, onSuccess: () => toast.success(t("profile.discord.testSent")) },
-  });
-  const removeMutation = useDeleteMyDiscord({
-    mutation: { ...silentMutation, onSuccess: () => toast.success(t("profile.discord.removed")) },
-  });
 
   const schema = z.object({
     email: z.array(z.enum(NotificationType)),
     discord: z.array(z.enum(NotificationType)),
-    webhookUrl: z
-      .string()
-      .refine((value) => value.trim() === "" || webhookPattern.test(value.trim()), {
-        message: t("serverErrors.discord.invalidWebhook"),
-      }),
-    discordEnabled: z.boolean(),
     digestEverything: z.boolean(),
     digestHouseholds: z.array(z.object({ id: z.string(), chosen: z.boolean() })),
   });
 
   const defaultValues: FormValues = {
     email: [...profile.emailNotificationTypes],
-    discord: [...discord.types],
-    webhookUrl: "",
-    discordEnabled: discord.hasWebhook ? discord.isEnabled : true,
+    discord: [...profile.discordNotificationTypes],
     digestEverything: profile.monthlyDigestEverything,
     digestHouseholds: households.map((household) => ({
       id: household.id,
@@ -94,9 +62,11 @@ export function NotificationsForm({ profile, discord, households }: Readonly<Pro
     defaultValues,
     schema,
     submit: async (value, formApi) => {
-      const webhookUrl = value.webhookUrl.trim();
       if (!sameKinds(value.email, profile.emailNotificationTypes)) {
         await emailMutation.mutateAsync({ data: { types: value.email } });
+      }
+      if (!sameKinds(value.discord, profile.discordNotificationTypes)) {
+        await discordMutation.mutateAsync({ data: { types: value.discord } });
       }
       const householdIds = value.digestHouseholds
         .filter((household) => household.chosen)
@@ -109,38 +79,16 @@ export function NotificationsForm({ profile, discord, households }: Readonly<Pro
           data: { everything: value.digestEverything, householdIds },
         });
       }
-      const discordChanged =
-        webhookUrl !== "" ||
-        value.discordEnabled !== discord.isEnabled ||
-        !sameKinds(value.discord, discord.types);
-      if (discordChanged && (discord.hasWebhook || webhookUrl !== "")) {
-        await discordMutation.mutateAsync({
-          data: {
-            webhookUrl: webhookUrl || null,
-            isEnabled: value.discordEnabled,
-            types: value.discord,
-          },
-        });
-      }
       toast.success(t("profile.notifications.saved"));
-      formApi.reset({ ...value, webhookUrl: "" });
+      formApi.reset(value);
     },
   });
 
   const emailNote =
-    (!emailServer && t("profile.notifications.needsEmail")) ||
-    (!profile.emailConfirmed && t("profile.notifications.needsVerification"));
-  const emailOff = Boolean(emailNote);
-
-  const problem =
-    (discord.unreadable && t("profile.discord.unreadable")) ||
-    (discord.disabledByDiscord && t("profile.discord.gone"));
-
-  const delivery =
-    discord.hasWebhook &&
-    (discord.lastDeliveredAt
-      ? t("profile.discord.lastDelivered", { date: formatDateTime(discord.lastDeliveredAt) })
-      : t("profile.discord.neverDelivered"));
+    available.email && !profile.emailConfirmed && t("profile.notifications.needsVerification");
+  const notes = [channels.length > 0 && t("profile.notifications.digestNote"), emailNote].filter(
+    Boolean,
+  );
 
   return (
     <form.AppForm>
@@ -149,41 +97,33 @@ export function NotificationsForm({ profile, discord, households }: Readonly<Pro
           <div className="max-w-prose space-y-1">
             <SectionTitle id="notifications-title">{t("profile.notifications.title")}</SectionTitle>
             <p className="text-sm text-muted-foreground">
-              {t("profile.notifications.description")}
+              {t(
+                channels.length > 0
+                  ? "profile.notifications.description"
+                  : "profile.notifications.descriptionInAppOnly",
+              )}
             </p>
           </div>
 
-          <form.Subscribe selector={(state) => state.values.discordEnabled}>
-            {(discordEnabled) => {
-              const discordNote =
-                (!discordAllowed && t("profile.notifications.discordNotAllowed")) ||
-                (!discord.hasWebhook && t("profile.notifications.discordNotConnected")) ||
-                (!discordEnabled && t("profile.notifications.discordPaused"));
+          <NotificationChannelsFields
+            form={form}
+            fields={{ email: "email", discord: "discord" }}
+            channels={channels}
+            off={{ email: Boolean(emailNote), discord: false }}
+          />
 
-              return (
-                <>
-                  <NotificationChannelsFields
-                    form={form}
-                    fields={{ email: "email", discord: "discord" }}
-                    off={{ email: emailOff, discord: Boolean(discordNote) }}
-                  />
+          {notes.length > 0 ? (
+            <ul className="mt-4 max-w-prose space-y-1.5 text-sm text-muted-foreground">
+              {notes.map((note) => (
+                <li key={String(note)} className="flex gap-2">
+                  <Info aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
+                  {note}
+                </li>
+              ))}
+            </ul>
+          ) : null}
 
-                  <ul className="mt-4 max-w-prose space-y-1.5 text-sm text-muted-foreground">
-                    {[t("profile.notifications.digestNote"), emailNote, discordNote]
-                      .filter(Boolean)
-                      .map((note) => (
-                        <li key={String(note)} className="flex gap-2">
-                          <Info aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
-                          {note}
-                        </li>
-                      ))}
-                  </ul>
-                </>
-              );
-            }}
-          </form.Subscribe>
-
-          {households.length > 0 ? (
+          {channels.length > 0 && households.length > 0 ? (
             <fieldset className="mt-5 max-w-prose space-y-2.5">
               <legend className="text-sm font-medium">
                 {t("profile.notifications.digestScopes")}
@@ -213,117 +153,17 @@ export function NotificationsForm({ profile, discord, households }: Readonly<Pro
           ) : null}
         </Section>
 
-        <Section aria-labelledby="discord-title" className="space-y-5">
-          <div className="max-w-prose space-y-1">
-            <SectionTitle id="discord-title">{t("profile.discord.title")}</SectionTitle>
-            <p className="text-sm text-muted-foreground">{t("profile.discord.description")}</p>
-          </div>
+        <FormError error={emailMutation.error ?? discordMutation.error ?? digestMutation.error} />
 
-          {problem ? (
-            <p role="alert" className="max-w-prose text-sm font-medium text-expense">
-              {problem}
-            </p>
-          ) : null}
-
-          <div className="max-w-md space-y-4">
-            <form.Field name="webhookUrl">
-              {(field) => (
-                <field.TextField
-                  id="discord-webhook-url"
-                  type="password"
-                  autoComplete="off"
-                  spellCheck={false}
-                  disabled={!discordAllowed}
-                  label={t("profile.discord.webhookUrl")}
-                  hint={t("profile.discord.webhookUrlHint")}
-                  placeholder={
-                    discord.hasWebhook ? t("profile.discord.webhookPlaceholder") : undefined
-                  }
-                />
-              )}
-            </form.Field>
-
-            <form.Field name="discordEnabled">
-              {(field) => (
-                <field.CheckboxField
-                  id="discord-is-enabled"
-                  disabled={!discordAllowed}
-                  label={t("profile.discord.enabled")}
-                />
-              )}
-            </form.Field>
-          </div>
-
-          {delivery || discord.lastError ? (
-            <div className="max-w-prose space-y-0.5 text-sm text-muted-foreground">
-              {delivery ? <p>{delivery}</p> : null}
-              {discord.lastError && !problem ? (
-                <p className="wrap-break-word">
-                  {t("profile.discord.lastError", { error: discord.lastError })}
-                </p>
-              ) : null}
-            </div>
-          ) : null}
-
-          {discord.hasWebhook ? (
-            <div className="flex flex-wrap items-center gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                pending={testMutation.isPending}
-                disabled={!discordAllowed}
-                onClick={() => {
-                  removeMutation.reset();
-                  testMutation.reset();
-                  testMutation.mutate();
-                }}
-              >
-                <Send />
-                {t("profile.discord.test")}
-              </Button>
-              <Button
-                type="button"
-                variant="outline-destructive"
-                size="sm"
-                pending={removeMutation.isPending}
-                onClick={() => setConfirmingRemove(true)}
-              >
-                <Trash2 />
-                {t("profile.discord.remove")}
-              </Button>
-            </div>
-          ) : null}
-        </Section>
-
-        <FormError
-          error={
-            emailMutation.error ??
-            digestMutation.error ??
-            discordMutation.error ??
-            testMutation.error ??
-            removeMutation.error
-          }
-        />
-
-        <form.FormActions
-          submitLabel={t("actions.save")}
-          pending={emailMutation.isPending || digestMutation.isPending || discordMutation.isPending}
-        />
+        {channels.length > 0 ? (
+          <form.FormActions
+            submitLabel={t("actions.save")}
+            pending={
+              emailMutation.isPending || discordMutation.isPending || digestMutation.isPending
+            }
+          />
+        ) : null}
       </form.FormShell>
-
-      <ConfirmDeleteDialog
-        target={confirmingRemove ? true : null}
-        title={t("profile.discord.removeTitle")}
-        description={t("profile.discord.removeDescription")}
-        confirmLabel={t("profile.discord.remove")}
-        onCancel={() => setConfirmingRemove(false)}
-        onConfirm={() => {
-          setConfirmingRemove(false);
-          testMutation.reset();
-          removeMutation.mutate();
-        }}
-      />
     </form.AppForm>
   );
 }

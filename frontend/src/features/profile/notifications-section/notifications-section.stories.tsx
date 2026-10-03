@@ -1,30 +1,22 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, fireEvent, userEvent, waitFor } from "storybook/test";
+import { expect, userEvent, waitFor } from "storybook/test";
 import { getMeMockHandler } from "@/api/generated/auth/auth.msw";
 import { getHouseholdsMockHandler } from "@/api/generated/households/households.msw";
-import {
-  getMyDiscordMockHandler,
-  getTestMyDiscordMockHandler,
-} from "@/api/generated/users/users.msw";
+import { getPublicSettingsMockHandler } from "@/api/generated/settings/settings.msw";
 import {
   digestSubscriber,
-  discordWebhookGoneProblem,
   emailSubscriber,
   householdDigestSubscriber,
-  myDiscordEmpty,
-  myDiscordFailing,
-  myDiscordGone,
-  myDiscordUnreadable,
+  currentUser,
+  publicSettings,
   unverifiedUser,
 } from "@/storybook/fixtures";
 import {
   discordOffHandler,
   emailEnabledHandler,
-  failWith,
   pending,
   withHandlers,
 } from "@/storybook/handlers";
-import { openedDialog } from "@/storybook/interactions";
 import { NotificationsSection } from "./notifications-section";
 
 const meta = {
@@ -36,27 +28,49 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-const webhook = "https://discord.com/api/webhooks/123456789012345678/abc-DEF_123";
-
-export const Configured: Story = {
+export const DiscordChosen: Story = {
+  parameters: withHandlers(
+    getMeMockHandler({ ...currentUser, discordNotificationTypes: ["billDue", "budgetExceeded"] }),
+  ),
   play: async ({ canvas }) => {
-    await expect(await canvas.findByLabelText("Webhook URL")).toHaveValue("");
     await expect(
-      canvas.getByRole("checkbox", { name: "A recurring entry is due on Discord" }),
+      await canvas.findByRole("checkbox", { name: "A recurring entry is due on Discord" }),
     ).toBeChecked();
     await expect(
       canvas.getByRole("checkbox", { name: "A budget reaches 80% on Discord" }),
     ).not.toBeChecked();
-    await expect(canvas.getByText(/Last message delivered/u)).toBeInTheDocument();
   },
 };
 
-export const EmailNeedsAMailServer: Story = {
+export const EmailNotSetUp: Story = {
+  play: async ({ canvas }) => {
+    await expect(
+      await canvas.findByRole("checkbox", { name: "Monthly digest on Discord" }),
+    ).not.toHaveAttribute("aria-disabled");
+    await expect(canvas.queryByRole("columnheader", { name: "Email" })).toBeNull();
+    await expect(canvas.queryByRole("checkbox", { name: "Monthly digest by email" })).toBeNull();
+  },
+};
+
+export const DiscordNotSetUp: Story = {
+  parameters: withHandlers(
+    getPublicSettingsMockHandler({ ...publicSettings, emailEnabled: true, discordEnabled: false }),
+  ),
   play: async ({ canvas }) => {
     await expect(
       await canvas.findByRole("checkbox", { name: "A recurring entry is due by email" }),
-    ).toHaveAttribute("aria-disabled", "true");
-    await expect(canvas.getByText(/cannot send mail yet/u)).toBeInTheDocument();
+    ).toBeVisible();
+    await waitFor(() => expect(canvas.queryByRole("columnheader", { name: "Discord" })).toBeNull());
+  },
+};
+
+export const NothingSetUp: Story = {
+  parameters: withHandlers(discordOffHandler),
+  play: async ({ canvas }) => {
+    await expect(await canvas.findByText(/can set up email or Discord/u)).toBeInTheDocument();
+    await expect(canvas.queryByRole("columnheader", { name: "Discord" })).toBeNull();
+    await expect(canvas.queryByText("Monthly digest")).toBeNull();
+    await expect(canvas.queryByRole("button", { name: "Save" })).toBeNull();
   },
 };
 
@@ -105,20 +119,9 @@ export const DigestWithoutHouseholds: Story = {
   parameters: withHandlers(getHouseholdsMockHandler([])),
   play: async ({ canvas }) => {
     await expect(
-      await canvas.findByRole("checkbox", { name: "Monthly digest by email" }),
+      await canvas.findByRole("checkbox", { name: "Monthly digest on Discord" }),
     ).toBeVisible();
     await expect(canvas.queryByRole("group", { name: "Monthly digest for" })).toBeNull();
-  },
-};
-
-export const DigestWithEmailOff: Story = {
-  play: async ({ canvas }) => {
-    await expect(
-      await canvas.findByRole("checkbox", { name: "Monthly digest by email" }),
-    ).toHaveAttribute("aria-disabled", "true");
-    await expect(
-      canvas.getByRole("checkbox", { name: "Monthly digest on Discord" }),
-    ).not.toHaveAttribute("aria-disabled");
   },
 };
 
@@ -144,89 +147,17 @@ export const SavingEmailChoices: Story = {
   },
 };
 
-export const NotConnected: Story = {
-  parameters: withHandlers(getMyDiscordMockHandler(myDiscordEmpty)),
+export const SavingDiscordChoices: Story = {
   play: async ({ canvas }) => {
-    await expect(
-      await canvas.findByRole("checkbox", { name: "A recurring entry is due on Discord" }),
-    ).toHaveAttribute("aria-disabled", "true");
-    await expect(canvas.getByText(/Connect a Discord channel below/u)).toBeInTheDocument();
-    await expect(canvas.queryByRole("button", { name: /Send a test message/u })).toBeNull();
-  },
-};
-
-export const SavingAWebhook: Story = {
-  parameters: withHandlers(getMyDiscordMockHandler(myDiscordEmpty)),
-  play: async ({ canvas }) => {
-    const url = await canvas.findByLabelText("Webhook URL");
-    await fireEvent.change(url, { target: { value: "https://example.com/hook" } });
-    await expect(
-      await canvas.findByText(/starts with https:\/\/discord\.com\/api\/webhooks/u),
-    ).toBeInTheDocument();
-    await fireEvent.change(url, { target: { value: webhook } });
-    await userEvent.click(canvas.getByRole("button", { name: "Save" }));
-    await waitFor(() => expect(url).toHaveValue(""));
-  },
-};
-
-export const TestSent: Story = {
-  play: async ({ canvas }) => {
-    const test = await canvas.findByRole("button", { name: /Send a test message/u });
-    await userEvent.click(test);
-    await waitFor(() => expect(test).toBeEnabled());
-  },
-};
-
-export const TestRefused: Story = {
-  parameters: withHandlers(getTestMyDiscordMockHandler(failWith(discordWebhookGoneProblem))),
-  play: async ({ canvas }) => {
-    await userEvent.click(await canvas.findByRole("button", { name: /Send a test message/u }));
-    await expect(await canvas.findByRole("alert")).toHaveTextContent(/no longer exists/u);
-  },
-};
-
-export const Removing: Story = {
-  play: async ({ canvas }) => {
-    await userEvent.click(await canvas.findByRole("button", { name: /Remove webhook/u }));
-    const dialog = await openedDialog("alertdialog");
-    await expect(dialog).toHaveTextContent(/Messages still waiting to be sent are dropped/u);
-  },
-};
-
-export const DisabledByDiscord: Story = {
-  parameters: withHandlers(getMyDiscordMockHandler(myDiscordGone)),
-  play: async ({ canvas }) => {
-    await expect(await canvas.findByRole("alert")).toHaveTextContent(/no longer exists/u);
-  },
-};
-
-export const Unreadable: Story = {
-  parameters: withHandlers(getMyDiscordMockHandler(myDiscordUnreadable)),
-  play: async ({ canvas }) => {
-    await expect(await canvas.findByRole("alert")).toHaveTextContent(/can no longer be read/u);
-  },
-};
-
-export const LastDeliveryFailed: Story = {
-  parameters: withHandlers(getMyDiscordMockHandler(myDiscordFailing)),
-  play: async ({ canvas }) => {
-    await expect(
-      await canvas.findByText(/Last problem: Discord answered 503/u),
-    ).toBeInTheDocument();
-  },
-};
-
-export const DiscordNotAllowed: Story = {
-  parameters: withHandlers(discordOffHandler),
-  play: async ({ canvas }) => {
-    await waitFor(() =>
-      expect(canvas.getByText(/has not allowed it on this installation/u)).toBeInTheDocument(),
-    );
-    await expect(canvas.getByLabelText("Webhook URL")).toBeDisabled();
-    await expect(canvas.getByRole("button", { name: /Send a test message/u })).toBeDisabled();
+    const budget = await canvas.findByRole("checkbox", { name: "A budget reaches 80% on Discord" });
+    await userEvent.click(budget);
+    await expect(budget).toBeChecked();
+    const save = canvas.getByRole("button", { name: "Save" });
+    await userEvent.click(save);
+    await waitFor(() => expect(save).not.toHaveAttribute("aria-busy"));
   },
 };
 
 export const Loading: Story = {
-  parameters: withHandlers(getMyDiscordMockHandler(pending)),
+  parameters: withHandlers(getMeMockHandler(pending)),
 };

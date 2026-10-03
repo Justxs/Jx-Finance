@@ -29,11 +29,15 @@ describe("shownCards", () => {
     expect(shown).toContain("summary");
   });
 
-  test("leaves out the cash-flow card with the upcoming bills while recurring entries are off", () => {
+  test("leaves out the upcoming bills while recurring entries are off and keeps the cash flow", () => {
     const shown = shownCards(draft, { ...allOn, recurringBills: false });
 
-    expect(shown).not.toContain("cashFlow");
     expect(shown).not.toContain("upcomingBills");
+    expect(shown).toContain("cashFlow");
+  });
+
+  test("leaves out the cash-flow card while the forecast is off", () => {
+    expect(shownCards(draft, { ...allOn, cashFlowForecast: false })).not.toContain("cashFlow");
     expect(shownCards(draft, allOn).at(-2)).toBe("cashFlow");
   });
 

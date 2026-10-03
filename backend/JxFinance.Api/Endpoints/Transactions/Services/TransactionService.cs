@@ -299,13 +299,14 @@ public sealed class TransactionService(
             var pattern = LikePattern.Contains(request.Search);
             var searchesPlace = LocationsEnabled;
             var searchesReceipts = ReceiptItemsEnabled;
+            var searchesNames = PayeeNamesEnabled;
             var receiptFiles = ReceiptItemSearch.MatchingFiles(db, currentUser.Id, request.Search);
             query = query.Where(t =>
                 (t.Description != null && EF.Functions.ILike(t.Description, pattern, LikePattern.Escape))
                 || (t.Note != null && EF.Functions.ILike(t.Note, pattern, LikePattern.Escape))
                 || (t.Payee != null && EF.Functions.ILike(t.Payee, pattern, LikePattern.Escape))
                 || (searchesPlace && t.Place != null && EF.Functions.ILike(t.Place, pattern, LikePattern.Escape))
-                || db.PayeeNames.Any(p => p.PayeeKey == t.PayeeKey && EF.Functions.ILike(p.Name, pattern, LikePattern.Escape))
+                || (searchesNames && db.PayeeNames.Any(p => p.PayeeKey == t.PayeeKey && EF.Functions.ILike(p.Name, pattern, LikePattern.Escape)))
                 || (searchesReceipts && db.TransactionAttachments.Any(a => a.TransactionId == t.Id && receiptFiles.Contains(a.Sha256))));
         }
 
@@ -373,7 +374,10 @@ public sealed class TransactionService(
 
     private bool LocationsEnabled => settings.Current.IsEnabled(Feature.Locations);
 
-    private bool ReceiptItemsEnabled => settings.Current.IsEnabled(Feature.ReceiptReading);
+    private bool ReceiptItemsEnabled =>
+        settings.Current.IsEnabled(Feature.ReceiptReading) && settings.Current.IsEnabled(Feature.Attachments);
+
+    private bool PayeeNamesEnabled => settings.Current.IsEnabled(Feature.PayeeNames);
 
     private TransactionResponse Shown(TransactionResponse response) =>
         Placed(UnusualEnabled ? response : response.WithoutUnusual());
@@ -745,14 +749,18 @@ public sealed class TransactionService(
         var ids = transactions.Select(t => t.Id).ToList();
         var linesByTransaction = await LoadLinesAsync(transactions.Where(t => t.IsSplit).Select(t => t.Id), cancellationToken);
         var tagsByTransaction = await LoadTagsAsync(ids, cancellationToken);
-        var attachmentCounts = await CountAttachmentsAsync(ids, cancellationToken);
+        var attachmentCounts = settings.Current.IsEnabled(Feature.Attachments)
+            ? await CountAttachmentsAsync(ids, cancellationToken)
+            : [];
         var debtPayments = await DebtPaymentsOfAsync(ids, cancellationToken);
         var refunds = await RefundMarksAsync(transactions, cancellationToken);
         var splits = await SharedExpensesOfAsync(transactions, cancellationToken);
-        var contactSplits = settings.Current.IsEnabled(Feature.Households)
+        var contactSplits = settings.Current.IsEnabled(Feature.People)
             ? await ContactSplitMarks.OfAsync(db, ids, cancellationToken)
             : [];
-        var payeeNames = await db.PayeeNamesForAsync(transactions.Select(t => t.PayeeKey), cancellationToken);
+        var payeeNames = PayeeNamesEnabled
+            ? await db.PayeeNamesForAsync(transactions.Select(t => t.PayeeKey), cancellationToken)
+            : new Dictionary<string, string>();
         var groups = await VisibleGroupsAsync(transactions, cancellationToken);
         var receiptItems = string.IsNullOrWhiteSpace(search) || !ReceiptItemsEnabled
             ? []

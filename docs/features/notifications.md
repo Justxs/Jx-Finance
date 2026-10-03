@@ -13,7 +13,7 @@ flowchart TD
     Digest["MonthlyDigestJob<br/>daily at 08:00 on days 1 to 5, needs MonthClose,<br/>only for members who ticked it"] --> Dedupe
     Dedupe["Publish under an advisory lock<br/>unless the same row already exists in the same period"] --> Pub["INotificationPublisher.Publish<br/>in the job's own transaction"]
     Pub --> Row["Notification: user, kind, title, typed payload, related row"]
-    Pub --> Discord["A DiscordMessages row when Discord is allowed<br/>and the owner's webhook takes that kind"]
+    Pub --> Discord["A DiscordMessages row when the installation's Discord channel<br/>is set up and the owner ticked that kind for Discord"]
     Pub --> Email["An EmailMessages row when the owner ticked that kind for email,<br/>the address is confirmed and the mail server is on"]
     Row --> List["GET /api/notifications, unread first for the badge"]
     List --> Bell["NotificationBell renders each kind from its payload"]
@@ -35,9 +35,13 @@ That makes the publisher the extension point. A new producer calls it and reache
 
 ## Discord beside the bell
 
-Discord, since 2026-09-26, is the second channel outside the application, and it follows the same rule: one more row, `DiscordMessages`, written by the publisher next to the notification and drained by its own outbox job. Like the email, it is not chosen by the producer. The publisher adds it for any kind when the installation allows Discord and the owner's webhook is enabled and takes that kind, with the text built by `NotificationTexts` in the owner's language (`AspNetUsers.Language`, or the installation's while it is null), which mirrors the bell's sentences. A new kind therefore reaches Discord once it has a sentence there, and a unit test fails until it does. See [Discord notifications](discord-notifications.md).
+Discord, since 2026-09-26, is the second channel outside the application, and it follows the same rule: one more row, `DiscordMessages`, written by the publisher next to the notification and drained by its own outbox job. Like the email, it is not chosen by the producer. Since 2026-10-03 there is one Discord channel for the whole installation, set up by an administrator, and the publisher adds the message for any kind the owner ticked in `AspNetUsers.DiscordNotificationTypes` while Discord is switched on and a webhook is saved. The text is built by `NotificationTexts` in the owner's language (`AspNetUsers.Language`, or the installation's while it is null), mirrors the bell's sentences, and starts with the owner's display name, because everyone who reads the channel sees it. A new kind therefore reaches Discord once it has a sentence there, and a unit test fails until it does. See [Discord notifications](discord-notifications.md).
 
-Each user makes both choices in one place, Settings › Personal › Notifications (`/profile?section=notifications`, `features/profile/notifications-section`): a table of every `NotificationType` against "In app", which is always on except for the monthly digest, "Email" and "Discord", saved with one button. A new kind appears in that table by itself, because the rows come from the generated enum.
+## Choosing channels
+
+Each user makes both choices in one place, Settings › Personal › Notifications (`/profile?section=notifications`, `features/profile/notifications-section`): a table of every `NotificationType` against "In app", which is always on except for the monthly digest, and one column per channel that is set up on the installation, saved with one button. A new kind appears in that table by itself, because the rows come from the generated enum.
+
+A channel's column appears only while the public settings say it is set up: "Email" while `emailEnabled` (a working mail server), "Discord" while `discordEnabled` (the switch on and a webhook saved). While the email column is shown and the member's address is unconfirmed, it is disabled with a note that it waits until the address is confirmed. When no channel is set up the description says that an administrator can set up email or Discord, the monthly digest row is hidden because the digest is only ever sent outside the app, the digest note and the "Monthly digest for" household scopes are hidden, and there is no Save button.
 
 ## Kinds and the typed payload
 

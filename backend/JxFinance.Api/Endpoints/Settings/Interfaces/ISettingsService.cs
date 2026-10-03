@@ -27,7 +27,13 @@ public interface ISettingsService
         UpdateMarketPriceSettingsRequest request,
         CancellationToken cancellationToken);
 
-    Task UpdateDiscordAsync(UpdateDiscordSettingsRequest request, CancellationToken cancellationToken);
+    Task<DiscordSettingsResponse> GetDiscordAsync(CancellationToken cancellationToken);
+
+    Task<Result<DiscordSettingsResponse>> UpdateDiscordAsync(
+        UpdateDiscordSettingsRequest request,
+        CancellationToken cancellationToken);
+
+    Task<Result> SendTestDiscordAsync(CancellationToken cancellationToken);
 
     Task<Result<SettingsResponse>> UpdateAsync(UpdateSettingsRequest request, CancellationToken cancellationToken);
 

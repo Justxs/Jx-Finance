@@ -13,7 +13,7 @@ public sealed class GetCashFlowForecastEndpoint(ICashFlowForecastService forecas
     {
         Get(ApiRoutes.Accounts + "/forecast");
         Group<AccountsGroup>();
-        Options(b => b.WithMetadata(new RequiresFeature(Feature.RecurringBills)));
+        Options(b => b.WithMetadata(new RequiresFeature(Feature.CashFlowForecast)));
     }
 
     public override async Task HandleAsync(GetCashFlowForecastRequest req, CancellationToken ct) =>

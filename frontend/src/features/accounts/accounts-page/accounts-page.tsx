@@ -101,7 +101,7 @@ export function AccountsPage() {
         />
       </Section>
 
-      {features.recurringBills ? <CashFlowForecast /> : null}
+      {features.cashFlowForecast ? <CashFlowForecast /> : null}
 
       <QueryBoundary fallback={null} errorSubject={t("accounts.archivedList.label")}>
         <ArchivedAccounts />

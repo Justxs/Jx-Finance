@@ -1,11 +1,13 @@
 using FastEndpoints;
 using JxFinance.Common.ExchangeRates;
 using JxFinance.Common.RecurringBills;
+using JxFinance.Common.Settings;
 using JxFinance.Common.Unusual;
 using JxFinance.Domain.Accounts;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.ExchangeRates;
 using JxFinance.Domain.RecurringBills;
+using JxFinance.Domain.Settings;
 using JxFinance.Endpoints.Accounts.GetCashFlowForecast;
 using JxFinance.Endpoints.Accounts.Interfaces;
 using JxFinance.Endpoints.Accounts.Shared;
@@ -15,7 +17,11 @@ using Microsoft.EntityFrameworkCore;
 namespace JxFinance.Endpoints.Accounts.Services;
 
 [RegisterService<ICashFlowForecastService>(LifeTime.Scoped)]
-public sealed class CashFlowForecastService(AppDbContext db, IExchangeRateService rates, IClock clock)
+public sealed class CashFlowForecastService(
+    AppDbContext db,
+    IExchangeRateService rates,
+    IClock clock,
+    IInstanceSettingsStore settings)
     : ICashFlowForecastService
 {
     public async Task<CashFlowForecastResponse> GetAsync(
@@ -27,11 +33,13 @@ public sealed class CashFlowForecastService(AppDbContext db, IExchangeRateServic
         var end = today.AddDays(days);
         var accounts = await db.Accounts.AsNoTracking().ToDictionaryAsync(a => a.Id, cancellationToken);
         var ids = accounts.Keys.ToList();
-        var bills = await db.RecurringBills
-            .AsNoTracking()
-            .Where(b => b.IsActive)
-            .OrderBy(b => b.Name)
-            .ToListAsync(cancellationToken);
+        var bills = settings.Current.IsEnabled(Feature.RecurringBills)
+            ? await db.RecurringBills
+                .AsNoTracking()
+                .Where(b => b.IsActive)
+                .OrderBy(b => b.Name)
+                .ToListAsync(cancellationToken)
+            : [];
 
         var held = await AccountMovements.SumAsync(db, ids, today, cancellationToken);
         var future = await AccountMovements.SumByDateAsync(db, ids, today, end, cancellationToken);

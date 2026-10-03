@@ -55,7 +55,7 @@ A transaction [spread over months](transactions.md#spreading-over-months) counts
 
 A [refund](transactions.md#refunds) counts in the window it is dated in and lowers `spent` there, so a rollover budget carries the difference to the next window. A refund never raises an alert, and an alert already raised stays. Limits from history read the same attributions, so each window's spending is net of refunds too.
 
-Since 2026-10-02, with [My share](household-settle-up.md#my-share) pressed on the budgets page or the dashboard, `GET /api/budgets?share=mine` counts a split expense in a personal budget, category or tag, at the member's own part, and a household split another member paid at the member's share. A household budget keeps the household's figure, the same for every member, and alerts and limits from history always count in full.
+Since 2026-10-02, with [My share](household-settle-up.md#my-share) chosen in Settings › Personal › Appearance, the budgets page and the dashboard ask `GET /api/budgets?share=mine`, which counts a split expense in a personal budget, category or tag, at the member's own part, and a household split another member paid at the member's share. A household budget keeps the household's figure, the same for every member, and alerts and limits from history always count in full.
 
 ## Rollover
 

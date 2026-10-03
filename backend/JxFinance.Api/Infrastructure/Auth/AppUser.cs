@@ -18,6 +18,7 @@ public sealed class AppUser : IdentityUser<Guid>
     public string DisplayName { get; set; } = string.Empty;
 
     public List<NotificationType> EmailNotificationTypes { get; set; } = [];
+    public List<NotificationType> DiscordNotificationTypes { get; set; } = [];
 
     public bool MonthlyDigestEverything { get; set; } = true;
 

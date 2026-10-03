@@ -49,7 +49,7 @@ public sealed record InstanceSettingsSnapshot(
             settings.DefaultAccountId,
             settings.DefaultPageSize,
             SmtpSettingsSnapshot.From(settings),
-            settings.DiscordEnabled,
+            settings.DiscordEnabled && settings.DiscordProtectedUrl.Length > 0,
             settings.SupportLinkEnabled,
             settings.PriceSyncEnabled);
     }

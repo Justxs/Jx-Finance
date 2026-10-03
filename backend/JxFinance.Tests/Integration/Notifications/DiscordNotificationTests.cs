@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Net;
 using System.Net.Http.Json;
+using System.Text.Json;
 using JxFinance.Common.Discord;
 using JxFinance.Common.Errors;
 using JxFinance.Domain.Notifications;
@@ -14,333 +15,260 @@ namespace JxFinance.Tests.Integration.Notifications;
 [Collection<IntegrationCollection>]
 public sealed class DiscordNotificationTests(ApiFixture fixture) : IntegrationTestBase(fixture)
 {
-    private const string DiscordUrl = "/api/users/me/discord";
+    private const string SettingsUrl = "/api/settings/discord";
+    private const string TestUrl = SettingsUrl + "/test";
+    private const string KindsUrl = "/api/users/me/discord-notifications";
 
-    private static readonly string[] BillDueOnly = ["billDue"];
+    private static readonly string[] BillAndBudget = ["billDue", "budgetWarning"];
+    private static readonly string[] BillTwice = ["billDue", "billDue"];
 
     private FakeDiscordWebhookClient Discord => Services.GetRequiredService<FakeDiscordWebhookClient>();
 
     [Fact]
-    public async Task A_bill_reminder_reaches_discord_only_when_the_switch_the_webhook_and_the_kind_are_all_on()
+    public async Task Only_administrators_read_save_and_test_the_channel()
     {
-        var switchedOff = await MemberWithWebhookAsync(["billDue"]);
-        var webhookOff = await MemberWithWebhookAsync(["billDue"], isEnabled: false);
-        var otherKind = await MemberWithWebhookAsync(["budgetExceeded"]);
-        var subscribed = await MemberWithWebhookAsync(["billDue"]);
+        using var member = await CreateUserClientAsync();
 
-        await SetDiscordAsync(false);
+        var read = await member.GetAsync(SettingsUrl, TestContext.Current.CancellationToken);
+        var saved = await member.PutAsJsonAsync(SettingsUrl, new { enabled = true }, TestContext.Current.CancellationToken);
+        var tested = await member.PostAsync(TestUrl, null, TestContext.Current.CancellationToken);
+
+        Assert.All([read, saved, tested], response => Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode));
+    }
+
+    [Fact]
+    public async Task The_channel_is_saved_kept_and_tested_without_ever_returning_its_url()
+    {
+        using var admin = await CreateUserClientAsync("Admin");
+        var id = NewWebhookId();
+        var token = $"token-{Guid.NewGuid():N}";
+        await SaveAsync(admin, false, $"https://discord.com/api/webhooks/{id}/{token}");
+
+        await SaveAsync(admin, false, "");
+        var tested = await admin.PostAsync(TestUrl, null, TestContext.Current.CancellationToken);
+        var body = await admin.GetStringAsync(SettingsUrl, TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.NoContent, tested.StatusCode);
+        Assert.Contains("webhook works", Assert.Single(Discord.To(id)).Post.Content, StringComparison.Ordinal);
+        Assert.DoesNotContain(id, body, StringComparison.Ordinal);
+        Assert.DoesNotContain(token, body, StringComparison.Ordinal);
+        var settings = JsonSerializer.Deserialize<DiscordDto>(body, JsonSerializerOptions.Web)!;
+        Assert.Equal((false, true), (settings.Enabled, settings.HasWebhook));
+        Assert.NotNull(settings.LastDeliveredAt);
+    }
+
+    [Fact]
+    public async Task Without_a_webhook_the_test_is_not_found_and_discord_cannot_be_switched_on()
+    {
+        using var admin = await CreateUserClientAsync("Admin");
+        await WithDbAsync(db => db.InstanceSettings.ExecuteUpdateAsync(
+            s => s.SetProperty(x => x.DiscordEnabled, false).SetProperty(x => x.DiscordProtectedUrl, string.Empty),
+            TestContext.Current.CancellationToken));
+
+        var tested = await admin.PostAsync(TestUrl, null, TestContext.Current.CancellationToken);
+        var switchedOn = await admin.PutAsJsonAsync(SettingsUrl, new { enabled = true }, TestContext.Current.CancellationToken);
+        var foreign = await admin.PutAsJsonAsync(
+            SettingsUrl,
+            new { enabled = false, webhookUrl = "https://evil.example/api/webhooks/1/token" },
+            TestContext.Current.CancellationToken);
+
+        await AssertProblemAsync(tested, HttpStatusCode.NotFound, ErrorCodes.ResourceNotFound);
+        await AssertProblemAsync(switchedOn, HttpStatusCode.BadRequest, ErrorCodes.DiscordInvalidWebhook);
+        await AssertProblemAsync(foreign, HttpStatusCode.BadRequest, ErrorCodes.DiscordInvalidWebhook);
+        Assert.False((await admin.GetFromJsonAsync<DiscordDto>(SettingsUrl, TestContext.Current.CancellationToken))!.HasWebhook);
+    }
+
+    [Fact]
+    public async Task Members_choose_on_their_profile_which_kinds_go_to_discord()
+    {
+        using var member = await CreateUserClientAsync();
+
+        var saved = await ReadOkAsync<ProfileDto>(await member.PutAsJsonAsync(
+            KindsUrl,
+            new { types = BillAndBudget },
+            TestContext.Current.CancellationToken));
+        var twice = await member.PutAsJsonAsync(KindsUrl, new { types = BillTwice }, TestContext.Current.CancellationToken);
+
+        Assert.Equal(BillAndBudget, saved.DiscordNotificationTypes);
+        await AssertProblemAsync(twice, HttpStatusCode.BadRequest, ErrorCodes.CollectionInvalidSize);
+        var me = await member.GetFromJsonAsync<ProfileDto>("/api/auth/me", TestContext.Current.CancellationToken);
+        Assert.Equal(BillAndBudget, me!.DiscordNotificationTypes);
+    }
+
+    [Fact]
+    public async Task A_bill_reminder_reaches_the_channel_only_when_the_switch_is_on_and_the_kind_is_ticked()
+    {
+        using var admin = await CreateUserClientAsync("Admin");
+        var webhook = await SaveWebhookAsync(admin, false);
+        var switchedOff = await MemberAsync("billDue");
+        var otherKind = await MemberAsync("budgetExceeded");
+        var first = await MemberAsync("billDue");
+        var second = await MemberAsync("billDue");
         await Seed.RecurringBillAsync(switchedOff.Client, Today, "Water");
         await ScanBillsAsync();
-        await SetDiscordAsync(true);
+        await SaveAsync(admin, true);
         try
         {
-            await Seed.RecurringBillAsync(webhookOff.Client, Today, "Water");
             await Seed.RecurringBillAsync(otherKind.Client, Today, "Water");
-            await Seed.RecurringBillAsync(subscribed.Client, Today, "Rent *now*");
+            await Seed.RecurringBillAsync(first.Client, Today, "Rent *now*");
+            await Seed.RecurringBillAsync(second.Client, Today, "Gym");
             await ScanBillsAsync();
             await DrainAsync();
 
-            Assert.Empty(Discord.To(switchedOff.WebhookId));
-            Assert.Empty(Discord.To(webhookOff.WebhookId));
-            Assert.Empty(Discord.To(otherKind.WebhookId));
-            var post = Assert.Single(Discord.To(subscribed.WebhookId)).Post;
-            Assert.Contains(@"**Rent \*now\***", post.Content, StringComparison.Ordinal);
-            Assert.Contains("Payment due", post.Content, StringComparison.Ordinal);
-            Assert.Contains($"<{ApiFixture.SiteUrl}/recurring-bills>", post.Content, StringComparison.Ordinal);
-            Assert.Single(await Seed.UnreadNotificationsAsync(subscribed.Client));
+            Assert.Equal(0, await MessageCountAsync(switchedOff.User.Id));
+            Assert.Equal(0, await MessageCountAsync(otherKind.User.Id));
+            var posts = Discord.To(webhook).Select(p => p.Post.Content).ToList();
+            Assert.Equal(2, posts.Count);
+            var rent = Assert.Single(posts, p => p.StartsWith(@"Test User · **Rent \*now\***", StringComparison.Ordinal));
+            Assert.Contains("Payment due", rent, StringComparison.Ordinal);
+            Assert.Contains($"<{ApiFixture.SiteUrl}/recurring-bills>", rent, StringComparison.Ordinal);
+            Assert.Contains(posts, p => p.Contains("**Gym**", StringComparison.Ordinal));
+            Assert.Single(await Seed.UnreadNotificationsAsync(first.Client));
         }
         finally
         {
-            await SetDiscordAsync(false);
+            await SwitchOffAsync(admin);
         }
     }
 
     [Fact]
-    public async Task A_budget_alert_reaches_discord()
-    {
-        var member = await MemberWithWebhookAsync(["budgetWarning", "budgetExceeded"]);
-        var account = await CreateAccountAsync("1000.00", client: member.Client);
-        var category = await CreateCategoryAsync(client: member.Client);
-        await PostAsync<IdDto>(
-            member.Client,
-            "/api/budgets",
-            new { categoryId = category, limitAmount = "100.00", period = "weekly", rolloverEnabled = false });
-        await PostAsync<IdDto>(
-            member.Client,
-            "/api/transactions",
-            new { accountId = account, categoryId = category, type = "expense", amount = "120.00", date = Today });
-
-        await SetDiscordAsync(true);
-        try
+    public async Task Running_the_job_twice_queues_one_message() =>
+        await WithChannelAsync(async (_, webhook) =>
         {
-            await Job<BudgetAlertJob>().RunOnceAsync(TestContext.Current.CancellationToken);
-            await DrainAsync();
-
-            var contents = Discord.To(member.WebhookId).Select(p => p.Post.Content).ToList();
-            Assert.Equal(2, contents.Count);
-            Assert.Contains(contents, c => c.Contains("Weekly limit reached", StringComparison.Ordinal));
-            Assert.Contains(contents, c => c.Contains("Weekly limit: 80% used", StringComparison.Ordinal));
-        }
-        finally
-        {
-            await SetDiscordAsync(false);
-        }
-    }
-
-    [Fact]
-    public async Task Running_the_job_twice_queues_one_message()
-    {
-        var member = await MemberWithWebhookAsync(["billDue"]);
-        await SetDiscordAsync(true);
-        try
-        {
+            var member = await MemberAsync("billDue");
             await Seed.RecurringBillAsync(member.Client, Today, "Internet");
             await ScanBillsAsync();
             await ScanBillsAsync();
             await DrainAsync();
             await DrainAsync();
 
-            Assert.Single(Discord.To(member.WebhookId));
+            Assert.Single(Discord.To(webhook));
             Assert.Equal(1, await MessageCountAsync(member.User.Id));
-        }
-        finally
-        {
-            await SetDiscordAsync(false);
-        }
-    }
+        });
 
     [Fact]
-    public async Task Rate_limiting_reschedules_without_counting_an_attempt()
-    {
-        var member = await MemberWithWebhookAsync(["billDue"]);
-        await SetDiscordAsync(true);
-        try
+    public async Task A_kind_the_member_no_longer_ticks_is_given_up() =>
+        await WithChannelAsync(async (_, webhook) =>
         {
+            var member = await MemberAsync("billDue");
+            await Seed.RecurringBillAsync(member.Client, Today, "Phone");
+            await ScanBillsAsync();
+            await ChooseKindsAsync(member.Client);
+
+            await DrainAsync();
+
+            Assert.Empty(Discord.To(webhook));
+            Assert.True((await SingleMessageAsync(member.User.Id)).IsGivenUp);
+        });
+
+    [Fact]
+    public async Task Rate_limiting_reschedules_without_counting_an_attempt() =>
+        await WithChannelAsync(async (_, webhook) =>
+        {
+            var member = await MemberAsync("billDue");
             await Seed.RecurringBillAsync(member.Client, Today, "Gym");
             await ScanBillsAsync();
             Discord.AnswerNext(
-                member.WebhookId,
+                webhook,
                 DiscordSendResult.Failure(ErrorCodes.DiscordRateLimited, "slow down", TimeSpan.FromMinutes(2)));
             var before = DateTimeOffset.UtcNow;
 
             await DrainAsync();
 
-            Assert.Empty(Discord.To(member.WebhookId));
+            Assert.Empty(Discord.To(webhook));
             var message = await SingleMessageAsync(member.User.Id);
             Assert.Equal(0, message.Attempts);
             Assert.Null(message.SentAt);
             Assert.True(message.NextAttemptAt >= before.AddSeconds(100));
-        }
-        finally
-        {
-            await SetDiscordAsync(false);
-        }
-    }
+        });
 
     [Fact]
-    public async Task A_webhook_discord_no_longer_knows_is_marked_and_its_queue_given_up()
-    {
-        var member = await MemberWithWebhookAsync(["billDue"]);
-        await SetDiscordAsync(true);
-        try
+    public async Task Another_failure_keeps_the_message_for_a_retry_and_shows_the_error() =>
+        await WithChannelAsync(async (admin, webhook) =>
         {
+            var member = await MemberAsync("billDue");
+            await Seed.RecurringBillAsync(member.Client, Today, "Insurance");
+            await ScanBillsAsync();
+            Discord.AnswerNext(webhook, DiscordSendResult.Failure(ErrorCodes.DiscordSendFailed, "Discord is down."));
+
+            await DrainAsync();
+
+            var message = await SingleMessageAsync(member.User.Id);
+            Assert.Equal((1, false, "Discord is down."), (message.Attempts, message.IsGivenUp, message.LastError));
+            var settings = await admin.GetFromJsonAsync<DiscordDto>(SettingsUrl, TestContext.Current.CancellationToken);
+            Assert.Equal("Discord is down.", settings!.LastError);
+            Assert.False(settings.DisabledByDiscord);
+        });
+
+    [Fact]
+    public async Task A_webhook_discord_no_longer_knows_gives_up_the_queue_until_a_new_url_is_saved() =>
+        await WithChannelAsync(async (admin, webhook) =>
+        {
+            var member = await MemberAsync("billDue");
             await Seed.RecurringBillAsync(member.Client, Today, "Rent");
             await Seed.RecurringBillAsync(member.Client, Today, "Water");
             await ScanBillsAsync();
             Discord.AnswerNext(
-                member.WebhookId,
+                webhook,
                 DiscordSendResult.Failure(ErrorCodes.DiscordWebhookGone, "Discord says this webhook no longer exists."));
 
             await DrainAsync();
             await DrainAsync();
 
-            Assert.Empty(Discord.To(member.WebhookId));
+            Assert.Empty(Discord.To(webhook));
             var messages = await MessagesAsync(member.User.Id);
             Assert.Equal(2, messages.Count);
             Assert.All(messages, m => Assert.True(m.IsGivenUp));
-            var settings = await member.Client.GetFromJsonAsync<DiscordDto>(DiscordUrl, TestContext.Current.CancellationToken);
+            var settings = await admin.GetFromJsonAsync<DiscordDto>(SettingsUrl, TestContext.Current.CancellationToken);
             Assert.True(settings!.DisabledByDiscord);
             Assert.Contains("no longer exists", settings.LastError, StringComparison.Ordinal);
-        }
-        finally
-        {
-            await SetDiscordAsync(false);
-        }
-    }
+            var renewed = await SaveAsync(admin, true, $"https://discord.com/api/webhooks/{NewWebhookId()}/token");
+            Assert.Equal((false, null), (renewed.DisabledByDiscord, renewed.LastError));
+        });
 
-    [Fact]
-    public async Task A_new_url_applies_to_messages_already_queued()
+    private async Task WithChannelAsync(Func<HttpClient, string, Task> test)
     {
-        var member = await MemberWithWebhookAsync(["billDue"]);
-        await SetDiscordAsync(true);
+        using var admin = await CreateUserClientAsync("Admin");
+        var webhook = await SaveWebhookAsync(admin, true);
         try
         {
-            await Seed.RecurringBillAsync(member.Client, Today, "Phone");
-            await ScanBillsAsync();
-            var newId = NewWebhookId();
-            await SaveWebhookAsync(member.Client, WebhookUrl(newId), ["billDue"]);
-
-            await DrainAsync();
-
-            Assert.Empty(Discord.To(member.WebhookId));
-            Assert.Single(Discord.To(newId));
+            await test(admin, webhook);
         }
         finally
         {
-            await SetDiscordAsync(false);
+            await SwitchOffAsync(admin);
         }
     }
 
-    [Fact]
-    public async Task Removing_the_webhook_drops_its_queue()
+    private static async Task<string> SaveWebhookAsync(HttpClient admin, bool enabled)
     {
-        var member = await MemberWithWebhookAsync(["billDue"]);
-        await SetDiscordAsync(true);
-        try
-        {
-            await Seed.RecurringBillAsync(member.Client, Today, "Parking");
-            await ScanBillsAsync();
-
-            var removed = await member.Client.DeleteAsync(DiscordUrl, TestContext.Current.CancellationToken);
-
-            Assert.Equal(HttpStatusCode.NoContent, removed.StatusCode);
-            Assert.Equal(0, await MessageCountAsync(member.User.Id));
-            var settings = await member.Client.GetFromJsonAsync<DiscordDto>(DiscordUrl, TestContext.Current.CancellationToken);
-            Assert.False(settings!.HasWebhook);
-        }
-        finally
-        {
-            await SetDiscordAsync(false);
-        }
+        var id = NewWebhookId();
+        await SaveAsync(admin, enabled, $"https://discord.com/api/webhooks/{id}/token-{Guid.NewGuid():N}");
+        return id;
     }
 
-    [Fact]
-    public async Task The_test_button_is_refused_while_the_installation_switch_is_off()
+    private static async Task<DiscordDto> SaveAsync(HttpClient admin, bool enabled, string? webhookUrl = null) =>
+        await ReadOkAsync<DiscordDto>(await admin.PutAsJsonAsync(
+            SettingsUrl,
+            new { enabled, webhookUrl },
+            TestContext.Current.CancellationToken));
+
+    private async Task SwitchOffAsync(HttpClient admin)
     {
-        var member = await MemberWithWebhookAsync(["billDue"]);
-        await SetDiscordAsync(false);
-
-        var response = await member.Client.PostAsync($"{DiscordUrl}/test", null, TestContext.Current.CancellationToken);
-
-        await AssertProblemAsync(response, HttpStatusCode.BadRequest, ErrorCodes.DiscordDisabled);
-        Assert.Empty(Discord.To(member.WebhookId));
+        await SaveAsync(admin, false);
+        await WithDbAsync(db => db.DiscordMessages.ExecuteDeleteAsync(TestContext.Current.CancellationToken));
     }
 
-    [Fact]
-    public async Task The_test_button_posts_right_away_when_allowed()
-    {
-        var member = await MemberWithWebhookAsync([]);
-        await SetDiscordAsync(true);
-        try
-        {
-            var response = await member.Client.PostAsync($"{DiscordUrl}/test", null, TestContext.Current.CancellationToken);
-
-            Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
-            var post = Assert.Single(Discord.To(member.WebhookId)).Post;
-            Assert.Contains("webhook works", post.Content, StringComparison.Ordinal);
-            var settings = await member.Client.GetFromJsonAsync<DiscordDto>(DiscordUrl, TestContext.Current.CancellationToken);
-            Assert.NotNull(settings!.LastDeliveredAt);
-        }
-        finally
-        {
-            await SetDiscordAsync(false);
-        }
-    }
-
-    [Fact]
-    public async Task Reading_the_settings_never_returns_the_url()
-    {
-        var member = await MemberWithWebhookAsync(["billDue"]);
-
-        var body = await member.Client.GetStringAsync(DiscordUrl, TestContext.Current.CancellationToken);
-
-        Assert.DoesNotContain(member.Token, body, StringComparison.Ordinal);
-        Assert.DoesNotContain(member.WebhookId, body, StringComparison.Ordinal);
-        Assert.Contains("\"hasWebhook\":true", body, StringComparison.Ordinal);
-    }
-
-    [Fact]
-    public async Task Saving_keeps_the_stored_url_when_none_is_sent()
-    {
-        var member = await MemberWithWebhookAsync(["billDue"]);
-        await SaveWebhookAsync(member.Client, null, ["budgetExceeded"], isEnabled: false);
-        await SetDiscordAsync(true);
-        try
-        {
-            var response = await member.Client.PostAsync($"{DiscordUrl}/test", null, TestContext.Current.CancellationToken);
-
-            Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
-            Assert.Single(Discord.To(member.WebhookId));
-            var settings = await member.Client.GetFromJsonAsync<DiscordDto>(DiscordUrl, TestContext.Current.CancellationToken);
-            Assert.False(settings!.IsEnabled);
-            Assert.Equal(["budgetExceeded"], settings.Types);
-        }
-        finally
-        {
-            await SetDiscordAsync(false);
-        }
-    }
-
-    [Fact]
-    public async Task Urls_outside_discord_are_refused()
-    {
-        using var member = await CreateUserClientAsync();
-
-        var response = await member.PutAsJsonAsync(
-            DiscordUrl,
-            new { webhookUrl = "https://evil.example/api/webhooks/1/token", isEnabled = true, types = BillDueOnly },
-            TestContext.Current.CancellationToken);
-
-        await AssertProblemAsync(response, HttpStatusCode.BadRequest, ErrorCodes.DiscordInvalidWebhook);
-    }
-
-    [Fact]
-    public async Task The_first_save_needs_a_url()
-    {
-        using var member = await CreateUserClientAsync();
-
-        var response = await member.PutAsJsonAsync(
-            DiscordUrl,
-            new { webhookUrl = (string?)null, isEnabled = true, types = BillDueOnly },
-            TestContext.Current.CancellationToken);
-
-        await AssertProblemAsync(response, HttpStatusCode.BadRequest, ErrorCodes.DiscordInvalidWebhook);
-    }
-
-    [Fact]
-    public async Task Only_administrators_switch_discord_for_the_installation()
-    {
-        using var member = await CreateUserClientAsync();
-
-        var response = await member.PutAsJsonAsync("/api/settings/discord", new { enabled = true }, TestContext.Current.CancellationToken);
-
-        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
-        var publicSettings = await CreateClient().GetStringAsync("/api/settings/public", TestContext.Current.CancellationToken);
-        Assert.Contains("\"discordEnabled\":false", publicSettings, StringComparison.Ordinal);
-    }
-
-    private async Task<DiscordMember> MemberWithWebhookAsync(string[] types, bool isEnabled = true)
+    private async Task<Member> MemberAsync(params string[] types)
     {
         var user = await CreateUserAsync();
         var client = await LoginAsync(user);
-        var id = NewWebhookId();
-        var token = $"token-{Guid.NewGuid():N}";
-        await SaveWebhookAsync(client, WebhookUrl(id, token), types, isEnabled);
-        return new DiscordMember(user, client, id, token);
+        await ChooseKindsAsync(client, types);
+        return new Member(user, client);
     }
 
-    private static async Task SaveWebhookAsync(HttpClient client, string? url, string[] types, bool isEnabled = true)
-    {
-        var response = await client.PutAsJsonAsync(
-            DiscordUrl,
-            new { webhookUrl = url, isEnabled, types },
-            TestContext.Current.CancellationToken);
-        Assert.True(response.IsSuccessStatusCode, await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
-    }
-
-    private async Task SetDiscordAsync(bool enabled) =>
-        (await Client.PutAsJsonAsync("/api/settings/discord", new { enabled }, TestContext.Current.CancellationToken))
-            .EnsureSuccessStatusCode();
+    private static async Task ChooseKindsAsync(HttpClient client, params string[] types) =>
+        (await client.PutAsJsonAsync(KindsUrl, new { types }, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
 
     private Task ScanBillsAsync() => Job<RecurringBillReminderJob>().RunOnceAsync(TestContext.Current.CancellationToken);
 
@@ -358,17 +286,14 @@ public sealed class DiscordNotificationTests(ApiFixture fixture) : IntegrationTe
     private static string NewWebhookId() =>
         Random.Shared.NextInt64(1_000_000_000, long.MaxValue).ToString(CultureInfo.InvariantCulture);
 
-    private static string WebhookUrl(string id, string? token = null) =>
-        $"https://discord.com/api/webhooks/{id}/{token ?? $"token-{Guid.NewGuid():N}"}";
+    private sealed record Member(TestUser User, HttpClient Client);
 
-    private sealed record DiscordMember(TestUser User, HttpClient Client, string WebhookId, string Token);
+    private sealed record ProfileDto(List<string> DiscordNotificationTypes);
 
     private sealed record DiscordDto(
+        bool Enabled,
         bool HasWebhook,
-        bool IsEnabled,
-        List<string> Types,
         DateTimeOffset? LastDeliveredAt,
         string? LastError,
-        bool DisabledByDiscord,
-        bool Unreadable);
+        bool DisabledByDiscord);
 }

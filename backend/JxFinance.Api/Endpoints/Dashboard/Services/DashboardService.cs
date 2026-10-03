@@ -2,8 +2,10 @@ using FastEndpoints;
 using JxFinance.Common;
 using JxFinance.Common.CategoryAttributions;
 using JxFinance.Common.InvestmentCashFlows;
+using JxFinance.Common.Settings;
 using JxFinance.Common.SettleUp;
 using JxFinance.Domain.Common;
+using JxFinance.Domain.Settings;
 using JxFinance.Endpoints.Accounts.Interfaces;
 using JxFinance.Endpoints.Dashboard.Interfaces;
 using JxFinance.Endpoints.Dashboard.Shared;
@@ -20,7 +22,8 @@ public sealed class DashboardService(
     ICurrentUser currentUser,
     ICategoryAttributionService attributions,
     IAccountService accountService,
-    IInvestmentCashFlowService investmentCashFlows)
+    IInvestmentCashFlowService investmentCashFlows,
+    IInstanceSettingsStore settings)
     : IDashboardService
 {
     public async Task<DashboardSummaryResponse> GetSummaryAsync(
@@ -37,7 +40,7 @@ public sealed class DashboardService(
         var (monthIncome, monthExpense) = (await db.Transactions.DailyFlowsAsync(
                 period,
                 null,
-                await ShareSlices.OfAsync(db, currentUser.Id, share, period, null, cancellationToken),
+                await ShareSlices.OfAsync(db, currentUser.Id, share, period, null, settings.Current.IsEnabled(Feature.People), cancellationToken),
                 cancellationToken))
             .Concat(await investmentCashFlows.GetFlowsAsync(period, null, cancellationToken))
             .Totals();
@@ -64,13 +67,13 @@ public sealed class DashboardService(
             period,
             null,
             FlowType.Expense,
-            await ShareSlices.OfAsync(db, currentUser.Id, share, period, null, cancellationToken),
+            await ShareSlices.OfAsync(db, currentUser.Id, share, period, null, settings.Current.IsEnabled(Feature.People), cancellationToken),
             cancellationToken);
         var earlierAttributions = await attributions.GetAttributionsAsync(
             earlier,
             null,
             FlowType.Expense,
-            await ShareSlices.OfAsync(db, currentUser.Id, share, earlier, null, cancellationToken),
+            await ShareSlices.OfAsync(db, currentUser.Id, share, earlier, null, settings.Current.IsEnabled(Feature.People), cancellationToken),
             cancellationToken);
 
         var categories = await db.Categories.ToDictionaryAsync(c => c.Id, cancellationToken);
@@ -107,7 +110,7 @@ public sealed class DashboardService(
         var byMonth = (await db.Transactions.DailyFlowsAsync(
                 window,
                 null,
-                await ShareSlices.OfAsync(db, currentUser.Id, share, window, null, cancellationToken),
+                await ShareSlices.OfAsync(db, currentUser.Id, share, window, null, settings.Current.IsEnabled(Feature.People), cancellationToken),
                 cancellationToken))
             .Concat(await investmentCashFlows.GetFlowsAsync(window, null, cancellationToken))
             .ToLookup(f => DateWindow.MonthOf(f.Date).Start);

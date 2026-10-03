@@ -5,6 +5,8 @@ using JxFinance.Common.Errors;
 using JxFinance.Common.Settings;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Notifications;
+using JxFinance.Domain.Settings;
+using JxFinance.Infrastructure.Auth;
 using JxFinance.Infrastructure.Data;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
@@ -16,8 +18,7 @@ public sealed class DiscordOutboxJob(
     ILogger<DiscordOutboxJob> logger) : PeriodicJob(scopeFactory, logger)
 {
     public const int KeepDays = 7;
-    public const int BatchSize = 50;
-    public const int PerUserPerPass = 5;
+    public const int BatchSize = 5;
 
     protected override string Name => "Discord outbox drain";
 
@@ -42,9 +43,7 @@ public sealed class DiscordOutboxJob(
         await using (var transaction = await db.Database.BeginTransactionAsync(ct))
         {
             await db.Database.LockAsync(AppLock.DiscordOutbox, ct);
-            var ready = db.DiscordMessages.Due(now);
-            due = await ready
-                .Where(m => ready.Count(earlier => earlier.UserId == m.UserId && earlier.CreatedAt < m.CreatedAt) < PerUserPerPass)
+            due = await db.DiscordMessages.Due(now)
                 .OrderBy(m => m.CreatedAt)
                 .Take(BatchSize)
                 .ToListAsync(ct);
@@ -60,10 +59,11 @@ public sealed class DiscordOutboxJob(
         }
 
         var userIds = due.Select(m => m.UserId).Distinct().ToList();
-        var webhooks = await db.DiscordWebhooks
-            .IgnoreQueryFilters(QueryFilters.OwnerOnly)
-            .Where(w => userIds.Contains(w.UserId))
-            .ToDictionaryAsync(w => w.UserId, ct);
+        var chosen = await db.Users
+            .Where(AppUser.IsActive)
+            .Where(u => userIds.Contains(u.Id))
+            .ToDictionaryAsync(u => u.Id, u => u.DiscordNotificationTypes, ct);
+        var channel = await db.InstanceSettings.FirstOrDefaultAsync(s => s.Id == InstanceSettings.SingletonId, ct);
         var sender = new Sender(
             services.GetRequiredService<IDiscordWebhookClient>(),
             services.GetRequiredService<IDataProtectionProvider>(),
@@ -71,16 +71,13 @@ public sealed class DiscordOutboxJob(
             DiscordText.Username(EmailTexts.Product(settings.InstanceName)),
             logger);
 
-        foreach (var messages in due.GroupBy(m => m.UserId))
+        try
         {
-            try
-            {
-                await sender.SendAllAsync(webhooks.GetValueOrDefault(messages.Key), messages.ToList(), ct);
-            }
-            finally
-            {
-                await SaveOutcomesAsync(db);
-            }
+            await sender.SendAllAsync(channel, due, chosen, ct);
+        }
+        finally
+        {
+            await SaveOutcomesAsync(db);
         }
     }
 
@@ -111,28 +108,29 @@ public sealed class DiscordOutboxJob(
         ILogger logger)
     {
         public async Task SendAllAsync(
-            DiscordWebhook? webhook,
+            InstanceSettings? channel,
             List<DiscordMessage> messages,
+            Dictionary<Guid, List<NotificationType>> chosen,
             CancellationToken ct)
         {
-            if (webhook is null || !webhook.IsEnabled || webhook.DisabledByDiscordAt is not null)
+            if (channel is not { DiscordEnabled: true, DiscordProtectedUrl.Length: > 0, DiscordDisabledByDiscordAt: null })
             {
-                GiveUpAll(messages, "There is no active Discord webhook for this user any more.");
+                GiveUpAll(messages, "There is no active Discord webhook any more.");
                 return;
             }
 
-            var target = DiscordWebhookSecret.Read(protection, webhook.ProtectedUrl);
+            var target = DiscordWebhookSecret.Read(protection, channel.DiscordProtectedUrl);
             if (!target.TryGetValue(out var destination))
             {
                 GiveUpAll(messages, target.ErrorMessage!);
-                webhook.LastError = target.ErrorMessage;
+                channel.DiscordLastError = target.ErrorMessage;
                 return;
             }
 
             for (var index = 0; index < messages.Count; index++)
             {
                 var message = messages[index];
-                if (!webhook.Types.Contains(message.NotificationType))
+                if (!chosen.TryGetValue(message.UserId, out var types) || !types.Contains(message.NotificationType))
                 {
                     message.GiveUp("This notification type is no longer sent to Discord.");
                     continue;
@@ -151,7 +149,7 @@ public sealed class DiscordOutboxJob(
                 {
                     logger.LogError(ex, "Sending the Discord message {MessageId} failed.", message.Id);
                     message.LastError = TextLimit.Cut(ex.Message, OutboxMessage.ErrorMaxLength);
-                    webhook.RecordSend(clock.UtcNow, message.LastError);
+                    channel.RecordDiscordSend(clock.UtcNow, message.LastError);
                     LogIfGivenUp(message);
                     continue;
                 }
@@ -161,7 +159,7 @@ public sealed class DiscordOutboxJob(
                 {
                     message.SentAt = now;
                     message.LastError = null;
-                    webhook.RecordSend(now, null);
+                    channel.RecordDiscordSend(now, null);
                     continue;
                 }
 
@@ -177,7 +175,7 @@ public sealed class DiscordOutboxJob(
                 }
 
                 var gone = error.Code == ErrorCodes.DiscordWebhookGone;
-                webhook.RecordSend(now, error.Message, gone);
+                channel.RecordDiscordSend(now, error.Message, gone);
                 if (gone)
                 {
                     GiveUpAll(messages.Skip(index), error.Message);

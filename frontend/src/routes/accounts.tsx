@@ -37,7 +37,7 @@ export const Route = createFileRoute("/accounts")({
     warm(queryClient, getHouseholdsSuspenseQueryOptions());
     warm(queryClient, getTransfersSuspenseQueryOptions(movementsPageParams(1)));
     warmWithSettings(queryClient, (settings) => {
-      if (settings.features.recurringBills) {
+      if (settings.features.cashFlowForecast) {
         warm(queryClient, getCashFlowForecastSuspenseQueryOptions({ days: FORECAST_DAYS }));
       }
       if (settings.features.multiCurrency) {

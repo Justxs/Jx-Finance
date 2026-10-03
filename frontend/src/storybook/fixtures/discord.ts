@@ -1,42 +1,40 @@
-import { type DiscordWebhookResponse, NotificationType } from "@/api/generated/model";
+import type { DiscordSettingsResponse } from "@/api/generated/model";
 import { problemOf } from "./problems";
 
 const validationType = "https://tools.ietf.org/html/rfc9110#section-15.5.1";
 
-export const myDiscord: DiscordWebhookResponse = {
+export const discordSettings: DiscordSettingsResponse = {
+  enabled: true,
   hasWebhook: true,
-  isEnabled: true,
-  types: ["billDue", "budgetExceeded"],
   lastDeliveredAt: "2026-09-25T07:14:00Z",
   lastError: null,
   disabledByDiscord: false,
   unreadable: false,
 };
 
-export const myDiscordEmpty: DiscordWebhookResponse = {
+export const discordSettingsEmpty: DiscordSettingsResponse = {
+  enabled: false,
   hasWebhook: false,
-  isEnabled: true,
-  types: Object.values(NotificationType),
   lastDeliveredAt: null,
   lastError: null,
   disabledByDiscord: false,
   unreadable: false,
 };
 
-export const myDiscordGone: DiscordWebhookResponse = {
-  ...myDiscord,
+export const discordSettingsGone: DiscordSettingsResponse = {
+  ...discordSettings,
   lastError: "Discord says this webhook no longer exists. Create a new one and paste its URL.",
   disabledByDiscord: true,
 };
 
-export const myDiscordUnreadable: DiscordWebhookResponse = {
-  ...myDiscord,
+export const discordSettingsUnreadable: DiscordSettingsResponse = {
+  ...discordSettings,
   lastDeliveredAt: null,
   unreadable: true,
 };
 
-export const myDiscordFailing: DiscordWebhookResponse = {
-  ...myDiscord,
+export const discordSettingsFailing: DiscordSettingsResponse = {
+  ...discordSettings,
   lastError: "Discord answered 503. Try again later.",
 };
 

@@ -331,7 +331,11 @@ public sealed class SettingsEndpointTests(ApiFixture fixture) : IntegrationTestB
         bool ReceiptReading,
         bool ApiTokens,
         bool Locations,
-        bool LearnedCategories);
+        bool LearnedCategories,
+        bool Attachments,
+        bool PayeeNames,
+        bool People,
+        bool CashFlowForecast);
 
     private sealed record SettingsDto(
         string? InstanceName,

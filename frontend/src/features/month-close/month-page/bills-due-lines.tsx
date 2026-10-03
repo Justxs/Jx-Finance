@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useDeferredValue, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useRecurringBillsSuspense } from "@/api/generated";
 import type { AccountResponse, RecurringBillResponse } from "@/api/generated/model";
@@ -25,8 +25,8 @@ function BillRows({ monthEnd, accounts }: Readonly<RowsProps>) {
   const money = useMoney();
   const formatDate = useIsoDate();
   const [confirming, setConfirming] = useState<RecurringBillResponse | null>(null);
-  const due = useRecurringBillsSuspense()
-    .data.filter((bill) => bill.isActive && bill.nextDueDate <= monthEnd)
+  const due = useDeferredValue(useRecurringBillsSuspense().data)
+    .filter((bill) => bill.isActive && bill.nextDueDate <= monthEnd)
     .toSorted((a, b) => a.nextDueDate.localeCompare(b.nextDueDate));
 
   function amountOf(bill: RecurringBillResponse) {

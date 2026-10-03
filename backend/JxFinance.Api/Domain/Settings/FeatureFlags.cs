@@ -16,9 +16,13 @@ public sealed record FeatureFlags(
     bool ReceiptReading,
     bool ApiTokens,
     bool Locations,
-    bool LearnedCategories)
+    bool LearnedCategories,
+    bool Attachments,
+    bool PayeeNames,
+    bool People,
+    bool CashFlowForecast)
 {
-    public static FeatureFlags All { get; } = new(true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true);
+    public static FeatureFlags All { get; } = new(true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true);
 
     public static FeatureFlags Default { get; } = All with { ApiTokens = false, Locations = false, LearnedCategories = false };
 
@@ -40,6 +44,10 @@ public sealed record FeatureFlags(
         Feature.ApiTokens => ApiTokens,
         Feature.Locations => Locations,
         Feature.LearnedCategories => LearnedCategories,
+        Feature.Attachments => Attachments,
+        Feature.PayeeNames => PayeeNames,
+        Feature.People => Households && People,
+        Feature.CashFlowForecast => CashFlowForecast,
         _ => true,
     };
 }

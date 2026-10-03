@@ -1,12 +1,14 @@
 using FastEndpoints;
 using JxFinance.Common.Payees;
 using JxFinance.Common.References;
+using JxFinance.Common.Settings;
 using JxFinance.Common.Subscriptions;
 using JxFinance.Common.Unusual;
 using JxFinance.Domain.Accounts;
 using JxFinance.Domain.Categories;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.RecurringBills;
+using JxFinance.Domain.Settings;
 using JxFinance.Endpoints.RecurringBills.DismissSubscriptionCandidate;
 using JxFinance.Endpoints.RecurringBills.Interfaces;
 using JxFinance.Endpoints.RecurringBills.Shared;
@@ -19,7 +21,8 @@ namespace JxFinance.Endpoints.RecurringBills.Services;
 public sealed class SubscriptionDetectionService(
     AppDbContext db,
     IClock clock,
-    IReferenceGuard references) : ISubscriptionDetectionService
+    IReferenceGuard references,
+    IInstanceSettingsStore settings) : ISubscriptionDetectionService
 {
     public async Task<IReadOnlyList<SubscriptionCandidateResponse>> DetectAsync(CancellationToken cancellationToken)
     {
@@ -58,7 +61,9 @@ public sealed class SubscriptionDetectionService(
             .ThenBy(c => c.Description, StringComparer.Ordinal)
             .Take(SubscriptionDetection.MaxCandidates)
             .ToList();
-        var names = await db.PayeeNamesForAsync(shown.Select(c => c.Description), cancellationToken);
+        var names = shown.Count > 0 && settings.Current.IsEnabled(Feature.PayeeNames)
+            ? await db.PayeeNamesForAsync(shown.Select(c => c.Description), cancellationToken)
+            : new Dictionary<string, string>();
         return shown.Select(c => c with { Name = names.GetValueOrDefault(c.Description) }).ToList();
     }
 

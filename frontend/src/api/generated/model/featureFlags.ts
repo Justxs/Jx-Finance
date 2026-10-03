@@ -23,4 +23,8 @@ export interface FeatureFlags {
   apiTokens: boolean;
   locations: boolean;
   learnedCategories: boolean;
+  attachments: boolean;
+  payeeNames: boolean;
+  people: boolean;
+  cashFlowForecast: boolean;
 }

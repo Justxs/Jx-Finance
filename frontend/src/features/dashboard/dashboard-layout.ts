@@ -47,7 +47,7 @@ const cardFeature: Partial<Record<DashboardCard, FeatureKey>> = {
   budgets: "budgets",
   netWorth: "netWorth",
   upcomingBills: "recurringBills",
-  cashFlow: "recurringBills",
+  cashFlow: "cashFlowForecast",
   goals: "goals",
 };
 

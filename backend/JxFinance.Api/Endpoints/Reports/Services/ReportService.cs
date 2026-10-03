@@ -42,7 +42,7 @@ public sealed class ReportService(
         var earlier = ComparisonWindow.For(comparison, period);
 
         var investmentFlows = await investmentCashFlows.GetFlowsAsync(period, earlier, cancellationToken);
-        var shares = await ShareSlices.OfAsync(db, currentUser.Id, share, period, earlier, cancellationToken);
+        var shares = await ShareSlices.OfAsync(db, currentUser.Id, share, period, earlier, settings.Current.IsEnabled(Feature.People), cancellationToken);
 
         var expenseAttributions = await attributions.GetAttributionsAsync(period, earlier, FlowType.Expense, shares, cancellationToken);
         var incomeAttributions = await attributions.GetAttributionsAsync(period, earlier, FlowType.Income, shares, cancellationToken);
@@ -222,7 +222,9 @@ public sealed class ReportService(
                     .FirstOrDefault(),
             })
             .ToDictionaryAsync(entry => entry.Key, entry => entry.Label, cancellationToken);
-        var names = await db.PayeeNamesForAsync(keys, cancellationToken);
+        var names = settings.Current.IsEnabled(Feature.PayeeNames)
+            ? await db.PayeeNamesForAsync(keys, cancellationToken)
+            : new Dictionary<string, string>();
 
         return totals
             .Select(item => item.Key.Length == 0

@@ -16,6 +16,7 @@ import {
   type QuickAddSources,
   buildCommandEntries,
   quickAddEntry,
+  searchTransactionsEntry,
 } from "./command-entries";
 import { filterCommandEntries, foldText, matchScore } from "./command-search";
 
@@ -86,12 +87,12 @@ describe("buildCommandEntries", () => {
 
     expect(entries).not.toContain("page-users");
     expect(entries).not.toContain("page-settings");
-    expect(entries).not.toContain("page-settings-email");
+    expect(entries).not.toContain("page-settings-notification-providers");
     expect(entries).not.toContain("page-settings-backups");
     expect(entries).not.toContain("action-backup");
   });
 
-  test("an administrator is offered them, the email section included", () => {
+  test("an administrator is offered them, the notification providers included", () => {
     const entries = ids(buildCommandEntries(sources({ isAdmin: true })));
 
     expect(entries).toEqual(
@@ -99,7 +100,7 @@ describe("buildCommandEntries", () => {
         "page-users",
         "page-settings",
         "page-settings-features",
-        "page-settings-email",
+        "page-settings-notification-providers",
         "page-settings-backups",
         "action-backup",
       ]),
@@ -215,6 +216,26 @@ describe("quickAddEntry", () => {
   test("text that is not an amount and a payee offers nothing", () => {
     expect(quickAddEntry("tags", quickSources())).toBeNull();
     expect(quickAddEntry("-3 maxima", quickSources())).toBeNull();
+  });
+});
+
+describe("searchTransactionsEntry", () => {
+  test("typed text opens the ledger searched for it", () => {
+    const entry = searchTransactionsEntry(
+      "  maxima ",
+      (key, options) => `${key} ${JSON.stringify(options ?? {})}`,
+    );
+
+    expect(entry?.label).toBe('commandPalette.searchTransactions {"search":"maxima"}');
+    expect(entry?.target).toEqual({
+      kind: "navigate",
+      link: { to: "/transactions", search: { search: "maxima" } },
+    });
+  });
+
+  test("an empty or blank box offers no search", () => {
+    expect(searchTransactionsEntry("", t)).toBeNull();
+    expect(searchTransactionsEntry("   ", t)).toBeNull();
   });
 });
 

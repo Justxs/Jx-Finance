@@ -193,6 +193,7 @@ export function FillFromReceipt({
   const { t } = useTranslation();
   const usableCurrencies = useUsableCurrencies();
   const locationsEnabled = useFeature("locations");
+  const attachedTo = useFeature("attachments") ? transactionId : undefined;
   const abort = useRef<AbortController | null>(null);
   const [source, setSource] = useState<ReceiptSource | null>(null);
   const [reading, setReading] = useState<ReceiptReadingResponse | null>(null);
@@ -226,14 +227,14 @@ export function FillFromReceipt({
   function pick(file: File) {
     readMutation.reset();
     const document = isReceiptDocument(file);
-    if (!transactionId || document) {
+    if (!attachedTo || document) {
       onReceiptFile?.(document ? null : file);
       read({ file });
       return;
     }
 
     uploadMutation.mutate(
-      { transactionId, data: { file } },
+      { transactionId: attachedTo, data: { file } },
       { onSuccess: (attachment) => read({ attachmentId: attachment.id }) },
     );
   }
@@ -347,10 +348,10 @@ export function FillFromReceipt({
   return (
     <div className="col-span-full space-y-1.5">
       <div className="flex flex-wrap items-center gap-2">
-        {transactionId ? (
+        {attachedTo ? (
           <QueryBoundary fallback={<ButtonSkeleton size="sm" className="w-40" />}>
             <AttachmentPicker
-              transactionId={transactionId}
+              transactionId={attachedTo}
               busy={busy}
               onRead={(attachmentId) => {
                 readMutation.reset();

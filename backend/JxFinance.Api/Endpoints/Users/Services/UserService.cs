@@ -10,6 +10,7 @@ using JxFinance.Endpoints.Users.GetUsers;
 using JxFinance.Endpoints.Users.Interfaces;
 using JxFinance.Endpoints.Users.ResetUserPassword;
 using JxFinance.Endpoints.Users.UpdateMyDigestScopes;
+using JxFinance.Endpoints.Users.UpdateMyDiscordNotifications;
 using JxFinance.Endpoints.Users.UpdateMyEmailNotifications;
 using JxFinance.Endpoints.Users.UpdateMyLanguage;
 using JxFinance.Endpoints.Users.UpdateMyProfile;
@@ -315,6 +316,11 @@ public sealed class UserService(
         UpdateMyEmailNotificationsRequest request,
         CancellationToken cancellationToken) =>
         UpdateOwnAsync(user => user.EmailNotificationTypes = [.. request.Types], cancellationToken);
+
+    public Task<Result<UserProfileResponse>> UpdateOwnDiscordNotificationsAsync(
+        UpdateMyDiscordNotificationsRequest request,
+        CancellationToken cancellationToken) =>
+        UpdateOwnAsync(user => user.DiscordNotificationTypes = [.. request.Types], cancellationToken);
 
     public Task<Result<UserProfileResponse>> UpdateOwnLanguageAsync(
         UpdateMyLanguageRequest request,

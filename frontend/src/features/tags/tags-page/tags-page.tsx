@@ -24,19 +24,13 @@ import { optimisticRemoval } from "@/lib/optimistic";
 
 export function TagsPage() {
   const { t } = useTranslation();
+  const payeeNamesEnabled = useFeature("payeeNames");
   const locationsEnabled = useFeature("locations");
   const tags = useEditableList(
     useTagsSuspense().data,
     useDeleteTag({ mutation: optimisticRemoval<TagResponse>(getTagsQueryKey()) }),
     (tag) => tag.name,
     "tag",
-  );
-  const payees = useEditableList(
-    usePayeeNamesSuspense().data,
-    useDeletePayeeName({
-      mutation: optimisticRemoval<PayeeNameResponse>(getPayeeNamesQueryKey()),
-    }),
-    (payee) => payee.name,
   );
 
   return (
@@ -68,6 +62,49 @@ export function TagsPage() {
         ))}
       </ListSection>
 
+      {payeeNamesEnabled ? (
+        <QueryBoundary
+          fallback={
+            <ListSectionSkeleton description>
+              <NamedRowsSkeleton rows={2} />
+            </ListSectionSkeleton>
+          }
+          errorSubject={t("payees.title")}
+        >
+          <PayeeNamesSection />
+        </QueryBoundary>
+      ) : null}
+
+      {locationsEnabled ? (
+        <QueryBoundary
+          fallback={
+            <ListSectionSkeleton description>
+              <NamedRowsSkeleton rows={3} />
+            </ListSectionSkeleton>
+          }
+          errorSubject={t("places.title")}
+        >
+          <PlacesSection />
+        </QueryBoundary>
+      ) : null}
+
+      <ConfirmDeleteDialog {...tags.dialogProps} />
+    </div>
+  );
+}
+
+function PayeeNamesSection() {
+  const { t } = useTranslation();
+  const payees = useEditableList(
+    usePayeeNamesSuspense().data,
+    useDeletePayeeName({
+      mutation: optimisticRemoval<PayeeNameResponse>(getPayeeNamesQueryKey()),
+    }),
+    (payee) => payee.name,
+  );
+
+  return (
+    <>
       <EditModal {...payees.editProps} title={(payee) => `${t("payees.editTitle")}: ${payee.name}`}>
         {(payee, close) => (
           <PayeeNameForm payee={payee.payeeKey} initialName={payee.name} onClose={close} />
@@ -92,21 +129,7 @@ export function TagsPage() {
         ))}
       </ListSection>
 
-      {locationsEnabled ? (
-        <QueryBoundary
-          fallback={
-            <ListSectionSkeleton description>
-              <NamedRowsSkeleton rows={3} />
-            </ListSectionSkeleton>
-          }
-          errorSubject={t("places.title")}
-        >
-          <PlacesSection />
-        </QueryBoundary>
-      ) : null}
-
-      <ConfirmDeleteDialog {...tags.dialogProps} />
       <ConfirmDeleteDialog {...payees.dialogProps} />
-    </div>
+    </>
   );
 }

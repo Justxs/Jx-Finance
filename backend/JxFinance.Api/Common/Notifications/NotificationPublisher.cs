@@ -24,6 +24,7 @@ public sealed class NotificationPublisher(
     private readonly Dictionary<Guid, IReadOnlySet<NotificationType>> discordTypes = [];
     private readonly Dictionary<Guid, EmailRecipient> emailRecipients = [];
     private readonly Dictionary<Guid, string?> languages = [];
+    private readonly Dictionary<Guid, string> names = [];
     private readonly HashSet<string> queuedKeys = new(StringComparer.Ordinal);
     private readonly HashSet<string> queuedEmailKeys = new(StringComparer.Ordinal);
 
@@ -44,7 +45,7 @@ public sealed class NotificationPublisher(
         await PreloadUsersAsync(missing, since, cancellationToken);
         if (store.Current.DiscordEnabled)
         {
-            await PreloadDiscordAsync(missing, since, cancellationToken);
+            await PreloadDiscordKeysAsync(missing, since, cancellationToken);
         }
     }
 
@@ -81,11 +82,16 @@ public sealed class NotificationPublisher(
             .AsNoTracking()
             .Where(AppUser.IsActive)
             .Where(u => userIds.Contains(u.Id))
-            .Select(u => new { u.Id, u.Email, u.EmailConfirmed, u.DisplayName, u.EmailNotificationTypes, u.Language })
+            .Select(u => new { u.Id, u.Email, u.EmailConfirmed, u.DisplayName, u.EmailNotificationTypes, u.DiscordNotificationTypes, u.Language })
             .ToListAsync(cancellationToken);
         foreach (var user in users)
         {
             languages[user.Id] = user.Language;
+            names[user.Id] = user.DisplayName;
+            if (store.Current.DiscordEnabled)
+            {
+                discordTypes[user.Id] = user.DiscordNotificationTypes.ToHashSet();
+            }
         }
 
         var recipients = users.Where(u => u.EmailConfirmed && u.Email != null && u.EmailNotificationTypes.Count > 0).ToList();
@@ -108,20 +114,8 @@ public sealed class NotificationPublisher(
         queuedEmailKeys.UnionWith(queued);
     }
 
-    private async Task PreloadDiscordAsync(List<Guid> userIds, DateTimeOffset since, CancellationToken cancellationToken)
+    private async Task PreloadDiscordKeysAsync(List<Guid> userIds, DateTimeOffset since, CancellationToken cancellationToken)
     {
-        var webhooks = await db.DiscordWebhooks
-            .IgnoreQueryFilters(QueryFilters.OwnerOnly)
-            .AsNoTracking()
-            .Where(w => userIds.Contains(w.UserId) && w.IsEnabled && w.DisabledByDiscordAt == null)
-            .Where(w => db.Users.Where(AppUser.IsActive).Select(u => u.Id).Contains(w.UserId))
-            .Select(w => new { w.UserId, w.Types })
-            .ToListAsync(cancellationToken);
-        foreach (var webhook in webhooks)
-        {
-            discordTypes[webhook.UserId] = webhook.Types.ToHashSet();
-        }
-
         var queued = await db.DiscordMessages
             .Where(m => userIds.Contains(m.UserId) && m.CreatedAt >= since && m.DedupeKey != null)
             .Select(m => m.DedupeKey!)
@@ -136,7 +130,11 @@ public sealed class NotificationPublisher(
         {
             UserId = notification.UserId,
             NotificationType = notification.Type,
-            Content = NotificationTexts.Discord(LanguageOf(notification.UserId), notification, options.Value.SiteUrl),
+            Content = NotificationTexts.Discord(
+                LanguageOf(notification.UserId),
+                notification,
+                names.GetValueOrDefault(notification.UserId, string.Empty),
+                options.Value.SiteUrl),
             DedupeKey = key,
             CreatedAt = now,
             NextAttemptAt = now,

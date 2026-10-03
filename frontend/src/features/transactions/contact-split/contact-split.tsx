@@ -17,11 +17,12 @@ import {
   isOptimistic,
   isPurchase,
 } from "@/features/transactions/transaction-amount/transaction-row";
-import { useFeature } from "@/hooks/use-settings";
+import { useSettings } from "@/hooks/use-settings";
 
 export function useContactSplits() {
   const { t } = useTranslation();
-  const enabled = useFeature("households");
+  const { features } = useSettings();
+  const enabled = features.households && features.people;
   const contacts = useQuery({ ...getContactsSuspenseQueryOptions(), enabled }).data ?? [];
   const accounts = useQuery({ ...getAccountsSuspenseQueryOptions(), enabled }).data ?? [];
   const me = useQuery({ ...getMeQueryOptions(), enabled }).data;

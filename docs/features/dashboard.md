@@ -52,7 +52,7 @@ A transaction [spread over months](transactions.md#spreading-over-months) counts
 
 The month's expenses, the trend and the category breakdown are net of [refund](transactions.md#refunds)s, which are expenses with a negative amount; a category whose refunds exceed its spending in the month shows its negative net last with an empty bar (or inside Other, past the first five), and the ledger's recent rows show a refund as "+" money back with a Refund tag.
 
-Since 2026-10-02 the month header carries the [My share](household-settle-up.md#my-share) toggle while `Households` is on. Pressed, the summary's income, expenses and net, the monthly trend, the category breakdown, the spending pace and the budgets card ask with `share=mine` and count a split expense at the member's own share; the total balance, the accounts, net worth and the other cards are unchanged.
+Since 2026-10-02, with [My share](household-settle-up.md#my-share) chosen in Settings › Personal › Appearance while `Households` is on, the summary's income, expenses and net, the monthly trend, the category breakdown, the spending pace and the budgets card ask with `share=mine` and count a split expense at the member's own share; the total balance, the accounts, net worth and the other cards are unchanged.
 
 ## Goals
 

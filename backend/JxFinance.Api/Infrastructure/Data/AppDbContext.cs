@@ -106,7 +106,6 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, ICurren
     public DbSet<PersonalApiToken> PersonalApiTokens => Set<PersonalApiToken>();
     public DbSet<ApiIdempotencyKey> ApiIdempotencyKeys => Set<ApiIdempotencyKey>();
     public DbSet<EmailMessage> EmailMessages => Set<EmailMessage>();
-    public DbSet<DiscordWebhook> DiscordWebhooks => Set<DiscordWebhook>();
     public DbSet<DiscordMessage> DiscordMessages => Set<DiscordMessage>();
     public DbSet<DeletionEntry> DeletionEntries => Set<DeletionEntry>();
     public DbSet<DeletionChange> DeletionChanges => Set<DeletionChange>();

@@ -1,16 +1,22 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, userEvent } from "storybook/test";
+import { expect, userEvent, waitFor } from "storybook/test";
+import { getSettingsMockHandler } from "@/api/generated/settings/settings.msw";
 import { i18n } from "@/lib/i18n";
 import { AMOUNT_MASK } from "@/lib/mask-amount";
-import { locales, pageSizes, readPreferences } from "@/stores/preferences";
+import { locales, pageSizes, readPreferences, savePreferences } from "@/stores/preferences";
 import { fonts, palettes, textSizes, themes } from "@/stores/theme-store";
 import { SAMPLE_AMOUNT, withSampleAmount } from "@/storybook/decorators";
+import { settingsWith } from "@/storybook/fixtures";
+import { withHandlers } from "@/storybook/handlers";
 import { AppearancePicker } from "./appearance-picker";
 
 const meta = {
   title: "Components/AppearancePicker",
   component: AppearancePicker,
   parameters: { layout: "padded" },
+  beforeEach() {
+    savePreferences({ myShare: false });
+  },
 } satisfies Meta<typeof AppearancePicker>;
 
 export default meta;
@@ -26,6 +32,7 @@ export const Default: Story = {
       canvas.getByRole("radiogroup", { name: "Typeface" }),
       canvas.getByRole("radiogroup", { name: "Text size" }),
       canvas.getByRole("radiogroup", { name: "Rows per page" }),
+      canvas.getByRole("radiogroup", { name: "Count" }),
     ]);
     await expect(canvas.getAllByRole("radio")).toHaveLength(
       themes.length +
@@ -35,7 +42,8 @@ export const Default: Story = {
         fonts.length +
         textSizes.length +
         pageSizes.length +
-        1,
+        1 +
+        2,
     );
     await expect(canvas.getByRole("radio", { name: "Light" })).toBeChecked();
     await expect(canvas.getByRole("radio", { name: "English" })).toBeChecked();
@@ -43,6 +51,7 @@ export const Default: Story = {
     await expect(canvas.getByRole("radio", { name: "Ledger navy" })).toBeChecked();
     await expect(canvas.getByRole("radio", { name: "Classic" })).toBeChecked();
     await expect(canvas.getByRole("radio", { name: "Default" })).toBeChecked();
+    await expect(canvas.getByRole("radio", { name: "Full amount" })).toBeChecked();
   },
 };
 
@@ -118,5 +127,24 @@ export const ChooseRowsPerPage: Story = {
     await expect(readPreferences().pageSize).toBe(50);
     await userEvent.click(canvas.getByRole("radio", { name: "Installation default (20)" }));
     await expect(readPreferences().pageSize).toBeUndefined();
+  },
+};
+
+export const ChooseMyShare: Story = {
+  play: async ({ canvas }) => {
+    await userEvent.click(canvas.getByRole("radio", { name: "My share" }));
+    await expect(canvas.getByRole("radio", { name: "My share" })).toBeChecked();
+    await expect(readPreferences().myShare).toBe(true);
+    await userEvent.click(canvas.getByRole("radio", { name: "Full amount" }));
+    await expect(readPreferences().myShare).toBe(false);
+  },
+};
+
+export const WithoutHouseholds: Story = {
+  parameters: withHandlers(
+    getSettingsMockHandler(settingsWith({ features: { households: false } })),
+  ),
+  play: async ({ canvas }) => {
+    await waitFor(() => expect(canvas.queryByRole("radiogroup", { name: "Count" })).toBeNull());
   },
 };

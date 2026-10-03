@@ -2,7 +2,7 @@
 
 Back to the [feature walkthrough](README.md). See also [Household settle-up](household-settle-up.md), whose split and balance rules this page reuses, [Households and sharing](households-and-sharing.md), [decisions](../decisions/households-and-sharing.md#people-outside-the-household) and [Trash and undo](trash-and-undo.md).
 
-Backend `Contacts` (`GetContacts`, `CreateContact`, `UpdateContact`, `DeleteContact`, `GetContactEntries`, `CreateContactPayment`, `DeleteContactPayment`, `CreateContactSplit`, `UpdateContactSplit`, `DeleteContactSplit`, `Services/ContactService.cs`, `Services/ContactSplitMarks.cs`), the shared rules in `Common/SettleUp` (`ShareAllocator`, `SettleUpBalances`, `ContactBalances`, `SplitRules`, `SettleUpText`), the entities `Contact`, `ContactSplit`, `ContactSplitShare` and `ContactPayment` in `Domain/Contacts`, the `contactSplit` marker of `Transactions`, and the three kinds in `TrashRestorers` and `Retention`. Frontend `households/people-section`, `households/contact-form`, `households/contact-payment-form`, `households/contact-entries`, `households/contact-split-form` and `transactions/contact-split` (the row action). Gated by `Households`; there is no switch of its own.
+Backend `Contacts` (`GetContacts`, `CreateContact`, `UpdateContact`, `DeleteContact`, `GetContactEntries`, `CreateContactPayment`, `DeleteContactPayment`, `CreateContactSplit`, `UpdateContactSplit`, `DeleteContactSplit`, `Services/ContactService.cs`, `Services/ContactSplitMarks.cs`), the shared rules in `Common/SettleUp` (`ShareAllocator`, `SettleUpBalances`, `ContactBalances`, `SplitRules`, `SettleUpText`), the entities `Contact`, `ContactSplit`, `ContactSplitShare` and `ContactPayment` in `Domain/Contacts`, the `contactSplit` marker of `Transactions`, and the three kinds in `TrashRestorers` and `Retention`. Frontend `households/people-section`, `households/contact-form`, `households/contact-payment-form`, `households/contact-entries`, `households/contact-split-form` and `transactions/contact-split` (the row action). Behind its own `People` switch since 2026-10-03, which counts as on only while `Households` is on too.
 
 Shipped on 2026-10-01. A member keeps track of money with friends and others who have no login: a dinner they paid for and split with two friends, fifty euros lent until payday, a concert ticket a friend bought for them. Each such person is a personal record with a running balance per currency, and "Record payment" writes down money that changed hands. Nobody else sees these people, their balances or their history.
 
@@ -23,7 +23,7 @@ The People section sits on the Households page under Settings › Shared, below 
 
 ## Splitting a purchase with people
 
-"Split with a person" is in the row menu of an expense with a positive amount on an account the signed-in member owns, next to "Split with household", while `Households` is on and the member has at least one person. A row that is split with a household does not offer it, and a row split with people does not offer the household split: a transaction is split once, either way. On a split row the action reads "Edit split with people".
+"Split with a person" is in the row menu of an expense with a positive amount on an account the signed-in member owns, next to "Split with household", while `Households` and `People` are on and the member has at least one person. A row that is split with a household does not offer it, and a row split with people does not offer the household split: a transaction is split once, either way. On a split row the action reads "Edit split with people".
 
 The dialog is the household split's: Equally, By shares or Exact amounts, then one checkbox per person with the member first, under their own name, and a preview under each of what they pay, computed by `share-allocation.ts`. The member can leave themselves out, which records the whole amount as owed: that is how money lent through an ordinary bank payment is recorded, from the expense row the bank import brought. Saving with nobody but the member is refused.
 
@@ -77,6 +77,10 @@ Moving a split transaction to another account from the ledger's selection keeps 
 ## Personal, not audited
 
 People, splits with them and payments with them are `OwnableEntity` rows under the ordinary owner filter: only the member who made them sees them, whatever the household switcher shows. They are not shareable and never reach the household's [activity log](audit-log.md), which records only what is shared into a household.
+
+## The switch
+
+`People` gates `/api/contacts` through `ContactsGroup`, and `FeatureFlags.IsEnabled(Feature.People)` is `Households && People`, so turning households off turns people off with them. Off, the `contactSplit` marker reads as null, Open balances in net worth counts only the household balances, My share leaves the people's part of a split out (`ShareSlices` takes `withPeople`), the three people kinds leave the trash list and refuse a restore, and the Households page leaves out the People section. Nothing is deleted, and the rule that a transaction is split once still holds while the switch is off.
 
 ## Backups, export and API tokens
 

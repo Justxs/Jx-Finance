@@ -2,7 +2,6 @@ import { Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { ChevronLeft, ChevronRight, SlidersHorizontal } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useDashboardLayoutSuspense } from "@/api/generated";
-import { MyShareToggle } from "@/components/my-share-toggle/my-share-toggle";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { Button, buttonVariants } from "@/components/ui/button/button";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
@@ -82,7 +81,6 @@ function MonthHeader({ month, current, onChange }: Readonly<MonthHeaderProps>) {
         {monthName(month)}
       </h1>
       <div className="flex flex-wrap items-center gap-2">
-        <MyShareToggle />
         <nav aria-label={t("dashboard.month.label")} className="flex items-center gap-1">
           <span
             className={cn(

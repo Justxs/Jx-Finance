@@ -63,6 +63,25 @@ public sealed class AttachmentEndpointTests(ApiFixture fixture) : IntegrationTes
         Assert.Equal(Convert.ToHexStringLower(SHA256.HashData(stored)), attachment.Sha256);
     }
 
+    [Fact]
+    public async Task The_switch_off_closes_the_files_and_hides_the_count_until_it_is_on_again()
+    {
+        var transaction = await NewTransactionAsync(Client);
+        var attachment = (await (await UploadAsync(Client, transaction, Png(), "receipt.png", "image/png"))
+            .Content.ReadFromJsonAsync<AttachmentDto>(TestContext.Current.CancellationToken))!;
+
+        await using (await FeatureOffAsync("attachments"))
+        {
+            Assert.Equal(0, (await Client.GetFromJsonAsync<CountDto>($"/api/transactions/{transaction}", TestContext.Current.CancellationToken))!.AttachmentCount);
+            await AssertProblemAsync(await Client.GetAsync($"/api/transactions/{transaction}/attachments", TestContext.Current.CancellationToken), HttpStatusCode.NotFound, "feature.disabled");
+            await AssertProblemAsync(await Client.GetAsync($"/api/attachments/{attachment.Id}/content", TestContext.Current.CancellationToken), HttpStatusCode.NotFound, "feature.disabled");
+            await AssertProblemAsync(await UploadAsync(Client, transaction, Png(), "second.png", "image/png"), HttpStatusCode.NotFound, "feature.disabled");
+        }
+
+        Assert.Equal([attachment.Id], (await ListAsync(Client, transaction)).Select(a => a.Id));
+        Assert.Equal(1, (await Client.GetFromJsonAsync<CountDto>($"/api/transactions/{transaction}", TestContext.Current.CancellationToken))!.AttachmentCount);
+    }
+
     [Theory]
     [InlineData("image/jpeg")]
     [InlineData("image/png")]

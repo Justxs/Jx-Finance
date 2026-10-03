@@ -4,15 +4,12 @@ import type { UserProfileResponse } from "@/api/generated/model";
 import {
   getCreateUserMockHandler,
   getDeactivateUserMockHandler,
-  getDeleteMyDiscordMockHandler,
   getExportMyDataMockHandler,
   getImportMyDataMockHandler,
-  getMyDiscordMockHandler,
   getReactivateUserMockHandler,
   getResetUserPasswordMockHandler,
-  getTestMyDiscordMockHandler,
   getUpdateMyDigestScopesMockHandler,
-  getUpdateMyDiscordMockHandler,
+  getUpdateMyDiscordNotificationsMockHandler,
   getUsersMockHandler,
   getUpdateMyEmailNotificationsMockHandler,
   getUpdateMyLanguageMockHandler,
@@ -23,7 +20,6 @@ import {
   adminPassword,
   currentUser,
   memberImportResult,
-  myDiscord,
   userProfile,
   users,
   wrongAdminPasswordProblem,
@@ -96,6 +92,16 @@ export const userHandlers = [
       ),
     };
   }),
+  getUpdateMyDiscordNotificationsMockHandler(async ({ request }) => {
+    const body = await readBody(request);
+    const chosen: unknown[] = Array.isArray(body.types) ? body.types : [];
+    return {
+      ...currentUser,
+      discordNotificationTypes: Object.values(NotificationType).filter((kind) =>
+        chosen.includes(kind),
+      ),
+    };
+  }),
   getUpdateMyLanguageMockHandler(async ({ request }) => ({
     ...currentUser,
     language: text((await readBody(request)).language) ?? null,
@@ -128,20 +134,6 @@ export const userHandlers = [
     const body = await readBody(request);
     return mergeProfile(user, { role: body.role });
   }),
-  getMyDiscordMockHandler(myDiscord),
-  getUpdateMyDiscordMockHandler(async ({ request }) => {
-    const body = await readBody(request);
-    const chosen: unknown[] = Array.isArray(body.types) ? body.types : myDiscord.types;
-    return {
-      ...myDiscord,
-      hasWebhook: true,
-      isEnabled: body.isEnabled === true,
-      types: Object.values(NotificationType).filter((kind) => chosen.includes(kind)),
-      disabledByDiscord: text(body.webhookUrl) ? false : myDiscord.disabledByDiscord,
-    };
-  }),
-  getDeleteMyDiscordMockHandler(),
-  getTestMyDiscordMockHandler(),
   getImportMyDataMockHandler(memberImportResult),
   onRouteOf(getExportMyDataMockHandler(new Blob()), () =>
     HttpResponse.arrayBuffer(

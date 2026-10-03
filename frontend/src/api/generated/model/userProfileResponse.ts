@@ -16,6 +16,7 @@ export interface UserProfileResponse {
   isActive: boolean;
   emailConfirmed: boolean;
   emailNotificationTypes: NotificationType[];
+  discordNotificationTypes: NotificationType[];
   /** @nullable */
   language: string | null;
   monthlyDigestEverything: boolean;

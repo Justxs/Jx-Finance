@@ -11,6 +11,7 @@ public sealed class AppUserConfiguration : IEntityTypeConfiguration<AppUser>
         builder.Property(u => u.DisplayName).HasMaxLength(100);
         builder.Property(u => u.Language).HasMaxLength(5);
         builder.Property(u => u.EmailNotificationTypes).StoredAsJson().HasDefaultValueSql("'[]'::jsonb");
+        builder.Property(u => u.DiscordNotificationTypes).StoredAsJson().HasDefaultValueSql("'[]'::jsonb");
         builder.Property(u => u.MonthlyDigestEverything).HasDefaultValue(true);
         builder.Property(u => u.MonthlyDigestHouseholdIds).HasDefaultValueSql("'{}'::uuid[]");
         builder.ComplexProperty(u => u.DashboardLayout, layout =>

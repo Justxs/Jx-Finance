@@ -2,7 +2,7 @@
 
 Back to the [feature walkthrough](README.md). See also [decisions](../decisions/reports.md), [Reports: expense by payee](reports.md#expense-by-payee), [Transactions](transactions.md).
 
-Backend `Payees` (`GetPayeeNames`, `SetPayeeName`, `DeletePayeeName`, group `PayeesGroup`), `Common/Payees/PayeeNameLookup.cs`, and the name parts of `Transactions`, `Reports` and `RecurringBills`. Frontend `payees` (`payee-name-form`), `transactions/payee-naming` (the row action), and the "Payee names" section of the Tags page. Always on; added on 2026-09-30.
+Backend `Payees` (`GetPayeeNames`, `SetPayeeName`, `DeletePayeeName`, group `PayeesGroup`), `Common/Payees/PayeeNameLookup.cs`, and the name parts of `Transactions`, `Reports` and `RecurringBills`. Frontend `payees` (`payee-name-form`), `transactions/payee-naming` (the row action), and the "Payee names" section of the Tags page. Added on 2026-09-30; behind its own `PayeeNames` switch, on by default, since 2026-10-03.
 
 A bank writes the same shop many ways: "MAXIMA LT, UAB 20260402", "Maxima LT UAB 20260418". Every transaction already stores the normalized form as `PayeeKey` (`maxima lt uab`), taken from the [statement's payee](bank-statement-import.md#the-statements-payee) when an import stored one and from the description otherwise, which is how the report, unusual amounts and suggested rules group payees. A payee name puts a word the member chose on that key, once, so "Maxima" reads in the ledger, the report and the recurring-entry suggestions instead of the bank's text.
 
@@ -40,6 +40,10 @@ In the ledger every row with a description or a statement payee has **Name payee
 | Recurring entries, suggestions | Each candidate carries `name`; the row and the prefilled entry use it before the capitalised key |
 
 `TransactionResponse.payeeName`, `PayeeBreakdownItem.name` and `SubscriptionCandidateResponse.name` are filled by one query per response, `PayeeNamesForAsync` over the keys on the page, so a ledger page costs one extra indexed read. The CSV and PDF exports keep the bank's description, because an export is the record. Setting or removing a name invalidates the payee list, the ledger, the report and the suggestions.
+
+## The switch
+
+`PayeeNames` gates `/api/payees` through `PayeesGroup`. Off, `TransactionService`, `ReportService` and `SubscriptionDetectionService` skip the name lookup, so `payeeName` and the two `name` fields read as null and every place falls back to the bank's text, and the ledger search stops matching names. The row menu leaves out Name payee and the Tags page leaves out its section. The names stay in their table and come back when the switch is on. The member's own export still writes them, into the `PayeeNames` table and the journal's payee field, because the export is the member's data rather than a screen.
 
 ## Tests
 

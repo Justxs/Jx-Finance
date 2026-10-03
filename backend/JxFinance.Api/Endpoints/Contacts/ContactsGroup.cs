@@ -4,4 +4,4 @@ using JxFinance.Domain.Settings;
 
 namespace JxFinance.Endpoints.Contacts;
 
-public sealed class ContactsGroup() : ApiGroup(ApiTags.Contacts, Feature.Households, tokenReadable: true);
+public sealed class ContactsGroup() : ApiGroup(ApiTags.Contacts, Feature.People, tokenReadable: true);

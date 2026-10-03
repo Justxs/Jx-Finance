@@ -148,8 +148,10 @@ export function DiscordFormSkeleton() {
   return (
     <div aria-hidden="true" className="mt-4 space-y-5">
       <CheckboxFieldSkeleton className="max-w-prose" />
-      <div className="flex justify-end pt-2">
-        <ButtonSkeleton className="w-20" />
+      <FormGridSkeleton fields={1} hints className="max-w-md" />
+      <div className="flex flex-wrap items-center gap-3">
+        <ButtonSkeleton className="w-40" />
+        <ButtonSkeleton className="ml-auto w-20" />
       </div>
     </div>
   );
@@ -218,17 +220,17 @@ function BackupSkeleton() {
 
 function SectionBodySkeleton({ section }: Readonly<{ section: SettingsSection }>) {
   switch (section) {
-    case "email":
+    case "notificationProviders":
       return (
-        <TitledSkeleton>
+        <Section aria-hidden="true">
+          <TextSkeleton size="title" width="w-40" />
+          <div className="mt-4 flex h-9 items-center gap-5 border-b">
+            <TextSkeleton size="sm" width="w-16" />
+            <TextSkeleton size="sm" width="w-16" />
+          </div>
+          <TextSkeleton size="sm" className="mt-5" width="w-3/4 max-w-prose" />
           <SmtpFormSkeleton />
-        </TitledSkeleton>
-      );
-    case "discord":
-      return (
-        <TitledSkeleton>
-          <DiscordFormSkeleton />
-        </TitledSkeleton>
+        </Section>
       );
     case "marketPrices":
       return (

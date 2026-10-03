@@ -1,6 +1,6 @@
 import { useNavigate, useSearch } from "@tanstack/react-router";
 import { ChevronLeft, ChevronRight, FileUp } from "lucide-react";
-import { useId, useRef, useState } from "react";
+import { useId, useRef, useState, ViewTransition } from "react";
 import { useTranslation } from "react-i18next";
 import {
   useAccountsSuspense,
@@ -224,11 +224,13 @@ function MonthView({ month }: Readonly<{ month: string }>) {
       <PageHeader title={t("nav.monthClose")}>
         <MonthStepper month={stepped.draft} current={current} onChange={stepped.change} />
       </PageHeader>
-      <StaleRegion stale={stale} className="space-y-5">
-        <QueryBoundary fallback={<MonthBodySkeleton />} errorSubject={t("monthClose.title")}>
-          <MonthBody month={shown.month} />
-        </QueryBoundary>
-      </StaleRegion>
+      <ViewTransition key={shown.month} name="month-results" default="none" share="auto">
+        <StaleRegion stale={stale} className="space-y-5">
+          <QueryBoundary fallback={<MonthBodySkeleton />} errorSubject={t("monthClose.title")}>
+            <MonthBody month={shown.month} />
+          </QueryBoundary>
+        </StaleRegion>
+      </ViewTransition>
     </div>
   );
 }

@@ -65,6 +65,30 @@ public sealed class PayeeNameTests(ApiFixture fixture) : IntegrationTestBase(fix
     }
 
     [Fact]
+    public async Task The_switch_off_shows_the_bank_text_and_closes_the_routes_until_it_is_on_again()
+    {
+        using var member = await CreateUserClientAsync();
+        var account = await CreateAccountAsync("1000.00", client: member);
+        await CreateTransactionAsync(member, account, null, "expense", "4.20", "2026-04-05", "LIDL 0042 VILNIUS");
+        await SetAsync(member, "LIDL 0042 VILNIUS", "Groceries");
+
+        await using (await FeatureOffAsync("payeeNames"))
+        {
+            var rows = await RowsAsync(member, "dateFrom=2026-04-01&dateTo=2026-04-30");
+            var found = await RowsAsync(member, "search=groceries");
+            var report = (await member.GetFromJsonAsync<ReportDto>("/api/reports/summary?dateFrom=2026-04-01&dateTo=2026-04-30", TestContext.Current.CancellationToken))!;
+
+            Assert.Null(Assert.Single(rows.Items).PayeeName);
+            Assert.Equal(0, found.Total);
+            Assert.Null(Assert.Single(report.ExpenseByPayee).Name);
+            await AssertProblemAsync(await member.GetAsync("/api/payees", TestContext.Current.CancellationToken), HttpStatusCode.NotFound, "feature.disabled");
+            await AssertProblemAsync(await SetAsync(member, "LIDL 0042 VILNIUS", "Lidl"), HttpStatusCode.NotFound, "feature.disabled");
+        }
+
+        Assert.Equal("Groceries", Assert.Single((await RowsAsync(member, "search=groceries")).Items).PayeeName);
+    }
+
+    [Fact]
     public async Task A_payee_with_nothing_left_after_normalizing_is_rejected()
     {
         using var member = await CreateUserClientAsync();

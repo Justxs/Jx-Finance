@@ -49,7 +49,6 @@ export const ErrorCode = {
   debtpaymentWrongType: "debt.paymentWrongType",
   debtscheduleIncomplete: "debt.scheduleIncomplete",
   decimalmalformed: "decimal.malformed",
-  discorddisabled: "discord.disabled",
   discordinvalidWebhook: "discord.invalidWebhook",
   discordrateLimited: "discord.rateLimited",
   discordrejected: "discord.rejected",

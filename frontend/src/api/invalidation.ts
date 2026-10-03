@@ -452,6 +452,7 @@ const rules: readonly Rule[] = [
   {
     after: [
       api.getUpdateMyEmailNotificationsMutationKey,
+      api.getUpdateMyDiscordNotificationsMutationKey,
       api.getUpdateMyLanguageMutationKey,
       api.getUpdateMyDigestScopesMutationKey,
     ],
@@ -483,15 +484,11 @@ const rules: readonly Rule[] = [
   },
   {
     after: [api.getUpdateDiscordSettingsMutationKey],
-    refresh: [api.getPublicSettingsQueryKey],
+    refresh: [api.getDiscordSettingsQueryKey, api.getPublicSettingsQueryKey],
   },
   {
-    after: [
-      api.getUpdateMyDiscordMutationKey,
-      api.getDeleteMyDiscordMutationKey,
-      api.getTestMyDiscordMutationKey,
-    ],
-    refresh: [api.getMyDiscordQueryKey],
+    after: [api.getSendTestDiscordMutationKey],
+    refresh: [api.getDiscordSettingsQueryKey],
   },
   {
     after: [api.getVerifyEmailMutationKey],

@@ -1,6 +1,8 @@
 using FastEndpoints;
+using JxFinance.Common.Settings;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Receipts;
+using JxFinance.Domain.Settings;
 using JxFinance.Endpoints.Receipts.GetReceiptItems;
 using JxFinance.Endpoints.Receipts.Interfaces;
 using JxFinance.Infrastructure.Data;
@@ -9,10 +11,15 @@ using Microsoft.EntityFrameworkCore;
 namespace JxFinance.Endpoints.Receipts.Services;
 
 [RegisterService<IReceiptItemReport>(LifeTime.Scoped)]
-public sealed class ReceiptItemReport(AppDbContext db) : IReceiptItemReport
+public sealed class ReceiptItemReport(AppDbContext db, IInstanceSettingsStore settings) : IReceiptItemReport
 {
     public async Task<GetReceiptItemsResponse> GetAsync(GetReceiptItemsRequest request, CancellationToken cancellationToken)
     {
+        if (!settings.Current.IsEnabled(Feature.Attachments))
+        {
+            return new GetReceiptItemsResponse([], 0);
+        }
+
         var (from, to) = (request.DateFrom!.Value, request.DateTo!.Value);
         var attached = await db.TransactionAttachments
             .Join(

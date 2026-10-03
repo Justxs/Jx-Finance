@@ -8,9 +8,11 @@ import { SectionHeader } from "@/components/ui/section/section";
 import { CreateHouseholdForm } from "@/features/households/create-household-form/create-household-form";
 import { HouseholdCard } from "@/features/households/household-card/household-card";
 import { PeopleSection, PeopleSkeleton } from "@/features/households/people-section/people-section";
+import { useFeature } from "@/hooks/use-settings";
 
 export function HouseholdsPage() {
   const { t } = useTranslation();
+  const peopleEnabled = useFeature("people");
 
   const households = useHouseholdsSuspense();
   const householdList = households.data;
@@ -29,9 +31,11 @@ export function HouseholdsPage() {
         householdList.map((household) => <HouseholdCard key={household.id} household={household} />)
       )}
 
-      <QueryBoundary fallback={<PeopleSkeleton />} errorSubject={t("households.people.title")}>
-        <PeopleSection />
-      </QueryBoundary>
+      {peopleEnabled ? (
+        <QueryBoundary fallback={<PeopleSkeleton />} errorSubject={t("households.people.title")}>
+          <PeopleSection />
+        </QueryBoundary>
+      ) : null}
     </SettingsLayout>
   );
 }

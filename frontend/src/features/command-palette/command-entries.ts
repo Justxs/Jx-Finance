@@ -99,14 +99,9 @@ const pageSections: Partial<Record<RoutePath, readonly PageSection[]>> = {
       labelKey: "settings.features.title",
     },
     {
-      id: "page-settings-email",
-      link: linkOptions({ to: "/settings", search: { section: "email" } }),
-      labelKey: "settings.smtp.title",
-    },
-    {
-      id: "page-settings-discord",
-      link: linkOptions({ to: "/settings", search: { section: "discord" } }),
-      labelKey: "settings.discord.title",
+      id: "page-settings-notification-providers",
+      link: linkOptions({ to: "/settings", search: { section: "notificationProviders" } }),
+      labelKey: "settings.notificationProviders.title",
     },
     {
       id: "page-settings-backups",
@@ -329,6 +324,21 @@ function recordEntries({ t, accounts, categories, tags }: CommandSources): Comma
 
 export function buildCommandEntries(sources: CommandSources): CommandEntry[] {
   return [...actionEntries(sources), ...pageEntries(sources), ...recordEntries(sources)];
+}
+
+export function searchTransactionsEntry(query: string, t: Translate): CommandEntry | null {
+  const search = query.trim();
+  if (search === "") {
+    return null;
+  }
+
+  return {
+    id: "action-search-transactions",
+    label: t("commandPalette.searchTransactions", { search }),
+    hint: t("commandPalette.openTransactions"),
+    keywords: "",
+    target: { kind: "navigate", link: linkOptions({ to: "/transactions", search: { search } }) },
+  };
 }
 
 export interface QuickAddSources {

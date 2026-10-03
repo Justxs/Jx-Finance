@@ -108,8 +108,8 @@ const producers = {
   recurringPriceRise: { feature: "recurringBills", link: () => bills },
   monthReadyToClose: { feature: "monthClose", link: monthLink },
   monthlyDigest: { feature: "monthClose", link: monthLink },
-  lowBalance: { feature: "recurringBills", link: () => accounts },
-  warrantyExpiring: { feature: undefined, link: () => ledger },
+  lowBalance: { feature: "cashFlowForecast", link: () => accounts },
+  warrantyExpiring: { feature: "attachments", link: () => ledger },
   importWaiting: { feature: "import", link: () => importSection },
 } as const satisfies Record<
   NotificationType,

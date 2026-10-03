@@ -19,6 +19,7 @@ const groupOf = {
   budgets: "plan",
   goals: "plan",
   recurringBills: "plan",
+  cashFlowForecast: "plan",
   netWorth: "review",
   investments: "review",
   reports: "review",
@@ -27,11 +28,14 @@ const groupOf = {
   unusualAmounts: "review",
   monthClose: "review",
   households: "ledger",
+  people: "ledger",
   multiCurrency: "ledger",
   receiptReading: "ledger",
   apiTokens: "ledger",
   locations: "ledger",
   learnedCategories: "ledger",
+  payeeNames: "ledger",
+  attachments: "ledger",
 } as const satisfies Record<FeatureKey, FeatureGroup>;
 
 const groupTitles: Record<FeatureGroup, TranslationKey> = {

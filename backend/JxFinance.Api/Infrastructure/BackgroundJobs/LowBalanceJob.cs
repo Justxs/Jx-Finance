@@ -20,7 +20,7 @@ public sealed class LowBalanceJob(
 
     protected override JobSchedule Schedule => JobSchedule.Every(TimeSpan.FromHours(6));
 
-    protected override Feature? RequiredFeature => Feature.RecurringBills;
+    protected override Feature? RequiredFeature => Feature.CashFlowForecast;
 
     protected override Task RunAsync(IServiceProvider services, CancellationToken ct) =>
         ForEachActiveUserAsync(services, userId => ScanUserAsync(userId, ct), ct);

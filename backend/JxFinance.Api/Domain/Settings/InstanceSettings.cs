@@ -7,6 +7,7 @@ public sealed class InstanceSettings
 {
     public const int SingletonId = 1;
     public const int SmtpDefaultPort = 587;
+    public const int DiscordErrorMaxLength = 500;
 
     public int Id { get; set; } = SingletonId;
     public string? InstanceName { get; set; }
@@ -28,10 +29,28 @@ public sealed class InstanceSettings
     public string? SmtpFromAddress { get; set; }
     public string? SmtpFromName { get; set; }
     public bool DiscordEnabled { get; set; }
+    public string DiscordProtectedUrl { get; set; } = string.Empty;
+    public DateTimeOffset? DiscordLastDeliveredAt { get; set; }
+    public string? DiscordLastError { get; set; }
+    public DateTimeOffset? DiscordDisabledByDiscordAt { get; set; }
     public bool SupportLinkEnabled { get; set; } = true;
     public bool PriceSyncEnabled { get; set; }
     public string EodhdProtectedKey { get; set; } = string.Empty;
     public DateTimeOffset? PriceSyncRunAt { get; set; }
     public DateOnly? PriceCallsDate { get; set; }
     public int PriceCallsUsed { get; set; }
+
+    public void RecordDiscordSend(DateTimeOffset now, string? error, bool gone = false)
+    {
+        DiscordLastError = error;
+        if (error is null)
+        {
+            DiscordLastDeliveredAt = now;
+            DiscordDisabledByDiscordAt = null;
+        }
+        else if (gone)
+        {
+            DiscordDisabledByDiscordAt = now;
+        }
+    }
 }

@@ -16006,12 +16006,79 @@
       }
     },
     "/api/settings/discord": {
+      "get": {
+        "tags": [
+          "Settings"
+        ],
+        "summary": "Read the installation's Discord channel",
+        "description": "Answers whether Discord is switched on, whether a webhook is saved, when a message last reached it and the last error. The webhook URL is never part of the answer, because anyone holding it can post to the channel. disabledByDiscord is true after Discord answered that the webhook no longer exists; unreadable is true when the stored URL cannot be decrypted, which a restore into an installation with other data protection keys leaves behind. Administrators only.",
+        "operationId": "GetDiscordSettings",
+        "responses": {
+          "200": {
+            "description": "The Discord settings, without the webhook URL.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DiscordSettingsResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Only administrators can read installation settings.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [
+              "Admin"
+            ]
+          }
+        ]
+      },
       "put": {
         "tags": [
           "Settings"
         ],
-        "summary": "Allow or stop Discord notifications for this installation",
-        "description": "Switches outbound Discord traffic on or off for everyone. While it is off no Discord message is queued, the outbox sends nothing, and members' test buttons answer discord.disabled. Switching it off leaves every member's webhook in place; messages that were already queued are not sent late but pruned after seven days. Administrators only.",
+        "summary": "Save the installation's Discord channel",
+        "description": "Stores the webhook of the one Discord channel this installation posts to and switches outbound Discord traffic on or off for everyone. Members then choose on their profile which of their notifications are posted there, with their name in front. Only webhook URLs on discord.com, discordapp.com, ptb.discord.com or canary.discord.com of the form https://discord.com/api/webhooks/{id}/{token} are accepted; anything else answers 400 discord.invalidWebhook, as does switching Discord on before a webhook is saved. The URL is encrypted before it is stored and never returned. Leaving webhookUrl empty keeps the stored one; a new URL also clears the mark Discord left on a webhook it no longer knows. While Discord is off nothing is queued or sent; messages that were already queued are not sent late but pruned after seven days. Administrators only.",
         "operationId": "UpdateDiscordSettings",
         "requestBody": {
           "content": {
@@ -16020,18 +16087,26 @@
                 "$ref": "#/components/schemas/UpdateDiscordSettingsRequest"
               },
               "example": {
-                "enabled": true
+                "enabled": true,
+                "webhookUrl": "https://discord.com/api/webhooks/123456789012345678/abcdefghijklmnopqrstuvwxyz"
               }
             }
           },
           "required": true
         },
         "responses": {
-          "204": {
-            "description": "The switch was saved; the public settings carry it as discordEnabled."
+          "200": {
+            "description": "The saved Discord settings, without the webhook URL.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DiscordSettingsResponse"
+                }
+              }
+            }
           },
           "400": {
-            "description": "Bad Request",
+            "description": "Validation failed, or discord.invalidWebhook.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -16059,6 +16134,84 @@
                 }
               }
             }
+          },
+          "429": {
+            "description": "Too many changes from this client; wait and retry."
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [
+              "Admin"
+            ]
+          }
+        ]
+      }
+    },
+    "/api/settings/discord/test": {
+      "post": {
+        "tags": [
+          "Settings"
+        ],
+        "summary": "Send a test message to the Discord channel",
+        "description": "Posts one short message to the saved webhook right away and waits for Discord's answer, even while Discord is switched off, so the channel can be checked before members use it. Nothing is queued, so a failure is not retried. A refusal answers 400 with Discord's own words: discord.webhookGone when Discord no longer knows the webhook (which also marks it), discord.rateLimited, discord.rejected or discord.sendFailed. discord.webhookUnreadable means the stored URL cannot be decrypted any more. Rate limited to 10 calls per five minutes per client. Administrators only.",
+        "operationId": "SendTestDiscord",
+        "responses": {
+          "204": {
+            "description": "Discord accepted the message."
+          },
+          "400": {
+            "description": "Discord refused the message, or the stored webhook cannot be read.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Only administrators can test the Discord channel.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No webhook is saved.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many test messages from this client; wait and retry."
           },
           "500": {
             "description": "Server Error",
@@ -22162,136 +22315,21 @@
         ]
       }
     },
-    "/api/users/me/discord": {
-      "delete": {
-        "tags": [
-          "Users"
-        ],
-        "summary": "Remove your Discord webhook",
-        "description": "Forgets your webhook URL and drops every Discord message still waiting to be sent to it. In-app notifications are not affected.",
-        "operationId": "DeleteMyDiscord",
-        "responses": {
-          "204": {
-            "description": "The webhook is removed."
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "No webhook is saved on your profile.",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Server Error",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "Cookie": [ ]
-          }
-        ]
-      },
-      "get": {
-        "tags": [
-          "Users"
-        ],
-        "summary": "Read your Discord notification settings",
-        "description": "Answers whether a webhook is saved, whether it is switched on, which notification kinds it receives, when a message last reached it and the last error. The webhook URL is never part of the answer, because anyone holding it can post to the channel. disabledByDiscord is true after Discord answered that the webhook no longer exists; unreadable is true when the stored URL cannot be decrypted, which a restore into an installation with other data protection keys leaves behind. Without a saved webhook the answer lists every kind, as a starting point for the form.",
-        "operationId": "GetMyDiscord",
-        "responses": {
-          "200": {
-            "description": "Your Discord settings, without the webhook URL.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/DiscordWebhookResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Server Error",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "Cookie": [ ]
-          }
-        ]
-      },
+    "/api/users/me/discord-notifications": {
       "put": {
         "tags": [
           "Users"
         ],
-        "summary": "Save your Discord notification settings",
-        "description": "Stores your personal Discord webhook, whether it is switched on and which notification kinds it receives. Every in-app notification of a chosen kind is then also posted to that channel, as long as an administrator allows Discord on this installation. Only webhook URLs on discord.com, discordapp.com, ptb.discord.com or canary.discord.com of the form https://discord.com/api/webhooks/{id}/{token} are accepted; anything else answers 400 discord.invalidWebhook. The URL is encrypted before it is stored and never returned. Leaving webhookUrl empty keeps the stored one; a new URL also clears the mark Discord left on a webhook it no longer knows. The first save needs a URL. An empty list of kinds is allowed and sends nothing.",
-        "operationId": "UpdateMyDiscord",
+        "summary": "Choose which notifications are posted to Discord",
+        "description": "Replaces the list of notification kinds of yours that are also posted to the installation's Discord channel, with your name in front. Every in-app notification of a chosen kind then queues one Discord message, at most once per kind, subject and day. Nothing is posted while an administrator has not switched Discord on and saved a webhook. The channel is shared: everyone who can read it sees what you tick. An empty list is allowed and posts nothing.",
+        "operationId": "UpdateMyDiscordNotifications",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/UpdateMyDiscordRequest"
+                "$ref": "#/components/schemas/UpdateMyDiscordNotificationsRequest"
               },
               "example": {
-                "webhookUrl": "https://discord.com/api/webhooks/123456789012345678/abcdefghijklmnopqrstuvwxyz",
-                "isEnabled": true,
                 "types": [
                   "billDue",
                   "budgetExceeded"
@@ -22303,17 +22341,17 @@
         },
         "responses": {
           "200": {
-            "description": "Your saved Discord settings, without the webhook URL.",
+            "description": "Your profile with the saved list of Discord notification kinds.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DiscordWebhookResponse"
+                  "$ref": "#/components/schemas/UserProfileResponse"
                 }
               }
             }
           },
           "400": {
-            "description": "Validation failed, or discord.invalidWebhook.",
+            "description": "Validation failed.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -22324,16 +22362,6 @@
           },
           "401": {
             "description": "Unauthorized",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "conflict.busy: the first webhook was saved from another window at the same moment. Try again.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -22344,69 +22372,6 @@
           },
           "429": {
             "description": "Too many changes from this client; wait and retry."
-          },
-          "500": {
-            "description": "Server Error",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "Cookie": [ ]
-          }
-        ]
-      }
-    },
-    "/api/users/me/discord/test": {
-      "post": {
-        "tags": [
-          "Users"
-        ],
-        "summary": "Send a test message to your Discord channel",
-        "description": "Posts one short message to your saved webhook right away and waits for Discord's answer. Nothing is queued, so a failure is not retried. A refusal answers 400 with Discord's own words: discord.webhookGone when Discord no longer knows the webhook (which also marks it on your profile), discord.rateLimited, discord.rejected or discord.sendFailed. discord.disabled means an administrator has not allowed Discord on this installation, and discord.webhookUnreadable that the stored URL cannot be decrypted any more. Save the webhook before testing it. Rate limited to 10 calls per five minutes per client.",
-        "operationId": "TestMyDiscord",
-        "responses": {
-          "204": {
-            "description": "Discord accepted the message."
-          },
-          "400": {
-            "description": "Discord refused the message, or Discord is switched off for this installation.",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "No webhook is saved on your profile.",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "Too many test messages from this client; wait and retry."
           },
           "500": {
             "description": "Server Error",
@@ -22508,7 +22473,7 @@
           "Users"
         ],
         "summary": "Download your own data",
-        "description": "Streams a zip archive named jx-finance-export-<date>.zip with every record you own: data.json in the backup's table format (format jx-finance-user-export, version 1, with your user id), accounts.csv, transactions.csv and transfers.csv for a spreadsheet, and ledger.beancount, a Beancount double-entry journal of your own accounts, assets and debts with a balance assertion for each. It holds your accounts, personal, shared and archived, with everything recorded on them by anyone, the transfers that touch them, your categories, tags, rules, budgets, goals, assets, debts, recurring entries, notifications, month closes and trash, and the categories, tags and securities your records point at. It never holds passwords, two-factor secrets, passkeys, API tokens, sessions, the broker token, the Discord webhook, households, memberships or the activity log, nor another member's accounts. The active household is ignored. Nothing is kept on the server, and the answer carries no Content-Length. POST /api/users/me/import loads the file into an empty member.",
+        "description": "Streams a zip archive named jx-finance-export-<date>.zip with every record you own: data.json in the backup's table format (format jx-finance-user-export, version 1, with your user id), accounts.csv, transactions.csv and transfers.csv for a spreadsheet, and ledger.beancount, a Beancount double-entry journal of your own accounts, assets and debts with a balance assertion for each. It holds your accounts, personal, shared and archived, with everything recorded on them by anyone, the transfers that touch them, your categories, tags, rules, budgets, goals, assets, debts, recurring entries, notifications, month closes and trash, and the categories, tags and securities your records point at. It never holds passwords, two-factor secrets, passkeys, API tokens, sessions, the broker token, households, memberships or the activity log, nor another member's accounts. The active household is ignored. Nothing is kept on the server, and the answer carries no Content-Length. POST /api/users/me/import loads the file into an empty member.",
         "operationId": "ExportMyData",
         "parameters": [
           {
@@ -27880,11 +27845,10 @@
         ],
         "type": "string"
       },
-      "DiscordWebhookResponse": {
+      "DiscordSettingsResponse": {
         "required": [
+          "enabled",
           "hasWebhook",
-          "isEnabled",
-          "types",
           "lastDeliveredAt",
           "lastError",
           "disabledByDiscord",
@@ -27892,17 +27856,11 @@
         ],
         "type": "object",
         "properties": {
+          "enabled": {
+            "type": "boolean"
+          },
           "hasWebhook": {
             "type": "boolean"
-          },
-          "isEnabled": {
-            "type": "boolean"
-          },
-          "types": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/NotificationType"
-            }
           },
           "lastDeliveredAt": {
             "type": [
@@ -28033,7 +27991,6 @@
           "debt.paymentWrongType",
           "debt.scheduleIncomplete",
           "decimal.malformed",
-          "discord.disabled",
           "discord.invalidWebhook",
           "discord.rateLimited",
           "discord.rejected",
@@ -28261,7 +28218,11 @@
           "receiptReading",
           "apiTokens",
           "locations",
-          "learnedCategories"
+          "learnedCategories",
+          "attachments",
+          "payeeNames",
+          "people",
+          "cashFlowForecast"
         ],
         "type": "object",
         "properties": {
@@ -28311,6 +28272,18 @@
             "type": "boolean"
           },
           "learnedCategories": {
+            "type": "boolean"
+          },
+          "attachments": {
+            "type": "boolean"
+          },
+          "payeeNames": {
+            "type": "boolean"
+          },
+          "people": {
+            "type": "boolean"
+          },
+          "cashFlowForecast": {
             "type": "boolean"
           }
         }
@@ -35971,17 +35944,27 @@
       },
       "UpdateDiscordSettingsRequest": {
         "required": [
-          "enabled"
+          "enabled",
+          "webhookUrl"
         ],
         "type": "object",
         "properties": {
           "enabled": {
             "type": "boolean",
             "example": true
+          },
+          "webhookUrl": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Leave empty to keep the stored webhook.",
+            "example": "https://discord.com/api/webhooks/123456789012345678/abcdefghijklmnopqrstuvwxyz"
           }
         },
         "example": {
-          "enabled": true
+          "enabled": true,
+          "webhookUrl": "https://discord.com/api/webhooks/123456789012345678/abcdefghijklmnopqrstuvwxyz"
         }
       },
       "UpdateGoalProgressRequest": {
@@ -36329,26 +36312,12 @@
           ]
         }
       },
-      "UpdateMyDiscordRequest": {
+      "UpdateMyDiscordNotificationsRequest": {
         "required": [
-          "webhookUrl",
-          "isEnabled",
           "types"
         ],
         "type": "object",
         "properties": {
-          "webhookUrl": {
-            "type": [
-              "null",
-              "string"
-            ],
-            "description": "Leave empty to keep the stored webhook.",
-            "example": "https://discord.com/api/webhooks/123456789012345678/abcdefghijklmnopqrstuvwxyz"
-          },
-          "isEnabled": {
-            "type": "boolean",
-            "example": true
-          },
           "types": {
             "type": "array",
             "items": {
@@ -36361,8 +36330,6 @@
           }
         },
         "example": {
-          "webhookUrl": "https://discord.com/api/webhooks/123456789012345678/abcdefghijklmnopqrstuvwxyz",
-          "isEnabled": true,
           "types": [
             "billDue",
             "budgetExceeded"
@@ -37103,6 +37070,7 @@
           "isActive",
           "emailConfirmed",
           "emailNotificationTypes",
+          "discordNotificationTypes",
           "language",
           "monthlyDigestEverything",
           "monthlyDigestHouseholdIds"
@@ -37132,6 +37100,12 @@
             "type": "boolean"
           },
           "emailNotificationTypes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NotificationType"
+            }
+          },
+          "discordNotificationTypes": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/NotificationType"

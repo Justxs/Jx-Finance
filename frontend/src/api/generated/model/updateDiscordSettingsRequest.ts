@@ -8,4 +8,9 @@
 
 export interface UpdateDiscordSettingsRequest {
   enabled: boolean;
+  /**
+   * Leave empty to keep the stored webhook.
+   * @nullable
+   */
+  webhookUrl: string | null;
 }

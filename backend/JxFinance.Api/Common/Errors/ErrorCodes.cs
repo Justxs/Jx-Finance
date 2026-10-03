@@ -150,7 +150,6 @@ public static class ErrorCodes
     public const string EmailAlreadyVerified = "email.alreadyVerified";
     public const string EmailTokenInvalid = "email.tokenInvalid";
     public const string PasswordResetTokenInvalid = "passwordReset.tokenInvalid";
-    public const string DiscordDisabled = "discord.disabled";
     public const string DiscordInvalidWebhook = "discord.invalidWebhook";
     public const string DiscordWebhookUnreadable = "discord.webhookUnreadable";
     public const string DiscordWebhookGone = "discord.webhookGone";

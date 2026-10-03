@@ -25,6 +25,7 @@ import {
 } from "@/features/transactions/transaction-form/transaction-form";
 import { transactionTemplates } from "@/features/transactions/transaction-views";
 import type { useTransactionMutations } from "@/features/transactions/transactions-page/use-transaction-mutations";
+import { useFeature } from "@/hooks/use-settings";
 import { byId } from "@/lib/options";
 import { savePreferences } from "@/stores/preferences";
 
@@ -51,6 +52,7 @@ export function useTransactionFormSection({
   const navigate = useNavigate({ from: "/transactions" });
   const createOpen = useSearch({ from: "/transactions", select: (search) => search.new ?? false });
   const handedDraft = useLocation({ select: (location) => location.state.transactionDraft });
+  const attachmentsEnabled = useFeature("attachments");
   const [prefill, setPrefill] = useState<{ key: string; draft: TransactionDraft } | null>(null);
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
   const [editing, setEditing] = useState<TransactionResponse | null>(null);
@@ -118,7 +120,7 @@ export function useTransactionFormSection({
   }
 
   async function splitCandidate({ candidateId, draft, file }: ReceiptCandidateSplit) {
-    if (file) {
+    if (file && attachmentsEnabled) {
       await attachReceipt(candidateId, file);
     }
     const candidate = await queryClient.query(getTransactionSuspenseQueryOptions(candidateId));
@@ -157,7 +159,7 @@ export function useTransactionFormSection({
           onSubmitAndAddAnother={handleCreateAnother}
           onSaveAsTemplate={saveAsTemplate}
           onCancel={() => setCreateOpen(false)}
-          onReceiptFile={setReceiptFile}
+          onReceiptFile={attachmentsEnabled ? setReceiptFile : undefined}
           onSplitCandidate={splitCandidate}
         />
       </Modal>
@@ -184,10 +186,12 @@ export function useTransactionFormSection({
               onSubmit={(values) => handleUpdate(transaction, values)}
               onCancel={close}
             />
-            <TransactionAttachments
-              transactionId={transaction.id}
-              className="mt-6 border-t border-border pt-4"
-            />
+            {attachmentsEnabled ? (
+              <TransactionAttachments
+                transactionId={transaction.id}
+                className="mt-6 border-t border-border pt-4"
+              />
+            ) : null}
           </>
         )}
       </EditModal>

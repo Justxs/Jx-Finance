@@ -8,12 +8,11 @@ import { type SettingsSection, SettingsLayout } from "@/components/settings-layo
 import { Button } from "@/components/ui/button/button";
 import { RuledLine } from "@/components/ui/ruled-line/ruled-line";
 import { BackupSection } from "@/features/settings/backup-section/backup-section";
-import { DiscordSection } from "@/features/settings/discord-section/discord-section";
 import { ExchangeRatesSection } from "@/features/settings/exchange-rates-section/exchange-rates-section";
 import { ImportInboxSection } from "@/features/settings/import-inbox-section/import-inbox-section";
 import { MarketPricesSection } from "@/features/settings/market-prices-section/market-prices-section";
+import { NotificationProvidersSection } from "@/features/settings/notification-providers-section/notification-providers-section";
 import { SettingsForm } from "@/features/settings/settings-form/settings-form";
-import { SmtpSection } from "@/features/settings/smtp-section/smtp-section";
 import { useIsoDate } from "@/hooks/use-formatters";
 import { useSettingsSuspense } from "@/hooks/use-settings";
 import { SettingsFormSkeleton } from "./settings-page-pending";
@@ -74,8 +73,7 @@ export function SettingsPage() {
 
   return (
     <SettingsLayout current={section}>
-      {section === "email" ? <SmtpSection /> : null}
-      {section === "discord" ? <DiscordSection /> : null}
+      {section === "notificationProviders" ? <NotificationProvidersSection /> : null}
       {section === "marketPrices" ? <MarketPricesSection /> : null}
       {section === "importInbox" ? <ImportInboxSection /> : null}
       {section === "backups" ? <BackupSection /> : null}

@@ -28,14 +28,14 @@ public sealed class TrashRestorersTests
     [InlineData(TrashKind.Tag, null)]
     [InlineData(TrashKind.CategorizationRule, Feature.CategorizationRules)]
     [InlineData(TrashKind.Household, Feature.Households)]
-    [InlineData(TrashKind.Attachment, null)]
+    [InlineData(TrashKind.Attachment, Feature.Attachments)]
     [InlineData(TrashKind.CsvImportMapping, Feature.Import)]
     [InlineData(TrashKind.SharedExpense, Feature.Households)]
     [InlineData(TrashKind.Settlement, Feature.Households)]
     [InlineData(TrashKind.TransactionGroup, null)]
-    [InlineData(TrashKind.Contact, Feature.Households)]
-    [InlineData(TrashKind.ContactSplit, Feature.Households)]
-    [InlineData(TrashKind.ContactPayment, Feature.Households)]
+    [InlineData(TrashKind.Contact, Feature.People)]
+    [InlineData(TrashKind.ContactSplit, Feature.People)]
+    [InlineData(TrashKind.ContactPayment, Feature.People)]
     public void Each_kind_belongs_to_its_feature(TrashKind kind, Feature? feature) =>
         Assert.Equal(feature, TrashRestorers.FeatureOf(kind));
 

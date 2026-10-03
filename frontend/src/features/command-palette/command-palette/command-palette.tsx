@@ -23,6 +23,7 @@ import {
   type CommandTarget,
   buildCommandEntries,
   quickAddEntry,
+  searchTransactionsEntry,
 } from "@/features/command-palette/command-entries";
 import { filterCommandEntries } from "@/features/command-palette/command-search";
 import type { QuickAddDraft } from "@/features/command-palette/quick-add";
@@ -123,8 +124,11 @@ function CommandPaletteContent({ onClose }: Readonly<ContentProps>) {
     defaultAccountId,
     formatMoney: money.format,
   });
-  const matches = filterCommandEntries(entries, query, recents);
-  const results = (quickAdd ? [quickAdd, ...matches] : matches).slice(0, RESULT_LIMIT);
+  const searchTransactions = searchTransactionsEntry(query, t);
+  const typed = [quickAdd, ...filterCommandEntries(entries, query, recents)]
+    .filter((entry) => entry !== null)
+    .slice(0, RESULT_LIMIT);
+  const results = searchTransactions ? [...typed, searchTransactions] : typed;
   const activeAt = Math.min(activeIndex, Math.max(results.length - 1, 0));
   const active = results[activeAt];
 
@@ -175,7 +179,7 @@ function CommandPaletteContent({ onClose }: Readonly<ContentProps>) {
   }
 
   function choose(entry: CommandEntry) {
-    if (entry.target.kind !== "quickAdd") {
+    if (entry !== quickAdd && entry !== searchTransactions) {
       rememberCommand(entry.id);
     }
     onClose();
@@ -231,8 +235,6 @@ function CommandPaletteContent({ onClose }: Readonly<ContentProps>) {
     }
   }
 
-  const expanded = results.length > 0;
-
   return (
     <DialogContent
       showCloseButton={false}
@@ -250,8 +252,8 @@ function CommandPaletteContent({ onClose }: Readonly<ContentProps>) {
           autoComplete="off"
           spellCheck={false}
           aria-label={t("commandPalette.searchLabel")}
-          aria-expanded={expanded}
-          aria-controls={expanded ? listId : undefined}
+          aria-expanded
+          aria-controls={listId}
           aria-autocomplete="list"
           aria-activedescendant={active ? `${optionPrefix}-${active.id}` : undefined}
           placeholder={t("commandPalette.placeholder")}
@@ -266,37 +268,33 @@ function CommandPaletteContent({ onClose }: Readonly<ContentProps>) {
         {t("commandPalette.count", { count: results.length })}
       </p>
 
-      {expanded ? (
-        <div
-          ref={listRef}
-          id={listId}
-          role="listbox"
-          aria-label={t("commandPalette.resultsLabel")}
-          className="min-h-0 overflow-y-auto overscroll-contain p-1.5"
-        >
-          {results.map((entry, index) => (
-            <div
-              key={entry.id}
-              id={`${optionPrefix}-${entry.id}`}
-              role="option"
-              tabIndex={-1}
-              aria-selected={entry.id === active?.id}
-              onClick={() => choose(entry)}
-              onKeyDown={(event) => chooseOnKey(event, entry)}
-              onPointerMove={() => setActiveIndex(index)}
-              className={cn(
-                "flex cursor-pointer items-center justify-between gap-3 rounded-md px-3 py-2 text-sm",
-                entry.id === active?.id && "bg-muted text-foreground",
-              )}
-            >
-              <span className="min-w-0 truncate">{entry.label}</span>
-              <span className="shrink-0 text-xs text-muted-foreground">{entry.hint}</span>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <p className="px-4 py-6 text-sm text-muted-foreground">{t("commandPalette.empty")}</p>
-      )}
+      <div
+        ref={listRef}
+        id={listId}
+        role="listbox"
+        aria-label={t("commandPalette.resultsLabel")}
+        className="min-h-0 overflow-y-auto overscroll-contain p-1.5"
+      >
+        {results.map((entry, index) => (
+          <div
+            key={entry.id}
+            id={`${optionPrefix}-${entry.id}`}
+            role="option"
+            tabIndex={-1}
+            aria-selected={entry.id === active?.id}
+            onClick={() => choose(entry)}
+            onKeyDown={(event) => chooseOnKey(event, entry)}
+            onPointerMove={() => setActiveIndex(index)}
+            className={cn(
+              "flex cursor-pointer items-center justify-between gap-3 rounded-md px-3 py-2 text-sm",
+              entry.id === active?.id && "bg-muted text-foreground",
+            )}
+          >
+            <span className="min-w-0 truncate">{entry.label}</span>
+            <span className="shrink-0 text-xs text-muted-foreground">{entry.hint}</span>
+          </div>
+        ))}
+      </div>
     </DialogContent>
   );
 }

@@ -47,7 +47,7 @@ public sealed class BudgetUsageCalculator(
         foreach (var group in budgets.GroupBy(b => b.HouseholdId))
         {
             var shares = group.Key is null
-                ? await ShareSlices.OfAsync(db, currentUser.Id, share, span, null, cancellationToken)
+                ? await ShareSlices.OfAsync(db, currentUser.Id, share, span, null, settings.Current.IsEnabled(Feature.People), cancellationToken)
                 : [];
             var spendByCategory = group.Any(b => b.CategoryId is not null)
                 ? await CategorySpendAsync(span, group.Key, shares, cancellationToken)

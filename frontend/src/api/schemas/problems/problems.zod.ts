@@ -74,7 +74,6 @@ export const ProblemDetailsResponse = zod
                 "debt.paymentWrongType",
                 "debt.scheduleIncomplete",
                 "decimal.malformed",
-                "discord.disabled",
                 "discord.invalidWebhook",
                 "discord.rateLimited",
                 "discord.rejected",

@@ -45,7 +45,7 @@ public sealed class PayeeKeyQueryTests
     {
         await using var capture = new SqlCapture();
 
-        await new SubscriptionDetectionService(capture.Db, new TestClock(), null!).DetectAsync(TestContext.Current.CancellationToken);
+        await new SubscriptionDetectionService(capture.Db, new TestClock(), null!, null!).DetectAsync(TestContext.Current.CancellationToken);
 
         var occurrences = capture.Statements[0];
         Assert.Contains("\"PayeeKey\" IS NOT NULL", occurrences, StringComparison.Ordinal);

@@ -49,26 +49,16 @@ public sealed class MonthlyDigestJob(
             .AsNoTracking()
             .Where(AppUser.IsActive)
             .OrderBy(u => u.Id)
-            .Select(u => new { u.Id, u.EmailNotificationTypes, u.MonthlyDigestEverything, u.MonthlyDigestHouseholdIds })
+            .Select(u => new { u.Id, u.EmailNotificationTypes, u.DiscordNotificationTypes, u.MonthlyDigestEverything, u.MonthlyDigestHouseholdIds })
             .ToListAsync(ct);
-        var byDiscord = settings.DiscordEnabled
-            ? (await db.DiscordWebhooks
-                .IgnoreQueryFilters(QueryFilters.OwnerOnly)
-                .AsNoTracking()
-                .Where(w => w.IsEnabled && w.DisabledByDiscordAt == null)
-                .Select(w => new { w.UserId, w.Types })
-                .ToListAsync(ct))
-                .Where(w => w.Types.Contains(NotificationType.MonthlyDigest))
-                .Select(w => w.UserId)
-                .ToHashSet()
-            : [];
         var sent = (await Sent(services).Select(n => new { n.UserId, n.RelatedId }).ToListAsync(ct))
             .Select(n => (n.UserId, n.RelatedId))
             .ToHashSet();
         var households = settings.IsEnabled(Feature.Households);
 
         return users
-            .Where(u => u.EmailNotificationTypes.Contains(NotificationType.MonthlyDigest) || byDiscord.Contains(u.Id))
+            .Where(u => u.EmailNotificationTypes.Contains(NotificationType.MonthlyDigest)
+                || (settings.DiscordEnabled && u.DiscordNotificationTypes.Contains(NotificationType.MonthlyDigest)))
             .SelectMany(u => (u.MonthlyDigestEverything ? [(Guid?)null] : Array.Empty<Guid?>())
                 .Concat(households ? u.MonthlyDigestHouseholdIds.Select(id => (Guid?)id) : [])
                 .Select(household => (u.Id, household)))

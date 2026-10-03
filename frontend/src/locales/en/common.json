@@ -1018,7 +1018,8 @@
     "verificationSent": "Confirmation email sent",
     "notifications": {
       "title": "Notifications",
-      "description": "Every notification appears under the bell. Tick the ones that should also reach you by email or in your Discord channel.",
+      "description": "Every notification appears under the bell. Tick the ones that should also reach you outside the app.",
+      "descriptionInAppOnly": "Every notification appears under the bell. An administrator can set up email or Discord to send them outside the app too.",
       "kind": "Notification",
       "inApp": "In app",
       "email": "Email",
@@ -1026,35 +1027,12 @@
       "alwaysInApp": "Always shown in the app",
       "byEmail": "{{kind}} by email",
       "byDiscord": "{{kind}} on Discord",
-      "needsEmail": "Email is unavailable: this installation cannot send mail yet. Ask an administrator to set up the mail server.",
       "needsVerification": "Email is unavailable until you confirm your address.",
-      "discordNotAllowed": "Discord is unavailable: an administrator has not allowed it on this installation.",
-      "discordNotConnected": "Connect a Discord channel below to use the Discord column.",
-      "discordPaused": "Discord is paused. Tick “Send notifications to this channel” below to resume.",
       "saved": "Notification settings saved",
       "digestOnlyOutside": "Only sent by email or Discord",
       "digestScopes": "Monthly digest for",
       "digestScopesHint": "Each one you tick is its own message, with the month as the dashboard shows it with that household picked.",
-      "digestNote": "The monthly digest arrives in the first days of each month and sums up the month that ended: income and expenses, the categories that moved most and what is still open before you close it. Tick Email or Discord to receive it."
-    },
-    "discord": {
-      "title": "Discord channel",
-      "description": "Post your notifications to a Discord channel of your own. Only you receive them; nobody else in the household sees your channel.",
-      "webhookUrl": "Webhook URL",
-      "webhookUrlHint": "In Discord: channel settings, Integrations, Webhooks, New webhook, Copy webhook URL.",
-      "enabled": "Send notifications to this channel",
-      "test": "Send a test message",
-      "testSent": "Test message posted to Discord",
-      "remove": "Remove webhook",
-      "removeTitle": "Remove the Discord webhook?",
-      "removeDescription": "Messages still waiting to be sent are dropped. In-app notifications are not affected.",
-      "removed": "Discord webhook removed",
-      "lastDelivered": "Last message delivered {{date}}.",
-      "neverDelivered": "Nothing has been delivered yet.",
-      "lastError": "Last problem: {{error}}",
-      "gone": "Discord says this webhook no longer exists. Create a new one in Discord and paste its URL.",
-      "unreadable": "The saved webhook can no longer be read, usually after a restore from another installation. Paste the webhook URL again.",
-      "webhookPlaceholder": "Saved. Paste a new URL to replace it."
+      "digestNote": "The monthly digest arrives in the first days of each month and sums up the month that ended: income and expenses, the categories that moved most and what is still open before you close it. Tick it above to receive it."
     }
   },
   "settings": {
@@ -1142,6 +1120,22 @@
         "learnedCategories": {
           "name": "Learned categories",
           "hint": "Suggests a category from your own categorized history where no rule fills one, in the import review, the transaction form and the ledger. The model is built on this server for each request and never stored or sent anywhere."
+        },
+        "attachments": {
+          "name": "Receipts and files",
+          "hint": "Receipts, warranties and other files attached to a transaction, kept on this server. Off also stops the warranty reminders."
+        },
+        "payeeNames": {
+          "name": "Payee names",
+          "hint": "A readable name for a payee that replaces the bank's text in the ledger, the reports and the subscription suggestions."
+        },
+        "people": {
+          "name": "People",
+          "hint": "Money shared with or lent to people outside the household: split expenses, payments and balances. Works only while Households is on."
+        },
+        "cashFlowForecast": {
+          "name": "Cash-flow forecast",
+          "hint": "Each account's balance for the coming weeks, projected from the rows dated ahead and the recurring entries. Off also stops the below-zero warning."
         }
       }
     },
@@ -1243,12 +1237,25 @@
       "testHint": "Save first. The message goes to your own address and nothing is stored.",
       "testSent": "Test message sent to {{email}}"
     },
+    "notificationProviders": {
+      "title": "Notification providers"
+    },
     "discord": {
       "title": "Discord",
-      "description": "Members can post their own notifications to a Discord channel through a webhook on their profile. This switch allows or stops that traffic for everyone.",
-      "enabled": "Allow Discord notifications",
-      "enabledHint": "Messages go from this server to discord.com. While this is off nothing is sent, and members' webhooks stay saved.",
-      "saved": "Discord setting saved"
+      "description": "The Discord channel this installation posts to. Members choose on their profile which of their notifications go there, and each message starts with their name, so everyone who can read the channel sees them.",
+      "enabled": "Send notifications to Discord",
+      "enabledHint": "Messages go from this server to discord.com. While this is off nothing is sent and the webhook stays saved.",
+      "saved": "Discord settings saved",
+      "webhookUrl": "Webhook URL",
+      "webhookUrlHint": "In Discord: channel settings, Integrations, Webhooks, New webhook, Copy webhook URL.",
+      "webhookPlaceholder": "Saved. Paste a new URL to replace it.",
+      "test": "Send a test message",
+      "testSent": "Test message posted to Discord",
+      "lastDelivered": "Last message delivered {{date}}.",
+      "neverDelivered": "Nothing has been delivered yet.",
+      "lastError": "Last problem: {{error}}",
+      "gone": "Discord says this webhook no longer exists. Create a new one in Discord and paste its URL.",
+      "unreadable": "The saved webhook can no longer be read, usually after a restore from another installation. Paste the webhook URL again."
     },
     "marketPrices": {
       "title": "Market prices",
@@ -1364,7 +1371,7 @@
     "placeholder": "Search pages, records and actions…",
     "resultsLabel": "Matches",
     "count": "Matches: {{count}}",
-    "empty": "Nothing matches what you typed.",
+    "searchTransactions": "Search transactions for “{{search}}”",
     "run": "Run",
     "goTo": "Go to",
     "openTransactions": "Open transactions",
@@ -2227,8 +2234,13 @@
       "everything": "Everything"
     },
     "myShare": {
-      "label": "My share",
-      "hint": "Count split expenses at your own share"
+      "title": "Split expenses",
+      "hint": "How an expense split with a household counts on the dashboard, budgets and reports in this browser.",
+      "count": "Count",
+      "states": {
+        "full": "Full amount",
+        "mine": "My share"
+      }
     },
     "settleUp": {
       "title": "Balances",
@@ -2916,7 +2928,6 @@
       "malformed": "Enter a number with a dot as the decimal separator, e.g. 12.34."
     },
     "discord": {
-      "disabled": "An administrator has not allowed Discord notifications on this installation.",
       "invalidWebhook": "Paste the webhook URL Discord gave you; it starts with https://discord.com/api/webhooks/.",
       "rateLimited": "Discord asked to slow down. Try again in a minute.",
       "rejected": "{{reason}}",

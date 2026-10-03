@@ -2,6 +2,7 @@ using JxFinance.Common;
 using JxFinance.Common.Notifications;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Notifications;
+using JxFinance.Domain.Settings;
 using JxFinance.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -16,6 +17,8 @@ public sealed class WarrantyReminderJob(
     protected override string Name => "Warranty reminder";
 
     protected override JobSchedule Schedule => JobSchedule.Every(TimeSpan.FromHours(6));
+
+    protected override Feature? RequiredFeature => Feature.Attachments;
 
     protected override async Task RunAsync(IServiceProvider services, CancellationToken ct)
     {

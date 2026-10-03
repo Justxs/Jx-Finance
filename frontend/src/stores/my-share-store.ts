@@ -1,10 +1,6 @@
 import type { FeatureFlags, SpendingShare } from "@/api/generated/model";
 import { useSettings } from "@/hooks/use-settings";
-import { readPreferences, savePreferences, usePreferences } from "./preferences";
-
-export function toggleMyShare() {
-  savePreferences({ myShare: !readPreferences().myShare });
-}
+import { readPreferences, usePreferences } from "./preferences";
 
 export function useMyShare(): boolean {
   const { myShare } = usePreferences();
