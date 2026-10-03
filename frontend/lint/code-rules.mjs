@@ -104,10 +104,128 @@ const noKeyListener = {
   },
 };
 
+const BROWSER_APIS = new Map([
+  ["localStorage", "storage"],
+  ["sessionStorage", "storage"],
+  ["setTimeout", "timer"],
+  ["setInterval", "timer"],
+]);
+const GLOBAL_OBJECTS = new Set(["window", "globalThis"]);
+
+function propertyName(node) {
+  if (!node.computed && node.property.type === "Identifier") {
+    return node.property.name;
+  }
+  return node.property.type === "Literal" ? node.property.value : undefined;
+}
+
+const noRawBrowserApi = {
+  meta: {
+    type: "problem",
+    docs: { description: "Disallow raw browser storage and timers." },
+    messages: {
+      storage:
+        "Browser storage goes through browserStorage() in src/lib/browser-storage.ts and TanStack DB local-storage collections, not `{{name}}`.",
+      timer:
+        "Debounce and throttle through TanStack Pacer (useDebouncer, useThrottler) and derive state during render instead of `{{name}}`.",
+    },
+  },
+  create(context) {
+    function report(node, name) {
+      context.report({ node, messageId: BROWSER_APIS.get(name), data: { name } });
+    }
+
+    return {
+      Program(node) {
+        const globalScope = context.sourceCode.getScope(node);
+        const implicit = globalScope.variables.filter(
+          (variable) => variable.defs.length === 0 && BROWSER_APIS.has(variable.name),
+        );
+        for (const reference of [
+          ...implicit.flatMap((variable) => variable.references),
+          ...globalScope.through,
+        ]) {
+          if (BROWSER_APIS.has(reference.identifier.name)) {
+            report(reference.identifier, reference.identifier.name);
+          }
+        }
+      },
+      MemberExpression(node) {
+        const name = propertyName(node);
+        if (
+          node.object.type === "Identifier" &&
+          GLOBAL_OBJECTS.has(node.object.name) &&
+          BROWSER_APIS.has(name)
+        ) {
+          report(node, name);
+        }
+      },
+    };
+  },
+};
+
+const UI_FILE = /\/src\/components\/ui\//;
+const SHARED_FILE = /\/src\/(components|lib|hooks|stores)\//;
+const APP_STATE_IMPORT = /^@\/(api|features|hooks|stores)\//;
+
+function layerViolation(file, specifier) {
+  if (UI_FILE.test(file)) {
+    if (APP_STATE_IMPORT.test(specifier)) {
+      return "ui";
+    }
+    return specifier.startsWith("@/components/") && !specifier.startsWith("@/components/ui/")
+      ? "ui"
+      : undefined;
+  }
+  return SHARED_FILE.test(file) && specifier.startsWith("@/features/") ? "shared" : undefined;
+}
+
+const layerImports = {
+  meta: {
+    type: "problem",
+    docs: { description: "Keep shared layers independent of features and app state." },
+    messages: {
+      ui: "UI primitives take everything they show as props; read settings, queries and stores in a wrapper outside components/ui instead of importing `{{specifier}}`.",
+      shared:
+        "Shared code in components, lib, hooks and stores must not depend on a feature; move the shared piece out of `{{specifier}}` instead.",
+    },
+  },
+  create(context) {
+    const file = posixPath(context.filename);
+
+    function check(source) {
+      if (source?.type !== "Literal" || typeof source.value !== "string") {
+        return;
+      }
+      const messageId = layerViolation(file, source.value);
+      if (messageId) {
+        context.report({ node: source, messageId, data: { specifier: source.value } });
+      }
+    }
+
+    return {
+      ImportDeclaration(node) {
+        check(node.source);
+      },
+      ExportNamedDeclaration(node) {
+        check(node.source);
+      },
+      ExportAllDeclaration(node) {
+        check(node.source);
+      },
+      ImportExpression(node) {
+        check(node.source);
+      },
+    };
+  },
+};
+
 export default {
   meta: { name: "jx-code" },
   rules: {
     "no-cross-feature-import": noCrossFeatureImport,
     "no-key-listener": noKeyListener,
+    "no-raw-browser-api": noRawBrowserApi,
+    "layer-imports": layerImports,
   },
 };

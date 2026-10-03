@@ -4,11 +4,13 @@ Related: feature page [Discord notifications](../features/discord-notifications.
 
 ## Current
 
-Implemented 2026-09-26, changed 2026-10-03. One Discord channel for the whole installation: an administrator saves its webhook and switches Discord on in Settings › Installation › Notification providers › Discord, off by default. Members only choose, in the Discord column of the table in Settings › Personal › Notifications, which of their notification kinds go there, and each message starts with the member's display name. Everyone who can read the channel sees every member's ticked notifications. The URL must be a Discord webhook on one of Discord's own hosts, is data-protected in `InstanceSettings` and never returned; every producer writes through `INotificationPublisher`, which adds the in-app row, the email and the Discord post in the producer's transaction; posts leave through a `DiscordMessages` outbox drained every 30 seconds, five at a time, as plain text in the member's language with mentions switched off
+Implemented 2026-09-26, changed 2026-10-03. One Discord channel for the whole installation: an administrator saves its webhook and switches Discord on in Settings › Installation › Notification providers › Discord, off by default. Members only choose, in the Discord column of the table in Settings › Personal › Notifications, which of their notification kinds go there, and each message starts with the member's display name. Everyone who can read the channel sees every member's ticked notifications. The URL must be a Discord webhook on one of Discord's own hosts, is data-protected in `InstanceSettings` and never returned; every producer writes through `INotificationPublisher`, which adds the in-app row, the email and the Discord post in the producer's transaction; posts leave through a `DiscordMessages` outbox drained every 30 seconds, five at a time, as plain text in the member's language with mentions switched off. A 429 moves the posts to Discord's `retry_after`, a 401, 403 or 404 gives up the pending posts and marks the channel disabled by Discord until a new URL is saved or a test succeeds, and rows older than seven days are deleted, sent or not. The page link is appended in angle brackets, and the poster name is the installation name unless it is empty or contains "discord" or "clyde", when it is "Jx Finance"
 
 ## Log
 
 Newest first. Each entry is a choice between real alternatives: what was chosen, what was rejected, and why.
+
+Older entries are in the git history of this file (`git log -p -- docs/decisions/discord-notifications.md`).
 
 - **2026-10-03.** Discord posts go to one installation channel whose webhook an administrator sets under Notification providers; members only choose their kinds (`AspNetUsers.DiscordNotificationTypes`), and every message starts with the member's display name. The personal webhooks, their table and the profile's "Discord channel" panel are removed, and existing personal webhooks are not carried over. This replaces the 2026-09-26 entry that chose one webhook per user and the guarantee that nobody's alerts reach anyone else's channel
   - Rejected: Keeping a personal webhook per member; an installation default plus a personal override; a shared channel without a name prefix
@@ -41,21 +43,3 @@ Newest first. Each entry is a choice between real alternatives: what was chosen,
 - **2026-09-26.** The outbox row stores the user id and the job looks the webhook up at send time
   - Rejected: Copying the URL into the row
   - Why: Changing, switching off or removing the webhook takes effect for messages still queued, and the secret lives in one place
-- **2026-09-26.** The Discord dedupe key is `{userId}:{type}:{relatedId or notification id}:{local date}`
-  - Rejected: `{type}:{relatedId}:{local date}`, as planned
-  - Why: The related id is not guaranteed to be private to one user, and two users notified about the same row on the same day would collide on the unique index and one of them would lose the post
-- **2026-09-26.** `Publish` throws `InvalidOperationException` for an owner that `PreloadAsync` did not load
-  - Rejected: Loading the webhook lazily on the first `Publish` for an owner; treating an unloaded owner as having no webhook
-  - Why: A lazy load puts one query per notification back into a pass over many users, and a silent default would make a producer that forgot the preload send nothing to Discord with every test still green
-- **2026-09-26.** `DiscordOutboxJob` deletes every row older than 7 days, sent or not, before it looks at the switch
-  - Rejected: Pruning only sent and given-up rows, as `EmailOutboxJob` does
-  - Why: A post queued before an administrator switched Discord off would otherwise be sent days late when it is switched back on, when an alert about spending or a due date has lost its point
-- **2026-09-26.** A 429 hands the attempt back to that row and to the rest of the user's batch and moves them to `retry_after`; a 401, 403 or 404 gives up every pending row of the user and sets `DisabledByDiscordAt` on the webhook until a new URL is saved or a test succeeds
-  - Rejected: Counting a 429 as a failed attempt; continuing with the user's next row after a 429; retrying a deleted webhook with the ordinary backoff
-  - Why: Discord asked to wait, so the next row would be refused too and a busy channel would burn its five attempts on rate limits alone. A deleted webhook will never answer again, and retrying it for hours would only fill the log
-- **2026-09-26, superseded on 2026-10-03.** Removing the webhook soft-deletes it with the protected URL blanked and hard-deletes its unsent messages
-  - Rejected: A hard delete that bypasses the soft-delete rule; a soft delete that keeps the ciphertext; leaving the queued posts for the job to give up
-  - Why: A delete of an ownable entity is a soft delete everywhere else, and the unique index is filtered to rows not deleted, so a new webhook can be saved at once. A removed credential should not survive in the database, or in the next backup, just because the row does. Queued posts would only be given up one by one, and deleting them makes "Remove" final at once
-- **2026-09-26.** The page link is appended in angle brackets, and the poster name is the installation name unless it is empty or contains "discord" or "clyde", when it is "Jx Finance"
-  - Rejected: A bare link; always "Jx Finance"; embeds
-  - Why: Angle brackets stop Discord from fetching a preview of an address that is usually private. Discord refuses a username containing either word, and a refused name would fail every post. Embeds stay in the backlog

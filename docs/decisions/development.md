@@ -2,10 +2,27 @@
 
 Related: architecture [API contract and generated client](../architecture/api-contract.md), [Tests and Storybook](../architecture/testing.md), [Developer tooling and package updates](../architecture/developer-tooling.md).
 
+## Current
+
+Warnings are errors, analyzers run at `latest-recommended` with a short list switched off in `.editorconfig`, and every NuGet version sits in `Directory.Packages.props`. One committed API contract, `frontend/openapi.json`, compared semantically by a backend test; OpenAPI and Scalar are served only in Development, with `App:ApiDocs=true` as the explicit override the integration tests use. `DevDataSeeder` runs only in Development, first-run setup creates the administrator and its starter categories itself, and demo data is the host command `--seed-demo <email>` for an existing empty user. Stories run in jsdom as portable stories with the real preview, MSW and `axe-core`, and Storybook is for review by hand, where colour contrast is checked in the Accessibility panel; end-to-end tests run against a Compose project of their own with its own volumes. Shared frontend code (`src/components`, `src/lib`, `src/hooks`, `src/stores`) never imports a feature, feature folders have no `index.ts` barrels, and imports across folders use `@/` paths
+
 ## Log
 
 Newest first. Each entry is a choice between real alternatives: what was chosen, what was rejected, and why.
 
+Older entries are in the git history of this file (`git log -p -- docs/decisions/development.md`).
+
+- **2026-10-03.** The 89 EF migrations were squashed into one `InitialCreate` before the first release, and from that release on migrations are never squashed or renamed. The startup fills `PayeeKeyBackfill`, `DebtBalanceBackfill` and `SpreadFromBackfill`, their call in the member import and the `IX_Transactions_PayeeKeyPending` index went with them, along with the one-off data rewrites inside the old migrations; an existing development database is moved over by the one-off SQL in [Developer tooling](../architecture/developer-tooling.md#the-squashed-migration-history), and backups and member downloads taken before are refused
+  - Rejected: Keeping the full history; squashing after the first release
+  - Why: Nothing outside development has applied a migration, so the history protected no installation, while it cost a migration folder of about 180 files, three startup steps and an import step that only filled rows written before their columns existed, and data rewrites that only ever applied to development data. After a release every installation has applied the history and a backup names its last migration, so a squash then would strand real installations and their backups behind a manual history rewrite; before the release the only cost is the development database and its backups, which the one-off SQL and a new backup cover
+
+- **2026-10-03.** A mutation stays pending until the queries it changed have refetched: the mutation cache awaits the invalidation in its `onSuccess`, before the mutation's own `onSuccess`, the success toast and the `mutateAsync` promise, and after a failure in `onSettled`, after the mutation's own rollback
+  - Rejected: Firing the invalidation and forgetting it in `onSettled`, as before; returning it from `onSettled` alone; optimistic updates on every list
+  - Why: Fired and forgotten, a form dialog closed and the toast showed while the list behind it still held the old rows, for one round trip, on every screen without an optimistic update. Returning the promise from `onSettled` keeps `isPending` true, but TanStack Query runs the mutation's own `onSuccess`, which is where the dialogs close, before the cache's `onSettled`, so the dialog still closed early; and on a failure the refetch must come after the mutation's `onError`, or a rollback would overwrite the fresh data. Optimistic updates for every list would be a second copy of each server rule. Only queries on screen are refetched and awaited, so the wait is usually one page of the ledger or one small list
+
+- **2026-10-03.** Feature components get DOM tests through `src/test/api.tsx`: `mockApi()` runs the Storybook MSW handlers in Node and records the requests, and `renderInApp` renders one component with the real mutation cache, a toaster and a memory router that registers only the path and search schema the component reads
+  - Rejected: Rendering through the Storybook decorators; mounting the whole route tree as `src/test/app-router.tsx` does; mocking the generated hooks
+  - Why: The decorators and the route tree import every route and page, which doubled a single file's run time, while one route with its schema is all a section or form needs. The handlers are already the typed, contract-checked mock of the API, and mocking hooks would test neither the request body nor the error mapping
 - **2026-10-03.** The backend integration tests run in eight parallel collections grouped by feature folder, each with its own fixture type, application instance and database; the databases are copies of one template database migrated once, inside one shared PostgreSQL container (or beside the `JX_TEST_POSTGRES` database). The full run went from about 10 minutes 30 seconds to between 2 minutes 15 seconds and 2 minutes 50 seconds on the development machine
   - Rejected: Respawn or another reset between tests in one database; one database with the classes run one at a time, as before; a container per collection; running the migrations into every collection's database
   - Why: A reset needs a known clean state, but every class creates the administrator's session and installation-wide rows, 45 classes switch instance settings, and a backup restore replaces the whole database, so resetting would cost a setup per class and still could not run two classes at once against one installation. One serial database was the 10 minute run, and its classes saw each other's leftovers in an order that changes between runs, which is how several tests failed only in some runs. A database per collection isolates settings, restores and installation-wide rows without any reset, copying a template is cheaper than running all 87 migrations once per collection, and one container avoids starting eight PostgreSQL servers on a six-core machine. The price is that a test still shares its database with the other classes of its collection, and that a few process-wide statics in FastEndpoints, FluentValidation and PdfSharp had to be pinned in the test setup, see [Tests and Storybook](../architecture/testing.md#backend-tests)
@@ -32,33 +49,3 @@ Newest first. Each entry is a choice between real alternatives: what was chosen,
 - **2026-09-29.** Mutation meta helpers are plain objects spread into the generated hook's options: `{ mutation: { ...silentMutation, onSuccess } }` and `{ mutation: notify(message) }`; `silent(options)` is gone. List pages that edit in an `EditModal` and delete with a confirmation share `useEditableList`, and a delete whose route names a parent goes through `childDelete`
   - Rejected: Keeping `silent(options)` as a generic wrapper; leaving the editing state, deferred list and confirmed delete in each page
   - Why: The wrapper sat between the generated hook and the callback, so TypeScript could not infer the callback's argument and call sites wrote the response type by hand; six pages and four child-record deletes repeated the same wiring line for line
-- **2026-09-29.** Shared frontend code (`src/components`, `src/lib`, `src/hooks`, `src/stores`) may not import `@/features/...`, enforced by a `no-restricted-imports` pattern; feature folders have no `index.ts` barrels, and cross-folder imports use `@/` paths instead of `../`. The React hook ban now also covers `src/components/ui`, whose files import React types by name instead of `import * as React`.
-  - Rejected: Leaving the layering to review; keeping per-folder barrels in features; moving `NotificationBell` into a notifications feature
-  - Why: Pieces used by several features had drifted into feature folders and pulled features into shared code; barrels hid which module a symbol came from and mixed three import styles; the bell is app-shell chrome rendered by the sidebar and the phone header, so as a feature it would have made those components import a feature
-- **2026-09-20.** Stories run in jsdom as portable stories (Vitest project `stories`: `composeStories` with the real preview, MSW `setupServer`, `axe-core`), and Storybook is for manual review, where colour contrast is checked by eye in the Accessibility panel. This supersedes the 2026-09-19 row "Stories run as browser tests"
-  - Rejected: Keeping the browser-mode story tests; splitting the browser run into shards
-  - Why: The browser run of about 1,126 stories kept twelve renderers of about 940 MB each, roughly 10 GB, which crashed the page, once hung for eight hours, hit recurring 15 second cold-start timeouts and took about ten minutes when it did finish; shards would have kept the same renderers and the same cold starts. In jsdom the run takes about three minutes, one story needs real layout and is tagged `browser-only`, and the price is that contrast and anything else that needs paint is no longer gated
-- **2026-09-19.** OpenAPI and Scalar routes exist only in Development, with `App:ApiDocs=true` as an explicit override used by the integration tests
-  - Rejected: Serving them everywhere; running the tests in the Development environment
-  - Why: A deployed installation should not describe its API to anyone who reaches it; Development in tests would also switch on the dev user seeding
-- **2026-09-19.** `DevDataSeeder.SeedAsync` runs only in Development; first-run setup creates the administrator and its starter categories itself
-  - Rejected: Seeding the passwordless `dev@localhost` user everywhere and letting setup take it over
-  - Why: Production held a placeholder account until setup ran; setup already handled an empty user table, it only lacked the starter categories
-- **2026-09-19.** One committed API contract, `frontend/openapi.json`, compared semantically by the backend test
-  - Rejected: A second snapshot under the test project refreshed with `JX_UPDATE_SNAPSHOTS=1`
-  - Why: Two files described one contract and an API change needed two commands; now `just gen` is the only step and the contract diff is reviewed where the client is generated
-- **2026-09-19.** Superseded on 2026-09-20, see the 2026-09-20 entry above. Stories run as browser tests (Vitest browser mode, Playwright)
-  - Rejected: Building Storybook only; portable stories in jsdom
-  - Why: 28 of 957 stories were already broken without anyone noticing; jsdom cannot run the MSW service worker or real layout
-- **2026-09-19.** End-to-end smoke tests run against a separate Compose project with its own volumes
-  - Rejected: Running them against the dev stack
-  - Why: First-run setup needs an empty database, and a test must never write to real data
-- **2026-09-19.** Warnings are errors and analyzers run at `latest-recommended`; a short list of rules is switched off in `.editorconfig`
-  - Rejected: Keeping compiler defaults
-  - Why: Unused usings and culture-sensitive formatting were accumulating; the disabled rules (logging delegates, reserved-word namespaces, static members on generic types) do not pay for themselves here
-- **2026-09-19.** Central package versions in `Directory.Packages.props`
-  - Rejected: Versions per project
-  - Why: The API and test project must agree on shared packages, and the update workflow edits one file
-- **2026-09-19.** Demo data is a host command (`--seed-demo <email>`) for an existing empty user
-  - Rejected: Seeding on startup in Development; a script calling the HTTP API
-  - Why: Startup seeding surprises, and a script would need the user's password

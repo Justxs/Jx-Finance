@@ -2,9 +2,15 @@
 
 Related: feature page [Reports](../features/reports.md).
 
+## Current
+
+A comparison with the previous period or the same period a year earlier is read in the same number of database round trips as one period. The server answers the earlier period's amounts and the client computes the difference and the percentage in one function (`changeOf`): a zero base has no percentage and reads "up from nothing", and a fall to zero is an ordinary −100%. A category, synthetic group or tag present in only one period is one entry with `0.00` on the empty side, and breakdowns are ordered by the larger of the two amounts
+
 ## Log
 
 Newest first. Each entry is a choice between real alternatives: what was chosen, what was rejected, and why.
+
+Older entries are in the git history of this file (`git log -p -- docs/decisions/reports.md`).
 
 - **2026-10-02.** The two columns under the summary are rebalanced: the narrow one holds expense by category, income by category and expense by tag; the wide one the trend, expense by payee, expense by place and the receipt items table. Decided while the owner was away, to be reviewed
   - Rejected: Keeping every list in the narrow column beside the trend alone; making the trend sticky beside the long list; moving the tags to the wide column as well
@@ -41,9 +47,3 @@ Newest first. Each entry is a choice between real alternatives: what was chosen,
 - **2026-09-21.** "The same period a year earlier" shifts both ends back with `DateOnly.AddYears` and then keeps a month end a month end: a range ending on the last day of its month ends on the last day of that month a year earlier
   - Rejected: Shifting both ends with `AddYears` alone; re-deriving whole calendar months when the range happens to be one; comparing against the same ISO week numbers
   - Why: `AddYears` alone clamps correctly in one direction — 29 February 2024 becomes 28 February 2023 — but silently drops 29 February when it goes the other way, so February 2025 would have been compared against 1–28 February 2024 and understated the earlier month by a day. Re-deriving months would need a second rule for ranges that are not whole months and would disagree with the first for anything in between. Week numbers answer a question this report never asks, since the range is chosen by date
-- **2026-09-21.** The server answers the earlier period's amounts and the client computes the difference and the percentage, in one function (`changeOf`); a zero base has no percentage and the page says "up from nothing", while a fall to zero is an ordinary −100%
-  - Rejected: Sending `difference` and `differencePercent` per row from the server; showing ∞ or a 100% rise from zero; hiding the row when the base is zero
-  - Why: The difference is a subtraction the client can do, and shipping three numbers per row instead of one widens the payload of every breakdown for something no other consumer needs. A percentage of zero is not a large number, it is not a number, so showing one would be a lie the reader cannot check, and hiding the row would lose exactly the categories a comparison exists to surface — the ones that started or stopped. The rule lives in one tested function so the page, the badge and any later consumer cannot disagree
-- **2026-09-21.** A category, synthetic group or tag present in only one period is one merged entry with `0.00` on the empty side, and the breakdowns are ordered by the larger of the two amounts
-  - Rejected: Leaving the row out of the side that has nothing; keeping two separate lists the client joins; ordering by the current amount
-  - Why: Two lists push the join into every client and make "it is not there" ambiguous between zero and unknown. Ordering by the current amount would bury a category that fell to zero at the bottom of a list the page truncates at five, which is the one row the reader most wants to see. The merged list is at most the union of two periods' keys, and the page still truncates to five categories and eight tags with the rest, and their earlier amounts, rolled into "Other"

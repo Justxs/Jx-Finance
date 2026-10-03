@@ -1,92 +1,48 @@
-# Verification evidence
+# Verification
 
-Last full pass: 2026-09-06. Checks used synthetic data in isolated local PostgreSQL 16 databases. No production records were used.
+How Jx Finance is verified, what each layer covers, and the dated results recorded so far. How the suites are built and run is in [Tests and Storybook](architecture/testing.md); the recipes, hooks and CI jobs are in [Developer tooling](architecture/developer-tooling.md). What is still open before a release is in the [release checklist](release-checklist.md).
 
-## What this record does not cover
+All automated checks use synthetic data in throwaway PostgreSQL 16 databases. No production records are used.
 
-Reviewed 2026-09-19 without rerunning anything. The results below are a dated record of the 2026-09-06 pass and are kept as such; the following was added afterwards and has no recorded verification pass here:
+## Layers
 
-- Multi-currency, investments with the Interactive Brokers import, installation settings, and administrator backup and restore. Their automated tests exist and run in CI, but no result is recorded in this file.
-- The test suites grew: the backend has 212 test methods (`[Fact]` and `[Theory]`) where the pass below ran 85 tests, and the frontend has 47 unit test files, 163 story files run as browser tests, and 6 end-to-end smoke tests where the pass below ran 6 tests.
-- nub is pinned at 0.9.6, not the 0.8.3 used during the migration below.
-- The Docker engine is available again. `just e2e` and the CI `e2e` job build both images and start the HTTP stack with its own volumes. The production overlay was checked locally on 2026-09-19, see Operations checks; what remains is under Remaining deployment validation.
+| Layer | Run with | Covers | In CI |
+| --- | --- | --- | --- |
+| Backend unit and architecture | `just test-unit`, no Docker | Pure logic (money, rates, calendars, statement and receipt parsers, amortization, the journal writer) and the rules every endpoint keeps: layering, contract, feature gates, administrator routes, token scopes, query filters | `backend` job |
+| Backend integration | `just test`, Docker | The whole API against real PostgreSQL: every endpoint's success, validation, access and isolation paths, jobs, imports, backups | `backend` job |
+| Frontend unit and DOM | `nub run test` | `src/lib`, the API client, stores, hooks, feature helpers, shared components, translation keys, theme contrast, and the request bodies of the settings, users, auth, category and tag forms | `frontend` job |
+| Stories | `just test-stories` | Every story's `play` function and an axe scan, in jsdom; stories tagged `browser-only` are skipped | `frontend` job |
+| Contract | `just gen-check` | The committed API contract and generated client match the API | `client-drift` job |
+| End to end | `just e2e`, Docker | Playwright specs in `frontend/e2e` against a throwaway Compose stack over HTTP | `e2e` job |
+| Production overlay | `just verify-production`, Docker | HTTPS, published ports, security headers, Secure cookies, a session surviving an API restart, host filtering | `production-overlay` job |
+| Static | `just check-fast` | Backend format, style and build; frontend types, lint and format; docs links and DESIGN.md | `backend`, `frontend` jobs and the pre-commit hook |
+| Manual | Storybook, a browser, the real host | Look and feel in both themes and languages, colour contrast beyond the theme tokens, the checks below | none |
 
-Record the next full pass here with its date, counts and commit, and move this section's items into it.
+Size as of 2026-10-03: 615 unit, 25 architecture and 1,210 integration test methods (`[Fact]` and `[Theory]`) in eight parallel collections; 127 frontend test files; 313 story files; 22 Playwright specs.
 
-## Automated checks (2026-09-06)
+## Results recorded on 2026-10-03
 
-| Check | Result |
-| --- | --- |
-| Backend Release tests | 85 passed, 0 failed, 0 skipped against a fresh PostgreSQL 16 database (`jx_test_final2`) |
-| Backend publish | Release publish succeeded |
-| Frontend tests | 6 passed: decimal entry and calendar report ranges in Europe/Vilnius, America/Los_Angeles and UTC, including leap-month and year boundaries |
-| Frontend lint, formatting, TypeScript and production build | Passed |
-| Generated API client | Exported from the updated API; regeneration produced identical files |
-| Compose configuration | Base and production overlay both passed `docker compose config --quiet` |
-| Backup removal | True on 2026-09-06: no backup, pg_dump or pg_restore references remained. Superseded on 2026-09-19 by the application-written backups under `Endpoints/Backups` and the `backups` volume; pg_dump, pg_restore and a scheduler are still absent |
-| Git whitespace check | Passed |
-
-Backend coverage includes authentication and 2FA, user management, accounts and balances, transactions/splits, transfers, budgets, goals, reports/exports, imports, recurring bills, households, net worth and architecture boundaries. Added regressions exercise concurrent duplicate imports, deleted import references, transfer matching, concurrent bill confirmation, session revocation, sharing access revocation, inactive bills, inaccessible references, concurrent reminder scans and unique daily net-worth observations. Budget windows are covered twice: `BudgetWindowTests` pins the four period boundaries and the two first-day-of-week variants as a unit test, and the integration tests read a real budget back after moving the installation time zone and the first day of the week, count split lines inside a window, reject a second budget for the same category and period, and check that a rollover carries a remainder, carries an overspend as a negative amount, stops after twelve windows and carries nothing from before the budget existed.
-
-Local reproducibility artifacts (ignored by Git): `.local/backend-final-release.log`, `backend/JxFinance.Tests/TestResults/final-release.trx`, `.local/frontend-build-final.log`, `.local/publish.log` and `.local/client-hashes.json`. Commands and prerequisites are in README.
-
-## Browser acceptance
-
-Completed in the Codex browser against Vite and the local API:
-
-- Sign-in and dashboard totals with synthetic data.
-- Budget limit edit using `425,50`, saved and displayed as EUR 425.50.
-- Goal name and target edits, persisted across browser sessions.
-- Transaction save rejected for an out-of-range amount preserved its description and amount. Correcting to `12,50` saved successfully; editing to `13,25` refreshed the visible row immediately. Search filtering and account names were verified after fixing table memoization.
-- Transfer history page 2 showed the two older entries after the first ten.
-- CSV file upload, preview, row/category selection and matching to an existing EUR 50 transfer. Account balance changed only by the EUR 3.25 expense, confirming that the transfer was not counted twice.
-- Bill confirmation created one EUR 24.90 expense, cleared its reminder, and advanced the displayed due date from September 5 to October 5.
-- Net worth showed current totals, the sample asset, and September 5/6 history points.
-- Reports matched ledger totals. The corrected current-month range started September 1 in Vilnius time.
-- Categories, household empty state and administrator user list loaded successfully.
-- Light/dark themes and English/Lithuanian text were inspected. Goal and bill layouts were checked at 390px width with no page overflow; the viewport override was reset.
-- The final clean browser smoke pass reported no JavaScript errors.
-
-The host-side administrator recovery command completed successfully in an interactive terminal against a disposable test administrator. Its container invocation remains untested.
-
-## Responsive layout and code cleanup
-
-The subsequent frontend cleanup consolidated summary figures, pagination and category breakdowns, removed duplicate chart rendering and per-row account dialogs, and made form columns depend on their available space. Tables retain all columns in keyboard-focusable horizontal scroll regions. Dialogs constrain their height to the viewport and scroll their form body; notification and calendar panels fit small screens.
-
-Browser checks against the synthetic QA account:
-
-- All 12 signed-in pages loaded and passed document-width checks at 320, 768 and 1440 pixels in English. Table and mobile-navigation scrolling is intentional and contained.
-- All 12 pages were inspected in Lithuanian at 320 and 1024 pixels. The 320px pass found overflowing transaction export controls and the profile two-factor button; both were fixed and rechecked.
-- Create dialogs for transactions, accounts, transfers, categories, budgets, goals, assets, debts and recurring bills were checked at 320px. Account and category editing were also inspected.
-- Lithuanian user creation and recurring-bill dialogs were checked at 740 x 360; scrolling and keyboard focus kept the bottom actions reachable.
-- Notification opening/Escape dismissal and the calendar popup were checked at 320px. Dashboard category labels, values and trend charts were visually inspected on phone and desktop layouts, with both light and dark themes covered during the pass.
-- The final browser console check returned no JavaScript errors. Frontend formatting, lint, all six unit tests and the TypeScript/production build passed again after cleanup.
-
-These are browser viewport checks, not physical iOS/Android device tests. This pass changed frontend presentation only; the backend results above are from the preceding release verification. The production build log is `.local/build-responsive-final.log` (ignored by Git).
-
-## Package manager migration
-
-The frontend moved to nub at version 0.8.3 (the repository now pins 0.9.6). Its migration command renamed the existing lockfile to `frontend/nub.lock` without changing its bytes or dependency versions, moved the esbuild build permission into `package.json`, and removed the former workspace configuration. Local scripts, the justfile, CI setup/cache/install steps, Docker build and development instructions use nub. `nub.jsonc` preserves standard Node behavior for Vite and the existing test scripts.
-
-Verified with the newly installed nub CLI and a clean `nub ci` dependency tree: formatting, lint, all six frontend tests and the TypeScript/production build passed. Orval regeneration followed by formatting produced an identical generated client, and the native lockfile still matches the original dependency graph byte-for-byte. `nub run --cwd frontend dev` started Vite, which returned HTTP 200. Logs are `.local/nub-install.log`, `.local/nub-build.log`, `.local/nub-orval.log` and `.local/nub-dev.log` (ignored by Git). CI and Docker configuration were updated but not executed during this pass; the Docker engine was unavailable at the time.
-
-## Operations checks (2026-09-19)
-
-Run on the development machine (Windows, Docker 29.5.2, Compose v5.1.3). The backend had uncommitted changes in progress that day whose model has no migration yet, so container runs that start the API used an export of commit 686de01 with the changed operations files copied over it (`.dockerignore`, the compose files, both Dockerfiles, both Caddyfiles, `scripts/verify-production.mjs`). Backend tests, `just check`, `just gen` and `just e2e` were not run in this pass.
+Measured on the 12-thread development machine.
 
 | Check | Result |
 | --- | --- |
-| API image built from the working tree with the new `.dockerignore` | Built. `find / -name '*.json.gz' -o -name '*.info.json' -o -name '*.csproj.user'` in the final image found nothing; the same search plus `*.user` and `TestResults` over `/src` and `/app` of the build stage found nothing, while two backups (four files) were present in `backend/JxFinance.Api/backups` on disk. `id` in the final image: `uid=1654(app)` |
-| `docker compose -f docker-compose.yml -f docker-compose.production.yml config --quiet` | Exit 0. The rendered configuration publishes one port, frontend 443; `db` and `api` publish none. Base file alone and base plus e2e overlay: exit 0 |
-| `caddy validate` of `Caddyfile` and `Caddyfile.production` with `caddy:2.11.4-alpine` | "Valid configuration" for both, by bind mount and through the stdin form CI uses |
-| `node scripts/verify-production.mjs` on the working tree | Failed as expected for that tree: both images built, the API container exited with EF `PendingModelChangesWarning` (model changed, no migration yet), so the stack never became healthy. The three static checks before start passed |
-| `node scripts/verify-production.mjs` on commit 686de01 plus the operations files | 24 of 24 checks passed, twice (before and after moving `Caddyfile.production` into the image): only 443 published; `auth_keys` and `backups` mounted only into `api`; API runs as non-root; 200 over HTTPS; HSTS, Content-Security-Policy, Permissions-Policy and Referrer-Policy on the site; `nosniff`, `default-src 'none'` and HSTS on `/api/setup/status`; first-run setup and sign-in; `jx_access` and `jx_refresh` both `Secure` and `HttpOnly`; `/api/auth/me` 200 before and after `up -d --force-recreate api` with the same access token; `Host: other.example` answered 400. All three services reported healthy, including the new frontend health check |
-| Base stack with the e2e overlay under project `jx-basecheck` (same export) | `up -d --build --wait` exit 0, `db`, `api`, `frontend` healthy. `curl -D -` on `/` showed the site Content-Security-Policy, Cross-Origin-Opener-Policy, Permissions-Policy, Referrer-Policy, `nosniff`, `X-Frame-Options` and no `Server` header; `/api/setup/status` showed `default-src 'none'; frame-ancestors 'none'` and `nosniff`. Playwright was not run |
-| `just update-images --check` | First run reported the Aspire dashboard tag `13.5` behind `13.5.2` (same digest); after `node scripts/update-images.mjs`, "Every pinned image is current", exit 0. The digests it resolved equal those from `docker buildx imagetools inspect` |
-| `just audit` | NuGet: no vulnerable packages in `JxFinance.Api` or `JxFinance.Tests`. `nub audit --prod --audit-level moderate`: no known vulnerabilities. `nub audit --dev`: 13 advisories (12 high, 1 moderate) in brace-expansion, browserslist, fast-uri, linkify-it and baseline-browser-mapping; reported, not blocking |
-| PowerShell parse of `scripts/dev.ps1`, `setup.ps1`, `with-dev-database.ps1` after adding `App__BackupDirectory` | 0 parse errors each. `just dev` itself was not started |
+| Backend, whole suite | 2,517 tests passed, in about 2.5 to 3 minutes |
+| `just test-unit` | 1,174 tests passed, in about 20 seconds |
+| Frontend `nub run test` | 2,553 tests passed |
+| `nub run test:stories` | 2,331 passed, 2 skipped (`browser-only`) |
 
-Not verified: the changed workflows have not run on the Gitea runner (the `production-overlay` job assumes, like the existing `e2e` job, that ports published by the Docker daemon are reachable from the job on 127.0.0.1); certificate trust on client devices; the recovery command inside the container.
+The end-to-end suite, the production overlay and the app and Storybook builds are not part of this record.
+
+## Earlier passes
+
+The full detail of these is in the git history of this file.
+
+- **2026-09-06**, the first full pass: 85 backend and 6 frontend tests, lint, types, the production build, generated-client stability and `docker compose config` all passed. A browser acceptance pass covered sign-in, budgets, goals, transactions, transfers, CSV import with transfer matching, bill confirmation, net worth, reports, both themes and both languages, and every signed-in page at 320, 768 and 1440 pixels. These were browser viewport checks, not phones. Docker was unavailable, so nothing containerized ran.
+- **2026-09-19**, operations: `scripts/verify-production.mjs` passed 24 of 24 checks on commit 686de01 plus that day's operations files, both Caddyfiles validated, the API image runs as a non-root user and holds no development backups, and `just audit` found no vulnerable shipped package.
+
+## What automated checks do not show
+
+No feature added from 2026-09-20 on has been used by a person, and none has met a real host, a real SMTP server, a real Discord webhook, real bank or broker files, or a passkey on a real device. Certificate trust on client devices and the administrator recovery command inside the container are unverified, and the CI workflow has not run on the Gitea runner. The [release checklist](release-checklist.md) keeps the open items and the [backlog](backlog.md) the order to do them in.
 
 ## Double-entry journal
 
@@ -97,12 +53,4 @@ The member export's `ledger.beancount` is checked in CI by `JournalChecker`, a C
 3. Unzip `ledger.beancount` and run `bean-check ledger.beancount`: no output means every transaction balances and every `balance` assertion, one per account and currency, holding, asset and debt, holds.
 4. Run `fava ledger.beancount` and compare the balance sheet with the accounts page and the income statement with the reports; they differ only where [the feature page](features/data-export-per-user.md#double-entry-journal) says.
 
-Not verified: on 2026-09-30, when the journal was built, the development machine had no Python with Beancount and Docker was not running, so neither `bean-check` nor the integration tests ran; only the unit tests of the writer, the names, the commodities and the checker did.
-
-## Remaining deployment validation
-
-During the 2026-09-06 pass Docker Desktop's Linux engine was unavailable (`dockerDesktopLinuxEngine` pipe missing), so nothing containerized was verified then. As of 2026-09-19 the engine runs again, and `just e2e` and the CI `e2e` job build the images and start the base Compose stack over HTTP with separate volumes. No result of those runs is recorded here.
-
-The production overlay, Secure cookies and session persistence across recreating the API container were checked locally on 2026-09-19, see Operations checks above. Still unverified: **certificate trust on client devices, the overlay on the real host with its real hostname and bind address, and the administrator recovery command inside the container**. Compose configuration validation, the HTTP end-to-end stack and local PostgreSQL tests do not prove those behaviors.
-
-Run those checks before deploying. Browser QA covered the flows listed above; it is not an exhaustive accessibility audit or a sustained daily-use trial. Vite still reports a bundle-size advisory for the main chunk, although the production build succeeds.
+Not run yet: `bean-check` and Fava have never read a real download.

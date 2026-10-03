@@ -81,7 +81,7 @@ A change is not finished until the docs match the code:
 
 - Feature behaviour goes in `docs/features/<feature>.md`. A new feature gets a page plus a row in `docs/features/README.md`.
 - A mechanism a reader could not infer from the code goes in the matching `docs/architecture/<area>.md`.
-- A choice between real alternatives gets a dated entry at the top of the Log in `docs/decisions/<topic>.md`, with what was rejected and why. Update that page's Current section when the standing decision changes.
+- A choice between real alternatives gets a dated entry at the top of the Log in `docs/decisions/<topic>.md`, with what was rejected and why. Update that page's Current section when the standing decision changes. Each Log keeps its newest 10 entries; older ones live in git history.
 - New doc files use lowercase kebab-case names without numbers or spaces. Link with relative paths and run `just check-docs`.
 - Keep lines under 2000 characters (some agent tools cut longer ones off); break long paragraphs at a sentence.
 

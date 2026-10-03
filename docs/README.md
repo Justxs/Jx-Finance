@@ -19,7 +19,7 @@ These pages describe the current code, not a wishlist. Where a page and the code
 | What does the interface look like? | [DESIGN.md](../DESIGN.md), [Visual system](architecture/visual-system.md) |
 | What must always hold (exactness, isolation, privacy)? | [Quality requirements](quality-requirements.md) |
 | What is not built yet? | [Backlog and ideas](backlog.md), [Plans](plans/README.md) |
-| What has been verified, and when? | [Verification evidence](verification.md), [Release checklist](release-checklist.md) |
+| What has been verified, and when? | [Verification](verification.md), [Release checklist](release-checklist.md) |
 
 ## Layout
 

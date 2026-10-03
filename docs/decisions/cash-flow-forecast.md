@@ -10,6 +10,8 @@ Implemented 2026-09-29 behind the `RecurringBills` switch; since 2026-10-03 behi
 
 Newest first. Each entry is a choice between real alternatives: what was chosen, what was rejected, and why.
 
+Older entries are in the git history of this file (`git log -p -- docs/decisions/cash-flow-forecast.md`).
+
 - **2026-10-03.** The forecast has its own `CashFlowForecast` switch and no longer needs `RecurringBills`; with entries off it leaves them out
   - Rejected: Keeping it under `RecurringBills`; requiring both switches; projecting entries that are hidden while their switch is off
   - Why: The owner wanted the forecast switchable on its own. The 2026-09-29 reason, nothing to project without entries, does not hold: rows dated ahead and the usual spending are projected without any entry. One feature per route keeps `RequiresFeature` and `FeatureGateTests` as they are, and a hidden entry moving a visible balance would be a number nobody can explain
@@ -41,12 +43,3 @@ Newest first. Each entry is a choice between real alternatives: what was chosen,
 - **2026-09-29.** Transfers leave the source and arrive in the destination when the caller can see it, converted at the newest rate and then marked estimated; only the caller's own active entries count, and the section says "your recurring entries"
   - Rejected: Only the source side; including a household partner's entries on a shared account
   - Why: Both balances move, and the destination is often the savings account the user asks about. Recurring entries cannot be shared yet, and reading someone else's personal rows would break the owner filter
-- **2026-09-29.** A second, dashed line takes off usual daily spending: per account, the median over the last three complete months of each month's expenses outside the entries, divided by that month's days; less than three months of history gives no line. The response carries two dates, and the text says which is which
-  - Rejected: No second line; the mean; adding irregular income; one combined date
-  - Why: Without it a salary account never goes below zero on paper: salary in, rent out, groceries ignored. The median ignores one large purchase, and a separate line keeps the scheduled one exact. The first date is a fact about the schedule and the second is a guess
-- **2026-09-29.** `days` is 30 to 90, default 90; `BillsForecastChart` is deleted and the recurring page shows the forecast section with the scheduled in and out totals
-  - Rejected: Six months, as the bar chart had; keeping both charts
-  - Why: Beyond three months the estimates outweigh the schedule. Two forecasts on one page that disagree would each weaken the other, and the monthly fixed-expense total the bars showed is the "out" figure
-- **2026-09-29.** A new `DashboardCard.CashFlow` is appended after `UpcomingBills` behind `recurringBills`, shown on the current month only; the endpoint carries `RequiresFeature(Feature.RecurringBills)` and there is no `CashFlowForecast` switch
-  - Rejected: Folding the forecast into the upcoming-bills card; a switch of its own
-  - Why: Card ids are published strings, and `DashboardLayout.ResolvedOrder` appends a card a saved layout does not mention at the end, shown, which is how a new card is meant to arrive. Without recurring entries there is nothing to project, and the same metadata already gates the unusual-amount endpoints inside an ungated group

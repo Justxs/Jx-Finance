@@ -10,6 +10,8 @@ Implemented 2026-09-26 behind the `UnusualAmounts` switch, on by default. A job 
 
 Newest first. Each entry is a choice between real alternatives: what was chosen, what was rejected, and why.
 
+Older entries are in the git history of this file (`git log -p -- docs/decisions/unusual-amounts.md`).
+
 - **2026-09-29.** The job writes a page of verdicts with one `UPDATE … FROM unnest(...) RETURNING` that still matches each row's `UpdatedAt`, instead of one `ExecuteUpdate` per row; the pass stays one transaction
   - Rejected: Committing per page
   - Why: Up to 20,000 round trips a pass became about 40 statements with the same guard against overwriting an edit. Committing per page would shorten the row locks but split the verdicts from the notifications they raise, so a crash in between would leave rows checked that never notified
@@ -41,6 +43,3 @@ Newest first. Each entry is a choice between real alternatives: what was chosen,
 - **2026-09-26.** "Not unusual" and "Mark as unusual again" live in the badge's popover, with an undo toast after dismissing
   - Rejected: Entries in the ledger's row menu, as planned
   - Why: The popover is where the reason for the flag is shown, so the decision is made next to the evidence and the row menu keeps only what applies to every row. The badge also appears in the dashboard's recent transactions, which have no row menu, and works the same there
-- **2026-09-26.** Only rows dated within the last 45 days notify; when one owner has more than three new flags in a pass they collapse into one `UnusualAmounts` notification with the count
-  - Rejected: One notification per flagged row whatever its date; a daily digest
-  - Why: An old statement imported today is history, not news, and its flags are still in the ledger filter. A large import would otherwise fill the bell with rows that say the same thing

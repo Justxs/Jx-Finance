@@ -54,3 +54,50 @@ tester.run("no-key-listener", plugin.rules["no-key-listener"], {
     { code: `document.addEventListener("keyup", onKey, { capture: true });`, errors: 1 },
   ],
 });
+
+tester.run("no-raw-browser-api", plugin.rules["no-raw-browser-api"], {
+  valid: [
+    `const setTimeout = later; setTimeout(run, 10);`,
+    `function save(localStorage) { localStorage.setItem("a", "b"); }`,
+    `storage.setItem("a", "b");`,
+    `debouncer.setTimeout(run);`,
+  ],
+  invalid: [
+    { code: `localStorage.setItem("a", "b");`, errors: 1 },
+    { code: `sessionStorage.clear();`, errors: 1 },
+    { code: `setTimeout(run, 10);`, errors: 1 },
+    { code: `setInterval(run, 10);`, errors: 1 },
+    { code: `window.localStorage.getItem("a");`, errors: 1 },
+    { code: `globalThis.setTimeout(run);`, errors: 1 },
+    { code: `window["sessionStorage"].clear();`, errors: 1 },
+  ],
+});
+
+const uiFile = "/app/src/components/ui/calendar/calendar.tsx";
+const sharedFile = "/app/src/lib/budgets.ts";
+
+tester.run("layer-imports", plugin.rules["layer-imports"], {
+  valid: [
+    { code: `import { Button } from "@/components/ui/button/button";`, filename: uiFile },
+    { code: `import { cn } from "@/lib/utils";`, filename: uiFile },
+    { code: `import { useSettings } from "@/hooks/use-settings";`, filename: sharedFile },
+    { code: `import { Money } from "@/components/money/money";`, filename: sharedFile },
+    {
+      code: `import { x } from "@/features/goals/a/a";`,
+      filename: "/app/src/routes/goals.tsx",
+    },
+  ],
+  invalid: [
+    { code: `import { useSettings } from "@/hooks/use-settings";`, filename: uiFile, errors: 1 },
+    { code: `import { x } from "@/api/generated";`, filename: uiFile, errors: 1 },
+    { code: `import { x } from "@/stores/theme-store";`, filename: uiFile, errors: 1 },
+    { code: `import { Money } from "@/components/money/money";`, filename: uiFile, errors: 1 },
+    { code: `import { x } from "@/features/goals/a/a";`, filename: uiFile, errors: 1 },
+    { code: `import { x } from "@/features/goals/a/a";`, filename: sharedFile, errors: 1 },
+    {
+      code: `export { x } from "@/features/goals/a/a";`,
+      filename: "/app/src/components/money/money.tsx",
+      errors: 1,
+    },
+  ],
+});

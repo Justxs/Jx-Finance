@@ -10,11 +10,11 @@ Includes full balances of all visible accounts plus all visible assets minus all
 
 ### Snapshot schedule
 
-Refresh today's snapshot hourly and on viewing; unique user/date; no invented historical points
+Refresh today's snapshot hourly and on viewing; unique user/date; no invented historical points, and snapshots already taken are not rewritten when a past valuation is added; a total beyond numeric(18,2) is still answered and that day's snapshot is skipped
 
 ### Asset value
 
-An asset keeps dated valuations, today or earlier, and may depreciate on a straight line in whole monthly steps down to a residual value. The value on any date is computed from the valuations and the terms when it is read and is never stored; an asset counts in net worth from its first valuation
+An asset keeps dated valuations, today or earlier, and may depreciate on a straight line in whole monthly steps down to a residual value. The monthly amount is `(start value − residual) / life` rounded up to the cent, so the last step is the smaller one, and a manual valuation on or after the start date restarts the decline from that value at the same monthly amount. The value on any date is computed from the valuations and the terms when it is read and is never stored; an asset counts in net worth from its first valuation
 
 ### Debt balance
 
@@ -27,6 +27,8 @@ The Trend chart continues at the average monthly change of the last twelve month
 ## Log
 
 Newest first. Each entry is a choice between real alternatives: what was chosen, what was rejected, and why.
+
+Older entries are in the git history of this file (`git log -p -- docs/decisions/net-worth.md`).
 
 - **2026-10-01.** A debt's recorded balance is kept as rows of a `DebtBalanceEntries` table, one per debt and date with an optional note, written by `DebtBalanceBook` exactly as `AssetValuationBook` writes asset valuations: creating a debt records its first balance, editing the amount or the date records one for that date, and `Debt.OutstandingAmount` and `AsOf` stay as the denormalized newest balance, so a balance for an earlier date only adds history. Decided while the owner was away, to be reviewed
   - Rejected: Deriving the history from the household activity log; dropping `OutstandingAmount` and `AsOf` and reading the newest row everywhere; letting a debt edit to an earlier date replace the newest balance
@@ -59,22 +61,3 @@ Newest first. Each entry is a choice between real alternatives: what was chosen,
 - **2026-09-27.** Depreciation is a straight line in whole monthly steps on the start date's day of month, never below the residual; the terms are optional: start date, start value, life of 1 to 600 months and residual value
   - Rejected: Daily pro rata; declining balance
   - Why: Monthly steps give amounts in cents that a person can check by hand. Declining balance can come later as a second method
-- **2026-09-27.** The monthly amount is `(start value − residual) / life` rounded up to the cent, so the value reaches the residual on the last step of the life at the latest and the final step is the smaller one
-  - Rejected: Rounding to the nearest cent and letting the last step absorb the difference
-  - Why: Rounding up needs no special last step, and the rule stays the same after a revaluation
-- **2026-09-27.** A manual valuation on or after the start date restarts the decline from that value at the same monthly amount
-  - Rejected: Ignoring manual valuations while depreciating; recomputing the rate from the new value
-  - Why: An inspection says what the car is worth now. The loss per month is a property of the car, not of the latest guess
-- **2026-09-27.** The value on a date is computed on read by a pure `AssetValue.On(date, valuations, terms)` for net worth, the list and the chart; depreciation writes no rows
-  - Rejected: A job writing a monthly valuation row
-  - Why: The debt schedule set the precedent: computed per request, never stored. Edited terms apply at once, with nothing to rewrite. Net worth snapshots still record what the value was each day
-- **2026-09-27.** Snapshots already taken are not rewritten when a valuation is added for a past date
-  - Rejected: Recomputing past snapshots
-  - Why: Snapshots are the history as it was seen
-- **2026-09-27.** An asset counts in net worth only on or after its earliest valuation, and valuation dates cannot be in the future
-  - Rejected: Keeping `AsOf` ignored
-  - Why: It makes "counts from the as-of date" true. With no future dates, today's total is unaffected except for the fix itself
-
-- **2026-09-19.** Net worth totals beyond numeric(18,2) are answered and the day's snapshot is skipped
-  - Rejected: Rejecting an asset or debt whose sum with the others would not fit; widening the snapshot columns
-  - Why: A write-time rule cannot cover account balances and holdings, which also feed the total, so the 500 would remain reachable. Wider columns need a migration for values no household has. Skipping matches what already happens when a rate is missing

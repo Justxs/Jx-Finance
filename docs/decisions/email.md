@@ -4,11 +4,13 @@ Related: feature page [Email](../features/email.md).
 
 ## Current
 
-Implemented 2026-09-20. One SMTP server per installation, configured by an administrator in Settings, with its own enabled switch and a data-protected password that no response carries; a single-use, one-hour reset link from the sign-in screen beside the administrator reset, recovery codes and host-side admin recovery, which all stay; address confirmation with a resend, blocking nothing except unsolicited mail to that address; since 2026-09-27 an email beside any notification kind the user ticks, none by default, sent through the notification publisher like Discord. Everything but the administrator's test message leaves through an outbox table drained by a background job, so no request and no other job waits for a mail server. Message texts are plain, held in the backend in English and Lithuanian, and since 2026-09-29 sent in the member's own language, `AspNetUsers.Language`, saved when they pick one in the interface, and in the installation language while they have none
+Implemented 2026-09-20. One SMTP server per installation, configured by an administrator in Settings, with its own enabled switch and a data-protected password that no response carries; a single-use, one-hour reset link from the sign-in screen beside the administrator reset, recovery codes and host-side admin recovery, which all stay; address confirmation with a resend, consumed by a button click rather than on page load, blocking nothing except unsolicited mail to that address; since 2026-09-27 an email beside any notification kind the user ticks, none by default, sent through the notification publisher like Discord. Everything but the administrator's test message leaves through an outbox table drained by a background job, so no request and no other job waits for a mail server. Message texts are plain, held in the backend in English and Lithuanian, and since 2026-09-29 sent in the member's own language, `AspNetUsers.Language`, saved when they pick one in the interface, and in the installation language while they have none
 
 ## Log
 
 Newest first. Each entry is a choice between real alternatives: what was chosen, what was rejected, and why.
+
+Older entries are in the git history of this file (`git log -p -- docs/decisions/email.md`).
 
 - **2026-10-01.** Reset and confirmation links are built only from `App:SiteUrl`; while it is empty no such message is queued, `forgot-password` still answers 204 and logs a warning, and a resend answers `email.notConfigured`
   - Rejected: Keeping the request's scheme and host as the fallback; refusing to start without `App:SiteUrl`; accepting the request host only when it matches `AllowedHosts`
@@ -40,6 +42,3 @@ Newest first. Each entry is a choice between real alternatives: what was chosen,
 - **2026-09-20.** The mail server is one installation setting with its own `enabled` flag, read and written through `settings/smtp`, and not a `FeatureFlags` entry
   - Rejected: Adding `Email` to `FeatureFlags` and `FeatureGateMiddleware`; putting the fields into the existing `PUT /api/settings` body
   - Why: A feature switch hides routes, and `forgot-password`, `reset-password` and `verify-email` must stay reachable: a link mailed yesterday should not 404 because an administrator turned a switch off this morning. Folding the fields into the main settings body would have put a credential behind `GET /api/settings`, which every signed-in user reads, and would have made one save either send the password again or lose it. A separate admin-only pair keeps the secret where only administrators can see that it exists
-- **2026-09-20.** The confirmation link consumes its token on a button click rather than on page load
-  - Rejected: Confirming on load, which is one click less
-  - Why: Mail servers and security suites follow links in incoming mail. Confirming on load lets a scanner confirm an address the recipient never opened, which defeats the only thing the confirmation proves
