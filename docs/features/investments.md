@@ -159,7 +159,6 @@ flowchart TD
     Newest -->|"yes"| Move["LastPrice and LastPriceDate move"]
     Newest -->|"no"| Keep["history gains an older point,<br/>LastPrice unchanged"]
     Delete["DELETE .../securities/{id}/prices/{date}"] --> Fall["LastPrice falls back to the newest remaining point,<br/>or is cleared when none is left"]
-    Migration["Migration AddSecurityPrices"] -->|"one row per security"| Backfill["the last price that was already stored"]
 ```
 
 ## Portfolio value over time

@@ -17,7 +17,6 @@ namespace JxFinance.Tests.Integration.Users;
 public sealed partial class UserImportTests(PeopleFixture fixture) : IntegrationTestBase(fixture)
 {
     private const string ImportUrl = "/api/users/me/import";
-    private const string OlderMigration = "20261001175018_AddImportInbox";
 
     [Fact]
     public async Task A_download_moves_into_an_empty_member_with_its_files()
@@ -86,31 +85,6 @@ public sealed partial class UserImportTests(PeopleFixture fixture) : Integration
         await AssertProblemAsync(response, HttpStatusCode.BadRequest, "import.invalidFile");
     }
 
-    [Fact]
-    public async Task A_download_from_an_older_version_takes_the_defaults_and_the_startup_fills_of_what_came_later()
-    {
-        using var source = await CreateUserClientAsync();
-        var account = await CreateAccountAsync(client: source);
-        await RecordTransactionAsync(source, new { accountId = account, type = "expense", amount = "360.00", date = "2026-01-15", description = "Insurance", spreadMonths = 12 });
-        await PostAsync<IdDto>(source, "/api/debts", new { name = "Car loan", type = "loan", outstandingAmount = "900.00", asOf = "2026-03-01" });
-        var older = WithData(WithNewIds(await DownloadAsync(source)), document =>
-        {
-            document[BackupJsonNames.Migration] = OlderMigration;
-            DropColumns(document, "Transactions", "Payee", "SpreadDirection", "SpreadFrom");
-            var tables = document[BackupJsonNames.Tables]!.AsArray();
-            tables.Remove(Table(document, "DebtBalanceEntries"));
-        });
-        using var target = await CreateUserClientAsync();
-
-        await ReadOkAsync<ImportDto>(await ImportAsync(target, older));
-        var moved = Assert.Single((await target.GetFromJsonAsync<PageDto<SpreadEntryDto>>("/api/transactions", TestContext.Current.CancellationToken))!.Items);
-        var debt = Assert.Single((await target.GetFromJsonAsync<List<DebtDto>>("/api/debts", TestContext.Current.CancellationToken))!);
-        var balances = await target.GetFromJsonAsync<List<DebtBalanceDto>>($"/api/debts/{debt.Id}/balances", TestContext.Current.CancellationToken);
-
-        Assert.Equal((12, "forward", new DateOnly(2026, 1, 15), new DateOnly(2026, 12, 15)), (moved.SpreadMonths, moved.SpreadDirection, moved.SpreadFrom, moved.SpreadUntil));
-        Assert.Equal([new DebtBalanceDto(new DateOnly(2026, 3, 1), "900.00", null)], balances);
-    }
-
     [Theory]
     [InlineData("29990101000000_FromAFutureVersion", "import.newerVersion")]
     [InlineData("20000101000000_NeverShipped", "import.unknownVersion")]
@@ -132,7 +106,6 @@ public sealed partial class UserImportTests(PeopleFixture fixture) : Integration
         await CreateAccountAsync(client: source);
         var file = WithData(WithNewIds(await DownloadAsync(source)), document =>
         {
-            document[BackupJsonNames.Migration] = OlderMigration;
             var accounts = Table(document, "Accounts");
             accounts[BackupJsonNames.Columns]!.AsArray().Add("RetiredColumn");
             foreach (var row in accounts[BackupJsonNames.Rows]!.AsArray())
@@ -419,26 +392,6 @@ public sealed partial class UserImportTests(PeopleFixture fixture) : Integration
 
     private static JsonObject Table(JsonObject document, string name) =>
         document[BackupJsonNames.Tables]!.AsArray().Select(t => t!.AsObject()).Single(t => t[BackupJsonNames.Name]!.GetValue<string>() == name);
-
-    private static void DropColumns(JsonObject document, string table, params string[] names)
-    {
-        var found = Table(document, table);
-        var columns = found[BackupJsonNames.Columns]!.AsArray();
-        var positions = names
-            .Select(name => columns.Select(c => c!.GetValue<string>()).ToList().IndexOf(name))
-            .Where(index => index >= 0)
-            .OrderDescending()
-            .ToList();
-        Assert.Equal(names.Length, positions.Count);
-        foreach (var index in positions)
-        {
-            columns.RemoveAt(index);
-            foreach (var row in found[BackupJsonNames.Rows]!.AsArray())
-            {
-                row!.AsArray().RemoveAt(index);
-            }
-        }
-    }
 
     private static byte[] WithNewIds(byte[] zip)
     {

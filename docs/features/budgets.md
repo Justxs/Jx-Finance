@@ -8,6 +8,8 @@ Each row (`budget-row`) leads with what is left, such as "€84.00 left", or wit
 
 A budget can be shared with a household like a category; a shared budget counts only the transactions on the household's shared accounts. See [Households and sharing](households-and-sharing.md#shared-budgets-goals-and-recurring-entries).
 
+Every budget response carries `version`, and since 2026-10-03 `PUT /api/budgets/{id}` requires the one the form read: when another member saved the budget in the meantime, or a reporting-currency change converted its limit, the update answers 409 `conflict.stale`, the edit dialog shows the message over the typed values, and saving again uses the refreshed version. See [Concurrent edits](../architecture/api-contract.md#concurrent-edits).
+
 ## The window
 
 A budget has no start or end date of its own. The window is derived from the period and from today in the installation time zone, so a budget created in March and a budget created yesterday answer the same question in September. `IClock.Today` converts the current instant into the installation time zone, and `BudgetWindow.For` turns that date into a half-open range: `Start` is inclusive, `End` is exclusive, and the response publishes the inclusive last day as `windowEnd`, like every other period in the API.
@@ -59,7 +61,7 @@ Since 2026-10-02, with [My share](household-settle-up.md#my-share) chosen in Set
 
 ## Rollover
 
-Rollover is a switch on the budget. When it is off, the effective limit is the base limit and nothing older than the current window is read: that is the behaviour every budget had before this feature, and the migration leaves existing rows with the switch off. When it is on, the remainder of the previous window is added to the current limit, and an overspend is subtracted. The remainder of that previous window includes what it carried in turn, so the carry is a walk backwards over whole windows.
+Rollover is a switch on the budget. When it is off, the effective limit is the base limit and nothing older than the current window is read. When it is on, the remainder of the previous window is added to the current limit, and an overspend is subtracted. The remainder of that previous window includes what it carried in turn, so the carry is a walk backwards over whole windows.
 
 ```mermaid
 flowchart LR

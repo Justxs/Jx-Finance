@@ -85,7 +85,7 @@ The debt page `/net-worth/debts/$debtId` is now reached from every debt row ("Ba
 
 Recording a past balance does not rewrite the net worth snapshots already taken. Deleting a debt moves it to the trash with its balances untouched, and the nightly purge removes them with the debt. Backups carry the table like every other, and [Download my data](data-export-per-user.md) carries it with the member's debts and imports it back.
 
-Debts created before the table existed got one balance from their current record. The `AddDebtBalanceEntries` migration only creates the table, and `DebtBalanceBackfill.RunAsync`, run at every start right after the migrations and the payee key backfill, inserts one balance from `OutstandingAmount` and `AsOf` for each debt, deleted ones included, that has none, in a single `INSERT … SELECT … WHERE NOT EXISTS`, and logs the count. It writes past the change tracker, so neither `UpdatedAt` nor the activity log moves. The [double-entry journal](data-export-per-user.md#double-entry-journal) opens each debt at its earliest balance and posts every later one against `Equity:Revaluation`.
+Creating a debt records its first balance and the last one cannot be deleted, so every debt has at least one. The [double-entry journal](data-export-per-user.md#double-entry-journal) opens each debt at its earliest balance and posts every later one against `Equity:Revaluation`.
 
 | Route | What it does |
 | --- | --- |

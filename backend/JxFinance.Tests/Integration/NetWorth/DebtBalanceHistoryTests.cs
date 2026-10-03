@@ -3,7 +3,6 @@ using System.Net.Http.Json;
 using JxFinance.Domain.NetWorth;
 using JxFinance.Domain.Trash;
 using JxFinance.Infrastructure.BackgroundJobs;
-using JxFinance.Infrastructure.Data;
 using JxFinance.Tests.Support;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
@@ -170,32 +169,6 @@ public sealed class DebtBalanceHistoryTests(NetWorthFixture fixture) : Integrati
         Assert.Equal(0, await WithDbAsync(db => db.DebtBalanceEntries.CountAsync(e => e.DebtId == debtId, TestContext.Current.CancellationToken)));
     }
 
-    [Fact]
-    public async Task The_backfill_gives_every_debt_without_balances_one_and_touches_nothing_else()
-    {
-        using var member = await CreateUserClientAsync();
-        var kept = await PostAsync<DebtDto>(member, "/api/debts", Body("700.00", Today.AddDays(-9)));
-        var deleted = await PostAsync<DebtDto>(member, "/api/debts", Body("300.00", Today.AddDays(-8)));
-        (await member.DeleteAsync($"/api/debts/{deleted.Id}", TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
-        DebtId[] ids = [new(kept.Id), new(deleted.Id)];
-        await WithDbAsync(db => db.DebtBalanceEntries.Where(e => ids.Contains(e.DebtId)).ExecuteDeleteAsync(TestContext.Current.CancellationToken));
-        var before = await StampsAsync(ids);
-        var audits = await AuditCountAsync(ids);
-
-        var added = await WithDbAsync(db => DebtBalanceBackfill.RunAsync(db, TestContext.Current.CancellationToken));
-        var again = await WithDbAsync(db => DebtBalanceBackfill.RunAsync(db, TestContext.Current.CancellationToken));
-
-        Assert.True(added >= 2);
-        Assert.Equal(0, again);
-        var entries = await WithDbAsync(db => db.DebtBalanceEntries.Where(e => ids.Contains(e.DebtId))
-            .OrderBy(e => e.Date)
-            .Select(e => new { e.Date, e.Amount, e.Note })
-            .ToListAsync(TestContext.Current.CancellationToken));
-        Assert.Equal([(Today.AddDays(-9), 700m, (string?)null), (Today.AddDays(-8), 300m, null)], entries.Select(e => (e.Date, e.Amount, e.Note)));
-        Assert.Equal(before, await StampsAsync(ids));
-        Assert.Equal(audits, await AuditCountAsync(ids));
-    }
-
     private async Task WaitForBlockedWriteAsync()
     {
         for (var attempt = 0; attempt < 100; attempt++)
@@ -210,15 +183,6 @@ public sealed class DebtBalanceHistoryTests(NetWorthFixture fixture) : Integrati
         }
 
         Assert.Fail("The balance write never waited on the held row.");
-    }
-
-    private Task<List<DateTimeOffset>> StampsAsync(DebtId[] ids) =>
-        WithDbAsync(db => db.Debts.IgnoreQueryFilters().Where(d => ids.Contains(d.Id)).OrderBy(d => d.AsOf).Select(d => d.UpdatedAt).ToListAsync(TestContext.Current.CancellationToken));
-
-    private Task<int> AuditCountAsync(DebtId[] ids)
-    {
-        var raw = ids.Select(id => (Guid?)id.Value).ToList();
-        return WithDbAsync(db => db.AuditEvents.IgnoreQueryFilters().CountAsync(e => raw.Contains(e.EntityId), TestContext.Current.CancellationToken));
     }
 
     private static string BalanceUrl(Guid debt, DateOnly date) => $"/api/debts/{debt}/balances/{date:yyyy-MM-dd}";

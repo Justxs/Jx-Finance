@@ -1,6 +1,5 @@
 using System.Net;
 using System.Net.Http.Json;
-using JxFinance.Infrastructure.Data;
 using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Transactions;
@@ -200,10 +199,9 @@ public sealed class SpreadTransactionTests(LedgerFixture fixture) : IntegrationT
         const string range = "dateFrom=2026-03-01&dateTo=2026-03-31";
 
         var overlapping = await LedgerAsync(member, $"{range}&spreadOverlap=true");
-        var forward = await ReadOkAsync<SpreadRowDto>(await member.PutAsJsonAsync(
+        var forward = await ReadOkAsync<SpreadRowDto>(await PutVersionedAsync(member,
             $"/api/transactions/{water.Id}",
-            new { id = water.Id, accountId = account, type = "expense", amount = "90.00", date = "2026-04-10", description = "Water", spreadMonths = 3 },
-            TestContext.Current.CancellationToken));
+            new { id = water.Id, accountId = account, type = "expense", amount = "90.00", date = "2026-04-10", description = "Water", spreadMonths = 3 }));
         var afterwards = await LedgerAsync(member, $"{range}&spreadOverlap=true");
 
         Assert.Equal(("backward", new DateOnly(2026, 2, 10), new DateOnly(2026, 4, 10)), (water.SpreadDirection, water.SpreadFrom, water.SpreadUntil));
@@ -213,21 +211,13 @@ public sealed class SpreadTransactionTests(LedgerFixture fixture) : IntegrationT
     }
 
     [Fact]
-    public async Task A_row_that_is_not_spread_has_no_direction_and_the_backfill_starts_old_spreads_on_their_date()
+    public async Task A_row_that_is_not_spread_has_no_direction()
     {
         using var member = await CreateUserClientAsync();
         var account = await CreateAccountAsync("1000.00", client: member);
         var plain = await PostAsync<SpreadRowDto>(member, "/api/transactions", new { accountId = account, type = "expense", amount = "9.00", date = "2026-03-05" });
-        var spread = await SpreadAsync(member, account, "120.00", new DateOnly(2026, 1, 15), 4);
-        await SqlAsync($"""UPDATE "Transactions" SET "SpreadFrom" = NULL WHERE "Id" = {spread.Id}""");
-
-        await WithDbAsync(db => SpreadFromBackfill.RunAsync(db, TestContext.Current.CancellationToken));
-        var again = await WithDbAsync(db => SpreadFromBackfill.RunAsync(db, TestContext.Current.CancellationToken));
 
         Assert.Equal(((string?)null, (DateOnly?)null, (DateOnly?)null), (plain.SpreadDirection, plain.SpreadFrom, plain.SpreadUntil));
-        Assert.Equal(0, again);
-        var stored = (await member.GetFromJsonAsync<SpreadRowDto>($"/api/transactions/{spread.Id}", TestContext.Current.CancellationToken))!;
-        Assert.Equal((new DateOnly(2026, 1, 15), new DateOnly(2026, 4, 15)), (stored.SpreadFrom, stored.SpreadUntil));
     }
 
     private static Task<SpreadRowDto> SpreadAsync(HttpClient client, Guid accountId, string amount, DateOnly date, int spreadMonths) =>

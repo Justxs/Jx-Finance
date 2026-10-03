@@ -6,7 +6,7 @@ Backend `Common/Unusual` (`UnusualAmountRule`, `UnusualAmountService`, `PriceRis
 
 An expense far above what its payee or its category usually costs gets a small rising-arrow badge in the ledger, on the dashboard's recent transactions and in the import preview, with a sentence such as "3.1× the usual €41.50 for this payee". A newly flagged row raises a notification, the ledger can show unusual rows only, and a row can be marked "Not unusual" so it stays quiet. The same pass watches subscriptions: when a bank charge that pays a recurring entry costs more than the entry expects, the recurring entries page says so, a notification is raised, and for a fixed entry one button updates the expected amount.
 
-It is a feature switch, `Feature.UnusualAmounts`, on by default (`HasDefaultValue(true)` in the `AddUnusualAmounts` migration of 2026-09-26), because it runs a job and raises notifications and an installation should be able to stop both. It gates two routes; everything else it adds is fields on existing requests and responses, which read as empty while it is off.
+It is a feature switch, `Feature.UnusualAmounts`, on by default (`HasDefaultValue(true)` on the column `Features_UnusualAmounts`), because it runs a job and raises notifications and an installation should be able to stop both. It gates two routes; everything else it adds is fields on existing requests and responses, which read as empty while it is off.
 
 ```mermaid
 sequenceDiagram
@@ -76,7 +76,7 @@ A verdict means "unusual compared with the 12 months before its date, as of when
 
 ## Where the verdict lives
 
-Six nullable columns on `Transactions`, added by `AddUnusualAmounts`:
+Six nullable columns on `Transactions`:
 
 | Column | What it holds |
 | --- | --- |

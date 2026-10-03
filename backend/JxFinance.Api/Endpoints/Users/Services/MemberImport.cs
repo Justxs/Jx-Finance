@@ -191,7 +191,6 @@ public sealed class MemberImport(AppDbContext db, Guid userId, int lockTimeoutSe
             }
         }
 
-        await FillAddedColumnsAsync(cancellationToken);
         return removed;
     }
 
@@ -226,13 +225,6 @@ public sealed class MemberImport(AppDbContext db, Guid userId, int lockTimeoutSe
             : new BackupFileException(
                 ErrorCodes.ImportUnknownVersion,
                 $"The export was taken at database version '{migration}', which this application does not know.");
-    }
-
-    private async Task FillAddedColumnsAsync(CancellationToken cancellationToken)
-    {
-        await PayeeKeyBackfill.RunAsync(db, cancellationToken);
-        await DebtBalanceBackfill.RunAsync(db, cancellationToken);
-        await SpreadFromBackfill.RunAsync(db, cancellationToken);
     }
 
     private async Task ClearStartingDataAsync(CancellationToken cancellationToken)

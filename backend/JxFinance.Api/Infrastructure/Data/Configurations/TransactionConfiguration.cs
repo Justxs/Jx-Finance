@@ -11,6 +11,7 @@ public sealed class TransactionConfiguration : IEntityTypeConfiguration<Transact
     {
         builder.ComplexProperty(t => t.Amount, money => money.HasColumns("Amount", DbSchema.CurrencyColumn));
         builder.Property(t => t.Description).HasMaxLength(500);
+        builder.Property(t => t.Version).IsRowVersion();
         builder.Property(t => t.Note).HasMaxLength(TransactionNote.MaxLength);
         builder.Property(t => t.ImportRef).HasMaxLength(64);
         builder.Property(t => t.Payee).HasMaxLength(TransactionPayee.MaxLength);
@@ -47,8 +48,6 @@ public sealed class TransactionConfiguration : IEntityTypeConfiguration<Transact
             .HasFilter("\"UnusualBasis\" IS NOT NULL AND \"UnusualDismissedAt\" IS NULL");
         builder.HasIndex(t => t.UnusualCheckedAt)
             .HasFilter("\"UnusualCheckedAt\" IS NULL");
-        builder.HasIndex(t => t.Id, "IX_Transactions_PayeeKeyPending")
-            .HasFilter("\"PayeeKey\" IS NULL");
         builder.HasOne<Transaction>().WithMany().HasForeignKey(t => t.RefundOfTransactionId).OnDelete(DeleteBehavior.SetNull);
         builder.HasIndex(t => t.RefundOfTransactionId).HasFilter("\"RefundOfTransactionId\" IS NOT NULL");
         builder.HasOne<TransactionGroup>().WithMany().HasForeignKey(t => t.GroupId).OnDelete(DeleteBehavior.SetNull);

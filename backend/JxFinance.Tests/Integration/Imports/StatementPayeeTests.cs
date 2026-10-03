@@ -1,7 +1,6 @@
 using System.Globalization;
 using System.Net.Http.Json;
 using JxFinance.Domain.Transactions;
-using JxFinance.Infrastructure.Data;
 using JxFinance.Tests.Support;
 using Microsoft.EntityFrameworkCore;
 
@@ -37,19 +36,6 @@ public sealed class StatementPayeeTests(ImportsFixture fixture) : IntegrationTes
 
         Assert.Equal(("MAXIMA LT, UAB", "maxima lt uab"), await StoredAsync(imported));
         Assert.Equal(((string?)null, "bakery"), await StoredAsync(typed.Id));
-    }
-
-    [Fact]
-    public async Task The_backfill_keys_a_row_by_its_payee()
-    {
-        using var member = await CreateUserClientAsync();
-        var account = await CreateAccountAsync("100.00", client: member);
-        var id = await ConfirmOneAsync(member, account, "Rimi Lietuva", "PIRKINYS *1234");
-        await SqlAsync($"""UPDATE "Transactions" SET "PayeeKey" = NULL WHERE "Id" = {id}""");
-
-        await WithDbAsync(db => PayeeKeyBackfill.RunAsync(db, TestContext.Current.CancellationToken));
-
-        Assert.Equal("rimi lietuva", (await StoredAsync(id)).Key);
     }
 
     [Fact]
@@ -113,11 +99,10 @@ public sealed class StatementPayeeTests(ImportsFixture fixture) : IntegrationTes
     private static object Row(string payee, string description, string? importRef = null) =>
         new { importRef = importRef ?? $"PAYEE-{Guid.NewGuid():N}", date = "2026-09-02", description, amount = "12.40", type = "expense", payee };
 
-    private static async Task EditDescriptionAsync(HttpClient client, Guid id, Guid account, string description) =>
-        (await client.PutAsJsonAsync(
+    private async Task EditDescriptionAsync(HttpClient client, Guid id, Guid account, string description) =>
+        (await PutVersionedAsync(client,
             $"/api/transactions/{id}",
-            new { id, accountId = account, type = "expense", amount = "12.40", date = "2026-09-02", description },
-            TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
+            new { id, accountId = account, type = "expense", amount = "12.40", date = "2026-09-02", description })).EnsureSuccessStatusCode();
 
     private static async Task<PayeeDto> GetAsync(HttpClient client, Guid id) =>
         (await client.GetFromJsonAsync<PayeeDto>($"/api/transactions/{id}", TestContext.Current.CancellationToken))!;

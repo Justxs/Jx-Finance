@@ -62,6 +62,12 @@ namespace JxFinance.Infrastructure.Data.Migrations
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid");
 
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
                     b.ComplexProperty(typeof(Dictionary<string, object>), "StartingBalance", "JxFinance.Domain.Accounts.Account.StartingBalance#Money", b1 =>
                         {
                             b1.IsRequired();
@@ -239,6 +245,12 @@ namespace JxFinance.Infrastructure.Data.Migrations
 
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
 
                     b.HasKey("Id");
 
@@ -816,6 +828,12 @@ namespace JxFinance.Infrastructure.Data.Migrations
 
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
 
                     b.HasKey("Id");
 
@@ -2513,6 +2531,12 @@ namespace JxFinance.Infrastructure.Data.Migrations
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid");
 
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
                     b.ComplexProperty(typeof(Dictionary<string, object>), "Amount", "JxFinance.Domain.Transactions.Transaction.Amount#Money", b1 =>
                         {
                             b1.IsRequired();
@@ -2572,9 +2596,6 @@ namespace JxFinance.Infrastructure.Data.Migrations
                         .HasFilter("\"ImportRef\" IS NOT NULL");
 
                     b.HasIndex("UserId", "Date");
-
-                    b.HasIndex(new[] { "Id" }, "IX_Transactions_PayeeKeyPending")
-                        .HasFilter("\"PayeeKey\" IS NULL");
 
                     b.HasIndex(new[] { "AccountId", "Place" }, "IX_Transactions_Place")
                         .HasFilter("\"Place\" IS NOT NULL");

@@ -43,7 +43,7 @@ The form sits on the Email tab of Settings › Installation › Notification pro
 
 ### Encryption
 
-`encryption` is `startTls`, `sslOnConnect` or `none`, and `startTls` is the default: it is the first value of `SmtpEncryption`, so a request that leaves the field out, a new installation and the migration all land on it. The modes map to MailKit's `SecureSocketOptions` one to one, and none of them is opportunistic:
+`encryption` is `startTls`, `sslOnConnect` or `none`, and `startTls` is the default: it is the first value of `SmtpEncryption`, so a request that leaves the field out and a new installation both land on it. The modes map to MailKit's `SecureSocketOptions` one to one, and none of them is opportunistic:
 
 | Mode | MailKit option | Usual port | What happens |
 | --- | --- | --- | --- |

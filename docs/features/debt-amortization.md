@@ -24,7 +24,7 @@ erDiagram
     }
 ```
 
-The five repayment columns were added to `Debts` by the `AddDebtAmortization` migration. Four are nullable and `AmortizationType` defaults to annuity, so every debt stored before stays valid and simply has no schedule. The terms describe the loan from its first payment, as the contract states it, and not from today's balance: the principal borrowed, the date of the first monthly payment, and either the number of monthly payments or the fixed monthly payment. Why the contract and not the current balance is in the [decision log](../decisions/debt-amortization.md).
+The five repayment columns live on `Debts`. Four are nullable and `AmortizationType` is annuity unless set otherwise, so a debt without terms is valid and simply has no schedule. The terms describe the loan from its first payment, as the contract states it, and not from today's balance: the principal borrowed, the date of the first monthly payment, and either the number of monthly payments or the fixed monthly payment. Why the contract and not the current balance is in the [decision log](../decisions/debt-amortization.md).
 
 A debt has a schedule when it has a loan amount, an interest rate (zero counts), a first payment date and a term, or, for an annuity only, a monthly payment. `AmortizationTerms.From(debt)` answers the terms or nothing, and the debt list answers `payoffDate`, the date of the last scheduled payment, only for a debt that has them; the page and the list read that field to decide whether to offer the schedule.
 

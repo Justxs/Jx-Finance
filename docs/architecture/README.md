@@ -24,7 +24,7 @@ Startup applies pending EF migrations directly. Only in the Development environm
 | [Visual system and motion](visual-system.md) | Visual system; Brand assets; Motion |
 | [Accessibility and keyboard shortcuts](accessibility.md) | Accessibility conventions; Keyboard shortcuts |
 | [Tests and Storybook](testing.md) | Backend tests; Frontend tests; Storybook |
-| [Developer tooling and package updates](developer-tooling.md) | Developer tooling; Package updates |
+| [Developer tooling and package updates](developer-tooling.md) | Developer tooling; The squashed migration history; Package updates |
 | [API contract and generated client](api-contract.md) | API contract and generated client |
 | [Authentication](authentication.md) | Authentication |
 | [Containers and the recovery command](deployment.md) | Containers; Recovery command |

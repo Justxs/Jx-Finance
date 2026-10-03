@@ -6,7 +6,7 @@ Backend `MonthCloses` (`MonthCloseService`, `MonthClosesGroup`, `Shared/MonthClo
 
 Once a month the bookkeeping session needs an end. The Month page holds that session for one month: the statements still to bring in and every line still open, each with its own control on the line, then the month's figures and budgets, and the close with an optional note. Closing freezes a snapshot of the month's figures and of the rows dated in it. Nothing is locked: every write path stays exactly as it was. If anything dated in that month changes later, the page says so, shows the figures at close against today's, lists the rows behind the difference, and the month can be re-closed to accept the change or reopened.
 
-It is a feature switch, `Feature.MonthClose`, on by default (`HasDefaultValue(true)`, column `Features_MonthClose` from the `AddMonthClose` migration), because it adds a page, a dashboard prompt and a reminder job. It gates everything under `/api/month-close` through `MonthClosesGroup`.
+It is a feature switch, `Feature.MonthClose`, on by default (`HasDefaultValue(true)` on the column `Features_MonthClose`), because it adds a page, a dashboard prompt and a reminder job. It gates everything under `/api/month-close` through `MonthClosesGroup`.
 
 ```mermaid
 flowchart TD

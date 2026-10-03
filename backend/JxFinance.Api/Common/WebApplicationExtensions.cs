@@ -25,24 +25,6 @@ public static class WebApplicationExtensions
         var store = services.GetRequiredService<IInstanceSettingsStore>();
         store.Set(await db.InstanceSettings.AsNoTracking().FirstOrDefaultAsync(s => s.Id == InstanceSettings.SingletonId) ?? store.Defaults());
 
-        var filled = await PayeeKeyBackfill.RunAsync(db, CancellationToken.None);
-        if (filled > 0)
-        {
-            logger.LogInformation("Filled the payee key of {Count} transaction(s)", filled);
-        }
-
-        var recorded = await DebtBalanceBackfill.RunAsync(db, CancellationToken.None);
-        if (recorded > 0)
-        {
-            logger.LogInformation("Recorded the first balance of {Count} debt(s)", recorded);
-        }
-
-        var spread = await SpreadFromBackfill.RunAsync(db, CancellationToken.None);
-        if (spread > 0)
-        {
-            logger.LogInformation("Filled the first spread month of {Count} transaction(s)", spread);
-        }
-
         if (app.Environment.IsDevelopment())
         {
             var users = services.GetRequiredService<UserManager<AppUser>>();

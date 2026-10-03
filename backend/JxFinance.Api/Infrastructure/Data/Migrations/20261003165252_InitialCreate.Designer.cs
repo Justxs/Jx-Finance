@@ -13,8 +13,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace JxFinance.Infrastructure.Data.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260929060842_AddPasskeys")]
-    partial class AddPasskeys
+    [Migration("20261003165252_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -65,6 +65,12 @@ namespace JxFinance.Infrastructure.Data.Migrations
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid");
 
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
                     b.ComplexProperty(typeof(Dictionary<string, object>), "StartingBalance", "JxFinance.Domain.Accounts.Account.StartingBalance#Money", b1 =>
                         {
                             b1.IsRequired();
@@ -98,8 +104,17 @@ namespace JxFinance.Infrastructure.Data.Migrations
                     b.Property<Guid>("AccountId")
                         .HasColumnType("uuid");
 
+                    b.Property<decimal>("Balance")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("character varying(3)");
 
                     b.Property<DateOnly>("Date")
                         .HasColumnType("date");
@@ -116,27 +131,11 @@ namespace JxFinance.Infrastructure.Data.Migrations
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid");
 
-                    b.ComplexProperty(typeof(Dictionary<string, object>), "Balance", "JxFinance.Domain.Accounts.AccountReconciliation.Balance#Money", b1 =>
-                        {
-                            b1.IsRequired();
-
-                            b1.Property<decimal>("Amount")
-                                .HasPrecision(18, 2)
-                                .HasColumnType("numeric(18,2)")
-                                .HasColumnName("Balance");
-
-                            b1.Property<string>("Currency")
-                                .IsRequired()
-                                .HasMaxLength(3)
-                                .HasColumnType("character varying(3)")
-                                .HasColumnName("Currency");
-                        });
-
                     b.HasKey("Id");
 
                     b.HasIndex("UserId");
 
-                    b.HasIndex("AccountId", "Date")
+                    b.HasIndex("AccountId", "Currency", "Date")
                         .IsUnique();
 
                     b.ToTable("AccountReconciliations");
@@ -177,6 +176,10 @@ namespace JxFinance.Infrastructure.Data.Migrations
                     b.Property<DateTimeOffset>("OccurredAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("ViaToken")
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
+
                     b.ComplexCollection(typeof(List<Dictionary<string, object>>), "Changes", "JxFinance.Domain.Audit.AuditEvent.Changes#AuditChange", b1 =>
                         {
                             b1.IsRequired();
@@ -212,11 +215,14 @@ namespace JxFinance.Infrastructure.Data.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("CategoryId")
+                    b.Property<Guid?>("CategoryId")
                         .HasColumnType("uuid");
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("HouseholdId")
+                        .HasColumnType("uuid");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
@@ -231,19 +237,38 @@ namespace JxFinance.Infrastructure.Data.Migrations
                     b.Property<bool>("RolloverEnabled")
                         .HasColumnType("boolean");
 
+                    b.Property<int>("Scope")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid?>("TagId")
+                        .HasColumnType("uuid");
+
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid");
 
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
                     b.HasKey("Id");
 
                     b.HasIndex("CategoryId");
 
+                    b.HasIndex("HouseholdId");
+
+                    b.HasIndex("TagId");
+
                     b.HasIndex("UserId");
 
-                    b.ToTable("Budgets");
+                    b.ToTable("Budgets", t =>
+                        {
+                            t.HasCheckConstraint("CK_Budgets_CategoryOrTag", "(\"CategoryId\" IS NULL) <> (\"TagId\" IS NULL)");
+                        });
                 });
 
             modelBuilder.Entity("JxFinance.Domain.Categories.Category", b =>
@@ -272,6 +297,9 @@ namespace JxFinance.Infrastructure.Data.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
+                    b.Property<Guid?>("ParentId")
+                        .HasColumnType("uuid");
+
                     b.Property<int>("Scope")
                         .HasColumnType("integer");
 
@@ -287,6 +315,8 @@ namespace JxFinance.Infrastructure.Data.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("HouseholdId");
+
+                    b.HasIndex("ParentId");
 
                     b.HasIndex("UserId");
 
@@ -402,6 +432,176 @@ namespace JxFinance.Infrastructure.Data.Migrations
                         .HasFilter("\"IsDeleted\" = false");
 
                     b.ToTable("SuggestedRuleDismissals");
+                });
+
+            modelBuilder.Entity("JxFinance.Domain.Contacts.Contact", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Contacts");
+                });
+
+            modelBuilder.Entity("JxFinance.Domain.Contacts.ContactPayment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ContactId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date");
+
+                    b.Property<int>("Direction")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.ComplexProperty(typeof(Dictionary<string, object>), "Amount", "JxFinance.Domain.Contacts.ContactPayment.Amount#Money", b1 =>
+                        {
+                            b1.IsRequired();
+
+                            b1.Property<decimal>("Amount")
+                                .HasPrecision(18, 2)
+                                .HasColumnType("numeric(18,2)")
+                                .HasColumnName("Amount");
+
+                            b1.Property<string>("Currency")
+                                .IsRequired()
+                                .HasMaxLength(3)
+                                .HasColumnType("character varying(3)")
+                                .HasColumnName("Currency");
+                        });
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("ContactId", "Date");
+
+                    b.ToTable("ContactPayments");
+                });
+
+            modelBuilder.Entity("JxFinance.Domain.Contacts.ContactSplit", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("Method")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal?>("OwnAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<int?>("OwnWeight")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("TransactionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.ComplexProperty(typeof(Dictionary<string, object>), "Amount", "JxFinance.Domain.Contacts.ContactSplit.Amount#Money", b1 =>
+                        {
+                            b1.IsRequired();
+
+                            b1.Property<decimal>("Amount")
+                                .HasPrecision(18, 2)
+                                .HasColumnType("numeric(18,2)")
+                                .HasColumnName("Amount");
+
+                            b1.Property<string>("Currency")
+                                .IsRequired()
+                                .HasMaxLength(3)
+                                .HasColumnType("character varying(3)")
+                                .HasColumnName("Currency");
+                        });
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TransactionId")
+                        .IsUnique()
+                        .HasFilter("\"IsDeleted\" = false");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("ContactSplits");
+                });
+
+            modelBuilder.Entity("JxFinance.Domain.Contacts.ContactSplitShare", b =>
+                {
+                    b.Property<Guid>("ContactSplitId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ContactId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<int?>("Weight")
+                        .HasColumnType("integer");
+
+                    b.HasKey("ContactSplitId", "ContactId");
+
+                    b.HasIndex("ContactId");
+
+                    b.ToTable("ContactSplitShares");
                 });
 
             modelBuilder.Entity("JxFinance.Domain.Conversions.CurrencyConversion", b =>
@@ -564,6 +764,24 @@ namespace JxFinance.Infrastructure.Data.Migrations
                     b.ToTable("ExchangeRates");
                 });
 
+            modelBuilder.Entity("JxFinance.Domain.ExchangeRates.ManualExchangeRate", b =>
+                {
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date");
+
+                    b.Property<string>("Currency")
+                        .HasMaxLength(3)
+                        .HasColumnType("character varying(3)");
+
+                    b.Property<decimal>("Rate")
+                        .HasPrecision(18, 8)
+                        .HasColumnType("numeric(18,8)");
+
+                    b.HasKey("Date", "Currency");
+
+                    b.ToTable("ManualExchangeRates");
+                });
+
             modelBuilder.Entity("JxFinance.Domain.Goals.Goal", b =>
                 {
                     b.Property<Guid>("Id")
@@ -587,6 +805,9 @@ namespace JxFinance.Infrastructure.Data.Migrations
                         .HasColumnType("integer")
                         .HasDefaultValue(100);
 
+                    b.Property<Guid?>("HouseholdId")
+                        .HasColumnType("uuid");
+
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
 
@@ -594,6 +815,9 @@ namespace JxFinance.Infrastructure.Data.Migrations
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
+
+                    b.Property<int>("Scope")
+                        .HasColumnType("integer");
 
                     b.Property<decimal>("TargetAmount")
                         .HasPrecision(18, 2)
@@ -608,9 +832,17 @@ namespace JxFinance.Infrastructure.Data.Migrations
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid");
 
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
                     b.HasKey("Id");
 
                     b.HasIndex("FundingAccountId");
+
+                    b.HasIndex("HouseholdId");
 
                     b.HasIndex("UserId");
 
@@ -669,9 +901,163 @@ namespace JxFinance.Infrastructure.Data.Migrations
                     b.HasIndex("UserId");
 
                     b.HasIndex("HouseholdId", "UserId")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasFilter("\"IsDeleted\" = false");
 
                     b.ToTable("HouseholdMemberships");
+                });
+
+            modelBuilder.Entity("JxFinance.Domain.Households.Settlement", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date");
+
+                    b.Property<Guid>("FromUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("HouseholdId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<Guid>("ToUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("TransferId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.ComplexProperty(typeof(Dictionary<string, object>), "Amount", "JxFinance.Domain.Households.Settlement.Amount#Money", b1 =>
+                        {
+                            b1.IsRequired();
+
+                            b1.Property<decimal>("Amount")
+                                .HasPrecision(18, 2)
+                                .HasColumnType("numeric(18,2)")
+                                .HasColumnName("Amount");
+
+                            b1.Property<string>("Currency")
+                                .IsRequired()
+                                .HasMaxLength(3)
+                                .HasColumnType("character varying(3)")
+                                .HasColumnName("Currency");
+                        });
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FromUserId");
+
+                    b.HasIndex("ToUserId");
+
+                    b.HasIndex("TransferId")
+                        .IsUnique()
+                        .HasFilter("\"TransferId\" IS NOT NULL AND \"IsDeleted\" = false");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("HouseholdId", "Date");
+
+                    b.ToTable("Settlements");
+                });
+
+            modelBuilder.Entity("JxFinance.Domain.Households.SharedExpense", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<Guid>("HouseholdId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("Method")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("TransactionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.ComplexProperty(typeof(Dictionary<string, object>), "Amount", "JxFinance.Domain.Households.SharedExpense.Amount#Money", b1 =>
+                        {
+                            b1.IsRequired();
+
+                            b1.Property<decimal>("Amount")
+                                .HasPrecision(18, 2)
+                                .HasColumnType("numeric(18,2)")
+                                .HasColumnName("Amount");
+
+                            b1.Property<string>("Currency")
+                                .IsRequired()
+                                .HasMaxLength(3)
+                                .HasColumnType("character varying(3)")
+                                .HasColumnName("Currency");
+                        });
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TransactionId")
+                        .IsUnique()
+                        .HasFilter("\"IsDeleted\" = false");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("HouseholdId", "Date");
+
+                    b.ToTable("SharedExpenses");
+                });
+
+            modelBuilder.Entity("JxFinance.Domain.Households.SharedExpenseShare", b =>
+                {
+                    b.Property<Guid>("SharedExpenseId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<int?>("Weight")
+                        .HasColumnType("integer");
+
+                    b.HasKey("SharedExpenseId", "UserId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("SharedExpenseShares");
                 });
 
             modelBuilder.Entity("JxFinance.Domain.Imports.CsvImportMapping", b =>
@@ -723,6 +1109,9 @@ namespace JxFinance.Infrastructure.Data.Migrations
                         .HasMaxLength(60)
                         .HasColumnType("character varying(60)");
 
+                    b.Property<bool>("NoHeaderRow")
+                        .HasColumnType("boolean");
+
                     b.Property<int>("SkipLines")
                         .HasColumnType("integer");
 
@@ -738,6 +1127,101 @@ namespace JxFinance.Infrastructure.Data.Migrations
                         .HasFilter("\"IsDeleted\" = false");
 
                     b.ToTable("CsvImportMappings");
+                });
+
+            modelBuilder.Entity("JxFinance.Domain.Imports.ImportInboxFile", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("AccountId")
+                        .HasColumnType("uuid");
+
+                    b.Property<byte[]>("Content")
+                        .HasColumnType("bytea");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("Format")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid?>("MappingId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Sha256")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character(64)")
+                        .IsFixedLength();
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AccountId");
+
+                    b.HasIndex("MappingId");
+
+                    b.HasIndex("Sha256");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("ImportInboxFiles");
+                });
+
+            modelBuilder.Entity("JxFinance.Domain.Investments.AllocationTarget", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Dimension")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Key")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .HasColumnType("character varying(36)");
+
+                    b.Property<decimal>("Share")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("numeric(5,2)");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "Key")
+                        .IsUnique()
+                        .HasFilter("\"IsDeleted\" = false");
+
+                    b.ToTable("AllocationTargets");
                 });
 
             modelBuilder.Entity("JxFinance.Domain.Investments.BrokerConnection", b =>
@@ -804,6 +1288,10 @@ namespace JxFinance.Infrastructure.Data.Migrations
                     b.Property<Guid>("AccountId")
                         .HasColumnType("uuid");
 
+                    b.Property<decimal?>("CostShare")
+                        .HasPrecision(9, 6)
+                        .HasColumnType("numeric(9,6)");
+
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -832,6 +1320,13 @@ namespace JxFinance.Infrastructure.Data.Migrations
                     b.Property<decimal>("Quantity")
                         .HasPrecision(20, 8)
                         .HasColumnType("numeric(20,8)");
+
+                    b.Property<decimal>("RelatedQuantity")
+                        .HasPrecision(20, 8)
+                        .HasColumnType("numeric(20,8)");
+
+                    b.Property<Guid?>("RelatedSecurityId")
+                        .HasColumnType("uuid");
 
                     b.Property<decimal>("ReportingAmount")
                         .HasPrecision(18, 2)
@@ -869,6 +1364,8 @@ namespace JxFinance.Infrastructure.Data.Migrations
                         });
 
                     b.HasKey("Id");
+
+                    b.HasIndex("RelatedSecurityId");
 
                     b.HasIndex("SecurityId");
 
@@ -921,6 +1418,28 @@ namespace JxFinance.Infrastructure.Data.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
+                    b.Property<string>("PriceQuoteCurrency")
+                        .HasMaxLength(3)
+                        .HasColumnType("character varying(3)");
+
+                    b.Property<string>("PriceSource")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasDefaultValue("None");
+
+                    b.Property<string>("PriceSymbol")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("PriceSyncError")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<DateTimeOffset?>("PriceSyncedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("Symbol")
                         .IsRequired()
                         .HasMaxLength(32)
@@ -940,7 +1459,10 @@ namespace JxFinance.Infrastructure.Data.Migrations
                         .IsUnique()
                         .HasFilter("\"IsDeleted\" = false");
 
-                    b.ToTable("Securities");
+                    b.ToTable("Securities", t =>
+                        {
+                            t.HasCheckConstraint("CK_Securities_PriceSymbol", "\"PriceSource\" = 'None' OR \"PriceSymbol\" IS NOT NULL");
+                        });
                 });
 
             modelBuilder.Entity("JxFinance.Domain.Investments.SecurityPrice", b =>
@@ -954,6 +1476,13 @@ namespace JxFinance.Infrastructure.Data.Migrations
                     b.Property<decimal>("Price")
                         .HasPrecision(18, 8)
                         .HasColumnType("numeric(18,8)");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)")
+                        .HasDefaultValue("Manual");
 
                     b.HasKey("SecurityId", "Date");
 
@@ -1017,6 +1546,9 @@ namespace JxFinance.Infrastructure.Data.Migrations
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<Guid?>("HouseholdId")
+                        .HasColumnType("uuid");
+
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
 
@@ -1024,6 +1556,9 @@ namespace JxFinance.Infrastructure.Data.Migrations
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
+
+                    b.Property<int>("Scope")
+                        .HasColumnType("integer");
 
                     b.Property<int>("Type")
                         .HasColumnType("integer");
@@ -1069,6 +1604,8 @@ namespace JxFinance.Infrastructure.Data.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("HouseholdId");
+
                     b.HasIndex("UserId");
 
                     b.ToTable("Assets");
@@ -1112,9 +1649,12 @@ namespace JxFinance.Infrastructure.Data.Migrations
                     b.Property<DateOnly?>("FirstPaymentDate")
                         .HasColumnType("date");
 
+                    b.Property<Guid?>("HouseholdId")
+                        .HasColumnType("uuid");
+
                     b.Property<decimal?>("InterestRate")
-                        .HasPrecision(5, 2)
-                        .HasColumnType("numeric(5,2)");
+                        .HasPrecision(7, 4)
+                        .HasColumnType("numeric(7,4)");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
@@ -1131,6 +1671,9 @@ namespace JxFinance.Infrastructure.Data.Migrations
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
+
+                    b.Property<int>("Scope")
+                        .HasColumnType("integer");
 
                     b.Property<int?>("TermMonths")
                         .HasColumnType("integer");
@@ -1165,9 +1708,32 @@ namespace JxFinance.Infrastructure.Data.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("HouseholdId");
+
                     b.HasIndex("UserId");
 
                     b.ToTable("Debts");
+                });
+
+            modelBuilder.Entity("JxFinance.Domain.NetWorth.DebtBalanceEntry", b =>
+                {
+                    b.Property<Guid>("DebtId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date");
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.HasKey("DebtId", "Date");
+
+                    b.ToTable("DebtBalanceEntries");
                 });
 
             modelBuilder.Entity("JxFinance.Domain.NetWorth.DebtPayment", b =>
@@ -1314,55 +1880,6 @@ namespace JxFinance.Infrastructure.Data.Migrations
                     b.ToTable("DiscordMessages");
                 });
 
-            modelBuilder.Entity("JxFinance.Domain.Notifications.DiscordWebhook", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTimeOffset?>("DisabledByDiscordAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("boolean");
-
-                    b.Property<bool>("IsEnabled")
-                        .HasColumnType("boolean");
-
-                    b.Property<DateTimeOffset?>("LastDeliveredAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("LastError")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
-
-                    b.Property<string>("ProtectedUrl")
-                        .IsConcurrencyToken()
-                        .IsRequired()
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)");
-
-                    b.Property<string>("Types")
-                        .IsRequired()
-                        .HasColumnType("jsonb");
-
-                    b.Property<DateTimeOffset>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId")
-                        .IsUnique()
-                        .HasFilter("\"IsDeleted\" = false");
-
-                    b.ToTable("DiscordWebhooks");
-                });
-
             modelBuilder.Entity("JxFinance.Domain.Notifications.Notification", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1416,6 +1933,42 @@ namespace JxFinance.Infrastructure.Data.Migrations
                     b.ToTable("Notifications");
                 });
 
+            modelBuilder.Entity("JxFinance.Domain.Payees.PayeeName", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("PayeeKey")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "PayeeKey")
+                        .IsUnique()
+                        .HasFilter("\"IsDeleted\" = false");
+
+                    b.ToTable("PayeeNames");
+                });
+
             modelBuilder.Entity("JxFinance.Domain.Receipts.ReceiptItemCategory", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1466,19 +2019,8 @@ namespace JxFinance.Infrastructure.Data.Migrations
                         .HasMaxLength(60)
                         .HasColumnType("character varying(60)");
 
-                    b.Property<int>("InputTokens")
-                        .HasColumnType("integer");
-
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
-
-                    b.Property<string>("Model")
-                        .IsRequired()
-                        .HasMaxLength(40)
-                        .HasColumnType("character varying(40)");
-
-                    b.Property<int>("OutputTokens")
-                        .HasColumnType("integer");
 
                     b.Property<string>("Result")
                         .HasColumnType("jsonb");
@@ -1505,25 +2047,6 @@ namespace JxFinance.Infrastructure.Data.Migrations
                     b.HasIndex("UserId", "Sha256");
 
                     b.ToTable("ReceiptReadings");
-                });
-
-            modelBuilder.Entity("JxFinance.Domain.Receipts.ReceiptReadingUsage", b =>
-                {
-                    b.Property<DateOnly>("Month")
-                        .HasColumnType("date");
-
-                    b.Property<long>("InputTokens")
-                        .HasColumnType("bigint");
-
-                    b.Property<long>("OutputTokens")
-                        .HasColumnType("bigint");
-
-                    b.Property<int>("Readings")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Month");
-
-                    b.ToTable("ReceiptReadingUsages");
                 });
 
             modelBuilder.Entity("JxFinance.Domain.RecurringBills.RecurringBill", b =>
@@ -1553,6 +2076,9 @@ namespace JxFinance.Infrastructure.Data.Migrations
                     b.Property<Guid?>("DebtId")
                         .HasColumnType("uuid");
 
+                    b.Property<Guid?>("HouseholdId")
+                        .HasColumnType("uuid");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
 
@@ -1578,8 +2104,17 @@ namespace JxFinance.Infrastructure.Data.Migrations
                     b.Property<int>("RemindDaysBefore")
                         .HasColumnType("integer");
 
+                    b.Property<int>("Scope")
+                        .HasColumnType("integer");
+
                     b.Property<int>("Shape")
                         .HasColumnType("integer");
+
+                    b.Property<int>("SpreadDirection")
+                        .HasColumnType("integer");
+
+                    b.Property<short?>("SpreadMonths")
+                        .HasColumnType("smallint");
 
                     b.Property<Guid?>("ToAccountId")
                         .HasColumnType("uuid");
@@ -1598,11 +2133,16 @@ namespace JxFinance.Infrastructure.Data.Migrations
 
                     b.HasIndex("DebtId");
 
+                    b.HasIndex("HouseholdId");
+
                     b.HasIndex("ToAccountId");
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("RecurringBills");
+                    b.ToTable("RecurringBills", t =>
+                        {
+                            t.HasCheckConstraint("CK_RecurringBills_SpreadMonths", "\"SpreadMonths\" IS NULL OR \"SpreadMonths\" BETWEEN 2 AND 36");
+                        });
                 });
 
             modelBuilder.Entity("JxFinance.Domain.RecurringBills.SubscriptionDismissal", b =>
@@ -1657,13 +2197,34 @@ namespace JxFinance.Infrastructure.Data.Migrations
                     b.Property<int>("DefaultPageSize")
                         .HasColumnType("integer");
 
+                    b.Property<DateTimeOffset?>("DiscordDisabledByDiscordAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<bool>("DiscordEnabled")
                         .HasColumnType("boolean");
+
+                    b.Property<DateTimeOffset?>("DiscordLastDeliveredAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DiscordLastError")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("DiscordProtectedUrl")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
 
                     b.Property<string>("EnabledCurrencyCodes")
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
+
+                    b.Property<string>("EodhdProtectedKey")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
 
                     b.Property<bool>("ExchangeRateSyncEnabled")
                         .HasColumnType("boolean");
@@ -1677,25 +2238,17 @@ namespace JxFinance.Infrastructure.Data.Migrations
                         .HasMaxLength(40)
                         .HasColumnType("character varying(40)");
 
-                    b.Property<string>("ReceiptApiKeyProtected")
-                        .IsRequired()
-                        .HasMaxLength(2000)
-                        .HasColumnType("character varying(2000)");
+                    b.Property<DateOnly?>("PriceCallsDate")
+                        .HasColumnType("date");
 
-                    b.Property<string>("ReceiptModel")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasMaxLength(40)
-                        .HasColumnType("character varying(40)")
-                        .HasDefaultValue("claude-sonnet-5");
+                    b.Property<int>("PriceCallsUsed")
+                        .HasColumnType("integer");
 
-                    b.Property<int>("ReceiptMonthlyLimit")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(100);
-
-                    b.Property<bool>("ReceiptReadingEnabled")
+                    b.Property<bool>("PriceSyncEnabled")
                         .HasColumnType("boolean");
+
+                    b.Property<DateTimeOffset?>("PriceSyncRunAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("ReportingCurrency")
                         .IsRequired()
@@ -1748,8 +2301,21 @@ namespace JxFinance.Infrastructure.Data.Migrations
                         {
                             b1.IsRequired();
 
+                            b1.Property<bool>("ApiTokens")
+                                .HasColumnType("boolean");
+
+                            b1.Property<bool>("Attachments")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("boolean")
+                                .HasDefaultValue(true);
+
                             b1.Property<bool>("Budgets")
                                 .HasColumnType("boolean");
+
+                            b1.Property<bool>("CashFlowForecast")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("boolean")
+                                .HasDefaultValue(true);
 
                             b1.Property<bool>("CategorizationRules")
                                 .ValueGeneratedOnAdd()
@@ -1768,6 +2334,12 @@ namespace JxFinance.Infrastructure.Data.Migrations
                             b1.Property<bool>("Investments")
                                 .HasColumnType("boolean");
 
+                            b1.Property<bool>("LearnedCategories")
+                                .HasColumnType("boolean");
+
+                            b1.Property<bool>("Locations")
+                                .HasColumnType("boolean");
+
                             b1.Property<bool>("MonthClose")
                                 .ValueGeneratedOnAdd()
                                 .HasColumnType("boolean")
@@ -1779,10 +2351,20 @@ namespace JxFinance.Infrastructure.Data.Migrations
                             b1.Property<bool>("NetWorth")
                                 .HasColumnType("boolean");
 
+                            b1.Property<bool>("PayeeNames")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("boolean")
+                                .HasDefaultValue(true);
+
+                            b1.Property<bool>("People")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("boolean")
+                                .HasDefaultValue(true);
+
                             b1.Property<bool>("ReceiptReading")
                                 .ValueGeneratedOnAdd()
                                 .HasColumnType("boolean")
-                                .HasDefaultValue(false);
+                                .HasDefaultValue(true);
 
                             b1.Property<bool>("RecurringBills")
                                 .HasColumnType("boolean");
@@ -1842,6 +2424,21 @@ namespace JxFinance.Infrastructure.Data.Migrations
                     b.ToTable("Tags");
                 });
 
+            modelBuilder.Entity("JxFinance.Domain.Transactions.DuplicateDismissal", b =>
+                {
+                    b.Property<Guid>("TransactionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("OtherTransactionId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("TransactionId", "OtherTransactionId");
+
+                    b.HasIndex("OtherTransactionId");
+
+                    b.ToTable("DuplicateDismissals");
+                });
+
             modelBuilder.Entity("JxFinance.Domain.Transactions.Transaction", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1863,6 +2460,9 @@ namespace JxFinance.Infrastructure.Data.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
 
+                    b.Property<Guid?>("GroupId")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("ImportRef")
                         .HasMaxLength(64)
                         .HasColumnType("character varying(64)");
@@ -1873,9 +2473,29 @@ namespace JxFinance.Infrastructure.Data.Migrations
                     b.Property<bool>("IsSplit")
                         .HasColumnType("boolean");
 
+                    b.Property<decimal?>("Latitude")
+                        .HasPrecision(7, 5)
+                        .HasColumnType("numeric(7,5)");
+
+                    b.Property<decimal?>("Longitude")
+                        .HasPrecision(8, 5)
+                        .HasColumnType("numeric(8,5)");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<string>("Payee")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
                     b.Property<string>("PayeeKey")
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
+
+                    b.Property<string>("Place")
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)");
 
                     b.Property<Guid?>("RefundOfTransactionId")
                         .HasColumnType("uuid");
@@ -1887,12 +2507,20 @@ namespace JxFinance.Infrastructure.Data.Migrations
                     b.Property<int>("Source")
                         .HasColumnType("integer");
 
-                    b.Property<int>("Type")
+                    b.Property<int>("SpreadDirection")
                         .HasColumnType("integer");
 
-                    b.Property<string>("UnusualBasis")
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
+                    b.Property<DateOnly?>("SpreadFrom")
+                        .HasColumnType("date");
+
+                    b.Property<short?>("SpreadMonths")
+                        .HasColumnType("smallint");
+
+                    b.Property<DateOnly?>("SpreadUntil")
+                        .HasColumnType("date");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("integer");
 
                     b.Property<DateTimeOffset?>("UnusualCheckedAt")
                         .HasColumnType("timestamp with time zone");
@@ -1900,22 +2528,17 @@ namespace JxFinance.Infrastructure.Data.Migrations
                     b.Property<DateTimeOffset?>("UnusualDismissedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<decimal?>("UnusualFactor")
-                        .HasPrecision(9, 2)
-                        .HasColumnType("numeric(9,2)");
-
-                    b.Property<int?>("UnusualSampleSize")
-                        .HasColumnType("integer");
-
-                    b.Property<decimal?>("UnusualTypicalAmount")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("numeric(18,2)");
-
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
 
                     b.ComplexProperty(typeof(Dictionary<string, object>), "Amount", "JxFinance.Domain.Transactions.Transaction.Amount#Money", b1 =>
                         {
@@ -1933,9 +2556,35 @@ namespace JxFinance.Infrastructure.Data.Migrations
                                 .HasColumnName("Currency");
                         });
 
+                    b.ComplexProperty(typeof(Dictionary<string, object>), "Unusual", "JxFinance.Domain.Transactions.Transaction.Unusual#UnusualVerdict", b1 =>
+                        {
+                            b1.Property<string>("Basis")
+                                .IsRequired()
+                                .HasMaxLength(20)
+                                .HasColumnType("character varying(20)")
+                                .HasColumnName("UnusualBasis");
+
+                            b1.Property<decimal>("Factor")
+                                .HasPrecision(9, 2)
+                                .HasColumnType("numeric(9,2)")
+                                .HasColumnName("UnusualFactor");
+
+                            b1.Property<int>("SampleSize")
+                                .HasColumnType("integer")
+                                .HasColumnName("UnusualSampleSize");
+
+                            b1.Property<decimal>("TypicalAmount")
+                                .HasPrecision(18, 2)
+                                .HasColumnType("numeric(18,2)")
+                                .HasColumnName("UnusualTypicalAmount");
+                        });
+
                     b.HasKey("Id");
 
                     b.HasIndex("CategoryId");
+
+                    b.HasIndex("GroupId")
+                        .HasFilter("\"GroupId\" IS NOT NULL");
 
                     b.HasIndex("RefundOfTransactionId")
                         .HasFilter("\"RefundOfTransactionId\" IS NOT NULL");
@@ -1951,13 +2600,23 @@ namespace JxFinance.Infrastructure.Data.Migrations
 
                     b.HasIndex("UserId", "Date");
 
-                    b.HasIndex(new[] { "Id" }, "IX_Transactions_PayeeKeyPending")
-                        .HasFilter("\"PayeeKey\" IS NULL");
+                    b.HasIndex(new[] { "AccountId", "Place" }, "IX_Transactions_Place")
+                        .HasFilter("\"Place\" IS NOT NULL");
+
+                    b.HasIndex(new[] { "AccountId", "SpreadUntil" }, "IX_Transactions_Spread")
+                        .HasFilter("\"SpreadMonths\" IS NOT NULL");
 
                     b.HasIndex(new[] { "AccountId", "Date" }, "IX_Transactions_Unusual")
                         .HasFilter("\"UnusualBasis\" IS NOT NULL AND \"UnusualDismissedAt\" IS NULL");
 
-                    b.ToTable("Transactions");
+                    b.ToTable("Transactions", t =>
+                        {
+                            t.HasCheckConstraint("CK_Transactions_Coordinates", "(\"Latitude\" IS NULL) = (\"Longitude\" IS NULL)");
+
+                            t.HasCheckConstraint("CK_Transactions_SpreadMonths", "\"SpreadMonths\" IS NULL OR \"SpreadMonths\" BETWEEN 2 AND 36");
+
+                            t.HasCheckConstraint("CK_Transactions_SpreadUntil", "(\"SpreadMonths\" IS NULL) = (\"SpreadUntil\" IS NULL)");
+                        });
                 });
 
             modelBuilder.Entity("JxFinance.Domain.Transactions.TransactionAttachment", b =>
@@ -1999,6 +2658,9 @@ namespace JxFinance.Infrastructure.Data.Migrations
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid");
 
+                    b.Property<DateOnly?>("WarrantyUntil")
+                        .HasColumnType("date");
+
                     b.HasKey("Id");
 
                     b.HasIndex("UserId");
@@ -2006,6 +2668,43 @@ namespace JxFinance.Infrastructure.Data.Migrations
                     b.HasIndex("TransactionId", "CreatedAt");
 
                     b.ToTable("TransactionAttachments");
+                });
+
+            modelBuilder.Entity("JxFinance.Domain.Transactions.TransactionGroup", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("HouseholdId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)");
+
+                    b.Property<int>("Scope")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("HouseholdId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("TransactionGroups");
                 });
 
             modelBuilder.Entity("JxFinance.Domain.Transactions.TransactionLine", b =>
@@ -2024,6 +2723,9 @@ namespace JxFinance.Infrastructure.Data.Migrations
                     b.Property<string>("Description")
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
+
+                    b.Property<int>("Position")
+                        .HasColumnType("integer");
 
                     b.Property<Guid>("TransactionId")
                         .HasColumnType("uuid");
@@ -2220,6 +2922,39 @@ namespace JxFinance.Infrastructure.Data.Migrations
                     b.ToTable("DeletionEntries");
                 });
 
+            modelBuilder.Entity("JxFinance.Infrastructure.Auth.ApiIdempotencyKey", b =>
+                {
+                    b.Property<Guid>("TokenId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Key")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("Body")
+                        .HasColumnType("jsonb");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Location")
+                        .HasMaxLength(2048)
+                        .HasColumnType("character varying(2048)");
+
+                    b.Property<string>("RequestHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character(64)")
+                        .IsFixedLength();
+
+                    b.Property<int?>("StatusCode")
+                        .HasColumnType("integer");
+
+                    b.HasKey("TokenId", "Key");
+
+                    b.ToTable("ApiIdempotencyKeys");
+                });
+
             modelBuilder.Entity("JxFinance.Infrastructure.Auth.AppRole", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2260,6 +2995,15 @@ namespace JxFinance.Infrastructure.Data.Migrations
                         .IsConcurrencyToken()
                         .HasColumnType("text");
 
+                    b.Property<bool>("CountOpenBalancesInNetWorth")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("DiscordNotificationTypes")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("jsonb")
+                        .HasDefaultValueSql("'[]'::jsonb");
+
                     b.Property<string>("DisplayName")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -2287,6 +3031,17 @@ namespace JxFinance.Infrastructure.Data.Migrations
 
                     b.Property<DateTimeOffset?>("LockoutEnd")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("MonthlyDigestEverything")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true);
+
+                    b.PrimitiveCollection<List<Guid>>("MonthlyDigestHouseholdIds")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid[]")
+                        .HasDefaultValueSql("'{}'::uuid[]");
 
                     b.Property<string>("NormalizedEmail")
                         .HasMaxLength(256)
@@ -2341,6 +3096,58 @@ namespace JxFinance.Infrastructure.Data.Migrations
                         .HasDatabaseName("UserNameIndex");
 
                     b.ToTable("AspNetUsers", (string)null);
+                });
+
+            modelBuilder.Entity("JxFinance.Infrastructure.Auth.PersonalApiToken", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Access")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasDefaultValue("Read");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset?>("LastUsedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
+
+                    b.Property<string>("Prefix")
+                        .IsRequired()
+                        .HasMaxLength(8)
+                        .HasColumnType("character(8)")
+                        .IsFixedLength();
+
+                    b.Property<string>("SecretHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character(64)")
+                        .IsFixedLength();
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Prefix")
+                        .IsUnique();
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("PersonalApiTokens");
                 });
 
             modelBuilder.Entity("JxFinance.Infrastructure.Auth.UserSession", b =>
@@ -2564,8 +3371,17 @@ namespace JxFinance.Infrastructure.Data.Migrations
                     b.HasOne("JxFinance.Domain.Categories.Category", null)
                         .WithMany()
                         .HasForeignKey("CategoryId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("JxFinance.Domain.Households.Household", null)
+                        .WithMany()
+                        .HasForeignKey("HouseholdId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("JxFinance.Domain.Tags.Tag", null)
+                        .WithMany()
+                        .HasForeignKey("TagId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("JxFinance.Infrastructure.Auth.AppUser", null)
                         .WithMany()
@@ -2579,6 +3395,11 @@ namespace JxFinance.Infrastructure.Data.Migrations
                     b.HasOne("JxFinance.Domain.Households.Household", null)
                         .WithMany()
                         .HasForeignKey("HouseholdId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("JxFinance.Domain.Categories.Category", null)
+                        .WithMany()
+                        .HasForeignKey("ParentId")
                         .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("JxFinance.Infrastructure.Auth.AppUser", null)
@@ -2637,6 +3458,60 @@ namespace JxFinance.Infrastructure.Data.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("JxFinance.Domain.Contacts.Contact", b =>
+                {
+                    b.HasOne("JxFinance.Infrastructure.Auth.AppUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("JxFinance.Domain.Contacts.ContactPayment", b =>
+                {
+                    b.HasOne("JxFinance.Domain.Contacts.Contact", null)
+                        .WithMany()
+                        .HasForeignKey("ContactId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("JxFinance.Infrastructure.Auth.AppUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("JxFinance.Domain.Contacts.ContactSplit", b =>
+                {
+                    b.HasOne("JxFinance.Domain.Transactions.Transaction", null)
+                        .WithMany()
+                        .HasForeignKey("TransactionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("JxFinance.Infrastructure.Auth.AppUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("JxFinance.Domain.Contacts.ContactSplitShare", b =>
+                {
+                    b.HasOne("JxFinance.Domain.Contacts.Contact", null)
+                        .WithMany()
+                        .HasForeignKey("ContactId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("JxFinance.Domain.Contacts.ContactSplit", null)
+                        .WithMany()
+                        .HasForeignKey("ContactSplitId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("JxFinance.Domain.Conversions.CurrencyConversion", b =>
                 {
                     b.HasOne("JxFinance.Domain.Accounts.Account", null)
@@ -2664,6 +3539,11 @@ namespace JxFinance.Infrastructure.Data.Migrations
                         .HasForeignKey("FundingAccountId")
                         .OnDelete(DeleteBehavior.Restrict);
 
+                    b.HasOne("JxFinance.Domain.Households.Household", null)
+                        .WithMany()
+                        .HasForeignKey("HouseholdId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("JxFinance.Infrastructure.Auth.AppUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
@@ -2686,7 +3566,104 @@ namespace JxFinance.Infrastructure.Data.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("JxFinance.Domain.Households.Settlement", b =>
+                {
+                    b.HasOne("JxFinance.Infrastructure.Auth.AppUser", null)
+                        .WithMany()
+                        .HasForeignKey("FromUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("JxFinance.Domain.Households.Household", null)
+                        .WithMany()
+                        .HasForeignKey("HouseholdId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("JxFinance.Infrastructure.Auth.AppUser", null)
+                        .WithMany()
+                        .HasForeignKey("ToUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("JxFinance.Domain.Transfers.Transfer", null)
+                        .WithMany()
+                        .HasForeignKey("TransferId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("JxFinance.Infrastructure.Auth.AppUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("JxFinance.Domain.Households.SharedExpense", b =>
+                {
+                    b.HasOne("JxFinance.Domain.Households.Household", null)
+                        .WithMany()
+                        .HasForeignKey("HouseholdId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("JxFinance.Domain.Transactions.Transaction", null)
+                        .WithMany()
+                        .HasForeignKey("TransactionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("JxFinance.Infrastructure.Auth.AppUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("JxFinance.Domain.Households.SharedExpenseShare", b =>
+                {
+                    b.HasOne("JxFinance.Domain.Households.SharedExpense", null)
+                        .WithMany()
+                        .HasForeignKey("SharedExpenseId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("JxFinance.Infrastructure.Auth.AppUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("JxFinance.Domain.Imports.CsvImportMapping", b =>
+                {
+                    b.HasOne("JxFinance.Infrastructure.Auth.AppUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("JxFinance.Domain.Imports.ImportInboxFile", b =>
+                {
+                    b.HasOne("JxFinance.Domain.Accounts.Account", null)
+                        .WithMany()
+                        .HasForeignKey("AccountId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("JxFinance.Domain.Imports.CsvImportMapping", null)
+                        .WithMany()
+                        .HasForeignKey("MappingId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("JxFinance.Infrastructure.Auth.AppUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("JxFinance.Domain.Investments.AllocationTarget", b =>
                 {
                     b.HasOne("JxFinance.Infrastructure.Auth.AppUser", null)
                         .WithMany()
@@ -2725,6 +3702,11 @@ namespace JxFinance.Infrastructure.Data.Migrations
 
                     b.HasOne("JxFinance.Domain.Investments.Security", null)
                         .WithMany()
+                        .HasForeignKey("RelatedSecurityId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("JxFinance.Domain.Investments.Security", null)
+                        .WithMany()
                         .HasForeignKey("SecurityId")
                         .OnDelete(DeleteBehavior.Restrict);
 
@@ -2760,6 +3742,11 @@ namespace JxFinance.Infrastructure.Data.Migrations
 
             modelBuilder.Entity("JxFinance.Domain.NetWorth.Asset", b =>
                 {
+                    b.HasOne("JxFinance.Domain.Households.Household", null)
+                        .WithMany()
+                        .HasForeignKey("HouseholdId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("JxFinance.Infrastructure.Auth.AppUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
@@ -2778,10 +3765,24 @@ namespace JxFinance.Infrastructure.Data.Migrations
 
             modelBuilder.Entity("JxFinance.Domain.NetWorth.Debt", b =>
                 {
+                    b.HasOne("JxFinance.Domain.Households.Household", null)
+                        .WithMany()
+                        .HasForeignKey("HouseholdId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("JxFinance.Infrastructure.Auth.AppUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("JxFinance.Domain.NetWorth.DebtBalanceEntry", b =>
+                {
+                    b.HasOne("JxFinance.Domain.NetWorth.Debt", null)
+                        .WithMany()
+                        .HasForeignKey("DebtId")
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
@@ -2815,7 +3816,7 @@ namespace JxFinance.Infrastructure.Data.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("JxFinance.Domain.Notifications.DiscordWebhook", b =>
+            modelBuilder.Entity("JxFinance.Domain.Notifications.Notification", b =>
                 {
                     b.HasOne("JxFinance.Infrastructure.Auth.AppUser", null)
                         .WithMany()
@@ -2824,7 +3825,7 @@ namespace JxFinance.Infrastructure.Data.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("JxFinance.Domain.Notifications.Notification", b =>
+            modelBuilder.Entity("JxFinance.Domain.Payees.PayeeName", b =>
                 {
                     b.HasOne("JxFinance.Infrastructure.Auth.AppUser", null)
                         .WithMany()
@@ -2874,6 +3875,11 @@ namespace JxFinance.Infrastructure.Data.Migrations
                         .HasForeignKey("DebtId")
                         .OnDelete(DeleteBehavior.SetNull);
 
+                    b.HasOne("JxFinance.Domain.Households.Household", null)
+                        .WithMany()
+                        .HasForeignKey("HouseholdId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("JxFinance.Domain.Accounts.Account", null)
                         .WithMany()
                         .HasForeignKey("ToAccountId")
@@ -2915,6 +3921,21 @@ namespace JxFinance.Infrastructure.Data.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("JxFinance.Domain.Transactions.DuplicateDismissal", b =>
+                {
+                    b.HasOne("JxFinance.Domain.Transactions.Transaction", null)
+                        .WithMany()
+                        .HasForeignKey("OtherTransactionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("JxFinance.Domain.Transactions.Transaction", null)
+                        .WithMany()
+                        .HasForeignKey("TransactionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("JxFinance.Domain.Transactions.Transaction", b =>
                 {
                     b.HasOne("JxFinance.Domain.Accounts.Account", null)
@@ -2927,6 +3948,11 @@ namespace JxFinance.Infrastructure.Data.Migrations
                         .WithMany()
                         .HasForeignKey("CategoryId")
                         .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("JxFinance.Domain.Transactions.TransactionGroup", null)
+                        .WithMany()
+                        .HasForeignKey("GroupId")
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.HasOne("JxFinance.Domain.Transactions.Transaction", null)
                         .WithMany()
@@ -2947,6 +3973,20 @@ namespace JxFinance.Infrastructure.Data.Migrations
                         .HasForeignKey("TransactionId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.HasOne("JxFinance.Infrastructure.Auth.AppUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("JxFinance.Domain.Transactions.TransactionGroup", b =>
+                {
+                    b.HasOne("JxFinance.Domain.Households.Household", null)
+                        .WithMany()
+                        .HasForeignKey("HouseholdId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("JxFinance.Infrastructure.Auth.AppUser", null)
                         .WithMany()
@@ -2978,7 +4018,7 @@ namespace JxFinance.Infrastructure.Data.Migrations
                         .IsRequired();
 
                     b.HasOne("JxFinance.Domain.Transactions.Transaction", null)
-                        .WithMany()
+                        .WithMany("Tags")
                         .HasForeignKey("TransactionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -3035,6 +4075,24 @@ namespace JxFinance.Infrastructure.Data.Migrations
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("JxFinance.Infrastructure.Auth.ApiIdempotencyKey", b =>
+                {
+                    b.HasOne("JxFinance.Infrastructure.Auth.PersonalApiToken", null)
+                        .WithMany()
+                        .HasForeignKey("TokenId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("JxFinance.Infrastructure.Auth.PersonalApiToken", b =>
+                {
+                    b.HasOne("JxFinance.Infrastructure.Auth.AppUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
@@ -3147,6 +4205,11 @@ namespace JxFinance.Infrastructure.Data.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("JxFinance.Domain.Transactions.Transaction", b =>
+                {
+                    b.Navigation("Tags");
                 });
 
             modelBuilder.Entity("JxFinance.Domain.Trash.DeletionEntry", b =>

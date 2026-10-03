@@ -135,7 +135,7 @@ In the tests, `JournalChecker` (`Tests/Support/Journal`) parses the subset of Be
 The zip moves a member to another installation, or back into a fresh member of this one. Below the download, "Import a download" takes the zip and posts it to `POST /api/users/me/import`; the answer counts the rows and files imported and the records left out, and every cached query is refreshed.
 
 The import works only into an empty member: one who owns no accounts and no tags outside the trash, or it answers 400 `import.targetNotEmpty`. The starter categories a new member gets are moved to the trash when nothing uses them, and the member's net-worth snapshots are deleted, so the file's history replaces them. The header must say `jx-finance-user-export` version 1, or it answers `import.invalidFile`. A file that does not start with the zip signature answers the same before anything is read, because the zip reader fails on a stream shorter than its end record with an error that is not about the file.
-A download carries every column its tables had when it was taken, such as the spreading of each transaction and recurring entry that `AddTransactionSpread` added on 2026-09-30, the place and coordinates that `AddTransactionLocations` added, and the `GroupId` of each transaction and the member's `TransactionGroups` that `AddTransactionGroups` added on 2026-10-01, because the tables are copied column by column.
+A download carries every column its tables had when it was taken, such as the spreading of each transaction and recurring entry, the place and coordinates, and the `GroupId` of each transaction with the member's `TransactionGroups`, because the tables are copied column by column.
 
 A [group](transaction-groups.md) comes back with its members; a row on the member's account that a housemate entered and grouped carries a group the file does not hold, and the repair step clears its `GroupId`. A partner's payment link on the member's shared debt is imported when its transaction is on one of the member's own accounts; one whose transaction sits on the partner's account is dropped by the repair step, because that transaction is not in the file.
 
@@ -154,15 +154,16 @@ It runs as one database transaction with the foreign keys deferred, as a restore
 
 ### A download from an older version
 
-Since 2026-10-02 the `migration` in the header may be the running application's or any earlier one, so a download taken on an older version imports into a newer installation. One this application does not have answers `import.newerVersion` when its id sorts after the current migration (ids start with their timestamp), because the download comes from a newer version and the installation needs upgrading first, and `import.unknownVersion` otherwise.
-The old shapes map onto the current schema column by column, with the generated migrations as the reference:
+The `migration` in the header may be the running application's or any earlier one it lists, so a download taken on an older version imports into a newer installation. One this application does not have answers `import.newerVersion` when its id sorts after the current migration (ids start with their timestamp), because the download comes from a newer version and the installation needs upgrading first, and `import.unknownVersion` otherwise.
+On 2026-10-03, before the first release, the migration history was squashed into one `InitialCreate` migration. A download taken before that names a migration this application no longer has, so it answers `import.unknownVersion` and cannot be imported; take a new download.
+From `InitialCreate` on, the old shapes map onto the current schema column by column, with the generated migrations as the reference:
 
 | What changed since the download | What the import does |
 | --- | --- |
-| A column added to an imported table | left out of the insert, so it takes the default its migration gave every existing row: `Scope` personal, `SpreadDirection` forward, `Position` 0, `NoHeaderRow` false, `RelatedQuantity` 0, null for the nullable ones |
-| A column an upgrade fills at startup | filled by the same step after the repair step, inside the import's transaction: `PayeeKeyBackfill` for `PayeeKey`, `SpreadFromBackfill` for the `SpreadFrom` of a spread transaction from before `AddSpreadDirection`, and `DebtBalanceBackfill` for the first [recorded balance](net-worth.md#debt-balance-history) of a debt from before `AddDebtBalanceEntries`; each touches only rows still missing the value, which after startup are the imported ones |
-| A table added since | absent from the file, so the member starts with none of its rows, such as no [possible duplicates](transactions.md#possible-duplicates) kept as both before `AddDuplicateDismissals` |
-| A column renamed or dropped | none since the export appeared on 2026-09-29; a column the file holds that its table no longer has answers `import.invalidFile`, so a migration that renames or drops a column of an imported table adds its mapping to `MemberImport` |
+| A column added to an imported table | left out of the insert, so it takes the database default its migration leaves, or null for a nullable one |
+| A column the application derives when it writes a row, as it derives `PayeeKey` and `SpreadFrom` | not derived for imported rows, so a migration that adds one also has to fill it for them |
+| A table added since | absent from the file, so the member starts with none of its rows |
+| A column renamed or dropped | a column the file holds that its table no longer has answers `import.invalidFile`, so a migration that renames or drops a column of an imported table adds its mapping to `MemberImport` |
 
 ## How it differs from a backup
 
@@ -174,6 +175,7 @@ The old shapes map onto the current schema column by column, with the generated 
 | Format | `jx-finance-user-export` 1, plus three CSVs and a Beancount journal | `jx-finance-backup` 1 |
 | Bringing back | into an empty member, records become theirs | replaces everything |
 | Taken on an older version | imported, mapped column by column | refused; restored with the version that wrote it, then upgraded |
+| Taken before the squash of 2026-10-03 | refused, `import.unknownVersion` | refused, `backup.schemaMismatch` |
 
 ## Classification and its guard
 

@@ -82,7 +82,6 @@ public sealed partial class QueryFilterTests
         "Infrastructure/Data/Auditing/AuditCollector.cs",
         "Infrastructure/Data/DemoDataCommand.cs",
         "Infrastructure/Data/DevDataSeeder.cs",
-        "Infrastructure/Data/PayeeKeyBackfill.cs",
         "Infrastructure/Data/StarterCategories.cs",
     ];
 

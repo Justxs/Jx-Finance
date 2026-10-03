@@ -27,5 +27,37 @@ Other code spans (Tailwind classes, attributes such as `role="img"`, plain words
 
 `just new-endpoint` and `just new-component` scaffold a backend slice and a frontend component with story and test; [Adding a feature](../adding-a-feature.md) walks through the whole path.
 
+## The squashed migration history
+On 2026-10-03 the migration history was squashed into one migration, `20261003165252_InitialCreate` (see [Data model](../data-model.md#model-configuration-and-migrations)). A development database migrated before that holds the old rows in `__EFMigrationsHistory`, so this version would try to create every table again and fail at startup. Its schema already matches `InitialCreate` except for two kinds of leftovers: the database defaults that old migrations left on the non-null columns they added to existing rows, which the model does not declare and the application never relies on, and the partial index `IX_Transactions_PayeeKeyPending`, which served only the removed startup fill of payee keys.
+
+Rewrite it once, before this version first starts on it. The newest row of `__EFMigrationsHistory` must be `20261003152510_AddRowVersions` or `20261003131532_DebtInterestRatePrecision` (the first changes no schema); a database further behind is easier to drop with `just db-reset`. Run this with `docker compose exec -T db psql -U <POSTGRES_USER> -d <POSTGRES_DB>`, the two values from `.env`:
+
+```sql
+BEGIN;
+DROP INDEX "IX_Transactions_PayeeKeyPending";
+ALTER TABLE "Accounts" ALTER COLUMN "Currency" DROP DEFAULT, ALTER COLUMN "Scope" DROP DEFAULT;
+ALTER TABLE "AspNetUsers" ALTER COLUMN "CountOpenBalancesInNetWorth" DROP DEFAULT, ALTER COLUMN "DisplayName" DROP DEFAULT;
+ALTER TABLE "Assets" ALTER COLUMN "Currency" DROP DEFAULT, ALTER COLUMN "Scope" DROP DEFAULT;
+ALTER TABLE "Budgets" ALTER COLUMN "RolloverEnabled" DROP DEFAULT, ALTER COLUMN "Scope" DROP DEFAULT;
+ALTER TABLE "Categories" ALTER COLUMN "Scope" DROP DEFAULT;
+ALTER TABLE "CsvImportMappings" ALTER COLUMN "NoHeaderRow" DROP DEFAULT;
+ALTER TABLE "Debts" ALTER COLUMN "AmortizationType" DROP DEFAULT, ALTER COLUMN "Currency" DROP DEFAULT, ALTER COLUMN "Scope" DROP DEFAULT, ALTER COLUMN "TracksPayments" DROP DEFAULT;
+ALTER TABLE "Goals" ALTER COLUMN "Funding" DROP DEFAULT, ALTER COLUMN "Scope" DROP DEFAULT;
+ALTER TABLE "InstanceSettings" ALTER COLUMN "DiscordEnabled" DROP DEFAULT, ALTER COLUMN "DiscordProtectedUrl" DROP DEFAULT, ALTER COLUMN "EodhdProtectedKey" DROP DEFAULT, ALTER COLUMN "Features_ApiTokens" DROP DEFAULT, ALTER COLUMN "Features_Investments" DROP DEFAULT, ALTER COLUMN "Features_LearnedCategories" DROP DEFAULT, ALTER COLUMN "Features_Locations" DROP DEFAULT, ALTER COLUMN "PriceCallsUsed" DROP DEFAULT, ALTER COLUMN "PriceSyncEnabled" DROP DEFAULT, ALTER COLUMN "SmtpEnabled" DROP DEFAULT, ALTER COLUMN "SmtpEncryption" DROP DEFAULT, ALTER COLUMN "SmtpPort" DROP DEFAULT, ALTER COLUMN "SmtpProtectedPassword" DROP DEFAULT;
+ALTER TABLE "InvestmentTransactions" ALTER COLUMN "RelatedQuantity" DROP DEFAULT;
+ALTER TABLE "NetWorthSnapshots" ALTER COLUMN "Currency" DROP DEFAULT;
+ALTER TABLE "RecurringBills" ALTER COLUMN "AnchorDay" DROP DEFAULT, ALTER COLUMN "Scope" DROP DEFAULT, ALTER COLUMN "Shape" DROP DEFAULT, ALTER COLUMN "SpreadDirection" DROP DEFAULT;
+ALTER TABLE "TransactionGroups" ALTER COLUMN "Scope" DROP DEFAULT;
+ALTER TABLE "TransactionLines" ALTER COLUMN "Position" DROP DEFAULT;
+ALTER TABLE "Transactions" ALTER COLUMN "Currency" DROP DEFAULT, ALTER COLUMN "ReportingAmount" DROP DEFAULT, ALTER COLUMN "SpreadDirection" DROP DEFAULT;
+ALTER TABLE "Transfers" ALTER COLUMN "Currency" DROP DEFAULT, ALTER COLUMN "ReceivedAmount" DROP DEFAULT, ALTER COLUMN "ReceivedCurrency" DROP DEFAULT;
+ALTER TABLE "UserSessions" ALTER COLUMN "LastSeenAt" DROP DEFAULT;
+DELETE FROM "__EFMigrationsHistory";
+INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion") VALUES ('20261003165252_InitialCreate', '10.0.12');
+COMMIT;
+```
+
+The script was checked on PostgreSQL 16 by migrating one database through the old history and another through `InitialCreate`, running it on the first and comparing `pg_dump --schema-only` of both and their history rows, which then matched. The rows keep their data; only the defaults, the index and the history change. Backups taken before the squash stay unrestorable even after this, because each names its own old migration.
+
 ## Package updates
 `.gitea/workflows/update-packages.yaml` runs every Monday at 05:00 UTC and on manual dispatch. It upgrades every NuGet package with `dotnet-outdated` and every frontend package with `nub update --latest`, majors included, moves the pinned Docker base images to their newest patch tag and digest (`scripts/update-images.mjs`), regenerates the API client with `scripts/gen.mjs` so the drift check stays green, then force-pushes `chore/package-updates` and opens a pull request through the Gitea API. An already-open pull request is refreshed in place. The job needs a `PACKAGE_UPDATE_TOKEN` repository secret holding a personal access token with repository write scope; the built-in Actions token is not used because pull requests it opens do not trigger CI. Nothing is pushed to `master`; majors and the forced `@tanstack/react-form@alpha` reach it only through that pull request and its CI run. The pinned nub version (in `.gitea/actions/setup-frontend/action.yml`) and the action versions are not covered: actions are pinned by commit SHA with the release in a trailing comment, and moving one means resolving the new SHA with `git ls-remote https://github.com/<owner>/<action> refs/tags/<tag>`.
