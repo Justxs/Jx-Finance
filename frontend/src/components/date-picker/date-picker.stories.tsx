@@ -39,7 +39,7 @@ function DatePickerExample({
 }
 
 const meta = {
-  title: "UI/DatePicker",
+  title: "Components/DatePicker",
   component: DatePicker,
 } satisfies Meta<typeof DatePicker>;
 

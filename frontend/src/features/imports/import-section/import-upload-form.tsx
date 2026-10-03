@@ -1,6 +1,7 @@
 import { type RefObject, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { AccountResponse, StatementFormat } from "@/api/generated/model";
+import { useAppForm } from "@/components/form";
 import { FieldShell } from "@/components/form/field-shell/field-shell";
 import { SelectField } from "@/components/select-field/select-field";
 import { Button } from "@/components/ui/button/button";
@@ -55,79 +56,76 @@ export function ImportUploadForm({
   const [expanded, setExpanded] = useState(false);
   const collapsed = secondary && !expanded;
   const accountName = accounts.find((account) => account.id === accountId)?.name;
+  const form = useAppForm({ defaultValues: {}, onSubmit: onPreview });
 
   return (
-    <form
-      noValidate
-      onSubmit={(event) => {
-        event.preventDefault();
-        onPreview();
-      }}
-    >
-      <SectionTitle className="mb-4">{t("imports.fileSection")}</SectionTitle>
-      {collapsed ? (
-        <p className="flex flex-wrap items-baseline gap-x-3 gap-y-1 text-sm">
-          <span className="min-w-0 font-medium wrap-break-word">{fileName}</span>
-          <span className="text-muted-foreground">{accountName}</span>
-          <Button
-            type="button"
-            variant="link"
-            size="inline"
-            disabled={locked}
-            onClick={() => setExpanded(true)}
-          >
-            {t("imports.changeFile")}
-          </Button>
-        </p>
-      ) : null}
-      <FormGrid className={collapsed ? "hidden" : undefined}>
-        <FieldShell id="import-account" label={t("transactions.account")}>
-          <SelectField
-            id="import-account"
-            value={accountId}
-            disabled={locked}
-            onChange={onAccountChange}
-            options={namedOptions(accounts)}
-          />
-        </FieldShell>
-        <FieldShell
-          id={IMPORT_FILE_INPUT_ID}
-          label={t("imports.file")}
-          hint={t(`imports.formats.${format}.hint`)}
-          error={fileError}
-          className="col-span-full"
-        >
-          {storedFileName ? (
-            <p id={IMPORT_FILE_INPUT_ID} className="text-sm font-medium wrap-break-word">
-              {storedFileName}
-            </p>
-          ) : (
-            <FileInput
-              id={IMPORT_FILE_INPUT_ID}
-              ref={fileInputRef}
-              accept={importFormats[format].accept}
+    <form.AppForm>
+      <form.FormShell>
+        <SectionTitle className="mb-4">{t("imports.fileSection")}</SectionTitle>
+        {collapsed ? (
+          <p className="flex flex-wrap items-baseline gap-x-3 gap-y-1 text-sm">
+            <span className="min-w-0 font-medium wrap-break-word">{fileName}</span>
+            <span className="text-muted-foreground">{accountName}</span>
+            <Button
+              type="button"
+              variant="link"
+              size="inline"
               disabled={locked}
-              onChange={(event) => {
-                setFileName(event.target.files?.[0]?.name ?? "");
-                onFileChange();
-              }}
-              placeholder={t("imports.chooseFile")}
-              {...shellAria({ id: IMPORT_FILE_INPUT_ID, hint: true, error: fileError })}
+              onClick={() => setExpanded(true)}
+            >
+              {t("imports.changeFile")}
+            </Button>
+          </p>
+        ) : null}
+        <FormGrid className={collapsed ? "hidden" : undefined}>
+          <FieldShell id="import-account" label={t("transactions.account")}>
+            <SelectField
+              id="import-account"
+              value={accountId}
+              disabled={locked}
+              onChange={onAccountChange}
+              options={namedOptions(accounts)}
             />
-          )}
-        </FieldShell>
-      </FormGrid>
-      <div className={collapsed ? "hidden" : "mt-4 flex justify-end"}>
-        <Button
-          type="submit"
-          variant={secondary ? "outline" : "default"}
-          pending={previewPending}
-          disabled={!accountId || disabled}
-        >
-          {t("imports.preview")}
-        </Button>
-      </div>
-    </form>
+          </FieldShell>
+          <FieldShell
+            id={IMPORT_FILE_INPUT_ID}
+            label={t("imports.file")}
+            hint={t(`imports.formats.${format}.hint`)}
+            error={fileError}
+            className="col-span-full"
+          >
+            {storedFileName ? (
+              <p id={IMPORT_FILE_INPUT_ID} className="text-sm font-medium wrap-break-word">
+                {storedFileName}
+              </p>
+            ) : (
+              <FileInput
+                id={IMPORT_FILE_INPUT_ID}
+                ref={fileInputRef}
+                accept={importFormats[format].accept}
+                disabled={locked}
+                onChange={(event) => {
+                  setFileName(event.target.files?.[0]?.name ?? "");
+                  onFileChange();
+                }}
+                placeholder={t("imports.chooseFile")}
+                {...shellAria({ id: IMPORT_FILE_INPUT_ID, hint: true, error: fileError })}
+              />
+            )}
+          </FieldShell>
+        </FormGrid>
+        <div className={collapsed ? "hidden" : "mt-4 flex justify-end"}>
+          <Button
+            type="submit"
+            variant={secondary ? "outline" : "default"}
+            pending={previewPending}
+            disabled={!accountId || disabled}
+          >
+            {t("imports.preview")}
+          </Button>
+        </div>
+      </form.FormShell>
+    </form.AppForm>
   );
 }
 

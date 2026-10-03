@@ -1,12 +1,10 @@
 import { ListFilter } from "lucide-react";
 import { type ReactNode, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { SelectField } from "@/components/select-field/select-field";
 import { Button } from "@/components/ui/button/button";
 import { Input } from "@/components/ui/input/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover/popover";
 import { Tooltip } from "@/components/ui/tooltip/tooltip";
-import type { SelectOption } from "@/lib/options";
 import { cn } from "@/lib/utils";
 
 function sameValue(a: unknown, b: unknown) {
@@ -131,35 +129,6 @@ export function TextColumnFilter({
           value={draft}
           onChange={(event) => setDraft(event.target.value)}
         />
-      )}
-    </ColumnFilter>
-  );
-}
-
-interface SelectFilterProps<T extends string> {
-  label: string;
-  value: T | "";
-  options: SelectOption<T | "">[];
-  onChange: (value: T | "") => void;
-}
-
-export function SelectColumnFilter<T extends string>({
-  label,
-  value,
-  options,
-  onChange,
-}: Readonly<SelectFilterProps<T>>) {
-  const chosen = options.find((option) => option.value === value)?.label;
-  return (
-    <ColumnFilter<T | "">
-      label={label}
-      value={value}
-      empty=""
-      summary={typeof chosen === "string" ? chosen : undefined}
-      onApply={onChange}
-    >
-      {(draft, setDraft) => (
-        <SelectField aria-label={label} value={draft} onChange={setDraft} options={options} />
       )}
     </ColumnFilter>
   );

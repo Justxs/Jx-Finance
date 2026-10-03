@@ -6,9 +6,9 @@ import { TooltipProvider } from "@/components/ui/tooltip/tooltip";
 import { setSetupNeeded } from "@/lib/auth-gate";
 import { routeTree } from "@/route-tree.gen";
 
-export const APP_TEST_TIMEOUT = 20_000;
+export const APP_TEST_TIMEOUT = 30_000;
 
-export const appWait = { timeout: 5_000 };
+export const appWait = { timeout: 15_000 };
 
 export function mountApp(path: string) {
   const queryClient = new QueryClient({

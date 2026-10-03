@@ -1,6 +1,8 @@
+import { QueryObserver } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { ApiError } from "@/api/client";
+import { getCreateTagMutationKey, getTagsQueryKey } from "@/api/generated";
 import { queryClient, throwWithoutData } from "./query-client";
 
 const generic = "Something went wrong. Please try again.";
@@ -164,6 +166,62 @@ describe("mutation success", () => {
     await succeedingMutation();
 
     expect(toastSuccess).not.toHaveBeenCalled();
+  });
+});
+
+function watchedTags(fetchTags: () => Promise<string>) {
+  const observer = new QueryObserver(queryClient, {
+    queryKey: getTagsQueryKey(),
+    queryFn: fetchTags,
+    retry: false,
+  });
+  return observer.subscribe(() => {});
+}
+
+describe("mutation refresh", () => {
+  test("a mutation stays pending until the queries it changed have refetched", async () => {
+    const order: string[] = [];
+    let answer = "before";
+    const stop = watchedTags(() => {
+      order.push(`fetched ${answer}`);
+      return Promise.resolve(answer);
+    });
+    await vi.waitFor(() => expect(queryClient.getQueryData(getTagsQueryKey())).toBe("before"));
+    const mutation = queryClient.getMutationCache().build(queryClient, {
+      mutationKey: getCreateTagMutationKey(),
+      mutationFn: () => {
+        answer = "after";
+        return Promise.resolve("created");
+      },
+      meta: { success: "Saved" },
+      onSuccess: () => {
+        order.push("closed");
+      },
+    });
+
+    await mutation.execute(undefined);
+    stop();
+
+    expect(order).toEqual(["fetched before", "fetched after", "closed"]);
+    expect(toastSuccess).toHaveBeenCalledExactlyOnceWith("Saved");
+  });
+
+  test("a failed mutation refreshes after its own error handler has rolled back", async () => {
+    const stop = watchedTags(() => Promise.resolve("server"));
+    await vi.waitFor(() => expect(queryClient.getQueryData(getTagsQueryKey())).toBe("server"));
+    const mutation = queryClient.getMutationCache().build(queryClient, {
+      mutationKey: getCreateTagMutationKey(),
+      mutationFn: () => Promise.reject(new ApiError({ status: 409, title: "Conflict" })),
+      meta: { silent: true },
+      onError: () => {
+        queryClient.setQueryData(getTagsQueryKey(), "rolled back");
+      },
+    });
+
+    await expect(mutation.execute(undefined)).rejects.toBeInstanceOf(ApiError);
+    stop();
+
+    expect(queryClient.getQueryData(getTagsQueryKey())).toBe("server");
   });
 });
 

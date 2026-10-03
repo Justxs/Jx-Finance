@@ -1,17 +1,12 @@
 import { CalendarDays } from "lucide-react";
 import { type FocusEventHandler, type ReactNode, useState } from "react";
-import type { Locale } from "react-day-picker";
 import { Button } from "@/components/ui/button/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover/popover";
-import { useCalendarLocale } from "@/hooks/use-formatters";
-import { useToday, useTodayDate } from "@/hooks/use-settings";
 import { cn } from "@/lib/utils";
 
 interface CalendarPopoverApi {
   month: Date;
   setMonth: (month: Date) => void;
-  locale: Locale;
-  today: string;
   close: () => void;
 }
 
@@ -20,6 +15,7 @@ interface Props {
   label: string;
   empty: boolean;
   anchor: Date | undefined;
+  today: Date;
   disabled?: boolean;
   className?: string;
   "aria-invalid"?: boolean;
@@ -33,6 +29,7 @@ export function CalendarPopover({
   label,
   empty,
   anchor,
+  today,
   disabled,
   className,
   "aria-invalid": ariaInvalid,
@@ -40,16 +37,13 @@ export function CalendarPopover({
   onBlur,
   children,
 }: Readonly<Props>) {
-  const locale = useCalendarLocale();
-  const today = useToday();
-  const todayDate = useTodayDate();
   const [open, setOpen] = useState(false);
-  const [month, setMonth] = useState(anchor ?? todayDate);
+  const [month, setMonth] = useState(anchor ?? today);
 
   function handleOpenChange(next: boolean) {
     setOpen(next);
     if (next) {
-      setMonth(anchor ?? todayDate);
+      setMonth(anchor ?? today);
     }
   }
 
@@ -77,7 +71,7 @@ export function CalendarPopover({
           <CalendarDays className="text-muted-foreground" />
         </PopoverTrigger>
         <PopoverContent align="start" className="w-auto gap-2">
-          {children({ month, setMonth, locale, today, close: () => setOpen(false) })}
+          {children({ month, setMonth, close: () => setOpen(false) })}
         </PopoverContent>
       </Popover>
     </div>

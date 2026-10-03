@@ -41,7 +41,8 @@ export const silentQuery = { retry: false, throwOnError: false, meta: { silent: 
 
 export function createMutationCache() {
   return new MutationCache({
-    onSuccess: (_data, _variables, _result, mutation) => {
+    onSuccess: async (_data, _variables, _result, mutation, context) => {
+      await invalidateAfterMutation(context.client, context.mutationKey);
       if (mutation.meta?.success) {
         toast.success(mutation.meta.success);
       }
@@ -51,9 +52,8 @@ export function createMutationCache() {
         toastError(error);
       }
     },
-    onSettled: (_data, _error, _variables, _result, _mutation, context) => {
-      void invalidateAfterMutation(context.client, context.mutationKey);
-    },
+    onSettled: (_data, error, _variables, _result, _mutation, context) =>
+      error ? invalidateAfterMutation(context.client, context.mutationKey) : undefined,
   });
 }
 

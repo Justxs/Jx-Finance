@@ -40,7 +40,7 @@ function DateRangePickerExample({
 }
 
 const meta = {
-  title: "UI/DateRangePicker",
+  title: "Components/DateRangePicker",
   component: DateRangePicker,
 } satisfies Meta<typeof DateRangePicker>;
 

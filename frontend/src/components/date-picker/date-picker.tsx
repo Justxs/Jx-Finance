@@ -2,7 +2,8 @@ import type { FocusEventHandler } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button/button";
 import { Calendar, CalendarPopover } from "@/components/ui/calendar";
-import { useDate } from "@/hooks/use-formatters";
+import { useCalendarLocale, useDate } from "@/hooks/use-formatters";
+import { useToday, useTodayDate, useWeekStartsOn } from "@/hooks/use-settings";
 import { parseIso, toIso } from "@/lib/calendar";
 
 interface Props {
@@ -20,6 +21,10 @@ interface Props {
 export function DatePicker({ value, onChange, placeholder, ...trigger }: Readonly<Props>) {
   const { t } = useTranslation();
   const dateFormat = useDate();
+  const locale = useCalendarLocale();
+  const weekStartsOn = useWeekStartsOn();
+  const today = useToday();
+  const todayDate = useTodayDate();
   const selected = parseIso(value) ?? undefined;
 
   return (
@@ -28,8 +33,9 @@ export function DatePicker({ value, onChange, placeholder, ...trigger }: Readonl
       label={selected ? dateFormat.format(selected) : (placeholder ?? t("datePicker.placeholder"))}
       empty={!selected}
       anchor={selected}
+      today={todayDate}
     >
-      {({ month, setMonth, locale, today, close }) => {
+      {({ month, setMonth, close }) => {
         function pick(next: string) {
           onChange(next);
           close();
@@ -40,6 +46,8 @@ export function DatePicker({ value, onChange, placeholder, ...trigger }: Readonl
             <Calendar
               mode="single"
               locale={locale}
+              weekStartsOn={weekStartsOn}
+              today={todayDate}
               selected={selected}
               month={month}
               onMonthChange={setMonth}

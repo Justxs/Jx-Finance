@@ -2,7 +2,8 @@ import { type ReactNode, ViewTransition } from "react";
 import { useTranslation } from "react-i18next";
 import type { UserProfileResponse } from "@/api/generated/model";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog/confirm-delete-dialog";
-import { SelectColumnFilter, TextColumnFilter } from "@/components/ui/column-filter/column-filter";
+import { SelectColumnFilter } from "@/components/select-column-filter/select-column-filter";
+import { TextColumnFilter } from "@/components/ui/column-filter/column-filter";
 import { SortableTableHead } from "@/components/ui/column-header/column-header";
 import {
   Table,

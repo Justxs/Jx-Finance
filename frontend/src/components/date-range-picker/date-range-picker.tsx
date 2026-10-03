@@ -1,7 +1,8 @@
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button/button";
 import { Calendar, CalendarPopover } from "@/components/ui/calendar";
-import { useDate } from "@/hooks/use-formatters";
+import { useCalendarLocale, useDate } from "@/hooks/use-formatters";
+import { useTodayDate, useWeekStartsOn } from "@/hooks/use-settings";
 import { parseIso, toIso } from "@/lib/calendar";
 
 export interface DateRange {
@@ -21,6 +22,9 @@ interface Props {
 export function DateRangePicker({ value, onChange, placeholder, ...trigger }: Readonly<Props>) {
   const { t } = useTranslation();
   const dateFormat = useDate();
+  const locale = useCalendarLocale();
+  const weekStartsOn = useWeekStartsOn();
+  const today = useTodayDate();
 
   const from = parseIso(value.from) ?? undefined;
   const to = parseIso(value.to) ?? undefined;
@@ -35,8 +39,8 @@ export function DateRangePicker({ value, onChange, placeholder, ...trigger }: Re
   }
 
   return (
-    <CalendarPopover {...trigger} label={label} empty={!from && !to} anchor={from}>
-      {({ month, setMonth, locale, close }) => {
+    <CalendarPopover {...trigger} label={label} empty={!from && !to} anchor={from} today={today}>
+      {({ month, setMonth, close }) => {
         function pick(iso: string) {
           const startingOver = !value.from || Boolean(value.to);
           if (startingOver) {
@@ -57,6 +61,8 @@ export function DateRangePicker({ value, onChange, placeholder, ...trigger }: Re
             <Calendar
               mode="range"
               locale={locale}
+              weekStartsOn={weekStartsOn}
+              today={today}
               selected={{ from, to }}
               month={month}
               onMonthChange={setMonth}

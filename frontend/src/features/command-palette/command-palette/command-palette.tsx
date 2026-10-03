@@ -1,7 +1,8 @@
+import { Autocomplete } from "@base-ui/react/autocomplete";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { Search } from "lucide-react";
-import { type KeyboardEvent, useId, useRef, useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   getAccountsSuspenseQueryOptions,
@@ -35,7 +36,6 @@ import { latestEndedMonth } from "@/lib/calendar";
 import { notify } from "@/lib/mutations";
 import { silentQuery } from "@/lib/query-client";
 import { UserRole } from "@/lib/user-role";
-import { cn } from "@/lib/utils";
 import { setActiveHousehold, useActiveHouseholdId } from "@/stores/active-household-store";
 import { setLocale, useLocale } from "@/stores/app-store";
 import {
@@ -53,10 +53,6 @@ const RESULT_LIMIT = 50;
 
 const listQuery = { staleTime: PALETTE_STALE_MS, ...silentQuery };
 
-function wrapIndex(index: number, step: number, length: number) {
-  return length === 0 ? 0 : (index + step + length) % length;
-}
-
 interface ContentProps {
   onClose: () => void;
 }
@@ -65,12 +61,7 @@ function CommandPaletteContent({ onClose }: Readonly<ContentProps>) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const listId = useId();
-  const optionPrefix = useId();
-  const listRef = useRef<HTMLDivElement>(null);
-
   const [query, setQuery] = useState("");
-  const [activeIndex, setActiveIndex] = useState(0);
 
   const me = useMe();
   const { features, defaultAccountId } = useSettings();
@@ -129,8 +120,6 @@ function CommandPaletteContent({ onClose }: Readonly<ContentProps>) {
     .filter((entry) => entry !== null)
     .slice(0, RESULT_LIMIT);
   const results = searchTransactions ? [...typed, searchTransactions] : typed;
-  const activeAt = Math.min(activeIndex, Math.max(results.length - 1, 0));
-  const active = results[activeAt];
 
   async function startQuickAdd(draft: QuickAddDraft) {
     const categoryId = await quickAddCategoryId(queryClient, draft, categoryList, features);
@@ -186,55 +175,6 @@ function CommandPaletteContent({ onClose }: Readonly<ContentProps>) {
     run(entry.target);
   }
 
-  function chooseOnKey(event: KeyboardEvent<HTMLDivElement>, entry: CommandEntry) {
-    if (event.key === "Enter" || event.key === " ") {
-      event.preventDefault();
-      choose(entry);
-    }
-  }
-
-  function changeQuery(next: string) {
-    setQuery(next);
-    setActiveIndex(0);
-    if (listRef.current) {
-      listRef.current.scrollTop = 0;
-    }
-  }
-
-  function highlight(index: number) {
-    setActiveIndex(index);
-    const entry = results[index];
-    const option = entry ? document.getElementById(`${optionPrefix}-${entry.id}`) : null;
-    option?.scrollIntoView?.({ block: "nearest" });
-  }
-
-  function handleKeyDown(event: KeyboardEvent<HTMLInputElement>) {
-    if (event.key === "ArrowDown") {
-      event.preventDefault();
-      highlight(wrapIndex(activeAt, 1, results.length));
-      return;
-    }
-    if (event.key === "ArrowUp") {
-      event.preventDefault();
-      highlight(wrapIndex(activeAt, -1, results.length));
-      return;
-    }
-    if (event.key === "Home") {
-      event.preventDefault();
-      highlight(0);
-      return;
-    }
-    if (event.key === "End") {
-      event.preventDefault();
-      highlight(Math.max(results.length - 1, 0));
-      return;
-    }
-    if (event.key === "Enter" && active) {
-      event.preventDefault();
-      choose(active);
-    }
-  }
-
   return (
     <DialogContent
       showCloseButton={false}
@@ -243,58 +183,54 @@ function CommandPaletteContent({ onClose }: Readonly<ContentProps>) {
       <DialogTitle className="sr-only">{t("commandPalette.title")}</DialogTitle>
       <DialogDescription className="sr-only">{t("commandPalette.description")}</DialogDescription>
 
-      <div className="flex shrink-0 items-center gap-2 border-b px-3 transition-colors has-[input:focus-visible]:border-ring">
-        <Search aria-hidden="true" className="size-4 shrink-0 text-muted-foreground" />
-        <input
-          autoFocus
-          type="text"
-          role="combobox"
-          autoComplete="off"
-          spellCheck={false}
-          aria-label={t("commandPalette.searchLabel")}
-          aria-expanded
-          aria-controls={listId}
-          aria-autocomplete="list"
-          aria-activedescendant={active ? `${optionPrefix}-${active.id}` : undefined}
-          placeholder={t("commandPalette.placeholder")}
-          value={query}
-          onChange={(event) => changeQuery(event.target.value)}
-          onKeyDown={handleKeyDown}
-          className="h-12 w-full min-w-0 bg-transparent py-1 text-base outline-none placeholder:text-muted-foreground md:text-sm"
-        />
-      </div>
-
-      <p role="status" className="sr-only">
-        {t("commandPalette.count", { count: results.length })}
-      </p>
-
-      <div
-        ref={listRef}
-        id={listId}
-        role="listbox"
-        aria-label={t("commandPalette.resultsLabel")}
-        className="min-h-0 overflow-y-auto overscroll-contain p-1.5"
+      <Autocomplete.Root
+        open
+        inline
+        items={results}
+        filter={null}
+        value={query}
+        onValueChange={(next, details) => {
+          if (details.reason !== "item-press") {
+            setQuery(next);
+          }
+        }}
+        itemToStringValue={(entry: CommandEntry) => entry.label}
+        autoHighlight="always"
+        keepHighlight
       >
-        {results.map((entry, index) => (
-          <div
-            key={entry.id}
-            id={`${optionPrefix}-${entry.id}`}
-            role="option"
-            tabIndex={-1}
-            aria-selected={entry.id === active?.id}
-            onClick={() => choose(entry)}
-            onKeyDown={(event) => chooseOnKey(event, entry)}
-            onPointerMove={() => setActiveIndex(index)}
-            className={cn(
-              "flex cursor-pointer items-center justify-between gap-3 rounded-md px-3 py-2 text-sm",
-              entry.id === active?.id && "bg-muted text-foreground",
-            )}
-          >
-            <span className="min-w-0 truncate">{entry.label}</span>
-            <span className="shrink-0 text-xs text-muted-foreground">{entry.hint}</span>
-          </div>
-        ))}
-      </div>
+        <div className="flex shrink-0 items-center gap-2 border-b px-3 transition-colors has-[input:focus-visible]:border-ring">
+          <Search aria-hidden="true" className="size-4 shrink-0 text-muted-foreground" />
+          <Autocomplete.Input
+            autoFocus
+            spellCheck={false}
+            aria-label={t("commandPalette.searchLabel")}
+            placeholder={t("commandPalette.placeholder")}
+            className="h-12 w-full min-w-0 bg-transparent py-1 text-base outline-none placeholder:text-muted-foreground md:text-sm"
+          />
+        </div>
+
+        <p role="status" className="sr-only">
+          {t("commandPalette.count", { count: results.length })}
+        </p>
+
+        <Autocomplete.List
+          aria-label={t("commandPalette.resultsLabel")}
+          className="min-h-0 overflow-y-auto overscroll-contain p-1.5"
+        >
+          {(entry: CommandEntry) => (
+            <Autocomplete.Item
+              key={entry.id}
+              value={entry}
+              onClick={() => choose(entry)}
+              render={(props, state) => <div {...props} aria-selected={state.highlighted} />}
+              className="flex cursor-pointer items-center justify-between gap-3 rounded-md px-3 py-2 text-sm data-highlighted:bg-muted data-highlighted:text-foreground"
+            >
+              <span className="min-w-0 truncate">{entry.label}</span>
+              <span className="shrink-0 text-xs text-muted-foreground">{entry.hint}</span>
+            </Autocomplete.Item>
+          )}
+        </Autocomplete.List>
+      </Autocomplete.Root>
     </DialogContent>
   );
 }

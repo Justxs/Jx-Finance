@@ -2,8 +2,6 @@ import { ChevronLeftIcon, ChevronRightIcon, ChevronDownIcon } from "lucide-react
 import type { ComponentProps } from "react";
 import { DayPicker, getDefaultClassNames, type DayButton, type Locale } from "react-day-picker";
 import { Button } from "@/components/ui/button/button";
-import { useToday, useWeekStartsOn } from "@/hooks/use-settings";
-import { parseIso } from "@/lib/calendar";
 import { cn } from "@/lib/utils";
 
 function Calendar({
@@ -15,21 +13,15 @@ function Calendar({
   locale,
   formatters,
   components,
-  weekStartsOn,
-  today,
   ...props
 }: ComponentProps<typeof DayPicker> & {
   buttonVariant?: ComponentProps<typeof Button>["variant"];
 }) {
   const defaultClassNames = getDefaultClassNames();
-  const defaultWeekStartsOn = useWeekStartsOn();
-  const defaultToday = parseIso(useToday()) ?? undefined;
 
   return (
     <DayPicker
       showOutsideDays={showOutsideDays}
-      weekStartsOn={weekStartsOn ?? defaultWeekStartsOn}
-      today={today ?? defaultToday}
       className={cn(
         "group/calendar bg-background p-2 [--cell-radius:var(--radius-md)] [--cell-size:--spacing(7)] in-data-[slot=card-content]:bg-transparent in-data-[slot=popover-content]:bg-transparent",
         String.raw`rtl:**:[.rdp-button\_next>svg]:rotate-180`,

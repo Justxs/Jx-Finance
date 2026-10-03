@@ -58,7 +58,7 @@ flowchart TD
     Deferred --> Page
     Form["TanStack Form + zod"] --> Mutation["Generated mutation hook<br/>customFetch normalizes decimal fields"]
     Mutation -->|"field errors"| Form
-    Mutation -->|"onSettled"| Invalidation["MutationCache<br/>src/api/invalidation.ts"]
+    Mutation -->|"before it settles"| Invalidation["MutationCache<br/>src/api/invalidation.ts"]
     Invalidation --> Cache
 ```
 
