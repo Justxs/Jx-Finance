@@ -4,6 +4,7 @@ import {
   DashboardCard,
   type DashboardLayoutResponse,
   type DashboardSummaryResponse,
+  type GettingStartedStepResponse,
   type MonthlyTrendItem,
   type MonthlyTrendResponse,
   type TransactionResponse,
@@ -125,3 +126,26 @@ export const allHiddenDashboardLayout: DashboardLayoutResponse = {
   hidden: Object.values(DashboardCard),
   isDefault: false,
 };
+
+export const gettingStarted: GettingStartedStepResponse[] = [
+  { step: "addAccount", done: true },
+  { step: "addTransaction", done: true },
+  { step: "sortSpending", done: false },
+  { step: "planAhead", done: true },
+  { step: "addRecurring", done: true },
+  { step: "secureSignIn", done: false },
+  { step: "inviteMember", done: true },
+  { step: "setUpEmail", done: false },
+  { step: "takeBackup", done: false },
+  { step: "closeMonth", done: false },
+];
+
+export const gettingStartedFresh: GettingStartedStepResponse[] = gettingStarted.map((entry) => ({
+  ...entry,
+  done: false,
+}));
+
+export const gettingStartedDone: GettingStartedStepResponse[] = gettingStarted.map((entry) => ({
+  ...entry,
+  done: true,
+}));

@@ -14,8 +14,8 @@ import type { PlaceBreakdownItem } from "@/api/generated/model";
 import latinExtFont from "@/assets/fonts/source-sans-3-latin-ext-wght-normal.woff2?url";
 import latinFont from "@/assets/fonts/source-sans-3-latin-wght-normal.woff2?url";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
+import { MAP_TILES_PATH } from "@/lib/map-tiles";
 import { usePalette, useTheme } from "@/stores/theme-store";
-import { MAP_TILES_PATH } from "./map-tiles";
 import { type PlaceFeatureCollection, placeFeatures, topPlaceNames } from "./place-features";
 
 const LITHUANIA: LngLatBoundsLike = [

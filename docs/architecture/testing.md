@@ -3,7 +3,7 @@
 ## Backend tests
 `backend/JxFinance.Tests` holds `Unit` (pure logic, no database), `Architecture` (NetArchTest rules and checks over the mapped endpoints) and `Integration` (the whole API against PostgreSQL through FastEndpoints.Testing). `just test-unit` runs the first two without Docker in about 20 seconds, `just test-class <Name>` runs one class by its short name, and `just test` runs everything. Measured on 2026-10-03 on the 12-thread development machine, the full run took between 2 minutes 15 seconds and 2 minutes 50 seconds over five runs; before the integration classes were split into collections it took about 10 minutes 30 seconds.
 
-xUnit v3 runs test collections in parallel and the classes of one collection one after another. Nothing in the project changes that: there is no `CollectionBehavior` attribute and no `xunit.runner.json`, so collections run on as many threads as the machine has logical cores. The integration classes form eight collections, each a group of feature folders, declared in `Support/Collections.cs`:
+xUnit v3 runs test collections in parallel and the classes of one collection one after another. Nothing in the project changes that: there is no `CollectionBehavior` attribute and no `xunit.runner.json`, so collections run on as many threads as the machine has logical cores. The integration classes form nine collections, eight of them a group of feature folders, declared in `Support/Collections.cs`:
 
 | Collection | Folders under `Integration` |
 | --- | --- |
@@ -15,6 +15,7 @@ xUnit v3 runs test collections in parallel and the classes of one collection one
 | `NotificationsCollection` | Notifications, Email, Diagnostics |
 | `PeopleCollection` | Households, Users, Auth |
 | `ReportsCollection` | Reports, MonthCloses, Dashboard, TransactionGroups |
+| `SetupCollection` | `Auth/DemoDataTests` alone, because removing demo data empties the ledger tables of its database |
 
 The groups were balanced on the summed test time of each folder from a TRX report (`dotnet test --project backend/JxFinance.Tests -c Release --report-xunit-trx`), so the slowest collection, not the sum, sets the run time. On this machine six, seven and eight collections all finished in 2 to 3 minutes, with the spread coming from whatever else the machine was doing: the applications and PostgreSQL share six physical cores, so each collection added makes every test a little slower. More collections than eight are not worth it here. The architecture tests in `FastEndpointsPipeline` build an application of their own and are a collection with `DisableParallelization`, so they run alone.
 

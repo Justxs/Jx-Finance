@@ -10,7 +10,6 @@ import { TransactionAmount } from "@/components/transaction-amount/transaction-a
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { Rows } from "@/components/ui/rows/rows";
 import { RowsSkeleton } from "@/components/ui/skeleton/skeleton";
-import { TextLink } from "@/components/ui/text-link/text-link";
 import { UnusualAmountBadge } from "@/components/unusual-amount-badge/unusual-amount-badge";
 import { recentTransactionsParams } from "@/features/dashboard/dashboard-queries";
 import { DashboardSection } from "@/features/dashboard/dashboard-section/dashboard-section";
@@ -20,37 +19,6 @@ import { currentMonthKey } from "@/lib/calendar";
 import { byId, nameById } from "@/lib/options";
 import { transactionCategoryLabel, transactionName } from "@/lib/transaction-row";
 import { metaLine } from "@/lib/utils";
-
-function FirstRunSteps() {
-  const { t } = useTranslation();
-  const steps = [
-    {
-      to: "/accounts",
-      label: "dashboard.firstRun.accounts",
-      hint: "dashboard.firstRun.accountsHint",
-    },
-    {
-      to: "/transactions",
-      label: "dashboard.firstRun.transactions",
-      hint: "dashboard.firstRun.transactionsHint",
-    },
-    { to: "/budgets", label: "dashboard.firstRun.budgets", hint: "dashboard.firstRun.budgetsHint" },
-  ] as const;
-
-  return (
-    <div className="py-4 text-sm">
-      <p className="text-muted-foreground">{t("dashboard.firstRun.intro")}</p>
-      <ol className="mt-2 list-decimal space-y-1 pl-5 marker:text-muted-foreground marker:tabular-nums">
-        {steps.map((step) => (
-          <li key={step.to}>
-            <TextLink to={step.to}>{t(step.label)}</TextLink>{" "}
-            <span className="text-muted-foreground">{t(step.hint)}</span>
-          </li>
-        ))}
-      </ol>
-    </div>
-  );
-}
 
 interface Props {
   month: string;
@@ -70,9 +38,7 @@ function RecentRows({ month }: Readonly<Props>) {
   const recentItems = recent.data.items;
 
   if (recentItems.length === 0) {
-    return accounts.data.length === 0 ? (
-      <FirstRunSteps />
-    ) : (
+    return (
       <EmptyText>
         {month === currentMonthKey(today) ? t("dashboard.empty") : t("dashboard.emptyMonth")}
       </EmptyText>

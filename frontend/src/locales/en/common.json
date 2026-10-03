@@ -105,15 +105,6 @@
     "recent": "Recent transactions",
     "empty": "No transactions yet.",
     "emptyMonth": "No transactions in this month.",
-    "firstRun": {
-      "intro": "The ledger is empty. Three steps start it:",
-      "accounts": "Add an account",
-      "accountsHint": "with its opening balance.",
-      "transactions": "Record transactions",
-      "transactionsHint": "by hand or from a bank statement.",
-      "budgets": "Set a budget",
-      "budgetsHint": "to see whether the month is on plan."
-    },
     "spendingByCategory": "Spending by category",
     "monthlyTrend": "Income vs. expenses",
     "other": "Other",
@@ -142,6 +133,53 @@
       "kept": "kept",
       "keptSoFar": "kept so far",
       "spent": "spent"
+    },
+    "gettingStarted": {
+      "title": "Getting started",
+      "progress": "{{done}} of {{total}} done",
+      "done": "Done",
+      "steps": {
+        "addAccount": {
+          "label": "Add an account",
+          "hint": "with its opening balance."
+        },
+        "addTransaction": {
+          "label": "Record transactions",
+          "hint": "by hand or from a bank statement."
+        },
+        "sortSpending": {
+          "label": "Sort your spending",
+          "hint": "so nothing from the last 30 days is uncategorized."
+        },
+        "planAhead": {
+          "label": "Set a budget or a goal",
+          "hint": "to see whether the month is on plan."
+        },
+        "addRecurring": {
+          "label": "Add recurring entries",
+          "hint": "for rent, salary and subscriptions."
+        },
+        "secureSignIn": {
+          "label": "Secure your sign-in",
+          "hint": "with an authenticator app or a passkey."
+        },
+        "inviteMember": {
+          "label": "Create a member",
+          "hint": "for everyone who shares the household."
+        },
+        "setUpEmail": {
+          "label": "Set up email",
+          "hint": "for password resets and reminders."
+        },
+        "takeBackup": {
+          "label": "Take a backup",
+          "hint": "and keep a copy somewhere else."
+        },
+        "closeMonth": {
+          "label": "Close your first month",
+          "hint": "once it has ended."
+        }
+      }
     }
   },
   "accounts": {
@@ -1064,83 +1102,103 @@
       "items": {
         "budgets": {
           "name": "Budgets",
-          "hint": "Weekly, monthly, quarterly or yearly limits per category."
+          "hint": "Weekly, monthly, quarterly or yearly limits per category.",
+          "example": "Groceries capped at €400 a month, with a line when the month runs over."
         },
         "goals": {
           "name": "Goals",
-          "hint": "Savings targets and progress."
+          "hint": "Savings targets and progress.",
+          "example": "An emergency fund of €15,000 with how much is left to save."
         },
         "recurringBills": {
           "name": "Recurring entries",
-          "hint": "Due dates and reminders for recurring expenses, income and transfers. Off also stops the reminders."
+          "hint": "Due dates and reminders for recurring expenses, income and transfers. Off also stops the reminders.",
+          "example": "Rent on the 2nd, matched to the bank row when it arrives."
         },
         "netWorth": {
           "name": "Net worth",
-          "hint": "Assets, debts and history. Off also stops the daily snapshot."
+          "hint": "Assets, debts and history. Off also stops the daily snapshot.",
+          "example": "Everything you own minus what you owe, month by month."
         },
         "reports": {
           "name": "Reports",
-          "hint": "Income and expense summaries over any period."
+          "hint": "Income and expense summaries over any period.",
+          "example": "Where the money went this quarter, by category, payee and tag."
         },
         "import": {
           "name": "Statement import",
-          "hint": "Bank statement upload, CSV or XML."
+          "hint": "Bank statement upload, CSV or XML.",
+          "example": "Upload a bank CSV and review every row before it is saved."
         },
         "households": {
           "name": "Households",
-          "hint": "Sharing accounts and categories with other users."
+          "hint": "Sharing accounts and categories with other users.",
+          "example": "A shared Home account you and your partner both fill in."
         },
         "multiCurrency": {
           "name": "Multiple currencies",
-          "hint": "Currency pickers, conversions and cross-currency transfers."
+          "hint": "Currency pickers, conversions and cross-currency transfers.",
+          "example": "Pay in Swedish kronor and see it in euros at that day's rate."
         },
         "investments": {
           "name": "Investments",
-          "hint": "Securities, trades, dividends and Interactive Brokers import."
+          "hint": "Securities, trades, dividends and Interactive Brokers import.",
+          "example": "Funds, shares and dividends, plus a yearly tax summary."
         },
         "categorizationRules": {
           "name": "Categorization rules",
-          "hint": "Rules that fill a category and tags from a description, in the import preview and on demand."
+          "hint": "Rules that fill a category and tags from a description, in the import preview and on demand.",
+          "example": "Every BOLT.EU ride lands in Transport without a click."
         },
         "unusualAmounts": {
           "name": "Unusual amounts",
-          "hint": "Flags expenses far above what their payee or category usually costs, and subscriptions charged more than expected. Off also stops the check and its notifications."
+          "hint": "Flags expenses far above what their payee or category usually costs, and subscriptions charged more than expected. Off also stops the check and its notifications.",
+          "example": "An electricity bill three times the usual gets a mark."
         },
         "monthClose": {
           "name": "Month-end close",
-          "hint": "A page that walks through each finished month and freezes its figures when you close it. Later changes show as drift. Off also stops the monthly reminder."
+          "hint": "A page that walks through each finished month and freezes its figures when you close it. Later changes show as drift. Off also stops the monthly reminder.",
+          "example": "A checklist at the end of each month, then the numbers are kept."
         },
         "receiptReading": {
           "name": "Receipt reading",
-          "hint": "Fills a transaction's split from a receipt photo or PDF, read on this server with Tesseract; nothing is sent anywhere."
+          "hint": "Fills a transaction's split from a receipt photo or PDF, read on this server with Tesseract; nothing is sent anywhere.",
+          "example": "A photo of a receipt fills in the amount, the date and the shop."
         },
         "apiTokens": {
           "name": "Personal API tokens",
-          "hint": "Members can create tokens for their own scripts, spreadsheets and home automation, read only or also for recording entries. Off suspends every token until it is on again."
+          "hint": "Members can create tokens for their own scripts, spreadsheets and home automation, read only or also for recording entries. Off suspends every token until it is on again.",
+          "example": "A spreadsheet or Home Assistant reads your balances."
         },
         "locations": {
           "name": "Places",
-          "hint": "A place for each payment and, on request, where it was made, with suggestions, a place filter and spending by place. Positions stay on this server, though the browser may ask its own location service."
+          "hint": "A place for each payment and, on request, where it was made, with suggestions, a place filter and spending by place. Positions stay on this server, though the browser may ask its own location service.",
+          "example": "A map of the places where you spend."
         },
         "learnedCategories": {
           "name": "Learned categories",
-          "hint": "Suggests a category from your own categorized history where no rule fills one, in the import review, the transaction form and the ledger. The model is built on this server for each request and never stored or sent anywhere."
+          "hint": "Suggests a category from your own categorized history where no rule fills one, in the import review, the transaction form and the ledger. The model is built on this server for each request and never stored or sent anywhere.",
+          "example": "Categories suggested from what you chose before."
         },
         "attachments": {
           "name": "Receipts and files",
-          "hint": "Receipts, warranties and other files attached to a transaction, kept on this server. Off also stops the warranty reminders."
+          "hint": "Receipts, warranties and other files attached to a transaction, kept on this server. Off also stops the warranty reminders.",
+          "example": "The invoice PDF kept with its payment, with a warranty reminder."
         },
         "payeeNames": {
           "name": "Payee names",
-          "hint": "A readable name for a payee that replaces the bank's text in the ledger, the reports and the subscription suggestions."
+          "hint": "A readable name for a payee that replaces the bank's text in the ledger, the reports and the subscription suggestions.",
+          "example": "CAFFEINE ROASTERS UZUPIO shows as Caffeine."
         },
         "people": {
           "name": "People",
-          "hint": "Money shared with or lent to people outside the household: split expenses, payments and balances. Works only while Households is on."
+          "hint": "Money shared with or lent to people outside the household: split expenses, payments and balances. Works only while Households is on.",
+          "example": "A friend owes you €42 for the trip, and you see it."
         },
         "cashFlowForecast": {
           "name": "Cash-flow forecast",
-          "hint": "Each account's balance for the coming weeks, projected from the rows dated ahead and the recurring entries. Off also stops the below-zero warning."
+          "hint": "Each account's balance for the coming weeks, projected from the rows dated ahead and the recurring entries. Off also stops the below-zero warning.",
+          "example": "Warns that the main account dips low before payday."
         }
       }
     },
@@ -1312,6 +1370,109 @@
       "file": "File",
       "reason": "Reason",
       "at": "Moved to failed"
+    },
+    "setupWizard": {
+      "title": "Set up Jx Finance",
+      "progress": "Step {{current}} of {{total}}",
+      "steps": {
+        "admin": "Administrator",
+        "basics": "Basics",
+        "features": "Features",
+        "start": "Start",
+        "notifications": "Notifications",
+        "tour": "Tour"
+      },
+      "skip": "Skip for now",
+      "back": "Back",
+      "continue": "Continue",
+      "basics": {
+        "title": "The basics",
+        "description": "How this installation is named, which currency it reports in and which clock it keeps. Settings › Installation changes them later."
+      },
+      "features": {
+        "title": "Choose features",
+        "description": "Start from a preset, then tick or untick anything. A feature turned off later keeps its data.",
+        "presets": "Presets",
+        "recommended": "Recommended.",
+        "preset": {
+          "track": {
+            "name": "Track spending",
+            "hint": "Import, sort and report."
+          },
+          "household": {
+            "name": "Run the household",
+            "hint": "Adds budgets, goals, bills, sharing and the month-end close."
+          },
+          "everything": {
+            "name": "Everything",
+            "hint": "Adds net worth, investments, currencies and receipt reading."
+          }
+        },
+        "optIn": "Places, Learned categories and Personal API tokens stay off until you tick them: they record where you pay, guess from your history or let scripts in.",
+        "needsTesseract": "Needs Tesseract on this server, which is not installed yet.",
+        "needsMapTiles": "The map also needs the tile file on the server; places work without it."
+      },
+      "tour": {
+        "title": "How Jx Finance works",
+        "description": "Four ideas carry the whole application.",
+        "panels": {
+          "accounts": {
+            "title": "Accounts",
+            "body": "Each account starts from an opening balance. Its balance is worked out from its transactions and never typed in."
+          },
+          "transactions": {
+            "title": "Transactions",
+            "body": "Add one by hand, or import a bank statement and review it before it is saved. Splits, refunds and transfers keep the totals right."
+          },
+          "sorting": {
+            "title": "Categories and rules",
+            "body": "Sort a transaction once and a rule repeats it on every import. Tags and payee names add detail without more categories."
+          },
+          "review": {
+            "title": "Plan and review",
+            "body": "Budgets and recurring entries say what should happen; the month-end close checks what did."
+          }
+        },
+        "shortcuts": "Keyboard shortcuts",
+        "finish": "Go to the dashboard"
+      },
+      "start": {
+        "title": "Choose a starting point",
+        "description": "Begin with an empty ledger, look around in sample data, or bring your data with you.",
+        "choose": "Starting point",
+        "loadDemo": "Load demo data",
+        "demoLoaded": "Demo data is loaded. A banner offers to remove it whenever you want to start for real.",
+        "choices": {
+          "empty": {
+            "label": "Empty",
+            "description": "Add the accounts you use with their opening balances. You can add more later."
+          },
+          "demo": {
+            "label": "Demo data",
+            "description": "Six months of sample accounts, transactions, budgets and bills to explore. Removing it later also removes anything you add meanwhile."
+          },
+          "restore": {
+            "label": "Restore",
+            "description": "Upload a backup of another Jx Finance installation and restore it. A restore replaces everything, including the administrator you just created: afterwards you sign in with the accounts the backup holds."
+          },
+          "import": {
+            "label": "Import",
+            "description": "Bring in the data you exported from your account on another installation."
+          }
+        }
+      },
+      "notifications": {
+        "title": "Email and chat",
+        "description": "Optional. Connect a mail server for password resets and reminders, or a Discord or Telegram channel for notifications. Each tab saves on its own; skip what you do not need."
+      }
+    },
+    "demoData": {
+      "title": "You are exploring demo data",
+      "body": "Everything here is sample data. Start for real removes it and leaves an empty ledger.",
+      "startForReal": "Start for real",
+      "confirmTitle": "Remove the demo data?",
+      "confirmDescription": "Every account, transaction and plan is deleted, including anything you added since the demo data was loaded. Users and settings stay.",
+      "removed": "Demo data removed. The ledger is empty."
     }
   },
   "settingsHub": {
@@ -3087,7 +3248,10 @@
       "current": "This is the browser you are using. Use the regular sign out instead."
     },
     "setup": {
-      "alreadyCompleted": "Setup was already completed."
+      "alreadyCompleted": "Setup was already completed.",
+      "notPending": "The guided setup is already finished.",
+      "ledgerNotEmpty": "Demo data can be loaded only into an empty ledger.",
+      "demoNotRemovable": "Demo data can be removed only while it is loaded and you are the only member."
     },
     "text": {
       "invalidFormat": "The format is not valid.",

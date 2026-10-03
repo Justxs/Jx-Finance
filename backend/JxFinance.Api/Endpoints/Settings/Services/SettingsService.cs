@@ -42,6 +42,8 @@ public sealed class SettingsService(
             store.Current.TelegramEnabled,
             PasskeySite.IsAvailable(options.Value.SiteUrl));
 
+    public SetupReadinessResponse GetReadiness() => new(receipts.IsAvailable);
+
     public async Task<Result<SettingsResponse>> UpdateAsync(
         UpdateSettingsRequest request,
         CancellationToken cancellationToken)
@@ -95,6 +97,33 @@ public sealed class SettingsService(
 
         return await GetAsync(cancellationToken);
     }
+
+    public Task MarkSetupPendingAsync(bool pending, CancellationToken cancellationToken) =>
+        StoredSettings.UpdateAsync(
+            db,
+            store,
+            settings =>
+            {
+                settings.SetupPending = pending;
+                return Task.FromResult<DomainError?>(null);
+            },
+            cancellationToken);
+
+    public Task MarkDemoDataAsync(bool loaded, CancellationToken cancellationToken) =>
+        StoredSettings.UpdateAsync(
+            db,
+            store,
+            settings =>
+            {
+                settings.DemoData = loaded;
+                if (!loaded)
+                {
+                    settings.DefaultAccountId = null;
+                }
+
+                return Task.FromResult<DomainError?>(null);
+            },
+            cancellationToken);
 
     private async Task<DomainError?> RevalueAsync(Currency previousCurrency, Currency reportingCurrency, CancellationToken cancellationToken)
     {
@@ -164,6 +193,8 @@ public sealed class SettingsService(
         settings.DefaultAccountId,
         settings.DefaultPageSize,
         settings.SupportLinkEnabled,
-        settings.Features.ReceiptReading && receipts.IsAvailable);
+        settings.Features.ReceiptReading && receipts.IsAvailable,
+        settings.SetupPending,
+        settings.DemoData);
 
 }

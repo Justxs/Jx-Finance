@@ -5,6 +5,7 @@ import {
   getSetupStatusSuspenseQueryOptions,
 } from "@/api/generated";
 import type { UserProfileResponse } from "@/api/generated/model";
+import { settingsQueryOptions } from "@/lib/settings";
 import { UserRole } from "@/lib/user-role";
 import { forgetUserPreferences } from "@/stores/preferences";
 
@@ -64,4 +65,16 @@ export async function checkIsAuthenticated(queryClient: QueryClient): Promise<bo
 export async function checkIsAdmin(queryClient: QueryClient): Promise<boolean> {
   const me = await loadMe(queryClient);
   return me?.role === UserRole.admin;
+}
+
+export async function checkGuidedSetupPending(queryClient: QueryClient): Promise<boolean> {
+  if (!(await checkIsAdmin(queryClient))) {
+    return false;
+  }
+
+  try {
+    return (await queryClient.query(settingsQueryOptions())).setupPending;
+  } catch {
+    return false;
+  }
 }

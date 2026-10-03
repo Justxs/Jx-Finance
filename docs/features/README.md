@@ -11,7 +11,7 @@ Every feature the current code implements, one page per feature under `features/
 
 | # | Feature | Feature switch | Backend | Frontend |
 | --- | --- | --- | --- | --- |
-| 1 | [First-run setup](first-run-setup.md) | always on | `Auth/Setup` | `auth`, route `/setup` |
+| 1 | [First-run setup and the guided setup](first-run-setup.md) | always on | `Auth/Setup`, `Dashboard` (`users/me/getting-started`) | `auth` (`setup-page`), `settings` (`setup-wizard`), route `/setup`; `dashboard` (`getting-started-card`) |
 | 2 | [Sign-in, sessions, lockout](sign-in-and-sessions.md) | always on | `Auth` | `auth`, route `/login` |
 | 3 | [Two-factor authentication and recovery codes](two-factor-authentication.md) | always on | `Auth/TwoFactor` | `profile` |
 | 4 | [User management and password reset by an administrator](user-management.md) | always on, Admin | `Users` | `users` (Users under Installation in Settings) |

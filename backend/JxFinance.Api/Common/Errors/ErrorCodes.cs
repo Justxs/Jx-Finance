@@ -51,6 +51,9 @@ public static class ErrorCodes
     public const string TokenRateLimited = "token.rateLimited";
     public const string IdempotencyKeyReused = "idempotency.keyReused";
     public const string SetupAlreadyCompleted = "setup.alreadyCompleted";
+    public const string SetupNotPending = "setup.notPending";
+    public const string SetupLedgerNotEmpty = "setup.ledgerNotEmpty";
+    public const string SetupDemoNotRemovable = "setup.demoNotRemovable";
     public const string FeatureDisabled = "feature.disabled";
     public const string UserSelfChange = "user.selfChange";
     public const string UserLastAdministrator = "user.lastAdministrator";
@@ -187,7 +190,8 @@ public static class ErrorCodes
     public static int StatusCodeFor(string? errorCode) => errorCode switch
     {
         ResourceNotFound or FeatureDisabled => StatusCodes.Status404NotFound,
-        ConflictDuplicate or ConflictStale or ConflictBusy or SetupAlreadyCompleted or RestoreSlotTaken
+        ConflictDuplicate or ConflictStale or ConflictBusy or SetupAlreadyCompleted or SetupNotPending
+            or SetupLedgerNotEmpty or SetupDemoNotRemovable or RestoreSlotTaken
             or RestoreNameTaken or AttachmentLimitReached or MonthCloseNotEnded or DebtPaymentTaken or PasskeyLimitReached
             or TokenLimitReached or SettleUpAlreadySplit or SettleUpTransferTaken or TwoFactorAlreadyEnabled
             or ImportAlreadyPresent or IdempotencyKeyReused or TransactionGroupMemberTaken => StatusCodes.Status409Conflict,

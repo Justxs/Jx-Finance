@@ -1,6 +1,6 @@
 import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { expect, test } from "vitest";
-import { getSetupStatusQueryKey } from "@/api/generated";
+import { getMeQueryKey, getSetupStatusQueryKey } from "@/api/generated";
 import { getSetupMockHandler } from "@/api/generated/setup/setup.msw";
 import { serverErrorProblem } from "@/storybook/fixtures";
 import { failWith } from "@/storybook/handlers";
@@ -18,13 +18,15 @@ async function fillIn(values: { name: string; email: string; password: string })
   fireEvent.click(screen.getByRole("button", { name: "Create admin account" }));
 }
 
-test("the first administrator is created trimmed, setup is marked done and sign-in opens", async () => {
+test("the first administrator is created trimmed, signed in and taken to the guided setup", async () => {
   const { router, queryClient } = renderInApp(<SetupPage />, { path: "/setup" });
 
   await fillIn({ name: " Justas ", email: " justas@example.lt ", password: "Correct-horse-42" });
 
-  await waitFor(() => expect(router.state.location.pathname).toBe("/login"));
+  await waitFor(() => expect(router.state.location.search).toEqual({ step: "basics" }));
+  expect(router.state.location.pathname).toBe("/setup");
   expect(queryClient.getQueryData(getSetupStatusQueryKey())).toEqual({ needsSetup: false });
+  expect(queryClient.getQueryData(getMeQueryKey())).toMatchObject({ email: "justas@example.lt" });
   expect(await api.lastBody("POST", "/api/setup")).toEqual({
     displayName: "Justas",
     email: "justas@example.lt",

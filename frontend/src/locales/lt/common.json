@@ -107,15 +107,6 @@
     "recent": "Paskutinės operacijos",
     "empty": "Operacijų dar nėra.",
     "emptyMonth": "Šį mėnesį operacijų nėra.",
-    "firstRun": {
-      "intro": "Įrašų dar nėra. Pradėkite nuo trijų žingsnių:",
-      "accounts": "Pridėkite sąskaitą",
-      "accountsHint": "su pradiniu likučiu.",
-      "transactions": "Įrašykite operacijas",
-      "transactionsHint": "rankiniu būdu arba iš banko išrašo.",
-      "budgets": "Nustatykite biudžetą",
-      "budgetsHint": "kad matytumėte, ar mėnesio išlaidos neviršija plano."
-    },
     "spendingByCategory": "Išlaidos pagal kategoriją",
     "monthlyTrend": "Pajamos ir išlaidos",
     "other": "Kita",
@@ -144,6 +135,53 @@
       "kept": "sutaupyta",
       "keptSoFar": "sutaupyta iki šiol",
       "spent": "išleista"
+    },
+    "gettingStarted": {
+      "title": "Pirmieji žingsniai",
+      "progress": "Atlikta {{done}} iš {{total}}",
+      "done": "Atlikta",
+      "steps": {
+        "addAccount": {
+          "label": "Pridėkite sąskaitą",
+          "hint": "su pradiniu likučiu."
+        },
+        "addTransaction": {
+          "label": "Įrašykite operacijas",
+          "hint": "rankiniu būdu arba iš banko išrašo."
+        },
+        "sortSpending": {
+          "label": "Surūšiuokite išlaidas",
+          "hint": "kad neliktų nekategorizuotų paskutinių 30 dienų operacijų."
+        },
+        "planAhead": {
+          "label": "Nustatykite biudžetą ar tikslą",
+          "hint": "kad matytumėte, ar mėnuo eina pagal planą."
+        },
+        "addRecurring": {
+          "label": "Pridėkite periodinius įrašus",
+          "hint": "nuomai, algai ir prenumeratoms."
+        },
+        "secureSignIn": {
+          "label": "Apsaugokite prisijungimą",
+          "hint": "autentifikavimo programėle arba prieigos raktu."
+        },
+        "inviteMember": {
+          "label": "Sukurkite narį",
+          "hint": "kiekvienam, kas dalijasi namų ūkiu."
+        },
+        "setUpEmail": {
+          "label": "Nustatykite el. paštą",
+          "hint": "slaptažodžiams atkurti ir priminimams."
+        },
+        "takeBackup": {
+          "label": "Padarykite atsarginę kopiją",
+          "hint": "ir laikykite jos kopiją kitur."
+        },
+        "closeMonth": {
+          "label": "Uždarykite pirmąjį mėnesį",
+          "hint": "kai jis pasibaigs."
+        }
+      }
     }
   },
   "accounts": {
@@ -1120,83 +1158,103 @@
       "items": {
         "budgets": {
           "name": "Biudžetai",
-          "hint": "Savaitės, mėnesio, ketvirčio ar metų limitai kategorijoms."
+          "hint": "Savaitės, mėnesio, ketvirčio ar metų limitai kategorijoms.",
+          "example": "Maistui – 400 € per mėnesį, o viršijus parodoma, kiek."
         },
         "goals": {
           "name": "Tikslai",
-          "hint": "Taupymo tikslai ir pažanga."
+          "hint": "Taupymo tikslai ir pažanga.",
+          "example": "15 000 € rezervo fondas ir kiek dar liko sutaupyti."
         },
         "recurringBills": {
           "name": "Periodiniai įrašai",
-          "hint": "Periodinių išlaidų, pajamų ir pervedimų terminai bei priminimai. Išjungus priminimai nebesiunčiami."
+          "hint": "Periodinių išlaidų, pajamų ir pervedimų terminai bei priminimai. Išjungus priminimai nebesiunčiami.",
+          "example": "Nuoma antrą dieną, susiejama su banko įrašu, kai jis atsiranda."
         },
         "netWorth": {
           "name": "Grynasis turtas",
-          "hint": "Turtas, skolos ir istorija. Išjungus sustabdomas ir kasdienis grynojo turto fiksavimas."
+          "hint": "Turtas, skolos ir istorija. Išjungus sustabdomas ir kasdienis grynojo turto fiksavimas.",
+          "example": "Viskas, ką turite, atėmus skolas, kiekvieną mėnesį."
         },
         "reports": {
           "name": "Ataskaitos",
-          "hint": "Pajamų ir išlaidų suvestinės bet kuriam laikotarpiui."
+          "hint": "Pajamų ir išlaidų suvestinės bet kuriam laikotarpiui.",
+          "example": "Kur išėjo pinigai šį ketvirtį pagal kategoriją, gavėją ir žymą."
         },
         "import": {
           "name": "Išrašų importas",
-          "hint": "Banko išrašų įkėlimas CSV arba XML formatu."
+          "hint": "Banko išrašų įkėlimas CSV arba XML formatu.",
+          "example": "Įkelkite banko CSV ir peržiūrėkite kiekvieną eilutę prieš išsaugant."
         },
         "households": {
           "name": "Namų ūkiai",
-          "hint": "Dalijimasis sąskaitomis ir kategorijomis su kitais naudotojais."
+          "hint": "Dalijimasis sąskaitomis ir kategorijomis su kitais naudotojais.",
+          "example": "Bendra namų sąskaita, kurią pildote abu su partneriu."
         },
         "multiCurrency": {
           "name": "Kelios valiutos",
-          "hint": "Valiutų pasirinkimas, keitimas ir pervedimai tarp skirtingų valiutų."
+          "hint": "Valiutų pasirinkimas, keitimas ir pervedimai tarp skirtingų valiutų.",
+          "example": "Mokate Švedijos kronomis, o matote eurais pagal tos dienos kursą."
         },
         "investments": {
           "name": "Investicijos",
-          "hint": "Vertybiniai popieriai, sandoriai, dividendai ir „Interactive Brokers“ importas."
+          "hint": "Vertybiniai popieriai, sandoriai, dividendai ir „Interactive Brokers“ importas.",
+          "example": "Fondai, akcijos ir dividendai bei metinė mokesčių suvestinė."
         },
         "categorizationRules": {
           "name": "Kategorizavimo taisyklės",
-          "hint": "Taisyklės, kurios pagal aprašymą parenka kategoriją ir žymas importo peržiūroje arba paleidus jas rankiniu būdu."
+          "hint": "Taisyklės, kurios pagal aprašymą parenka kategoriją ir žymas importo peržiūroje arba paleidus jas rankiniu būdu.",
+          "example": "Kiekviena BOLT.EU kelionė pati patenka į Transportą."
         },
         "unusualAmounts": {
           "name": "Neįprastos sumos",
-          "hint": "Pažymi išlaidas, kurios gerokai viršija įprastą gavėjo ar kategorijos sumą, ir prenumeratas, už kurias nuskaičiuota daugiau nei tikėtasi. Išjungus sustabdomas ir tikrinimas, ir jo pranešimai."
+          "hint": "Pažymi išlaidas, kurios gerokai viršija įprastą gavėjo ar kategorijos sumą, ir prenumeratas, už kurias nuskaičiuota daugiau nei tikėtasi. Išjungus sustabdomas ir tikrinimas, ir jo pranešimai.",
+          "example": "Tris kartus didesnė nei įprastai sąskaita už elektrą pažymima."
         },
         "monthClose": {
           "name": "Mėnesio uždarymas",
-          "hint": "Puslapis, kuriame peržiūrimas kiekvienas pasibaigęs mėnuo, o jį uždarius jo skaičiai užfiksuojami. Vėlesni pakeitimai rodomi kaip nuokrypis. Išjungus nebesiunčiamas ir mėnesinis priminimas."
+          "hint": "Puslapis, kuriame peržiūrimas kiekvienas pasibaigęs mėnuo, o jį uždarius jo skaičiai užfiksuojami. Vėlesni pakeitimai rodomi kaip nuokrypis. Išjungus nebesiunčiamas ir mėnesinis priminimas.",
+          "example": "Kiekvieno mėnesio pabaigoje kontrolinis sąrašas, po to skaičiai užfiksuojami."
         },
         "receiptReading": {
           "name": "Kvitų skaitymas",
-          "hint": "Operacijos išskaidymą užpildo iš kvito nuotraukos ar PDF failo, kurį perskaito šis serveris su Tesseract; niekas niekur nesiunčiama."
+          "hint": "Operacijos išskaidymą užpildo iš kvito nuotraukos ar PDF failo, kurį perskaito šis serveris su Tesseract; niekas niekur nesiunčiama.",
+          "example": "Kvito nuotrauka užpildo sumą, datą ir parduotuvę."
         },
         "apiTokens": {
           "name": "Asmeniniai API raktai",
-          "hint": "Nariai gali kurti raktus savo scenarijams, skaičiuoklėms ir namų automatikai: tik skaitymui arba ir įrašams. Išjungus visi raktai sustabdomi, kol funkcija vėl įjungiama."
+          "hint": "Nariai gali kurti raktus savo scenarijams, skaičiuoklėms ir namų automatikai: tik skaitymui arba ir įrašams. Išjungus visi raktai sustabdomi, kol funkcija vėl įjungiama.",
+          "example": "Skaičiuoklė arba Home Assistant skaito jūsų likučius."
         },
         "locations": {
           "name": "Vietos",
-          "hint": "Kiekvieno mokėjimo vieta ir, paprašius, padėtis, kur jis atliktas, su pasiūlymais, vietos filtru ir išlaidomis pagal vietą. Padėtys lieka šiame serveryje, nors naršyklė gali kreiptis į savo vietos nustatymo paslaugą."
+          "hint": "Kiekvieno mokėjimo vieta ir, paprašius, padėtis, kur jis atliktas, su pasiūlymais, vietos filtru ir išlaidomis pagal vietą. Padėtys lieka šiame serveryje, nors naršyklė gali kreiptis į savo vietos nustatymo paslaugą.",
+          "example": "Vietų, kuriose išleidžiate, žemėlapis."
         },
         "learnedCategories": {
           "name": "Išmoktos kategorijos",
-          "hint": "Kai jokia taisyklė netinka, pasiūlo kategoriją pagal jūsų jau suskirstytas operacijas importo peržiūroje, operacijos formoje ir operacijų sąraše. Modelis sudaromas šiame serveryje kiekvienai užklausai, niekur nesaugomas ir nesiunčiamas."
+          "hint": "Kai jokia taisyklė netinka, pasiūlo kategoriją pagal jūsų jau suskirstytas operacijas importo peržiūroje, operacijos formoje ir operacijų sąraše. Modelis sudaromas šiame serveryje kiekvienai užklausai, niekur nesaugomas ir nesiunčiamas.",
+          "example": "Kategorijos siūlomos pagal tai, ką rinkotės anksčiau."
         },
         "attachments": {
           "name": "Čekiai ir failai",
-          "hint": "Prie operacijos prisegami čekiai, garantijos ir kiti failai, saugomi šiame serveryje. Išjungus nebesiunčiami ir priminimai apie garantijas."
+          "hint": "Prie operacijos prisegami čekiai, garantijos ir kiti failai, saugomi šiame serveryje. Išjungus nebesiunčiami ir priminimai apie garantijas.",
+          "example": "Sąskaitos PDF saugomas su mokėjimu, su garantijos priminimu."
         },
         "payeeNames": {
           "name": "Gavėjų pavadinimai",
-          "hint": "Aiškus gavėjo pavadinimas, kuris operacijų sąraše, ataskaitose ir prenumeratų pasiūlymuose rodomas vietoj banko teksto."
+          "hint": "Aiškus gavėjo pavadinimas, kuris operacijų sąraše, ataskaitose ir prenumeratų pasiūlymuose rodomas vietoj banko teksto.",
+          "example": "CAFFEINE ROASTERS UZUPIO rodoma kaip Caffeine."
         },
         "people": {
           "name": "Žmonės",
-          "hint": "Pinigai, dalijami su žmonėmis už namų ūkio ribų arba jiems paskolinti: padalytos išlaidos, mokėjimai ir likučiai. Veikia tik kai įjungti namų ūkiai."
+          "hint": "Pinigai, dalijami su žmonėmis už namų ūkio ribų arba jiems paskolinti: padalytos išlaidos, mokėjimai ir likučiai. Veikia tik kai įjungti namų ūkiai.",
+          "example": "Draugas skolingas 42 € už kelionę, ir tai matote."
         },
         "cashFlowForecast": {
           "name": "Pinigų srauto prognozė",
-          "hint": "Kiekvienos sąskaitos likutis artimiausioms savaitėms, numatytas pagal jau įrašytas būsimų dienų eilutes ir periodinius įrašus. Išjungus nebesiunčiamas ir įspėjimas apie neigiamą likutį."
+          "hint": "Kiekvienos sąskaitos likutis artimiausioms savaitėms, numatytas pagal jau įrašytas būsimų dienų eilutes ir periodinius įrašus. Išjungus nebesiunčiamas ir įspėjimas apie neigiamą likutį.",
+          "example": "Įspėja, kad pagrindinės sąskaitos likutis prieš algą nukris per žemai."
         }
       }
     },
@@ -1372,6 +1430,109 @@
       "file": "Failas",
       "reason": "Priežastis",
       "at": "Perkelta į failed"
+    },
+    "setupWizard": {
+      "title": "Jx Finance sąranka",
+      "progress": "{{current}} žingsnis iš {{total}}",
+      "steps": {
+        "admin": "Administratorius",
+        "basics": "Pagrindai",
+        "features": "Funkcijos",
+        "start": "Pradžia",
+        "notifications": "Pranešimai",
+        "tour": "Apžvalga"
+      },
+      "skip": "Praleisti",
+      "back": "Atgal",
+      "continue": "Toliau",
+      "basics": {
+        "title": "Pagrindai",
+        "description": "Kaip vadinasi ši sistema, kokia valiuta ji skaičiuoja ir kurią laiko juostą naudoja. Vėliau juos galima pakeisti skiltyje Nustatymai › Sistema."
+      },
+      "features": {
+        "title": "Pasirinkite funkcijas",
+        "description": "Pradėkite nuo rinkinio, tada pažymėkite ar atžymėkite ką norite. Vėliau išjungta funkcija savo duomenų nepraranda.",
+        "presets": "Rinkiniai",
+        "recommended": "Rekomenduojama.",
+        "preset": {
+          "track": {
+            "name": "Išlaidų apskaita",
+            "hint": "Importas, rūšiavimas ir ataskaitos."
+          },
+          "household": {
+            "name": "Namų ūkio tvarkymas",
+            "hint": "Dar biudžetai, tikslai, sąskaitos, dalijimasis ir mėnesio uždarymas."
+          },
+          "everything": {
+            "name": "Viskas",
+            "hint": "Dar grynasis turtas, investicijos, valiutos ir kvitų skaitymas."
+          }
+        },
+        "optIn": "Vietos, Išmoktos kategorijos ir Asmeniniai API raktai lieka išjungti, kol jų nepažymite: jie fiksuoja, kur mokate, spėja pagal jūsų istoriją arba įsileidžia scenarijus.",
+        "needsTesseract": "Reikia Tesseract šiame serveryje, o jis dar neįdiegtas.",
+        "needsMapTiles": "Žemėlapiui dar reikia žemėlapio failo serveryje; vietos veikia ir be jo."
+      },
+      "tour": {
+        "title": "Kaip veikia Jx Finance",
+        "description": "Visa programa remiasi keturiomis idėjomis.",
+        "panels": {
+          "accounts": {
+            "title": "Sąskaitos",
+            "body": "Kiekviena sąskaita prasideda nuo pradinio likučio. Likutis apskaičiuojamas iš jos operacijų ir niekada neįvedamas ranka."
+          },
+          "transactions": {
+            "title": "Operacijos",
+            "body": "Įrašykite ranka arba importuokite banko išrašą ir peržiūrėkite jį prieš išsaugant. Išskaidymai, grąžinimai ir pervedimai išlaiko teisingas sumas."
+          },
+          "sorting": {
+            "title": "Kategorijos ir taisyklės",
+            "body": "Surūšiuokite operaciją kartą, ir taisyklė tai pakartos kiekvieno importo metu. Žymos ir gavėjų pavadinimai prideda detalių be naujų kategorijų."
+          },
+          "review": {
+            "title": "Planas ir peržiūra",
+            "body": "Biudžetai ir periodiniai įrašai nusako, kas turėtų įvykti, o mėnesio uždarymas patikrina, kas įvyko."
+          }
+        },
+        "shortcuts": "Spartieji klavišai",
+        "finish": "Eiti į suvestinę"
+      },
+      "start": {
+        "title": "Pasirinkite, nuo ko pradėti",
+        "description": "Pradėkite nuo tuščios apskaitos, apsidairykite pavyzdiniuose duomenyse arba atsineškite savo duomenis.",
+        "choose": "Pradžios taškas",
+        "loadDemo": "Įkelti pavyzdinius duomenis",
+        "demoLoaded": "Pavyzdiniai duomenys įkelti. Juostelė pasiūlys juos pašalinti, kai norėsite pradėti iš tikrųjų.",
+        "choices": {
+          "empty": {
+            "label": "Tuščia",
+            "description": "Pridėkite naudojamas sąskaitas su pradiniais likučiais. Daugiau galėsite pridėti vėliau."
+          },
+          "demo": {
+            "label": "Pavyzdžiai",
+            "description": "Šeši mėnesiai pavyzdinių sąskaitų, operacijų, biudžetų ir sąskaitų apmokėti. Vėliau juos pašalinus, pašalinama ir viskas, ką pridėjote tuo metu."
+          },
+          "restore": {
+            "label": "Atkurti",
+            "description": "Įkelkite kitos Jx Finance sistemos atsarginę kopiją ir ją atkurkite. Atkūrimas pakeičia viską, net ką tik sukurtą administratorių: po to prisijungiate kopijoje esančiomis paskyromis."
+          },
+          "import": {
+            "label": "Importuoti",
+            "description": "Įkelkite duomenis, kuriuos eksportavote iš savo paskyros kitoje sistemoje."
+          }
+        }
+      },
+      "notifications": {
+        "title": "El. paštas ir pokalbiai",
+        "description": "Nebūtina. Prijunkite pašto serverį slaptažodžiams atkurti ir priminimams arba Discord ar Telegram kanalą pranešimams. Kiekvienas skirtukas išsaugomas atskirai; praleiskite, ko nereikia."
+      }
+    },
+    "demoData": {
+      "title": "Naršote pavyzdinius duomenis",
+      "body": "Viskas čia – pavyzdiniai duomenys. „Pradėti iš tikrųjų“ juos pašalina ir palieka tuščią apskaitą.",
+      "startForReal": "Pradėti iš tikrųjų",
+      "confirmTitle": "Pašalinti pavyzdinius duomenis?",
+      "confirmDescription": "Ištrinamos visos sąskaitos, operacijos ir planai, taip pat viskas, ką pridėjote įkėlę pavyzdinius duomenis. Naudotojai ir nustatymai lieka.",
+      "removed": "Pavyzdiniai duomenys pašalinti. Apskaita tuščia."
     }
   },
   "settingsHub": {
@@ -3207,7 +3368,10 @@
       "current": "Tai naršyklė, kuria dabar naudojatės. Atsijunkite įprastu būdu."
     },
     "setup": {
-      "alreadyCompleted": "Pradinis nustatymas jau atliktas."
+      "alreadyCompleted": "Pradinis nustatymas jau atliktas.",
+      "notPending": "Sąranka jau baigta.",
+      "ledgerNotEmpty": "Pavyzdinius duomenis galima įkelti tik į tuščią apskaitą.",
+      "demoNotRemovable": "Pavyzdinius duomenis galima pašalinti tik kol jie įkelti ir esate vienintelis narys."
     },
     "text": {
       "invalidFormat": "Netinkamas formatas.",

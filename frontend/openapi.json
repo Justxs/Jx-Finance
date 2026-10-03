@@ -17373,7 +17373,7 @@
           "Setup"
         ],
         "summary": "Provision the first administrator",
-        "description": "Creates the administrator account on a fresh instance. It works exactly once: once an administrator exists the endpoint answers 409 for good. Rate limited to five attempts per five minutes per client.",
+        "description": "Creates the administrator account on a fresh instance and signs this browser in with a session that is not remembered, then marks the guided setup as pending in the settings. It works exactly once: once an administrator exists the endpoint answers 409 for good. Rate limited to five attempts per five minutes per client.",
         "operationId": "Setup",
         "requestBody": {
           "content": {
@@ -17392,7 +17392,7 @@
         },
         "responses": {
           "200": {
-            "description": "The administrator account was created; its profile is returned.",
+            "description": "The administrator account was created and signed in; its profile is returned.",
             "content": {
               "application/json": {
                 "schema": {
@@ -17435,6 +17435,279 @@
             }
           }
         }
+      }
+    },
+    "/api/setup/demo-data": {
+      "post": {
+        "tags": [
+          "Setup"
+        ],
+        "summary": "Load demo data",
+        "description": "Fills the administrator's empty ledger with six months of sample accounts, transactions, budgets, goals, recurring entries, net worth and a household, in the reporting currency, and sets demoData in the settings. Offered only during the guided setup, so it answers 409 setup.notPending once the setup is finished, and 409 setup.ledgerNotEmpty when the administrator already has an account.",
+        "operationId": "LoadDemoData",
+        "responses": {
+          "204": {
+            "description": "The demo data is loaded."
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The guided setup is finished, or the ledger is not empty.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [
+              "Admin"
+            ]
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "Setup"
+        ],
+        "summary": "Remove the demo data and start for real",
+        "description": "Empties every ledger table, including anything entered since the demo data was loaded, gives the administrator the starter categories again and clears demoData. Users, sign-in data, sessions, settings and exchange rates stay. Allowed only while demoData is set and the administrator is the only user; otherwise it answers 409 setup.demoNotRemovable.",
+        "operationId": "RemoveDemoData",
+        "responses": {
+          "204": {
+            "description": "The demo data is removed."
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "No demo data is loaded, or another user exists.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [
+              "Admin"
+            ]
+          }
+        ]
+      }
+    },
+    "/api/setup/finish": {
+      "post": {
+        "tags": [
+          "Setup"
+        ],
+        "summary": "Finish the guided setup",
+        "description": "Clears setupPending in the settings, so the client stops opening the guided setup for administrators. Skipping the setup calls this too. Calling it again changes nothing.",
+        "operationId": "FinishSetup",
+        "responses": {
+          "204": {
+            "description": "The guided setup is finished."
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [
+              "Admin"
+            ]
+          }
+        ]
+      }
+    },
+    "/api/setup/readiness": {
+      "get": {
+        "tags": [
+          "Setup"
+        ],
+        "summary": "Read what this server can run",
+        "description": "Tells the guided setup which optional parts are installed where the API runs, whatever the feature switches say: receiptReaderInstalled is true when Tesseract is available for receipt reading.",
+        "operationId": "GetSetupReadiness",
+        "responses": {
+          "200": {
+            "description": "What the server has installed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SetupReadinessResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [
+              "Admin"
+            ]
+          }
+        ]
       }
     },
     "/api/setup/status": {
@@ -22864,6 +23137,66 @@
         ]
       }
     },
+    "/api/users/me/getting-started": {
+      "get": {
+        "tags": [
+          "Dashboard"
+        ],
+        "summary": "Get your getting started steps",
+        "description": "Returns the first steps through the application in order, each marked done or not. Every step is worked out from your data at the time of the request, so nothing is stored: deleting your only budget marks planning as not done again. A step whose feature is switched off is left out; inviting a member, setting up email and taking a backup are listed for administrators only. Sorting your spending is done once you have a transaction and none dated in the last 30 days is uncategorized.",
+        "operationId": "GetGettingStarted",
+        "responses": {
+          "200": {
+            "description": "The steps of the signed-in user.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/GettingStartedStepResponse"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      }
+    },
     "/api/users/me/import": {
       "post": {
         "tags": [
@@ -27647,6 +27980,7 @@
       },
       "DashboardCard": {
         "enum": [
+          "gettingStarted",
           "summary",
           "monthlyTrend",
           "spendingByCategory",
@@ -28490,6 +28824,9 @@
           "settleUp.sharesMismatch",
           "settleUp.transferTaken",
           "setup.alreadyCompleted",
+          "setup.demoNotRemovable",
+          "setup.ledgerNotEmpty",
+          "setup.notPending",
           "telegram.botRemoved",
           "telegram.invalidChat",
           "telegram.invalidToken",
@@ -28876,6 +29213,36 @@
           "receipts": {
             "type": "integer",
             "format": "int32"
+          }
+        }
+      },
+      "GettingStartedStep": {
+        "enum": [
+          "addAccount",
+          "addTransaction",
+          "sortSpending",
+          "planAhead",
+          "addRecurring",
+          "secureSignIn",
+          "inviteMember",
+          "setUpEmail",
+          "takeBackup",
+          "closeMonth"
+        ],
+        "type": "string"
+      },
+      "GettingStartedStepResponse": {
+        "required": [
+          "step",
+          "done"
+        ],
+        "type": "object",
+        "properties": {
+          "step": {
+            "$ref": "#/components/schemas/GettingStartedStep"
+          },
+          "done": {
+            "type": "boolean"
           }
         }
       },
@@ -33887,7 +34254,9 @@
           "defaultAccountId",
           "defaultPageSize",
           "supportLinkEnabled",
-          "receiptReadingReady"
+          "receiptReadingReady",
+          "setupPending",
+          "demoData"
         ],
         "type": "object",
         "properties": {
@@ -33947,6 +34316,12 @@
           },
           "receiptReadingReady": {
             "type": "boolean"
+          },
+          "setupPending": {
+            "type": "boolean"
+          },
+          "demoData": {
+            "type": "boolean"
           }
         }
       },
@@ -33985,6 +34360,17 @@
             "items": {
               "$ref": "#/components/schemas/SuggestedPaymentResponse"
             }
+          }
+        }
+      },
+      "SetupReadinessResponse": {
+        "required": [
+          "receiptReaderInstalled"
+        ],
+        "type": "object",
+        "properties": {
+          "receiptReaderInstalled": {
+            "type": "boolean"
           }
         }
       },

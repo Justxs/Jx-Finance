@@ -11,6 +11,8 @@ const featuresFieldGroup = defineAppFieldGroup(({ strict }) => ({
 
 interface Props {
   fields: typeof featuresFieldGroup.fields;
+  examples?: boolean;
+  notes?: Partial<Record<FeatureKey, string>>;
 }
 
 type FeatureGroup = "plan" | "review" | "ledger";
@@ -57,7 +59,9 @@ export const featureGroups = groupOrder.map((group) => ({
   features: featureKeys.filter((feature) => groupOf[feature] === group),
 }));
 
-function FeaturesFieldsGroup({ fields }: Readonly<Props>) {
+const noNotes: Partial<Record<FeatureKey, string>> = {};
+
+function FeaturesFieldsGroup({ fields, examples = false, notes = noNotes }: Readonly<Props>) {
   const { t } = useTranslation();
 
   return (
@@ -73,7 +77,16 @@ function FeaturesFieldsGroup({ fields }: Readonly<Props>) {
                     <field.CheckboxField
                       id={`settings-feature-${feature}`}
                       label={t(`settings.features.items.${feature}.name`)}
-                      hint={t(`settings.features.items.${feature}.hint`)}
+                      hint={[
+                        t(
+                          examples
+                            ? `settings.features.items.${feature}.example`
+                            : `settings.features.items.${feature}.hint`,
+                        ),
+                        notes[feature],
+                      ]
+                        .filter(Boolean)
+                        .join(" ")}
                     />
                   </li>
                 )}

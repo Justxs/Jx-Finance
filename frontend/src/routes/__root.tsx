@@ -18,10 +18,11 @@ import { Splash } from "@/components/splash/splash";
 import { ThemeToggle } from "@/components/theme-toggle/theme-toggle";
 import { CommandPalette } from "@/features/command-palette/command-palette/command-palette";
 import { EmailVerificationBanner } from "@/features/profile/email-verification-banner/email-verification-banner";
+import { DemoDataBanner } from "@/features/settings/demo-data-banner/demo-data-banner";
 import { usePublicSettings } from "@/hooks/use-settings";
 import { useVisibleNav } from "@/hooks/use-visible-nav";
 import { warmAppShell } from "@/lib/app-shell";
-import { checkIsAuthenticated, checkSetupNeeded } from "@/lib/auth-gate";
+import { checkGuidedSetupPending, checkIsAuthenticated, checkSetupNeeded } from "@/lib/auth-gate";
 import { PUBLIC_PATHS } from "@/lib/navigation";
 import type { RouterContext } from "@/lib/route-prefetch";
 import { saveChosenLocale } from "@/stores/app-store";
@@ -30,18 +31,28 @@ export const Route = createRootRouteWithContext<RouterContext>()({
   beforeLoad: async ({ context: { queryClient }, location }) => {
     const needsSetup = await checkSetupNeeded(queryClient);
     if (needsSetup) {
-      if (location.pathname !== "/setup") {
+      if (location.pathname !== "/setup" || "step" in location.search) {
         throw redirect({ to: "/setup" });
       }
       return;
     }
 
+    const isAuthenticated = await checkIsAuthenticated(queryClient);
+    const guidedSetup = isAuthenticated && (await checkGuidedSetupPending(queryClient));
     if (location.pathname === "/setup") {
-      throw redirect({ to: "/login" });
+      if (!guidedSetup) {
+        throw redirect({ to: isAuthenticated ? "/" : "/login" });
+      }
+      if (!("step" in location.search)) {
+        throw redirect({ to: "/setup", search: { step: "basics" } });
+      }
+      return;
     }
 
-    const isAuthenticated = await checkIsAuthenticated(queryClient);
     if (isAuthenticated) {
+      if (guidedSetup) {
+        throw redirect({ to: "/setup", search: { step: "basics" } });
+      }
       if (location.pathname === "/login") {
         throw redirect({ to: "/" });
       }
@@ -125,6 +136,7 @@ function RootLayout() {
           <div className="contents print:hidden">
             <QueryBoundary fallback={null} error={null}>
               <EmailVerificationBanner />
+              <DemoDataBanner />
             </QueryBoundary>
           </div>
           <QueryBoundary

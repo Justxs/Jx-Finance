@@ -33,3 +33,7 @@ public sealed class PeopleCollection : TestCollection<PeopleFixture>;
 public sealed class ReportsFixture : ApiFixture;
 
 public sealed class ReportsCollection : TestCollection<ReportsFixture>;
+
+public sealed class SetupFixture : ApiFixture;
+
+public sealed class SetupCollection : TestCollection<SetupFixture>;

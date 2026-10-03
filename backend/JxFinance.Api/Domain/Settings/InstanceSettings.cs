@@ -45,6 +45,8 @@ public sealed class InstanceSettings
     public DateTimeOffset? PriceSyncRunAt { get; set; }
     public DateOnly? PriceCallsDate { get; set; }
     public int PriceCallsUsed { get; set; }
+    public bool SetupPending { get; set; }
+    public bool DemoData { get; set; }
 
     public void RecordDiscordSend(DateTimeOffset now, string? error, bool gone = false)
     {

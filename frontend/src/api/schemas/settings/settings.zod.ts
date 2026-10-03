@@ -110,6 +110,8 @@ export const SettingsResponse = zod.object({
   defaultPageSize: zod.int(),
   supportLinkEnabled: zod.boolean(),
   receiptReadingReady: zod.boolean(),
+  setupPending: zod.boolean(),
+  demoData: zod.boolean(),
 });
 
 /**
@@ -331,6 +333,8 @@ export const UpdateSettingsResponse = zod.object({
   defaultPageSize: zod.int(),
   supportLinkEnabled: zod.boolean(),
   receiptReadingReady: zod.boolean(),
+  setupPending: zod.boolean(),
+  demoData: zod.boolean(),
 });
 
 /**

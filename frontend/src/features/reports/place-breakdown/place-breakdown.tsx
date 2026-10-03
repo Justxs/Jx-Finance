@@ -7,8 +7,8 @@ import { Button } from "@/components/ui/button/button";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { SegmentedControl } from "@/components/ui/segmented-control/segmented-control";
 import { PlaceMap } from "@/features/reports/place-map";
-import { useMapTilesPresent } from "@/features/reports/place-map/map-tiles";
 import { breakdownWeight } from "@/lib/comparison";
+import { useMapTilesPresent } from "@/lib/map-tiles";
 
 const SHOWN_ROWS = 8;
 

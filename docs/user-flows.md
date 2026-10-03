@@ -1,7 +1,7 @@
 # User flows
 
 ## First installation
-Open the app, complete first-run setup, and sign in. The administrator can create other users from Users, under Installation in Settings. Each receives personal starter categories and, once a mail server is configured in Settings, a link that confirms their address. There is still no public registration or email invitation flow.
+Open the app and create the administrator; first-run setup signs you in and opens the guided setup: the basics (name, currency, language, time zone), a feature preset, a starting point (your accounts, demo data, a backup to restore or an export to import), optional email and chat notifications, and a short tour. With demo data loaded, a banner offers Start for real, which empties the ledger again. Skip it at any step. The Getting started card on the dashboard then lists the first steps until each is done. The administrator can create other users from Users, under Installation in Settings. Each receives personal starter categories and, once a mail server is configured in Settings, a link that confirms their address. There is still no public registration or email invitation flow.
 
 ## Forgotten password
 Press "Forgot your password?" on the sign-in screen, which appears only when the installation can send email, and type the address. The screen answers the same sentence whether or not the address belongs to an account here. The emailed link opens a page that sets a new password, works once and expires after an hour; the change signs every browser of that account out. An administrator setting a temporary password from Users remains the way in when there is no mail server, and `--recover-admin` remains the way in when no administrator can sign in at all.

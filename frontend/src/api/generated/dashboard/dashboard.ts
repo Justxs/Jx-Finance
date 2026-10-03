@@ -29,6 +29,7 @@ import type {
   DashboardLayoutResponse,
   DashboardSummaryParams,
   DashboardSummaryResponse,
+  GettingStartedStepResponse,
   MonthlyTrendParams,
   MonthlyTrendResponse,
   ProblemDetails,
@@ -752,3 +753,117 @@ export const useSaveDashboardLayout = <TError = ErrorType<ProblemDetails>, TCont
 > => {
   return useMutation(getSaveDashboardLayoutMutationOptions(options), queryClient);
 };
+export const getGettingStartedUrl = () => {
+  return `/api/users/me/getting-started`;
+};
+
+/**
+ * Returns the first steps through the application in order, each marked done or not. Every step is worked out from your data at the time of the request, so nothing is stored: deleting your only budget marks planning as not done again. A step whose feature is switched off is left out; inviting a member, setting up email and taking a backup are listed for administrators only. Sorting your spending is done once you have a transaction and none dated in the last 30 days is uncategorized.
+ * @summary Get your getting started steps
+ */
+export const gettingStarted = async (
+  options?: Parameters<typeof customFetch>[1],
+): Promise<GettingStartedStepResponse[]> => {
+  return customFetch<GettingStartedStepResponse[]>(getGettingStartedUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGettingStartedQueryKey = () => {
+  return [`/api/users/me/getting-started`] as const;
+};
+
+export const getGettingStartedSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof gettingStarted>>,
+  TError = ErrorType<ProblemDetails>,
+>(options?: {
+  query?: Partial<
+    UseSuspenseQueryOptions<Awaited<ReturnType<typeof gettingStarted>>, TError, TData>
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGettingStartedQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof gettingStarted>>> = ({ signal }) =>
+    gettingStarted({ signal, ...requestOptions });
+
+  return queryOptionsBuilder({
+    queryKey,
+    ...queryOptions,
+    queryFn: queryOptions?.queryFn ?? queryFn,
+  }) as UseSuspenseQueryOptions<Awaited<ReturnType<typeof gettingStarted>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  } & {
+    throwOnError?: ((this: never, error: TError) => boolean) & { readonly __inferenceOnly: never };
+  };
+};
+
+export type GettingStartedSuspenseQueryResult = NonNullable<
+  Awaited<ReturnType<typeof gettingStarted>>
+>;
+export type GettingStartedSuspenseQueryError = ErrorType<ProblemDetails>;
+
+export function useGettingStartedSuspense<
+  TData = Awaited<ReturnType<typeof gettingStarted>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options: {
+    query: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof gettingStarted>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGettingStartedSuspense<
+  TData = Awaited<ReturnType<typeof gettingStarted>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof gettingStarted>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGettingStartedSuspense<
+  TData = Awaited<ReturnType<typeof gettingStarted>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof gettingStarted>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get your getting started steps
+ */
+
+export function useGettingStartedSuspense<
+  TData = Awaited<ReturnType<typeof gettingStarted>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof gettingStarted>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGettingStartedSuspenseQueryOptions(options);
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}

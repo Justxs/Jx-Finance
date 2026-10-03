@@ -15,7 +15,7 @@ interface RowProps {
   shortcut: Shortcut;
 }
 
-function ShortcutRow({ shortcut }: Readonly<RowProps>) {
+export function ShortcutRow({ shortcut }: Readonly<RowProps>) {
   const { t } = useTranslation();
 
   return (

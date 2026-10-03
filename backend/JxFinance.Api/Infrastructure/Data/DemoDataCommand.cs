@@ -67,31 +67,40 @@ public static class DemoDataCommand
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         var user = await users.FindByEmailAsync(email)
             ?? throw new InvalidOperationException($"No user with the email {email}. Create the account first, then seed it.");
-        if (await db.Accounts.IgnoreQueryFilters().AnyAsync(a => a.UserId == user.Id))
+        if (await HasAccountsAsync(db, user.Id, CancellationToken.None))
             throw new InvalidOperationException("This user already has accounts. Demo data is only added to an empty user; run 'just db-reset' for a clean database.");
 
-        await StarterCategories.SeedAsync(db, user.Id, CancellationToken.None);
-        var categories = await db.Categories.IgnoreQueryFilters(QueryFilters.OwnerOnly)
-            .Where(c => c.UserId == user.Id)
-            .ToDictionaryAsync(c => c.Name, c => c.Id);
-
         var clock = scope.ServiceProvider.GetRequiredService<IClock>();
-        var today = clock.Today;
         var currency = scope.ServiceProvider.GetRequiredService<IInstanceSettingsStore>().Current.ReportingCurrency;
+        await SeedAsync(db, user.Id, clock, currency, CancellationToken.None);
+        Console.WriteLine($"Seeded {Months} months of demo data for {email}.");
+    }
+
+    public static Task<bool> HasAccountsAsync(AppDbContext db, Guid userId, CancellationToken cancellationToken) =>
+        db.Accounts.IgnoreQueryFilters().AnyAsync(a => a.UserId == userId, cancellationToken);
+
+    public static async Task SeedAsync(AppDbContext db, Guid userId, IClock clock, Currency currency, CancellationToken cancellationToken)
+    {
+        await StarterCategories.SeedAsync(db, userId, cancellationToken);
+        var categories = await db.Categories.IgnoreQueryFilters(QueryFilters.OwnerOnly)
+            .Where(c => c.UserId == userId)
+            .ToDictionaryAsync(c => c.Name, c => c.Id, cancellationToken);
+
+        var today = clock.Today;
         var firstMonth = new DateOnly(today.Year, today.Month, 1).AddMonths(1 - Months);
 
-        var checking = NewAccount(user.Id, currency, "Main account", AccountType.Checking, 1250.00m);
-        var savings = NewAccount(user.Id, currency, "Savings", AccountType.Savings, 4000.00m);
-        var cash = NewAccount(user.Id, currency, "Wallet", AccountType.Cash, 150.00m);
+        var checking = NewAccount(userId, currency, "Main account", AccountType.Checking, 1250.00m);
+        var savings = NewAccount(userId, currency, "Savings", AccountType.Savings, 4000.00m);
+        var cash = NewAccount(userId, currency, "Wallet", AccountType.Cash, 150.00m);
         db.Accounts.AddRange(checking, savings, cash);
 
         Transaction? Spend(AccountId account, CategoryId? category, decimal amount, DateOnly date, string description) =>
-            Record(db, currency, user.Id, account, category, FlowType.Expense, amount, date, description, today);
+            Record(db, currency, userId, account, category, FlowType.Expense, amount, date, description, today);
 
         for (var month = 0; month < Months; month++)
         {
             var start = firstMonth.AddMonths(month);
-            Record(db, currency, user.Id, checking.Id, categories["Salary"], FlowType.Income, 2450.00m, start.AddDays(9), "Salary", today);
+            Record(db, currency, userId, checking.Id, categories["Salary"], FlowType.Income, 2450.00m, start.AddDays(9), "Salary", today);
             foreach (var expense in MonthlyExpenses)
             {
                 var amount = expense.Amount + month * 1.15m;
@@ -121,7 +130,7 @@ public static class DemoDataCommand
             {
                 db.Transfers.Add(new Transfer
                 {
-                    UserId = user.Id,
+                    UserId = userId,
                     FromAccountId = checking.Id,
                     ToAccountId = savings.Id,
                     Amount = new Money(300.00m, currency),
@@ -135,7 +144,7 @@ public static class DemoDataCommand
         var insuredOn = firstMonth.AddDays(14);
         Spend(checking.Id, categories["Transport"], 480.00m, insuredOn, "Car insurance")!.SpreadMonths = 12;
 
-        var trip = new TransactionGroup { UserId = user.Id, Name = "Riga weekend" };
+        var trip = new TransactionGroup { UserId = userId, Name = "Riga weekend" };
         db.TransactionGroups.Add(trip);
         var tripStart = firstMonth.AddMonths(1).AddDays(5);
         foreach (var row in Trip)
@@ -144,19 +153,19 @@ public static class DemoDataCommand
         }
 
         db.PayeeNames.AddRange(
-            new PayeeName { UserId = user.Id, PayeeKey = SubscriptionDescription.Normalize(CardPayees[0].Earlier), Name = "Caffeine" },
-            new PayeeName { UserId = user.Id, PayeeKey = SubscriptionDescription.Normalize(CardPayees[2].Earlier), Name = "Bolt" });
+            new PayeeName { UserId = userId, PayeeKey = SubscriptionDescription.Normalize(CardPayees[0].Earlier), Name = "Caffeine" },
+            new PayeeName { UserId = userId, PayeeKey = SubscriptionDescription.Normalize(CardPayees[2].Earlier), Name = "Bolt" });
 
         db.Budgets.AddRange(
-            new Budget { UserId = user.Id, CategoryId = categories["Food"], LimitAmount = new Money(300.00m, currency) },
-            new Budget { UserId = user.Id, CategoryId = categories["Transport"], LimitAmount = new Money(60.00m, currency) },
-            new Budget { UserId = user.Id, CategoryId = categories["Entertainment"], LimitAmount = new Money(50.00m, currency) });
+            new Budget { UserId = userId, CategoryId = categories["Food"], LimitAmount = new Money(300.00m, currency) },
+            new Budget { UserId = userId, CategoryId = categories["Transport"], LimitAmount = new Money(60.00m, currency) },
+            new Budget { UserId = userId, CategoryId = categories["Entertainment"], LimitAmount = new Money(50.00m, currency) });
         db.Goals.AddRange(
-            new Goal { UserId = user.Id, Name = "Emergency fund", TargetAmount = new Money(6000.00m, currency), CurrentAmount = new Money(4300.00m, currency) },
-            new Goal { UserId = user.Id, Name = "Summer trip", TargetAmount = new Money(1800.00m, currency), CurrentAmount = new Money(450.00m, currency), TargetDate = today.AddMonths(8) },
+            new Goal { UserId = userId, Name = "Emergency fund", TargetAmount = new Money(6000.00m, currency), CurrentAmount = new Money(4300.00m, currency) },
+            new Goal { UserId = userId, Name = "Summer trip", TargetAmount = new Money(1800.00m, currency), CurrentAmount = new Money(450.00m, currency), TargetDate = today.AddMonths(8) },
             new Goal
             {
-                UserId = user.Id,
+                UserId = userId,
                 Name = "House deposit",
                 TargetAmount = new Money(15000.00m, currency),
                 Funding = GoalFunding.Account,
@@ -165,12 +174,12 @@ public static class DemoDataCommand
             });
         var home = new Household { Name = "Home" };
         db.Households.Add(home);
-        db.HouseholdMemberships.Add(new HouseholdMembership { HouseholdId = home.Id, UserId = user.Id, Role = HouseholdRole.Owner });
+        db.HouseholdMemberships.Add(new HouseholdMembership { HouseholdId = home.Id, UserId = userId, Role = HouseholdRole.Owner });
         var bought = today.AddYears(-3);
         var inspected = bought.AddYears(2);
         var car = new Asset
         {
-            UserId = user.Id,
+            UserId = userId,
             Name = "Car",
             Type = AssetType.Vehicle,
             CurrentValue = new Money(11800.00m, currency),
@@ -179,7 +188,7 @@ public static class DemoDataCommand
         };
         var flat = new Asset
         {
-            UserId = user.Id,
+            UserId = userId,
             Name = "Flat",
             Type = AssetType.Property,
             CurrentValue = new Money(156000.00m, currency),
@@ -196,7 +205,7 @@ public static class DemoDataCommand
             new AssetValuation { AssetId = flat.Id, Date = today, Value = 156000.00m });
         var carLoan = new Debt
         {
-            UserId = user.Id,
+            UserId = userId,
             Name = "Car loan",
             Type = DebtType.Loan,
             OutstandingAmount = new Money(3200.00m, currency),
@@ -219,7 +228,7 @@ public static class DemoDataCommand
 
         var rent = new RecurringBill
         {
-            UserId = user.Id,
+            UserId = userId,
             Name = "Rent",
             Kind = RecurringBillKind.Fixed,
             Amount = 620.00m,
@@ -230,7 +239,7 @@ public static class DemoDataCommand
         rent.Schedule(NextOn(2));
         var electricity = new RecurringBill
         {
-            UserId = user.Id,
+            UserId = userId,
             Name = "Electricity",
             Kind = RecurringBillKind.Variable,
             CategoryId = categories["Utilities"],
@@ -240,7 +249,7 @@ public static class DemoDataCommand
         electricity.Schedule(NextOn(5));
         var salary = new RecurringBill
         {
-            UserId = user.Id,
+            UserId = userId,
             Name = "Salary",
             Shape = RecurringBillShape.Income,
             Kind = RecurringBillKind.Fixed,
@@ -252,7 +261,7 @@ public static class DemoDataCommand
         salary.Schedule(NextOn(10));
         var toSavings = new RecurringBill
         {
-            UserId = user.Id,
+            UserId = userId,
             Name = "Standing order to savings",
             Shape = RecurringBillShape.Transfer,
             Kind = RecurringBillKind.Fixed,
@@ -265,7 +274,7 @@ public static class DemoDataCommand
         toSavings.Schedule(NextOn(12));
         var insurance = new RecurringBill
         {
-            UserId = user.Id,
+            UserId = userId,
             Name = "Car insurance",
             Kind = RecurringBillKind.Fixed,
             Amount = 480.00m,
@@ -277,15 +286,14 @@ public static class DemoDataCommand
         insurance.Schedule(insuredOn.AddYears(1));
         db.RecurringBills.AddRange(rent, electricity, salary, toSavings, insurance);
 
-        await db.SaveChangesAsync();
+        await db.SaveChangesAsync(cancellationToken);
         var historyStart = clock.StartOfDay(firstMonth);
         foreach (var entry in db.ChangeTracker.Entries<EntityBase>())
         {
             entry.Entity.CreatedAt = historyStart;
         }
 
-        await db.SaveChangesAsync();
-        Console.WriteLine($"Seeded {Months} months of demo data for {email}.");
+        await db.SaveChangesAsync(cancellationToken);
     }
 
     private static Account NewAccount(Guid userId, Currency currency, string name, AccountType type, decimal startingBalance) =>

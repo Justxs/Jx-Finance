@@ -11,6 +11,7 @@ public sealed class DashboardLayoutTests(ReportsFixture fixture) : IntegrationTe
 
     private static readonly string[] DefaultOrder =
     [
+        "gettingStarted",
         "summary",
         "monthlyTrend",
         "spendingByCategory",

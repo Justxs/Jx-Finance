@@ -3,6 +3,7 @@ import {
   getCategoryBreakdownMockHandler,
   getDashboardLayoutMockHandler,
   getDashboardSummaryMockHandler,
+  getGettingStartedMockHandler,
   getMonthlyTrendMockHandler,
   getResetDashboardLayoutMockHandler,
   getSaveDashboardLayoutMockHandler,
@@ -20,6 +21,7 @@ import {
   categoryBreakdown,
   dashboardSummary,
   defaultDashboardLayout,
+  gettingStarted,
   monthlyTrendItems,
   transactionsBetween,
   withEarlierAmounts,
@@ -73,4 +75,5 @@ export const dashboardHandlers = [
   getDashboardLayoutMockHandler(defaultDashboardLayout),
   getSaveDashboardLayoutMockHandler(({ request }) => savedLayout(request)),
   getResetDashboardLayoutMockHandler(defaultDashboardLayout),
+  getGettingStartedMockHandler(gettingStarted),
 ];

@@ -31,7 +31,7 @@ Before changing behaviour that a page here covers, read that page. When you choo
 | [Reports](reports.md) | Comparisons | 10 | [Reports](../features/reports.md) |
 | [Exports](exports.md) | Data export per user, Ledger exports | 10 | [Exports](../features/exports.md), [Data export per user](../features/data-export-per-user.md) |
 | [Investments](investments.md) | Investments | 10 | [Investments](../features/investments.md) |
-| [Installation settings and feature switches](installation-settings.md) | none | 3 | [Installation settings and feature switches](../features/installation-settings.md) |
+| [Installation settings and feature switches](installation-settings.md) | none | 5 | [Installation settings and feature switches](../features/installation-settings.md) |
 | [Backup and restore](backup-and-restore.md) | Backup and restore | 5 | [Backup and restore](../features/backup-and-restore.md) |
 | [Interface and command palette](interface.md) | Design, Navigation, Command palette | 10 | [Interface](../features/interface.md) |
 | [Email](email.md) | Email | 10 | [Email](../features/email.md) |

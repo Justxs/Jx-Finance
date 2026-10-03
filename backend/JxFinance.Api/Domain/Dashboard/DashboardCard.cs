@@ -2,6 +2,7 @@ namespace JxFinance.Domain.Dashboard;
 
 public enum DashboardCard
 {
+    GettingStarted,
     Summary,
     MonthlyTrend,
     SpendingByCategory,

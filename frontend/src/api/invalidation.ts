@@ -460,6 +460,14 @@ const rules: readonly Rule[] = [
     refresh: [api.getMeQueryKey],
   },
   {
+    after: [api.getLoadDemoDataMutationKey, api.getRemoveDemoDataMutationKey],
+    refresh: "everything",
+  },
+  {
+    after: [api.getFinishSetupMutationKey],
+    refresh: [api.getSettingsQueryKey],
+  },
+  {
     after: [api.getUpdateSmtpSettingsMutationKey],
     refresh: [api.getSmtpSettingsQueryKey, api.getPublicSettingsQueryKey],
   },

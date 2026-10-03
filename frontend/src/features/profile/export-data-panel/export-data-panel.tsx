@@ -56,7 +56,7 @@ export function ExportDataPanel() {
   );
 }
 
-function ImportDataForm() {
+export function ImportDataForm() {
   const { t } = useTranslation();
   const fileField = useFileField(IMPORT_FILE_INPUT_ID, MAX_FILE_BYTES, uploadProblemKeys);
   const importMutation = useImportMyData({

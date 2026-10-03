@@ -49,4 +49,6 @@ export const defaultSettings: SettingsResponse = {
   defaultPageSize: 20,
   supportLinkEnabled: true,
   receiptReadingReady: false,
+  setupPending: false,
+  demoData: false,
 };

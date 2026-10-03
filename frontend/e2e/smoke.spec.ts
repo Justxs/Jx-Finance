@@ -4,7 +4,9 @@ import { admin, fillSignIn, readJson, signIn, today } from "./support";
 
 test.describe.configure({ mode: "serial" });
 
-test("a fresh install asks for the administrator, then for a sign in", async ({ page }) => {
+test("a fresh install asks for the administrator, then opens the guided setup", async ({
+  page,
+}) => {
   await page.goto("/");
   await expect(page).toHaveURL(/\/setup$/);
 
@@ -13,8 +15,13 @@ test("a fresh install asks for the administrator, then for a sign in", async ({ 
   await page.getByLabel("Password", { exact: true }).fill(admin.password);
   await page.getByRole("button", { name: "Create admin account" }).click();
 
-  await expect(page).toHaveURL(/\/login/);
-  await expect(page.getByRole("heading", { name: "Sign in" })).toBeVisible();
+  await expect(page).toHaveURL(/\/setup\?step=basics/);
+  await expect(page.getByRole("heading", { name: "The basics" })).toBeVisible();
+
+  await page.getByRole("button", { name: "Skip for now" }).click();
+
+  await expect(page).toHaveURL(/\/$/);
+  await expect(page.getByRole("heading", { name: "Getting started" })).toBeVisible();
 });
 
 test("setup is closed once an administrator exists", async ({ page }) => {

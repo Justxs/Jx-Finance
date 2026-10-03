@@ -60,7 +60,7 @@ function NetWorthSkeleton() {
 }
 
 export const cardSkeletons: Record<
-  Exclude<DashboardCard, "summary" | "recentTransactions">,
+  Exclude<DashboardCard, "gettingStarted" | "summary" | "recentTransactions">,
   ReactNode
 > = {
   monthlyTrend: <ChartSkeleton height={300} legend />,

@@ -8,7 +8,7 @@
 import * as zod from "zod";
 
 /**
- * Creates the administrator account on a fresh instance. It works exactly once: once an administrator exists the endpoint answers 409 for good. Rate limited to five attempts per five minutes per client.
+ * Creates the administrator account on a fresh instance and signs this browser in with a session that is not remembered, then marks the guided setup as pending in the settings. It works exactly once: once an administrator exists the endpoint answers 409 for good. Rate limited to five attempts per five minutes per client.
  * @summary Provision the first administrator
  */
 export const setupBodyEmailMin = 0;
@@ -83,6 +83,32 @@ export const SetupResponse = zod.object({
   language: zod.string().nullable(),
   monthlyDigestEverything: zod.boolean(),
   monthlyDigestHouseholdIds: zod.array(zod.uuid()),
+});
+
+/**
+ * Fills the administrator's empty ledger with six months of sample accounts, transactions, budgets, goals, recurring entries, net worth and a household, in the reporting currency, and sets demoData in the settings. Offered only during the guided setup, so it answers 409 setup.notPending once the setup is finished, and 409 setup.ledgerNotEmpty when the administrator already has an account.
+ * @summary Load demo data
+ */
+export const LoadDemoDataResponse = zod.void();
+
+/**
+ * Empties every ledger table, including anything entered since the demo data was loaded, gives the administrator the starter categories again and clears demoData. Users, sign-in data, sessions, settings and exchange rates stay. Allowed only while demoData is set and the administrator is the only user; otherwise it answers 409 setup.demoNotRemovable.
+ * @summary Remove the demo data and start for real
+ */
+export const RemoveDemoDataResponse = zod.void();
+
+/**
+ * Clears setupPending in the settings, so the client stops opening the guided setup for administrators. Skipping the setup calls this too. Calling it again changes nothing.
+ * @summary Finish the guided setup
+ */
+export const FinishSetupResponse = zod.void();
+
+/**
+ * Tells the guided setup which optional parts are installed where the API runs, whatever the feature switches say: receiptReaderInstalled is true when Tesseract is available for receipt reading.
+ * @summary Read what this server can run
+ */
+export const SetupReadinessResponse = zod.object({
+  receiptReaderInstalled: zod.boolean(),
 });
 
 /**

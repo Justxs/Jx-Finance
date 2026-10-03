@@ -8,16 +8,22 @@
 import {
   queryOptions as queryOptionsBuilder,
   useMutation,
+  useQuery,
   useSuspenseQuery,
 } from "@tanstack/react-query";
 import type {
   DataTag,
+  DefinedInitialDataOptions,
+  DefinedUseQueryResult,
   MutationFunction,
   QueryClient,
   QueryFunction,
   QueryKey,
+  UndefinedInitialDataOptions,
   UseMutationOptions,
   UseMutationResult,
+  UseQueryOptions,
+  UseQueryResult,
   UseSuspenseQueryOptions,
   UseSuspenseQueryResult,
 } from "@tanstack/react-query";
@@ -25,6 +31,7 @@ import { customFetch } from "../../client";
 import type { ErrorType } from "../../client";
 import type {
   ProblemDetails,
+  SetupReadinessResponse,
   SetupRequest,
   SetupStatusResponse,
   UserProfileResponse,
@@ -52,7 +59,7 @@ export const getSetupUrl = () => {
 };
 
 /**
- * Creates the administrator account on a fresh instance. It works exactly once: once an administrator exists the endpoint answers 409 for good. Rate limited to five attempts per five minutes per client.
+ * Creates the administrator account on a fresh instance and signs this browser in with a session that is not remembered, then marks the guided setup as pending in the settings. It works exactly once: once an administrator exists the endpoint answers 409 for good. Rate limited to five attempts per five minutes per client.
  * @summary Provision the first administrator
  */
 export const setup = async (
@@ -150,6 +157,383 @@ export const useSetup = <TError = ErrorType<ProblemDetails | void>, TContext = u
 > => {
   return useMutation(getSetupMutationOptions(options), queryClient);
 };
+export const getLoadDemoDataUrl = () => {
+  return `/api/setup/demo-data`;
+};
+
+/**
+ * Fills the administrator's empty ledger with six months of sample accounts, transactions, budgets, goals, recurring entries, net worth and a household, in the reporting currency, and sets demoData in the settings. Offered only during the guided setup, so it answers 409 setup.notPending once the setup is finished, and 409 setup.ledgerNotEmpty when the administrator already has an account.
+ * @summary Load demo data
+ */
+export const loadDemoData = async (options?: Parameters<typeof customFetch>[1]): Promise<void> => {
+  return customFetch<void>(getLoadDemoDataUrl(), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getLoadDemoDataMutationKey = () => ["loadDemoData"] as const;
+
+export const getLoadDemoDataMutationOptions = <
+  TError = ErrorType<ProblemDetails>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<Awaited<ReturnType<typeof loadDemoData>>, TError, void, TContext>;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<Awaited<ReturnType<typeof loadDemoData>>, TError, void, TContext> => {
+  const mutationKey = getLoadDemoDataMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<Awaited<ReturnType<typeof loadDemoData>>, void> = () => {
+    return loadDemoData(requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type LoadDemoDataMutationResult = NonNullable<Awaited<ReturnType<typeof loadDemoData>>>;
+
+export type LoadDemoDataMutationError = ErrorType<ProblemDetails>;
+
+/**
+ * @summary Load demo data
+ */
+export const useLoadDemoData = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<Awaited<ReturnType<typeof loadDemoData>>, TError, void, TContext>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<Awaited<ReturnType<typeof loadDemoData>>, TError, void, TContext> => {
+  return useMutation(getLoadDemoDataMutationOptions(options), queryClient);
+};
+export const getRemoveDemoDataUrl = () => {
+  return `/api/setup/demo-data`;
+};
+
+/**
+ * Empties every ledger table, including anything entered since the demo data was loaded, gives the administrator the starter categories again and clears demoData. Users, sign-in data, sessions, settings and exchange rates stay. Allowed only while demoData is set and the administrator is the only user; otherwise it answers 409 setup.demoNotRemovable.
+ * @summary Remove the demo data and start for real
+ */
+export const removeDemoData = async (
+  options?: Parameters<typeof customFetch>[1],
+): Promise<void> => {
+  return customFetch<void>(getRemoveDemoDataUrl(), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getRemoveDemoDataMutationKey = () => ["removeDemoData"] as const;
+
+export const getRemoveDemoDataMutationOptions = <
+  TError = ErrorType<ProblemDetails>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<Awaited<ReturnType<typeof removeDemoData>>, TError, void, TContext>;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<Awaited<ReturnType<typeof removeDemoData>>, TError, void, TContext> => {
+  const mutationKey = getRemoveDemoDataMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<Awaited<ReturnType<typeof removeDemoData>>, void> = () => {
+    return removeDemoData(requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type RemoveDemoDataMutationResult = NonNullable<Awaited<ReturnType<typeof removeDemoData>>>;
+
+export type RemoveDemoDataMutationError = ErrorType<ProblemDetails>;
+
+/**
+ * @summary Remove the demo data and start for real
+ */
+export const useRemoveDemoData = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof removeDemoData>>,
+      TError,
+      void,
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<Awaited<ReturnType<typeof removeDemoData>>, TError, void, TContext> => {
+  return useMutation(getRemoveDemoDataMutationOptions(options), queryClient);
+};
+export const getFinishSetupUrl = () => {
+  return `/api/setup/finish`;
+};
+
+/**
+ * Clears setupPending in the settings, so the client stops opening the guided setup for administrators. Skipping the setup calls this too. Calling it again changes nothing.
+ * @summary Finish the guided setup
+ */
+export const finishSetup = async (options?: Parameters<typeof customFetch>[1]): Promise<void> => {
+  return customFetch<void>(getFinishSetupUrl(), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getFinishSetupMutationKey = () => ["finishSetup"] as const;
+
+export const getFinishSetupMutationOptions = <
+  TError = ErrorType<ProblemDetails>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<Awaited<ReturnType<typeof finishSetup>>, TError, void, TContext>;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<Awaited<ReturnType<typeof finishSetup>>, TError, void, TContext> => {
+  const mutationKey = getFinishSetupMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<Awaited<ReturnType<typeof finishSetup>>, void> = () => {
+    return finishSetup(requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type FinishSetupMutationResult = NonNullable<Awaited<ReturnType<typeof finishSetup>>>;
+
+export type FinishSetupMutationError = ErrorType<ProblemDetails>;
+
+/**
+ * @summary Finish the guided setup
+ */
+export const useFinishSetup = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<Awaited<ReturnType<typeof finishSetup>>, TError, void, TContext>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<Awaited<ReturnType<typeof finishSetup>>, TError, void, TContext> => {
+  return useMutation(getFinishSetupMutationOptions(options), queryClient);
+};
+export const getSetupReadinessUrl = () => {
+  return `/api/setup/readiness`;
+};
+
+/**
+ * Tells the guided setup which optional parts are installed where the API runs, whatever the feature switches say: receiptReaderInstalled is true when Tesseract is available for receipt reading.
+ * @summary Read what this server can run
+ */
+export const setupReadiness = async (
+  options?: Parameters<typeof customFetch>[1],
+): Promise<SetupReadinessResponse> => {
+  return customFetch<SetupReadinessResponse>(getSetupReadinessUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getSetupReadinessQueryKey = () => {
+  return [`/api/setup/readiness`] as const;
+};
+
+export const getSetupReadinessQueryOptions = <
+  TData = Awaited<ReturnType<typeof setupReadiness>>,
+  TError = ErrorType<ProblemDetails>,
+>(options?: {
+  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof setupReadiness>>, TError, TData>>;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getSetupReadinessQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof setupReadiness>>> = ({ signal }) =>
+    setupReadiness({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof setupReadiness>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type SetupReadinessQueryResult = NonNullable<Awaited<ReturnType<typeof setupReadiness>>>;
+export type SetupReadinessQueryError = ErrorType<ProblemDetails>;
+
+export function useSetupReadiness<
+  TData = Awaited<ReturnType<typeof setupReadiness>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof setupReadiness>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof setupReadiness>>,
+          TError,
+          Awaited<ReturnType<typeof setupReadiness>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useSetupReadiness<
+  TData = Awaited<ReturnType<typeof setupReadiness>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof setupReadiness>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof setupReadiness>>,
+          TError,
+          Awaited<ReturnType<typeof setupReadiness>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useSetupReadiness<
+  TData = Awaited<ReturnType<typeof setupReadiness>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof setupReadiness>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Read what this server can run
+ */
+
+export function useSetupReadiness<
+  TData = Awaited<ReturnType<typeof setupReadiness>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof setupReadiness>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getSetupReadinessQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export const getSetupReadinessSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof setupReadiness>>,
+  TError = ErrorType<ProblemDetails>,
+>(options?: {
+  query?: Partial<
+    UseSuspenseQueryOptions<Awaited<ReturnType<typeof setupReadiness>>, TError, TData>
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getSetupReadinessQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof setupReadiness>>> = ({ signal }) =>
+    setupReadiness({ signal, ...requestOptions });
+
+  return queryOptionsBuilder({
+    queryKey,
+    ...queryOptions,
+    queryFn: queryOptions?.queryFn ?? queryFn,
+  }) as UseSuspenseQueryOptions<Awaited<ReturnType<typeof setupReadiness>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  } & {
+    throwOnError?: ((this: never, error: TError) => boolean) & { readonly __inferenceOnly: never };
+  };
+};
+
+export type SetupReadinessSuspenseQueryResult = NonNullable<
+  Awaited<ReturnType<typeof setupReadiness>>
+>;
+export type SetupReadinessSuspenseQueryError = ErrorType<ProblemDetails>;
+
+export function useSetupReadinessSuspense<
+  TData = Awaited<ReturnType<typeof setupReadiness>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options: {
+    query: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof setupReadiness>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useSetupReadinessSuspense<
+  TData = Awaited<ReturnType<typeof setupReadiness>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof setupReadiness>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useSetupReadinessSuspense<
+  TData = Awaited<ReturnType<typeof setupReadiness>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof setupReadiness>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Read what this server can run
+ */
+
+export function useSetupReadinessSuspense<
+  TData = Awaited<ReturnType<typeof setupReadiness>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof setupReadiness>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getSetupReadinessSuspenseQueryOptions(options);
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
 export const getSetupStatusUrl = () => {
   return `/api/setup/status`;
 };

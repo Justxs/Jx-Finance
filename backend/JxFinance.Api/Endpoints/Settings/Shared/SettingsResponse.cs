@@ -16,4 +16,6 @@ public sealed record SettingsResponse(
     Guid? DefaultAccountId,
     int DefaultPageSize,
     bool SupportLinkEnabled,
-    bool ReceiptReadingReady);
+    bool ReceiptReadingReady,
+    bool SetupPending,
+    bool DemoData);

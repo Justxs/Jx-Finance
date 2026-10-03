@@ -281,6 +281,10 @@
                 "dashboard/dashboard-customiser/dashboard-customiser",
                 "imports/import-data-section/import-data-section"
               ],
+              "settings": [
+                "accounts/account-form/account-form",
+                "profile/export-data-panel/export-data-panel"
+              ],
               "tags": ["places/places-section/places-section"],
               "transactions": ["imports/import-dialog/import-dialog"]
             }

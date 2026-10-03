@@ -8,6 +8,7 @@ import {
   getCategoryBreakdownSuspenseQueryOptions,
   getDashboardLayoutSuspenseQueryOptions,
   getDashboardSummarySuspenseQueryOptions,
+  getGettingStartedSuspenseQueryOptions,
   getGoalsSuspenseQueryOptions,
   getMonthlyTrendSuspenseQueryOptions,
   getMonthReviewSuspenseQueryOptions,
@@ -99,6 +100,9 @@ function warmCard(
   share: SpendingShare | undefined,
 ) {
   switch (card) {
+    case "gettingStarted":
+      warm(queryClient, getGettingStartedSuspenseQueryOptions());
+      break;
     case "summary":
       warm(queryClient, getDashboardSummarySuspenseQueryOptions(withShare({ month }, share)));
       break;

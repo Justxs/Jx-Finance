@@ -80,14 +80,10 @@ public abstract class ApiFixture : AppFixture<Program>
     {
         Api = CreateSessionClient();
 
-        await Api.PostAsJsonAsync(
+        var setupResponse = await Api.PostAsJsonAsync(
             "/api/setup",
             new { email = TestAdminEmail, password = TestAdminPassword, displayName = "Test Admin" });
-
-        var loginResponse = await Api.PostAsJsonAsync(
-            "/api/auth/login",
-            new { email = TestAdminEmail, password = TestAdminPassword, rememberMe = false });
-        loginResponse.EnsureSuccessStatusCode();
+        setupResponse.EnsureSuccessStatusCode();
     }
 
     public HttpClient CreateSessionClient() =>

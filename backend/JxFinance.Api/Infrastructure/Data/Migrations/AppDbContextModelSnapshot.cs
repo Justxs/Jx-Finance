@@ -2246,6 +2246,9 @@ namespace JxFinance.Infrastructure.Data.Migrations
                     b.Property<int>("DefaultPageSize")
                         .HasColumnType("integer");
 
+                    b.Property<bool>("DemoData")
+                        .HasColumnType("boolean");
+
                     b.Property<DateTimeOffset?>("DiscordDisabledByDiscordAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -2303,6 +2306,9 @@ namespace JxFinance.Infrastructure.Data.Migrations
                         .IsRequired()
                         .HasMaxLength(3)
                         .HasColumnType("character varying(3)");
+
+                    b.Property<bool>("SetupPending")
+                        .HasColumnType("boolean");
 
                     b.Property<bool>("SmtpEnabled")
                         .HasColumnType("boolean");

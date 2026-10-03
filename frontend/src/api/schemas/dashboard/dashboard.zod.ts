@@ -82,6 +82,7 @@ export const DashboardSummaryResponse = zod.object({
 export const DashboardLayoutResponse = zod.object({
   order: zod.array(
     zod.enum([
+      "gettingStarted",
       "summary",
       "monthlyTrend",
       "spendingByCategory",
@@ -97,6 +98,7 @@ export const DashboardLayoutResponse = zod.object({
   ),
   hidden: zod.array(
     zod.enum([
+      "gettingStarted",
       "summary",
       "monthlyTrend",
       "spendingByCategory",
@@ -120,6 +122,7 @@ export const DashboardLayoutResponse = zod.object({
 export const ResetDashboardLayoutResponse = zod.object({
   order: zod.array(
     zod.enum([
+      "gettingStarted",
       "summary",
       "monthlyTrend",
       "spendingByCategory",
@@ -135,6 +138,7 @@ export const ResetDashboardLayoutResponse = zod.object({
   ),
   hidden: zod.array(
     zod.enum([
+      "gettingStarted",
       "summary",
       "monthlyTrend",
       "spendingByCategory",
@@ -169,6 +173,7 @@ export const SaveDashboardLayoutBody = zod.object({
 export const SaveDashboardLayoutResponse = zod.object({
   order: zod.array(
     zod.enum([
+      "gettingStarted",
       "summary",
       "monthlyTrend",
       "spendingByCategory",
@@ -184,6 +189,7 @@ export const SaveDashboardLayoutResponse = zod.object({
   ),
   hidden: zod.array(
     zod.enum([
+      "gettingStarted",
       "summary",
       "monthlyTrend",
       "spendingByCategory",
@@ -199,3 +205,24 @@ export const SaveDashboardLayoutResponse = zod.object({
   ),
   isDefault: zod.boolean(),
 });
+
+/**
+ * Returns the first steps through the application in order, each marked done or not. Every step is worked out from your data at the time of the request, so nothing is stored: deleting your only budget marks planning as not done again. A step whose feature is switched off is left out; inviting a member, setting up email and taking a backup are listed for administrators only. Sorting your spending is done once you have a transaction and none dated in the last 30 days is uncategorized.
+ * @summary Get your getting started steps
+ */
+export const GettingStartedResponseItem = zod.object({
+  step: zod.enum([
+    "addAccount",
+    "addTransaction",
+    "sortSpending",
+    "planAhead",
+    "addRecurring",
+    "secureSignIn",
+    "inviteMember",
+    "setUpEmail",
+    "takeBackup",
+    "closeMonth",
+  ]),
+  done: zod.boolean(),
+});
+export const GettingStartedResponse = zod.array(GettingStartedResponseItem);

@@ -10,5 +10,11 @@ public interface ISettingsService
 
     PublicSettingsResponse GetPublic();
 
+    SetupReadinessResponse GetReadiness();
+
     Task<Result<SettingsResponse>> UpdateAsync(UpdateSettingsRequest request, CancellationToken cancellationToken);
+
+    Task MarkSetupPendingAsync(bool pending, CancellationToken cancellationToken);
+
+    Task MarkDemoDataAsync(bool loaded, CancellationToken cancellationToken);
 }

@@ -49,7 +49,7 @@ describe("shownCards", () => {
 
 describe("moveCard", () => {
   test("swaps a card with its neighbour", () => {
-    expect(moveCard(draft, "monthlyTrend", "up", allOn).order.slice(0, 2)).toEqual([
+    expect(moveCard(draft, "monthlyTrend", "up", allOn).order.slice(1, 3)).toEqual([
       "monthlyTrend",
       "summary",
     ]);
@@ -58,13 +58,13 @@ describe("moveCard", () => {
   test("steps over a card whose feature is off and keeps that card in place", () => {
     const moved = moveCard(draft, "netWorth", "up", { ...allOn, budgets: false });
 
-    expect(moved.order.indexOf("netWorth")).toBe(3);
-    expect(moved.order.indexOf("budgets")).toBe(4);
-    expect(moved.order.indexOf("spendingPace")).toBe(5);
+    expect(moved.order.indexOf("netWorth")).toBe(4);
+    expect(moved.order.indexOf("budgets")).toBe(5);
+    expect(moved.order.indexOf("spendingPace")).toBe(6);
   });
 
   test("leaves the first card where it is when moved up", () => {
-    expect(moveCard(draft, "summary", "up", allOn)).toBe(draft);
+    expect(moveCard(draft, "gettingStarted", "up", allOn)).toBe(draft);
   });
 });
 

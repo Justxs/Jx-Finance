@@ -6,6 +6,7 @@ using JxFinance.Domain.Common;
 using JxFinance.Endpoints.Auth.Interfaces;
 using JxFinance.Endpoints.Auth.Login;
 using JxFinance.Endpoints.Auth.Shared;
+using JxFinance.Endpoints.Settings.Interfaces;
 using JxFinance.Infrastructure.Auth;
 using JxFinance.Infrastructure.Data;
 using Microsoft.AspNetCore.Identity;
@@ -20,6 +21,7 @@ public sealed class AuthService(
     AppDbContext db,
     ICurrentUser currentUser,
     ISessionService sessions,
+    ISettingsService settings,
     IClock clock) : IAuthService
 {
     private static readonly DomainError UserMissing = EntityLookup.NotFound("The signed-in user no longer exists.");
@@ -82,6 +84,8 @@ public sealed class AuthService(
         await StarterCategories.SeedAsync(db, user.Id, cancellationToken);
         await transaction.CommitAsync(cancellationToken);
 
+        await settings.MarkSetupPendingAsync(true, cancellationToken);
+        await sessions.SignInAsync(user, rememberMe: false, cancellationToken);
         return user;
     }
 

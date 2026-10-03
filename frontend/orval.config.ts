@@ -111,6 +111,7 @@ const plainQueryOperations = [
   "GetPublicSettings",
   "GetSecurities",
   "GetSettings",
+  "GetSetupReadiness",
   "GetTransfers",
   "Me",
 ];

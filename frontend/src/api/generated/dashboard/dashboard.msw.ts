@@ -11,6 +11,7 @@ import type {
   CategoryBreakdownResponse,
   DashboardLayoutResponse,
   DashboardSummaryResponse,
+  GettingStartedStepResponse,
   MonthlyTrendResponse,
 } from "../model";
 
@@ -157,6 +158,30 @@ export const getSaveDashboardLayoutMockHandler = (
     options,
   );
 };
+
+export const getGettingStartedMockHandler = (
+  overrideResponse?:
+    | GettingStartedStepResponse[]
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<GettingStartedStepResponse[]> | GettingStartedStepResponse[]),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/users/me/getting-started",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : undefined,
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
 export const getDashboardMock = () => [
   getCategoryBreakdownMockHandler(),
   getMonthlyTrendMockHandler(),
@@ -164,4 +189,5 @@ export const getDashboardMock = () => [
   getDashboardLayoutMockHandler(),
   getResetDashboardLayoutMockHandler(),
   getSaveDashboardLayoutMockHandler(),
+  getGettingStartedMockHandler(),
 ];

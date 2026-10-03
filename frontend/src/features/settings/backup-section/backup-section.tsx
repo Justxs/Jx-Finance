@@ -20,7 +20,7 @@ import { BackupsTable } from "./backups-table";
 import { CreateBackupForm } from "./create-backup-form";
 import { RestoreBackupDialog } from "./restore-backup-dialog";
 
-function BackupList() {
+export function BackupList() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();

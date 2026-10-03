@@ -67,12 +67,32 @@ Since 2026-10-02 a month is closed on its own page, the [Month tab of Reports](m
 
 `warmDashboard` warms the review either one needs: the latest ended month's on the current month, the shown month's otherwise. Neither is one of the cards below: they have no id, no place in the layout and no entry in the customiser. The checklist, the close, the ruled-off figures and the drift live on the Month page, because the dashboard is the daily glance and the close is a monthly session of its own. See [Month-end close](month-end-close.md#screens).
 
+## Getting started
+
+`GettingStartedCard` (`features/dashboard/getting-started-card`) is the tutorial after the [guided setup](first-run-setup.md#the-guided-setup): a list of first steps, each a link to where it is done while it is open and struck through with "Done" for assistive technology once it is done, under "5 of 10 done". It renders nothing once every step is done, and nothing while it loads or when its load fails, so a finished installation never sees it. It replaced the three first-run links the recent transactions card showed on an installation without accounts.
+
+`GET /api/users/me/getting-started` (`GettingStartedService`) answers the steps in order, each `{ step, done }`. Nothing is stored: every step is worked out from the caller's data on each request, through the same visibility filters as the pages, so a shared account counts and deleting the only budget opens the planning step again. The query is read with `staleTime: 0` rather than added to the invalidation rules of every mutation it depends on, so the card is fresh each time the dashboard opens.
+
+| Step | Done when | Listed |
+| --- | --- | --- |
+| `addAccount` | the caller sees an account | always |
+| `addTransaction` | the caller sees a transaction | always |
+| `sortSpending` | there is a transaction and none dated in the last 30 days is uncategorized | always |
+| `planAhead` | a budget or a goal exists among the switched-on ones | while `Budgets` or `Goals` is on |
+| `addRecurring` | a recurring entry exists | while `RecurringBills` is on |
+| `secureSignIn` | the caller has two-factor authentication or a passkey | always |
+| `inviteMember` | another user exists | administrators |
+| `setUpEmail` | the mail server is configured | administrators |
+| `takeBackup` | a backup is stored | administrators |
+| `closeMonth` | a month is closed | while `MonthClose` is on |
+
 ## Choosing and ordering the cards
 
-Each user decides which of the eleven cards the dashboard shows and in what order. The layout belongs to the person, not to a household or a browser: it is stored on the user row, so it follows them to every browser and device, and two members of one household each keep their own. Backend `Dashboard` (`GetDashboardLayout`, `SaveDashboardLayout`, `ResetDashboardLayout`, `DashboardLayoutService`) and `Domain/Dashboard`; frontend `dashboard-layout.ts`, `dashboard-card`, `dashboard-customiser` and the page.
+Each user decides which of the twelve cards the dashboard shows and in what order. The layout belongs to the person, not to a household or a browser: it is stored on the user row, so it follows them to every browser and device, and two members of one household each keep their own. Backend `Dashboard` (`GetDashboardLayout`, `SaveDashboardLayout`, `ResetDashboardLayout`, `DashboardLayoutService`) and `Domain/Dashboard`; frontend `dashboard-layout.ts`, `dashboard-card`, `dashboard-customiser` and the page.
 
 | Card id | Card | Feature switch |
 | --- | --- | --- |
+| `gettingStarted` | Getting started, added 2026-10-03, first in the default order and appended to saved layouts; shown only while a step is open | always on |
 | `summary` | Total balance and the month figures | always on |
 | `monthlyTrend` | Income vs. expenses | always on |
 | `spendingByCategory` | Spending by category | always on |

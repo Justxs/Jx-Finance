@@ -2,7 +2,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
-import { useSetup } from "@/api/generated";
+import { getMeQueryKey, useSetup } from "@/api/generated";
 import {
   setupBodyDisplayNameMax,
   setupBodyEmailMax,
@@ -12,7 +12,7 @@ import {
 import { useServerForm } from "@/components/form";
 import { FormError } from "@/components/form-error/form-error";
 import { AuthCard } from "@/features/auth/auth-card/auth-card";
-import { setSetupNeeded } from "@/lib/auth-gate";
+import { setAuthenticated, setSetupNeeded } from "@/lib/auth-gate";
 import { silentMutation } from "@/lib/mutations";
 import { password, requiredEmail, requiredText } from "@/lib/validation";
 
@@ -36,9 +36,11 @@ export function SetupPage() {
   const setupMutation = useSetup({
     mutation: {
       ...silentMutation,
-      onSuccess: () => {
+      onSuccess: (profile) => {
         setSetupNeeded(queryClient, false);
-        void navigate({ to: "/login" });
+        setAuthenticated(true);
+        queryClient.setQueryData(getMeQueryKey(), profile);
+        void navigate({ to: "/setup", search: { step: "basics" } });
       },
     },
   });

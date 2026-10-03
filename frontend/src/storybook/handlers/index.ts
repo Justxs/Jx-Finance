@@ -23,6 +23,7 @@ import { getConversionsMockHandler } from "@/api/generated/conversions/conversio
 import {
   getCategoryBreakdownMockHandler,
   getDashboardSummaryMockHandler,
+  getGettingStartedMockHandler,
   getMonthlyTrendMockHandler,
 } from "@/api/generated/dashboard/dashboard.msw";
 import { getGoalsMockHandler } from "@/api/generated/goals/goals.msw";
@@ -77,6 +78,7 @@ import {
   emptyReportSummary,
   emptyTransactionsSummary,
   evenSettleUp,
+  gettingStartedFresh,
   importPreview,
   noRememberedItemCategories,
   serverErrorProblem,
@@ -220,6 +222,7 @@ export const emptyHandlers: RequestHandler[] = [
   getConversionsMockHandler(emptyPage),
   getExchangeRateEntriesMockHandler([]),
   getDashboardSummaryMockHandler(emptyDashboardSummary),
+  getGettingStartedMockHandler(gettingStartedFresh),
   getMonthlyTrendMockHandler({ items: [] }),
   getCategoryBreakdownMockHandler(emptyCategoryBreakdown),
   ...emptyInvestmentHandlers,

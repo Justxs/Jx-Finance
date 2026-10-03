@@ -2,8 +2,8 @@ import { HttpResponse, http } from "msw";
 import type { ReportSummaryResponse } from "@/api/generated/model";
 import { ReportComparisonMode } from "@/api/generated/model";
 import { getReportSummaryMockHandler } from "@/api/generated/reports/reports.msw";
-import { MAP_TILES_PATH } from "@/features/reports/place-map/map-tiles";
 import { monthBounds, parseIso, previousMonth } from "@/lib/calendar";
+import { MAP_TILES_PATH } from "@/lib/map-tiles";
 import {
   FIXTURE_MONTH_END,
   FIXTURE_MONTH_START,

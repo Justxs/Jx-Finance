@@ -16,6 +16,7 @@ import {
 import { pastMonthEnd } from "@/features/dashboard/dashboard-queries";
 import { DashboardSection } from "@/features/dashboard/dashboard-section/dashboard-section";
 import { DashboardStats } from "@/features/dashboard/dashboard-stats/dashboard-stats";
+import { GettingStartedCard } from "@/features/dashboard/getting-started-card/getting-started-card";
 import { GoalsSnapshot } from "@/features/dashboard/goals-snapshot/goals-snapshot";
 import { MonthlyTrendChart } from "@/features/dashboard/monthly-trend-chart/monthly-trend-chart";
 import { NetWorthMonth } from "@/features/dashboard/net-worth-month/net-worth-month";
@@ -31,6 +32,7 @@ const wide = "lg:col-span-6 xl:col-span-8";
 const narrow = "lg:col-span-6 xl:col-span-4";
 
 const titleKeys = {
+  gettingStarted: "dashboard.gettingStarted.title",
   summary: "dashboard.totalBalance",
   monthlyTrend: "dashboard.monthlyTrend",
   spendingByCategory: "dashboard.spendingByCategory",
@@ -61,7 +63,7 @@ interface SectionCard {
 }
 
 const sectionCards: Record<
-  Exclude<DashboardCardId, "summary" | "recentTransactions">,
+  Exclude<DashboardCardId, "gettingStarted" | "summary" | "recentTransactions">,
   SectionCard
 > = {
   monthlyTrend: {
@@ -126,6 +128,14 @@ export function DashboardCard({ card, month, widen = false }: Readonly<Props>) {
   const { t } = useTranslation();
   const until = pastMonthEnd(month, useTodayDate());
   const title = dashboardCardTitle(t, card);
+
+  if (card === "gettingStarted") {
+    return (
+      <QueryBoundary fallback={null} error={null}>
+        <GettingStartedCard className={wide} />
+      </QueryBoundary>
+    );
+  }
 
   if (card === "summary") {
     return (

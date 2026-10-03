@@ -19,7 +19,9 @@ public sealed record InstanceSettingsSnapshot(
     bool DiscordEnabled,
     bool TelegramEnabled,
     bool SupportLinkEnabled,
-    bool PriceSyncEnabled)
+    bool PriceSyncEnabled,
+    bool SetupPending,
+    bool DemoData)
 {
     public bool IsEnabled(Feature feature) => Features.IsEnabled(feature);
 
@@ -53,7 +55,9 @@ public sealed record InstanceSettingsSnapshot(
             settings.DiscordEnabled && settings.DiscordProtectedUrl.Length > 0,
             settings is { TelegramEnabled: true, TelegramProtectedToken.Length: > 0, TelegramChatId: not null },
             settings.SupportLinkEnabled,
-            settings.PriceSyncEnabled);
+            settings.PriceSyncEnabled,
+            settings.SetupPending,
+            settings.DemoData);
     }
 
     public static bool IsValidTimeZone(string? id)

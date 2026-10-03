@@ -9,6 +9,7 @@
 export type DashboardCard = (typeof DashboardCard)[keyof typeof DashboardCard];
 
 export const DashboardCard = {
+  gettingStarted: "gettingStarted",
   summary: "summary",
   monthlyTrend: "monthlyTrend",
   spendingByCategory: "spendingByCategory",

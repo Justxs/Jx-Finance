@@ -329,6 +329,10 @@ Every 201 goes through `CreatedAsync`, which sets `Location` to a path built fro
 | PUT | `/api/settings/telegram` (Admin) |
 | POST | `/api/settings/telegram/test` (Admin) |
 | POST | `/api/setup` |
+| DELETE | `/api/setup/demo-data` (Admin) |
+| POST | `/api/setup/demo-data` (Admin) |
+| POST | `/api/setup/finish` (Admin) |
+| GET | `/api/setup/readiness` (Admin) |
 | GET | `/api/setup/status` |
 | GET | `/api/tags` |
 | POST | `/api/tags` |
@@ -376,6 +380,7 @@ Every 201 goes through `CreatedAsync`, which sets `Location` to a path built fro
 | DELETE | `/api/users/me/dashboard-layout` |
 | GET | `/api/users/me/dashboard-layout` |
 | PUT | `/api/users/me/dashboard-layout` |
+| GET | `/api/users/me/getting-started` |
 | PUT | `/api/users/me/discord-notifications` |
 | PUT | `/api/users/me/email-notifications` |
 | PUT | `/api/users/me/digest-scopes` |

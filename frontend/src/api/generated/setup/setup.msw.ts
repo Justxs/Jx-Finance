@@ -7,7 +7,7 @@
  */
 import { HttpResponse, http } from "msw";
 import type { RequestHandlerOptions } from "msw";
-import type { SetupStatusResponse, UserProfileResponse } from "../model";
+import type { SetupReadinessResponse, SetupStatusResponse, UserProfileResponse } from "../model";
 
 export const getSetupMockHandler = (
   overrideResponse?:
@@ -20,6 +20,87 @@ export const getSetupMockHandler = (
   return http.post(
     "*/api/setup",
     async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : undefined,
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getLoadDemoDataMockHandler = (
+  overrideResponse?:
+    | void
+    | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<void> | void),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/setup/demo-data",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      if (typeof overrideResponse === "function") {
+        await overrideResponse(info);
+      }
+
+      return new HttpResponse(null, { status: 204 });
+    },
+    options,
+  );
+};
+
+export const getRemoveDemoDataMockHandler = (
+  overrideResponse?:
+    | void
+    | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<void> | void),
+  options?: RequestHandlerOptions,
+) => {
+  return http.delete(
+    "*/api/setup/demo-data",
+    async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+      if (typeof overrideResponse === "function") {
+        await overrideResponse(info);
+      }
+
+      return new HttpResponse(null, { status: 204 });
+    },
+    options,
+  );
+};
+
+export const getFinishSetupMockHandler = (
+  overrideResponse?:
+    | void
+    | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<void> | void),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/setup/finish",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      if (typeof overrideResponse === "function") {
+        await overrideResponse(info);
+      }
+
+      return new HttpResponse(null, { status: 204 });
+    },
+    options,
+  );
+};
+
+export const getSetupReadinessMockHandler = (
+  overrideResponse?:
+    | SetupReadinessResponse
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<SetupReadinessResponse> | SetupReadinessResponse),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/setup/readiness",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -56,4 +137,11 @@ export const getSetupStatusMockHandler = (
     options,
   );
 };
-export const getSetupMock = () => [getSetupMockHandler(), getSetupStatusMockHandler()];
+export const getSetupMock = () => [
+  getSetupMockHandler(),
+  getLoadDemoDataMockHandler(),
+  getRemoveDemoDataMockHandler(),
+  getFinishSetupMockHandler(),
+  getSetupReadinessMockHandler(),
+  getSetupStatusMockHandler(),
+];

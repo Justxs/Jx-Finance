@@ -26,4 +26,6 @@ export interface SettingsResponse {
   defaultPageSize: number;
   supportLinkEnabled: boolean;
   receiptReadingReady: boolean;
+  setupPending: boolean;
+  demoData: boolean;
 }
