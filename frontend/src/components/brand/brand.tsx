@@ -61,8 +61,10 @@ export function Brand({
       <BrandMark className={stacked ? sizes[size].stackedMark : sizes[size].mark} />
       <span
         aria-hidden="true"
+        title={name ?? undefined}
         className={cn(
-          "max-w-full truncate font-serif leading-tight font-semibold tracking-tight",
+          "max-w-full font-serif leading-tight font-semibold tracking-tight",
+          stacked ? "line-clamp-2 wrap-break-word" : "truncate",
           sizes[size].text,
         )}
       >

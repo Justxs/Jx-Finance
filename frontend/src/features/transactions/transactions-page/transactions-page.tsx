@@ -58,7 +58,7 @@ import { usePageClamp } from "@/hooks/use-paged-list";
 import { useRetained } from "@/hooks/use-retained";
 import { useSettingsSuspense } from "@/hooks/use-settings";
 import { byId, nameById } from "@/lib/options";
-import { metaLine } from "@/lib/utils";
+import { cn, metaLine } from "@/lib/utils";
 import { usePreferences } from "@/stores/preferences";
 import { useTransactionMutations } from "./use-transaction-mutations";
 import { useTransactionSelection } from "./use-transaction-selection";
@@ -77,7 +77,8 @@ export function TransactionsPage() {
   const [deletingIds, setDeletingIds] = useState<string[] | null>(null);
   const deletingCount = useRetained(deletingIds?.length);
   const viewKey = JSON.stringify(view);
-  const selection = useTransactionSelection(viewKey);
+  const { page: _page, sort: _sort, direction: _direction, ...selectionScope } = view;
+  const selection = useTransactionSelection(JSON.stringify(selectionScope));
 
   const listParams = transactionListParams(shown, pageSize);
   const filterParams = transactionFilterParams(shown);
@@ -122,6 +123,7 @@ export function TransactionsPage() {
   const selectableIds = items.filter(isSelectableTransaction).map((item) => item.id);
   const selectedItems = items.filter((item) => selection.selectedIds.has(item.id));
   const selectedIds = selectedItems.map((item) => item.id);
+  const selecting = selectedItems.length > 0;
   const remove = useConfirmedDelete(
     mutations.remove,
     [...items, ...groups.memberTransactions],
@@ -201,8 +203,19 @@ export function TransactionsPage() {
 
       <Section className="space-y-2">
         <ActiveFilters filters={filters} tags={tags} />
-        {selectedItems.length > 0 ? (
+        <div data-slot="ledger-tools" className="grid items-start">
+          <div
+            className={cn(
+              "col-start-1 row-start-1 flex flex-wrap items-center justify-between gap-x-4 gap-y-1",
+              selecting && "md:invisible",
+            )}
+          >
+            <TransactionsTotals params={filterParams} stale={stale} />
+            <TransactionsFiltersDialog filters={filters} tags={tags} className="md:hidden" />
+          </div>
           <SelectionToolbar
+            key={selecting ? "selecting" : "idle"}
+            className="col-start-1 row-start-1"
             selected={selectedItems}
             categories={categories}
             tags={tags}
@@ -226,12 +239,7 @@ export function TransactionsPage() {
             }
             onClear={selection.clear}
           />
-        ) : (
-          <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
-            <TransactionsTotals params={filterParams} stale={stale} />
-            <TransactionsFiltersDialog filters={filters} tags={tags} className="md:hidden" />
-          </div>
-        )}
+        </div>
 
         <div className="hidden md:block">
           <TransactionsTable
@@ -247,7 +255,8 @@ export function TransactionsPage() {
               selectedIds: selection.selectedIds,
               selectableIds,
               rowLabel: (row) => `${formatDate(row.date)} ${transactionName(row, categoryById, t)}`,
-              onToggle: selection.toggle,
+              onToggle: (id, selected, extend) =>
+                selection.toggle(selectableIds, id, selected, extend),
               onTogglePage: (selected) => selection.togglePage(selectableIds, selected),
             }}
           />
@@ -267,7 +276,10 @@ export function TransactionsPage() {
           page={shown.page}
           pages={pages}
           range={{ total, pageSize }}
-          onPageChange={(page) => navigate({ search: (prev) => ({ ...prev, page }) })}
+          onPageChange={(page) => {
+            selection.clear();
+            void navigate({ search: (prev) => ({ ...prev, page }) });
+          }}
         />
       </Section>
 

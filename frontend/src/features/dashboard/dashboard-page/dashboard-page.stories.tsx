@@ -141,7 +141,7 @@ export const MonthReadyToClose: Story = {
   },
   play: async ({ canvas }) => {
     await expect(
-      await canvas.findByRole("heading", { level: 2, name: /ready to close|galima uždaryti/i }),
+      await canvas.findByRole("heading", { level: 2, name: /has ended|mėnuo baigėsi/i }),
     ).toBeVisible();
   },
 };
@@ -174,14 +174,14 @@ export const StepsBetweenMonths: Story = {
   },
 };
 
-export const EndedMonthShowsTheClose: Story = {
+export const EndedMonthLinksToTheMonthPage: Story = {
   parameters: { route: "/?month=2026-08" },
   play: async ({ canvas }) => {
+    await expect(await canvas.findByText(/august 2026 has ended|mėnuo baigėsi/i)).toBeVisible();
     await expect(
-      await canvas.findByRole("heading", {
-        name: /august 2026 is ready to close|galima uždaryti/i,
-      }),
-    ).toBeVisible();
+      canvas.getByRole("link", { name: /review month|peržiūrėti mėnesį/i }),
+    ).toHaveAttribute("href", expect.stringContaining("/reports/month?month=2026-08"));
+    await expect(canvas.queryByRole("button", { name: /^(close|uždaryti)/i })).toBeNull();
     await expect(canvas.queryByRole("button", { name: /not now|ne dabar/i })).toBeNull();
   },
 };

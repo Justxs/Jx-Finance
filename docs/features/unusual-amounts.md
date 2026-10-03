@@ -170,7 +170,7 @@ The actions live in the badge because that is where the reason is shown; the row
 
 `ImportPreviewRow` gained `unusual` in the same shape. While the feature is on, `ImportPreviewService.PreviewAsync` makes, for either statement format, one batch call to `IUnusualAmountService.EvaluateAsync` over the expense rows, valued through `ITransactionValuation` at the rate for each row's date; a row that cannot be valued gets no verdict. The category a row is judged in is the one its categorization rule suggests, because the client's recall of the latest matching description happens after the preview is answered. The call runs as the caller through the request's context, so a narrowed household scope narrows the category history too.
 
-Nothing is stored. Confirmed rows arrive unchecked and the job evaluates them, so the stored flag has one source; for a payee baseline the two agree, which a test asserts. The screen shows an "Unusual amount" mark with the sentence in its tooltip in the row's flags, never on a duplicate row, since that one cannot be imported.
+Nothing is stored. Confirmed rows arrive unchecked and the job evaluates them, so the stored flag has one source; for a payee baseline the two agree, which a test asserts. The screen shows an "Unusual amount" mark with the sentence in its tooltip among the marks under the row's description, never on a duplicate row, since that one cannot be imported.
 
 ## Endpoints
 

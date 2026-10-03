@@ -19,8 +19,10 @@ import { TransactionRowActions } from "@/features/transactions/transaction-row-a
 import { UnusualAmountBadge } from "@/features/transactions/unusual-amount/unusual-amount-badge";
 import { EMPTY_VALUE, useIsoDate } from "@/hooks/use-formatters";
 import { CategoryIcon } from "@/lib/category-icons";
+import { metaLine } from "@/lib/utils";
 import { CategoryCell, type useInlineCategory } from "./category-cell";
 import type { transactionTableFeatures } from "./table-features";
+import { useWideLedger } from "./use-wide-ledger";
 
 const columnHelper = createColumnHelper<typeof transactionTableFeatures, TransactionResponse>();
 
@@ -28,7 +30,7 @@ export interface TransactionSelection {
   selectedIds: ReadonlySet<string>;
   selectableIds: string[];
   rowLabel: (row: TransactionResponse) => string;
-  onToggle: (id: string, selected: boolean) => void;
+  onToggle: (id: string, selected: boolean, extend: boolean) => void;
   onTogglePage: (selected: boolean) => void;
 }
 
@@ -70,6 +72,7 @@ export function useTransactionColumns({
 }: ColumnArgs) {
   const { t } = useTranslation();
   const formatDate = useIsoDate();
+  const wide = useWideLedger();
 
   function rowName(row: TransactionResponse) {
     return transactionName(row, categoryById, t);
@@ -87,13 +90,16 @@ export function useTransactionColumns({
     columnHelper.accessor("description", {
       header: t("transactions.description"),
       cell: (info) => {
-        const { payeeName, payee, note } = info.row.original;
+        const { payeeName, payee, note, accountId, tagIds } = info.row.original;
         const bankText = info.getValue();
         const description = payeeName ?? (payee || bankText);
-        const statementText = !payeeName && payee ? bankText : null;
+        const meta = metaLine(
+          wide ? null : accountNames.get(accountId),
+          !payeeName && payee ? bankText : null,
+        );
         return (
           <span className="flex items-start gap-2">
-            <span className="min-w-0">
+            <span className="min-w-0 flex-1">
               {description ? (
                 <span
                   className="line-clamp-2 font-medium wrap-break-word"
@@ -104,12 +110,14 @@ export function useTransactionColumns({
               ) : (
                 <span className="text-muted-foreground">{EMPTY_VALUE}</span>
               )}
-              {statementText ? (
-                <span
-                  className="line-clamp-1 text-xs wrap-break-word text-muted-foreground"
-                  title={statementText}
-                >
-                  {statementText}
+              {meta || tagIds.length > 0 ? (
+                <span className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1">
+                  {meta ? (
+                    <span className="min-w-0 truncate text-xs text-muted-foreground" title={meta}>
+                      {meta}
+                    </span>
+                  ) : null}
+                  <TagChips tagIds={tagIds} tagById={tagById} />
                 </span>
               ) : null}
               {note ? (
@@ -183,27 +191,21 @@ export function useTransactionColumns({
         );
       },
     }),
-    columnHelper.accessor("tagIds", {
-      header: t("tags.field"),
-      cell: (info) => {
-        const ids = info.getValue();
-        if (ids.length === 0) {
-          return <span className="text-muted-foreground">{EMPTY_VALUE}</span>;
-        }
-        return <TagChips tagIds={ids} tagById={tagById} />;
-      },
-    }),
-    columnHelper.accessor("accountId", {
-      header: t("transactions.account"),
-      cell: (info) => {
-        const name = accountNames.get(info.getValue()) ?? "";
-        return (
-          <span className="block truncate text-muted-foreground" title={name}>
-            {name}
-          </span>
-        );
-      },
-    }),
+    ...(wide
+      ? [
+          columnHelper.accessor("accountId", {
+            header: t("transactions.account"),
+            cell: (info) => {
+              const name = accountNames.get(info.getValue()) ?? "";
+              return (
+                <span className="block truncate text-muted-foreground" title={name}>
+                  {name}
+                </span>
+              );
+            },
+          }),
+        ]
+      : []),
     columnHelper.accessor("amount", {
       header: t("transactions.amount"),
       cell: (info) => (

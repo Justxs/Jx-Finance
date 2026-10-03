@@ -16,10 +16,16 @@ export function useGroupDates() {
   const formatDate = useIsoDate();
   const shortDay = useShortDayIso();
 
-  return function groupDates(group: Pick<TransactionGroupSummary, "firstDate" | "lastDate">) {
+  function parts(group: Pick<TransactionGroupSummary, "firstDate" | "lastDate">) {
     return group.firstDate === group.lastDate
-      ? formatDate(group.lastDate)
-      : `${shortDay(group.firstDate)} – ${formatDate(group.lastDate)}`;
+      ? [formatDate(group.lastDate)]
+      : [`${shortDay(group.firstDate)} –`, formatDate(group.lastDate)];
+  }
+
+  return {
+    parts,
+    text: (group: Pick<TransactionGroupSummary, "firstDate" | "lastDate">) =>
+      parts(group).join(" "),
   };
 }
 
@@ -87,20 +93,27 @@ interface Props {
   group: TransactionGroupSummary;
   expanded: boolean;
   selectable: boolean;
+  nameSpan: number;
   handlers: LedgerGroupHandlers;
 }
 
-export function GroupRow({ group, expanded, selectable, handlers }: Readonly<Props>) {
+export function GroupRow({ group, expanded, selectable, nameSpan, handlers }: Readonly<Props>) {
   const groupDates = useGroupDates();
   const groupCount = useGroupCount();
 
   return (
     <TableRow data-kind="group">
       {selectable ? <TableCell className="pr-0" /> : null}
-      <TableCell className="whitespace-nowrap text-muted-foreground tabular-nums">
-        {groupDates(group)}
+      <TableCell className="whitespace-normal text-muted-foreground tabular-nums">
+        <span className="flex flex-wrap gap-x-1">
+          {groupDates.parts(group).map((part) => (
+            <span key={part} className="whitespace-nowrap">
+              {part}
+            </span>
+          ))}
+        </span>
       </TableCell>
-      <TableCell colSpan={4} className="whitespace-normal">
+      <TableCell colSpan={nameSpan} className="whitespace-normal">
         <span className="flex items-center gap-2">
           <GroupToggle group={group} expanded={expanded} onToggle={handlers.onToggle} />
           <Layers className="size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />

@@ -89,7 +89,9 @@ export function ChartTooltip({
           >
             <ChartSwatch series={item} />
             <dt className="text-muted-foreground">{item.label}</dt>
-            <dd className={cn("ml-auto pl-4 font-semibold tabular-nums", item.tone)}>
+            <dd
+              className={cn("ml-auto pl-4 font-semibold whitespace-nowrap tabular-nums", item.tone)}
+            >
               {formatValue(item)}
             </dd>
           </div>

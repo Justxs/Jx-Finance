@@ -52,7 +52,7 @@ export function HubTabs({ current, pages }: Readonly<Props>) {
             className={cn("relative", tabsTabClass, active && "font-semibold text-foreground")}
           >
             <page.icon aria-hidden="true" className="size-4 shrink-0" />
-            {t(page.key)}
+            {t("tabKey" in page ? page.tabKey : page.key)}
             {active ? (
               <span
                 aria-hidden="true"

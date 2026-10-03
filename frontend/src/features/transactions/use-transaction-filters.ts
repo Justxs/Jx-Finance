@@ -23,6 +23,12 @@ import {
   transactionFilterParams,
 } from "./transaction-queries";
 
+export interface DescriptionFilterDraft {
+  search: string;
+  place: string;
+  tags: string[];
+}
+
 export interface AmountFilterDraft {
   type: TransactionTypeFilter;
   unusual: boolean;
@@ -97,8 +103,19 @@ export function useTransactionFilters({ accounts, categories }: Args) {
       value: search.place ?? "",
       debounceMs: SEARCH_DEBOUNCE_MS,
       set: (next: string) => patchSearch({ place: next || undefined }),
-      setWithSearch: (nextSearch: string, nextPlace: string) =>
-        patchSearch({ search: nextSearch || undefined, place: nextPlace || undefined }),
+    },
+    description: {
+      value: {
+        search: search.search ?? "",
+        place: locationsEnabled ? (search.place ?? "") : "",
+        tags: selectedTagIds,
+      },
+      set: (next: DescriptionFilterDraft) =>
+        patchSearch({
+          search: next.search || undefined,
+          place: locationsEnabled ? next.place || undefined : search.place,
+          tagIds: formatTagIds(next.tags),
+        }),
     },
     payee: {
       label: t("filters.payee"),

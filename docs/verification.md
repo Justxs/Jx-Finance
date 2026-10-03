@@ -8,7 +8,7 @@ Reviewed 2026-09-19 without rerunning anything. The results below are a dated re
 
 - Multi-currency, investments with the Interactive Brokers import, installation settings, and administrator backup and restore. Their automated tests exist and run in CI, but no result is recorded in this file.
 - The test suites grew: the backend has 212 test methods (`[Fact]` and `[Theory]`) where the pass below ran 85 tests, and the frontend has 47 unit test files, 163 story files run as browser tests, and 6 end-to-end smoke tests where the pass below ran 6 tests.
-- nub is pinned at 0.9.2, not the 0.8.3 used during the migration below.
+- nub is pinned at 0.9.6, not the 0.8.3 used during the migration below.
 - The Docker engine is available again. `just e2e` and the CI `e2e` job build both images and start the HTTP stack with its own volumes. The production overlay was checked locally on 2026-09-19, see Operations checks; what remains is under Remaining deployment validation.
 
 Record the next full pass here with its date, counts and commit, and move this section's items into it.
@@ -66,7 +66,7 @@ These are browser viewport checks, not physical iOS/Android device tests. This p
 
 ## Package manager migration
 
-The frontend moved to nub at version 0.8.3 (the repository now pins 0.9.2). Its migration command renamed the existing lockfile to `frontend/nub.lock` without changing its bytes or dependency versions, moved the esbuild build permission into `package.json`, and removed the former workspace configuration. Local scripts, the justfile, CI setup/cache/install steps, Docker build and development instructions use nub. `nub.jsonc` preserves standard Node behavior for Vite and the existing test scripts.
+The frontend moved to nub at version 0.8.3 (the repository now pins 0.9.6). Its migration command renamed the existing lockfile to `frontend/nub.lock` without changing its bytes or dependency versions, moved the esbuild build permission into `package.json`, and removed the former workspace configuration. Local scripts, the justfile, CI setup/cache/install steps, Docker build and development instructions use nub. `nub.jsonc` preserves standard Node behavior for Vite and the existing test scripts.
 
 Verified with the newly installed nub CLI and a clean `nub ci` dependency tree: formatting, lint, all six frontend tests and the TypeScript/production build passed. Orval regeneration followed by formatting produced an identical generated client, and the native lockfile still matches the original dependency graph byte-for-byte. `nub run --cwd frontend dev` started Vite, which returned HTTP 200. Logs are `.local/nub-install.log`, `.local/nub-build.log`, `.local/nub-orval.log` and `.local/nub-dev.log` (ignored by Git). CI and Docker configuration were updated but not executed during this pass; the Docker engine was unavailable at the time.
 

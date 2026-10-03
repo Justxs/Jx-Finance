@@ -295,7 +295,8 @@
         "src/components/notification-bell/notification-bell.tsx",
         "src/components/chart/chart-tooltip.tsx",
         "src/components/ui/skeleton/skeleton.stories.tsx",
-        "src/features/month-close/month-close-review/month-close-review-skeleton.tsx"
+        "src/features/month-close/month-close-line/month-close-line.tsx",
+        "src/features/month-close/month-page/month-page-pending.tsx"
       ],
       "rules": {
         "jx/no-rounded-full": "off"

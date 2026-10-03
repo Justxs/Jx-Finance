@@ -133,7 +133,10 @@ export const UnusualAmountsPriceRisesAndMonthClose: Story = {
     await expect(entries[1]).toHaveTextContent("5 expenses are well above their usual amount");
     await expect(entries[2]).toHaveTextContent(/Charged €27\.99, expected €24\.99/u);
     await expect(entries[3]).toHaveTextContent("August 2026 has ended and is ready to close");
-    await expect(entries[3]).toHaveAttribute("href", expect.stringContaining("month=2026-08"));
+    await expect(entries[3]).toHaveAttribute(
+      "href",
+      expect.stringContaining("/reports/month?month=2026-08"),
+    );
   },
 };
 
@@ -175,7 +178,10 @@ export const MonthlyDigest: Story = {
     await expect(entry).toHaveTextContent(
       /Income €3,200\.00, expenses €2,450\.00, net \+€750\.00/u,
     );
-    await expect(entry).toHaveAttribute("href", expect.stringContaining("month=2026-08"));
+    await expect(entry).toHaveAttribute(
+      "href",
+      expect.stringContaining("/reports/month?month=2026-08"),
+    );
   },
 };
 

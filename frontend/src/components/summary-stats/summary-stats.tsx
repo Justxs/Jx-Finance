@@ -20,6 +20,7 @@ interface SummaryStat {
 interface Props {
   items: readonly SummaryStat[];
   currency?: string;
+  className?: string;
 }
 
 function restGrid(count: number) {
@@ -36,7 +37,7 @@ function toneOf(item: SummaryStat) {
   return gainTone(Number(item.value));
 }
 
-export function SummaryStats({ items, currency }: Readonly<Props>) {
+export function SummaryStats({ items, currency, className }: Readonly<Props>) {
   const money = useMoney();
   const lead = items.find((item) => item.lead) ?? items[0];
   const rest = items.filter((item) => item !== lead);
@@ -56,7 +57,7 @@ export function SummaryStats({ items, currency }: Readonly<Props>) {
   }
 
   return (
-    <Section as={SplitColumns} className="gap-y-6 lg:items-end">
+    <Section as={SplitColumns} className={cn("gap-y-6 lg:items-end", className)}>
       {lead ? (
         <dl className="min-w-0">
           <dt className="text-sm text-muted-foreground">{lead.label}</dt>
@@ -97,13 +98,16 @@ export function SummaryStats({ items, currency }: Readonly<Props>) {
   );
 }
 
-export function SummaryStatsSkeleton({ items = 2 }: Readonly<{ items?: number }>) {
+export function SummaryStatsSkeleton({
+  items = 2,
+  className,
+}: Readonly<{ items?: number; className?: string }>) {
   return (
     <Section
       as={SplitColumns}
       data-slot="summary-stats-skeleton"
       aria-hidden="true"
-      className="gap-y-6 lg:items-end"
+      className={cn("gap-y-6 lg:items-end", className)}
     >
       <div className="min-w-0">
         <TextSkeleton size="sm" />

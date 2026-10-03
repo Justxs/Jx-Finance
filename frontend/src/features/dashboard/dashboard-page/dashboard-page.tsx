@@ -10,8 +10,8 @@ import { Section } from "@/components/ui/section/section";
 import { StaleRegion } from "@/components/ui/stale-region/stale-region";
 import { DashboardCard } from "@/features/dashboard/dashboard-card/dashboard-card";
 import { shownCards } from "@/features/dashboard/dashboard-layout";
+import { MonthCloseLine } from "@/features/month-close/month-close-line/month-close-line";
 import { MonthClosePrompt } from "@/features/month-close/month-close-prompt/month-close-prompt";
-import { MonthCloseReview } from "@/features/month-close/month-close-review/month-close-review";
 import { useDebouncedDraft } from "@/hooks/use-debounced-draft";
 import { useDeferredParams } from "@/hooks/use-deferred-params";
 import { useMonthName } from "@/hooks/use-formatters";
@@ -138,7 +138,7 @@ export function DashboardPage() {
       <MonthHeader month={stepped.draft} current={current} onChange={stepped.change} />
 
       <StaleRegion stale={stale} className="space-y-6">
-        {shown.month === current ? <MonthClosePrompt /> : <MonthCloseReview month={shown.month} />}
+        {shown.month === current ? <MonthClosePrompt /> : <MonthCloseLine month={shown.month} />}
 
         <QueryBoundary
           fallback={<DashboardSkeleton />}

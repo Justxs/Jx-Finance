@@ -4,8 +4,7 @@ import type { Locale } from "react-day-picker";
 import { Button } from "@/components/ui/button/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover/popover";
 import { useCalendarLocale } from "@/hooks/use-formatters";
-import { useToday } from "@/hooks/use-settings";
-import { parseIso } from "@/lib/calendar";
+import { useToday, useTodayDate } from "@/hooks/use-settings";
 import { cn } from "@/lib/utils";
 
 interface CalendarPopoverApi {
@@ -43,7 +42,7 @@ export function CalendarPopover({
 }: Readonly<Props>) {
   const locale = useCalendarLocale();
   const today = useToday();
-  const todayDate = parseIso(today) ?? new Date();
+  const todayDate = useTodayDate();
   const [open, setOpen] = useState(false);
   const [month, setMonth] = useState(anchor ?? todayDate);
 

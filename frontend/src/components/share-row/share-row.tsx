@@ -34,7 +34,7 @@ export function ShareRow({
 }: Readonly<Props>) {
   return (
     <li>
-      <div className="flex items-baseline gap-3 text-sm">
+      <div className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5 text-sm">
         {icon}
         {name}
         {note ?? (
@@ -44,8 +44,8 @@ export function ShareRow({
         )}
         <span
           className={cn(
-            "shrink-0 text-right font-medium tabular-nums",
-            wideAmount ? "w-28" : "w-24",
+            "ml-auto shrink-0 text-right font-medium whitespace-nowrap tabular-nums",
+            wideAmount ? "min-w-28" : "min-w-24",
           )}
         >
           {amount}

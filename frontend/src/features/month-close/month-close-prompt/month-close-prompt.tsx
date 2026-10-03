@@ -15,17 +15,13 @@ import {
   openItemCount,
 } from "@/features/month-close/close-checklist/close-checklist";
 import { useMonthCloser } from "@/features/month-close/close-form/use-month-closer";
-import { statusMarkers } from "@/features/month-close/status-markers";
+import { keptShare } from "@/features/month-close/kept-share";
+import { monthTitleKey, statusMarkers } from "@/features/month-close/status-markers";
 import { useMonthName, usePercent } from "@/hooks/use-formatters";
 import { useFeature, useTodayDate } from "@/hooks/use-settings";
 import { latestEndedMonth } from "@/lib/calendar";
 import { cn } from "@/lib/utils";
 import { hideMonthClosePrompt, useMonthClosePromptHidden } from "@/stores/month-close-prompt-store";
-
-function savingsRate(income: string | undefined, net: string | undefined) {
-  const earned = Number(income ?? 0);
-  return earned > 0 ? Number(net ?? 0) / earned : null;
-}
 
 interface PanelProps {
   month: string;
@@ -43,7 +39,7 @@ function PromptPanel({ month, review }: Readonly<PanelProps>) {
   const attention = attentionCount(review.checklist);
   const openItems = openItemCount(review.checklist);
   const marker = statusMarkers[review.status];
-  const rate = savingsRate(review.figures.totalIncome, review.figures.net);
+  const share = keptShare(review.figures.totalIncome, review.figures.net);
 
   let summary = t("monthClose.prompt.ready");
   if (changed) {
@@ -59,7 +55,7 @@ function PromptPanel({ month, review }: Readonly<PanelProps>) {
 
   const reviewLink = (
     <Link
-      to="/"
+      to="/reports/month"
       search={{ month }}
       className={buttonVariants({ variant: changed ? "default" : "outline" })}
     >
@@ -74,12 +70,9 @@ function PromptPanel({ month, review }: Readonly<PanelProps>) {
           <marker.icon aria-hidden="true" className={cn("mt-1 size-5 shrink-0", marker.tone)} />
           <div className="min-w-0">
             <SectionTitle id={titleId}>
-              {t(
-                changed ? "monthClose.prompt.title.closedChanged" : "monthClose.prompt.title.open",
-                {
-                  month: monthName,
-                },
-              )}
+              {t(`monthClose.panel.title.${monthTitleKey(review.status, attention)}`, {
+                month: monthName,
+              })}
             </SectionTitle>
             <p className="mt-0.5 text-sm text-muted-foreground">{summary}</p>
           </div>
@@ -105,17 +98,19 @@ function PromptPanel({ month, review }: Readonly<PanelProps>) {
         <div className="flex flex-wrap items-end justify-between gap-x-8 gap-y-4 lg:justify-end">
           <dl className="flex gap-x-8">
             <div>
-              <dt className="text-xs text-muted-foreground">{t("monthClose.prompt.net")}</dt>
+              <dt className="text-xs text-muted-foreground">{t("monthClose.figures.net")}</dt>
               <dd className="text-xl font-semibold">
                 <SignedAmount value={Number(review.figures.net)} />
               </dd>
             </div>
-            {rate === null ? null : (
+            {share === null ? null : (
               <div>
                 <dt className="text-xs text-muted-foreground">
-                  {t("monthClose.prompt.savingsRate")}
+                  {t(share.kept ? "monthClose.figures.kept" : "monthClose.figures.spent")}
                 </dt>
-                <dd className="text-xl font-semibold tabular-nums">{percent.format(rate)}</dd>
+                <dd className="text-xl font-semibold tabular-nums">
+                  {percent.format(share.share)}
+                </dd>
               </div>
             )}
           </dl>

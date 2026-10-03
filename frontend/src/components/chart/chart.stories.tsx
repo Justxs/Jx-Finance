@@ -77,6 +77,17 @@ export const LargeAmounts: Story = {
   },
 };
 
+export const BillionsInLithuanian: Story = {
+  args: {
+    data: months.map((point, index) => ({
+      ...point,
+      income: point.income * 240_000,
+      expense: point.expense * (index === 3 ? 520_000 : 310_000),
+    })),
+  },
+  globals: { locale: "lt" },
+};
+
 export const Lithuanian: Story = { args: { data: months }, globals: { locale: "lt" } };
 
 export const TooltipOnly: Story = {

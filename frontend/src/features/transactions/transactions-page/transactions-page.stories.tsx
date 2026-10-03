@@ -86,12 +86,47 @@ export const SaveAndAddAnother: Story = {
 };
 
 export const BulkSelection: Story = {
+  play: async ({ canvas, canvasElement }) => {
+    const boxes = await canvas.findAllByRole("checkbox", { name: /^Select: / });
+    const enabled = boxes.filter((box) => box.getAttribute("aria-disabled") !== "true");
+    const slot = canvasElement.querySelector("[data-slot=ledger-tools]");
+    const totals = await canvas.findByLabelText("Totals for the current filters");
+    await expect(slot).toHaveClass("grid");
+    await expect(slot?.querySelector("[data-slot=selection-toolbar]")).toHaveClass(
+      "invisible",
+      "col-start-1",
+      "row-start-1",
+    );
+
+    await userEvent.click(enabled[0]!);
+    await userEvent.click(enabled[1]!);
+    await expect(enabled[1]).toHaveFocus();
+    await expect(await canvas.findByText("2 selected")).toBeVisible();
+    await expect(totals.closest("[data-slot=ledger-tools] > *")).toHaveClass(
+      "md:invisible",
+      "col-start-1",
+      "row-start-1",
+    );
+
+    const user = userEvent.setup();
+    await user.keyboard("{Shift>}");
+    await user.click(enabled[4]!);
+    await user.keyboard("{/Shift}");
+    await expect(await canvas.findByText("5 selected")).toBeVisible();
+  },
+};
+
+export const SelectionKeptAcrossASort: Story = {
   play: async ({ canvas }) => {
     const boxes = await canvas.findAllByRole("checkbox", { name: /^Select: / });
     const enabled = boxes.filter((box) => box.getAttribute("aria-disabled") !== "true");
     await userEvent.click(enabled[0]!);
     await userEvent.click(enabled[1]!);
-    await expect(enabled[1]).toHaveFocus();
+    await expect(await canvas.findByText("2 selected")).toBeVisible();
+
+    await userEvent.click(canvas.getByRole("button", { name: "Sort Date ascending" }));
+    await userEvent.click(await canvas.findByRole("button", { name: "Sort Date descending" }));
+    await canvas.findByRole("button", { name: "Sort Date ascending" });
     await expect(await canvas.findByText("2 selected")).toBeVisible();
   },
 };
@@ -114,7 +149,7 @@ export const GroupingTwoSelectedRows: Story = {
     await userEvent.click(enabled[0]!);
     await userEvent.click(enabled[1]!);
     const toolbar = within(canvas.getByRole("group", { name: "Selected transactions" }));
-    await userEvent.click(toolbar.getByRole("button", { name: "Group" }));
+    await chooseMenuItem(toolbar.getByRole("button", { name: "More" }), "Group");
 
     const dialog = within(await openedDialog());
     await fireEvent.change(dialog.getByLabelText("Group name"), {
@@ -157,8 +192,8 @@ export const MovingSelectedRowsWithARefusal: Story = {
   ),
   play: async ({ canvas }) => {
     const toolbar = await selectTwoRows(canvas);
-    await userEvent.click(toolbar.getByRole("button", { name: "Move to account" }));
-    const popover = within(await screen.findByRole("dialog", { name: "Move to account" }));
+    await chooseMenuItem(toolbar.getByRole("button", { name: "More" }), "Move to account");
+    const popover = within(await openedDialog());
     await chooseOption(
       popover.getByRole("combobox", { name: "Account to move to" }),
       savingsAccount.name,
@@ -252,7 +287,7 @@ export const RemovingOneActiveFilter: Story = {
     const active = await canvas.findByRole("list", { name: "Active filters" });
     await expect(within(active).getByText("“lidl”")).toBeVisible();
     await expect(
-      canvas.getByRole("button", { name: "Filter by Description (now: lidl)" }),
+      canvas.getByRole("button", { name: "Filter by Description (now: “lidl”)" }),
     ).toBeInTheDocument();
     await userEvent.click(
       within(active).getByRole("button", { name: "Remove filter Type: Expense" }),

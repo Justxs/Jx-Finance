@@ -4,8 +4,9 @@ import {
   useSettingsSuspense as useSettingsSuspenseQuery,
 } from "@/api/generated";
 import type { SettingsResponse } from "@/api/generated/model";
-import { parseIso, todayInZone } from "@/lib/calendar";
+import { todayInZone } from "@/lib/calendar";
 import { silentQuery } from "@/lib/query-client";
+import { todayDateIn } from "@/lib/route-prefetch";
 import { type FeatureKey, defaultSettings, settingsQuery } from "@/lib/settings";
 
 const quietSettingsQuery = { ...settingsQuery, ...silentQuery } as const;
@@ -49,7 +50,7 @@ export function useToday(): string {
 }
 
 export function useTodayDate(): Date {
-  return parseIso(useToday()) ?? new Date();
+  return todayDateIn(useSettings());
 }
 
 export function usePasskeysAvailable(): boolean {

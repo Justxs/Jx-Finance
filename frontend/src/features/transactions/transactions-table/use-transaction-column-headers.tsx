@@ -3,11 +3,7 @@ import type { TagResponse } from "@/api/generated/model";
 import { SelectField } from "@/components/select-field/select-field";
 import { TagPicker } from "@/components/tag-picker/tag-picker";
 import { Checkbox } from "@/components/ui/checkbox/checkbox";
-import {
-  ColumnFilter,
-  SelectColumnFilter,
-  TextColumnFilter,
-} from "@/components/ui/column-filter/column-filter";
+import { ColumnFilter, SelectColumnFilter } from "@/components/ui/column-filter/column-filter";
 import { ColumnHeader } from "@/components/ui/column-header/column-header";
 import { DateRangePicker } from "@/components/ui/date-range-picker/date-range-picker";
 import { Input } from "@/components/ui/input/input";
@@ -15,6 +11,7 @@ import { AmountRangeFields } from "@/features/transactions/amount-range-fields/a
 import { useFilterSummaries } from "@/features/transactions/use-filter-summaries";
 import type {
   AmountFilterDraft,
+  DescriptionFilterDraft,
   TransactionFilters,
 } from "@/features/transactions/use-transaction-filters";
 import { SEARCH_SHORTCUT_TARGET } from "@/lib/shortcuts";
@@ -59,41 +56,40 @@ export function useTransactionColumnHeaders(filters: TransactionFilters, tags: T
     ),
     description: header(
       "description",
-      fields.place.enabled ? (
-        <ColumnFilter<{ search: string; place: string }>
-          label={fields.search.label}
-          value={{ search: fields.search.value, place: fields.place.value }}
-          empty={{ search: "", place: "" }}
-          shortcut={SEARCH_SHORTCUT_TARGET}
-          summary={valueOf("search", "place")}
-          onApply={(next) => fields.place.setWithSearch(next.search, next.place)}
-        >
-          {(draft, setDraft) => (
-            <>
-              <Input
-                aria-label={fields.search.label}
-                placeholder={fields.search.placeholder}
-                value={draft.search}
-                onChange={(event) => setDraft({ ...draft, search: event.target.value })}
-              />
+      <ColumnFilter<DescriptionFilterDraft>
+        label={fields.search.label}
+        value={fields.description.value}
+        empty={{ search: "", place: "", tags: [] }}
+        shortcut={SEARCH_SHORTCUT_TARGET}
+        summary={valueOf("search", "place", "tags")}
+        onApply={fields.description.set}
+      >
+        {(draft, setDraft) => (
+          <>
+            <Input
+              aria-label={fields.search.label}
+              placeholder={fields.search.placeholder}
+              value={draft.search}
+              onChange={(event) => setDraft({ ...draft, search: event.target.value })}
+            />
+            {fields.place.enabled ? (
               <Input
                 aria-label={fields.place.label}
                 placeholder={fields.place.label}
                 value={draft.place}
                 onChange={(event) => setDraft({ ...draft, place: event.target.value })}
               />
-            </>
-          )}
-        </ColumnFilter>
-      ) : (
-        <TextColumnFilter
-          label={fields.search.label}
-          value={fields.search.value}
-          placeholder={fields.search.placeholder}
-          shortcut={SEARCH_SHORTCUT_TARGET}
-          onChange={fields.search.set}
-        />
-      ),
+            ) : null}
+            <TagPicker
+              tags={tags}
+              value={draft.tags}
+              onChange={(next) => setDraft({ ...draft, tags: next })}
+              aria-label={fields.tags.label}
+              hint={fields.tags.hint}
+            />
+          </>
+        )}
+      </ColumnFilter>,
     ),
     categoryId: header(
       "category",
@@ -103,30 +99,6 @@ export function useTransactionColumnHeaders(filters: TransactionFilters, tags: T
         onChange={fields.category.set}
         options={fields.category.options}
       />,
-    ),
-    tagIds: (
-      <ColumnHeader<string>
-        label={fields.tags.label}
-        filter={
-          <ColumnFilter<string[]>
-            label={fields.tags.label}
-            value={fields.tags.value}
-            empty={[]}
-            summary={valueOf("tags")}
-            onApply={fields.tags.set}
-          >
-            {(draft, setDraft) => (
-              <TagPicker
-                tags={tags}
-                value={draft}
-                onChange={setDraft}
-                aria-label={fields.tags.label}
-                hint={fields.tags.hint}
-              />
-            )}
-          </ColumnFilter>
-        }
-      />
     ),
     accountId: header(
       "account",

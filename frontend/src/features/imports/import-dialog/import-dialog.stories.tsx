@@ -4,6 +4,7 @@ import {
   getDismissImportInboxFileMockHandler,
   getImportPreviewMockHandler,
   getInspectCsvMockHandler,
+  getListCsvMappingsMockHandler,
   getListImportInboxMockHandler,
 } from "@/api/generated/imports/imports.msw";
 import { IMPORT_FILE_INPUT_ID } from "@/features/imports/import-section/import-upload-form";
@@ -15,6 +16,7 @@ import {
   mappedCsvPreview,
   missingColumnsProblem,
   revolutInspectionFitting,
+  serverErrorProblem,
 } from "@/storybook/fixtures";
 import { failWith, withHandlers } from "@/storybook/handlers";
 import { uploadAndPreview } from "@/storybook/import-play";
@@ -34,6 +36,15 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Providers: Story = {};
+
+export const ProvidersFail: Story = {
+  parameters: withHandlers(getListCsvMappingsMockHandler(failWith(serverErrorProblem))),
+  play: async () => {
+    const alert = await screen.findByRole("alert");
+    await expect(alert).toHaveTextContent("Statement sources could not be loaded.");
+    await expect(within(alert).getByRole("button", { name: /^Try again/u })).toBeVisible();
+  },
+};
 
 export const SwedbankUpload: Story = {
   play: async () => {
@@ -74,7 +85,7 @@ export const DiscardEditedReview: Story = {
   play: async () => {
     await userEvent.click(await screen.findByRole("button", { name: /swedbank/i }));
     await uploadAndPreview(await openedDialog());
-    const rows = await screen.findAllByRole("checkbox", { name: /^(select|pasirinkti): /i });
+    const rows = await screen.findAllByRole("checkbox", { name: /^(select|pasirinkti): .*LIDL/i });
     await userEvent.click(first(rows));
     await userEvent.click(screen.getByRole("button", { name: /all providers|visi teikėjai/i }));
     const confirm = await openedDialog("alertdialog");
@@ -84,6 +95,36 @@ export const DiscardEditedReview: Story = {
     await expect(
       screen.getByRole("region", { name: /review rows|eilučių peržiūra/i }),
     ).toBeVisible();
+  },
+};
+
+export const WidensForTheReview: Story = {
+  play: async () => {
+    await userEvent.click(await screen.findByRole("button", { name: /swedbank/i }));
+    const dialog = await openedDialog();
+    await expect(dialog).toHaveClass("sm:has-data-wide:max-w-6xl");
+    await expect(dialog.querySelector("[data-wide]")).toBeNull();
+    await uploadAndPreview(dialog);
+    await within(dialog).findByRole("region", { name: /review rows|eilučių peržiūra/i });
+    await expect(dialog.querySelector("[data-wide]")).not.toBeNull();
+  },
+};
+
+export const ImportFinished: Story = {
+  play: async () => {
+    await userEvent.click(await screen.findByRole("button", { name: /swedbank/i }));
+    const dialog = within(await openedDialog());
+    await uploadAndPreview(await openedDialog());
+    await userEvent.click(await dialog.findByRole("button", { name: /^Import \d+ rows?$/u }));
+
+    const result = await dialog.findByRole("region", { name: "Statement imported" });
+    await expect(within(result).getByRole("status")).toHaveTextContent(/^Imported \d+ rows?\.$/u);
+    await expect(
+      within(result).getByRole("link", { name: /^Categorize \d+ rows?$/u }),
+    ).toHaveAttribute("href", expect.stringContaining("uncategorized=true"));
+    await expect(within(result).getByRole("link", { name: "View imported rows" })).toBeVisible();
+    await expect(dialog.queryByRole("region", { name: /review rows/i })).toBeNull();
+    await expect(screen.queryByText(/linked 0|\(0 duplicates/u)).toBeNull();
   },
 };
 

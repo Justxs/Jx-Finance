@@ -17,8 +17,10 @@ import { Rows } from "@/components/ui/rows/rows";
 import { SegmentedControl } from "@/components/ui/segmented-control/segmented-control";
 import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table/table";
 import { Tooltip } from "@/components/ui/tooltip/tooltip";
+import { amountColumnWide } from "@/features/transactions/transaction-amount/transaction-amount";
+import { useMoney } from "@/hooks/use-formatters";
 import { usePageClamp } from "@/hooks/use-paged-list";
-import { ImportRow } from "./import-row";
+import { ImportRow, importAmount } from "./import-row";
 import {
   ImportSummaryBar,
   NO_GROUP,
@@ -66,6 +68,7 @@ export function ImportPreviewTable({
   confirmPending,
 }: Readonly<Props>) {
   const { t } = useTranslation();
+  const money = useMoney();
   const [page, setPage] = useState(1);
   const [view, setView] = useState<PreviewView>("all");
   const [query, setQuery] = useState("");
@@ -84,6 +87,7 @@ export function ImportPreviewTable({
   const pageRows = visible
     .slice(offset, offset + PREVIEW_PAGE_SIZE)
     .flatMap((index) => (rows[index] ? [{ row: rows[index], index }] : []));
+  const wideAmounts = amountColumnWide(pageRows.map(({ row }) => importAmount(money, row)));
 
   function rowProps(row: PreviewRowState, index: number) {
     return { row, index, accountId, accounts, categories, tags, onRowChange };
@@ -168,8 +172,8 @@ export function ImportPreviewTable({
       <div className="hidden md:block">
         <Table
           label={t("imports.preview")}
-          columns={["w-10", "w-27", undefined, "w-30", "w-44", "w-36", "w-52", "w-40"]}
-          className="min-w-268"
+          columns={["w-10", "w-27", undefined, wideAmounts ? "w-38" : "w-30", "w-48", "w-12"]}
+          className={wideAmounts ? "min-w-208" : "min-w-200"}
         >
           <TableHeader>
             <TableRow>
@@ -178,9 +182,9 @@ export function ImportPreviewTable({
               <TableHead>{t("transactions.description")}</TableHead>
               <TableHead numeric>{t("transactions.amount")}</TableHead>
               <TableHead>{t("transactions.category")}</TableHead>
-              <TableHead>{t("tags.field")}</TableHead>
-              <TableHead>{t("imports.recordAs")}</TableHead>
-              <TableHead>{t("imports.flags")}</TableHead>
+              <TableHead>
+                <span className="sr-only">{t("imports.more")}</span>
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>

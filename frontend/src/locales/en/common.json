@@ -26,6 +26,8 @@
     "settings": "Settings",
     "investments": "Investments",
     "monthClose": "Month close",
+    "month": "Month",
+    "overview": "Overview",
     "plan": "Plan",
     "wealth": "Wealth",
     "installation": "Installation"
@@ -492,6 +494,7 @@
     "moveAccountField": "Account to move to",
     "moveHint": "Each row keeps its amount, currency, date, category and tags.",
     "move": "Move",
+    "moreBulkActions": "More",
     "moved_one": "{{count}} transaction moved to {{account}}",
     "moved_other": "{{count}} transactions moved to {{account}}",
     "movedPartly_one": "Moved {{moved}} of {{count}} transaction to {{account}}",
@@ -1312,10 +1315,18 @@
     "over": "{{amount}} over",
     "empty": "No budgets yet.",
     "needCategory": "Create an expense category first to set a budget.",
-    "spentInWindow": "Spent in window",
-    "budgeted": "Budgeted",
-    "remaining": "Remaining",
-    "overBy": "Over by",
+    "summary": {
+      "over_one": "{{count}} of {{total}} budgets over",
+      "over_other": "{{count}} of {{total}} budgets over",
+      "overLine_one": "{{count}} of {{total}} budgets is over, by {{amount}}",
+      "overLine_other": "{{count}} of {{total}} budgets are over, by {{amount}} in all",
+      "left": {
+        "weekly": "Left this week",
+        "monthly": "Left this month",
+        "quarterly": "Left this quarter",
+        "yearly": "Left this year"
+      }
+    },
     "spentOf": "{{spent}} spent of {{limit}}",
     "historyHint": {
       "weekly": "Median of the last {{number}} weeks: {{amount}}",
@@ -2533,7 +2544,6 @@
     "file": "File",
     "chooseFile": "Click to choose a file",
     "preview": "Preview",
-    "confirmed": "Imported {{imported}} transactions, linked {{linked}} to your own entries ({{skipped}} duplicates skipped)",
     "noRows": "No importable rows found in this file.",
     "duplicate": "Already imported",
     "matched": "Matches your entry",
@@ -2543,9 +2553,10 @@
     "refundOf": "Refund of {{date}} {{description}}",
     "looksLikeTransfer": "Looks like a transfer",
     "unusual": "Unusual amount",
-    "recordAs": "Record as",
+    "recordAsFor": "Record as: {{row}}",
     "markTransfer": "Mark as transfer",
-    "markTransferFor": "Mark as transfer: {{row}}",
+    "more": "More options",
+    "moreFor": "More options: {{row}}",
     "changeFile": "Change",
     "transaction": "Income / expense",
     "transferWith": "Transfer · {{account}}",
@@ -2554,7 +2565,6 @@
     "existingTransfer": "Existing transfer",
     "matchHelp": "When importing the other account, match the same transfer to avoid counting it twice.",
     "selectRow": "Select: {{row}}",
-    "flags": "Status",
     "pageDescription": "Upload a bank statement, review the rows, then confirm what enters the ledger.",
     "fileSection": "Statement file",
     "reviewSection": "Review rows",
@@ -2588,13 +2598,21 @@
     "resultLinked_other": "{{count}} linked to entries you made by hand.",
     "resultSkipped_one": "{{count}} duplicate skipped.",
     "resultSkipped_other": "{{count}} duplicates skipped.",
-    "resultLink": "View them in Transactions",
+    "resultLink": "View imported rows",
+    "resultTitle": "Statement imported",
+    "resultCategorize_one": "Categorize {{count}} row",
+    "resultCategorize_other": "Categorize {{count}} rows",
+    "resultClosingBalance": "Statement closing balance",
+    "resultMonthClose": "Month close: {{month}}",
+    "importAnother": "Import another file",
     "open": "Import bank statement",
     "sectionTitle": "Import data",
     "sectionDescription": "Bring transactions in from a bank statement file. Every row is reviewed before it enters the ledger.",
     "dialogTitle": "Import bank statement",
     "dialogProviderTitle": "Import from {{provider}}",
     "chooseProvider": "Choose where the statement comes from.",
+    "providersSubject": "Statement sources",
+    "formSubject": "The import form",
     "allProviders": "All providers",
     "providers": {
       "swedbank": "Swedbank",
@@ -2613,9 +2631,6 @@
     "ruleFilledHint": "Filled by your rule \"{{rule}}\". Change it if it does not fit.",
     "tagsFor": "Tags: {{row}}",
     "chooseTags": "Tags",
-    "spread": "Spread over months",
-    "spreadFor": "Spread over months: {{row}}",
-    "pickerValue": "{{label}}: {{value}}",
     "reversal": "Reversal",
     "formats": {
       "swedbankCsv": {
@@ -2660,7 +2675,7 @@
     },
     "discard": {
       "title": "Discard this review?",
-      "description": "The rows you selected, categorised or matched as transfers will be lost. Nothing has been imported yet.",
+      "description": "The rows you selected, categorized or matched as transfers will be lost. Nothing has been imported yet.",
       "confirm": "Discard"
     },
     "views": {
@@ -3176,8 +3191,8 @@
       "reopen": "Reopen",
       "saveNote": "Save note",
       "confirmTitle": "Close with open items?",
-      "confirmDescription_one": "{{count}} item still needs attention. You can close anyway and fix it later; the change will show as drift.",
-      "confirmDescription_other": "{{count}} items still need attention. You can close anyway and fix them later; the changes will show as drift.",
+      "confirmDescription_one": "{{count}} item still needs attention. You can close anyway and fix it later; the month will then show as changed after closing.",
+      "confirmDescription_other": "{{count}} items still need attention. You can close anyway and fix them later; the month will then show as changed after closing.",
       "closeAnyway": "Close anyway",
       "reopenTitle": "Reopen {{month}}?",
       "reopenDescription": "The snapshot and its note are deleted. The transactions stay as they are.",
@@ -3194,6 +3209,7 @@
       "title": {
         "notEnded": "{{month}} is still running",
         "open": "{{month}} is ready to close",
+        "attention": "{{month}} has ended",
         "closed": "{{month}} is closed",
         "closedChanged": "{{month}} changed after closing"
       },
@@ -3202,21 +3218,36 @@
       "attention_one": "{{count}} thing needs attention before you close.",
       "attention_other": "{{count}} things need attention before you close.",
       "closedOn": "Closed on {{date}}.",
-      "changedSince": "Closed on {{date}}. Something dated in it has changed since: re-close to accept it, or reopen.",
-      "details": "Details"
+      "changedSince": "Closed on {{date}}. Something dated in it has changed since: re-close to accept it, or reopen."
+    },
+    "figures": {
+      "net": "Net",
+      "income": "Income",
+      "expense": "Expenses",
+      "kept": "Income kept",
+      "spent": "Income spent"
     },
     "prompt": {
-      "title": {
-        "open": "{{month}} is ready to close",
-        "closedChanged": "{{month}} changed after closing"
-      },
       "ready": "Everything is in order. Close it to keep a snapshot of the month.",
       "review": "Review month",
       "hide": "Not now",
       "hideLabel": "Hide until next month",
-      "net": "Net",
-      "savingsRate": "Saved",
       "changed": "Something dated in it has changed since you closed it. Review the changes, then re-close or reopen."
+    },
+    "page": {
+      "openLines_one": "{{count}} line still open.",
+      "openLines_other": "{{count}} lines still open.",
+      "importStatement": "Import statement",
+      "statements": "Statements",
+      "uncategorized": "Uncategorized",
+      "bills": "Recurring entries due",
+      "review": "Review",
+      "figures": "The month",
+      "billDue": "Due {{date}}",
+      "showAll": "Show all {{count}} in Transactions",
+      "bulkCategory": "Category for all shown",
+      "bulkApply_one": "Set category for {{count}} row",
+      "bulkApply_other": "Set category for all {{count}}"
     }
   },
   "support": {

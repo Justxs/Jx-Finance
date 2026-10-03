@@ -21,11 +21,13 @@ function recordedAs(row: PreviewRowState) {
 
 export function ImportTransferPicker({
   row,
+  label,
   accountId,
   accounts,
   onChange,
 }: Readonly<{
   row: PreviewRowState;
+  label: string;
   accountId: string;
   accounts: AccountResponse[];
   onChange: (patch: Partial<PreviewRowState>) => void;
@@ -80,9 +82,9 @@ export function ImportTransferPicker({
   }
 
   return (
-    <div className="min-w-44 space-y-2">
+    <div className="space-y-2">
       <SelectField
-        aria-label={t("imports.recordAs")}
+        aria-label={label}
         value={recordedAs(row)}
         onChange={choose}
         options={[
@@ -134,7 +136,7 @@ export function ImportTransferPicker({
         </div>
       ) : null}
       {row.transferAccountId ? (
-        <p className="max-w-56 text-xs text-muted-foreground">{t("imports.matchHelp")}</p>
+        <p className="text-xs whitespace-normal text-muted-foreground">{t("imports.matchHelp")}</p>
       ) : null}
     </div>
   );

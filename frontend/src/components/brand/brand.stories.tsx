@@ -1,5 +1,12 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { expect } from "storybook/test";
+import { getPublicSettingsMockHandler } from "@/api/generated/settings/settings.msw";
+import { publicSettings } from "@/storybook/fixtures";
+import { withHandlers } from "@/storybook/handlers";
 import { Brand, BrandMark } from "./brand";
+
+const longInstanceName =
+  "Pranauskų šeimos namų ūkio buhalterija – Vilniaus, Kauno ir Klaipėdos būstų bei bendrų sąskaitų apskaita";
 
 const meta = {
   title: "Components/Brand",
@@ -38,6 +45,27 @@ export const OnSidebarSurface: Story = {
       <Brand />
     </div>
   ),
+};
+
+export const LongInstallationName: Story = {
+  parameters: withHandlers(
+    getPublicSettingsMockHandler({ ...publicSettings, instanceName: longInstanceName }),
+  ),
+  render: () => (
+    <div className="flex flex-col gap-8">
+      <div className="flex w-58 items-center bg-sidebar px-6 py-5">
+        <Brand />
+      </div>
+      <div className="w-96 max-w-full">
+        <Brand size="lg" stacked />
+      </div>
+    </div>
+  ),
+  play: async ({ canvas }) => {
+    const names = await canvas.findAllByTitle(longInstanceName);
+    await expect(names[0]).toHaveClass("truncate");
+    await expect(names[1]).toHaveClass("line-clamp-2");
+  },
 };
 
 export const ClearSpace: Story = {

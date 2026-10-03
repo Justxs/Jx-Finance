@@ -5,12 +5,15 @@ import type {
   MonthCloseYearResponse,
   MonthDrift,
   MonthReviewResponse,
+  RecurringBillResponse,
+  TransactionResponse,
 } from "@/api/generated/model";
 import { monthBounds, parseIso, previousMonth, toIso } from "@/lib/calendar";
 import { accounts } from "./accounts";
-import { ids } from "./base";
+import { ids, uid } from "./base";
 import { budgets } from "./budgets";
 import { netWorthHistoryItems } from "./net-worth";
+import { overdueBill, variableBill } from "./recurring-bills";
 import { buildReportSummary, emptyReportSummary, withComparison } from "./reports";
 
 export const MONTH_CLOSE_MONTH = "2026-08";
@@ -270,3 +273,50 @@ export const emptyMonthReview = monthReviewOf(MONTH_CLOSE_MONTH, {
   netWorthStart: null,
   netWorthEnd: null,
 });
+
+function uncategorizedRow(
+  n: number,
+  day: string,
+  accountId: string,
+  amount: string,
+  description: string,
+): TransactionResponse {
+  const date = `${MONTH_CLOSE_MONTH}-${day}`;
+  return {
+    id: uid("c105ed00", n),
+    accountId,
+    categoryId: null,
+    type: "expense",
+    amount,
+    currency: "eur",
+    reportingAmount: amount,
+    date,
+    description,
+    source: "imported",
+    isSplit: false,
+    createdAt: `${date}T09:30:00Z`,
+    lines: null,
+    tagIds: [],
+    attachmentCount: 0,
+    unusual: null,
+    unusualDismissed: false,
+    enteredByMe: true,
+  };
+}
+
+export const monthUncategorizedTransactions: TransactionResponse[] = [
+  uncategorizedRow(1, "12", ids.accounts.checking, "23.18", "RIMI VILNIUS / Pirkinys kortele"),
+  uncategorizedRow(
+    2,
+    "19",
+    ids.accounts.shared,
+    "250.00",
+    "Rūta Kazlauskienė / Pervedimas už vaikų vasaros stovyklą ir kelionės į Palangą išlaidas",
+  ),
+  uncategorizedRow(3, "28", ids.accounts.checking, "8.40", "BOLT OPERATIONS OU / Kelionė"),
+];
+
+export const monthBillsDue: RecurringBillResponse[] = [
+  { ...overdueBill, nextDueDate: `${MONTH_CLOSE_MONTH}-25` },
+  { ...variableBill, nextDueDate: `${MONTH_CLOSE_MONTH}-28` },
+];

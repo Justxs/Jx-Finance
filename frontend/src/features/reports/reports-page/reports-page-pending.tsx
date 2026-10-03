@@ -40,14 +40,16 @@ export function ReportsPending() {
             <ShareRowsSkeleton rows={4} />
             <TextSkeleton size="xs" className="mt-3" width="w-3/4" />
           </SectionSkeleton>
+        </div>
+        <div className="space-y-5">
+          <SectionSkeleton>
+            <ChartSkeleton height={280} legend />
+          </SectionSkeleton>
           <SectionSkeleton>
             <ShareRowsSkeleton rows={8} />
             <TextSkeleton size="xs" className="mt-3" width="w-3/4" />
           </SectionSkeleton>
         </div>
-        <SectionSkeleton>
-          <ChartSkeleton height={280} legend />
-        </SectionSkeleton>
       </SplitColumns>
       <SectionSkeleton className="hidden lg:block">
         <ChartSkeleton height={MONEY_FLOW_HEIGHT} />

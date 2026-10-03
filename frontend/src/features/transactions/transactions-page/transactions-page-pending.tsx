@@ -8,7 +8,7 @@ import {
   TextSkeleton,
   rowWidth,
 } from "@/components/ui/skeleton/skeleton";
-import { TableSkeleton } from "@/components/ui/table/table";
+import { TransactionsTableSkeleton } from "@/features/transactions/transactions-table/transactions-table";
 import { useSettings } from "@/hooks/use-settings";
 import { usePreferences } from "@/stores/preferences";
 
@@ -63,7 +63,7 @@ export function TransactionsPending() {
           <TransactionsTotalsSkeleton />
           <ButtonSkeleton size="sm" className="md:hidden" />
         </div>
-        <TableSkeleton rows={rows} columns={6} lines={2} className="hidden md:block" />
+        <TransactionsTableSkeleton rows={rows} className="hidden md:block" />
         <TransactionRowsSkeleton rows={rows} />
         <PaginationSkeleton />
       </Section>

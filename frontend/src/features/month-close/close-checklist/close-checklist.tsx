@@ -2,6 +2,7 @@ import { type LinkOptions, linkOptions } from "@tanstack/react-router";
 import { CircleAlert, CircleCheck } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import type { MonthAccountCoverage, MonthChecklist } from "@/api/generated/model";
+import { Button } from "@/components/ui/button/button";
 import { Rows } from "@/components/ui/rows/rows";
 import { TextLink } from "@/components/ui/text-link/text-link";
 import { useIsoDate, useMoney } from "@/hooks/use-formatters";
@@ -50,22 +51,70 @@ const otherCurrencyTexts = {
   behind: "monthClose.checklist.otherBehind",
 } as const;
 
+export function openLineCount(checklist: MonthChecklist) {
+  return openItemCount(checklist) + checklist.accounts.filter(needsReconciling).length;
+}
+
+type ChecklistKind = "uncategorized" | "unusual" | "duplicates" | "recurring" | "accounts";
+
+const everyKind: readonly ChecklistKind[] = [
+  "uncategorized",
+  "unusual",
+  "duplicates",
+  "recurring",
+  "accounts",
+];
+
+interface Action {
+  label: string;
+  link: LinkOptions;
+  onClick?: () => void;
+}
+
 interface Item {
   key: string;
+  kind: ChecklistKind;
   done: boolean;
   label: string;
   notes?: string[];
-  actions: { label: string; link: LinkOptions }[];
+  actions: Action[];
 }
 
 interface Props {
   month: string;
   checklist: MonthChecklist;
   openOnly?: boolean;
+  kinds?: readonly ChecklistKind[];
+  onReconcile?: (accountId: string) => void;
+  onImport?: (accountId: string) => void;
   className?: string;
 }
 
-export function CloseChecklist({ month, checklist, openOnly = false, className }: Readonly<Props>) {
+function ActionControl({ action, first }: Readonly<{ action: Action; first: boolean }>) {
+  const control = first ? { "data-line-control": "" } : {};
+  if (action.onClick) {
+    return (
+      <Button type="button" variant="outline" size="sm" onClick={action.onClick} {...control}>
+        {action.label}
+      </Button>
+    );
+  }
+  return (
+    <TextLink {...action.link} {...control}>
+      {action.label}
+    </TextLink>
+  );
+}
+
+export function CloseChecklist({
+  month,
+  checklist,
+  openOnly = false,
+  kinds = everyKind,
+  onReconcile,
+  onImport,
+  className,
+}: Readonly<Props>) {
   const { t } = useTranslation();
   const isoDate = useIsoDate();
   const money = useMoney();
@@ -76,6 +125,7 @@ export function CloseChecklist({ month, checklist, openOnly = false, className }
   const items: Item[] = [
     {
       key: "uncategorized",
+      kind: "uncategorized",
       done: checklist.uncategorized === 0,
       label:
         checklist.uncategorized === 0
@@ -96,6 +146,7 @@ export function CloseChecklist({ month, checklist, openOnly = false, className }
   if (checklist.unusual !== null) {
     items.push({
       key: "unusual",
+      kind: "unusual",
       done: checklist.unusual === 0,
       label:
         checklist.unusual === 0
@@ -112,6 +163,7 @@ export function CloseChecklist({ month, checklist, openOnly = false, className }
 
   items.push({
     key: "duplicates",
+    kind: "duplicates",
     done: checklist.duplicates === 0,
     label:
       checklist.duplicates === 0
@@ -128,6 +180,7 @@ export function CloseChecklist({ month, checklist, openOnly = false, className }
   if (checklist.unconfirmedRecurring !== null) {
     items.push({
       key: "recurring",
+      kind: "recurring",
       done: checklist.unconfirmedRecurring === 0,
       label:
         checklist.unconfirmedRecurring === 0
@@ -140,20 +193,22 @@ export function CloseChecklist({ month, checklist, openOnly = false, className }
   }
 
   for (const entry of checklist.accounts) {
-    const actions: Item["actions"] = [
-      {
-        label: t("monthClose.checklist.reconcile"),
-        link: linkOptions({ to: "/accounts", search: { reconcile: entry.accountId } }),
-      },
-    ];
+    const actions: Action[] = [];
     if (entry.state === "behind" && importEnabled) {
       actions.push({
         label: t("monthClose.checklist.import"),
         link: linkOptions({ to: "/profile", search: { section: "import" } }),
+        onClick: onImport && (() => onImport(entry.accountId)),
       });
     }
+    actions.push({
+      label: t("monthClose.checklist.reconcile"),
+      link: linkOptions({ to: "/accounts", search: { reconcile: entry.accountId } }),
+      onClick: onReconcile && (() => onReconcile(entry.accountId)),
+    });
     items.push({
       key: `account-${entry.accountId}`,
+      kind: "accounts",
       done: !needsReconciling(entry),
       label: t(entry.date ? accountTexts[entry.state] : "monthClose.checklist.noStatement", {
         account: entry.accountName,
@@ -172,7 +227,7 @@ export function CloseChecklist({ month, checklist, openOnly = false, className }
     });
   }
 
-  const shown = openOnly ? items.filter((item) => !item.done) : items;
+  const shown = items.filter((item) => kinds.includes(item.kind) && (!openOnly || !item.done));
 
   return (
     <Rows className={className}>
@@ -181,7 +236,9 @@ export function CloseChecklist({ month, checklist, openOnly = false, className }
         return (
           <li
             key={item.key}
-            className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 py-2.5 text-sm"
+            tabIndex={item.done ? undefined : -1}
+            data-open-line={item.done ? undefined : ""}
+            className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 py-2.5 text-sm focus-ring"
           >
             <span className="flex min-w-0 items-start gap-2.5">
               <Icon
@@ -203,11 +260,14 @@ export function CloseChecklist({ month, checklist, openOnly = false, className }
               </span>
             </span>
             {item.done ? null : (
-              <span className="ml-auto flex gap-x-4">
-                {item.actions.map((action) => (
-                  <TextLink key={action.label} {...action.link}>
-                    {action.label}
-                  </TextLink>
+              <span
+                className={cn(
+                  "ml-auto flex items-center gap-y-2",
+                  item.actions.some((action) => action.onClick) ? "gap-x-2" : "gap-x-4",
+                )}
+              >
+                {item.actions.map((action, index) => (
+                  <ActionControl key={action.label} action={action} first={index === 0} />
                 ))}
               </span>
             )}

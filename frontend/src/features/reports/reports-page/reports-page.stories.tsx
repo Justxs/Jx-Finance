@@ -25,6 +25,27 @@ type Story = StoryObj<typeof meta>;
 
 export const ThisMonth: Story = {};
 
+function columnOf(heading: HTMLElement) {
+  return heading.closest('[data-slot="split-columns"] > div');
+}
+
+export const ListsBesideTheTrendAndTables: Story = {
+  play: async ({ canvas }) => {
+    const trend = columnOf(await canvas.findByRole("heading", { name: "Trend" }));
+    const lists = columnOf(canvas.getByRole("heading", { name: "Expense by category" }));
+    await expect(lists?.nextElementSibling).toBe(trend);
+    await canvas.findByRole("heading", { name: "Receipt items" });
+    const columns = [
+      "Income by category",
+      "Expense by tag",
+      "Expense by payee",
+      "Receipt items",
+    ].map((name) => columnOf(canvas.getByRole("heading", { name })));
+    await expect(columns.map((column) => column === lists)).toEqual([true, true, false, false]);
+    await expect(columns.map((column) => column === trend)).toEqual([false, false, true, true]);
+  },
+};
+
 export const LastMonth: Story = {
   parameters: { route: routeFor(presetRange("lastMonth", today)) },
 };

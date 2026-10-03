@@ -72,6 +72,7 @@ function TransferPickerHarness({ row, accountId, singleAccount = false }: Readon
     <div className="w-64">
       <ImportTransferPicker
         row={state}
+        label="Record as"
         accountId={accountId}
         accounts={singleAccount ? [checkingAccount] : accounts}
         onChange={(patch) => setState((previous) => ({ ...previous, ...patch }))}

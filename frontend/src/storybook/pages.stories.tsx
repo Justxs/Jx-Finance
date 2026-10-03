@@ -38,6 +38,8 @@ export const Investments: Story = { args: { path: "/investments" } };
 
 export const Reports: Story = { args: { path: "/reports" } };
 
+export const MonthClose: Story = { args: { path: "/reports/month?month=2026-08" } };
+
 export const Households: Story = { args: { path: "/households" } };
 
 export const Users: Story = { args: { path: "/users" } };

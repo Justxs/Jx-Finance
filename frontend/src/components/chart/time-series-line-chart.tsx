@@ -18,11 +18,10 @@ import { type ChartSeries, ChartTooltip } from "./chart-tooltip";
 const SHORT_SPAN_MS = 92 * 24 * 60 * 60 * 1000;
 
 const X_AXES = {
-  date: { dataKey: "date", marginRight: 24, yWidth: 60, minTickGap: 48, interval: undefined },
+  date: { dataKey: "date", marginRight: 24, minTickGap: 48, interval: undefined },
   day: {
     dataKey: "day",
     marginRight: 12,
-    yWidth: 56,
     minTickGap: 24,
     interval: "preserveStartEnd",
   },
@@ -105,7 +104,7 @@ export function TimeSeriesLineChart({
             domain={yDomain}
             tickFormatter={(value) => axisMoney.format(Number(value), currency)}
             tickCount={5}
-            width={axis.yWidth}
+            width="auto"
           />
           <Tooltip
             cursor={chartCursor}

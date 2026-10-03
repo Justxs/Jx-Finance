@@ -17,6 +17,8 @@ export const Default: Story = {
   play: async ({ canvas }) => {
     const meters = await canvas.findAllByRole("meter", { name: /of the period passed|praėjo/i });
     await expect(meters.length).toBeGreaterThan(0);
+    await expect(canvas.getByText("1 of 5 budgets is over, by €54.11")).toHaveClass("text-expense");
+    await expect(canvas.getByText("Yearly")).toBeVisible();
   },
 };
 

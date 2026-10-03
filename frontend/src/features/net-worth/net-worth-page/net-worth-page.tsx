@@ -22,12 +22,15 @@ export function NetWorthPage() {
   return (
     <div className="space-y-5">
       <PageHeader title={t("netWorth.title")}>
-        <QueryBoundary fallback={null}>
+        <QueryBoundary fallback={null} error={null}>
           <OpenBalancesToggle />
         </QueryBoundary>
       </PageHeader>
 
-      <QueryBoundary fallback={<SummaryStatsSkeleton items={3} />}>
+      <QueryBoundary
+        fallback={<SummaryStatsSkeleton items={3} />}
+        errorSubject={t("netWorth.title")}
+      >
         <NetWorthStats />
       </QueryBoundary>
 
@@ -57,10 +60,10 @@ export function NetWorthPage() {
       </div>
 
       <div className="grid gap-5 lg:grid-cols-2">
-        <QueryBoundary fallback={<BalanceItemsSkeleton />}>
+        <QueryBoundary fallback={<BalanceItemsSkeleton />} errorSubject={t("netWorth.assets")}>
           <AssetsSection />
         </QueryBoundary>
-        <QueryBoundary fallback={<BalanceItemsSkeleton />}>
+        <QueryBoundary fallback={<BalanceItemsSkeleton />} errorSubject={t("netWorth.debts")}>
           <DebtsSection />
         </QueryBoundary>
       </div>

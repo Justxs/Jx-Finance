@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils";
 const gridClass =
   "grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-1 sm:grid-cols-[minmax(0,1fr)_auto_auto]";
 const amountClass =
-  "col-span-2 row-start-2 min-w-0 text-sm sm:col-span-1 sm:col-start-2 sm:row-start-1";
+  "col-span-2 row-start-2 min-w-0 text-sm sm:col-span-1 sm:col-start-2 sm:row-start-1 sm:max-w-72";
 const actionsClass = "col-start-2 row-start-1 sm:col-start-3";
 
 interface ProgressMeter {
@@ -37,8 +37,8 @@ interface Props extends DeleteProps {
 export function ProgressAmount({ amount, of }: Readonly<{ amount: string; of: string }>) {
   return (
     <>
-      <span className="font-semibold">{amount}</span>{" "}
-      <span className="text-muted-foreground">{of}</span>
+      <span className="font-semibold whitespace-nowrap">{amount}</span>{" "}
+      <span className="whitespace-nowrap text-muted-foreground">{of}</span>
     </>
   );
 }
@@ -69,7 +69,7 @@ export function ProgressRow({
             {meta}
           </div>
           <div className={cn(amountClass, "sm:text-right")}>
-            <p className="whitespace-nowrap tabular-nums">{primary}</p>
+            <p className="tabular-nums">{primary}</p>
             {secondary}
           </div>
           <RowActions

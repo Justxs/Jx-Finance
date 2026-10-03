@@ -26,13 +26,15 @@ type Story = StoryObj<typeof meta>;
 export const WithOpenItems: Story = {
   play: async ({ canvas }) => {
     await expect(
-      await canvas.findByRole("heading", { name: "August 2026 is ready to close" }),
+      await canvas.findByRole("heading", { name: "August 2026 has ended" }),
     ).toBeVisible();
+    await expect(canvas.getByText(/things need attention before you close/)).toBeVisible();
+    await expect(canvas.getByText("Income kept")).toBeVisible();
     await expect(canvas.getByRole("link", { name: "Categorize" })).toBeVisible();
     await expect(canvas.queryByText("Every transaction has a category")).toBeNull();
     await expect(canvas.getByRole("link", { name: "Review month" })).toHaveAttribute(
       "href",
-      expect.stringContaining("month=2026-08"),
+      expect.stringContaining("/reports/month?month=2026-08"),
     );
   },
 };
@@ -41,14 +43,19 @@ export const ClosingWithOpenItemsAsksFirst: Story = {
   play: async ({ canvas }) => {
     await userEvent.click(await canvas.findByRole("button", { name: "Close August 2026" }));
     const dialog = await openedDialog("alertdialog");
-    await expect(within(dialog).getByText(/still need attention/)).toBeVisible();
+    await expect(within(dialog).getByText(/still need attention/)).toHaveTextContent(
+      /show as changed after closing/,
+    );
   },
 };
 
 export const EverythingInOrder: Story = {
   parameters: withHandlers(getMonthReviewMockHandler(clearOpenMonthReview)),
   play: async ({ canvas }) => {
-    await expect(await canvas.findByText(/Everything is in order/)).toBeVisible();
+    await expect(
+      await canvas.findByRole("heading", { name: "August 2026 is ready to close" }),
+    ).toBeVisible();
+    await expect(canvas.getByText(/Everything is in order/)).toBeVisible();
     await expect(canvas.queryByRole("list")).toBeNull();
   },
 };
@@ -74,7 +81,7 @@ export const HiddenUntilNextMonth: Story = {
   play: async ({ canvas }) => {
     await userEvent.click(await canvas.findByRole("button", { name: "Not now" }));
     await waitFor(() =>
-      expect(canvas.queryByRole("heading", { name: "August 2026 is ready to close" })).toBeNull(),
+      expect(canvas.queryByRole("heading", { name: "August 2026 has ended" })).toBeNull(),
     );
   },
 };

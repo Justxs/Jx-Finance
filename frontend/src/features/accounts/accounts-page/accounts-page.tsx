@@ -103,11 +103,11 @@ export function AccountsPage() {
 
       {features.recurringBills ? <CashFlowForecast /> : null}
 
-      <QueryBoundary fallback={null}>
+      <QueryBoundary fallback={null} errorSubject={t("accounts.archivedList.label")}>
         <ArchivedAccounts />
       </QueryBoundary>
 
-      <QueryBoundary fallback={<MovementsSkeleton />}>
+      <QueryBoundary fallback={<MovementsSkeleton />} errorSubject={t("transfers.heading")}>
         <TransfersSection
           accounts={allAccountList}
           addOpen={creating === "transfer"}
@@ -116,7 +116,7 @@ export function AccountsPage() {
       </QueryBoundary>
 
       {features.multiCurrency ? (
-        <QueryBoundary fallback={<MovementsSkeleton />}>
+        <QueryBoundary fallback={<MovementsSkeleton />} errorSubject={t("conversions.heading")}>
           <ConversionsSection
             accounts={allAccountList}
             convertAccountId={convertAccountId}

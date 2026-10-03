@@ -3,7 +3,7 @@
 | Layer | Implementation |
 | --- | --- |
 | Frontend | React 19, TypeScript 6, Vite 8; TanStack Router/Query/Table/Store/Hotkeys/Pacer, TanStack Form 2 alpha, TanStack DB (local-storage collections for per-browser preferences, saved ledger filters and transaction templates) |
-| Package manager | nub 0.9.2; native nub.lock, frozen installs in CI and Docker |
+| Package manager | nub 0.9.6; native nub.lock, frozen installs in CI and Docker |
 | Styling | Tailwind 4, shadcn/ui (base-nova style) on Base UI, react-day-picker, Lucide icons, Recharts, MapLibre GL with the PMTiles protocol for the map of spending by place (loaded only when the map is opened), self-hosted typefaces for the per-browser typeface choice: Source Serif 4, Source Sans 3, Inter, Newsreader, IBM Plex Sans, IBM Plex Serif and Atkinson Hyperlegible Next (woff2 in `src/assets/fonts`, OFL) |
 | Localization | react-i18next, EN/LT JSON dictionaries and Intl formatters |
 | API | .NET 10, FastEndpoints, FluentValidation, plain feature services |
@@ -29,7 +29,7 @@ Design-system rules come from the `@shadcn/lint` Oxlint JS plugin, registered un
 A component that must take a caller's styling choice does so through a prop with a fixed set of values (`EmptyText size`, `SelectTrigger size="icon"`, `TextField monospace`), never a class-name prop, so the linter can read what is applied. The one list of classes a component takes is `Table`'s `columns`, typed to width utilities (`w-*`), which are layout and allowed everywhere. Dynamic values reach CSS through custom properties (`style={{ "--meter-fill": … }}` with `w-(--meter-fill)`), typed by the `CSSProperties` augmentation in `frontend/src/react.d.ts`.
 
 The DESIGN.md rules that `@shadcn/lint` cannot express come from a local Oxlint JS plugin, `frontend/lint/design-rules.mjs`, listed as `./lint/design-rules.mjs` under `jsPlugins` with the rule prefix `jx` and switched on for `src/**` in an override, all as errors. Three of its rules read every string and template literal in a file, so `className`, `cn`, `cva` and class constants are all covered; each string is split into utilities and the variant prefixes and `!` are dropped before matching:
-- `jx/no-rounded-full`: no `rounded-full` or side `-full` radius. The circles DESIGN.md names are exempt by file in the next override: the splash ring, the `icon-handle` button size, the notification bell count, the dot swatch of `ChartTooltip`, the month-close review skeleton (it stands in for round status icons) and the circle story of `Skeleton`. A new circle is added to that list together with its line in DESIGN.md.
+- `jx/no-rounded-full`: no `rounded-full` or side `-full` radius. The circles DESIGN.md names are exempt by file in the next override: the splash ring, the `icon-handle` button size, the notification bell count, the dot swatch of `ChartTooltip`, the month page and dashboard month-line skeletons (they stand in for round status icons) and the circle story of `Skeleton`. A new circle is added to that list together with its line in DESIGN.md.
 - `jx/no-transition-all`: name the properties that change. Besides Tailwind's own, `global.css` has `transition-width` and `transition-reveal` (opacity, translate and visibility, for an element that fades and slides out of view), and `collapse-rows` animates a collapsible panel through `grid-template-rows`.
 - `jx/no-destructive-text`: `text-destructive`, with or without an opacity; error and removal text is `text-expense`. `text-destructive-foreground` on a destructive fill is allowed.
 

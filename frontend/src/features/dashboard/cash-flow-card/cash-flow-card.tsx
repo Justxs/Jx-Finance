@@ -17,6 +17,13 @@ export function CashFlowCard() {
   const formatDay = useShortDayIso();
   const forecast = useCashFlowForecastSuspense({ days: FORECAST_DAYS }).data;
 
+  function balance(value: string, currency: string) {
+    const amount = Number(value);
+    return amount < 0
+      ? money.formatSigned(amount, "auto", currency)
+      : money.format(amount, currency);
+  }
+
   if (forecast.accounts.length === 0) {
     return <EmptyText>{t("forecast.empty", { days: FORECAST_DAYS })}</EmptyText>;
   }
@@ -33,7 +40,7 @@ export function CashFlowCard() {
               </p>
               <p className="truncate text-xs text-muted-foreground">
                 {t("dashboard.cashFlowLowest", {
-                  amount: money.format(Number(account.lowestBalance), account.currency),
+                  amount: balance(account.lowestBalance, account.currency),
                   date: formatDay(account.lowestOn),
                 })}
               </p>
@@ -54,7 +61,7 @@ export function CashFlowCard() {
                 toCents(account.startBalance) < 0 && EXPENSE_TONE,
               )}
             >
-              {money.format(Number(account.startBalance), account.currency)}
+              {balance(account.startBalance, account.currency)}
             </span>
           </li>
         );

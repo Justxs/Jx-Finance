@@ -1,5 +1,4 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { useState } from "react";
 import { toast } from "sonner";
 import { expect, fn, screen, userEvent, waitFor } from "storybook/test";
 import type { TransactionResponse } from "@/api/generated/model";
@@ -7,12 +6,14 @@ import { getDebtsMockHandler } from "@/api/generated/net-worth/net-worth.msw";
 import { getBulkCategorizeTransactionsMockHandler } from "@/api/generated/transactions/transactions.msw";
 import { transactionRow } from "@/features/transactions/ledger-groups/ledger-rows";
 import { useTransactionRowDialogs } from "@/features/transactions/transaction-row-actions/transaction-row-actions";
+import { useTransactionSelection } from "@/features/transactions/transactions-page/use-transaction-selection";
 import { useTransactionFilters } from "@/features/transactions/use-transaction-filters";
 import {
   accounts,
   categories,
   debts,
   foreignCurrencyTransactions,
+  hugeAmountTransactions,
   linkedPaymentTransaction,
   linkedRefund,
   longDescriptionTransaction,
@@ -26,7 +27,7 @@ import {
   uncategorisedTransaction,
 } from "@/storybook/fixtures";
 import { withHandlers } from "@/storybook/handlers";
-import { openedDialog } from "@/storybook/interactions";
+import { first, openedDialog } from "@/storybook/interactions";
 import { useInlineCategory } from "./category-cell";
 import { TransactionsTable } from "./transactions-table";
 import { useTransactionColumnHeaders } from "./use-transaction-column-headers";
@@ -50,7 +51,7 @@ function TransactionsTableHarness({
   deletingId = null,
   initialSelectedIds = NO_IDS,
 }: Readonly<HarnessProps>) {
-  const [selectedIds, setSelectedIds] = useState<ReadonlySet<string>>(new Set(initialSelectedIds));
+  const selection = useTransactionSelection("story", new Set(initialSelectedIds));
   const selectableIds = data.filter(isSelectableTransaction).map((item) => item.id);
   const filters = useTransactionFilters({ accounts, categories });
   const columnHeaders = useTransactionColumnHeaders(filters, tags);
@@ -82,19 +83,11 @@ function TransactionsTableHarness({
         columnAriaSort={columnHeaders.ariaSortByColumn}
         filtered={columnHeaders.active}
         selection={{
-          selectedIds,
+          selectedIds: selection.selectedIds,
           selectableIds,
           rowLabel: (row) => `${row.date} ${row.description ?? ""}`,
-          onToggle: (id, selected) => {
-            const next = new Set(selectedIds);
-            if (selected) {
-              next.add(id);
-            } else {
-              next.delete(id);
-            }
-            setSelectedIds(next);
-          },
-          onTogglePage: (selected) => setSelectedIds(new Set(selected ? selectableIds : [])),
+          onToggle: (id, selected, extend) => selection.toggle(selectableIds, id, selected, extend),
+          onTogglePage: (selected) => selection.togglePage(selectableIds, selected),
         }}
       />
       {rowDialogs.dialogs}
@@ -119,6 +112,20 @@ export const Default: Story = {
 };
 
 export const Empty: Story = { args: { data: [] } };
+
+export const HugeAmounts: Story = {
+  args: { data: hugeAmountTransactions },
+  play: async ({ canvas, canvasElement }) => {
+    const columns = [...canvasElement.querySelectorAll("col")].map((column) => column.className);
+    await expect(columns).toContain("w-38");
+    await expect(canvas.getByRole("table")).toHaveClass("min-w-202");
+    await expect(canvas.getByText("−€1,234,567,890.12")).toHaveClass("whitespace-nowrap");
+    await expect(canvas.getByText(/^−IDR\s2,000,000,000(?:\.00)?$/u)).toBeInTheDocument();
+    await expect(canvas.getByText("+€1,250,000.00").parentElement).toHaveTextContent(
+      "Refund+€1,250,000.00",
+    );
+  },
+};
 
 export const ForeignCurrency: Story = {
   args: { data: [...foreignCurrencyTransactions, ...transactions.slice(0, 3)] },
@@ -152,8 +159,9 @@ export const StatementPayee: Story = {
   },
   play: async ({ canvas }) => {
     await expect(canvas.getByText("MAXIMA LT, UAB")).toBeInTheDocument();
+    const account = accountNames.get(longDescriptionTransaction.accountId) ?? "";
     await expect(
-      canvas.getByText("Pirkinys 5168******1234 2026-09-14 MAXIMA X VILNIUS"),
+      canvas.getByText(`${account} · Pirkinys 5168******1234 2026-09-14 MAXIMA X VILNIUS`),
     ).toBeInTheDocument();
   },
 };
@@ -273,5 +281,49 @@ export const Refunds: Story = {
     );
     await expect(await screen.findByRole("menuitem", { name: "Duplicate" })).toBeVisible();
     await expect(screen.queryByRole("menuitem", { name: "Record refund" })).toBeNull();
+  },
+};
+
+const tagged = transactions.filter((item) => item.tagIds.length > 0).slice(0, 4);
+
+export const TagsAndAccountUnderTheDescription: Story = {
+  args: { data: tagged },
+  play: async ({ canvas }) => {
+    const row = first(tagged);
+    const tagName = tags.find((tag) => tag.id === first(row.tagIds))?.name ?? "";
+    const cell = first(canvas.getAllByText(tagName)).closest("td");
+    await expect(cell).toHaveTextContent(row.payeeName ?? (row.payee || row.description) ?? "");
+    await expect(cell).toHaveTextContent(accountNames.get(row.accountId) ?? "");
+    await expect(canvas.getByRole("button", { name: "Filter by Description" })).toBeVisible();
+    await expect(canvas.queryByRole("button", { name: "Filter by Tags" })).toBeNull();
+    await expect(canvas.queryByRole("button", { name: "Filter by Account" })).toBeNull();
+    const columns = [...canvas.getByRole("table").querySelectorAll("col")].map(
+      (column) => column.className,
+    );
+    await expect(columns).toEqual(["w-10", "w-27", "", "w-44", "w-30", "w-23 pointer-coarse:w-29"]);
+    await expect(canvas.getByRole("table")).toHaveClass("min-w-194");
+  },
+};
+
+export const RangeSelection: Story = {
+  play: async ({ canvas }) => {
+    const boxes = canvas
+      .getAllByRole("checkbox", { name: /^Select: / })
+      .filter((box) => box.getAttribute("aria-disabled") !== "true");
+    const [start, , , end, after, , last] = boxes;
+    if (!start || !end || !after || !last) {
+      throw new Error("the story needs seven selectable rows");
+    }
+    const user = userEvent.setup();
+    await user.click(start);
+    await user.keyboard("{Shift>}");
+    await user.click(end);
+    await user.keyboard("{/Shift}");
+    await Promise.all(boxes.slice(0, 4).map((box) => expect(box).toBeChecked()));
+    await expect(after).not.toBeChecked();
+
+    last.focus();
+    await user.keyboard("{Shift>}[Space]{/Shift}");
+    await Promise.all(boxes.slice(0, 7).map((box) => expect(box).toBeChecked()));
   },
 };

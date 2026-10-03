@@ -12,10 +12,17 @@ interface FormProps {
   pending: boolean;
   error: unknown;
   onSubmit: (note: string) => Promise<unknown>;
-  onClose: () => void;
+  onClose?: () => void;
 }
 
-function NoteForm({ note, submitLabel, pending, error, onSubmit, onClose }: Readonly<FormProps>) {
+export function NoteForm({
+  note,
+  submitLabel,
+  pending,
+  error,
+  onSubmit,
+  onClose,
+}: Readonly<FormProps>) {
   const { t } = useTranslation();
   const form = useServerForm({
     defaultValues: { note },
@@ -45,6 +52,7 @@ function NoteForm({ note, submitLabel, pending, error, onSubmit, onClose }: Read
 }
 
 interface Props extends FormProps {
+  onClose: () => void;
   open: boolean;
   title: string;
   description?: string;

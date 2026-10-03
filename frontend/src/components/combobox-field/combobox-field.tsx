@@ -57,7 +57,10 @@ export function ComboboxField<T extends string>({
           onBlur={onBlur}
           className={cn(selectTriggerClass, "w-full min-w-0 text-left", className)}
         >
-          <span className="min-w-0 flex-1 truncate">
+          <span
+            className="min-w-0 flex-1 truncate"
+            title={typeof selected?.label === "string" ? selected.label : undefined}
+          >
             <Combobox.Value placeholder={placeholder} />
           </span>
           <Combobox.Icon

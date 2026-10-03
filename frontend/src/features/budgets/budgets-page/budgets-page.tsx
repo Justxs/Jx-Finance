@@ -16,13 +16,51 @@ import { PanelRows } from "@/components/panel-rows/panel-rows";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { SummaryStats } from "@/components/summary-stats/summary-stats";
 import { BudgetForm } from "@/features/budgets/budget-form/budget-form";
+import { budgetOverview } from "@/features/budgets/budget-overview";
 import { BudgetRow } from "@/features/budgets/budget-row/budget-row";
 import { BudgetSuggestions } from "@/features/budgets/budget-suggestions/budget-suggestions";
 import { useEditableList } from "@/hooks/use-editable-list";
-import { fromCents, toCents } from "@/lib/money";
+import { useMoney } from "@/hooks/use-formatters";
+import { fromCents } from "@/lib/money";
 import { optimisticRemoval } from "@/lib/optimistic";
 import { EXPENSE_TONE } from "@/lib/tone";
 import { useShare, withShare } from "@/stores/my-share-store";
+
+function BudgetsSummary({ budgets }: Readonly<{ budgets: readonly BudgetResponse[] }>) {
+  const { t } = useTranslation();
+  const money = useMoney();
+  const { over, overCents, periods } = budgetOverview(budgets);
+  const leadPeriod = periods.find((totals) => totals.period === "monthly") ?? periods[0];
+
+  const periodStats = periods.map((totals) => ({
+    label: t(`budgets.summary.left.${totals.period}`),
+    value: fromCents(totals.leftCents),
+    detail: t("budgets.spentOf", {
+      spent: money.format(totals.spentCents / 100),
+      limit: money.format(totals.limitCents / 100),
+    }),
+    lead: over.length === 0 && totals === leadPeriod,
+  }));
+
+  if (over.length === 0) {
+    return <SummaryStats items={periodStats} />;
+  }
+
+  return (
+    <SummaryStats
+      items={[
+        {
+          label: t("budgets.summary.over", { count: over.length, total: budgets.length }),
+          value: fromCents(overCents),
+          tone: EXPENSE_TONE,
+          detail: over.map((budget) => budget.name).join(", "),
+          lead: true,
+        },
+        ...periodStats,
+      ]}
+    />
+  );
+}
 
 export function BudgetsPage() {
   const { t } = useTranslation();
@@ -36,10 +74,6 @@ export function BudgetsPage() {
     "budget",
   );
   const budgetList = budgets.list;
-
-  const spentCents = budgetList.reduce((sum, budget) => sum + toCents(budget.spent), 0);
-  const limitCents = budgetList.reduce((sum, budget) => sum + toCents(budget.effectiveLimit), 0);
-  const remainingCents = limitCents - spentCents;
 
   return (
     <div className="space-y-5">
@@ -58,27 +92,13 @@ export function BudgetsPage() {
           <BudgetForm initial={budget} categories={categoryList} tags={tagList} onClose={close} />
         )}
       </EditModal>
-      {budgetList.length > 0 ? (
-        <SummaryStats
-          items={[
-            { label: t("budgets.spentInWindow"), value: fromCents(spentCents), lead: true },
-            { label: t("budgets.budgeted"), value: fromCents(limitCents) },
-            remainingCents < 0
-              ? {
-                  label: t("budgets.overBy"),
-                  value: fromCents(-remainingCents),
-                  tone: EXPENSE_TONE,
-                }
-              : { label: t("budgets.remaining"), value: fromCents(remainingCents) },
-          ]}
-        />
-      ) : null}
+      {budgetList.length > 0 ? <BudgetsSummary budgets={budgetList} /> : null}
       <PanelRows count={budgetList.length} emptyText={t("budgets.empty")}>
         {budgetList.map((budget) => (
           <BudgetRow key={budget.id} budget={budget} {...budgets.rowProps(budget)} />
         ))}
       </PanelRows>
-      <QueryBoundary fallback={null}>
+      <QueryBoundary fallback={null} errorSubject={t("budgets.suggestions.title")}>
         <BudgetSuggestions />
       </QueryBoundary>
       <ConfirmDeleteDialog {...budgets.dialogProps} />

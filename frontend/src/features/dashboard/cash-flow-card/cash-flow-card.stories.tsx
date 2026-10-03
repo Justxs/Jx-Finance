@@ -19,7 +19,7 @@ type Story = StoryObj<typeof meta>;
 export const AtRisk: Story = {
   play: async ({ canvas }) => {
     await expect(await canvas.findByText("Below zero on Oct 1")).toBeVisible();
-    await expect(canvas.getByText(/^Lowest .*361.19 on Oct 1$/u)).toBeVisible();
+    await expect(canvas.getByText(/^Lowest −€361\.19 on Oct 1$/u)).toBeVisible();
   },
 };
 

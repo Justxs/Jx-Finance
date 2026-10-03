@@ -70,3 +70,20 @@ export const SharedWithHousehold: Story = {
     await expect(await canvas.findByText("Shared · Kazlauskų šeima")).toBeVisible();
   },
 };
+
+export const HugeAmountsLongName: Story = {
+  args: {
+    budget: {
+      ...weeklyRolloverBudget,
+      name: "Namo statybos ir apdailos darbai, įskaitant langų, durų, stogo dangos ir šildymo sistemos įrengimą",
+      limitAmount: "1234567890.12",
+      carriedAmount: "98765432.10",
+      effectiveLimit: "1333333322.22",
+      spent: "987654321.09",
+    },
+  },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText(/ left$/u).parentElement).not.toHaveClass("whitespace-nowrap");
+    await expect(canvas.getByRole("link", { name: /^Namo statybos/u })).toBeVisible();
+  },
+};

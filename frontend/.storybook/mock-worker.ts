@@ -1,5 +1,6 @@
 import { isCommonAssetRequest } from "msw";
 import { mswLoader } from "msw-storybook-addon/csf3";
+import { HttpNetworkFrame } from "msw/experimental";
 
 const WORKER_URL = "/mockServiceWorker.js";
 const CONTROLLER_WAIT_MS = 3000;
@@ -8,11 +9,21 @@ const WORKER_START_ATTEMPTS = 3;
 const STORYBOOK_REQUEST =
   /\.eot$|\.mdx$|sb-common-assets|__webpack_hmr|iframe\.html|sb-vite|@vite|@react-refresh|\/virtual:|\.stories\./;
 
-export function warnAboutUnhandledRequest(request: Request, print: { warning: () => void }) {
+export function warnAboutUnhandledRequest({
+  frame,
+  defaults,
+}: {
+  frame: unknown;
+  defaults: { warn: () => void };
+}) {
+  if (!(frame instanceof HttpNetworkFrame)) {
+    return;
+  }
+  const { request } = frame.data;
   if (isCommonAssetRequest(request) || STORYBOOK_REQUEST.test(request.url)) {
     return;
   }
-  print.warning();
+  defaults.warn();
 }
 
 function waitForController() {
@@ -50,7 +61,7 @@ async function startMockWorker() {
   const options = {
     quiet: true,
     serviceWorker: { url: WORKER_URL },
-    onUnhandledRequest: warnAboutUnhandledRequest,
+    onUnhandledFrame: warnAboutUnhandledRequest,
   };
 
   async function attemptStart(attempt: number): Promise<typeof worker> {
@@ -61,7 +72,7 @@ async function startMockWorker() {
       throw new Error("The mock service worker did not start.");
     }
     console.warn(`[storybook] mock worker start attempt ${attempt} timed out`);
-    worker.stop();
+    await worker.stop();
     return attemptStart(attempt + 1);
   }
 

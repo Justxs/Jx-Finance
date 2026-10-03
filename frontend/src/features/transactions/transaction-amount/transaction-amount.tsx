@@ -18,6 +18,12 @@ export function signedAmount(money: ReturnType<typeof useMoney>, transaction: Tr
   );
 }
 
+const NARROW_AMOUNT_LENGTH = 13;
+
+export function amountColumnWide(amounts: readonly string[]) {
+  return amounts.some((amount) => amount.length > NARROW_AMOUNT_LENGTH);
+}
+
 interface Props {
   transaction: Pick<TransactionResponse, "id" | "amount" | "type" | "currency" | "reportingAmount">;
   showReporting?: boolean;
@@ -39,7 +45,7 @@ export function TransactionAmount({
   return (
     <span
       className={cn(
-        "font-semibold whitespace-nowrap tabular-nums",
+        "font-semibold tabular-nums",
         isIncome ? INCOME_TONE : "text-foreground",
         className,
       )}
@@ -47,7 +53,7 @@ export function TransactionAmount({
       {isRefund(transaction) ? (
         <Tag className="mr-1.5 align-text-bottom">{t("transactions.refund")}</Tag>
       ) : null}
-      {signedAmount(money, transaction)}
+      <span className="whitespace-nowrap">{signedAmount(money, transaction)}</span>
       {reportingVisible ? (
         <ApproximateAmount
           value={Number(transaction.reportingAmount)}

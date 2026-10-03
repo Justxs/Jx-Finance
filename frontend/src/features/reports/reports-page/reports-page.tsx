@@ -136,6 +136,11 @@ export function ReportsPage() {
                   dateTo={shown.dateTo}
                 />
               </TitledSection>
+            </div>
+            <div className="space-y-5">
+              <TitledSection title={t("reports.trend")} bodyGap="md">
+                <ReportTrendChart items={summary.data.trend} bucket={summary.data.trendBucket} />
+              </TitledSection>
               <TitledSection title={t("reports.expenseByPayee")} bodyGap="md">
                 <PayeeBreakdown
                   items={summary.data.expenseByPayee}
@@ -156,9 +161,6 @@ export function ReportsPage() {
                 <ReceiptItems dateFrom={shown.dateFrom} dateTo={shown.dateTo} />
               ) : null}
             </div>
-            <TitledSection title={t("reports.trend")} bodyGap="md">
-              <ReportTrendChart items={summary.data.trend} bucket={summary.data.trendBucket} />
-            </TitledSection>
           </SplitColumns>
 
           <MoneyFlow summary={summary.data} />

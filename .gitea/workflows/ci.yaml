@@ -157,7 +157,7 @@ jobs:
       - name: Setup nub and Node
         uses: nubjs/setup-nub@c7b970ec04655a2f0a111cd436cc182a3b660e7a # v0.6.0
         with:
-          nub-version: "0.9.2"
+          nub-version: "0.9.6"
           node-version: 24
           working-directory: tools/jx-mcp
           cache: true

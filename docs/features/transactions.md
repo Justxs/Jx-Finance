@@ -43,7 +43,7 @@ An expense row with a positive amount has a "Record refund" action in its menu. 
 
 Since 2026-10-01 "Fill from receipt" with a return receipt fills the form the same way: type Refund, the category of the largest returned amount, the returned total and, when one is found, a link to the latest purchase from the same shop of at least that amount within 90 days, with its description. See [Receipt reading](receipt-reading.md#return-receipts).
 
-In the ledger a refund's amount reads "+€12.00" in ink rather than the income colour, with a neutral "Refund" tag before it, and a linked refund shows "Refund of {description}, {date}", a link that opens the ledger searched for that description on that date. The purchase shows a "Refunded €12.00" tag, the reporting-currency total of the visible refunds that name it, carried by text and not by colour alone. `GET /api/transactions` and `GET /api/transactions/{id}` answer `refundOf` (`id`, `date`, `description`; null when the purchase is deleted or no longer visible) and `refundedAmount`. The ledger's type filter has no separate value for refunds: "Expense" lists them with their Refund tag. Sorting by amount sorts a refund by its negative reporting amount. A soft-deleted purchase hides the link, and the retention purge sets it to null through the foreign key's `SET NULL`.
+In the ledger a refund's amount reads "+€12.00" in ink rather than the income colour, with a neutral "Refund" tag before it (in the desktop table the tag moves onto its own line above the amount when the two do not fit the column), and a linked refund shows "Refund of {description}, {date}", a link that opens the ledger searched for that description on that date. The purchase shows a "Refunded €12.00" tag, the reporting-currency total of the visible refunds that name it, carried by text and not by colour alone. `GET /api/transactions` and `GET /api/transactions/{id}` answer `refundOf` (`id`, `date`, `description`; null when the purchase is deleted or no longer visible) and `refundedAmount`. The ledger's type filter has no separate value for refunds: "Expense" lists them with their Refund tag. Sorting by amount sorts a refund by its negative reporting amount. A soft-deleted purchase hides the link, and the retention purge sets it to null through the foreign key's `SET NULL`.
 
 The import review can record an incoming bank row as a refund, linked or not, and proposes one when the bank entry looks like money back for a purchase on that account; see [Bank statement import](bank-statement-import.md#refunds). A refund typed in by hand matches the bank's credit of the same size like any hand-entered row.
 
@@ -94,6 +94,10 @@ While the `Import` switch is on, the header also holds "Import bank statement" b
 In the transaction form, Type is an Expense / Income / Refund segmented control, and Category, like the category of each split line, is a searchable combobox. Changing the type empties the category and every split line's category that is not of the new type, since the pickers only offer categories of the type and the server refuses the other with `category.wrongType`.
 
 When a filter leaves no rows, the empty table and the phone list say so and offer "Clear filters", which runs the same reset as the chip line. Without an account the page says so and links to the accounts page with the create dialog open. Below the rows, the pager shows the range and the total, such as "51–100 of 438", and from five pages on a page number field, where typing a number and Enter jumps to it, clamped to the last page. A page past the last one, from a link such as `?page=999` or after deleting the only row of the last page, moves to the last real page through `usePageClamp`, replacing the history entry rather than adding one.
+
+## The desktop table
+
+Since 2026-10-02 the desktop table has at most seven columns: the tick box, Date, Description, Category, Account from the `xl` breakpoint (1280px), Amount and the row actions. The description takes the width the others leave and never gets less than 240px; below that the table scrolls sideways inside its own region. A row's tags sit as chips under its description, on the muted line that also holds the account name below `xl` and the bank's statement text when a payee name replaced it; from `xl` the account has its own column again. `useWideLedger`, a `matchMedia` subscription read through `useSyncExternalStore`, makes that choice once, so the columns, the span of a group row and the pending skeleton (`TransactionsTableSkeleton`) always agree. Every transaction row has at least Duplicate, Edit and Delete, so its actions are always one vertical-ellipsis menu; the column is two icon buttons wide because a group row shows Rename and Ungroup side by side. The Description header's filter holds the search text, the place while the `Locations` switch is on, and the tags, and its button names all three. A group row's date range breaks between its two dates rather than running into the group's name.
 
 ## Changing one row's category
 
@@ -204,7 +208,7 @@ While the `LearnedCategories` switch is on, the form offers a category when the 
 ```mermaid
 flowchart TD
     Select["Tick rows, split rows cannot be ticked"] --> Same{"All selected rows of one type?"}
-    Same -->|"no"| Disabled["toolbar disabled"]
+    Same -->|"no"| Disabled["category select replaced by a hint"]
     Same -->|"yes"| Post["POST /api/transactions/bulk-category"]
     Post --> Load["Load every id through the visibility filter"]
     Load -->|"any missing"| NF["404, nothing written"]
@@ -221,7 +225,13 @@ flowchart TD
 
 ## Deleting a selection and moving it to another account
 
-Since 2026-10-01 the selection toolbar also has **Move to account**, an outline button that opens a popover with an account select, the hint "Each row keeps its amount, currency, date, category and tags." and a small **Move** button, and **Delete**, an outline button in expense red. Neither cares whether the selection mixes income and expense. The selection itself is unchanged: split rows and the members of an expanded group cannot be ticked, as for the other bulk actions, although both endpoints accept them like any other row, so a client of the API can delete or move them.
+Since 2026-10-01 the selection toolbar also has **Move to account**, which offers an account select, the hint "Each row keeps its amount, currency, date, category and tags." and a **Move** button, and **Delete**, an outline button in expense red. Neither cares whether the selection mixes income and expense. The selection itself is unchanged: split rows and the members of an expanded group cannot be ticked, as for the other bulk actions, although both endpoints accept them like any other row, so a client of the API can delete or move them.
+
+Only one bulk action runs at a time. While Set category, Set tags, Move or Delete is waiting for the server, that button shows its spinner (More shows it too for Set tags and Move) and every other action in the toolbar, Clear selection included, is disabled, so a second click cannot start a move of rows that are being deleted or recategorize rows that are being moved.
+
+Since 2026-10-02 the totals line and the selection toolbar share one slot, a one-cell grid holding both with the one not in use invisible, so ticking the first row never moves the table; from a content width of 1024px each fits on one line. The toolbar shows the count, the category select with **Set category** (a two-line hint takes their place while the selection mixes income and expense), **More**, **Delete** and **Clear selection**. More is a menu of **Set tags**, **Move to account** and **Group**, which needs two rows; Set tags and Move to account each open a small dialog with the tag picker or the account select, Cancel and the action, and the dialog closes when the action succeeds and the selection clears.
+
+Shift-clicking a checkbox, or pressing Shift+Space on it, ticks or clears every selectable row of the page between it and the checkbox used last, to the state the clicked one takes. The selection survives a change of sort, but the count and every bulk action cover only the ticked rows on the page in view: a ticked row that a new sort moves off the page leaves the count, and comes back ticked if a later sort brings it back. Moving to another page with the pager, changing a filter, finishing a bulk action or Clear selection clears it.
 
 ```mermaid
 flowchart TD
@@ -274,7 +284,7 @@ flowchart TD
     Check -->|"no"| Plain["entry shows its name alone"]
 ```
 
-The page number and the row selection are never saved: the page number belongs to one reading of one list, and the selection is cleared by any navigation. Sorting is not saved either, so applying a saved filter never reorders the table under the reader; the sort the reader chose stays where it was.
+The page number and the row selection are never saved: the page number belongs to one reading of one list, and the selection is cleared when the filter or the page changes. Sorting is not saved either, so applying a saved filter never reorders the table under the reader; the sort the reader chose stays where it was.
 
 Applying goes through `navigate` exactly as every filter control does, so the URL is the only state, the back button undoes an applied filter, and the link is still shareable. A name that points at a deleted category, account or tag is applied as stored rather than repaired: dropping the missing part would silently answer a wider list than the name promises, which is the one failure a filter must not have. The entry says so in the menu, and the ledger answers the empty list that the filter honestly describes.
 

@@ -11,7 +11,7 @@ import {
   transactionGroups,
   transactions,
 } from "@/storybook/fixtures";
-import { chooseOption, first } from "@/storybook/interactions";
+import { type Canvas, chooseOption, first } from "@/storybook/interactions";
 import { ImportPreviewTable } from "./import-preview-table";
 import { type PreviewRowState, toPreviewRows } from "./preview-rows";
 
@@ -159,11 +159,79 @@ export const LearnedCategory: Story = {
   },
 };
 
+function previewTable(canvas: Canvas) {
+  return within(first(canvas.getAllByRole("region", { name: "Preview" })));
+}
+
+export const PurposeTextUnderPayee: Story = {
+  play: async ({ canvas }) => {
+    const table = previewTable(canvas);
+    await expect(table.getByText("Rūta Kazlauskienė")).toHaveClass("font-medium");
+    const purpose = table.getByText("Pervedimas į taupomąją sąskaitą LT647044001231465456");
+    await expect(purpose).toHaveClass("text-xs", "text-muted-foreground", "truncate");
+    await expect(purpose).toHaveAttribute(
+      "title",
+      "Pervedimas į taupomąją sąskaitą LT647044001231465456",
+    );
+    await expect(table.getByText("VALSTYBINĖ MOKESČIŲ INSPEKCIJA")).toBeVisible();
+    await expect(table.getByText("GPM permokos grąžinimas")).toBeVisible();
+  },
+};
+
+export const FlagsInTheDescriptionCell: Story = {
+  play: async ({ canvas }) => {
+    const table = previewTable(canvas);
+    await expect(table.queryByRole("columnheader", { name: "Status" })).not.toBeInTheDocument();
+    const cell = table.getByText("Rūta Kazlauskienė").closest("td");
+    await expect(cell).toHaveTextContent("Looks like a transfer");
+    await expect(table.getByText("LIDL LIETUVA UAB").closest("td")).toHaveTextContent(
+      "Unusual amount",
+    );
+  },
+};
+
+export const DuplicateRowsAreLocked: Story = {
+  play: async ({ canvas }) => {
+    const table = previewTable(canvas);
+    await expect(table.getByRole("checkbox", { name: /^Select: .*MAXIMA/ })).toHaveAttribute(
+      "aria-disabled",
+      "true",
+    );
+    await expect(table.getByRole("combobox", { name: /^Category: .*MAXIMA/ })).toBeDisabled();
+    await expect(
+      table.queryByRole("button", { name: /^More options: .*MAXIMA/ }),
+    ).not.toBeInTheDocument();
+    await expect(table.getByText("MAXIMA LT, UAB").closest("tr")).toHaveClass(
+      "text-muted-foreground",
+    );
+  },
+};
+
+export const MarkAsTransferFromMore: Story = {
+  play: async ({ canvas }) => {
+    const table = previewTable(canvas);
+    await userEvent.click(table.getByRole("button", { name: /^More options: .*LIDL/ }));
+    await userEvent.click(await screen.findByRole("button", { name: "Mark as transfer" }));
+    await expect(
+      await table.findByRole("combobox", { name: /^Record as: .*LIDL/ }),
+    ).toHaveTextContent("Income / expense");
+  },
+};
+
+export const TagARow: Story = {
+  play: async ({ canvas }) => {
+    const table = previewTable(canvas);
+    const tag = first(tags);
+    await userEvent.click(table.getByRole("button", { name: /^More options: .*LIDL/ }));
+    await userEvent.click(await screen.findByRole("checkbox", { name: tag.name }));
+    await expect(table.getByText("LIDL LIETUVA UAB").closest("td")).toHaveTextContent(tag.name);
+  },
+};
+
 export const SpreadARow: Story = {
   play: async ({ canvas }) => {
-    const table = within(first(canvas.getAllByRole("region", { name: "Preview" })));
-    const trigger = first(table.getAllByRole("button", { name: /^Spread over months: .*MAXIMA/ }));
-    await userEvent.click(trigger);
+    const table = previewTable(canvas);
+    await userEvent.click(table.getByRole("button", { name: /^More options: .*LIDL/ }));
     await chooseOption(await screen.findByRole("combobox", { name: "Spread over" }), "12 months");
     await chooseOption(
       await screen.findByRole("combobox", { name: "Months counted" }),
@@ -176,7 +244,9 @@ export const SpreadARow: Story = {
     await expect(screen.getByRole("combobox", { name: "Months counted" })).toHaveTextContent(
       "Up to the date's month",
     );
-    await expect(trigger).toHaveTextContent("Spread · 12 months");
+    await expect(table.getByText("LIDL LIETUVA UAB").closest("td")).toHaveTextContent(
+      "Spread · 12 months",
+    );
   },
 };
 
@@ -209,6 +279,19 @@ export const NamingANewGroup: Story = {
 };
 
 export const ManyRows: Story = { args: { rows: manyRows } };
+
+export const HugeAmounts: Story = {
+  args: {
+    rows: defaultRows.map((row, index) =>
+      index === 0 ? { ...row, amount: "1234567890.12", currency: "eur" } : row,
+    ),
+  },
+  play: async ({ canvas, canvasElement }) => {
+    const columns = [...canvasElement.querySelectorAll("col")].map((column) => column.className);
+    await expect(columns).toContain("w-38");
+    await expect(canvas.getByRole("table")).toHaveClass("min-w-208");
+  },
+};
 
 export const NoCategories: Story = { args: { withCategories: false } };
 

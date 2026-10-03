@@ -17,7 +17,7 @@ function previousMonth() {
   return { key, name, year: start.getFullYear() };
 }
 
-test("a member reviews last month on the dashboard and closes it with a note", async ({
+test("a member works through last month on its page and closes it with a note", async ({
   page,
   browser,
 }, testInfo) => {
@@ -34,24 +34,25 @@ test("a member reviews last month on the dashboard and closes it with a note", a
   });
 
   await member.goto(`/?month=${month.key}`);
-  await expect(
-    member.getByRole("heading", { name: `${month.name} is ready to close` }),
-  ).toBeVisible();
-  const uncategorized = member
-    .getByRole("listitem")
-    .filter({ hasText: "2 uncategorized transactions" });
-  await expect(uncategorized.getByRole("link", { name: "Categorize" })).toBeVisible();
+  await member.getByRole("link", { name: "Review month" }).click();
+  await expect(member).toHaveURL(new RegExp(`/reports/month\\?month=${month.key}$`));
+  await expect(member.getByRole("heading", { name: `${month.name} has ended` })).toBeVisible();
+  await expect(member.getByRole("status").first()).toContainText("lines still open");
+  const uncategorized = member.getByRole("region", { name: /^Uncategorized/ });
+  await expect(uncategorized.getByRole("combobox", { name: /^Category for / })).toHaveCount(2);
 
+  await member.getByLabel("Note", { exact: true }).fill(note);
   await member.getByRole("button", { name: `Close ${month.name}`, exact: true }).click();
-  const dialog = member.getByRole("dialog");
+  const dialog = member.getByRole("alertdialog");
   await expect(dialog).toContainText("2 items still need attention");
-  await dialog.getByLabel("Note", { exact: true }).fill(note);
-  await dialog.getByRole("button", { name: `Close ${month.name}`, exact: true }).click();
+  await dialog.getByRole("button", { name: "Close anyway" }).click();
   await expect(dialog).toBeHidden();
 
   await expect(member.getByRole("heading", { name: `${month.name} is closed` })).toBeVisible();
   await expect(member.getByText(/^Closed on /)).toBeVisible();
   await expect(member.getByText(note)).toBeVisible();
+  await expect(member.getByText("Income kept")).toBeVisible();
+  await expect(member.getByRole("heading", { name: /^Uncategorized/ })).toBeHidden();
   await expect(member.getByRole("button", { name: "Reopen" })).toBeVisible();
   await expect(member.getByRole("button", { name: "Edit note" })).toBeVisible();
 

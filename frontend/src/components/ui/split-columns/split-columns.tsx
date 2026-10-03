@@ -5,7 +5,10 @@ export function SplitColumns({ className, ...props }: Readonly<ComponentProps<"d
   return (
     <div
       data-slot="split-columns"
-      className={cn("grid gap-x-12 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]", className)}
+      className={cn(
+        "grid grid-cols-1 gap-x-12 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]",
+        className,
+      )}
       {...props}
     />
   );

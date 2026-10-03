@@ -30,7 +30,14 @@ export const Loading: Story = {
   parameters: withHandlers(getTransactionsSummaryMockHandler(pending)),
 };
 
-export const ServerError: Story = { parameters: { msw: { handlers: errorHandlers } } };
+export const ServerError: Story = {
+  parameters: { msw: { handlers: errorHandlers } },
+  play: async ({ canvas }) => {
+    await expect(await canvas.findByRole("alert")).toHaveTextContent(
+      "Totals for the current filters could not be loaded.",
+    );
+  },
+};
 
 export const RefundsOutweighSpending: Story = {
   render: () => <TransactionsTotalsLine count={2} totalIncome="0" totalExpense="-12.50" />,

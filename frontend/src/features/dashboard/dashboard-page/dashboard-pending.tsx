@@ -12,7 +12,7 @@ import {
   SectionSkeleton,
   TextSkeleton,
 } from "@/components/ui/skeleton/skeleton";
-import { MonthCloseReviewSkeleton } from "@/features/month-close/month-close-review/month-close-review-skeleton";
+import { MonthCloseLineSkeleton } from "@/features/month-close/month-close-line/month-close-line";
 import { useFeature } from "@/hooks/use-settings";
 
 export const dashboardGrid = "grid gap-4 lg:grid-cols-6 xl:grid-cols-12 xl:gap-5";
@@ -115,7 +115,7 @@ export function DashboardPending() {
 
   return (
     <PagePending className="space-y-6" header={<MonthHeaderSkeleton />}>
-      {reviewing ? <MonthCloseReviewSkeleton /> : null}
+      {reviewing ? <MonthCloseLineSkeleton /> : null}
       <DashboardSkeleton />
     </PagePending>
   );

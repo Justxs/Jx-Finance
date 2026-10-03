@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { expect } from "storybook/test";
 import { getNetWorthHistoryMockHandler } from "@/api/generated/net-worth/net-worth.msw";
 import { withWidth } from "@/storybook/decorators";
 import { FIXTURE_MONTH_END, FIXTURE_YEAR_START, netWorthHistoryItems } from "@/storybook/fixtures";
@@ -51,4 +52,12 @@ export const NoHistory: Story = { parameters: { msw: { handlers: emptyHandlers }
 
 export const Loading: Story = { parameters: { msw: { handlers: loadingHandlers } } };
 
-export const ServerError: Story = { parameters: { msw: { handlers: errorHandlers } } };
+export const ServerError: Story = {
+  parameters: { msw: { handlers: errorHandlers } },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByRole("heading", { name: "Net worth change" })).toBeVisible();
+    await expect(await canvas.findByRole("alert")).toHaveTextContent(
+      "Net worth change could not be loaded.",
+    );
+  },
+};

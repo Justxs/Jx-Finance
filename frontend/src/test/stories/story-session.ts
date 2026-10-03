@@ -84,7 +84,7 @@ export async function registerStoryTests(storyFiles: readonly StoryFile[]) {
   const files = await Promise.all(storyFiles.map(composeFile));
 
   beforeAll(async () => {
-    server.listen({ onUnhandledRequest: warnAboutUnhandledRequest });
+    server.listen({ onUnhandledFrame: warnAboutUnhandledRequest });
     await annotations.beforeAll?.();
   });
 

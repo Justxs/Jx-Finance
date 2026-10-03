@@ -2,7 +2,7 @@
 
 Back to the [feature walkthrough](README.md). See also [decisions](../decisions/reports.md).
 
-Backend `Reports`, page `/reports`. One endpoint, `GET /api/reports/summary`, for any date range; the year presets use the same report. The same endpoint can answer a second, earlier period beside the chosen one; see [Comparing with an earlier period](#comparing-with-an-earlier-period).
+Backend `Reports`, page `/reports`, the Overview tab of the Reports hub. While `MonthClose` is on the hub has a second tab, Month (`/reports/month`), the bookkeeping session of one month described in [Month-end close](month-end-close.md#screens); with it off, or with `Reports` off, the hub shows its one remaining page under that page's own name and without tabs. One endpoint, `GET /api/reports/summary`, for any date range; the year presets use the same report. The same endpoint can answer a second, earlier period beside the chosen one; see [Comparing with an earlier period](#comparing-with-an-earlier-period).
 
 ```mermaid
 flowchart LR
@@ -28,6 +28,8 @@ flowchart LR
 ```
 
 `dateTo` defaults to today and `dateFrom` to the first day of `dateTo`'s month. `GetReportSummaryValidator` answers 400 `range.invalid` for a date outside 2000-01-01 to 2999-12-31, the years `MonthKey` supports, and for a `dateFrom` after the end, which is today when `dateTo` is left out. Before it, a start after the end returned an empty report without saying why, and a date at the edge of what `DateOnly` holds failed with a server error when the range or the earlier comparison period was worked out. `ReportEndpointTests` cover each refusal.
+
+Under the summary figures the page is two columns (`SplitColumns`) from `lg`. The narrow one holds the short lists: expense by category, income by category and expense by tag. The wide one holds the trend chart, then expense by payee, whose bank texts are long, then expense by place with its map and the receipt items table, each while its switch is on. Until 2026-10-02 the narrow column held every list and the wide one only the trend, which left most of the wide column empty on a desktop. `ReportsPending` mirrors the same two columns, and the `ListsBesideTheTrendAndTables` story checks which column each section is in.
 
 ## Comparing with an earlier period
 

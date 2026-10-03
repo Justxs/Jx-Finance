@@ -54,7 +54,7 @@ export function BarChartFrame({
               tickFormatter={(value) => axisMoney.format(Number(value))}
               {...axisProps}
               tickCount={5}
-              width={56}
+              width="auto"
             />
             <Tooltip
               cursor={chartCursor}

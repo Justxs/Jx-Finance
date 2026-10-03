@@ -50,7 +50,7 @@ test("each feature flag adds its page", () => {
     "/investments",
     "/profile",
   ]);
-  expect(paths(allOn, false)).toHaveLength(14);
+  expect(paths(allOn, false)).toHaveLength(15);
 });
 
 test("multi-currency has no page of its own", () => {
@@ -105,6 +105,13 @@ test("sibling pages share one sidebar link", () => {
 test("a hub with one page left shows that page's own name", () => {
   expect(entryKeys({ ...allOff, budgets: true }, false)).toContain("nav.budgets");
   expect(entryKeys({ ...allOff, budgets: true }, false)).not.toContain("nav.plan");
+});
+
+test("the month page is a tab of reports, and reports alone keeps its own name", () => {
+  const reports = navEntries(visibleNav(allOn, false)).find((entry) => entry.hub === "reports");
+  expect(reports?.pages.map((page) => page.to)).toEqual(["/reports", "/reports/month"]);
+  expect(entryKeys({ ...allOn, monthClose: false }, false)).toContain("nav.reports");
+  expect(entryKeys({ ...allOff, monthClose: true }, false)).toContain("nav.monthClose");
 });
 
 test("settings keeps its name for a member with only the personal pages", () => {

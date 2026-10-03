@@ -3,37 +3,57 @@ import { useState } from "react";
 const NO_SELECTION: ReadonlySet<string> = new Set();
 
 interface SelectionState {
-  viewKey: string;
+  scope: string;
   ids: ReadonlySet<string>;
+  anchor: string | null;
 }
 
-export function useTransactionSelection(viewKey: string) {
-  const [selection, setSelection] = useState<SelectionState>({ viewKey, ids: NO_SELECTION });
-  const selectedIds = selection.viewKey === viewKey ? selection.ids : NO_SELECTION;
+export function selectionRange(
+  order: readonly string[],
+  anchor: string | null,
+  id: string,
+  extend: boolean,
+): string[] {
+  const from = extend && anchor !== null ? order.indexOf(anchor) : -1;
+  const to = order.indexOf(id);
+  if (from === -1 || to === -1) {
+    return [id];
+  }
+  return order.slice(Math.min(from, to), Math.max(from, to) + 1);
+}
 
-  function setSelectedIds(ids: ReadonlySet<string>) {
-    setSelection({ viewKey, ids });
+export function useTransactionSelection(scope: string, initialIds = NO_SELECTION) {
+  const [selection, setSelection] = useState<SelectionState>({
+    scope,
+    ids: initialIds,
+    anchor: null,
+  });
+  function inScope(state: SelectionState): SelectionState {
+    return state.scope === scope ? state : { scope, ids: NO_SELECTION, anchor: null };
   }
 
   function clear() {
-    setSelectedIds(NO_SELECTION);
+    setSelection({ scope, ids: NO_SELECTION, anchor: null });
   }
 
-  function toggle(id: string, selected: boolean) {
+  function toggle(order: readonly string[], id: string, selected: boolean, extend: boolean) {
     setSelection((previous) => {
-      const next = new Set(previous.viewKey === viewKey ? previous.ids : NO_SELECTION);
-      if (selected) {
-        next.add(id);
-      } else {
-        next.delete(id);
+      const { ids, anchor } = inScope(previous);
+      const next = new Set(ids);
+      for (const target of selectionRange(order, anchor, id, extend)) {
+        if (selected) {
+          next.add(target);
+        } else {
+          next.delete(target);
+        }
       }
-      return { viewKey, ids: next };
+      return { scope, ids: next, anchor: id };
     });
   }
 
   function togglePage(selectableIds: readonly string[], selected: boolean) {
-    setSelectedIds(selected ? new Set(selectableIds) : NO_SELECTION);
+    setSelection({ scope, ids: selected ? new Set(selectableIds) : NO_SELECTION, anchor: null });
   }
 
-  return { selectedIds, clear, toggle, togglePage };
+  return { selectedIds: inScope(selection).ids, clear, toggle, togglePage };
 }

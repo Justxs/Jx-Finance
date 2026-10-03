@@ -253,7 +253,7 @@ function actionEntries(sources: CommandSources): CommandEntry[] {
     entries.push(
       action("close-last-month", t("commandPalette.closeLastMonth"), t("nav.monthClose"), {
         kind: "navigate",
-        link: linkOptions({ to: "/", search: { month: lastMonth } }),
+        link: linkOptions({ to: "/reports/month", search: { month: lastMonth } }),
       }),
     );
   }

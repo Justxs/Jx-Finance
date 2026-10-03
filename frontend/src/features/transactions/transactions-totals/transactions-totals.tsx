@@ -72,8 +72,13 @@ function LoadedTotals({ params, stale }: Readonly<Props>) {
 }
 
 export function TransactionsTotals({ params, stale }: Readonly<Props>) {
+  const { t } = useTranslation();
+
   return (
-    <QueryBoundary fallback={<TransactionsTotalsSkeleton />}>
+    <QueryBoundary
+      fallback={<TransactionsTotalsSkeleton />}
+      errorSubject={t("transactions.totalsLabel")}
+    >
       <LoadedTotals params={params} stale={stale} />
     </QueryBoundary>
   );

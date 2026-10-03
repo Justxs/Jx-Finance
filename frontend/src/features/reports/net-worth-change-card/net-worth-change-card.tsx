@@ -1,8 +1,11 @@
 import { useTranslation } from "react-i18next";
 import { useNetWorthHistorySuspense } from "@/api/generated";
 import { ChangeBadge } from "@/components/change-badge/change-badge";
+import { ErrorState } from "@/components/error-state/error-state";
+import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { Section, SectionTitle } from "@/components/ui/section/section";
+import { TextSkeleton } from "@/components/ui/skeleton/skeleton";
 import { useMoney } from "@/hooks/use-formatters";
 import { changeOf } from "@/lib/comparison";
 
@@ -11,7 +14,31 @@ interface Props {
   dateTo: string;
 }
 
-export function NetWorthChangeCard({ dateFrom, dateTo }: Readonly<Props>) {
+export function NetWorthChangeCard(props: Readonly<Props>) {
+  const { t } = useTranslation();
+  const title = t("reports.netWorthChange");
+
+  return (
+    <QueryBoundary
+      fallback={
+        <Section>
+          <SectionTitle>{title}</SectionTitle>
+          <TextSkeleton size="xs" className="mt-1 sm:justify-end" width="w-56" />
+        </Section>
+      }
+      error={
+        <Section>
+          <SectionTitle>{title}</SectionTitle>
+          <ErrorState subject={title} />
+        </Section>
+      }
+    >
+      <NetWorthChange {...props} />
+    </QueryBoundary>
+  );
+}
+
+function NetWorthChange({ dateFrom, dateTo }: Readonly<Props>) {
   const { t } = useTranslation();
   const money = useMoney();
   const history = useNetWorthHistorySuspense();

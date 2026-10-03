@@ -93,7 +93,10 @@ const ledger = linkOptions({ to: "/transactions" });
 const importSection = linkOptions({ to: "/profile", search: { section: "import" } });
 
 function monthLink({ month }: NotificationPayload) {
-  return linkOptions({ to: "/", search: { month: month ? monthKeyOfIso(month) : undefined } });
+  return linkOptions({
+    to: "/reports/month",
+    search: { month: month ? monthKeyOfIso(month) : undefined },
+  });
 }
 
 const producers = {

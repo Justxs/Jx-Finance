@@ -45,7 +45,7 @@ export function GoalsSnapshot() {
         return (
           <ShareRow
             key={goal.id}
-            name={<span className="min-w-0 flex-1 wrap-break-word">{goal.name}</span>}
+            name={<span className="min-w-24 flex-1 wrap-break-word">{goal.name}</span>}
             note={
               <span className="shrink-0 text-right text-xs text-muted-foreground tabular-nums">
                 {note}

@@ -18,12 +18,12 @@ import {
 } from "@/storybook/fixtures";
 import { query, readBody, text } from "./http";
 
-function monthOf(params: Record<string, string | readonly string[] | undefined>) {
+export function monthOf(params: Record<string, string | readonly string[] | undefined>) {
   const value = params.month;
   return typeof value === "string" ? value : MONTH_CLOSE_MONTH;
 }
 
-function reviewOf(month: string): MonthReviewResponse {
+export function reviewOf(month: string): MonthReviewResponse {
   if (month === MONTH_CLOSE_MONTH) {
     return openMonthReview;
   }

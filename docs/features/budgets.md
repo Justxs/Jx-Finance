@@ -132,4 +132,12 @@ The page ends with "Steady spending without a budget": the monthly categories th
 
 ## On screen
 
-The budgets page lists every budget with its period and window, the meter against the effective limit, and, when rollover is on, the base plus carried breakdown underneath. The category name links to the transactions list filtered to that category and that window, not to the calendar month. The dashboard snapshot reads the effective limit for the same reason. The form has the period select and the rollover switch next to the category and the limit, and the limit carries the history hint described in [limits from history](#limits-from-history).
+The budgets page opens with a summary (`SummaryStats`) that never adds a weekly window to a yearly one and never nets one budget's overspend against another's remainder. `budgetOverview` in `features/budgets/budget-overview.ts` computes it in the browser from `GET /api/budgets`, which needs no change because every budget it answers is already in the window that holds today:
+
+- When any budget is over, the lead figure is the overspend of those budgets alone, in the expense colour, labelled "1 of 5 budgets over", with their names under it.
+- Each period that has a budget gets "Left this week", "Left this month", "Left this quarter" or "Left this year": the sum of what is left in that period's budgets that are not over, with "€234.11 spent of €210.00" for all of them under it.
+- When nothing is over, "Left this month" leads, or the first period in the order weekly, monthly, quarterly, yearly when there is no monthly budget.
+
+The dashboard card uses the same `budgetOverview`: when a budget is over, one expense-coloured line above the rows says "1 of 5 budgets is over, by €54.11", and each row names its period after the budget's name, so a weekly and a yearly limit side by side read as what they are.
+
+Below the summary the page lists every budget with its period and window, the meter against the effective limit, and, when rollover is on, the base plus carried breakdown underneath. The category name links to the transactions list filtered to that category and that window, not to the calendar month. The dashboard snapshot reads the effective limit for the same reason. The form has the period select and the rollover switch next to the category and the limit, and the limit carries the history hint described in [limits from history](#limits-from-history).

@@ -19,8 +19,9 @@ test("two rows are grouped, opened in place, ungrouped and brought back with und
   await dinnerRow.getByRole("checkbox").check();
   await page
     .getByRole("group", { name: "Selected transactions" })
-    .getByRole("button", { name: "Group", exact: true })
+    .getByRole("button", { name: "More", exact: true })
     .click();
+  await page.getByRole("menuitem", { name: "Group", exact: true }).click();
 
   const create = page.getByRole("dialog");
   await create.getByLabel("Group name").fill(name);

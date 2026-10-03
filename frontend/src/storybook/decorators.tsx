@@ -31,6 +31,7 @@ import { investmentsSearchSchema } from "@/routes/investments";
 import { profileSearchSchema } from "@/routes/profile";
 import { recurringBillsSearchSchema } from "@/routes/recurring-bills";
 import { reportsSearchSchema } from "@/routes/reports";
+import { monthPageSearchSchema } from "@/routes/reports_.month";
 import { settingsSearchSchema } from "@/routes/settings";
 import { usersSearchSchema } from "@/routes/users";
 import { longDescriptionTransaction } from "@/storybook/fixtures";
@@ -41,6 +42,7 @@ const STORY_ROUTES = [
   { path: "/transactions", validateSearch: transactionsSearchSchema },
   { path: "/investments", validateSearch: investmentsSearchSchema },
   { path: "/reports", validateSearch: reportsSearchSchema },
+  { path: "/reports/month", validateSearch: monthPageSearchSchema },
   { path: "/users", validateSearch: usersSearchSchema },
   { path: "/budgets" },
   { path: "/categories" },

@@ -4,11 +4,15 @@ Related: feature page [Budgets](../features/budgets.md).
 
 ## Current
 
-Weekly, monthly, quarterly or yearly limit per expense category or per tag, one budget per category or tag and period, a tag budget counting every expense carrying the tag in full; the window is derived from today in the installation time zone and, for weekly, from the configured first day of the week; an optional rollover carries the previous window's remainder or overspend, recomputed per read and walked back at most twelve windows or to the budget's creation; a new budget's limit is prefilled with the median of the category's last six complete windows, rounded up to a whole unit, and the page lists up to five steady monthly categories without a monthly budget, with no dismissal
+Weekly, monthly, quarterly or yearly limit per expense category or per tag, one budget per category or tag and period, a tag budget counting every expense carrying the tag in full; the window is derived from today in the installation time zone and, for weekly, from the configured first day of the week; an optional rollover carries the previous window's remainder or overspend, recomputed per read and walked back at most twelve windows or to the budget's creation; a new budget's limit is prefilled with the median of the category's last six complete windows, rounded up to a whole unit, and the page lists up to five steady monthly categories without a monthly budget, with no dismissal; the page summary leads with the overspent budgets when there are any and otherwise shows what is left per period, computed in the browser
 
 ## Log
 
 Newest first. Each entry is a choice between real alternatives: what was chosen, what was rejected, and why.
+
+- **2026-10-02.** The budgets page summary leads with how many budgets are over and the sum of their overspend, names them, and shows "Left this week/month/quarter/year" per period from the budgets that are not over; when nothing is over, the month's figure leads. The dashboard card adds the same overspend line and each row's period. All of it is computed in the browser by `budgetOverview` from `GET /api/budgets`. Decided while the owner was away, to be reviewed
+  - Rejected: Keeping "Spent in window", "Budgeted" and "Remaining" summed over every budget; one figure for the monthly budgets only; a summary field on the API
+  - Why: The sums added weekly, monthly, quarterly and yearly windows into one number and netted one budget's overspend against another's remainder, so a page with a budget €54.11 over led with "€2,022.85 remaining". The monthly figure alone would hide a weekly or yearly limit that is the one going wrong. Every budget in the response is already in the window holding today, so the browser has all it needs and the API stays as it is
 
 - **2026-09-30.** A budget follows a category or a tag, as two nullable columns with a check constraint that exactly one is set, and a tag budget counts whole tagged expenses. Decided while the owner was away, to be reviewed
   - Rejected: A separate `TagBudget` entity; a budget on a category and a tag together; counting only the tagged split lines of an expense category

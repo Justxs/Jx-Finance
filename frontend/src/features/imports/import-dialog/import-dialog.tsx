@@ -74,7 +74,10 @@ export function ImportDialog({ open, onOpenChange, accounts, initialAccountId }:
     }
     if (!provider) {
       return (
-        <QueryBoundary fallback={<RowsSkeleton rows={3} lines={2} />}>
+        <QueryBoundary
+          fallback={<RowsSkeleton rows={3} lines={2} />}
+          errorSubject={t("imports.providersSubject")}
+        >
           <ImportProviders
             accounts={accounts}
             onChoose={setProvider}
@@ -102,7 +105,10 @@ export function ImportDialog({ open, onOpenChange, accounts, initialAccountId }:
           <ArrowLeft />
           {t("imports.allProviders")}
         </Button>
-        <QueryBoundary fallback={<ImportUploadFormSkeleton />}>
+        <QueryBoundary
+          fallback={<ImportUploadFormSkeleton />}
+          errorSubject={t("imports.formSubject")}
+        >
           <ImportSection
             accounts={accounts}
             format={provider.format}
@@ -111,6 +117,7 @@ export function ImportDialog({ open, onOpenChange, accounts, initialAccountId }:
             inbox={inbox ?? undefined}
             onEditedChange={setEdited}
             confirmDiscard={confirmDiscard}
+            onLeave={() => handleOpenChange(false)}
           />
         </QueryBoundary>
       </div>
@@ -123,7 +130,7 @@ export function ImportDialog({ open, onOpenChange, accounts, initialAccountId }:
       onOpenChange={handleOpenChange}
       title={title()}
       description={provider || editing ? t("imports.pageDescription") : t("imports.chooseProvider")}
-      className={provider || editing ? "sm:max-w-6xl" : undefined}
+      className={editing ? "sm:max-w-6xl" : "sm:has-data-wide:max-w-6xl"}
     >
       {body()}
       <ConfirmDeleteDialog

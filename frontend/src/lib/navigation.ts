@@ -2,6 +2,7 @@ import type { LinkProps } from "@tanstack/react-router";
 import {
   ArrowLeftRight,
   Bookmark,
+  CalendarCheck,
   CalendarClock,
   ChartCandlestick,
   FileBarChart,
@@ -25,11 +26,12 @@ import type { FeatureKey } from "@/lib/settings";
 
 export type RoutePath = NonNullable<LinkProps["to"]>;
 
-export type NavHub = "categories" | "plan" | "wealth" | "settings";
+export type NavHub = "categories" | "plan" | "wealth" | "reports" | "settings";
 
 interface NavPage {
   to: RoutePath;
   key: TranslationKey;
+  tabKey?: TranslationKey;
   icon: LucideIcon;
   group: "ledger" | "plan" | "review" | "manage";
   hub?: NavHub;
@@ -47,6 +49,7 @@ export const navHubs = {
   categories: { key: "nav.categories", icon: Tags, tabs: true },
   plan: { key: "nav.plan", icon: PiggyBank, tabs: true },
   wealth: { key: "nav.wealth", icon: Scale, tabs: true },
+  reports: { key: "nav.reports", icon: FileBarChart, tabs: true },
   settings: { key: "nav.settings", icon: Settings, tabs: false },
 } as const satisfies Record<NavHub, NavHubEntry>;
 
@@ -134,10 +137,22 @@ export const navPages = [
   {
     to: "/reports",
     key: "nav.reports",
+    tabKey: "nav.overview",
     icon: FileBarChart,
     group: "review",
+    hub: "reports",
     feature: "reports",
     shortcut: "r",
+  },
+  {
+    to: "/reports/month",
+    key: "nav.monthClose",
+    tabKey: "nav.month",
+    icon: CalendarCheck,
+    group: "review",
+    hub: "reports",
+    feature: "monthClose",
+    shortcut: "m",
   },
   { to: "/profile", key: "nav.profile", icon: UserRound, group: "manage", hub: "settings" },
   {

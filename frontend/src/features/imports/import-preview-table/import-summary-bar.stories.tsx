@@ -29,6 +29,24 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
 
+const manyCurrencies = ["eur", "usd", "gbp", "huf", "jpy", "pln", "idr"] as const;
+
+export const ManyCurrenciesHugeNets: Story = {
+  args: {
+    rows: manyCurrencies.map((currency, index) => ({
+      ...rows[index % rows.length]!,
+      currency,
+      amount: (1234567890.12 * (index + 1)).toFixed(2),
+      selected: true,
+    })),
+  },
+  decorators: [withWidth("card")],
+  play: async ({ canvas }) => {
+    const nets = canvas.getByText("Net of selected").parentElement!;
+    await expect(nets.querySelectorAll(".whitespace-nowrap")).toHaveLength(manyCurrencies.length);
+  },
+};
+
 export const NothingSelected: Story = {
   args: { rows: rows.map((row) => ({ ...row, selected: false })) },
 };

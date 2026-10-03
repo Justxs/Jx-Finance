@@ -6,7 +6,7 @@ export function budgetPeriodLabel(t: Translate, period: BudgetPeriod) {
   return t(`budgets.periods.${period}`);
 }
 
-const periodOrder: readonly BudgetPeriod[] = [
+export const periodOrder: readonly BudgetPeriod[] = [
   BudgetPeriod.weekly,
   BudgetPeriod.monthly,
   BudgetPeriod.quarterly,

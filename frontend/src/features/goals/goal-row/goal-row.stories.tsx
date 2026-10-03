@@ -102,3 +102,19 @@ export const SharedWithHousehold: Story = {
     await expect(await canvas.findByText("Shared · Kazlauskų šeima")).toBeVisible();
   },
 };
+
+export const HugeAmountsLongName: Story = {
+  args: {
+    goal: {
+      ...goalWithTargetDate,
+      name: "Sodyba prie Platelių ežero su pirtimi, prieplauka ir sodu vaikams bei anūkams vasaroti",
+      targetAmount: "1234567890.12",
+      currentAmount: "987654321.09",
+      progressAmount: "987654321.09",
+    },
+  },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText("€987,654,321.09")).toHaveClass("whitespace-nowrap");
+    await expect(canvas.getByText("of €1,234,567,890.12")).toHaveClass("whitespace-nowrap");
+  },
+};

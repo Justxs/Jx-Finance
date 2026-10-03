@@ -77,3 +77,36 @@ export const LongContent: Story = {
     ],
   },
 };
+
+const longLithuanianName =
+  "Šeimos bendra einamoji sąskaita kasdienėms išlaidoms, komunaliniams mokesčiams ir vaikų būrelių įmokoms";
+
+export const ManyCurrenciesLongName: Story = {
+  args: {
+    accounts: [
+      {
+        ...checkingAccount,
+        name: longLithuanianName,
+        currentBalance: "1234567890.12",
+        reportingBalance: "1234567890.12",
+        holdingsValue: "987654321.09",
+        balances: [
+          { currency: "eur", amount: "1234567890.12" },
+          { currency: "usd", amount: "23456789.01" },
+          { currency: "gbp", amount: "3456789.12" },
+          { currency: "huf", amount: "456789012.00" },
+          { currency: "jpy", amount: "567890123.00" },
+          { currency: "pln", amount: "6789012.34" },
+          { currency: "idr", amount: "7890123456.00" },
+        ],
+      },
+      sharedAccount,
+    ],
+    positiveTotal: 1234567890.12 + Number(sharedAccount.reportingBalance),
+  },
+  play: async ({ canvas }) => {
+    const names = await canvas.findAllByText(longLithuanianName);
+    await Promise.all(names.map((name) => expect(name).toHaveClass("wrap-break-word")));
+    await expect(canvas.getAllByText(/^IDR\s7,890,123,456(?:\.00)?$/u)).not.toHaveLength(0);
+  },
+};

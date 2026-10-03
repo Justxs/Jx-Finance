@@ -279,6 +279,31 @@ export const refundTransactions: TransactionResponse[] = [
   refundedPurchase,
 ];
 
+export const hugeAmountTransactions: TransactionResponse[] = [
+  manual(811, "09-16", checking, housing, -1234567890.12, "Būsto pirkimas Užupyje"),
+  manual(812, "09-15", checking, salary, 98765432.1, "Įmonės akcijų pardavimas"),
+  {
+    ...manual(813, "09-14", checking, housing, -45000000, "Lakás vásárlás, Budapest"),
+    currency: "huf",
+    reportingAmount: "111386.14",
+  },
+  {
+    ...manual(814, "09-13", checking, housing, -123456789, "Tokijo buto užstatas"),
+    currency: "jpy",
+    reportingAmount: "751002.43",
+  },
+  {
+    ...manual(815, "09-12", checking, housing, -2000000000, "Vilos Balyje rezervacija"),
+    currency: "idr",
+    reportingAmount: "110375.25",
+  },
+  {
+    ...manual(816, "09-11", checking, shopping, -1250000, "Statybos rangovo grąžinimas"),
+    amount: "-1250000.00",
+    reportingAmount: "-1250000.00",
+  },
+];
+
 export const foreignCurrencyTransactions: TransactionResponse[] = [
   {
     ...manual(801, "09-15", broker, null, 42.5, "VUSA dividendai"),

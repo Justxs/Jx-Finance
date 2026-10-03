@@ -34,7 +34,7 @@ export const Open: Story = {
   },
   play: async () => {
     const dialog = await openedDialog();
-    await expect(within(dialog).getAllByRole("listitem")).toHaveLength(17);
+    await expect(within(dialog).getAllByRole("listitem")).toHaveLength(18);
     await within(dialog).findByText("Command palette");
   },
 };

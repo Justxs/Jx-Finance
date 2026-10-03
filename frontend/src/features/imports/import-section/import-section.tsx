@@ -41,7 +41,12 @@ import { useFileField } from "@/hooks/use-file-field";
 import { silentMutation } from "@/lib/mutations";
 import { optimisticRemoval } from "@/lib/optimistic";
 import { ImportPreviewError, problemDetail } from "./import-preview-error";
-import { type ImportResult, ImportResultLine, useReconciliationText } from "./import-result";
+import {
+  type ImportResult,
+  ImportResultPanel,
+  useImportCountsText,
+  useReconciliationText,
+} from "./import-result";
 import { IMPORT_FILE_INPUT_ID, ImportUploadForm, importFormats } from "./import-upload-form";
 
 const uploadProblemKeys = {
@@ -58,6 +63,7 @@ interface Props {
   inbox?: InboxReview;
   onEditedChange: (edited: boolean) => void;
   confirmDiscard: (run: () => void) => void;
+  onLeave?: () => void;
 }
 
 export function ImportSection({
@@ -68,9 +74,11 @@ export function ImportSection({
   inbox,
   onEditedChange,
   confirmDiscard,
+  onLeave,
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const reconciliationText = useReconciliationText();
+  const countsText = useImportCountsText();
   const fileField = useFileField(
     IMPORT_FILE_INPUT_ID,
     importFormats[format].maxBytes,
@@ -132,7 +140,7 @@ export function ImportSection({
       onSuccess: (data, variables) => {
         const confirmed = (rows ?? []).filter((row) => row.selected);
         toast.success(
-          t("imports.confirmed", {
+          countsText({
             imported: data.imported,
             linked: data.linked,
             skipped: data.skippedDuplicates,
@@ -145,6 +153,7 @@ export function ImportSection({
           imported: data.imported,
           linked: data.linked,
           skipped: data.skippedDuplicates,
+          uncategorized: confirmed.filter((row) => takesCategory(row) && !row.categoryId).length,
           accountId: variables.data.accountId,
           reconciliation: data.reconciliation,
           ...importDateRange(confirmed),
@@ -252,6 +261,16 @@ export function ImportSection({
 
   const missingColumns = problemDetail(previewMutation.error, "import.missingColumns");
 
+  if (result) {
+    return (
+      <ImportResultPanel
+        result={result}
+        onLeave={onLeave}
+        onImportAnother={() => setResult(null)}
+      />
+    );
+  }
+
   return (
     <div className="space-y-5">
       <Section className="space-y-4">
@@ -291,11 +310,10 @@ export function ImportSection({
             {t("imports.mapping.updateFromFile")}
           </Button>
         ) : null}
-        {result ? <ImportResultLine result={result} /> : null}
       </Section>
 
       {inspection ? (
-        <Section className="space-y-4" aria-labelledby="import-mapping-title">
+        <Section className="space-y-4" aria-labelledby="import-mapping-title" data-wide="">
           <div className="space-y-1">
             <SectionTitle id="import-mapping-title">{t("imports.mapping.title")}</SectionTitle>
             <p className="max-w-prose text-sm text-muted-foreground">
@@ -322,7 +340,7 @@ export function ImportSection({
       ) : null}
 
       {rows ? (
-        <Section className="space-y-4" aria-labelledby="import-review-title">
+        <Section className="space-y-4" aria-labelledby="import-review-title" data-wide="">
           <SectionTitle id="import-review-title">{t("imports.reviewSection")}</SectionTitle>
           {statement ? (
             <ImportStatementBar

@@ -96,7 +96,7 @@ export function TransactionsList({
               </div>
               <div className="flex items-center gap-2">
                 <p className="min-w-0 flex-1 truncate text-xs text-muted-foreground tabular-nums">
-                  {metaLine(groupDates(group), groupCount(group))}
+                  {metaLine(groupDates.text(group), groupCount(group))}
                 </p>
                 <SharedScopeTag scope={group.scope} householdId={group.householdId} />
                 <RowActions

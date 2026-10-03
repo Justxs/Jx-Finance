@@ -4,7 +4,7 @@ Back to the [feature walkthrough](README.md). See also [decisions](../decisions/
 
 Backend `Infrastructure/BackgroundJobs/MonthlyDigestJob.cs`, the pure builder `Common/Notifications/MonthlyDigest.cs`, the payload `Domain/Notifications/MonthlyDigestPayload.cs`, the texts in `Common/Notifications/NotificationTexts.cs` and `Common/Email/EmailTexts.cs`, `Users/UpdateMyLanguage` for the member's language and `Users/UpdateMyDigestScopes` for the scopes. Frontend `profile/notifications-section` (the row, its note and the "Monthly digest for" choice), `components/notification-bell` (the bell row) and `stores/app-store.ts` (the language saved on the server). No switch of its own: the job runs while `MonthClose` is on, and each member opts in.
 
-In the first days of a month, each member who asked for it receives one message per chosen scope about the month that just ended: income, expenses, net and the share of income kept; the three expense categories that moved most against the month before; what is still open before the month can be closed; whether it is closed; and a link to `/?month=yyyy-MM`, where the dashboard shows that month and its close panel. It is written in the member's own language.
+In the first days of a month, each member who asked for it receives one message per chosen scope about the month that just ended: income, expenses, net and the share of income kept; the three expense categories that moved most against the month before; what is still open before the month can be closed; whether it is closed; and a link to `/?month=yyyy-MM`, where the dashboard shows that month with a line that leads to its [Month page](month-end-close.md#screens). It is written in the member's own language.
 
 ```mermaid
 flowchart TD
@@ -58,7 +58,7 @@ The texts are built from the payload when the message is queued, in the recipien
 - Details (`NotificationTexts.DigestDetails`): "Biggest changes: Groceries 420.00 EUR (was 380.00 EUR), …"; "Still to do: uncategorised 3, accounts not reconciled 1." with only the non-zero items, or "Nothing left to do."; and "The month is closed." or "The month is not closed yet."
 - Discord: the month in bold, the sentence, the details and the link, each escaped and clipped to 2000 characters like every message.
 - Email (`EmailTexts.MonthlyDigest`): subject "your September 2026" ("mėnesio suvestinė, 2026 m. rugsėjis") after the product name, a body of the sentence, the details, the link and how to switch it off. It is stored as `EmailKind.Notification`, so the publisher's daily deduplication keys cover it.
-- Bell: the title is `DigestTitle` in the installation language and the line "Income €3,200.00, expenses €2,450.00, net €750.00" is rendered by the client from the payload in the interface language; the row links to `/?month=yyyy-MM` while `MonthClose` is on, in whichever household the browser has picked.
+- Bell: the title is `DigestTitle` in the installation language and the line "Income €3,200.00, expenses €2,450.00, net €750.00" is rendered by the client from the payload in the interface language; the row links to `/reports/month?month=yyyy-MM`, the [Month page](month-end-close.md#screens), while `MonthClose` is on, in whichever household the browser has picked.
 
 ## The member's language
 
