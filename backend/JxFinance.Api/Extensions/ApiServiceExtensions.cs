@@ -4,6 +4,7 @@ using JxFinance.Common.Discord;
 using JxFinance.Common.ExchangeRates;
 using JxFinance.Common.Middleware;
 using JxFinance.Common.Receipts;
+using JxFinance.Common.Telegram;
 using JxFinance.Endpoints.Backups.UploadBackup;
 using JxFinance.Infrastructure.BackgroundJobs;
 using JxFinance.Infrastructure.Brokers.InteractiveBrokers;
@@ -12,6 +13,7 @@ using JxFinance.Infrastructure.Discord;
 using JxFinance.Infrastructure.ExchangeRates;
 using JxFinance.Infrastructure.MarketPrices;
 using JxFinance.Infrastructure.Receipts;
+using JxFinance.Infrastructure.Telegram;
 using Serilog;
 
 namespace JxFinance.Extensions;
@@ -70,6 +72,14 @@ public static class ApiServiceExtensions
             client.DefaultRequestHeaders.UserAgent.ParseAdd("JxFinance/1.0");
         }).RemoveAllLoggers();
 
+        builder.Services.AddHttpClient<ITelegramBotClient, TelegramBotClient>(client =>
+        {
+            client.BaseAddress = new Uri(TelegramBotClient.BaseAddress);
+            client.Timeout = TimeSpan.FromSeconds(10);
+            client.MaxResponseContentBufferSize = 64 * 1024;
+            client.DefaultRequestHeaders.UserAgent.ParseAdd("JxFinance/1.0");
+        }).RemoveAllLoggers();
+
         builder.Services.AddSingleton<IReceiptReader, TesseractReceiptReader>();
 
         if (!builder.Configuration.GetValue<bool>("export-openapi-docs") && builder.Configuration.GetValue(ConfigKeys.BackgroundJobs, true))
@@ -84,6 +94,7 @@ public static class ApiServiceExtensions
             builder.Services.AddHostedService<PriceSyncJob>();
             builder.Services.AddHostedService<EmailOutboxJob>();
             builder.Services.AddHostedService<DiscordOutboxJob>();
+            builder.Services.AddHostedService<TelegramOutboxJob>();
             builder.Services.AddHostedService<UnusualAmountJob>();
             builder.Services.AddHostedService<MonthCloseReminderJob>();
             builder.Services.AddHostedService<MonthlyDigestJob>();

@@ -11,6 +11,7 @@ rectangle "Jx Finance installation\n\nSPA, API, PostgreSQL" <<system>> as jx
 
 rectangle "SMTP server" <<external>> as smtp
 rectangle "Discord webhooks" <<external>> as discord
+rectangle "Telegram Bot API" <<external>> as telegram
 rectangle "Frankfurter\nexchange rates" <<external>> as frankfurter
 rectangle "EODHD, Kraken\nmarket prices" <<external>> as prices
 rectangle "Interactive Brokers\nFlex Web Service" <<external>> as ibkr
@@ -22,6 +23,7 @@ bank ..> jx : files in the import inbox\nor uploaded by hand
 
 jx --> smtp : notification and\naccount emails
 jx --> discord : notification posts
+jx --> telegram : notification messages
 jx --> frankfurter : daily rates
 jx --> prices : security prices
 jx --> ibkr : trades and cash

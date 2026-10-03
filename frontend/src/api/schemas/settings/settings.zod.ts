@@ -549,7 +549,7 @@ export const SyncMarketPricesResponse = zod.object({
 });
 
 /**
- * Anonymous. Returns only the installation name, the default language, whether this installation can send email, which is what decides if the sign-in page offers "Forgot password", and whether an administrator allowed Discord notifications, which the profile uses to explain its Discord section, and whether passkeys can work here, which is false when the configured site address is plain HTTP or an IP address. No host name, no address and no credential is part of the answer.
+ * Anonymous. Returns only the installation name, the default language, whether this installation can send email, which is what decides if the sign-in page offers "Forgot password", and whether the installation's Discord channel and Telegram group are set up, which decide the profile's notification columns, and whether passkeys can work here, which is false when the configured site address is plain HTTP or an IP address. No host name, no address and no credential is part of the answer.
  * @summary Read the settings the sign-in page needs
  */
 export const PublicSettingsResponse = zod.object({
@@ -557,6 +557,7 @@ export const PublicSettingsResponse = zod.object({
   defaultLanguage: zod.string(),
   emailEnabled: zod.boolean(),
   discordEnabled: zod.boolean(),
+  telegramEnabled: zod.boolean(),
   passkeysAvailable: zod.boolean(),
 });
 
@@ -662,3 +663,43 @@ export const UpdateSmtpSettingsResponse = zod.object({
 export const SendTestEmailResponse = zod.object({
   sentTo: zod.string(),
 });
+
+/**
+ * Answers whether Telegram is switched on, whether a bot token is saved, the group's chat id, when a message last reached it and the last error. The bot token is never part of the answer, because anyone holding it controls the bot. disabledByTelegram is true after Telegram answered that the bot was removed from the group or its token was revoked; unreadable is true when the stored token cannot be decrypted, which a restore into an installation with other data protection keys leaves behind. Administrators only.
+ * @summary Read the installation's Telegram group
+ */
+export const TelegramSettingsResponse = zod.object({
+  enabled: zod.boolean(),
+  hasToken: zod.boolean(),
+  chatId: zod.int().nullable(),
+  lastDeliveredAt: zod.iso.datetime({ offset: true }).nullable(),
+  lastError: zod.string().nullable(),
+  disabledByTelegram: zod.boolean(),
+  unreadable: zod.boolean(),
+});
+
+/**
+ * Stores the bot token and the id of the one Telegram group this installation posts to, and switches outbound Telegram traffic on or off for everyone. Members then choose on their profile which of their notifications are posted there, with their name in front. The token must be the one @BotFather gave, of the form 123456789:AAE…, or the answer is 400 telegram.invalidToken; the chat id is a whole number, negative for a group, and 0 answers telegram.invalidChat. Switching Telegram on without a saved token answers telegram.invalidToken and without a chat id telegram.invalidChat. The token is encrypted before it is stored and never returned. Leaving botToken empty keeps the stored one; a new token or a new chat id clears the mark Telegram left on a bot it refused. While Telegram is off nothing is queued or sent; messages that were already queued are not sent late but pruned after seven days. Administrators only.
+ * @summary Save the installation's Telegram group
+ */
+export const UpdateTelegramSettingsBody = zod.object({
+  enabled: zod.boolean(),
+  botToken: zod.string().nullable().describe("Leave empty to keep the stored token."),
+  chatId: zod.int().nullable().describe("The group's id; null removes it."),
+});
+
+export const UpdateTelegramSettingsResponse = zod.object({
+  enabled: zod.boolean(),
+  hasToken: zod.boolean(),
+  chatId: zod.int().nullable(),
+  lastDeliveredAt: zod.iso.datetime({ offset: true }).nullable(),
+  lastError: zod.string().nullable(),
+  disabledByTelegram: zod.boolean(),
+  unreadable: zod.boolean(),
+});
+
+/**
+ * Posts one short message to the saved group right away and waits for Telegram's answer, even while Telegram is switched off, so the group can be checked before members use it. Nothing is queued, so a failure is not retried. When Telegram says the group became a supergroup with a new id, the new id is saved and the message sent again. A refusal answers 400 with Telegram's own words: telegram.botRemoved when the bot was removed from the group or its token revoked (which also marks it), telegram.rateLimited, telegram.rejected or telegram.sendFailed. telegram.tokenUnreadable means the stored token cannot be decrypted any more. Rate limited to 10 calls per five minutes per client. Administrators only.
+ * @summary Send a test message to the Telegram group
+ */
+export const SendTestTelegramResponse = zod.void();

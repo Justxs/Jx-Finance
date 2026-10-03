@@ -50,7 +50,7 @@ Calendar in the page header, or the Calendar link on the dashboard's Upcoming bi
 
 ## Get a summary of last month
 
-In Settings › Personal › Notifications, tick Email or Discord on the "Monthly digest" row and save. In the first days of each month one message arrives about the month that ended: income, expenses, net and the share kept, the three expense categories that changed most against the month before, what is still open before the month can be closed, whether it is closed, and a link to that month on the dashboard. The bell shows it too. A month with nothing recorded and nothing open sends nothing. See [Monthly digest](features/monthly-digest.md).
+In Settings › Personal › Notifications, tick Email, Discord or Telegram on the "Monthly digest" row and save. In the first days of each month one message arrives about the month that ended: income, expenses, net and the share kept, the three expense categories that changed most against the month before, what is still open before the month can be closed, whether it is closed, and a link to that month on the dashboard. The bell shows it too. A month with nothing recorded and nothing open sends nothing. See [Monthly digest](features/monthly-digest.md).
 
 ## Close last month
 

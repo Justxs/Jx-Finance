@@ -4,11 +4,13 @@ using System.Text.RegularExpressions;
 using JxFinance.Common;
 using JxFinance.Common.Discord;
 using JxFinance.Common.Email;
+using JxFinance.Common.Telegram;
 using JxFinance.Domain.Email;
 using JxFinance.Endpoints.Auth.Passkeys;
 using JxFinance.Endpoints.Auth.Tokens;
 using JxFinance.Endpoints.Settings.UpdateDiscordSettings;
 using JxFinance.Endpoints.Settings.UpdateMarketPriceSettings;
+using JxFinance.Endpoints.Settings.UpdateTelegramSettings;
 using JxFinance.Extensions;
 using JxFinance.Infrastructure.Auth;
 
@@ -72,6 +74,8 @@ public sealed partial class SecretRedactionTests
         Assert.Contains(nameof(SmtpDelivery), guarded);
         Assert.Contains(nameof(UpdateDiscordSettingsRequest), guarded);
         Assert.Contains(nameof(DiscordTarget), guarded);
+        Assert.Contains(nameof(UpdateTelegramSettingsRequest), guarded);
+        Assert.Contains(nameof(TelegramTarget), guarded);
         Assert.Contains(nameof(AddPasskeyRequest), guarded);
         Assert.Contains(nameof(PasskeySignInRequest), guarded);
         Assert.Contains(nameof(PasskeyState), guarded);

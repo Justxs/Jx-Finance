@@ -15,7 +15,7 @@ public sealed class UpdateDiscordSettingsEndpoint(IDiscordSettingsService discor
         Group<SettingsGroup>();
         Roles(AppRoles.Admin);
         Throttle(hitLimit: 20, durationSeconds: 300);
-        Description(d => d.Produces(429));
+        Description(d => d.Produces(429).ProducesProblemDetails(409));
     }
 
     public override async Task HandleAsync(UpdateDiscordSettingsRequest req, CancellationToken ct) =>

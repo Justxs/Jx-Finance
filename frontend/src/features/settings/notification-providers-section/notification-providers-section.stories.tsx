@@ -30,3 +30,13 @@ export const Discord: Story = {
     await expect(canvas.queryByLabelText("Server")).toBeNull();
   },
 };
+
+export const Telegram: Story = {
+  play: async ({ canvas }) => {
+    await userEvent.click(canvas.getByRole("tab", { name: "Telegram" }));
+    await expect(
+      await canvas.findByRole("checkbox", { name: "Send notifications to Telegram" }),
+    ).toBeChecked();
+    await expect(canvas.queryByLabelText("Server")).toBeNull();
+  },
+};

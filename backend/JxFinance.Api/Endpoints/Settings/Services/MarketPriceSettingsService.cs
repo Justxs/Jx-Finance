@@ -40,11 +40,11 @@ public sealed class MarketPriceSettingsService(
             [.. failures.Select(f => new PriceSyncFailure(f.Id.Value, f.Symbol, f.Name, f.PriceSyncError!, f.PriceSyncedAt!.Value))]);
     }
 
-    public async Task<MarketPriceSettingsResponse> UpdateMarketPricesAsync(
+    public async Task<Result<MarketPriceSettingsResponse>> UpdateMarketPricesAsync(
         UpdateMarketPriceSettingsRequest request,
         CancellationToken cancellationToken)
     {
-        await StoredSettings.UpdateAsync(
+        var failed = await StoredSettings.UpdateAsync(
             db,
             store,
             settings =>
@@ -60,6 +60,6 @@ public sealed class MarketPriceSettingsService(
                 return Task.FromResult<DomainError?>(null);
             },
             cancellationToken);
-        return await GetMarketPricesAsync(cancellationToken);
+        return failed is null ? await GetMarketPricesAsync(cancellationToken) : failed;
     }
 }

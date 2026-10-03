@@ -1022,17 +1022,19 @@
     "notifications": {
       "title": "Notifications",
       "description": "Every notification appears under the bell. Tick the ones that should also reach you outside the app.",
-      "descriptionInAppOnly": "Every notification appears under the bell. An administrator can set up email or Discord to send them outside the app too.",
+      "descriptionInAppOnly": "Every notification appears under the bell. An administrator can set up email, Discord or Telegram to send them outside the app too.",
       "kind": "Notification",
       "inApp": "In app",
       "email": "Email",
       "discord": "Discord",
+      "telegram": "Telegram",
       "alwaysInApp": "Always shown in the app",
       "byEmail": "{{kind}} by email",
       "byDiscord": "{{kind}} on Discord",
+      "byTelegram": "{{kind}} on Telegram",
       "needsVerification": "Email is unavailable until you confirm your address.",
       "saved": "Notification settings saved",
-      "digestOnlyOutside": "Only sent by email or Discord",
+      "digestOnlyOutside": "Only sent by email, Discord or Telegram",
       "digestScopes": "Monthly digest for",
       "digestScopesHint": "Each one you tick is its own message, with the month as the dashboard shows it with that household picked.",
       "digestNote": "The monthly digest arrives in the first days of each month and sums up the month that ended: income and expenses, the categories that moved most and what is still open before you close it. Tick it above to receive it."
@@ -1241,7 +1243,10 @@
       "testSent": "Test message sent to {{email}}"
     },
     "notificationProviders": {
-      "title": "Notification providers"
+      "title": "Notification providers",
+      "lastDelivered": "Last message delivered {{date}}.",
+      "neverDelivered": "Nothing has been delivered yet.",
+      "lastError": "Last problem: {{error}}"
     },
     "discord": {
       "title": "Discord",
@@ -1254,11 +1259,24 @@
       "webhookPlaceholder": "Saved. Paste a new URL to replace it.",
       "test": "Send a test message",
       "testSent": "Test message posted to Discord",
-      "lastDelivered": "Last message delivered {{date}}.",
-      "neverDelivered": "Nothing has been delivered yet.",
-      "lastError": "Last problem: {{error}}",
       "gone": "Discord says this webhook no longer exists. Create a new one in Discord and paste its URL.",
       "unreadable": "The saved webhook can no longer be read, usually after a restore from another installation. Paste the webhook URL again."
+    },
+    "telegram": {
+      "title": "Telegram",
+      "description": "The Telegram group this installation posts to. Members choose on their profile which of their notifications go there, and each message starts with their name, so everyone in the group sees them.",
+      "enabled": "Send notifications to Telegram",
+      "enabledHint": "Messages go from this server to api.telegram.org. While this is off nothing is sent and the bot token stays saved.",
+      "saved": "Telegram settings saved",
+      "botToken": "Bot token",
+      "botTokenHint": "In Telegram: message @BotFather, send /newbot and copy the token it gives you. Then add the bot to the group.",
+      "tokenPlaceholder": "Saved. Paste a new token to replace it.",
+      "chatId": "Group chat id",
+      "chatIdHint": "A whole number, negative for a group. After adding the bot, open api.telegram.org/bot<token>/getUpdates in a browser and copy the chat id.",
+      "test": "Send a test message",
+      "testSent": "Test message posted to Telegram",
+      "removed": "Telegram says the bot was removed from the group or its token was revoked. Add the bot back and send a test message, or paste a new token.",
+      "unreadable": "The saved bot token can no longer be read, usually after a restore from another installation. Paste the token again."
     },
     "marketPrices": {
       "title": "Market prices",
@@ -2938,6 +2956,15 @@
       "sendFailed": "Discord could not be reached. Try again later.",
       "webhookGone": "Discord says this webhook no longer exists. Create a new one in Discord and paste its URL.",
       "webhookUnreadable": "The saved webhook can no longer be read. Paste the webhook URL again."
+    },
+    "telegram": {
+      "botRemoved": "Telegram says the bot was removed from the group or its token was revoked.",
+      "invalidChat": "Enter the id of the Telegram group, a whole number such as -1001234567890.",
+      "invalidToken": "Paste the token @BotFather gave you; it looks like 123456789:AAE….",
+      "rateLimited": "Telegram asked to slow down. Try again in a minute.",
+      "rejected": "{{reason}}",
+      "sendFailed": "Telegram could not be reached. Try again later.",
+      "tokenUnreadable": "The saved bot token can no longer be read. Paste the token again."
     },
     "email": {
       "alreadyVerified": "This address is already confirmed.",

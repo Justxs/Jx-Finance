@@ -144,11 +144,13 @@ export function SmtpFormSkeleton() {
   );
 }
 
-export function DiscordFormSkeleton() {
+export function ChannelFormSkeleton({ fields = 1 }: Readonly<{ fields?: number }>) {
   return (
     <div aria-hidden="true" className="mt-4 space-y-5">
       <CheckboxFieldSkeleton className="max-w-prose" />
-      <FormGridSkeleton fields={1} hints className="max-w-md" />
+      {Array.from({ length: fields }, (_, index) => (
+        <FormGridSkeleton key={index} fields={1} hints className="max-w-md" />
+      ))}
       <div className="flex flex-wrap items-center gap-3">
         <ButtonSkeleton className="w-40" />
         <ButtonSkeleton className="ml-auto w-20" />

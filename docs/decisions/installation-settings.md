@@ -6,6 +6,10 @@ Related: feature page [Installation settings and feature switches](../features/i
 
 Newest first. Each entry is a choice between real alternatives: what was chosen, what was rejected, and why.
 
+- **2026-10-03.** A settings save whose row changed underneath it, through a concurrency token, answers 409 `conflict.stale` and saves nothing; `PUT /api/settings/market-prices` now reports that failure instead of ignoring it
+  - Rejected: Reloading the row and applying the change again; dropping the concurrency token on `TelegramChatId`
+  - Why: The main settings save revalues stored rates when the reporting currency changes, so running its change twice would revalue twice. Without the token, an outbox pass that started before an administrator changed the group would write a removed-bot mark or a delivery time against the new group. The conflict is rare, since it needs a save during the pass that follows a supergroup move, so an explicit answer is enough
+
 - **2026-10-03.** Four always-on features gained switches, `Attachments`, `PayeeNames`, `People` and `CashFlowForecast`, all on by default and on for an upgraded installation; each hides its routes, its screens and its fields on read, and keeps its data
   - Rejected: Switches for tags, transaction groups and reconciliation; starting the new switches off; clearing names, files or people's rows when a switch goes off
   - Why: Each of the four is a screen with routes of its own, which is what a switch can hide without a second shape for rows: names, counts and markers read as null or 0, as the `Locations` and `UnusualAmounts` fields already do. Tags, groups and reconciliation keep the reasons logged on their own pages. Turning a switch on must bring everything back, so the default keeps what an installation already used

@@ -34,6 +34,9 @@ public sealed class InstanceSettingsConfiguration : IEntityTypeConfiguration<Ins
         builder.Property(s => s.SupportLinkEnabled).HasDefaultValue(true);
         builder.Property(s => s.EodhdProtectedKey).HasMaxLength(1000);
         builder.Property(s => s.DiscordProtectedUrl).HasMaxLength(1000).IsConcurrencyToken();
-        builder.Property(s => s.DiscordLastError).HasMaxLength(InstanceSettings.DiscordErrorMaxLength);
+        builder.Property(s => s.DiscordLastError).HasMaxLength(InstanceSettings.ChannelErrorMaxLength);
+        builder.Property(s => s.TelegramProtectedToken).HasMaxLength(1000).IsConcurrencyToken();
+        builder.Property(s => s.TelegramChatId).IsConcurrencyToken();
+        builder.Property(s => s.TelegramLastError).HasMaxLength(InstanceSettings.ChannelErrorMaxLength);
     }
 }

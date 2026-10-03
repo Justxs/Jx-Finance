@@ -2,7 +2,7 @@
 
 Back to the [feature walkthrough](README.md). See also [decisions](../decisions/notifications.md), [architecture: Background work and notifications](../architecture/background-jobs.md).
 
-Backend `Notifications` and `Common/Notifications`, written by background jobs and shown by `NotificationBell` in the sidebar foot. Notifications are not a feature of their own: they are the shared mechanism a producer uses to tell one user that something happened while nobody was looking. Five producers exist today, `RecurringBillReminderJob`, `BudgetAlertJob`, since 2026-09-26 `UnusualAmountJob`, since 2026-09-27 `MonthCloseReminderJob` and since 2026-09-29 `MonthlyDigestJob`, and each is gated by the feature it belongs to. All five write through `INotificationPublisher`, which is the extension point: it adds the in-app row and, beside it, whatever the user asked to receive elsewhere. The notification endpoints themselves are behind no feature switch and are not listed in `FeatureGateMiddleware`, so listing, the unread badge, marking one read and marking all read keep working as long as any producer is enabled — and also when none is.
+Backend `Notifications` and `Common/Notifications`, written by background jobs and shown by `NotificationBell` in the sidebar foot. Notifications are not a feature of their own: they are the shared mechanism a producer uses to tell one user that something happened while nobody was looking. Five producers exist today, `RecurringBillReminderJob`, `BudgetAlertJob`, since 2026-09-26 `UnusualAmountJob`, since 2026-09-27 `MonthCloseReminderJob` and since 2026-09-29 `MonthlyDigestJob`, and each is gated by the feature it belongs to. All five write through `INotificationPublisher`, which is the extension point: it adds the in-app row and, beside it, whatever the user asked to receive elsewhere: email, Discord or Telegram. The notification endpoints themselves are behind no feature switch and are not listed in `FeatureGateMiddleware`, so listing, the unread badge, marking one read and marking all read keep working as long as any producer is enabled — and also when none is.
 
 ```mermaid
 flowchart TD
@@ -14,6 +14,7 @@ flowchart TD
     Dedupe["Publish under an advisory lock<br/>unless the same row already exists in the same period"] --> Pub["INotificationPublisher.Publish<br/>in the job's own transaction"]
     Pub --> Row["Notification: user, kind, title, typed payload, related row"]
     Pub --> Discord["A DiscordMessages row when the installation's Discord channel<br/>is set up and the owner ticked that kind for Discord"]
+    Pub --> Telegram["A TelegramMessages row when the installation's Telegram group<br/>is set up and the owner ticked that kind for Telegram"]
     Pub --> Email["An EmailMessages row when the owner ticked that kind for email,<br/>the address is confirmed and the mail server is on"]
     Row --> List["GET /api/notifications, unread first for the badge"]
     List --> Bell["NotificationBell renders each kind from its payload"]
@@ -25,7 +26,7 @@ flowchart TD
 
 ## The publisher
 
-No producer adds a `Notification` itself. Every one calls `INotificationPublisher.Publish(notification)` (`Common/Notifications`, scoped), after a `PreloadAsync(userIds)` that loads, in one go, what the publisher needs to know about the owners it is about to notify; publishing for a user who was not preloaded throws, so the batch load cannot be forgotten. The publisher adds the in-app row, an email and a Discord message when the owner asked for that kind on that channel, all to the producer's own `AppDbContext`, so the producer's transaction and lock cover every channel at once. `BudgetAlertJob` works in a user scope and resolves its publisher, and with it the email outbox, from that scope.
+No producer adds a `Notification` itself. Every one calls `INotificationPublisher.Publish(notification)` (`Common/Notifications`, scoped), after a `PreloadAsync(userIds)` that loads, in one go, what the publisher needs to know about the owners it is about to notify; publishing for a user who was not preloaded throws, so the batch load cannot be forgotten. The publisher adds the in-app row, an email, a Discord message and a Telegram message when the owner asked for that kind on that channel, all to the producer's own `AppDbContext`, so the producer's transaction and lock cover every channel at once. `BudgetAlertJob` works in a user scope and resolves its publisher, and with it the email outbox, from that scope.
 
 That makes the publisher the extension point. A new producer calls it and reaches every channel; a new channel is added in one place and every producer reaches it. The architecture test `NotificationPublisherTests` scans the API sources and fails when anything outside `Common/Notifications/NotificationPublisher.cs` calls `Notifications.Add` or `AddRange`.
 
@@ -37,11 +38,15 @@ That makes the publisher the extension point. A new producer calls it and reache
 
 Discord, since 2026-09-26, is the second channel outside the application, and it follows the same rule: one more row, `DiscordMessages`, written by the publisher next to the notification and drained by its own outbox job. Like the email, it is not chosen by the producer. Since 2026-10-03 there is one Discord channel for the whole installation, set up by an administrator, and the publisher adds the message for any kind the owner ticked in `AspNetUsers.DiscordNotificationTypes` while Discord is switched on and a webhook is saved. The text is built by `NotificationTexts` in the owner's language (`AspNetUsers.Language`, or the installation's while it is null), mirrors the bell's sentences, and starts with the owner's display name, because everyone who reads the channel sees it. A new kind therefore reaches Discord once it has a sentence there, and a unit test fails until it does. See [Discord notifications](discord-notifications.md).
 
+## Telegram beside the bell
+
+Telegram, since 2026-10-03, is the third channel outside the application and works exactly like Discord: one installation group set up by an administrator, a `TelegramMessages` row written by the publisher for any kind the owner ticked in `AspNetUsers.TelegramNotificationTypes` while Telegram is switched on and a bot token and chat id are saved, the text from `NotificationTexts.Telegram` in the owner's language with the owner's name in front, and its own outbox job. A unit test fails for a kind without a Telegram text. See [Telegram notifications](telegram-notifications.md).
+
 ## Choosing channels
 
 Each user makes both choices in one place, Settings › Personal › Notifications (`/profile?section=notifications`, `features/profile/notifications-section`): a table of every `NotificationType` against "In app", which is always on except for the monthly digest, and one column per channel that is set up on the installation, saved with one button. A new kind appears in that table by itself, because the rows come from the generated enum.
 
-A channel's column appears only while the public settings say it is set up: "Email" while `emailEnabled` (a working mail server), "Discord" while `discordEnabled` (the switch on and a webhook saved). While the email column is shown and the member's address is unconfirmed, it is disabled with a note that it waits until the address is confirmed. When no channel is set up the description says that an administrator can set up email or Discord, the monthly digest row is hidden because the digest is only ever sent outside the app, the digest note and the "Monthly digest for" household scopes are hidden, and there is no Save button.
+A channel's column appears only while the public settings say it is set up: "Email" while `emailEnabled` (a working mail server), "Discord" while `discordEnabled` (the switch on and a webhook saved), "Telegram" while `telegramEnabled` (the switch on, a bot token and a chat id saved). While the email column is shown and the member's address is unconfirmed, it is disabled with a note that it waits until the address is confirmed. When no channel is set up the description says that an administrator can set up email, Discord or Telegram, the monthly digest row is hidden because the digest is only ever sent outside the app, the digest note and the "Monthly digest for" household scopes are hidden, and there is no Save button.
 
 ## Kinds and the typed payload
 

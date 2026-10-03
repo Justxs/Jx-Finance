@@ -2,6 +2,7 @@ using System.Globalization;
 using JxFinance.Common.Discord;
 using JxFinance.Common.Email;
 using JxFinance.Common.Formats;
+using JxFinance.Common.Telegram;
 using JxFinance.Domain.Budgets;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Notifications;
@@ -12,6 +13,7 @@ namespace JxFinance.Common.Notifications;
 public static class NotificationTexts
 {
     public const string MonthFormat = "yyyy-MM";
+    public const int TelegramTitleMaxLength = 256;
 
     private static readonly string[] LithuanianMonths =
     [
@@ -119,6 +121,28 @@ public static class NotificationTexts
         EmailTexts.IsLithuanian(language)
             ? $"Šis kanalas gaus {DiscordText.Escape(product)} pranešimus. Jei matote šią žinutę, Discord ryšys veikia."
             : $"This channel will receive notifications from {DiscordText.Escape(product)}. If you can read this, the Discord webhook works.";
+
+    public static string Telegram(string language, Notification notification, string member, string? siteUrl)
+    {
+        var title = TextLimit.Ellipsize(Title(language, notification), TelegramTitleMaxLength);
+        var lines = new List<string>
+        {
+            $"{TelegramText.Escape(member)} · <b>{TelegramText.Escape(title)}</b>",
+            TelegramText.Escape(Sentence(language, notification)),
+        };
+        lines.AddRange(DigestDetails(language, notification).Select(TelegramText.Escape));
+        if (PageUrl(notification, siteUrl) is { } url)
+        {
+            lines.Add(TelegramText.Escape(url));
+        }
+
+        return TelegramText.Clip(string.Join('\n', lines), TelegramMessage.ContentMaxLength);
+    }
+
+    public static string TelegramTest(string language, string product) =>
+        EmailTexts.IsLithuanian(language)
+            ? $"Ši grupė gaus {TelegramText.Escape(product)} pranešimus. Jei matote šią žinutę, Telegram ryšys veikia."
+            : $"This group will receive notifications from {TelegramText.Escape(product)}. If you can read this, the Telegram bot works.";
 
     public static IReadOnlyList<string> DigestDetails(string language, Notification notification)
     {

@@ -31,6 +31,7 @@ export * from "./backups";
 export * from "./auth";
 export * from "./email";
 export * from "./discord";
+export * from "./telegram";
 export * from "./setup";
 export * from "./problems";
 export * from "./investments";

@@ -1930,6 +1930,58 @@ namespace JxFinance.Infrastructure.Data.Migrations
                     b.ToTable("Notifications");
                 });
 
+            modelBuilder.Entity("JxFinance.Domain.Notifications.TelegramMessage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Attempts")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasMaxLength(4096)
+                        .HasColumnType("character varying(4096)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DedupeKey")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("LastError")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<DateTimeOffset>("NextAttemptAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("NotificationType")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
+
+                    b.Property<DateTimeOffset?>("SentAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DedupeKey")
+                        .IsUnique()
+                        .HasFilter("\"DedupeKey\" IS NOT NULL");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("SentAt", "NextAttemptAt");
+
+                    b.ToTable("TelegramMessages");
+                });
+
             modelBuilder.Entity("JxFinance.Domain.Payees.PayeeName", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2288,6 +2340,29 @@ namespace JxFinance.Infrastructure.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
                         .HasDefaultValue(true);
+
+                    b.Property<long?>("TelegramChatId")
+                        .IsConcurrencyToken()
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTimeOffset?>("TelegramDisabledByTelegramAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("TelegramEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTimeOffset?>("TelegramLastDeliveredAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("TelegramLastError")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("TelegramProtectedToken")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
 
                     b.Property<string>("TimeZone")
                         .IsRequired()
@@ -3060,6 +3135,12 @@ namespace JxFinance.Infrastructure.Data.Migrations
 
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("text");
+
+                    b.Property<string>("TelegramNotificationTypes")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("jsonb")
+                        .HasDefaultValueSql("'[]'::jsonb");
 
                     b.Property<bool>("TwoFactorEnabled")
                         .HasColumnType("boolean");

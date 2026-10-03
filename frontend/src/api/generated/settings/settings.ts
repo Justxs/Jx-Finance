@@ -43,10 +43,12 @@ import type {
   SettingsResponse,
   SmtpSettingsResponse,
   SmtpTestResponse,
+  TelegramSettingsResponse,
   UpdateDiscordSettingsRequest,
   UpdateMarketPriceSettingsRequest,
   UpdateSettingsRequest,
   UpdateSmtpSettingsRequest,
+  UpdateTelegramSettingsRequest,
 } from "../model";
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
@@ -1356,7 +1358,7 @@ export const getPublicSettingsUrl = () => {
 };
 
 /**
- * Anonymous. Returns only the installation name, the default language, whether this installation can send email, which is what decides if the sign-in page offers "Forgot password", and whether an administrator allowed Discord notifications, which the profile uses to explain its Discord section, and whether passkeys can work here, which is false when the configured site address is plain HTTP or an IP address. No host name, no address and no credential is part of the answer.
+ * Anonymous. Returns only the installation name, the default language, whether this installation can send email, which is what decides if the sign-in page offers "Forgot password", and whether the installation's Discord channel and Telegram group are set up, which decide the profile's notification columns, and whether passkeys can work here, which is false when the configured site address is plain HTTP or an IP address. No host name, no address and no credential is part of the answer.
  * @summary Read the settings the sign-in page needs
  */
 export const publicSettings = async (
@@ -1836,4 +1838,296 @@ export const useSendTestEmail = <TError = ErrorType<ProblemDetails | void>, TCon
   queryClient?: QueryClient,
 ): UseMutationResult<Awaited<ReturnType<typeof sendTestEmail>>, TError, void, TContext> => {
   return useMutation(getSendTestEmailMutationOptions(options), queryClient);
+};
+export const getTelegramSettingsUrl = () => {
+  return `/api/settings/telegram`;
+};
+
+/**
+ * Answers whether Telegram is switched on, whether a bot token is saved, the group's chat id, when a message last reached it and the last error. The bot token is never part of the answer, because anyone holding it controls the bot. disabledByTelegram is true after Telegram answered that the bot was removed from the group or its token was revoked; unreadable is true when the stored token cannot be decrypted, which a restore into an installation with other data protection keys leaves behind. Administrators only.
+ * @summary Read the installation's Telegram group
+ */
+export const telegramSettings = async (
+  options?: Parameters<typeof customFetch>[1],
+): Promise<TelegramSettingsResponse> => {
+  return customFetch<TelegramSettingsResponse>(getTelegramSettingsUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getTelegramSettingsQueryKey = () => {
+  return [`/api/settings/telegram`] as const;
+};
+
+export const getTelegramSettingsSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof telegramSettings>>,
+  TError = ErrorType<ProblemDetails>,
+>(options?: {
+  query?: Partial<
+    UseSuspenseQueryOptions<Awaited<ReturnType<typeof telegramSettings>>, TError, TData>
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getTelegramSettingsQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof telegramSettings>>> = ({ signal }) =>
+    telegramSettings({ signal, ...requestOptions });
+
+  return queryOptionsBuilder({
+    queryKey,
+    ...queryOptions,
+    queryFn: queryOptions?.queryFn ?? queryFn,
+  }) as UseSuspenseQueryOptions<Awaited<ReturnType<typeof telegramSettings>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  } & {
+    throwOnError?: ((this: never, error: TError) => boolean) & { readonly __inferenceOnly: never };
+  };
+};
+
+export type TelegramSettingsSuspenseQueryResult = NonNullable<
+  Awaited<ReturnType<typeof telegramSettings>>
+>;
+export type TelegramSettingsSuspenseQueryError = ErrorType<ProblemDetails>;
+
+export function useTelegramSettingsSuspense<
+  TData = Awaited<ReturnType<typeof telegramSettings>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options: {
+    query: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof telegramSettings>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useTelegramSettingsSuspense<
+  TData = Awaited<ReturnType<typeof telegramSettings>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof telegramSettings>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useTelegramSettingsSuspense<
+  TData = Awaited<ReturnType<typeof telegramSettings>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof telegramSettings>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Read the installation's Telegram group
+ */
+
+export function useTelegramSettingsSuspense<
+  TData = Awaited<ReturnType<typeof telegramSettings>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof telegramSettings>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getTelegramSettingsSuspenseQueryOptions(options);
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export const getUpdateTelegramSettingsUrl = () => {
+  return `/api/settings/telegram`;
+};
+
+/**
+ * Stores the bot token and the id of the one Telegram group this installation posts to, and switches outbound Telegram traffic on or off for everyone. Members then choose on their profile which of their notifications are posted there, with their name in front. The token must be the one @BotFather gave, of the form 123456789:AAE…, or the answer is 400 telegram.invalidToken; the chat id is a whole number, negative for a group, and 0 answers telegram.invalidChat. Switching Telegram on without a saved token answers telegram.invalidToken and without a chat id telegram.invalidChat. The token is encrypted before it is stored and never returned. Leaving botToken empty keeps the stored one; a new token or a new chat id clears the mark Telegram left on a bot it refused. While Telegram is off nothing is queued or sent; messages that were already queued are not sent late but pruned after seven days. Administrators only.
+ * @summary Save the installation's Telegram group
+ */
+export const updateTelegramSettings = async (
+  updateTelegramSettingsRequest: UpdateTelegramSettingsRequest,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<TelegramSettingsResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return customFetch<TelegramSettingsResponse>(getUpdateTelegramSettingsUrl(), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(updateTelegramSettingsRequest),
+  });
+};
+
+export const getUpdateTelegramSettingsMutationKey = () => ["updateTelegramSettings"] as const;
+
+export const getUpdateTelegramSettingsMutationOptions = <
+  TError = ErrorType<ProblemDetails | void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateTelegramSettings>>,
+    TError,
+    UpdateTelegramSettingsMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateTelegramSettings>>,
+  TError,
+  UpdateTelegramSettingsMutationVariables,
+  TContext
+> => {
+  const mutationKey = getUpdateTelegramSettingsMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateTelegramSettings>>,
+    UpdateTelegramSettingsMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return updateTelegramSettings(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateTelegramSettingsMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateTelegramSettings>>
+>;
+export type UpdateTelegramSettingsMutationBody = UpdateTelegramSettingsRequest;
+export type UpdateTelegramSettingsMutationError = ErrorType<ProblemDetails | void>;
+export type UpdateTelegramSettingsMutationVariables = { data: UpdateTelegramSettingsRequest };
+
+/**
+ * @summary Save the installation's Telegram group
+ */
+export const useUpdateTelegramSettings = <
+  TError = ErrorType<ProblemDetails | void>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof updateTelegramSettings>>,
+      TError,
+      UpdateTelegramSettingsMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof updateTelegramSettings>>,
+  TError,
+  UpdateTelegramSettingsMutationVariables,
+  TContext
+> => {
+  return useMutation(getUpdateTelegramSettingsMutationOptions(options), queryClient);
+};
+export const getSendTestTelegramUrl = () => {
+  return `/api/settings/telegram/test`;
+};
+
+/**
+ * Posts one short message to the saved group right away and waits for Telegram's answer, even while Telegram is switched off, so the group can be checked before members use it. Nothing is queued, so a failure is not retried. When Telegram says the group became a supergroup with a new id, the new id is saved and the message sent again. A refusal answers 400 with Telegram's own words: telegram.botRemoved when the bot was removed from the group or its token revoked (which also marks it), telegram.rateLimited, telegram.rejected or telegram.sendFailed. telegram.tokenUnreadable means the stored token cannot be decrypted any more. Rate limited to 10 calls per five minutes per client. Administrators only.
+ * @summary Send a test message to the Telegram group
+ */
+export const sendTestTelegram = async (
+  options?: Parameters<typeof customFetch>[1],
+): Promise<void> => {
+  return customFetch<void>(getSendTestTelegramUrl(), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getSendTestTelegramMutationKey = () => ["sendTestTelegram"] as const;
+
+export const getSendTestTelegramMutationOptions = <
+  TError = ErrorType<ProblemDetails | void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof sendTestTelegram>>,
+    TError,
+    void,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<Awaited<ReturnType<typeof sendTestTelegram>>, TError, void, TContext> => {
+  const mutationKey = getSendTestTelegramMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<Awaited<ReturnType<typeof sendTestTelegram>>, void> = () => {
+    return sendTestTelegram(requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SendTestTelegramMutationResult = NonNullable<
+  Awaited<ReturnType<typeof sendTestTelegram>>
+>;
+
+export type SendTestTelegramMutationError = ErrorType<ProblemDetails | void>;
+
+/**
+ * @summary Send a test message to the Telegram group
+ */
+export const useSendTestTelegram = <TError = ErrorType<ProblemDetails | void>, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof sendTestTelegram>>,
+      TError,
+      void,
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<Awaited<ReturnType<typeof sendTestTelegram>>, TError, void, TContext> => {
+  return useMutation(getSendTestTelegramMutationOptions(options), queryClient);
 };

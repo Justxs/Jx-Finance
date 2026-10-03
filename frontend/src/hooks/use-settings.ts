@@ -37,6 +37,10 @@ export function useDiscordEnabled(): boolean {
   return usePublicSettings()?.discordEnabled ?? false;
 }
 
+export function useTelegramEnabled(): boolean {
+  return usePublicSettings()?.telegramEnabled ?? false;
+}
+
 export function useFeature(feature: FeatureKey): boolean {
   return useSettings().features[feature];
 }

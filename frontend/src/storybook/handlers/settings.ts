@@ -12,6 +12,9 @@ import {
   getDiscordSettingsMockHandler,
   getSendTestDiscordMockHandler,
   getUpdateDiscordSettingsMockHandler,
+  getSendTestTelegramMockHandler,
+  getTelegramSettingsMockHandler,
+  getUpdateTelegramSettingsMockHandler,
   getUpdateMarketPriceSettingsMockHandler,
   getUpdateSettingsMockHandler,
   getUpdateSmtpSettingsMockHandler,
@@ -26,6 +29,7 @@ import {
   settings,
   smtpSettings,
   smtpTestSent,
+  telegramSettings,
 } from "@/storybook/fixtures";
 import { currencyCode, readBody, text } from "./http";
 
@@ -37,6 +41,11 @@ export const emailEnabledHandler = getPublicSettingsMockHandler({
 export const discordOffHandler = getPublicSettingsMockHandler({
   ...publicSettings,
   discordEnabled: false,
+});
+
+export const telegramEnabledHandler = getPublicSettingsMockHandler({
+  ...publicSettings,
+  telegramEnabled: true,
 });
 
 export const passkeysOffHandler = getPublicSettingsMockHandler({
@@ -78,6 +87,18 @@ export const settingsHandlers = [
     };
   }),
   getSendTestDiscordMockHandler(),
+  getTelegramSettingsMockHandler(telegramSettings),
+  getUpdateTelegramSettingsMockHandler(async ({ request }) => {
+    const body = await readBody(request);
+    const replaced = Boolean(text(body.botToken));
+    return {
+      ...telegramSettings,
+      enabled: body.enabled === true,
+      chatId: typeof body.chatId === "number" ? body.chatId : null,
+      disabledByTelegram: replaced ? false : telegramSettings.disabledByTelegram,
+    };
+  }),
+  getSendTestTelegramMockHandler(),
   getMarketPriceSettingsMockHandler(marketPriceSettings),
   getUpdateMarketPriceSettingsMockHandler(async ({ request }) => {
     const body = await readBody(request);

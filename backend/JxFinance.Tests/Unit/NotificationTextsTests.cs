@@ -1,5 +1,6 @@
 using JxFinance.Common.Discord;
 using JxFinance.Common.Notifications;
+using JxFinance.Common.Telegram;
 using JxFinance.Domain.Budgets;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Notifications;
@@ -105,6 +106,55 @@ public sealed class NotificationTextsTests
     public void The_username_avoids_names_discord_refuses(string product, string expected)
     {
         Assert.Equal(expected, DiscordText.Username(product));
+    }
+
+    [Theory]
+    [MemberData(nameof(EveryTypeInEveryLanguage))]
+    public void Every_notification_type_reaches_telegram_with_its_sentence(NotificationType type, string language)
+    {
+        var notification = Sample(type);
+
+        var content = NotificationTexts.Telegram(language, notification, "Ona", null);
+
+        Assert.Contains(TelegramText.Escape(NotificationTexts.Sentence(language, notification)), content, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void The_telegram_message_escapes_html_and_mentions_and_links_to_the_page()
+    {
+        var notification = Sample(NotificationType.BillDue);
+        notification.Title = "<i>Rent</i> & @everyone";
+
+        var content = NotificationTexts.Telegram("en", notification, "<Ona>", "https://finance.test/");
+
+        Assert.StartsWith(
+            "&lt;Ona&gt; · <b>&lt;i&gt;Rent&lt;/i&gt; &amp; @⁠everyone</b>\nPayment due 2026-10-05",
+            content,
+            StringComparison.Ordinal);
+        Assert.EndsWith("\nhttps://finance.test/recurring-bills", content, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void A_long_title_is_shortened_inside_the_bold_tag()
+    {
+        var notification = Sample(NotificationType.BudgetExceeded);
+        notification.Title = new string('&', 5000);
+
+        var content = NotificationTexts.Telegram("en", notification, "Ona", null);
+
+        Assert.True(content.Length <= TelegramMessage.ContentMaxLength);
+        Assert.Contains("&amp;…</b>", content, StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData("abcdef", 4, "abc…")]
+    [InlineData("a&amp;b", 4, "a…")]
+    [InlineData("a&amp;bc", 7, "a&amp;…")]
+    [InlineData("short", 10, "short")]
+    [InlineData("ab😀cd", 4, "ab…")]
+    public void Clipping_never_cuts_an_entity_or_an_emoji_in_half(string html, int maxLength, string expected)
+    {
+        Assert.Equal(expected, TelegramText.Clip(html, maxLength));
     }
 
     private static Notification Sample(NotificationType type) => new()

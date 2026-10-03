@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common.OpenApi;
 
 namespace JxFinance.Endpoints.Settings.UpdateMarketPriceSettings;
 
@@ -15,5 +16,6 @@ public sealed class UpdateMarketPriceSettingsSummary : Summary<UpdateMarketPrice
         RequestParam(r => r.EodhdApiKey, "Null keeps the saved key, an empty string removes it, anything else replaces it.");
         Responses[200] = "The saved settings, without the key.";
         Responses[403] = "Only administrators can change installation settings.";
+        Responses[409] = SummaryText.StaleSettings;
     }
 }

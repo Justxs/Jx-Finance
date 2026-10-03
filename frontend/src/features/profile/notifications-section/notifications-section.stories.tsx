@@ -15,6 +15,7 @@ import {
   discordOffHandler,
   emailEnabledHandler,
   pending,
+  telegramEnabledHandler,
   withHandlers,
 } from "@/storybook/handlers";
 import { NotificationsSection } from "./notifications-section";
@@ -67,7 +68,9 @@ export const DiscordNotSetUp: Story = {
 export const NothingSetUp: Story = {
   parameters: withHandlers(discordOffHandler),
   play: async ({ canvas }) => {
-    await expect(await canvas.findByText(/can set up email or Discord/u)).toBeInTheDocument();
+    await expect(
+      await canvas.findByText(/can set up email, Discord or Telegram/u),
+    ).toBeInTheDocument();
     await expect(canvas.queryByRole("columnheader", { name: "Discord" })).toBeNull();
     await expect(canvas.queryByText("Monthly digest")).toBeNull();
     await expect(canvas.queryByRole("button", { name: "Save" })).toBeNull();
@@ -95,7 +98,7 @@ export const DigestChosen: Story = {
     await waitFor(() => expect(digestByEmail).not.toHaveAttribute("aria-disabled"));
     await expect(digestByEmail).toBeChecked();
     await expect(
-      canvas.getByRole("img", { name: "Only sent by email or Discord" }),
+      canvas.getByRole("img", { name: "Only sent by email, Discord or Telegram" }),
     ).toBeInTheDocument();
     await expect(canvas.getByText(/sums up the month that ended/u)).toBeInTheDocument();
   },
@@ -150,6 +153,40 @@ export const SavingEmailChoices: Story = {
 export const SavingDiscordChoices: Story = {
   play: async ({ canvas }) => {
     const budget = await canvas.findByRole("checkbox", { name: "A budget reaches 80% on Discord" });
+    await userEvent.click(budget);
+    await expect(budget).toBeChecked();
+    const save = canvas.getByRole("button", { name: "Save" });
+    await userEvent.click(save);
+    await waitFor(() => expect(save).not.toHaveAttribute("aria-busy"));
+  },
+};
+
+export const EveryChannel: Story = {
+  parameters: withHandlers(
+    getPublicSettingsMockHandler({
+      ...publicSettings,
+      emailEnabled: true,
+      discordEnabled: true,
+      telegramEnabled: true,
+    }),
+    getMeMockHandler({ ...currentUser, telegramNotificationTypes: ["lowBalance"] }),
+  ),
+  play: async ({ canvas }) => {
+    await expect(await canvas.findByRole("columnheader", { name: "Telegram" })).toBeVisible();
+    await expect(canvas.getByRole("columnheader", { name: "Discord" })).toBeVisible();
+    await expect(canvas.getByRole("columnheader", { name: "Email" })).toBeVisible();
+    await expect(
+      canvas.getByRole("checkbox", { name: "An account is forecast to go below zero on Telegram" }),
+    ).toBeChecked();
+  },
+};
+
+export const SavingTelegramChoices: Story = {
+  parameters: withHandlers(telegramEnabledHandler),
+  play: async ({ canvas }) => {
+    const budget = await canvas.findByRole("checkbox", {
+      name: "A budget reaches 80% on Telegram",
+    });
     await userEvent.click(budget);
     await expect(budget).toBeChecked();
     const save = canvas.getByRole("button", { name: "Save" });

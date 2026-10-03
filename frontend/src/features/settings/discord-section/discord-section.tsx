@@ -1,4 +1,3 @@
-import { Send } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -9,11 +8,10 @@ import {
 } from "@/api/generated";
 import type { DiscordSettingsResponse } from "@/api/generated/model";
 import { useServerForm } from "@/components/form";
-import { FormError } from "@/components/form-error/form-error";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
-import { Button } from "@/components/ui/button/button";
-import { DiscordFormSkeleton } from "@/features/settings/settings-page/settings-page-pending";
-import { useDateTime } from "@/hooks/use-formatters";
+import { ChannelActions } from "@/features/settings/channel-actions/channel-actions";
+import { DeliveryStatus } from "@/features/settings/delivery-status/delivery-status";
+import { ChannelFormSkeleton } from "@/features/settings/settings-page/settings-page-pending";
 import { silentMutation } from "@/lib/mutations";
 
 const webhookPattern =
@@ -21,7 +19,6 @@ const webhookPattern =
 
 function DiscordForm({ settings }: Readonly<{ settings: DiscordSettingsResponse }>) {
   const { t } = useTranslation();
-  const formatDateTime = useDateTime();
   const saveMutation = useUpdateDiscordSettings({
     mutation: { ...silentMutation, onSuccess: () => toast.success(t("settings.discord.saved")) },
   });
@@ -58,12 +55,6 @@ function DiscordForm({ settings }: Readonly<{ settings: DiscordSettingsResponse 
   const problem =
     (settings.unreadable && t("settings.discord.unreadable")) ||
     (settings.disabledByDiscord && t("settings.discord.gone"));
-
-  const delivery =
-    settings.hasWebhook &&
-    (settings.lastDeliveredAt
-      ? t("settings.discord.lastDelivered", { date: formatDateTime(settings.lastDeliveredAt) })
-      : t("settings.discord.neverDelivered"));
 
   return (
     <form.AppForm>
@@ -102,37 +93,26 @@ function DiscordForm({ settings }: Readonly<{ settings: DiscordSettingsResponse 
           )}
         </form.Field>
 
-        {delivery || settings.lastError ? (
-          <div className="max-w-prose space-y-0.5 text-sm text-muted-foreground">
-            {delivery ? <p>{delivery}</p> : null}
-            {settings.lastError && !problem ? (
-              <p className="wrap-break-word">
-                {t("settings.discord.lastError", { error: settings.lastError })}
-              </p>
-            ) : null}
-          </div>
-        ) : null}
+        <DeliveryStatus
+          configured={settings.hasWebhook}
+          lastDeliveredAt={settings.lastDeliveredAt}
+          lastError={problem ? null : settings.lastError}
+        />
 
-        <FormError error={testMutation.error ?? saveMutation.error} />
-
-        <div className="flex flex-wrap items-center gap-3">
-          <Button
-            type="button"
-            variant="outline"
-            pending={testMutation.isPending}
-            disabled={!settings.hasWebhook}
-            onClick={() => {
-              saveMutation.reset();
-              testMutation.mutate();
-            }}
-          >
-            <Send />
-            {t("settings.discord.test")}
-          </Button>
+        <ChannelActions
+          error={testMutation.error ?? saveMutation.error}
+          testLabel={t("settings.discord.test")}
+          testPending={testMutation.isPending}
+          canTest={settings.hasWebhook}
+          onTest={() => {
+            saveMutation.reset();
+            testMutation.mutate();
+          }}
+        >
           <form.SubmitButton pending={saveMutation.isPending} className="ml-auto">
             {t("actions.save")}
           </form.SubmitButton>
-        </div>
+        </ChannelActions>
       </form.FormShell>
     </form.AppForm>
   );
@@ -150,7 +130,7 @@ export function DiscordSection() {
       <p className="max-w-prose text-sm text-muted-foreground">
         {t("settings.discord.description")}
       </p>
-      <QueryBoundary fallback={<DiscordFormSkeleton />}>
+      <QueryBoundary fallback={<ChannelFormSkeleton />}>
         <DiscordSettings />
       </QueryBoundary>
     </>

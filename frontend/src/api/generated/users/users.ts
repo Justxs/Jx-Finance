@@ -35,6 +35,7 @@ import type {
   UpdateMyEmailNotificationsRequest,
   UpdateMyLanguageRequest,
   UpdateMyProfileRequest,
+  UpdateMyTelegramNotificationsRequest,
   UpdateUserRoleRequest,
   UserProfileResponse,
   UsersParams,
@@ -393,7 +394,7 @@ export const getUpdateMyDigestScopesUrl = () => {
 };
 
 /**
- * Replaces the scopes your monthly digest covers, for email and Discord alike: everything, the default, which is your own records and everything shared into any of your households, and each household listed, whose digest reads the month as the dashboard does with that household picked. Each chosen scope is its own message. The digest is still sent only when you tick it for email or Discord, and nothing is sent when no scope is chosen.
+ * Replaces the scopes your monthly digest covers, for email, Discord and Telegram alike: everything, the default, which is your own records and everything shared into any of your households, and each household listed, whose digest reads the month as the dashboard does with that household picked. Each chosen scope is its own message. The digest is still sent only when you tick it for email, Discord or Telegram, and nothing is sent when no scope is chosen.
  * @summary Choose which scopes get a monthly digest
  */
 export const updateMyDigestScopes = async (
@@ -948,7 +949,7 @@ export const getUpdateMyLanguageUrl = () => {
 };
 
 /**
- * Saves the language you picked in the interface, en or lt, so that every email and Discord message the server sends you is written in it. Until you save one, messages use the installation's default language. The interface itself keeps its language per browser.
+ * Saves the language you picked in the interface, en or lt, so that every email, Discord and Telegram message the server sends you is written in it. Until you save one, messages use the installation's default language. The interface itself keeps its language per browser.
  * @summary Save your language
  */
 export const updateMyLanguage = async (
@@ -1048,6 +1049,118 @@ export const useUpdateMyLanguage = <TError = ErrorType<ProblemDetails | void>, T
   TContext
 > => {
   return useMutation(getUpdateMyLanguageMutationOptions(options), queryClient);
+};
+export const getUpdateMyTelegramNotificationsUrl = () => {
+  return `/api/users/me/telegram-notifications`;
+};
+
+/**
+ * Replaces the list of notification kinds of yours that are also posted to the installation's Telegram group, with your name in front. Every in-app notification of a chosen kind then queues one Telegram message, at most once per kind, subject and day. Nothing is posted while an administrator has not switched Telegram on and saved a bot token and a group. The group is shared: everyone in it sees what you tick. An empty list is allowed and posts nothing.
+ * @summary Choose which notifications are posted to Telegram
+ */
+export const updateMyTelegramNotifications = async (
+  updateMyTelegramNotificationsRequest: UpdateMyTelegramNotificationsRequest,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<UserProfileResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return customFetch<UserProfileResponse>(getUpdateMyTelegramNotificationsUrl(), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(updateMyTelegramNotificationsRequest),
+  });
+};
+
+export const getUpdateMyTelegramNotificationsMutationKey = () =>
+  ["updateMyTelegramNotifications"] as const;
+
+export const getUpdateMyTelegramNotificationsMutationOptions = <
+  TError = ErrorType<ProblemDetails | void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateMyTelegramNotifications>>,
+    TError,
+    UpdateMyTelegramNotificationsMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateMyTelegramNotifications>>,
+  TError,
+  UpdateMyTelegramNotificationsMutationVariables,
+  TContext
+> => {
+  const mutationKey = getUpdateMyTelegramNotificationsMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateMyTelegramNotifications>>,
+    UpdateMyTelegramNotificationsMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return updateMyTelegramNotifications(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateMyTelegramNotificationsMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateMyTelegramNotifications>>
+>;
+export type UpdateMyTelegramNotificationsMutationBody = UpdateMyTelegramNotificationsRequest;
+export type UpdateMyTelegramNotificationsMutationError = ErrorType<ProblemDetails | void>;
+export type UpdateMyTelegramNotificationsMutationVariables = {
+  data: UpdateMyTelegramNotificationsRequest;
+};
+
+/**
+ * @summary Choose which notifications are posted to Telegram
+ */
+export const useUpdateMyTelegramNotifications = <
+  TError = ErrorType<ProblemDetails | void>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof updateMyTelegramNotifications>>,
+      TError,
+      UpdateMyTelegramNotificationsMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof updateMyTelegramNotifications>>,
+  TError,
+  UpdateMyTelegramNotificationsMutationVariables,
+  TContext
+> => {
+  return useMutation(getUpdateMyTelegramNotificationsMutationOptions(options), queryClient);
 };
 export const getDeactivateUserUrl = (id: string) => {
   return `/api/users/${id}/deactivate`;

@@ -14,6 +14,7 @@ using JxFinance.Endpoints.Users.UpdateMyDiscordNotifications;
 using JxFinance.Endpoints.Users.UpdateMyEmailNotifications;
 using JxFinance.Endpoints.Users.UpdateMyLanguage;
 using JxFinance.Endpoints.Users.UpdateMyProfile;
+using JxFinance.Endpoints.Users.UpdateMyTelegramNotifications;
 using JxFinance.Endpoints.Users.UpdateUserRole;
 using JxFinance.Infrastructure.Auth;
 using JxFinance.Infrastructure.Data;
@@ -321,6 +322,11 @@ public sealed class UserService(
         UpdateMyDiscordNotificationsRequest request,
         CancellationToken cancellationToken) =>
         UpdateOwnAsync(user => user.DiscordNotificationTypes = [.. request.Types], cancellationToken);
+
+    public Task<Result<UserProfileResponse>> UpdateOwnTelegramNotificationsAsync(
+        UpdateMyTelegramNotificationsRequest request,
+        CancellationToken cancellationToken) =>
+        UpdateOwnAsync(user => user.TelegramNotificationTypes = [.. request.Types], cancellationToken);
 
     public Task<Result<UserProfileResponse>> UpdateOwnLanguageAsync(
         UpdateMyLanguageRequest request,

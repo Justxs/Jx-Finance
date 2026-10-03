@@ -8,6 +8,7 @@ using JxFinance.Endpoints.Users.UpdateMyDiscordNotifications;
 using JxFinance.Endpoints.Users.UpdateMyEmailNotifications;
 using JxFinance.Endpoints.Users.UpdateMyLanguage;
 using JxFinance.Endpoints.Users.UpdateMyProfile;
+using JxFinance.Endpoints.Users.UpdateMyTelegramNotifications;
 using JxFinance.Endpoints.Users.UpdateUserRole;
 
 namespace JxFinance.Endpoints.Users.Interfaces;
@@ -40,6 +41,10 @@ public interface IUserService
 
     Task<Result<UserProfileResponse>> UpdateOwnDiscordNotificationsAsync(
         UpdateMyDiscordNotificationsRequest request,
+        CancellationToken cancellationToken);
+
+    Task<Result<UserProfileResponse>> UpdateOwnTelegramNotificationsAsync(
+        UpdateMyTelegramNotificationsRequest request,
         CancellationToken cancellationToken);
 
     Task<Result<UserProfileResponse>> UpdateOwnLanguageAsync(

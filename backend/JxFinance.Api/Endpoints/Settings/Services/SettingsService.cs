@@ -39,6 +39,7 @@ public sealed class SettingsService(
             store.Current.DefaultLanguage,
             store.Current.Smtp.IsConfigured,
             store.Current.DiscordEnabled,
+            store.Current.TelegramEnabled,
             PasskeySite.IsAvailable(options.Value.SiteUrl));
 
     public async Task<Result<SettingsResponse>> UpdateAsync(

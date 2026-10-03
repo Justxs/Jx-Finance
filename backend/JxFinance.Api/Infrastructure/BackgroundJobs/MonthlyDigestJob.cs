@@ -50,7 +50,7 @@ public sealed class MonthlyDigestJob(
             .AsNoTracking()
             .Where(AppUser.IsActive)
             .OrderBy(u => u.Id)
-            .Select(u => new { u.Id, u.EmailNotificationTypes, u.DiscordNotificationTypes, u.MonthlyDigestEverything, u.MonthlyDigestHouseholdIds })
+            .Select(u => new { u.Id, u.EmailNotificationTypes, u.DiscordNotificationTypes, u.TelegramNotificationTypes, u.MonthlyDigestEverything, u.MonthlyDigestHouseholdIds })
             .ToListAsync(ct);
         var sent = (await Sent(services).Select(n => new { n.UserId, n.RelatedId }).ToListAsync(ct))
             .Select(n => (n.UserId, n.RelatedId))
@@ -59,7 +59,8 @@ public sealed class MonthlyDigestJob(
 
         return users
             .Where(u => u.EmailNotificationTypes.Contains(NotificationType.MonthlyDigest)
-                || (settings.DiscordEnabled && u.DiscordNotificationTypes.Contains(NotificationType.MonthlyDigest)))
+                || (settings.DiscordEnabled && u.DiscordNotificationTypes.Contains(NotificationType.MonthlyDigest))
+                || (settings.TelegramEnabled && u.TelegramNotificationTypes.Contains(NotificationType.MonthlyDigest)))
             .SelectMany(u => (u.MonthlyDigestEverything ? [(Guid?)null] : Array.Empty<Guid?>())
                 .Concat(households ? u.MonthlyDigestHouseholdIds.Select(id => (Guid?)id) : [])
                 .Select(household => (u.Id, household)))

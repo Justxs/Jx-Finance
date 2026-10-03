@@ -7,7 +7,7 @@ public sealed class InstanceSettings
 {
     public const int SingletonId = 1;
     public const int SmtpDefaultPort = 587;
-    public const int DiscordErrorMaxLength = 500;
+    public const int ChannelErrorMaxLength = 500;
 
     public int Id { get; set; } = SingletonId;
     public string? InstanceName { get; set; }
@@ -33,6 +33,12 @@ public sealed class InstanceSettings
     public DateTimeOffset? DiscordLastDeliveredAt { get; set; }
     public string? DiscordLastError { get; set; }
     public DateTimeOffset? DiscordDisabledByDiscordAt { get; set; }
+    public bool TelegramEnabled { get; set; }
+    public string TelegramProtectedToken { get; set; } = string.Empty;
+    public long? TelegramChatId { get; set; }
+    public DateTimeOffset? TelegramLastDeliveredAt { get; set; }
+    public string? TelegramLastError { get; set; }
+    public DateTimeOffset? TelegramDisabledByTelegramAt { get; set; }
     public bool SupportLinkEnabled { get; set; } = true;
     public bool PriceSyncEnabled { get; set; }
     public string EodhdProtectedKey { get; set; } = string.Empty;
@@ -51,6 +57,20 @@ public sealed class InstanceSettings
         else if (gone)
         {
             DiscordDisabledByDiscordAt = now;
+        }
+    }
+
+    public void RecordTelegramSend(DateTimeOffset now, string? error, bool gone = false)
+    {
+        TelegramLastError = error;
+        if (error is null)
+        {
+            TelegramLastDeliveredAt = now;
+            TelegramDisabledByTelegramAt = null;
+        }
+        else if (gone)
+        {
+            TelegramDisabledByTelegramAt = now;
         }
     }
 }

@@ -10,6 +10,7 @@ import {
   getResetUserPasswordMockHandler,
   getUpdateMyDigestScopesMockHandler,
   getUpdateMyDiscordNotificationsMockHandler,
+  getUpdateMyTelegramNotificationsMockHandler,
   getUsersMockHandler,
   getUpdateMyEmailNotificationsMockHandler,
   getUpdateMyLanguageMockHandler,
@@ -98,6 +99,16 @@ export const userHandlers = [
     return {
       ...currentUser,
       discordNotificationTypes: Object.values(NotificationType).filter((kind) =>
+        chosen.includes(kind),
+      ),
+    };
+  }),
+  getUpdateMyTelegramNotificationsMockHandler(async ({ request }) => {
+    const body = await readBody(request);
+    const chosen: unknown[] = Array.isArray(body.types) ? body.types : [];
+    return {
+      ...currentUser,
+      telegramNotificationTypes: Object.values(NotificationType).filter((kind) =>
         chosen.includes(kind),
       ),
     };

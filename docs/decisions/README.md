@@ -31,11 +31,12 @@ Before changing behaviour that a page here covers, read that page. When you choo
 | [Reports](reports.md) | Comparisons | 10 | [Reports](../features/reports.md) |
 | [Exports](exports.md) | Data export per user, Ledger exports | 10 | [Exports](../features/exports.md), [Data export per user](../features/data-export-per-user.md) |
 | [Investments](investments.md) | Investments | 10 | [Investments](../features/investments.md) |
-| [Installation settings and feature switches](installation-settings.md) | none | 2 | [Installation settings and feature switches](../features/installation-settings.md) |
+| [Installation settings and feature switches](installation-settings.md) | none | 3 | [Installation settings and feature switches](../features/installation-settings.md) |
 | [Backup and restore](backup-and-restore.md) | Backup and restore | 5 | [Backup and restore](../features/backup-and-restore.md) |
 | [Interface and command palette](interface.md) | Design, Navigation, Command palette | 10 | [Interface](../features/interface.md) |
 | [Email](email.md) | Email | 10 | [Email](../features/email.md) |
 | [Discord notifications](discord-notifications.md) | Discord notifications | 10 | [Discord notifications](../features/discord-notifications.md) |
+| [Telegram notifications](telegram-notifications.md) | Telegram notifications | 7 | [Telegram notifications](../features/telegram-notifications.md) |
 | [Unusual amounts](unusual-amounts.md) | Unusual amounts | 10 | [Unusual amounts](../features/unusual-amounts.md) |
 | [Month-end close](month-end-close.md) | Month-end close | 10 | [Month-end close](../features/month-end-close.md) |
 | [Reconciliation](reconciliation.md) | Reconciliation | 7 | [Reconciliation](../features/reconciliation.md) |

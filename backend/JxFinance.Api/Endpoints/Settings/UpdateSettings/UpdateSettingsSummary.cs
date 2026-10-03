@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common.OpenApi;
 
 namespace JxFinance.Endpoints.Settings.UpdateSettings;
 
@@ -20,5 +21,6 @@ public sealed class UpdateSettingsSummary : Summary<UpdateSettingsEndpoint, Upda
         Responses[200] = "The saved settings.";
         Responses[400] = "Validation failed, or the reporting currency could not be changed because a rate is missing.";
         Responses[403] = "Only administrators can change settings.";
+        Responses[409] = SummaryText.StaleSettings;
     }
 }

@@ -16,6 +16,14 @@ public sealed class TextLimitTests
     [Fact]
     public void Ellipsize_keeps_null() => Assert.Null(TextLimit.Ellipsize(null, 5));
 
+    [Fact]
+    public void A_cut_never_splits_an_emoji_in_half()
+    {
+        Assert.Equal("ab…", TextLimit.Ellipsize("ab😀cd", 4));
+        Assert.Equal("ab", TextLimit.Cut("ab😀cd", 3));
+        Assert.Equal("ab😀", TextLimit.Cut("ab😀cd", 4));
+    }
+
     [Theory]
     [InlineData("  short  ", 5, "short")]
     [InlineData("abcdef", 5, "abcde")]

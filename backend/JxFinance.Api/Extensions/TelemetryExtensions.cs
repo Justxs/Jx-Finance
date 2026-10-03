@@ -3,6 +3,7 @@ using JxFinance.Common;
 using JxFinance.Infrastructure.Configuration;
 using JxFinance.Infrastructure.Discord;
 using JxFinance.Infrastructure.MarketPrices;
+using JxFinance.Infrastructure.Telegram;
 using Npgsql;
 using OpenTelemetry;
 using OpenTelemetry.Metrics;
@@ -53,6 +54,11 @@ public static class TelemetryExtensions
             ? $"{uri.Scheme}://{uri.Host}/api/webhooks/{SecretText.Hidden}"
             : null;
 
+    public static string? RedactedTelegramUrl(Uri? uri) =>
+        uri is not null && uri.Host.Equals(TelegramBotClient.HostName, StringComparison.OrdinalIgnoreCase)
+            ? $"{uri.Scheme}://{uri.Host}/bot{SecretText.Hidden}/{uri.Segments[^1]}"
+            : null;
+
     public static string? RedactedEodhdUrl(Uri? uri)
     {
         if (uri is null || !uri.Host.EndsWith(EodhdPriceProvider.HostName, StringComparison.OrdinalIgnoreCase))
@@ -70,7 +76,9 @@ public static class TelemetryExtensions
 
     private static void Redact(Activity activity, HttpRequestMessage request)
     {
-        if ((RedactedDiscordUrl(request.RequestUri) ?? RedactedEodhdUrl(request.RequestUri)) is not { } redacted)
+        if ((RedactedDiscordUrl(request.RequestUri)
+            ?? RedactedTelegramUrl(request.RequestUri)
+            ?? RedactedEodhdUrl(request.RequestUri)) is not { } redacted)
         {
             return;
         }

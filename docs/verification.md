@@ -42,7 +42,7 @@ The full detail of these is in the git history of this file.
 
 ## What automated checks do not show
 
-No feature added from 2026-09-20 on has been used by a person, and none has met a real host, a real SMTP server, a real Discord webhook, real bank or broker files, or a passkey on a real device. Certificate trust on client devices and the administrator recovery command inside the container are unverified, and the CI workflow has not run on the Gitea runner. The [release checklist](release-checklist.md) keeps the open items and the [backlog](backlog.md) the order to do them in.
+No feature added from 2026-09-20 on has been used by a person, and none has met a real host, a real SMTP server, a real Discord webhook, a real Telegram bot, real bank or broker files, or a passkey on a real device. Certificate trust on client devices and the administrator recovery command inside the container are unverified, and the CI workflow has not run on the Gitea runner. The [release checklist](release-checklist.md) keeps the open items and the [backlog](backlog.md) the order to do them in.
 
 ## Double-entry journal
 

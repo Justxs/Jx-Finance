@@ -6,14 +6,16 @@ participant "INotificationPublisher" as N
 database "PostgreSQL" as P
 participant "EmailOutboxJob\nevery minute" as EO
 participant "DiscordOutboxJob\nevery 30 s" as DO
+participant "TelegramOutboxJob\nevery 30 s" as TO
 participant "SMTP server" as M
 participant "Discord" as D
+participant "Telegram" as T
 
 group one transaction
   J -> P : advisory lock, read per-user state
   J -> N : PreloadAsync(owners)
   J -> N : Publish(notification)
-  N -> P : Notification, EmailMessages,\nDiscordMessages rows
+  N -> P : Notification, EmailMessages,\nDiscordMessages, TelegramMessages rows
 end
 
 loop drain the outboxes
@@ -22,7 +24,9 @@ loop drain the outboxes
   opt failure
     EO -> P : retry at 4, 16, 64, 240 min
   end
-  DO -> P : claim up to 50 rows,\nfive per user
+  DO -> P : claim up to five rows
   DO -> D : post, no mentions parsed
+  TO -> P : claim up to five rows
+  TO -> T : sendMessage, HTML escaped,\nno link previews
 end
 @enduml

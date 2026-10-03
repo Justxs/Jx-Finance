@@ -49,6 +49,7 @@ export const publicSettings: PublicSettingsResponse = {
   defaultLanguage: settings.defaultLanguage,
   emailEnabled: false,
   discordEnabled: true,
+  telegramEnabled: false,
   passkeysAvailable: true,
 };
 

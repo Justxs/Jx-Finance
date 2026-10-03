@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common.OpenApi;
 using JxFinance.Domain.Email;
 
 namespace JxFinance.Endpoints.Settings.UpdateSmtpSettings;
@@ -34,5 +35,6 @@ public sealed class UpdateSmtpSettingsSummary : Summary<UpdateSmtpSettingsEndpoi
         Responses[400] = "Invalid settings, email.insecureConnection, or email.passwordRequired.";
         Responses[200] = "The saved settings, without the password.";
         Responses[403] = "Only administrators can change installation settings.";
+        Responses[409] = SummaryText.StaleSettings;
     }
 }

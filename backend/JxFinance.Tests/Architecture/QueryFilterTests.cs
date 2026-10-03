@@ -41,6 +41,7 @@ public sealed partial class QueryFilterTests
         typeof(PersonalApiToken),
         typeof(Security),
         typeof(SecurityPrice),
+        typeof(TelegramMessage),
         typeof(UserSession),
     ];
 

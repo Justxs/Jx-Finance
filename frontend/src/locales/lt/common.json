@@ -1078,17 +1078,19 @@
     "notifications": {
       "title": "Pranešimai",
       "description": "Visi pranešimai rodomi prie varpelio. Pažymėkite, kuriuos taip pat norite gauti už programos ribų.",
-      "descriptionInAppOnly": "Visi pranešimai rodomi prie varpelio. Administratorius gali nustatyti el. paštą arba Discord, kad jie būtų siunčiami ir už programos ribų.",
+      "descriptionInAppOnly": "Visi pranešimai rodomi prie varpelio. Administratorius gali nustatyti el. paštą, Discord arba Telegram, kad jie būtų siunčiami ir už programos ribų.",
       "kind": "Pranešimas",
       "inApp": "Programoje",
       "email": "El. paštas",
       "discord": "Discord",
+      "telegram": "Telegram",
       "alwaysInApp": "Visada rodoma programoje",
       "byEmail": "{{kind}} el. paštu",
       "byDiscord": "{{kind}} į Discord",
+      "byTelegram": "{{kind}} į Telegram",
       "needsVerification": "El. paštas negalimas, kol nepatvirtinsite savo adreso.",
       "saved": "Pranešimų nustatymai išsaugoti",
-      "digestOnlyOutside": "Siunčiama tik el. paštu arba į Discord",
+      "digestOnlyOutside": "Siunčiama tik el. paštu, į Discord arba Telegram",
       "digestScopes": "Mėnesio suvestinė apie",
       "digestScopesHint": "Kiekviena pažymėta ateina atskiru pranešimu, su mėnesiu tokiu, kokį rodo pagrindinis puslapis pasirinkus tą namų ūkį.",
       "digestNote": "Mėnesio suvestinė atkeliauja pirmosiomis mėnesio dienomis ir apibendrina pasibaigusį mėnesį: pajamas ir išlaidas, labiausiai pasikeitusias kategorijas ir tai, ką dar reikia sutvarkyti prieš jį uždarant. Pažymėkite ją aukščiau, kad ją gautumėte."
@@ -1301,7 +1303,10 @@
       "testSent": "Bandomasis laiškas išsiųstas adresu {{email}}"
     },
     "notificationProviders": {
-      "title": "Pranešimų teikėjai"
+      "title": "Pranešimų teikėjai",
+      "lastDelivered": "Paskutinė žinutė pristatyta {{date}}.",
+      "neverDelivered": "Kol kas nieko nepristatyta.",
+      "lastError": "Paskutinė problema: {{error}}"
     },
     "discord": {
       "title": "Discord",
@@ -1314,11 +1319,24 @@
       "webhookPlaceholder": "Išsaugota. Įklijuokite naują nuorodą, kad pakeistumėte.",
       "test": "Siųsti bandomąją žinutę",
       "testSent": "Bandomoji žinutė išsiųsta į Discord",
-      "lastDelivered": "Paskutinė žinutė pristatyta {{date}}.",
-      "neverDelivered": "Kol kas nieko nepristatyta.",
-      "lastError": "Paskutinė problema: {{error}}",
       "gone": "Discord teigia, kad šio webhook nebėra. Sukurkite naują Discord programoje ir įklijuokite jo nuorodą.",
       "unreadable": "Išsaugoto webhook nebeįmanoma perskaityti – dažniausiai taip nutinka atkūrus kopiją iš kitos sistemos. Įklijuokite webhook nuorodą iš naujo."
+    },
+    "telegram": {
+      "title": "Telegram",
+      "description": "Telegram grupė, į kurią ši sistema siunčia pranešimus. Nariai savo profilyje pasirenka, kuriuos savo pranešimus ten siųsti, o kiekviena žinutė prasideda jų vardu, todėl ją mato visi grupės nariai.",
+      "enabled": "Siųsti pranešimus į Telegram",
+      "enabledHint": "Žinutės siunčiamos iš šio serverio į api.telegram.org. Kol išjungta, niekas nesiunčiama, o boto raktas lieka išsaugotas.",
+      "saved": "Telegram nustatymai išsaugoti",
+      "botToken": "Boto raktas",
+      "botTokenHint": "Telegram programoje: parašykite @BotFather, išsiųskite /newbot ir nukopijuokite gautą raktą. Tada pridėkite botą į grupę.",
+      "tokenPlaceholder": "Išsaugota. Įklijuokite naują raktą, kad pakeistumėte.",
+      "chatId": "Grupės ID",
+      "chatIdHint": "Sveikasis skaičius, grupės – neigiamas. Pridėję botą, naršyklėje atidarykite api.telegram.org/bot<raktas>/getUpdates ir nukopijuokite chat id.",
+      "test": "Siųsti bandomąją žinutę",
+      "testSent": "Bandomoji žinutė išsiųsta į Telegram",
+      "removed": "Telegram teigia, kad botas pašalintas iš grupės arba jo raktas atšauktas. Grąžinkite botą į grupę ir išsiųskite bandomąją žinutę arba įklijuokite naują raktą.",
+      "unreadable": "Išsaugoto boto rakto nebeįmanoma perskaityti – dažniausiai taip nutinka atkūrus kopiją iš kitos sistemos. Įklijuokite raktą iš naujo."
     },
     "marketPrices": {
       "title": "Rinkos kainos",
@@ -3058,6 +3076,15 @@
       "sendFailed": "Nepavyko susisiekti su Discord. Bandykite vėliau.",
       "webhookGone": "Discord teigia, kad šio webhook nebėra. Sukurkite naują Discord programoje ir įklijuokite jo nuorodą.",
       "webhookUnreadable": "Išsaugoto webhook nebeįmanoma perskaityti. Įklijuokite webhook nuorodą iš naujo."
+    },
+    "telegram": {
+      "botRemoved": "Telegram teigia, kad botas pašalintas iš grupės arba jo raktas atšauktas.",
+      "invalidChat": "Įveskite Telegram grupės ID – sveikąjį skaičių, pvz., -1001234567890.",
+      "invalidToken": "Įklijuokite @BotFather pateiktą raktą; jis atrodo kaip 123456789:AAE….",
+      "rateLimited": "Telegram paprašė palaukti. Bandykite po minutės.",
+      "rejected": "{{reason}}",
+      "sendFailed": "Nepavyko susisiekti su Telegram. Bandykite vėliau.",
+      "tokenUnreadable": "Išsaugoto boto rakto nebeįmanoma perskaityti. Įklijuokite raktą iš naujo."
     },
     "email": {
       "alreadyVerified": "Šis adresas jau patvirtintas.",

@@ -5,4 +5,5 @@ public sealed record PublicSettingsResponse(
     string DefaultLanguage,
     bool EmailEnabled,
     bool DiscordEnabled,
+    bool TelegramEnabled,
     bool PasskeysAvailable);

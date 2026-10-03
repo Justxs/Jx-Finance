@@ -442,10 +442,13 @@ public sealed class BackupEndpointTests(DataFixture fixture) : IntegrationTestBa
     }
 
     [Fact]
-    public async Task Restore_keeps_the_discord_channel_month_closes_and_reconciliations_and_drops_queued_discord_messages()
+    public async Task Restore_keeps_the_chat_channels_month_closes_and_reconciliations_and_drops_queued_chat_messages()
     {
         const string discordUrl = "/api/settings/discord";
         const string kindsUrl = "/api/users/me/discord-notifications";
+        const string telegramUrl = "/api/settings/telegram";
+        const string telegramKindsUrl = "/api/users/me/telegram-notifications";
+        const string telegramToken = "77077:restore-token-restore-token-restore-token";
         const string closeUrl = "/api/month-close/2025-05";
         var administrator = await CreateUserAsync("Admin");
         using var adminClient = await LoginAsync(administrator);
@@ -456,8 +459,21 @@ public sealed class BackupEndpointTests(DataFixture fixture) : IntegrationTestBa
             new { enabled = false, webhookUrl = "https://discord.com/api/webhooks/77/restore-token" },
             TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
         (await memberClient.PutAsJsonAsync(kindsUrl, new { types = DiscordKinds }, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
+        (await adminClient.PutAsJsonAsync(
+            telegramUrl,
+            new { enabled = false, botToken = telegramToken, chatId = -77077 },
+            TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
+        (await memberClient.PutAsJsonAsync(telegramKindsUrl, new { types = DiscordKinds }, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
         await WithDbAsync(async db =>
         {
+            db.TelegramMessages.Add(new TelegramMessage
+            {
+                UserId = member.Id,
+                NotificationType = NotificationType.BillDue,
+                Content = "queued before the backup",
+                CreatedAt = DateTimeOffset.UtcNow,
+                NextAttemptAt = DateTimeOffset.UtcNow.AddHours(1),
+            });
             db.DiscordMessages.Add(new DiscordMessage
             {
                 UserId = member.Id,
@@ -481,6 +497,11 @@ public sealed class BackupEndpointTests(DataFixture fixture) : IntegrationTestBa
             new { enabled = false, webhookUrl = "https://discord.com/api/webhooks/78/after-backup" },
             TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
         (await memberClient.PutAsJsonAsync(kindsUrl, new { types = Array.Empty<string>() }, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
+        (await adminClient.PutAsJsonAsync(
+            telegramUrl,
+            new { enabled = false, botToken = "78078:after-backup-after-backup-after-backup", chatId = -78078 },
+            TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
+        (await memberClient.PutAsJsonAsync(telegramKindsUrl, new { types = Array.Empty<string>() }, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
         (await memberClient.DeleteAsync(closeUrl, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
         (await memberClient.DeleteAsync($"/api/accounts/{account}/reconciliations/{reconciliation.Id}", TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
 
@@ -503,6 +524,10 @@ public sealed class BackupEndpointTests(DataFixture fixture) : IntegrationTestBa
         var me = await restoredClient.GetFromJsonAsync<JsonObject>("/api/auth/me", TestContext.Current.CancellationToken);
         Assert.Equal(DiscordKinds, me!["discordNotificationTypes"]!.AsArray().Select(t => t!.GetValue<string>()));
         Assert.Equal(0, await WithDbAsync(db => db.DiscordMessages.CountAsync(m => m.UserId == member.Id, TestContext.Current.CancellationToken)));
+        (await restoredAdmin.PostAsync($"{telegramUrl}/test", null, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
+        Assert.Equal(telegramToken, Assert.Single(Services.GetRequiredService<FakeTelegramBotClient>().To(-77077)).Target.Token);
+        Assert.Equal(DiscordKinds, me["telegramNotificationTypes"]!.AsArray().Select(t => t!.GetValue<string>()));
+        Assert.Equal(0, await WithDbAsync(db => db.TelegramMessages.CountAsync(m => m.UserId == member.Id, TestContext.Current.CancellationToken)));
         var review = await restoredClient.GetFromJsonAsync<JsonObject>(closeUrl, TestContext.Current.CancellationToken);
         Assert.Equal("closed", review!["status"]!.GetValue<string>());
         Assert.Equal("Kept", review["note"]!.GetValue<string>());

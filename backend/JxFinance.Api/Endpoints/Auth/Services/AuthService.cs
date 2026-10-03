@@ -170,6 +170,7 @@ public sealed class AuthService(
         user.EmailConfirmed,
         user.EmailNotificationTypes,
         user.DiscordNotificationTypes,
+        user.TelegramNotificationTypes,
         user.Language,
         user.MonthlyDigestEverything,
         user.MonthlyDigestHouseholdIds);

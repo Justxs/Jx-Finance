@@ -14,13 +14,20 @@ import {
 
 export const notificationKinds = Object.values(NotificationType);
 
-export const notificationChannels = ["email", "discord"] as const;
+export const notificationChannels = ["email", "discord", "telegram"] as const;
 
 type Channel = (typeof notificationChannels)[number];
+
+const channelLabels = {
+  email: "profile.notifications.byEmail",
+  discord: "profile.notifications.byDiscord",
+  telegram: "profile.notifications.byTelegram",
+} as const satisfies Record<Channel, string>;
 
 const channelsFieldGroup = defineAppFieldGroup(({ strict }) => ({
   email: strict<NotificationType[]>(),
   discord: strict<NotificationType[]>(),
+  telegram: strict<NotificationType[]>(),
 }));
 
 interface Props {
@@ -78,12 +85,7 @@ function NotificationChannelsGroup({ fields, channels, off }: Readonly<Props>) {
                         {(field) => (
                           <Checkbox
                             className="mx-auto"
-                            aria-label={t(
-                              channel === "email"
-                                ? "profile.notifications.byEmail"
-                                : "profile.notifications.byDiscord",
-                              { kind: name },
-                            )}
+                            aria-label={t(channelLabels[channel], { kind: name })}
                             disabled={off[channel]}
                             checked={field.value.includes(kind)}
                             onCheckedChange={(on) =>

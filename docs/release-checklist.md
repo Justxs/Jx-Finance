@@ -57,6 +57,7 @@ Added on 2026-09-20 and 2026-09-21, each with its own integration tests, stories
 Added from 2026-09-26 to 2026-09-28, in the same way:
 
 - [x] Discord notifications to one installation channel set up by an administrator, with each member choosing their kinds.
+- [x] Telegram notifications to one installation group, the same way (added 2026-10-03).
 - [x] Unusual amounts and subscription price rises.
 - [x] Month-end close with a checklist, a snapshot and drift after the close.
 - [x] Asset valuations with straight-line depreciation, and debt payments linked to a debt.
@@ -69,7 +70,7 @@ Added on 2026-09-29, each with its own integration tests, stories and page under
 - [x] Spending by payee, stored as `PayeeKey` on every transaction.
 - [x] A 30 to 90 day cash-flow forecast of every account from its balance and recurring entries.
 - [x] Reconciliation of an account against a statement balance.
-- [x] A monthly digest by email or Discord, in the member's own language.
+- [x] A monthly digest by email, Discord or Telegram, in the member's own language.
 - [x] Refunds as negative expenses in the category they were spent in.
 - [x] A generic CSV import through a column mapping saved per bank.
 - [x] Receipt reading with Tesseract inside the installation.
@@ -91,7 +92,7 @@ Added on 2026-09-30 and 2026-10-01, in the same way; their integration and end-t
 - [x] Write access for personal API tokens with idempotency keys, and a read-only MCP server in `tools/jx-mcp`.
 - [x] Transaction locations with a self-hosted map, transaction groups, learned category suggestions (switched off) and split lines kept in the order entered.
 
-None of that has been through a deployment, a real SMTP server, a real Discord webhook or a day of ordinary use; only the automated checks have run.
+None of that has been through a deployment, a real SMTP server, a real Discord webhook, a real Telegram bot or a day of ordinary use; only the automated checks have run.
 
 Still open:
 

@@ -453,6 +453,7 @@ const rules: readonly Rule[] = [
     after: [
       api.getUpdateMyEmailNotificationsMutationKey,
       api.getUpdateMyDiscordNotificationsMutationKey,
+      api.getUpdateMyTelegramNotificationsMutationKey,
       api.getUpdateMyLanguageMutationKey,
       api.getUpdateMyDigestScopesMutationKey,
     ],
@@ -489,6 +490,14 @@ const rules: readonly Rule[] = [
   {
     after: [api.getSendTestDiscordMutationKey],
     refresh: [api.getDiscordSettingsQueryKey],
+  },
+  {
+    after: [api.getUpdateTelegramSettingsMutationKey],
+    refresh: [api.getTelegramSettingsQueryKey, api.getPublicSettingsQueryKey],
+  },
+  {
+    after: [api.getSendTestTelegramMutationKey],
+    refresh: [api.getTelegramSettingsQueryKey],
   },
   {
     after: [api.getVerifyEmailMutationKey],

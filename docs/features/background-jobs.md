@@ -19,6 +19,7 @@ flowchart LR
         Q["PriceSyncJob<br/>every 6 h, needs Investments and the market prices switch"]
         M["EmailOutboxJob<br/>every minute, needs a mail server"]
         D["DiscordOutboxJob<br/>every 30 s, needs the Discord setting"]
+        T["TelegramOutboxJob<br/>every 30 s, needs the Telegram setting"]
         I["ImportInboxJob<br/>every 5 min, needs Import and App:ImportInbox"]
         L["RetentionJob<br/>daily at 03:00, no feature gate"]
     end
@@ -35,9 +36,11 @@ flowchart LR
     Pub --> Notif["Notifications"]
     Pub --> Mail["An EmailMessages row, only for a bill reminder<br/>whose owner asked for reminder emails"]
     Pub --> Disc["A DiscordMessages row, only when the installation's<br/>Discord channel is set up and the owner ticked that kind"]
+    Pub --> Tele["A TelegramMessages row, only when the installation's<br/>Telegram group is set up and the owner ticked that kind"]
     R --> BillDedupe["Bill reminders, deduplicated per bill and local day"]
     M --> Send["Claim, send with a timeout, retry with backoff,<br/>give up after five attempts, prune after a week"]
     D --> Post["Claim at most five, post in order to the one webhook,<br/>wait out a 429, disable a webhook Discord deleted,<br/>prune every row after a week"]
+    T --> TPost["The same drain as Discord, to the one group:<br/>follow a supergroup move, mark a removed bot"]
     A --> Alert["Budget alerts at 80% and 100% of the effective limit,<br/>deduplicated per budget, window and threshold"]
     N --> Snap["Snapshot per active user, failures isolated per user"]
     E --> Rates["Rates from the day after the newest stored rate,<br/>or the last 30 days; prunes ExchangeRateFetchLog"]
@@ -55,7 +58,7 @@ flowchart LR
 | `WarrantyReminderJob` | 6 hours | none | A warranty date is a day a month away, so a quarter of the day is prompt enough; a pass reads the attachments whose date falls in the next 30 days over the whole installation and deduplicates per attachment and date |
 | `UnusualAmountJob` | 15 minutes | `UnusualAmounts`; the price-rise half also needs `RecurringBills` | An unusual charge is worth hearing about soon after it is imported, and a pass that finds no unchecked row is one query over a partial index. It takes at most 40 pages of 500 rows, so a backfill of a large ledger is spread over several passes |
 | `MonthCloseReminderJob` | 08:00 daily in the installation time zone, acting only on days 1 to 5 of a month | `MonthClose` | The reminder belongs to the first days of a month in the installation time zone, and a morning pass sends it when people read it rather than just after midnight. A pass on day 6 or later returns before touching the database, the pass at startup catches up after a server that was off at 08:00, and the deduplication per user and month makes the extra passes harmless |
-| `MonthlyDigestJob` | 08:00 daily in the installation time zone, acting only on days 1 to 5 of a month | `MonthClose`; only members who ticked the digest for email or Discord | The same reasoning as the reminder: the 08:00 pass on the 1st sends the digest, a server that was off on the 1st catches up until the 5th, and the deduplication per member and month makes later passes harmless. Each member's review is a handful of report queries, run once a month |
+| `MonthlyDigestJob` | 08:00 daily in the installation time zone, acting only on days 1 to 5 of a month | `MonthClose`; only members who ticked the digest for email, Discord or Telegram | The same reasoning as the reminder: the 08:00 pass on the 1st sends the digest, a server that was off on the 1st catches up until the 5th, and the deduplication per member and month makes later passes harmless. Each member's review is a handful of report queries, run once a month |
 | `NetWorthSnapshotJob` | 1 hour | `NetWorth` | One point per day; an hour is enough to have today's point before anyone looks |
 | `ExchangeRateSyncJob` | 6 hours | none, obeys the auto-sync setting | The ECB publishes once per working day |
 | `BrokerSyncJob` | 24 hours | `Investments` | The Flex Web Service is rate limited and the statement changes once a day |
@@ -64,6 +67,7 @@ flowchart LR
 | `RetentionJob` | 03:00 daily in the installation time zone | none | Every window it enforces is measured in days — 400 for the audit log, 30 for the trash — so a day's delay is irrelevant, and a night-time pass keeps the deletes away from the hours the ledger is used. It runs whatever any feature switch says, because rows written while a feature was on still have to age out |
 | `EmailOutboxJob` | 1 minute (`App:Email:OutboxIntervalSeconds`) | none, sends nothing while the mail server is off or incomplete | A password reset link is useless if it arrives in an hour. A minute is the shortest interval that still leaves a dead mail server cheap: a pass that finds nothing due is one indexed query. It prunes before it looks at the mail server, so rows sent while SMTP was configured still age out after it is switched off |
 | `DiscordOutboxJob` | 30 seconds | none, sends nothing while `DiscordEnabled` is off or no webhook is saved | A notification in a chat channel is expected to arrive about when it happened, and an idle pass is one indexed query. Every post goes to the installation's one webhook, which Discord limits to about 5 requests per 2 seconds and its channel to 30 a minute, so a pass takes at most five rows and the short interval drains a backlog without bursting. It deletes every row older than 7 days before it looks at the setting, sent or not, so posts queued before the switch went off are dropped rather than sent late |
+| `TelegramOutboxJob` | 30 seconds | none, sends nothing while `TelegramEnabled` is off or no token or chat id is saved | The Discord reasoning: a chat message should arrive about when it happened. Five rows a pass every 30 seconds stays under Telegram's limit of about 20 messages a minute in one group |
 
 `BudgetAlertJob` iterates active users in id order and opens a per-user `AppDbContext`, the way `BrokerSyncJob` does, because `BudgetUsageCalculator` and `ICategoryAttributionService` read through the ownership query filter. Each user is handled in its own try block, so one user whose budgets cannot be computed is logged with the user id and everybody else still gets their alerts.
 
@@ -110,6 +114,7 @@ flowchart LR
     Lock --> War["AppLock.WarrantyReminders: warranty reminder scan"]
     Lock --> Mail["AppLock.EmailOutbox: claiming the next batch of messages"]
     Lock --> Disc["AppLock.DiscordOutbox: claiming the next batch of Discord posts"]
+    Lock --> Tele["AppLock.TelegramOutbox: claiming the next batch of Telegram messages"]
     Lock --> Unu["AppLock.UnusualAmounts: unusual-amount scan, held for the whole pass"]
     Lock --> Close["AppLock.MonthCloseReminders: month-end reminder pass"]
     Lock --> Dig["AppLock.MonthlyDigest: one member's digest"]
@@ -118,9 +123,9 @@ flowchart LR
 
 `EmailOutboxJob` holds `AppLock.EmailOutbox` only while it claims a batch: the rows it takes have their attempt counted and their next attempt time pushed forward in the same transaction, which commits before any connection is opened. A pass that dies mid-send therefore loses one attempt, never a message, and a second pass cannot pick up what the first is still sending. Sending itself happens outside the lock and outside any transaction, one message per try block, so a bad recipient does not stop the batch and a slow mail server does not hold a database lock.
 
-`DiscordOutboxJob` works the same way under `AppLock.DiscordOutbox` (`738192440`): up to 5 due rows by `CreatedAt`, the attempt counted and the next attempt set `min(4^attempts, 240)` minutes ahead, committed before any socket opens. It then reads the installation's webhook and the members' current kinds, posts the rows in order and saves the outcomes at the end, even when the host is stopping, so a post that went out is never sent again; a save that conflicts with a replaced URL detaches the conflicting entries and retries. A 429 hands the attempt back to that row and to the rest of the batch and moves them to Discord's `retry_after`; a webhook Discord no longer knows gives up the rest of the batch and marks the webhook on `InstanceSettings`. See [Discord notifications](discord-notifications.md).
+`DiscordOutboxJob` works the same way under `AppLock.DiscordOutbox` (`738192440`): up to 5 due rows by `CreatedAt`, the attempt counted and the next attempt set `min(4^attempts, 240)` minutes ahead, committed before any socket opens. It then reads the installation's webhook and the members' current kinds, posts the rows in order and saves the outcomes at the end, even when the host is stopping, so a post that went out is never sent again; a save that conflicts with a replaced URL detaches the conflicting entries and retries. A 429 hands the attempt back to that row and to the rest of the batch and moves them to Discord's `retry_after`; a webhook Discord no longer knows gives up the rest of the batch and marks the webhook on `InstanceSettings`. See [Discord notifications](discord-notifications.md). Since 2026-10-03 this drain is `ChatOutboxJob`, and `TelegramOutboxJob` runs it under `AppLock.TelegramOutbox` (`738192450`) for the Telegram group; see [Telegram notifications](telegram-notifications.md#the-outbox-job).
 
-`RecurringBillReminderJob` and `BudgetAlertJob` no longer add notifications or emails themselves. Each preloads the owners it is about to notify and calls `INotificationPublisher.Publish`, which adds the in-app row and the Discord post to the job's own context; the bill job enqueues its reminder email itself on the same context, so the lock and the transaction described below cover all three. The budget job resolves its publisher from the user scope it works in, so the publisher writes on the job's own context.
+`RecurringBillReminderJob` and `BudgetAlertJob` no longer add notifications or emails themselves. Each preloads the owners it is about to notify and calls `INotificationPublisher.Publish`, which adds the in-app row and the Discord and Telegram posts to the job's own context; the bill job enqueues its reminder email itself on the same context, so the lock and the transaction described below cover all three. The budget job resolves its publisher from the user scope it works in, so the publisher writes on the job's own context.
 
 `UnusualAmountJob` takes `AppLock.UnusualAmounts` (`738192441`) once, in one transaction for the whole pass, like the reminder scan. Inside it the job pages the unchecked expenses, writes each page's verdicts with one `UPDATE … FROM unnest`, reads which rows and price rises were already notified and publishes the rest, so a second instance or a restart waits for the first pass and then finds nothing left to check. It evaluates each account owner's rows through `IUnusualAmountService` resolved from a user scope for that owner (`PeriodicJob.UserScope`), because the category history is what that owner can see, but writes and publishes on the job's own context, inside the lock. The backfill stores verdicts without notifying anybody: a pass where no transaction was ever checked is silent, and later passes notify only rows written after the earliest check. See [Unusual amounts](unusual-amounts.md).
 

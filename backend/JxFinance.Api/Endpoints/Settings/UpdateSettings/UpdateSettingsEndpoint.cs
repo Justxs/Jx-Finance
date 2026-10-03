@@ -14,6 +14,7 @@ public sealed class UpdateSettingsEndpoint(ISettingsService settingsService)
         Put(ApiRoutes.Settings);
         Group<SettingsGroup>();
         Roles(AppRoles.Admin);
+        Description(d => d.ProducesProblemDetails(409));
     }
 
     public override async Task HandleAsync(UpdateSettingsRequest req, CancellationToken ct) =>

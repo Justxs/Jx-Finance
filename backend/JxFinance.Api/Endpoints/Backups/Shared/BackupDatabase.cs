@@ -25,6 +25,7 @@ public static class BackupDatabase
             db.Model.FindEntityType(typeof(ApiIdempotencyKey))!.GetTableName(),
             db.Model.FindEntityType(typeof(EmailMessage))!.GetTableName(),
             db.Model.FindEntityType(typeof(DiscordMessage))!.GetTableName(),
+            db.Model.FindEntityType(typeof(TelegramMessage))!.GetTableName(),
             db.Model.FindEntityType(typeof(ImportInboxFile))!.GetTableName(),
         ];
 

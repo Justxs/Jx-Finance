@@ -4,6 +4,7 @@ using JxFinance.Common.Discord;
 using JxFinance.Common.Email;
 using JxFinance.Common.ExchangeRates;
 using JxFinance.Common.Receipts;
+using JxFinance.Common.Telegram;
 using JxFinance.Domain.Investments;
 using JxFinance.Infrastructure.Brokers.InteractiveBrokers;
 using JxFinance.Infrastructure.Configuration;
@@ -64,6 +65,9 @@ public abstract class ApiFixture : AppFixture<Program>
         services.RemoveAll<IDiscordWebhookClient>();
         services.AddSingleton<FakeDiscordWebhookClient>();
         services.AddSingleton<IDiscordWebhookClient>(sp => sp.GetRequiredService<FakeDiscordWebhookClient>());
+        services.RemoveAll<ITelegramBotClient>();
+        services.AddSingleton<FakeTelegramBotClient>();
+        services.AddSingleton<ITelegramBotClient>(sp => sp.GetRequiredService<FakeTelegramBotClient>());
         services.RemoveAll<IMarketPriceProvider>();
         services.AddSingleton<IMarketPriceProvider>(new FixedPriceProvider(PriceSource.Eodhd));
         services.AddSingleton<IMarketPriceProvider>(new FixedPriceProvider(PriceSource.Kraken));

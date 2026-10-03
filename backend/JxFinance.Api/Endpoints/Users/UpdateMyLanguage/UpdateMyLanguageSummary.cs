@@ -8,7 +8,7 @@ public sealed class UpdateMyLanguageSummary : Summary<UpdateMyLanguageEndpoint, 
     public UpdateMyLanguageSummary()
     {
         Summary = "Save your language";
-        Description = "Saves the language you picked in the interface, en or lt, so that every email and Discord message "
+        Description = "Saves the language you picked in the interface, en or lt, so that every email, Discord and Telegram message "
             + "the server sends you is written in it. Until you save one, messages use the installation's default "
             + "language. The interface itself keeps its language per browser.";
         ExampleRequest = new UpdateMyLanguageRequest(AppLanguages.Lt);

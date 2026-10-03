@@ -158,6 +158,13 @@ public static class ErrorCodes
     public const string DiscordRateLimited = "discord.rateLimited";
     public const string DiscordRejected = "discord.rejected";
     public const string DiscordSendFailed = "discord.sendFailed";
+    public const string TelegramInvalidToken = "telegram.invalidToken";
+    public const string TelegramInvalidChat = "telegram.invalidChat";
+    public const string TelegramTokenUnreadable = "telegram.tokenUnreadable";
+    public const string TelegramBotRemoved = "telegram.botRemoved";
+    public const string TelegramRateLimited = "telegram.rateLimited";
+    public const string TelegramRejected = "telegram.rejected";
+    public const string TelegramSendFailed = "telegram.sendFailed";
     public const string MonthInvalid = "month.invalid";
     public const string MonthCloseNotEnded = "monthClose.notEnded";
     public const string ReconciliationFutureDate = "reconciliation.futureDate";

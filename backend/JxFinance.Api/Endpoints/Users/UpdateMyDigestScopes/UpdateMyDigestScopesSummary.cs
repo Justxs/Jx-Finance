@@ -7,10 +7,10 @@ public sealed class UpdateMyDigestScopesSummary : Summary<UpdateMyDigestScopesEn
     public UpdateMyDigestScopesSummary()
     {
         Summary = "Choose which scopes get a monthly digest";
-        Description = "Replaces the scopes your monthly digest covers, for email and Discord alike: everything, the "
+        Description = "Replaces the scopes your monthly digest covers, for email, Discord and Telegram alike: everything, the "
             + "default, which is your own records and everything shared into any of your households, and each "
             + "household listed, whose digest reads the month as the dashboard does with that household picked. Each "
-            + "chosen scope is its own message. The digest is still sent only when you tick it for email or Discord, "
+            + "chosen scope is its own message. The digest is still sent only when you tick it for email, Discord or Telegram, "
             + "and nothing is sent when no scope is chosen.";
         ExampleRequest = new UpdateMyDigestScopesRequest(true, [Guid.Parse("8d3c1e52-7a1f-4f53-9f2a-1b6c4e0d9a10")]);
         Responses[200] = "Your profile with the saved digest scopes.";

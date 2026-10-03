@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common.OpenApi;
 
 namespace JxFinance.Endpoints.Settings.UpdateDiscordSettings;
 
@@ -25,5 +26,6 @@ public sealed class UpdateDiscordSettingsSummary : Summary<UpdateDiscordSettings
         Responses[400] = "Validation failed, or discord.invalidWebhook.";
         Responses[403] = "Only administrators can change installation settings.";
         Responses[429] = "Too many changes from this client; wait and retry.";
+        Responses[409] = SummaryText.StaleSettings;
     }
 }

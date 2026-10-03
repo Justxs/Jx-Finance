@@ -6,7 +6,8 @@ The table is in the suggested build order. Each plan's `Status:` line names what
 
 | Plan | Size | Where it lives | Build after |
 | --- | --- | --- | --- |
-| [Telegram notifications](telegram-notifications.md) | M | `Common/Telegram`, `Infrastructure/Telegram`, `Endpoints/Settings`, `Endpoints/Users`, `features/settings/telegram-section` | Nothing |
+
+No plan is open: the last one, [Telegram notifications](../features/telegram-notifications.md), shipped on 2026-10-03.
 
 ## Changes to shared code
 

@@ -1,3 +1,4 @@
+using JxFinance.Common;
 using JxFinance.Common.Settings;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Settings;
@@ -28,7 +29,15 @@ internal static class StoredSettings
             return error;
         }
 
-        await db.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await db.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return VersionedSave.Stale;
+        }
+
         await transaction.CommitAsync(cancellationToken);
         store.Set(settings);
         return null;

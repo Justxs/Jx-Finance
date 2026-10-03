@@ -74,6 +74,21 @@ export const CreateUserResponse = zod.object({
       "importWaiting",
     ]),
   ),
+  telegramNotificationTypes: zod.array(
+    zod.enum([
+      "billDue",
+      "budgetWarning",
+      "budgetExceeded",
+      "unusualAmount",
+      "unusualAmounts",
+      "recurringPriceRise",
+      "monthReadyToClose",
+      "monthlyDigest",
+      "lowBalance",
+      "warrantyExpiring",
+      "importWaiting",
+    ]),
+  ),
   language: zod.string().nullable(),
   monthlyDigestEverything: zod.boolean(),
   monthlyDigestHouseholdIds: zod.array(zod.uuid()),
@@ -107,6 +122,21 @@ export const UsersResponseItem = zod.object({
     ]),
   ),
   discordNotificationTypes: zod.array(
+    zod.enum([
+      "billDue",
+      "budgetWarning",
+      "budgetExceeded",
+      "unusualAmount",
+      "unusualAmounts",
+      "recurringPriceRise",
+      "monthReadyToClose",
+      "monthlyDigest",
+      "lowBalance",
+      "warrantyExpiring",
+      "importWaiting",
+    ]),
+  ),
+  telegramNotificationTypes: zod.array(
     zod.enum([
       "billDue",
       "budgetWarning",
@@ -189,13 +219,28 @@ export const UpdateMyProfileResponse = zod.object({
       "importWaiting",
     ]),
   ),
+  telegramNotificationTypes: zod.array(
+    zod.enum([
+      "billDue",
+      "budgetWarning",
+      "budgetExceeded",
+      "unusualAmount",
+      "unusualAmounts",
+      "recurringPriceRise",
+      "monthReadyToClose",
+      "monthlyDigest",
+      "lowBalance",
+      "warrantyExpiring",
+      "importWaiting",
+    ]),
+  ),
   language: zod.string().nullable(),
   monthlyDigestEverything: zod.boolean(),
   monthlyDigestHouseholdIds: zod.array(zod.uuid()),
 });
 
 /**
- * Replaces the scopes your monthly digest covers, for email and Discord alike: everything, the default, which is your own records and everything shared into any of your households, and each household listed, whose digest reads the month as the dashboard does with that household picked. Each chosen scope is its own message. The digest is still sent only when you tick it for email or Discord, and nothing is sent when no scope is chosen.
+ * Replaces the scopes your monthly digest covers, for email, Discord and Telegram alike: everything, the default, which is your own records and everything shared into any of your households, and each household listed, whose digest reads the month as the dashboard does with that household picked. Each chosen scope is its own message. The digest is still sent only when you tick it for email, Discord or Telegram, and nothing is sent when no scope is chosen.
  * @summary Choose which scopes get a monthly digest
  */
 export const UpdateMyDigestScopesBody = zod.object({
@@ -227,6 +272,21 @@ export const UpdateMyDigestScopesResponse = zod.object({
     ]),
   ),
   discordNotificationTypes: zod.array(
+    zod.enum([
+      "billDue",
+      "budgetWarning",
+      "budgetExceeded",
+      "unusualAmount",
+      "unusualAmounts",
+      "recurringPriceRise",
+      "monthReadyToClose",
+      "monthlyDigest",
+      "lowBalance",
+      "warrantyExpiring",
+      "importWaiting",
+    ]),
+  ),
+  telegramNotificationTypes: zod.array(
     zod.enum([
       "billDue",
       "budgetWarning",
@@ -306,6 +366,21 @@ export const UpdateMyDiscordNotificationsResponse = zod.object({
       "importWaiting",
     ]),
   ),
+  telegramNotificationTypes: zod.array(
+    zod.enum([
+      "billDue",
+      "budgetWarning",
+      "budgetExceeded",
+      "unusualAmount",
+      "unusualAmounts",
+      "recurringPriceRise",
+      "monthReadyToClose",
+      "monthlyDigest",
+      "lowBalance",
+      "warrantyExpiring",
+      "importWaiting",
+    ]),
+  ),
   language: zod.string().nullable(),
   monthlyDigestEverything: zod.boolean(),
   monthlyDigestHouseholdIds: zod.array(zod.uuid()),
@@ -371,6 +446,21 @@ export const UpdateMyEmailNotificationsResponse = zod.object({
       "importWaiting",
     ]),
   ),
+  telegramNotificationTypes: zod.array(
+    zod.enum([
+      "billDue",
+      "budgetWarning",
+      "budgetExceeded",
+      "unusualAmount",
+      "unusualAmounts",
+      "recurringPriceRise",
+      "monthReadyToClose",
+      "monthlyDigest",
+      "lowBalance",
+      "warrantyExpiring",
+      "importWaiting",
+    ]),
+  ),
   language: zod.string().nullable(),
   monthlyDigestEverything: zod.boolean(),
   monthlyDigestHouseholdIds: zod.array(zod.uuid()),
@@ -398,7 +488,7 @@ export const ImportMyDataResponse = zod.object({
 });
 
 /**
- * Saves the language you picked in the interface, en or lt, so that every email and Discord message the server sends you is written in it. Until you save one, messages use the installation's default language. The interface itself keeps its language per browser.
+ * Saves the language you picked in the interface, en or lt, so that every email, Discord and Telegram message the server sends you is written in it. Until you save one, messages use the installation's default language. The interface itself keeps its language per browser.
  * @summary Save your language
  */
 export const UpdateMyLanguageBody = zod.object({
@@ -429,6 +519,101 @@ export const UpdateMyLanguageResponse = zod.object({
     ]),
   ),
   discordNotificationTypes: zod.array(
+    zod.enum([
+      "billDue",
+      "budgetWarning",
+      "budgetExceeded",
+      "unusualAmount",
+      "unusualAmounts",
+      "recurringPriceRise",
+      "monthReadyToClose",
+      "monthlyDigest",
+      "lowBalance",
+      "warrantyExpiring",
+      "importWaiting",
+    ]),
+  ),
+  telegramNotificationTypes: zod.array(
+    zod.enum([
+      "billDue",
+      "budgetWarning",
+      "budgetExceeded",
+      "unusualAmount",
+      "unusualAmounts",
+      "recurringPriceRise",
+      "monthReadyToClose",
+      "monthlyDigest",
+      "lowBalance",
+      "warrantyExpiring",
+      "importWaiting",
+    ]),
+  ),
+  language: zod.string().nullable(),
+  monthlyDigestEverything: zod.boolean(),
+  monthlyDigestHouseholdIds: zod.array(zod.uuid()),
+});
+
+/**
+ * Replaces the list of notification kinds of yours that are also posted to the installation's Telegram group, with your name in front. Every in-app notification of a chosen kind then queues one Telegram message, at most once per kind, subject and day. Nothing is posted while an administrator has not switched Telegram on and saved a bot token and a group. The group is shared: everyone in it sees what you tick. An empty list is allowed and posts nothing.
+ * @summary Choose which notifications are posted to Telegram
+ */
+export const UpdateMyTelegramNotificationsBody = zod.object({
+  types: zod.array(
+    zod.enum([
+      "billDue",
+      "budgetWarning",
+      "budgetExceeded",
+      "unusualAmount",
+      "unusualAmounts",
+      "recurringPriceRise",
+      "monthReadyToClose",
+      "monthlyDigest",
+      "lowBalance",
+      "warrantyExpiring",
+      "importWaiting",
+    ]),
+  ),
+});
+
+export const UpdateMyTelegramNotificationsResponse = zod.object({
+  id: zod.uuid(),
+  email: zod.string(),
+  displayName: zod.string(),
+  role: zod.string(),
+  twoFactorEnabled: zod.boolean(),
+  isActive: zod.boolean(),
+  emailConfirmed: zod.boolean(),
+  emailNotificationTypes: zod.array(
+    zod.enum([
+      "billDue",
+      "budgetWarning",
+      "budgetExceeded",
+      "unusualAmount",
+      "unusualAmounts",
+      "recurringPriceRise",
+      "monthReadyToClose",
+      "monthlyDigest",
+      "lowBalance",
+      "warrantyExpiring",
+      "importWaiting",
+    ]),
+  ),
+  discordNotificationTypes: zod.array(
+    zod.enum([
+      "billDue",
+      "budgetWarning",
+      "budgetExceeded",
+      "unusualAmount",
+      "unusualAmounts",
+      "recurringPriceRise",
+      "monthReadyToClose",
+      "monthlyDigest",
+      "lowBalance",
+      "warrantyExpiring",
+      "importWaiting",
+    ]),
+  ),
+  telegramNotificationTypes: zod.array(
     zod.enum([
       "billDue",
       "budgetWarning",
@@ -529,6 +714,21 @@ export const ResetUserPasswordResponse = zod.object({
       "importWaiting",
     ]),
   ),
+  telegramNotificationTypes: zod.array(
+    zod.enum([
+      "billDue",
+      "budgetWarning",
+      "budgetExceeded",
+      "unusualAmount",
+      "unusualAmounts",
+      "recurringPriceRise",
+      "monthReadyToClose",
+      "monthlyDigest",
+      "lowBalance",
+      "warrantyExpiring",
+      "importWaiting",
+    ]),
+  ),
   language: zod.string().nullable(),
   monthlyDigestEverything: zod.boolean(),
   monthlyDigestHouseholdIds: zod.array(zod.uuid()),
@@ -566,6 +766,21 @@ export const UpdateUserRoleResponse = zod.object({
     ]),
   ),
   discordNotificationTypes: zod.array(
+    zod.enum([
+      "billDue",
+      "budgetWarning",
+      "budgetExceeded",
+      "unusualAmount",
+      "unusualAmounts",
+      "recurringPriceRise",
+      "monthReadyToClose",
+      "monthlyDigest",
+      "lowBalance",
+      "warrantyExpiring",
+      "importWaiting",
+    ]),
+  ),
+  telegramNotificationTypes: zod.array(
     zod.enum([
       "billDue",
       "budgetWarning",

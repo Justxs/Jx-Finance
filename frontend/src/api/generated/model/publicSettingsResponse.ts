@@ -12,5 +12,6 @@ export interface PublicSettingsResponse {
   defaultLanguage: string;
   emailEnabled: boolean;
   discordEnabled: boolean;
+  telegramEnabled: boolean;
   passkeysAvailable: boolean;
 }

@@ -30,7 +30,7 @@ node "Docker host on a private network" <<device>> as host {
   storage "db_data" <<volume>> as vdb
 }
 
-cloud "External services\nSMTP, Discord, Frankfurter,\nEODHD, Kraken, Interactive Brokers" as ext
+cloud "External services\nSMTP, Discord, Telegram, Frankfurter,\nEODHD, Kraken, Interactive Brokers" as ext
 
 browser --> caddy : HTTPS :443
 mcp --> caddy : HTTPS :443 /api\nAuthorization header

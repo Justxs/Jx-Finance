@@ -19,6 +19,7 @@ public sealed class AppUser : IdentityUser<Guid>
 
     public List<NotificationType> EmailNotificationTypes { get; set; } = [];
     public List<NotificationType> DiscordNotificationTypes { get; set; } = [];
+    public List<NotificationType> TelegramNotificationTypes { get; set; } = [];
 
     public bool MonthlyDigestEverything { get; set; } = true;
 

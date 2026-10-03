@@ -17,6 +17,7 @@ import type {
   SettingsResponse,
   SmtpSettingsResponse,
   SmtpTestResponse,
+  TelegramSettingsResponse,
 } from "../model";
 
 export const getSettingsMockHandler = (
@@ -392,6 +393,73 @@ export const getSendTestEmailMockHandler = (
     options,
   );
 };
+
+export const getTelegramSettingsMockHandler = (
+  overrideResponse?:
+    | TelegramSettingsResponse
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<TelegramSettingsResponse> | TelegramSettingsResponse),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/settings/telegram",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : undefined,
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getUpdateTelegramSettingsMockHandler = (
+  overrideResponse?:
+    | TelegramSettingsResponse
+    | ((
+        info: Parameters<Parameters<typeof http.put>[1]>[0],
+      ) => Promise<TelegramSettingsResponse> | TelegramSettingsResponse),
+  options?: RequestHandlerOptions,
+) => {
+  return http.put(
+    "*/api/settings/telegram",
+    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : undefined,
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getSendTestTelegramMockHandler = (
+  overrideResponse?:
+    | void
+    | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<void> | void),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/settings/telegram/test",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      if (typeof overrideResponse === "function") {
+        await overrideResponse(info);
+      }
+
+      return new HttpResponse(null, { status: 204 });
+    },
+    options,
+  );
+};
 export const getSettingsMock = () => [
   getSettingsMockHandler(),
   getUpdateSettingsMockHandler(),
@@ -409,4 +477,7 @@ export const getSettingsMock = () => [
   getSmtpSettingsMockHandler(),
   getUpdateSmtpSettingsMockHandler(),
   getSendTestEmailMockHandler(),
+  getTelegramSettingsMockHandler(),
+  getUpdateTelegramSettingsMockHandler(),
+  getSendTestTelegramMockHandler(),
 ];

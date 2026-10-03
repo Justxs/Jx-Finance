@@ -16,6 +16,7 @@ export function userProfile(seed: UserSeed): UserProfileResponse {
     emailConfirmed: true,
     emailNotificationTypes: [],
     discordNotificationTypes: [],
+    telegramNotificationTypes: [],
     language: null,
     monthlyDigestEverything: true,
     monthlyDigestHouseholdIds: [],

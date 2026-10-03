@@ -6,19 +6,21 @@ import {
   useUpdateMyDigestScopes,
   useUpdateMyDiscordNotifications,
   useUpdateMyEmailNotifications,
+  useUpdateMyTelegramNotifications,
 } from "@/api/generated";
 import { NotificationType } from "@/api/generated/model";
 import type { HouseholdResponse, UserProfileResponse } from "@/api/generated/model";
 import { useServerForm } from "@/components/form";
 import { FormError } from "@/components/form-error/form-error";
 import { Section, SectionTitle } from "@/components/ui/section/section";
-import { useDiscordEnabled, useEmailEnabled } from "@/hooks/use-settings";
+import { useDiscordEnabled, useEmailEnabled, useTelegramEnabled } from "@/hooks/use-settings";
 import { silentMutation } from "@/lib/mutations";
 import { NotificationChannelsFields, notificationChannels } from "./notification-channels-fields";
 
 interface FormValues {
   email: NotificationType[];
   discord: NotificationType[];
+  telegram: NotificationType[];
   digestEverything: boolean;
   digestHouseholds: { id: string; chosen: boolean }[];
 }
@@ -34,16 +36,22 @@ interface Props {
 
 export function NotificationsForm({ profile, households }: Readonly<Props>) {
   const { t } = useTranslation();
-  const available = { email: useEmailEnabled(), discord: useDiscordEnabled() };
+  const available = {
+    email: useEmailEnabled(),
+    discord: useDiscordEnabled(),
+    telegram: useTelegramEnabled(),
+  };
   const channels = notificationChannels.filter((channel) => available[channel]);
 
   const emailMutation = useUpdateMyEmailNotifications({ mutation: silentMutation });
   const discordMutation = useUpdateMyDiscordNotifications({ mutation: silentMutation });
+  const telegramMutation = useUpdateMyTelegramNotifications({ mutation: silentMutation });
   const digestMutation = useUpdateMyDigestScopes({ mutation: silentMutation });
 
   const schema = z.object({
     email: z.array(z.enum(NotificationType)),
     discord: z.array(z.enum(NotificationType)),
+    telegram: z.array(z.enum(NotificationType)),
     digestEverything: z.boolean(),
     digestHouseholds: z.array(z.object({ id: z.string(), chosen: z.boolean() })),
   });
@@ -51,6 +59,7 @@ export function NotificationsForm({ profile, households }: Readonly<Props>) {
   const defaultValues: FormValues = {
     email: [...profile.emailNotificationTypes],
     discord: [...profile.discordNotificationTypes],
+    telegram: [...profile.telegramNotificationTypes],
     digestEverything: profile.monthlyDigestEverything,
     digestHouseholds: households.map((household) => ({
       id: household.id,
@@ -67,6 +76,9 @@ export function NotificationsForm({ profile, households }: Readonly<Props>) {
       }
       if (!sameKinds(value.discord, profile.discordNotificationTypes)) {
         await discordMutation.mutateAsync({ data: { types: value.discord } });
+      }
+      if (!sameKinds(value.telegram, profile.telegramNotificationTypes)) {
+        await telegramMutation.mutateAsync({ data: { types: value.telegram } });
       }
       const householdIds = value.digestHouseholds
         .filter((household) => household.chosen)
@@ -107,9 +119,9 @@ export function NotificationsForm({ profile, households }: Readonly<Props>) {
 
           <NotificationChannelsFields
             form={form}
-            fields={{ email: "email", discord: "discord" }}
+            fields={{ email: "email", discord: "discord", telegram: "telegram" }}
             channels={channels}
-            off={{ email: Boolean(emailNote), discord: false }}
+            off={{ email: Boolean(emailNote), discord: false, telegram: false }}
           />
 
           {notes.length > 0 ? (
@@ -153,13 +165,23 @@ export function NotificationsForm({ profile, households }: Readonly<Props>) {
           ) : null}
         </Section>
 
-        <FormError error={emailMutation.error ?? discordMutation.error ?? digestMutation.error} />
+        <FormError
+          error={
+            emailMutation.error ??
+            discordMutation.error ??
+            telegramMutation.error ??
+            digestMutation.error
+          }
+        />
 
         {channels.length > 0 ? (
           <form.FormActions
             submitLabel={t("actions.save")}
             pending={
-              emailMutation.isPending || discordMutation.isPending || digestMutation.isPending
+              emailMutation.isPending ||
+              discordMutation.isPending ||
+              telegramMutation.isPending ||
+              digestMutation.isPending
             }
           />
         ) : null}

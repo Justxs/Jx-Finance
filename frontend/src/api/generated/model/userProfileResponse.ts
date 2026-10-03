@@ -17,6 +17,7 @@ export interface UserProfileResponse {
   emailConfirmed: boolean;
   emailNotificationTypes: NotificationType[];
   discordNotificationTypes: NotificationType[];
+  telegramNotificationTypes: NotificationType[];
   /** @nullable */
   language: string | null;
   monthlyDigestEverything: boolean;

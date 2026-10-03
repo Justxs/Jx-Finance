@@ -12,6 +12,7 @@ public sealed record UserProfileResponse(
     bool EmailConfirmed,
     IReadOnlyList<NotificationType> EmailNotificationTypes,
     IReadOnlyList<NotificationType> DiscordNotificationTypes,
+    IReadOnlyList<NotificationType> TelegramNotificationTypes,
     string? Language,
     bool MonthlyDigestEverything,
     IReadOnlyList<Guid> MonthlyDigestHouseholdIds);

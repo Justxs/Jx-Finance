@@ -117,7 +117,12 @@ import { userHandlers } from "./users";
 
 export { failWith, failWithStatus, onRouteOf, pending, problem } from "./http";
 export { mapTilesPresentHandler } from "./reports";
-export { discordOffHandler, emailEnabledHandler, passkeysOffHandler } from "./settings";
+export {
+  discordOffHandler,
+  emailEnabledHandler,
+  passkeysOffHandler,
+  telegramEnabledHandler,
+} from "./settings";
 
 export const handlers: RequestHandler[] = [
   ...accountHandlers,

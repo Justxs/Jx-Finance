@@ -20,6 +20,7 @@ public sealed class AdminRouteTests
         "GET /api/settings/exchange-rates",
         "GET /api/settings/market-prices",
         "GET /api/settings/smtp",
+        "GET /api/settings/telegram",
         "GET /api/users",
         "POST /api/backups",
         "POST /api/backups/upload",
@@ -29,6 +30,7 @@ public sealed class AdminRouteTests
         "POST /api/settings/exchange-rates/sync",
         "POST /api/settings/market-prices/sync",
         "POST /api/settings/smtp/test",
+        "POST /api/settings/telegram/test",
         "POST /api/users",
         "POST /api/users/{id}/deactivate",
         "POST /api/users/{id}/reactivate",
@@ -40,6 +42,7 @@ public sealed class AdminRouteTests
         "PUT /api/settings/exchange-rates/{currency}/{date}",
         "PUT /api/settings/market-prices",
         "PUT /api/settings/smtp",
+        "PUT /api/settings/telegram",
         "PUT /api/users/{id}/role",
     ];
 

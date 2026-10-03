@@ -20,6 +20,7 @@ public enum AppLock : long
     WarrantyReminders = 738192447,
     PriceSync = 738192448,
     ImportInbox = 738192449,
+    TelegramOutbox = 738192450,
 }
 
 public static class AdvisoryLock

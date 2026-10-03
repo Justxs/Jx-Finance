@@ -17,6 +17,7 @@ public sealed record InstanceSettingsSnapshot(
     int DefaultPageSize,
     SmtpSettingsSnapshot Smtp,
     bool DiscordEnabled,
+    bool TelegramEnabled,
     bool SupportLinkEnabled,
     bool PriceSyncEnabled)
 {
@@ -50,6 +51,7 @@ public sealed record InstanceSettingsSnapshot(
             settings.DefaultPageSize,
             SmtpSettingsSnapshot.From(settings),
             settings.DiscordEnabled && settings.DiscordProtectedUrl.Length > 0,
+            settings is { TelegramEnabled: true, TelegramProtectedToken.Length: > 0, TelegramChatId: not null },
             settings.SupportLinkEnabled,
             settings.PriceSyncEnabled);
     }

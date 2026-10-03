@@ -2,7 +2,7 @@ using JxFinance.Domain.Common;
 
 namespace JxFinance.Domain.Notifications;
 
-public sealed class DiscordMessage : OutboxMessage
+public sealed class DiscordMessage : OutboxMessage, IChatMessage
 {
     public const int ContentMaxLength = 2000;
 

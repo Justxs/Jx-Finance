@@ -107,6 +107,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, ICurren
     public DbSet<ApiIdempotencyKey> ApiIdempotencyKeys => Set<ApiIdempotencyKey>();
     public DbSet<EmailMessage> EmailMessages => Set<EmailMessage>();
     public DbSet<DiscordMessage> DiscordMessages => Set<DiscordMessage>();
+    public DbSet<TelegramMessage> TelegramMessages => Set<TelegramMessage>();
     public DbSet<DeletionEntry> DeletionEntries => Set<DeletionEntry>();
     public DbSet<DeletionChange> DeletionChanges => Set<DeletionChange>();
     public DbSet<AuditEvent> AuditEvents => Set<AuditEvent>();

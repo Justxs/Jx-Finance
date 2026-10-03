@@ -14,8 +14,9 @@ public sealed class UpdateMarketPriceSettingsEndpoint(IMarketPriceSettingsServic
         Put(ApiRoutes.Settings + "/market-prices");
         Group<SettingsGroup>();
         Roles(AppRoles.Admin);
+        Description(d => d.ProducesProblemDetails(409));
     }
 
     public override async Task HandleAsync(UpdateMarketPriceSettingsRequest req, CancellationToken ct) =>
-        await Send.OkAsync(await marketPriceSettings.UpdateMarketPricesAsync(req, ct), ct);
+        await Send.OkOrProblemAsync(await marketPriceSettings.UpdateMarketPricesAsync(req, ct), ct);
 }
