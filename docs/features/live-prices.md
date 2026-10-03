@@ -35,7 +35,7 @@ flowchart TD
     Switch -->|"no"| Nothing["no request to any provider"]
     Switch -->|"yes"| Sync["PriceSyncService.SyncAsync"]
     Now["Fetch now (administrator)"] --> Sync
-    Sync --> Lock["transaction, AppLock.PriceSync"]
+    Sync --> Lock["claim: short transaction, AppLock.PriceSync"]
     Lock --> Held["HeldSecurities: non-zero position on any account,<br/>with the date of the first trade"]
     Held --> Mapped["with a price source"]
     Mapped --> Due{"due?"}
@@ -46,10 +46,10 @@ flowchart TD
     Due -->|"stale"| Fetch["oldest last price first"]
     Fetch --> Budget{"EODHD and calls left today?"}
     Budget -->|"no key or no calls left"| Skip
-    Budget -->|"yes, or Kraken"| Ask["closing prices from the day after the last price,<br/>or from the first trade on a first fetch, to yesterday"]
+    Budget -->|"yes, or Kraken"| Ask["calls counted and claim committed, then closing prices<br/>from the day after the last price, or from the first trade<br/>on a first fetch, to yesterday, outside any transaction"]
     Ask --> Currency{"quoted in the security's currency?<br/>GBX becomes GBP divided by 100"}
     Currency -->|"no"| Fail["PriceSyncError stored, nothing written"]
-    Currency -->|"yes"| Book["SecurityPriceBook with source Feed"]
+    Currency -->|"yes"| Book["SecurityPriceBook with source Feed,<br/>in a second short transaction under the lock"]
 ```
 
 A security is due when it has never been fetched, or when its last price is older than its target day and it was not already asked today. The target day of an EODHD security is the last weekday before today, because exchanges close at weekends; the target day of a Kraken security is yesterday, because crypto has a close every calendar day, so Saturday's and Sunday's closes arrive on the next day's run rather than waiting for Tuesday. So a run on a holiday, when the provider has nothing new, costs one call per security that day and none on the next runs. A failure waits 24 hours before it is tried again, except on Fetch now. EODHD calls are counted on the settings row (`PriceCallsDate`, `PriceCallsUsed`), including Find; a fetch that would need more calls than are left is not made, so the day's count never passes the limit. The first fetch of an EODHD symbol costs two calls, because EODHD's end-of-day answer carries no currency and the provider asks its search once for the listing's currency. The answer is stored on the security as `PriceQuoteCurrency`, so every later fetch costs one call, across restarts, until the source or the symbol changes. A symbol chosen from Find's list costs one call on its first fetch too, because the API keeps Find's answers in memory and the first fetch stores the remembered currency; only a restart between Find and that first fetch brings the second call back, once.

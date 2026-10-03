@@ -228,6 +228,26 @@ public sealed class SettingsEndpointTests(InvestmentsFixture fixture) : Integrat
     }
 
     [Fact]
+    public async Task A_goal_too_large_for_the_new_currency_keeps_the_reporting_currency()
+    {
+        var original = await ReadAsync();
+        var goal = await PostAsync<IdDto>(Client, "/api/goals", new { name = "Milijardai", targetAmount = "9999999999999999.00", currentAmount = "0.00" });
+
+        try
+        {
+            var refused = await Client.PutAsJsonAsync("/api/settings", original with { ReportingCurrency = "usd" }, TestContext.Current.CancellationToken);
+
+            await AssertProblemAsync(refused, HttpStatusCode.BadRequest, "exchangeRate.amountTooLarge");
+            Assert.Equal(original.ReportingCurrency, (await ReadAsync()).ReportingCurrency);
+            Assert.Equal((9999999999999999.00m, 0.00m), await StoredGoalAmountsAsync(goal.Id));
+        }
+        finally
+        {
+            await SqlAsync($"""DELETE FROM "Goals" WHERE "Id" = {goal.Id}""");
+        }
+    }
+
+    [Fact]
     public async Task Changing_the_reporting_currency_converts_budget_limits_and_goal_amounts()
     {
         var original = await ReadAsync();

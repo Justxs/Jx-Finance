@@ -1,3 +1,4 @@
+using JxFinance.Domain.Common;
 using JxFinance.Domain.Transactions;
 
 namespace JxFinance.Common.Unusual;
@@ -34,7 +35,7 @@ public static class UnusualAmountRule
             && amount - median >= MinimumExcess;
 
         return unusual
-            ? new UnusualVerdict(basis, decimal.Round(median, 2), Math.Min(decimal.Round(amount / median, 2), MaximumFactor), history.Count)
+            ? new UnusualVerdict(basis, Money.Round(median), Math.Min(decimal.Round(amount / median, 2, MidpointRounding.AwayFromZero), MaximumFactor), history.Count)
             : null;
     }
 }

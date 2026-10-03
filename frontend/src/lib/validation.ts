@@ -31,7 +31,7 @@ function blankOr(check: (value: string) => boolean) {
 }
 
 export function isRate(value: string): boolean {
-  return blankOr((rate) => /^\d+(\.\d+)?$/.test(normalizeMoney(rate)))(value);
+  return blankOr((rate) => /^\d+(\.\d{1,4})?$/.test(normalizeMoney(rate)))(value);
 }
 
 export function isEmail(value: string): boolean {

@@ -71,11 +71,11 @@ describe("quantities", () => {
 });
 
 describe("rates", () => {
-  test.each(["", "  ", "1", "0,92", "1.0825123"])("accepts %j", (value) => {
+  test.each(["", "  ", "1", "0,92", "3.4590"])("accepts %j", (value) => {
     expect(isRate(value)).toBe(true);
   });
 
-  test.each(["-1", "abc", "1.", "1,2,3", "1e3"])("rejects %j", (value) => {
+  test.each(["-1", "abc", "1.", "1,2,3", "1e3", "1.08251"])("rejects %j", (value) => {
     expect(isRate(value)).toBe(false);
   });
 });

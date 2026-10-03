@@ -101,7 +101,7 @@ public static partial class Mt940Parser
             date,
             payee,
             description?[..Math.Min(description.Length, ParsedStatement.DescriptionMaxLength)],
-            decimal.Round(amount, 2),
+            Money.Round(amount),
             type,
             currency,
             counterpartyIban,

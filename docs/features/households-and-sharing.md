@@ -118,6 +118,8 @@ An owner adds a member from the household card by email and role, in a dialog wi
 
 Since 2026-09-29 the owner confirms a removal first: the member's delete action on the household card opens a dialog that names the member and says they will stop seeing the household, and only "Remove" sends the request. Before that the row removed the member at once. There is no undo, because a membership does not go to the trash, but the owner can add the same person again; until 2026-10-03 that second add failed with a server error.
 
+A household always keeps an owner: demoting or removing the last one answers 400 `household.lastOwner`. Since 2026-10-03 a role change and a removal take the household's advisory lock (`LockAsync` on its id) inside their transaction before they check that the caller is an owner and that another owner remains, so two owners demoting or removing each other at the same moment are serialized: the first wins, and the second, no longer an owner, answers 403 `access.forbidden`. Adding a member takes no lock, because a new membership can only add an owner, never take the last one away.
+
 ```mermaid
 sequenceDiagram
     actor Owner as Household owner

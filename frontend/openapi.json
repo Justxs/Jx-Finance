@@ -25959,7 +25959,7 @@
               "null",
               "number"
             ],
-            "description": "Optional annual rate as a percentage, for example 2.4.",
+            "description": "Optional annual rate as a percentage from 0 to 100 with at most 4 decimal places (debt.ratePrecision), for example 2.4.",
             "format": "double",
             "example": 2.4
           },
@@ -27989,6 +27989,7 @@
           "debt.paymentTaken",
           "debt.paymentTooSmall",
           "debt.paymentWrongType",
+          "debt.ratePrecision",
           "debt.scheduleIncomplete",
           "decimal.malformed",
           "discord.invalidWebhook",
@@ -28007,6 +28008,7 @@
           "email.taken",
           "email.tokenInvalid",
           "enum.invalid",
+          "exchangeRate.amountTooLarge",
           "exchangeRate.futureDate",
           "exchangeRate.notPositive",
           "exchangeRate.unavailable",

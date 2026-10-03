@@ -77,6 +77,14 @@ public sealed class OfxParserTests
     }
 
     [Fact]
+    public void An_amount_with_a_half_cent_rounds_away_from_zero()
+    {
+        var statement = Parse(Sgml.Replace("<TRNAMT>-15.77", "<TRNAMT>-15.765", StringComparison.Ordinal));
+
+        Assert.Equal(15.77m, statement.Rows[0].Amount);
+    }
+
+    [Fact]
     public void A_file_without_an_ofx_element_is_refused()
     {
         var result = OfxParser.Parse(new MemoryStream(Encoding.UTF8.GetBytes("Date,Amount\n2026-09-01,10")), Currency.Eur);

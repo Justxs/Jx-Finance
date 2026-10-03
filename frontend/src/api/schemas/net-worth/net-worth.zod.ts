@@ -503,7 +503,9 @@ export const CreateDebtBody = zod.object({
     .min(createDebtBodyInterestRateMin)
     .max(createDebtBodyInterestRateMax)
     .nullable()
-    .describe("Optional annual rate as a percentage, for example 2.4."),
+    .describe(
+      "Optional annual rate as a percentage from 0 to 100 with at most 4 decimal places (debt.ratePrecision), for example 2.4.",
+    ),
   asOf: zod.iso.date(),
   loanAmount: zod
     .stringFormat("decimal", createDebtBodyLoanAmountRegExp)

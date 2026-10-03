@@ -76,6 +76,7 @@ public static class ErrorCodes
     public const string ExchangeRateNotPositive = "exchangeRate.notPositive";
     public const string ExchangeRateUnsupportedCurrency = "exchangeRate.unsupportedCurrency";
     public const string ExchangeRateFutureDate = "exchangeRate.futureDate";
+    public const string ExchangeRateAmountTooLarge = "exchangeRate.amountTooLarge";
     public const string TransferSameAccount = "transfer.sameAccount";
     public const string TransferReceivedAmountRequired = "transfer.receivedAmountRequired";
     public const string TransferAmountMismatch = "transfer.amountMismatch";
@@ -125,6 +126,7 @@ public static class ErrorCodes
     public const string DebtPaymentTaken = "debt.paymentTaken";
     public const string DebtNotTracked = "debt.notTracked";
     public const string DebtLastBalance = "debt.lastBalance";
+    public const string DebtRatePrecision = "debt.ratePrecision";
     public const string AttachmentEmpty = "attachment.empty";
     public const string AttachmentTooLarge = "attachment.tooLarge";
     public const string AttachmentTypeNotAllowed = "attachment.typeNotAllowed";

@@ -14,5 +14,5 @@ public interface IReportingRevaluation
         Currency reportingCurrency,
         CancellationToken cancellationToken);
 
-    Task<string?> ConvertPlansAsync(Currency from, Currency to, CancellationToken cancellationToken);
+    Task<DomainError?> ConvertPlansAsync(Currency from, Currency to, CancellationToken cancellationToken);
 }

@@ -2,13 +2,30 @@ import { act, renderHook } from "@testing-library/react";
 import { afterEach, describe, expect, test, vi } from "vitest";
 import { freshModuleLoader } from "@/test/fresh-module";
 import { blockStorage, seedPreferences, storedPreferences } from "@/test/preferences";
+import type { Theme } from "./theme-store";
 
 const loadStore = await freshModuleLoader(() => import("./theme-store"));
 
-function preferDark() {
+function systemScheme(initial: Theme) {
+  let scheme = initial;
+  const listeners = new Set<() => void>();
   vi.stubGlobal("matchMedia", (query: string) => ({
-    matches: query === "(prefers-color-scheme: dark)",
+    get matches() {
+      return query === "(prefers-color-scheme: dark)" && scheme === "dark";
+    },
+    addEventListener: (_type: string, listener: () => void) => listeners.add(listener),
+    removeEventListener: (_type: string, listener: () => void) => listeners.delete(listener),
   }));
+  return function change(next: Theme) {
+    scheme = next;
+    for (const listener of listeners) {
+      listener();
+    }
+  };
+}
+
+function preferDark() {
+  systemScheme("dark");
 }
 
 function root() {
@@ -47,6 +64,36 @@ describe("initial theme", () => {
     const store = await loadStore();
 
     expect(renderHook(() => store.useTheme()).result.current.theme).toBe("light");
+  });
+});
+
+describe("live system theme", () => {
+  test("follows a change of the system preference without a stored theme", async () => {
+    const changeSystem = systemScheme("light");
+    const store = await loadStore();
+    const { result } = renderHook(() => store.useTheme());
+
+    act(() => changeSystem("dark"));
+
+    expect(result.current.theme).toBe("dark");
+    expect(root()).toHaveClass("dark");
+
+    act(() => changeSystem("light"));
+
+    expect(result.current.theme).toBe("light");
+    expect(root()).not.toHaveClass("dark");
+  });
+
+  test("a stored theme ignores a change of the system preference", async () => {
+    const changeSystem = systemScheme("light");
+    seedPreferences({ theme: "light" });
+    const store = await loadStore();
+    const { result } = renderHook(() => store.useTheme());
+
+    act(() => changeSystem("dark"));
+
+    expect(result.current.theme).toBe("light");
+    expect(root()).not.toHaveClass("dark");
   });
 });
 

@@ -1,4 +1,6 @@
 using FastEndpoints;
+using JxFinance.Common.Errors;
+using JxFinance.Common.Validation;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Investments;
 using JxFinance.Domain.Transactions;
@@ -42,7 +44,7 @@ public sealed class ReportingRevaluation(
             reportingCurrency,
             cancellationToken);
 
-    public async Task<string?> ConvertPlansAsync(Currency from, Currency to, CancellationToken cancellationToken)
+    public async Task<DomainError?> ConvertPlansAsync(Currency from, Currency to, CancellationToken cancellationToken)
     {
         var budgets = await db.Budgets.IgnoreQueryFilters().ToListAsync(cancellationToken);
         var goals = await db.Goals.IgnoreQueryFilters().ToListAsync(cancellationToken);
@@ -55,7 +57,19 @@ public sealed class ReportingRevaluation(
         var table = await rates.GetForDateAsync(today, cancellationToken);
         if (!rates.IsFresh(table, today) || table.Rate(from, to) is not { } rate)
         {
-            return $"No exchange rate is available for {from.ToCode()} to {to.ToCode()} on {today:yyyy-MM-dd}. Sync exchange rates and try again.";
+            return new DomainError(
+                ErrorCodes.ExchangeRateUnavailable,
+                $"No exchange rate is available for {from.ToCode()} to {to.ToCode()} on {today:yyyy-MM-dd}. Sync exchange rates and try again.");
+        }
+
+        var largest = budgets.Select(b => b.LimitAmount.Amount)
+            .Concat(goals.SelectMany(g => new[] { g.TargetAmount.Amount, g.CurrentAmount.Amount }))
+            .Max(Math.Abs);
+        if (!DecimalRules.FitsMoney(Money.Round(largest * rate)))
+        {
+            return new DomainError(
+                ErrorCodes.ExchangeRateAmountTooLarge,
+                $"A budget limit or goal amount would exceed the largest amount allowed in {to.ToCode()}. Lower it first.");
         }
 
         foreach (var budget in budgets)

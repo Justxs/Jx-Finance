@@ -138,6 +138,8 @@ public sealed class HouseholdService(
         UpdateMemberRoleRequest request,
         CancellationToken cancellationToken)
     {
+        await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
+        await db.Database.LockAsync(request.Id, cancellationToken);
         var owned = await FindOwnedAsync(request.Id, cancellationToken);
         if (!owned.TryGetValue(out var household))
         {
@@ -158,6 +160,7 @@ public sealed class HouseholdService(
 
         membership.Role = request.Role;
         await db.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
 
         return await ToResponseAsync(household, cancellationToken);
     }
@@ -167,6 +170,8 @@ public sealed class HouseholdService(
         Guid userId,
         CancellationToken cancellationToken)
     {
+        await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
+        await db.Database.LockAsync(householdId, cancellationToken);
         var owned = await FindOwnedAsync(householdId, cancellationToken);
         if (!owned.TryGetValue(out var household))
         {
@@ -184,7 +189,6 @@ public sealed class HouseholdService(
             return LastOwner;
         }
 
-        await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
         await MakePersonalAsync(household.Id, membership.UserId, cancellationToken);
         db.HouseholdMemberships.Remove(membership);
         await db.SaveChangesAsync(cancellationToken);

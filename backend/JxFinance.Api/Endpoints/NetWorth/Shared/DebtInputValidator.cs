@@ -20,6 +20,10 @@ public abstract class DebtInputValidator<TRequest> : Validator<TRequest>
             .IsNonNegativeMoney()
             .WithMessage("Outstanding amount must be a non-negative decimal with at most 2 decimal places.");
         RuleFor(r => r.InterestRate).IsWithin(0, 100).When(r => r.InterestRate.HasValue);
+        RuleFor(r => r.InterestRate)
+            .Must(rate => rate is null || decimal.Round(rate.Value, 4) == rate.Value)
+            .WithErrorCode(ErrorCodes.DebtRatePrecision)
+            .WithMessage("Interest rate can have at most 4 decimal places.");
         RuleFor(r => r.AsOf).IsRequired();
         RuleFor(r => r.LoanAmount)
             .IsPositiveMoney()

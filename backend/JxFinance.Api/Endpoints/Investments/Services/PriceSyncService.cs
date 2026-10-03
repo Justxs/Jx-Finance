@@ -36,78 +36,20 @@ public sealed class PriceSyncService(
 
     public async Task<Result<MarketPriceSyncResponse>> SyncAsync(bool force, CancellationToken cancellationToken)
     {
-        await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
-        await db.Database.LockAsync(AppLock.PriceSync, cancellationToken);
-        var settings = await SettingsRowAsync(cancellationToken);
-        var key = ReadKey(settings);
-
-        var firstTrades = await HeldSecurities.FirstTradesAsync(db, cancellationToken);
-        var heldIds = firstTrades.Keys.ToList();
-        var mapped = await db.Securities
-            .Where(s => s.PriceSource != PriceSource.None && heldIds.Contains(s.Id))
-            .ToListAsync(cancellationToken);
-        if (force && key.IsFailure && mapped.Any(s => s.PriceSource == PriceSource.Eodhd))
+        var claimed = await ClaimAsync(force, cancellationToken);
+        if (!claimed.TryGetValue(out var claim))
         {
-            return key.Error;
+            return claimed.Error;
         }
 
-        var mappedIds = mapped.Select(s => s.Id).ToList();
-        var withFeed = (await db.SecurityPrices
-                .Where(p => mappedIds.Contains(p.SecurityId) && p.Source == PriceSourceKind.Feed)
-                .Select(p => p.SecurityId)
-                .Distinct()
-                .ToListAsync(cancellationToken))
-            .ToHashSet();
-        var due = mapped
-            .Where(s => PriceSyncRules.IsDue(s, clock, force))
-            .OrderBy(s => s.LastPriceDate ?? DateOnly.MinValue)
-            .ThenBy(s => s.Symbol, StringComparer.Ordinal)
-            .ToList();
-
-        var today = clock.Today;
-        var to = today.AddDays(-1);
-        var (checkedCount, written, failed) = (0, 0, 0);
-        foreach (var security in due)
+        var fetched = new List<(PriceFetch Fetch, Result<IReadOnlyList<MarketClose>> Closes)>();
+        foreach (var fetch in claim.Fetches)
         {
-            var provider = Provider(security.PriceSource);
-            var symbol = security.PriceSymbol!;
-            var from = PriceSyncRules.From(security, withFeed.Contains(security.Id), firstTrades[security.Id]);
-            if (from > to)
-            {
-                MarkSynced(security, null);
-                continue;
-            }
-
-            var calls = provider.CallsFor(security);
-            if (security.PriceSource == PriceSource.Eodhd
-                && (key.IsFailure || calls > PriceSyncRules.CallsLeft(settings, today, DailyLimit)))
-            {
-                continue;
-            }
-
-            PriceSyncRules.Spend(settings, today, calls);
-            checkedCount++;
-            var fetched = await provider.CloseAsync(security, from, to, key.Value, cancellationToken);
-            var closes = fetched.IsSuccess ? PriceSyncRules.InSecurityCurrency(security, fetched.Value!) : fetched;
-            if (closes.IsFailure)
-            {
-                failed++;
-                MarkSynced(security, closes.ErrorMessage);
-                logger.LogWarning("Price sync for {Symbol} failed: {Error}", symbol, closes.ErrorMessage);
-            }
-            else
-            {
-                written += await WriteAsync(security, closes.Value!, from, to, cancellationToken);
-                MarkSynced(security, null);
-            }
-
-            await db.SaveChangesAsync(cancellationToken);
+            var security = fetch.Security;
+            fetched.Add((fetch, await Provider(security.PriceSource).CloseAsync(security, fetch.From, claim.To, claim.Key, cancellationToken)));
         }
 
-        settings.PriceSyncRunAt = clock.UtcNow;
-        await db.SaveChangesAsync(cancellationToken);
-        await transaction.CommitAsync(cancellationToken);
-        return new MarketPriceSyncResponse(checkedCount, written, failed, PriceSyncRules.CallsLeft(settings, today, DailyLimit));
+        return await RecordAsync(fetched, claim.To, cancellationToken);
     }
 
     public async Task<Result<IReadOnlyList<PriceSymbolCandidate>>> FindSymbolAsync(
@@ -147,6 +89,109 @@ public sealed class PriceSyncService(
         await db.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
         return await Provider(PriceSource.Eodhd).FindAsync(isin, key.Value, cancellationToken);
+    }
+
+    private async Task<Result<PriceClaim>> ClaimAsync(bool force, CancellationToken cancellationToken)
+    {
+        await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
+        await db.Database.LockAsync(AppLock.PriceSync, cancellationToken);
+        var settings = await SettingsRowAsync(cancellationToken);
+        var key = ReadKey(settings);
+
+        var firstTrades = await HeldSecurities.FirstTradesAsync(db, cancellationToken);
+        var heldIds = firstTrades.Keys.ToList();
+        var mapped = await db.Securities
+            .Where(s => s.PriceSource != PriceSource.None && heldIds.Contains(s.Id))
+            .ToListAsync(cancellationToken);
+        if (force && key.IsFailure && mapped.Any(s => s.PriceSource == PriceSource.Eodhd))
+        {
+            return key.Error;
+        }
+
+        var mappedIds = mapped.Select(s => s.Id).ToList();
+        var withFeed = (await db.SecurityPrices
+                .Where(p => mappedIds.Contains(p.SecurityId) && p.Source == PriceSourceKind.Feed)
+                .Select(p => p.SecurityId)
+                .Distinct()
+                .ToListAsync(cancellationToken))
+            .ToHashSet();
+        var due = mapped
+            .Where(s => PriceSyncRules.IsDue(s, clock, force))
+            .OrderBy(s => s.LastPriceDate ?? DateOnly.MinValue)
+            .ThenBy(s => s.Symbol, StringComparer.Ordinal)
+            .ToList();
+
+        var today = clock.Today;
+        var to = today.AddDays(-1);
+        var fetches = new List<PriceFetch>();
+        foreach (var security in due)
+        {
+            var from = PriceSyncRules.From(security, withFeed.Contains(security.Id), firstTrades[security.Id]);
+            if (from > to)
+            {
+                MarkSynced(security, null);
+                continue;
+            }
+
+            var calls = Provider(security.PriceSource).CallsFor(security);
+            if (security.PriceSource == PriceSource.Eodhd
+                && (key.IsFailure || calls > PriceSyncRules.CallsLeft(settings, today, DailyLimit)))
+            {
+                continue;
+            }
+
+            PriceSyncRules.Spend(settings, today, calls);
+            MarkSynced(security, null);
+            fetches.Add(new PriceFetch(security, security.PriceSource, security.PriceSymbol!, from));
+        }
+
+        await db.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+        db.ChangeTracker.Clear();
+        return new PriceClaim(fetches, to, key.Value);
+    }
+
+    private async Task<Result<MarketPriceSyncResponse>> RecordAsync(
+        List<(PriceFetch Fetch, Result<IReadOnlyList<MarketClose>> Closes)> fetched,
+        DateOnly to,
+        CancellationToken cancellationToken)
+    {
+        await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
+        await db.Database.LockAsync(AppLock.PriceSync, cancellationToken);
+        var settings = await SettingsRowAsync(cancellationToken);
+        var ids = fetched.Select(f => f.Fetch.Security.Id).ToList();
+        var securities = await db.Securities.Where(s => ids.Contains(s.Id)).ToDictionaryAsync(s => s.Id, cancellationToken);
+        var (written, failed) = (0, 0);
+        foreach (var (fetch, fetchedCloses) in fetched)
+        {
+            if (!securities.TryGetValue(fetch.Security.Id, out var security)
+                || security.PriceSource != fetch.Source
+                || security.PriceSymbol != fetch.Symbol)
+            {
+                continue;
+            }
+
+            security.PriceQuoteCurrency ??= fetch.Security.PriceQuoteCurrency;
+            var closes = fetchedCloses.IsSuccess ? PriceSyncRules.InSecurityCurrency(security, fetchedCloses.Value!) : fetchedCloses;
+            if (closes.IsFailure)
+            {
+                failed++;
+                MarkSynced(security, closes.ErrorMessage);
+                logger.LogWarning("Price sync for {Symbol} failed: {Error}", fetch.Symbol, closes.ErrorMessage);
+            }
+            else
+            {
+                written += await WriteAsync(security, closes.Value!, fetch.From, to, cancellationToken);
+                MarkSynced(security, null);
+            }
+
+            await db.SaveChangesAsync(cancellationToken);
+        }
+
+        settings.PriceSyncRunAt = clock.UtcNow;
+        await db.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+        return new MarketPriceSyncResponse(fetched.Count, written, failed, PriceSyncRules.CallsLeft(settings, clock.Today, DailyLimit));
     }
 
     private IMarketPriceProvider Provider(PriceSource source) => providers.First(p => p.Source == source);
@@ -205,4 +250,8 @@ public sealed class PriceSyncService(
         security.PriceSyncedAt = clock.UtcNow;
         security.PriceSyncError = error is { Length: > Security.PriceSyncErrorMaxLength } ? error[..Security.PriceSyncErrorMaxLength] : error;
     }
+
+    private sealed record PriceFetch(Security Security, PriceSource Source, string Symbol, DateOnly From);
+
+    private sealed record PriceClaim(IReadOnlyList<PriceFetch> Fetches, DateOnly To, string? Key);
 }

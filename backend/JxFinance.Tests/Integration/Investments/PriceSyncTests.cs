@@ -153,6 +153,28 @@ public sealed class PriceSyncTests(InvestmentsFixture fixture) : IntegrationTest
     }
 
     [Fact]
+    public async Task Two_overlapping_syncs_spend_the_last_calls_of_the_day_once()
+    {
+        await SaveMarketPricesAsync(enabled: false, key: "test-key");
+        var symbol = $"{NewSymbol()}.XETRA";
+        var held = await MappedHoldingAsync("eodhd", symbol);
+        var today = Today;
+        await WithDbAsync(db => db.Securities
+            .Where(s => s.Id != new SecurityId(held.SecurityId) && s.PriceSource != PriceSource.None)
+            .ExecuteUpdateAsync(s => s.SetProperty(x => x.LastPriceDate, today), TestContext.Current.CancellationToken));
+        await SqlAsync($"""UPDATE "InstanceSettings" SET "PriceCallsDate" = {Today}, "PriceCallsUsed" = 18""");
+
+        var results = await Task.WhenAll(SyncNowAsync(), SyncNowAsync());
+
+        Assert.Equal(1, results.Sum(r => r.Checked));
+        Assert.Single(Eodhd.Calls, c => c.Symbol == symbol);
+        Assert.NotEmpty(await PricesAsync(held.SecurityId));
+        var settings = await ReadOkAsync<MarketPriceSettingsDto>(await Client.GetAsync("/api/settings/market-prices", TestContext.Current.CancellationToken));
+        Assert.Equal(0, settings.CallsLeft);
+        await ResetBudgetAsync();
+    }
+
+    [Fact]
     public async Task The_value_history_is_no_longer_partial_after_a_sync()
     {
         await SaveMarketPricesAsync(enabled: false, key: "test-key");

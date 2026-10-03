@@ -2932,7 +2932,7 @@
     "details": "Techninė informacija"
   },
   "validation": {
-    "rate": "Įveskite teisingą palūkanų normą, pvz., 4,5.",
+    "rate": "Įveskite teisingą palūkanų normą, iki 4 skaitmenų po kablelio, pvz., 4,5.",
     "required": "Šis laukas privalomas.",
     "money": "Įveskite teisingą sumą, pvz., 12,34.",
     "positiveMoney": "Įveskite sumą, didesnę už 0, pvz., 12,34.",
@@ -3042,7 +3042,8 @@
       "paymentWrongType": "Skolą galima dengti tik išlaidomis.",
       "paymentTaken": "Ši operacija jau susieta su skola.",
       "notTracked": "Pirmiausia įjunkite šios skolos įmokų sekimą.",
-      "lastBalance": "Skola turi turėti bent vieną įrašytą likutį. Vietoj to ištrinkite skolą."
+      "lastBalance": "Skola turi turėti bent vieną įrašytą likutį. Vietoj to ištrinkite skolą.",
+      "ratePrecision": "Įveskite palūkanų normą, ne daugiau kaip 4 skaitmenys po kablelio, pvz., 3,459."
     },
     "decimal": {
       "malformed": "Įveskite skaičių su tašku kaip dešimtainiu skirtuku, pvz., 12.34."
@@ -3079,7 +3080,8 @@
       "unavailable": "Šiai datai nėra valiutos kurso. Pirmiausia sinchronizuokite kursus arba įveskite kursą nustatymuose.",
       "notPositive": "Kursas turi būti didesnis už nulį, ne daugiau kaip 8 skaitmenys po kablelio.",
       "unsupportedCurrency": "Kursai nurodomi už vieną eurą, todėl euras savo kurso neturi.",
-      "futureDate": "Kurso data negali būti vėlesnė nei šiandien."
+      "futureDate": "Kurso data negali būti vėlesnė nei šiandien.",
+      "amountTooLarge": "Perskaičiuota biudžeto riba ar tikslo suma viršytų didžiausią leistiną sumą naujoje valiutoje. Pirmiausia ją sumažinkite."
     },
     "export": {
       "tooManyRows": "Per daug operacijų PDF failui. Susiaurinkite filtrus arba eksportuokite CSV."

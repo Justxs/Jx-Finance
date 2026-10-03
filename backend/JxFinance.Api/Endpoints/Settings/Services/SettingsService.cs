@@ -64,7 +64,7 @@ public sealed class SettingsService(
                 if (settings.ReportingCurrency != request.ReportingCurrency
                     && await RevalueAsync(settings.ReportingCurrency, request.ReportingCurrency, cancellationToken) is { } error)
                 {
-                    return new DomainError(ErrorCodes.ExchangeRateUnavailable, error);
+                    return error;
                 }
 
                 var currencies = request.EnabledCurrencies
@@ -95,7 +95,7 @@ public sealed class SettingsService(
         return await GetAsync(cancellationToken);
     }
 
-    private async Task<string?> RevalueAsync(Currency previousCurrency, Currency reportingCurrency, CancellationToken cancellationToken)
+    private async Task<DomainError?> RevalueAsync(Currency previousCurrency, Currency reportingCurrency, CancellationToken cancellationToken)
     {
         await revaluation.LockAsync(cancellationToken);
 
@@ -126,7 +126,7 @@ public sealed class SettingsService(
 
         if (await revaluation.RevalueAsync(foreign, foreignEntries, reportingCurrency, cancellationToken) is { } error)
         {
-            return error;
+            return new DomainError(ErrorCodes.ExchangeRateUnavailable, error);
         }
 
         var now = clock.UtcNow;

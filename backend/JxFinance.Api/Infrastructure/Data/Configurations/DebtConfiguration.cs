@@ -11,6 +11,6 @@ public sealed class DebtConfiguration : IEntityTypeConfiguration<Debt>
         builder.Property(d => d.Name).HasMaxLength(100);
         builder.ComplexProperty(d => d.OutstandingAmount, money => money.HasColumns("OutstandingAmount", DbSchema.CurrencyColumn));
         builder.Ignore(d => d.Currency);
-        builder.Property(d => d.InterestRate).HasPrecision(5, 2);
+        builder.Property(d => d.InterestRate).HasPrecision(7, 4);
     }
 }

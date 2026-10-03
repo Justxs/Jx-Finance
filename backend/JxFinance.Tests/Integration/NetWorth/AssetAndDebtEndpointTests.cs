@@ -37,11 +37,11 @@ public sealed class AssetAndDebtEndpointTests(NetWorthFixture fixture) : Integra
 
         var update = await member.PutAsJsonAsync(
             $"/api/debts/{debt.Id}",
-            new { name = "Loan", type = "loan", outstandingAmount = "2500.00", interestRate = 5.5m, asOf = Today }, TestContext.Current.CancellationToken);
+            new { name = "Loan", type = "loan", outstandingAmount = "2500.00", interestRate = 3.4591m, asOf = Today }, TestContext.Current.CancellationToken);
 
         update.EnsureSuccessStatusCode();
         var listed = Assert.Single((await member.GetFromJsonAsync<List<DebtDto>>("/api/debts", TestContext.Current.CancellationToken))!);
-        Assert.Equal(new DebtDto(debt.Id, "2500.00", 5.5m), listed);
+        Assert.Equal(new DebtDto(debt.Id, "2500.00", 3.4591m), listed);
         Assert.Equal("-2500.00", (await member.GetFromJsonAsync<NetWorthDto>("/api/networth", TestContext.Current.CancellationToken))!.NetWorth);
     }
 
@@ -50,6 +50,7 @@ public sealed class AssetAndDebtEndpointTests(NetWorthFixture fixture) : Integra
     [InlineData("assets", "currentValue", "1.234")]
     [InlineData("debts", "outstandingAmount", "-1.00")]
     [InlineData("debts", "interestRate", "101")]
+    [InlineData("debts", "interestRate", "3.45912")]
     public async Task Create_rejects_an_invalid_value_and_names_the_field(string resource, string field, string value)
     {
         var body = new Dictionary<string, object>

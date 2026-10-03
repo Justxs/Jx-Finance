@@ -2812,7 +2812,7 @@
     "details": "Technical details"
   },
   "validation": {
-    "rate": "Enter a valid rate, e.g. 4.5.",
+    "rate": "Enter a valid rate with up to 4 decimals, e.g. 4.5.",
     "required": "This field is required.",
     "money": "Enter a valid amount, e.g. 12.34.",
     "positiveMoney": "Enter an amount greater than 0, e.g. 12.34.",
@@ -2922,7 +2922,8 @@
       "paymentWrongType": "Only an expense can pay a debt.",
       "paymentTaken": "This transaction already pays a debt.",
       "notTracked": "Turn on Track payments for this debt first.",
-      "lastBalance": "A debt keeps at least one recorded balance. Delete the debt instead."
+      "lastBalance": "A debt keeps at least one recorded balance. Delete the debt instead.",
+      "ratePrecision": "Enter an interest rate with at most 4 decimal places, e.g. 3.459."
     },
     "decimal": {
       "malformed": "Enter a number with a dot as the decimal separator, e.g. 12.34."
@@ -2959,7 +2960,8 @@
       "unavailable": "No exchange rate for that date. Sync rates or enter one in settings first.",
       "notPositive": "The rate must be above zero, with at most 8 decimal places.",
       "unsupportedCurrency": "Rates are given per euro, so the euro has no rate of its own.",
-      "futureDate": "A rate cannot be dated after today."
+      "futureDate": "A rate cannot be dated after today.",
+      "amountTooLarge": "A budget limit or goal amount would grow past the largest amount allowed in the new currency. Lower it first."
     },
     "export": {
       "tooManyRows": "Too many transactions for a PDF. Narrow the filters or export CSV instead."

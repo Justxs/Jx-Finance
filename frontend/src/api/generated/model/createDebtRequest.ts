@@ -21,7 +21,7 @@ export interface CreateDebtRequest {
   /** Decimal string with at most two decimal places. */
   outstandingAmount: string;
   /**
-   * Optional annual rate as a percentage, for example 2.4.
+   * Optional annual rate as a percentage from 0 to 100 with at most 4 decimal places (debt.ratePrecision), for example 2.4.
    * @minimum 0
    * @maximum 100
    * @nullable

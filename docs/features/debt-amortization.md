@@ -14,7 +14,7 @@ erDiagram
         string Name "max 100"
         int Type "mortgage, loan, other"
         numeric OutstandingAmount "recorded balance, used by net worth"
-        numeric InterestRate "annual percent, 0 to 100, optional"
+        numeric InterestRate "annual percent, 0 to 100, four decimals, optional"
         date AsOf "date of the recorded balance"
         numeric LoanAmount "principal at the start, optional"
         date FirstPaymentDate "optional"
@@ -31,6 +31,8 @@ A debt has a schedule when it has a loan amount, an interest rate (zero counts),
 | Rule | Code | Field |
 | --- | --- | --- |
 | Loan amount is a positive decimal string with at most two decimals | `money.positive` | `loanAmount` |
+| Interest rate is from 0 to 100 | `range.invalid` | `interestRate` |
+| Interest rate has at most four decimals, stored as numeric(7,4) so it reloads exactly | `debt.ratePrecision` | `interestRate` |
 | Term is a whole number from 1 to 600 | `range.invalid` | `termMonths` |
 | Monthly payment is a positive decimal string with at most two decimals | `money.positive` | `monthlyPayment` |
 | A term and a monthly payment are not both given | `value.mustBeEmpty` | `monthlyPayment` |

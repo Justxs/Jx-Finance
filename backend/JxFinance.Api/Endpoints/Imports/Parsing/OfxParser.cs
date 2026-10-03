@@ -107,7 +107,7 @@ public static partial class OfxParser
 
     private static decimal? Amount(string? text) =>
         decimal.TryParse(text?.Replace(',', '.'), NumberStyles.AllowLeadingSign | NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out var value)
-            ? decimal.Round(value, 2)
+            ? Money.Round(value)
             : null;
 
     private static DateOnly? Date(string? text) =>

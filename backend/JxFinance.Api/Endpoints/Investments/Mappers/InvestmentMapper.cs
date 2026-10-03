@@ -111,12 +111,12 @@ public static class InvestmentMapper
             accountId.Value,
             security.ToResponse(),
             position.Quantity,
-            position.Quantity == 0m ? 0m : decimal.Round(position.CostBasis / position.Quantity, 4),
+            position.Quantity == 0m ? 0m : decimal.Round(position.CostBasis / position.Quantity, 4, MidpointRounding.AwayFromZero),
             position.CostBasis,
             marketValue,
             unrealized,
             unrealized is { } change && position.CostBasis != 0m
-                ? decimal.Round(change / position.CostBasis * 100m, 2)
+                ? decimal.Round(change / position.CostBasis * 100m, 2, MidpointRounding.AwayFromZero)
                 : null,
             marketValueReporting is { } reporting ? Money.Round(reporting) : null,
             realizedGain,

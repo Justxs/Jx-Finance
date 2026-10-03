@@ -27,7 +27,7 @@ public sealed class CreateDebtSummary : Summary<CreateDebtEndpoint, CreateDebtRe
             AmortizationType.Annuity);
         RequestParam(r => r.Type, "Mortgage, Loan, or Other.");
         RequestParam(r => r.OutstandingAmount, "Decimal string with at most two decimal places.");
-        RequestParam(r => r.InterestRate, "Optional annual rate as a percentage, for example 2.4.");
+        RequestParam(r => r.InterestRate, "Optional annual rate as a percentage from 0 to 100 with at most 4 decimal places (debt.ratePrecision), for example 2.4.");
         RequestParam(r => r.AsOf, "The date the balance is good for, as YYYY-MM-DD.");
         this.DescribeDebtSchedule();
         Responses[201] = "The debt was created. The Location header points at it.";

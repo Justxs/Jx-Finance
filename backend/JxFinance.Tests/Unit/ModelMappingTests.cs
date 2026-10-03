@@ -37,7 +37,7 @@ public sealed class ModelMappingTests
 
         Assert.Equal("numeric(20,8)", ColumnType<InvestmentTransaction>(capture.Db, "Quantity"));
         Assert.Equal("numeric(18,8)", ColumnType<SecurityPrice>(capture.Db, "Price"));
-        Assert.Equal("numeric(5,2)", ColumnType<Debt>(capture.Db, "InterestRate"));
+        Assert.Equal("numeric(7,4)", ColumnType<Debt>(capture.Db, "InterestRate"));
     }
 
     [Fact]

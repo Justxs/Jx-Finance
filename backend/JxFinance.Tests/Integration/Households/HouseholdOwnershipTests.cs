@@ -44,6 +44,24 @@ public sealed class HouseholdOwnershipTests(PeopleFixture fixture) : Integration
     }
 
     [Fact]
+    public async Task Two_owners_demoting_each_other_at_once_leave_one_owner()
+    {
+        var other = await CreateUserAsync();
+        var household = await CreateHouseholdAsync(other);
+        var me = await Client.GetFromJsonAsync<IdDto>("/api/auth/me", TestContext.Current.CancellationToken);
+        (await Client.PutAsJsonAsync($"/api/households/{household}/members/{other.Id}", new { role = "owner" }, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
+        using var otherClient = await LoginAsync(other);
+
+        var responses = await Task.WhenAll(
+            Client.PutAsJsonAsync($"/api/households/{household}/members/{other.Id}", new { role = "member" }, TestContext.Current.CancellationToken),
+            otherClient.PutAsJsonAsync($"/api/households/{household}/members/{me!.Id}", new { role = "member" }, TestContext.Current.CancellationToken));
+
+        Assert.Single(responses, r => r.IsSuccessStatusCode);
+        var after = await Client.GetFromJsonAsync<HouseholdMembersDto>($"/api/households/{household}", TestContext.Current.CancellationToken);
+        Assert.Single(after!.Members, m => m.Role == "owner");
+    }
+
+    [Fact]
     public async Task A_member_cannot_change_roles()
     {
         var member = await CreateUserAsync();
@@ -83,4 +101,8 @@ public sealed class HouseholdOwnershipTests(PeopleFixture fixture) : Integration
     }
 
     private sealed record HouseholdDto(Guid Id, string Name);
+
+    private sealed record HouseholdMembersDto(IReadOnlyList<MemberDto> Members);
+
+    private sealed record MemberDto(Guid UserId, string Role);
 }
