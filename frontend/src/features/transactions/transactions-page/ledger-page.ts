@@ -4,8 +4,8 @@ import type {
   PagedResponseOfLedgerItemResponse,
   TransactionResponse,
 } from "@/api/generated/model";
-import { optimisticId } from "@/features/transactions/transaction-amount/transaction-row";
 import { spreadFrom, spreadUntil } from "@/lib/spread-slices";
+import { optimisticId } from "@/lib/transaction-row";
 import { normalizeMoney } from "@/lib/validation";
 
 export function optimisticTransaction(

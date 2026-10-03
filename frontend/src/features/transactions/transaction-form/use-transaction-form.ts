@@ -5,7 +5,8 @@ import { useAppForm } from "@/components/form";
 import { useMoney } from "@/hooks/use-formatters";
 import { useSettingsSuspense, useToday } from "@/hooks/use-settings";
 import { submitToServer } from "@/lib/form-server-errors";
-import { type TransactionDraft, draftFromTransaction } from "./transaction-draft";
+import type { TransactionDraft } from "@/lib/transaction-draft";
+import { draftFromTransaction } from "./transaction-draft";
 import {
   type TransactionFormValues,
   defaultFormFields,

@@ -10,17 +10,17 @@ import type {
   UncategorizedSuggestionResponse,
   UncategorizedSuggestionsParams,
 } from "@/api/generated/model";
+import { confidencePercent } from "@/components/category-suggestion/confidence";
 import { FormError } from "@/components/form-error/form-error";
 import { FormActions } from "@/components/form/form-actions/form-actions";
 import { Modal } from "@/components/modal";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { RecordRowsSkeleton } from "@/components/record-row/record-row";
+import { TransactionAmount } from "@/components/transaction-amount/transaction-amount";
 import { Button } from "@/components/ui/button/button";
 import { Checkbox } from "@/components/ui/checkbox/checkbox";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { Rows } from "@/components/ui/rows/rows";
-import { confidencePercent } from "@/features/transactions/category-suggestion/confidence";
-import { TransactionAmount } from "@/features/transactions/transaction-amount/transaction-amount";
 import { EMPTY_VALUE, useIsoDate } from "@/hooks/use-formatters";
 import { silentMutation } from "@/lib/mutations";
 

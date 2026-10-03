@@ -8,15 +8,15 @@ import {
   Currency,
 } from "@/api/generated/model";
 import { createConversionBodyDescriptionMax } from "@/api/schemas/conversions/conversions.zod";
+import { ClosedMonthHint } from "@/components/closed-month-hint/closed-month-hint";
 import { MoneyPairField, useServerForm } from "@/components/form";
 import { FormError } from "@/components/form-error/form-error";
 import { FormGrid } from "@/components/ui/form-grid/form-grid";
-import { heldCurrencies } from "@/features/accounts/held-currencies";
-import { ClosedMonthHint } from "@/features/month-close/closed-month-hint/closed-month-hint";
 import { useUsableCurrencies } from "@/hooks/use-currencies";
 import { useToday } from "@/hooks/use-settings";
 import { DEFAULT_CURRENCY } from "@/lib/currency";
 import { hasServerErrorCode } from "@/lib/form-server-errors";
+import { heldCurrencies } from "@/lib/held-currencies";
 import { silentMutation, upsert } from "@/lib/mutations";
 import { namedOptions, withMissingOption } from "@/lib/options";
 import {

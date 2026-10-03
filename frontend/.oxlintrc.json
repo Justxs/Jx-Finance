@@ -1,7 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/oxc-project/oxc/main/npm/oxlint/configuration_schema.json",
   "plugins": ["react", "typescript", "import", "jsx-a11y", "unicorn", "oxc", "promise"],
-  "jsPlugins": ["@shadcn/lint", "./lint/design-rules.mjs"],
+  "jsPlugins": ["@shadcn/lint", "./lint/design-rules.mjs", "./lint/code-rules.mjs"],
   "env": {
     "browser": true,
     "es2024": true
@@ -285,7 +285,114 @@
         "jx/no-text-ghost-button": "error",
         "jx/no-transition-all": "error",
         "jx/no-literal-number-placeholder": "error",
-        "jx/no-destructive-text": "error"
+        "jx/no-destructive-text": "error",
+        "jx-code/no-cross-feature-import": [
+          "error",
+          {
+            "allow": {
+              "accounts": ["imports/import-dialog/import-dialog"],
+              "command-palette": [
+                "net-worth/net-worth-composition-chart/net-worth-composition-chart"
+              ],
+              "dashboard": [
+                "month-close/month-close-line/month-close-line",
+                "month-close/month-close-prompt/month-close-prompt"
+              ],
+              "month-close": [
+                "accounts/reconcile-dialog/reconcile-dialog",
+                "imports/import-dialog/import-dialog"
+              ],
+              "profile": [
+                "dashboard/dashboard-customiser/dashboard-customiser",
+                "imports/import-data-section/import-data-section"
+              ],
+              "tags": ["places/places-section/places-section"],
+              "transactions": ["imports/import-dialog/import-dialog"]
+            }
+          }
+        ],
+        "jx-code/no-key-listener": "error",
+        "import/no-relative-parent-imports": "error",
+        "no-restricted-globals": [
+          "error",
+          {
+            "name": "localStorage",
+            "message": "Browser storage goes through browserStorage() in src/lib/browser-storage.ts and TanStack DB local-storage collections."
+          },
+          {
+            "name": "sessionStorage",
+            "message": "Browser storage goes through browserStorage() in src/lib/browser-storage.ts and TanStack DB local-storage collections."
+          },
+          {
+            "name": "setTimeout",
+            "message": "Debounce and throttle through TanStack Pacer (useDebouncer, useThrottler); derive state during render instead of waiting."
+          },
+          {
+            "name": "setInterval",
+            "message": "Debounce and throttle through TanStack Pacer (useDebouncer, useThrottler); derive state during render instead of waiting."
+          }
+        ],
+        "no-restricted-properties": [
+          "error",
+          {
+            "object": "window",
+            "property": "localStorage",
+            "message": "Browser storage goes through browserStorage() in src/lib/browser-storage.ts and TanStack DB local-storage collections."
+          },
+          {
+            "object": "window",
+            "property": "sessionStorage",
+            "message": "Browser storage goes through browserStorage() in src/lib/browser-storage.ts and TanStack DB local-storage collections."
+          },
+          {
+            "object": "window",
+            "property": "setTimeout",
+            "message": "Debounce and throttle through TanStack Pacer (useDebouncer, useThrottler); derive state during render instead of waiting."
+          },
+          {
+            "object": "window",
+            "property": "setInterval",
+            "message": "Debounce and throttle through TanStack Pacer (useDebouncer, useThrottler); derive state during render instead of waiting."
+          },
+          {
+            "object": "globalThis",
+            "property": "localStorage",
+            "message": "Browser storage goes through browserStorage() in src/lib/browser-storage.ts and TanStack DB local-storage collections."
+          },
+          {
+            "object": "globalThis",
+            "property": "sessionStorage",
+            "message": "Browser storage goes through browserStorage() in src/lib/browser-storage.ts and TanStack DB local-storage collections."
+          },
+          {
+            "object": "globalThis",
+            "property": "setTimeout",
+            "message": "Debounce and throttle through TanStack Pacer (useDebouncer, useThrottler); derive state during render instead of waiting."
+          },
+          {
+            "object": "globalThis",
+            "property": "setInterval",
+            "message": "Debounce and throttle through TanStack Pacer (useDebouncer, useThrottler); derive state during render instead of waiting."
+          }
+        ]
+      }
+    },
+    {
+      "files": [
+        "src/test/**",
+        "**/*.test.{ts,tsx}",
+        "src/lib/browser-storage.ts",
+        "src/components/ui/sonner/sonner.stories.tsx"
+      ],
+      "rules": {
+        "no-restricted-globals": "off",
+        "no-restricted-properties": "off"
+      }
+    },
+    {
+      "files": ["src/test/stories/story-session.ts"],
+      "rules": {
+        "import/no-relative-parent-imports": "off"
       }
     },
     {

@@ -24,11 +24,11 @@ import { Button } from "@/components/ui/button/button";
 import { FileInput } from "@/components/ui/file-input/file-input";
 import { ButtonSkeleton } from "@/components/ui/skeleton/skeleton";
 import { ACCEPT_ATTRIBUTE } from "@/features/transactions/transaction-attachments/attachment-files";
-import type { TransactionDraft } from "@/features/transactions/transaction-form/transaction-draft";
 import type { TransactionFormApi } from "@/features/transactions/transaction-form/use-transaction-form";
 import { useUsableCurrencies } from "@/hooks/use-currencies";
 import { useFeature } from "@/hooks/use-settings";
 import { silentMutation } from "@/lib/mutations";
+import type { TransactionDraft } from "@/lib/transaction-draft";
 import { ReceiptReview } from "./receipt-review";
 import {
   type CategoryChoice,

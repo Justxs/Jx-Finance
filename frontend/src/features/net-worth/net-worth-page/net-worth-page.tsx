@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { ChartSkeleton } from "@/components/chart/chart-skeleton";
+import { NetWorthHistoryChart } from "@/components/net-worth-history-chart";
 import { PageHeader } from "@/components/page-header/page-header";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { SummaryStatsSkeleton } from "@/components/summary-stats/summary-stats";
@@ -7,7 +8,6 @@ import { TitledSection } from "@/components/ui/section/section";
 import { AssetsSection } from "@/features/net-worth/assets-section/assets-section";
 import { DebtsSection } from "@/features/net-worth/debts-section/debts-section";
 import { NetWorthCompositionChart } from "@/features/net-worth/net-worth-composition-chart";
-import { NetWorthHistoryChart } from "@/features/net-worth/net-worth-history-chart";
 import {
   NetWorthPace,
   NetWorthPaceSkeleton,

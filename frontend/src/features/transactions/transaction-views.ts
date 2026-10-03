@@ -1,9 +1,14 @@
-import { type Collection, type NonSingleResult, useLiveQuery } from "@tanstack/react-db";
+import {
+  type Collection,
+  type NonSingleResult,
+  type UtilsRecord,
+  useLiveQuery,
+} from "@tanstack/react-db";
 import { z } from "zod";
 import { Currency, FlowType, SpreadDirection } from "@/api/generated/model";
 import { DEFAULT_CURRENCY } from "@/lib/currency";
+import { transactionFilterSchema } from "@/lib/transaction-filter";
 import { localCollection } from "@/stores/local-collection";
-import { transactionFilterSchema } from "./transaction-queries";
 
 export const SAVED_FILTERS_STORAGE_KEY = "jx-saved-filters";
 export const TEMPLATES_STORAGE_KEY = "jx-transaction-templates";
@@ -48,8 +53,8 @@ function trimmedName(name: string) {
   return name.trim().slice(0, SAVED_NAME_MAX_LENGTH);
 }
 
-function namedRows<TRow extends { id: string; name: string }>(
-  collection: Collection<TRow, string> & NonSingleResult,
+function namedRows<TRow extends { id: string; name: string }, TUtils extends UtilsRecord>(
+  collection: Collection<TRow, string, TUtils> & NonSingleResult,
   schema: z.ZodType<TRow>,
 ) {
   function byName(rows: readonly TRow[]): TRow[] {

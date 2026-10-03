@@ -1,8 +1,7 @@
 import type { QueryClient } from "@tanstack/react-query";
 import { getTransactionsSuspenseQueryOptions, suggestCategory } from "@/api/generated";
 import type { CategoryResponse, FeatureFlags } from "@/api/generated/model";
-import { recallCategoryId } from "@/features/imports/import-preview-table/preview-rows";
-import { recallParams } from "@/features/imports/import-queries";
+import { recallCategoryId, recallParams } from "@/lib/category-recall";
 import { silentQuery } from "@/lib/query-client";
 import { type QuickAddDraft, chooseQuickAddCategory } from "./quick-add";
 

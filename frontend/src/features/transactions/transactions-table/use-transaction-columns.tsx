@@ -1,26 +1,23 @@
 import { createColumnHelper } from "@tanstack/react-table";
 import { useTranslation } from "react-i18next";
 import type { CategoryResponse, TagResponse, TransactionResponse } from "@/api/generated/model";
+import { CategoryCell, type useInlineCategory } from "@/components/category-cell/category-cell";
 import type { RowAction } from "@/components/row-actions/row-actions";
 import { TagChips } from "@/components/tag-chips/tag-chips";
+import { TransactionAmount } from "@/components/transaction-amount/transaction-amount";
 import { Tag } from "@/components/ui/tag/tag";
+import { UnusualAmountBadge } from "@/components/unusual-amount-badge/unusual-amount-badge";
 import { DebtPaymentMarker } from "@/features/transactions/debt-payment/debt-payment";
 import { ReceiptItemMatch } from "@/features/transactions/receipt-item-match/receipt-item-match";
 import { RefundMark } from "@/features/transactions/refund-mark/refund-mark";
 import { SharedExpenseMark } from "@/features/transactions/shared-expense/shared-expense";
 import { SpreadMark } from "@/features/transactions/spread-mark/spread-mark";
-import { TransactionAmount } from "@/features/transactions/transaction-amount/transaction-amount";
-import {
-  isOptimistic,
-  transactionName,
-} from "@/features/transactions/transaction-amount/transaction-row";
 import { AttachmentCount } from "@/features/transactions/transaction-attachments/attachment-count";
 import { TransactionRowActions } from "@/features/transactions/transaction-row-actions/transaction-row-actions";
-import { UnusualAmountBadge } from "@/features/transactions/unusual-amount/unusual-amount-badge";
 import { EMPTY_VALUE, useIsoDate } from "@/hooks/use-formatters";
 import { CategoryIcon } from "@/lib/category-icons";
+import { isOptimistic, transactionName } from "@/lib/transaction-row";
 import { metaLine } from "@/lib/utils";
-import { CategoryCell, type useInlineCategory } from "./category-cell";
 import type { transactionTableFeatures } from "./table-features";
 import { useWideLedger } from "./use-wide-ledger";
 

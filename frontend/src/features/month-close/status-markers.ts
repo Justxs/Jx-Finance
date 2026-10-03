@@ -12,10 +12,6 @@ export const statusMarkers = {
   closedChanged: { icon: CircleAlert, tone: EXPENSE_TONE },
 } as const;
 
-export function isClosedStatus(status: MonthCloseMonthStatus["status"]) {
-  return status === "closed" || status === "closedChanged";
-}
-
 export function monthTitleKey(status: MonthCloseMonthStatus["status"], attention: number) {
   return status === "open" && attention > 0 ? "attention" : status;
 }

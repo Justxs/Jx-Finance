@@ -12,8 +12,6 @@ import {
   TextSkeleton,
 } from "@/components/ui/skeleton/skeleton";
 import { useIsoDate, useMoney, useMonthName } from "@/hooks/use-formatters";
-import { money as moneyRule, normalizeMoney } from "@/lib/validation";
-import { savePreferences, usePreferences } from "@/stores/preferences";
 import {
   MAX_MILESTONES,
   type MilestoneReach,
@@ -21,7 +19,9 @@ import {
   suggestedMilestones,
   trailingPace,
   withMilestone,
-} from "./pace";
+} from "@/lib/net-worth-pace";
+import { money as moneyRule, normalizeMoney } from "@/lib/validation";
+import { savePreferences, usePreferences } from "@/stores/preferences";
 
 export function NetWorthPaceSkeleton() {
   return (

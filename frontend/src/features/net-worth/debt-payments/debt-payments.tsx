@@ -10,6 +10,7 @@ import {
 } from "@/api/generated";
 import type { DebtPaymentResponse, DebtResponse } from "@/api/generated/model";
 import { CreateDialog } from "@/components/create-dialog/create-dialog";
+import { DebtPaymentForm } from "@/components/debt-payment-form/debt-payment-form";
 import { FormError } from "@/components/form-error/form-error";
 import { EditModal } from "@/components/modal";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
@@ -25,7 +26,6 @@ import {
   TextSkeleton,
   rowWidth,
 } from "@/components/ui/skeleton/skeleton";
-import { DebtPaymentForm } from "@/features/net-worth/debt-payment-form/debt-payment-form";
 import { EMPTY_VALUE, useIsoDate, useMoney } from "@/hooks/use-formatters";
 import { silentMutation } from "@/lib/mutations";
 import { nameById } from "@/lib/options";

@@ -14,8 +14,8 @@ import { ListSection, ListSectionSkeleton } from "@/components/list-section/list
 import { EditModal } from "@/components/modal";
 import { NamedRow, NamedRowsSkeleton } from "@/components/named-row/named-row";
 import { PageHeader } from "@/components/page-header/page-header";
+import { PayeeNameForm } from "@/components/payee-name-form/payee-name-form";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
-import { PayeeNameForm } from "@/features/payees/payee-name-form/payee-name-form";
 import { PlacesSection } from "@/features/places/places-section/places-section";
 import { TagForm } from "@/features/tags/tag-form/tag-form";
 import { useEditableList } from "@/hooks/use-editable-list";

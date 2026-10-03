@@ -1,5 +1,5 @@
 import type { AccountResponse, CategorySuggestionResponse } from "@/api/generated/model";
-import type { TransactionDraft } from "@/features/transactions/transaction-form/transaction-draft";
+import type { TransactionDraft } from "@/lib/transaction-draft";
 
 export interface QuickAdd {
   amount: string;

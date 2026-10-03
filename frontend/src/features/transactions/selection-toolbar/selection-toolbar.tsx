@@ -15,8 +15,8 @@ import { TagPicker } from "@/components/tag-picker/tag-picker";
 import { Button } from "@/components/ui/button/button";
 import { Hint } from "@/components/ui/field-error";
 import { Menu, MenuContent, MenuItem, MenuTrigger } from "@/components/ui/menu/menu";
-import { UNCATEGORIZED_OPTION } from "@/features/transactions/transaction-amount/transaction-row";
 import { namedOptions } from "@/lib/options";
+import { UNCATEGORIZED_OPTION } from "@/lib/transaction-row";
 import { cn } from "@/lib/utils";
 
 interface Props {

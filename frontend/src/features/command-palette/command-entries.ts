@@ -6,10 +6,10 @@ import type {
   HouseholdResponse,
   TagResponse,
 } from "@/api/generated/model";
-import type { TransactionFilter } from "@/features/transactions/transaction-queries";
 import type { Translate, TranslationKey } from "@/lib/i18n";
 import { type RoutePath, adminNavPages, navPages } from "@/lib/navigation";
 import type { FeatureKey } from "@/lib/settings";
+import type { TransactionFilter } from "@/lib/transaction-filter";
 import { type Locale, localeNames, nextLocale } from "@/stores/app-store";
 import type { Theme } from "@/stores/theme-store";
 import { type QuickAddDraft, parseQuickAdd, quickAddAccount } from "./quick-add";

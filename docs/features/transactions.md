@@ -11,7 +11,7 @@ flowchart TD
     Defer --> Summary["GET /api/transactions/summary"]
     Url --> Csv["GET /api/transactions/export"]
     Url --> Pdf["GET /api/transactions/export/pdf"]
-    List --> F["TransactionService.Filtered(TransactionFilterRequest)"]
+    List --> F["TransactionQueryService.Filtered(TransactionFilterRequest)"]
     Summary --> F
     Csv --> F
     Pdf --> F
@@ -52,7 +52,7 @@ How each part of the application treats a refund. Totals net it, and the checks 
 | Place | Treats a refund |
 | --- | --- |
 | Account balance, `AccountMovements.SumAsync` and `ListAsync` | Raises it: `-Amount` of a negative expense is positive. Reconciliation (`ReconciliationService`) and the statement's ledger balance use the same movements |
-| Ledger summary, `TransactionService.GetSummaryAsync` | Nets the expense total; the totals line shows it with a minus, and with a plus when refunds outweigh the spending |
+| Ledger summary, `TransactionQueryService.GetSummaryAsync` | Nets the expense total; the totals line shows it with a minus, and with a plus when refunds outweigh the spending |
 | Reports: totals, trend, category, tag and payee breakdowns (`ReportService`, `CategoryAttributionService`, `CategoryBreakdownBuilder`) | Nets. A category, tag or payee whose refunds exceed its spending keeps its negative net and sorts last. A payee's count includes its refunds |
 | Payee ledger filter (`PayeeKey`) | Lists the refund when its description normalizes to the payee's key |
 | Dashboard month totals, trend and category breakdown (`DashboardService`) | Nets |
@@ -67,7 +67,7 @@ How each part of the application treats a refund. Totals net it, and the checks 
 | Subscription detection, `SubscriptionDetectionService` | Ignored |
 | Possible duplicates, `PossibleDuplicates.Pairs` | Never pairs: only rows above zero are compared, so two equal refunds are not offered as duplicates |
 | Price rises, `PriceRiseMatcher` and the job's comparison | Ignored |
-| Debt payments, `NetWorthService` | Never offered as a candidate; linking one answers `debt.paymentWrongType` |
+| Debt payments, `DebtService` | Never offered as a candidate; linking one answers `debt.paymentWrongType` |
 | Rule suggestions, `SuggestedRuleService` | Ignored as evidence |
 | Categorization rules, `RuleMatcher` | A rule with an amount range never matches a refund, because the range compares the signed amount; a rule without one can categorize an uncategorized refund like any expense |
 | Validation | `amount` of an expense must be non-zero (`money.nonZero`); income and split lines stay positive (`money.positive`); an import row's `amount` stays positive, because it is the bank's size |
@@ -85,7 +85,7 @@ The row menus only list these actions. "Link to debt" and the household split ea
 
 While a column filter is active its button names the value in its tooltip and accessible name, such as "Filter by Account (now: Swedbank einamoji)", besides the tint. Above the rows, one line lists every active filter as a removable chip, labelled with its column, and ends with "Clear filters", which keeps the sort. A date range that covers exactly one calendar month reads as the month, such as "September 2026"; otherwise it reads as a range, or "From" or "Until" one date. The search text is quoted, the payee chip shows the key it filters on, and the category chip can read "Uncategorized". The phone filters dialog writes the same search params, so the line shows on phones too. It replaced the "Clear filters" button that sat in the page header. The page calls `useTransactionFilters` once and passes the result to the chip line, the column headers, the phone filters dialog and the saved filters menu; `useFilterSummaries(filters, tags)` builds the chip texts, and the column buttons read the same texts.
 
-The filter half of the search params is one zod schema, `transactionFilterSchema` in `features/transactions/transaction-queries.ts`. The route's `transactionsSearchSchema` extends it with `page`, `sort`, `direction` and `new`; `transactionFilterParams` parses a view through it, which keeps only the filter keys; and a saved filter stores the same shape. Each field falls back to "not set" on its own, so a URL or a saved filter with one bad value keeps the rest: `accountId` and `categoryId` must be UUIDs, `tagIds` a comma-separated list of them, `dateFrom` and `dateTo` ISO dates such as `2026-09-01`, `amountMin` and `amountMax` non-negative numbers, and `unusual`, `uncategorized` and `duplicates` only take `true`, so `unusual=false` reads as no filter.
+The filter half of the search params is one zod schema, `transactionFilterSchema` in `lib/transaction-filter.ts`. The route's `transactionsSearchSchema` extends it with `page`, `sort`, `direction` and `new`; `transactionFilterParams` parses a view through it, which keeps only the filter keys; and a saved filter stores the same shape. Each field falls back to "not set" on its own, so a URL or a saved filter with one bad value keeps the rest: `accountId` and `categoryId` must be UUIDs, `tagIds` a comma-separated list of them, `dateFrom` and `dateTo` ISO dates such as `2026-09-01`, `amountMin` and `amountMax` non-negative numbers, and `unusual`, `uncategorized` and `duplicates` only take `true`, so `unusual=false` reads as no filter.
 
 The create and edit dialogs, with the prefill of a duplicate, a refund or a template, the receipt file waiting to be attached and the receipt split that moves to an existing row, live in `useTransactionFormSection`; the page calls it once and hands its `startBlank`, `startFromDraft` and `startEditing` to the header, the templates menu and the row actions.
 
@@ -109,7 +109,7 @@ A save that sets or changes a category, in this cell or in the transaction form'
 
 `uncategorized=true` is a filter on the same four endpoints, part of `TransactionFilterRequest` like every other, and belongs to no feature. It keeps a transaction with no category, and a split transaction with at least one line without one; a split whose lines all carry a category is categorized even though its own `CategoryId` is empty. The ledger offers it as "Uncategorized", right after "All categories" in the category column's filter and in the phone filters dialog; choosing it clears `categoryId` and choosing a category clears it, so the two never combine. The filter's "Uncategorized" option and the "Uncategorized" choice of the category cell and the selection toolbar use one option value, `UNCATEGORIZED_OPTION`; the filter turns it into `uncategorized=true` and the other two into a null category. It is the `uncategorized` search param, counts as an active filter, travels in the export links and in a saved filter, and a saved filter written before it parses without it. It arrived with [month-end close](month-end-close.md), whose checklist counts the month's uncategorized rows through the summary and links to the ledger with the month's dates and this filter, so the count and the list it opens agree.
 
-While `MonthClose` is on, the create and edit dialogs of a transaction and a currency conversion show a hint under the date when that date falls in a month the user closed under the current household scope: "August 2026 is closed. Saving will show as a change after the close." `ClosedMonthHint` in `features/month-close` reads the year's statuses from `GET /api/month-close?year=`, fetched quietly on demand with a one-minute stale time; a failure shows no hint. It is a hint only: saving is never blocked, and the change shows as drift when the dashboard shows that month. Every transaction, transfer, conversion and investment mutation also invalidates the `/api/month-close` queries, so the month's status and drift follow without a reload.
+While `MonthClose` is on, the create and edit dialogs of a transaction and a currency conversion show a hint under the date when that date falls in a month the user closed under the current household scope: "August 2026 is closed. Saving will show as a change after the close." `ClosedMonthHint` in `components/closed-month-hint` reads the year's statuses from `GET /api/month-close?year=`, fetched quietly on demand with a one-minute stale time; a failure shows no hint. It is a hint only: saving is never blocked, and the change shows as drift when the dashboard shows that month. Every transaction, transfer, conversion and investment mutation also invalidates the `/api/month-close` queries, so the month's status and drift follow without a reload.
 
 ## Possible duplicates
 

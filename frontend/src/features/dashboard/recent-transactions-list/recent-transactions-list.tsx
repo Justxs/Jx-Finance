@@ -6,22 +6,19 @@ import {
 } from "@/api/generated";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { TimelineRow } from "@/components/timeline-row/timeline-row";
+import { TransactionAmount } from "@/components/transaction-amount/transaction-amount";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { Rows } from "@/components/ui/rows/rows";
 import { RowsSkeleton } from "@/components/ui/skeleton/skeleton";
 import { TextLink } from "@/components/ui/text-link/text-link";
+import { UnusualAmountBadge } from "@/components/unusual-amount-badge/unusual-amount-badge";
 import { recentTransactionsParams } from "@/features/dashboard/dashboard-queries";
 import { DashboardSection } from "@/features/dashboard/dashboard-section/dashboard-section";
-import { TransactionAmount } from "@/features/transactions/transaction-amount/transaction-amount";
-import {
-  transactionCategoryLabel,
-  transactionName,
-} from "@/features/transactions/transaction-amount/transaction-row";
-import { UnusualAmountBadge } from "@/features/transactions/unusual-amount/unusual-amount-badge";
 import { useShortDayIso } from "@/hooks/use-formatters";
 import { useTodayDate } from "@/hooks/use-settings";
 import { currentMonthKey } from "@/lib/calendar";
 import { byId, nameById } from "@/lib/options";
+import { transactionCategoryLabel, transactionName } from "@/lib/transaction-row";
 import { metaLine } from "@/lib/utils";
 
 function FirstRunSteps() {

@@ -18,10 +18,11 @@ import {
   spreadMonthsOf,
   spreadShape,
   spreadValues,
-} from "@/features/transactions/spread-fields/spread-choice";
+} from "@/components/spread-fields/spread-choice";
 import { DEFAULT_CURRENCY } from "@/lib/currency";
 import type { Translate } from "@/lib/i18n";
 import { toCents } from "@/lib/money";
+import type { TransactionDraft } from "@/lib/transaction-draft";
 import {
   isPositiveMoney,
   normalizeMoney,
@@ -30,7 +31,6 @@ import {
   requiredValue,
 } from "@/lib/validation";
 import type { LineFormValue } from "./line-form-value";
-import type { TransactionDraft } from "./transaction-draft";
 
 export interface TransactionFormValues extends CreateTransactionRequest {
   currency: Currency;

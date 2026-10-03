@@ -4,6 +4,7 @@ import { expect, fn, screen, userEvent, waitFor } from "storybook/test";
 import type { TransactionResponse } from "@/api/generated/model";
 import { getDebtsMockHandler } from "@/api/generated/net-worth/net-worth.msw";
 import { getBulkCategorizeTransactionsMockHandler } from "@/api/generated/transactions/transactions.msw";
+import { useInlineCategory } from "@/components/category-cell/category-cell";
 import { transactionRow } from "@/features/transactions/ledger-groups/ledger-rows";
 import { useTransactionRowDialogs } from "@/features/transactions/transaction-row-actions/transaction-row-actions";
 import { useTransactionSelection } from "@/features/transactions/transactions-page/use-transaction-selection";
@@ -28,7 +29,6 @@ import {
 } from "@/storybook/fixtures";
 import { withHandlers } from "@/storybook/handlers";
 import { first, openedDialog } from "@/storybook/interactions";
-import { useInlineCategory } from "./category-cell";
 import { TransactionsTable } from "./transactions-table";
 import { useTransactionColumnHeaders } from "./use-transaction-column-headers";
 import { isSelectableTransaction, useTransactionColumns } from "./use-transaction-columns";

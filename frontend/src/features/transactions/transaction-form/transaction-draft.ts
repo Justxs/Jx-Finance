@@ -1,40 +1,8 @@
-import type {
-  Currency,
-  FlowType,
-  SpreadDirection,
-  TransactionLineRequest,
-  TransactionRefundOfResponse,
-  TransactionResponse,
-} from "@/api/generated/model";
+import type { TransactionResponse } from "@/api/generated/model";
 import type { TransactionTemplateValues } from "@/features/transactions/transaction-views";
+import type { TransactionDraft } from "@/lib/transaction-draft";
 import { normalizeMoney } from "@/lib/validation";
 import type { TransactionFormValues } from "./transaction-schema";
-
-export interface TransactionDraft {
-  accountId?: string;
-  categoryId?: string | null;
-  type?: FlowType;
-  amount?: string;
-  currency?: Currency;
-  date?: string;
-  description?: string | null;
-  note?: string | null;
-  place?: string | null;
-  latitude?: number | null;
-  longitude?: number | null;
-  isSplit?: boolean;
-  tagIds?: string[];
-  lines?: TransactionLineRequest[] | null;
-  refundOf?: TransactionRefundOfResponse | null;
-  spreadMonths?: number | null;
-  spreadDirection?: SpreadDirection | null;
-}
-
-declare module "@tanstack/react-router" {
-  interface HistoryState {
-    transactionDraft?: TransactionDraft;
-  }
-}
 
 export function draftFromTransaction(transaction: TransactionResponse): TransactionDraft {
   return {

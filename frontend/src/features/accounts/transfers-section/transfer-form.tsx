@@ -6,9 +6,9 @@ import { createTransferBodyDescriptionMax } from "@/api/schemas/transfers/transf
 import { MoneyPairField, useServerForm } from "@/components/form";
 import { FormError } from "@/components/form-error/form-error";
 import { FormGrid } from "@/components/ui/form-grid/form-grid";
-import { heldCurrencies } from "@/features/accounts/held-currencies";
 import { useFeature, useToday } from "@/hooks/use-settings";
 import { DEFAULT_CURRENCY } from "@/lib/currency";
+import { heldCurrencies } from "@/lib/held-currencies";
 import { silentMutation, upsert } from "@/lib/mutations";
 import { namedOptions, withMissingOption } from "@/lib/options";
 import { isPositiveMoney, optionalText, positiveMoney, requiredValue } from "@/lib/validation";

@@ -3,6 +3,7 @@ import { CornerDownRight } from "lucide-react";
 import { type MouseEvent, type ReactNode, ViewTransition } from "react";
 import { useTranslation } from "react-i18next";
 import type { TransactionResponse } from "@/api/generated/model";
+import { amountColumnWide, signedAmount } from "@/components/transaction-amount/transaction-amount";
 import { Checkbox } from "@/components/ui/checkbox/checkbox";
 import {
   IconButtonSkeleton,
@@ -23,12 +24,8 @@ import { Tooltip } from "@/components/ui/tooltip/tooltip";
 import { GroupRow, GroupStatusRow } from "@/features/transactions/ledger-groups/group-row";
 import { type LedgerRow, ledgerRowKey } from "@/features/transactions/ledger-groups/ledger-rows";
 import type { LedgerGroupHandlers } from "@/features/transactions/ledger-groups/use-ledger-groups";
-import {
-  amountColumnWide,
-  signedAmount,
-} from "@/features/transactions/transaction-amount/transaction-amount";
-import { isOptimistic } from "@/features/transactions/transaction-amount/transaction-row";
 import { useMoney } from "@/hooks/use-formatters";
+import { isOptimistic } from "@/lib/transaction-row";
 import { cn } from "@/lib/utils";
 import { transactionTableFeatures } from "./table-features";
 import {

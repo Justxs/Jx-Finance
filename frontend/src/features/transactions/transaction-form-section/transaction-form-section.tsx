@@ -13,12 +13,8 @@ import type {
 import { EditModal, Modal } from "@/components/modal";
 import type { ReceiptCandidateSplit } from "@/features/transactions/receipt-reading/fill-from-receipt";
 import { SourceMark } from "@/features/transactions/source-mark/source-mark";
-import { transactionName } from "@/features/transactions/transaction-amount/transaction-row";
 import { TransactionAttachments } from "@/features/transactions/transaction-attachments/transaction-attachments";
-import {
-  type TransactionDraft,
-  templateValuesFromFormValues,
-} from "@/features/transactions/transaction-form/transaction-draft";
+import { templateValuesFromFormValues } from "@/features/transactions/transaction-form/transaction-draft";
 import {
   TransactionForm,
   type TransactionFormValues,
@@ -27,6 +23,8 @@ import { transactionTemplates } from "@/features/transactions/transaction-views"
 import type { useTransactionMutations } from "@/features/transactions/transactions-page/use-transaction-mutations";
 import { useFeature } from "@/hooks/use-settings";
 import { byId } from "@/lib/options";
+import type { TransactionDraft } from "@/lib/transaction-draft";
+import { transactionName } from "@/lib/transaction-row";
 import { savePreferences } from "@/stores/preferences";
 
 interface Options {

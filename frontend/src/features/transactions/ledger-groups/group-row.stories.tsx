@@ -3,8 +3,8 @@ import { toast } from "sonner";
 import { expect, screen, userEvent, within } from "storybook/test";
 import type { LedgerItemResponse, TransactionGroupMembersParams } from "@/api/generated/model";
 import { getTransactionGroupMembersMockHandler } from "@/api/generated/transaction-groups/transaction-groups.msw";
+import { useInlineCategory } from "@/components/category-cell/category-cell";
 import { useTransactionRowDialogs } from "@/features/transactions/transaction-row-actions/transaction-row-actions";
-import { useInlineCategory } from "@/features/transactions/transactions-table/category-cell";
 import { TransactionsTable } from "@/features/transactions/transactions-table/transactions-table";
 import { useTransactionColumns } from "@/features/transactions/transactions-table/use-transaction-columns";
 import {

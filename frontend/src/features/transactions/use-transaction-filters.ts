@@ -4,7 +4,8 @@ import type { AccountResponse, CategoryResponse } from "@/api/generated/model";
 import { useSearchTable } from "@/hooks/use-search-table";
 import { useFeature } from "@/hooks/use-settings";
 import { namedOptions } from "@/lib/options";
-import { UNCATEGORIZED_OPTION } from "./transaction-amount/transaction-row";
+import type { TransactionFilter } from "@/lib/transaction-filter";
+import { UNCATEGORIZED_OPTION } from "@/lib/transaction-row";
 import {
   type AmountRangeDraft,
   SEARCH_DEBOUNCE_MS,
@@ -16,12 +17,7 @@ import {
   sortOptions,
   typeOptions,
 } from "./transaction-filter-fields";
-import {
-  type TransactionFilter,
-  formatTagIds,
-  parseTagIds,
-  transactionFilterParams,
-} from "./transaction-queries";
+import { formatTagIds, parseTagIds, transactionFilterParams } from "./transaction-queries";
 
 export interface DescriptionFilterDraft {
   search: string;

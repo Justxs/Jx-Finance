@@ -1,10 +1,10 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect } from "storybook/test";
 import { getGoalsMockHandler } from "@/api/generated/goals/goals.msw";
+import { DashboardCard } from "@/features/dashboard/dashboard-card/dashboard-card";
 import { withWidth } from "@/storybook/decorators";
 import { goals, unavailableFundedGoal } from "@/storybook/fixtures";
 import { emptyHandlers, errorHandlers, loadingHandlers, withHandlers } from "@/storybook/handlers";
-import { DashboardCard } from "../dashboard-card/dashboard-card";
 import { GoalsSnapshot } from "./goals-snapshot";
 
 const meta = {

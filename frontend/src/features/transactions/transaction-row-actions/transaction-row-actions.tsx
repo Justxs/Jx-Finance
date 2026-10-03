@@ -8,10 +8,7 @@ import { useGroupRowActions } from "@/features/transactions/group-dialog/group-d
 import { usePayeeNaming } from "@/features/transactions/payee-naming/payee-naming";
 import { useKeepBoth } from "@/features/transactions/possible-duplicates/use-keep-both";
 import { useSharedExpenseSplits } from "@/features/transactions/shared-expense/shared-expense";
-import {
-  isOptimistic,
-  isPurchase,
-} from "@/features/transactions/transaction-amount/transaction-row";
+import { isOptimistic, isPurchase } from "@/lib/transaction-row";
 
 export function useTransactionRowDialogs({ possibleDuplicates = false } = {}) {
   const keepBoth = useKeepBoth(possibleDuplicates);

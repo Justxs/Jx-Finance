@@ -3,21 +3,21 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { useReopenMonth, useUpdateMonthNote } from "@/api/generated";
 import type { MonthReviewResponse } from "@/api/generated/model";
+import { BudgetRows } from "@/components/budget-rows/budget-rows";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog/confirm-delete-dialog";
 import { FormError } from "@/components/form-error/form-error";
 import { SummaryStats } from "@/components/summary-stats/summary-stats";
 import { Button } from "@/components/ui/button/button";
 import { Section, TitledSection } from "@/components/ui/section/section";
 import { SplitColumns } from "@/components/ui/split-columns/split-columns";
-import { BudgetRows } from "@/features/dashboard/budget-snapshot/budget-snapshot";
 import { openItemCount } from "@/features/month-close/close-checklist/close-checklist";
 import { keptShare } from "@/features/month-close/kept-share";
 import {
   MonthNoteDialog,
   NoteForm,
 } from "@/features/month-close/month-note-dialog/month-note-dialog";
-import { isClosedStatus } from "@/features/month-close/status-markers";
 import { useMoney, useMonthName, usePercent } from "@/hooks/use-formatters";
+import { isClosedStatus } from "@/lib/month-close";
 import { silentMutation } from "@/lib/mutations";
 import { gainTone } from "@/lib/tone";
 import { cn } from "@/lib/utils";

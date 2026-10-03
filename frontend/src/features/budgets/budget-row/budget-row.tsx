@@ -1,12 +1,12 @@
 import { useTranslation } from "react-i18next";
 import type { BudgetResponse } from "@/api/generated/model";
+import { BudgetRemaining, budgetFigures } from "@/components/budget-remaining/budget-remaining";
 import { ProgressRow } from "@/components/progress-row/progress-row";
 import type { DeleteProps } from "@/components/row-actions/row-actions";
 import { SharedScopeTag } from "@/components/shared-scope-tag/shared-scope-tag";
 import { TransactionsLink } from "@/components/transactions-link/transactions-link";
-import { budgetPeriodLabel } from "@/features/budgets/budget-periods";
-import { BudgetRemaining, budgetFigures } from "@/features/budgets/budget-remaining";
 import { useIsoDate, useMoney } from "@/hooks/use-formatters";
+import { budgetPeriodLabel } from "@/lib/budgets";
 
 interface Props extends DeleteProps {
   budget: BudgetResponse;

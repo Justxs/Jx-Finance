@@ -10,7 +10,7 @@ import {
   getRecurringTotalsSuspenseQueryOptions,
   getSubscriptionCandidatesSuspenseQueryOptions,
 } from "@/api/generated";
-import { FORECAST_DAYS } from "@/features/accounts/cash-flow-forecast/forecast-series";
+import { FORECAST_DAYS } from "@/components/cash-flow-forecast/forecast-series";
 import { RecurringBillsPage } from "@/features/recurring-bills/recurring-bills-page/recurring-bills-page";
 import { RecurringBillsPending } from "@/features/recurring-bills/recurring-bills-page/recurring-bills-page-pending";
 import { MONTH_KEY_PATTERN, monthKeyOfIso, todayInZone } from "@/lib/calendar";

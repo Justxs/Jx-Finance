@@ -21,17 +21,13 @@ import {
 } from "@/features/month-close/close-checklist/close-checklist";
 import { CloseForm } from "@/features/month-close/close-form/close-form";
 import { DriftPanel } from "@/features/month-close/drift-panel/drift-panel";
-import {
-  isClosedStatus,
-  monthTitleKey,
-  statusMarkers,
-  useStatusLine,
-} from "@/features/month-close/status-markers";
+import { monthTitleKey, statusMarkers, useStatusLine } from "@/features/month-close/status-markers";
 import { useDebouncedDraft } from "@/hooks/use-debounced-draft";
 import { useDeferredParams } from "@/hooks/use-deferred-params";
 import { useMonthName } from "@/hooks/use-formatters";
 import { useFeature, useTodayDate } from "@/hooks/use-settings";
 import { currentMonthKey, latestEndedMonth, shiftMonth } from "@/lib/calendar";
+import { isClosedStatus } from "@/lib/month-close";
 import { EXPENSE_TONE } from "@/lib/tone";
 import { cn } from "@/lib/utils";
 import { BillsDueLines } from "./bills-due-lines";

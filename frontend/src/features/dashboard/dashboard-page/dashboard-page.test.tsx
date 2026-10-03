@@ -7,7 +7,7 @@ import { memberUser } from "@/storybook/fixtures";
 import { APP_TEST_TIMEOUT, appWait, mountApp, settled } from "@/test/app-router";
 import { settingsFixture } from "@/test/settings";
 
-await import("@/features/net-worth/net-worth-history-chart/net-worth-history-chart");
+await import("@/components/net-worth-history-chart/net-worth-history-chart");
 
 vi.setConfig({ testTimeout: APP_TEST_TIMEOUT });
 

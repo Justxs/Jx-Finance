@@ -1,13 +1,13 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { AccountResponse, CategoryResponse, TagResponse } from "@/api/generated/model";
+import { confidencePercent } from "@/components/category-suggestion/confidence";
 import { ComboboxField } from "@/components/combobox-field/combobox-field";
 import { TagChips } from "@/components/tag-chips/tag-chips";
 import { Checkbox } from "@/components/ui/checkbox/checkbox";
 import { TableCell, TableRow } from "@/components/ui/table/table";
 import { HintTag, Tag } from "@/components/ui/tag/tag";
-import { confidencePercent } from "@/features/transactions/category-suggestion/confidence";
-import { useUnusualSentence } from "@/features/transactions/unusual-amount/use-unusual-sentence";
+import { useUnusualSentence } from "@/components/unusual-amount-badge/use-unusual-sentence";
 import { EMPTY_VALUE, useIsoDate, useMoney } from "@/hooks/use-formatters";
 import { byId, namedOptions } from "@/lib/options";
 import { INCOME_TONE } from "@/lib/tone";

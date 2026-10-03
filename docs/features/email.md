@@ -2,7 +2,7 @@
 
 Back to the [feature walkthrough](README.md). See also [decisions](../decisions/email.md).
 
-Backend `Settings` (`settings/smtp`, `settings/smtp/test`) and `Auth` (`forgot-password`, `reset-password`, `verify-email`, `send-verification-email`), the shared pieces in `Common/Email`, the transport in `Infrastructure/Email` and the drain in `Infrastructure/BackgroundJobs/EmailOutboxJob`. Frontend: the Email tab of the `notificationProviders` section of `/settings` (`features/settings/smtp-section`, inside `features/settings/notification-providers-section`), the routes `/forgot-password`, `/reset-password` and `/verify-email`, the banner in the application shell and the Email column of the notification table in the Notifications section of `/profile`.
+Backend `Settings` (`settings/smtp` and `settings/smtp/test` through `SmtpSettingsService`) and `Auth` (`forgot-password`, `reset-password`, `verify-email`, `send-verification-email`), the shared pieces in `Common/Email`, the transport in `Infrastructure/Email` and the drain in `Infrastructure/BackgroundJobs/EmailOutboxJob`. Frontend: the Email tab of the `notificationProviders` section of `/settings` (`features/settings/smtp-section`, inside `features/settings/notification-providers-section`), the routes `/forgot-password`, `/reset-password` and `/verify-email`, the banner in the application shell and the Email column of the notification table in the Notifications section of `/profile`.
 
 Email is not a feature switch. It is one installation setting with its own enabled flag, so turning it off stops every outgoing message and leaves every route in place; nothing is gated by `FeatureGateMiddleware`. An installation that never fills the mail server in behaves exactly like the release before this one.
 

@@ -17,7 +17,6 @@ import type {
   AccountResponse,
   CsvMappingResponse,
   ImportConfirmGroup,
-  ImportStatementSummary,
   InspectCsvResponse,
   StatementFormat,
 } from "@/api/generated/model";
@@ -36,17 +35,22 @@ import {
   takesCategory,
   toPreviewRows,
 } from "@/features/imports/import-preview-table/preview-rows";
-import { recallParams } from "@/features/imports/import-queries";
 import { useFileField } from "@/hooks/use-file-field";
+import { recallParams } from "@/lib/category-recall";
 import { silentMutation } from "@/lib/mutations";
 import { optimisticRemoval } from "@/lib/optimistic";
 import { ImportPreviewError, problemDetail } from "./import-preview-error";
+import { ImportResultPanel, useImportCountsText, useReconciliationText } from "./import-result";
 import {
-  type ImportResult,
-  ImportResultPanel,
-  useImportCountsText,
-  useReconciliationText,
-} from "./import-result";
+  type Step,
+  UPLOAD,
+  closingStatement,
+  confirmRow,
+  leaveMapping,
+  reviewOf,
+  withReview,
+  withRows,
+} from "./import-steps";
 import { IMPORT_FILE_INPUT_ID, ImportUploadForm, importFormats } from "./import-upload-form";
 
 const uploadProblemKeys = {
@@ -96,28 +100,31 @@ export function ImportSection({
   const groups = useTransactionGroupsSuspense();
   const mappings = useListCsvMappingsSuspense();
 
-  const [result, setResult] = useState<ImportResult | null>(null);
-  const [rows, setRows] = useState<PreviewRowState[] | null>(() =>
-    inbox ? toPreviewRows(inbox.preview.rows, history.data.items, categoryList) : null,
-  );
-  const [statement, setStatement] = useState<ImportStatementSummary | null>(
-    inbox?.preview.statement ?? null,
+  const [step, setStep] = useState<Step>(() =>
+    inbox
+      ? {
+          kind: "review",
+          review: {
+            rows: toPreviewRows(inbox.preview.rows, history.data.items, categoryList),
+            statement: inbox.preview.statement,
+          },
+        }
+      : UPLOAD,
   );
   const [mapping, setMapping] = useState(chosenMapping);
-  const [inspection, setInspection] = useState<InspectCsvResponse | null>(null);
-  const [remapping, setRemapping] = useState<CsvMappingResponse | undefined>(undefined);
+  const review = reviewOf(step);
 
   const dismissMutation = useDismissImportInboxFile({
     mutation: optimisticRemoval(getListImportInboxQueryKey()),
   });
 
-  function replaceRows(next: PreviewRowState[] | null) {
-    setRows(next);
+  function dropReview() {
+    setStep((current) => withReview(current, undefined));
     onEditedChange(false);
   }
 
   function editRows(next: PreviewRowState[]) {
-    setRows(next);
+    setStep((current) => withRows(current, () => next));
     onEditedChange(true);
   }
 
@@ -125,20 +132,19 @@ export function ImportSection({
     mutation: {
       ...silentMutation,
       onSuccess: (data) => {
-        replaceRows(toPreviewRows(data.rows, history.data.items, categoryList));
-        setStatement(data.statement);
+        const rows = toPreviewRows(data.rows, history.data.items, categoryList);
+        setStep((current) => withReview(current, { rows, statement: data.statement }));
+        onEditedChange(false);
       },
     },
   });
 
-  const inspectMutation = useInspectCsv({
-    mutation: { ...silentMutation, onSuccess: setInspection },
-  });
+  const inspectMutation = useInspectCsv({ mutation: silentMutation });
 
   const confirmMutation = useImportConfirm({
     mutation: {
       onSuccess: (data, variables) => {
-        const confirmed = (rows ?? []).filter((row) => row.selected);
+        const confirmed = (review?.rows ?? []).filter((row) => row.selected);
         toast.success(
           countsText({
             imported: data.imported,
@@ -149,16 +155,19 @@ export function ImportSection({
             description: data.reconciliation ? reconciliationText(data.reconciliation) : undefined,
           },
         );
-        setResult({
-          imported: data.imported,
-          linked: data.linked,
-          skipped: data.skippedDuplicates,
-          uncategorized: confirmed.filter((row) => takesCategory(row) && !row.categoryId).length,
-          accountId: variables.data.accountId,
-          reconciliation: data.reconciliation,
-          ...importDateRange(confirmed),
+        setStep({
+          kind: "result",
+          result: {
+            imported: data.imported,
+            linked: data.linked,
+            skipped: data.skippedDuplicates,
+            uncategorized: confirmed.filter((row) => takesCategory(row) && !row.categoryId).length,
+            accountId: variables.data.accountId,
+            reconciliation: data.reconciliation,
+            ...importDateRange(confirmed),
+          },
         });
-        replaceRows(null);
+        onEditedChange(false);
         fileField.reset();
         if (inbox) {
           dismissMutation.mutate({ id: inbox.item.id });
@@ -168,7 +177,7 @@ export function ImportSection({
   });
 
   function clearPreview() {
-    replaceRows(null);
+    dropReview();
     fileField.clearError();
     previewMutation.reset();
   }
@@ -177,15 +186,33 @@ export function ImportSection({
     return inbox?.file ?? fileField.take();
   }
 
-  function inspect(options?: Partial<ReadOptions>) {
+  function inspect(
+    options?: Partial<ReadOptions>,
+    remapping = step.kind === "map" ? step.remapping : undefined,
+  ) {
     const file = takeFile();
-    if (file) {
-      inspectMutation.mutate({ data: { file, ...options } });
+    if (!file) {
+      return;
     }
+    inspectMutation.mutate(
+      { data: { file, ...options } },
+      {
+        onSuccess: (inspection) =>
+          setStep((current) => ({
+            kind: "map",
+            inspection,
+            remapping,
+            review: reviewOf(current),
+          })),
+      },
+    );
+  }
+
+  function closeMapping() {
+    setStep(leaveMapping);
   }
 
   function preview(id: string, mappingId = mapping?.id) {
-    setResult(null);
     if (format === "genericCsv" && !mappingId) {
       inspect();
       return;
@@ -199,74 +226,52 @@ export function ImportSection({
 
   function applyMapping(chosen: CsvMappingResponse) {
     setMapping(chosen);
-    setInspection(null);
-    setRemapping(undefined);
+    closeMapping();
     preview(accountId, chosen.id);
   }
 
   function remap() {
-    setRemapping(mapping);
     previewMutation.reset();
-    inspect({ noHeaderRow: mapping?.noHeaderRow });
+    inspect({ noHeaderRow: mapping?.noHeaderRow }, mapping);
   }
 
   function switchAccount(id: string) {
     setAccountId(id);
-    replaceRows(null);
+    dropReview();
     preview(id);
   }
 
   function updateRow(index: number, patch: Partial<PreviewRowState>) {
-    setRows((prev) => prev?.map((row, i) => (i === index ? { ...row, ...patch } : row)) ?? null);
+    setStep((current) =>
+      withRows(current, (rows) => rows.map((row, i) => (i === index ? { ...row, ...patch } : row))),
+    );
     onEditedChange(true);
   }
 
   function handleConfirm(group: ImportConfirmGroup | null) {
-    if (!rows) {
+    if (!review) {
       return;
     }
-    const selectedRows = rows.filter((row) => row.selected);
-    const { closingDate, closingBalance, closingCurrency } = statement ?? {};
     confirmMutation.mutate({
       data: {
         accountId,
         format,
         mappingId: mapping?.id ?? null,
         group,
-        statement:
-          closingDate && closingBalance && closingCurrency
-            ? { closingDate, closingBalance, closingCurrency }
-            : null,
-        rows: selectedRows.map((row) => ({
-          importRef: row.importRef,
-          currency: row.currency,
-          date: row.date,
-          description: row.description,
-          payee: row.payee,
-          amount: row.amount,
-          type: row.type,
-          categoryId: takesCategory(row) ? row.categoryId || null : null,
-          tagIds: takesCategory(row) ? row.tagIds : [],
-          spreadMonths: takesCategory(row) ? row.spreadMonths : null,
-          spreadDirection: takesCategory(row) && row.spreadMonths ? row.spreadDirection : null,
-          transferAccountId: row.transferAccountId || null,
-          existingTransferId: row.existingTransferId || null,
-          existingTransactionId: row.existingTransactionId || null,
-          asRefund: row.asRefund,
-          refundOfTransactionId: row.refundOfTransactionId || null,
-        })),
+        statement: closingStatement(review.statement),
+        rows: review.rows.filter((row) => row.selected).map(confirmRow),
       },
     });
   }
 
   const missingColumns = problemDetail(previewMutation.error, "import.missingColumns");
 
-  if (result) {
+  if (step.kind === "result") {
     return (
       <ImportResultPanel
-        result={result}
+        result={step.result}
         onLeave={onLeave}
-        onImportAnother={() => setResult(null)}
+        onImportAnother={() => setStep(UPLOAD)}
       />
     );
   }
@@ -292,12 +297,12 @@ export function ImportSection({
             fileField.clearError();
             previewMutation.reset();
             inspectMutation.reset();
-            setInspection(null);
+            closeMapping();
           }}
           previewPending={previewMutation.isPending || inspectMutation.isPending}
           disabled={confirmMutation.isPending}
           fileError={fileField.error}
-          secondary={Boolean(rows?.length)}
+          secondary={Boolean(review?.rows.length)}
         />
         {previewMutation.isError ? (
           <ImportPreviewError error={previewMutation.error} format={format} />
@@ -312,48 +317,34 @@ export function ImportSection({
         ) : null}
       </Section>
 
-      {inspection ? (
-        <Section className="space-y-4" aria-labelledby="import-mapping-title" data-wide="">
-          <div className="space-y-1">
-            <SectionTitle id="import-mapping-title">{t("imports.mapping.title")}</SectionTitle>
-            <p className="max-w-prose text-sm text-muted-foreground">
-              {t("imports.mapping.description")}
-            </p>
-          </div>
-          <CsvMappingForm
-            key={`${inspection.encoding}|${inspection.delimiter}|${inspection.skipLines}|${inspection.noHeaderRow}`}
-            inspection={inspection}
-            initial={remapping}
-            fitting={mappings.data.filter((item) =>
-              inspection.matchingMappingIds.includes(item.id),
-            )}
-            cardAccount={
-              accounts.find((account) => account.id === accountId)?.type === "creditCard"
-            }
-            readPending={inspectMutation.isPending}
-            onRead={inspect}
-            onUse={applyMapping}
-            onSaved={applyMapping}
-            onCancel={() => setInspection(null)}
-          />
-        </Section>
+      {step.kind === "map" ? (
+        <MappingStep
+          inspection={step.inspection}
+          remapping={step.remapping}
+          mappings={mappings.data}
+          cardAccount={accounts.find((account) => account.id === accountId)?.type === "creditCard"}
+          readPending={inspectMutation.isPending}
+          onRead={inspect}
+          onApply={applyMapping}
+          onCancel={closeMapping}
+        />
       ) : null}
 
-      {rows ? (
+      {review ? (
         <Section className="space-y-4" aria-labelledby="import-review-title" data-wide="">
           <SectionTitle id="import-review-title">{t("imports.reviewSection")}</SectionTitle>
-          {statement ? (
+          {review.statement ? (
             <ImportStatementBar
-              statement={statement}
+              statement={review.statement}
               format={format}
-              rows={rows}
+              rows={review.rows}
               accounts={accounts}
               disabled={previewMutation.isPending || confirmMutation.isPending}
               onSwitchAccount={(id) => confirmDiscard(() => switchAccount(id))}
             />
           ) : null}
           <ImportPreviewTable
-            rows={rows}
+            rows={review.rows}
             accountId={accountId}
             accounts={accounts}
             categories={categoryList}
@@ -373,5 +364,52 @@ export function ImportSection({
         </Section>
       ) : null}
     </div>
+  );
+}
+
+interface MappingStepProps {
+  inspection: InspectCsvResponse;
+  remapping?: CsvMappingResponse;
+  mappings: readonly CsvMappingResponse[];
+  cardAccount: boolean;
+  readPending: boolean;
+  onRead: (options: ReadOptions) => void;
+  onApply: (mapping: CsvMappingResponse) => void;
+  onCancel: () => void;
+}
+
+function MappingStep({
+  inspection,
+  remapping,
+  mappings,
+  cardAccount,
+  readPending,
+  onRead,
+  onApply,
+  onCancel,
+}: Readonly<MappingStepProps>) {
+  const { t } = useTranslation();
+
+  return (
+    <Section className="space-y-4" aria-labelledby="import-mapping-title" data-wide="">
+      <div className="space-y-1">
+        <SectionTitle id="import-mapping-title">{t("imports.mapping.title")}</SectionTitle>
+        <p className="max-w-prose text-sm text-muted-foreground">
+          {t("imports.mapping.description")}
+        </p>
+      </div>
+      <CsvMappingForm
+        key={`${inspection.encoding}|${inspection.delimiter}|${inspection.skipLines}|${inspection.noHeaderRow}`}
+        inspection={inspection}
+        initial={remapping}
+        fitting={mappings.filter((item) => inspection.matchingMappingIds.includes(item.id))}
+        cardAccount={cardAccount}
+        readPending={readPending}
+        onRead={onRead}
+        onUse={onApply}
+        onSaved={onApply}
+        onCancel={onCancel}
+      />
+    </Section>
   );
 }

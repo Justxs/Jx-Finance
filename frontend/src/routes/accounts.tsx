@@ -10,11 +10,11 @@ import {
   getTransfersSuspenseQueryOptions,
 } from "@/api/generated";
 import { AccountSortField } from "@/api/generated/model";
+import { FORECAST_DAYS } from "@/components/cash-flow-forecast/forecast-series";
 import { accountListParams, movementsPageParams } from "@/features/accounts/account-queries";
 import { accountTypes } from "@/features/accounts/account-types";
 import { AccountsPage } from "@/features/accounts/accounts-page/accounts-page";
 import { AccountsPending } from "@/features/accounts/accounts-page/accounts-page-pending";
-import { FORECAST_DAYS } from "@/features/accounts/cash-flow-forecast/forecast-series";
 import { warm, warmWithSettings } from "@/lib/route-prefetch";
 import { optionalParam, sortParams } from "@/lib/search-schema";
 

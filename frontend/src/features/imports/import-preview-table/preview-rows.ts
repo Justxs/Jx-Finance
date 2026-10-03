@@ -6,6 +6,7 @@ import type {
   SpreadDirection,
   TransactionResponse,
 } from "@/api/generated/model";
+import { recallCategoryId } from "@/lib/category-recall";
 import { toCents } from "@/lib/money";
 
 export interface PreviewRowState extends ImportPreviewRow {
@@ -106,29 +107,6 @@ export function visibleRowIndexes(rows: PreviewRowState[], view: PreviewView, qu
 
 function normalize(text: string | null | undefined) {
   return text?.trim().toLocaleLowerCase() ?? "";
-}
-
-export function recallCategoryId(
-  row: Pick<ImportPreviewRow, "description" | "type" | "isDuplicate">,
-  transactions: TransactionResponse[],
-  categories: CategoryResponse[],
-) {
-  const description = normalize(row.description);
-  if (!description || row.isDuplicate) {
-    return "";
-  }
-  const match = transactions
-    .filter(
-      (transaction) =>
-        transaction.type === row.type &&
-        Boolean(transaction.categoryId) &&
-        normalize(transaction.description) === description &&
-        categories.some(
-          (category) => category.id === transaction.categoryId && category.type === row.type,
-        ),
-    )
-    .toSorted((a, b) => b.date.localeCompare(a.date))[0];
-  return match?.categoryId ?? "";
 }
 
 export function toPreviewRows(

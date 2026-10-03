@@ -10,11 +10,11 @@ import type {
 import { ExportMenu } from "@/components/export-menu/export-menu";
 import { Button } from "@/components/ui/button/button";
 import { SavedFilters } from "@/features/transactions/saved-filters/saved-filters";
-import type { TransactionDraft } from "@/features/transactions/transaction-form/transaction-draft";
 import { TransactionTemplates } from "@/features/transactions/transaction-templates/transaction-templates";
 import { UncategorizedSuggestionsDialog } from "@/features/transactions/uncategorized-suggestions/uncategorized-suggestions-dialog";
 import type { TransactionFilters } from "@/features/transactions/use-transaction-filters";
 import { useFeature } from "@/hooks/use-settings";
+import type { TransactionDraft } from "@/lib/transaction-draft";
 
 interface Props {
   filters: TransactionFilters;

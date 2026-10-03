@@ -5,16 +5,13 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { getDebtsSuspenseQueryOptions, useUnlinkDebtPayment } from "@/api/generated";
 import type { TransactionResponse } from "@/api/generated/model";
+import { DebtPaymentForm } from "@/components/debt-payment-form/debt-payment-form";
 import { EditModal } from "@/components/modal";
 import type { RowAction } from "@/components/row-actions/row-actions";
 import { buttonVariants } from "@/components/ui/button/button";
 import { Tooltip } from "@/components/ui/tooltip/tooltip";
-import { DebtPaymentForm } from "@/features/net-worth/debt-payment-form/debt-payment-form";
-import {
-  isOptimistic,
-  isPurchase,
-} from "@/features/transactions/transaction-amount/transaction-row";
 import { useFeature } from "@/hooks/use-settings";
+import { isOptimistic, isPurchase } from "@/lib/transaction-row";
 
 interface Props {
   transaction: TransactionResponse;

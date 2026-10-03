@@ -2,7 +2,7 @@
 
 Back to the [feature walkthrough](README.md). See also [decisions](../decisions/cash-flow-forecast.md), [Recurring entries](recurring-bills.md) and [Accounts](accounts.md).
 
-Backend `Accounts` (`GetCashFlowForecast`, `Services/CashFlowForecastService.cs`, the pure `Shared/CashFlowProjection.cs`, and the schedule, estimate and history it shares with the [bills calendar](recurring-bills.md#calendar) in `Common/RecurringBills/`), frontend `accounts/cash-flow-forecast` and `dashboard/cash-flow-card`. One read-only route, `GET /api/accounts/forecast?days=`, behind its own `CashFlowForecast` switch through `RequiresFeature` metadata on the endpoint, although the rest of `/api/accounts` is ungated. Nothing is stored: the forecast is computed on every read.
+Backend `Accounts` (`GetCashFlowForecast`, `Services/CashFlowForecastService.cs`, the pure `Shared/CashFlowProjection.cs`, and the schedule, estimate and history it shares with the [bills calendar](recurring-bills.md#calendar) in `Common/RecurringBills/`), frontend `components/cash-flow-forecast` and `dashboard/cash-flow-card`. One read-only route, `GET /api/accounts/forecast?days=`, behind its own `CashFlowForecast` switch through `RequiresFeature` metadata on the endpoint, although the rest of `/api/accounts` is ungated. Nothing is stored: the forecast is computed on every read.
 
 The forecast answers one question: will one of my accounts go below zero before the money I expect arrives? It projects every visible account from today's balance to the end of a 30, 60 or 90 day horizon, one step per scheduled occurrence of the caller's recurring entries, and draws a second, dashed line that also takes the account's usual everyday spending off day by day.
 

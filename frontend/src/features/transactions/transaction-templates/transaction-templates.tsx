@@ -1,11 +1,9 @@
 import { NotebookPen } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { SavedListMenu } from "@/features/transactions/saved-list-menu/saved-list-menu";
-import {
-  type TransactionDraft,
-  draftFromTemplate,
-} from "@/features/transactions/transaction-form/transaction-draft";
+import { draftFromTemplate } from "@/features/transactions/transaction-form/transaction-draft";
 import { transactionTemplates } from "@/features/transactions/transaction-views";
+import type { TransactionDraft } from "@/lib/transaction-draft";
 
 interface Props {
   onUse: (draft: TransactionDraft) => void;

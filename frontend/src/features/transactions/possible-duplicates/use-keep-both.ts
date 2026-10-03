@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { useKeepPossibleDuplicates } from "@/api/generated";
 import type { TransactionResponse } from "@/api/generated/model";
 import type { RowAction } from "@/components/row-actions/row-actions";
-import { isOptimistic } from "@/features/transactions/transaction-amount/transaction-row";
+import { isOptimistic } from "@/lib/transaction-row";
 
 export function useKeepBoth(offered: boolean) {
   const { t } = useTranslation();

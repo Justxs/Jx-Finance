@@ -13,7 +13,7 @@ import { resetPreferences } from "@/test/preferences";
 import { settingsFixture } from "@/test/settings";
 
 await Promise.all([
-  import("@/features/net-worth/net-worth-history-chart/net-worth-history-chart"),
+  import("@/components/net-worth-history-chart/net-worth-history-chart"),
   import("@/features/net-worth/net-worth-composition-chart/net-worth-composition-chart"),
 ]);
 

@@ -13,12 +13,10 @@ import { EditModal } from "@/components/modal";
 import { Button } from "@/components/ui/button/button";
 import { Tag } from "@/components/ui/tag/tag";
 import { RuleForm } from "@/features/categorization-rules/rule-form/rule-form";
-import {
-  conditionText,
-  ruleFromSuggestion,
-} from "@/features/categorization-rules/rule-form/rule-summary";
+import { conditionText } from "@/features/categorization-rules/rule-form/rule-summary";
 import { silentMutation } from "@/lib/mutations";
 import { nameById } from "@/lib/options";
+import { ruleFromSuggestion } from "@/lib/suggested-rule";
 
 function suggestionKey(suggestion: { key: string; categoryId: string }) {
   return `${suggestion.categoryId}:${suggestion.key}`;

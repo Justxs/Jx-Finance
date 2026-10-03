@@ -1,11 +1,8 @@
 import { useTranslation } from "react-i18next";
 import { useCashFlowForecastSuspense } from "@/api/generated";
+import { FORECAST_DAYS, forecastRisks } from "@/components/cash-flow-forecast/forecast-series";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { Rows } from "@/components/ui/rows/rows";
-import {
-  FORECAST_DAYS,
-  forecastRisks,
-} from "@/features/accounts/cash-flow-forecast/forecast-series";
 import { useMoney, useShortDayIso } from "@/hooks/use-formatters";
 import { toCents } from "@/lib/money";
 import { EXPENSE_TONE } from "@/lib/tone";

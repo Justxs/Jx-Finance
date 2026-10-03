@@ -4,7 +4,7 @@ import type {
   CreateConversionRequest,
   Currency,
 } from "@/api/generated/model";
-import { heldCurrencies } from "@/features/accounts/held-currencies";
+import { heldCurrencies } from "@/lib/held-currencies";
 
 export interface ConversionFieldValues {
   accountId: string;

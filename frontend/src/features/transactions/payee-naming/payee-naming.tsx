@@ -3,10 +3,10 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { TransactionResponse } from "@/api/generated/model";
 import { EditModal } from "@/components/modal";
+import { PayeeNameForm } from "@/components/payee-name-form/payee-name-form";
 import type { RowAction } from "@/components/row-actions/row-actions";
-import { PayeeNameForm } from "@/features/payees/payee-name-form/payee-name-form";
-import { isOptimistic } from "@/features/transactions/transaction-amount/transaction-row";
 import { useFeature } from "@/hooks/use-settings";
+import { isOptimistic } from "@/lib/transaction-row";
 
 export function usePayeeNaming() {
   const { t } = useTranslation();

@@ -2,8 +2,8 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { useCloseMonth } from "@/api/generated";
 import type { MonthReviewResponse } from "@/api/generated/model";
-import { isClosedStatus } from "@/features/month-close/status-markers";
 import { useMonthName } from "@/hooks/use-formatters";
+import { isClosedStatus } from "@/lib/month-close";
 import { silentMutation } from "@/lib/mutations";
 
 export function useMonthCloser(month: string, review: MonthReviewResponse) {

@@ -8,30 +8,30 @@ import type {
   TagResponse,
   TransactionResponse,
 } from "@/api/generated/model";
+import { CategorySuggestion } from "@/components/category-suggestion/category-suggestion";
+import { ClosedMonthHint } from "@/components/closed-month-hint/closed-month-hint";
 import { MoneyPairField } from "@/components/form";
 import { FormError } from "@/components/form-error/form-error";
 import { FieldShell } from "@/components/form/field-shell/field-shell";
+import { SpreadFields } from "@/components/spread-fields/spread-fields";
 import { TagPicker } from "@/components/tag-picker/tag-picker";
 import { Button } from "@/components/ui/button/button";
 import { FormGrid } from "@/components/ui/form-grid/form-grid";
-import { heldCurrencies } from "@/features/accounts/held-currencies";
-import { ClosedMonthHint } from "@/features/month-close/closed-month-hint/closed-month-hint";
-import { CategorySuggestion } from "@/features/transactions/category-suggestion/category-suggestion";
 import { PlaceField } from "@/features/transactions/place-field/place-field";
 import {
   FillFromReceipt,
   type ReceiptCandidateSplit,
 } from "@/features/transactions/receipt-reading/fill-from-receipt";
-import { SpreadFields } from "@/features/transactions/spread-fields/spread-fields";
 import { EMPTY_VALUE, useIsoDate } from "@/hooks/use-formatters";
 import { useFeature, useSettings } from "@/hooks/use-settings";
+import { heldCurrencies } from "@/lib/held-currencies";
 import { silentMutation } from "@/lib/mutations";
 import { namedOptions } from "@/lib/options";
+import type { TransactionDraft } from "@/lib/transaction-draft";
 import { isMoney, normalizeMoney } from "@/lib/validation";
 import { emptyLine } from "./line-form-value";
 import { SaveTemplateControl } from "./save-template-control";
 import { SplitLinesEditor } from "./split-lines-editor";
-import type { TransactionDraft } from "./transaction-draft";
 import { TransactionFormActions } from "./transaction-form-actions";
 import {
   type TransactionFormValues,

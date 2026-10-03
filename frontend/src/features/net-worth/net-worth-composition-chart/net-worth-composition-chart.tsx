@@ -7,7 +7,7 @@ import {
 import {
   type NetWorthSeries,
   NetWorthSeriesChart,
-} from "@/features/net-worth/net-worth-history-chart/net-worth-series-chart";
+} from "@/components/net-worth-history-chart/net-worth-series-chart";
 
 export function NetWorthCompositionChart() {
   const { t } = useTranslation();

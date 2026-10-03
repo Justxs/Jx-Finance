@@ -9,6 +9,7 @@ import type {
 } from "@/api/generated/model";
 import { FormActions } from "@/components/form/form-actions/form-actions";
 import { Pagination } from "@/components/pagination/pagination";
+import { amountColumnWide } from "@/components/transaction-amount/transaction-amount";
 import { Button } from "@/components/ui/button/button";
 import { Checkbox } from "@/components/ui/checkbox/checkbox";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
@@ -17,7 +18,6 @@ import { Rows } from "@/components/ui/rows/rows";
 import { SegmentedControl } from "@/components/ui/segmented-control/segmented-control";
 import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table/table";
 import { Tooltip } from "@/components/ui/tooltip/tooltip";
-import { amountColumnWide } from "@/features/transactions/transaction-amount/transaction-amount";
 import { useMoney } from "@/hooks/use-formatters";
 import { usePageClamp } from "@/hooks/use-paged-list";
 import { ImportRow, importAmount } from "./import-row";

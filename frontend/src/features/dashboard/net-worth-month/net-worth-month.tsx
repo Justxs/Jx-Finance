@@ -1,8 +1,8 @@
 import { useTranslation } from "react-i18next";
 import { useNetWorthHistorySuspense } from "@/api/generated";
 import type { NetWorthSnapshotItem } from "@/api/generated/model";
+import { NetWorthHistoryChart } from "@/components/net-worth-history-chart";
 import { SignedAmount } from "@/components/signed-amount/signed-amount";
-import { NetWorthHistoryChart } from "@/features/net-worth/net-worth-history-chart";
 
 function monthChange(
   items: readonly NetWorthSnapshotItem[],

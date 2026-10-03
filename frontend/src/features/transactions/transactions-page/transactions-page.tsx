@@ -1,16 +1,5 @@
-import { useNavigate, useSearch } from "@tanstack/react-router";
 import { FileUp, Plus } from "lucide-react";
-import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  getExportTransactionsPdfUrl,
-  getExportTransactionsUrl,
-  getLedgerQueryKey,
-  useAccountsSuspense,
-  useCategoriesSuspense,
-  useLedgerSuspense,
-  useTagsSuspense,
-} from "@/api/generated";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog/confirm-delete-dialog";
 import { PageHeader } from "@/components/page-header/page-header";
 import { Pagination } from "@/components/pagination/pagination";
@@ -18,146 +7,47 @@ import { Button } from "@/components/ui/button/button";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { Section } from "@/components/ui/section/section";
 import { TextLink } from "@/components/ui/text-link/text-link";
-import { useSuggestedRuleToast } from "@/features/categorization-rules/suggested-rule-toast/use-suggested-rule-toast";
 import { ImportDialog } from "@/features/imports/import-dialog/import-dialog";
 import { ActiveFilters } from "@/features/transactions/active-filters/active-filters";
-import { ledgerTransactions } from "@/features/transactions/ledger-groups/ledger-rows";
-import { useLedgerGroups } from "@/features/transactions/ledger-groups/use-ledger-groups";
 import { SelectionToolbar } from "@/features/transactions/selection-toolbar/selection-toolbar";
-import { signedAmount } from "@/features/transactions/transaction-amount/transaction-amount";
-import { transactionName } from "@/features/transactions/transaction-amount/transaction-row";
-import { useTransactionFormSection } from "@/features/transactions/transaction-form-section/transaction-form-section";
-import {
-  duplicateDraft,
-  refundDraft,
-} from "@/features/transactions/transaction-form/transaction-draft";
-import {
-  transactionFilterParams,
-  transactionListParams,
-  transactionView,
-} from "@/features/transactions/transaction-queries";
-import { useTransactionRowDialogs } from "@/features/transactions/transaction-row-actions/transaction-row-actions";
 import { TransactionsFiltersDialog } from "@/features/transactions/transactions-filters-dialog/transactions-filters-dialog";
 import { TransactionsList } from "@/features/transactions/transactions-list/transactions-list";
-import { useInlineCategory } from "@/features/transactions/transactions-table/category-cell";
 import { TransactionsTable } from "@/features/transactions/transactions-table/transactions-table";
-import { useTransactionColumnHeaders } from "@/features/transactions/transactions-table/use-transaction-column-headers";
-import {
-  type TransactionRowHandlers,
-  isSelectableTransaction,
-  useTransactionColumns,
-} from "@/features/transactions/transactions-table/use-transaction-columns";
 import { TransactionsToolbar } from "@/features/transactions/transactions-toolbar/transactions-toolbar";
 import { TransactionsTotals } from "@/features/transactions/transactions-totals/transactions-totals";
-import { useTransactionFilters } from "@/features/transactions/use-transaction-filters";
-import { useConfirmedDelete } from "@/hooks/use-confirmed-delete";
-import { useDeferredParams } from "@/hooks/use-deferred-params";
-import { useExportUrl } from "@/hooks/use-export-url";
-import { useIsoDate, useMoney } from "@/hooks/use-formatters";
-import { usePageClamp } from "@/hooks/use-paged-list";
-import { useRetained } from "@/hooks/use-retained";
-import { useSettingsSuspense } from "@/hooks/use-settings";
-import { byId, nameById } from "@/lib/options";
-import { cn, metaLine } from "@/lib/utils";
-import { usePreferences } from "@/stores/preferences";
-import { useTransactionMutations } from "./use-transaction-mutations";
-import { useTransactionSelection } from "./use-transaction-selection";
+import { cn } from "@/lib/utils";
+import { useTransactionsPageModel } from "./use-transactions-page-model";
 
 export function TransactionsPage() {
   const { t } = useTranslation();
-  const { defaultPageSize, features } = useSettingsSuspense();
-  const pageSize = usePreferences().pageSize ?? defaultPageSize;
-  const money = useMoney();
-  const formatDate = useIsoDate();
-
-  const view = transactionView(useSearch({ from: "/transactions" }));
-  const [shown, stale] = useDeferredParams(view);
-  const navigate = useNavigate({ from: "/transactions" });
-  const [importOpen, setImportOpen] = useState(false);
-  const [deletingIds, setDeletingIds] = useState<string[] | null>(null);
-  const deletingCount = useRetained(deletingIds?.length);
-  const viewKey = JSON.stringify(view);
-  const { page: _page, sort: _sort, direction: _direction, ...selectionScope } = view;
-  const selection = useTransactionSelection(JSON.stringify(selectionScope));
-
-  const listParams = transactionListParams(shown, pageSize);
-  const filterParams = transactionFilterParams(shown);
-  const listKey = getLedgerQueryKey(listParams);
-  const exportCsvUrl = useExportUrl(getExportTransactionsUrl(listParams));
-  const exportPdfUrl = useExportUrl(getExportTransactionsPdfUrl(listParams));
-
-  const { data: accounts } = useAccountsSuspense();
-  const { data: categories } = useCategoriesSuspense();
-  const { data: tags } = useTagsSuspense();
   const {
-    data: { items: ledgerItems, total },
-  } = useLedgerSuspense(listParams);
-  const items = ledgerTransactions(ledgerItems);
-  const suggestedRule = useSuggestedRuleToast(categories);
-  const filters = useTransactionFilters({ accounts, categories });
-  const columnHeaders = useTransactionColumnHeaders(filters, tags);
-  const rowDialogs = useTransactionRowDialogs({ possibleDuplicates: shown.duplicates === true });
-  const inlineCategory = useInlineCategory(suggestedRule.offerAfterSave);
-
-  const accountNames = nameById(accounts);
-  const mutations = useTransactionMutations({
-    listKey,
-    accountNames,
-    onBulkApplied: selection.clear,
-  });
-  const groups = useLedgerGroups({
-    viewKey,
-    items: ledgerItems,
-    filter: filterParams,
-    onGrouped: selection.clear,
-  });
-  const formSection = useTransactionFormSection({
+    features,
     accounts,
     categories,
     tags,
+    filters,
+    filterParams,
+    exportCsvUrl,
+    exportPdfUrl,
+    stale,
+    selection,
+    selectableIds,
+    selectedItems,
+    selectedIds,
     mutations,
-    onCategorized: suggestedRule.offerAfterSave,
-  });
-
-  const categoryById = byId(categories);
-  const selectableIds = items.filter(isSelectableTransaction).map((item) => item.id);
-  const selectedItems = items.filter((item) => selection.selectedIds.has(item.id));
-  const selectedIds = selectedItems.map((item) => item.id);
+    groups,
+    formSection,
+    rowDialogs,
+    remove,
+    columnHeaders,
+    columns,
+    rowHandlers,
+    rowLabel,
+    paging,
+    bulkDelete,
+    importDialog,
+  } = useTransactionsPageModel();
   const selecting = selectedItems.length > 0;
-  const remove = useConfirmedDelete(
-    mutations.remove,
-    [...items, ...groups.memberTransactions],
-    (item) =>
-      metaLine(
-        formatDate(item.date),
-        transactionName(item, categoryById, t),
-        signedAmount(money, item),
-      ),
-    "transaction",
-  );
-
-  const pages = usePageClamp(
-    {
-      page: shown.page,
-      setPage: (page) => void navigate({ search: (prev) => ({ ...prev, page }), replace: true }),
-    },
-    total,
-    pageSize,
-  );
-
-  const rowHandlers: TransactionRowHandlers = {
-    accountNames,
-    categoryById,
-    tagById: byId(tags),
-    onEdit: (transaction) => formSection.startEditing(transaction),
-    onDuplicate: (transaction) => formSection.startFromDraft(duplicateDraft(transaction)),
-    onRefund: (transaction) => formSection.startFromDraft(refundDraft(transaction)),
-    onDelete: remove.request,
-    deletingId: remove.pendingId,
-    moreActions: rowDialogs.moreActions,
-    onUpdateSplit: rowDialogs.onUpdateSplit,
-  };
-  const columns = useTransactionColumns({ ...rowHandlers, categories, inlineCategory });
 
   return (
     <div className="space-y-5">
@@ -175,7 +65,7 @@ export function TransactionsPage() {
         {features.import ? (
           <Button
             variant="outline"
-            onClick={() => setImportOpen(true)}
+            onClick={() => importDialog.setOpen(true)}
             disabled={accounts.length === 0}
           >
             <FileUp />
@@ -233,7 +123,7 @@ export function TransactionsPage() {
             onMove={(accountId) =>
               mutations.bulkMove.mutate({ data: { transactionIds: selectedIds, accountId } })
             }
-            onDelete={() => setDeletingIds(selectedIds)}
+            onDelete={() => bulkDelete.setIds(selectedIds)}
             onGroup={() =>
               groups.openGroupDialog({ kind: "selection", transactionIds: selectedIds })
             }
@@ -254,7 +144,7 @@ export function TransactionsPage() {
             selection={{
               selectedIds: selection.selectedIds,
               selectableIds,
-              rowLabel: (row) => `${formatDate(row.date)} ${transactionName(row, categoryById, t)}`,
+              rowLabel,
               onToggle: (id, selected, extend) =>
                 selection.toggle(selectableIds, id, selected, extend),
               onTogglePage: (selected) => selection.togglePage(selectableIds, selected),
@@ -273,13 +163,10 @@ export function TransactionsPage() {
         </div>
 
         <Pagination
-          page={shown.page}
-          pages={pages}
-          range={{ total, pageSize }}
-          onPageChange={(page) => {
-            selection.clear();
-            void navigate({ search: (prev) => ({ ...prev, page }) });
-          }}
+          page={paging.page}
+          pages={paging.pages}
+          range={{ total: paging.total, pageSize: paging.pageSize }}
+          onPageChange={paging.goToPage}
         />
       </Section>
 
@@ -288,14 +175,18 @@ export function TransactionsPage() {
       {groups.dialogs}
       <ConfirmDeleteDialog {...remove.dialogProps} />
       <ConfirmDeleteDialog
-        target={deletingIds}
-        title={t("transactions.bulkDeleteTitle", { count: deletingCount ?? 0 })}
+        target={bulkDelete.ids}
+        title={t("transactions.bulkDeleteTitle", { count: bulkDelete.count ?? 0 })}
         description={t("confirmDelete.undoable")}
-        onCancel={() => setDeletingIds(null)}
+        onCancel={() => bulkDelete.setIds(null)}
         onConfirm={(transactionIds) => mutations.bulkDelete.mutate({ data: { transactionIds } })}
       />
       {features.import ? (
-        <ImportDialog open={importOpen} onOpenChange={setImportOpen} accounts={accounts} />
+        <ImportDialog
+          open={importDialog.open}
+          onOpenChange={importDialog.setOpen}
+          accounts={accounts}
+        />
       ) : null}
     </div>
   );

@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 import type { TransactionResponse } from "@/api/generated/model";
-import { optimisticId } from "@/features/transactions/transaction-amount/transaction-row";
+import { optimisticId } from "@/lib/transaction-row";
 import { isSelectableTransaction } from "./use-transaction-columns";
 
 function transaction(overrides: Partial<TransactionResponse>): TransactionResponse {

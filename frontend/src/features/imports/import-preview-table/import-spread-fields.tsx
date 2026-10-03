@@ -6,7 +6,7 @@ import {
   SPREAD_CUSTOM,
   spreadDirectionOptions,
   spreadOptions,
-} from "@/features/transactions/spread-fields/spread-choice";
+} from "@/components/spread-fields/spread-choice";
 
 interface Spread {
   spreadMonths: number | null;

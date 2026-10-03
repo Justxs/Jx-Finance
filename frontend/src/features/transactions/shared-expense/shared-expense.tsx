@@ -14,14 +14,11 @@ import type { RowAction } from "@/components/row-actions/row-actions";
 import { Button } from "@/components/ui/button/button";
 import { TextSkeleton } from "@/components/ui/skeleton/skeleton";
 import { Tooltip } from "@/components/ui/tooltip/tooltip";
-import { SplitExpenseForm } from "@/features/households/split-expense-dialog/split-expense-dialog";
-import {
-  isOptimistic,
-  isPurchase,
-} from "@/features/transactions/transaction-amount/transaction-row";
 import { useMoney } from "@/hooks/use-formatters";
 import { useFeature } from "@/hooks/use-settings";
+import { isOptimistic, isPurchase } from "@/lib/transaction-row";
 import { cn } from "@/lib/utils";
+import { SplitExpenseForm } from "./split-expense-dialog";
 
 export function useSharedExpenseSplits() {
   const { t } = useTranslation();

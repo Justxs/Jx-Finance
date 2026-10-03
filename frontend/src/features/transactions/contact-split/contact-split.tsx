@@ -12,12 +12,9 @@ import { EditModal } from "@/components/modal";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import type { RowAction } from "@/components/row-actions/row-actions";
 import { TextSkeleton } from "@/components/ui/skeleton/skeleton";
-import { ContactSplitForm } from "@/features/households/contact-split-form/contact-split-form";
-import {
-  isOptimistic,
-  isPurchase,
-} from "@/features/transactions/transaction-amount/transaction-row";
 import { useSettings } from "@/hooks/use-settings";
+import { isOptimistic, isPurchase } from "@/lib/transaction-row";
+import { ContactSplitForm } from "./contact-split-form";
 
 export function useContactSplits() {
   const { t } = useTranslation();

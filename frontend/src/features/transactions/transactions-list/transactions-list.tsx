@@ -4,8 +4,10 @@ import { RowActions } from "@/components/row-actions/row-actions";
 import { RowTransition } from "@/components/row-transition/row-transition";
 import { SharedScopeTag } from "@/components/shared-scope-tag/shared-scope-tag";
 import { TagChips } from "@/components/tag-chips/tag-chips";
+import { TransactionAmount } from "@/components/transaction-amount/transaction-amount";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { Rows } from "@/components/ui/rows/rows";
+import { UnusualAmountBadge } from "@/components/unusual-amount-badge/unusual-amount-badge";
 import { DebtPaymentMarker } from "@/features/transactions/debt-payment/debt-payment";
 import {
   GroupMembersStatus,
@@ -20,17 +22,11 @@ import { ReceiptItemMatch } from "@/features/transactions/receipt-item-match/rec
 import { RefundMark } from "@/features/transactions/refund-mark/refund-mark";
 import { SharedExpenseMark } from "@/features/transactions/shared-expense/shared-expense";
 import { SpreadMark } from "@/features/transactions/spread-mark/spread-mark";
-import { TransactionAmount } from "@/features/transactions/transaction-amount/transaction-amount";
-import {
-  isOptimistic,
-  transactionCategoryLabel,
-  transactionName,
-} from "@/features/transactions/transaction-amount/transaction-row";
 import { AttachmentCount } from "@/features/transactions/transaction-attachments/attachment-count";
 import { TransactionRowActions } from "@/features/transactions/transaction-row-actions/transaction-row-actions";
 import type { TransactionRowHandlers } from "@/features/transactions/transactions-table/use-transaction-columns";
-import { UnusualAmountBadge } from "@/features/transactions/unusual-amount/unusual-amount-badge";
 import { useIsoDate } from "@/hooks/use-formatters";
+import { isOptimistic, transactionCategoryLabel, transactionName } from "@/lib/transaction-row";
 import { cn, metaLine } from "@/lib/utils";
 
 interface Props extends TransactionRowHandlers {

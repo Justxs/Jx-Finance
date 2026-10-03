@@ -1,9 +1,4 @@
-import type {
-  CategorizationRuleResponse,
-  CreateCategorizationRuleRequest,
-  DescriptionMatch,
-  SuggestedRuleResponse,
-} from "@/api/generated/model";
+import type { CategorizationRuleResponse, DescriptionMatch } from "@/api/generated/model";
 import type { Translate } from "@/lib/i18n";
 
 export function conditionText(
@@ -50,20 +45,5 @@ export function ruleActionNames(
       .map((id) => tagNames.get(id))
       .filter((name) => name !== undefined)
       .toSorted((a, b) => a.localeCompare(b, "lt")),
-  };
-}
-
-export function ruleFromSuggestion(
-  suggestion: SuggestedRuleResponse,
-): CreateCategorizationRuleRequest {
-  return {
-    name: suggestion.name,
-    match: suggestion.match,
-    pattern: suggestion.pattern,
-    categoryId: suggestion.categoryId,
-    tagIds: [],
-    accountId: null,
-    minAmount: null,
-    maxAmount: null,
   };
 }

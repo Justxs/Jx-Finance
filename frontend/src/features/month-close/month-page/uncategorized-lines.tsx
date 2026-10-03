@@ -9,28 +9,25 @@ import {
   useTransactionsSuspense,
 } from "@/api/generated";
 import type { CategoryResponse, TransactionResponse } from "@/api/generated/model";
+import { CategoryCell, useInlineCategory } from "@/components/category-cell/category-cell";
+import { CategorySuggestion } from "@/components/category-suggestion/category-suggestion";
 import { ComboboxField } from "@/components/combobox-field/combobox-field";
 import { FormError } from "@/components/form-error/form-error";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { RowTransition } from "@/components/row-transition/row-transition";
+import { TransactionAmount } from "@/components/transaction-amount/transaction-amount";
 import { Button } from "@/components/ui/button/button";
 import { Rows } from "@/components/ui/rows/rows";
 import { TitledSection } from "@/components/ui/section/section";
 import { RowsSkeleton } from "@/components/ui/skeleton/skeleton";
 import { Tag } from "@/components/ui/tag/tag";
 import { TextLink } from "@/components/ui/text-link/text-link";
-import { CategorySuggestion } from "@/features/transactions/category-suggestion/category-suggestion";
-import { TransactionAmount } from "@/features/transactions/transaction-amount/transaction-amount";
-import { transactionName } from "@/features/transactions/transaction-amount/transaction-row";
-import {
-  CategoryCell,
-  useInlineCategory,
-} from "@/features/transactions/transactions-table/category-cell";
 import { useIsoDate } from "@/hooks/use-formatters";
 import { useFeature } from "@/hooks/use-settings";
 import { monthBounds, monthDate } from "@/lib/calendar";
 import { silentMutation } from "@/lib/mutations";
 import { silentQuery } from "@/lib/query-client";
+import { transactionName } from "@/lib/transaction-row";
 import { cn } from "@/lib/utils";
 import { DoneLine, lineClass } from "./done-line";
 import { uncategorizedParams } from "./month-queries";

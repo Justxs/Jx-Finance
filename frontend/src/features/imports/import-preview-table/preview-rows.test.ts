@@ -5,11 +5,11 @@ import type {
   ImportPreviewRow,
   TransactionResponse,
 } from "@/api/generated/model";
+import { recallCategoryId } from "@/lib/category-recall";
 import {
   applyCategory,
   categoryTargetCount,
   importDateRange,
-  recallCategoryId,
   refundPatch,
   selectAllPatch,
   summarizeSelection,

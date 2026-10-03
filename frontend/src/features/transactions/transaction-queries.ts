@@ -1,34 +1,13 @@
 import { z } from "zod";
-import { FlowType, TransactionSortField } from "@/api/generated/model";
+import { TransactionSortField } from "@/api/generated/model";
 import { optionalParam, sortParams } from "@/lib/search-schema";
-
-export const transactionFilterSchema = z.object({
-  search: optionalParam(z.string()),
-  payee: optionalParam(z.string()),
-  place: optionalParam(z.string()),
-  accountId: optionalParam(z.uuid()),
-  categoryId: optionalParam(z.uuid()),
-  tagIds: optionalParam(
-    z.string().refine((value) => value.split(",").every((id) => z.uuid().safeParse(id).success)),
-  ),
-  type: optionalParam(z.enum(FlowType)),
-  dateFrom: optionalParam(z.iso.date()),
-  dateTo: optionalParam(z.iso.date()),
-  amountMin: optionalParam(z.number().nonnegative()),
-  amountMax: optionalParam(z.number().nonnegative()),
-  unusual: optionalParam(z.literal(true)),
-  uncategorized: optionalParam(z.literal(true)),
-  duplicates: optionalParam(z.literal(true)),
-  spreadOverlap: optionalParam(z.literal(true)),
-});
+import { type TransactionFilter, transactionFilterSchema } from "@/lib/transaction-filter";
 
 export const transactionsSearchSchema = transactionFilterSchema.extend({
   page: z.coerce.number().int().min(1).optional().default(1).catch(1),
   ...sortParams(TransactionSortField),
   new: optionalParam(z.boolean()),
 });
-
-export type TransactionFilter = z.infer<typeof transactionFilterSchema>;
 
 type TransactionsView = Omit<z.infer<typeof transactionsSearchSchema>, "new">;
 

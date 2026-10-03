@@ -23,7 +23,7 @@ import type {
   SettingsResponse,
   SpendingShare,
 } from "@/api/generated/model";
-import { FORECAST_DAYS } from "@/features/accounts/cash-flow-forecast/forecast-series";
+import { FORECAST_DAYS } from "@/components/cash-flow-forecast/forecast-series";
 import { latestEndedMonth, currentMonthKey } from "@/lib/calendar";
 import { type MoveDirection, adjacentIndex, swapItems } from "@/lib/reorder";
 import { todayDateIn, warm, warmWithSettings } from "@/lib/route-prefetch";

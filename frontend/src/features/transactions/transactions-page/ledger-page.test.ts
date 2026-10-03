@@ -6,8 +6,8 @@ import type {
   PagedResponseOfLedgerItemResponse,
   TransactionGroupSummary,
 } from "@/api/generated/model";
-import { isOptimistic } from "@/features/transactions/transaction-amount/transaction-row";
 import { optimisticUpdate } from "@/lib/optimistic";
+import { isOptimistic } from "@/lib/transaction-row";
 import {
   optimisticTransaction,
   withLedgerTransaction,

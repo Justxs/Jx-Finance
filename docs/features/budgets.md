@@ -132,7 +132,7 @@ The page ends with "Steady spending without a budget": the monthly categories th
 
 ## On screen
 
-The budgets page opens with a summary (`SummaryStats`) that never adds a weekly window to a yearly one and never nets one budget's overspend against another's remainder. `budgetOverview` in `features/budgets/budget-overview.ts` computes it in the browser from `GET /api/budgets`, which needs no change because every budget it answers is already in the window that holds today:
+The budgets page opens with a summary (`SummaryStats`) that never adds a weekly window to a yearly one and never nets one budget's overspend against another's remainder. `budgetOverview` in `lib/budgets.ts` computes it in the browser from `GET /api/budgets`, which needs no change because every budget it answers is already in the window that holds today:
 
 - When any budget is over, the lead figure is the overspend of those budgets alone, in the expense colour, labelled "1 of 5 budgets over", with their names under it.
 - Each period that has a budget gets "Left this week", "Left this month", "Left this quarter" or "Left this year": the sum of what is left in that period's budgets that are not over, with "€234.11 spent of €210.00" for all of them under it.
