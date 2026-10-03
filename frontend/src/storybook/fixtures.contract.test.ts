@@ -85,6 +85,7 @@ const contracts: Record<string, Contract> = {
   receiptReadingReturn: { schema: schemas.ReadReceiptResponse },
   receiptReadingReturnUnlinked: { schema: schemas.ReadReceiptResponse },
   receiptReadingPdf: { schema: schemas.ReadReceiptResponse },
+  receiptReadingInvoice: { schema: schemas.ReadReceiptResponse },
   receiptReadingUnreadLines: { schema: schemas.ReadReceiptResponse },
   receiptReadingWithPhotoLocation: { schema: schemas.ReadReceiptResponse },
   rememberedItemCategories: { schema: schemas.ReceiptItemCategoriesResponse },

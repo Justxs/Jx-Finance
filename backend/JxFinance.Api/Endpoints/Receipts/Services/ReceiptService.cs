@@ -365,7 +365,7 @@ public sealed class ReceiptService(
         var shown = store.Current.IsEnabled(Feature.Locations) ? position : null;
         IReadOnlyList<ReceiptCandidateResponse> candidates = source.AttachmentId is null
             && result is { IsReturn: false, Total: > 0 and var total, Date: { } date }
-            ? await CandidatesAsync(total, result.Currency, date, cancellationToken)
+            ? await CandidatesAsync(total, result.Currency, date, result.DueDate, cancellationToken)
             : [];
         var refundOf = result.IsReturn ? await RefundOriginalAsync(result, reading.Sha256, cancellationToken) : null;
         return new ReceiptReadingResponse(
@@ -415,10 +415,11 @@ public sealed class ReceiptService(
         decimal total,
         Currency? currency,
         DateOnly date,
+        DateOnly? dueDate,
         CancellationToken cancellationToken)
     {
         var from = date.AddDays(-ManualEntryMatcher.MaxDays);
-        var to = date.AddDays(ManualEntryMatcher.MaxDays);
+        var to = (dueDate > date ? dueDate.Value : date).AddDays(ManualEntryMatcher.MaxDays);
         var matches = await db.Transactions
             .AsNoTracking()
             .Where(t => t.Type == FlowType.Expense

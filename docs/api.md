@@ -450,6 +450,8 @@ Since 2026-10-02 the type can also be `merger`: the bodies take `relatedQuantity
 
 Since 2026-10-02 the type can also be `spinOff`, with the parent in `securityId`, the new security in `relatedSecurityId`, the shares received in `relatedQuantity` and an optional `costShare`; its `quantity` is ignored and stored as 0. `PUT` on an imported spin-off applies only `costShare`, as on an imported merger, and the broker import lists the new security of every spin-off it books in `costSharesMissing`.
 
+Since 2026-10-03 the `result` of `POST /api/receipts/read` answers `isInvoice`, `invoiceNumber` and `dueDate` (false and null for a till receipt), and an adjustment may be of kind `vat`; for an invoice the candidates reach three days past the due date. See [Receipt reading](features/receipt-reading.md#reading-an-invoice).
+
 Since 2026-09-30 `GET /api/receipts/items` takes `dateFrom`, `dateTo` and an optional `search` and answers `{ items: [{ key, name, currency, amount, count, lastBought }], receipts }`, the caller's receipt items summed by normalized name. See [Receipt reading](features/receipt-reading.md#spending-per-item).
 
 Since 2026-10-01, while the `ReceiptReading` feature is on, `search` on the filtered transaction endpoints and the ledger also matches the item names of the caller's own readings of the files attached to a transaction, and a listed transaction with a matching item answers `receiptItem` (`name`, `warrantyUntil`, the warranty date of that file), null otherwise; the single-transaction response never carries it. See [Receipt reading](features/receipt-reading.md#finding-a-purchase-by-item).

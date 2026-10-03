@@ -14,4 +14,5 @@ export const ReceiptAdjustmentKind = {
   voucher: "voucher",
   rounding: "rounding",
   other: "other",
+  vat: "vat",
 } as const;

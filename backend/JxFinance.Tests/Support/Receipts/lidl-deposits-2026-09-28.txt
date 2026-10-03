@@ -1,0 +1,29 @@
+UAB "Lidl Lietuva" Į. k.: 111791015
+Ežero g. 3, Kaunas
+PVM mokėtojo kodas LT117910113
+Kvitas 161114/666 #00161114
+0082860 Energ.gėrim.LEWIS HAMILTON 0,99 A
+Įdėta (Užstatas)
+0002800 Užstatas 0,10 0,10 !
+0083606 Rudieji plevagrybiai 1,19 A
+0029408 Konserv.lalieji žirneliai 0,60 A
+0083207 PEPSI zero Gaz.galvosis gėr. 1,15 A
+Įdėta (Užstatas)
+0002800 Užstatas 0,10 0,10 !
+0029238 Nulupt.smulkin. pom. su bazil. 1,19 A
+5564418 Šaltinio vanduo KIDS 0,29 A
+Įdėta (Užstatas)
+0002800 Užstatas 0,10 0,10 !
+0035735 Tilandsija 5,49 A
+5530725 UAT grietinėlė 18% 1,59 A
+0083207 PEPSI zero Gaz.galvosis gėr. 1,15 A
+Įdėta (Užstatas)
+0002800 Užstatas 0,10 0,10 !
+0083345 Svogūnai raudonieji
+0,49 x 0,872 kg 0,43 A
+Tarpinė suma 14,47
+PVM Be PVM Su PVM
+A=21,00% 2,44 11,63 14,07
+Mokėti 14,47
+Mokėta (Banko kortelė) 14,47
+Data ir laikas 2026-09-28 11:57:45

@@ -25,4 +25,8 @@ export interface ReceiptResultResponse {
   unreadLines: string[];
   /** @nullable */
   address?: string | null;
+  isInvoice?: boolean;
+  /** @nullable */
+  invoiceNumber?: string | null;
+  dueDate?: null | NullableOfDateOnly;
 }

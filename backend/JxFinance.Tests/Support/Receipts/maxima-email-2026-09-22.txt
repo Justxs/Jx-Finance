@@ -1,0 +1,47 @@
+Jonas Jonaitis <jonas@example.com>
+Jūsų apsipirkimo MAXIMOJE kvitas
+2 laiškai(-ų)
+Maxima <noreply@example.com> 2026 m. rugsėjo 22 d. 18:35
+Kam: jonas@example.com
+Sveiki,
+MAXIMA LT, UAB
+Raudondvario pl. 284a, Kaunas, Kasa Nr. 4
+PVM mokėtojo kodas LT230335113
+J0 #00046359
+Kvitas bazėje: 58/483 #
+Kepintos saulėgrąžos YES, grietinėlės ir svogūnų
+skoni 1,59 A
+AČIŪ nuolaida prekei:Kepintos saulėgrąžos YES, grietinėl
+ -0,34 A
+Gazuotas gėrimas FANTA LEMON ZERO 2,49 A
+AČIŪ nuolaida prekei:gazuotiems gėrimams FANTA, SPRITE
+ -0,75 A
+PET (depozitinis) 0,10 EUR 0,10
+Gazuotas gėrimas FANTA 2,49 A
+AČIŪ nuolaida prekei:gazuotiems gėrimams FANTA, SPRITE
+ -0,75 A
+PET (depozitinis) 0,10 EUR 0,10
+Tilžės sūris FARM MILK, 45 % rieb. s. m. 1,84 A
+Konservuoti smulkinti lupti pomidorai WELL DONE 1,19 A
+Raudonos saldžiosios paprikos SALDVA 0,59 A
+Kakavinės kriauklelės MIO & RIO 1,44 A
+ 0,72 X 2 vnt.
+Lazanijos lakštai LA MOLISANA 2,29 A
+UAT pienas WELL DONE be laktozės, 3,2 % rieb. 1,09 A
+====================================================== #
+Suteiktos naudos #
+Atsiskaityta MAXIMOS pinigais -0,01 A
+AČIŪ nuolaidos -1,84 #
+========================================================
+Sutaupėte 1,85
+--------------------------------------------------------
+ Be PVM PVM Su PVM
+- - - - - - - - - - - - - - - - - - - - - - - - - - - -
+A= 21,00% 10,88 2,28 13,16
+Depozitas/įmoka 0,20
+========================================================
+Kvito suma 13,36
+- - - - - - - - - - - - - - - - - - - - - - - - - - - -
+f1Mokėtina suma 13,36
+f0Mokėta negrynaisiais 13,36
+bankine kortele ************0000 13,36 #

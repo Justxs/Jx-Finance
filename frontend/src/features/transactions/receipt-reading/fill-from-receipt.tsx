@@ -257,6 +257,9 @@ export function FillFromReceipt({
     if (result.merchant) {
       form.setFieldValue("description", result.merchant);
     }
+    if (result.isInvoice && result.invoiceNumber && !form.getFieldValue("note").trim()) {
+      form.setFieldValue("note", t("receipts.invoiceNote", { number: result.invoiceNumber }));
+    }
   }
 
   function fillPlace(result: ReceiptResultResponse) {

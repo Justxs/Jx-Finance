@@ -1,0 +1,20 @@
+PVM SĄSKAITA FAKTŪRA
+Serija ŠT Nr. 2026-0931
+Sąskaitos data: 2026 m. rugsėjo 30 d. Apmokėti iki: 2026-10-15
+Pardavėjas: UAB „Šviesos tinklai“
+Įmonės kodas 304512345
+PVM mokėtojo kodas LT100011223344
+Gedimino pr. 1, LT-01103 Vilnius
+A/s LT12 7300 0101 2345 6789, AB bankas
+Pirkėjas: Jonas Jonaitis
+Vilniaus g. 10-5, LT-01119 Vilnius
+Mokėtina suma 1 597,20
+Nr. Pavadinimas Mato vnt. Kiekis Kaina Suma
+1 Interneto paslauga 1 Gbps mėn. 1 20,00 20,00
+2 Maršrutizatorius vnt 1 1 000,00 1 000,00
+3 Įrengimo darbai val 2 150,00 300,00
+Suma be PVM 1 320,00
+PVM 21% 277,20
+Iš viso su PVM 1 597,20 EUR
+Suma žodžiais: tūkstantis penki šimtai devyniasdešimt septyni eurai 20 ct
+Sąskaitą išrašė: Ona Onaitė

@@ -94,6 +94,107 @@ public sealed class ReceiptTextParserTests
     }
 
     [Fact]
+    public void A_maxima_e_receipt_printed_from_the_mail_keeps_wrapped_names_and_the_discounts_printed_under_them()
+    {
+        var result = Parse(FakeReceiptReader.MaximaEmail);
+
+        Assert.Equal(
+            ("MAXIMA LT, UAB", "Raudondvario pl. 284a, Kaunas", new DateOnly(2026, 9, 22), Currency.Eur, 13.36m),
+            (result.Merchant, result.Address, result.Date, result.Currency, result.Total));
+        Assert.Equal(
+            [
+                ("Kepintos saulėgrąžos YES, grietinėlės ir svogūnų skoni", 1.59m, 0.34m, 0m),
+                ("Gazuotas gėrimas FANTA LEMON ZERO", 2.49m, 0.75m, 0.10m),
+                ("Gazuotas gėrimas FANTA", 2.49m, 0.75m, 0.10m),
+                ("Tilžės sūris FARM MILK, 45 % rieb. s. m", 1.84m, 0m, 0m),
+                ("Konservuoti smulkinti lupti pomidorai WELL DONE", 1.19m, 0m, 0m),
+                ("Raudonos saldžiosios paprikos SALDVA", 0.59m, 0m, 0m),
+                ("Kakavinės kriauklelės MIO & RIO", 1.44m, 0m, 0m),
+                ("Lazanijos lakštai LA MOLISANA", 2.29m, 0m, 0m),
+                ("UAT pienas WELL DONE be laktozės, 3,2 % rieb", 1.09m, 0m, 0m),
+            ],
+            result.Items.Select(i => (i.Name, i.Amount, i.Discount, i.Deposit)));
+        Assert.Equal("0,72 X 2 vnt", result.Items[6].Quantity);
+        Assert.Equal(new ReceiptAdjustment(ReceiptAdjustmentKind.Other, "Atsiskaityta MAXIMOS pinigais", -0.01m), Assert.Single(result.Adjustments));
+        Assert.Empty(result.UnreadLines);
+        Assert.Equal(result.Total, Balance(result));
+    }
+
+    [Fact]
+    public void A_maxima_paper_receipt_joins_a_name_wrapped_onto_a_capitalised_line_and_takes_the_markdown_as_a_discount()
+    {
+        var result = Parse(FakeReceiptReader.MaximaPaper);
+
+        Assert.Equal(
+            ("MAXIMA LT, UAB", "Raudondvario pl. 284a, Kaunas", new DateOnly(2026, 7, 9), 17.03m),
+            (result.Merchant, result.Address, result.Date, result.Total));
+        Assert.Equal(
+            [
+                ("Jogurtas GRAIKIŠKA AMFORA su braškėmis, 2,4 % rieb", null, 2.29m, 0m),
+                ("Baltyminis batonėlis MAXI NUTRITION su braškių, jogurt", "2,29 X 2 vnt", 4.58m, 0m),
+                ("Šaldyti vištienos krūt. kepsneliai DONUTS MR TORES s", null, 3.69m, 0m),
+                ("Stalčiaus organizatorius, 3 vnt", "5,99 X 2 vnt", 11.98m, 5.48m),
+            ],
+            result.Items.Select(i => (i.Name, i.Quantity, i.Amount, i.Discount)));
+        Assert.Equal(-0.03m, Assert.Single(result.Adjustments).Amount);
+        Assert.Empty(result.UnreadLines);
+        Assert.Equal(result.Total, Balance(result));
+    }
+
+    [Fact]
+    public void A_lidl_e_receipt_drops_article_codes_and_keeps_each_deposit_with_its_drink()
+    {
+        var result = Parse(FakeReceiptReader.LidlDeposits);
+
+        Assert.Equal(
+            ("UAB \"Lidl Lietuva\"", "Ežero g. 3, Kaunas", new DateOnly(2026, 9, 28), 14.47m),
+            (result.Merchant, result.Address, result.Date, result.Total));
+        Assert.Equal(
+            [
+                "Energ.gėrim.LEWIS HAMILTON", "Rudieji plevagrybiai", "Konserv.lalieji žirneliai", "PEPSI zero Gaz.galvosis gėr",
+                "Nulupt.smulkin. pom. su bazil", "Šaltinio vanduo KIDS", "Tilandsija", "UAT grietinėlė 18%", "PEPSI zero Gaz.galvosis gėr",
+                "Svogūnai raudonieji",
+            ],
+            result.Items.Select(i => i.Name));
+        Assert.Equal([0.10m, 0m, 0m, 0.10m, 0m, 0.10m, 0m, 0m, 0.10m, 0m], result.Items.Select(i => i.Deposit));
+        Assert.Equal(("0,49 x 0,872 kg", 0.43m), (result.Items[^1].Quantity, result.Items[^1].Amount));
+        Assert.Empty(result.UnreadLines);
+        Assert.Equal(result.Total, Balance(result));
+    }
+
+    [Fact]
+    public void An_iki_app_receipt_reads_the_row_under_each_name_with_its_discount_column()
+    {
+        var result = Parse(FakeReceiptReader.IkiApp);
+
+        Assert.Equal(
+            ("IKI - LAMPĖDIS RAUDONDVARIO PL. 169B", new DateOnly(2026, 8, 12), Currency.Eur, 7.01m),
+            (result.Merchant, result.Date, result.Currency, result.Total));
+        Assert.Equal(
+            [
+                ("OSHEE HYDROBOOST CITRINŲ SK NEGAZUOT/IZOT GĖR. SU ELEKTROL. BEI VIT. 0,555L", 3.38m, 0m),
+                ("KINDER SHOKO-BONS SALDAINIAI", 3.69m, 1.85m),
+                ("PIZZA DONUT MARGHERITA 84G", 0.60m, 0m),
+                ("MILKA PIENINIS BATONĖLIS SU VANIL.SK./PIENINIU ĮDARU IR KAKAV.SAUSAINIŲ GAB", 0.99m, 0m),
+                ("PILNA VIENKARTINĖ PLASTIKO PAKUOTĖ", 0.20m, 0m),
+            ],
+            result.Items.Select(i => (i.Name, i.Amount, i.Discount)));
+        Assert.Equal("1.69 € 2.000", result.Items[0].Quantity);
+        Assert.Empty(result.UnreadLines);
+        Assert.Equal(result.Total, Balance(result));
+    }
+
+    [Fact]
+    public void An_iki_app_receipt_with_many_discounts_balances_to_its_total()
+    {
+        var result = Parse(FakeReceiptReader.IkiAppDiscounts);
+
+        Assert.Equal(8.08m, result.Total);
+        Assert.Equal([0.20m, 0.34m, 0m, 1.24m, 0.48m, 2.99m], result.Items.Select(i => i.Discount));
+        Assert.Equal(result.Total, Balance(result));
+    }
+
+    [Fact]
     public void A_simple_english_receipt_is_read()
     {
         var result = ReceiptTextParser.Parse("""
@@ -164,6 +265,91 @@ public sealed class ReceiptTextParserTests
             """).Value!;
 
         Assert.Null(result.Address);
+    }
+
+    [Fact]
+    public void A_lithuanian_invoice_is_read_from_its_item_table_with_the_vat_as_an_adjustment()
+    {
+        var result = Parse(FakeReceiptReader.Invoice);
+
+        Assert.True(result.IsInvoice);
+        Assert.Equal(
+            ("UAB „Šviesos tinklai“", new DateOnly(2026, 9, 30), new DateOnly(2026, 10, 15), "ŠT 2026-0931", Currency.Eur, 1597.20m),
+            (result.Merchant, result.Date, result.DueDate, result.InvoiceNumber, result.Currency, result.Total));
+        Assert.Equal(
+            [("Interneto paslauga 1 Gbps", "mėn. 1 20,00", 20m), ("Maršrutizatorius", "vnt 1 1 000,00", 1000m), ("Įrengimo darbai", "val 2 150,00", 300m)],
+            result.Items.Select(i => (i.Name, i.Quantity, i.Amount)));
+        Assert.Equal(new ReceiptAdjustment(ReceiptAdjustmentKind.Vat, "PVM 21%", 277.20m), Assert.Single(result.Adjustments));
+        Assert.Null(result.Address);
+        Assert.Empty(result.UnreadLines);
+        Assert.Equal(result.Total, Balance(result));
+    }
+
+    [Fact]
+    public void An_english_invoice_is_read_with_its_number_and_due_date()
+    {
+        var result = Parse(FakeReceiptReader.InvoiceEnglish);
+
+        Assert.Equal(
+            ("Northwind Hosting Ltd", new DateOnly(2026, 9, 15), new DateOnly(2026, 9, 29), "INV-2026-0042", Currency.Eur, 308.55m),
+            (result.Merchant, result.Date, result.DueDate, result.InvoiceNumber, result.Currency, result.Total));
+        Assert.Equal([("Web hosting plan 12 months", 240m), ("Domain renewal", 15m)], result.Items.Select(i => (i.Name, i.Amount)));
+        Assert.Equal(new ReceiptAdjustment(ReceiptAdjustmentKind.Vat, "VAT 21%", 53.55m), Assert.Single(result.Adjustments));
+        Assert.Equal(result.Total, Balance(result));
+    }
+
+    [Fact]
+    public void An_invoice_with_rows_that_include_vat_gets_no_vat_adjustment()
+    {
+        var result = ReceiptTextParser.Parse("""
+            Sąskaita faktūra Nr. 15
+            Pardavėjas: MB "Medžio darbai"
+            Pavadinimas Kiekis Suma
+            Lentynos gamyba 1 121,00 121,00
+            PVM 21% 21,00
+            Iš viso 121,00
+            """).Value!;
+
+        Assert.Equal(("MB \"Medžio darbai\"", "15", 121m), (result.Merchant, result.InvoiceNumber, result.Total));
+        Assert.Empty(result.Adjustments);
+        Assert.Equal(result.Total, Balance(result));
+    }
+
+    [Fact]
+    public void A_total_without_vat_is_not_the_total_and_a_wrapped_row_keeps_its_name()
+    {
+        var result = ReceiptTextParser.Parse("""
+            Invoice No. 9
+            Customer: Jonas Jonaitis Supplier: Ona Onaitė
+            Description Qty Amount
+            Consulting services for the garden
+            2 25.00 50.00
+            Iš viso be PVM 50,00
+            PVM 21% 10,50
+            Iš viso su PVM 60,50
+            """).Value!;
+
+        Assert.Equal(("Ona Onaitė", 60.50m), (result.Merchant, result.Total));
+        Assert.Equal(("Consulting services for the garden", "2 25.00", 50m), (Assert.Single(result.Items).Name, result.Items[0].Quantity, result.Items[0].Amount));
+        Assert.Equal(10.50m, Assert.Single(result.Adjustments).Amount);
+    }
+
+    [Theory]
+    [InlineData("1 299,99", 1299.99)]
+    [InlineData("1.299,99", 1299.99)]
+    [InlineData("1,299.99", 1299.99)]
+    [InlineData("12 345 678,90", 12345678.90)]
+    public void An_amount_with_thousands_separators_is_read_whole(string printed, decimal amount)
+    {
+        var result = ReceiptTextParser.Parse($"""
+            SENUKAI
+            2026 m. spalio 2 d.
+            Šaldytuvas {printed} A
+            Mokėti {printed}
+            """).Value!;
+
+        Assert.Equal((amount, amount, new DateOnly(2026, 10, 2)), (result.Total, Assert.Single(result.Items).Amount, result.Date));
+        Assert.False(result.IsInvoice);
     }
 
     [Theory]

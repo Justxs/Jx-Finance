@@ -25,7 +25,10 @@ public sealed record ReceiptResultResponse(
     IReadOnlyList<ReceiptItemResponse> Items,
     IReadOnlyList<ReceiptAdjustmentResponse> Adjustments,
     IReadOnlyList<string> UnreadLines,
-    string? Address = null);
+    string? Address = null,
+    bool IsInvoice = false,
+    string? InvoiceNumber = null,
+    DateOnly? DueDate = null);
 
 public sealed record ReceiptItemResponse(
     string Name,

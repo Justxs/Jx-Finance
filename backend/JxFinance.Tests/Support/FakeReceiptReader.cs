@@ -12,6 +12,13 @@ public sealed class FakeReceiptReader : IReceiptReader
     public const string Iki = "iki-2026-09-22";
     public const string Lidl = "lidl-2026-09-24";
     public const string Return = "return-2026-09-27";
+    public const string MaximaEmail = "maxima-email-2026-09-22";
+    public const string MaximaPaper = "maxima-paper-2026-07-09";
+    public const string LidlDeposits = "lidl-deposits-2026-09-28";
+    public const string IkiApp = "iki-app-2026-08-12";
+    public const string IkiAppDiscounts = "iki-app-2026-07-02";
+    public const string Invoice = "invoice-2026-09-30";
+    public const string InvoiceEnglish = "invoice-english-2026-09-15";
 
     private readonly ConcurrentQueue<byte[]> calls = new();
 

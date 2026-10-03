@@ -17,7 +17,10 @@ public static class ReceiptMappers
         [.. result.Items.Select(i => new ReceiptItemResponse(i.Name, i.Quantity, i.Amount, i.Discount, i.Deposit, i.CategoryId, i.Remembered))],
         [.. result.Adjustments.Select(a => new ReceiptAdjustmentResponse(a.Kind, a.Label, a.Amount))],
         result.UnreadLines ?? [],
-        result.Address);
+        result.Address,
+        result.IsInvoice,
+        result.InvoiceNumber,
+        result.DueDate);
 
     public static ReceiptCandidateResponse ToCandidate(this Transaction transaction) => new(
         transaction.Id.Value,

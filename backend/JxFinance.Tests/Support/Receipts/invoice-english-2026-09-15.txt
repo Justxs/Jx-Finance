@@ -1,0 +1,14 @@
+INVOICE
+Invoice No. INV-2026-0042
+Date of issue: 15/09/2026
+Due date: 29/09/2026
+Seller: Northwind Hosting Ltd
+12 Harbour Road, Riga
+Bill to: Jonas Jonaitis
+Description Qty Unit price Amount
+Web hosting plan 12 months 1 240.00 240.00
+Domain renewal 1 15.00 15.00
+Subtotal 255.00
+VAT 21% 53.55
+Total due EUR 308.55
+Thank you for your business

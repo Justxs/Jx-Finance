@@ -128,7 +128,19 @@ export function ReceiptReview({
   const source = [result.merchant, result.date ? formatDate(result.date) : null]
     .filter(Boolean)
     .join(", ");
-  const title = source ? t("receipts.reviewTitle", { source }) : t("receipts.reviewTitleBare");
+  const receiptTitle = source
+    ? t("receipts.reviewTitle", { source })
+    : t("receipts.reviewTitleBare");
+  const invoiceTitle = source
+    ? t("receipts.invoiceTitle", { source })
+    : t("receipts.invoiceTitleBare");
+  const title = result.isInvoice ? invoiceTitle : receiptTitle;
+  const invoiceDetails = [
+    result.invoiceNumber ? t("receipts.invoiceNumber", { number: result.invoiceNumber }) : null,
+    result.dueDate ? t("receipts.invoiceDue", { date: formatDate(result.dueDate) }) : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
 
   const groups = groupItems(result.items, choices);
   const fill: ReceiptFill = result.isReturn
@@ -176,6 +188,7 @@ export function ReceiptReview({
       className="sm:max-w-3xl"
     >
       <div className="space-y-5">
+        {invoiceDetails ? <p className="text-sm text-muted-foreground">{invoiceDetails}</p> : null}
         {result.pagesRead < result.pageCount ? (
           <p className="text-sm text-muted-foreground">
             {t("receipts.pagesCut", { read: result.pagesRead, count: result.pageCount })}

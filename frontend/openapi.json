@@ -31818,7 +31818,8 @@
           "discount",
           "voucher",
           "rounding",
-          "other"
+          "other",
+          "vat"
         ],
         "type": "string"
       },
@@ -32135,6 +32136,26 @@
             "type": [
               "null",
               "string"
+            ]
+          },
+          "isInvoice": {
+            "type": "boolean",
+            "default": false
+          },
+          "invoiceNumber": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "dueDate": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/NullableOfDateOnly"
+              }
             ]
           }
         }

@@ -13,13 +13,17 @@ public sealed record ReceiptResult(
     IReadOnlyList<ReceiptItem> Items,
     IReadOnlyList<ReceiptAdjustment> Adjustments,
     IReadOnlyList<string> UnreadLines,
-    string? Address = null)
+    string? Address = null,
+    bool IsInvoice = false,
+    string? InvoiceNumber = null,
+    DateOnly? DueDate = null)
 {
     public const int MaxItems = 200;
     public const int MaxAdjustments = 20;
     public const int MaxUnreadLines = 50;
     public const int TextMaxLength = 200;
     public const int QuantityMaxLength = 40;
+    public const int InvoiceNumberMaxLength = 40;
 }
 
 public sealed record ReceiptItem(
@@ -39,4 +43,5 @@ public enum ReceiptAdjustmentKind
     Voucher,
     Rounding,
     Other,
+    Vat,
 }

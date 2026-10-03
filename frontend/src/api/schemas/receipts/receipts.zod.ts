@@ -107,6 +107,7 @@ export const readReceiptResponseResultItemsItemDepositRegExp = new RegExp("^-?\\
 export const readReceiptResponseResultAdjustmentsItemAmountRegExp = new RegExp(
   "^-?\\d+(\\.\\d{1,8})?$",
 );
+export const readReceiptResponseResultIsInvoiceDefault = false;
 export const readReceiptResponseCandidatesItemAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 
 export const ReadReceiptResponse = zod.object({
@@ -167,13 +168,16 @@ export const ReadReceiptResponse = zod.object({
     ),
     adjustments: zod.array(
       zod.object({
-        kind: zod.enum(["discount", "voucher", "rounding", "other"]),
+        kind: zod.enum(["discount", "voucher", "rounding", "other", "vat"]),
         label: zod.string(),
         amount: zod.stringFormat("decimal", readReceiptResponseResultAdjustmentsItemAmountRegExp),
       }),
     ),
     unreadLines: zod.array(zod.string()),
     address: zod.string().nullish(),
+    isInvoice: zod.boolean().default(readReceiptResponseResultIsInvoiceDefault),
+    invoiceNumber: zod.string().nullish(),
+    dueDate: zod.union([zod.null(), zod.iso.date()]).optional(),
   }),
   candidates: zod.array(
     zod.object({

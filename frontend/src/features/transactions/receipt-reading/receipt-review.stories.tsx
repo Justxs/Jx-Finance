@@ -5,6 +5,7 @@ import {
   categories,
   ids,
   receiptReading,
+  receiptReadingInvoice,
   receiptReadingMisread,
   receiptReadingOneCategory,
   receiptReadingPdf,
@@ -143,6 +144,20 @@ export const PdfPagesCut: Story = {
   args: { reading: receiptReadingPdf },
   play: async () => {
     await expect(await linesText()).toMatch(/Only the first 3 of 7 pages were read\./u);
+  },
+};
+
+export const Invoice: Story = {
+  args: { reading: receiptReadingInvoice, amount: "1597.20" },
+  play: async () => {
+    await openedDialog();
+    await expect(
+      screen.getByRole("heading", { name: /Invoice from UAB „Šviesos tinklai“/u }),
+    ).toBeVisible();
+    const text = await linesText();
+    await expect(text).toMatch(/No\. ŠT 2026-0931 · due/u);
+    await expect(text).toMatch(/PVM 21%/u);
+    await expect(text).not.toMatch(/The items add up to/u);
   },
 };
 

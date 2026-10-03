@@ -133,6 +133,30 @@ export const receiptReadingPdf: ReceiptReadingResponse = {
   result: { ...maximaReceipt, merchant: "Pigu.lt", pagesRead: 3, pageCount: 7 },
 };
 
+export const receiptReadingInvoice: ReceiptReadingResponse = {
+  ...receiptReading,
+  result: {
+    merchant: "UAB „Šviesos tinklai“",
+    date: "2026-09-30",
+    currency: "eur",
+    total: "1597.20",
+    isReturn: false,
+    pagesRead: 1,
+    pageCount: 1,
+    items: [
+      item("Interneto paslauga 1 Gbps", "20.00", null, { quantity: "mėn. 1 20,00" }),
+      item("Maršrutizatorius", "1000.00", null, { quantity: "vnt 1 1 000,00" }),
+      item("Įrengimo darbai", "300.00", null, { quantity: "val 2 150,00" }),
+    ],
+    adjustments: [{ kind: "vat", label: "PVM 21%", amount: "277.20" }],
+    unreadLines: [],
+    address: null,
+    isInvoice: true,
+    invoiceNumber: "ŠT 2026-0931",
+    dueDate: "2026-10-15",
+  },
+};
+
 export const receiptReadingUnreadLines: ReceiptReadingResponse = {
   ...receiptReading,
   result: {

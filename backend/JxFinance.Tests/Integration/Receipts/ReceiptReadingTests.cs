@@ -428,6 +428,23 @@ public sealed class ReceiptReadingTests(DataFixture fixture) : IntegrationTestBa
     }
 
     [Fact]
+    public async Task An_invoice_answers_its_number_and_due_date_and_offers_a_payment_made_by_the_due_date()
+    {
+        Reader.Reset();
+        using var member = await CreateUserClientAsync();
+        var account = await CreateAccountAsync(client: member);
+        var paid = await CreateTransactionAsync(member, account, null, "expense", "1597.20", "2026-10-14", "UAB Šviesos tinklai");
+        await CreateTransactionAsync(member, account, null, "expense", "1597.20", "2026-10-20", "Too late");
+        Reader.Answer = FakeReceiptReader.Invoice;
+
+        var reading = await ReadOkAsync(await ReadUploadAsync(member, Jpeg()));
+
+        Assert.Equal((true, "ŠT 2026-0931", new DateOnly(2026, 10, 15)), (reading.Result.IsInvoice, reading.Result.InvoiceNumber, reading.Result.DueDate));
+        Assert.Equal(("vat", "277.20"), (reading.Result.Adjustments[0].Kind, reading.Result.Adjustments[0].Amount));
+        Assert.Equal(paid.Id, Assert.Single(reading.Candidates).Id);
+    }
+
+    [Fact]
     public async Task The_purge_keeps_readings_while_their_file_exists_and_removes_the_rest_after_a_day()
     {
         Reader.Reset();
@@ -586,7 +603,10 @@ public sealed class ReceiptReadingTests(DataFixture fixture) : IntegrationTestBa
         int PageCount,
         List<ItemDto> Items,
         List<AdjustmentDto> Adjustments,
-        List<string> UnreadLines);
+        List<string> UnreadLines,
+        bool IsInvoice = false,
+        string? InvoiceNumber = null,
+        DateOnly? DueDate = null);
 
     private sealed record ItemDto(string Name, string? Quantity, string Amount, string Discount, string Deposit, Guid? CategoryId, bool Remembered);
 
