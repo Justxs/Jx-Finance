@@ -71,6 +71,6 @@ Not implemented: per-user reporting currency, manual exchange rates, PWA/offline
 | --- | --- |
 | Step-by-step user flows | [User flows](../user-flows.md) |
 | Entities, money and currency rules | [Data model](../data-model.md) |
-| Routes, endpoint layout, error envelope | [API surface](../api.md) |
+| Routes, endpoint layout, error envelope | [API surface](../api.md), [API routes](../api-routes.md) |
 | Every mechanism in prose, per area | [Architecture](../architecture/README.md) |
 | Decisions and open questions, per topic | [Decisions](../decisions/README.md) |

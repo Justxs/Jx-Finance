@@ -34,7 +34,7 @@ Finished when `just test` passes, except for `OpenApi_document_matches_the_appro
 just gen
 ```
 
-This exports the OpenAPI document from the backend build into `frontend/openapi.json`, the single committed copy of the contract, and regenerates the React Query hooks, MSW handlers, zod schemas and the route list in [API surface](api.md#routes); notes on a route go under its Route notes. Review the diff of `frontend/openapi.json` first: it is the API change as a client sees it. Commit the contract and the generated folders together with the backend change; CI regenerates both and fails on any difference.
+This exports the OpenAPI document from the backend build into `frontend/openapi.json`, the single committed copy of the contract, and regenerates the React Query hooks, MSW handlers, zod schemas and the route list in [API routes](api-routes.md); notes on a route go under its area in [Route notes](api.md#route-notes). Review the diff of `frontend/openapi.json` first: it is the API change as a client sees it. Commit the contract and the generated folders together with the backend change; CI regenerates both and fails on any difference.
 
 A new mutation must be listed in `src/api/invalidation.ts`, either with the query roots it makes stale or in `mutationsWithoutInvalidation`; `invalidation.test.ts` fails otherwise. A new error code needs an English and a Lithuanian text under `serverErrors` in `src/locales/*/common.json`; `server-error-codes.test.ts` fails otherwise.
 
@@ -61,7 +61,7 @@ The recipe creates the component, the stories `Default` (with a `play` function)
 | Command | What it runs | When |
 | --- | --- | --- |
 | `just test-fe <path>`, `just test-class <Name>`, `just test-method <Name>` | the frontend tests of one file or folder; one backend test class or method | while editing |
-| `just check-changed` | lint, format and type checks for the changed frontend files, backend format and unit tests, docs links, each only when its area changed | before a commit |
+| `just check-changed` | lint, format and type checks and the tests in the folder of the changed frontend files, backend format and unit tests, docs links, each only when its area changed | before a commit |
 | `just check-fast` | backend format, build and unit tests, frontend types, lint, format, unit and DOM tests | before a push; no Docker needed |
 | `just test-stories` | every story's `play` function and an axe scan, in jsdom, about three minutes | after touching components, stories, fixtures or handlers |
 | `just e2e` | the smoke tests and the user-flow specs against a throwaway Docker stack on port 8089 | after touching auth, routing, startup, Docker files or a flow that a spec in `frontend/e2e` covers |

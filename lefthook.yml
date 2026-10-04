@@ -12,9 +12,10 @@ pre-commit:
       glob: "*.{ts,tsx,mjs}"
       run: node_modules/.bin/oxlint --no-error-on-unmatched-pattern {staged_files}
     - name: backend format
+      root: backend/
       glob: "backend/**/*.cs"
       exclude: "backend/JxFinance.Api/Infrastructure/Data/Migrations/*"
-      run: dotnet format whitespace backend --folder --include {staged_files}
+      run: dotnet format whitespace . --folder --include {staged_files}
       stage_fixed: true
     - name: docs links
       glob: "*.md"

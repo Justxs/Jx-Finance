@@ -83,6 +83,7 @@
     ],
     "shadcn/require-static-classes": "error",
     "typescript/no-deprecated": "error",
+    "jx-code/no-comments": "error",
     "react/rules-of-hooks": "error",
     "eqeqeq": [
       "error",

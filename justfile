@@ -59,18 +59,18 @@ migrate-list:
 migrate-script:
     cd backend; $env:ConnectionStrings__Default = "{{export_connection}}"; dotnet ef migrations script --configuration Release --idempotent --project JxFinance.Api
 
-# Export the API contract from the backend build on a free port (no database needed; works while the dev API runs) into frontend/openapi.json and regenerate the frontend client, MSW handlers, zod schemas and the route list in docs/api.md.
+# Export the API contract from the backend build on a free port (no database needed; works while the dev API runs) into frontend/openapi.json and regenerate the frontend client, MSW handlers, zod schemas and the route list in docs/api-routes.md.
 [group('gen')]
 gen:
     node scripts/gen.mjs
 
-# Regenerate only the frontend code and the route list in docs/api.md from the contract already in frontend/openapi.json.
+# Regenerate only the frontend code and the route list in docs/api-routes.md from the contract already in frontend/openapi.json.
 [group('gen')]
 gen-client:
     nub run --cwd frontend orval
     node scripts/api-docs.mjs
 
-# Fail when the committed contract, generated client or docs/api.md route list differs from what the backend produces now.
+# Fail when the committed contract, generated client or docs/api-routes.md route list differs from what the backend produces now.
 [group('gen')]
 gen-check:
     node scripts/gen.mjs --check
@@ -108,7 +108,7 @@ check-frontend:
     nub run --cwd frontend format:check
     nub run --cwd frontend test
 
-# Fail on a broken link or heading anchor in the Markdown docs, a docs file name with spaces or capitals, a line too long for an agent to read whole, a code path or type name in docs/ or AGENTS.md the code no longer has, a stale route list in docs/api.md, and DESIGN.md naming a component, path, CSS variable or color the code no longer has.
+# Fail on a broken link or heading anchor in the Markdown docs, a docs file name with spaces or capitals, a line or a section too long for an agent to read whole, a code path or type name in docs/ or AGENTS.md the code no longer has, a stale route list in docs/api-routes.md, and DESIGN.md naming a component, path, CSS variable or color the code no longer has.
 [group('check')]
 check-docs:
     node scripts/check-docs.mjs
@@ -118,7 +118,7 @@ check-docs:
 diagrams:
     node scripts/render-diagrams.mjs
 
-# Fail when backend code is not formatted or breaks a code style rule.
+# Fail when backend code is not formatted, breaks a code style rule or holds a comment (migrations aside).
 [group('check')]
 format-check-backend:
     node scripts/format-backend.mjs --check

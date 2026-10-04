@@ -11,12 +11,12 @@ Documentation lives in [`docs/`](docs/README.md) and describes the current code.
 | Change or fix a feature | `docs/features/<feature>.md`, then `docs/decisions/<topic>.md` before changing behaviour it covers |
 | Add a feature or endpoint | [docs/adding-a-feature.md](docs/adding-a-feature.md) |
 | Understand a mechanism (auth, jobs, sharing, currency, contract) | `docs/architecture/<area>.md`, indexed in [docs/architecture/README.md](docs/architecture/README.md) |
-| Touch the UI | [DESIGN.md](DESIGN.md), [PRODUCT.md](PRODUCT.md), [docs/architecture/visual-system.md](docs/architecture/visual-system.md) |
-| Touch an endpoint, route or error | [docs/api.md](docs/api.md), [docs/architecture/api-contract.md](docs/architecture/api-contract.md) |
-| Touch entities or migrations | [docs/data-model.md](docs/data-model.md) |
-| Write tests or stories | [docs/architecture/testing.md](docs/architecture/testing.md) |
+| Touch the UI | The [Components](DESIGN.md#components) entry you change and [Do's and Don'ts](DESIGN.md#dos-and-donts) in DESIGN.md; the matching section of [docs/architecture/visual-system.md](docs/architecture/visual-system.md); [PRODUCT.md](PRODUCT.md) for a new screen or new copy |
+| Touch an endpoint, route or error | [How endpoints are written](docs/api.md#how-endpoints-are-written), [Errors](docs/api.md#errors) and the area's section of [Route notes](docs/api.md#route-notes); [docs/api-routes.md](docs/api-routes.md) to find a route; [Error codes](docs/architecture/api-contract.md#error-codes) for a new code |
+| Touch entities or migrations | The entity's section of [docs/data-model.md](docs/data-model.md) and [Model configuration and migrations](docs/data-model.md#model-configuration-and-migrations) |
+| Write tests or stories | [Backend tests](docs/architecture/testing.md#backend-tests), or the section of [Frontend tests](docs/architecture/testing.md#frontend-tests) that fits (story runner, unit and DOM tests, helpers, end-to-end) |
 
-The feature table in [docs/features/README.md](docs/features/README.md) maps every feature to its backend folder, frontend folder and feature switch.
+The feature table in [docs/features/README.md](docs/features/README.md) maps every feature to its backend folder, frontend folder and feature switch. Pages are split into headed sections, none longer than about 4,000 tokens: list a page's headings with `grep -n "^#"` and read only the section you need.
 
 ## Layout
 
@@ -24,7 +24,7 @@ The feature table in [docs/features/README.md](docs/features/README.md) maps eve
 - `backend/JxFinance.Api/{Domain,Infrastructure,Common,Extensions}`: framework-free domain types; EF, jobs and integrations; shared helpers, errors and validation.
 - `backend/JxFinance.Tests/{Architecture,Integration,Unit,Support}`: xUnit v3; integration tests run against real PostgreSQL via Testcontainers.
 - `frontend/src/{features,components,components/ui,routes,lib,stores,locales,storybook}`: one folder per component, holding its story; `locales/en` and `locales/lt` must match.
-- Generated, never edited by hand: `frontend/openapi.json`, `frontend/src/api/generated/`, `frontend/src/api/schemas/`, `frontend/src/route-tree.gen.ts`, `backend/JxFinance.Api/Infrastructure/Data/Migrations/`, and the Routes section of `docs/api.md`.
+- Generated, never edited by hand: `frontend/openapi.json`, `frontend/src/api/generated/`, `frontend/src/api/schemas/`, `frontend/src/route-tree.gen.ts`, `backend/JxFinance.Api/Infrastructure/Data/Migrations/` and `docs/api-routes.md`.
 - `scripts/`: Node and PowerShell helpers behind the `justfile` recipes.
 
 ## Commands
@@ -34,21 +34,26 @@ The development machine is Windows with Windows PowerShell 5.1 (`powershell.exe`
 | Command | Does |
 | --- | --- |
 | `just setup`, `just dev` | First checkout; run PostgreSQL, API and Vite together |
-| `just check-changed` | Lint, format and type checks, backend format plus `test-unit`, and docs checks for only the areas changed against HEAD; no frontend tests |
+| `just check-changed` | Lint, format and type checks, the frontend tests beside the changed files, backend format plus `test-unit`, and docs checks for only the areas changed against HEAD |
 | `just check-fast` | Docs links, backend format, build and unit tests, frontend types, lint, format and unit tests; no Docker |
 | `just test` | Backend tests; needs Docker; about two and a half minutes |
 | `just test-unit`, `just test-class <Name>`, `just test-method <Name>` | Backend unit and architecture tests without Docker; one backend test class; one test method |
 | `just test-fe <path>` | Frontend unit and DOM tests of one file or folder, relative to `frontend` |
 | `just test-stories` | Every story's `play` function plus an axe scan, in jsdom; about three minutes |
 | `just check` | Everything CI runs except end-to-end tests |
-| `just gen` | After an API change: export the contract and regenerate the client, MSW handlers, zod schemas and the route list in `docs/api.md` |
+| `just gen` | After an API change: export the contract and regenerate the client, MSW handlers, zod schemas and the route list in `docs/api-routes.md` |
 | `just migrate-add <Name>` | Create an EF migration after a model change, from a clean Release build; refuses an empty one |
 | `just new-endpoint <Tag> <Name> <verb> "<route>" [--service]`, `just new-component <feature> <name>` | Scaffold a backend slice with its integration test (`--service` adds and calls the service method), or a frontend component with its stories and DOM test |
 | `just fix` | Auto-fix lint and formatting on both sides |
-| `just check-docs` | Check every Markdown link and heading anchor, code paths and type names in `docs/` and this file, the `docs/api.md` route list, and DESIGN.md against the code |
+| `just check-docs` | Check every Markdown link and heading anchor, code paths and type names in `docs/` and this file, sections too long to read whole, the `docs/api-routes.md` route list, and DESIGN.md against the code |
 | `just diagrams` | Render the PlantUML system diagrams in `docs/architecture/diagrams` to SVG; needs Java |
 
 Put a wall-clock timeout on long commands. Never start Storybook browser test runs (Vitest browser mode or Playwright over stories): they crashed and hung before. Playwright is only for `frontend/e2e` through `just e2e`.
+
+## Seeing a change
+
+- A component or page: open its story in the browser pane through the `storybook` entry of `.claude/launch.json` (port 6006, or `storybook-alt` on 6016 when the owner's Storybook holds 6006) and look at it in both themes. Its `play` functions run in `just test-stories`.
+- The running app needs the development database, which runs in Docker. Never start Docker or `docker compose` yourself and never run Docker-backed tests in the foreground: run `just test-class` on integration tests only in the background with a hard timeout. When the owner has `just dev` running, open `http://localhost:5173` and ask them for a demo account (`just seed <email>` fills one).
 
 ## Traps
 
@@ -64,7 +69,7 @@ Put a wall-clock timeout on long commands. Never start Storybook browser test ru
 
 General:
 
-- No code comments of any kind, in C#, TypeScript, YAML, JSON or PowerShell. Use clear names and small functions; put any explanation in `docs/`.
+- No code comments of any kind, in C#, TypeScript, YAML, JSON or PowerShell. Use clear names and small functions; put any explanation in `docs/`. The frontend lint rule `jx-code/no-comments` and `just format-check-backend` fail on one.
 - Write the least code that meets the need. Reuse existing components, helpers and response types before adding new ones. Avoid one-use abstractions and branches for impossible cases.
 - Never use deprecated APIs; use the replacement the deprecation names. The frontend lint enforces `typescript/no-deprecated`.
 - Use the newest package versions, and do major-version migrations properly rather than pinning an old major.
@@ -99,7 +104,8 @@ Docs describe behaviour, not code layout, so a change is finished when they matc
 
 ## Git
 
-- Commit only when asked, directly on `master`; no feature branches.
+- Commit only when asked, directly on `master`; no feature branches, and no agents in worktree isolation.
+- No `Co-Authored-By` or other attribution trailers in commit messages, even when a tool suggests one.
 - Subjects are conventional commits, such as `feat(goals): archive a finished goal`, with types `feat fix refactor perf test docs build ci chore style revert`; a hook enforces this.
 - One commit carries a whole change: backend, contract, generated client, frontend and docs.
 - The pre-commit hook formats staged files and checks docs links; the pre-push hook type-checks the frontend and builds the backend, and runs no tests. Never skip hooks.

@@ -101,3 +101,17 @@ tester.run("layer-imports", plugin.rules["layer-imports"], {
     },
   ],
 });
+
+tester.run("no-comments", plugin.rules["no-comments"], {
+  valid: [
+    `const url = "https://example.com/a";`,
+    `const text = "/* not a comment */";`,
+    `/// <reference types="vite/client" />`,
+  ],
+  invalid: [
+    { code: `const a = 1; // why`, errors: 1 },
+    { code: `/* block */ const a = 1;`, errors: 1 },
+    { code: `/** doc */\nexport function a() {}`, errors: 1 },
+    { code: `// @ts-expect-error\nconst a: number = "";`, errors: 1 },
+  ],
+});

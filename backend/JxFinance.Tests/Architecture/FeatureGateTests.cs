@@ -60,7 +60,7 @@ public sealed class FeatureGateTests
             .Select(gate => gate.Prefix)
             .ToList();
 
-        Assert.Empty(empty);
+        Assert.True(empty.Count == 0, $"No endpoint lives under these gated prefixes any more; remove them from GatedPrefixes in this test:{string.Join(", ", empty)}");
     }
 
     private static Feature? ExpectedFeature(RouteEndpoint endpoint)

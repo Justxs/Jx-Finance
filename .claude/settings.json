@@ -10,33 +10,56 @@
       "PowerShell(just test-class *)",
       "PowerShell(just test-method *)",
       "PowerShell(just test-fe *)",
+      "PowerShell(just test-stories)",
       "PowerShell(just gen)",
+      "PowerShell(just gen-client)",
+      "PowerShell(just gen-check)",
       "PowerShell(just fix)",
+      "PowerShell(just new-endpoint *)",
+      "PowerShell(just new-component *)",
+      "PowerShell(just migrate-add *)",
+      "PowerShell(just migrate-list)",
       "PowerShell(nub run test*)",
       "PowerShell(nub run lint)",
       "PowerShell(nub run format:check)",
       "PowerShell(nub exec tsc -b)",
       "PowerShell(nub exec oxlint *)",
       "PowerShell(nub exec oxfmt *)",
+      "PowerShell(nub exec --cwd frontend vitest run *)",
       "PowerShell(dotnet build *)",
       "PowerShell(dotnet test *)",
       "Bash(node scripts/check-docs.mjs)",
+      "Bash(node scripts/check-changed.mjs)",
       "Bash(node scripts/format-backend.mjs*)",
       "Bash(git status*)",
       "Bash(git diff*)",
       "Bash(git log*)",
-      "Bash(git show*)"
+      "Bash(git show*)",
+      "Bash(git worktree list)"
     ]
   },
   "hooks": {
     "PreToolUse": [
       {
-        "matcher": "Bash|PowerShell",
+        "matcher": "Bash|PowerShell|Edit|Write|MultiEdit",
         "hooks": [
           {
             "type": "command",
             "command": "node \"${CLAUDE_PROJECT_DIR}/.claude/hooks/guard.mjs\"",
             "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PROJECT_DIR}/.claude/hooks/format.mjs\"",
+            "timeout": 30,
+            "statusMessage": "Formatting"
           }
         ]
       }

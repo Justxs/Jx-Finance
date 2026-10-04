@@ -220,9 +220,32 @@ const layerImports = {
   },
 };
 
+const noComments = {
+  meta: {
+    type: "suggestion",
+    docs: { description: "Disallow code comments." },
+    messages: {
+      comment:
+        "No comments in code: use clearer names or a smaller function, and put any explanation in docs/.",
+    },
+  },
+  create(context) {
+    return {
+      Program() {
+        for (const comment of context.sourceCode.getAllComments()) {
+          if (!comment.value.startsWith("/ <reference ")) {
+            context.report({ loc: comment.loc, messageId: "comment" });
+          }
+        }
+      },
+    };
+  },
+};
+
 export default {
   meta: { name: "jx-code" },
   rules: {
+    "no-comments": noComments,
     "no-cross-feature-import": noCrossFeatureImport,
     "no-key-listener": noKeyListener,
     "no-raw-browser-api": noRawBrowserApi,

@@ -27,7 +27,7 @@ public sealed partial class EndpointContractTests
             .Select(Name)
             .ToList();
 
-        Assert.Empty(missing);
+        AssertNone(missing, "These endpoints call Throttle(...) without declaring 429; add Description(d => d.Produces(429)) next to it:");
     }
 
     [Fact]
@@ -39,7 +39,7 @@ public sealed partial class EndpointContractTests
             .Select(Name)
             .ToList();
 
-        Assert.Empty(missing);
+        AssertNone(missing, "These endpoints lack a summary or a tag; add a <Name>Summary class beside the endpoint and call Group<TagGroup>() in Configure:");
     }
 
     [Fact]
@@ -55,7 +55,7 @@ public sealed partial class EndpointContractTests
             .Select(Name)
             .ToList();
 
-        Assert.Empty(missing);
+        AssertNone(missing, "These endpoints lost the 401 or 403 that ApiPipelineExtensions declares for every endpoint; keep the global defaults when calling Description(...):");
     }
 
     [Fact]
@@ -69,8 +69,11 @@ public sealed partial class EndpointContractTests
             .Select(file => Path.GetRelativePath(endpoints, file))
             .ToList();
 
-        Assert.Empty(offenders);
+        AssertNone(offenders, "These endpoints answer through Send.NotFoundAsync, Send.UnauthorizedAsync or Send.ForbiddenAsync; return a DomainError from the service and answer with Send.OkOrProblemAsync or Send.ProblemAsync:");
     }
+
+    private static void AssertNone(List<string> offenders, string fix) =>
+        Assert.True(offenders.Count == 0, string.Join(Environment.NewLine, [fix, .. offenders]));
 
     private static IEnumerable<RouteEndpoint> Endpoints() =>
         FastEndpointsPipeline.Endpoints.Where(endpoint => endpoint.Metadata.GetMetadata<EndpointDefinition>() is not null);

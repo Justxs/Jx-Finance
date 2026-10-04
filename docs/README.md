@@ -11,7 +11,7 @@ These pages describe what the current code does, not a wishlist, and not how it 
 | What is in scope, what is deliberately left out? | [Features and scope](scope.md) |
 | How does a user get something done? | [User flows](user-flows.md) |
 | Which entities and money rules exist? | [Data model](data-model.md) |
-| How is an endpoint written, which routes exist, what does an error look like? | [API surface](api.md) |
+| How is an endpoint written, which routes exist, what does an error look like? | [API surface](api.md), [API routes](api-routes.md) |
 | How does mechanism Y work, and why is it built that way? | [Architecture](architecture/README.md), then `architecture/<area>.md` |
 | What was decided about Z, and what was rejected? | [Decisions](decisions/README.md), then `decisions/<topic>.md` |
 | How do I add a feature end to end? | [Adding a feature](adding-a-feature.md) |
@@ -29,4 +29,4 @@ These pages describe what the current code does, not a wishlist, and not how it 
 - `plans/`: designs for features not built yet, deleted once the feature ships.
 - The top-level pages cover the whole product.
 
-File names are lowercase kebab-case without numbers, so that paths stay stable and need no quoting. `just check-docs` checks every link and heading anchor, that the code paths and type names these pages and AGENTS.md put in backticks still exist, that the route list in [API surface](api.md#routes) matches the contract, and that the components, paths, CSS variables and frontmatter colors named in [DESIGN.md](../DESIGN.md) still match the code ([Developer tooling](architecture/developer-tooling.md)).
+File names are lowercase kebab-case without numbers, so that paths stay stable and need no quoting. `just check-docs` checks every link and heading anchor, that the code paths and type names these pages and AGENTS.md put in backticks still exist, that the route list in [API routes](api-routes.md) matches the contract, that no section runs longer than 16,000 characters before the next heading, and that the components, paths, CSS variables and frontmatter colors named in [DESIGN.md](../DESIGN.md) still match the code ([Developer tooling](architecture/developer-tooling.md)).

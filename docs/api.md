@@ -1,6 +1,6 @@
 # API surface
 
-The contract, `frontend/openapi.json`, is the authoritative request and response schema; `just gen` regenerates it, the frontend client and the [route list](#routes) below.
+The contract, `frontend/openapi.json`, is the authoritative request and response schema; `just gen` regenerates it, the frontend client and the [route list](api-routes.md).
 
 All routes require authentication except first-run setup/status and login, plus public diagnostics where explicitly configured. User administration requires the Admin role. Household permissions are checked in its service.
 
@@ -113,441 +113,11 @@ Every 201 goes through `CreatedAsync`, which sets `Location` to a path built fro
 
 ## Routes
 
-Generated from `frontend/openapi.json` by `just gen`, one table per tag; `just check-docs` fails when it is stale. Change an operation's summary in its summary class, not here, and keep notes on routes under [Route notes](#route-notes).
-
-### Accounts
-
-| Method | Route | Summary |
-| --- | --- | --- |
-| GET | `/api/accounts` | List accounts |
-| POST | `/api/accounts` | Create an account |
-| GET | `/api/accounts/archived` | List archived accounts |
-| GET | `/api/accounts/forecast` | Forecast account balances from recurring entries |
-| GET | `/api/accounts/{id}` | Get one account |
-| PUT | `/api/accounts/{id}` | Update an account |
-| DELETE | `/api/accounts/{id}` | Archive an account |
-| GET | `/api/accounts/{id}/reconciliations` | List the reconciliations of an account |
-| POST | `/api/accounts/{id}/reconciliations` | Record a statement balance for an account |
-| GET | `/api/accounts/{id}/reconciliations/preview` | Preview a reconciliation of an account |
-| DELETE | `/api/accounts/{id}/reconciliations/{reconciliationId}` | Delete a reconciliation of an account |
-| POST | `/api/accounts/{id}/restore` | Restore an archived account |
-
-### Attachments
-
-| Method | Route | Summary |
-| --- | --- | --- |
-| DELETE | `/api/attachments/{id}` | Remove a file from a transaction |
-| GET | `/api/attachments/{id}/content` | Download a file of a transaction |
-| PUT | `/api/attachments/{id}/warranty` | Set the warranty end of a receipt |
-| GET | `/api/transactions/{transactionId}/attachments` | List the files of a transaction |
-| POST | `/api/transactions/{transactionId}/attachments` | Attach a file to a transaction |
-
-### Auth
-
-| Method | Route | Summary |
-| --- | --- | --- |
-| POST | `/api/auth/2fa/disable` | Turn two-factor authentication off |
-| POST | `/api/auth/2fa/enable` | Finish two-factor enrolment |
-| POST | `/api/auth/2fa/setup` | Begin two-factor enrolment |
-| POST | `/api/auth/forgot-password` | Ask for a password reset link |
-| POST | `/api/auth/login` | Sign in |
-| POST | `/api/auth/logout` | Sign out |
-| GET | `/api/auth/me` | Get the signed-in profile |
-| GET | `/api/auth/passkeys` | List your passkeys |
-| POST | `/api/auth/passkeys` | Finish adding a passkey |
-| POST | `/api/auth/passkeys/registration-options` | Begin adding a passkey |
-| POST | `/api/auth/passkeys/sign-in` | Sign in with a passkey |
-| POST | `/api/auth/passkeys/sign-in-options` | Begin signing in with a passkey |
-| PUT | `/api/auth/passkeys/{id}` | Rename a passkey |
-| DELETE | `/api/auth/passkeys/{id}` | Remove a passkey |
-| POST | `/api/auth/refresh` | Renew the access token |
-| POST | `/api/auth/reset-password` | Set a new password from a reset link |
-| POST | `/api/auth/send-verification-email` | Send the confirmation email again |
-| GET | `/api/auth/sessions` | List signed-in browsers |
-| POST | `/api/auth/sessions/revoke-others` | Sign out everywhere else |
-| DELETE | `/api/auth/sessions/{id}` | Sign another browser out |
-| GET | `/api/auth/tokens` | List your personal API tokens |
-| POST | `/api/auth/tokens` | Create a personal API token |
-| DELETE | `/api/auth/tokens/{id}` | Revoke a personal API token |
-| POST | `/api/auth/verify-email` | Confirm an email address |
-
-### Setup
-
-| Method | Route | Summary |
-| --- | --- | --- |
-| POST | `/api/setup` | Provision the first administrator |
-| POST | `/api/setup/demo-data` | Load demo data |
-| DELETE | `/api/setup/demo-data` | Remove the demo data and start for real |
-| POST | `/api/setup/finish` | Finish the guided setup |
-| GET | `/api/setup/readiness` | Read what this server can run |
-| GET | `/api/setup/status` | Check whether first-run setup is needed |
-
-### Backups
-
-| Method | Route | Summary |
-| --- | --- | --- |
-| GET | `/api/backups` | List the backups kept on the server |
-| POST | `/api/backups` | Take a backup of the whole installation |
-| POST | `/api/backups/upload` | Add a downloaded backup to the server |
-| PUT | `/api/backups/{id}` | Change the note of a backup |
-| DELETE | `/api/backups/{id}` | Delete a backup |
-| GET | `/api/backups/{id}/download` | Download a backup file |
-| POST | `/api/backups/{id}/restore` | Replace all data with a stored backup |
-
-### Budgets
-
-| Method | Route | Summary |
-| --- | --- | --- |
-| GET | `/api/budgets` | List budgets |
-| POST | `/api/budgets` | Create a budget |
-| GET | `/api/budgets/suggestions` | Suggest budget limits from past spending |
-| PUT | `/api/budgets/{id}` | Update a budget |
-| DELETE | `/api/budgets/{id}` | Delete a budget |
-
-### Categories
-
-| Method | Route | Summary |
-| --- | --- | --- |
-| GET | `/api/categories` | List categories |
-| POST | `/api/categories` | Create a category |
-| PUT | `/api/categories/{id}` | Update a category |
-| DELETE | `/api/categories/{id}` | Delete a category |
-
-### CategorizationRules
-
-| Method | Route | Summary |
-| --- | --- | --- |
-| GET | `/api/categorization-rules` | List categorization rules |
-| POST | `/api/categorization-rules` | Create a categorization rule |
-| POST | `/api/categorization-rules/run` | Run the rules over the ledger |
-| POST | `/api/categorization-rules/run/preview` | Count what a run of the rules would touch |
-| GET | `/api/categorization-rules/suggested` | List suggested categorization rules |
-| POST | `/api/categorization-rules/suggested/dismiss` | Dismiss a suggested categorization rule |
-| POST | `/api/categorization-rules/test` | Try a rule against a sample description |
-| PUT | `/api/categorization-rules/{id}` | Update a categorization rule |
-| DELETE | `/api/categorization-rules/{id}` | Delete a categorization rule |
-| POST | `/api/categorization-rules/{id}/move` | Move a rule one place up or down |
-
-### Contacts
-
-| Method | Route | Summary |
-| --- | --- | --- |
-| GET | `/api/contacts` | List the people you keep money with |
-| POST | `/api/contacts` | Add a person |
-| DELETE | `/api/contacts/payments/{id}` | Delete a payment with a person |
-| POST | `/api/contacts/splits` | Split an expense with people |
-| PUT | `/api/contacts/splits/{id}` | Change a split with people |
-| DELETE | `/api/contacts/splits/{id}` | Delete a split with people |
-| PUT | `/api/contacts/{id}` | Rename a person |
-| DELETE | `/api/contacts/{id}` | Delete a person |
-| GET | `/api/contacts/{id}/entries` | List what you shared with a person |
-| POST | `/api/contacts/{id}/payments` | Record money between you and a person |
-
-### Conversions
-
-| Method | Route | Summary |
-| --- | --- | --- |
-| GET | `/api/conversions` | List currency conversions |
-| POST | `/api/conversions` | Convert currency inside an account |
-| PUT | `/api/conversions/{id}` | Update a currency conversion |
-| DELETE | `/api/conversions/{id}` | Delete a currency conversion |
-
-### Currencies
-
-| Method | Route | Summary |
-| --- | --- | --- |
-| GET | `/api/currencies` | List supported currencies |
-| GET | `/api/exchange-rates` | Look up an exchange rate |
-
-### Dashboard
-
-| Method | Route | Summary |
-| --- | --- | --- |
-| GET | `/api/dashboard/category-breakdown` | Get spending split by category |
-| GET | `/api/dashboard/monthly-trend` | Get the monthly income and expense trend |
-| GET | `/api/dashboard/summary` | Get the dashboard summary |
-| GET | `/api/users/me/dashboard-layout` | Get your dashboard layout |
-| PUT | `/api/users/me/dashboard-layout` | Save your dashboard layout |
-| DELETE | `/api/users/me/dashboard-layout` | Reset your dashboard layout |
-| GET | `/api/users/me/getting-started` | Get your getting started steps |
-
-### Goals
-
-| Method | Route | Summary |
-| --- | --- | --- |
-| GET | `/api/goals` | List savings goals |
-| POST | `/api/goals` | Create a savings goal |
-| PUT | `/api/goals/{id}` | Update a savings goal |
-| DELETE | `/api/goals/{id}` | Delete a savings goal |
-| PATCH | `/api/goals/{id}/progress` | Update a manual goal's progress |
-
-### Households
-
-| Method | Route | Summary |
-| --- | --- | --- |
-| GET | `/api/households` | List households |
-| POST | `/api/households` | Create a household |
-| GET | `/api/households/{id}` | Get one household |
-| PUT | `/api/households/{id}` | Rename a household |
-| DELETE | `/api/households/{id}` | Delete a household |
-| GET | `/api/households/{id}/audit` | List what members changed in a household |
-| POST | `/api/households/{id}/members` | Add a member |
-| PUT | `/api/households/{id}/members/{userId}` | Change a member role |
-| DELETE | `/api/households/{id}/members/{userId}` | Remove a member |
-| GET | `/api/households/{id}/settle-up` | Who owes whom in a household |
-| GET | `/api/households/{id}/settlements` | List a household's recorded payments |
-| POST | `/api/households/{id}/settlements` | Record that one member paid another |
-| DELETE | `/api/households/{id}/settlements/{settlementId}` | Delete a recorded payment |
-| GET | `/api/households/{id}/shared-expenses` | List a household's split expenses |
-| POST | `/api/households/{id}/shared-expenses` | Split an expense with the household |
-| PUT | `/api/households/{id}/shared-expenses/{expenseId}` | Change a split |
-| DELETE | `/api/households/{id}/shared-expenses/{expenseId}` | Delete a split |
-
-### Imports
-
-| Method | Route | Summary |
-| --- | --- | --- |
-| POST | `/api/import/confirm` | Commit previewed statement rows |
-| GET | `/api/import/csv-mappings` | List CSV column mappings |
-| POST | `/api/import/csv-mappings` | Save a CSV column mapping |
-| PUT | `/api/import/csv-mappings/{id}` | Update a CSV column mapping |
-| DELETE | `/api/import/csv-mappings/{id}` | Delete a CSV column mapping |
-| POST | `/api/import/csv/inspect` | Inspect a CSV file for a column mapping |
-| GET | `/api/import/inbox` | List statements waiting in the import inbox |
-| GET | `/api/import/inbox/status` | Read the import inbox of this installation |
-| DELETE | `/api/import/inbox/{id}` | Remove a statement from the import inbox |
-| GET | `/api/import/inbox/{id}/file` | Download a statement waiting in the import inbox |
-| POST | `/api/import/preview` | Preview a bank statement |
-
-### Investments
-
-| Method | Route | Summary |
-| --- | --- | --- |
-| GET | `/api/investments/allocation-targets` | Get your target allocation |
-| PUT | `/api/investments/allocation-targets` | Replace your target allocation |
-| GET | `/api/investments/connections` | List your Interactive Brokers connections |
-| PUT | `/api/investments/connections/{accountId}` | Connect an account to the Interactive Brokers Flex Web Service |
-| DELETE | `/api/investments/connections/{accountId}` | Remove an Interactive Brokers connection |
-| POST | `/api/investments/connections/{accountId}/sync` | Download and import the Flex Query report now |
-| POST | `/api/investments/import/interactive-brokers` | Import an Interactive Brokers Flex Query report |
-| POST | `/api/investments/import/trade-csv` | Import trades from any broker as CSV |
-| GET | `/api/investments/portfolio` | Get the investment portfolio |
-| GET | `/api/investments/securities` | List securities |
-| POST | `/api/investments/securities` | Add a security |
-| PUT | `/api/investments/securities/{id}` | Update the details of a security |
-| PUT | `/api/investments/securities/{id}/price` | Record a price of a security |
-| POST | `/api/investments/securities/{id}/price-symbol/find` | Look up the EODHD symbols of a security |
-| GET | `/api/investments/securities/{id}/prices` | List the price history of a security |
-| POST | `/api/investments/securities/{id}/prices/import` | Import the price history of one security from a CSV |
-| DELETE | `/api/investments/securities/{id}/prices/{date}` | Delete a point of a security's price history |
-| GET | `/api/investments/tax-summary` | Get the yearly investment tax summary |
-| GET | `/api/investments/tax-summary/export` | Export the yearly investment tax summary as CSV |
-| GET | `/api/investments/transactions` | List investment transactions |
-| POST | `/api/investments/transactions` | Record an investment transaction |
-| PUT | `/api/investments/transactions/{id}` | Correct an investment transaction |
-| DELETE | `/api/investments/transactions/{id}` | Delete an investment transaction |
-| GET | `/api/investments/value-history` | Get the portfolio value over time |
-
-### MonthClose
-
-| Method | Route | Summary |
-| --- | --- | --- |
-| GET | `/api/month-close` | List the close status of every month in a year |
-| GET | `/api/month-close/{month}` | Review one month for closing |
-| POST | `/api/month-close/{month}` | Close or re-close a month |
-| DELETE | `/api/month-close/{month}` | Reopen a closed month |
-| PUT | `/api/month-close/{month}/note` | Change the note of a closed month |
-
-### NetWorth
-
-| Method | Route | Summary |
-| --- | --- | --- |
-| GET | `/api/assets` | List assets |
-| POST | `/api/assets` | Add an asset |
-| PUT | `/api/assets/{id}` | Update an asset |
-| DELETE | `/api/assets/{id}` | Delete an asset |
-| GET | `/api/assets/{id}/valuations` | List the valuations of an asset |
-| PUT | `/api/assets/{id}/valuations/{date}` | Record a valuation of an asset |
-| DELETE | `/api/assets/{id}/valuations/{date}` | Delete a valuation of an asset |
-| GET | `/api/assets/{id}/value-history` | Get the value of an asset over time |
-| GET | `/api/debts` | List debts |
-| POST | `/api/debts` | Add a debt |
-| PUT | `/api/debts/{id}` | Update a debt |
-| DELETE | `/api/debts/{id}` | Delete a debt |
-| GET | `/api/debts/{id}/balances` | List the recorded balances of a debt |
-| PUT | `/api/debts/{id}/balances/{date}` | Record a balance of a debt |
-| DELETE | `/api/debts/{id}/balances/{date}` | Delete a recorded balance of a debt |
-| GET | `/api/debts/{id}/payment-candidates` | Suggest transactions to link to a debt |
-| GET | `/api/debts/{id}/payments` | List the payments of a debt |
-| POST | `/api/debts/{id}/payments` | Link a payment to a debt |
-| PUT | `/api/debts/{id}/payments/{paymentId}` | Change how a payment counts against a debt |
-| DELETE | `/api/debts/{id}/payments/{paymentId}` | Unlink a payment from a debt |
-| GET | `/api/debts/{id}/schedule` | Get the repayment schedule of a debt |
-| GET | `/api/networth` | Get current net worth |
-| GET | `/api/networth/history` | Get the net worth history |
-| PUT | `/api/networth/open-balances` | Count open settle-up balances in your net worth |
-
-### Notifications
-
-| Method | Route | Summary |
-| --- | --- | --- |
-| GET | `/api/notifications` | List notifications |
-| POST | `/api/notifications/read-all` | Mark every notification read |
-| PATCH | `/api/notifications/{id}/read` | Mark one notification read |
-
-### Payees
-
-| Method | Route | Summary |
-| --- | --- | --- |
-| GET | `/api/payees` | List your payee names |
-| PUT | `/api/payees` | Name a payee |
-| DELETE | `/api/payees/{id}` | Remove a payee name |
-
-### Diagnostics
-
-| Method | Route | Summary |
-| --- | --- | --- |
-| GET | `/api/ping` | Ping the API |
-
-### Receipts
-
-| Method | Route | Summary |
-| --- | --- | --- |
-| GET | `/api/receipts/item-categories` | List your remembered receipt item categories |
-| DELETE | `/api/receipts/item-categories/{id}` | Forget a remembered receipt item category |
-| GET | `/api/receipts/items` | Spending per receipt item |
-| POST | `/api/receipts/read` | Read a receipt and propose its items by category |
-| PUT | `/api/receipts/{id}/categories` | Keep the categories chosen for a receipt's items |
-
-### RecurringBills
-
-| Method | Route | Summary |
-| --- | --- | --- |
-| GET | `/api/recurring-bills` | List recurring entries |
-| POST | `/api/recurring-bills` | Create a recurring entry |
-| GET | `/api/recurring-bills/calendar` | Lay out one month of recurring entries |
-| GET | `/api/recurring-bills/suggestions` | Suggest subscriptions found in the ledger |
-| POST | `/api/recurring-bills/suggestions/dismiss` | Dismiss a subscription suggestion |
-| GET | `/api/recurring-bills/totals` | Sum what recurring entries cost a month and a year |
-| GET | `/api/recurring-bills/{id}` | Get one recurring entry |
-| PUT | `/api/recurring-bills/{id}` | Update a recurring entry |
-| DELETE | `/api/recurring-bills/{id}` | Delete a recurring entry |
-| POST | `/api/recurring-bills/{id}/confirm` | Confirm a due occurrence |
-| POST | `/api/recurring-bills/{id}/skip` | Mark a due occurrence as done |
-
-### Reports
-
-| Method | Route | Summary |
-| --- | --- | --- |
-| GET | `/api/reports/summary` | Summarise income and expenses over a range |
-
-### Settings
-
-| Method | Route | Summary |
-| --- | --- | --- |
-| GET | `/api/settings` | Read installation settings |
-| PUT | `/api/settings` | Update installation settings |
-| GET | `/api/settings/discord` | Read the installation's Discord channel |
-| PUT | `/api/settings/discord` | Save the installation's Discord channel |
-| POST | `/api/settings/discord/test` | Send a test message to the Discord channel |
-| GET | `/api/settings/exchange-rates` | List the stored exchange rates of a currency |
-| POST | `/api/settings/exchange-rates/sync` | Fetch exchange rates now |
-| PUT | `/api/settings/exchange-rates/{currency}/{date}` | Enter an exchange rate by hand |
-| DELETE | `/api/settings/exchange-rates/{currency}/{date}` | Delete an exchange rate entered by hand |
-| GET | `/api/settings/market-prices` | Read the market price settings of this installation |
-| PUT | `/api/settings/market-prices` | Save the market price settings of this installation |
-| POST | `/api/settings/market-prices/sync` | Fetch closing prices now |
-| GET | `/api/settings/public` | Read the settings the sign-in page needs |
-| GET | `/api/settings/smtp` | Read the mail server of this installation |
-| PUT | `/api/settings/smtp` | Save the mail server of this installation |
-| POST | `/api/settings/smtp/test` | Send a test message |
-| GET | `/api/settings/telegram` | Read the installation's Telegram group |
-| PUT | `/api/settings/telegram` | Save the installation's Telegram group |
-| POST | `/api/settings/telegram/test` | Send a test message to the Telegram group |
-
-### Tags
-
-| Method | Route | Summary |
-| --- | --- | --- |
-| GET | `/api/tags` | List tags |
-| POST | `/api/tags` | Create a tag |
-| PUT | `/api/tags/{id}` | Update a tag |
-| DELETE | `/api/tags/{id}` | Delete a tag |
-
-### TransactionGroups
-
-| Method | Route | Summary |
-| --- | --- | --- |
-| GET | `/api/transaction-groups` | List your transaction groups |
-| POST | `/api/transaction-groups` | Group transactions |
-| PUT | `/api/transaction-groups/{id}` | Rename or share a transaction group |
-| DELETE | `/api/transaction-groups/{id}` | Ungroup |
-| GET | `/api/transaction-groups/{id}/members` | List the members of a group |
-| POST | `/api/transaction-groups/{id}/members` | Add transactions to a group |
-| DELETE | `/api/transaction-groups/{id}/members/{transactionId}` | Remove a transaction from a group |
-
-### Transactions
-
-| Method | Route | Summary |
-| --- | --- | --- |
-| GET | `/api/transactions` | List transactions |
-| POST | `/api/transactions` | Record a transaction |
-| POST | `/api/transactions/bulk-account` | Move several transactions to another account |
-| POST | `/api/transactions/bulk-category` | Set the category of several transactions |
-| POST | `/api/transactions/bulk-delete` | Delete several transactions |
-| POST | `/api/transactions/bulk-tags` | Set the tags of several transactions |
-| GET | `/api/transactions/export` | Export transactions as CSV |
-| GET | `/api/transactions/export/pdf` | Export transactions as PDF |
-| GET | `/api/transactions/ledger` | List the ledger with transaction groups folded |
-| GET | `/api/transactions/places` | Suggest places used before |
-| POST | `/api/transactions/places/rename` | Rename a place or merge several spellings into one |
-| POST | `/api/transactions/suggest-category` | Suggest a category for a transaction being entered |
-| GET | `/api/transactions/summary` | Total the filtered transactions |
-| GET | `/api/transactions/uncategorized-suggestions` | Suggest categories for uncategorized transactions |
-| GET | `/api/transactions/{id}` | Get one transaction |
-| PUT | `/api/transactions/{id}` | Update a transaction |
-| DELETE | `/api/transactions/{id}` | Delete a transaction |
-| POST | `/api/transactions/{id}/duplicates/keep` | Keep a transaction and its possible duplicates |
-| POST | `/api/transactions/{id}/unusual/dismiss` | Mark an unusual expense as not unusual |
-| DELETE | `/api/transactions/{id}/unusual/dismiss` | Mark an expense as unusual again |
-
-### Transfers
-
-| Method | Route | Summary |
-| --- | --- | --- |
-| GET | `/api/transfers` | List transfers |
-| POST | `/api/transfers` | Create a transfer |
-| PUT | `/api/transfers/{id}` | Update a transfer |
-| DELETE | `/api/transfers/{id}` | Delete a transfer |
-
-### Trash
-
-| Method | Route | Summary |
-| --- | --- | --- |
-| GET | `/api/trash` | List what you deleted recently |
-| POST | `/api/trash/restore` | Restore a deleted record |
-| POST | `/api/trash/restore-transactions` | Restore several deleted transactions |
-
-### Users
-
-| Method | Route | Summary |
-| --- | --- | --- |
-| GET | `/api/users` | List users |
-| POST | `/api/users` | Create a user |
-| PUT | `/api/users/me` | Update your own profile |
-| PUT | `/api/users/me/digest-scopes` | Choose which scopes get a monthly digest |
-| PUT | `/api/users/me/discord-notifications` | Choose which notifications are posted to Discord |
-| PUT | `/api/users/me/email-notifications` | Choose which notifications you are emailed |
-| GET | `/api/users/me/export` | Download your own data |
-| POST | `/api/users/me/import` | Import a download of your data |
-| PUT | `/api/users/me/language` | Save your language |
-| PUT | `/api/users/me/telegram-notifications` | Choose which notifications are posted to Telegram |
-| POST | `/api/users/{id}/deactivate` | Deactivate a user |
-| POST | `/api/users/{id}/reactivate` | Reactivate a deactivated user |
-| POST | `/api/users/{id}/reset-password` | Set a new password for another user |
-| PUT | `/api/users/{id}/role` | Change a user role |
+The route list, one table per tag, is generated into [API routes](api-routes.md) by `just gen`; notes on routes are under [Route notes](#route-notes).
 
 ## Route notes
+
+### Import
 
 Import preview takes `format` (`swedbankCsv`, `camt053` or `genericCsv`) beside the file and account, and answers the rows with `isReversal`, `suggestedTransferAccountId` and `matchedTransaction` (`id`, `date`, `description`, `categoryId` of a hand-entered transaction the row can be linked to, or null) plus a `statement` summary (`iban`, `ibanMatchesAccount`, `otherAccountId`, `notBooked`, `unreadable`, `closingDate`, `closingBalance`, `closingCurrency`, `ledgerBalanceAtClose`); a camt.053 file with several statements and none for the account answers 400 `import.noStatementForAccount`, whose `reason` is the comma-separated IBANs the file holds. Import confirm takes the same `format`, and its rows optionally select TransferAccountId and ExistingTransferId, or ExistingTransactionId to link the bank entry to a hand-entered transaction instead of adding one; a link that no longer fits answers 400 `import.entryMismatch`, and the response counts `linked` beside `imported` and `skippedDuplicates`.
 Since 2026-09-29 `genericCsv` reads any CSV through a saved column mapping: preview and confirm take `mappingId`, which is required for that format (`required` otherwise) and answers `reference.notFound` when the mapping is not the caller's; a file without a column the mapping names answers 400 `import.missingColumns`, whose `reason` lists the quoted names. `/api/import/csv-mappings` lists (by name), creates, replaces and deletes the caller's mappings (`name`, `encoding`, `delimiter`, `skipLines`, `amountStyle`, `dateFormat`, `decimalSeparator`, `currency`, `columns`); an amount style without its columns, or a status column without `bookedValues`, answers `import.mappingIncomplete`, a date format outside the list `import.invalidDateFormat`, and a deleted mapping goes to the trash as `csvImportMapping`. `POST /api/import/csv/inspect` (multipart `file`, optional `encoding`, `delimiter` and `skipLines`) answers the proposed `encoding`, `delimiter` and `skipLines`, the `columns` with the date formats and decimal separator each one's samples fit, up to ten `samples` rows of raw cells and the `matchingMappingIds` of the caller's mappings whose every named column is in the header. See [Bank statement import](features/bank-statement-import.md#generic-csv).
@@ -558,6 +128,12 @@ Since 2026-09-29 a preview row also carries `refundCandidate`, shaped like `matc
 Since 2026-09-29 confirm also takes an optional `statement` (`closingDate`, `closingBalance`, `closingCurrency`, echoed from the preview); for `camt053` or `genericCsv` it is recorded as a reconciliation of the account in the statement's currency (since 2026-10-01 whichever currency that is), and the response's `reconciliation` carries it, null otherwise. Recurring entry confirmation requires ExpectedDueDate. Transfer listing accepts an optional Date filter. 2FA setup/disable requires Password. Resetting another user's password requires NewPassword and the administrator's own CurrentPassword, with ResetTwoFactor optional. Updating a transfer takes the body of creating one; updating a conversion takes the body of creating one without the account. The broker import result carries Splits, SkippedCorporateActions per type and PositionMismatches, which is null when the report has no Open Positions section.
 Since 2026-10-01 a confirm row also takes `payee`, the preview row's `payee` sent back (at most 200 characters, `text.tooLong` beyond), stored on the new transaction, and every transaction response answers `payee`, the statement's payee of an imported row or null. The stored `PayeeKey` comes from it before the description. See [Bank statement import](features/bank-statement-import.md#the-statements-payee).
 Since 2026-10-02 confirm also takes an optional `group`, `{ id }` of a [transaction group](features/transaction-groups.md) the caller can see or `{ name }` of a new one (`text.tooShort`, `text.tooLong`, and `value.mustBeEmpty` for a name beside an id): every row written as a transaction and every linked row join it in the same database transaction, a new group takes the account's sharing, and the group's own refusals (403 `access.forbidden`, 404, 409 `transactionGroup.memberTaken`, 400 `household.referenceNotShared`) roll the import back.
+
+Since 2026-10-01, while the `LearnedCategories` feature is on, an import preview row also carries `learnedCategoryId` and `learnedConfidence` (0 to 1), the category a model trained on the caller's categorized rows guesses for a row that is not a duplicate and got no category from a rule, both null otherwise. `POST /api/transactions/suggest-category` takes `{ accountId, type, amount, description }` (amount zero or more, description 1 to 500 characters) and answers `{ categoryId, source, ruleName, confidence }`, where `source` is `rule` or `learned` and every field is null when neither has an answer; an account the caller cannot see answers 400 `reference.notFound`. It only reads, is a `POST` so the description stays out of URLs, and is not token-writable. `GET /api/transactions/uncategorized-suggestions` takes the ledger's filters and answers, for the newest 200 matching transactions without a category and not split, `[{ transaction, categoryId, source, ruleName, confidence }]` for those that got a suggestion; it is token-readable and answers 404 `feature.disabled` while the feature is off. The suggestion has no gate: it answers a rule while `CategorizationRules` is on and a guess while `LearnedCategories` is on, every field null with both off. `POST /api/transactions/bulk-category` takes `onlyUncategorized` (false by default): when true only the listed rows that still have no category change and `updated` counts them. See [Learned categories](features/learned-categories.md).
+
+Since 2026-09-30 the import preview and confirm take `format=ofx` and `format=mt940` beside `swedbankCsv`, `camt053` and `genericCsv`; a file that is not of the format answers `import.invalidFile`, and the closing balance of both is kept as a reconciliation like a camt.053's. See [Bank statement import](features/bank-statement-import.md#ofx-and-mt940).
+
+### Profile and notification settings
 
 `/api/users/me/dashboard-layout` is the signed-in user's own dashboard layout and is open to every signed-in user, under the `Dashboard` tag. `GET` answers `order` (every card id this version knows, saved ones first), `hidden` and `isDefault`; `PUT` takes `order` and `hidden` as lists of card id strings and answers the same shape, refusing an unknown id with `dashboard.cardUnknown` and a repeated one with `dashboard.cardDuplicate`; `DELETE` forgets the saved layout and answers the default. The card ids are the `DashboardCard` enum of the contract. See [Dashboard](features/dashboard.md).
 
@@ -573,21 +149,18 @@ Since 2026-10-02 confirm also takes an optional `group`, `{ id }` of a [transact
 
 `/api/settings/telegram` is the installation's one Telegram group, administrators only, under the `Settings` tag. `GET` answers `enabled`, `hasToken`, `chatId`, `lastDeliveredAt`, `lastError`, `disabledByTelegram` and `unreadable`, never the token. `PUT` takes `{ enabled, botToken?, chatId? }`: an empty token keeps the stored one, `chatId` is stored as sent, and a new token or chat id clears the Telegram mark and the last error. A token without the @BotFather shape, or switching on with none saved, answers 400 `telegram.invalidToken`; a chat id of 0, or switching on without one, answers `telegram.invalidChat`. `POST /api/settings/telegram/test` posts a test message at once in the administrator's language, also while the switch is off, and answers 204, 404 without a token and a chat id, or Telegram's own error. The throttles are Discord's. `GET /api/settings/public` carries `telegramEnabled`, true only while the switch is on and a token and chat id are saved. `PUT /api/users/me/telegram-notifications` takes `{ types }` and answers the profile with `telegramNotificationTypes`, with the same rules as the Discord list. See [Telegram notifications](features/telegram-notifications.md).
 
-Goal bodies carry `funding` (`manual` or `account`), `fundingAccountId` and `fundingSharePercent`, a whole percentage from 1 to 100 that defaults to 100 when omitted. `funding` defaults to `manual`, so a body written before this addition still creates the goal it used to. A funded goal must name an account and a manual goal must not, each refused by the validator with `fundingAccountId` as the field at fault, and an account that does not exist or is not visible to the caller answers 400 `reference.notFound` without naming a field, exactly as a recurring bill's account does. `currentAmount` stays required for a manual update and is ignored for a funded one, which is what preserves it across a switch. The response adds those three fields and `progressAmount`: the stored `currentAmount` for a manual goal, the computed share of the funding account's reporting balance for a funded one, never below zero, and null when that account is archived or no longer visible.
+### Accounts and forecast
 
-`PATCH /api/goals/{id}/progress` (since 2026-10-01) changes only a manual goal's saved amount: the body holds exactly one of `currentAmount`, the new amount, or `delta`, added to the stored one and negative to take money out (`required` on `currentAmount` for neither, `value.mustBeEmpty` on `delta` for both). It answers the goal, 404 for one the caller cannot see, 400 `goal.notManual` for a goal funded from an account 400 `money.nonNegative` when a delta would take the amount below zero and 400 `money.invalid` when it would take it past the largest storable amount; above the target is allowed. A read-and-write token may call it, with `Idempotency-Key`. See [Goals](features/goals.md#moving-progress-without-the-whole-goal).
+Since 2026-09-30 `GET /api/accounts/forecast` takes an optional `whatIfAccountId`, `whatIfAmount` (signed, non-zero) and `whatIfDate`, all three or none, and adds that unsaved payment as an entry with source `whatIf`. See [Cash-flow forecast](features/cash-flow-forecast.md#trying-a-payment).
+Since 2026-10-01 an account's `type` can also be `creditCard`, in bodies, responses and the `type` filter of `GET /api/accounts`; nothing else about the account changes, and its forecast never answers `belowZeroOn` or `belowZeroWithSpendingOn`. See [Accounts](features/accounts.md#credit-cards).
 
-Recurring entry bodies carry `shape` (`expense`, `income` or `transfer`) and `toAccountId`. Both default to what a body written before this addition meant, an expense with no destination account, so such a body still creates the schedule it used to. A transfer must name `accountId` and `toAccountId`, they must differ, and it must leave `categoryId` empty; an expense or an income must leave `toAccountId` empty. Each rule names the field at fault and answers `required`, `transfer.sameAccount` or `value.mustBeEmpty`, and the same rules apply to an update, so a shape change that would leave a required field empty is refused instead of stored. A category must match the shape: an expense wants an expense category and an income an income category, both refused with `category.wrongType`. `POST /api/recurring-bills/{id}/confirm` answers `bill`, a nullable `transactionId` and a nullable `transferId`; an expense or an income fills the first, a transfer the second. Its body gained `receivedAmount`, which is passed to the ordinary transfer create path, so a transfer between two currencies is refused with `transfer.receivedAmountRequired` until it is given, exactly as `POST /api/transfers` is.
+`GET /api/accounts/forecast?days=` projects each visible account's main-currency balance from today for `days` days, 30 to 90 and 90 by default, refused as `range.invalid` outside that range. It answers `from`, `to`, `accounts` (only those with an entry in the horizon, those that go below zero first) and `notCounted`, the caller's active recurring entries it could not place, each with `reason` `noAccount`, `noHistory`, `accountNotVisible` or `noExchangeRate` (a transfer into another currency whose newest rate is more than five days old or missing: it still leaves the source account, and only its arrival is left out). Each account carries `startBalance`, `usualDailySpending`, `lowestBalance`, `lowestOn`, `belowZeroOn`, `belowZeroWithSpendingOn`, `otherCurrencies` and `entries` (`date`, `source` `recurring` or `ledger`, `billId`, `name`, `shape`, signed `amount`, `estimated`, `overdue`, `balanceAfter`). The literal segment takes precedence over `/api/accounts/{id}`, and the route carries `RequiresFeature(RecurringBills)`, so it answers 404 `feature.disabled` while that switch is off. Details in [Cash-flow forecast](features/cash-flow-forecast.md).
 
-`POST /api/recurring-bills/{id}/skip` marks the due occurrence done without writing a transaction or a transfer. Its body is `expectedDueDate` and an optional `transactionId`, the row that paid the occurrence, used only to link a debt payment when the entry pays a tracked debt. It answers the entry with its new `nextDueDate`, 404 for an entry the caller cannot see, 400 `recurringBill.inactive` and 409 `conflict.stale` when the date is not the next due date, exactly as confirm does, and marks the entry's unread reminders read. A personal API token cannot call it. See [Recurring entries](features/recurring-bills.md#marking-an-occurrence-done).
+`GET /api/accounts/{id}/reconciliations/preview?date=&currency=` answers the ledger balance of the account on a statement date in `currency`, its main currency when left out, with `date`, `currency`, `ledgerBalance`, `previous` (the latest reconciliation before the date, or null), `rows` (at most 100 signed movements after `previous` up to the date, newest first, each `kind`, `id`, `date`, `description`, `amount`) and `rowCount`. `GET /api/accounts/{id}/reconciliations` answers the newest 24 reconciliations in every currency, each `id`, `date`, `balance`, `currency`, `source` (`manual` or `statement`), `ledgerBalance`, `difference` (statement minus ledger, computed on read) and `createdAt`. `POST /api/accounts/{id}/reconciliations` takes `{ date, balance, currency }`, `currency` optional, records or replaces the balance on that date in that currency and answers it; `DELETE /api/accounts/{id}/reconciliations/{reconciliationId}` answers 204. A date after today answers 400 `reconciliation.futureDate`, an unknown currency 400 `enum.invalid`, and an account the caller cannot see, or a reconciliation that is not there, 404 `resource.notFound`. Details in [Reconciliation](features/reconciliation.md).
 
-`GET /api/recurring-bills/calendar?month=YYYY-MM` is read-only and answers one month of the caller's active recurring entries: `from` and `to` (the month's first and last day), `expectedOut`, `expectedIn` and `paidOut` in the reporting currency, `partial` (an estimate or an amount without a fresh rate is inside a figure), `unpriced` (expense and income entries with no amount) and `occurrences`, by date and name, each with `date`, `billId`, `name`, `shape`, a nullable `amount` and `currency`, `estimated`, `status` (`due`, `overdue`, `paid` or `noMatch`), `isNextDue`, `unconfirmed`, `accountNotVisible`, `accountId` and, for a paid expense or income, `transactionId`. A month that is missing or not `YYYY-MM` answers 400 `month.invalid`, one more than 12 months from the current one 400 `range.invalid`, and the route answers 404 `feature.disabled` while `RecurringBills` is off. See [Recurring entries](features/recurring-bills.md#calendar).
+`GET /api/accounts/archived` answers the archived accounts the caller would see if they were active — their own, and the shared accounts of households both they and the owner still belong to — narrowed by the active household exactly as `GET /api/accounts` is, sorted by name. Each row carries `id`, `name`, `description`, `iban`, `type`, `startingBalance`, `currency`, `scope`, `householdId`, `archivedAt` and `canRestore`, which is true only for the owner. There is no balance: the transactions of an archived account are filtered out with it. `POST /api/accounts/{id}/restore` takes no body and answers 200 with the account as `GET /api/accounts/{id}` would, balance included. It answers the same 200 for an account that is already active, which makes it safe to repeat, 403 `access.forbidden` when the caller can see the archived account but does not own it, and 404 `resource.notFound` when no such account, archived or active, is visible — including one that belongs to another household than the active one. An account still marked as shared into a household its owner no longer belongs to comes back personal rather than being refused. Details in [Accounts](features/accounts.md).
 
-`GET /api/recurring-bills/suggestions` is read-only and writes nothing. It answers a list of subscription candidates, the soonest expected occurrence first, each with `description` (the normalized text the group was formed on), `accountId`, a nullable `categoryId` filled only when every occurrence agrees, `cadence`, `typicalAmount` (the median, as a decimal string like every other money field), `occurrenceDates` in ascending order and `nextExpectedDate`. Both routes sit in `RecurringBillsGroup` under the `/api/recurring-bills` prefix on purpose, so the feature gate covers them with the rest of the feature and nothing else changes. `POST /api/recurring-bills/suggestions/dismiss` takes `accountId` and `description`, normalizes the description again on the server, and answers 204; an account the caller cannot see answers 400 `reference.notFound`, and dismissing the same group twice answers 204 without writing a second row. There is no create endpoint for a candidate: the client fills the ordinary `POST /api/recurring-bills` body and that path's validation is the only one there is.
-
-`GET /api/categorization-rules/suggested` is read-only too. It answers at most 20 suggested rules, most rows first, each with `key` (the normalized description the group was formed on), `name`, `match`, `pattern`, `categoryId`, `evidence` (how many rows back it) and `lastSeen`, and an empty list when the caller already has 100 rules. The optional `transactionId` narrows the answer to the one suggestion that row backs, and only while it has exactly three rows; an id the caller cannot see answers an empty list, not 404. `POST /api/categorization-rules/suggested/dismiss` takes `key` and `categoryId`, normalizes the key again and answers 204; a category the caller cannot see answers 400 `reference.notFound`, and a second dismissal of the same pair writes nothing, while two at the same moment answer the later one 409 `conflict.duplicate`. There is no accept endpoint: the client posts the suggestion to `POST /api/categorization-rules`. See [Categorization rules](features/categorization-rules.md#suggested-rules).
-
-Recurring entry bodies also take an optional `matchKey`, the bank text the entry's charges carry, at most 200 characters, normalized on the server and stored as null when empty; a body without it clears it. `GET /api/recurring-bills` answers `matchKey` and, while the `UnusualAmounts` feature is on, a nullable `latestMatch` on each active expense entry with an account: the latest matching charge of the last 13 months as `date`, `amount` in the account's currency, a nullable `expected` and `isPriceRise`. The single-entry answers (get, create, update and confirm) fill it the same way. See [Unusual amounts](features/unusual-amounts.md).
+### Transactions
 
 Since 2026-09-29 a transaction's `amount` is signed for an expense: negative means a refund, money back in an expense category, and `reportingAmount` carries the same sign. An expense amount must not be zero (`money.nonZero`), an income amount stays positive (`money.positive`), and a refund with `lines` answers `transaction.splitNotAllowed`. Create and update bodies take an optional `refundOfTransactionId`, allowed only on a refund, naming a visible expense that is not a refund and not the row itself, or 400 `transaction.refundOriginalInvalid`. `GET /api/transactions` and `GET /api/transactions/{id}`, and the create and update responses, answer `refundOf` (`id`, `date`, `description` of the purchase, null when there is none or it is not visible) and `refundedAmount` (the reporting-currency total of the visible refunds naming the row, as a positive number, or null). The summary's `totalExpense` and the CSV and PDF exports carry refunds signed, so every expense total is net. See [Transactions](features/transactions.md#refunds).
 
@@ -599,6 +172,10 @@ Since 2026-10-01 they also take `duplicates`: `true` keeps the [possible duplica
 
 They also take `payee`, since 2026-09-29: the value is normalized like a stored `PayeeKey` and keeps the transactions whose key equals it, so a `payeeKey` of the report and a raw description both work; a value with nothing left after normalizing is ignored and more than 500 characters answers `text.tooLong`. See [Transactions](features/transactions.md#payee-filter).
 
+Since 2026-09-30 every transaction response answers `payeeName`, the caller's own name for the row's `PayeeKey` or null, and `search` also matches it. `GET /api/payees` lists the caller's payee names (`id`, `payeeKey`, `name`), `PUT /api/payees` takes `{ payee, name }`, normalizes `payee` like a stored key (nothing left answers `text.invalidFormat`) and creates or renames the name (two first names for the same payee at the same moment answer the later one 409 `conflict.busy`), and `DELETE /api/payees/{id}` removes it (204, or 404 `resource.notFound`). The report's `expenseByPayee` items and the recurring-entry suggestions carry the same `name`. See [Payee names](features/payee-names.md).
+
+They also take `amountMin` and `amountMax`, since 2026-09-30: inclusive bounds on the size of the amount in the transaction's own currency, so a refund matches like a purchase of the same size. Each must be a non-negative amount with at most two decimals (`money.nonNegative`), and `amountMax` below `amountMin` answers `range.invalid`. See [Transactions](features/transactions.md#amount-range-filter).
+
 Since 2026-09-30 the create and update bodies take an optional `note`, at most 1000 characters (`text.tooLong`), and every transaction response answers it; `search` on the four filtered endpoints matches it as well as the description. See [Transactions](features/transactions.md#notes).
 
 Since 2026-09-30 the transaction create and update bodies take an optional `spreadMonths`, 2 to 36 (`range.invalid`), refused on a split with `transaction.splitNotAllowed` and on a refund with `transaction.spreadRefund` until 2026-10-02, when both became allowed and `transaction.spreadRefund` was removed; every transaction response answers `spreadMonths` and `spreadUntil`, the date of the last monthly slice. The four filtered endpoints take `spreadOverlap=true`, which with both `dateFrom` and `dateTo` also keeps spread rows dated before the range whose slices reach into it, and is ignored otherwise. Recurring entry bodies and responses carry `spreadMonths` too, on the expense and income shapes only (`value.mustBeEmpty` on a transfer). Since 2026-10-02 both bodies also take an optional `spreadDirection`, `forward` (the default) or `backward` (`enum.invalid` otherwise), and both responses answer it, null when nothing is spread; a transaction response also answers `spreadFrom`, the date of the first slice, and the drill-through compares the range from `spreadFrom` to `spreadUntil`. The report, dashboard, budget and month-close figures count each slice in its month; see [Transactions](features/transactions.md#spreading-over-months).
@@ -607,7 +184,53 @@ Since 2026-10-01, while the `Locations` feature is on, the transaction create an
 
 Since 2026-10-01 `GET /api/transactions/ledger` takes the filters, sort and paging of `GET /api/transactions` and answers `items` of `{ kind, transaction, group }`: `kind` `transaction` with the list's transaction, or `group` with `id`, `name`, `firstDate`, `lastDate`, `memberCount`, `matchingCount`, `netReportingAmount` and, since 2026-10-02, `scope` and `householdId` of a [transaction group](features/transaction-groups.md) the caller can see, their own or one shared with their household, with a matching member; `total` counts items. Every transaction response answers `groupId`, only when the group is the caller's, and `enteredByMe`. `/api/transaction-groups` lists the caller's groups (`id`, `name`, `memberCount`, `firstDate`, `lastDate`), creates one from `{ name, transactionIds }` (201 with `Location`), renames it with `PUT /{id}` `{ name }`, adds rows with `POST /{id}/members` `{ transactionIds }` (204), removes one with `DELETE /{id}/members/{transactionId}` (204) and ungroups with `DELETE /{id}` (204, trash kind `transactionGroup`); `GET /{id}/members` takes the ledger's filters and answers `{ items, truncated }`, at most 200 members. The name is 1 to 120 characters (`text.tooShort`, `text.tooLong`), the rows 1 to 200 (`required`, `collection.invalidSize`); a row the caller cannot see answers 404 `resource.notFound`, a visible row someone else entered 403 `access.forbidden`, and a row already in another group 409 `transactionGroup.memberTaken`. The three `GET` routes are token-readable; the writes are not token-writable.
 
-Since 2026-10-01, while the `LearnedCategories` feature is on, an import preview row also carries `learnedCategoryId` and `learnedConfidence` (0 to 1), the category a model trained on the caller's categorized rows guesses for a row that is not a duplicate and got no category from a rule, both null otherwise. `POST /api/transactions/suggest-category` takes `{ accountId, type, amount, description }` (amount zero or more, description 1 to 500 characters) and answers `{ categoryId, source, ruleName, confidence }`, where `source` is `rule` or `learned` and every field is null when neither has an answer; an account the caller cannot see answers 400 `reference.notFound`. It only reads, is a `POST` so the description stays out of URLs, and is not token-writable. `GET /api/transactions/uncategorized-suggestions` takes the ledger's filters and answers, for the newest 200 matching transactions without a category and not split, `[{ transaction, categoryId, source, ruleName, confidence }]` for those that got a suggestion; it is token-readable and answers 404 `feature.disabled` while the feature is off. The suggestion has no gate: it answers a rule while `CategorizationRules` is on and a guess while `LearnedCategories` is on, every field null with both off. `POST /api/transactions/bulk-category` takes `onlyUncategorized` (false by default): when true only the listed rows that still have no category change and `updated` counts them. See [Learned categories](features/learned-categories.md).
+Since 2026-10-01, while the `ReceiptReading` feature is on, `search` on the filtered transaction endpoints and the ledger also matches the item names of the caller's own readings of the files attached to a transaction, and a listed transaction with a matching item answers `receiptItem` (`name`, `warrantyUntil`, the warranty date of that file), null otherwise; the single-transaction response never carries it. See [Receipt reading](features/receipt-reading.md#finding-a-purchase-by-item).
+
+### Categories and categorization rules
+
+Since 2026-09-30 category bodies take an optional `parentId` and responses answer it (`category.wrongType` for a parent of the other type, `category.nestingInvalid` for nesting deeper than one level); `categoryId` on the four transaction filters includes the sub-categories of a parent, and category breakdown items answer `parentId`, `parentName` and `parentIcon`. See [Categories](features/categories.md#groups).
+
+`GET /api/categorization-rules/suggested` is read-only. It answers at most 20 suggested rules, most rows first, each with `key` (the normalized description the group was formed on), `name`, `match`, `pattern`, `categoryId`, `evidence` (how many rows back it) and `lastSeen`, and an empty list when the caller already has 100 rules. The optional `transactionId` narrows the answer to the one suggestion that row backs, and only while it has exactly three rows; an id the caller cannot see answers an empty list, not 404. `POST /api/categorization-rules/suggested/dismiss` takes `key` and `categoryId`, normalizes the key again and answers 204; a category the caller cannot see answers 400 `reference.notFound`, and a second dismissal of the same pair writes nothing, while two at the same moment answer the later one 409 `conflict.duplicate`. There is no accept endpoint: the client posts the suggestion to `POST /api/categorization-rules`. See [Categorization rules](features/categorization-rules.md#suggested-rules).
+
+### Budgets
+
+Since 2026-09-30 a budget body takes `categoryId` or `tagId`, exactly one (`required` on `categoryId` otherwise), and `BudgetResponse` answers `categoryId`, `tagId` and `name` in place of `categoryName`. See [Budgets](features/budgets.md#budgets-on-a-tag).
+
+Budget bodies carry `period` (`weekly`, `monthly`, `quarterly` or `yearly`) and `rolloverEnabled`. Both default to the shape a body written before this addition had, monthly with no rollover, so such a body still creates the budget it used to. A category may carry one budget per period; a second one for the same pair is refused with 409 `conflict.duplicate`, on create and on an update that would move a budget onto a taken pair. The response adds `carriedAmount`, `effectiveLimit`, `rolloverEnabled`, `windowStart` and the inclusive `windowEnd`: `limitAmount` is still the typed limit, `effectiveLimit` is that plus the carry, and `spent` and `remaining` are measured inside the window instead of the calendar month. With rollover off the carry is zero and the three numbers read exactly as the two did before.
+
+`GET /api/budgets/suggestions?period=` is read-only and requires `period`; a value that is not one of the four answers 400 `request.malformed` on the `period` field, because the query binding rejects it before validation runs. It answers `period` and `categories`: every visible expense category with spending in the last six complete windows of that period, by name, each with `categoryId`, `categoryName`, `windows` (`start`, the inclusive `end` and `spent`, oldest first; the window that holds today is left out and windows that end before the caller's earliest transaction are dropped), `median` and `suggestedLimit` (both null with fewer than three windows; `suggestedLimit` is also null when the median is zero), `isSteady` and `hasBudget` (the caller has a budget of this period on the category). The client creates a suggested budget through `POST /api/budgets`. See [Budgets](features/budgets.md#limits-from-history).
+
+### Goals
+
+Goal bodies carry `funding` (`manual` or `account`), `fundingAccountId` and `fundingSharePercent`, a whole percentage from 1 to 100 that defaults to 100 when omitted. `funding` defaults to `manual`, so a body written before this addition still creates the goal it used to. A funded goal must name an account and a manual goal must not, each refused by the validator with `fundingAccountId` as the field at fault, and an account that does not exist or is not visible to the caller answers 400 `reference.notFound` without naming a field, exactly as a recurring bill's account does. `currentAmount` stays required for a manual update and is ignored for a funded one, which is what preserves it across a switch. The response adds those three fields and `progressAmount`: the stored `currentAmount` for a manual goal, the computed share of the funding account's reporting balance for a funded one, never below zero, and null when that account is archived or no longer visible.
+
+`PATCH /api/goals/{id}/progress` (since 2026-10-01) changes only a manual goal's saved amount: the body holds exactly one of `currentAmount`, the new amount, or `delta`, added to the stored one and negative to take money out (`required` on `currentAmount` for neither, `value.mustBeEmpty` on `delta` for both). It answers the goal, 404 for one the caller cannot see, 400 `goal.notManual` for a goal funded from an account 400 `money.nonNegative` when a delta would take the amount below zero and 400 `money.invalid` when it would take it past the largest storable amount; above the target is allowed. A read-and-write token may call it, with `Idempotency-Key`. See [Goals](features/goals.md#moving-progress-without-the-whole-goal).
+
+### Recurring entries
+
+Recurring entry bodies carry `shape` (`expense`, `income` or `transfer`) and `toAccountId`. Both default to what a body written before this addition meant, an expense with no destination account, so such a body still creates the schedule it used to. A transfer must name `accountId` and `toAccountId`, they must differ, and it must leave `categoryId` empty; an expense or an income must leave `toAccountId` empty. Each rule names the field at fault and answers `required`, `transfer.sameAccount` or `value.mustBeEmpty`, and the same rules apply to an update, so a shape change that would leave a required field empty is refused instead of stored. A category must match the shape: an expense wants an expense category and an income an income category, both refused with `category.wrongType`. `POST /api/recurring-bills/{id}/confirm` answers `bill`, a nullable `transactionId` and a nullable `transferId`; an expense or an income fills the first, a transfer the second. Its body gained `receivedAmount`, which is passed to the ordinary transfer create path, so a transfer between two currencies is refused with `transfer.receivedAmountRequired` until it is given, exactly as `POST /api/transfers` is.
+
+`POST /api/recurring-bills/{id}/skip` marks the due occurrence done without writing a transaction or a transfer. Its body is `expectedDueDate` and an optional `transactionId`, the row that paid the occurrence, used only to link a debt payment when the entry pays a tracked debt. It answers the entry with its new `nextDueDate`, 404 for an entry the caller cannot see, 400 `recurringBill.inactive` and 409 `conflict.stale` when the date is not the next due date, exactly as confirm does, and marks the entry's unread reminders read. A personal API token cannot call it. See [Recurring entries](features/recurring-bills.md#marking-an-occurrence-done).
+
+`GET /api/recurring-bills/calendar?month=YYYY-MM` is read-only and answers one month of the caller's active recurring entries: `from` and `to` (the month's first and last day), `expectedOut`, `expectedIn` and `paidOut` in the reporting currency, `partial` (an estimate or an amount without a fresh rate is inside a figure), `unpriced` (expense and income entries with no amount) and `occurrences`, by date and name, each with `date`, `billId`, `name`, `shape`, a nullable `amount` and `currency`, `estimated`, `status` (`due`, `overdue`, `paid` or `noMatch`), `isNextDue`, `unconfirmed`, `accountNotVisible`, `accountId` and, for a paid expense or income, `transactionId`. A month that is missing or not `YYYY-MM` answers 400 `month.invalid`, one more than 12 months from the current one 400 `range.invalid`, and the route answers 404 `feature.disabled` while `RecurringBills` is off. See [Recurring entries](features/recurring-bills.md#calendar).
+
+`GET /api/recurring-bills/suggestions` is read-only and writes nothing. It answers a list of subscription candidates, the soonest expected occurrence first, each with `description` (the normalized text the group was formed on), `accountId`, a nullable `categoryId` filled only when every occurrence agrees, `cadence`, `typicalAmount` (the median, as a decimal string like every other money field), `occurrenceDates` in ascending order and `nextExpectedDate`. Both routes sit in `RecurringBillsGroup` under the `/api/recurring-bills` prefix on purpose, so the feature gate covers them with the rest of the feature and nothing else changes. `POST /api/recurring-bills/suggestions/dismiss` takes `accountId` and `description`, normalizes the description again on the server, and answers 204; an account the caller cannot see answers 400 `reference.notFound`, and dismissing the same group twice answers 204 without writing a second row. There is no create endpoint for a candidate: the client fills the ordinary `POST /api/recurring-bills` body and that path's validation is the only one there is.
+
+Recurring entry bodies also take an optional `matchKey`, the bank text the entry's charges carry, at most 200 characters, normalized on the server and stored as null when empty; a body without it clears it. `GET /api/recurring-bills` answers `matchKey` and, while the `UnusualAmounts` feature is on, a nullable `latestMatch` on each active expense entry with an account: the latest matching charge of the last 13 months as `date`, `amount` in the account's currency, a nullable `expected` and `isPriceRise`. The single-entry answers (get, create, update and confirm) fill it the same way. See [Unusual amounts](features/unusual-amounts.md).
+
+### Reports and month close
+
+`GET /api/reports/summary` answers `expenseByCategory` and `incomeByCategory`. Items of both lists, and of `GET /api/dashboard/category-breakdown`, carry an optional `syntheticGroup`: null for a real category and for uncategorized amounts, `investmentIncome` or `investmentTaxesAndFees` for the total of investment ledger entries, which has `categoryId` null and an English `categoryName` as a fallback. A client names such a group in the viewer's language and does not link it to a category. `GET /api/dashboard/category-breakdown` always fills `comparisonAmount` and answers `comparisonStart` and `comparisonEnd`: the same period of the previous month, cut to the same days while the month has not ended ([Dashboard](features/dashboard.md#month)). The income and expense figures of the report and of the three dashboard endpoints include those investment entries while the `Investments` feature is on.
+
+`GET /api/reports/summary` also answers `expenseByPayee`, since 2026-09-29: at most 50 `PayeeBreakdownItem`s with `payeeKey`, `label` (the newest description), `amount`, `comparisonAmount` and `count`, over whole expense transactions grouped by the stored `PayeeKey` and ordered by the larger of the two amounts. The expenses without a description are one entry with `payeeKey` and `label` null. A `payeeKey` is what the transaction list's `payee` filter takes. The month-close review's `figures` carry it too. See [Reports](features/reports.md#expense-by-payee).
+
+`GET /api/reports/summary` answers 400 `range.invalid` for a `dateFrom` or `dateTo` outside 2000-01-01 to 2999-12-31 and for a `dateFrom` after `dateTo`, or after today when `dateTo` is left out. It also takes `comparison`: `none` (the default, and the same as leaving it out), `previousPeriod` for the same number of days immediately before the range, `previousMonth` for the same range a month earlier, or `previousYear` for the same range a year earlier, where for the last two a range that ends on the last day of a month again ends on the last day of the earlier month, so 1–31 March meets 1–28 (or 29) February. With a comparison the response gains `comparison` — the earlier period's `mode`, `periodStart`, `periodEnd`, `totalIncome`, `totalExpense` and `net` — while every category, tag and payee entry fills `comparisonAmount` and every trend point gains `comparisonBucketStart`, `comparisonIncome` and `comparisonExpense`. A category, synthetic group, tag or payee that only one of the two periods touched is one entry with `0.00` on the empty side, and the breakdowns are ordered by the larger of the two amounts. Trend points are paired by position: the first bucket of the range meets the first bucket of the earlier one, both bucketed the same way, and a bucket with no counterpart compares against zero. Every one of those fields is null without the parameter, so a client of the older shape is unaffected. The difference and its percentage are the client's to compute, because a change from a zero base has no percentage to show; `CategoryBreakdownItem` gained `comparisonAmount` too, and it stays null everywhere the dashboard uses it.
+
+Since 2026-10-02 `GET /api/reports/summary`, `GET /api/budgets` and `GET /api/dashboard/summary`, `monthly-trend` and `category-breakdown` take `share` (`SpendingShare`): `full`, the default and the same as leaving it out, or `mine`, which counts an expense split with a household or with people at the caller's own share and a household split another member paid at the caller's share. On `GET /api/budgets` it changes personal budgets only. The response shapes do not change. See [Household settle-up](features/household-settle-up.md#my-share).
+
+`/api/month-close` belongs to the `MonthClose` feature and tag, and every route answers 404 `feature.disabled` while it is off. `{month}` is `YYYY-MM` with a year from 2000 to 2999; anything else answers 400 `month.invalid`. Every route acts on the caller's own closes under the active household scope (the `X-Active-Household` header, or none for "Everything"). `GET /api/month-close?year=` (the current year when left out) answers `year` and twelve `months`, each with `month`, `status` (`notEnded`, `open`, `closed` or `closedChanged`) and `closedAt`. `GET /api/month-close/{month}` answers the review: `month`, `monthEnd`, `status`, `closedAt`, `note`, `checklist` (`uncategorized`; `unconfirmedRecurring` and `unusual`, each null while its feature is off; and `accounts`, since 2026-09-29 in place of `imports`: one `{ accountId, accountName, state, date, difference, currency }` per account with a reconciliation or, while `Import` is on, an imported row, `state` being `reconciled`, `differs`, `imported` or `behind`, always present), `figures` (the report summary of the month with the `previousMonth` comparison), `budgets` (monthly budgets as of `monthEnd`, null while `Budgets` is off), `netWorthStart` and `netWorthEnd` (net worth snapshot points, null when there is none or `NetWorth` is off) and `drift`, null unless the month is closed. `POST /api/month-close/{month}` takes `{ note? }` (at most 1000 characters; a missing note keeps the stored one), closes or re-closes the month and answers the review; a month that has not ended answers 409 `monthClose.notEnded`. `PUT /api/month-close/{month}/note` takes `{ note? }`, answers the review, and 404 `resource.notFound` when the month is not closed. `DELETE /api/month-close/{month}` reopens and answers 204, also when there was nothing to reopen. See [Month-end close](features/month-end-close.md).
+
+### Investments
 
 Since 2026-09-30 `POST /api/investments/import/trade-csv` takes `accountId` and a CSV `file` of trades, dividends, taxes, interest and fees and answers the broker import's counts; investment entries it writes carry `source` `tradeCsv`. See [Investments](features/investments.md#trade-csv-from-any-broker).
 
@@ -617,40 +240,9 @@ Since 2026-10-02 the type can also be `merger`: the bodies take `relatedQuantity
 
 Since 2026-10-02 the type can also be `spinOff`, with the parent in `securityId`, the new security in `relatedSecurityId`, the shares received in `relatedQuantity` and an optional `costShare`; its `quantity` is ignored and stored as 0. `PUT` on an imported spin-off applies only `costShare`, as on an imported merger, and the broker import lists the new security of every spin-off it books in `costSharesMissing`.
 
-Since 2026-10-03 the `result` of `POST /api/receipts/read` answers `isInvoice`, `invoiceNumber` and `dueDate` (false and null for a till receipt), and an adjustment may be of kind `vat`; for an invoice the candidates reach three days past the due date. See [Receipt reading](features/receipt-reading.md#reading-an-invoice).
-
-Since 2026-09-30 `GET /api/receipts/items` takes `dateFrom`, `dateTo` and an optional `search` and answers `{ items: [{ key, name, currency, amount, count, lastBought }], receipts }`, the caller's receipt items summed by normalized name. See [Receipt reading](features/receipt-reading.md#spending-per-item).
-
-Since 2026-10-01, while the `ReceiptReading` feature is on, `search` on the filtered transaction endpoints and the ledger also matches the item names of the caller's own readings of the files attached to a transaction, and a listed transaction with a matching item answers `receiptItem` (`name`, `warrantyUntil`, the warranty date of that file), null otherwise; the single-transaction response never carries it. See [Receipt reading](features/receipt-reading.md#finding-a-purchase-by-item).
-
-Since 2026-09-30 `PUT /api/attachments/{id}/warranty` takes `{ warrantyUntil }` (a date or null) and answers the attachment, whose responses carry `warrantyUntil`; a `warrantyExpiring` notification follows 30 days before. See [Attachments](features/attachments.md#warranty-dates).
-
-Since 2026-09-30 the import preview and confirm take `format=ofx` and `format=mt940` beside `swedbankCsv`, `camt053` and `genericCsv`; a file that is not of the format answers `import.invalidFile`, and the closing balance of both is kept as a reconciliation like a camt.053's. See [Bank statement import](features/bank-statement-import.md#ofx-and-mt940).
-
 Since 2026-09-30 `GET /api/investments/portfolio` also answers `annualizedReturn` (a fraction string such as `0.0734`, or null) and `byType` and `byCurrency` (`{ key, marketValue }` slices of the open holdings, largest first). See [Investments](features/investments.md#annualized-return-and-allocation).
 
 Since 2026-10-01 `GET /api/investments/allocation-targets` answers the caller's own target allocation, `{ dimension, targets: [{ key, share, symbol }] }` with `dimension` one of `type`, `currency` and `security` (null without targets), `share` a percentage string and `symbol` filled for a security, and is readable with an API token; `PUT` takes `{ dimension, targets: [{ key, share }] }` and replaces every target, an empty list removing them, refusing `allocation.shareInvalid`, `allocation.sharesTotal`, `allocation.bucketUnknown` and `allocation.bucketDuplicate`. See [Investments](features/investments.md#target-allocation).
-
-Since 2026-09-30 `GET /api/accounts/forecast` takes an optional `whatIfAccountId`, `whatIfAmount` (signed, non-zero) and `whatIfDate`, all three or none, and adds that unsaved payment as an entry with source `whatIf`. See [Cash-flow forecast](features/cash-flow-forecast.md#trying-a-payment).
-Since 2026-10-01 an account's `type` can also be `creditCard`, in bodies, responses and the `type` filter of `GET /api/accounts`; nothing else about the account changes, and its forecast never answers `belowZeroOn` or `belowZeroWithSpendingOn`. See [Accounts](features/accounts.md#credit-cards).
-
-Since 2026-09-30 category bodies take an optional `parentId` and responses answer it (`category.wrongType` for a parent of the other type, `category.nestingInvalid` for nesting deeper than one level); `categoryId` on the four transaction filters includes the sub-categories of a parent, and category breakdown items answer `parentId`, `parentName` and `parentIcon`. See [Categories](features/categories.md#groups).
-
-Since 2026-09-30 a budget body takes `categoryId` or `tagId`, exactly one (`required` on `categoryId` otherwise), and `BudgetResponse` answers `categoryId`, `tagId` and `name` in place of `categoryName`. See [Budgets](features/budgets.md#budgets-on-a-tag).
-
-Since 2026-09-30 every transaction response answers `payeeName`, the caller's own name for the row's `PayeeKey` or null, and `search` also matches it. `GET /api/payees` lists the caller's payee names (`id`, `payeeKey`, `name`), `PUT /api/payees` takes `{ payee, name }`, normalizes `payee` like a stored key (nothing left answers `text.invalidFormat`) and creates or renames the name (two first names for the same payee at the same moment answer the later one 409 `conflict.busy`), and `DELETE /api/payees/{id}` removes it (204, or 404 `resource.notFound`). The report's `expenseByPayee` items and the recurring-entry suggestions carry the same `name`. See [Payee names](features/payee-names.md).
-
-They also take `amountMin` and `amountMax`, since 2026-09-30: inclusive bounds on the size of the amount in the transaction's own currency, so a refund matches like a purchase of the same size. Each must be a non-negative amount with at most two decimals (`money.nonNegative`), and `amountMax` below `amountMin` answers `range.invalid`. See [Transactions](features/transactions.md#amount-range-filter).
-
-`/api/month-close` belongs to the `MonthClose` feature and tag, and every route answers 404 `feature.disabled` while it is off. `{month}` is `YYYY-MM` with a year from 2000 to 2999; anything else answers 400 `month.invalid`. Every route acts on the caller's own closes under the active household scope (the `X-Active-Household` header, or none for "Everything"). `GET /api/month-close?year=` (the current year when left out) answers `year` and twelve `months`, each with `month`, `status` (`notEnded`, `open`, `closed` or `closedChanged`) and `closedAt`. `GET /api/month-close/{month}` answers the review: `month`, `monthEnd`, `status`, `closedAt`, `note`, `checklist` (`uncategorized`; `unconfirmedRecurring` and `unusual`, each null while its feature is off; and `accounts`, since 2026-09-29 in place of `imports`: one `{ accountId, accountName, state, date, difference, currency }` per account with a reconciliation or, while `Import` is on, an imported row, `state` being `reconciled`, `differs`, `imported` or `behind`, always present), `figures` (the report summary of the month with the `previousMonth` comparison), `budgets` (monthly budgets as of `monthEnd`, null while `Budgets` is off), `netWorthStart` and `netWorthEnd` (net worth snapshot points, null when there is none or `NetWorth` is off) and `drift`, null unless the month is closed. `POST /api/month-close/{month}` takes `{ note? }` (at most 1000 characters; a missing note keeps the stored one), closes or re-closes the month and answers the review; a month that has not ended answers 409 `monthClose.notEnded`. `PUT /api/month-close/{month}/note` takes `{ note? }`, answers the review, and 404 `resource.notFound` when the month is not closed. `DELETE /api/month-close/{month}` reopens and answers 204, also when there was nothing to reopen. See [Month-end close](features/month-end-close.md).
-
-`GET /api/reports/summary` answers `expenseByCategory` and `incomeByCategory`. Items of both lists, and of `GET /api/dashboard/category-breakdown`, carry an optional `syntheticGroup`: null for a real category and for uncategorized amounts, `investmentIncome` or `investmentTaxesAndFees` for the total of investment ledger entries, which has `categoryId` null and an English `categoryName` as a fallback. A client names such a group in the viewer's language and does not link it to a category. `GET /api/dashboard/category-breakdown` always fills `comparisonAmount` and answers `comparisonStart` and `comparisonEnd`: the same period of the previous month, cut to the same days while the month has not ended ([Dashboard](features/dashboard.md#month)). The income and expense figures of the report and of the three dashboard endpoints include those investment entries while the `Investments` feature is on.
-
-`GET /api/reports/summary` also answers `expenseByPayee`, since 2026-09-29: at most 50 `PayeeBreakdownItem`s with `payeeKey`, `label` (the newest description), `amount`, `comparisonAmount` and `count`, over whole expense transactions grouped by the stored `PayeeKey` and ordered by the larger of the two amounts. The expenses without a description are one entry with `payeeKey` and `label` null. A `payeeKey` is what the transaction list's `payee` filter takes. The month-close review's `figures` carry it too. See [Reports](features/reports.md#expense-by-payee).
-
-`GET /api/reports/summary` answers 400 `range.invalid` for a `dateFrom` or `dateTo` outside 2000-01-01 to 2999-12-31 and for a `dateFrom` after `dateTo`, or after today when `dateTo` is left out. It also takes `comparison`: `none` (the default, and the same as leaving it out), `previousPeriod` for the same number of days immediately before the range, `previousMonth` for the same range a month earlier, or `previousYear` for the same range a year earlier, where for the last two a range that ends on the last day of a month again ends on the last day of the earlier month, so 1–31 March meets 1–28 (or 29) February. With a comparison the response gains `comparison` — the earlier period's `mode`, `periodStart`, `periodEnd`, `totalIncome`, `totalExpense` and `net` — while every category, tag and payee entry fills `comparisonAmount` and every trend point gains `comparisonBucketStart`, `comparisonIncome` and `comparisonExpense`. A category, synthetic group, tag or payee that only one of the two periods touched is one entry with `0.00` on the empty side, and the breakdowns are ordered by the larger of the two amounts. Trend points are paired by position: the first bucket of the range meets the first bucket of the earlier one, both bucketed the same way, and a bucket with no counterpart compares against zero. Every one of those fields is null without the parameter, so a client of the older shape is unaffected. The difference and its percentage are the client's to compute, because a change from a zero base has no percentage to show; `CategoryBreakdownItem` gained `comparisonAmount` too, and it stays null everywhere the dashboard uses it.
-
-Since 2026-10-02 `GET /api/reports/summary`, `GET /api/budgets` and `GET /api/dashboard/summary`, `monthly-trend` and `category-breakdown` take `share` (`SpendingShare`): `full`, the default and the same as leaving it out, or `mine`, which counts an expense split with a household or with people at the caller's own share and a household split another member paid at the caller's share. On `GET /api/budgets` it changes personal budgets only. The response shapes do not change. See [Household settle-up](features/household-settle-up.md#my-share).
 
 `PUT /api/investments/securities/{id}/price` takes `lastPrice` and an optional `lastPriceDate`, which defaults to today in the installation time zone and is refused with `range.invalid` when it is in the future. It records the price for that date and answers the security, whose `lastPrice` changes only when the date is the newest one. `GET /api/investments/securities/{id}/prices?from&to` lists the recorded points, newest first, to every signed-in user. `DELETE /api/investments/securities/{id}/prices/{date}` removes one point and answers 204, 403 `security.notHeld` under the same rule as setting a price, or 404 when the security or the point does not exist. `GET /api/investments/value-history?from&to&accountId` answers `reportingCurrency` and `points`, each with `date`, `marketValue`, `costBasis` and `isPartial`; `to` defaults to today and is never later, `from` defaults to one year before `to`, and `from` after `to` is `range.invalid`. The series is daily up to 92 days, weekly up to 731 days and monthly beyond, counted back from `to`, begins no earlier than the first trade, and is empty when nothing was traded by `to`. All of them sit under `/api/investments` and answer 404 `feature.disabled` while the feature is off.
 
@@ -662,17 +254,7 @@ Nothing is computed beyond restating the entries: no tax, rate or allowance is a
 
 `GET /api/investments/tax-summary/export?year&accountIds` answers the same year as a CSV attachment named `investment-tax-summary-<year>.csv`, streamed without a `Content-Length`; its columns are on the [Exports page](features/exports.md). Both sit under `/api/investments` and answer 404 `feature.disabled` while the feature is off.
 
-`GET /api/accounts/forecast?days=` projects each visible account's main-currency balance from today for `days` days, 30 to 90 and 90 by default, refused as `range.invalid` outside that range. It answers `from`, `to`, `accounts` (only those with an entry in the horizon, those that go below zero first) and `notCounted`, the caller's active recurring entries it could not place, each with `reason` `noAccount`, `noHistory`, `accountNotVisible` or `noExchangeRate` (a transfer into another currency whose newest rate is more than five days old or missing: it still leaves the source account, and only its arrival is left out). Each account carries `startBalance`, `usualDailySpending`, `lowestBalance`, `lowestOn`, `belowZeroOn`, `belowZeroWithSpendingOn`, `otherCurrencies` and `entries` (`date`, `source` `recurring` or `ledger`, `billId`, `name`, `shape`, signed `amount`, `estimated`, `overdue`, `balanceAfter`). The literal segment takes precedence over `/api/accounts/{id}`, and the route carries `RequiresFeature(RecurringBills)`, so it answers 404 `feature.disabled` while that switch is off. Details in [Cash-flow forecast](features/cash-flow-forecast.md).
-
-`GET /api/accounts/{id}/reconciliations/preview?date=&currency=` answers the ledger balance of the account on a statement date in `currency`, its main currency when left out, with `date`, `currency`, `ledgerBalance`, `previous` (the latest reconciliation before the date, or null), `rows` (at most 100 signed movements after `previous` up to the date, newest first, each `kind`, `id`, `date`, `description`, `amount`) and `rowCount`. `GET /api/accounts/{id}/reconciliations` answers the newest 24 reconciliations in every currency, each `id`, `date`, `balance`, `currency`, `source` (`manual` or `statement`), `ledgerBalance`, `difference` (statement minus ledger, computed on read) and `createdAt`. `POST /api/accounts/{id}/reconciliations` takes `{ date, balance, currency }`, `currency` optional, records or replaces the balance on that date in that currency and answers it; `DELETE /api/accounts/{id}/reconciliations/{reconciliationId}` answers 204. A date after today answers 400 `reconciliation.futureDate`, an unknown currency 400 `enum.invalid`, and an account the caller cannot see, or a reconciliation that is not there, 404 `resource.notFound`. Details in [Reconciliation](features/reconciliation.md).
-
-`GET /api/accounts/archived` answers the archived accounts the caller would see if they were active — their own, and the shared accounts of households both they and the owner still belong to — narrowed by the active household exactly as `GET /api/accounts` is, sorted by name. Each row carries `id`, `name`, `description`, `iban`, `type`, `startingBalance`, `currency`, `scope`, `householdId`, `archivedAt` and `canRestore`, which is true only for the owner. There is no balance: the transactions of an archived account are filtered out with it. `POST /api/accounts/{id}/restore` takes no body and answers 200 with the account as `GET /api/accounts/{id}` would, balance included. It answers the same 200 for an account that is already active, which makes it safe to repeat, 403 `access.forbidden` when the caller can see the archived account but does not own it, and 404 `resource.notFound` when no such account, archived or active, is visible — including one that belongs to another household than the active one. An account still marked as shared into a household its owner no longer belongs to comes back personal rather than being refused. Details in [Accounts](features/accounts.md).
-
-`GET /api/households/{id}/audit?page&pageSize&memberId&kind&dateFrom&dateTo` answers a page of the household's activity, newest first. Each row carries `id`, `occurredAt`, `actorUserId`, `actorName` (looked up on read), `action` (`created`, `updated`, `deleted`, `restored`, `imported`, `shared`, `unshared`, `memberAdded`, `memberRemoved`, `memberRoleChanged` or `renamed`), `entityKind` (`account`, `transaction`, `transfer`, `conversion`, `investmentTransaction`, `category`, `tag`, `household`, `member`, `attachment`, `sharedExpense` or `settlement`), a nullable `entityId` (null for a bulk edit; the account for an import; the user for a membership row), the stored `description`, a nullable `count` for an import or bulk edit, and `changes`, a list of `{field, from, to}` display strings for an update, a rename or a role change. `memberId` filters by actor, `kind` by entity kind, `dateFrom` and `dateTo` by whole days in the installation's time zone; a start after the end answers 400 `range.invalid`. A caller who is not a member, an unknown or deleted household, and any household other than the one active in `X-Active-Household` all answer 404 `resource.notFound`. The route is under the Households feature switch. What is written, and when, is in [Audit log](features/audit-log.md).
-
-`GET /api/trash` answers a page of what the signed-in user deleted in the last 30 days and has not restored, newest first; each row carries `id`, `kind`, `entityId`, `description` and `deletedAt`. `kind` is one of `transaction`, `transfer`, `conversion`, `budget`, `goal`, `asset`, `debt`, `recurringBill`, `investmentTransaction`, `category`, `tag`, `categorizationRule`, `household`, `attachment`, `csvImportMapping`, `sharedExpense` and `settlement`, and a kind whose feature is switched off is left out of the list. `POST /api/trash/restore` takes `kind` and `entityId` — the record's own id, not the trash row's — so the toast shown right after a delete and the Restore button on the screen call one operation, and answers 204. It answers 204 again when the record is already back, which makes it safe to repeat. `POST /api/trash/restore-transactions` takes `transactionIds` (1 to 200), restores each of the caller's deleted transactions through the same checks and answers 200 with `restored` and `refused`, a list of `{ transactionId, code, reason }` for the rows that stay in the trash; it is the undo of `POST /api/transactions/bulk-delete`, which takes `transactionIds` and answers `{ deleted }`. `POST /api/transactions/bulk-account` takes `transactionIds` and `accountId` and answers `{ moved, refused }`, refusing a conversion fee (`transaction.conversionFee`), a household split whose payer does not own the account (`settleUp.notPayer`) and a shared debt payment on an account outside the debt's household (`household.referenceNotShared`). None of the three is token-writable. See [Transactions](features/transactions.md#deleting-a-selection-and-moving-it-to-another-account).
-Restoring a transaction brings its split lines and its tags with it, and its group while the group is live, and a conversion brings back its fee transaction; restoring a `transactionGroup` regroups its recorded members that are still live and in no other group; it is refused with 404 `resource.notFound` when nothing the caller deleted matches or the feature is off, 400 `restore.expired`, `restore.referenceMissing`, `restore.companionDeleted`, `restore.detailsLost` or `restore.securityChanged`, 400 `holding.oversold` or `holding.dependentSales` when the replayed holding of a restored investment entry would sell more than was held at some point, and 409 `restore.slotTaken` when another budget already holds the category and period. A category, tag, rule or household comes back with the rows its delete rewrote, where they are still in the state the delete left them; it is refused with 409 `restore.nameTaken` when another tag of the caller now has the tag's name, 400 `collection.invalidSize` when a restored rule would be the 101st, and 403 `access.forbidden` when the caller is no longer an owner of the household. A split expense or a settle-up payment is refused with 400 `household.notMember` when the caller is no longer a member of its household, `restore.referenceMissing` when a split's transaction is deleted or purged, and 409 `settleUp.alreadySplit` or `settleUp.transferTaken` when its transaction was split again or its transfer settles another payment.
-`TrashGroup` declares no feature, for the reason the notification routes are ungated: the pair belongs to no single feature, so the service filters by feature per row instead.
+### Receipts and attachments
 
 Files attached to a transaction: `GET /api/transactions/{transactionId}/attachments` lists them oldest first, and `POST` to the same route takes one file as multipart/form-data in the field `file` and answers 201 with `id`, `transactionId`, `fileName`, `contentType`, `sizeBytes`, `sha256`, `uploadedById`, `uploadedByName` and `uploadedAt`. JPEG, PNG, WebP, HEIC and PDF up to 10 MB are accepted, ten per transaction; the type is read from the bytes and a disagreeing declared type is refused, and an image is stored upright without its metadata and a HEIC photo as JPEG, so `fileName`, `contentType`, `sizeBytes` and `sha256` describe the stored file (`attachment.empty`, `attachment.tooLarge`, `attachment.typeNotAllowed`, `attachment.contentMismatch`, 409 `attachment.limitReached`); the upload is throttled to 30 calls per five minutes per client (429). `GET /api/attachments/{id}/content` streams the file as `Content-Disposition: attachment` with `nosniff`, a sandboxing policy and the SHA-256 as ETag (304 on a match); `DELETE /api/attachments/{id}` moves it to the trash as kind `attachment`. Every route answers 404 for a transaction or file the caller cannot see. A transaction response carries `attachmentCount`. See [Attachments](features/attachments.md).
 
@@ -680,9 +262,27 @@ Files attached to a transaction: `GET /api/transactions/{transactionId}/attachme
 `PUT /api/receipts/{id}/categories` takes `items`, each `index` and `categoryId` (null to forget), stores the choices and remembers them per item name, and answers 204; an index outside the reading answers `range.invalid`, a category that is not a visible expense category `reference.notFound` or `category.wrongType`, and someone else's reading 404. Since 2026-10-01 `GET /api/receipts/item-categories?search` lists the caller's remembered item categories, `items` (`id`, `key`, `categoryId`, `lastUsed`) most recently used first and at most 100, with `total` counting every match (`search` over 100 characters answers `text.tooLong`), and `DELETE /api/receipts/item-categories/{id}` forgets one for good (204, or 404 `resource.notFound`); see [Receipt reading](features/receipt-reading.md#remembered-items-on-the-categories-page). All of them sit under `/api/receipts` and answer 404 `feature.disabled` while `ReceiptReading` is off.
 `GET /api/settings` answers `receiptReadingReady`, the switch and whether Tesseract is installed. See [Receipt reading](features/receipt-reading.md).
 
+Since 2026-10-03 the `result` of `POST /api/receipts/read` answers `isInvoice`, `invoiceNumber` and `dueDate` (false and null for a till receipt), and an adjustment may be of kind `vat`; for an invoice the candidates reach three days past the due date. See [Receipt reading](features/receipt-reading.md#reading-an-invoice).
+
+Since 2026-09-30 `GET /api/receipts/items` takes `dateFrom`, `dateTo` and an optional `search` and answers `{ items: [{ key, name, currency, amount, count, lastBought }], receipts }`, the caller's receipt items summed by normalized name. See [Receipt reading](features/receipt-reading.md#spending-per-item).
+
+Since 2026-09-30 `PUT /api/attachments/{id}/warranty` takes `{ warrantyUntil }` (a date or null) and answers the attachment, whose responses carry `warrantyUntil`; a `warrantyExpiring` notification follows 30 days before. See [Attachments](features/attachments.md#warranty-dates).
+
+### Debts and net worth
+
 Debt bodies take optional repayment terms: `loanAmount`, `firstPaymentDate`, `termMonths` (1 to 600) or `monthlyPayment` but not both (`value.mustBeEmpty`), and `amortizationType` (`annuity`, the default, or `linear`, which takes no monthly payment). A body written before this addition leaves them out and stores a debt without a schedule, and because an update replaces the debt, leaving them out of a `PUT` clears them. A monthly payment that would not repay the loan within 600 payments is refused with `debt.paymentTooSmall`. Since 2026-10-03 `interestRate` takes at most four decimals and is refused with `debt.ratePrecision` beyond that. A debt response carries the terms and `payoffDate`, the date of the last scheduled payment, or null when the terms are incomplete. `GET /api/debts/{id}/schedule?extraMonthly&lumpSum&lumpSumDate` answers the computed schedule — the regular payment, the scheduled balance and payments made as of today, and a `plan` with its payoff date, totals and one row per payment (date, payment, interest, principal, extra, balance) — plus, when an overpayment was asked for, `withExtra`, `interestSaved` and `paymentsSaved` for the same payment over a shorter term, and `lowerPayment` for the same number of payments at a lower payment. The overpayments are dot-decimal query strings (`money.nonNegative`), and a positive `lumpSum` needs `lumpSumDate` (`required`). It answers 404 for a debt the caller does not own and 400 `debt.scheduleIncomplete` for one without complete terms. See [Debt amortization](features/debt-amortization.md).
 
 Debt bodies also take `tracksPayments` (false when left out). A debt response carries `tracksPayments`, `trackedBalance` (null unless it tracks payments), `trackedIncomplete` and `unavailablePayments`. `GET /api/debts/{id}/payments` lists the counted payments with their interest, principal and balance after; `POST` to the same route links `{ transactionId, kind?, principal? }` (`debt.notTracked`, `reference.notFound`, `debt.paymentWrongType`, `transaction.splitNotAllowed`, 409 `debt.paymentTaken`); `PUT` and `DELETE` on `/api/debts/{id}/payments/{paymentId}` change or remove a link; `GET /api/debts/{id}/payment-candidates?from` suggests unlinked expenses. Link, update and the debt endpoints answer the debt with its new tracked balance. Recurring entry bodies and responses carry `debtId`, accepted only on the expense shape (`recurringBill.debtShape`). Transaction list rows carry `debtPayment` for every member who can see the debt. See [Debt amortization](features/debt-amortization.md#tracking-payments).
+
+Asset and debt responses carry `currency`, the reporting currency of the day the asset or debt was created, in which its amounts stay; a debt's loan amount and monthly payment are in the same currency. `GET /api/networth` answers `accounts`, `assets`, `debts` and `netWorth` in the reporting currency with `isComplete`, false when an account balance, a holding, an asset or a debt could not be valued and was left out; `GET /api/networth/history` converts a point stored in an earlier reporting currency at the rate of its date. `GET /api/dashboard/summary` carries the same `isComplete` for `totalBalance`.
+
+Since 2026-10-02 `GET /api/networth` also answers `countsOpenBalances`, `receivable` and `payable`. `PUT /api/networth/open-balances` takes `{ "count": true }` or `false` (400 `required` without it), stores the caller's choice and answers the net worth under it. While it is true `receivable`, what the caller's households and people owe them, is inside `assets` and `payable`, what they owe, is inside `debts`; both are `0.00` otherwise. See [Net worth](features/net-worth.md#open-settle-up-balances).
+
+### Households, people and sharing
+
+Budget, goal and recurring entry requests take an optional `scope` (`personal`, the default, or `shared`) and `householdId`, as accounts, categories and tags do, and their responses carry both. Since 2026-10-04 the responses of every shareable record — accounts, categories, tags, budgets, goals, recurring entries, assets, debts, transaction groups and the ledger's group summaries — also carry `isMine`, true when the caller owns the record. A shared one answers 400 `household.referenceNotShared` when a category, tag or account it names is not shared with the same household, or a debt a recurring entry pays; only its owner changes its sharing or deletes it (403 `access.forbidden`).
+
+Since 2026-09-30 asset and debt requests take the same optional `scope` and `householdId`, and their responses carry both. Members of the household edit a shared asset or debt, set and delete its valuations or, since 2026-10-01, its recorded balances, and link, change and unlink its payments; only its owner changes its sharing or deletes it (403 `access.forbidden`). A shared debt answers 400 `household.referenceNotShared` when a payment is linked from an account not shared with its household, when it is shared while its linked payments sit on such accounts, and when a recurring entry that pays it uses such an account. See [Shared assets and debts](features/households-and-sharing.md#shared-assets-and-debts).
 
 Since 2026-09-29 the household settle-up routes are under the Households switch and every one answers 404 `resource.notFound` for a caller who is not a member, a deleted household, or a household other than the one active in `X-Active-Household`. `GET /api/households/{id}/settle-up` answers `balances`, the non-zero `{ userId, name, isMember, currency, amount }` of each member per currency (positive is owed to the member), and `payments`, the suggested `{ fromUserId, fromName, toUserId, toName, currency, amount }`.
 Since 2026-10-01 the routes under `/api/contacts` keep the caller's people outside the household, under the Households switch and personal to the caller: another member's person answers 404 `resource.notFound`. `GET /api/contacts` answers each person by name with `id`, `name` and `balances`, the non-zero `{ currency, amount }` per currency, positive when the person owes the caller. `POST` and `PUT /api/contacts/{id}` take `{ name }` (1 to 100 characters); `DELETE` sends the person to the trash as `contact`.
@@ -691,18 +291,14 @@ Since 2026-10-01 the routes under `/api/contacts` keep the caller's people outsi
 
 `POST /api/contacts/splits` takes `{ transactionId, method, own, shares }`, `own` being the caller's `{ weight, amount }` or null when they take no part and `shares` one `{ contactId, weight, amount }` per person, and answers 201 with `{ id, method, ownWeight, ownAmount, shares }`; it refuses with `reference.notFound`, `settleUp.notPayer`, `settleUp.notExpense`, `contact.noPerson`, `settleUp.sharesMismatch` and 409 `settleUp.alreadySplit`, which a household split now also answers for a transaction split with people. `PUT /api/contacts/splits/{id}` takes `{ method, own, shares }` and copies the transaction's current amount, date and description first; `DELETE` sends it to the trash as `contactSplit`. Transaction rows carry `contactSplit` with the same shape for their owner. Only the two `GET` routes are token-readable. See [Money with people outside the household](features/money-with-people.md).
 
-Budget, goal and recurring entry requests take an optional `scope` (`personal`, the default, or `shared`) and `householdId`, as accounts, categories and tags do, and their responses carry both. Since 2026-10-04 the responses of every shareable record — accounts, categories, tags, budgets, goals, recurring entries, assets, debts, transaction groups and the ledger's group summaries — also carry `isMine`, true when the caller owns the record. A shared one answers 400 `household.referenceNotShared` when a category, tag or account it names is not shared with the same household, or a debt a recurring entry pays; only its owner changes its sharing or deletes it (403 `access.forbidden`).
-
-Since 2026-09-30 asset and debt requests take the same optional `scope` and `householdId`, and their responses carry both. Members of the household edit a shared asset or debt, set and delete its valuations or, since 2026-10-01, its recorded balances, and link, change and unlink its payments; only its owner changes its sharing or deletes it (403 `access.forbidden`). A shared debt answers 400 `household.referenceNotShared` when a payment is linked from an account not shared with its household, when it is shared while its linked payments sit on such accounts, and when a recurring entry that pays it uses such an account. See [Shared assets and debts](features/households-and-sharing.md#shared-assets-and-debts).
-
 `GET /api/households/{id}/shared-expenses?page&pageSize` pages the splits newest first: `id`, `payerId`, `payerName`, the copied `date`, `description`, `amount` and `currency`, `method` (`equal`, `shares` or `exact`), `shares` (`userId`, `name`, `weight`, `amount`), the caller's `myShare`, `counted` (false while the transaction is deleted), and `transactionId` and `amountDiffers`, which are null except for the payer. `POST` to the same route takes `{ transactionId, method, shares: [{ userId, weight?, amount? }] }` and answers 201 with the split; it is refused with 400 `reference.notFound`, `settleUp.notPayer`, `settleUp.notExpense`, `household.notMember`, `settleUp.noOtherMember` or `settleUp.sharesMismatch`, and 409 `settleUp.alreadySplit`. Between 1 and 20 members take part, each once (`collection.invalidSize`, `conflict.duplicate`); a weight is a whole number from 1 to 100 (`range.invalid`).
 `PUT /api/households/{id}/shared-expenses/{expenseId}` takes `{ method, shares, refreshFromTransaction }` and `DELETE` removes it; both are for the payer only (403 `access.forbidden`). `GET /api/households/{id}/settlements?page&pageSize` pages the payments: `id`, `fromUserId`, `fromName`, `toUserId`, `toName`, `amount`, `currency`, `date`, `note` and `hasTransfer`. `POST` takes `{ fromUserId, toUserId, amount, currency, date, note?, transfer?: { fromAccountId, toAccountId }, transferId? }` and answers 201; it is refused with 403 `access.forbidden` when the caller is neither party, 400 `settleUp.samePerson`, `household.notMember`, `reference.notFound`, `settleUp.accountOwner` or `settleUp.currencyMismatch`, `value.mustBeEmpty` when both `transfer` and `transferId` are sent, and 409 `settleUp.transferTaken`.
 `DELETE /api/households/{id}/settlements/{settlementId}` is for either party and leaves the transfer. Transaction rows, from the list and from `GET`, `POST` and `PUT /api/transactions` alike (one `ResponderAsync` builds all of them), carry `sharedExpense` for the payer (`id`, `householdId`, `householdName`, `method`, `shares`, `myShare`, `amountDiffers`), and account responses carry `ownerId`. The three `GET` routes are token-readable. See [Household settle-up](features/household-settle-up.md).
 
-Asset and debt responses carry `currency`, the reporting currency of the day the asset or debt was created, in which its amounts stay; a debt's loan amount and monthly payment are in the same currency. `GET /api/networth` answers `accounts`, `assets`, `debts` and `netWorth` in the reporting currency with `isComplete`, false when an account balance, a holding, an asset or a debt could not be valued and was left out; `GET /api/networth/history` converts a point stored in an earlier reporting currency at the rate of its date. `GET /api/dashboard/summary` carries the same `isComplete` for `totalBalance`.
+`GET /api/households/{id}/audit?page&pageSize&memberId&kind&dateFrom&dateTo` answers a page of the household's activity, newest first. Each row carries `id`, `occurredAt`, `actorUserId`, `actorName` (looked up on read), `action` (`created`, `updated`, `deleted`, `restored`, `imported`, `shared`, `unshared`, `memberAdded`, `memberRemoved`, `memberRoleChanged` or `renamed`), `entityKind` (`account`, `transaction`, `transfer`, `conversion`, `investmentTransaction`, `category`, `tag`, `household`, `member`, `attachment`, `sharedExpense` or `settlement`), a nullable `entityId` (null for a bulk edit; the account for an import; the user for a membership row), the stored `description`, a nullable `count` for an import or bulk edit, and `changes`, a list of `{field, from, to}` display strings for an update, a rename or a role change. `memberId` filters by actor, `kind` by entity kind, `dateFrom` and `dateTo` by whole days in the installation's time zone; a start after the end answers 400 `range.invalid`. A caller who is not a member, an unknown or deleted household, and any household other than the one active in `X-Active-Household` all answer 404 `resource.notFound`. The route is under the Households feature switch. What is written, and when, is in [Audit log](features/audit-log.md).
 
-Since 2026-10-02 `GET /api/networth` also answers `countsOpenBalances`, `receivable` and `payable`. `PUT /api/networth/open-balances` takes `{ "count": true }` or `false` (400 `required` without it), stores the caller's choice and answers the net worth under it. While it is true `receivable`, what the caller's households and people owe them, is inside `assets` and `payable`, what they owe, is inside `debts`; both are `0.00` otherwise. See [Net worth](features/net-worth.md#open-settle-up-balances).
+### Trash
 
-Budget bodies carry `period` (`weekly`, `monthly`, `quarterly` or `yearly`) and `rolloverEnabled`. Both default to the shape a body written before this addition had, monthly with no rollover, so such a body still creates the budget it used to. A category may carry one budget per period; a second one for the same pair is refused with 409 `conflict.duplicate`, on create and on an update that would move a budget onto a taken pair. The response adds `carriedAmount`, `effectiveLimit`, `rolloverEnabled`, `windowStart` and the inclusive `windowEnd`: `limitAmount` is still the typed limit, `effectiveLimit` is that plus the carry, and `spent` and `remaining` are measured inside the window instead of the calendar month. With rollover off the carry is zero and the three numbers read exactly as the two did before.
-
-`GET /api/budgets/suggestions?period=` is read-only and requires `period`; a value that is not one of the four answers 400 `request.malformed` on the `period` field, because the query binding rejects it before validation runs. It answers `period` and `categories`: every visible expense category with spending in the last six complete windows of that period, by name, each with `categoryId`, `categoryName`, `windows` (`start`, the inclusive `end` and `spent`, oldest first; the window that holds today is left out and windows that end before the caller's earliest transaction are dropped), `median` and `suggestedLimit` (both null with fewer than three windows; `suggestedLimit` is also null when the median is zero), `isSteady` and `hasBudget` (the caller has a budget of this period on the category). The client creates a suggested budget through `POST /api/budgets`. See [Budgets](features/budgets.md#limits-from-history).
+`GET /api/trash` answers a page of what the signed-in user deleted in the last 30 days and has not restored, newest first; each row carries `id`, `kind`, `entityId`, `description` and `deletedAt`. `kind` is one of `transaction`, `transfer`, `conversion`, `budget`, `goal`, `asset`, `debt`, `recurringBill`, `investmentTransaction`, `category`, `tag`, `categorizationRule`, `household`, `attachment`, `csvImportMapping`, `sharedExpense` and `settlement`, and a kind whose feature is switched off is left out of the list. `POST /api/trash/restore` takes `kind` and `entityId` — the record's own id, not the trash row's — so the toast shown right after a delete and the Restore button on the screen call one operation, and answers 204. It answers 204 again when the record is already back, which makes it safe to repeat. `POST /api/trash/restore-transactions` takes `transactionIds` (1 to 200), restores each of the caller's deleted transactions through the same checks and answers 200 with `restored` and `refused`, a list of `{ transactionId, code, reason }` for the rows that stay in the trash; it is the undo of `POST /api/transactions/bulk-delete`, which takes `transactionIds` and answers `{ deleted }`. `POST /api/transactions/bulk-account` takes `transactionIds` and `accountId` and answers `{ moved, refused }`, refusing a conversion fee (`transaction.conversionFee`), a household split whose payer does not own the account (`settleUp.notPayer`) and a shared debt payment on an account outside the debt's household (`household.referenceNotShared`). None of the three is token-writable. See [Transactions](features/transactions.md#deleting-a-selection-and-moving-it-to-another-account).
+Restoring a transaction brings its split lines and its tags with it, and its group while the group is live, and a conversion brings back its fee transaction; restoring a `transactionGroup` regroups its recorded members that are still live and in no other group; it is refused with 404 `resource.notFound` when nothing the caller deleted matches or the feature is off, 400 `restore.expired`, `restore.referenceMissing`, `restore.companionDeleted`, `restore.detailsLost` or `restore.securityChanged`, 400 `holding.oversold` or `holding.dependentSales` when the replayed holding of a restored investment entry would sell more than was held at some point, and 409 `restore.slotTaken` when another budget already holds the category and period. A category, tag, rule or household comes back with the rows its delete rewrote, where they are still in the state the delete left them; it is refused with 409 `restore.nameTaken` when another tag of the caller now has the tag's name, 400 `collection.invalidSize` when a restored rule would be the 101st, and 403 `access.forbidden` when the caller is no longer an owner of the household. A split expense or a settle-up payment is refused with 400 `household.notMember` when the caller is no longer a member of its household, `restore.referenceMissing` when a split's transaction is deleted or purged, and 409 `settleUp.alreadySplit` or `settleUp.transferTaken` when its transaction was split again or its transfer settles another payment.
+`TrashGroup` declares no feature, for the reason the notification routes are ungated: the pair belongs to no single feature, so the service filters by feature per row instead.

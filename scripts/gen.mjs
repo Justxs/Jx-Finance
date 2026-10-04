@@ -5,7 +5,7 @@ import { fail, root, run } from "./run.mjs";
 
 const checkDrift = process.argv.includes("--check");
 const exportConnection = "Host=localhost;Database=export;Username=export;Password=export";
-const generated = ["frontend/openapi.json", "frontend/src/api/generated", "frontend/src/api/schemas", "docs/api.md"];
+const generated = ["frontend/openapi.json", "frontend/src/api/generated", "frontend/src/api/schemas", "docs/api-routes.md"];
 
 function snapshot() {
   const hashes = new Map();

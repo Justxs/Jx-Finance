@@ -1,12 +1,13 @@
 import { execFileSync } from "node:child_process";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
-import { apiDoc, withRoutes } from "./api-docs.mjs";
+import { routesDoc, routesPage } from "./api-docs.mjs";
 import { codeReferenceProblems } from "./code-references.mjs";
 import { designProblems } from "./design-drift.mjs";
 import { fail, root, run } from "./run.mjs";
 
 const maxLine = 2000;
+const maxSection = 16000;
 const rootFiles = ["AGENTS.md", "CLAUDE.md", "README.md", "PRODUCT.md", "DESIGN.md"];
 
 function walk(dir) {
@@ -75,12 +76,23 @@ function scan(text) {
   const counts = new Map();
   const links = [];
   const long = [];
+  const sprawling = [];
+  let section = { line: 1, size: 0, history: false };
+  function closeSection() {
+    if (section.size > maxSection && !section.history) sprawling.push(section);
+  }
   let fence = false;
   lines.forEach((line, index) => {
     if (/^\s*```/.test(line)) fence = !fence;
+    const heading = fence ? null : line.match(/^#{1,6} (.+)$/);
+    if (heading) {
+      closeSection();
+      section = { line: index + 1, size: 0, history: /^(Done|Log)$/.test(heading[1]) };
+    } else {
+      section.size += line.length + 1;
+    }
     if (fence) return;
     if (line.length > maxLine && !line.startsWith("|")) long.push(index + 1);
-    const heading = line.match(/^#{1,6} (.+)$/);
     if (heading) {
       const base = slugify(heading[1]);
       const seen = counts.get(base) ?? 0;
@@ -92,7 +104,8 @@ function scan(text) {
       links.push({ line: index + 1, target: match[1].replace(/^<|>$/g, "") });
     }
   });
-  return { anchors, links, long };
+  closeSection();
+  return { anchors, links, long, sprawling };
 }
 
 const files = staged
@@ -105,8 +118,11 @@ for (const file of files) {
   if (file.startsWith("docs/") && !/^[a-z0-9/.-]+$/.test(file.replace(/README\.md$/, "readme.md"))) {
     problems.push(`${file}: use lowercase kebab-case names without spaces`);
   }
-  const { links, long } = parsed.get(file);
+  const { links, long, sprawling } = parsed.get(file);
   for (const line of long) problems.push(`${file}:${line}: line longer than ${maxLine} characters; break it at a sentence`);
+  for (const { line, size } of sprawling) {
+    problems.push(`${file}:${line}: ${size} characters before the next heading, over ${maxSection}; split the section with headings an agent can jump to`);
+  }
   for (const { line, target } of links) {
     if (/^[a-z][a-z0-9+.-]*:/i.test(target)) continue;
     const hash = target.indexOf("#");
@@ -127,9 +143,8 @@ for (const file of files) {
 }
 
 if (files.includes("DESIGN.md")) problems.push(...designProblems(indexed.get("DESIGN.md") ?? readDisk("DESIGN.md")));
-if (files.includes(apiDoc)) {
-  const text = indexed.get(apiDoc) ?? readDisk(apiDoc);
-  if (withRoutes(text) !== text) problems.push(`${apiDoc}: the route list differs from frontend/openapi.json; run just gen`);
+if (files.includes(routesDoc) && (indexed.get(routesDoc) ?? readDisk(routesDoc)) !== routesPage()) {
+  problems.push(`${routesDoc}: the route list differs from frontend/openapi.json; run just gen`);
 }
 const referencing = files.filter((file) => file === "AGENTS.md" || (file.startsWith("docs/") && !/^docs\/(decisions|plans)\//.test(file)));
 problems.push(...codeReferenceProblems(referencing.map((file) => ({ file, text: indexed.get(file) ?? readDisk(file) }))));

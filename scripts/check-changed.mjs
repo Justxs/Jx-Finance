@@ -1,4 +1,4 @@
-import { existsSync } from "node:fs";
+import { existsSync, readdirSync } from "node:fs";
 import path from "node:path";
 import { fail, root, run } from "./run.mjs";
 
@@ -12,11 +12,31 @@ const changed = [...new Set([...lines(["diff", "--name-only", "HEAD"]), ...lines
 const frontend = changed.filter((file) => file.startsWith("frontend/")).map((file) => file.slice("frontend/".length));
 const lintable = frontend.filter((file) => /\.(?:ts|tsx|mjs)$/.test(file));
 const formattable = frontend.filter((file) => /\.(?:ts|tsx|js|cjs|mjs|json|jsonc|css|md)$/.test(file));
+const contractTests = [
+  ["src/locales/", ["src/locales/locales.test.ts", "src/lib/server-error-codes.test.ts"]],
+  ["src/api/", ["src/api/invalidation.test.ts", "src/storybook/fixtures.contract.test.ts"]],
+  ["src/storybook/", ["src/storybook/fixtures.contract.test.ts"]],
+];
+
+function testsBeside(file) {
+  const folder = path.posix.dirname(file);
+  return readdirSync(path.join(root, "frontend", folder))
+    .filter((name) => /\.test\.(?:ts|tsx|mjs)$/.test(name))
+    .map((name) => `${folder}/${name}`);
+}
+
+const ownTests = [
+  ...new Set([
+    ...frontend.filter((file) => /^(?:src|lint)\/.+\.(?:ts|tsx|mjs)$/.test(file)).flatMap(testsBeside),
+    ...contractTests.filter(([prefix]) => frontend.some((file) => file.startsWith(prefix))).flatMap(([, tests]) => tests),
+  ]),
+];
 
 const steps = [];
 if (lintable.length > 0) steps.push(["nub", ["exec", "--cwd", "frontend", "oxlint", "--no-error-on-unmatched-pattern", ...lintable]]);
 if (formattable.length > 0) steps.push(["nub", ["exec", "--cwd", "frontend", "oxfmt", "--check", "--no-error-on-unmatched-pattern", ...formattable]]);
 if (frontend.length > 0) steps.push(["nub", ["exec", "--cwd", "frontend", "tsc", "-b"]]);
+if (ownTests.length > 0) steps.push(["nub", ["exec", "--cwd", "frontend", "vitest", "run", "--project", "unit", "--project", "dom", ...ownTests]]);
 if (changed.some((file) => file.startsWith("backend/"))) {
   steps.push(["node", ["scripts/format-backend.mjs", "--check"]], ["just", ["test-unit"]]);
 }
