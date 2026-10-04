@@ -190,5 +190,5 @@ public sealed class AssetService(
         return db.Assets.FindOrNotFoundAsync(a => a.Id == assetId, AssetNotFound, cancellationToken);
     }
 
-    private AssetResponse ToResponse(Asset asset) => asset.ToResponse([asset.Newest], clock.Today);
+    private AssetResponse ToResponse(Asset asset) => asset.ToResponse([asset.Newest], clock.Today, currentUser.Id);
 }

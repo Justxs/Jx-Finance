@@ -51,6 +51,7 @@ export const CreateCategoryResponse = zod.object({
   isDefault: zod.boolean(),
   scope: zod.enum(["personal", "shared"]),
   householdId: zod.uuid().nullable(),
+  isMine: zod.boolean(),
   parentId: zod.uuid().nullish(),
 });
 
@@ -66,6 +67,7 @@ export const CategoriesResponseItem = zod.object({
   isDefault: zod.boolean(),
   scope: zod.enum(["personal", "shared"]),
   householdId: zod.uuid().nullable(),
+  isMine: zod.boolean(),
   parentId: zod.uuid().nullish(),
 });
 export const CategoriesResponse = zod.array(CategoriesResponseItem);
@@ -102,5 +104,6 @@ export const UpdateCategoryResponse = zod.object({
   isDefault: zod.boolean(),
   scope: zod.enum(["personal", "shared"]),
   householdId: zod.uuid().nullable(),
+  isMine: zod.boolean(),
   parentId: zod.uuid().nullish(),
 });

@@ -7,6 +7,7 @@ function tag(id: string, name: string, householdId: string | null = null): TagRe
     name,
     scope: householdId ? "shared" : "personal",
     householdId,
+    isMine: true,
   };
 }
 

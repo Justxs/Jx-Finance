@@ -10,17 +10,33 @@ const sharingFieldGroup = defineAppFieldGroup(({ strict }) => ({
   householdId: strict<string>(),
 }));
 
+interface SharedRecord {
+  isMine: boolean;
+}
+
+export function sharingFieldCount(
+  householdCount: number,
+  record: SharedRecord | undefined,
+  scope: Scope,
+) {
+  if (householdCount === 0 || record?.isMine === false) {
+    return 0;
+  }
+  return scope === "shared" ? 2 : 1;
+}
+
 interface Props {
   fields: typeof sharingFieldGroup.fields;
   idPrefix: string;
   grid?: boolean;
+  record?: SharedRecord;
 }
 
-function SharingFieldsGroup({ fields, idPrefix, grid = false }: Readonly<Props>) {
+function SharingFieldsGroup({ fields, idPrefix, grid = false, record }: Readonly<Props>) {
   const { t } = useTranslation();
   const households = useHouseholdsSuspense().data;
 
-  if (households.length === 0) {
+  if (sharingFieldCount(households.length, record, "personal") === 0) {
     return null;
   }
 

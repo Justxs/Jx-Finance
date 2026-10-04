@@ -27,7 +27,7 @@ public static class BudgetMapper
         budget.ApplySharing(input);
     }
 
-    public static BudgetResponse ToResponse(this Budget budget, string? name, BudgetUsage usage)
+    public static BudgetResponse ToResponse(this Budget budget, string? name, BudgetUsage usage, Guid callerId)
     {
         var limit = budget.LimitAmount.Amount;
         var effectiveLimit = limit + usage.Carried;
@@ -47,6 +47,7 @@ public static class BudgetMapper
             usage.Window.LastDay,
             budget.Scope,
             budget.HouseholdId?.Value,
+            budget.UserId == callerId,
             budget.Version);
     }
 }

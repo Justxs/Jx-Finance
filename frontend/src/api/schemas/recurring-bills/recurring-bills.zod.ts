@@ -125,6 +125,7 @@ export const CreateRecurringBillResponse = zod.object({
   debtId: zod.uuid().nullable(),
   scope: zod.enum(["personal", "shared"]),
   householdId: zod.uuid().nullable(),
+  isMine: zod.boolean(),
   spreadMonths: zod.int().nullish(),
   spreadDirection: zod.union([zod.null(), zod.enum(["forward", "backward"])]).optional(),
 });
@@ -175,6 +176,7 @@ export const RecurringBillsResponseItem = zod.object({
   debtId: zod.uuid().nullable(),
   scope: zod.enum(["personal", "shared"]),
   householdId: zod.uuid().nullable(),
+  isMine: zod.boolean(),
   spreadMonths: zod.int().nullish(),
   spreadDirection: zod.union([zod.null(), zod.enum(["forward", "backward"])]).optional(),
 });
@@ -365,6 +367,7 @@ export const RecurringBillResponse = zod.object({
   debtId: zod.uuid().nullable(),
   scope: zod.enum(["personal", "shared"]),
   householdId: zod.uuid().nullable(),
+  isMine: zod.boolean(),
   spreadMonths: zod.int().nullish(),
   spreadDirection: zod.union([zod.null(), zod.enum(["forward", "backward"])]).optional(),
 });
@@ -473,6 +476,7 @@ export const UpdateRecurringBillResponse = zod.object({
   debtId: zod.uuid().nullable(),
   scope: zod.enum(["personal", "shared"]),
   householdId: zod.uuid().nullable(),
+  isMine: zod.boolean(),
   spreadMonths: zod.int().nullish(),
   spreadDirection: zod.union([zod.null(), zod.enum(["forward", "backward"])]).optional(),
 });
@@ -552,6 +556,7 @@ export const ConfirmRecurringBillResponse = zod.object({
     debtId: zod.uuid().nullable(),
     scope: zod.enum(["personal", "shared"]),
     householdId: zod.uuid().nullable(),
+    isMine: zod.boolean(),
     spreadMonths: zod.int().nullish(),
     spreadDirection: zod.union([zod.null(), zod.enum(["forward", "backward"])]).optional(),
   }),
@@ -615,6 +620,7 @@ export const SkipRecurringBillResponse = zod.object({
   debtId: zod.uuid().nullable(),
   scope: zod.enum(["personal", "shared"]),
   householdId: zod.uuid().nullable(),
+  isMine: zod.boolean(),
   spreadMonths: zod.int().nullish(),
   spreadDirection: zod.union([zod.null(), zod.enum(["forward", "backward"])]).optional(),
 });

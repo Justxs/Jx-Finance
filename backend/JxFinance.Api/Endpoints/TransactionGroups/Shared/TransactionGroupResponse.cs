@@ -9,4 +9,5 @@ public sealed record TransactionGroupResponse(
     DateOnly FirstDate,
     DateOnly LastDate,
     Scope Scope,
-    Guid? HouseholdId);
+    Guid? HouseholdId,
+    bool IsMine);

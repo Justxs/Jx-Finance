@@ -73,6 +73,7 @@ export function TagForm({ initial, onClose }: Readonly<Props>) {
           form={form}
           fields={{ scope: "scope", householdId: "householdId" }}
           idPrefix="tag"
+          record={initial}
           grid
         />
 

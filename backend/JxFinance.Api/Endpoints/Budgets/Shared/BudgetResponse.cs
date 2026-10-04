@@ -20,4 +20,5 @@ public sealed record BudgetResponse(
     DateOnly WindowEnd,
     Scope Scope,
     Guid? HouseholdId,
+    bool IsMine,
     uint Version);

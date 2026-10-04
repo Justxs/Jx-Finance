@@ -30,7 +30,7 @@ public static class AssetMapper
         asset.ApplySharing(input);
     }
 
-    public static AssetResponse ToResponse(this Asset asset, IReadOnlyCollection<AssetValuation> valuations, DateOnly today) => new(
+    public static AssetResponse ToResponse(this Asset asset, IReadOnlyCollection<AssetValuation> valuations, DateOnly today, Guid callerId) => new(
         asset.Id.Value,
         asset.Name,
         asset.Type,
@@ -44,7 +44,8 @@ public static class AssetMapper
         asset.Depreciation is null ? null : AssetValue.MonthlyAmount(asset.Depreciation),
         asset.Depreciation is null ? null : AssetValue.FullyDepreciatedOn(valuations, asset.Depreciation),
         asset.Scope,
-        asset.HouseholdId?.Value);
+        asset.HouseholdId?.Value,
+        asset.UserId == callerId);
 
     public static AssetValuationResponse ToResponse(this AssetValuation valuation) =>
         new(valuation.Date, valuation.Value, valuation.Note);

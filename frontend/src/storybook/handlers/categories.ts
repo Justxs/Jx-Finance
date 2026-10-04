@@ -25,6 +25,7 @@ export const categoryHandlers = [
       isDefault: false,
       scope: "personal",
       householdId: null,
+      isMine: true,
     };
     return mergeScoped(base, await readBody(request));
   }),

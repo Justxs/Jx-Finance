@@ -54,6 +54,7 @@ export function RecurringBillForm({
           form={form}
           fields={{ scope: "scope", householdId: "householdId" }}
           idPrefix={fieldId}
+          record={initial}
         />
 
         <FormError error={error} />

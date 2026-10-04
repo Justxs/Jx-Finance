@@ -10,4 +10,5 @@ public sealed record CategoryResponse(
     bool IsDefault,
     Scope Scope,
     Guid? HouseholdId,
+    bool IsMine,
     Guid? ParentId = null);

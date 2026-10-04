@@ -32,7 +32,7 @@ public sealed class RecurringBillService(
     ICurrentUser currentUser,
     IClock clock) : IRecurringBillService
 {
-    private readonly RecurringBillLookup lookup = new(db, settings, clock);
+    private readonly RecurringBillLookup lookup = new(db, settings, clock, currentUser);
 
     private static readonly DomainError DebtMissing = new(ErrorCodes.ReferenceNotFound, "Debt does not exist.");
     private static readonly DomainError DebtNotTracked = new(ErrorCodes.DebtNotTracked, "Turn on payment tracking for this debt first.");
@@ -51,7 +51,7 @@ public sealed class RecurringBillService(
     {
         var bills = await db.RecurringBills.AsNoTracking().OrderBy(b => b.NextDueDate).ToListAsync(cancellationToken);
         var matches = await lookup.LatestMatchesAsync(bills, cancellationToken);
-        return bills.Select(b => b.ToResponse(matches.GetValueOrDefault(b.Id))).ToList();
+        return bills.Select(b => b.ToResponse(matches.GetValueOrDefault(b.Id), currentUser.Id)).ToList();
     }
 
     public async Task<Result<RecurringBillResponse>> GetByIdAsync(Guid id, CancellationToken cancellationToken)

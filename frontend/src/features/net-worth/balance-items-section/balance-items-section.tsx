@@ -25,6 +25,7 @@ export interface BalanceItem<TRecord> {
   action?: RowAction;
   scope?: Scope;
   householdId?: string | null;
+  isMine?: boolean;
 }
 
 export interface BalanceItemFormProps<TRecord> {
@@ -93,7 +94,7 @@ export function BalanceItemsSection<TRecord>({
                 size="icon"
                 actions={item.action ? [item.action] : undefined}
                 onEdit={() => setEditTarget(item.id)}
-                {...remove.deleteProps(item.id)}
+                {...(item.isMine === false ? {} : remove.deleteProps(item.id))}
               >
                 <span className={cn("text-right", amountClass)}>
                   {money.format(item.amount, item.currency)}

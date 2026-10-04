@@ -59,9 +59,15 @@ The narrowing happens in one place, the shareable branch of `ApplyQueryFilters` 
 - Every export answers the scope of the screen it was started from. The CSV exports stay plain browser downloads and carry the scope in the URL; the PDF export goes through the API client and carries it in the header as well. The backup download is not scoped: a backup is the whole installation, taken by an administrator, and it is written and read outside the query filter exactly as the background jobs are.
 - The [data export per user](data-export-per-user.md) is not scoped either: it answers "what is mine", not "what am I looking at", so it ignores the header and takes no `activeHousehold` parameter. An own account shared into a household other than the active one is still in it, and a partner's shared account never is.
 
+## What only the owner sees
+
+On every shared record — account, category, tag, budget, goal, recurring entry, asset, debt and transaction group — only its owner may delete it (archive an account, ungroup a group) or change its sharing. Since 2026-10-04 the screens offer those actions to the owner alone: every one of these responses carries `isMine`, true when the caller owns the record, and for a member who does not the row has no Delete, Archive or Ungroup and the edit form has no Visibility field. The member still edits every other field, and saving sends the record's sharing unchanged. The "Shared · household" tag on the row is what tells them it is shared. The server keeps answering 403 `access.forbidden` to a member who deletes or reshares anyway, and the app shows it as an error toast.
+
+The Visibility field is one or two half-width fields, or none for a member who does not own the record or a user with no household, so the budget and goal forms keep their two-column rows even: when the visible fields come to an odd count, the budget form stretches Period and the goal form stretches Funding across the row.
+
 ## Shared budgets, goals and recurring entries
 
-Since 2026-09-30 the budget, goal and recurring entry forms have the same Visibility field as accounts, categories and tags, shown only to a member of a household, and a shared row carries the "Shared · household" tag. They follow the same rules: every member of the household sees the record and can edit it, only its owner can change its sharing or delete it (`access.forbidden`), and the switcher hides it while another household is active.
+Since 2026-09-30 the budget, goal and recurring entry forms have the same Visibility field as accounts, categories and tags, shown only to a member of a household, and a shared row carries the "Shared · household" tag. They follow the same rules: every member of the household sees the record and can edit it, only its owner can change its sharing or delete it (see [What only the owner sees](#what-only-the-owner-sees)), and the switcher hides it while another household is active.
 
 A shared record may only point at what every member can see, so its category, tag, funding account or accounts must be shared with the same household, and a shared recurring entry can pay only a debt shared with the same household. Anything else answers 400 `household.referenceNotShared` when it is saved. Unsharing a category or account later does not reach back: the plan stays shared and a member who can no longer see the category reads its name as "Unknown".
 
@@ -77,7 +83,7 @@ Deleting the household or removing its owner from it makes these records persona
 
 ## Shared assets and debts
 
-Since 2026-09-30 the asset and debt forms have the same Visibility field, and a shared asset or debt carries the "Shared · household" tag in the net worth lists and next to the title of its page. A new one proposes the active household, as the other forms do; a new debt has no payments yet, so that is always safe. The owner alone changes its sharing or deletes it, and a member who tries to delete it is told so in the delete dialog (`access.forbidden`).
+Since 2026-09-30 the asset and debt forms have the same Visibility field, and a shared asset or debt carries the "Shared · household" tag in the net worth lists and next to the title of its page. A new one proposes the active household, as the other forms do; a new debt has no payments yet, so that is always safe. The owner alone changes its sharing or deletes it; a member sees neither Delete nor the Visibility field (see [What only the owner sees](#what-only-the-owner-sees)).
 
 A shared asset or debt counts in full in the net worth of every member who can see it, as a shared account does, rather than a share per member, so a shared mortgage and the flat it pays for count for both partners alike. The household switcher narrows the list and the total to one household like everything else. Any member who can see a shared asset adds or deletes its valuations, and any member who can see a shared debt records or deletes its balances, links a payment to it, changes its principal or unlinks it. The links follow their debt, so both partners see the same payments and the same tracked balance.
 
@@ -87,7 +93,7 @@ Each member's net worth snapshot stays the member's whole net worth. `GET /api/n
 
 ## Shared transaction groups
 
-Since 2026-10-02 the dialog that groups ledger rows has the same Visibility field, and a shared [transaction group](transaction-groups.md#personal-and-shared-groups) carries the "Shared · household" tag on its ledger row. Every member of the household sees it fold, can add rows that sit on accounts shared with the household, whoever entered them, and can take rows out or rename it; only its owner changes its sharing or ungroups it. Making it personal again takes out the rows other members entered.
+Since 2026-10-02 the dialog that groups ledger rows has the same Visibility field, and a shared [transaction group](transaction-groups.md#personal-and-shared-groups) carries the "Shared · household" tag on its ledger row. Every member of the household sees it fold, can add rows that sit on accounts shared with the household, whoever entered them, and can take rows out or rename it; only its owner changes its sharing or ungroups it, so a member's row has no Ungroup and their Rename dialog no Visibility field. Making it personal again takes out the rows other members entered.
 
 ## Settling up
 

@@ -5,7 +5,7 @@ import {
   getCategoriesMockHandler,
 } from "@/api/generated/categories/categories.msw";
 import { withPageFrame } from "@/storybook/decorators";
-import { categories, incomeCategories, many } from "@/storybook/fixtures";
+import { categories, incomeCategories, many, sharedByPartner } from "@/storybook/fixtures";
 import {
   emptyHandlers,
   errorHandlers,
@@ -17,6 +17,7 @@ import { openedDialog } from "@/storybook/interactions";
 import { CategoriesPage } from "./categories-page";
 
 const manyCategories = many(categories, 40);
+const partnerShared = categories.find((category) => category.scope === "shared")!;
 
 const meta = {
   title: "Features/Categories/CategoriesPage",
@@ -81,6 +82,26 @@ export const DeleteOffersUndo: Story = {
     await userEvent.click(undo);
 
     await expect(await screen.findByText(/brought back|įrašas grąžintas/i)).toBeInTheDocument();
+  },
+};
+
+export const SharedByAnotherMember: Story = {
+  parameters: withHandlers(
+    getCategoriesMockHandler(
+      categories.map((category) =>
+        category.id === partnerShared.id ? sharedByPartner(category) : category,
+      ),
+    ),
+  ),
+  play: async ({ canvas }) => {
+    const actions = await canvas.findAllByRole("button", {
+      name: (name) => name.endsWith(`: ${partnerShared.name}`),
+    });
+    await expect(actions).toHaveLength(1);
+    await userEvent.click(actions[0]!);
+    const dialog = within(await openedDialog());
+    await expect(dialog.getByRole("textbox", { name: /name|pavadinimas/i })).toBeVisible();
+    await expect(dialog.queryByRole("combobox", { name: /visibility|matomumas/i })).toBeNull();
   },
 };
 

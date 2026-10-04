@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace JxFinance.Endpoints.RecurringBills.Services;
 
-internal sealed class RecurringBillLookup(AppDbContext db, IInstanceSettingsStore settings, IClock clock)
+internal sealed class RecurringBillLookup(AppDbContext db, IInstanceSettingsStore settings, IClock clock, ICurrentUser currentUser)
 {
     public static readonly DomainError NotFound = EntityLookup.NotFound("Recurring entry not found.");
 
@@ -61,7 +61,7 @@ internal sealed class RecurringBillLookup(AppDbContext db, IInstanceSettingsStor
     }
 
     public async Task<RecurringBillResponse> ResponseAsync(RecurringBill bill, CancellationToken cancellationToken) =>
-        bill.ToResponse((await LatestMatchesAsync([bill], cancellationToken)).GetValueOrDefault(bill.Id));
+        bill.ToResponse((await LatestMatchesAsync([bill], cancellationToken)).GetValueOrDefault(bill.Id), currentUser.Id);
 
     public Task<RecurringBill?> FindAsync(Guid id, CancellationToken cancellationToken)
     {

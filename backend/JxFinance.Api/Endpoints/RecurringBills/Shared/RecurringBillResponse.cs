@@ -23,5 +23,6 @@ public sealed record RecurringBillResponse(
     Guid? DebtId,
     Scope Scope,
     Guid? HouseholdId,
+    bool IsMine,
     int? SpreadMonths = null,
     SpreadDirection? SpreadDirection = null);

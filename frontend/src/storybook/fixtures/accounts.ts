@@ -11,6 +11,7 @@ const accountDefaults = {
   currency: "eur",
   householdId: null,
   ownerId: ids.users.ruta,
+  isMine: true,
   version: 1,
 } satisfies Partial<BaseAccount>;
 

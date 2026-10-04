@@ -13,7 +13,7 @@ import {
 } from "@/api/schemas/goals/goals.zod";
 import { useServerForm } from "@/components/form";
 import { FormError } from "@/components/form-error/form-error";
-import { SharingFields } from "@/components/sharing-fields/sharing-fields";
+import { SharingFields, sharingFieldCount } from "@/components/sharing-fields/sharing-fields";
 import { FormGrid } from "@/components/ui/form-grid/form-grid";
 import { silentMutation, upsert } from "@/lib/mutations";
 import { namedOptions, optionsOf, withMissingOption } from "@/lib/options";
@@ -50,7 +50,8 @@ interface Props {
 
 export function GoalForm({ initial, accounts, onClose }: Readonly<Props>) {
   const { t } = useTranslation();
-  const sharing = useSharingDefaults(useHouseholdsSuspense().data, initial);
+  const households = useHouseholdsSuspense().data;
+  const sharing = useSharingDefaults(households, initial);
 
   const schema = refineSharing(
     z
@@ -151,17 +152,30 @@ export function GoalForm({ initial, accounts, onClose }: Readonly<Props>) {
             {(field) => <field.DateField id="goal-date" label={t("goals.targetDate")} />}
           </form.Field>
 
-          <form.Field name="funding">
-            {(field) => (
-              <field.SelectFieldControl
-                id="goal-funding"
-                label={t("goals.funding")}
-                options={optionsOf(["manual", "account"] as const, (mode) =>
-                  t(`goals.fundingModes.${mode}`),
+          <form.Subscribe selector={(state) => [state.values.funding, state.values.scope] as const}>
+            {([funding, scope]) => (
+              <form.Field name="funding">
+                {(field) => (
+                  <field.SelectFieldControl
+                    id="goal-funding"
+                    label={t("goals.funding")}
+                    options={optionsOf(["manual", "account"] as const, (mode) =>
+                      t(`goals.fundingModes.${mode}`),
+                    )}
+                    className={
+                      (3 +
+                        (funding === "manual" ? 1 : 2) +
+                        sharingFieldCount(households.length, initial, scope)) %
+                        2 ===
+                      1
+                        ? "col-span-full"
+                        : undefined
+                    }
+                  />
                 )}
-              />
+              </form.Field>
             )}
-          </form.Field>
+          </form.Subscribe>
 
           <form.Subscribe selector={(state) => state.values.funding}>
             {(funding) =>
@@ -205,6 +219,7 @@ export function GoalForm({ initial, accounts, onClose }: Readonly<Props>) {
             form={form}
             fields={{ scope: "scope", householdId: "householdId" }}
             idPrefix="goal"
+            record={initial}
           />
         </FormGrid>
 

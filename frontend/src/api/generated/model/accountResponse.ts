@@ -24,6 +24,7 @@ export interface AccountResponse {
   scope: Scope;
   /** @nullable */
   householdId: string | null;
+  isMine: boolean;
   currency: Currency;
   balances: CurrencyBalance[];
   reportingBalance: string;

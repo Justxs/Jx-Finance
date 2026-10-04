@@ -20,7 +20,16 @@ import {
 } from "./preview-rows";
 
 function category(id: string, name: string, type: FlowType): CategoryResponse {
-  return { id, name, type, icon: null, isDefault: false, scope: "personal", householdId: null };
+  return {
+    id,
+    name,
+    type,
+    icon: null,
+    isDefault: false,
+    scope: "personal",
+    householdId: null,
+    isMine: true,
+  };
 }
 
 const food = category("food", "Food", "expense");

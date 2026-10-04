@@ -13,4 +13,5 @@ export interface TagResponse {
   scope: Scope;
   /** @nullable */
   householdId: string | null;
+  isMine: boolean;
 }

@@ -113,6 +113,7 @@ export const partnerSharedAccount: AccountResponse = withBalance(
     scope: "shared",
     householdId: ids.households.family,
     ownerId: sarunas,
+    isMine: false,
   },
   "640.00",
 );

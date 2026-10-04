@@ -38,4 +38,5 @@ export interface DebtResponse {
   scope: Scope;
   /** @nullable */
   householdId: string | null;
+  isMine: boolean;
 }

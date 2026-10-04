@@ -28,5 +28,6 @@ export interface BudgetResponse {
   scope: Scope;
   /** @nullable */
   householdId: string | null;
+  isMine: boolean;
   version: number;
 }

@@ -144,7 +144,7 @@ export function AccountsTable({
         label={account.name}
         removeKind="archive"
         onEdit={() => onEdit(account.id)}
-        onDelete={() => onDelete(account.id)}
+        onDelete={account.isMine ? () => onDelete(account.id) : undefined}
         deletePending={deletingId === account.id}
         deleteDisabled={deletingId !== null}
         className="justify-end"

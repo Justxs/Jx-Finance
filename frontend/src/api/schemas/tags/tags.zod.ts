@@ -32,6 +32,7 @@ export const CreateTagResponse = zod.object({
   name: zod.string(),
   scope: zod.enum(["personal", "shared"]),
   householdId: zod.uuid().nullable(),
+  isMine: zod.boolean(),
 });
 
 /**
@@ -43,6 +44,7 @@ export const TagsResponseItem = zod.object({
   name: zod.string(),
   scope: zod.enum(["personal", "shared"]),
   householdId: zod.uuid().nullable(),
+  isMine: zod.boolean(),
 });
 export const TagsResponse = zod.array(TagsResponseItem);
 
@@ -70,4 +72,5 @@ export const UpdateTagResponse = zod.object({
   name: zod.string(),
   scope: zod.enum(["personal", "shared"]),
   householdId: zod.uuid().nullable(),
+  isMine: zod.boolean(),
 });

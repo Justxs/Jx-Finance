@@ -2,7 +2,15 @@ import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { expect, test } from "vitest";
 import { getSettingsMockHandler } from "@/api/generated/settings/settings.msw";
-import { familyHousehold, ids, payeeNames, settingsWith, tags } from "@/storybook/fixtures";
+import { getTagsMockHandler } from "@/api/generated/tags/tags.msw";
+import {
+  familyHousehold,
+  ids,
+  payeeNames,
+  settingsWith,
+  sharedByPartner,
+  tags,
+} from "@/storybook/fixtures";
 import { mockApi, renderInApp } from "@/test/api";
 import { TagsPage } from "./tags-page";
 
@@ -31,6 +39,40 @@ test("a shared tag names its household and a personal one does not", async () =>
 
   expect(within(sharedRow).getByText(`Shared · ${familyHousehold.name}`)).toBeInTheDocument();
   expect(within(personalRow).queryByText(/^Shared/u)).not.toBeInTheDocument();
+});
+
+test("the owner of a shared tag may delete it and change its visibility", async () => {
+  await renderPage();
+
+  expect(screen.getByRole("button", { name: `Delete: ${renovation.name}` })).toBeInTheDocument();
+  await userEvent.click(screen.getByRole("button", { name: `Edit: ${renovation.name}` }));
+
+  expect(
+    await (await openedDialog("dialog")).findByRole("combobox", { name: "Visibility" }),
+  ).toBeInTheDocument();
+});
+
+test("another member renames a shared tag but cannot delete it or change its visibility", async () => {
+  api.use(
+    getTagsMockHandler(tags.map((tag) => (tag.id === renovation.id ? sharedByPartner(tag) : tag))),
+  );
+  await renderPage();
+
+  expect(screen.queryByRole("button", { name: `Delete: ${renovation.name}` })).toBeNull();
+  await userEvent.click(screen.getByRole("button", { name: `Edit: ${renovation.name}` }));
+  const dialog = await openedDialog("dialog");
+  expect(dialog.queryByRole("combobox", { name: "Visibility" })).toBeNull();
+  fireEvent.change(dialog.getByRole("textbox", { name: "Name" }), {
+    target: { value: "Virtuvės remontas" },
+  });
+  fireEvent.click(dialog.getByRole("button", { name: "Save" }));
+
+  await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+  expect(await api.lastBody("PUT", `/api/tags/${renovation.id}`)).toEqual({
+    name: "Virtuvės remontas",
+    scope: "shared",
+    householdId: familyHousehold.id,
+  });
 });
 
 test("cancelling a tag delete sends nothing", async () => {

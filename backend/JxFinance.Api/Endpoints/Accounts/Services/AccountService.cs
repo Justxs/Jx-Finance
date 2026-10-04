@@ -59,7 +59,7 @@ public sealed class AccountService(
 
         var balances = await BalancesAsync(accounts, request.AsOf, cancellationToken);
 
-        return Sort(accounts, balances, request).Select(a => a.ToResponse(balances[a.Id])).ToList();
+        return Sort(accounts, balances, request).Select(a => a.ToResponse(balances[a.Id], currentUser.Id)).ToList();
     }
 
     public async Task<(decimal Total, bool IsComplete)> GetReportingTotalAsync(
@@ -112,7 +112,7 @@ public sealed class AccountService(
             return NotFound;
         }
 
-        return account.ToResponse(await BalanceAsync(account, cancellationToken));
+        return account.ToResponse(await BalanceAsync(account, cancellationToken), currentUser.Id);
     }
 
     public async Task<Result<AccountResponse>> CreateAsync(
@@ -134,7 +134,7 @@ public sealed class AccountService(
         db.Accounts.Add(account);
         await db.SaveChangesAsync(cancellationToken);
 
-        return account.ToResponse(await BalanceAsync(account, cancellationToken));
+        return account.ToResponse(await BalanceAsync(account, cancellationToken), currentUser.Id);
     }
 
     public async Task<Result<AccountResponse>> UpdateAsync(
@@ -164,7 +164,7 @@ public sealed class AccountService(
             return stale;
         }
 
-        return account.ToResponse(await BalanceAsync(account, cancellationToken));
+        return account.ToResponse(await BalanceAsync(account, cancellationToken), currentUser.Id);
     }
 
     public Task<Result<Guid>> ArchiveAsync(Guid id, CancellationToken cancellationToken) =>
@@ -202,7 +202,7 @@ public sealed class AccountService(
         var active = await db.Accounts.FirstOrDefaultAsync(a => a.Id == accountId, cancellationToken);
         if (active is not null)
         {
-            return active.ToResponse(await BalanceAsync(active, cancellationToken));
+            return active.ToResponse(await BalanceAsync(active, cancellationToken), currentUser.Id);
         }
 
         if (await ArchivedAccounts().FirstOrDefaultAsync(a => a.Id == accountId, cancellationToken) is not { } account)
@@ -226,7 +226,7 @@ public sealed class AccountService(
         account.IsDeleted = false;
         await db.SaveChangesAsync(cancellationToken);
 
-        return account.ToResponse(await BalanceAsync(account, cancellationToken));
+        return account.ToResponse(await BalanceAsync(account, cancellationToken), currentUser.Id);
     }
 
     private Task<Account?> FindAsync(Guid id, CancellationToken cancellationToken)

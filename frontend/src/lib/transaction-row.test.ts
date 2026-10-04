@@ -19,6 +19,7 @@ const food: CategoryResponse = {
   isDefault: false,
   scope: "personal",
   householdId: null,
+  isMine: true,
 };
 
 const categoryById = new Map<string | undefined, CategoryResponse | undefined>([["food", food]]);

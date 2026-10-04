@@ -18,6 +18,7 @@ export interface CategoryResponse {
   scope: Scope;
   /** @nullable */
   householdId: string | null;
+  isMine: boolean;
   /** @nullable */
   parentId?: string | null;
 }

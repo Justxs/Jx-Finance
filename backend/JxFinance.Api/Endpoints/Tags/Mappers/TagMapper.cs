@@ -23,9 +23,10 @@ public static class TagMapper
 
     public static string NormalizedName(this ITagInput input) => OptionalText.Normalize(input.Name) ?? input.Name;
 
-    public static TagResponse ToResponse(this Tag tag) => new(
+    public static TagResponse ToResponse(this Tag tag, Guid callerId) => new(
         tag.Id.Value,
         tag.Name,
         tag.Scope,
-        tag.HouseholdId?.Value);
+        tag.HouseholdId?.Value,
+        tag.UserId == callerId);
 }

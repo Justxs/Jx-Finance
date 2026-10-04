@@ -30,9 +30,10 @@ public sealed class RecurringBillOccurrenceService(
     IReferenceGuard references,
     ITransferService transfers,
     IInstanceSettingsStore settings,
-    IClock clock) : IRecurringBillOccurrenceService
+    IClock clock,
+    ICurrentUser currentUser) : IRecurringBillOccurrenceService
 {
-    private readonly RecurringBillLookup lookup = new(db, settings, clock);
+    private readonly RecurringBillLookup lookup = new(db, settings, clock, currentUser);
 
     private static readonly DomainError CategoryGone =
         new(ErrorCodes.ReferenceNotFound, "The category of this recurring entry is no longer available.");

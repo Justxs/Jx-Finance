@@ -134,6 +134,7 @@ export function CategoryForm({ categories, initial, onClose }: Readonly<Props>) 
           form={form}
           fields={{ scope: "scope", householdId: "householdId" }}
           idPrefix="category"
+          record={initial}
           grid
         />
 

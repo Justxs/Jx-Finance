@@ -450,6 +450,7 @@ export const tripGroup: TransactionGroupSummary = {
   netReportingAmount: "-300.40",
   scope: "personal",
   householdId: null,
+  isMine: true,
 };
 
 export const sharedTripGroup: TransactionGroupSummary = {
@@ -480,6 +481,7 @@ export const transactionGroups: TransactionGroupResponse[] = [
     lastDate: tripGroup.lastDate,
     scope: "personal",
     householdId: null,
+    isMine: true,
   },
   {
     id: kitchenGroupId,
@@ -489,6 +491,7 @@ export const transactionGroups: TransactionGroupResponse[] = [
     lastDate: "2026-08-27",
     scope: "shared",
     householdId: familyHousehold.id,
+    isMine: true,
   },
 ];
 

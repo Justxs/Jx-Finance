@@ -319,6 +319,7 @@ export function AssetForm({ editing, onClose }: Readonly<BalanceItemFormProps<As
           form={form}
           fields={{ scope: "scope", householdId: "householdId" }}
           idPrefix={idPrefix}
+          record={editing}
         />
 
         <FormError error={error} />

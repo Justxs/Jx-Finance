@@ -108,6 +108,7 @@ export const CreateAccountResponse = zod.object({
   createdAt: zod.iso.datetime({ offset: true }),
   scope: zod.enum(["personal", "shared"]),
   householdId: zod.uuid().nullable(),
+  isMine: zod.boolean(),
   currency: zod.enum([
     "eur",
     "usd",
@@ -208,6 +209,7 @@ export const AccountsResponseItem = zod.object({
   createdAt: zod.iso.datetime({ offset: true }),
   scope: zod.enum(["personal", "shared"]),
   householdId: zod.uuid().nullable(),
+  isMine: zod.boolean(),
   currency: zod.enum([
     "eur",
     "usd",
@@ -480,6 +482,7 @@ export const AccountResponse = zod.object({
   createdAt: zod.iso.datetime({ offset: true }),
   scope: zod.enum(["personal", "shared"]),
   householdId: zod.uuid().nullable(),
+  isMine: zod.boolean(),
   currency: zod.enum([
     "eur",
     "usd",
@@ -648,6 +651,7 @@ export const UpdateAccountResponse = zod.object({
   createdAt: zod.iso.datetime({ offset: true }),
   scope: zod.enum(["personal", "shared"]),
   householdId: zod.uuid().nullable(),
+  isMine: zod.boolean(),
   currency: zod.enum([
     "eur",
     "usd",
@@ -1023,6 +1027,7 @@ export const RestoreAccountResponse = zod.object({
   createdAt: zod.iso.datetime({ offset: true }),
   scope: zod.enum(["personal", "shared"]),
   householdId: zod.uuid().nullable(),
+  isMine: zod.boolean(),
   currency: zod.enum([
     "eur",
     "usd",

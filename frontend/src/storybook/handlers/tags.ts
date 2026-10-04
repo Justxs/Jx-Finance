@@ -13,7 +13,13 @@ import { updateFrom } from "./lists";
 export const tagHandlers = [
   getTagsMockHandler(tags),
   getCreateTagMockHandler(async ({ request }) => {
-    const base: TagResponse = { id: NEW_ID, name: "", scope: "personal", householdId: null };
+    const base: TagResponse = {
+      id: NEW_ID,
+      name: "",
+      scope: "personal",
+      householdId: null,
+      isMine: true,
+    };
     return mergeScoped(base, await readBody(request));
   }),
   getUpdateTagMockHandler(updateFrom(tags, mergeScoped)),

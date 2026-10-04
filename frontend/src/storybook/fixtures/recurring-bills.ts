@@ -13,6 +13,7 @@ const billDefaults = {
   debtId: null,
   scope: "personal",
   householdId: null,
+  isMine: true,
 } satisfies Partial<RecurringBillResponse>;
 
 export function bill(

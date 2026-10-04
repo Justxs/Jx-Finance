@@ -29,7 +29,7 @@ public sealed class TagService(
     public async Task<IReadOnlyList<TagResponse>> GetAllAsync(CancellationToken cancellationToken)
     {
         var tags = await db.Tags.OrderBy(t => t.Name).ToListAsync(cancellationToken);
-        return tags.Select(t => t.ToResponse()).ToList();
+        return tags.Select(t => t.ToResponse(currentUser.Id)).ToList();
     }
 
     public async Task<Result<TagResponse>> CreateAsync(CreateTagRequest request, CancellationToken cancellationToken)
@@ -47,7 +47,7 @@ public sealed class TagService(
             return conflict;
         }
 
-        return tag.ToResponse();
+        return tag.ToResponse(currentUser.Id);
     }
 
     public async Task<Result<TagResponse>> UpdateAsync(UpdateTagRequest request, CancellationToken cancellationToken)
@@ -70,7 +70,7 @@ public sealed class TagService(
             return conflict;
         }
 
-        return tag.ToResponse();
+        return tag.ToResponse(currentUser.Id);
     }
 
     public async Task<Result<Guid>> DeleteAsync(Guid id, CancellationToken cancellationToken)

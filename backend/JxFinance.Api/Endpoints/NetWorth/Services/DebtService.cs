@@ -48,7 +48,7 @@ public sealed class DebtService(
     {
         var debts = await db.Debts.AsNoTracking().OrderBy(d => d.CreatedAt).ToListAsync(cancellationToken);
         var tracked = await DebtTracker.TrackAsync(db, rates, debts, cancellationToken);
-        return debts.Select(d => d.ToResponse(tracked.GetValueOrDefault(d.Id))).ToList();
+        return debts.Select(d => d.ToResponse(tracked.GetValueOrDefault(d.Id), currentUser.Id)).ToList();
     }
 
     public async Task<Result<DebtResponse>> CreateDebtAsync(
@@ -404,7 +404,7 @@ public sealed class DebtService(
     }
 
     private async Task<DebtResponse> ToResponseAsync(Debt debt, CancellationToken cancellationToken) =>
-        debt.ToResponse((await DebtTracker.TrackAsync(db, rates, [debt], cancellationToken)).GetValueOrDefault(debt.Id));
+        debt.ToResponse((await DebtTracker.TrackAsync(db, rates, [debt], cancellationToken)).GetValueOrDefault(debt.Id), currentUser.Id);
 
     private static HouseholdId? SharedHousehold(Debt debt) => debt.Scope == Scope.Shared ? debt.HouseholdId : null;
 

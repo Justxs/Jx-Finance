@@ -49,6 +49,7 @@ export function DebtsSection() {
         },
         scope: debt.scope,
         householdId: debt.householdId,
+        isMine: debt.isMine,
       }))}
       deleteMutation={deleteMutation}
       undoKind="debt"

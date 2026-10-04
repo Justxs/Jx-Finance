@@ -123,6 +123,7 @@ public sealed class TransactionQueryService(
                 g.Name,
                 g.Scope,
                 g.HouseholdId,
+                g.UserId,
                 Members = db.Transactions.Count(t => t.GroupId == g.Id),
                 Matching = filtered.Count(t => t.GroupId == g.Id),
                 First = filtered.Where(t => t.GroupId == g.Id).Min(t => (DateOnly?)t.Date),
@@ -144,7 +145,8 @@ public sealed class TransactionQueryService(
                 g.Matching,
                 Money.Round(g.Net),
                 g.Scope,
-                g.HouseholdId?.Value));
+                g.HouseholdId?.Value,
+                g.UserId == currentUser.Id));
     }
 
     public async Task<ExportNames> ExportNamesAsync(CancellationToken cancellationToken) => new(

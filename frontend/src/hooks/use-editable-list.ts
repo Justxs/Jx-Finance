@@ -2,7 +2,7 @@ import { useDeferredValue, useState } from "react";
 import type { TrashKind } from "@/api/generated/model";
 import { type DeleteMutation, useConfirmedDelete } from "@/hooks/use-confirmed-delete";
 
-export function useEditableList<T extends { id: string }>(
+export function useEditableList<T extends { id: string; isMine?: boolean }>(
   items: readonly T[],
   deleteMutation: DeleteMutation,
   labelOf: (item: T) => string | null | undefined,
@@ -17,7 +17,7 @@ export function useEditableList<T extends { id: string }>(
     list,
     rowProps: (item: T) => ({
       onEdit: () => setEditingId(item.id),
-      ...remove.deleteProps(item.id),
+      ...(item.isMine === false ? {} : remove.deleteProps(item.id)),
     }),
     editProps: { item: editing, onClose: () => setEditingId(null) },
     dialogProps: remove.dialogProps,

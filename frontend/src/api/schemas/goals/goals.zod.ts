@@ -67,6 +67,7 @@ export const CreateGoalResponse = zod.object({
   progressAmount: zod.stringFormat("decimal", createGoalResponseProgressAmountRegExp).nullable(),
   scope: zod.enum(["personal", "shared"]),
   householdId: zod.uuid().nullable(),
+  isMine: zod.boolean(),
   version: zod.int(),
 });
 
@@ -90,6 +91,7 @@ export const GoalsResponseItem = zod.object({
   progressAmount: zod.stringFormat("decimal", goalsResponseProgressAmountRegExp).nullable(),
   scope: zod.enum(["personal", "shared"]),
   householdId: zod.uuid().nullable(),
+  isMine: zod.boolean(),
   version: zod.int(),
 });
 export const GoalsResponse = zod.array(GoalsResponseItem);
@@ -161,6 +163,7 @@ export const UpdateGoalResponse = zod.object({
   progressAmount: zod.stringFormat("decimal", updateGoalResponseProgressAmountRegExp).nullable(),
   scope: zod.enum(["personal", "shared"]),
   householdId: zod.uuid().nullable(),
+  isMine: zod.boolean(),
   version: zod.int(),
 });
 
@@ -202,5 +205,6 @@ export const UpdateGoalProgressResponse = zod.object({
     .nullable(),
   scope: zod.enum(["personal", "shared"]),
   householdId: zod.uuid().nullable(),
+  isMine: zod.boolean(),
   version: zod.int(),
 });

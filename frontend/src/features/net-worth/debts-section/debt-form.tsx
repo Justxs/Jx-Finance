@@ -279,6 +279,7 @@ export function DebtForm({ editing, onClose }: Readonly<BalanceItemFormProps<Deb
           form={form}
           fields={{ scope: "scope", householdId: "householdId" }}
           idPrefix={idPrefix}
+          record={editing}
         />
 
         <FormError error={error} />

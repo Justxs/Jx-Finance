@@ -36,6 +36,7 @@ const budgetDefaults = {
   windowEnd: budgetWindows.monthly.end,
   scope: "personal",
   householdId: null,
+  isMine: true,
   version: 1,
 } satisfies Partial<BudgetResponse>;
 

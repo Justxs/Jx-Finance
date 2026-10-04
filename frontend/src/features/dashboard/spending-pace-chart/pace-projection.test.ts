@@ -20,6 +20,7 @@ function bill(overrides: Partial<RecurringBillResponse>): RecurringBillResponse 
     latestMatch: null,
     scope: "personal",
     householdId: null,
+    isMine: true,
     debtId: null,
     ...overrides,
   };

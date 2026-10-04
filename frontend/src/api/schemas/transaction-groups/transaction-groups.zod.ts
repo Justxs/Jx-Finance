@@ -36,6 +36,7 @@ export const CreateTransactionGroupResponse = zod.object({
   lastDate: zod.iso.date(),
   scope: zod.enum(["personal", "shared"]),
   householdId: zod.uuid().nullable(),
+  isMine: zod.boolean(),
 });
 
 /**
@@ -50,6 +51,7 @@ export const TransactionGroupsResponseItem = zod.object({
   lastDate: zod.iso.date(),
   scope: zod.enum(["personal", "shared"]),
   householdId: zod.uuid().nullable(),
+  isMine: zod.boolean(),
 });
 export const TransactionGroupsResponse = zod.array(TransactionGroupsResponseItem);
 
@@ -81,6 +83,7 @@ export const RenameTransactionGroupResponse = zod.object({
   lastDate: zod.iso.date(),
   scope: zod.enum(["personal", "shared"]),
   householdId: zod.uuid().nullable(),
+  isMine: zod.boolean(),
 });
 
 /**

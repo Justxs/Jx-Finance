@@ -317,6 +317,7 @@ public sealed class TransactionGroupService(
                 g.Name,
                 g.Scope,
                 g.HouseholdId,
+                g.UserId,
                 Count = db.Transactions.Count(t => t.GroupId == g.Id),
                 First = db.Transactions.Where(t => t.GroupId == g.Id).Min(t => (DateOnly?)t.Date),
                 Last = db.Transactions.Where(t => t.GroupId == g.Id).Max(t => (DateOnly?)t.Date),
@@ -331,7 +332,8 @@ public sealed class TransactionGroupService(
                 g.First ?? default,
                 g.Last ?? default,
                 g.Scope,
-                g.HouseholdId?.Value))
+                g.HouseholdId?.Value,
+                g.UserId == currentUser.Id))
             .ToList();
     }
 }

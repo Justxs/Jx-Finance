@@ -23,7 +23,7 @@ public static class CategoryMapper
         category.ParentId = input.ParentId is { } parentId ? new CategoryId(parentId) : null;
     }
 
-    public static CategoryResponse ToResponse(this Category category) => new(
+    public static CategoryResponse ToResponse(this Category category, Guid callerId) => new(
         category.Id.Value,
         category.Name,
         category.Type,
@@ -31,5 +31,6 @@ public static class CategoryMapper
         category.IsDefault,
         category.Scope,
         category.HouseholdId?.Value,
+        category.UserId == callerId,
         category.ParentId?.Value);
 }

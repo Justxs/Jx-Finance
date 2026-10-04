@@ -23902,6 +23902,7 @@
           "createdAt",
           "scope",
           "householdId",
+          "isMine",
           "currency",
           "balances",
           "reportingBalance",
@@ -23954,6 +23955,9 @@
               "string"
             ],
             "format": "uuid"
+          },
+          "isMine": {
+            "type": "boolean"
           },
           "currency": {
             "$ref": "#/components/schemas/Currency"
@@ -24220,7 +24224,8 @@
           "monthlyDepreciation",
           "fullyDepreciatedOn",
           "scope",
-          "householdId"
+          "householdId",
+          "isMine"
         ],
         "type": "object",
         "properties": {
@@ -24284,6 +24289,9 @@
               "string"
             ],
             "format": "uuid"
+          },
+          "isMine": {
+            "type": "boolean"
           }
         }
       },
@@ -24885,6 +24893,7 @@
           "windowEnd",
           "scope",
           "householdId",
+          "isMine",
           "version"
         ],
         "type": "object",
@@ -24951,6 +24960,9 @@
               "string"
             ],
             "format": "uuid"
+          },
+          "isMine": {
+            "type": "boolean"
           },
           "version": {
             "type": "integer",
@@ -25400,7 +25412,8 @@
           "icon",
           "isDefault",
           "scope",
-          "householdId"
+          "householdId",
+          "isMine"
         ],
         "type": "object",
         "properties": {
@@ -25432,6 +25445,9 @@
               "string"
             ],
             "format": "uuid"
+          },
+          "isMine": {
+            "type": "boolean"
           },
           "parentId": {
             "type": [
@@ -27756,7 +27772,8 @@
           "trackedIncomplete",
           "unavailablePayments",
           "scope",
-          "householdId"
+          "householdId",
+          "isMine"
         ],
         "type": "object",
         "properties": {
@@ -27857,6 +27874,9 @@
               "string"
             ],
             "format": "uuid"
+          },
+          "isMine": {
+            "type": "boolean"
           }
         }
       },
@@ -28791,6 +28811,7 @@
           "progressAmount",
           "scope",
           "householdId",
+          "isMine",
           "version"
         ],
         "type": "object",
@@ -28850,6 +28871,9 @@
               "string"
             ],
             "format": "uuid"
+          },
+          "isMine": {
+            "type": "boolean"
           },
           "version": {
             "type": "integer",
@@ -32581,7 +32605,8 @@
           "latestMatch",
           "debtId",
           "scope",
-          "householdId"
+          "householdId",
+          "isMine"
         ],
         "type": "object",
         "properties": {
@@ -32671,6 +32696,9 @@
               "string"
             ],
             "format": "uuid"
+          },
+          "isMine": {
+            "type": "boolean"
           },
           "spreadMonths": {
             "type": [
@@ -34276,7 +34304,8 @@
           "id",
           "name",
           "scope",
-          "householdId"
+          "householdId",
+          "isMine"
         ],
         "type": "object",
         "properties": {
@@ -34296,6 +34325,9 @@
               "string"
             ],
             "format": "uuid"
+          },
+          "isMine": {
+            "type": "boolean"
           }
         }
       },
@@ -34734,7 +34766,8 @@
           "firstDate",
           "lastDate",
           "scope",
-          "householdId"
+          "householdId",
+          "isMine"
         ],
         "type": "object",
         "properties": {
@@ -34764,6 +34797,9 @@
               "string"
             ],
             "format": "uuid"
+          },
+          "isMine": {
+            "type": "boolean"
           }
         }
       },
@@ -34777,7 +34813,8 @@
           "matchingCount",
           "netReportingAmount",
           "scope",
-          "householdId"
+          "householdId",
+          "isMine"
         ],
         "type": "object",
         "properties": {
@@ -34815,6 +34852,9 @@
               "string"
             ],
             "format": "uuid"
+          },
+          "isMine": {
+            "type": "boolean"
           }
         }
       },

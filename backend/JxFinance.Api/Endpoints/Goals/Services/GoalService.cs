@@ -51,7 +51,7 @@ public sealed class GoalService(
         var goals = await db.Goals.OrderBy(g => g.CreatedAt).ToListAsync(cancellationToken);
         var balances = await BalancesAsync(goals, cancellationToken);
 
-        return goals.Select(g => g.ToResponse(Progress(g, balances))).ToList();
+        return goals.Select(g => g.ToResponse(Progress(g, balances), currentUser.Id)).ToList();
     }
 
     public async Task<Result<GoalResponse>> CreateAsync(
@@ -126,7 +126,7 @@ public sealed class GoalService(
         await db.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
 
-        return goal.ToResponse(goal.CurrentAmount.Amount);
+        return goal.ToResponse(goal.CurrentAmount.Amount, currentUser.Id);
     }
 
     public Task<Result<Guid>> DeleteAsync(Guid id, CancellationToken cancellationToken)
@@ -157,7 +157,7 @@ public sealed class GoalService(
     }
 
     private async Task<GoalResponse> ToResponseAsync(Goal goal, CancellationToken cancellationToken) =>
-        goal.ToResponse(Progress(goal, await BalancesAsync([goal], cancellationToken)));
+        goal.ToResponse(Progress(goal, await BalancesAsync([goal], cancellationToken)), currentUser.Id);
 
     private Task<IReadOnlyDictionary<AccountId, decimal>> BalancesAsync(
         IReadOnlyList<Goal> goals,

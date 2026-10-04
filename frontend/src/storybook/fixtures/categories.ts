@@ -17,6 +17,7 @@ function category(
     isDefault,
     scope: householdId ? "shared" : "personal",
     householdId,
+    isMine: true,
   };
 }
 

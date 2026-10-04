@@ -21,7 +21,7 @@ import { FIXTURE_TODAY, ids, totalOf, uid } from "./base";
 import { familyHousehold } from "./households";
 import { transactions } from "./transactions";
 
-const personal = { scope: "personal", householdId: null } as const;
+const personal = { scope: "personal", householdId: null, isMine: true } as const;
 
 const manual = {
   depreciation: null,

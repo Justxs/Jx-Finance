@@ -176,6 +176,7 @@ export function AccountForm({ initial, onClose }: Readonly<Props>) {
           form={form}
           fields={{ scope: "scope", householdId: "householdId" }}
           idPrefix="account"
+          record={initial}
         />
 
         <FormError error={error} />

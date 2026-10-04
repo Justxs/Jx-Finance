@@ -51,6 +51,7 @@ export function AssetsSection() {
         },
         scope: asset.scope,
         householdId: asset.householdId,
+        isMine: asset.isMine,
       }))}
       deleteMutation={deleteMutation}
       undoKind="asset"

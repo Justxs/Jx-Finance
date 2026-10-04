@@ -34,7 +34,7 @@ public static class DebtMapper
         debt.ApplySharing(input);
     }
 
-    public static DebtResponse ToResponse(this Debt debt, DebtTracking? tracking) => new(
+    public static DebtResponse ToResponse(this Debt debt, DebtTracking? tracking, Guid callerId) => new(
         debt.Id.Value,
         debt.Name,
         debt.Type,
@@ -53,7 +53,8 @@ public static class DebtMapper
         tracking?.Incomplete ?? false,
         tracking?.Unavailable ?? 0,
         debt.Scope,
-        debt.HouseholdId?.Value);
+        debt.HouseholdId?.Value,
+        debt.UserId == callerId);
 
     public static DebtBalanceEntryResponse ToResponse(this DebtBalanceEntry entry) =>
         new(entry.Date, entry.Amount, entry.Note);

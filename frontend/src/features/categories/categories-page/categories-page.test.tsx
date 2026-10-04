@@ -1,8 +1,15 @@
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { expect, test } from "vitest";
+import { getCategoriesMockHandler } from "@/api/generated/categories/categories.msw";
 import { getSettingsMockHandler } from "@/api/generated/settings/settings.msw";
-import { categories, familyHousehold, ids, settingsWith } from "@/storybook/fixtures";
+import {
+  categories,
+  familyHousehold,
+  ids,
+  settingsWith,
+  sharedByPartner,
+} from "@/storybook/fixtures";
 import { mockApi, renderInApp } from "@/test/api";
 import { CategoriesPage } from "./categories-page";
 
@@ -45,6 +52,44 @@ test("a shared category names the household it is shared with", async () => {
   const row = screen.getByText(sharedGoods.name).closest("li")!;
 
   expect(within(row).getByText(`Shared · ${familyHousehold.name}`)).toBeInTheDocument();
+});
+
+test("the owner of a shared category may delete it and change its visibility", async () => {
+  await renderPage();
+
+  expect(screen.getByRole("button", { name: `Delete: ${sharedGoods.name}` })).toBeInTheDocument();
+  await userEvent.click(screen.getByRole("button", { name: `Edit: ${sharedGoods.name}` }));
+
+  expect(
+    await (await openedDialog("dialog")).findByRole("combobox", { name: "Visibility" }),
+  ).toBeInTheDocument();
+});
+
+test("another member renames a shared category but cannot delete it or change its visibility", async () => {
+  api.use(
+    getCategoriesMockHandler(
+      categories.map((category) =>
+        category.id === sharedGoods.id ? sharedByPartner(category) : category,
+      ),
+    ),
+  );
+  await renderPage();
+
+  expect(screen.queryByRole("button", { name: `Delete: ${sharedGoods.name}` })).toBeNull();
+  await userEvent.click(screen.getByRole("button", { name: `Edit: ${sharedGoods.name}` }));
+  const dialog = await openedDialog("dialog");
+  expect(dialog.queryByRole("combobox", { name: "Visibility" })).toBeNull();
+  fireEvent.change(dialog.getByRole("textbox", { name: "Name" }), {
+    target: { value: "Namų reikmenys" },
+  });
+  fireEvent.click(dialog.getByRole("button", { name: "Save" }));
+
+  await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+  expect(await api.lastBody("PUT", `/api/categories/${sharedGoods.id}`)).toMatchObject({
+    name: "Namų reikmenys",
+    scope: "shared",
+    householdId: familyHousehold.id,
+  });
 });
 
 test("cancelling a delete sends nothing", async () => {

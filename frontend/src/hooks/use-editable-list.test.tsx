@@ -4,8 +4,8 @@ import { createQueryWrapper } from "@/test/query";
 import { useEditableList } from "./use-editable-list";
 
 const goals = [
-  { id: "g1", name: "Holiday" },
-  { id: "g2", name: "Car" },
+  { id: "g1", name: "Holiday", isMine: true },
+  { id: "g2", name: "Car", isMine: false },
 ];
 
 function setup() {
@@ -39,7 +39,7 @@ test("keeps the edit modal on the newest copy of the row", () => {
   );
 
   act(() => result.current.rowProps(goals[1]!).onEdit());
-  const refreshed = { id: "g2", name: "Car, renamed elsewhere" };
+  const refreshed = { id: "g2", name: "Car, renamed elsewhere", isMine: false };
   rerender({ items: [goals[0]!, refreshed] });
 
   expect(result.current.editProps.item).toBe(refreshed);
@@ -48,11 +48,21 @@ test("keeps the edit modal on the newest copy of the row", () => {
 test("asks before deleting a row and deletes it on confirm", () => {
   const { result, mutate } = setup();
 
-  act(() => result.current.rowProps(goals[0]!).onDelete());
+  act(() => result.current.rowProps(goals[0]!).onDelete?.());
   expect(result.current.dialogProps.target).toBe("g1");
   expect(result.current.dialogProps.itemLabel).toBe("Holiday");
   expect(mutate).not.toHaveBeenCalled();
 
   act(() => result.current.dialogProps.onConfirm("g1"));
   expect(mutate).toHaveBeenCalledWith({ id: "g1" });
+});
+
+test("offers no delete on a row someone else owns, only the edit", () => {
+  const { result } = setup();
+
+  const row = result.current.rowProps(goals[1]!);
+
+  expect(row.onDelete).toBeUndefined();
+  act(() => row.onEdit());
+  expect(result.current.editProps.item).toBe(goals[1]);
 });

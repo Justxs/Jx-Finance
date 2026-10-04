@@ -19,4 +19,5 @@ export interface TransactionGroupSummary {
   scope: Scope;
   /** @nullable */
   householdId: string | null;
+  isMine: boolean;
 }

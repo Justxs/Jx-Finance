@@ -35,7 +35,7 @@ public static class GoalMapper
     public static AccountId? FundingAccount(this IGoalInput input) =>
         input.Funding == GoalFunding.Account ? new AccountId(input.FundingAccountId!.Value) : null;
 
-    public static GoalResponse ToResponse(this Goal goal, decimal? progressAmount) => new(
+    public static GoalResponse ToResponse(this Goal goal, decimal? progressAmount, Guid callerId) => new(
         goal.Id.Value,
         goal.Name,
         goal.TargetAmount.Amount,
@@ -47,5 +47,6 @@ public static class GoalMapper
         progressAmount,
         goal.Scope,
         goal.HouseholdId?.Value,
+        goal.UserId == callerId,
         goal.Version);
 }

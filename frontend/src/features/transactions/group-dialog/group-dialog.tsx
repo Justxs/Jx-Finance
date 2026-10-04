@@ -34,7 +34,7 @@ export type GroupTarget =
   | { kind: "row"; transactionId: string }
   | {
       kind: "rename";
-      group: Pick<TransactionGroupSummary, "id" | "name" | "scope" | "householdId">;
+      group: Pick<TransactionGroupSummary, "id" | "name" | "scope" | "householdId" | "isMine">;
     };
 
 interface FormProps {
@@ -54,10 +54,8 @@ export function GroupForm({ target, onClose, onGrouped }: Readonly<FormProps>) {
   const { t } = useTranslation();
   const formatDate = useIsoDate();
   const fromRow = target.kind === "row";
-  const sharing = useSharingDefaults(
-    useHouseholdsSuspense().data,
-    target.kind === "rename" ? target.group : undefined,
-  );
+  const editing = target.kind === "rename" ? target.group : undefined;
+  const sharing = useSharingDefaults(useHouseholdsSuspense().data, editing);
   const groups = useQuery({ ...getTransactionGroupsSuspenseQueryOptions(), enabled: fromRow }).data;
   const existing: TransactionGroupResponse[] = fromRow ? (groups ?? []) : [];
   const grouped = { meta: { silent: true, success: t("transactions.groups.grouped") } } as const;
@@ -179,6 +177,7 @@ export function GroupForm({ target, onClose, onGrouped }: Readonly<FormProps>) {
                   form={form}
                   fields={{ scope: "scope", householdId: "householdId" }}
                   idPrefix="group"
+                  record={editing}
                 />
               </>
             )

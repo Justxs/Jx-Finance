@@ -120,6 +120,7 @@ export const CreateAssetResponse = zod.object({
   fullyDepreciatedOn: zod.union([zod.null(), zod.iso.date()]),
   scope: zod.enum(["personal", "shared"]),
   householdId: zod.uuid().nullable(),
+  isMine: zod.boolean(),
 });
 
 /**
@@ -190,6 +191,7 @@ export const AssetsResponseItem = zod.object({
   fullyDepreciatedOn: zod.union([zod.null(), zod.iso.date()]),
   scope: zod.enum(["personal", "shared"]),
   householdId: zod.uuid().nullable(),
+  isMine: zod.boolean(),
 });
 export const AssetsResponse = zod.array(AssetsResponseItem);
 
@@ -310,6 +312,7 @@ export const UpdateAssetResponse = zod.object({
   fullyDepreciatedOn: zod.union([zod.null(), zod.iso.date()]),
   scope: zod.enum(["personal", "shared"]),
   householdId: zod.uuid().nullable(),
+  isMine: zod.boolean(),
 });
 
 /**
@@ -425,6 +428,7 @@ export const SetAssetValuationResponse = zod.object({
   fullyDepreciatedOn: zod.union([zod.null(), zod.iso.date()]),
   scope: zod.enum(["personal", "shared"]),
   householdId: zod.uuid().nullable(),
+  isMine: zod.boolean(),
 });
 
 /**
@@ -603,6 +607,7 @@ export const CreateDebtResponse = zod.object({
   unavailablePayments: zod.int(),
   scope: zod.enum(["personal", "shared"]),
   householdId: zod.uuid().nullable(),
+  isMine: zod.boolean(),
 });
 
 /**
@@ -665,6 +670,7 @@ export const DebtsResponseItem = zod.object({
   unavailablePayments: zod.int(),
   scope: zod.enum(["personal", "shared"]),
   householdId: zod.uuid().nullable(),
+  isMine: zod.boolean(),
 });
 export const DebtsResponse = zod.array(DebtsResponseItem);
 
@@ -797,6 +803,7 @@ export const UpdateDebtResponse = zod.object({
   unavailablePayments: zod.int(),
   scope: zod.enum(["personal", "shared"]),
   householdId: zod.uuid().nullable(),
+  isMine: zod.boolean(),
 });
 
 /**
@@ -898,6 +905,7 @@ export const SetDebtBalanceResponse = zod.object({
   unavailablePayments: zod.int(),
   scope: zod.enum(["personal", "shared"]),
   householdId: zod.uuid().nullable(),
+  isMine: zod.boolean(),
 });
 
 /**
@@ -1218,6 +1226,7 @@ export const LinkDebtPaymentResponse = zod.object({
   unavailablePayments: zod.int(),
   scope: zod.enum(["personal", "shared"]),
   householdId: zod.uuid().nullable(),
+  isMine: zod.boolean(),
 });
 
 /**
@@ -1304,6 +1313,7 @@ export const UpdateDebtPaymentResponse = zod.object({
   unavailablePayments: zod.int(),
   scope: zod.enum(["personal", "shared"]),
   householdId: zod.uuid().nullable(),
+  isMine: zod.boolean(),
 });
 
 /**

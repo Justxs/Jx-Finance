@@ -18,7 +18,7 @@ import {
 } from "@/api/generated/model";
 import { useServerForm } from "@/components/form";
 import { FormError } from "@/components/form-error/form-error";
-import { SharingFields } from "@/components/sharing-fields/sharing-fields";
+import { SharingFields, sharingFieldCount } from "@/components/sharing-fields/sharing-fields";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { FormGrid } from "@/components/ui/form-grid/form-grid";
 import { budgetPeriodOptions } from "@/features/budgets/budget-periods";
@@ -104,7 +104,8 @@ export function BudgetForm({ categories, tags, initial, onClose }: Readonly<Prop
   const monthly = useBudgetSuggestionsSuspense({ period: "monthly" });
   const expenseCategories = categories.filter((c) => c.type === "expense");
   const firstCategoryId = expenseCategories[0]?.id ?? "";
-  const sharing = useSharingDefaults(useHouseholdsSuspense().data, initial);
+  const households = useHouseholdsSuspense().data;
+  const sharing = useSharingDefaults(households, initial);
 
   const schema = refineSharing(
     z
@@ -266,15 +267,31 @@ export function BudgetForm({ categories, tags, initial, onClose }: Readonly<Prop
             )}
           </form.Subscribe>
 
-          <form.Field name="period">
-            {(field) => (
-              <field.SelectFieldControl
-                id="budget-period"
-                label={t("budgets.period")}
-                options={budgetPeriodOptions(t)}
-              />
+          <form.Subscribe selector={(state) => state.values.scope}>
+            {(scope) => (
+              <form.Field name="period">
+                {(field) => (
+                  <field.SelectFieldControl
+                    id="budget-period"
+                    label={t("budgets.period")}
+                    options={budgetPeriodOptions(t)}
+                    className={
+                      sharingFieldCount(households.length, initial, scope) % 2 === 0
+                        ? "col-span-full"
+                        : undefined
+                    }
+                  />
+                )}
+              </form.Field>
             )}
-          </form.Field>
+          </form.Subscribe>
+
+          <SharingFields
+            form={form}
+            fields={{ scope: "scope", householdId: "householdId" }}
+            idPrefix="budget"
+            record={initial}
+          />
 
           <form.Field name="rolloverEnabled">
             {(field) => (
@@ -286,12 +303,6 @@ export function BudgetForm({ categories, tags, initial, onClose }: Readonly<Prop
               />
             )}
           </form.Field>
-
-          <SharingFields
-            form={form}
-            fields={{ scope: "scope", householdId: "householdId" }}
-            idPrefix="budget"
-          />
         </FormGrid>
 
         <FormError error={error} />

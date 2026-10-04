@@ -28,7 +28,8 @@ public static class RecurringBillMapper
 
     public static RecurringBillResponse ToResponse(
         this RecurringBill bill,
-        RecurringBillMatchResponse? latestMatch = null) => new(
+        RecurringBillMatchResponse? latestMatch,
+        Guid callerId) => new(
         bill.Id.Value,
         bill.Name,
         bill.Shape,
@@ -46,6 +47,7 @@ public static class RecurringBillMapper
         bill.DebtId?.Value,
         bill.Scope,
         bill.HouseholdId?.Value,
+        bill.UserId == callerId,
         bill.SpreadMonths,
         bill.SpreadMonths is null ? null : bill.SpreadDirection);
 

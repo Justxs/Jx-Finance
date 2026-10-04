@@ -21,4 +21,5 @@ public sealed record TransactionGroupSummary(
     int MatchingCount,
     [property: Money] decimal NetReportingAmount,
     Scope Scope,
-    Guid? HouseholdId);
+    Guid? HouseholdId,
+    bool IsMine);

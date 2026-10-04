@@ -2,7 +2,7 @@
 
 Back to the [feature walkthrough](README.md).
 
-Backend `Accounts`, page `/accounts`. Personal or shared scope, archive instead of delete, only the owner archives, restores or changes sharing.
+Backend `Accounts`, page `/accounts`. Personal or shared scope, archive instead of delete, only the owner archives, restores or changes sharing. Since 2026-10-04 a household member's row of an account they do not own has no Archive, and its edit form no Visibility field (see [What only the owner sees](households-and-sharing.md#what-only-the-owner-sees)).
 
 Every account response carries `version`, and since 2026-10-03 `PUT /api/accounts/{id}` requires the one the form read: when another member saved the account in the meantime the update answers 409 `conflict.stale`, the edit dialog shows the message over the typed values, and saving again uses the refreshed version. See [Concurrent edits](../architecture/api-contract.md#concurrent-edits).
 

@@ -27,4 +27,5 @@ export interface AssetResponse {
   scope: Scope;
   /** @nullable */
   householdId: string | null;
+  isMine: boolean;
 }

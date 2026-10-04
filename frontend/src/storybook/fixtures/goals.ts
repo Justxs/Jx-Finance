@@ -9,6 +9,7 @@ const goalDefaults = {
   fundingSharePercent: 100,
   scope: "personal",
   householdId: null,
+  isMine: true,
   version: 1,
 } satisfies Partial<GoalResponse>;
 

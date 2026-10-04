@@ -18,7 +18,7 @@ public static class AccountMapper
 
     public static void ApplyTo(this IAccountInput input, Account account) => Apply(input, account, account.Currency);
 
-    public static AccountResponse ToResponse(this Account account, AccountBalance balance) => new(
+    public static AccountResponse ToResponse(this Account account, AccountBalance balance, Guid callerId) => new(
         account.Id.Value,
         account.Name,
         account.Description,
@@ -29,6 +29,7 @@ public static class AccountMapper
         account.CreatedAt,
         account.Scope,
         account.HouseholdId?.Value,
+        account.UserId == callerId,
         account.Currency,
         balance.ByCurrency
             .Select(entry => new CurrencyBalance(entry.Currency, entry.Amount))

@@ -15,6 +15,7 @@ public sealed record AccountResponse(
     DateTimeOffset CreatedAt,
     Scope Scope,
     Guid? HouseholdId,
+    bool IsMine,
     Currency Currency,
     IReadOnlyList<CurrencyBalance> Balances,
     [property: Money] decimal ReportingBalance,

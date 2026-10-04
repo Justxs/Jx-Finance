@@ -5,7 +5,7 @@ import {
   getAssetsMockHandler,
 } from "@/api/generated/net-worth/net-worth.msw";
 import { withWidth } from "@/storybook/decorators";
-import { assets, dollarAsset, many } from "@/storybook/fixtures";
+import { assets, dollarAsset, many, sharedAsset, sharedByPartner } from "@/storybook/fixtures";
 import {
   emptyHandlers,
   errorHandlers,
@@ -44,6 +44,18 @@ export const SeveralCurrencies: Story = {
   parameters: withHandlers(getAssetsMockHandler([...assets, dollarAsset])),
   play: async ({ canvas }) => {
     await expect(await canvas.findAllByText("$6,200.00")).toHaveLength(2);
+  },
+};
+
+export const SharedByAnotherMember: Story = {
+  parameters: withHandlers(
+    getAssetsMockHandler([sharedByPartner(sharedAsset), ...assets.slice(1)]),
+  ),
+  play: async ({ canvas }) => {
+    await expect(
+      await canvas.findByRole("button", { name: /^(edit|redaguoti):/i }),
+    ).toBeInTheDocument();
+    await expect(canvas.queryByRole("button", { name: /^(delete|ištrinti):/i })).toBeNull();
   },
 };
 

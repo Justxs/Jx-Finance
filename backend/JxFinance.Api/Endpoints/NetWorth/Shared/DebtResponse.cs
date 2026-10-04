@@ -23,6 +23,7 @@ public sealed record DebtResponse(
     bool TrackedIncomplete,
     int UnavailablePayments,
     Scope Scope,
-    Guid? HouseholdId);
+    Guid? HouseholdId,
+    bool IsMine);
 
 public sealed record DebtBalanceEntryResponse(DateOnly Date, [property: Money] decimal Amount, string? Note);

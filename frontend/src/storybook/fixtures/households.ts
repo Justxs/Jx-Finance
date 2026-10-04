@@ -1,4 +1,4 @@
-import type { HouseholdMemberResponse, HouseholdResponse } from "@/api/generated/model";
+import type { HouseholdMemberResponse, HouseholdResponse, Scope } from "@/api/generated/model";
 import { ids } from "./base";
 import { currentUser, longNameUser, memberUser } from "./users";
 
@@ -51,3 +51,13 @@ export const gardenHousehold: HouseholdResponse = {
 };
 
 export const households: HouseholdResponse[] = [familyHousehold, gardenHousehold];
+
+interface Shareable {
+  scope: Scope;
+  householdId: string | null;
+  isMine: boolean;
+}
+
+export function sharedByPartner<T extends Shareable>(record: T): T {
+  return { ...record, scope: "shared", householdId: familyHousehold.id, isMine: false };
+}

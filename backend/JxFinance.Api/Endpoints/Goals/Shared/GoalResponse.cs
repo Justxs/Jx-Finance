@@ -16,4 +16,5 @@ public sealed record GoalResponse(
     [property: Money] decimal? ProgressAmount,
     Scope Scope,
     Guid? HouseholdId,
+    bool IsMine,
     uint Version);

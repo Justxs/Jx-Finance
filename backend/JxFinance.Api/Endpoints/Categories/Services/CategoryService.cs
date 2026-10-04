@@ -32,7 +32,7 @@ public sealed class CategoryService(
             .OrderBy(c => c.Type)
             .ThenBy(c => c.Name)
             .ToListAsync(cancellationToken);
-        return categories.Select(c => c.ToResponse()).ToList();
+        return categories.Select(c => c.ToResponse(currentUser.Id)).ToList();
     }
 
     public async Task<Result<CategoryResponse>> CreateAsync(
@@ -53,7 +53,7 @@ public sealed class CategoryService(
         db.Categories.Add(category);
         await db.SaveChangesAsync(cancellationToken);
 
-        return category.ToResponse();
+        return category.ToResponse(currentUser.Id);
     }
 
     public async Task<Result<CategoryResponse>> UpdateAsync(
@@ -78,7 +78,7 @@ public sealed class CategoryService(
         request.ApplyTo(category);
         await db.SaveChangesAsync(cancellationToken);
 
-        return category.ToResponse();
+        return category.ToResponse(currentUser.Id);
     }
 
     public async Task<Result<Guid>> DeleteAsync(Guid id, CancellationToken cancellationToken)

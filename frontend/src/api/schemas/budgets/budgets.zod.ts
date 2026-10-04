@@ -65,6 +65,7 @@ export const CreateBudgetResponse = zod.object({
   windowEnd: zod.iso.date(),
   scope: zod.enum(["personal", "shared"]),
   householdId: zod.uuid().nullable(),
+  isMine: zod.boolean(),
   version: zod.int(),
 });
 
@@ -96,6 +97,7 @@ export const BudgetsResponseItem = zod.object({
   windowEnd: zod.iso.date(),
   scope: zod.enum(["personal", "shared"]),
   householdId: zod.uuid().nullable(),
+  isMine: zod.boolean(),
   version: zod.int(),
 });
 export const BudgetsResponse = zod.array(BudgetsResponseItem);
@@ -199,5 +201,6 @@ export const UpdateBudgetResponse = zod.object({
   windowEnd: zod.iso.date(),
   scope: zod.enum(["personal", "shared"]),
   householdId: zod.uuid().nullable(),
+  isMine: zod.boolean(),
   version: zod.int(),
 });

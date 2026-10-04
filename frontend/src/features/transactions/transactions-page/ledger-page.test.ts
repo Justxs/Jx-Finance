@@ -24,6 +24,7 @@ const group: TransactionGroupSummary = {
   netReportingAmount: "-612.40",
   scope: "personal",
   householdId: null,
+  isMine: true,
 };
 
 const groupItem: LedgerItemResponse = { kind: "group", transaction: null, group };

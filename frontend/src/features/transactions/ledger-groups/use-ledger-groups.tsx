@@ -116,12 +116,16 @@ export function useLedgerGroups({ viewKey, items, filter, onGrouped }: Readonly<
   }
 
   function actions(group: TransactionGroupSummary): RowAction[] {
+    const rename: RowAction = {
+      icon: Pencil,
+      label: t("transactions.groups.rename"),
+      onSelect: () => groupDialog.open({ kind: "rename", group }),
+    };
+    if (!group.isMine) {
+      return [rename];
+    }
     return [
-      {
-        icon: Pencil,
-        label: t("transactions.groups.rename"),
-        onSelect: () => groupDialog.open({ kind: "rename", group }),
-      },
+      rename,
       {
         icon: Ungroup,
         label: t("transactions.groups.ungroup"),

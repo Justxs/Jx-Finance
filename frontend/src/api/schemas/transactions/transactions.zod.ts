@@ -859,6 +859,7 @@ export const LedgerResponse = zod.object({
           ),
           scope: zod.enum(["personal", "shared"]),
           householdId: zod.uuid().nullable(),
+          isMine: zod.boolean(),
         }),
       ]),
     }),

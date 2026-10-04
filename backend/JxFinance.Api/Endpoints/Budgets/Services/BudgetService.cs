@@ -173,7 +173,7 @@ public sealed class BudgetService(
         var usage = await usageCalculator.CalculateAsync(budgets, asOf, share, cancellationToken);
         var names = await NamesAsync(budgets, cancellationToken);
 
-        return budgets.Select(b => b.ToResponse(NameOf(b, names), usage[b.Id])).ToList();
+        return budgets.Select(b => b.ToResponse(NameOf(b, names), usage[b.Id], currentUser.Id)).ToList();
     }
 
     private async Task<BudgetTargetNames> NamesAsync(IReadOnlyList<Budget> budgets, CancellationToken cancellationToken)
