@@ -17,7 +17,7 @@ import type {
 import { fromCents, toCents } from "@/lib/money";
 import { spreadSlices } from "@/lib/spread-slices";
 import { accounts } from "./accounts";
-import { FIXTURE_MONTH_END, FIXTURE_MONTH_START, ids, uid } from "./base";
+import { FIXTURE_MONTH_END, FIXTURE_MONTH_START, ids, type Seed, uid } from "./base";
 import { categories } from "./categories";
 import { familyHousehold } from "./households";
 import { tags } from "./tags";
@@ -39,8 +39,30 @@ const {
 } = ids.categories;
 const { car, children, holiday, reimbursable, renovation } = ids.tags;
 
+const transactionDefaults = {
+  categoryId: null,
+  type: "expense",
+  currency: "eur",
+  description: null,
+  source: "manual",
+  isSplit: false,
+  lines: null,
+  tagIds: [],
+  attachmentCount: 0,
+  unusual: null,
+  unusualDismissed: false,
+  enteredByMe: true,
+  version: 1,
+} satisfies Partial<TransactionResponse>;
+
+export function transaction(
+  seed: Seed<TransactionResponse, typeof transactionDefaults>,
+): TransactionResponse {
+  return { ...transactionDefaults, ...seed };
+}
+
 function transactionFrom(source: TransactionResponse["source"]) {
-  return function transaction(
+  return function sourced(
     n: number,
     monthDay: string,
     accountId: string,
@@ -52,27 +74,20 @@ function transactionFrom(source: TransactionResponse["source"]) {
   ): TransactionResponse {
     const date = `2026-${monthDay}`;
     const amount = Math.abs(signedAmount).toFixed(2);
-    return {
+    return transaction({
       id: uid("55555555", n),
       accountId,
       categoryId,
       type: signedAmount < 0 ? "expense" : "income",
       amount,
-      currency: "eur",
       reportingAmount: amount,
       date,
       description,
       source,
-      isSplit: false,
       createdAt: `${date}T${String(8 + (n % 12)).padStart(2, "0")}:30:00Z`,
-      lines: null,
       tagIds,
       attachmentCount,
-      unusual: null,
-      unusualDismissed: false,
-      enteredByMe: true,
-      version: 1,
-    };
+    });
   };
 }
 
@@ -152,11 +167,11 @@ export const ownPlaces: PlaceSuggestionResponse[] = [
 ];
 
 function placed(
-  transaction: TransactionResponse,
+  row: TransactionResponse,
   suggestion: PlaceSuggestionResponse,
 ): TransactionResponse {
   return {
-    ...transaction,
+    ...row,
     place: suggestion.name,
     latitude: suggestion.latitude,
     longitude: suggestion.longitude,
@@ -415,8 +430,8 @@ export const uncategorizedSuggestions: UncategorizedSuggestionResponse[] = [
 const tripGroupId = uid("57575757", 1);
 const kitchenGroupId = uid("57575757", 2);
 
-function grouped(transaction: TransactionResponse): TransactionResponse {
-  return { ...transaction, groupId: tripGroupId };
+function grouped(row: TransactionResponse): TransactionResponse {
+  return { ...row, groupId: tripGroupId };
 }
 
 export const tripGroupMembers: TransactionResponse[] = [
@@ -481,9 +496,9 @@ export function ledgerItemsOf(
   rows: readonly TransactionResponse[],
   groups: readonly TransactionGroupSummary[] = [],
 ): LedgerItemResponse[] {
-  const items = rows.map((transaction): LedgerItemResponse => ({
+  const items = rows.map((row): LedgerItemResponse => ({
     kind: "transaction",
-    transaction,
+    transaction: row,
     group: null,
   }));
   for (const group of groups) {

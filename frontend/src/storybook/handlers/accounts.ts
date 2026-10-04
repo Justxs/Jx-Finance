@@ -15,6 +15,7 @@ import {
 import type { AccountResponse } from "@/api/generated/model";
 import { toCents } from "@/lib/money";
 import {
+  account,
   accounts,
   archivedAccounts,
   cashFlowForecast,
@@ -101,9 +102,6 @@ export const accountHandlers = [
   getDeleteReconciliationMockHandler(),
   getRestoreAccountMockHandler(({ params }) => {
     const archived = found(byId(archivedAccounts, params.id));
-    return withBalance(
-      { ...archived, createdAt: CREATED_AT, ownerId: checkingAccount.ownerId, version: 1 },
-      archived.startingBalance,
-    );
+    return account({ ...archived, createdAt: CREATED_AT, balance: archived.startingBalance });
   }),
 ];

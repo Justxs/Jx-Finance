@@ -5,7 +5,7 @@ import type {
   BudgetSuggestionsResponse,
 } from "@/api/generated/model";
 import { fromCents, toCents } from "@/lib/money";
-import { ids } from "./base";
+import { ids, type Seed } from "./base";
 import { categories } from "./categories";
 import { countedBetween, expenseParts } from "./transactions";
 
@@ -27,12 +27,28 @@ function spentInWindow(categoryId: string, window: Window): number {
     .reduce((total, part) => total + part.cents, 0);
 }
 
+const budgetDefaults = {
+  tagId: null,
+  carriedAmount: "0.00",
+  period: "monthly",
+  rolloverEnabled: false,
+  windowStart: budgetWindows.monthly.start,
+  windowEnd: budgetWindows.monthly.end,
+  scope: "personal",
+  householdId: null,
+  version: 1,
+} satisfies Partial<BudgetResponse>;
+
+export function budget(seed: Seed<BudgetResponse, typeof budgetDefaults>): BudgetResponse {
+  return { ...budgetDefaults, ...seed };
+}
+
 interface Options {
   period?: BudgetPeriod;
   carried?: string;
 }
 
-function budget(
+function categoryBudget(
   id: string,
   categoryId: string,
   limitAmount: string,
@@ -41,10 +57,9 @@ function budget(
   const window = budgetWindows[period];
   const spent = spentInWindow(categoryId, window);
   const effective = toCents(limitAmount) + toCents(carried);
-  return {
+  return budget({
     id,
     categoryId,
-    tagId: null,
     name: categories.find((item) => item.id === categoryId)?.name ?? "",
     limitAmount,
     carriedAmount: carried,
@@ -55,49 +70,39 @@ function budget(
     rolloverEnabled: carried !== "0.00",
     windowStart: window.start,
     windowEnd: window.end,
-    scope: "personal",
-    householdId: null,
-    version: 1,
-  };
+  });
 }
 
-export const overLimitBudget: BudgetResponse = budget(
-  ids.budgets.food,
-  ids.categories.food,
-  "150.00",
-);
+export const overLimitBudget = categoryBudget(ids.budgets.food, ids.categories.food, "150.00");
 
-export const weeklyRolloverBudget: BudgetResponse = budget(
+export const weeklyRolloverBudget = categoryBudget(
   ids.budgets.transport,
   ids.categories.transport,
   "40.00",
   { period: "weekly", carried: "12.50" },
 );
 
-export const holidayTagBudget: BudgetResponse = {
+export const holidayTagBudget = budget({
   id: ids.budgets.holiday,
   categoryId: null,
   tagId: ids.tags.holiday,
   name: "Atostogos 2026",
   limitAmount: "2000.00",
-  carriedAmount: "0.00",
   effectiveLimit: "2000.00",
   spent: "18.00",
   remaining: "1982.00",
   period: "yearly",
-  rolloverEnabled: false,
   windowStart: budgetWindows.yearly.start,
   windowEnd: budgetWindows.yearly.end,
-  scope: "personal",
-  householdId: null,
-  version: 1,
-};
+});
 
 export const budgets: BudgetResponse[] = [
   overLimitBudget,
   weeklyRolloverBudget,
-  budget(ids.budgets.entertainment, ids.categories.entertainment, "60.00"),
-  budget(ids.budgets.utilities, ids.categories.utilities, "150.00", { period: "quarterly" }),
+  categoryBudget(ids.budgets.entertainment, ids.categories.entertainment, "60.00"),
+  categoryBudget(ids.budgets.utilities, ids.categories.utilities, "150.00", {
+    period: "quarterly",
+  }),
   holidayTagBudget,
 ];
 

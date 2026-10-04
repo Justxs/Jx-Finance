@@ -1,17 +1,25 @@
+import { globSync } from "node:fs";
 import { it } from "vitest";
 import type { StoryModule } from "./story-session";
 
 const SHARD_COUNT = 6;
 
-const storyFiles = import.meta.glob<StoryModule>("/src/**/*.stories.tsx");
+const storyPaths = globSync("src/**/*.stories.tsx").map((path) => `/${path.replaceAll("\\", "/")}`);
+
+function storyFile(path: string) {
+  function load(): Promise<StoryModule> {
+    return import(path);
+  }
+  return { path, load };
+}
 
 function shardFiles(shard: number) {
   const only = process.env.STORY_FILE;
-  return Object.entries(storyFiles)
-    .toSorted(([left], [right]) => left.localeCompare(right))
-    .filter(([path]) => !only || path.includes(only))
+  return storyPaths
+    .toSorted((left, right) => left.localeCompare(right))
+    .filter((path) => !only || path.includes(only))
     .filter((_, index) => index % SHARD_COUNT === shard)
-    .map(([path, load]) => ({ path, load }));
+    .map(storyFile);
 }
 
 export async function runStoryShard(shard: number) {

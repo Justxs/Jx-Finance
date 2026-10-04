@@ -5,12 +5,14 @@ export default defineConfig({
   plugins: reactPlugins(),
   resolve: { alias: srcAlias },
   test: {
+    fsModuleCache: true,
     projects: [
       {
         extends: true,
         test: {
           name: "unit",
           environment: "node",
+          isolate: false,
           include: ["src/**/*.test.ts", "lint/**/*.test.mjs"],
           exclude: ["src/**/*.dom.test.ts", "src/test/stories/**"],
         },

@@ -36,6 +36,7 @@ import {
   ledgerItemsOf,
   ownPlaces,
   placeSuggestions,
+  transaction,
   transactions,
   transactionsCsv,
   tripGroup,
@@ -237,26 +238,14 @@ export const transactionHandlers = [
     return paginate(ledgerItemsOf(filterTransactions(params), matchingTripGroup(params)), params);
   }),
   getCreateTransactionMockHandler(async ({ request }) => {
-    const base: TransactionResponse = {
+    const base = transaction({
       id: NEW_TRANSACTION_ID,
       accountId: checkingAccount.id,
-      categoryId: null,
-      type: "expense",
       amount: "0.00",
-      currency: "eur",
       reportingAmount: "0.00",
       date: FIXTURE_TODAY,
-      description: null,
-      source: "manual",
-      isSplit: false,
       createdAt: CREATED_AT,
-      lines: null,
-      tagIds: [],
-      attachmentCount: 0,
-      unusual: null,
-      unusualDismissed: false,
-      version: 1,
-    };
+    });
     return mergeTransaction(base, await readBody(request));
   }),
   getPlacesMockHandler(({ request }) => {

@@ -1,34 +1,27 @@
 import { describe, expect, test } from "vitest";
 import type { BudgetPeriod, BudgetResponse } from "@/api/generated/model";
+import { budget } from "@/storybook/fixtures/budgets";
 import { budgetOverview } from "./budgets";
 
-function budget(name: string, period: BudgetPeriod, limit: string, spent: string): BudgetResponse {
-  return {
+function limited(name: string, period: BudgetPeriod, limit: string, spent: string): BudgetResponse {
+  return budget({
     id: name,
     categoryId: name,
-    tagId: null,
     name,
     limitAmount: limit,
-    carriedAmount: "0.00",
     effectiveLimit: limit,
     spent,
     remaining: (Number(limit) - Number(spent)).toFixed(2),
     period,
-    rolloverEnabled: false,
-    windowStart: "2026-09-01",
-    windowEnd: "2026-09-30",
-    scope: "personal",
-    householdId: null,
-    version: 1,
-  };
+  });
 }
 
 describe("budgetOverview", () => {
   test("adds up only the overspend of the budgets that are over", () => {
     const overview = budgetOverview([
-      budget("Food", "monthly", "150.00", "204.11"),
-      budget("Fun", "monthly", "60.00", "30.00"),
-      budget("Holiday", "yearly", "2000.00", "18.00"),
+      limited("Food", "monthly", "150.00", "204.11"),
+      limited("Fun", "monthly", "60.00", "30.00"),
+      limited("Holiday", "yearly", "2000.00", "18.00"),
     ]);
 
     expect(overview.over.map((item) => item.name)).toEqual(["Food"]);
@@ -37,10 +30,10 @@ describe("budgetOverview", () => {
 
   test("keeps each period apart and never nets an overspend against what is left", () => {
     const overview = budgetOverview([
-      budget("Holiday", "yearly", "2000.00", "18.00"),
-      budget("Food", "monthly", "150.00", "204.11"),
-      budget("Fun", "monthly", "60.00", "30.00"),
-      budget("Bus", "weekly", "40.00", "12.00"),
+      limited("Holiday", "yearly", "2000.00", "18.00"),
+      limited("Food", "monthly", "150.00", "204.11"),
+      limited("Fun", "monthly", "60.00", "30.00"),
+      limited("Bus", "weekly", "40.00", "12.00"),
     ]);
 
     expect(overview.periods).toEqual([

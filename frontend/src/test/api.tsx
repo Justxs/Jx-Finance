@@ -1,4 +1,4 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { type QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   type AnyValidator,
   RouterProvider,
@@ -18,6 +18,7 @@ import { Toaster } from "@/components/ui/sonner/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip/tooltip";
 import { createMutationCache } from "@/lib/query-client";
 import { handlers } from "@/storybook/handlers";
+import { testQueryClient } from "./query-client";
 
 const clients = new Set<QueryClient>();
 
@@ -74,10 +75,7 @@ function Blank() {
 }
 
 export function renderInApp(ui: ReactElement, { path = "/", validateSearch }: AppOptions = {}) {
-  const queryClient = new QueryClient({
-    defaultOptions: { queries: { retry: false, staleTime: Infinity }, mutations: { retry: false } },
-    mutationCache: createMutationCache(),
-  });
+  const queryClient = testQueryClient({ mutationCache: createMutationCache() });
   clients.add(queryClient);
 
   function Screen() {

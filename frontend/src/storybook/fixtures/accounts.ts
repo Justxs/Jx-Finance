@@ -1,16 +1,20 @@
 import type { AccountResponse, ArchivedAccountResponse } from "@/api/generated/model";
-import { ids } from "./base";
+import { ids, type Seed } from "./base";
 
 type BaseAccount = Omit<
   AccountResponse,
   "currentBalance" | "reportingBalance" | "holdingsValue" | "balances"
 >;
 
-type Defaulted = "scope" | "currency" | "householdId" | "ownerId" | "version";
+const accountDefaults = {
+  scope: "personal",
+  currency: "eur",
+  householdId: null,
+  ownerId: ids.users.ruta,
+  version: 1,
+} satisfies Partial<BaseAccount>;
 
-interface AccountSeed extends Omit<BaseAccount, Defaulted>, Partial<Pick<BaseAccount, Defaulted>> {
-  balance: string;
-}
+type AccountSeed = Seed<BaseAccount, typeof accountDefaults> & { balance: string };
 
 export function withBalance(base: BaseAccount, amount: string): AccountResponse {
   return {
@@ -22,18 +26,8 @@ export function withBalance(base: BaseAccount, amount: string): AccountResponse 
   };
 }
 
-function account({ balance, ...seed }: AccountSeed): AccountResponse {
-  return withBalance(
-    {
-      scope: "personal",
-      currency: "eur",
-      householdId: null,
-      ownerId: ids.users.ruta,
-      version: 1,
-      ...seed,
-    },
-    balance,
-  );
+export function account({ balance, ...seed }: AccountSeed): AccountResponse {
+  return withBalance({ ...accountDefaults, ...seed }, balance);
 }
 
 export const checkingAccount = account({
@@ -84,16 +78,16 @@ export const sharedAccount = account({
 });
 
 export const brokerAccount: AccountResponse = {
-  id: ids.accounts.broker,
-  name: "Interactive Brokers",
-  description: "Investicinė sąskaita keliomis valiutomis",
-  iban: null,
-  type: "investment",
-  startingBalance: "5000.00",
-  currentBalance: "5412.63",
-  createdAt: "2025-05-19T10:05:00Z",
-  scope: "personal",
-  currency: "eur",
+  ...account({
+    id: ids.accounts.broker,
+    name: "Interactive Brokers",
+    description: "Investicinė sąskaita keliomis valiutomis",
+    iban: null,
+    type: "investment",
+    startingBalance: "5000.00",
+    balance: "5412.63",
+    createdAt: "2025-05-19T10:05:00Z",
+  }),
   balances: [
     { currency: "eur", amount: "2498.00" },
     { currency: "usd", amount: "2710.40" },
@@ -101,9 +95,6 @@ export const brokerAccount: AccountResponse = {
   ],
   reportingBalance: "15987.62",
   holdingsValue: "10574.99",
-  householdId: null,
-  ownerId: ids.users.ruta,
-  version: 1,
 };
 
 export const accounts: AccountResponse[] = [

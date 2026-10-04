@@ -9,6 +9,7 @@ import { BudgetPeriod } from "@/api/generated/model";
 import type { BudgetResponse } from "@/api/generated/model";
 import { toCents } from "@/lib/money";
 import {
+  budget,
   budgetSuggestions,
   budgets,
   budgetWindows,
@@ -64,24 +65,15 @@ export const budgetHandlers = [
     return period === "weekly" ? weeklyBudgetSuggestions : { period, categories: [] };
   }),
   getCreateBudgetMockHandler(async ({ request }) => {
-    const base: BudgetResponse = {
+    const base = budget({
       id: NEW_ID,
       categoryId: "",
-      tagId: null,
       name: "",
       limitAmount: "0.00",
-      carriedAmount: "0.00",
       effectiveLimit: "0.00",
       spent: "0.00",
       remaining: "0.00",
-      period: "monthly",
-      rolloverEnabled: false,
-      windowStart: budgetWindows.monthly.start,
-      windowEnd: budgetWindows.monthly.end,
-      scope: "personal",
-      householdId: null,
-      version: 1,
-    };
+    });
     return mergeBudget(base, await readBody(request));
   }),
   getUpdateBudgetMockHandler(updateFrom(budgets, mergeBudget)),

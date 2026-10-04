@@ -1,36 +1,24 @@
 import type { RecurringBillResponse, RecurringTotalsResponse } from "@/api/generated/model";
-import { ids } from "./base";
+import { ids, type Seed } from "./base";
 import { problemOf } from "./problems";
 
-type Defaulted =
-  | "shape"
-  | "kind"
-  | "toAccountId"
-  | "cadence"
-  | "isActive"
-  | "matchKey"
-  | "latestMatch"
-  | "debtId"
-  | "scope"
-  | "householdId";
+const billDefaults = {
+  shape: "expense",
+  kind: "fixed",
+  toAccountId: null,
+  cadence: "monthly",
+  isActive: true,
+  matchKey: null,
+  latestMatch: null,
+  debtId: null,
+  scope: "personal",
+  householdId: null,
+} satisfies Partial<RecurringBillResponse>;
 
-type BillSeed = Omit<RecurringBillResponse, Defaulted> &
-  Partial<Pick<RecurringBillResponse, Defaulted>>;
-
-function bill(seed: BillSeed): RecurringBillResponse {
-  return {
-    shape: "expense",
-    kind: "fixed",
-    toAccountId: null,
-    cadence: "monthly",
-    isActive: true,
-    matchKey: null,
-    latestMatch: null,
-    debtId: null,
-    scope: "personal",
-    householdId: null,
-    ...seed,
-  };
+export function bill(
+  seed: Seed<RecurringBillResponse, typeof billDefaults>,
+): RecurringBillResponse {
+  return { ...billDefaults, ...seed };
 }
 
 export const dueSoonBill = bill({

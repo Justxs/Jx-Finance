@@ -6,6 +6,7 @@ import type {
   TransactionResponse,
 } from "@/api/generated/model";
 import { recallCategoryId } from "@/lib/category-recall";
+import { transaction } from "@/storybook/fixtures/transactions";
 import {
   applyCategory,
   categoryTargetCount,
@@ -55,32 +56,23 @@ function row(
   };
 }
 
-function transaction(
+function recorded(
   date: string,
   description: string | null,
   type: FlowType,
   categoryId: string | null,
 ): TransactionResponse {
-  return {
+  return transaction({
     id: `${date}-${description}`,
     accountId: "account",
     categoryId,
     type,
     amount: "1.00",
+    reportingAmount: "1.00",
     date,
     description,
-    source: "manual",
-    isSplit: false,
     createdAt: `${date}T00:00:00Z`,
-    lines: null,
-    currency: "eur",
-    reportingAmount: "1.00",
-    tagIds: [],
-    attachmentCount: 0,
-    unusual: null,
-    unusualDismissed: false,
-    version: 1,
-  };
+  });
 }
 
 describe("category recall", () => {
@@ -93,9 +85,9 @@ describe("category recall", () => {
         row("4", "Trafi bilietas", "expense", "29.00", { isDuplicate: true }),
       ],
       [
-        transaction("2026-07-01", "Trafi bilietas", "expense", "food"),
-        transaction("2026-08-01", " trafi bilietas ", "expense", "transport"),
-        transaction("2026-08-15", "Trafi bilietas", "expense", null),
+        recorded("2026-07-01", "Trafi bilietas", "expense", "food"),
+        recorded("2026-08-01", " trafi bilietas ", "expense", "transport"),
+        recorded("2026-08-15", "Trafi bilietas", "expense", null),
       ],
       categories,
     );
@@ -109,7 +101,7 @@ describe("category recall", () => {
   });
 
   test("rows without a description recall nothing", () => {
-    const history = [transaction("2026-08-01", null, "expense", "food")];
+    const history = [recorded("2026-08-01", null, "expense", "food")];
 
     expect(recallCategoryId(row("1", null, "expense", "1.00"), history, categories)).toBe("");
     expect(recallCategoryId(row("2", "   ", "expense", "1.00"), history, categories)).toBe("");
@@ -117,8 +109,8 @@ describe("category recall", () => {
 
   test("ignores history whose category is gone or of the other type", () => {
     const history = [
-      transaction("2026-08-02", "Lidl", "expense", "deleted"),
-      transaction("2026-08-01", "Lidl", "expense", "salary"),
+      recorded("2026-08-02", "Lidl", "expense", "deleted"),
+      recorded("2026-08-01", "Lidl", "expense", "salary"),
     ];
 
     expect(recallCategoryId(row("1", "Lidl", "expense", "1.00"), history, categories)).toBe("");
@@ -135,7 +127,7 @@ describe("rule suggestions", () => {
           matchedRuleName: "Transport",
         }),
       ],
-      [transaction("2026-08-01", "Trafi bilietas", "expense", "food")],
+      [recorded("2026-08-01", "Trafi bilietas", "expense", "food")],
       categories,
     );
 
@@ -155,7 +147,7 @@ describe("rule suggestions", () => {
           matchedRuleName: "Commuting",
         }),
       ],
-      [transaction("2026-08-01", "Trafi bilietas", "expense", "food")],
+      [recorded("2026-08-01", "Trafi bilietas", "expense", "food")],
       categories,
     );
 
@@ -185,7 +177,7 @@ describe("rule suggestions", () => {
 });
 
 describe("learned suggestions", () => {
-  const history = [transaction("2026-08-01", "Trafi bilietas", "expense", "food")];
+  const history = [recorded("2026-08-01", "Trafi bilietas", "expense", "food")];
 
   test("a rule beats a learned guess, which beats the recall", () => {
     const rows = toPreviewRows(
@@ -514,7 +506,7 @@ describe("bulk category", () => {
   test("a manual pick clears the suggested mark", () => {
     const rows = toPreviewRows(
       [row("1", "Lidl", "expense", "1.00")],
-      [transaction("2026-08-01", "Lidl", "expense", "transport")],
+      [recorded("2026-08-01", "Lidl", "expense", "transport")],
       categories,
     );
 
@@ -554,7 +546,7 @@ describe("views and search", () => {
       row("3", "Maxima", "expense", "42.18", { isDuplicate: true }),
       row("4", "Savings", "expense", "250.00", { looksLikeTransfer: true }),
     ],
-    [transaction("2026-09-01", "Lidl", "expense", "food")],
+    [recorded("2026-09-01", "Lidl", "expense", "food")],
     categories,
   );
 

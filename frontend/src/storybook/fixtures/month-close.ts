@@ -15,6 +15,7 @@ import { budgets } from "./budgets";
 import { netWorthHistoryItems } from "./net-worth";
 import { overdueBill, variableBill } from "./recurring-bills";
 import { buildReportSummary, emptyReportSummary, withComparison } from "./reports";
+import { transaction } from "./transactions";
 
 export const MONTH_CLOSE_MONTH = "2026-08";
 export const MONTH_CLOSE_CHANGED_MONTH = "2026-07";
@@ -282,27 +283,16 @@ function uncategorizedRow(
   description: string,
 ): TransactionResponse {
   const date = `${MONTH_CLOSE_MONTH}-${day}`;
-  return {
+  return transaction({
     id: uid("c105ed00", n),
     accountId,
-    categoryId: null,
-    type: "expense",
     amount,
-    currency: "eur",
     reportingAmount: amount,
     date,
     description,
     source: "imported",
-    isSplit: false,
     createdAt: `${date}T09:30:00Z`,
-    lines: null,
-    tagIds: [],
-    attachmentCount: 0,
-    unusual: null,
-    unusualDismissed: false,
-    enteredByMe: true,
-    version: 1,
-  };
+  });
 }
 
 export const monthUncategorizedTransactions: TransactionResponse[] = [

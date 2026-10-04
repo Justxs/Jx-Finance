@@ -149,16 +149,10 @@ const contracts: Record<string, Contract> = {
   incomeCategories: { schema: schemas.CategoriesResponse },
   expenseCategories: { schema: schemas.CategoriesResponse },
   splitTransactionLines: { schema: schemas.TransactionResponse, toResponse: asSplitTransaction },
-  splitTransaction: { schema: schemas.TransactionResponse },
-  longDescriptionTransaction: { schema: schemas.TransactionResponse },
   payeeUnusual: { schema: schemas.TransactionResponse, toResponse: asUnusualTransaction },
   categoryUnusual: { schema: schemas.TransactionResponse, toResponse: asUnusualTransaction },
-  uncategorisedTransaction: { schema: schemas.TransactionResponse },
-  refundedPurchase: { schema: schemas.TransactionResponse },
   linkedRefund: { schema: schemas.TransactionResponse },
   unlinkedRefund: { schema: schemas.TransactionResponse },
-  spreadTransaction: { schema: schemas.TransactionResponse },
-  receiptItemTransaction: { schema: schemas.TransactionResponse },
   refundTransactions: { schema: schemas.TransactionsResponse, toResponse: asPage },
   hugeAmountTransactions: { schema: schemas.TransactionsResponse, toResponse: asPage },
   foreignCurrencyTransactions: { schema: schemas.TransactionsResponse, toResponse: asPage },
@@ -186,67 +180,19 @@ const contracts: Record<string, Contract> = {
   settings: { schema: schemas.SettingsResponse },
   publicSettings: { schema: schemas.PublicSettingsResponse },
   currencies: { schema: schemas.CurrenciesResponse },
-  overLimitBudget: { schema: schemas.BudgetsResponseItem },
-  weeklyRolloverBudget: { schema: schemas.BudgetsResponseItem },
-  holidayTagBudget: { schema: schemas.BudgetsResponseItem },
   budgets: { schema: schemas.BudgetsResponse },
   budgetSuggestions: { schema: schemas.BudgetSuggestionsResponse },
   weeklyBudgetSuggestions: { schema: schemas.BudgetSuggestionsResponse },
   youngBudgetSuggestions: { schema: schemas.BudgetSuggestionsResponse },
   goalWithTargetDate: { schema: schemas.GoalsResponseItem },
-  openEndedGoal: { schema: schemas.GoalsResponseItem },
-  completedGoal: { schema: schemas.GoalsResponseItem },
-  accountFundedGoal: { schema: schemas.GoalsResponseItem },
-  sharedFundedGoal: { schema: schemas.GoalsResponseItem },
-  unavailableFundedGoal: { schema: schemas.GoalsResponseItem },
   goals: { schema: schemas.GoalsResponse },
-  dueSoonBill: { schema: schemas.RecurringBillResponse },
-  priceRiseBill: { schema: schemas.RecurringBillResponse },
-  variableBill: { schema: schemas.RecurringBillResponse },
-  overdueBill: { schema: schemas.RecurringBillResponse },
-  inactiveBill: { schema: schemas.RecurringBillResponse },
-  incomeBill: { schema: schemas.RecurringBillResponse },
-  transferBill: { schema: schemas.RecurringBillResponse },
-  crossCurrencyTransferBill: { schema: schemas.RecurringBillResponse },
-  mortgageBill: { schema: schemas.RecurringBillResponse },
-  lapsedBill: { schema: schemas.RecurringBillResponse },
   recurringBills: { schema: schemas.RecurringBillsResponse },
   recurringTotals: { schema: schemas.RecurringTotalsResponse },
   settledRecurringTotals: { schema: schemas.RecurringTotalsResponse },
   emptyRecurringTotals: { schema: schemas.RecurringTotalsResponse },
-  paidOccurrence: { schema: schemas.BillsCalendarResponse, toResponse: asCalendar },
-  paidIncomeOccurrence: { schema: schemas.BillsCalendarResponse, toResponse: asCalendar },
-  noMatchOccurrence: { schema: schemas.BillsCalendarResponse, toResponse: asCalendar },
-  overdueOccurrence: { schema: schemas.BillsCalendarResponse, toResponse: asCalendar },
-  dueOccurrence: { schema: schemas.BillsCalendarResponse, toResponse: asCalendar },
-  estimatedOccurrence: { schema: schemas.BillsCalendarResponse, toResponse: asCalendar },
-  unconfirmedOccurrence: { schema: schemas.BillsCalendarResponse, toResponse: asCalendar },
-  unpricedOccurrence: { schema: schemas.BillsCalendarResponse, toResponse: asCalendar },
-  hiddenAccountOccurrence: { schema: schemas.BillsCalendarResponse, toResponse: asCalendar },
-  billsCalendar: { schema: schemas.BillsCalendarResponse },
-  unconfirmedBillsCalendar: { schema: schemas.BillsCalendarResponse },
-  unpricedBillsCalendar: { schema: schemas.BillsCalendarResponse },
-  emptyBillsCalendar: { schema: schemas.BillsCalendarResponse },
-  spotifyCandidate: { schema: schemas.SubscriptionCandidatesResponseItem },
-  gymCandidate: { schema: schemas.SubscriptionCandidatesResponseItem },
-  domainCandidate: { schema: schemas.SubscriptionCandidatesResponseItem },
-  waterCandidate: { schema: schemas.SubscriptionCandidatesResponseItem },
   subscriptionCandidates: { schema: schemas.SubscriptionCandidatesResponse },
-  budgetWarningNotification: { schema: schemas.NotificationsResponseItem },
-  budgetExceededNotification: { schema: schemas.NotificationsResponseItem },
-  expenseDueNotification: { schema: schemas.NotificationsResponseItem },
-  incomeDueNotification: { schema: schemas.NotificationsResponseItem },
-  transferDueNotification: { schema: schemas.NotificationsResponseItem },
-  unusualAmountNotification: { schema: schemas.NotificationsResponseItem },
-  unusualAmountsNotification: { schema: schemas.NotificationsResponseItem },
-  priceRiseNotification: { schema: schemas.NotificationsResponseItem },
-  lowBalanceNotification: { schema: schemas.NotificationsResponseItem },
   receiptItems: { schema: schemas.ReceiptItemsResponse },
   noReceiptItems: { schema: schemas.ReceiptItemsResponse },
-  warrantyNotification: { schema: schemas.NotificationsResponseItem },
-  importWaitingNotification: { schema: schemas.NotificationsResponseItem },
-  monthReadyNotification: { schema: schemas.NotificationsResponseItem },
-  monthlyDigestNotification: { schema: schemas.NotificationsResponseItem },
   monthCloseYear: { schema: schemas.MonthCloseYearResponse },
   reconciliations: { schema: schemas.ReconciliationsResponse },
   matchedReconciliation: { schema: schemas.RecordReconciliationResponse },
@@ -255,20 +201,10 @@ const contracts: Record<string, Contract> = {
   firstReconciliationPreview: { schema: schemas.ReconciliationPreviewResponse },
   usdReconciliationPreview: { schema: schemas.ReconciliationPreviewResponse },
   longReconciliationPreview: { schema: schemas.ReconciliationPreviewResponse },
-  openMonthReview: { schema: schemas.MonthReviewResponse },
-  clearOpenMonthReview: { schema: schemas.MonthReviewResponse },
-  closedMonthReview: { schema: schemas.MonthReviewResponse },
-  closedChangedMonthReview: { schema: schemas.MonthReviewResponse },
-  currencyChangedMonthReview: { schema: schemas.MonthReviewResponse },
-  notEndedMonthReview: { schema: schemas.MonthReviewResponse },
-  emptyMonthReview: { schema: schemas.MonthReviewResponse },
   monthUncategorizedTransactions: { schema: schemas.TransactionsResponse, toResponse: asPage },
   monthBillsDue: { schema: schemas.RecurringBillsResponse },
   notifications: { schema: schemas.NotificationsResponse },
   assets: { schema: schemas.AssetsResponse },
-  fullyDepreciatedAsset: { schema: schemas.AssetsResponse, toResponse: asList },
-  dollarAsset: { schema: schemas.AssetsResponse, toResponse: asList },
-  sharedAsset: { schema: schemas.AssetsResponse, toResponse: asList },
   apartmentValuations: { schema: schemas.AssetValuationsResponse },
   carValuations: { schema: schemas.AssetValuationsResponse },
   apartmentValueHistory: { schema: schemas.AssetValueHistoryResponse },
@@ -285,7 +221,6 @@ const contracts: Record<string, Contract> = {
   sharedTrackedMortgage: { schema: schemas.DebtsResponse, toResponse: asList },
   mortgagePayments: { schema: schemas.DebtPaymentsResponse },
   mortgageBalances: { schema: schemas.DebtBalancesResponse },
-  linkedPaymentTransaction: { schema: schemas.TransactionResponse },
   netWorth: { schema: schemas.NetWorthResponse },
   emptyNetWorth: { schema: schemas.NetWorthResponse },
   netWorthWithOpenBalances: { schema: schemas.NetWorthResponse },
@@ -293,10 +228,9 @@ const contracts: Record<string, Contract> = {
   netWorthHistory: { schema: schemas.NetWorthHistoryResponse },
   dashboardSummary: { schema: schemas.DashboardSummaryResponse },
   emptyDashboardSummary: { schema: schemas.DashboardSummaryResponse },
-  defaultDashboardLayout: { schema: schemas.DashboardLayoutResponse },
-  customDashboardLayout: { schema: schemas.DashboardLayoutResponse },
-  hiddenCardsDashboardLayout: { schema: schemas.DashboardLayoutResponse },
-  allHiddenDashboardLayout: { schema: schemas.DashboardLayoutResponse },
+  gettingStarted: { schema: schemas.GettingStartedResponse },
+  gettingStartedFresh: { schema: schemas.GettingStartedResponse },
+  gettingStartedDone: { schema: schemas.GettingStartedResponse },
   monthlyTrendItems: { schema: schemas.MonthlyTrendResponse, toResponse: asItems },
   monthlyTrend: { schema: schemas.MonthlyTrendResponse },
   categoryBreakdownItems: {
@@ -391,13 +325,26 @@ const contracts: Record<string, Contract> = {
   sharedExpenses: { schema: schemas.SharedExpensesResponse, toResponse: asPage },
   householdSettlements: { schema: schemas.SettlementsResponse, toResponse: asPage },
   partnerSharedAccount: { schema: schemas.AccountResponse },
-  sharedPurchase: { schema: schemas.TransactionResponse },
-  outdatedSharedPurchase: { schema: schemas.TransactionResponse },
   contacts: { schema: schemas.ContactsResponse },
   contactEntries: { schema: schemas.ContactEntriesResponse, toResponse: asPage },
-  contactSplitPurchase: { schema: schemas.TransactionResponse },
   dinnerSplit: { schema: schemas.CreateContactSplitResponse },
 };
+
+const contractsBySuffix: [string, Contract][] = [
+  ["Problem", { schema: schemas.ProblemDetailsResponse }],
+  ["Notification", { schema: schemas.NotificationsResponseItem }],
+  ["Bill", { schema: schemas.RecurringBillResponse }],
+  ["Occurrence", { schema: schemas.BillsCalendarResponse, toResponse: asCalendar }],
+  ["Calendar", { schema: schemas.BillsCalendarResponse }],
+  ["Review", { schema: schemas.MonthReviewResponse }],
+  ["Goal", { schema: schemas.GoalsResponseItem }],
+  ["Budget", { schema: schemas.BudgetsResponseItem }],
+  ["Candidate", { schema: schemas.SubscriptionCandidatesResponseItem }],
+  ["Layout", { schema: schemas.DashboardLayoutResponse }],
+  ["Transaction", { schema: schemas.TransactionResponse }],
+  ["Purchase", { schema: schemas.TransactionResponse }],
+  ["Asset", { schema: schemas.AssetsResponse, toResponse: asList }],
+];
 
 function buildSummary() {
   return fixtures.buildTransactionsSummary(fixtures.transactions);
@@ -508,19 +455,18 @@ function fixtureNames(): string[] {
   return Object.keys(exported).filter((name) => typeof exported[name] !== "function");
 }
 
-const problems = fixtureNames().filter((name) => name.endsWith("Problem"));
+function contractOf(name: string): Contract | undefined {
+  return contracts[name] ?? contractsBySuffix.find(([suffix]) => name.endsWith(suffix))?.[1];
+}
+
+const checked = fixtureNames().filter((name) => contractOf(name) !== undefined);
 
 describe("storybook fixtures match the generated response schemas", () => {
-  test.each(Object.keys(contracts))("%s", (name) => {
-    const contract = contracts[name]!;
-    expect(name in exported, `${name} is no longer exported by the fixtures`).toBe(true);
+  test.each(checked)("%s", (name) => {
+    const contract = contractOf(name)!;
     const fixture = exported[name];
     const response = contract.toResponse ? contract.toResponse(fixture) : fixture;
     expect(describeIssues(name, contract.schema, response)).toEqual([]);
-  });
-
-  test.each(problems)("%s", (name) => {
-    expect(describeIssues(name, schemas.ProblemDetailsResponse, exported[name])).toEqual([]);
   });
 
   test.each(Object.keys(builtResponses))("%s result", (name) => {
@@ -529,11 +475,14 @@ describe("storybook fixtures match the generated response schemas", () => {
   });
 
   test("every exported fixture is checked or explicitly listed as not checkable", () => {
-    const accounted = new Set([...Object.keys(contracts), ...problems, ...notApiResponses]);
-    expect(fixtureNames().filter((name) => !accounted.has(name))).toEqual([]);
+    const unchecked = fixtureNames().filter(
+      (name) => contractOf(name) === undefined && !notApiResponses.includes(name),
+    );
+    expect(unchecked).toEqual([]);
   });
 
-  test("the lists of unchecked names only hold existing exports", () => {
-    expect(notApiResponses.filter((name) => !(name in exported))).toEqual([]);
+  test("the named contracts and unchecked names only hold existing exports", () => {
+    const named = [...Object.keys(contracts), ...notApiResponses];
+    expect(named.filter((name) => !(name in exported))).toEqual([]);
   });
 });

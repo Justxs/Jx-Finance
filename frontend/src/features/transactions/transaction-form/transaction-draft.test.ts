@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
 import type { TransactionResponse } from "@/api/generated/model";
+import { transaction } from "@/storybook/fixtures/transactions";
 import {
   draftFromTemplate,
   draftFromTransaction,
@@ -9,29 +10,21 @@ import {
 } from "./transaction-draft";
 import { defaultFormFields, toSubmittedValues } from "./transaction-schema";
 
-const split: TransactionResponse = {
+const split = transaction({
   id: "tx-1",
   accountId: "account-1",
-  categoryId: null,
-  type: "expense",
   amount: "128.40",
-  currency: "eur",
   reportingAmount: "128.40",
   date: "2026-09-13",
   description: "Maxima",
-  source: "manual",
   isSplit: true,
   createdAt: "2026-09-13T08:30:00Z",
   tagIds: ["tag-1", "tag-2"],
-  attachmentCount: 0,
-  unusual: null,
-  unusualDismissed: false,
-  version: 1,
   lines: [
     { id: "line-a", categoryId: "category-1", amount: "74.15", description: "Food" },
     { id: "line-b", categoryId: null, amount: "54.25", description: null },
   ],
-};
+});
 
 describe("draftFromTransaction", () => {
   test("carries the account, tags and split lines without their line ids", () => {

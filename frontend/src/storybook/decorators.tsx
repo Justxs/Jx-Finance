@@ -1,5 +1,5 @@
 import type { Decorator } from "@storybook/react-vite";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { type QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   type AnyRoute,
   type AnyRouter,
@@ -35,6 +35,7 @@ import { monthPageSearchSchema } from "@/routes/reports_.month";
 import { settingsSearchSchema } from "@/routes/settings";
 import { usersSearchSchema } from "@/routes/users";
 import { longDescriptionTransaction } from "@/storybook/fixtures";
+import { testQueryClient } from "@/test/query-client";
 
 const STORY_ROUTES = [
   { path: "/", validateSearch: dashboardSearchSchema },
@@ -117,10 +118,7 @@ export function withPageFrame(...[Story]: Parameters<Decorator>) {
 const storyQueryClients = new Set<QueryClient>();
 
 function createStoryQueryClient() {
-  const client = new QueryClient({
-    defaultOptions: { queries: { retry: false, staleTime: Infinity }, mutations: { retry: false } },
-    mutationCache: createMutationCache(),
-  });
+  const client = testQueryClient({ mutationCache: createMutationCache() });
   storyQueryClients.add(client);
   return client;
 }

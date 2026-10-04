@@ -1,9 +1,10 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClientProvider } from "@tanstack/react-query";
 import { render } from "@testing-library/react";
 import type { ReactElement, ReactNode } from "react";
 import { vi } from "vitest";
 import { getCurrenciesQueryKey, getSettingsQueryKey } from "@/api/generated";
 import type { CurrenciesResponse, SettingsResponse } from "@/api/generated/model";
+import { testQueryClient } from "./query-client";
 
 interface Seed {
   settings?: SettingsResponse;
@@ -15,7 +16,7 @@ export function createQueryWrapper({ settings, currencies }: Seed = {}) {
     "fetch",
     vi.fn(() => new Promise<Response>(() => {})),
   );
-  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  const client = testQueryClient();
   if (settings) {
     client.setQueryData(getSettingsQueryKey(), settings);
   }

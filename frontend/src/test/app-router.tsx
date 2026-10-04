@@ -1,19 +1,18 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { type QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { RouterProvider, createMemoryHistory, createRouter } from "@tanstack/react-router";
 import { render, waitFor } from "@testing-library/react";
 import { expect } from "vitest";
 import { TooltipProvider } from "@/components/ui/tooltip/tooltip";
 import { setSetupNeeded } from "@/lib/auth-gate";
 import { routeTree } from "@/route-tree.gen";
+import { testQueryClient } from "./query-client";
 
 export const APP_TEST_TIMEOUT = 30_000;
 
 export const appWait = { timeout: 15_000 };
 
 export function mountApp(path: string) {
-  const queryClient = new QueryClient({
-    defaultOptions: { queries: { retry: false, staleTime: Infinity } },
-  });
+  const queryClient = testQueryClient();
   setSetupNeeded(queryClient, false);
   const router = createRouter({
     routeTree,

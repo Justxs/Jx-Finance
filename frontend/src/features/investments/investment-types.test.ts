@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
 import type { AccountResponse, AccountType } from "@/api/generated/model";
+import { account } from "@/storybook/fixtures/accounts";
 import {
   chargeSign,
   defaultInvestmentAccount,
@@ -9,25 +10,17 @@ import {
   usesAmount,
 } from "./investment-types";
 
-function account(id: string, type: AccountType): AccountResponse {
-  return {
+function accountOfType(id: string, type: AccountType): AccountResponse {
+  return account({
     id,
     name: id,
     description: null,
     iban: null,
     type,
     startingBalance: "0.00",
-    currentBalance: "0.00",
+    balance: "0.00",
     createdAt: "2026-01-01T00:00:00Z",
-    scope: "personal",
-    householdId: null,
-    ownerId: "u",
-    currency: "eur",
-    balances: [],
-    reportingBalance: "0.00",
-    holdingsValue: "0.00",
-    version: 1,
-  };
+  });
 }
 
 describe("entry type rules", () => {
@@ -51,9 +44,9 @@ describe("entry type rules", () => {
 
 describe("defaultInvestmentAccount", () => {
   const accounts = [
-    account("bank", "checking"),
-    account("broker", "investment"),
-    account("cash", "cash"),
+    accountOfType("bank", "checking"),
+    accountOfType("broker", "investment"),
+    accountOfType("cash", "cash"),
   ];
 
   test("prefers the requested account", () => {
@@ -66,7 +59,7 @@ describe("defaultInvestmentAccount", () => {
   });
 
   test("falls back to the first account, then nothing", () => {
-    expect(defaultInvestmentAccount([account("bank", "checking")])?.id).toBe("bank");
+    expect(defaultInvestmentAccount([accountOfType("bank", "checking")])?.id).toBe("bank");
     expect(defaultInvestmentAccount([])).toBeUndefined();
   });
 });

@@ -2,6 +2,7 @@ import type { AssetValuationResponse, AssetValueHistoryResponse } from "@/api/ge
 import {
   getAssetValuationsMockHandler,
   getAssetValueHistoryMockHandler,
+  getCountOpenBalancesMockHandler,
   getCreateAssetMockHandler,
   getCreateDebtMockHandler,
   getDebtBalancesMockHandler,
@@ -41,6 +42,7 @@ import {
   mortgagePayments,
   netWorth,
   netWorthHistory,
+  netWorthWithOpenBalances,
   scheduleIncompleteProblem,
   trackedMortgage,
   transactions,
@@ -167,4 +169,7 @@ export const debtHandlers = [
 export const netWorthHandlers = [
   getNetWorthMockHandler(netWorth),
   getNetWorthHistoryMockHandler(netWorthHistory),
+  getCountOpenBalancesMockHandler(async ({ request }) =>
+    (await readBody(request)).count === true ? netWorthWithOpenBalances : netWorth,
+  ),
 ];

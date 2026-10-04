@@ -18,60 +18,12 @@ import type {
   ValueHistoryResponse,
 } from "@/api/generated/model";
 import { brokerAccount, checkingAccount, savingsAccount } from "./accounts";
-import { uid } from "./base";
+import { type Seed, uid } from "./base";
 import { problemOf, statusProblem } from "./problems";
 
-export const worldEtf: SecurityResponse = {
-  id: uid("eeeeeeee", 1),
-  symbol: "VWCE",
-  name: "Vanguard FTSE All-World UCITS ETF (USD) Accumulating",
-  isin: "IE00BK5BQT80",
-  exchange: "XETRA",
-  type: "etf",
-  currency: "eur",
-  lastPrice: "128.46",
-  lastPriceDate: "2026-09-17",
-  priceSource: "eodhd",
-  priceSymbol: "VWCE.XETRA",
-  priceSyncError: null,
-};
-
-export const usStock: SecurityResponse = {
-  id: uid("eeeeeeee", 2),
-  symbol: "MSFT",
-  name: "Microsoft Corporation",
-  isin: "US5949181045",
-  exchange: "NASDAQ",
-  type: "stock",
-  currency: "usd",
-  lastPrice: "462.18",
-  lastPriceDate: "2026-09-17",
-  priceSource: "none",
-  priceSymbol: null,
-  priceSyncError: null,
-};
-
-const closedStock: SecurityResponse = {
-  id: uid("eeeeeeee", 3),
-  symbol: "ASML",
-  name: "ASML Holding N.V.",
-  isin: "NL0010273215",
-  exchange: "AEB",
-  type: "stock",
-  currency: "eur",
-  lastPrice: "742.30",
-  lastPriceDate: "2026-09-17",
-  priceSource: "none",
-  priceSymbol: null,
-  priceSyncError: null,
-};
-
-export const unpricedStock: SecurityResponse = {
-  id: uid("eeeeeeee", 4),
-  symbol: "IGN1L",
-  name: "Ignitis grupė",
-  isin: "LT0000115768",
-  exchange: "Nasdaq Vilnius",
+const securityDefaults = {
+  isin: null,
+  exchange: null,
   type: "stock",
   currency: "eur",
   lastPrice: null,
@@ -79,7 +31,53 @@ export const unpricedStock: SecurityResponse = {
   priceSource: "none",
   priceSymbol: null,
   priceSyncError: null,
-};
+} satisfies Partial<SecurityResponse>;
+
+export function security(seed: Seed<SecurityResponse, typeof securityDefaults>): SecurityResponse {
+  return { ...securityDefaults, ...seed };
+}
+
+export const worldEtf = security({
+  id: uid("eeeeeeee", 1),
+  symbol: "VWCE",
+  name: "Vanguard FTSE All-World UCITS ETF (USD) Accumulating",
+  isin: "IE00BK5BQT80",
+  exchange: "XETRA",
+  type: "etf",
+  lastPrice: "128.46",
+  lastPriceDate: "2026-09-17",
+  priceSource: "eodhd",
+  priceSymbol: "VWCE.XETRA",
+});
+
+export const usStock = security({
+  id: uid("eeeeeeee", 2),
+  symbol: "MSFT",
+  name: "Microsoft Corporation",
+  isin: "US5949181045",
+  exchange: "NASDAQ",
+  currency: "usd",
+  lastPrice: "462.18",
+  lastPriceDate: "2026-09-17",
+});
+
+const closedStock = security({
+  id: uid("eeeeeeee", 3),
+  symbol: "ASML",
+  name: "ASML Holding N.V.",
+  isin: "NL0010273215",
+  exchange: "AEB",
+  lastPrice: "742.30",
+  lastPriceDate: "2026-09-17",
+});
+
+export const unpricedStock = security({
+  id: uid("eeeeeeee", 4),
+  symbol: "IGN1L",
+  name: "Ignitis grupė",
+  isin: "LT0000115768",
+  exchange: "Nasdaq Vilnius",
+});
 
 export const securities: SecurityResponse[] = [closedStock, unpricedStock, usStock, worldEtf];
 
@@ -692,20 +690,16 @@ export const brokerSyncProblem = {
     "Interactive Brokers rejected the request: the token has expired (code 1012). Create a new token in Flex Web Service and save it here.",
 };
 
-export const euroCoin: SecurityResponse = {
+export const euroCoin = security({
   id: uid("eeeeeeee", 5),
   symbol: "BTC",
   name: "Bitcoin",
-  isin: null,
-  exchange: null,
   type: "crypto",
-  currency: "eur",
   lastPrice: "95350.1",
   lastPriceDate: "2026-09-17",
   priceSource: "kraken",
   priceSymbol: "XBTEUR",
-  priceSyncError: null,
-};
+});
 
 export const priceSymbolCandidates: PriceSymbolCandidate[] = [
   {

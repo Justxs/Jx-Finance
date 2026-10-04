@@ -45,6 +45,7 @@ import {
   priceImportResult,
   priceSymbolCandidates,
   securities,
+  security,
   securityPrices,
   taxSummary,
   valueHistory,
@@ -98,11 +99,11 @@ export const investmentHandlers = [
   }),
   getCreateInvestmentTransactionMockHandler(async ({ request }) => {
     const body = await readBody(request);
-    const security = securities.find((item) => item.id === body.securityId);
+    const traded = securities.find((item) => item.id === body.securityId);
     const related = securities.find((item) => item.id === body.relatedSecurityId);
     const type = investmentType.parse(body.type);
     const quantity = Number(text(body.quantity) ?? 0);
-    const held = portfolio.holdings.find((holding) => holding.security.id === security?.id);
+    const held = portfolio.holdings.find((holding) => holding.security.id === traded?.id);
     if (type === "sell" && quantity > Number(held?.quantity ?? 0)) {
       throw problem(oversellProblem);
     }
@@ -125,8 +126,8 @@ export const investmentHandlers = [
     return {
       id: NEW_ID,
       accountId: text(body.accountId) ?? "",
-      securityId: security?.id ?? null,
-      symbol: security?.symbol ?? null,
+      securityId: traded?.id ?? null,
+      symbol: traded?.symbol ?? null,
       relatedSecurityId: related?.id ?? null,
       relatedSymbol: related?.symbol ?? null,
       type,
@@ -137,7 +138,7 @@ export const investmentHandlers = [
       price: text(body.price) ?? "0",
       fee: fee.toFixed(2),
       cashAmount: cashByType[type].toFixed(2),
-      currency: security?.currency ?? currencyCode.catch("eur").parse(body.currency),
+      currency: traded?.currency ?? currencyCode.catch("eur").parse(body.currency),
       description: text(body.description),
       source: "manual",
       createdAt: CREATED_AT,
@@ -163,18 +164,7 @@ export const investmentHandlers = [
     }
 
     const created: SecurityResponse = {
-      id: NEW_ID,
-      symbol: "",
-      name: "",
-      isin: null,
-      exchange: null,
-      type: "stock",
-      currency: "eur",
-      lastPrice: null,
-      lastPriceDate: null,
-      priceSource: "none",
-      priceSymbol: null,
-      priceSyncError: null,
+      ...security({ id: NEW_ID, symbol: "", name: "" }),
       ...body,
     };
     const lastPriceDate = created.lastPrice ? (created.lastPriceDate ?? FIXTURE_TODAY) : null;
@@ -190,13 +180,13 @@ export const investmentHandlers = [
     };
   }),
   getSecurityPricesMockHandler(({ params }) => {
-    const security = found(byId(securities, params.id));
-    if (security.id === worldEtf.id) {
+    const priced = found(byId(securities, params.id));
+    if (priced.id === worldEtf.id) {
       return securityPrices;
     }
 
-    return security.lastPrice && security.lastPriceDate
-      ? [{ date: security.lastPriceDate, price: security.lastPrice, source: "manual" as const }]
+    return priced.lastPrice && priced.lastPriceDate
+      ? [{ date: priced.lastPriceDate, price: priced.lastPrice, source: "manual" as const }]
       : [];
   }),
   getDeleteSecurityPriceMockHandler(),

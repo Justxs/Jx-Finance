@@ -29,6 +29,8 @@ export function many<T extends { id: string }>(
   }));
 }
 
+export type Seed<T, Defaults> = Omit<T, keyof Defaults> & Partial<T>;
+
 export const ids = {
   users: {
     ruta: uid("11111111", 1),
