@@ -31,7 +31,7 @@ test("the basics are saved with the settings the wizard does not show, then feat
 test("a preset sets the features that are saved", async () => {
   renderInApp(<SetupWizard step="features" />, { path: "/setup" });
 
-  fireEvent.click(await screen.findByRole("button", { name: /^Track spending/u }));
+  fireEvent.click(await screen.findByRole("radio", { name: "Track spending" }));
   fireEvent.click(screen.getByRole("button", { name: "Continue" }));
 
   await waitFor(() => expect(api.sent("PUT", "/api/settings")).toHaveLength(1));

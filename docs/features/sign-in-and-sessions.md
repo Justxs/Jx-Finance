@@ -61,7 +61,7 @@ Neither endpoint touches `AccessFailedAsync`. Counting a reset request as a fail
 
 ## Refresh token rotation
 
-The client calls refresh once on a 401 and retries the request. The database keeps only SHA-256 hashes.
+The client calls refresh once on a 401 and retries the request. A second 401 ends the session and opens sign-in only when the browser had one: the first check of `/api/me` on a signed-out visit answers 401 twice too, and ending a session there sent the landing page at `/` to sign-in. The database keeps only SHA-256 hashes.
 
 ```mermaid
 flowchart TD

@@ -45,16 +45,16 @@ The guided setup is one card in the sign-in layout, without the sidebar. A step 
 | Step | `step` | What it does |
 | --- | --- | --- |
 | Basics | `basics` | Installation name, reporting currency, default language, time zone and first day of the week, the fields of Settings › General, Currencies and Regional. The time zone starts at the browser's when the installation still has UTC, and the language at the one chosen with the language toggle. |
-| Features | `features` | Three presets above the feature switches of Settings › Features, each switch showing an example of what it enables instead of its hint. |
+| Features | `features` | A `SegmentedControl` of three presets above the feature switches of Settings › Features, drawn as chips in one ruled row per group (`FeatureChips`); a chip shows its feature name only, and its example of what it enables appears as a tooltip. |
 | Start | `start` | A choice of starting point, described [below](#starting-point). Nothing on this step is part of the form; Continue only moves on. |
 | Notifications | `notifications` | The Email, Discord and Telegram tabs of Settings › Notification providers (`NotificationProviderTabs`), each saving on its own. Optional; Continue only moves on. |
-| Tour | `tour` | Four short panels on accounts, transactions, categories and rules, and plan and review, then the action shortcuts from the `?` list. "Go to the dashboard" finishes. |
+| Tour | `tour` | A ruled list of four short entries on accounts, transactions, categories and rules, and plan and review, with the action shortcuts from the `?` list in a column beside it. "Go to the dashboard" finishes. |
 
 Continue on Basics and Features saves with `PUT /api/settings`, sending the fields the guided setup does not show unchanged from the current settings, and moves to the next step; a failure stays on the step in a `FormError`. "Skip for now", on Basics and Features, finishes without saving the open step. Finishing calls `POST /api/setup/finish`, sets `setupPending` false in the cached settings and opens the dashboard, where the [Getting started](dashboard.md#getting-started) card takes over.
 
 ## Starting point
 
-The Start step is a `SegmentedControl` of four choices, each with one sentence under it. Each reuses what the application already has rather than a copy:
+The Start step is a `SegmentedControl` of four choices, each with one sentence under it. Changing the choice is a React transition, so the sentence and the panel fade in through a keyed `ViewTransition` with the `reveal-in` class. Each reuses what the application already has rather than a copy:
 
 | Choice | What it shows |
 | --- | --- |
@@ -73,12 +73,12 @@ While `demoData` is true, `DemoDataBanner` sits above every page for administrat
 
 ## What the server can run
 
-Two switches depend on something outside the application. On the Features step their example gains a sentence when it is missing: Receipt reading says it needs Tesseract on this server, and Places says the map also needs the tile file. The switch stays usable either way, since each feature works or waits without it. `GET /api/setup/readiness` (Admin) answers `receiptReaderInstalled`, whether Tesseract is available where the API runs, whatever the switch says, unlike `receiptReadingReady` in the settings, which is false while the switch is off. The tile file is served by Caddy, which the API cannot see, so the browser asks with the same `HEAD /maps/lithuania.pmtiles` as the reports page (`useMapTilesPresent`, moved to `lib/map-tiles.ts` so both features use it). The readiness is read with a plain `useQuery` hook (`plainQueryOperations`), so a slow or failed answer leaves the notes out instead of holding the step.
+Two switches depend on something outside the application. On the Features step, when it is missing, their chip gains a warning icon and a line under the groups names the feature and says what is missing: Receipt reading needs Tesseract on this server, and Places needs the tile file for the map. The checkbox is described by that line. The switch stays usable either way, since each feature works or waits without it. `GET /api/setup/readiness` (Admin) answers `receiptReaderInstalled`, whether Tesseract is available where the API runs, whatever the switch says, unlike `receiptReadingReady` in the settings, which is false while the switch is off. The tile file is served by Caddy, which the API cannot see, so the browser asks with the same `HEAD /maps/lithuania.pmtiles` as the reports page (`useMapTilesPresent`, moved to `lib/map-tiles.ts` so both features use it). The readiness is read with a plain `useQuery` hook (`plainQueryOperations`), so a slow or failed answer leaves the notes out instead of holding the step.
 
-A preset switches every feature on or off except the three that start off for privacy or security, Places, Learned categories and Personal API tokens, which keep their value and are named below the switches. The preset whose result matches the current switches is pressed (`aria-pressed`); changing a switch by hand releases it.
+A preset switches every feature on or off except the three that start off for privacy or security, Places, Learned categories and Personal API tokens, which keep their value. The preset whose result matches the current switches is the checked segment; changing a switch by hand leaves no segment checked.
 
 | Preset | Features on |
 | --- | --- |
 | Track spending | Statement import, Categorization rules, Payee names, Receipts and files, Unusual amounts, Reports |
-| Run the household (recommended) | Track spending plus Budgets, Goals, Recurring entries, Cash-flow forecast, Month-end close, Households, People |
+| Run the household | Track spending plus Budgets, Goals, Recurring entries, Cash-flow forecast, Month-end close, Households, People |
 | Everything | Run the household plus Net worth, Investments, Multiple currencies, Receipt reading |

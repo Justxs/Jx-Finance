@@ -70,6 +70,27 @@ function PasskeySignIn({ label, rememberMe, onSignedIn }: Readonly<PasskeySignIn
   );
 }
 
+const landingLink =
+  "inline-flex min-h-11 items-center rounded-md px-2.5 focus-ring transition-colors hover:text-foreground";
+
+function LandingLinks() {
+  const { t } = useTranslation();
+
+  return (
+    <nav
+      aria-label={t("landing.nav.label")}
+      className="mt-4 flex justify-center gap-2 text-sm font-medium text-muted-foreground"
+    >
+      <Link to="/" className={landingLink}>
+        {t("landing.nav.home")}
+      </Link>
+      <Link to="/features" className={landingLink}>
+        {t("landing.nav.features")}
+      </Link>
+    </nav>
+  );
+}
+
 export function LoginPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -127,7 +148,7 @@ export function LoginPage() {
   });
 
   return (
-    <AuthCard title={t("auth.signIn")} subtitle={t("auth.signInSubtitle")}>
+    <AuthCard title={t("auth.signIn")} footer={<LandingLinks />}>
       <form.AppForm>
         <form.FormShell className="mt-6 space-y-4">
           <form.Field name="email">

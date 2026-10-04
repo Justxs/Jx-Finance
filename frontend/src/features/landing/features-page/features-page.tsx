@@ -8,25 +8,45 @@ import {
   NetWorthCard,
   ReminderCard,
   SettleUpCard,
+  SignInCard,
+  TripCard,
 } from "@/features/landing/showcase/showcase";
 import { cn } from "@/lib/utils";
 
 export const featureGroups = [
-  { key: "everyday", features: ["import", "rules", "receipts", "recurring"] },
-  { key: "plan", features: ["budgets", "goals", "forecast"] },
-  { key: "household", features: ["sharing", "settleUp", "currencies"] },
-  { key: "wealth", features: ["netWorth", "investments"] },
-  { key: "review", features: ["reports", "export", "notifications", "security"] },
+  {
+    key: "everyday",
+    features: ["accounts", "import", "rules", "learned", "receipts", "recurring"],
+  },
+  { key: "organise", features: ["tags", "groups", "payeeNames", "places", "search"] },
+  { key: "plan", features: ["budgets", "goals", "forecast", "loans"] },
+  { key: "household", features: ["sharing", "settleUp", "people", "activity", "currencies"] },
+  { key: "wealth", features: ["netWorth", "investments", "prices", "taxes"] },
+  {
+    key: "review",
+    features: ["reports", "monthClose", "reconcile", "unusual", "digest", "notifications"],
+  },
+  {
+    key: "yours",
+    features: ["dashboard", "look", "undo", "export", "backups", "tools", "security"],
+  },
 ] as const;
+
+export const featureCount = featureGroups.reduce(
+  (total, group) => total + group.features.length,
+  0,
+);
 
 type FeatureGroup = (typeof featureGroups)[number];
 
 const groupVisuals = {
   everyday: ImportCard,
+  organise: TripCard,
   plan: BudgetCard,
   household: SettleUpCard,
   wealth: NetWorthCard,
   review: ReminderCard,
+  yours: SignInCard,
 } as const;
 
 function GroupSection({ group }: Readonly<{ group: FeatureGroup }>) {

@@ -5,8 +5,6 @@ export const presetNames = ["track", "household", "everything"] as const;
 
 export type PresetName = (typeof presetNames)[number];
 
-export const recommendedPreset: PresetName = "household";
-
 const optIn: ReadonlySet<FeatureKey> = new Set(["apiTokens", "locations", "learnedCategories"]);
 
 const track: readonly FeatureKey[] = [

@@ -1,4 +1,4 @@
-import { BellRing } from "lucide-react";
+import { BellRing, Fingerprint, Smartphone } from "lucide-react";
 import { type ComponentProps, useId } from "react";
 import { useTranslation } from "react-i18next";
 import { Meter } from "@/components/ui/meter/meter";
@@ -247,6 +247,76 @@ export function ReminderCard({
         </div>
         <span className="shrink-0 text-sm font-semibold tabular-nums">{money.signed(-24.99)}</span>
       </div>
+    </ShowcaseCard>
+  );
+}
+
+const tripRows = [
+  { payee: "Hotel Neiburgs", amount: -384 },
+  { payee: "Circle K", amount: -68.4 },
+  { payee: "Lido", amount: -23.6 },
+] as const;
+
+const tripTotal = -612.4;
+
+export function TripCard({ className, delay }: Readonly<{ className?: string; delay?: number }>) {
+  const { t } = useTranslation();
+  const titleId = useId();
+  const money = useSampleMoney();
+  const day = useDateFormat({ day: "numeric", month: "short" });
+  const start = parseIso("2026-07-03");
+  const end = parseIso("2026-07-17");
+
+  return (
+    <ShowcaseCard aria-labelledby={titleId} className={className} delay={delay}>
+      <div className="flex items-baseline justify-between gap-3">
+        <CardTitle id={titleId}>{t("landing.showcase.trip")}</CardTitle>
+        <span className="shrink-0 text-sm font-semibold tabular-nums">
+          {money.signed(tripTotal)}
+        </span>
+      </div>
+      <p className="text-xs text-muted-foreground">
+        {t("landing.showcase.tripPayments", {
+          dates: start && end ? day.formatRange(start, end) : "",
+        })}
+      </p>
+      <Rows className="mt-2">
+        {tripRows.map((row) => (
+          <li key={row.payee} className="flex items-baseline justify-between gap-3 py-2 text-sm">
+            <span className="min-w-0 truncate">{row.payee}</span>
+            <span className="shrink-0 tabular-nums">{money.signed(row.amount)}</span>
+          </li>
+        ))}
+      </Rows>
+      <div className="mt-2 flex flex-wrap items-center gap-2">
+        <Tag tone="accent">{t("landing.showcase.holiday")}</Tag>
+        <span className="text-xs text-muted-foreground">{t("landing.showcase.tripMore")}</span>
+      </div>
+    </ShowcaseCard>
+  );
+}
+
+const signInMethods = [
+  { key: "passkey", Icon: Fingerprint },
+  { key: "phoneCode", Icon: Smartphone },
+] as const;
+
+export function SignInCard({ className, delay }: Readonly<{ className?: string; delay?: number }>) {
+  const { t } = useTranslation();
+  const titleId = useId();
+
+  return (
+    <ShowcaseCard aria-labelledby={titleId} className={className} delay={delay}>
+      <CardTitle id={titleId}>{t("landing.showcase.signIn")}</CardTitle>
+      <Rows className="mt-2">
+        {signInMethods.map(({ key, Icon }) => (
+          <li key={key} className="flex items-center gap-3 py-2.5 text-sm">
+            <Icon className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+            <span className="min-w-0 flex-1">{t(`landing.showcase.${key}`)}</span>
+            <Tag tone="positive">{t("landing.showcase.on")}</Tag>
+          </li>
+        ))}
+      </Rows>
     </ShowcaseCard>
   );
 }

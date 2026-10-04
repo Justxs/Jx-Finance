@@ -3,6 +3,7 @@ import { ArrowRight, ArrowUpRight } from "lucide-react";
 import { useId } from "react";
 import { useTranslation } from "react-i18next";
 import { buttonVariants } from "@/components/ui/button/button";
+import { featureGroups } from "@/features/landing/features-page/features-page";
 import {
   ExternalLink,
   LandingShell,
@@ -59,10 +60,39 @@ function Statement() {
           </div>
         ))}
       </dl>
-      <Link to="/features" className={cn(buttonVariants({ variant: "outline" }), "mt-6")}>
-        {t("landing.seeFeatures")}
-        <ArrowRight aria-hidden="true" />
-      </Link>
+    </section>
+  );
+}
+
+function FeatureOverview() {
+  const { t } = useTranslation();
+  const titleId = useId();
+
+  return (
+    <section aria-labelledby={titleId} className={cn(landingColumn, "pb-12 sm:pb-16")}>
+      <h2 id={titleId} className="font-serif text-page-title font-semibold">
+        {t("landing.overview")}
+      </h2>
+      <div className="mt-5 grid gap-x-8 gap-y-8 sm:grid-cols-2 lg:grid-cols-4">
+        {featureGroups.map((group) => (
+          <div key={group.key} className="border-t border-rule pt-3">
+            <h3 className="text-sm font-semibold">
+              {t(`landing.featuresPage.groups.${group.key}`)}
+            </h3>
+            <ul className="mt-2 space-y-1 text-sm text-muted-foreground">
+              {group.features.map((feature) => (
+                <li key={feature}>{t(`landing.featuresPage.items.${feature}.title`)}</li>
+              ))}
+            </ul>
+          </div>
+        ))}
+        <div className="border-t border-rule pt-4">
+          <Link to="/features" className={buttonVariants({ variant: "outline" })}>
+            {t("landing.seeFeatures")}
+            <ArrowRight aria-hidden="true" />
+          </Link>
+        </div>
+      </div>
     </section>
   );
 }
@@ -117,6 +147,7 @@ export function LandingPage() {
   return (
     <LandingShell hero={hero}>
       <Statement />
+      <FeatureOverview />
     </LandingShell>
   );
 }

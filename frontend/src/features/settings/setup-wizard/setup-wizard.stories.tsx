@@ -39,11 +39,11 @@ export const Basics: Story = {
 export const Features: Story = {
   args: { step: "features" },
   play: async ({ canvas }) => {
-    const track = await canvas.findByRole("button", {
-      name: /^(track spending|išlaidų apskaita)/iu,
+    const track = await canvas.findByRole("radio", {
+      name: /^(track spending|išlaidų apskaita)$/iu,
     });
     await userEvent.click(track);
-    await expect(track).toHaveAttribute("aria-pressed", "true");
+    await expect(track).toBeChecked();
     await expect(
       canvas.getByRole("checkbox", { name: /^(budgets|biudžetai)/iu }),
     ).not.toBeChecked();

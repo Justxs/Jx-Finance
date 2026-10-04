@@ -23,6 +23,16 @@ export function installScrollStub() {
   Object.assign(globalThis, { scrollTo() {} });
 }
 
+export function installResizeObserverStub() {
+  Object.assign(globalThis, {
+    ResizeObserver: class {
+      observe() {}
+      unobserve() {}
+      disconnect() {}
+    },
+  });
+}
+
 export function installPointerCaptureStub() {
   Object.assign(Element.prototype, {
     hasPointerCapture: () => false,

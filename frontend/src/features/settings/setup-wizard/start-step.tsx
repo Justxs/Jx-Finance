@@ -1,5 +1,5 @@
 import { CircleCheck, Plus } from "lucide-react";
-import { type ComponentType, useState } from "react";
+import { type ComponentType, ViewTransition, startTransition, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useAccountsSuspense, useLoadDemoData } from "@/api/generated";
 import { FormError } from "@/components/form-error/form-error";
@@ -101,20 +101,24 @@ export function StartStep() {
       <SegmentedControl
         aria-label={t("settings.setupWizard.start.choose")}
         value={choice}
-        onChange={setChoice}
+        onChange={(next) => startTransition(() => setChoice(next))}
         options={choices.map((value) => ({
           value,
           label: t(`settings.setupWizard.start.choices.${value}.label`),
         }))}
       />
-      <p className="mt-3 max-w-prose text-sm text-muted-foreground">
-        {t(`settings.setupWizard.start.choices.${choice}.description`)}
-      </p>
-      <div className="mt-4">
-        <QueryBoundary fallback={null}>
-          <Panel />
-        </QueryBoundary>
-      </div>
+      <ViewTransition key={choice} enter="reveal-in" exit="none" update="none" share="none">
+        <div>
+          <p className="mt-3 max-w-prose text-sm text-muted-foreground">
+            {t(`settings.setupWizard.start.choices.${choice}.description`)}
+          </p>
+          <div className="mt-4">
+            <QueryBoundary fallback={null}>
+              <Panel />
+            </QueryBoundary>
+          </div>
+        </div>
+      </ViewTransition>
     </div>
   );
 }

@@ -26,8 +26,9 @@ import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { Button } from "@/components/ui/button/button";
 import { Card } from "@/components/ui/card/card";
 import { FormGrid } from "@/components/ui/form-grid/form-grid";
+import { SegmentedControl } from "@/components/ui/segmented-control/segmented-control";
 import { NotificationProviderTabs } from "@/features/settings/notification-providers-section/notification-providers-section";
-import { FeaturesFields } from "@/features/settings/settings-form/features-fields";
+import { FeatureChips } from "@/features/settings/settings-form/features-fields";
 import { RegionalFields } from "@/features/settings/settings-form/regional-fields";
 import { useSettingsSuspense } from "@/hooks/use-settings";
 import { useMapTilesPresent } from "@/lib/map-tiles";
@@ -36,7 +37,7 @@ import { silentQuery } from "@/lib/query-client";
 import type { FeatureKey } from "@/lib/settings";
 import { cn } from "@/lib/utils";
 import { optionalText, requiredValue } from "@/lib/validation";
-import { applyPreset, matchingPreset, presetNames, recommendedPreset } from "./feature-presets";
+import { applyPreset, matchingPreset, presetNames } from "./feature-presets";
 import { StartStep } from "./start-step";
 import { TourPanels } from "./tour-panels";
 
@@ -202,9 +203,11 @@ export function SetupWizard({ step }: Readonly<Props>) {
         >
           {t(`settings.setupWizard.${step}.title`)}
         </h1>
-        <p className="mt-1 max-w-prose text-sm text-muted-foreground">
-          {t(`settings.setupWizard.${step}.description`)}
-        </p>
+        {step === "tour" ? null : (
+          <p className="mt-1 max-w-prose text-sm text-muted-foreground">
+            {t(`settings.setupWizard.${step}.description`)}
+          </p>
+        )}
 
         {step === "start" || step === "notifications" || step === "tour" ? (
           <>
@@ -258,7 +261,6 @@ export function SetupWizard({ step }: Readonly<Props>) {
                           id="setup-reporting-currency"
                           all
                           label={t("settings.currencies.reporting")}
-                          hint={t("settings.currencies.reportingHint")}
                         />
                       )}
                     </form.Field>
@@ -275,53 +277,23 @@ export function SetupWizard({ step }: Readonly<Props>) {
                 </>
               ) : (
                 <>
-                  <fieldset className="mt-6 min-w-0">
-                    <legend className="text-sm font-semibold">
-                      {t("settings.setupWizard.features.presets")}
-                    </legend>
-                    <form.Subscribe selector={(state) => state.values.features}>
-                      {(features) => (
-                        <div className="mt-2 grid gap-3 sm:grid-cols-3">
-                          {presetNames.map((preset) => (
-                            <div key={preset} className="min-w-0">
-                              <Button
-                                type="button"
-                                variant="outline"
-                                className="w-full"
-                                aria-pressed={matchingPreset(features) === preset}
-                                aria-describedby={`setup-preset-${preset}`}
-                                onClick={() =>
-                                  form.setFieldValue("features", applyPreset(features, preset))
-                                }
-                              >
-                                {t(`settings.setupWizard.features.preset.${preset}.name`)}
-                              </Button>
-                              <p
-                                id={`setup-preset-${preset}`}
-                                className="mt-1.5 text-xs text-muted-foreground"
-                              >
-                                {preset === recommendedPreset ? (
-                                  <span className="font-medium text-primary">
-                                    {t("settings.setupWizard.features.recommended")}{" "}
-                                  </span>
-                                ) : null}
-                                {t(`settings.setupWizard.features.preset.${preset}.hint`)}
-                              </p>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </form.Subscribe>
-                  </fieldset>
-                  <FeaturesFields
-                    form={form}
-                    fields={{ features: "features" }}
-                    examples
-                    notes={notes}
-                  />
-                  <p className="mt-6 max-w-prose text-xs text-muted-foreground">
-                    {t("settings.setupWizard.features.optIn")}
-                  </p>
+                  <form.Subscribe selector={(state) => state.values.features}>
+                    {(features) => (
+                      <SegmentedControl
+                        className="mt-6"
+                        aria-label={t("settings.setupWizard.features.presets")}
+                        value={matchingPreset(features) ?? null}
+                        onChange={(preset) =>
+                          form.setFieldValue("features", applyPreset(features, preset))
+                        }
+                        options={presetNames.map((preset) => ({
+                          value: preset,
+                          label: t(`settings.setupWizard.features.preset.${preset}`),
+                        }))}
+                      />
+                    )}
+                  </form.Subscribe>
+                  <FeatureChips form={form} fields={{ features: "features" }} notes={notes} />
                 </>
               )}
 

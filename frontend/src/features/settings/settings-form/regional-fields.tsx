@@ -49,7 +49,6 @@ function RegionalFieldsGroup({ fields, savedTimeZone }: Readonly<Props>) {
           <field.SelectFieldControl
             id="settings-language"
             label={t("settings.regional.language")}
-            hint={t("settings.regional.languageHint")}
             options={optionsOf(languages, (language) =>
               t(`settings.regional.languages.${language}`),
             )}
@@ -59,11 +58,7 @@ function RegionalFieldsGroup({ fields, savedTimeZone }: Readonly<Props>) {
 
       <fields.Field name="timeZone">
         {(field) => (
-          <FieldShell
-            id="settings-time-zone"
-            label={t("settings.regional.timeZone")}
-            hint={t("settings.regional.timeZoneHint")}
-          >
+          <FieldShell id="settings-time-zone" label={t("settings.regional.timeZone")}>
             <div className="flex gap-2">
               <div className="w-2/5 min-w-0">
                 <SelectField
@@ -84,7 +79,6 @@ function RegionalFieldsGroup({ fields, savedTimeZone }: Readonly<Props>) {
               <div className="min-w-0 flex-1">
                 <SelectField
                   id="settings-time-zone"
-                  aria-describedby="settings-time-zone-hint"
                   value={field.value}
                   onBlur={field.handleBlur}
                   onChange={(value) => field.handleChange(value)}

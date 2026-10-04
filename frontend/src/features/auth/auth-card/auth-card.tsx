@@ -8,11 +8,12 @@ import { cn } from "@/lib/utils";
 
 interface AuthCardProps {
   title: string;
-  subtitle: ReactNode;
+  subtitle?: ReactNode;
+  footer?: ReactNode;
   children: ReactNode;
 }
 
-export function AuthCard({ title, subtitle, children }: Readonly<AuthCardProps>) {
+export function AuthCard({ title, subtitle, footer, children }: Readonly<AuthCardProps>) {
   return (
     <div className="w-full max-w-sm">
       <div className="mb-6 flex justify-center">
@@ -20,9 +21,10 @@ export function AuthCard({ title, subtitle, children }: Readonly<AuthCardProps>)
       </div>
       <Card className="p-6 sm:p-8">
         <h1 className="text-lg font-semibold">{title}</h1>
-        <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p>
+        {subtitle ? <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p> : null}
         {children}
       </Card>
+      {footer}
     </div>
   );
 }

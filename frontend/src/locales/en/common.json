@@ -858,7 +858,6 @@
   },
   "auth": {
     "signIn": "Sign in",
-    "signInSubtitle": "Sign in to your Jx Finance account.",
     "email": "Email",
     "password": "Password",
     "rememberMe": "Remember me on this device",
@@ -897,9 +896,11 @@
     "sourceLabel": "Jx Finance on GitHub",
     "nav": {
       "label": "Main",
+      "home": "Home",
       "features": "Features"
     },
     "seeFeatures": "See all features",
+    "overview": "What you'll find inside",
     "sample": {
       "label": "Sample ledger",
       "title": "Household account, {{month}}",
@@ -934,7 +935,15 @@
       "partnerOwes": "Your partner owes you",
       "billDue": "Internet bill due today",
       "billName": "Home internet · monthly",
-      "over": "{{amount}} over"
+      "over": "{{amount}} over",
+      "trip": "Trip to Riga",
+      "tripPayments": "14 payments · {{dates}}",
+      "tripMore": "and 11 more payments",
+      "holiday": "Holiday",
+      "signIn": "Your sign-in",
+      "passkey": "Passkey on this laptop",
+      "phoneCode": "Code from your phone",
+      "on": "On"
     },
     "statement": {
       "title": "In short",
@@ -965,6 +974,10 @@
       "ownTitle": "Want your own?",
       "ownText": "Jx Finance is free. You can set it up on your own computer or server by following the guide on GitHub.",
       "ownAction": "Read the setup guide",
+      "suggestTitle": "Missing a feature?",
+      "suggestText": "Write to me about what you would like Jx Finance to do and how you would use it.",
+      "suggestAction": "Suggest a feature",
+      "suggestSubject": "Jx Finance feature suggestion",
       "supportText": "Jx Finance is built and kept up by one developer."
     },
     "footer": "Private personal finances · Free and open source",
@@ -974,12 +987,19 @@
       "example": "For example:",
       "groups": {
         "everyday": "Everyday money",
+        "organise": "Sorting and finding",
         "plan": "Planning",
         "household": "Living together",
         "wealth": "What you own",
-        "review": "Reports and reminders"
+        "review": "Reports and reminders",
+        "yours": "Your data, your way"
       },
       "items": {
+        "accounts": {
+          "title": "All your accounts",
+          "text": "Keep current accounts, cards, savings and cash in one place. Balances are worked out from the payments, and moving money between your own accounts never counts as spending.",
+          "example": "You move €200 from your current account to savings. Both balances change, and the month's spending stays the same."
+        },
         "import": {
           "title": "Bank statements",
           "text": "Download the statement from your bank's website and upload it. You see every line first and choose what to keep, so nothing is saved by surprise.",
@@ -990,6 +1010,11 @@
           "text": "Sort spending into categories like Groceries or Transport. A rule remembers your choice, so the next statement sorts itself.",
           "example": "You make one rule: payments to Maxima go to Groceries. From then on every Maxima line arrives already sorted."
         },
+        "learned": {
+          "title": "Categories it learns",
+          "text": "For payments no rule covers, Jx Finance suggests a category based on the ones you chose before. It only suggests; you decide.",
+          "example": "A Lidl shop you have never been to appears on your statement, and Groceries is already suggested beside it."
+        },
         "receipts": {
           "title": "Receipts",
           "text": "Attach a photo or PDF of a receipt to a payment. Jx Finance can read the amount, the date and the items from it.",
@@ -999,6 +1024,31 @@
           "title": "Recurring bills",
           "text": "Bills that come back every month or year remind you when they are due. Confirming one records the payment.",
           "example": "Your internet bill is due on the 15th. That day a reminder appears, and one click records the payment."
+        },
+        "tags": {
+          "title": "Tags",
+          "text": "A tag says what a payment was for, whatever its category: a holiday, a renovation, something a colleague will pay back.",
+          "example": "Everything tagged Kitchen renovation adds up to €8,940, from the tiles to the electrician."
+        },
+        "groups": {
+          "title": "Trips and projects in one row",
+          "text": "Fold many payments into one row that opens to show them all. Each payment keeps its own date, category and amount.",
+          "example": "Fourteen card payments from a trip to Riga read as one row: Trip to Riga, 3–17 July, −€612.40."
+        },
+        "payeeNames": {
+          "title": "Clear payee names",
+          "text": "Banks write the same shop in many ways. Name it once, and every payment to it reads that way.",
+          "example": "\"MAXIMA LT, UAB 20260402\" shows as Maxima in the list, in reports and in bill suggestions."
+        },
+        "places": {
+          "title": "Where you paid",
+          "text": "Note the shop or place of a payment, find payments by place, and see what each place cost you, as a list or on a map.",
+          "example": "You see that the shop near work costs you twice as much a month as the one near home."
+        },
+        "search": {
+          "title": "Finding any payment",
+          "text": "Filter by date, amount, category, tag, account or a word in a note or on a receipt, and save the filters you use often. Payments that may have been entered twice are pointed out.",
+          "example": "You search for \"batteries\" and find the March receipt you need for the warranty."
         },
         "budgets": {
           "title": "Budgets",
@@ -1015,6 +1065,11 @@
           "text": "See how an account's balance will move over the coming weeks, with upcoming bills included.",
           "example": "Before booking a trip you check that the account will not run out of money before payday."
         },
+        "loans": {
+          "title": "Paying off a loan",
+          "text": "Enter a loan's terms to see when it will be paid off and how much of each payment is interest. Try paying extra and see what it saves.",
+          "example": "You see that paying €100 more a month ends the mortgage years sooner, and how much interest that saves."
+        },
         "sharing": {
           "title": "Shared household books",
           "text": "Share accounts and categories with the people you live with. Your personal accounts stay private.",
@@ -1024,6 +1079,16 @@
           "title": "Splitting costs",
           "text": "Split a shared expense and see who owes whom.",
           "example": "You paid €120 for groceries for both of you. Jx Finance shows that your partner owes you €60."
+        },
+        "people": {
+          "title": "Friends outside the household",
+          "text": "Keep track of money with friends and family who do not use Jx Finance: a dinner you split, money you lent. Only you see them.",
+          "example": "You paid €90 for dinner with two friends. Each of them owes you €30 until they pay you back."
+        },
+        "activity": {
+          "title": "Who changed what",
+          "text": "Every member of a household can see who added, changed or deleted something shared.",
+          "example": "The electricity bill on the joint account looks different, and the activity list shows your partner corrected it on Sunday."
         },
         "currencies": {
           "title": "Several currencies",
@@ -1040,20 +1105,75 @@
           "text": "Keep track of shares and funds. Enter them yourself or import them from Interactive Brokers.",
           "example": "You see what your index fund cost you and what it is worth today."
         },
+        "prices": {
+          "title": "Daily prices",
+          "text": "When an administrator switches it on, share and fund prices are updated once a day, so your portfolio shows what it is worth now.",
+          "example": "Each morning your index fund shows the latest closing price without you typing it in."
+        },
+        "taxes": {
+          "title": "Yearly investment summary",
+          "text": "See one year's sales with their gains, and the dividends, interest, tax withheld and fees, ready for your tax return. It restates what you recorded and is not tax advice.",
+          "example": "In spring you read off last year's dividends and the shares you sold, with what you first paid for them."
+        },
         "reports": {
-          "title": "Reports and month close",
-          "text": "See where the money went in any period, and close each month with a short checklist.",
+          "title": "Reports",
+          "text": "See where the money went in any period, by category, tag, payee or place, and compare it with the period before.",
           "example": "At the end of October you see that eating out grew by a third compared with September."
         },
-        "export": {
-          "title": "Export",
-          "text": "Download your payments as a spreadsheet file or a PDF.",
-          "example": "You send last year's spending to your accountant as a PDF."
+        "monthClose": {
+          "title": "Month close",
+          "text": "Close each month with a short checklist: statements brought in, every payment sorted. If something in a closed month changes later, you see what changed.",
+          "example": "On 2 October you close September. When a late refund dated in September arrives, the month shows the difference."
+        },
+        "reconcile": {
+          "title": "Matching the bank",
+          "text": "Enter the balance printed on your bank statement and see whether your books agree, and by how much if they do not.",
+          "example": "Your bank says €1,482.10 at the end of September, and Jx Finance agrees to the cent."
+        },
+        "unusual": {
+          "title": "Unusual charges",
+          "text": "A payment far above what a shop usually costs you is marked, and you are told when a subscription gets more expensive.",
+          "example": "Your streaming service goes from €9.99 to €12.99, and Jx Finance points it out as soon as the charge is recorded."
+        },
+        "digest": {
+          "title": "Monthly summary",
+          "text": "At the start of each month, get a short summary of the month before: income, spending, what changed most and what is still open.",
+          "example": "On 1 October a message tells you September ended €340 up and that eating out grew the most."
         },
         "notifications": {
           "title": "Reminders",
           "text": "Get reminders in the app, by email, or in a Discord or Telegram chat.",
           "example": "On the day a bill is due, a message appears in your family's Telegram group."
+        },
+        "dashboard": {
+          "title": "Your own home screen",
+          "text": "Choose which cards your home screen shows and in what order.",
+          "example": "You put budgets first and hide investments, while your partner keeps a layout of their own."
+        },
+        "look": {
+          "title": "Made to suit you",
+          "text": "Light or dark, four colour palettes, a choice of typeface and text size, keyboard shortcuts, and a layout that works on a phone.",
+          "example": "In the evening you switch to dark mode and larger text, and jump between pages with the keyboard."
+        },
+        "undo": {
+          "title": "Undo and trash",
+          "text": "Every delete can be undone straight away, and anything you deleted in the last 30 days can be put back.",
+          "example": "You delete the wrong payment, press Undo, and it is back."
+        },
+        "export": {
+          "title": "Export",
+          "text": "Download your payments as a spreadsheet file or a PDF, or take all your own records with you in one file.",
+          "example": "You send last year's spending to your accountant as a PDF."
+        },
+        "backups": {
+          "title": "Backups",
+          "text": "An administrator can back up everything, attached files included, and restore it on this computer or another one.",
+          "example": "Before moving to a new home server you take a backup and restore it there."
+        },
+        "tools": {
+          "title": "Connect your own tools",
+          "text": "Give a spreadsheet, a phone shortcut, your home automation or an AI assistant a key to your books. You choose whether it may only read or also add payments, and you can withdraw the key at any time.",
+          "example": "A shortcut on your phone records a coffee paid in cash with two taps."
         },
         "security": {
           "title": "Safe sign-in",
@@ -1378,7 +1498,6 @@
     "currencies": {
       "title": "Currencies",
       "reporting": "Reporting currency",
-      "reportingHint": "Totals, budgets and reports are shown in this currency.",
       "reportingChangeWarning": "Saving revalues every transaction at the rate on its own date. Budgets, goals, assets, debts, bills and net worth history keep their numbers, so review them afterwards.",
       "enabled": "Currencies you use",
       "enabledHint_one": "{{count}} currency is offered when entering data. The reporting currency is always included.",
@@ -1423,7 +1542,6 @@
     "regional": {
       "title": "Regional",
       "language": "Default language",
-      "languageHint": "Used until someone picks a language themselves.",
       "languages": {
         "en": "English",
         "lt": "Lietuvių"
@@ -1431,7 +1549,6 @@
       "timeZone": "Time zone",
       "timeZoneRegion": "Time zone region",
       "timeZoneOther": "Other",
-      "timeZoneHint": "Decides what counts as today and this month.",
       "firstDayOfWeek": "Week starts on",
       "days": {
         "monday": "Monday",
@@ -1560,34 +1677,22 @@
       "continue": "Continue",
       "basics": {
         "title": "The basics",
-        "description": "How this installation is named, which currency it reports in and which clock it keeps. Settings › Installation changes them later."
+        "description": "Settings › Installation changes these later."
       },
       "features": {
         "title": "Choose features",
         "description": "Start from a preset, then tick or untick anything. A feature turned off later keeps its data.",
         "presets": "Presets",
-        "recommended": "Recommended.",
         "preset": {
-          "track": {
-            "name": "Track spending",
-            "hint": "Import, sort and report."
-          },
-          "household": {
-            "name": "Run the household",
-            "hint": "Adds budgets, goals, bills, sharing and the month-end close."
-          },
-          "everything": {
-            "name": "Everything",
-            "hint": "Adds net worth, investments, currencies and receipt reading."
-          }
+          "track": "Track spending",
+          "household": "Run the household",
+          "everything": "Everything"
         },
-        "optIn": "Places, Learned categories and Personal API tokens stay off until you tick them: they record where you pay, guess from your history or let scripts in.",
         "needsTesseract": "Needs Tesseract on this server, which is not installed yet.",
         "needsMapTiles": "The map also needs the tile file on the server; places work without it."
       },
       "tour": {
         "title": "How Jx Finance works",
-        "description": "Four ideas carry the whole application.",
         "panels": {
           "accounts": {
             "title": "Accounts",

@@ -2,7 +2,12 @@ import "@testing-library/jest-dom/vitest";
 import { cleanup } from "@testing-library/react";
 import { afterEach, beforeEach, vi } from "vitest";
 import { i18n } from "@/lib/i18n";
-import { installNodeFormData, installPointerCaptureStub, installScrollStub } from "./polyfills";
+import {
+  installNodeFormData,
+  installPointerCaptureStub,
+  installResizeObserverStub,
+  installScrollStub,
+} from "./polyfills";
 
 function installMatchMedia() {
   Object.defineProperty(globalThis, "matchMedia", {
@@ -22,6 +27,7 @@ function installMatchMedia() {
 installMatchMedia();
 installScrollStub();
 installPointerCaptureStub();
+installResizeObserverStub();
 await installNodeFormData();
 
 beforeEach(() => {

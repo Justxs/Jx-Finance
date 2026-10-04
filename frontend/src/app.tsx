@@ -6,7 +6,7 @@ import { RouteError } from "@/components/route-error/route-error";
 import { RoutePending } from "@/components/route-pending/route-pending";
 import { Toaster } from "@/components/ui/sonner/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip/tooltip";
-import { endSession } from "@/lib/auth-gate";
+import { endSession, hasSession } from "@/lib/auth-gate";
 import { i18n } from "@/lib/i18n";
 import { pageViewTransition } from "@/lib/page-transition";
 import { queryClient } from "@/lib/query-client";
@@ -45,7 +45,9 @@ function scrollToTopOnPageChange({ pathChanged }: RouterEvents["onBeforeNavigate
 router.subscribe("onBeforeNavigate", scrollToTopOnPageChange);
 
 function handleSessionExpired() {
-  endSession(queryClient, router.navigate);
+  if (hasSession()) {
+    endSession(queryClient, router.navigate);
+  }
 }
 
 onSessionExpired(handleSessionExpired);

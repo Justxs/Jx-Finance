@@ -1,5 +1,6 @@
 import type { QueryClient } from "@tanstack/react-query";
 import {
+  getMeQueryKey,
   getMeQueryOptions,
   getSetupStatusQueryKey,
   getSetupStatusSuspenseQueryOptions,
@@ -47,8 +48,13 @@ export async function checkSetupNeeded(queryClient: QueryClient): Promise<boolea
 
 async function loadMe(queryClient: QueryClient): Promise<UserProfileResponse | null> {
   try {
-    return await queryClient.query({ ...getMeQueryOptions(), staleTime: "static" });
+    return await queryClient.query({
+      ...getMeQueryOptions(),
+      staleTime: "static",
+      retry: false,
+    });
   } catch {
+    queryClient.removeQueries({ queryKey: getMeQueryKey(), exact: true });
     return null;
   }
 }

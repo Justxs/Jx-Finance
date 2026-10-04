@@ -91,6 +91,16 @@ describe("checkIsAuthenticated", () => {
     await expect(gate.checkIsAuthenticated(queryClient())).resolves.toBe(false);
   });
 
+  test("a signed-out check leaves no error behind and is not retried", async () => {
+    const gate = await loadGate();
+    fetchMock.mockResolvedValue(json({}, { status: 401 }));
+    const client = new QueryClient();
+
+    await expect(gate.checkIsAuthenticated(client)).resolves.toBe(false);
+    expect(client.getQueryCache().getAll()).toEqual([]);
+    expect(requestedUrls()).toEqual(["/api/auth/me", "/api/auth/refresh", "/api/auth/me"]);
+  });
+
   test("a network failure means signed out and is cached", async () => {
     const gate = await loadGate();
     fetchMock.mockRejectedValue(new TypeError("offline"));

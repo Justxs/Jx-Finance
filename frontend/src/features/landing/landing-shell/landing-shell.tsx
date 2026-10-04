@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { ArrowUpRight } from "lucide-react";
+import { ArrowUpRight, Mail } from "lucide-react";
 import { type ReactNode, useId } from "react";
 import { useTranslation } from "react-i18next";
 import { Brand, BrandMark } from "@/components/brand/brand";
@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 
 export const SOURCE_URL = "https://github.com/Justxs/Jx-Finance";
 export const SETUP_URL = `${SOURCE_URL}#docker`;
+const SUGGESTION_EMAIL = "pranauskis.justas@gmail.com";
 
 export const landingColumn = "mx-auto w-full max-w-7xl px-4 sm:px-8 lg:px-10";
 
@@ -36,6 +37,8 @@ function LandingDoors() {
   const membersId = useId();
   const ownId = useId();
   const supportId = useId();
+  const suggestId = useId();
+  const suggestionHref = `mailto:${SUGGESTION_EMAIL}?subject=${encodeURIComponent(t("landing.close.suggestSubject"))}`;
 
   return (
     <div className="border-t">
@@ -43,7 +46,7 @@ function LandingDoors() {
         className={cn(
           landingColumn,
           "grid gap-x-12 gap-y-10 py-12 sm:grid-cols-2 sm:py-16",
-          supportShown && "lg:grid-cols-3",
+          supportShown ? "lg:grid-cols-4" : "lg:grid-cols-3",
         )}
       >
         <section aria-labelledby={membersId} className="flex flex-col items-start">
@@ -71,6 +74,21 @@ function LandingDoors() {
             {t("landing.close.ownAction")}
             <ArrowUpRight aria-hidden="true" />
           </ExternalLink>
+        </section>
+        <section aria-labelledby={suggestId} className="flex flex-col items-start">
+          <h2 id={suggestId} className="text-lg leading-6 font-semibold">
+            {t("landing.close.suggestTitle")}
+          </h2>
+          <p className="mt-1 mb-4 max-w-prose text-sm text-muted-foreground">
+            {t("landing.close.suggestText")}
+          </p>
+          <a
+            href={suggestionHref}
+            className={cn(buttonVariants({ variant: "outline" }), "mt-auto")}
+          >
+            <Mail aria-hidden="true" />
+            {t("landing.close.suggestAction")}
+          </a>
         </section>
         {supportShown ? (
           <section aria-labelledby={supportId} className="flex flex-col items-start">

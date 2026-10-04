@@ -34,7 +34,7 @@ function CurrenciesFieldsGroup({ fields, savedReportingCurrency }: Readonly<Prop
               label={t("settings.currencies.reporting")}
               hint={
                 reportingField.value === savedReportingCurrency
-                  ? t("settings.currencies.reportingHint")
+                  ? undefined
                   : t("settings.currencies.reportingChangeWarning")
               }
               hintRole="status"

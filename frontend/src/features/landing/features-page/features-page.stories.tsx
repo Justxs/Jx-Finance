@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect } from "storybook/test";
-import { FeaturesPage, featureGroups } from "./features-page";
+import { FeaturesPage, featureCount, featureGroups } from "./features-page";
 
 const meta = {
   title: "Features/Landing/FeaturesPage",
@@ -10,8 +10,6 @@ const meta = {
 
 export default meta;
 type Story = StoryObj<typeof meta>;
-
-const featureCount = featureGroups.reduce((total, group) => total + group.features.length, 0);
 
 export const Default: Story = {
   play: async ({ canvas }) => {

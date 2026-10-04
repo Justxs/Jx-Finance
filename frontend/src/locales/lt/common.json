@@ -914,7 +914,6 @@
   },
   "auth": {
     "signIn": "Prisijungti",
-    "signInSubtitle": "Prisijunkite prie savo Jx Finance paskyros.",
     "email": "El. paštas",
     "password": "Slaptažodis",
     "rememberMe": "Prisiminti mane šiame įrenginyje",
@@ -953,9 +952,11 @@
     "sourceLabel": "Jx Finance „GitHub“ svetainėje",
     "nav": {
       "label": "Pagrindinis meniu",
+      "home": "Pradžia",
       "features": "Funkcionalumas"
     },
     "seeFeatures": "Peržiūrėti visą funkcionalumą",
+    "overview": "Ką rasite viduje",
     "sample": {
       "label": "Pavyzdinės operacijos",
       "title": "Namų ūkio sąskaita: {{month}}",
@@ -990,7 +991,15 @@
       "partnerOwes": "Partneris jums skolingas",
       "billDue": "Šiandien mokėti už internetą",
       "billName": "Namų internetas · kas mėnesį",
-      "over": "viršyta {{amount}}"
+      "over": "viršyta {{amount}}",
+      "trip": "Kelionė į Rygą",
+      "tripPayments": "14 mokėjimų · {{dates}}",
+      "tripMore": "ir dar 11 mokėjimų",
+      "holiday": "Atostogos",
+      "signIn": "Jūsų prisijungimas",
+      "passkey": "Prieigos raktas šiame kompiuteryje",
+      "phoneCode": "Kodas iš telefono",
+      "on": "Įjungta"
     },
     "statement": {
       "title": "Trumpai",
@@ -1021,6 +1030,10 @@
       "ownTitle": "Norite naudotis patys?",
       "ownText": "Jx Finance – nemokama programa. Įsidiekite ją savo kompiuteryje ar serveryje pagal „GitHub“ svetainėje pateiktą instrukciją.",
       "ownAction": "Skaityti diegimo instrukciją",
+      "suggestTitle": "Trūksta funkcijos?",
+      "suggestText": "Parašykite man, ką norėtumėte, kad Jx Finance darytų, ir kaip tuo naudotumėtės.",
+      "suggestAction": "Pasiūlyti funkciją",
+      "suggestSubject": "Jx Finance funkcijos pasiūlymas",
       "supportText": "Jx Finance kuria ir prižiūri vienas kūrėjas."
     },
     "footer": "Privati asmeninių finansų apskaita · Nemokama ir atvirojo kodo",
@@ -1030,12 +1043,19 @@
       "example": "Pavyzdžiui:",
       "groups": {
         "everyday": "Kasdieniai finansai",
+        "organise": "Tvarka ir paieška",
         "plan": "Planavimas",
         "household": "Gyvenantiems kartu",
         "wealth": "Jūsų turtas",
-        "review": "Ataskaitos ir priminimai"
+        "review": "Ataskaitos ir priminimai",
+        "yours": "Jūsų duomenys, jūsų pasirinkimai"
       },
       "items": {
+        "accounts": {
+          "title": "Visos jūsų sąskaitos",
+          "text": "Einamosios sąskaitos, kortelės, santaupos ir grynieji – vienoje vietoje. Likučiai apskaičiuojami iš mokėjimų, o pinigų perkėlimas tarp savo sąskaitų niekada nelaikomas išlaidomis.",
+          "example": "Perkeliate 200 € iš einamosios sąskaitos į taupomąją. Abiejų sąskaitų likučiai pasikeičia, o mėnesio išlaidos lieka tokios pačios."
+        },
         "import": {
           "title": "Banko išrašai",
           "text": "Atsisiųskite išrašą iš savo banko svetainės ir įkelkite jį į programą. Pirmiausia peržiūrite kiekvieną eilutę ir pasirenkate, ką išsaugoti, todėl niekas neįrašoma be jūsų žinios.",
@@ -1046,6 +1066,11 @@
           "text": "Suskirstykite išlaidas į kategorijas, pavyzdžiui, „Maisto produktai“ ar „Transportas“. Taisyklė įsimena jūsų pasirinkimą, todėl kitą išrašą programa suskirstys pati.",
           "example": "Sukuriate vieną taisyklę: mokėjimai „Maximai“ priskiriami kategorijai „Maisto produktai“. Nuo tada visos „Maximos“ eilutės atkeliauja jau suskirstytos."
         },
+        "learned": {
+          "title": "Kategorijos, kurių programa išmoksta",
+          "text": "Mokėjimams, kuriems netinka jokia taisyklė, Jx Finance pasiūlo kategoriją pagal tas, kurias rinkotės anksčiau. Programa tik siūlo – sprendžiate jūs.",
+          "example": "Išraše pirmą kartą pasirodo „Lidl“ parduotuvė, kurioje dar nebuvote, ir šalia jau pasiūlyta kategorija „Maisto produktai“."
+        },
         "receipts": {
           "title": "Kvitai",
           "text": "Prie mokėjimo pridėkite kvito nuotrauką arba PDF failą. Jx Finance gali nuskaityti iš jo sumą, datą ir prekes.",
@@ -1055,6 +1080,31 @@
           "title": "Periodiniai mokėjimai",
           "text": "Kas mėnesį ar kasmet mokamos sąskaitos primena apie save, kai ateina mokėjimo terminas. Patvirtinus priminimą, mokėjimas įrašomas.",
           "example": "Interneto sąskaitą reikia apmokėti 15 d. Tą dieną gaunate priminimą ir vienu paspaudimu įrašote mokėjimą."
+        },
+        "tags": {
+          "title": "Žymos",
+          "text": "Žyma nurodo, kam buvo skirtas mokėjimas, nepriklausomai nuo kategorijos: atostogoms, remontui ar tam, ką kolega jums grąžins.",
+          "example": "Visi mokėjimai su žyma „Virtuvės remontas“ sudaro 8 940 € – nuo plytelių iki elektriko."
+        },
+        "groups": {
+          "title": "Kelionės ir projektai vienoje eilutėje",
+          "text": "Sujunkite daug mokėjimų į vieną eilutę, kurią išskleidę matote juos visus. Kiekvienas mokėjimas išlaiko savo datą, kategoriją ir sumą.",
+          "example": "Keturiolika kortelės mokėjimų iš kelionės į Rygą rodomi viena eilute: „Kelionė į Rygą“, liepos 3–17 d., −612,40 €."
+        },
+        "payeeNames": {
+          "title": "Aiškūs gavėjų pavadinimai",
+          "text": "Bankai tą pačią parduotuvę užrašo įvairiai. Pavadinkite ją vieną kartą, ir visi mokėjimai jai bus rodomi tuo pavadinimu.",
+          "example": "„MAXIMA LT, UAB 20260402“ sąraše, ataskaitose ir periodinių mokėjimų pasiūlymuose rodoma kaip „Maxima“."
+        },
+        "places": {
+          "title": "Kur mokėjote",
+          "text": "Pažymėkite mokėjimo parduotuvę ar vietą, ieškokite mokėjimų pagal vietą ir matykite, kiek jums kainavo kiekviena vieta – sąraše ar žemėlapyje.",
+          "example": "Matote, kad parduotuvė prie darbo per mėnesį kainuoja dvigubai daugiau nei ta, kuri prie namų."
+        },
+        "search": {
+          "title": "Bet kurio mokėjimo paieška",
+          "text": "Filtruokite pagal datą, sumą, kategoriją, žymą, sąskaitą ar žodį pastaboje ar kvite ir išsaugokite dažnai naudojamus filtrus. Mokėjimai, kurie galėjo būti įvesti dukart, pažymimi.",
+          "example": "Ieškote žodžio „baterijos“ ir randate kovo mėnesio kvitą, kurio reikia garantijai."
         },
         "budgets": {
           "title": "Biudžetai",
@@ -1071,6 +1121,11 @@
           "text": "Matykite, kaip per artimiausias savaites keisis sąskaitos likutis, įskaitant laukiančius mokėjimus.",
           "example": "Prieš užsisakydami kelionę patikrinate, ar iki atlyginimo sąskaitoje užteks pinigų."
         },
+        "loans": {
+          "title": "Paskolos grąžinimas",
+          "text": "Įveskite paskolos sąlygas ir matykite, kada ji bus grąžinta ir kiek kiekvienos įmokos sudaro palūkanos. Išbandykite didesnes įmokas ir pamatykite, kiek sutaupytumėte.",
+          "example": "Matote, kad mokėdami 100 € daugiau per mėnesį būsto paskolą grąžintumėte keleriais metais anksčiau, ir kiek palūkanų taip sutaupytumėte."
+        },
         "sharing": {
           "title": "Bendra namų ūkio apskaita",
           "text": "Dalinkitės sąskaitomis ir kategorijomis su kartu gyvenančiais žmonėmis. Asmenines sąskaitas matote tik jūs.",
@@ -1080,6 +1135,16 @@
           "title": "Bendrų išlaidų dalijimas",
           "text": "Padalykite bendras išlaidas ir matykite, kas kam kiek skolingas.",
           "example": "Už abiejų pirkinius sumokėjote 120 €. Jx Finance parodo, kad partneris jums skolingas 60 €."
+        },
+        "people": {
+          "title": "Draugai už namų ūkio ribų",
+          "text": "Sekite pinigus su draugais ir artimaisiais, kurie nesinaudoja Jx Finance: padalytą vakarienę, paskolintus pinigus. Juos matote tik jūs.",
+          "example": "Už vakarienę su dviem draugais sumokėjote 90 €. Kiekvienas iš jų jums skolingas 30 €, kol grąžins."
+        },
+        "activity": {
+          "title": "Kas ką pakeitė",
+          "text": "Kiekvienas namų ūkio narys mato, kas pridėjo, pakeitė ar ištrynė tai, kuo dalijamasi.",
+          "example": "Elektros sąskaita bendroje sąskaitoje atrodo kitaip, o veiklos sąraše matote, kad sekmadienį ją pataisė partneris."
         },
         "currencies": {
           "title": "Kelios valiutos",
@@ -1096,20 +1161,75 @@
           "text": "Sekite akcijas ir fondus: įveskite juos patys arba importuokite iš „Interactive Brokers“.",
           "example": "Matote, kiek sumokėjote už indeksų fondą ir kiek jis vertas šiandien."
         },
+        "prices": {
+          "title": "Kasdienės kainos",
+          "text": "Kai administratorius tai įjungia, akcijų ir fondų kainos atnaujinamos kartą per dieną, todėl portfelis rodo dabartinę vertę.",
+          "example": "Kiekvieną rytą jūsų indeksų fondas rodo naujausią uždarymo kainą, jums nieko neįvedant."
+        },
+        "taxes": {
+          "title": "Metinė investicijų suvestinė",
+          "text": "Matykite metų pardavimus su jų pelnu, dividendus, palūkanas, išskaičiuotus mokesčius ir mokesčius brokeriui – paruoštus pajamų deklaracijai. Tai jūsų įrašų suvestinė, o ne mokesčių konsultacija.",
+          "example": "Pavasarį iš jos nusirašote praėjusių metų dividendus ir parduotas akcijas su jų įsigijimo kaina."
+        },
         "reports": {
-          "title": "Ataskaitos ir mėnesio uždarymas",
-          "text": "Matykite, kam išleidote pinigus per bet kurį laikotarpį, ir uždarykite kiekvieną mėnesį pagal trumpą kontrolinį sąrašą.",
+          "title": "Ataskaitos",
+          "text": "Matykite, kam išleidote pinigus per bet kurį laikotarpį – pagal kategoriją, žymą, gavėją ar vietą – ir palyginkite su ankstesniu laikotarpiu.",
           "example": "Spalio pabaigoje matote, kad kavinėse ir restoranuose išleidote trečdaliu daugiau nei rugsėjį."
         },
-        "export": {
-          "title": "Eksportas",
-          "text": "Atsisiųskite savo mokėjimus skaičiuoklės failu arba PDF formatu.",
-          "example": "Praėjusių metų išlaidas PDF formatu nusiunčiate buhalteriui."
+        "monthClose": {
+          "title": "Mėnesio uždarymas",
+          "text": "Uždarykite kiekvieną mėnesį pagal trumpą kontrolinį sąrašą: išrašai įkelti, visi mokėjimai suskirstyti. Jei vėliau uždarytame mėnesyje kas nors pasikeičia, matote, kas pasikeitė.",
+          "example": "Spalio 2 d. uždarote rugsėjį. Kai atkeliauja vėluojantis grąžinimas rugsėjo data, mėnuo parodo skirtumą."
+        },
+        "reconcile": {
+          "title": "Sutikrinimas su banku",
+          "text": "Įveskite banko išraše nurodytą likutį ir pamatykite, ar jūsų apskaita sutampa, o jei ne – kiek skiriasi.",
+          "example": "Bankas rugsėjo pabaigoje rodo 1 482,10 €, ir Jx Finance sutampa iki cento."
+        },
+        "unusual": {
+          "title": "Neįprasti mokėjimai",
+          "text": "Mokėjimas, gerokai didesnis nei įprastai toje parduotuvėje, pažymimas, o jums pranešama, kai prenumerata pabrangsta.",
+          "example": "Vaizdo įrašų prenumerata pabrangsta nuo 9,99 € iki 12,99 €, ir Jx Finance tai parodo vos tik mokėjimas įrašomas."
+        },
+        "digest": {
+          "title": "Mėnesio suvestinė",
+          "text": "Kiekvieno mėnesio pradžioje gaukite trumpą praėjusio mėnesio suvestinę: pajamos, išlaidos, kas labiausiai pasikeitė ir kas dar neužbaigta.",
+          "example": "Spalio 1 d. gaunate žinutę, kad rugsėjį sutaupėte 340 €, o labiausiai išaugo išlaidos kavinėms ir restoranams."
         },
         "notifications": {
           "title": "Priminimai",
           "text": "Gaukite priminimus programoje, el. paštu arba „Discord“ ar „Telegram“ pokalbyje.",
           "example": "Mokėjimo dieną į jūsų šeimos „Telegram“ grupę atkeliauja žinutė."
+        },
+        "dashboard": {
+          "title": "Jūsų pradžios ekranas",
+          "text": "Pasirinkite, kurias korteles rodo jūsų pradžios ekranas ir kokia tvarka.",
+          "example": "Biudžetus perkeliate į viršų, o investicijas paslepiate, o partneris išlaiko savo išdėstymą."
+        },
+        "look": {
+          "title": "Pritaikyta jums",
+          "text": "Šviesi ar tamsi tema, keturios spalvų paletės, šrifto ir teksto dydžio pasirinkimas, spartieji klavišai ir telefonui pritaikytas vaizdas.",
+          "example": "Vakare įjungiate tamsią temą ir didesnį tekstą, o tarp puslapių naršote klaviatūra."
+        },
+        "undo": {
+          "title": "Atšaukimas ir šiukšlinė",
+          "text": "Bet kurį ištrynimą galima iškart atšaukti, o viską, ką ištrynėte per pastarąsias 30 dienų, galima atkurti.",
+          "example": "Ištrinate ne tą mokėjimą, paspaudžiate „Atšaukti“, ir jis vėl savo vietoje."
+        },
+        "export": {
+          "title": "Eksportas",
+          "text": "Atsisiųskite savo mokėjimus skaičiuoklės failu arba PDF formatu arba pasiimkite visus savo įrašus viename faile.",
+          "example": "Praėjusių metų išlaidas PDF formatu nusiunčiate buhalteriui."
+        },
+        "backups": {
+          "title": "Atsarginės kopijos",
+          "text": "Administratorius gali padaryti visko atsarginę kopiją kartu su prisegtais failais ir atkurti ją šiame ar kitame kompiuteryje.",
+          "example": "Prieš persikeldami į naują namų serverį padarote atsarginę kopiją ir atkuriate ją ten."
+        },
+        "tools": {
+          "title": "Savų įrankių prijungimas",
+          "text": "Suteikite skaičiuoklei, telefono sparčiajai komandai, išmaniųjų namų sistemai ar DI asistentui raktą prie savo apskaitos. Jūs pasirenkate, ar jis gali tik skaityti, ar ir pridėti mokėjimus, ir bet kada galite raktą atšaukti.",
+          "example": "Spartioji komanda telefone dviem paspaudimais įrašo grynaisiais apmokėtą kavą."
         },
         "security": {
           "title": "Saugus prisijungimas",
@@ -1434,7 +1554,6 @@
     "currencies": {
       "title": "Valiutos",
       "reporting": "Ataskaitų valiuta",
-      "reportingHint": "Sumos, biudžetai ir ataskaitos rodomi šia valiuta.",
       "reportingChangeWarning": "Išsaugojus kiekviena operacija bus perskaičiuota pagal jos datos kursą. Biudžetų, tikslų, turto, skolų, periodinių įrašų ir grynojo turto istorijos sumos nepasikeis, todėl vėliau jas peržiūrėkite.",
       "enabled": "Naudojamos valiutos",
       "enabledHint_one": "Įvedant duomenis siūloma {{count}} valiuta. Ataskaitų valiuta įtraukiama visada.",
@@ -1483,7 +1602,6 @@
     "regional": {
       "title": "Regioniniai nustatymai",
       "language": "Numatytoji kalba",
-      "languageHint": "Naudojama, kol naudotojas pats nepasirenka kitos kalbos.",
       "languages": {
         "en": "English",
         "lt": "Lietuvių"
@@ -1491,7 +1609,6 @@
       "timeZone": "Laiko juosta",
       "timeZoneRegion": "Laiko juostos regionas",
       "timeZoneOther": "Kita",
-      "timeZoneHint": "Nuo jos priklauso, kuri diena laikoma šiandiena ir kuris mėnuo – einamuoju.",
       "firstDayOfWeek": "Savaitė prasideda",
       "days": {
         "monday": "Pirmadienį",
@@ -1620,34 +1737,22 @@
       "continue": "Toliau",
       "basics": {
         "title": "Pagrindai",
-        "description": "Kaip vadinasi ši sistema, kokia valiuta ji skaičiuoja ir kurią laiko juostą naudoja. Vėliau juos galima pakeisti skiltyje Nustatymai › Sistema."
+        "description": "Vėliau juos galima pakeisti skiltyje Nustatymai › Sistema."
       },
       "features": {
         "title": "Pasirinkite funkcijas",
         "description": "Pradėkite nuo rinkinio, tada pažymėkite ar atžymėkite ką norite. Vėliau išjungta funkcija savo duomenų nepraranda.",
         "presets": "Rinkiniai",
-        "recommended": "Rekomenduojama.",
         "preset": {
-          "track": {
-            "name": "Išlaidų apskaita",
-            "hint": "Importas, rūšiavimas ir ataskaitos."
-          },
-          "household": {
-            "name": "Namų ūkio tvarkymas",
-            "hint": "Dar biudžetai, tikslai, sąskaitos, dalijimasis ir mėnesio uždarymas."
-          },
-          "everything": {
-            "name": "Viskas",
-            "hint": "Dar grynasis turtas, investicijos, valiutos ir kvitų skaitymas."
-          }
+          "track": "Išlaidų apskaita",
+          "household": "Namų ūkio tvarkymas",
+          "everything": "Viskas"
         },
-        "optIn": "Vietos, Išmoktos kategorijos ir Asmeniniai API raktai lieka išjungti, kol jų nepažymite: jie fiksuoja, kur mokate, spėja pagal jūsų istoriją arba įsileidžia scenarijus.",
         "needsTesseract": "Reikia Tesseract šiame serveryje, o jis dar neįdiegtas.",
         "needsMapTiles": "Žemėlapiui dar reikia žemėlapio failo serveryje; vietos veikia ir be jo."
       },
       "tour": {
         "title": "Kaip veikia Jx Finance",
-        "description": "Visa programa remiasi keturiomis idėjomis.",
         "panels": {
           "accounts": {
             "title": "Sąskaitos",
