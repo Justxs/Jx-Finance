@@ -71,6 +71,8 @@ public sealed partial class QueryFilterTests
         "Endpoints/Investments/Services/StatementImport.cs",
         "Endpoints/Settings/Services/ExchangeRateEntryService.cs",
         "Endpoints/Settings/Services/SettingsService.cs",
+        "Endpoints/Trash/Services/CategoryAndTagRestores.cs",
+        "Endpoints/Trash/Services/LedgerRestores.cs",
         "Endpoints/Trash/Services/TrashRestorers.cs",
         "Endpoints/Users/Services/UserExportService.cs",
         "Endpoints/Users/Services/UserJournalSource.cs",
@@ -94,11 +96,16 @@ public sealed partial class QueryFilterTests
         var unowned = capture.Db.Model.GetEntityTypes()
             .Where(entity => !entity.IsOwned() && entity.BaseType is null)
             .Where(entity => entity.FindDeclaredQueryFilter(QueryFilters.Owner) is null)
-            .Select(entity => entity.ClrType.FullName)
+            .Select(entity => entity.ClrType.FullName!)
             .Order(StringComparer.Ordinal)
             .ToList();
 
-        Assert.Equal(GlobalEntities.Concat(ChildEntities).Select(type => type.FullName).Order(StringComparer.Ordinal), unowned);
+        ApprovedList.AssertMatches(
+            GlobalEntities.Concat(ChildEntities).Select(type => type.FullName!).Order(StringComparer.Ordinal),
+            unowned,
+            "GlobalEntities and ChildEntities in Architecture/QueryFilterTests.cs",
+            entity => $"{entity} has no QueryFilters.Owner filter and is in neither GlobalEntities nor ChildEntities in Architecture/QueryFilterTests.cs. Give it an owner filter in its entity configuration, or add it to GlobalEntities if every user may read every row, or to ChildEntities if it is read only through a filtered parent.",
+            entity => $"{entity} is in GlobalEntities or ChildEntities in Architecture/QueryFilterTests.cs but has an owner filter now or is no longer mapped. Remove it from the list.");
     }
 
     [Fact]
@@ -113,7 +120,12 @@ public sealed partial class QueryFilterTests
             .Order(StringComparer.Ordinal)
             .ToList();
 
-        Assert.Equal(FilterBypassFiles.Order(StringComparer.Ordinal), bypassing);
+        ApprovedList.AssertMatches(
+            FilterBypassFiles.Order(StringComparer.Ordinal),
+            bypassing,
+            "FilterBypassFiles in Architecture/QueryFilterTests.cs",
+            file => $"{file} calls a bare IgnoreQueryFilters(), which shows deleted rows and every user's rows, and is not in FilterBypassFiles in Architecture/QueryFilterTests.cs. Drop only the filter it needs with IgnoreQueryFilters(QueryFilters.OwnerOnly) or IgnoreQueryFilters(QueryFilters.SoftDeleteOnly), or add the file if it must read every row and constrains the query itself.",
+            file => $"{file} is in FilterBypassFiles in Architecture/QueryFilterTests.cs but no longer calls a bare IgnoreQueryFilters() or was moved. Remove it from the list, or update the path.");
     }
 
     [GeneratedRegex(@"\.IgnoreQueryFilters\(\s*\)")]

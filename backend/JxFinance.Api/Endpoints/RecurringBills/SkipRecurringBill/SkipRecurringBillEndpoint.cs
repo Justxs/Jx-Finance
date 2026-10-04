@@ -5,7 +5,7 @@ using JxFinance.Endpoints.RecurringBills.Shared;
 
 namespace JxFinance.Endpoints.RecurringBills.SkipRecurringBill;
 
-public sealed class SkipRecurringBillEndpoint(IRecurringBillService recurringBillService)
+public sealed class SkipRecurringBillEndpoint(IRecurringBillOccurrenceService occurrences)
     : Endpoint<SkipRecurringBillRequest, RecurringBillResponse>
 {
     public override void Configure()
@@ -16,5 +16,5 @@ public sealed class SkipRecurringBillEndpoint(IRecurringBillService recurringBil
     }
 
     public override async Task HandleAsync(SkipRecurringBillRequest req, CancellationToken ct) =>
-        await Send.OkOrProblemAsync(await recurringBillService.SkipAsync(req, ct), ct);
+        await Send.OkOrProblemAsync(await occurrences.SkipAsync(req, ct), ct);
 }

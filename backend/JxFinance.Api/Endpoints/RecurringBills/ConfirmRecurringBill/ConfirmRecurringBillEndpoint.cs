@@ -4,7 +4,7 @@ using JxFinance.Endpoints.RecurringBills.Interfaces;
 
 namespace JxFinance.Endpoints.RecurringBills.ConfirmRecurringBill;
 
-public sealed class ConfirmRecurringBillEndpoint(IRecurringBillService recurringBillService)
+public sealed class ConfirmRecurringBillEndpoint(IRecurringBillOccurrenceService occurrences)
     : Endpoint<ConfirmRecurringBillRequest, ConfirmRecurringBillResponse>
 {
     public override void Configure()
@@ -16,5 +16,5 @@ public sealed class ConfirmRecurringBillEndpoint(IRecurringBillService recurring
     }
 
     public override async Task HandleAsync(ConfirmRecurringBillRequest req, CancellationToken ct) =>
-        await Send.OkOrProblemAsync(await recurringBillService.ConfirmAsync(req, ct), ct);
+        await Send.OkOrProblemAsync(await occurrences.ConfirmAsync(req, ct), ct);
 }

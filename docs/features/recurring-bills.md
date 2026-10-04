@@ -30,7 +30,7 @@ Since 2026-09-30 an expense or income entry can carry `spreadMonths`, 2 to 36 (`
 sequenceDiagram
     actor User
     participant Form as RecurringBillConfirmForm
-    participant Api as RecurringBillService.ConfirmAsync
+    participant Api as RecurringBillOccurrenceService.ConfirmAsync
     participant Transfers as TransferService.CreateAsync
     participant Db as PostgreSQL
     User->>Form: Record payment, income or transfer
@@ -81,7 +81,7 @@ The route is not on the [API token](personal-api-tokens.md#writing-with-a-token)
 
 Since 2026-10-01 the List view opens, above the forecast, with four figures in the reporting currency: **Costs per month** and **Costs per year** of the active expense entries, and **Income per month** and **Income per year** of the active income entries. Transfers move money between your own accounts and count in none of them. The figures are shown while at least one active expense or income entry exists, through the shared `SummaryStats`, so hiding amounts masks them like every other figure.
 
-`GET /api/recurring-bills/totals` (`GetRecurringTotals`, `RecurringBillService.GetTotalsAsync`) computes them on the server, because the paid matching and the variable estimates need bank rows the client does not hold. It reads the entries the caller can see through the ordinary query filters, so the active household narrows it as it narrows the list, and it is readable with a personal API token like the rest of the prefix. Nothing is stored.
+`GET /api/recurring-bills/totals` (`GetRecurringTotals`, `RecurringBillScheduleService.GetTotalsAsync`) computes them on the server, because the paid matching and the variable estimates need bank rows the client does not hold. It reads the entries the caller can see through the ordinary query filters, so the active household narrows it as it narrows the list, and it is readable with a personal API token like the rest of the prefix. Nothing is stored.
 
 - **Cadence.** `RecurringCost.PerYear` counts a weekly entry 52 times a year, a monthly one 12, a quarterly one 4 and a yearly one once. The month figure is the year figure divided by 12, so a weekly €10 costs €520.00 a year and €43.33 a month. Sums are rounded once, at the end.
 - **Amount.** A fixed entry counts at its amount in its account's currency; a variable one at the calendar's estimate, `RecurringEstimate`: the median of its newest six matching rows of the last 13 months.
@@ -118,7 +118,7 @@ flowchart TD
 
 Since 2026-09-30 the page header has a **List | Calendar** switch. List is the page described above. Calendar shows one month as a grid of weeks that start on the installation's first day of the week, with Today, Previous and Next beside the month's name; Previous and Next stop 12 months either side of the current month. The view and the month live in the address (`/recurring-bills?view=calendar&month=2026-10`, the month left out for the current one), so the back button and a bookmark keep them. In Calendar view the cash-flow forecast, the entry groups and the inactive disclosure give way to the calendar, while **Add recurring entry**, the subscription suggestions and every dialog stay. The route loader warms the forecast only for the list and the calendar's month only for the calendar.
 
-Backend `RecurringBills` (`GetBillsCalendar`, `RecurringBillService.GetCalendarAsync`) with the helpers it shares with the [cash-flow forecast](cash-flow-forecast.md) in `Common/RecurringBills/`; frontend `recurring-bills/bills-calendar` and `recurring-bills/bill-chip`, with `monthWeeks` in `lib/calendar.ts`. One read-only route, `GET /api/recurring-bills/calendar?month=YYYY-MM`, under the same switch and readable with a personal API token. Nothing is stored.
+Backend `RecurringBills` (`GetBillsCalendar`, `RecurringBillScheduleService.GetCalendarAsync`) with the helpers it shares with the [cash-flow forecast](cash-flow-forecast.md) in `Common/RecurringBills/`; frontend `recurring-bills/bills-calendar` and `recurring-bills/bill-chip`, with `monthWeeks` in `lib/calendar.ts`. One read-only route, `GET /api/recurring-bills/calendar?month=YYYY-MM`, under the same switch and readable with a personal API token. Nothing is stored.
 
 ```mermaid
 flowchart TD

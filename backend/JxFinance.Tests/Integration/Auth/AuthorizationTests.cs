@@ -44,12 +44,15 @@ public sealed class AuthorizationTests(PeopleFixture fixture) : IntegrationTestB
                 var response = await anonymous.SendAsync(request, TestContext.Current.CancellationToken);
                 checkedRoutes++;
                 if (response.StatusCode != HttpStatusCode.Unauthorized)
-                    open.Add($"{route}: {(int)response.StatusCode}");
+                    open.Add($"{route} answered {(int)response.StatusCode}");
             }
         }
 
         Assert.True(checkedRoutes > 50, $"Only {checkedRoutes} routes were discovered.");
-        Assert.Empty(open);
+        Assert.True(
+            open.Count == 0,
+            string.Join(Environment.NewLine, open.Select(route =>
+                $"{route} without a session, not 401, and is not in AnonymousRoutes in Integration/Auth/AuthorizationTests.cs. Add it if anyone may call it before signing in, or remove AllowAnonymous() from its endpoint.")));
     }
 
     private static HttpContent EmptyBodyFor(JsonElement operation)

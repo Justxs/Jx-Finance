@@ -1,10 +1,6 @@
 using JxFinance.Domain.Common;
-using JxFinance.Endpoints.RecurringBills.ConfirmRecurringBill;
 using JxFinance.Endpoints.RecurringBills.CreateRecurringBill;
-using JxFinance.Endpoints.RecurringBills.GetBillsCalendar;
-using JxFinance.Endpoints.RecurringBills.GetRecurringTotals;
 using JxFinance.Endpoints.RecurringBills.Shared;
-using JxFinance.Endpoints.RecurringBills.SkipRecurringBill;
 using JxFinance.Endpoints.RecurringBills.UpdateRecurringBill;
 
 namespace JxFinance.Endpoints.RecurringBills.Interfaces;
@@ -24,16 +20,4 @@ public interface IRecurringBillService
         CancellationToken cancellationToken);
 
     Task<Result<Guid>> DeleteAsync(Guid id, CancellationToken cancellationToken);
-
-    Task<Result<ConfirmRecurringBillResponse>> ConfirmAsync(
-        ConfirmRecurringBillRequest request,
-        CancellationToken cancellationToken);
-
-    Task<Result<RecurringBillResponse>> SkipAsync(
-        SkipRecurringBillRequest request,
-        CancellationToken cancellationToken);
-
-    Task<Result<BillsCalendarResponse>> GetCalendarAsync(string? month, CancellationToken cancellationToken);
-
-    Task<RecurringTotalsResponse> GetTotalsAsync(CancellationToken cancellationToken);
 }

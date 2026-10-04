@@ -4,7 +4,7 @@ using JxFinance.Endpoints.RecurringBills.Interfaces;
 
 namespace JxFinance.Endpoints.RecurringBills.GetRecurringTotals;
 
-public sealed class GetRecurringTotalsEndpoint(IRecurringBillService recurringBillService)
+public sealed class GetRecurringTotalsEndpoint(IRecurringBillScheduleService schedule)
     : EndpointWithoutRequest<RecurringTotalsResponse>
 {
     public override void Configure()
@@ -14,5 +14,5 @@ public sealed class GetRecurringTotalsEndpoint(IRecurringBillService recurringBi
     }
 
     public override async Task HandleAsync(CancellationToken ct) =>
-        await Send.OkAsync(await recurringBillService.GetTotalsAsync(ct), ct);
+        await Send.OkAsync(await schedule.GetTotalsAsync(ct), ct);
 }

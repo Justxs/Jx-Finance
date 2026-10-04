@@ -8,6 +8,8 @@ namespace JxFinance.Tests.Architecture;
 [Collection<FastEndpointsPipeline>]
 public sealed class TokenWritableTests
 {
+    private const string ListName = "WritableRoutes in Architecture/TokenWritableTests.cs";
+
     private static readonly string[] WritableRoutes =
     [
         "DELETE /api/transactions/{id}",
@@ -41,7 +43,12 @@ public sealed class TokenWritableTests
             .Order(StringComparer.Ordinal)
             .ToList();
 
-        Assert.Equal(WritableRoutes.Order(StringComparer.Ordinal), writable);
+        ApprovedList.AssertMatches(
+            WritableRoutes.Order(StringComparer.Ordinal),
+            writable,
+            ListName,
+            route => $"{route} accepts a read-and-write token but is not in {ListName}. Add it if such a token may call it, or remove Metadata(TokenWritable.Yes) from its endpoint.",
+            route => $"{route} is in {ListName} but does not accept a read-and-write token or no longer exists. Remove it from the list if that is intended, or add Metadata(TokenWritable.Yes) to its endpoint's Configure.");
     }
 
     [Fact]
@@ -53,15 +60,24 @@ public sealed class TokenWritableTests
             .Select(PathOf)
             .ToList();
 
-        Assert.Empty(leaked);
+        Assert.True(
+            leaked.Count == 0,
+            string.Join(Environment.NewLine, leaked.Select(path =>
+                $"{path} accepts a read-and-write token but sits under a prefix in NeverWritablePrefixes in Architecture/TokenWritableTests.cs. Remove Metadata(TokenWritable.Yes) from its endpoint.")));
     }
 
     [Fact]
     public void No_get_route_carries_the_write_mark()
     {
-        Assert.DoesNotContain(
-            FastEndpointsPipeline.Endpoints,
-            endpoint => TokenWritable.Allows(endpoint.Metadata) && MethodsOf(endpoint).Contains(HttpMethods.Get));
+        var marked = FastEndpointsPipeline.Endpoints
+            .Where(endpoint => TokenWritable.Allows(endpoint.Metadata) && MethodsOf(endpoint).Contains(HttpMethods.Get))
+            .Select(PathOf)
+            .ToList();
+
+        Assert.True(
+            marked.Count == 0,
+            string.Join(Environment.NewLine, marked.Select(path =>
+                $"GET {path} carries Metadata(TokenWritable.Yes). A read is opened to tokens by its group's tokenReadable: true; remove the write mark.")));
     }
 
     private static IReadOnlyList<string> MethodsOf(RouteEndpoint endpoint) =>

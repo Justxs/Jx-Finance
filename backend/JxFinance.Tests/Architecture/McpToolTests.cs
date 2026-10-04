@@ -9,6 +9,8 @@ namespace JxFinance.Tests.Architecture;
 [Collection<FastEndpointsPipeline>]
 public sealed class McpToolTests
 {
+    private const string ListName = "Tools in Architecture/McpToolTests.cs";
+
     private static readonly string[] Tools =
     [
         "bulk_categorize_transactions",
@@ -92,7 +94,12 @@ public sealed class McpToolTests
             .Order(StringComparer.Ordinal)
             .ToList();
 
-        Assert.Equal(Tools, tools);
+        ApprovedList.AssertMatches(
+            Tools,
+            tools,
+            ListName,
+            tool => $"{tool} is an MCP tool but not in {ListName}. Every token-readable or token-writable route without a file answer becomes a tool (McpTools.OptIn); add it if an AI client holding a personal API token may call it, or take the route off the token lists.",
+            tool => $"{tool} is in {ListName} but no endpoint exposes it any more. Remove it from the list if the endpoint was renamed, removed or taken off the token lists on purpose.");
     }
 
     [Fact]
@@ -106,6 +113,9 @@ public sealed class McpToolTests
             .Select(endpoint => endpoint.RoutePattern.RawText)
             .ToList();
 
-        Assert.Empty(strays);
+        Assert.True(
+            strays.Count == 0,
+            string.Join(Environment.NewLine, strays.Select(route =>
+                $"/{route} is an MCP tool although a personal API token may not call it. McpTools.OptIn must skip it: check the token marks on the endpoint and the refusal in PersonalApiTokenGateMiddleware.")));
     }
 }

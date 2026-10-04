@@ -5,10 +5,7 @@ using JxFinance.Common.Trash;
 using JxFinance.Domain.Accounts;
 using JxFinance.Domain.Audit;
 using JxFinance.Domain.Common;
-using JxFinance.Domain.Conversions;
 using JxFinance.Domain.Investments;
-using JxFinance.Domain.Transactions;
-using JxFinance.Domain.Transfers;
 using JxFinance.Endpoints.Investments.Shared;
 using JxFinance.Infrastructure.Brokers.InteractiveBrokers;
 using JxFinance.Infrastructure.Data;
@@ -33,10 +30,9 @@ public sealed class StatementImport(
 
     private string ActionRefPrefix => refPrefix + "ca:";
 
-    private const int MaxRefLength = 64;
-    private const int MaxDescriptionLength = 500;
+    internal const int MaxRefLength = 64;
+    internal static readonly string[] SecurityCategories = ["STK", "FUND"];
     private const decimal QuantityTolerance = 0.0001m;
-    private static readonly string[] SecurityCategories = ["STK", "FUND"];
 
     private static readonly (string Marker, InvestmentTransactionType Type)[] CashTypes =
     [
@@ -48,13 +44,12 @@ public sealed class StatementImport(
         ("Commission Adjustments", InvestmentTransactionType.Fee),
     ];
 
-    private readonly Counts counts = new() { Skipped = statement.Unreadable };
-    private readonly Dictionary<long, Security> renamedContracts = [];
-    private readonly Dictionary<(string Isin, Currency Currency), Security> renamedIsins = [];
+    private readonly StatementCounts counts = new() { Skipped = statement.Unreadable };
+    private readonly StatementSecurities securities = new(db);
+    private readonly StatementEntries entries = new(db, rates, transfers, account, source);
     private HashSet<string> entryRefs = [];
     private HashSet<string> conversionRefs = [];
     private HashSet<string> transferRefs = [];
-    private List<Security> securities = [];
 
     public async Task<Result<BrokerImportResponse>> RunAsync(CancellationToken cancellationToken)
     {
@@ -63,7 +58,7 @@ public sealed class StatementImport(
 
         await LoadAsync(cancellationToken);
 
-        var error = await ImportCorporateActionsAsync(cancellationToken)
+        var error = await new StatementCorporateActions(statement, ActionRefPrefix, securities, entries, entryRefs, counts).ImportAsync(cancellationToken)
             ?? await ImportTradesAsync(cancellationToken)
             ?? await ImportCashTransactionsAsync(cancellationToken);
         if (error is not null)
@@ -86,7 +81,7 @@ public sealed class StatementImport(
             counts.Transfers,
             counts.Duplicates,
             counts.Skipped,
-            counts.SecuritiesCreated,
+            securities.Created,
             counts.PricesUpdated,
             counts.Splits,
             counts.CorporateActions,
@@ -102,8 +97,8 @@ public sealed class StatementImport(
 
     private async Task SummariseAsync(CancellationToken cancellationToken)
     {
-        var entries = counts.Trades + counts.CashEntries + counts.Conversions + counts.Transfers + counts.Splits + counts.CorporateActions;
-        if (entries == 0)
+        var total = counts.Trades + counts.CashEntries + counts.Conversions + counts.Transfers + counts.Splits + counts.CorporateActions;
+        if (total == 0)
         {
             return;
         }
@@ -123,7 +118,7 @@ public sealed class StatementImport(
                 (counts.Transfers, "transfer", "transfers"),
                 (counts.Splits, "split", "splits"),
                 (counts.CorporateActions, "corporate action", "corporate actions")),
-            entries,
+            total,
             account.Value,
             [account]);
     }
@@ -142,223 +137,7 @@ public sealed class StatementImport(
             .Where(r => r.AccountId == account)
             .Select(r => r.ImportRef)
             .ToListAsync(cancellationToken)).ToHashSet();
-        securities = await db.Securities.ToListAsync(cancellationToken);
-    }
-
-    private async Task<DomainError?> ImportCorporateActionsAsync(CancellationToken cancellationToken)
-    {
-        foreach (var action in statement.CorporateActions.GroupBy(a => a.Id))
-        {
-            var rows = action.Where(a => SecurityCategories.Contains(a.Instrument.AssetCategory)).ToList();
-            var reference = ActionRefPrefix + action.Key;
-            var type = action.First().Type;
-            Result<bool> booked = rows.Count == 0 || reference.Length > MaxRefLength
-                ? false
-                : type switch
-                {
-                    FlexParser.ForwardSplit or FlexParser.ReverseSplit => BookSplit(rows, reference),
-                    FlexParser.IssueChange => BookSymbolChange(rows, reference),
-                    FlexParser.Merger => await BookMergerAsync(rows, reference, cancellationToken),
-                    FlexParser.SpinOff => BookSpinOff(rows, reference),
-                    _ => false,
-                };
-            if (booked.IsFailure)
-            {
-                return booked.Error;
-            }
-
-            if (!booked.Value)
-            {
-                counts.Skipped++;
-                counts.SkippedActions[type] = counts.SkippedActions.GetValueOrDefault(type) + 1;
-            }
-        }
-
-        return null;
-    }
-
-    private bool BookSplit(List<FlexCorporateAction> rows, string reference)
-    {
-        if (rows.Select(r => r.Ratio).FirstOrDefault(r => r is not null) is not { } ratio)
-        {
-            return false;
-        }
-
-        var successor = rows.OrderByDescending(r => r.Quantity).First().Instrument;
-        var security = rows.Select(r => Find(r.Instrument)).FirstOrDefault(s => s is not null) ?? Resolve(successor);
-        TakeOver(security, successor, rows);
-        if (!entryRefs.Add(reference))
-        {
-            counts.Duplicates++;
-            return true;
-        }
-
-        AddEntry(
-            reference,
-            InvestmentTransactionType.Split,
-            security,
-            rows[0].Date,
-            new Money(0m, security.Currency),
-            0m,
-            rows[0].Description,
-            ratio);
-        counts.Splits++;
-        return true;
-    }
-
-    private bool BookSymbolChange(List<FlexCorporateAction> rows, string reference)
-    {
-        var leaving = rows.Where(r => r.Quantity < 0m).ToList();
-        var arriving = rows.Where(r => r.Quantity > 0m).ToList();
-        if (leaving.Count == 0 || arriving.Count == 0)
-        {
-            return false;
-        }
-
-        var source = Resolve(leaving[0].Instrument);
-        var successor = Find(arriving[0].Instrument);
-        if (successor == source)
-        {
-            TakeOver(source, arriving[0].Instrument, rows);
-            return true;
-        }
-
-        successor ??= Resolve(arriving[0].Instrument);
-        if (successor.Currency != source.Currency)
-        {
-            return false;
-        }
-
-        if (!entryRefs.Add(reference))
-        {
-            counts.Duplicates++;
-            return true;
-        }
-
-        AddEntry(
-            reference,
-            InvestmentTransactionType.SymbolChange,
-            source,
-            leaving[0].Date,
-            new Money(0m, source.Currency),
-            0m,
-            leaving[0].Description,
-            -leaving.Sum(r => r.Quantity),
-            related: successor);
-        counts.CorporateActions++;
-        return true;
-    }
-
-    private async Task<Result<bool>> BookMergerAsync(
-        List<FlexCorporateAction> rows,
-        string reference,
-        CancellationToken cancellationToken)
-    {
-        var leaving = rows.Where(r => r.Quantity < 0m).ToList();
-        var arriving = rows.Where(r => r.Quantity > 0m).ToList();
-        if (leaving.Count == 0)
-        {
-            return false;
-        }
-
-        var target = Resolve(leaving[0].Instrument);
-        var acquirer = arriving.Count == 0 ? null : Resolve(arriving[0].Instrument);
-        var cash = rows.Sum(r => r.Proceeds);
-        if (acquirer == target || (acquirer is not null && acquirer.Currency != target.Currency) || cash < 0m)
-        {
-            return false;
-        }
-
-        if (!entryRefs.Add(reference))
-        {
-            counts.Duplicates++;
-            return true;
-        }
-
-        var value = arriving.Sum(r => Math.Abs(r.Value));
-        decimal? costShare = acquirer is not null && cash > 0m && value > 0m
-            ? decimal.Round(value / (value + cash) * Portfolio.WholeCost, 6)
-            : null;
-        if (acquirer is not null && cash > 0m && costShare is null)
-        {
-            counts.CostSharesMissing.Add(acquirer.Symbol);
-        }
-
-        var error = await AddEntryAsync(
-            reference,
-            InvestmentTransactionType.Merger,
-            target,
-            leaving[0].Date,
-            new Money(cash, target.Currency),
-            leaving[0].Description,
-            cancellationToken,
-            -leaving.Sum(r => r.Quantity),
-            related: acquirer,
-            relatedQuantity: arriving.Sum(r => r.Quantity),
-            costShare: costShare);
-        if (error is not null)
-        {
-            return error;
-        }
-
-        counts.CorporateActions++;
-        return true;
-    }
-
-    private bool BookSpinOff(List<FlexCorporateAction> rows, string reference)
-    {
-        var arriving = rows.Where(r => r.Quantity > 0m).ToList();
-        if (arriving.Count == 0 || arriving[0].SourceIsin is not { } parentIsin)
-        {
-            return false;
-        }
-
-        var currency = arriving[0].Instrument.Currency;
-        var parent = renamedIsins.GetValueOrDefault((parentIsin, currency))
-            ?? securities.FirstOrDefault(s => s.Isin == parentIsin && s.Currency == currency);
-        if (parent is null || Find(arriving[0].Instrument) == parent)
-        {
-            return false;
-        }
-
-        var child = Resolve(arriving[0].Instrument);
-        if (!entryRefs.Add(reference))
-        {
-            counts.Duplicates++;
-            return true;
-        }
-
-        AddEntry(
-            reference,
-            InvestmentTransactionType.SpinOff,
-            parent,
-            arriving[0].Date,
-            new Money(0m, parent.Currency),
-            0m,
-            arriving[0].Description,
-            related: child,
-            relatedQuantity: arriving.Sum(r => r.Quantity));
-        counts.CostSharesMissing.Add(child.Symbol);
-        counts.CorporateActions++;
-        return true;
-    }
-
-    private void TakeOver(Security security, FlexInstrument successor, List<FlexCorporateAction> rows)
-    {
-        security.BrokerContractId = successor.ContractId ?? security.BrokerContractId;
-        security.Isin = successor.Isin?.ToUpperInvariant() ?? security.Isin;
-        foreach (var row in rows)
-        {
-            if (row.Instrument.ContractId is { } contractId)
-            {
-                renamedContracts[contractId] = security;
-            }
-
-            if (row.Instrument.Isin is { } isin)
-            {
-                renamedIsins[(isin.ToUpperInvariant(), row.Instrument.Currency)] = security;
-            }
-        }
+        await securities.LoadAsync(cancellationToken);
     }
 
     private async Task<DomainError?> ImportTradesAsync(CancellationToken cancellationToken)
@@ -383,7 +162,7 @@ public sealed class StatementImport(
                 }
                 else
                 {
-                    error = await AddConversionAsync(reference, trade, baseCurrency, cancellationToken);
+                    error = await entries.AddConversionAsync(reference, trade, baseCurrency, cancellationToken);
                     counts.Conversions++;
                 }
             }
@@ -400,8 +179,8 @@ public sealed class StatementImport(
                 var currency = trade.Instrument.Currency;
                 var sameCurrency = trade.CommissionCurrency == currency;
                 var costs = trade.Taxes + (sameCurrency ? trade.Commission : 0m);
-                var security = Resolve(trade.Instrument);
-                error = await AddEntryAsync(
+                var security = securities.Resolve(trade.Instrument);
+                error = await entries.AddEntryAsync(
                     reference,
                     trade.IsBuy ? InvestmentTransactionType.Buy : InvestmentTransactionType.Sell,
                     security,
@@ -414,7 +193,7 @@ public sealed class StatementImport(
                     -costs);
                 if (error is null && !sameCurrency && trade.Commission != 0m)
                 {
-                    error = await AddEntryAsync(
+                    error = await entries.AddEntryAsync(
                         reference + ":fee",
                         InvestmentTransactionType.Fee,
                         security,
@@ -457,7 +236,7 @@ public sealed class StatementImport(
                 {
                     counts.Duplicates++;
                 }
-                else if (await AddTransferAsync(reference, entry, funding.Value, cancellationToken) is { } error)
+                else if (await entries.AddTransferAsync(reference, entry, funding.Value, cancellationToken) is { } error)
                 {
                     return error;
                 }
@@ -484,9 +263,9 @@ public sealed class StatementImport(
             else
             {
                 var security = entry.Instrument is { } instrument && SecurityCategories.Contains(instrument.AssetCategory)
-                    ? Resolve(instrument)
+                    ? securities.Resolve(instrument)
                     : null;
-                var error = await AddEntryAsync(
+                var error = await entries.AddEntryAsync(
                     reference,
                     type.Value,
                     security,
@@ -510,7 +289,7 @@ public sealed class StatementImport(
     {
         var marks = statement.OpenPositions
             .Where(p => SecurityCategories.Contains(p.Instrument.AssetCategory))
-            .Select(p => (Security: Find(p.Instrument), p.Date, p.MarkPrice))
+            .Select(p => (Security: securities.Find(p.Instrument), p.Date, p.MarkPrice))
             .Where(m => m.Security is not null)
             .ToList();
         if (marks.Count == 0)
@@ -534,198 +313,6 @@ public sealed class StatementImport(
         }
     }
 
-    private Security? Find(FlexInstrument instrument)
-    {
-        var symbol = SymbolOf(instrument);
-        var isin = instrument.Isin?.ToUpperInvariant();
-        if (instrument.ContractId is { } contractId && renamedContracts.TryGetValue(contractId, out var renamed))
-        {
-            return renamed;
-        }
-
-        if (isin is not null && renamedIsins.TryGetValue((isin, instrument.Currency), out renamed))
-        {
-            return renamed;
-        }
-
-        return securities.FirstOrDefault(s => instrument.ContractId is not null && s.BrokerContractId == instrument.ContractId)
-            ?? securities.FirstOrDefault(s => isin is not null && s.Isin == isin && s.Currency == instrument.Currency)
-            ?? securities.FirstOrDefault(s => s.Symbol == symbol && s.Currency == instrument.Currency);
-    }
-
-    private Security Resolve(FlexInstrument instrument)
-    {
-        var security = Find(instrument);
-        if (security is null)
-        {
-            security = new Security
-            {
-                Symbol = SymbolOf(instrument),
-                Name = TextLimit.Ellipsize(instrument.Name, Security.NameMaxLength),
-                Isin = instrument.Isin?.ToUpperInvariant(),
-                Exchange = TextLimit.Ellipsize(instrument.Exchange, Security.ExchangeMaxLength),
-                Currency = instrument.Currency,
-                Type = instrument switch
-                {
-                    { SubCategory: "ETF" } => SecurityType.Etf,
-                    { AssetCategory: "FUND" } => SecurityType.Fund,
-                    _ => SecurityType.Stock,
-                },
-            };
-            securities.Add(security);
-            db.Securities.Add(security);
-            counts.SecuritiesCreated++;
-        }
-
-        security.BrokerContractId ??= instrument.ContractId;
-        security.Isin ??= instrument.Isin?.ToUpperInvariant();
-        return security;
-    }
-
-    private static string SymbolOf(FlexInstrument instrument) =>
-        TextLimit.Cut(instrument.Symbol.ToUpperInvariant(), Security.SymbolMaxLength);
-
-    private async Task<DomainError?> AddEntryAsync(
-        string reference,
-        InvestmentTransactionType type,
-        Security? security,
-        DateOnly date,
-        Money cash,
-        string? description,
-        CancellationToken cancellationToken,
-        decimal quantity = 0m,
-        decimal price = 0m,
-        decimal fee = 0m,
-        Security? related = null,
-        decimal relatedQuantity = 0m,
-        decimal? costShare = null)
-    {
-        var reporting = await rates.ToReportingAsync(cash, date, cancellationToken);
-        if (reporting.IsFailure)
-        {
-            return reporting.Error;
-        }
-
-        AddEntry(reference, type, security, date, cash, reporting.Value, description, quantity, price, fee, related, relatedQuantity, costShare);
-        return null;
-    }
-
-    private void AddEntry(
-        string reference,
-        InvestmentTransactionType type,
-        Security? security,
-        DateOnly date,
-        Money cash,
-        decimal reportingAmount,
-        string? description,
-        decimal quantity = 0m,
-        decimal price = 0m,
-        decimal fee = 0m,
-        Security? related = null,
-        decimal relatedQuantity = 0m,
-        decimal? costShare = null)
-    {
-        db.InvestmentTransactions.Add(new InvestmentTransaction
-        {
-            AccountId = account,
-            SecurityId = security?.Id,
-            RelatedSecurityId = related?.Id,
-            Type = type,
-            Date = date,
-            Quantity = quantity,
-            RelatedQuantity = relatedQuantity,
-            CostShare = costShare,
-            Price = price,
-            Fee = fee,
-            CashAmount = cash,
-            ReportingAmount = reportingAmount,
-            Description = TextLimit.Ellipsize(description, MaxDescriptionLength),
-            Source = source,
-            ExternalId = reference,
-        });
-    }
-
-    private async Task<DomainError?> AddTransferAsync(
-        string reference,
-        FlexCashTransaction entry,
-        (AccountId Account, Currency Currency) funding,
-        CancellationToken cancellationToken)
-    {
-        var (fundingAccount, fundingCurrency) = funding;
-        var atBroker = new Money(Math.Abs(entry.Amount), entry.Currency);
-        var atFunding = await rates.ConvertAsync(atBroker, fundingCurrency, entry.Date, cancellationToken);
-        if (atFunding.IsFailure)
-        {
-            return atFunding.Error;
-        }
-
-        var draft = entry.Amount > 0
-            ? new TransferDraft(fundingAccount, account, atFunding.Value, fundingCurrency, atBroker.Amount, atBroker.Currency)
-            : new TransferDraft(account, fundingAccount, atBroker.Amount, atBroker.Currency, atFunding.Value, fundingCurrency);
-        var amounts = await transfers.ResolveAsync(draft, [atBroker.Currency, fundingCurrency], cancellationToken);
-        if (amounts.IsFailure)
-        {
-            return amounts.Error;
-        }
-
-        var transfer = new Transfer
-        {
-            FromAccountId = draft.FromAccountId,
-            ToAccountId = draft.ToAccountId,
-            Amount = amounts.Value!.Sent,
-            ReceivedAmount = amounts.Value.Received,
-            Date = entry.Date,
-            Description = TextLimit.Ellipsize(entry.Description, MaxDescriptionLength),
-        };
-        db.Transfers.Add(transfer);
-        db.TransferImports.Add(new TransferImport { AccountId = account, ImportRef = reference, TransferId = transfer.Id });
-        return null;
-    }
-
-    private async Task<DomainError?> AddConversionAsync(
-        string reference,
-        FlexTrade trade,
-        Currency baseCurrency,
-        CancellationToken cancellationToken)
-    {
-        var inBase = new Money(Math.Abs(trade.Quantity), baseCurrency);
-        var inQuote = new Money(Math.Abs(trade.Proceeds), trade.Instrument.Currency);
-
-        Transaction? fee = null;
-        if (trade.Commission < 0m)
-        {
-            var amount = new Money(-trade.Commission, trade.CommissionCurrency);
-            var reporting = await rates.ToReportingAsync(amount, trade.Date, cancellationToken);
-            if (reporting.IsFailure)
-            {
-                return reporting.Error;
-            }
-
-            fee = new Transaction
-            {
-                AccountId = account,
-                Type = FlowType.Expense,
-                Amount = amount,
-                ReportingAmount = reporting.Value,
-                Date = trade.Date,
-                Description = $"Conversion fee {trade.Instrument.Symbol}",
-                Source = TransactionSource.Imported,
-            };
-            db.Transactions.Add(fee);
-        }
-
-        db.CurrencyConversions.Add(new CurrencyConversion
-        {
-            AccountId = account,
-            FromAmount = trade.IsBuy ? inQuote : inBase,
-            ToAmount = trade.IsBuy ? inBase : inQuote,
-            Date = trade.Date,
-            FeeTransactionId = fee?.Id,
-            ImportRef = reference,
-        });
-        return null;
-    }
-
     private async Task<IReadOnlyList<PositionMismatchResponse>?> ComparePositionsAsync(CancellationToken cancellationToken)
     {
         var reported = statement.OpenPositions
@@ -737,15 +324,15 @@ public sealed class StatementImport(
         }
 
         var asOf = reported.Max(p => p.Date);
-        var entries = await db.InvestmentTransactions
+        var history = await db.InvestmentTransactions
             .Where(t => t.AccountId == account && t.Date <= asOf && Portfolio.PositionTypes.Contains(t.Type))
             .ToListAsync(cancellationToken);
-        var replayed = Portfolio.Positions(entries).ToDictionary(p => p.Key, p => p.Value.Quantity);
+        var replayed = Portfolio.Positions(history).ToDictionary(p => p.Key, p => p.Value.Quantity);
 
         var quantities = new Dictionary<(string Symbol, Currency Currency), (decimal Broker, decimal Replayed)>();
         foreach (var position in reported)
         {
-            var security = Find(position.Instrument);
+            var security = securities.Find(position.Instrument);
             var key = (security?.Symbol ?? position.Instrument.Symbol.ToUpperInvariant(), position.Instrument.Currency);
             var held = security is null ? 0m : replayed.GetValueOrDefault(security.Id);
             quantities[key] = (quantities.GetValueOrDefault(key).Broker + position.Quantity!.Value, held);
@@ -753,7 +340,7 @@ public sealed class StatementImport(
 
         foreach (var (securityId, quantity) in replayed.Where(p => p.Value != 0m))
         {
-            var security = securities.First(s => s.Id == securityId);
+            var security = securities.Get(securityId);
             quantities.TryAdd((security.Symbol, security.Currency), (0m, quantity));
         }
 
@@ -763,20 +350,19 @@ public sealed class StatementImport(
             .Select(q => new PositionMismatchResponse(q.Key.Symbol, q.Value.Broker, decimal.Round(q.Value.Replayed, 8)))
             .ToList();
     }
+}
 
-    private sealed class Counts
-    {
-        public int Trades { get; set; }
-        public int CashEntries { get; set; }
-        public int Conversions { get; set; }
-        public int Transfers { get; set; }
-        public int Duplicates { get; set; }
-        public int Skipped { get; set; }
-        public int SecuritiesCreated { get; set; }
-        public int PricesUpdated { get; set; }
-        public int Splits { get; set; }
-        public int CorporateActions { get; set; }
-        public List<string> CostSharesMissing { get; } = [];
-        public Dictionary<string, int> SkippedActions { get; } = [];
-    }
+internal sealed class StatementCounts
+{
+    public int Trades { get; set; }
+    public int CashEntries { get; set; }
+    public int Conversions { get; set; }
+    public int Transfers { get; set; }
+    public int Duplicates { get; set; }
+    public int Skipped { get; set; }
+    public int PricesUpdated { get; set; }
+    public int Splits { get; set; }
+    public int CorporateActions { get; set; }
+    public List<string> CostSharesMissing { get; } = [];
+    public Dictionary<string, int> SkippedActions { get; } = [];
 }

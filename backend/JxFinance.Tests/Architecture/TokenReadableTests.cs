@@ -8,6 +8,8 @@ namespace JxFinance.Tests.Architecture;
 [Collection<FastEndpointsPipeline>]
 public sealed class TokenReadableTests
 {
+    private const string ListName = "ReadableRoutes in Architecture/TokenReadableTests.cs";
+
     private static readonly string[] ReadableRoutes =
     [
         "GET /api/accounts",
@@ -100,7 +102,12 @@ public sealed class TokenReadableTests
             .Order(StringComparer.Ordinal)
             .ToList();
 
-        Assert.Equal(ReadableRoutes.Order(StringComparer.Ordinal), readable);
+        ApprovedList.AssertMatches(
+            ReadableRoutes.Order(StringComparer.Ordinal),
+            readable,
+            ListName,
+            route => $"{route} accepts a personal API token but is not in {ListName}. Add it if a token may read it, or add Metadata(TokenReadable.No) to its endpoint's Configure.",
+            route => $"{route} is in {ListName} but does not accept a personal API token or no longer exists. Remove it from the list if that is intended, or give its group tokenReadable: true and drop Metadata(TokenReadable.No).");
     }
 
     [Fact]
@@ -112,7 +119,10 @@ public sealed class TokenReadableTests
             .Select(PathOf)
             .ToList();
 
-        Assert.Empty(leaked);
+        Assert.True(
+            leaked.Count == 0,
+            string.Join(Environment.NewLine, leaked.Select(path =>
+                $"{path} accepts a personal API token but sits under a prefix in NeverReadablePrefixes in Architecture/TokenReadableTests.cs. Add Metadata(TokenReadable.No) to its endpoint's Configure.")));
         Assert.Contains(FastEndpointsPipeline.Endpoints, endpoint => PathOf(endpoint) == ApiRoutes.InvestmentsPath + "/connections");
     }
 

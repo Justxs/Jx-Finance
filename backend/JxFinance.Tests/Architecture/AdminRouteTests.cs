@@ -9,6 +9,8 @@ namespace JxFinance.Tests.Architecture;
 [Collection<FastEndpointsPipeline>]
 public sealed class AdminRouteTests
 {
+    private const string ListName = "AdminRoutes in Architecture/AdminRouteTests.cs";
+
     private static readonly string[] AdminRoutes =
     [
         "DELETE /api/backups/{id}",
@@ -59,7 +61,12 @@ public sealed class AdminRouteTests
             .Order(StringComparer.Ordinal)
             .ToList();
 
-        Assert.Equal(AdminRoutes.Order(StringComparer.Ordinal), admin);
+        ApprovedList.AssertMatches(
+            AdminRoutes.Order(StringComparer.Ordinal),
+            admin,
+            ListName,
+            route => $"{route} requires the administrator role but is not in {ListName}. Add it if only an administrator may call it, or remove Roles(AppRoles.Admin) from its endpoint.",
+            route => $"{route} is in {ListName} but does not require the administrator role or no longer exists. Add Roles(AppRoles.Admin) to its endpoint's Configure, or remove it from the list if members may call it.");
     }
 
     [Fact]
@@ -70,7 +77,9 @@ public sealed class AdminRouteTests
             .ToList();
 
         Assert.NotEmpty(backups);
-        Assert.All(backups, endpoint => Assert.True(RequiresAdmin(endpoint), PathOf(endpoint)));
+        Assert.All(backups, endpoint => Assert.True(
+            RequiresAdmin(endpoint),
+            $"{PathOf(endpoint)} is a backup route without the administrator role. A backup holds every member's data; add Roles(AppRoles.Admin) to its endpoint's Configure."));
     }
 
     private static bool RequiresAdmin(RouteEndpoint endpoint) =>
