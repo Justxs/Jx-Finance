@@ -65,7 +65,7 @@ flowchart TD
 
 Several tags mean **all of them**, not any of them. Tags stack as narrowing facets — "holiday" *and* "reimbursable" is the question a household actually asks — and an OR is already available by filtering one tag at a time, while an AND cannot be expressed any other way. Adding a tag to the filter therefore always makes the list shorter, which is what every other filter on the page does.
 
-The filter travels as one comma-separated query parameter rather than a repeated key, because the generated client serialises an array parameter by joining it with commas anyway; declaring a string is the honest description of what goes over the wire, and it keeps the CSV and PDF export links, which are plain browser navigations built by `buildExportUrl`, identical to the list request. A malformed or over-long value is refused by `TransactionFilterValidator`, which both the list request and the summary request share, rather than being silently ignored.
+The filter travels as one comma-separated query parameter rather than a repeated key, because the generated client serialises an array parameter by joining it with commas anyway; declaring a string is the honest description of what goes over the wire, and it keeps the CSV and PDF export links, which are plain browser navigations built by `useExportUrl`, identical to the list request. A malformed or over-long value is refused by `TransactionFilterValidator`, which both the list request and the summary request share, rather than being silently ignored.
 
 Each chosen tag becomes one `EXISTS` subquery inside the one `Filtered` method the list, the summary, the CSV and the PDF all use, so the four cannot disagree. The subquery is an index seek on `(TagId, TransactionId)`, which the configuration declares beside the join table's own `(TransactionId, TagId)` primary key; at most ten of them can be asked for, so the plan stays bounded. Reading the tags back is not a query per row either: the paged list loads the join rows of the page in one query keyed by transaction id, and the PDF export does the same for its capped result.
 
@@ -104,7 +104,7 @@ Before the join rows go, the ids of the transactions they pointed at are recorde
 
 Since 2026-09-30 the delete also retires the tag's [budgets](budgets.md#budgets-on-a-tag), recording them beside the trash entry, which then reads `Holiday, 7 transactions, 1 budget`, and a restore brings each back while its period is still free. Creating, renaming or deleting a tag refreshes the budgets list along with the tags, the ledger and its totals.
 
-A household member who did not create a shared tag may rename it, like a shared category, but only the owner may delete it or change its sharing.
+A household member who did not create a shared tag may rename it, like a shared category, but only the owner may delete it or change its sharing; since 2026-10-04 that member's row has no Delete and the edit form no Visibility field.
 
 ## The screen
 

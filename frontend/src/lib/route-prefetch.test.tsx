@@ -53,10 +53,12 @@ function bodyFor(url: URL): unknown {
 
 let requested: string[] = [];
 let failing: ReadonlySet<string> = new Set();
+let slowSettings = false;
+let settingsDelivered = false;
 
-function networkTurn() {
+function networkTurn(delay = 0) {
   return new Promise<void>((resolve) => {
-    setTimeout(resolve, 0);
+    setTimeout(resolve, delay);
   });
 }
 
@@ -64,7 +66,9 @@ async function respond(input: RequestInfo | URL): Promise<Response> {
   const url = new URL(input instanceof Request ? input.url : input, "http://localhost");
   url.searchParams.sort();
   requested.push(`${url.pathname}${url.search}`);
-  await networkTurn();
+  const isSettings = url.pathname === "/api/settings";
+  await networkTurn(slowSettings && isSettings ? 1000 : 0);
+  settingsDelivered ||= isSettings;
   if (failing.has(url.pathname)) {
     return Response.json({ title: "Broken" }, { status: 500 });
   }
@@ -78,6 +82,8 @@ function requestsTo(pathname: string) {
 beforeEach(() => {
   requested = [];
   failing = new Set();
+  slowSettings = false;
+  settingsDelivered = false;
   setAuthenticated(true);
   vi.stubGlobal("fetch", vi.fn(respond));
 });
@@ -114,6 +120,16 @@ test("changing the page asks only for the new page", async () => {
   ]);
   expect(requestsTo("/api/accounts")).toHaveLength(0);
   expect(requestsTo("/api/categories")).toHaveLength(0);
+});
+
+test("no page renders before the settings that decide its sections have arrived", async () => {
+  slowSettings = true;
+  const { queryClient } = mountApp("/transactions");
+
+  await screen.findByRole("heading", { level: 1, name: "Transactions" }, appWait);
+
+  expect(settingsDelivered).toBe(true);
+  await settled(queryClient);
 });
 
 test("a failing endpoint leaves the route loaded and the failure to the page", async () => {
