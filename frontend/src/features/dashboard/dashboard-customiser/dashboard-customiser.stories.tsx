@@ -42,10 +42,12 @@ function listedTitles(canvas: Canvas) {
 
 export const Default: Story = {
   play: async ({ canvas }) => {
-    await expect(canvas.getAllByRole("checkbox")).toHaveLength(11);
+    await expect(canvas.getAllByRole("checkbox")).toHaveLength(12);
     await expect(canvas.queryAllByRole("checkbox", { checked: false })).toHaveLength(0);
     await expect(
-      canvas.getByRole("button", { name: /^(move up|pakelti): (total balance|bendras likutis)$/i }),
+      canvas.getByRole("button", {
+        name: /^(move up|pakelti): (getting started|pirmieji žingsniai)$/i,
+      }),
     ).toBeDisabled();
   },
 };
@@ -74,7 +76,7 @@ export const FeatureSwitchedOff: Story = {
     features: { ...settings.features, budgets: false, netWorth: false, reports: false },
   },
   play: async ({ canvas }) => {
-    await expect(canvas.getAllByRole("checkbox")).toHaveLength(8);
+    await expect(canvas.getAllByRole("checkbox")).toHaveLength(9);
     await expect(canvas.getByText(/switched off|išjungė/i)).toBeInTheDocument();
   },
 };
@@ -89,8 +91,8 @@ export const KeyboardReorder: Story = {
     await userEvent.keyboard(" ");
 
     await expect(down).toHaveFocus();
-    await expect(listedTitles(canvas)[2]).toMatch(/total balance|bendras likutis/i);
-    await expect(canvas.getByRole("status")).toHaveTextContent(/3/);
+    await expect(listedTitles(canvas)[3]).toMatch(/total balance|bendras likutis/i);
+    await expect(canvas.getByRole("status")).toHaveTextContent(/4/);
   },
 };
 
@@ -128,7 +130,9 @@ export const ResetRestoresTheDraft: Story = {
     await userEvent.click(
       canvas.getByRole("button", { name: /reset to default|atkurti numatytąjį/i }),
     );
-    await waitFor(() => expect(listedTitles(canvas)[0]).toMatch(/total balance|bendras likutis/i));
+    await waitFor(() =>
+      expect(listedTitles(canvas)[0]).toMatch(/getting started|pirmieji žingsniai/i),
+    );
   },
 };
 

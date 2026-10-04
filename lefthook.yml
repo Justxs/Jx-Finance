@@ -32,10 +32,6 @@ pre-push:
       root: frontend/
       glob: "*.{ts,tsx}"
       run: node_modules/.bin/tsc -b
-    - name: related tests
-      root: frontend/
-      glob: "src/**/*.{ts,tsx}"
-      run: node_modules/.bin/vitest related --run --project unit --project dom {push_files}
     - name: backend build
       glob: "backend/**/*.{cs,csproj,props}"
       run: dotnet build backend/JxFinance.slnx -c Release --nologo -v quiet

@@ -1,6 +1,7 @@
 using JxFinance.Domain.Investments;
 using JxFinance.Domain.NetWorth;
 using JxFinance.Domain.Transactions;
+using JxFinance.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 
@@ -8,6 +9,16 @@ namespace JxFinance.Tests.Unit;
 
 public sealed class ModelMappingTests
 {
+    [Fact]
+    public void Model_has_no_changes_without_a_migration()
+    {
+        using var db = new DesignTimeDbContextFactory().CreateDbContext([]);
+
+        Assert.False(
+            db.Database.HasPendingModelChanges(),
+            "The EF model differs from the last migration. Run 'just migrate-add <Name>' and commit the migration.");
+    }
+
     [Fact]
     public async Task Every_decimal_column_states_its_precision()
     {

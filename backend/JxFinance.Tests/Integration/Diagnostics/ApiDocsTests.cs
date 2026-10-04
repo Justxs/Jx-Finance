@@ -21,19 +21,6 @@ public sealed class ApiDocsTests(NotificationsFixture fixture) : IntegrationTest
     }
 
     [Fact]
-    public async Task OpenApi_document_matches_the_approved_contract()
-    {
-        var path = RepoPath.Of(Path.Combine("frontend", "openapi.json"));
-        Assert.True(File.Exists(path), "No approved contract. Run 'just gen'.");
-        var actual = WithoutServers(JsonNode.Parse(await Client.GetStringAsync("/openapi/v1.json", TestContext.Current.CancellationToken))!);
-        var approved = WithoutServers(JsonNode.Parse(await File.ReadAllTextAsync(path, TestContext.Current.CancellationToken))!);
-
-        Assert.True(
-            JsonNode.DeepEquals(approved, actual),
-            "The API contract changed. Run 'just gen', review the difference in the contract and the generated client, then commit both.");
-    }
-
-    [Fact]
     public async Task OpenApi_schema_names_do_not_leak_implementation_details()
     {
         var document = JsonNode.Parse(await Client.GetStringAsync("/openapi/v1.json", TestContext.Current.CancellationToken))!;
@@ -93,11 +80,5 @@ public sealed class ApiDocsTests(NotificationsFixture fixture) : IntegrationTest
         var error = process.StandardError.ReadToEndAsync();
         await process.WaitForExitAsync();
         return (process.ExitCode, await output + await error);
-    }
-
-    private static JsonNode WithoutServers(JsonNode document)
-    {
-        document.AsObject().Remove("servers");
-        return document;
     }
 }

@@ -16,7 +16,7 @@ public sealed class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<App
             .BuildServiceProvider();
 
         var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
-        optionsBuilder.UseNpgsql(connectionString).UseApplicationServiceProvider(identity);
+        optionsBuilder.UseNpgsql(connectionString).UseApplicationServiceProvider(identity).EnableServiceProviderCaching(false);
 
         return new AppDbContext(optionsBuilder.Options, new FixedUser(DevDataSeeder.DevUserId), new Time.UtcClock());
     }

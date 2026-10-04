@@ -1,0 +1,45 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(just --list)",
+      "PowerShell(just doctor)",
+      "PowerShell(just check-fast)",
+      "PowerShell(just check-changed)",
+      "PowerShell(just check-docs)",
+      "PowerShell(just test-unit)",
+      "PowerShell(just test-class *)",
+      "PowerShell(just test-method *)",
+      "PowerShell(just test-fe *)",
+      "PowerShell(just gen)",
+      "PowerShell(just fix)",
+      "PowerShell(nub run test*)",
+      "PowerShell(nub run lint)",
+      "PowerShell(nub run format:check)",
+      "PowerShell(nub exec tsc -b)",
+      "PowerShell(nub exec oxlint *)",
+      "PowerShell(nub exec oxfmt *)",
+      "PowerShell(dotnet build *)",
+      "PowerShell(dotnet test *)",
+      "Bash(node scripts/check-docs.mjs)",
+      "Bash(node scripts/format-backend.mjs*)",
+      "Bash(git status*)",
+      "Bash(git diff*)",
+      "Bash(git log*)",
+      "Bash(git show*)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash|PowerShell",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PROJECT_DIR}/.claude/hooks/guard.mjs\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}

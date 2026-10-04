@@ -68,7 +68,9 @@ docker-compose.override.yml
 *.bak
 *.tmp
 .local/
-.claude
+.claude/*
+!.claude/settings.json
+!.claude/hooks/
 .agents
 .codex
 .impeccable

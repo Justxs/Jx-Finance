@@ -5,24 +5,12 @@ using JxFinance.Domain.Common;
 using JxFinance.Infrastructure.Data;
 using JxFinance.Tests.Support;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace JxFinance.Tests.Integration.Data;
 
 [Collection<DataCollection>]
 public sealed class DatabaseToolingTests(DataFixture fixture) : IntegrationTestBase(fixture)
 {
-    [Fact]
-    public void Model_has_no_changes_without_a_migration()
-    {
-        using var scope = Services.CreateScope();
-        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-
-        Assert.False(
-            db.Database.HasPendingModelChanges(),
-            "The EF model differs from the last migration. Run 'just migrate-add <Name>'.");
-    }
-
     [Fact]
     public async Task Demo_data_fills_an_empty_user_and_refuses_a_second_run()
     {
