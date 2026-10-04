@@ -946,6 +946,179 @@
     "usePasskeyInstead": "Naudoti prieigos raktą",
     "passkeyFailed": "Ši naršyklė negalėjo panaudoti prieigos rakto. Bandykite dar kartą arba prisijunkite slaptažodžiu."
   },
+  "landing": {
+    "title": "Asmeniniai finansai – tik jūsų žinioje",
+    "lead": "Jx Finance padeda namų ūkiui tvarkyti pinigus: sekti pajamas ir išlaidas, planuoti biudžetą, taupyti tikslams ir matyti, ką turite ir kiek esate skolingi. Programa veikia jūsų kompiuteryje ar serveryje, todėl finansiniai duomenys lieka pas jus.",
+    "source": "Žiūrėti „GitHub“ svetainėje",
+    "sourceLabel": "Jx Finance „GitHub“ svetainėje",
+    "nav": {
+      "label": "Pagrindinis meniu",
+      "features": "Funkcionalumas"
+    },
+    "seeFeatures": "Peržiūrėti visą funkcionalumą",
+    "sample": {
+      "label": "Pavyzdinės operacijos",
+      "title": "Namų ūkio sąskaita: {{month}}",
+      "tag": "Pavyzdiniai duomenys",
+      "salary": "Atlyginimas",
+      "rent": "Nuoma",
+      "wages": "Darbo užmokestis",
+      "groceries": "Maisto produktai",
+      "utilities": "Komunalinės paslaugos",
+      "housing": "Būstas",
+      "transport": "Transportas",
+      "mainAccount": "Pagrindinė sąskaita",
+      "jointAccount": "Bendra sąskaita",
+      "net": "Balansas"
+    },
+    "showcase": {
+      "budgets": "Biudžetai, rugsėjis",
+      "groceries": "Maisto produktai",
+      "eatingOut": "Kavinės ir restoranai",
+      "transport": "Transportas",
+      "of": "iš {{limit}}",
+      "netWorth": "Grynasis turtas",
+      "thisMonth": "šį mėnesį",
+      "netWorthChart": "Grynasis turtas per pastaruosius šešis mėnesius: auga",
+      "statement": "Banko išrašas, rugsėjis",
+      "toSavings": "Į taupomąją sąskaitą",
+      "filledByRule": "Užpildyta pagal taisyklę",
+      "transfer": "Panašu į pervedimą",
+      "sharedGroceries": "Bendri pirkiniai",
+      "youPaid": "Sumokėjote",
+      "yourShare": "Jūsų dalis",
+      "partnerOwes": "Partneris jums skolingas",
+      "billDue": "Šiandien mokėti už internetą",
+      "billName": "Namų internetas · kas mėnesį",
+      "over": "viršyta {{amount}}"
+    },
+    "statement": {
+      "title": "Trumpai",
+      "bank": {
+        "label": "Prisijungimai prie banko",
+        "text": "Jx Finance niekada nesijungia prie jūsų banko ir neatlieka jokių mokėjimų. Atsisiunčiate išrašą iš banko, įkeliate jį ir peržiūrite kiekvieną eilutę, prieš ją išsaugodami."
+      },
+      "privacy": {
+        "label": "Kitos įmonės, kurios mato jūsų duomenis",
+        "text": "Duomenys lieka jūsų kompiuteryje ar serveryje. Jokių reklamų ir sekimo, o niekur nieko nesiunčiama, kol to neįjungia administratorius."
+      },
+      "currencies": {
+        "label": "Valiutos",
+        "text": "Mokėkite eurais, doleriais ar bet kuria kita iš 30 valiutų. Sumos rodomos viena pagrindine valiuta."
+      },
+      "languages": {
+        "label": "Kalbos",
+        "text": "Lietuvių ir anglų."
+      },
+      "price": {
+        "label": "Kaina",
+        "text": "Naudotis galima nemokamai, o programos kodą gali peržiūrėti kiekvienas."
+      }
+    },
+    "close": {
+      "membersTitle": "Jau gavote kvietimą?",
+      "membersText": "Prisijunkite el. pašto adresu, kuriuo buvote pakviesti.",
+      "ownTitle": "Norite naudotis patys?",
+      "ownText": "Jx Finance – nemokama programa. Įsidiekite ją savo kompiuteryje ar serveryje pagal „GitHub“ svetainėje pateiktą instrukciją.",
+      "ownAction": "Skaityti diegimo instrukciją",
+      "supportText": "Jx Finance kuria ir prižiūri vienas kūrėjas."
+    },
+    "footer": "Privati asmeninių finansų apskaita · Nemokama ir atvirojo kodo",
+    "featuresPage": {
+      "title": "Ką galite daryti su Jx Finance",
+      "lead": "Prie kiekvienos dalies rasite pavyzdį, kaip ja gali naudotis namų ūkis. Kai kurias dalis administratorius gali įjungti arba išjungti.",
+      "example": "Pavyzdžiui:",
+      "groups": {
+        "everyday": "Kasdieniai finansai",
+        "plan": "Planavimas",
+        "household": "Gyvenantiems kartu",
+        "wealth": "Jūsų turtas",
+        "review": "Ataskaitos ir priminimai"
+      },
+      "items": {
+        "import": {
+          "title": "Banko išrašai",
+          "text": "Atsisiųskite išrašą iš savo banko svetainės ir įkelkite jį į programą. Pirmiausia peržiūrite kiekvieną eilutę ir pasirenkate, ką išsaugoti, todėl niekas neįrašoma be jūsų žinios.",
+          "example": "Spalio pradžioje įkeliate rugsėjo išrašą. Anksčiau jau įkeltos eilutės pažymimos, todėl jų neįrašysite dukart."
+        },
+        "rules": {
+          "title": "Kategorijos ir taisyklės",
+          "text": "Suskirstykite išlaidas į kategorijas, pavyzdžiui, „Maisto produktai“ ar „Transportas“. Taisyklė įsimena jūsų pasirinkimą, todėl kitą išrašą programa suskirstys pati.",
+          "example": "Sukuriate vieną taisyklę: mokėjimai „Maximai“ priskiriami kategorijai „Maisto produktai“. Nuo tada visos „Maximos“ eilutės atkeliauja jau suskirstytos."
+        },
+        "receipts": {
+          "title": "Kvitai",
+          "text": "Prie mokėjimo pridėkite kvito nuotrauką arba PDF failą. Jx Finance gali nuskaityti iš jo sumą, datą ir prekes.",
+          "example": "Grįžę iš statybinių prekių parduotuvės nufotografuojate kvitą – suma ir prekės užpildomos automatiškai, jums belieka patikrinti."
+        },
+        "recurring": {
+          "title": "Periodiniai mokėjimai",
+          "text": "Kas mėnesį ar kasmet mokamos sąskaitos primena apie save, kai ateina mokėjimo terminas. Patvirtinus priminimą, mokėjimas įrašomas.",
+          "example": "Interneto sąskaitą reikia apmokėti 15 d. Tą dieną gaunate priminimą ir vienu paspaudimu įrašote mokėjimą."
+        },
+        "budgets": {
+          "title": "Biudžetai",
+          "text": "Nustatykite, kiek per mėnesį ar metus norite išleisti kiekvienai kategorijai, ir matykite, kiek dar liko.",
+          "example": "Maisto produktams skiriate 400 € per mėnesį. 20 d. matote, kad liko 85 €."
+        },
+        "goals": {
+          "title": "Taupymo tikslai",
+          "text": "Taupykite tikslui ir matykite, kiek dar trūksta.",
+          "example": "Vasaros atostogoms iki birželio reikia sutaupyti 1 500 €. Kai atidedate pinigų, juosta pildosi."
+        },
+        "forecast": {
+          "title": "Likučio prognozė",
+          "text": "Matykite, kaip per artimiausias savaites keisis sąskaitos likutis, įskaitant laukiančius mokėjimus.",
+          "example": "Prieš užsisakydami kelionę patikrinate, ar iki atlyginimo sąskaitoje užteks pinigų."
+        },
+        "sharing": {
+          "title": "Bendra namų ūkio apskaita",
+          "text": "Dalinkitės sąskaitomis ir kategorijomis su kartu gyvenančiais žmonėmis. Asmenines sąskaitas matote tik jūs.",
+          "example": "Jūs ir partneris matote bendrą sąskaitą ir jos mokėjimus, bet ne vienas kito asmenines išlaidas."
+        },
+        "settleUp": {
+          "title": "Bendrų išlaidų dalijimas",
+          "text": "Padalykite bendras išlaidas ir matykite, kas kam kiek skolingas.",
+          "example": "Už abiejų pirkinius sumokėjote 120 €. Jx Finance parodo, kad partneris jums skolingas 60 €."
+        },
+        "currencies": {
+          "title": "Kelios valiutos",
+          "text": "Mokėkite bet kuria iš 30 valiutų. Sumos rodomos viena pagrindine valiuta pagal mokėjimo dienos kursą.",
+          "example": "Viešbutis, už kurį mokėjote JAV doleriais, rodomas eurais pagal tos dienos kursą."
+        },
+        "netWorth": {
+          "title": "Grynasis turtas",
+          "text": "Sudėkite sąskaitų likučius, turtą ir skolas ir stebėkite, kaip keičiasi bendra suma.",
+          "example": "Įrašote butą ir būsto paskolą ir kas mėnesį matote, kaip keičiasi jūsų grynasis turtas."
+        },
+        "investments": {
+          "title": "Investicijos",
+          "text": "Sekite akcijas ir fondus: įveskite juos patys arba importuokite iš „Interactive Brokers“.",
+          "example": "Matote, kiek sumokėjote už indeksų fondą ir kiek jis vertas šiandien."
+        },
+        "reports": {
+          "title": "Ataskaitos ir mėnesio uždarymas",
+          "text": "Matykite, kam išleidote pinigus per bet kurį laikotarpį, ir uždarykite kiekvieną mėnesį pagal trumpą kontrolinį sąrašą.",
+          "example": "Spalio pabaigoje matote, kad kavinėse ir restoranuose išleidote trečdaliu daugiau nei rugsėjį."
+        },
+        "export": {
+          "title": "Eksportas",
+          "text": "Atsisiųskite savo mokėjimus skaičiuoklės failu arba PDF formatu.",
+          "example": "Praėjusių metų išlaidas PDF formatu nusiunčiate buhalteriui."
+        },
+        "notifications": {
+          "title": "Priminimai",
+          "text": "Gaukite priminimus programoje, el. paštu arba „Discord“ ar „Telegram“ pokalbyje.",
+          "example": "Mokėjimo dieną į jūsų šeimos „Telegram“ grupę atkeliauja žinutė."
+        },
+        "security": {
+          "title": "Saugus prisijungimas",
+          "text": "Prisijunkite prieigos raktu, pavyzdžiui, piršto atspaudu, arba antru žingsniu įveskite kodą iš telefono.",
+          "example": "Nešiojamajame kompiuteryje prisijungiate piršto atspaudu, nerašydami slaptažodžio."
+        }
+      }
+    }
+  },
   "users": {
     "title": "Naudotojai",
     "add": "Sukurti naudotoją",
@@ -3594,13 +3767,13 @@
     }
   },
   "support": {
-    "link": "Paremk mane per Ko-fi",
+    "link": "Paremkite mane per Ko-fi",
     "title": "Paremti Jx Finance",
     "description": "Jx Finance kuria ir prižiūri vienas kūrėjas. Šoninėje juostoje yra nedidelė nuoroda į Ko-fi puslapį, kuriame galite paremti šį darbą. Kol neatidarote nuorodos, iš Ko-fi nieko neįkeliama.",
     "show": "Rodyti Ko-fi nuorodą šoninėje juostoje",
     "installationOff": "Administratorius šioje sistemoje išjungė Ko-fi nuorodą.",
     "hideHint": "Šią nuorodą galite paslėpti Nustatymuose, skiltyje „Išvaizda“.",
-    "tooltipCollapsed": "Paremk mane per Ko-fi. Šią nuorodą galite paslėpti Nustatymuose, skiltyje „Išvaizda“."
+    "tooltipCollapsed": "Paremkite mane per Ko-fi. Šią nuorodą galite paslėpti Nustatymuose, skiltyje „Išvaizda“."
   },
   "currencyGroups": {
     "account": "Sąskaitos valiutos",

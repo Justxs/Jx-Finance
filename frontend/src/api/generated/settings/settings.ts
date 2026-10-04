@@ -1358,7 +1358,7 @@ export const getPublicSettingsUrl = () => {
 };
 
 /**
- * Anonymous. Returns only the installation name, the default language, whether this installation can send email, which is what decides if the sign-in page offers "Forgot password", and whether the installation's Discord channel and Telegram group are set up, which decide the profile's notification columns, and whether passkeys can work here, which is false when the configured site address is plain HTTP or an IP address. No host name, no address and no credential is part of the answer.
+ * Anonymous. Returns only the installation name, the default language, whether this installation can send email, which is what decides if the sign-in page offers "Forgot password", and whether the installation's Discord channel and Telegram group are set up, which decide the profile's notification columns, and whether passkeys can work here, which is false when the configured site address is plain HTTP or an IP address, and whether the administrator shows the Ko-fi support link, which the signed-out landing page follows. No host name, no address and no credential is part of the answer.
  * @summary Read the settings the sign-in page needs
  */
 export const publicSettings = async (

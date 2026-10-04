@@ -53,6 +53,7 @@ export const publicSettings: PublicSettingsResponse = {
   discordEnabled: true,
   telegramEnabled: false,
   passkeysAvailable: true,
+  supportLinkEnabled: settings.supportLinkEnabled,
 };
 
 export interface SettingsPatch extends Partial<Omit<SettingsResponse, "features">> {

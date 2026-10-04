@@ -890,6 +890,179 @@
     "usePasskeyInstead": "Use a passkey instead",
     "passkeyFailed": "This browser could not use a passkey. Try again or sign in with your password."
   },
+  "landing": {
+    "title": "Your personal finances, kept private",
+    "lead": "Jx Finance helps your household keep track of money: income, spending, budgets, savings goals, and what you own and owe. It runs on your own computer or server, so your money data stays with you.",
+    "source": "See it on GitHub",
+    "sourceLabel": "Jx Finance on GitHub",
+    "nav": {
+      "label": "Main",
+      "features": "Features"
+    },
+    "seeFeatures": "See all features",
+    "sample": {
+      "label": "Sample ledger",
+      "title": "Household account, {{month}}",
+      "tag": "Sample data",
+      "salary": "Salary",
+      "rent": "Rent",
+      "wages": "Wages",
+      "groceries": "Groceries",
+      "utilities": "Utilities",
+      "housing": "Housing",
+      "transport": "Transport",
+      "mainAccount": "Main account",
+      "jointAccount": "Joint account",
+      "net": "Net"
+    },
+    "showcase": {
+      "budgets": "Budgets, September",
+      "groceries": "Groceries",
+      "eatingOut": "Eating out",
+      "transport": "Transport",
+      "of": "of {{limit}}",
+      "netWorth": "Net worth",
+      "thisMonth": "this month",
+      "netWorthChart": "Net worth over the last six months, rising",
+      "statement": "Bank statement, September",
+      "toSavings": "To savings",
+      "filledByRule": "Filled by a rule",
+      "transfer": "Looks like a transfer",
+      "sharedGroceries": "Groceries for two",
+      "youPaid": "You paid",
+      "yourShare": "Your share",
+      "partnerOwes": "Your partner owes you",
+      "billDue": "Internet bill due today",
+      "billName": "Home internet · monthly",
+      "over": "{{amount}} over"
+    },
+    "statement": {
+      "title": "In short",
+      "bank": {
+        "label": "Logins to your bank",
+        "text": "Jx Finance never logs in to your bank and never moves money. You download a statement from your bank, upload it, and check each line before it is saved."
+      },
+      "privacy": {
+        "label": "Outside companies that see your data",
+        "text": "Your data stays on your own computer or server. There are no ads and no tracking, and nothing is sent anywhere else unless an administrator switches it on."
+      },
+      "currencies": {
+        "label": "Currencies",
+        "text": "Pay in euros, dollars or any of 30 currencies. Totals are shown in one main currency."
+      },
+      "languages": {
+        "label": "Languages",
+        "text": "English and Lithuanian."
+      },
+      "price": {
+        "label": "Price",
+        "text": "Free to use, and the code is open for anyone to read."
+      }
+    },
+    "close": {
+      "membersTitle": "Already invited?",
+      "membersText": "Sign in with the email address you were invited with.",
+      "ownTitle": "Want your own?",
+      "ownText": "Jx Finance is free. You can set it up on your own computer or server by following the guide on GitHub.",
+      "ownAction": "Read the setup guide",
+      "supportText": "Jx Finance is built and kept up by one developer."
+    },
+    "footer": "Private personal finances · Free and open source",
+    "featuresPage": {
+      "title": "What Jx Finance can do",
+      "lead": "Each part comes with an example of how a household might use it. An administrator can switch parts on or off.",
+      "example": "For example:",
+      "groups": {
+        "everyday": "Everyday money",
+        "plan": "Planning",
+        "household": "Living together",
+        "wealth": "What you own",
+        "review": "Reports and reminders"
+      },
+      "items": {
+        "import": {
+          "title": "Bank statements",
+          "text": "Download the statement from your bank's website and upload it. You see every line first and choose what to keep, so nothing is saved by surprise.",
+          "example": "In early October you upload September's statement. Lines you uploaded before are marked as already imported."
+        },
+        "rules": {
+          "title": "Categories and rules",
+          "text": "Sort spending into categories like Groceries or Transport. A rule remembers your choice, so the next statement sorts itself.",
+          "example": "You make one rule: payments to Maxima go to Groceries. From then on every Maxima line arrives already sorted."
+        },
+        "receipts": {
+          "title": "Receipts",
+          "text": "Attach a photo or PDF of a receipt to a payment. Jx Finance can read the amount, the date and the items from it.",
+          "example": "After a trip to the hardware store you add a photo of the receipt, and the amount and items are filled in for you to check."
+        },
+        "recurring": {
+          "title": "Recurring bills",
+          "text": "Bills that come back every month or year remind you when they are due. Confirming one records the payment.",
+          "example": "Your internet bill is due on the 15th. That day a reminder appears, and one click records the payment."
+        },
+        "budgets": {
+          "title": "Budgets",
+          "text": "Set how much you want to spend on a category each month or year, and see what is left.",
+          "example": "Groceries get €400 a month. On the 20th you can see that €85 is left."
+        },
+        "goals": {
+          "title": "Savings goals",
+          "text": "Save towards something and watch how close you are.",
+          "example": "A summer holiday needs €1,500 by June. The bar fills up as you put money aside."
+        },
+        "forecast": {
+          "title": "Looking ahead",
+          "text": "See how an account's balance will move over the coming weeks, with upcoming bills included.",
+          "example": "Before booking a trip you check that the account will not run out of money before payday."
+        },
+        "sharing": {
+          "title": "Shared household books",
+          "text": "Share accounts and categories with the people you live with. Your personal accounts stay private.",
+          "example": "You and your partner both see the joint account and its payments, but not each other's personal spending."
+        },
+        "settleUp": {
+          "title": "Splitting costs",
+          "text": "Split a shared expense and see who owes whom.",
+          "example": "You paid €120 for groceries for both of you. Jx Finance shows that your partner owes you €60."
+        },
+        "currencies": {
+          "title": "Several currencies",
+          "text": "Pay in any of 30 currencies. Totals are shown in one main currency, using the exchange rate of the day you paid.",
+          "example": "A hotel paid in US dollars shows up in euros at that day's rate."
+        },
+        "netWorth": {
+          "title": "Net worth",
+          "text": "Add up your accounts, the things you own and your debts, and follow the total over time.",
+          "example": "You add your flat and the mortgage and see how your net worth changes month by month."
+        },
+        "investments": {
+          "title": "Investments",
+          "text": "Keep track of shares and funds. Enter them yourself or import them from Interactive Brokers.",
+          "example": "You see what your index fund cost you and what it is worth today."
+        },
+        "reports": {
+          "title": "Reports and month close",
+          "text": "See where the money went in any period, and close each month with a short checklist.",
+          "example": "At the end of October you see that eating out grew by a third compared with September."
+        },
+        "export": {
+          "title": "Export",
+          "text": "Download your payments as a spreadsheet file or a PDF.",
+          "example": "You send last year's spending to your accountant as a PDF."
+        },
+        "notifications": {
+          "title": "Reminders",
+          "text": "Get reminders in the app, by email, or in a Discord or Telegram chat.",
+          "example": "On the day a bill is due, a message appears in your family's Telegram group."
+        },
+        "security": {
+          "title": "Safe sign-in",
+          "text": "Sign in with a passkey, such as your fingerprint, or add a code from your phone as a second step.",
+          "example": "On your laptop you sign in with your fingerprint instead of typing a password."
+        }
+      }
+    }
+  },
   "users": {
     "title": "Users",
     "add": "Create user",

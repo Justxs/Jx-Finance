@@ -10,7 +10,7 @@ import { savePreferences, usePreferences } from "@/stores/preferences";
 
 export const SUPPORT_URL = "https://ko-fi.com/justxs";
 
-function KofiCup({ className }: Readonly<{ className?: string }>) {
+export function KofiCup({ className }: Readonly<{ className?: string }>) {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true" className={cn("shrink-0", className)}>
       <path

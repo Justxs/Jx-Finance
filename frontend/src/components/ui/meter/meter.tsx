@@ -29,6 +29,7 @@ export function Meter({ value, max, tone = "primary", label, mark, className }: 
       className={cn("relative h-1.5 bg-border", className)}
     >
       <div
+        data-slot="meter-fill"
         className={cn(
           "h-full origin-left scale-x-(--meter-fill) transition-transform duration-slow ease-out-expo",
           tones[tone],

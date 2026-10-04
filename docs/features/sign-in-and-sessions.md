@@ -4,6 +4,8 @@ Back to the [feature walkthrough](README.md). See also [decisions](../decisions/
 
 Backend `Auth` (`AuthService`, `SessionService`, `AccountEmailService`, `PasskeyService`), routes `login`, `logout`, `me`, `refresh`, `sessions`, `sessions/{id}`, `sessions/revoke-others`, `forgot-password`, `reset-password`, `verify-email`, `send-verification-email`, and the passkey routes of [Passkeys](passkeys.md). Login and each passkey sign-in endpoint are throttled to 10 calls per five minutes per client.
 
+A signed-out visit to `/` shows the [landing page](landing-page.md), whose "Sign in" opens `/login`. A signed-out visit to any other page behind sign-in goes straight to `/login`.
+
 ## Sign-in
 
 ```mermaid

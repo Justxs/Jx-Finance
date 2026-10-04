@@ -123,6 +123,7 @@ export {
   discordOffHandler,
   emailEnabledHandler,
   passkeysOffHandler,
+  supportLinkOffHandler,
   telegramEnabledHandler,
 } from "./settings";
 

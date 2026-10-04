@@ -23,7 +23,7 @@ import { usePublicSettings } from "@/hooks/use-settings";
 import { useVisibleNav } from "@/hooks/use-visible-nav";
 import { warmAppShell } from "@/lib/app-shell";
 import { checkGuidedSetupPending, checkIsAuthenticated, checkSetupNeeded } from "@/lib/auth-gate";
-import { PUBLIC_PATHS } from "@/lib/navigation";
+import { LANDING_PATHS, PUBLIC_PATHS } from "@/lib/navigation";
 import type { RouterContext } from "@/lib/route-prefetch";
 import { saveChosenLocale } from "@/stores/app-store";
 
@@ -53,12 +53,15 @@ export const Route = createRootRouteWithContext<RouterContext>()({
       if (guidedSetup) {
         throw redirect({ to: "/setup", search: { step: "basics" } });
       }
-      if (location.pathname === "/login") {
+      if (location.pathname === "/login" || LANDING_PATHS.has(location.pathname)) {
         throw redirect({ to: "/" });
       }
       return;
     }
 
+    if (location.pathname === "/") {
+      throw redirect({ to: "/welcome", mask: { to: "/" }, replace: true });
+    }
     if (!PUBLIC_PATHS.has(location.pathname)) {
       throw redirect({ to: "/login" });
     }
@@ -94,6 +97,15 @@ function RootLayout() {
 
   if (crossingSignIn || (authenticatedArea && me.isPending)) {
     return <Splash />;
+  }
+
+  if (LANDING_PATHS.has(location.pathname)) {
+    return (
+      <>
+        {instanceName ? <title>{instanceName}</title> : null}
+        <Outlet />
+      </>
+    );
   }
 
   if (!authenticatedArea) {

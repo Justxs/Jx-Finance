@@ -337,6 +337,9 @@ public sealed class SettingsEndpointTests(InvestmentsFixture fixture) : Integrat
 
             Assert.False(saved.SupportLinkEnabled);
             Assert.False((await ReadAsync()).SupportLinkEnabled);
+            using var anonymous = CreateClient();
+            var shown = await anonymous.GetFromJsonAsync<JsonElement>("/api/settings/public", TestContext.Current.CancellationToken);
+            Assert.False(shown.GetProperty("supportLinkEnabled").GetBoolean());
         }
         finally
         {

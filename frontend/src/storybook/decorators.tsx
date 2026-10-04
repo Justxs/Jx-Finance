@@ -57,6 +57,8 @@ const STORY_ROUTES = [
   { path: "/profile", validateSearch: profileSearchSchema },
   { path: "/recurring-bills", validateSearch: recurringBillsSearchSchema },
   { path: "/settings", validateSearch: settingsSearchSchema },
+  { path: "/welcome" },
+  { path: "/features" },
   { path: "/login" },
   { path: "/setup" },
   { path: "/forgot-password" },

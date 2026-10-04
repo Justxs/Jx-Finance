@@ -6,4 +6,5 @@ public sealed record PublicSettingsResponse(
     bool EmailEnabled,
     bool DiscordEnabled,
     bool TelegramEnabled,
-    bool PasskeysAvailable);
+    bool PasskeysAvailable,
+    bool SupportLinkEnabled);

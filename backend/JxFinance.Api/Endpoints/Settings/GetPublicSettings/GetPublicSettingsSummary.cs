@@ -11,7 +11,8 @@ public sealed class GetPublicSettingsSummary : Summary<GetPublicSettingsEndpoint
             + "installation can send email, which is what decides if the sign-in page offers \"Forgot password\", and "
             + "whether the installation's Discord channel and Telegram group are set up, which decide the profile's "
             + "notification columns, and whether passkeys can work here, which is false when the configured site address is plain "
-            + "HTTP or an IP address. No host name, no address and no credential is part of the answer.";
+            + "HTTP or an IP address, and whether the administrator shows the Ko-fi support link, which the signed-out "
+            + "landing page follows. No host name, no address and no credential is part of the answer.";
         Responses[200] = "The public settings.";
     }
 }

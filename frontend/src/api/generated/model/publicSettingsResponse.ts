@@ -14,4 +14,5 @@ export interface PublicSettingsResponse {
   discordEnabled: boolean;
   telegramEnabled: boolean;
   passkeysAvailable: boolean;
+  supportLinkEnabled: boolean;
 }

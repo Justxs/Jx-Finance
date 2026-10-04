@@ -40,7 +40,8 @@ public sealed class SettingsService(
             store.Current.Smtp.IsConfigured,
             store.Current.DiscordEnabled,
             store.Current.TelegramEnabled,
-            PasskeySite.IsAvailable(options.Value.SiteUrl));
+            PasskeySite.IsAvailable(options.Value.SiteUrl),
+            store.Current.SupportLinkEnabled);
 
     public SetupReadinessResponse GetReadiness() => new(receipts.IsAvailable);
 

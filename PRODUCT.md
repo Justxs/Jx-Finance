@@ -8,7 +8,9 @@ web
 
 ## Users
 
-The owner and the few people in their household. They are trusted, invited by an administrator, and already know what the product is for. Nobody arrives cold.
+The owner and the few people in their household. They are trusted, invited by an administrator, and already know what the product is for. Inside the app nobody arrives cold.
+
+The one exception is the signed-out landing page at `/`. It also speaks to a stranger who found the open-source project and wants to know what it is, whether to run their own installation, and where the source lives. That page and the features page use plain words a non-bookkeeper understands, and persuade with facts, a sample ledger labelled as sample data and everyday examples, never with invented users or claims.
 
 The main situation is a sit-down session at a desktop computer, weekly or monthly: import the bank statement (Swedbank CSV, camt.053 XML, OFX, MT940 or any bank's CSV through a saved column mapping), review and categorize rows, record anything the bank did not see, then check balances, budgets, upcoming bills and reports. The phone is secondary and is used for the occasional quick entry or lookup.
 
@@ -35,7 +37,7 @@ A private ledger that the household runs itself. Data stays in its own PostgreSQ
 
 ## Capabilities and Constraints
 
-- Routes: dashboard, transactions, accounts (with transfers), categories, tags, rules, budgets, goals, recurring bills, net worth, investments, reports, month close, profile, households, users (admin), settings (admin), login, first-run setup. Month close is the Month tab of Reports (`/reports/month`). The sidebar groups them into hubs with tabs under the page title (Categories, Plan, Wealth, Reports) and one Settings page for everyone, whose Personal, Shared and Installation (admin) sections cover profile, households, users and settings. Bank statement import is not a route: it opens as a dialog from Settings › Personal › Import data (provider list, then the statement review with bulk selection, bulk category and category recall). Import and investments can be switched off per installation.
+- Routes: dashboard, transactions, accounts (with transfers), categories, tags, rules, budgets, goals, recurring bills, net worth, investments, reports, month close, profile, households, users (admin), settings (admin), login, first-run setup, and the landing page that signed-out visitors see at `/`, with its public features page at `/features`. Month close is the Month tab of Reports (`/reports/month`). The sidebar groups them into hubs with tabs under the page title (Categories, Plan, Wealth, Reports) and one Settings page for everyone, whose Personal, Shared and Installation (admin) sections cover profile, households, users and settings. Bank statement import is not a route: it opens as a dialog from Settings › Personal › Import data (provider list, then the statement review with bulk selection, bulk category and category recall). Import and investments can be switched off per installation.
 - Light and dark themes are both first-class.
 - The browser makes no third-party network requests. The Content-Security-Policy allows scripts, fonts and connections from the same origin only; fonts must be bundled. The only outbound traffic comes from the server, and only when an administrator enables it: the daily ECB rate sync, a saved Interactive Brokers Flex connection, notifications posted to the one Discord webhook an administrator saves and switches on, and the daily closing prices of held securities from EODHD and, for crypto priced in EUR, Kraken, once an administrator switches market prices on; the providers learn only the symbols of the securities held. Receipt reading makes no outbound call: photos and PDFs are read inside the API container.
 - Places on transactions stay in the installation: names come from the household's own earlier places, never from a geocoding service, and the map of spending by place is drawn from a tile file the administrator puts on the server, served from the same origin. The `Permissions-Policy` allows geolocation for the site itself only (`geolocation=(self)`), and the position is asked for only when a member presses Use my location; the browser or the operating system may then ask its own network location service (Google, Apple or Microsoft) to find it, a request outside the page and its Content-Security-Policy.
@@ -54,7 +56,7 @@ A private ledger that the household runs itself. Data stays in its own PostgreSQ
 
 - Deterministic fixtures and MSW handlers in `frontend/src/storybook` render every route with realistic Lithuanian household data, including empty, loading and error variants.
 - Product documentation in `docs/`.
-- No marketing material, testimonials or external users exist; none may be invented.
+- No marketing material, testimonials or external users exist; none may be invented. The landing page links the GitHub repository (https://github.com/Justxs/Jx-Finance, MIT licence) and, when the installation shows it, the Ko-fi page.
 
 ## Product Principles
 

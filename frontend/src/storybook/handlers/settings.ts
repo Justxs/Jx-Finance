@@ -53,6 +53,11 @@ export const passkeysOffHandler = getPublicSettingsMockHandler({
   passkeysAvailable: false,
 });
 
+export const supportLinkOffHandler = getPublicSettingsMockHandler({
+  ...publicSettings,
+  supportLinkEnabled: false,
+});
+
 export const settingsHandlers = [
   getPublicSettingsMockHandler(publicSettings),
   getSettingsMockHandler(settings),

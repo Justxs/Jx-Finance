@@ -33,6 +33,9 @@
   --chart-2: #267051;
   --chart-3: #b8403a;
   --radius: 0.375rem;
+  --hero: #1f3546;
+  --hero-foreground: #fbfbfc;
+  --hero-muted: #b9c7d2;
 }
 
 .dark,
@@ -64,6 +67,9 @@
   --chart-2: #7cbd9c;
   --chart-3: #e0766d;
   --radius: 0.375rem;
+  --hero: #172636;
+  --hero-foreground: #eef1f4;
+  --hero-muted: #a9b8c4;
 }
 
 [data-palette="plum"] {
@@ -248,6 +254,9 @@
 
 @theme inline {
   --color-background: var(--background);
+  --color-hero: var(--hero);
+  --color-hero-foreground: var(--hero-foreground);
+  --color-hero-muted: var(--hero-muted);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
@@ -300,8 +309,17 @@
   --text-stat-lg: 2.75rem;
   --text-stat-lg--line-height: 1.1;
   --text-stat-lg--letter-spacing: -0.015em;
+  --text-display: 4.75rem;
+  --text-display--line-height: 1;
+  --text-display--letter-spacing: -0.025em;
+  --text-display-sm: 3.5rem;
+  --text-display-sm--line-height: 1.04;
+  --text-display-sm--letter-spacing: -0.02em;
 
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --animate-settle-in: settle-in 420ms var(--ease-out-expo) calc(var(--row, 0) * 70ms + 120ms) both;
+  --animate-rule-draw: rule-draw 520ms var(--ease-out-expo) 640ms both;
+  --animate-card-in: card-in 640ms var(--ease-out-expo) var(--card-delay, 0ms) both;
 }
 
 @utility transition-width {
@@ -591,6 +609,51 @@
   from {
     opacity: 0;
     translate: 0 -0.375rem;
+  }
+}
+
+@keyframes settle-in {
+  from {
+    opacity: 0;
+    translate: 0 0.375rem;
+  }
+}
+
+@keyframes rule-draw {
+  from {
+    scale: 0 1;
+  }
+}
+
+@keyframes card-in {
+  from {
+    opacity: 0;
+    translate: 0 1.5rem;
+  }
+}
+
+@keyframes meter-grow {
+  from {
+    scale: 0 1;
+  }
+}
+
+@utility on-hero {
+  --background: var(--hero);
+  --foreground: var(--hero-foreground);
+  --muted-foreground: var(--hero-muted);
+  --primary: var(--hero-foreground);
+  --primary-foreground: var(--hero);
+  --muted: color-mix(in oklab, var(--hero-foreground) 12%, transparent);
+  --border: color-mix(in oklab, var(--hero-foreground) 32%, transparent);
+  --input: color-mix(in oklab, var(--hero-foreground) 40%, transparent);
+  --ring: var(--hero-foreground);
+  color: var(--hero-foreground);
+}
+
+@utility meters-grow {
+  & [data-slot="meter-fill"] {
+    animation: meter-grow 900ms var(--ease-out-expo) var(--card-delay, 0ms) both;
   }
 }
 
