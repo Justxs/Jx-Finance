@@ -28,7 +28,7 @@ Test-Tool ".NET SDK" "dotnet" "10.0.400" "https://dotnet.microsoft.com/download"
 Test-Tool "Node.js" "node" "24.0" "https://nodejs.org"
 Test-Tool "nub" "nub" "0.9.6" "npm install --global @nubjs/nub@0.9.6"
 Test-Tool "Docker" "docker" "24.0" "https://www.docker.com/products/docker-desktop"
-Test-Tool "just" "just" "1.0" "winget install Casey.Just"
+Test-Tool "just" "just" "1.27" "winget install Casey.Just"
 
 docker info *> $null
 if ($LASTEXITCODE -ne 0) { Write-Problem "[down]    Docker is installed but not running. Start Docker Desktop." }

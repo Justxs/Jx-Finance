@@ -5,7 +5,7 @@ import { fail, root, run } from "./run.mjs";
 
 const checkDrift = process.argv.includes("--check");
 const exportConnection = "Host=localhost;Database=export;Username=export;Password=export";
-const generated = ["frontend/openapi.json", "frontend/src/api/generated", "frontend/src/api/schemas"];
+const generated = ["frontend/openapi.json", "frontend/src/api/generated", "frontend/src/api/schemas", "docs/api.md"];
 
 function snapshot() {
   const hashes = new Map();
@@ -27,11 +27,12 @@ function snapshot() {
 const before = checkDrift ? snapshot() : new Map();
 
 try {
-  run("dotnet", ["run", "--project", "backend/JxFinance.Api", "-c", "Release", "--export-openapi-docs", "true"], {
-    env: { ConnectionStrings__Default: exportConnection },
+  run("dotnet", ["run", "--project", "backend/JxFinance.Api", "-c", "Release", "--no-launch-profile", "--export-openapi-docs", "true"], {
+    env: { ConnectionStrings__Default: exportConnection, ASPNETCORE_ENVIRONMENT: "Development", ASPNETCORE_URLS: "http://127.0.0.1:0" },
   });
   fs.copyFileSync(path.join(root, "backend/JxFinance.Api/wwwroot/openapi/v1.json"), path.join(root, "frontend/openapi.json"));
   run("nub", ["run", "--cwd", "frontend", "orval"]);
+  run("node", ["scripts/api-docs.mjs"]);
 } catch (error) {
   fail(error.message);
 }
@@ -42,6 +43,6 @@ if (checkDrift) {
   if (changed.length > 0) {
     for (const file of changed) console.error(`  ${file}`);
     if (process.env.CI) run("git", ["--no-pager", "diff", "--", ...generated]);
-    fail("API contract or generated client is out of date. Run 'just gen' and commit the result.");
+    fail("API contract, generated client or route list is out of date. Run 'just gen' and commit the result.");
   }
 }

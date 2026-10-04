@@ -1,6 +1,8 @@
 import { execFileSync } from "node:child_process";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
+import { apiDoc, withRoutes } from "./api-docs.mjs";
+import { codeReferenceProblems } from "./code-references.mjs";
 import { designProblems } from "./design-drift.mjs";
 import { fail, root, run } from "./run.mjs";
 
@@ -125,6 +127,12 @@ for (const file of files) {
 }
 
 if (files.includes("DESIGN.md")) problems.push(...designProblems(indexed.get("DESIGN.md") ?? readDisk("DESIGN.md")));
+if (files.includes(apiDoc)) {
+  const text = indexed.get(apiDoc) ?? readDisk(apiDoc);
+  if (withRoutes(text) !== text) problems.push(`${apiDoc}: the route list differs from frontend/openapi.json; run just gen`);
+}
+const referencing = files.filter((file) => file === "AGENTS.md" || (file.startsWith("docs/") && !/^docs\/(decisions|plans)\//.test(file)));
+problems.push(...codeReferenceProblems(referencing.map((file) => ({ file, text: indexed.get(file) ?? readDisk(file) }))));
 
 if (problems.length) fail(problems.join("\n"));
 console.log(`Checked ${files.length} Markdown files.`);

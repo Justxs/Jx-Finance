@@ -1,6 +1,6 @@
 # Jx Finance documentation
 
-These pages describe the current code, not a wishlist. Where a page and the code disagree, the code is right and the page needs fixing. Diagrams are Mermaid: they render in Gitea and GitHub, and in the VS Code Markdown preview with a Mermaid extension. The top-level UML views in [System diagrams](architecture/diagrams.md) are PlantUML, committed with their rendered SVGs. Installation and commands are in the [repository README](../README.md); rules for coding agents are in [AGENTS.md](../AGENTS.md).
+These pages describe what the current code does, not a wishlist, and not how it is laid out: they name a class or file only where a reader needs an entry point, so a rename or a split needs no doc change. Where a page and the code disagree, the code is right and the page needs fixing. Diagrams are Mermaid: they render in Gitea and GitHub, and in the VS Code Markdown preview with a Mermaid extension. The top-level UML views in [System diagrams](architecture/diagrams.md) are PlantUML, committed with their rendered SVGs. Installation and commands are in the [repository README](../README.md); rules for coding agents are in [AGENTS.md](../AGENTS.md).
 
 ## Where to look
 
@@ -23,10 +23,10 @@ These pages describe the current code, not a wishlist. Where a page and the code
 
 ## Layout
 
-- `features/`: one page per feature, each with diagrams, the backend folder, the frontend feature folder and the feature switch. `README.md` is the table of all of them.
+- `features/`: one page per feature, with its behaviour and diagrams. `README.md` is the table of all of them and the one place that names each feature's backend folder, frontend folder and switch.
 - `architecture/`: prose on how things work, one page per area.
 - `decisions/`: one page per topic, each with the standing decision and a dated log of choices and rejected alternatives.
 - `plans/`: designs for features not built yet, deleted once the feature ships.
 - The top-level pages cover the whole product.
 
-File names are lowercase kebab-case without numbers, so that paths stay stable and need no quoting. `just check-docs` checks every link and heading anchor, and that the components, paths, CSS variables and frontmatter colors named in [DESIGN.md](../DESIGN.md) still match the code ([Developer tooling](architecture/developer-tooling.md)).
+File names are lowercase kebab-case without numbers, so that paths stay stable and need no quoting. `just check-docs` checks every link and heading anchor, that the code paths and type names these pages and AGENTS.md put in backticks still exist, that the route list in [API surface](api.md#routes) matches the contract, and that the components, paths, CSS variables and frontmatter colors named in [DESIGN.md](../DESIGN.md) still match the code ([Developer tooling](architecture/developer-tooling.md)).

@@ -9,7 +9,7 @@ export function run(command, args, options = {}) {
   const windows = process.platform === "win32";
   const quoted = args.map((arg) => (/\s/.test(arg) ? `"${arg}"` : arg));
   const result = spawnSync(windows ? [command, ...quoted].join(" ") : command, windows ? [] : args, {
-    cwd: root,
+    cwd: path.join(root, options.cwd ?? ""),
     env: { ...process.env, ...options.env },
     encoding: "utf8",
     shell: windows,

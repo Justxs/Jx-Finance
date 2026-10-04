@@ -31,6 +31,8 @@ export function ${component}({ title }: ${component}Props) {
 }
 `,
   [`${name}.stories.tsx`]: `import type { Meta, StoryObj } from "@storybook/react-vite";
+import { expect } from "storybook/test";
+import { emptyHandlers, errorHandlers, loadingHandlers } from "@/storybook/handlers";
 import { ${component} } from "./${name}";
 
 const meta = {
@@ -42,19 +44,30 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {};
+export const Default: Story = {
+  play: async ({ canvas }) => {
+    await expect(canvas.getByRole("heading", { name: "${component}" })).toBeVisible();
+  },
+};
+
+export const Empty: Story = { parameters: { msw: { handlers: emptyHandlers } } };
+
+export const Loading: Story = { parameters: { msw: { handlers: loadingHandlers } } };
+
+export const ServerError: Story = { parameters: { msw: { handlers: errorHandlers } } };
 `,
-  [`${name}.test.tsx`]: `import { render, screen } from "@testing-library/react";
+  [`${name}.test.tsx`]: `import { screen } from "@testing-library/react";
 import { expect, test } from "vitest";
-import { createQueryWrapper } from "@/test/query";
+import { mockApi, renderInApp } from "@/test/api";
 import { ${component} } from "./${name}";
 
-test("renders its title", () => {
-  const { Wrapper } = createQueryWrapper();
+const api = mockApi();
 
-  render(<${component} title="Example" />, { wrapper: Wrapper });
+test("shows its title without writing anything", async () => {
+  renderInApp(<${component} title="Example" />);
 
-  expect(screen.getByRole("heading", { name: "Example" })).toBeInTheDocument();
+  expect(await screen.findByRole("heading", { name: "Example" })).toBeInTheDocument();
+  expect(api.sent("POST", "/api/${feature}")).toHaveLength(0);
 });
 `,
 });

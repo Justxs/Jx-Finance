@@ -11,7 +11,7 @@ The pieces moved out of features on 2026-10-03: to `src/components`, `BudgetRows
 
 A component that only one non-page sibling uses moves into that sibling's folder: `split-lines-editor` sits in `transaction-form/`, `member-row` and `add-member-form` in `household-card/`, the column hooks and `table-features` in `transactions-table/`, `date-range-presets` in `report-filters/`. Pages never absorb their children, so a feature stays a flat list of page, section, table and form folders. Stories that show several components together live in `src/storybook/showcase`.
 
-The shadcn CLI still writes flat files such as `src/components/ui/tooltip.tsx`. After `shadcn add`, move the file into `ui/tooltip/` and add its story.
+The shadcn CLI still writes flat files straight into `src/components/ui`. After `shadcn add`, move the file into a folder of its own, as `ui/tooltip/` holds `tooltip.tsx`, and add its story.
 
 ## UI components
 `src/components/ui` holds shadcn/ui components generated with the `base-nova` style, which builds on Base UI (`@base-ui/react`) instead of Radix. Add or refresh one with `shadcn add <name> --overwrite`; the CLI shells out to npm, which cannot install into a nub project, so install any new dependency with `nub add` first. Generated files import `cn` from `@/lib/utils`. Local changes to generated files are deliberate: `Button` has a `pending` prop, `Dialog` close labels are translated, and `Table` has no scroll container because every table sits in its own labelled, focusable scroll region. `sonner.tsx` is hand-written because the shadcn version depends on `next-themes` and the app has its own theme store.
