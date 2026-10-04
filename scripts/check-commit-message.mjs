@@ -14,7 +14,7 @@ const types = [
   "style",
   "revert",
 ];
-const subject = (readFileSync(process.argv[2], "utf8").split(/\r?\n/)[0] ?? "").trim();
+const subject = (readFileSync(process.argv.slice(2).join(" "), "utf8").split(/\r?\n/)[0] ?? "").trim();
 const conventional = new RegExp(String.raw`^(${types.join("|")})(\([a-z0-9-]+\))?!?: \S.*$`);
 
 if (/^(Merge|Revert|fixup!|squash!)/.test(subject) || conventional.test(subject)) {
