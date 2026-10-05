@@ -159,7 +159,7 @@ export const WithAddAnother: Story = {
 export const PrefilledFromADuplicate: Story = {
   args: { prefill: duplicateDraft(splitTransaction) },
   play: async ({ canvas }) => {
-    const amounts = await canvas.findAllByLabelText("Amount");
+    const amounts = await canvas.findAllByLabelText(/^Amount(, line \d+)?$/u);
 
     await expect(amounts[0]).toHaveValue("128.40");
     await expect(amounts).toHaveLength(4);

@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { Rows } from "@/components/ui/rows/rows";
 import { Section, SectionTitle } from "@/components/ui/section/section";
@@ -21,13 +22,18 @@ export function ListSection({
   action,
   children,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
+
   return (
     <Section>
       <div className="mb-2 flex items-baseline justify-between gap-3">
         <SectionTitle>{title}</SectionTitle>
         <div className="flex items-center gap-3">
           {action}
-          <span className="text-sm text-muted-foreground tabular-nums">{count}</span>
+          <span className="text-sm text-muted-foreground tabular-nums">
+            <span aria-hidden="true">{count}</span>
+            <span className="sr-only">{t("common.itemCount", { count })}</span>
+          </span>
         </div>
       </div>
       {description ? (

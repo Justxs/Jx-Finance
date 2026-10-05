@@ -14,8 +14,8 @@ export function NetWorthCompositionChart() {
 
   const series: NetWorthSeries[] = [
     { key: "accounts", label: t("netWorth.accounts"), color: CHART_COLOR_PRIMARY, shape: "line" },
-    { key: "assets", label: t("netWorth.assets"), color: CHART_COLOR_POSITIVE, shape: "line" },
-    { key: "debts", label: t("netWorth.debts"), color: CHART_COLOR_NEGATIVE, shape: "line" },
+    { key: "assets", label: t("netWorth.assets"), color: CHART_COLOR_POSITIVE, shape: "dashed" },
+    { key: "debts", label: t("netWorth.debts"), color: CHART_COLOR_NEGATIVE, shape: "dotted" },
   ];
 
   return <NetWorthSeriesChart series={series} ariaLabel={t("netWorth.compositionLabel")} legend />;

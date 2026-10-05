@@ -3,6 +3,7 @@ import type { CategoryBreakdownItem, ReportTrendPoint } from "@/api/generated/mo
 import { ChangeBadge } from "@/components/change-badge/change-badge";
 import { SignedAmount } from "@/components/signed-amount/signed-amount";
 import { Button } from "@/components/ui/button/button";
+import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { TitledSection } from "@/components/ui/section/section";
 import {
   Table,
@@ -30,7 +31,7 @@ function Changes({ items }: Readonly<{ items: readonly CategoryBreakdownItem[] }
   const nameOf = useCategoryName();
 
   if (items.length === 0) {
-    return <p className="text-sm text-muted-foreground">{t("reports.yearReview.noChanges")}</p>;
+    return <EmptyText size="sm">{t("reports.yearReview.noChanges")}</EmptyText>;
   }
 
   return (
@@ -64,11 +65,7 @@ export function YearReview({ trend, expenseByCategory, compared, onCompare }: Re
 
   return (
     <TitledSection title={t("reports.yearReview.title")} bodyGap="md">
-      <Table
-        label={t("reports.yearReview.months")}
-        className="min-w-120"
-        aria-label={t("reports.yearReview.months")}
-      >
+      <Table label={t("reports.yearReview.months")} className="min-w-120">
         <TableHeader>
           <TableRow>
             <TableHead>{t("reports.yearReview.month")}</TableHead>

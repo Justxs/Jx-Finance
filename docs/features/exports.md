@@ -40,6 +40,14 @@ Tags are the one column whose names the streamed row does not carry, so the CSV 
 
 A [refund](transactions.md#refunds) is exported as it is stored: type `Expense` with a negative amount, so a spreadsheet sum of the Expense rows is net spending. The PDF's totals are net as well, its type cell reads "Refund" for such a row, and the amount keeps its minus sign.
 
+## File names
+
+Every download carries the product name, so a file sitting in a downloads folder says where it came from. The transaction CSV and PDF are named by the date range of the filter: `jx-finance-transactions-2026-09-01-to-2026-09-30.pdf`, `jx-finance-transactions-from-2026-09-01.csv` or `jx-finance-transactions-to-2026-09-30.csv` when only one end is set, and `jx-finance-transactions.csv` with no range (`ExportFileName`). The tax summary is `jx-finance-investment-tax-summary-<year>.csv`, and the member export and backups already were `jx-finance-export-<date>.zip` and `jx-finance-backup-<time>`.
+
+## The PDF's look
+
+The PDF opens with the brand: the small bird in Ledger Navy beside the installation name (or "Jx Finance") in serif, then the title "Transactions" in serif and the date range in muted text. The totals follow as three labelled figures: income in the income green, expense in ink, and the net on the right in green, red or ink by its sign, with a double rule under it as under a net total in the ledger. Every page ends with "Jx Finance · page 2 of 3". The colours are the light theme's tokens. The bird is `brand-mark.png`, embedded in the API and written by the frontend's brand build, because MigraDoc cannot draw SVG. The serif is the brand's Source Serif 4, Regular and Semibold, embedded in the API with its SIL Open Font License beside it (`Infrastructure/Pdf/Fonts`), so every server renders the same title and net; the sans is still the system font `PdfFontResolver` finds, DejaVu Sans in the Docker image.
+
 ## The yearly investment tax summary
 
 Since 2026-09-21 there is a second CSV, `GET /api/investments/tax-summary/export?year&accountIds`, described on [Investments](investments.md). It writes its rows the same way — a `StreamWriter` over the response body, no `Content-Length`, the same leading-quote guard for a text cell that begins with `= + - @`, a tab or a carriage return — through the shared `Common/CsvCell` helper that the transaction export now also uses. Only text cells are guarded; a date, a number, a currency code or a section name is written as it is, so a negative amount keeps its minus sign.

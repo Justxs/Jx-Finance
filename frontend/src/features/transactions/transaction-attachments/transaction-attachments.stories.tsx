@@ -135,9 +135,7 @@ export const Loading: Story = { parameters: { msw: { handlers: loadingHandlers }
 export const LoadFailed: Story = {
   parameters: { msw: { handlers: errorHandlers } },
   play: async ({ canvas }) => {
-    await expect(
-      await canvas.findByText("The files of this transaction could not be loaded."),
-    ).toBeVisible();
+    await expect(await canvas.findByText("Receipts and files could not be loaded.")).toBeVisible();
   },
 };
 

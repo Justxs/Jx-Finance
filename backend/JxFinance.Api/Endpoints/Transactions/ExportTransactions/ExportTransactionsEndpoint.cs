@@ -22,7 +22,7 @@ public sealed class ExportTransactionsEndpoint(
     {
         var names = await transactionService.ExportNamesAsync(ct);
 
-        await using var writer = HttpContext.StartCsv("transactions.csv");
+        await using var writer = HttpContext.StartCsv(ExportFileName.Transactions(req.DateFrom, req.DateTo, "csv"));
         await writer.WriteLineAsync(TransactionCsvWriter.Header);
         await foreach (var transaction in transactionService.StreamExportAsync(req, ct))
         {

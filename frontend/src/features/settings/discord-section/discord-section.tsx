@@ -102,6 +102,7 @@ function DiscordForm({ settings }: Readonly<{ settings: DiscordSettingsResponse 
         <ChannelActions
           error={testMutation.error ?? saveMutation.error}
           testLabel={t("settings.discord.test")}
+          testHint={t("settings.discord.testHint")}
           testPending={testMutation.isPending}
           canTest={settings.hasWebhook}
           onTest={() => {
@@ -130,7 +131,7 @@ export function DiscordSection() {
       <p className="max-w-prose text-sm text-muted-foreground">
         {t("settings.discord.description")}
       </p>
-      <QueryBoundary fallback={<ChannelFormSkeleton />}>
+      <QueryBoundary fallback={<ChannelFormSkeleton />} errorSubject={t("settings.discord.title")}>
         <DiscordSettings />
       </QueryBoundary>
     </>

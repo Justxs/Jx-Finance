@@ -205,12 +205,16 @@ export function SmtpForm({ settings }: Readonly<{ settings: SmtpSettingsResponse
             variant="outline"
             pending={testMutation.isPending}
             disabled={!settings.enabled}
+            focusableWhenDisabled={testMutation.isPending || !settings.enabled}
+            aria-describedby="smtp-test-hint"
             onClick={sendTest}
           >
             <Send />
             {t("settings.smtp.test")}
           </Button>
-          <p className="text-sm text-muted-foreground">{t("settings.smtp.testHint")}</p>
+          <p id="smtp-test-hint" className="text-sm text-muted-foreground">
+            {t("settings.smtp.testHint")}
+          </p>
           <form.SubmitButton pending={saveMutation.isPending} className="ml-auto">
             {t("actions.save")}
           </form.SubmitButton>

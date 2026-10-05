@@ -1,6 +1,7 @@
 using System.Net.Mime;
 using FastEndpoints;
 using JxFinance.Common;
+using JxFinance.Common.Email;
 using JxFinance.Common.Settings;
 using JxFinance.Endpoints.Transactions.GetTransactions;
 using JxFinance.Endpoints.Transactions.Interfaces;
@@ -35,7 +36,8 @@ public sealed class ExportTransactionsPdfEndpoint(
             names,
             req.DateFrom,
             req.DateTo,
-            settings.Current.ReportingCurrency).GeneratePdf();
-        await Send.BytesAsync(pdf, "transactions.pdf", MediaTypeNames.Application.Pdf, cancellation: ct);
+            settings.Current.ReportingCurrency,
+            EmailTexts.Product(settings.Current.InstanceName)).GeneratePdf();
+        await Send.BytesAsync(pdf, ExportFileName.Transactions(req.DateFrom, req.DateTo, "pdf"), MediaTypeNames.Application.Pdf, cancellation: ct);
     }
 }

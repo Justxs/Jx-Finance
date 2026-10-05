@@ -11,6 +11,11 @@ COPY backend/ backend/
 RUN dotnet publish backend/JxFinance.Api/JxFinance.Api.csproj -c Release -a $TARGETARCH --self-contained false --no-restore -o /app
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0.12@sha256:6a94333d37514e385650a3c81a55e5350b67253dbe136e9cf17e499c35606a8c
+LABEL org.opencontainers.image.title="Jx Finance API" \
+      org.opencontainers.image.description="A private household ledger you run yourself: the ASP.NET Core API." \
+      org.opencontainers.image.source="https://github.com/Justxs/Jx-Finance" \
+      org.opencontainers.image.url="https://github.com/Justxs/Jx-Finance" \
+      org.opencontainers.image.licenses="MIT"
 RUN apt-get update \
     && apt-get install -y --no-install-recommends curl fonts-dejavu-core ghostscript tesseract-ocr tesseract-ocr-eng tesseract-ocr-lit \
     && rm -rf /var/lib/apt/lists/*

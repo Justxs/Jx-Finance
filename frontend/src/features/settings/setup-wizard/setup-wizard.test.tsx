@@ -45,7 +45,7 @@ test("skipping finishes the setup without saving and opens the dashboard", async
 
   fireEvent.click(await screen.findByRole("button", { name: "Skip for now" }));
 
-  await waitFor(() => expect(router.state.location.pathname).toBe("/"));
+  await waitFor(() => expect(router.state.location.pathname).toBe("/dashboard"));
   expect(api.sent("POST", "/api/setup/finish")).toHaveLength(1);
   expect(api.sent("PUT", "/api/settings")).toHaveLength(0);
   expect(queryClient.getQueryData<SettingsResponse>(getSettingsQueryKey())?.setupPending).toBe(
@@ -58,7 +58,7 @@ test("the tour finishes the setup", async () => {
 
   fireEvent.click(await screen.findByRole("button", { name: "Go to the dashboard" }));
 
-  await waitFor(() => expect(router.state.location.pathname).toBe("/"));
+  await waitFor(() => expect(router.state.location.pathname).toBe("/dashboard"));
   expect(api.sent("POST", "/api/setup/finish")).toHaveLength(1);
 });
 

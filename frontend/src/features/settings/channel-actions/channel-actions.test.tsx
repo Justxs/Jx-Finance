@@ -11,6 +11,7 @@ test("the test button sends a test only when there is something to test", () => 
     <ChannelActions
       error={null}
       testLabel="Send a test"
+      testHint="Save first."
       testPending={false}
       canTest
       onTest={onTest}
@@ -26,6 +27,7 @@ test("the test button sends a test only when there is something to test", () => 
     <ChannelActions
       error={null}
       testLabel="Send a test"
+      testHint="Save first."
       testPending={false}
       canTest={false}
       onTest={onTest}
@@ -33,6 +35,9 @@ test("the test button sends a test only when there is something to test", () => 
       <button type="submit">Save</button>
     </ChannelActions>,
   );
-  expect(screen.getByRole("button", { name: /Send a test/u })).toBeDisabled();
+  expect(screen.getByRole("button", { name: /Send a test/u })).toHaveAttribute(
+    "aria-disabled",
+    "true",
+  );
   expect(screen.getByRole("button", { name: "Save" })).toBeInTheDocument();
 });

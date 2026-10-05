@@ -75,7 +75,7 @@ function CurrenciesFieldsGroup({ fields, savedReportingCurrency }: Readonly<Prop
                         {t("settings.currencies.selectNone")}
                       </Button>
                     </div>
-                    <ul className="mt-3 grid gap-x-8 gap-y-1 sm:grid-cols-2 lg:grid-cols-3">
+                    <ul className="mt-3 grid gap-x-8 gap-y-1 sm:grid-cols-2 2xl:grid-cols-3">
                       {orderCurrencies([reportingField.value]).map((currency) => {
                         const locked = currency === reportingField.value;
                         return (
@@ -95,7 +95,7 @@ function CurrenciesFieldsGroup({ fields, savedReportingCurrency }: Readonly<Prop
                               <span className="w-9 shrink-0 font-medium tabular-nums">
                                 {currency.toUpperCase()}
                               </span>
-                              <span className="min-w-0 truncate text-muted-foreground">
+                              <span className="min-w-0 wrap-break-word text-muted-foreground">
                                 {currencyName(currency)}
                               </span>
                             </label>

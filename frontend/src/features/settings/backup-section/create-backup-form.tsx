@@ -26,12 +26,12 @@ export function CreateBackupForm() {
 
   return (
     <form.AppForm>
-      <form.FormShell className="flex max-w-xl flex-wrap items-start gap-2">
+      <form.FormShell className="flex max-w-xl flex-wrap items-end gap-2">
         <form.Field name="note">
           {(field) => (
             <field.TextField
               id="backup-note"
-              aria-label={t("backup.note")}
+              label={t("backup.note")}
               placeholder={t("backup.notePlaceholder")}
               className="min-w-56 flex-1"
             />

@@ -60,11 +60,17 @@ export function ColumnFilter<T>({
           aria-label={triggerLabel}
           data-shortcut={shortcut}
           className={cn(
-            "rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground pointer-coarse:p-3",
+            "relative inline-flex items-center justify-center rounded-lg p-1.5 text-muted-foreground focus-ring transition-colors hover:bg-accent hover:text-accent-foreground pointer-coarse:min-h-11 pointer-coarse:min-w-11",
             active && "bg-primary/15 text-primary",
           )}
         >
-          <ListFilter className="size-3.5" />
+          <ListFilter aria-hidden="true" className="size-3.5" />
+          {active ? (
+            <span
+              aria-hidden="true"
+              className="absolute top-0.5 right-0.5 size-1.5 rounded-sm bg-primary"
+            />
+          ) : null}
         </PopoverTrigger>
       </Tooltip>
       <PopoverContent align="start" aria-label={label} className="w-64 font-normal tracking-normal">

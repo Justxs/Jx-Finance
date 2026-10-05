@@ -48,7 +48,10 @@ export function CheckboxList({
         <EmptyText size="sm">{emptyText}</EmptyText>
       ) : (
         items.map((item) => (
-          <label key={item.id} className="flex items-center gap-2.5 text-sm">
+          <label
+            key={item.id}
+            className="flex items-center gap-2.5 text-sm pointer-coarse:min-h-11"
+          >
             <Checkbox
               checked={chosen.has(item.id)}
               disabled={disabled}

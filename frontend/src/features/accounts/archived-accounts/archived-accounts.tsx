@@ -1,4 +1,5 @@
 import { Undo2 } from "lucide-react";
+import { useId } from "react";
 import { useTranslation } from "react-i18next";
 import { useArchivedAccountsSuspense, useRestoreAccount } from "@/api/generated";
 import type { ArchivedAccountResponse } from "@/api/generated/model";
@@ -7,7 +8,7 @@ import { RowTransition } from "@/components/row-transition/row-transition";
 import { SharedScopeTag } from "@/components/shared-scope-tag/shared-scope-tag";
 import { Button } from "@/components/ui/button/button";
 import { Rows } from "@/components/ui/rows/rows";
-import { Section } from "@/components/ui/section/section";
+import { Section, SectionTitle } from "@/components/ui/section/section";
 import { useDate, useMoney } from "@/hooks/use-formatters";
 import { AccountTypeIcon } from "@/lib/account-icons";
 import { notify, pendingId } from "@/lib/mutations";
@@ -82,6 +83,7 @@ function ArchivedAccountsList({ accounts, restoringId, onRestore }: Readonly<Lis
 
 export function ArchivedAccounts() {
   const { t } = useTranslation();
+  const titleId = useId();
   const archived = useArchivedAccountsSuspense();
   const restoreMutation = useRestoreAccount({ mutation: notify(t("accounts.restored")) });
   const restoringId = pendingId(restoreMutation);
@@ -92,8 +94,12 @@ export function ArchivedAccounts() {
   }
 
   return (
-    <Section>
-      <Disclosure summary={t("accounts.archivedList.summary", { count: accounts.length })}>
+    <Section aria-labelledby={titleId}>
+      <SectionTitle id={titleId}>{t("accounts.archivedList.label")}</SectionTitle>
+      <Disclosure
+        className="mt-2"
+        summary={t("accounts.archivedList.show", { count: accounts.length })}
+      >
         <ArchivedAccountsList
           accounts={accounts}
           restoringId={restoringId}

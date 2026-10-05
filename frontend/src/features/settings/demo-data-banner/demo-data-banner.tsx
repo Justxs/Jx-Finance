@@ -24,7 +24,7 @@ export function DemoDataBanner() {
   }
 
   return (
-    <div role="status" className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b pb-4">
+    <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b pb-4">
       <FlaskConical className="size-4 shrink-0 text-muted-foreground" aria-hidden />
       <div className="min-w-0 flex-1">
         <p className="text-sm font-medium">{t("settings.demoData.title")}</p>
@@ -33,7 +33,7 @@ export function DemoDataBanner() {
       </div>
       <Button
         type="button"
-        variant="outline"
+        variant="outline-destructive"
         size="sm"
         pending={removeMutation.isPending}
         onClick={() => setConfirming(true)}

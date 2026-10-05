@@ -170,7 +170,7 @@ export function CloseForm({ month, review }: Readonly<Props>) {
       ) : null}
 
       {closed ? (
-        <div className="mt-5 flex flex-wrap justify-end gap-2">
+        <div className="mt-5 flex flex-wrap justify-end gap-2 print:hidden">
           <Button
             type="button"
             variant="outline-destructive"

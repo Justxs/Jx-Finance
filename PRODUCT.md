@@ -49,7 +49,7 @@ A private ledger that the household runs itself. Data stays in its own PostgreSQ
 
 - Name: Jx Finance.
 - Income reads green and expense reads red everywhere money is signed.
-- The logo is the "Jx" mark: serif letters on a navy tile with the "x" standing on a double total rule, followed by "Finance" in the lockup. Assets live in `frontend/public` and `frontend/src/components/brand`; usage rules are in DESIGN.md.
+- The logo is the ledger bird, a bird carrying a receipt in its beak, followed by "Jx Finance" in the display serif in the lockup. Assets live in `frontend/public` and `frontend/src/components/brand`; usage rules are in DESIGN.md.
 - Brand typefaces are Source Serif 4 and Source Sans 3; brand colors are Ledger Navy and paper.
 
 ## Evidence on Hand

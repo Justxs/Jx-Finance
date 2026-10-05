@@ -24,7 +24,8 @@ export function TransactionsTotalsLine({
   const money = useMoney();
 
   return (
-    <p
+    <div
+      role="group"
       aria-label={t("transactions.totalsLabel")}
       aria-busy={stale}
       className={cn(
@@ -49,7 +50,7 @@ export function TransactionsTotalsLine({
         </span>{" "}
         {t("transactions.totalExpense")}
       </span>
-    </p>
+    </div>
   );
 }
 

@@ -59,7 +59,8 @@ export function SelectFieldControl({
     control = (
       <SegmentedControl
         {...shared}
-        aria-label={ariaLabel ?? (typeof label === "string" ? label : undefined)}
+        aria-label={ariaLabel}
+        aria-labelledby={ariaLabel || !label ? undefined : `${id}-label`}
       />
     );
   } else if (kind === "search") {

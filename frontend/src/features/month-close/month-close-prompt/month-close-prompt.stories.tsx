@@ -14,7 +14,7 @@ import { MonthClosePrompt } from "./month-close-prompt";
 const meta = {
   title: "Features/MonthClose/MonthClosePrompt",
   component: MonthClosePrompt,
-  parameters: { layout: "padded", route: "/" },
+  parameters: { layout: "padded", route: "/dashboard" },
   beforeEach: () => {
     savePreferences({ monthClosePromptHidden: undefined });
   },
@@ -29,12 +29,17 @@ export const WithOpenItems: Story = {
       await canvas.findByRole("heading", { name: "August 2026 has ended" }),
     ).toBeVisible();
     await expect(canvas.getByText(/things need attention before you close/)).toBeVisible();
-    await expect(canvas.getByText("Income kept")).toBeVisible();
+    await expect(canvas.getByText("August 2026 net")).toBeVisible();
+    await expect(canvas.getByText("Income kept in August 2026")).toBeVisible();
     await expect(canvas.getByRole("link", { name: "Categorize" })).toBeVisible();
     await expect(canvas.queryByText("Every transaction has a category")).toBeNull();
     await expect(canvas.getByRole("link", { name: "Review month" })).toHaveAttribute(
       "href",
       expect.stringContaining("/reports/month?month=2026-08"),
+    );
+    await expect(canvas.getByRole("link", { name: "Review month" })).toHaveClass("bg-primary");
+    await expect(canvas.getByRole("button", { name: "Close August 2026" })).not.toHaveClass(
+      "bg-primary",
     );
   },
 };
@@ -57,6 +62,10 @@ export const EverythingInOrder: Story = {
     ).toBeVisible();
     await expect(canvas.getByText(/Everything is in order/)).toBeVisible();
     await expect(canvas.queryByRole("list")).toBeNull();
+    await expect(canvas.getByRole("button", { name: "Close August 2026" })).toHaveClass(
+      "bg-primary",
+    );
+    await expect(canvas.getByRole("link", { name: "Review month" })).not.toHaveClass("bg-primary");
   },
 };
 

@@ -2,7 +2,6 @@ import { Link } from "@tanstack/react-router";
 import type { LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { Brand } from "@/components/brand/brand";
 import { Card } from "@/components/ui/card/card";
 import { cn } from "@/lib/utils";
 
@@ -16,9 +15,6 @@ interface AuthCardProps {
 export function AuthCard({ title, subtitle, footer, children }: Readonly<AuthCardProps>) {
   return (
     <div className="w-full max-w-sm">
-      <div className="mb-6 flex justify-center">
-        <Brand size="lg" stacked />
-      </div>
       <Card className="p-6 sm:p-8">
         <h1 className="text-lg font-semibold">{title}</h1>
         {subtitle ? <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p> : null}
@@ -48,7 +44,12 @@ interface AuthNoticeProps {
 export function AuthNotice({ icon: Icon, className, children }: Readonly<AuthNoticeProps>) {
   return (
     <p
-      className={cn("flex gap-3 rounded-md bg-background px-4 py-3 text-sm", className)}
+      ref={(node) => node?.focus()}
+      tabIndex={-1}
+      className={cn(
+        "flex gap-3 rounded-md bg-background px-4 py-3 text-sm outline-none",
+        className,
+      )}
       role="status"
     >
       <Icon className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden />

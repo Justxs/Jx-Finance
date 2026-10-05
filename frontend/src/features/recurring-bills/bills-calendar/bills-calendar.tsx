@@ -63,7 +63,7 @@ function MonthTable({ month, byDate, actions }: Readonly<GridProps>) {
   const fullDate = useDateFormat({ dateStyle: "full" });
 
   return (
-    <table className="hidden w-full table-fixed border-collapse text-sm md:table">
+    <table className="hidden w-full table-fixed border-collapse text-sm lg:table">
       <caption className="sr-only">{monthName(month)}</caption>
       <thead>
         <tr>
@@ -117,7 +117,7 @@ function Agenda({ byDate, actions }: Readonly<Omit<GridProps, "month">>) {
   const dayName = useDateFormat({ weekday: "long", month: "long", day: "numeric" });
 
   return (
-    <Rows className="md:hidden">
+    <Rows className="lg:hidden">
       {[...byDate.entries()].map(([iso, occurrences]) => (
         <li key={iso} className="space-y-1.5 py-2.5">
           <p

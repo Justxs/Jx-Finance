@@ -1,3 +1,4 @@
+import { useId } from "react";
 import { useTranslation } from "react-i18next";
 import type { CategorizationRuleResponse } from "@/api/generated/model";
 import { MoveButtons } from "@/components/move-buttons/move-buttons";
@@ -17,7 +18,7 @@ interface Props extends DeleteProps {
   accountNames: ReadonlyMap<string, string>;
   categoryNames: ReadonlyMap<string, string>;
   tagNames: ReadonlyMap<string, string>;
-  movePending: boolean;
+  focusMove?: MoveDirection;
   onMove: (direction: MoveDirection) => void;
   onEdit: () => void;
 }
@@ -28,17 +29,25 @@ export function RuleRow({
   accountNames,
   categoryNames,
   tagNames,
-  movePending,
+  focusMove,
   onMove,
   onEdit,
   ...deleteProps
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const names = ruleActionNames(rule, categoryNames, tagNames);
+  const moveId = useId();
+
+  function focusMoveButton() {
+    document.getElementById(`${moveId}-${focusMove}`)?.focus();
+  }
 
   return (
     <RowTransition>
-      <li className="flex flex-wrap items-start justify-between gap-2 py-2.5">
+      <li
+        ref={focusMove ? focusMoveButton : undefined}
+        className="flex flex-wrap items-start justify-between gap-2 py-2.5"
+      >
         <div className="flex min-w-0 flex-1 items-start gap-3">
           <span className="mt-0.5 w-6 shrink-0 text-right text-sm text-muted-foreground tabular-nums">
             {rule.position + 1}
@@ -72,7 +81,7 @@ export function RuleRow({
             label={rule.name}
             first={rule.position === 0}
             last={rule.position === total - 1}
-            disabled={movePending}
+            idPrefix={moveId}
             onMove={onMove}
           />
         </RowActions>

@@ -33,7 +33,7 @@ export function TransactionsLink({ name, filter, className }: Readonly<Props>) {
           ...filter,
           spreadOverlap: filter.dateFrom && filter.dateTo ? true : undefined,
         }}
-        className={cn("underline-offset-4 hover:underline", className)}
+        className={cn("rounded-sm underline-offset-4 focus-ring hover:underline", className)}
       >
         {name}
       </Link>

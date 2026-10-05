@@ -25,8 +25,16 @@ export function CategorySuggestion({ suggestion, categories, onApply }: Readonly
 
   return (
     <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
-      <Button type="button" variant="outline" size="sm" onClick={() => onApply(category.id)}>
-        {t("transactions.categorySuggestion.label", { category: category.name })}
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        className="h-auto min-h-8 max-w-full"
+        onClick={() => onApply(category.id)}
+      >
+        <span className="min-w-0 py-1 text-left wrap-break-word whitespace-normal">
+          {t("transactions.categorySuggestion.label", { category: category.name })}
+        </span>
       </Button>
       <span>{source}</span>
     </div>

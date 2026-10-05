@@ -9,7 +9,7 @@ import { LandingPage } from "./landing-page";
 const meta = {
   title: "Features/Landing/LandingPage",
   component: LandingPage,
-  parameters: { layout: "fullscreen", route: "/welcome" },
+  parameters: { layout: "fullscreen", route: "/" },
 } satisfies Meta<typeof LandingPage>;
 
 export default meta;
@@ -29,18 +29,15 @@ export const Default: Story = {
       "/login",
       "/login",
     ]);
-    await expect(canvas.getByRole("link", { name: "See it on GitHub" })).toHaveAttribute(
-      "href",
-      SOURCE_URL,
-    );
-    await expect(canvas.getByRole("link", { name: "Read the setup guide" })).toHaveAttribute(
-      "href",
-      SETUP_URL,
-    );
-    await expect(await canvas.findByRole("link", { name: "Support me on Ko-fi" })).toHaveAttribute(
-      "href",
-      "https://ko-fi.com/justxs",
-    );
+    await expect(
+      canvas.getByRole("link", { name: "See it on GitHub (opens in a new tab)" }),
+    ).toHaveAttribute("href", SOURCE_URL);
+    await expect(
+      canvas.getByRole("link", { name: "Read the setup guide (opens in a new tab)" }),
+    ).toHaveAttribute("href", SETUP_URL);
+    await expect(
+      await canvas.findByRole("link", { name: "Support me on Ko-fi (opens in a new tab)" }),
+    ).toHaveAttribute("href", "https://ko-fi.com/justxs");
   },
 };
 
@@ -57,7 +54,9 @@ export const SupportLinkSwitchedOff: Story = {
   parameters: withHandlers(supportLinkOffHandler),
   play: async ({ canvas }) => {
     await canvas.findByRole("heading", { name: "Want your own?" });
-    await expect(canvas.queryByRole("link", { name: "Support me on Ko-fi" })).toBeNull();
+    await expect(
+      canvas.queryByRole("link", { name: "Support me on Ko-fi (opens in a new tab)" }),
+    ).toBeNull();
   },
 };
 

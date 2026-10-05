@@ -58,14 +58,14 @@ export function PriceSymbolFinder({ securityId, disabled, onChoose }: Readonly<P
                   <li key={candidate.symbol}>
                     <button
                       type="button"
-                      className="flex w-full items-baseline gap-2 rounded-md px-1.5 py-1 text-left hover:bg-muted focus-visible:bg-muted focus-visible:outline-hidden"
+                      className="flex w-full items-baseline gap-2 rounded-md px-1.5 py-1 text-left focus-ring hover:bg-muted"
                       onClick={() => {
                         onChoose(candidate.symbol);
                         setOpen(false);
                       }}
                     >
                       <span className="font-mono text-sm font-medium">{candidate.symbol}</span>
-                      <span className="min-w-0 flex-1 truncate text-xs text-muted-foreground">
+                      <span className="min-w-0 flex-1 text-xs break-words text-muted-foreground">
                         {candidate.name}
                       </span>
                       <span className="text-xs text-muted-foreground tabular-nums">

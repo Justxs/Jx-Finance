@@ -29,7 +29,9 @@ export function ActiveFilters({ filters, tags }: Readonly<Props>) {
             className="inline-flex max-w-72 items-center gap-1 rounded-sm border bg-muted/40 py-0.5 pr-1.5 pl-2.5 leading-5 focus-ring transition-colors hover:bg-muted pointer-coarse:min-h-11"
           >
             <span className="shrink-0 text-muted-foreground">{summary.label}</span>
-            <span className="truncate font-medium">{summary.value}</span>
+            <span className="line-clamp-2 min-w-0 text-left font-medium wrap-break-word">
+              {summary.value}
+            </span>
             <X aria-hidden="true" className="size-3.5 shrink-0 text-muted-foreground" />
           </button>
         </li>

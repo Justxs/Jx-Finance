@@ -47,10 +47,12 @@ function HouseholdCardSkeleton() {
 export function HouseholdsPending() {
   return (
     <SettingsPending current="households">
-      <div className="mb-2 flex items-center justify-between gap-3">
-        <TextSkeleton size="title" width="w-32" />
-        <ButtonSkeleton size="sm" className="w-32" />
-      </div>
+      <Section aria-hidden="true">
+        <div className="mb-2 flex items-center justify-between gap-3">
+          <TextSkeleton size="title" width="w-32" />
+          <ButtonSkeleton size="sm" className="w-32" />
+        </div>
+      </Section>
       <HouseholdCardSkeleton />
     </SettingsPending>
   );

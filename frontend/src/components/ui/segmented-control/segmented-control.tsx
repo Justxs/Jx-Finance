@@ -88,13 +88,13 @@ export function SegmentedControl<T extends string>({
     >
       <span
         aria-hidden="true"
-        className="pointer-events-none absolute inset-y-px left-(--segment-left) w-(--segment-width) rounded-md bg-background opacity-0 ease-out-expo group-data-placed/segments:opacity-100 group-data-ready/segments:transition-[left,width] group-data-ready/segments:duration-slow dark:bg-input/60"
+        className="pointer-events-none absolute inset-y-px left-(--segment-left) w-(--segment-width) rounded-md border border-primary bg-accent opacity-0 ease-out-expo group-data-placed/segments:opacity-100 group-data-ready/segments:transition-[left,width] group-data-ready/segments:duration-slow"
       />
       {options.map((option) => (
         <Radio.Root
           key={option.value}
           value={option.value}
-          className="relative inline-flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-md px-3 text-sm whitespace-nowrap text-muted-foreground focus-ring-inset transition-colors duration-slow ease-out-expo hover:text-foreground data-checked:font-medium data-checked:text-foreground data-disabled:pointer-events-none data-disabled:opacity-50 pointer-coarse:h-10"
+          className="relative inline-flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-md px-3 text-sm whitespace-nowrap text-muted-foreground focus-ring-inset transition-colors duration-slow ease-out-expo hover:text-foreground data-checked:font-medium data-checked:text-foreground data-disabled:pointer-events-none data-disabled:opacity-50 pointer-coarse:h-11"
         >
           {option.label}
         </Radio.Root>

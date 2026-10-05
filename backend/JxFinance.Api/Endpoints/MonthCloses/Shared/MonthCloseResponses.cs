@@ -111,6 +111,7 @@ public sealed record MonthDriftCategory(
 public sealed record MonthDriftRow(
     Guid Id,
     MonthDriftRowKind Kind,
+    FlowType? Type,
     MonthDriftChange Change,
     DateOnly Date,
     string? Description,

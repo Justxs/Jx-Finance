@@ -1,6 +1,7 @@
-import type { ReactNode } from "react";
+import { type ReactNode, useId } from "react";
 import { CartesianGrid, ComposedChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { useAxisMoney } from "@/hooks/use-formatters";
+import { ChartDataTable } from "./chart-data-table";
 import { ChartLegend } from "./chart-legend";
 import { axisProps, chartCursor } from "./chart-theme";
 import { type ChartSeries, ChartTooltip } from "./chart-tooltip";
@@ -29,11 +30,12 @@ export function BarChartFrame({
   children,
 }: Readonly<Props>) {
   const axisMoney = useAxisMoney();
+  const tableId = useId();
 
   return (
     <div className="space-y-3">
       <ChartLegend series={series} />
-      <div role="img" aria-label={ariaLabel}>
+      <div role="img" aria-label={ariaLabel} aria-describedby={tableId}>
         <ResponsiveContainer width="100%" height={height}>
           <ComposedChart
             accessibilityLayer={false}
@@ -68,6 +70,14 @@ export function BarChartFrame({
           </ComposedChart>
         </ResponsiveContainer>
       </div>
+      <ChartDataTable
+        id={tableId}
+        caption={ariaLabel}
+        data={data}
+        labelKey="label"
+        series={series}
+        formatLabel={formatLabel}
+      />
     </div>
   );
 }

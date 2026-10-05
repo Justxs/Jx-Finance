@@ -96,12 +96,7 @@ function EntriesTable({
   const label = t("forecast.entriesLabel", { account: account.accountName, days });
 
   return (
-    <Table
-      label={label}
-      columns={["w-24", undefined, "w-32", "w-32"]}
-      className="min-w-120"
-      aria-label={label}
-    >
+    <Table label={label} columns={["w-20", undefined, "w-28", "w-28"]} className="min-w-120">
       <TableHeader>
         <TableRow>
           <TableHead>{t("forecast.date")}</TableHead>
@@ -116,11 +111,9 @@ function EntriesTable({
           return (
             <TableRow key={`${entry.date}-${entry.billId ?? "ledger"}-${entry.balanceAfter}`}>
               <TableCell className="tabular-nums">{formatDay(entry.date)}</TableCell>
-              <TableCell>
-                <span className="flex min-w-0 items-center gap-2">
-                  <span className="truncate" title={entryName(t, entry)}>
-                    {entryName(t, entry)}
-                  </span>
+              <TableCell className="whitespace-normal">
+                <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                  <span className="min-w-0 wrap-break-word">{entryName(t, entry)}</span>
                   {entry.overdue ? <Tag tone="negative">{t("forecast.overdue")}</Tag> : null}
                 </span>
               </TableCell>
@@ -229,12 +222,12 @@ function ForecastBody({ days, totals, whatIf, onWhatIf }: Readonly<BodyProps>) {
             {forecast.notCounted.map((entry) => (
               <li
                 key={entry.billId}
-                className="flex items-baseline justify-between gap-3 py-2 text-sm"
+                className="flex flex-wrap items-baseline justify-between gap-x-3 py-2 text-sm"
               >
                 <span className="min-w-0 truncate" title={entry.name}>
                   {entry.name}
                 </span>
-                <span className="shrink-0 text-xs text-muted-foreground">
+                <span className="ml-auto min-w-0 text-right text-xs text-muted-foreground">
                   {t(`forecast.reasons.${entry.reason}`)}
                 </span>
               </li>

@@ -90,7 +90,9 @@ export function AccountMenu({
         {compact ? null : (
           <span className="min-w-0 flex-1">
             <span className="block truncate text-sm font-medium">{name}</span>
-            <span className="block truncate text-xs text-muted-foreground">{email}</span>
+            <span className="block truncate text-xs text-muted-foreground" title={email}>
+              {email}
+            </span>
           </span>
         )}
         {compact ? null : (
@@ -102,7 +104,7 @@ export function AccountMenu({
           <>
             <div className="min-w-0 px-2 py-1.5">
               <p className="truncate font-medium">{name}</p>
-              <p className="truncate text-xs text-muted-foreground">{email}</p>
+              <p className="text-xs wrap-anywhere text-muted-foreground">{email}</p>
             </div>
             <MenuSeparator />
           </>

@@ -53,7 +53,7 @@ export const navHubs = {
   settings: { key: "nav.settings", icon: Settings, tabs: false },
 } as const satisfies Record<NavHub, NavHubEntry>;
 
-const landingPaths = ["/welcome", "/features"] as const satisfies readonly RoutePath[];
+const landingPaths = ["/", "/features"] as const satisfies readonly RoutePath[];
 
 export const LANDING_PATHS: ReadonlySet<string> = new Set<RoutePath>(landingPaths);
 
@@ -67,7 +67,7 @@ export const PUBLIC_PATHS: ReadonlySet<string> = new Set<RoutePath>([
 ]);
 
 export const navPages = [
-  { to: "/", key: "nav.dashboard", icon: LayoutDashboard, group: "ledger", shortcut: "d" },
+  { to: "/dashboard", key: "nav.dashboard", icon: LayoutDashboard, group: "ledger", shortcut: "d" },
   {
     to: "/transactions",
     key: "nav.transactions",

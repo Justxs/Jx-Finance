@@ -138,8 +138,8 @@ export const MembersError: Story = {
   play: async ({ canvas }) => {
     await userEvent.click(canvas.getByRole("button", { name: toggleName }));
     const alert = await canvas.findByRole("alert");
-    await expect(alert).toHaveTextContent("Could not load this.");
-    await expect(within(alert).getByRole("button", { name: "Try again" })).toBeVisible();
+    await expect(alert).toHaveTextContent("The rows of Kelionė į Rygą could not be loaded.");
+    await expect(within(alert).getByRole("button", { name: /^Try again/ })).toBeVisible();
   },
 };
 

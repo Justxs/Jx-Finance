@@ -29,7 +29,7 @@
     "month": "Mėnuo",
     "overview": "Apžvalga",
     "plan": "Planas",
-    "wealth": "Turtas",
+    "wealth": "Turtas ir skolos",
     "installation": "Sistema"
   },
   "actions": {
@@ -49,7 +49,11 @@
   "common": {
     "actions": "Veiksmai",
     "search": "Ieškoti",
-    "noMatches": "Atitikmenų nėra"
+    "noMatches": "Atitikmenų nėra",
+    "itemCount_one": "{{count}} įrašas",
+    "itemCount_few": "{{count}} įrašai",
+    "itemCount_many": "{{count}} įrašo",
+    "itemCount_other": "{{count}} įrašų"
   },
   "confirmDelete": {
     "title": "Ištrinti šį įrašą?",
@@ -122,7 +126,7 @@
       "title": "Pritaikyti suvestinę",
       "intro": "Pasirinkite, kurias korteles rodyti ir kokia tvarka. Išdėstymas saugomas jūsų paskyroje, todėl bus toks pat visose naršyklėse ir įrenginiuose.",
       "cards": "Suvestinės kortelės",
-      "moved": "Kortelė „{{card}}“ perkelta į {{position}} vietą iš {{total}}.",
+      "moved": "Kortelė „{{card}}“ perkelta: {{position}} vieta iš {{total}}.",
       "switchedOff": "Administratoriaus išjungtų funkcijų kortelės nerodomos. Jų vieta išsaugoma, jei funkcija vėl bus įjungta.",
       "reset": "Atkurti numatytąjį išdėstymą",
       "saved": "Suvestinės išdėstymas išsaugotas.",
@@ -140,6 +144,11 @@
       "title": "Pirmieji žingsniai",
       "progress": "Atlikta {{done}} iš {{total}}",
       "done": "Atlikta",
+      "showSteps": "Rodyti žingsnius",
+      "showLess": "Rodyti mažiau",
+      "hide": "Slėpti kortelę",
+      "hideLabel": "Vėl parodyti galite Nustatymuose, skiltyje „Suvestinė“",
+      "hidden": "Pirmieji žingsniai paslėpti",
       "steps": {
         "addAccount": {
           "label": "Pridėkite sąskaitą",
@@ -151,11 +160,11 @@
         },
         "sortSpending": {
           "label": "Surūšiuokite išlaidas",
-          "hint": "kad neliktų nekategorizuotų paskutinių 30 dienų operacijų."
+          "hint": ", kad neliktų nekategorizuotų paskutinių 30 dienų operacijų."
         },
         "planAhead": {
           "label": "Nustatykite biudžetą ar tikslą",
-          "hint": "kad matytumėte, ar mėnuo eina pagal planą."
+          "hint": ", kad matytumėte, ar mėnuo eina pagal planą."
         },
         "addRecurring": {
           "label": "Pridėkite periodinius įrašus",
@@ -167,7 +176,7 @@
         },
         "inviteMember": {
           "label": "Sukurkite narį",
-          "hint": "kiekvienam, kas dalijasi namų ūkiu."
+          "hint": "kiekvienam namų ūkio nariui."
         },
         "setUpEmail": {
           "label": "Nustatykite el. paštą",
@@ -179,7 +188,7 @@
         },
         "closeMonth": {
           "label": "Uždarykite pirmąjį mėnesį",
-          "hint": "kai jis pasibaigs."
+          "hint": ", kai jis pasibaigs."
         }
       }
     }
@@ -192,12 +201,12 @@
     "description": "Aprašymas",
     "descriptionPlaceholder": "pvz., pagrindinė atlyginimo sąskaita",
     "iban": "IBAN",
-    "ibanPlaceholder": "LT12 1000 0111 0100 1000 (nebūtina)",
+    "ibanPlaceholder": "LT12 1000 0111 0100 1000 (neprivaloma)",
     "type": "Tipas",
     "startingBalance": "Pradinis likutis",
     "currentBalance": "Dabartinis likutis",
     "owed": "Skola {{amount}}",
-    "creditCardHint": "Kiek esate skolingi kortelei, neigiama suma.",
+    "creditCardHint": "Kortelės skola, įvesta neigiama suma.",
     "empty": "Sąskaitų dar nėra. Pridėkite pirmąją ir pradėkite apskaitą.",
     "archived": "Sąskaita archyvuota",
     "types": {
@@ -216,13 +225,16 @@
     "archiveDescription": "Ji nebebus rodoma sąrašuose, pasirinkimo laukuose ir sumose, o kartu bus paslėptos ir jos operacijos. Vėliau ją galėsite atkurti šio puslapio skiltyje „Archyvuotos sąskaitos“.",
     "restored": "Sąskaita atkurta",
     "archivedList": {
-      "summary": "Archyvuotos sąskaitos ({{count}})",
+      "show_one": "Rodyti {{count}} sąskaitą",
+      "show_few": "Rodyti {{count}} sąskaitas",
+      "show_many": "Rodyti {{count}} sąskaitos",
+      "show_other": "Rodyti {{count}} sąskaitų",
       "label": "Archyvuotos sąskaitos",
       "archivedOn": "Archyvuota {{date}}",
       "restore": "Atkurti",
       "ownerOnly": "Atkurti gali tik sąskaitos savininkas"
     },
-    "shareOfTotal": "Dalis nuo visų",
+    "shareOfTotal": "Bendros sumos dalis",
     "total": "Iš viso",
     "reconcile": {
       "action": "Suderinti",
@@ -235,7 +247,7 @@
       "matches": "Sutampa su išrašu",
       "more": "Išraše {{amount}} daugiau",
       "less": "Išraše {{amount}} mažiau",
-      "rowsSince": "Eilutės nuo suderinimo {{date}}",
+      "rowsSince": "Eilutės po {{date}} suderinimo",
       "rowsAll": "Eilutės iki {{date}}",
       "noRows": "Šiuo laikotarpiu eilučių nėra.",
       "moreRows_one": "ir dar {{count}} eilutė",
@@ -254,7 +266,7 @@
       },
       "kinds": {
         "transaction": "Operacija",
-        "transferOut": "Išeinantis pervedimas",
+        "transferOut": "Siunčiamas pervedimas",
         "transferIn": "Gaunamas pervedimas",
         "conversion": "Valiutos keitimas",
         "investmentEntry": "Investicijų įrašas"
@@ -349,6 +361,7 @@
     "parent": "Priskirti grupei",
     "noParent": "Be grupės (viršutinis lygis)",
     "parentHint": "Grupės biudžetas, operacijų filtras ir ataskaitos suma apima jos subkategorijas.",
+    "subcategoryOf": "grupės „{{parent}}“ subkategorija",
     "remembered": {
       "title": "Įsimintos kvitų prekės",
       "explainer": "Kai kvito prekę priskiriate kategorijai, kitame kvite tokio pavadinimo prekė gauna tą pačią kategoriją. Pamirškite ją, kad vėl spręstų jūsų taisyklės.",
@@ -357,7 +370,7 @@
       "unavailable": "Ištrinta arba nebebendrinama kategorija",
       "empty": "Kol kas nieko neįsiminta. Čia atsiras kategorijos, kurias pasirenkate kvitų prekėms.",
       "noMatches": "Pagal šią paiešką įsimintų prekių nėra.",
-      "more": "Rodomos {{shown}} paskiausiai naudotos iš {{total}}. Kitas raskite paieška.",
+      "more": "Rodomos paskiausiai naudotos: {{shown}} iš {{total}}. Kitų ieškokite paieškoje.",
       "forget": "Pamiršti",
       "forgetTitle": "Pamiršti šią prekę?",
       "forgetDescription": "Kitame kvite ši prekė gaus pirmos tinkančios taisyklės kategoriją arba jokios. Operacijų kategorijos nepasikeis."
@@ -403,7 +416,8 @@
     "editTitle": "Redaguoti taisyklę",
     "empty": "Taisyklių dar nėra.",
     "explainer": "Taisyklė tikrina operacijos aprašymą ir priskiria kategoriją, žymas arba abu. Taisykles matote tik jūs. Jos tikrinamos iš viršaus į apačią, ir eilutei pritaikoma pirmoji tinkanti taisyklė, todėl konkretesnes taisykles laikykite aukščiau už bendresnes.",
-    "listTitle": "Taisyklės tikrinimo tvarka",
+    "listTitle": "Taisyklių tikrinimo tvarka",
+    "moved": "Eilės tvarka pakeista",
     "name": "Pavadinimas",
     "namePlaceholder": "pvz., Maisto prekės",
     "condition": "Kai aprašymas",
@@ -440,7 +454,6 @@
     "testerNothing": "kol kas nieko",
     "positionLabel": "{{position}} iš {{total}}",
     "orderHint": "Taisyklės tikrinamos iš viršaus į apačią. Pritaikoma pirmoji tinkanti taisyklė, o likusios praleidžiamos.",
-    "moved": "Eilės tvarka pakeista",
     "onAccount": "sąskaitoje „{{account}}“",
     "amountRange": "nuo {{from}} iki {{to}}",
     "amountFrom": "nuo {{from}}",
@@ -479,7 +492,7 @@
       "description": "Kiekvieną iš jų bent tris kartus rankiniu būdu priskyrėte tai pačiai kategorijai. Peržiūrėkite pasiūlymą ir prieš išsaugodami pakoreguokite arba jį atmeskite.",
       "question": {
         "contains": "Visada priskirti kategoriją „{{category}}“ aprašymams, kuriuose yra „{{pattern}}“?",
-        "startsWith": "Visada priskirti kategoriją „{{category}}“ aprašymams, kurie prasideda „{{pattern}}“?",
+        "startsWith": "Visada priskirti kategoriją „{{category}}“ aprašymams, kurie prasideda tekstu „{{pattern}}“?",
         "exact": "Visada priskirti kategoriją „{{category}}“ aprašymui „{{pattern}}“?"
       },
       "create": "Sukurti taisyklę",
@@ -527,6 +540,7 @@
     "lineAmount": "Suma",
     "lineCategory": "Kategorija",
     "lineDescription": "Pastaba",
+    "lineField": "{{field}}, eilutė Nr. {{number}}",
     "removeLine": "Pašalinti eilutę Nr. {{number}}",
     "splitTotalMismatch": "Eilučių suma – {{linesTotal}}, o operacijos suma – {{total}}.",
     "count_one": "{{count}} operacija",
@@ -559,14 +573,15 @@
     "moveHint": "Kiekviena eilutė išlaiko sumą, valiutą, datą, kategoriją ir žymas.",
     "move": "Perkelti",
     "moreBulkActions": "Daugiau",
-    "moved_one": "Perkelta į {{account}}: {{count}} operacija",
-    "moved_few": "Perkelta į {{account}}: {{count}} operacijos",
-    "moved_many": "Perkelta į {{account}}: {{count}} operacijos",
-    "moved_other": "Perkelta į {{account}}: {{count}} operacijų",
-    "movedPartly_one": "Perkelta į {{account}}: {{moved}} iš {{count}}",
-    "movedPartly_few": "Perkelta į {{account}}: {{moved}} iš {{count}}",
-    "movedPartly_many": "Perkelta į {{account}}: {{moved}} iš {{count}}",
-    "movedPartly_other": "Perkelta į {{account}}: {{moved}} iš {{count}}",
+    "moreActions": "Daugiau",
+    "moved_one": "Perkelta į sąskaitą „{{account}}“: {{count}} operacija",
+    "moved_few": "Perkelta į sąskaitą „{{account}}“: {{count}} operacijos",
+    "moved_many": "Perkelta į sąskaitą „{{account}}“: {{count}} operacijos",
+    "moved_other": "Perkelta į sąskaitą „{{account}}“: {{count}} operacijų",
+    "movedPartly_one": "Perkelta į sąskaitą „{{account}}“: {{moved}} iš {{count}}",
+    "movedPartly_few": "Perkelta į sąskaitą „{{account}}“: {{moved}} iš {{count}}",
+    "movedPartly_many": "Perkelta į sąskaitą „{{account}}“: {{moved}} iš {{count}}",
+    "movedPartly_other": "Perkelta į sąskaitą „{{account}}“: {{moved}} iš {{count}}",
     "deleteSelected": "Ištrinti",
     "bulkDeleteTitle_one": "Ištrinti {{count}} operaciją?",
     "bulkDeleteTitle_few": "Ištrinti {{count}} operacijas?",
@@ -603,7 +618,7 @@
     "duplicate": "Dubliuoti",
     "refund": "Grąžinimas",
     "recordRefund": "Įrašyti grąžinimą",
-    "refundOf": "Grąžinimas už {{description}}, {{date}}",
+    "refundOf": "Grąžinimas: {{description}}, {{date}}",
     "refundOfShow": "Rodyti pirkinį, už kurį grąžinta",
     "sourceApi": "Pridėta per API",
     "refundOfClear": "Atsieti pirkinį",
@@ -633,7 +648,7 @@
       "kept": "Abi operacijos paliktos. Ši pora daugiau nebus siūloma."
     },
     "attachments": {
-      "title": "Čekiai ir failai",
+      "title": "Kvitai ir failai",
       "hint": "JPEG, PNG, WebP, HEIC arba PDF, kiekvienas iki {{size}} MB, ne daugiau kaip {{max}} vienai operacijai.",
       "drop": "Nutempkite failus čia arba pasirinkite",
       "dropActive": "Atleiskite, kad pridėtumėte",
@@ -650,8 +665,7 @@
       "remove": "Pašalinti",
       "removeTitle": "Pašalinti šį failą?",
       "uploadedBy": "{{name}}, {{date}}",
-      "preview": "{{name}} peržiūra",
-      "loadError": "Nepavyko įkelti šios operacijos failų.",
+      "preview": "Peržiūra: {{name}}",
       "fileTooLarge": "Failas {{name}} didesnis nei {{size}} MB.",
       "fileTypeNotAllowed": "Failas {{name}} nėra JPEG, PNG, WebP, HEIC ar PDF formato.",
       "tooMany": "Failas {{name}} nepridėtas: prie šios operacijos galima pridėti dar tik {{free}}.",
@@ -669,7 +683,7 @@
     "useRemaining": "Naudoti likutį {{amount}}",
     "categoryFor": "Kategorija: {{transaction}}",
     "note": "Pastaba",
-    "noteHint": "Jūsų žodžiai šalia banko aprašymo. Importas jų nekeičia.",
+    "noteHint": "Jūsų pastaba, saugoma šalia banko aprašymo. Importuojant ji nekeičiama.",
     "statementPayee": "Gavėjas banko išraše: {{payee}}",
     "spread": {
       "label": "Paskirstyti per",
@@ -682,8 +696,8 @@
       "forward": "Nuo datos mėnesio",
       "backward": "Iki datos mėnesio",
       "chip": "Paskirstyta · {{months}} mėn.",
-      "tooltip": "Ataskaitose ir biudžetuose skaičiuojama po {{amount}} per mėnesį: {{from}} – {{to}}",
-      "tooltipInRange": "Ataskaitose ir biudžetuose skaičiuojama po {{amount}} per mėnesį: {{from}} – {{to}}. Rodomoms datoms tenka {{part}}."
+      "tooltip": "Ataskaitose ir biudžetuose skaičiuojama po {{amount}} per mėnesį: {{from}}–{{to}}",
+      "tooltipInRange": "Ataskaitose ir biudžetuose skaičiuojama po {{amount}} per mėnesį: {{from}}–{{to}}. Rodomoms datoms tenka {{part}}."
     },
     "place": {
       "label": "Vieta",
@@ -692,7 +706,7 @@
       "locationSaved": "Vieta išsaugota",
       "remove": "Pašalinti",
       "removeLabel": "Pašalinti išsaugotą vietą",
-      "denied": "Naršyklei neleista pranešti jūsų vietos. Leiskite tai svetainės nustatymuose arba įrašykite vietą.",
+      "denied": "Naršyklei neleista nustatyti jūsų vietos. Leiskite tai svetainės nustatymuose arba įrašykite vietą.",
       "timeout": "Nepavyko laiku nustatyti jūsų vietos. Bandykite dar kartą arba įrašykite vietą.",
       "unavailable": "Jūsų vieta dabar nepasiekiama. Įrašykite vietą.",
       "usePhotoLocation": "Naudoti nuotraukos vietą"
@@ -703,7 +717,7 @@
       "removeFromGroup": "Pašalinti iš grupės",
       "rename": "Pervadinti grupę",
       "ungroup": "Išgrupuoti",
-      "ungroupHint": "Visos eilutės lieka žurnale tokios, kokios yra. Grupė perkeliama į šiukšlinę, iš kurios ją galima atkurti.",
+      "ungroupHint": "Visos eilutės lieka apskaitoje tokios, kokios yra. Grupė perkeliama į šiukšlinę, iš kurios ją galima atkurti.",
       "dialogTitle": "Grupuoti eilutes",
       "newGroup": "Nauja grupė",
       "existingGroup": "Esama grupė",
@@ -723,7 +737,8 @@
       "showRows_other": "Rodyti {{count}} grupės „{{name}}“ operacijų",
       "noGroups": "Grupių dar neturite. Pavadinkite naują ir ji prasidės nuo šios eilutės.",
       "grouped": "Sugrupuota",
-      "truncated": "Rodomos tik pirmosios 200 operacijų. Susiaurinkite filtrus, kad pamatytumėte kitas."
+      "truncated": "Rodomos tik pirmosios 200 operacijų. Susiaurinkite filtrus, kad pamatytumėte kitas.",
+      "membersSubject": "grupės „{{name}}“ operacijos"
     },
     "categorySuggestion": {
       "label": "Siūloma: {{category}}",
@@ -733,7 +748,7 @@
     "uncategorizedSuggestions": {
       "open": "Pasiūlyti kategorijas",
       "title": "Siūlomos kategorijos",
-      "description": "Kategorijos iki 200 rodomų operacijų be kategorijos pagal jūsų taisykles ir istoriją. Pažymėkite grupes, kurioms pritariate; tuo metu kategoriją gavusi operacija nekeičiama.",
+      "description": "Kategorijos, pasiūlytos pagal jūsų taisykles ir istoriją, iki 200 rodomų operacijų be kategorijos. Pažymėkite grupes, kurioms pritariate; operacija, kuriai kategorija tuo tarpu jau priskirta, nekeičiama.",
       "group_one": "{{category}}, {{count}} operacija",
       "group_few": "{{category}}, {{count}} operacijos",
       "group_many": "{{category}}, {{count}} operacijos",
@@ -762,7 +777,7 @@
     "invoiceTitleBare": "Sąskaita faktūra",
     "invoiceNumber": "Nr. {{number}}",
     "invoiceDue": "apmokėti iki {{date}}",
-    "invoiceNote": "Sąskaita {{number}}",
+    "invoiceNote": "Sąskaita faktūra Nr. {{number}}",
     "itemCategory": "Prekės „{{name}}“ kategorija",
     "discount": "nuolaida {{amount}}",
     "deposit": "užstatas {{amount}}",
@@ -774,7 +789,7 @@
     "unreadHint": "Patikrinkite jas kvite: jei tarp jų yra prekė, jos trūksta aukščiau esančiose eilutėse.",
     "lines": "Gautos eilutės",
     "itemsDiffer": "Prekių suma yra {{items}}, o kvite nurodyta {{printed}}.",
-    "paymentDiffers": "Kvitas {{receipt}}, šis mokėjimas {{payment}}; eilutės perskaičiuotos pagal mokėjimą.",
+    "paymentDiffers": "Kvito suma – {{receipt}}, šio mokėjimo – {{payment}}; eilutės perskaičiuotos pagal mokėjimą.",
     "pagesCut": "Perskaityti tik pirmieji {{read}} iš {{count}} puslapių.",
     "returnReceipt": "Grąžinimo kvitas: forma bus užpildyta kaip grąžinimas didžiausios grąžintos sumos kategorijoje.",
     "refundOfNone": "Nerasta ankstesnio šios parduotuvės pirkimo, su kuriuo jį būtų galima susieti.",
@@ -817,7 +832,7 @@
       "transactionGroup": "Operacijų grupė",
       "contact": "Žmogus",
       "contactSplit": "Padalijimas su žmonėmis",
-      "contactPayment": "Mokėjimas su žmogumi"
+      "contactPayment": "Atsiskaitymas su žmogumi"
     }
   },
   "theme": {
@@ -856,7 +871,7 @@
     "upload": "Įkelti",
     "uploaded": "Kopija pridėta prie sąrašo.",
     "confirmTitle": "Pakeisti visus duomenis šia kopija?",
-    "confirmDescription": "Visi šios sistemos duomenys, visų naudotojų, bus ištrinti ir pakeisti kopijos turiniu. Šio veiksmo atšaukti negalima. Visi naudotojai bus atjungti, o jūs turėsite prisijungti iš naujo slaptažodžiu, kuris buvo naudojamas kopijos sukūrimo metu. Serveryje esančios kopijos išsaugomos.",
+    "confirmDescription": "Visi šios sistemos visų naudotojų duomenys bus ištrinti ir pakeisti kopijos turiniu. Šio veiksmo atšaukti negalima. Visi naudotojai bus atjungti, o jūs turėsite prisijungti iš naujo slaptažodžiu, kuris buvo naudojamas kopijos sukūrimo metu. Serveryje esančios kopijos išsaugomos.",
     "confirmLabel": "Norėdami patvirtinti, įveskite {{word}}",
     "confirmWord": "ATKURTI",
     "confirmAction": "Pakeisti visus duomenis",
@@ -950,12 +965,13 @@
     "lead": "Jx Finance padeda namų ūkiui tvarkyti pinigus: sekti pajamas ir išlaidas, planuoti biudžetą, taupyti tikslams ir matyti, ką turite ir kiek esate skolingi. Programa veikia jūsų kompiuteryje ar serveryje, todėl finansiniai duomenys lieka pas jus.",
     "source": "Žiūrėti „GitHub“ svetainėje",
     "sourceLabel": "Jx Finance „GitHub“ svetainėje",
+    "opensInNewTab": "atsidaro naujame skirtuke",
     "nav": {
       "label": "Pagrindinis meniu",
       "home": "Pradžia",
-      "features": "Funkcionalumas"
+      "features": "Funkcijos"
     },
-    "seeFeatures": "Peržiūrėti visą funkcionalumą",
+    "seeFeatures": "Visos funkcijos",
     "overview": "Ką rasite viduje",
     "sample": {
       "label": "Pavyzdinės operacijos",
@@ -1009,7 +1025,7 @@
       },
       "privacy": {
         "label": "Kitos įmonės, kurios mato jūsų duomenis",
-        "text": "Duomenys lieka jūsų kompiuteryje ar serveryje. Jokių reklamų ir sekimo, o niekur nieko nesiunčiama, kol to neįjungia administratorius."
+        "text": "Duomenys lieka jūsų kompiuteryje ar serveryje. Jokių reklamų ir sekimo; niekas niekur nesiunčiama, nebent tai įjungia administratorius."
       },
       "currencies": {
         "label": "Valiutos",
@@ -1118,7 +1134,7 @@
         },
         "forecast": {
           "title": "Likučio prognozė",
-          "text": "Matykite, kaip per artimiausias savaites keisis sąskaitos likutis, įskaitant laukiančius mokėjimus.",
+          "text": "Matykite, kaip per artimiausias savaites keisis sąskaitos likutis, įskaitant artėjančius mokėjimus.",
           "example": "Prieš užsisakydami kelionę patikrinate, ar iki atlyginimo sąskaitoje užteks pinigų."
         },
         "loans": {
@@ -1168,7 +1184,7 @@
         },
         "taxes": {
           "title": "Metinė investicijų suvestinė",
-          "text": "Matykite metų pardavimus su jų pelnu, dividendus, palūkanas, išskaičiuotus mokesčius ir mokesčius brokeriui – paruoštus pajamų deklaracijai. Tai jūsų įrašų suvestinė, o ne mokesčių konsultacija.",
+          "text": "Matykite metų pardavimus su jų pelnu, dividendus, palūkanas, išskaičiuotus mokesčius ir brokerio komisinius – paruoštus pajamų deklaracijai. Tai jūsų įrašų suvestinė, o ne mokesčių konsultacija.",
           "example": "Pavasarį iš jos nusirašote praėjusių metų dividendus ir parduotas akcijas su jų įsigijimo kaina."
         },
         "reports": {
@@ -1182,14 +1198,14 @@
           "example": "Spalio 2 d. uždarote rugsėjį. Kai atkeliauja vėluojantis grąžinimas rugsėjo data, mėnuo parodo skirtumą."
         },
         "reconcile": {
-          "title": "Sutikrinimas su banku",
+          "title": "Suderinimas su banku",
           "text": "Įveskite banko išraše nurodytą likutį ir pamatykite, ar jūsų apskaita sutampa, o jei ne – kiek skiriasi.",
           "example": "Bankas rugsėjo pabaigoje rodo 1 482,10 €, ir Jx Finance sutampa iki cento."
         },
         "unusual": {
           "title": "Neįprasti mokėjimai",
           "text": "Mokėjimas, gerokai didesnis nei įprastai toje parduotuvėje, pažymimas, o jums pranešama, kai prenumerata pabrangsta.",
-          "example": "Vaizdo įrašų prenumerata pabrangsta nuo 9,99 € iki 12,99 €, ir Jx Finance tai parodo vos tik mokėjimas įrašomas."
+          "example": "Vaizdo įrašų prenumerata pabrangsta nuo 9,99 € iki 12,99 €, ir Jx Finance tai parodo, vos tik mokėjimas įrašomas."
         },
         "digest": {
           "title": "Mėnesio suvestinė",
@@ -1204,7 +1220,7 @@
         "dashboard": {
           "title": "Jūsų pradžios ekranas",
           "text": "Pasirinkite, kurias korteles rodo jūsų pradžios ekranas ir kokia tvarka.",
-          "example": "Biudžetus perkeliate į viršų, o investicijas paslepiate, o partneris išlaiko savo išdėstymą."
+          "example": "Biudžetus perkeliate į viršų, investicijas paslepiate, o partneris išlaiko savo išdėstymą."
         },
         "look": {
           "title": "Pritaikyta jums",
@@ -1283,7 +1299,7 @@
     "dataExport": {
       "navTitle": "Importas ir eksportas",
       "title": "Jūsų duomenų eksportas",
-      "description": "Atsisiųskite viską, kas priklauso jums, vienu zip failu: savo sąskaitas, asmenines, bendras ir archyvuotas, su viskuo, kas jose įrašyta, jas liečiančius pervedimus ir savo kategorijas, žymes, taisykles, biudžetus, tikslus, turtą, skolas, pasikartojančius įrašus bei pranešimus. data.json saugo visus įrašus, o accounts.csv, transactions.csv ir transfers.csv atsidaro skaičiuoklėje.",
+      "description": "Atsisiųskite viską, kas priklauso jums, vienu zip failu: savo sąskaitas, asmenines, bendras ir archyvuotas, su viskuo, kas jose įrašyta, jas liečiančius pervedimus ir savo kategorijas, žymas, taisykles, biudžetus, tikslus, turtą, skolas, periodinius įrašus bei pranešimus. data.json saugo visus įrašus, o accounts.csv, transactions.csv ir transfers.csv atsidaro skaičiuoklėje.",
       "excluded": "Slaptažodžiai, dviejų veiksnių autentifikavimo paslaptys, prieigos raktai, API raktai, namų ūkiai ir kitų narių sąskaitos niekada neįtraukiami.",
       "attachments": "Įtraukti prisegtus failus",
       "download": "Atsisiųsti mano duomenis",
@@ -1291,7 +1307,7 @@
     },
     "dataImport": {
       "title": "Importuoti atsisiųstus duomenis",
-      "description": "Keliatės iš kitos diegties? Įkelkite ten atsisiųstą zip failą į šį narį. Tai veikia tik kol neturite sąskaitų ar žymių, o visi duomenys tampa jūsų asmeniniais.",
+      "description": "Persikeliate iš kitos sistemos? Įkelkite ten atsisiųstą zip failą į šią paskyrą. Tai veikia tik tol, kol neturite sąskaitų ar žymų; visi duomenys tampa jūsų asmeniniais.",
       "file": "Duomenų eksportas",
       "fileHint": "jx-finance-export zip failas iš šios arba senesnės programos versijos.",
       "chooseFile": "Pasirinkite zip failą",
@@ -1306,7 +1322,7 @@
     "title": "Jūsų profilis",
     "detailsTitle": "Vardas ir slaptažodis",
     "currentPassword": "Dabartinis slaptažodis",
-    "newPassword": "Naujas slaptažodis (nebūtina)",
+    "newPassword": "Naujas slaptažodis (neprivaloma)",
     "save": "Išsaugoti pakeitimus",
     "updated": "Profilis atnaujintas",
     "securityTitle": "Sauga",
@@ -1358,10 +1374,10 @@
       "removed": "Prieigos raktas pašalintas",
       "signOutHint": "Jei įrenginys su šiuo prieigos raktu prarastas, atjunkite ir visas kitas naršykles.",
       "signOutLink": "Prisijungusios naršyklės",
-      "unavailable": "Prieigos raktams reikia, kad ši sistema būtų atidaryta per HTTPS jos vardu, o ne paprastu HTTP ar IP adresu. Kreipkitės į administratorių.",
+      "unavailable": "Prieigos raktai veikia tik tada, kai ši sistema atidaroma per HTTPS naudojant jos domeno vardą, o ne per paprastą HTTP ar IP adresu. Kreipkitės į administratorių.",
       "unsupported": "Ši naršyklė negali sukurti prieigos raktų. Naudokite naujausią Chrome, Edge, Firefox ar Safari.",
       "alreadyRegistered": "Šiame autentifikatoriuje jau yra jūsų paskyros prieigos raktas.",
-      "failed": "Naršyklė nesukūrė prieigos rakto. Bandykite dar kartą."
+      "failed": "Naršyklei nepavyko sukurti prieigos rakto. Bandykite dar kartą."
     },
     "apiTokens": {
       "title": "Asmeniniai API raktai",
@@ -1399,7 +1415,7 @@
         "readWrite": "Skaityti ir rašyti",
         "badgeRead": "Tik skaityti",
         "badgeReadWrite": "Skaityti ir rašyti",
-        "readWriteSummary": "Šiuo raktu taip pat galima pridėti, keisti ir trinti operacijas bei pervedimus, keisti jų kategoriją ar žymas iš karto keliems įrašams ir patvirtinti pasikartojančius įrašus. Jis galioja ne ilgiau kaip 90 dienų."
+        "readWriteSummary": "Šiuo raktu taip pat galima pridėti, keisti ir trinti operacijas bei pervedimus, keisti jų kategoriją ar žymas iš karto keliems įrašams ir patvirtinti periodinius įrašus. Jis galioja ne ilgiau kaip 90 dienų."
       }
     },
     "emailUnconfirmedTitle": "Patvirtinkite el. pašto adresą",
@@ -1423,7 +1439,7 @@
       "saved": "Pranešimų nustatymai išsaugoti",
       "digestOnlyOutside": "Siunčiama tik el. paštu, į Discord arba Telegram",
       "digestScopes": "Mėnesio suvestinė apie",
-      "digestScopesHint": "Kiekviena pažymėta ateina atskiru pranešimu, su mėnesiu tokiu, kokį rodo pagrindinis puslapis pasirinkus tą namų ūkį.",
+      "digestScopesHint": "Kiekviena pažymėta suvestinė siunčiama atskiru pranešimu; mėnuo joje rodomas taip, kaip suvestinėje pasirinkus tą namų ūkį.",
       "digestNote": "Mėnesio suvestinė atkeliauja pirmosiomis mėnesio dienomis ir apibendrina pasibaigusį mėnesį: pajamas ir išlaidas, labiausiai pasikeitusias kategorijas ir tai, ką dar reikia sutvarkyti prieš jį uždarant. Pažymėkite ją aukščiau, kad ją gautumėte."
     }
   },
@@ -1462,7 +1478,7 @@
         "recurringBills": {
           "name": "Periodiniai įrašai",
           "hint": "Periodinių išlaidų, pajamų ir pervedimų terminai bei priminimai. Išjungus priminimai nebesiunčiami.",
-          "example": "Nuoma antrą dieną, susiejama su banko įrašu, kai jis atsiranda."
+          "example": "Nuoma antrą mėnesio dieną, susiejama su banko įrašu, kai jis atsiranda."
         },
         "netWorth": {
           "name": "Grynasis turtas",
@@ -1502,7 +1518,7 @@
         "unusualAmounts": {
           "name": "Neįprastos sumos",
           "hint": "Pažymi išlaidas, kurios gerokai viršija įprastą gavėjo ar kategorijos sumą, ir prenumeratas, už kurias nuskaičiuota daugiau nei tikėtasi. Išjungus sustabdomas ir tikrinimas, ir jo pranešimai.",
-          "example": "Tris kartus didesnė nei įprastai sąskaita už elektrą pažymima."
+          "example": "Sąskaita už elektrą, tris kartus didesnė nei įprastai, pažymima."
         },
         "monthClose": {
           "name": "Mėnesio uždarymas",
@@ -1530,9 +1546,9 @@
           "example": "Kategorijos siūlomos pagal tai, ką rinkotės anksčiau."
         },
         "attachments": {
-          "name": "Čekiai ir failai",
-          "hint": "Prie operacijos prisegami čekiai, garantijos ir kiti failai, saugomi šiame serveryje. Išjungus nebesiunčiami ir priminimai apie garantijas.",
-          "example": "Sąskaitos PDF saugomas su mokėjimu, su garantijos priminimu."
+          "name": "Kvitai ir failai",
+          "hint": "Prie operacijos prisegami kvitai, garantijos ir kiti failai, saugomi šiame serveryje. Išjungus nebesiunčiami ir priminimai apie garantijas.",
+          "example": "Sąskaitos faktūros PDF saugomas kartu su mokėjimu, o garantijai nustatomas priminimas."
         },
         "payeeNames": {
           "name": "Gavėjų pavadinimai",
@@ -1541,8 +1557,8 @@
         },
         "people": {
           "name": "Žmonės",
-          "hint": "Pinigai, dalijami su žmonėmis už namų ūkio ribų arba jiems paskolinti: padalytos išlaidos, mokėjimai ir likučiai. Veikia tik kai įjungti namų ūkiai.",
-          "example": "Draugas skolingas 42 € už kelionę, ir tai matote."
+          "hint": "Pinigai, dalijami su žmonėmis už namų ūkio ribų arba jiems paskolinti: padalytos išlaidos, mokėjimai ir likučiai. Veikia, tik kai įjungta funkcija „Namų ūkiai“.",
+          "example": "Matote, kad draugas jums skolingas 42 € už kelionę."
         },
         "cashFlowForecast": {
           "name": "Pinigų srauto prognozė",
@@ -1578,7 +1594,7 @@
       "upToDate": "Kursai jau atnaujinti",
       "entries": {
         "title": "Saugomi kursai",
-        "description": "Įveskite kursą ranka, kai automatinis gavimas išjungtas, trūksta dienos arba kursą reikia pataisyti. Ranka įvestas kursas pakeičia tos pačios dienos ECB kursą, o operacijos nuo tos dienos įvertinamos iš naujo.",
+        "description": "Įveskite kursą ranka, kai automatinis gavimas išjungtas, trūksta dienos arba kursą reikia pataisyti. Ranka įvestas kursas pakeičia tos pačios dienos ECB kursą, o operacijos nuo tos dienos perskaičiuojamos.",
         "currency": "Valiuta",
         "add": "Įvesti kursą",
         "addTitle": "Įvesti {{currency}} kursą",
@@ -1596,7 +1612,7 @@
         "rateHint": "Kiek {{currency}} galima gauti už vieną eurą tą dieną.",
         "date": "Data",
         "dateFuture": "Kurso data negali būti vėlesnė nei šiandien.",
-        "rateInvalid": "Įveskite didesnį už nulį skaičių, ne daugiau kaip 8 skaitmenys po kablelio."
+        "rateInvalid": "Įveskite už nulį didesnį skaičių, ne daugiau kaip 8 skaitmenų po kablelio."
       }
     },
     "regional": {
@@ -1618,7 +1634,7 @@
     "defaults": {
       "title": "Numatytosios reikšmės",
       "account": "Numatytoji sąskaita",
-      "accountHint": "Iš anksto parenkama pridedant operaciją tiems naudotojams, kurie ją mato.",
+      "accountHint": "Iš anksto parenkama pridedant operaciją, jei naudotojas šią sąskaitą mato.",
       "firstAccount": "Pirmoji sąrašo sąskaita",
       "pageSize": "Eilučių puslapyje",
       "pageSizeHint": "Naudojama operacijų sąraše."
@@ -1658,7 +1674,7 @@
     },
     "discord": {
       "title": "Discord",
-      "description": "Discord kanalas, į kurį ši sistema siunčia pranešimus. Nariai savo profilyje pasirenka, kuriuos savo pranešimus ten siųsti, o kiekviena žinutė prasideda jų vardu, todėl ją mato visi, kas gali skaityti kanalą.",
+      "description": "Discord kanalas, į kurį ši sistema siunčia pranešimus. Nariai savo profilyje pasirenka, kuriuos savo pranešimus ten siųsti, o kiekviena žinutė prasideda jų vardu, todėl ją mato visi, kurie gali skaityti kanalą.",
       "enabled": "Siųsti pranešimus į Discord",
       "enabledHint": "Žinutės siunčiamos iš šio serverio į discord.com. Kol išjungta, niekas nesiunčiama, o webhook lieka išsaugotas.",
       "saved": "Discord nustatymai išsaugoti",
@@ -1666,6 +1682,7 @@
       "webhookUrlHint": "Discord programoje: kanalo nustatymai, Integracijos, Webhooks, Naujas webhook, Kopijuoti webhook nuorodą.",
       "webhookPlaceholder": "Išsaugota. Įklijuokite naują nuorodą, kad pakeistumėte.",
       "test": "Siųsti bandomąją žinutę",
+      "testHint": "Pirmiausia išsaugokite webhook nuorodą.",
       "testSent": "Bandomoji žinutė išsiųsta į Discord",
       "gone": "Discord teigia, kad šio webhook nebėra. Sukurkite naują Discord programoje ir įklijuokite jo nuorodą.",
       "unreadable": "Išsaugoto webhook nebeįmanoma perskaityti – dažniausiai taip nutinka atkūrus kopiją iš kitos sistemos. Įklijuokite webhook nuorodą iš naujo."
@@ -1682,6 +1699,7 @@
       "chatId": "Grupės ID",
       "chatIdHint": "Sveikasis skaičius, grupės – neigiamas. Pridėję botą, naršyklėje atidarykite api.telegram.org/bot<raktas>/getUpdates ir nukopijuokite chat id.",
       "test": "Siųsti bandomąją žinutę",
+      "testHint": "Pirmiausia išsaugokite boto raktą ir grupės ID.",
       "testSent": "Bandomoji žinutė išsiųsta į Telegram",
       "removed": "Telegram teigia, kad botas pašalintas iš grupės arba jo raktas atšauktas. Grąžinkite botą į grupę ir išsiųskite bandomąją žinutę arba įklijuokite naują raktą.",
       "unreadable": "Išsaugoto boto rakto nebeįmanoma perskaityti – dažniausiai taip nutinka atkūrus kopiją iš kitos sistemos. Įklijuokite raktą iš naujo."
@@ -1708,18 +1726,18 @@
       "security": "Vertybinis popierius",
       "reason": "Priežastis",
       "at": "Kada",
-      "privacy": "Tiekėjai sužino tik tai, kuriuos vertybinius popierius ši sistema turi, pagal jų simbolius: niekada ne kiekius, sumas ar kas juos turi. EUR įkainota kriptovaliuta gaunama iš „Kraken“ be rakto, visa kita iš EODHD."
+      "privacy": "Tiekėjai sužino tik tai, kuriuos vertybinius popierius ši sistema turi, pagal jų simbolius: niekada ne kiekius, sumas ar kas juos turi. Eurais įkainotų kriptovaliutų kainos gaunamos iš „Kraken“ be rakto, visų kitų – iš EODHD."
     },
     "importInbox": {
       "title": "Importo gautieji",
-      "description": "Aplankas, kurį serveris stebi ieškodamas banko išrašų failų. Kiekvienas failas tampa peržiūra, laukiančia sąskaitos, kurią jis nurodo, savininko.",
+      "description": "Aplankas, kurį serveris stebi ieškodamas banko išrašų failų. Kiekvienas failas tampa importo peržiūra, kurios laukia jame nurodytos sąskaitos savininkas.",
       "off": "Gautieji išjungti. Kad juos įjungtumėte, nustatykite App__ImportInbox į aplanką, prijungtą prie API konteinerio.",
-      "folder": "Stebimas",
+      "folder": "Stebimas aplankas",
       "failures": "Failai, kurių gautieji negalėjo panaudoti",
       "noFailures": "Nesėkmių nėra",
       "file": "Failas",
       "reason": "Priežastis",
-      "at": "Perkelta į failed"
+      "at": "Perkelta į aplanką „failed“"
     },
     "setupWizard": {
       "title": "Jx Finance sąranka",
@@ -1741,7 +1759,7 @@
       },
       "features": {
         "title": "Pasirinkite funkcijas",
-        "description": "Pradėkite nuo rinkinio, tada pažymėkite ar atžymėkite ką norite. Vėliau išjungta funkcija savo duomenų nepraranda.",
+        "description": "Pradėkite nuo rinkinio, tada pažymėkite ar atžymėkite, ką norite. Vėliau išjungta funkcija savo duomenų nepraranda.",
         "presets": "Rinkiniai",
         "preset": {
           "track": "Išlaidų apskaita",
@@ -1764,7 +1782,7 @@
           },
           "sorting": {
             "title": "Kategorijos ir taisyklės",
-            "body": "Surūšiuokite operaciją kartą, ir taisyklė tai pakartos kiekvieno importo metu. Žymos ir gavėjų pavadinimai prideda detalių be naujų kategorijų."
+            "body": "Kartą priskirkite operacijai kategoriją – taisyklė tai pakartos per kiekvieną importą. Žymos ir gavėjų pavadinimai prideda detalių be naujų kategorijų."
           },
           "review": {
             "title": "Planas ir peržiūra",
@@ -1787,7 +1805,7 @@
           },
           "demo": {
             "label": "Pavyzdžiai",
-            "description": "Šeši mėnesiai pavyzdinių sąskaitų, operacijų, biudžetų ir sąskaitų apmokėti. Vėliau juos pašalinus, pašalinama ir viskas, ką pridėjote tuo metu."
+            "description": "Šešių mėnesių pavyzdinės sąskaitos, operacijos, biudžetai ir periodiniai įrašai. Vėliau juos pašalinus, pašalinama ir viskas, ką pridėjote per tą laiką."
           },
           "restore": {
             "label": "Atkurti",
@@ -1835,8 +1853,8 @@
     },
     "rollover": "Perkelti likutį į kitą laikotarpį",
     "rolloverHint": "Neišleistas likutis padidina kito laikotarpio limitą, o viršijimas jį sumažina. Perkeliama ne daugiau kaip iš dvylikos ankstesnių laikotarpių.",
-    "windowLabel": "{{period}} · {{from}} – {{to}}",
-    "carryLabel": "{{base}} bazinis {{carried}} perkelta = {{effective}}",
+    "windowLabel": "{{period}} · {{from}}–{{to}}",
+    "carryLabel": "{{base}} bazinė {{carried}} perkelta = {{effective}}",
     "ofLimit": "iš {{amount}}",
     "left": "Liko {{amount}}",
     "over": "Viršyta {{amount}}",
@@ -1875,7 +1893,7 @@
       "created": "Biudžetas sukurtas"
     },
     "target": "Limitas pagal",
-    "tagHint": "Kiekviena išlaida su šia žyma skaičiuojama visa, nesvarbu kokia kategorija; grąžinimas su ja atimamas.",
+    "tagHint": "Kiekviena išlaida su šia žyma skaičiuojama visa, nesvarbu, kokia jos kategorija; grąžinimas su šia žyma atimamas.",
     "tag": "Žyma"
   },
   "shortcuts": {
@@ -1933,7 +1951,7 @@
     "fundingSharePercent": "Likučio dalis (%)",
     "needAccount": "Pirmiausia sukurkite sąskaitą arba stebėkite šį tikslą rankiniu būdu.",
     "fundedFrom": "Iš sąskaitos „{{account}}“",
-    "fundedShareFrom": "{{percent}}% sąskaitos „{{account}}“ likučio",
+    "fundedShareFrom": "{{percent}} % sąskaitos „{{account}}“ likučio",
     "unavailableAccount": "Nepasiekiama sąskaita",
     "progressUnavailable": "Pažanga nepasiekiama",
     "progressUnavailableHint": "Kaupimo sąskaita archyvuota arba su jumis nebebendrinama.",
@@ -1945,6 +1963,7 @@
     "accounts": "Sąskaitos",
     "assets": "Turtas",
     "debts": "Skolos",
+    "total": "Iš viso",
     "netWorth": "Grynasis turtas",
     "trend": "Tendencija",
     "openBalances": {
@@ -2053,7 +2072,8 @@
       "paidOffSavings": "Permoka grąžina visą skolą, sutaupysite {{amount}} palūkanų.",
       "noSavings": "Įveskite sumą ir pamatysite, kiek anksčiau skola bus grąžinta arba kiek sumažės įmoka.",
       "trackedBalance": "Sekamas likutis",
-      "balanceTracked": "Sekamas"
+      "balanceTracked": "Sekamas",
+      "paid": "Sumokėta"
     },
     "depreciation": {
       "title": "Nusidėvėjimas",
@@ -2080,7 +2100,7 @@
       "monthly": "Mėnesio nusidėvėjimas",
       "residual": "Iki {{amount}}",
       "noDepreciation": "Nenusidėvi",
-      "fullyDepreciatedOn": "Visiškai nusidėvės",
+      "fullyDepreciatedOn": "Visiško nusidėvėjimo data",
       "chart": "Vertė laikui bėgant",
       "chartLabel": "Turto vertė pagal datą su pažymėtais įvertinimais",
       "value": "Vertė",
@@ -2109,19 +2129,19 @@
     },
     "tracking": {
       "enable": "Sekti įmokas",
-      "hint": "Nurodytą dieną likutis prilyginamas žemiau įvestai sumai, o vėliau iš jo atimama su šia skola susietų įmokų pagrindinė dalis.",
+      "hint": "Nurodytą dieną likutis prilyginamas žemiau įvestai sumai, o vėliau iš jo atimama su šia skola susietų įmokų paskolos dalis.",
       "balance": "Likutis",
       "balanceOn": "Likučio data"
     },
     "payments": {
       "title": "Susietos įmokos",
       "balance": "Sekamas likutis",
-      "anchor": "{{amount}} ({{date}}), atėmus nuo tada grąžintą pagrindinę dalį. Įprasta įmoka pirmiausia padengia mėnesio palūkanas pagal skolos palūkanų normą, o visa papildoma įmoka tenka pagrindinei daliai.",
+      "anchor": "{{amount}} ({{date}}), atėmus nuo tada grąžintą paskolos dalį. Įprasta įmoka pirmiausia padengia mėnesio palūkanas pagal skolos palūkanų normą, o visa papildoma įmoka tenka pagrindinei daliai.",
       "incomplete": "Kai kurioms įmokoms trūksta tos dienos valiutos kurso, todėl jos į likutį neįskaičiuotos.",
       "unavailable_one": "{{count}} susieta įmoka ištrinta arba jums nebebendrinama, todėl neįskaičiuota.",
       "unavailable_few": "{{count}} susietos įmokos ištrintos arba jums nebebendrinamos, todėl neįskaičiuotos.",
       "unavailable_many": "{{count}} susietos įmokos ištrinta arba jums nebebendrinama, todėl neįskaičiuota.",
-      "unavailable_other": "{{count}} susietų įmokų ištrinta arba jums nebebendrinama, todėl jos neįskaičiuotos.",
+      "unavailable_other": "{{count}} susietų įmokų ištrinta arba jums nebebendrinama, todėl neįskaičiuota.",
       "empty": "Susietų įmokų dar nėra.",
       "link": "Susieti įmokas",
       "noCandidates": "Nuo likučio datos nėra nesusietų išlaidų.",
@@ -2137,11 +2157,11 @@
         "extra": "Papildoma",
         "auto": "Įprasta, o jei šį mėnesį įprasta jau yra – papildoma"
       },
-      "principal": "Pagrindinė dalis pagal išrašą",
+      "principal": "Paskolos dalis pagal išrašą",
       "principalHint": "Neprivaloma. Pakeičia pagal palūkanų normą apskaičiuotą paskirstymą.",
       "interest": "palūkanos {{amount}}",
-      "principalPart": "pagrindinė dalis {{amount}}",
-      "typed": "pagrindinė dalis {{amount}} pagal išrašą",
+      "principalPart": "paskolos dalis {{amount}}",
+      "typed": "paskolos dalis {{amount}} pagal išrašą",
       "balanceAfter": "likutis {{amount}}",
       "overpaid": "permokėta {{amount}}",
       "unlink": "Atsieti",
@@ -2202,7 +2222,7 @@
       "symbol": "Kainos simbolis",
       "symbolHint": "Taip, kaip jį rašo šaltinis, pavyzdžiui, VWCE.XETRA arba XBTEUR.",
       "find": "Rasti",
-      "findHint": "Ieško išsaugoto ISIN EODHD sistemoje. Reikia EODHD rakto; kiekviena paieška yra viena dienos užklausa.",
+      "findHint": "Ieško išsaugoto ISIN EODHD sistemoje. Reikia EODHD rakto; kiekviena paieška sunaudoja vieną iš dienos užklausų.",
       "candidates": "Šio ISIN kotiruotės",
       "noCandidates": "EODHD nežino nė vienos šio ISIN kotiruotės."
     },
@@ -2230,7 +2250,8 @@
       "cost": "Investuota",
       "label": "Portfelio rinkos vertė ir investuota suma laikui bėgant",
       "empty": "Šiuo laikotarpiu nieko neturėta.",
-      "partial": "Kai kuriomis datomis pozicija dar neturėjo kainos ar valiutos kurso, todėl į abi linijas neįtraukta. Įrašykite ankstesnes kainas kainų istorijoje, kad jos būtų užpildytos."
+      "partial": "Kai kuriomis datomis pozicija dar neturėjo kainos ar valiutos kurso, todėl į abi linijas neįtraukta. Įrašykite ankstesnes kainas kainų istorijoje, kad jos būtų užpildytos.",
+      "summary": "Rinkos vertė pasikeitė nuo {{start}} ({{startDate}}) iki {{end}} ({{endDate}}), pokytis {{change}}."
     },
     "years": {
       "title": "Pajamos pagal metus",
@@ -2246,7 +2267,7 @@
     "tax": {
       "open": "Mokesčių suvestinė",
       "title": "Investicijų mokesčių suvestinė",
-      "description": "Vienų kalendorinių metų įrašų suvestinė: pardavimai, pajamos ir mokesčiai.",
+      "description": "Vienų kalendorinių metų įrašų suvestinė: perleidimai, pajamos ir mokesčiai.",
       "back": "Grįžti į portfelį",
       "yearTitle": "{{year}} m.",
       "year": "Metai",
@@ -2260,20 +2281,20 @@
       "print": "Spausdinti",
       "disclaimer": "Tai yra jūsų įrašytų duomenų suvestinė, o ne mokestinė konsultacija. Ji netaiko jokio mokesčio, tarifo ar lengvatos ir nenurodo jokios deklaracijos formos. Prieš naudodami skaičius, palyginkite juos su brokerio ataskaitomis.",
       "relatesToReports": "Tie patys dividendai, palūkanos, išskaičiuotas mokestis ir komisiniai jau įskaičiuoti ataskaitose ir suvestinėje kaip pajamos ir išlaidos. Šiame puslapyje jie išvardyti po vieną už vienerius metus, o prie kiekvieno pardavimo pridėtas realizuotas pelnas, kurio ataskaitos nerodo. Niekas čia neskaičiuojama du kartus, o kainų istorija šių skaičių nekeičia, nes kaina veikia tik nerealizuotą vertę.",
-      "incomplete": "Bent viena pozicija parduota neįrašius jos pirkimo, todėl įsigijimo vertė šiame puslapyje nepilna. Įrašykite trūkstamus įrašus ir atverkite puslapį iš naujo.",
+      "incomplete": "Bent viena pozicija parduota neįrašius jos pirkimo, todėl įsigijimo savikaina šiame puslapyje nepilna. Įrašykite trūkstamus įrašus ir atverkite puslapį iš naujo.",
       "realizedGain": "Realizuotas pelnas",
       "dividends": "Dividendai",
       "interest": "Palūkanos",
       "withholdingTax": "Išskaičiuotas mokestis",
       "fees": "Komisiniai",
-      "disposals": "Pardavimai",
+      "disposals": "Perleidimai",
       "disposalsHint": "Kiekvienas pardavimas su panaudotomis partijomis, pradedant seniausia.",
       "noDisposals": "Šiais metais nieko neparduota.",
       "soldOn": "Parduota",
       "security": "Vertybinis popierius",
       "quantity": "Kiekis",
       "proceeds": "Gautos lėšos",
-      "costBasis": "Įsigijimo vertė",
+      "costBasis": "Įsigijimo savikaina",
       "gain": "Pelnas arba nuostolis",
       "lots": "Panaudotos partijos",
       "lot": "{{date}} · {{quantity}} · {{cost}}",
@@ -2347,7 +2368,7 @@
       "costShareHint": "Likusi savikaina priskiriama gautiems pinigams kaip perleidimas. Dalis nurodyta susijungimo dokumentuose.",
       "costShareOnly": "Šis įrašas importuotas. Čia galima nustatyti tik į naują vertybinį popierių perkeliamą savikainos dalį.",
       "spunOffSecurity": "Naujas vertybinis popierius",
-      "spinOffCostShare": "Į naują vertybinį popierių perkeliama savikaina (%)",
+      "spinOffCostShare": "Į naują vertybinį popierių perkeliama savikainos dalis (%)",
       "spinOffCostShareHint": "Šį paskirstymą skelbia emitentas. Partijos išlaiko pirkimo datas. Palikite tuščią, jei nurodysite vėliau; iki tol naujos akcijos skaičiuojamos be savikainos.",
       "price": "Vieneto kaina",
       "priceIn": "Vieneto kaina ({{currency}})",
@@ -2426,10 +2447,10 @@
         "trades_few": "Importuoti {{count}} sandoriai.",
         "trades_many": "Importuota {{count}} sandorio.",
         "trades_other": "Importuota {{count}} sandorių.",
-        "cashEntries_one": "Importuotas {{count}} dividendų, mokesčių ar palūkanų įrašas.",
-        "cashEntries_few": "Importuoti {{count}} dividendų, mokesčių ar palūkanų įrašai.",
-        "cashEntries_many": "Importuota {{count}} dividendų, mokesčių ar palūkanų įrašo.",
-        "cashEntries_other": "Importuota {{count}} dividendų, mokesčių ar palūkanų įrašų.",
+        "cashEntries_one": "Importuotas {{count}} dividendų, mokesčių, palūkanų ar komisinių įrašas.",
+        "cashEntries_few": "Importuoti {{count}} dividendų, mokesčių, palūkanų ar komisinių įrašai.",
+        "cashEntries_many": "Importuota {{count}} dividendų, mokesčių, palūkanų ar komisinių įrašo.",
+        "cashEntries_other": "Importuota {{count}} dividendų, mokesčių, palūkanų ar komisinių įrašų.",
         "conversions_one": "Importuotas {{count}} valiutos keitimas.",
         "conversions_few": "Importuoti {{count}} valiutos keitimai.",
         "conversions_many": "Importuota {{count}} valiutos keitimo.",
@@ -2465,7 +2486,7 @@
       },
       "help": {
         "title": "Kaip sukurti „Flex Query“",
-        "create": "„Interactive Brokers“ „Client Portal“ atverkite „Performance & Reports“, tada „Flex Queries“ ir sukurkite „Activity Flex Query“.",
+        "create": "„Interactive Brokers“ portale „Client Portal“ atverkite „Performance & Reports“, tada „Flex Queries“ ir sukurkite „Activity Flex Query“.",
         "sections": "Pridėkite skiltis „Trades“ (pažymėję „Executions“), „Cash Transactions“, „Corporate Actions“ ir „Open Positions“.",
         "format": "Pasirinkite XML formatą ir datos formatą yyyyMMdd.",
         "period": "Pasirinkite laikotarpį, pavyzdžiui, „Last 365 days“, išsaugokite užklausą ir paleiskite ją, kad atsisiųstumėte failą.",
@@ -2504,11 +2525,12 @@
       "tradeCsv": {
         "intro": "Bet kuriam kitam brokeriui: surašykite sandorius į CSV su antraštės eilute. Privalomi stulpeliai Date, Type (buy, sell, dividend, withholdingTax, interest ar fee) ir Currency; pirkimams ir pardavimams reikia Symbol, Quantity ir Price, kitiems – Amount. Fee, Name, Isin, SecurityType (stock, etf ar fund) ir Id neprivalomi.",
         "fileHint": "CSV failas iki 5 MB. Tos pačios eilutės niekada neimportuojamos du kartus.",
-        "tooLarge": "Failas didesnis nei 5 MB."
+        "tooLarge": "Failas didesnis nei 5 MB.",
+        "sample": "CSV pavyzdys"
       }
     },
     "connection": {
-      "description": "„Jx Finance“ kartą per dieną atsisiunčia „Flex Query“ ataskaitą ir importuoja tai, kas nauja. Prieigos raktas saugomas užšifruotas ir daugiau neberodomas.",
+      "description": "Jx Finance kartą per dieną atsisiunčia „Flex Query“ ataskaitą ir importuoja tai, kas nauja. Prieigos raktas saugomas užšifruotas ir daugiau neberodomas.",
       "lastSync": "Paskutinis sinchronizavimas",
       "neverSynced": "Dar nesinchronizuota",
       "lastError": "Paskutinis sinchronizavimas nepavyko",
@@ -2543,7 +2565,7 @@
       "set": "Nustatyti tikslus",
       "edit": "Keisti tikslus",
       "title": "Tikslinis paskirstymas",
-      "description": "Pasirinkite, kokią dalį turėtų sudaryti kiekviena grupė, visas pagal vieną požymį. Dalių suma yra 100 %, o turima grupė be dalies turi 0 % tikslą.",
+      "description": "Nurodykite, kokią dalį turėtų sudaryti kiekviena grupė; visi tikslai nustatomi pagal vieną požymį. Dalių suma turi būti 100 %, o turimos grupės, kuriai dalis nenurodyta, tikslas yra 0 %.",
       "dimension": "Tikslai pagal",
       "shares": "Tikslinės dalys",
       "shareLabel": "{{name}} tikslinė dalis, procentais",
@@ -2553,8 +2575,8 @@
       "clearHint": "Palikite visas dalis tuščias, jei norite pašalinti tikslus.",
       "otherDimension": "Jūsų tikslai nustatyti pagal požymį „{{dimension}}“.",
       "target": "Tikslas {{target}}",
-      "over": "{{points}} proc. punkto daugiau",
-      "under": "{{points}} proc. punkto mažiau",
+      "over": "{{points}} proc. p. daugiau",
+      "under": "{{points}} proc. p. mažiau",
       "onTarget": "Atitinka tikslą",
       "amount": "Nauja investuojama suma",
       "amountInvalid": "Įveskite didesnę už nulį sumą, ne daugiau kaip dviejų skaitmenų po kablelio.",
@@ -2617,6 +2639,7 @@
     "nextDueDate": "Kitas terminas",
     "remindDaysBefore": "Priminti likus dienų",
     "active": "Aktyvus",
+    "activeTitle": "Aktyvūs įrašai",
     "inactive": "Neaktyvus",
     "confirm": "Patvirtinti",
     "confirmTitle": "Patvirtinti periodinį įrašą",
@@ -2634,14 +2657,14 @@
     "editTitle": "Redaguoti periodinį įrašą",
     "activeHint": "Neaktyvus įrašas nesiunčia priminimų ir jo negalima patvirtinti.",
     "confirmFixed": {
-      "expense": "{{amount}} bus įrašyta kaip „{{name}}“ išlaidos {{date}} data, o įrašui bus nustatytas kitas terminas.",
-      "income": "{{amount}} bus įrašyta kaip „{{name}}“ pajamos {{date}} data, o įrašui bus nustatytas kitas terminas.",
-      "transfer": "{{amount}} bus pervesta iš „{{from}}“ į „{{to}}“ {{date}} data, o įrašui bus nustatytas kitas terminas."
+      "expense": "{{amount}} bus įrašyta kaip „{{name}}“ išlaidos su data {{date}}, o įrašui bus nustatytas kitas terminas.",
+      "income": "{{amount}} bus įrašyta kaip „{{name}}“ pajamos su data {{date}}, o įrašui bus nustatytas kitas terminas.",
+      "transfer": "{{amount}} bus pervesta iš „{{from}}“ į „{{to}}“ su data {{date}}, o įrašui bus nustatytas kitas terminas."
     },
     "confirmVariable": {
-      "expense": "Jūsų įvesta suma bus įrašyta kaip „{{name}}“ išlaidos {{date}} data, o įrašui bus nustatytas kitas terminas.",
-      "income": "Jūsų įvesta suma bus įrašyta kaip „{{name}}“ pajamos {{date}} data, o įrašui bus nustatytas kitas terminas.",
-      "transfer": "Jūsų įvesta suma bus pervesta iš „{{from}}“ į „{{to}}“ {{date}} data, o įrašui bus nustatytas kitas terminas."
+      "expense": "Jūsų įvesta suma bus įrašyta kaip „{{name}}“ išlaidos su data {{date}}, o įrašui bus nustatytas kitas terminas.",
+      "income": "Jūsų įvesta suma bus įrašyta kaip „{{name}}“ pajamos su data {{date}}, o įrašui bus nustatytas kitas terminas.",
+      "transfer": "Jūsų įvesta suma bus pervesta iš „{{from}}“ į „{{to}}“ su data {{date}}, o įrašui bus nustatytas kitas terminas."
     },
     "confirmStale": "Šis terminas jau patvirtintas arba įrašas buvo pakeistas kitur. Įrašas atnaujintas: patikrinkite viršuje nurodytą terminą ir, jei jis vis dar aktualus, patvirtinkite dar kartą.",
     "groups": {
@@ -2660,7 +2683,7 @@
       "expectedOut": "Laukiamos išlaidos",
       "expectedIn": "Laukiamos pajamos",
       "paidOut": "Sumokėta",
-      "partial": "Iš dalies apytiksliai",
+      "partial": "Iš dalies apytikslė suma",
       "unpriced_one": "{{count}} įrašas be sumos",
       "unpriced_few": "{{count}} įrašai be sumos",
       "unpriced_many": "{{count}} įrašo be sumos",
@@ -2710,8 +2733,8 @@
     "whatIfTitle": "Išbandyti mokėjimą",
     "whatIfAmount": "Suma",
     "whatIfTry": "Rodyti prognozėje",
-    "whatIfHint": "Vienkartinis mokėjimas iš {{account}}, kuris neišsaugomas, kad pamatytumėte, ar likučio pakaks.",
-    "whatIfShown": "Įtrauktas neišsaugotas {{amount}} mokėjimas iš {{account}}, {{date}}.",
+    "whatIfHint": "Neišsaugomas vienkartinis mokėjimas iš sąskaitos „{{account}}“, kad pamatytumėte, ar likučio pakaks.",
+    "whatIfShown": "Įtrauktas neišsaugotas {{amount}} mokėjimas iš sąskaitos „{{account}}“ ({{date}}).",
     "whatIfClear": "Pašalinti",
     "whatIfEntry": "Išbandytas mokėjimas, neišsaugotas"
   },
@@ -2736,7 +2759,7 @@
     "markAllRead": "Pažymėti visus kaip skaitytus",
     "kinds": {
       "billDue": "Artėja periodinio įrašo terminas",
-      "budgetWarning": "Biudžetas pasiekia 80%",
+      "budgetWarning": "Biudžetas pasiekia 80 %",
       "budgetExceeded": "Pasiektas biudžeto limitas",
       "unusualAmount": "Išlaida gerokai viršija įprastą sumą",
       "unusualAmounts": "Kelios neįprastos išlaidos vienu metu",
@@ -2744,7 +2767,7 @@
       "monthReadyToClose": "Pasibaigusį mėnesį galima uždaryti",
       "monthlyDigest": "Mėnesio suvestinė",
       "lowBalance": "Prognozuojama, kad sąskaitos likutis taps neigiamas",
-      "warrantyExpiring": "Baigiasi čekio garantija",
+      "warrantyExpiring": "Netrukus baigiasi kvito garantija",
       "importWaiting": "Į importo gautuosius atkeliauja banko išrašas"
     },
     "unusualAmount": "{{amount}}: {{factor}}× daugiau nei įprasta ({{typical}})",
@@ -2758,12 +2781,12 @@
       "income": "Numatoma gauti: {{date}}",
       "transfer": "Pervedimo data: {{date}}"
     },
-    "budgetWarning": "{{period}} limitas: panaudota {{percent}}%",
+    "budgetWarning": "{{period}} limitas: panaudota {{percent}} %",
     "budgetExceeded": "{{period}} limitas pasiektas",
     "titleWithCount": "Pranešimai, neskaitytų: {{count}}",
     "unavailable": "Nepavyko įkelti pranešimų",
     "monthReadyToClose": "{{month}} baigėsi: peržiūrėkite ir uždarykite mėnesį",
-    "monthlyDigest": "Pajamos {{income}}, išlaidos {{expense}}, grynai {{net}}",
+    "monthlyDigest": "Pajamos {{income}}, išlaidos {{expense}}, balansas {{net}}",
     "lowBalance": "Pagal prognozę {{date}} likutis taps neigiamas, mažiausias {{amount}}",
     "warrantyExpiring": "Garantija baigiasi {{date}}",
     "importWaiting": "Banko išrašas laukia peržiūros"
@@ -2800,15 +2823,15 @@
     },
     "settleUp": {
       "title": "Balansai",
-      "description": "Kas kam skolingas už padalintas išlaidas, pagal valiutą. Balansai į grynąjį turtą įskaičiuojami tik ten įjungus „Atviri balansai“.",
+      "description": "Kas kam skolingas už padalintas išlaidas, pagal valiutą. Balansai į grynąjį turtą įskaičiuojami tik grynojo turto skiltyje įjungus „Atviri balansai“.",
       "empty": "Visi atsiskaitę.",
       "owes": "{{name}} skolingas {{amount}}",
       "isOwed": "{{name}} turi gauti {{amount}}",
       "youOwe": "Jūs skolingi {{amount}}",
       "youAreOwed": "Jūs turite gauti {{amount}}",
       "formerMember": "Buvęs narys",
-      "suggestions": "Kad atsiskaitytumėte",
-      "pays": "{{from}} sumoka {{to}} {{amount}}",
+      "suggestions": "Kaip atsiskaityti",
+      "pays": "{{from}} → {{to}}: {{amount}}",
       "record": "Įrašyti mokėjimą",
       "showShared": "Rodyti bendras išlaidas",
       "hideShared": "Slėpti bendras išlaidas"
@@ -2822,14 +2845,14 @@
       "paidBy": "Sumokėjo {{name}}",
       "yourShare": "Jūsų dalis {{amount}}",
       "notCounted": "Neskaičiuojama, kol operacija ištrinta",
-      "paid": "{{from}} sumokėjo {{to}}",
+      "paid": "{{from}} sumokėjo, gavo {{to}}",
       "withTransfer": "Su pervedimu"
     },
     "split": {
       "action": "Padalinti su namų ūkiu",
       "edit": "Keisti padalijimą",
       "household": "Namų ūkis",
-      "method": "Dalyti",
+      "method": "Dalijimo būdas",
       "methods": {
         "equal": "Po lygiai",
         "shares": "Dalimis",
@@ -2837,12 +2860,12 @@
       },
       "members": "Kas dalyvauja",
       "include": "{{name}} dalyvauja",
-      "weight": "{{name}} dalys",
-      "amount": "{{name}} suma",
+      "weight": "Dalys: {{name}}",
+      "amount": "Suma: {{name}}",
       "preview": "{{name}} moka {{amount}}",
       "mismatch": "Sumos sudaro {{assigned}}, o ne {{total}}.",
       "nobody": "Pasirinkite, kas dalyvauja.",
-      "mark": "Padalinta su {{household}}, jūsų dalis {{amount}}",
+      "mark": "Padalinta su namų ūkiu „{{household}}“, jūsų dalis {{amount}}",
       "differs": "Suma pasikeitė po padalijimo.",
       "update": "Atnaujinti padalijimą"
     },
@@ -2858,30 +2881,30 @@
       "withTransferHint": "Įrašo įprastą pervedimą iš mokėtojo sąskaitos į gavėjo sąskaitą.",
       "fromAccount": "Iš sąskaitos",
       "toAccount": "Į sąskaitą",
-      "noAccount": "Jums nematoma jokia {{name}} sąskaita valiuta {{currency}}, todėl galima įrašyti tik mokėjimą."
+      "noAccount": "Nematote jokios nario {{name}} sąskaitos valiuta {{currency}}, todėl galima įrašyti tik mokėjimą."
     },
     "people": {
       "title": "Žmonės",
-      "description": "Draugai ir kiti žmonės už namų ūkio ribų su tuo, ką jiems paskolinote ar su jais pasidalinote. Juos matote tik jūs; balansai į grynąjį turtą įskaičiuojami tik ten įjungus „Atviri balansai“.",
+      "description": "Draugai ir kiti žmonės už namų ūkio ribų: ką jiems paskolinote ar kokias išlaidas su jais pasidalijote. Juos matote tik jūs; balansai į grynąjį turtą įskaičiuojami tik grynojo turto skiltyje įjungus „Atviri balansai“.",
       "add": "Pridėti žmogų",
       "rename": "Pervadinti žmogų",
       "name": "Vardas",
       "namePlaceholder": "pvz., Jonas",
-      "empty": "Žmonių dar nėra. Pridėkite tą, kuriam skolinate pinigų ar su kuriuo dalijatės vakarienės sąskaitą, tada padalinkite pirkinį su juo iš jo eilutės operacijų sąraše.",
+      "empty": "Žmonių dar nėra. Pridėkite tą, kuriam skolinate pinigų ar su kuriuo dalijatės vakarienės sąskaitą, tada padalinkite su juo pirkinį – tai daroma pirkinio eilutėje operacijų sąraše.",
       "even": "Atsiskaitę",
       "owesYou": "Jums skolingas {{amount}}",
       "youOwe": "Jūs skolingi {{amount}}",
       "record": "Įrašyti mokėjimą",
       "showHistory": "Rodyti istoriją",
       "hideHistory": "Slėpti istoriją",
-      "emptyHistory": "Su {{name}} dar nieko nėra.",
+      "emptyHistory": "Su asmeniu {{name}} dar nieko nėra.",
       "shareOfSplit": "Jo dalis padalijime",
-      "youPaid": "Jūs sumokėjote {{name}}",
+      "youPaid": "Jūs sumokėjote asmeniui {{name}}",
       "theyPaid": "{{name}} sumokėjo jums",
       "payment": {
-        "title": "Įrašyti mokėjimą su {{name}}",
+        "title": "Įrašyti mokėjimą: {{name}}",
         "direction": "Kas sumokėjo",
-        "hint": "Paskolinti ar grąžinti jūsų pinigai didina jo skolą; jo jums sumokėti ar už jus sumokėti pinigai ją mažina. Sąskaitos nesikeičia."
+        "hint": "Jūsų paskolinti ar jam grąžinti pinigai didina jo skolą jums; jo jums sumokėti ar už jus sumokėti pinigai ją mažina. Sąskaitų likučiai nesikeičia."
       },
       "split": {
         "action": "Padalinti su žmogumi",
@@ -2925,7 +2948,7 @@
       "settlement": "Mokėjimas",
       "budget": "Biudžetas",
       "goal": "Tikslas",
-      "recurringBill": "Pasikartojantis įrašas",
+      "recurringBill": "Periodinis įrašas",
       "asset": "Turtas",
       "debt": "Skola",
       "transactionGroup": "Operacijų grupė"
@@ -2946,7 +2969,7 @@
       "memberAdded": "{{actor}} pridėjo narį {{description}}",
       "memberRemoved": "{{actor}} pašalino narį {{description}}",
       "memberRoleChanged": "{{actor}} pakeitė nario {{description}} vaidmenį",
-      "renamed": "{{actor}} pervadino namų ūkį į {{description}}",
+      "renamed": "{{actor}} pervadino namų ūkį: {{description}}",
       "createdAttachment": "{{actor}} pridėjo failą {{description}}",
       "deletedAttachment": "{{actor}} pašalino failą {{description}}",
       "restoredAttachment": "{{actor}} atkūrė failą {{description}}"
@@ -3027,7 +3050,7 @@
     "expenseByCategory": "Išlaidos pagal kategoriją",
     "incomeByCategory": "Pajamos pagal kategoriją",
     "expenseByPayee": "Išlaidos pagal gavėją",
-    "payeeHint": "Skaičiuojamos visos operacijos, o aprašymai, kurie skiriasi tik nuorodų numeriais, laikomi vienu gavėju.",
+    "payeeHint": "Operacijos skaičiuojamos visa suma, o aprašymai, kurie skiriasi tik nuorodų numeriais, laikomi vienu gavėju.",
     "noDescription": "Be aprašymo",
     "showAllPayees": "Rodyti visus",
     "noPayeeSpending": "Šiuo laikotarpiu išlaidų pagal gavėjus nėra.",
@@ -3047,7 +3070,7 @@
         "previousMonth": "Tuo pačiu laikotarpiu praėjusį mėnesį",
         "previousYear": "Tuo pačiu laikotarpiu pernai"
       },
-      "against": "Palyginta su {{from}} – {{to}}",
+      "against": "Palyginta su {{from}}–{{to}}",
       "was": "buvo {{amount}}",
       "noBase": "anksčiau nebuvo",
       "verdict": {
@@ -3081,8 +3104,8 @@
       "moneyBackLine": "Grąžinta: {{items}} (grąžinta daugiau, nei išleista)"
     },
     "receiptItems": {
-      "title": "Čekių prekės",
-      "hint": "Kiek kainavo nuskaitytų čekių prekės šio laikotarpio operacijų prieduose.",
+      "title": "Kvitų prekės",
+      "hint": "Kiek kainavo nuskaitytų kvitų prekės šio laikotarpio operacijų prieduose.",
       "search": "Rasti prekę",
       "item": "Prekė",
       "bought": "Pirkta",
@@ -3092,7 +3115,7 @@
       "times_few": "{{count}} kartus",
       "times_many": "{{count}} karto",
       "times_other": "{{count}} kartų",
-      "noReceipts": "Šiuo laikotarpiu čekių nenuskaityta. Išlaidai su pridėtu čekiu pasirinkite „Užpildyti iš čekio“.",
+      "noReceipts": "Šiuo laikotarpiu kvitų nenuskaityta. Išlaidai su pridėtu kvitu pasirinkite „Užpildyti iš kvito“.",
       "noMatches": "Nė viena prekė neatitinka.",
       "table": "Prekės pagal sumą"
     },
@@ -3107,7 +3130,7 @@
       "map": "Žemėlapis",
       "mapLabel": "Išlaidų pagal vietą žemėlapis: {{places}}",
       "mapLabelEmpty": "Išlaidų pagal vietą žemėlapis; nė viena vieta dar neturi padėties",
-      "noCoordinates": "Nė viena iš šių vietų dar neturi padėties. Ją išsaugo „Naudoti mano vietą“ operacijos formoje.",
+      "noCoordinates": "Nė viena iš šių vietų dar neturi padėties. Ją išsaugosite operacijos formoje paspaudę „Naudoti mano vietą“.",
       "mapFailed": "Šioje naršyklėje žemėlapio nupiešti nepavyko. Tos pačios vietos yra sąraše.",
       "toggleAttribution": "Rodyti arba slėpti žemėlapio šaltinius"
     }
@@ -3119,7 +3142,7 @@
     "noRows": "Šiame faile nerasta importuojamų eilučių.",
     "duplicate": "Jau importuota",
     "matched": "Atitinka jūsų įrašą",
-    "matchedHint": "Šį įrašą įvedėte {{date}}: {{description}}. Importuojant banko įrašas susiejamas su juo, o ne pridedamas antrą kartą, o jūsų kategorija, žymos ir aprašymas lieka.",
+    "matchedHint": "Šį įrašą įvedėte {{date}}: {{description}}. Importuojant banko įrašas bus susietas su juo, užuot pridėtas antrą kartą; jūsų kategorija, žymos ir aprašymas išliks.",
     "linkEntry": "Jūsų įrašas, {{date}}",
     "refund": "Grąžinimas",
     "refundOf": "Grąžinimas už {{date}} {{description}}",
@@ -3218,17 +3241,17 @@
     "reversal": "Atšaukimas",
     "formats": {
       "swedbankCsv": {
-        "hint": "Swedbank sąskaitos išrašas, eksportuotas CSV formatu, iki 5 MB. Niekas neišsaugoma, kol nepatvirtinate peržiūrėtų eilučių.",
+        "hint": "Swedbank sąskaitos išrašas, eksportuotas CSV formatu, iki 5 MB. Niekas neišsaugoma, kol nepatvirtinsite peržiūrėtų eilučių.",
         "errorFormat": "Šis failas neatitinka Swedbank CSV išrašo formato.",
         "errorFix": "Eksportuokite sąskaitos išrašą iš Swedbank CSV formatu ir įkelkite jo nekeisdami. Peržiūra tikrina stulpelių tvarką, valiutą, debeto ir kredito kryptį, datas, sumas ir nuorodas."
       },
       "camt053": {
-        "hint": "Internetinėje bankininkystėje atsisiųskite sąskaitos išrašą XML / ISO 20022 / camt.053 formatu, iki 20 MB. Niekas neišsaugoma, kol nepatvirtinate peržiūrėtų eilučių.",
+        "hint": "Internetinėje bankininkystėje atsisiųskite sąskaitos išrašą XML / ISO 20022 / camt.053 formatu, iki 20 MB. Niekas neišsaugoma, kol nepatvirtinsite peržiūrėtų eilučių.",
         "errorFormat": "Šis failas nėra camt.053 banko išrašas ISO 20022 XML formatu.",
         "errorFix": "Atsisiųskite sąskaitos išrašą iš internetinės bankininkystės XML (ISO 20022, camt.053) formatu ir įkelkite jo nekeisdami. Dienos ataskaitos (camt.052) ir pranešimai (camt.054) neskaitomi."
       },
       "genericCsv": {
-        "hint": "Bet kurio banko, kortelių išdavėjo ar mokėjimų programėlės CSV eksportas, iki 5 MB. Niekas neišsaugoma, kol nepatvirtinate peržiūrėtų eilučių.",
+        "hint": "Bet kurio banko, kortelių išdavėjo ar mokėjimų programėlės CSV eksportas, iki 5 MB. Niekas neišsaugoma, kol nepatvirtinsite peržiūrėtų eilučių.",
         "errorFormat": "Šio failo nepavyko perskaityti kaip CSV išrašo su antraštės eilute.",
         "errorFix": "Eksportuokite išrašą kaip CSV ir įkelkite jį nepakeistą. Jei stulpeliai atrodo neteisingai, pataisykite koduotę, skyriklį arba eilučių virš antraštės skaičių."
       },
@@ -3306,7 +3329,7 @@
       "skipLines": "Eilučių virš antraštės",
       "noHeaderRow": "Failas neturi antraštės eilutės",
       "noHeaderRowHint": "Tada stulpeliai pasirenkami pagal eilės numerį, o eilutės viršuje skaičiuojamos iki pirmojo įrašo.",
-      "position": "{{position}} stulpelis",
+      "position": "Stulpelis {{position}}",
       "money": "Pinigai",
       "amountStyle": "Kaip įrašyta suma",
       "styles": {
@@ -3371,7 +3394,7 @@
       "review": "Peržiūrėti",
       "dismiss": "Atmesti",
       "dismissTitle": "Atmesti šį išrašą?",
-      "dismissDescription": "Jis dings iš sąrašo, nieko neimportavus. Failas lieka gautųjų aplanko aplanke done.",
+      "dismissDescription": "Jis dings iš sąrašo, nieko neimportavus. Failas lieka gautųjų aplanko poaplankyje „done“.",
       "waiting_one": "Peržiūros laukia {{count}} banko išrašas.",
       "waiting_few": "Peržiūros laukia {{count}} banko išrašai.",
       "waiting_many": "Peržiūros laukia {{count}} banko išrašo.",
@@ -3388,7 +3411,7 @@
     "loadHint": "Apskaitoje niekas nepakeista. Patikrinkite ryšį ir bandykite dar kartą.",
     "pageFailedTitle": "Nepavyko įkelti „Jx Finance“.",
     "pageFailedBody": "Serveris neatsakė. Apskaitoje niekas nepakeista. Bandykite dar kartą arba, jei problema išlieka, perkraukite puslapį.",
-    "reload": "Perkrauti puslapį",
+    "reload": "Įkelti puslapį iš naujo",
     "details": "Techninė informacija"
   },
   "validation": {
@@ -3396,9 +3419,9 @@
     "required": "Šis laukas privalomas.",
     "money": "Įveskite teisingą sumą, pvz., 12,34.",
     "positiveMoney": "Įveskite sumą, didesnę už 0, pvz., 12,34.",
-    "iban": "Įveskite teisingą IBAN, pvz., LT12 1000 0111 0100 1000.",
+    "iban": "Įveskite galiojantį IBAN, pvz., LT12 1000 0111 0100 1000.",
     "maxLength": "Leidžiama ne daugiau kaip {{max}} simb.",
-    "email": "Įveskite teisingą el. pašto adresą.",
+    "email": "Įveskite galiojantį el. pašto adresą.",
     "minLength": "Reikia bent {{min}} simb.",
     "wholeNumberBetween": "Įveskite sveikąjį skaičių nuo {{min}} iki {{max}}."
   },
@@ -3426,7 +3449,7 @@
     "amountRange": "Sumos intervalas",
     "amountFrom": "Nuo",
     "amountTo": "Iki",
-    "amountHint": "Lyginama kiekvienos operacijos valiuta; grąžinimas atitinka pagal dydį.",
+    "amountHint": "Sumos lyginamos kiekvienos operacijos valiuta; grąžinimai lyginami pagal sumos dydį.",
     "amountAtLeast": "Ne mažiau kaip {{amount}}",
     "amountAtMost": "Ne daugiau kaip {{amount}}"
   },
@@ -3440,7 +3463,8 @@
     "netWorth": "Grynasis turtas",
     "earlierIncome": "Pajamos, ankstesnis laikotarpis",
     "earlierExpense": "Išlaidos, ankstesnis laikotarpis",
-    "soFar": "{{label}}, kol kas"
+    "soFar": "{{label}}, kol kas",
+    "period": "Laikotarpis"
   },
   "serverErrors": {
     "access": {
@@ -3503,7 +3527,7 @@
       "paymentTaken": "Ši operacija jau susieta su skola.",
       "notTracked": "Pirmiausia įjunkite šios skolos įmokų sekimą.",
       "lastBalance": "Skola turi turėti bent vieną įrašytą likutį. Vietoj to ištrinkite skolą.",
-      "ratePrecision": "Įveskite palūkanų normą, ne daugiau kaip 4 skaitmenys po kablelio, pvz., 3,459."
+      "ratePrecision": "Įveskite palūkanų normą, turinčią ne daugiau kaip 4 skaitmenis po kablelio, pvz., 3,459."
     },
     "decimal": {
       "malformed": "Įveskite skaičių su tašku kaip dešimtainiu skirtuku, pvz., 12.34."
@@ -3547,7 +3571,7 @@
     },
     "exchangeRate": {
       "unavailable": "Šiai datai nėra valiutos kurso. Pirmiausia sinchronizuokite kursus arba įveskite kursą nustatymuose.",
-      "notPositive": "Kursas turi būti didesnis už nulį, ne daugiau kaip 8 skaitmenys po kablelio.",
+      "notPositive": "Kursas turi būti didesnis už nulį ir turėti ne daugiau kaip 8 skaitmenis po kablelio.",
       "unsupportedCurrency": "Kursai nurodomi už vieną eurą, todėl euras savo kurso neturi.",
       "futureDate": "Kurso data negali būti vėlesnė nei šiandien.",
       "amountTooLarge": "Perskaičiuota biudžeto riba ar tikslo suma viršytų didžiausią leistiną sumą naujoje valiutoje. Pirmiausia ją sumažinkite."
@@ -3571,7 +3595,7 @@
       "notMember": "Nesate šio namų ūkio narys.",
       "required": "Bendram įrašui pasirinkite namų ūkį.",
       "scopeMismatch": "Užklausoje nurodyti du skirtingi namų ūkiai. Perkraukite puslapį ir bandykite dar kartą.",
-      "referenceNotShared": "Bendras įrašas gali naudoti tik su tuo pačiu namų ūkiu bendrinamas sąskaitas, kategorijas, žymes ir skolas."
+      "referenceNotShared": "Bendras įrašas gali naudoti tik su tuo pačiu namų ūkiu bendrinamas sąskaitas, kategorijas, žymas ir skolas."
     },
     "idempotency": {
       "keyReused": "Šis pakartojimo raktas jau panaudotas kitai užklausai. Siųskite naują raktą."
@@ -3589,10 +3613,10 @@
       "missingColumns": "Faile nėra stulpelio {{reason}}. Atnaujinkite susiejimą pagal šį failą arba patikrinkite, ar tai tinkamo banko eksportas.",
       "mappingIncomplete": "Pasirinkite šiam sumos būdui reikalingus stulpelius ir, jei nurodytas būsenos stulpelis, įvykdytos būsenos reikšmes.",
       "invalidDateFormat": "Pasirinkite vieną iš išvardytų datos formatų.",
-      "targetNotEmpty": "Jau turite sąskaitų ar žymių. Importuokite į naują, tuščią narį.",
+      "targetNotEmpty": "Jau turite sąskaitų ar žymų. Importuokite į naują, tuščią paskyrą.",
       "alreadyPresent": "Kai kurie šie įrašai čia jau yra, todėl niekas neimportuota.",
-      "newerVersion": "Šis atsisiuntimas sukurtas naujesnės Jx Finance versijos. Atnaujinkite šią įdiegtį, tada importuokite jį.",
-      "unknownVersion": "Šis atsisiuntimas sukurtas Jx Finance versijos, kurios ši įdiegtis nežino, todėl jo importuoti negalima."
+      "newerVersion": "Šis failas sukurtas naujesne Jx Finance versija. Atnaujinkite šią sistemą, tada importuokite jį.",
+      "unknownVersion": "Šis failas sukurtas Jx Finance versija, kurios ši sistema neatpažįsta, todėl jo importuoti negalima."
     },
     "money": {
       "invalid": "Įveskite teisingą sumą, pvz., 12,34.",
@@ -3659,7 +3683,7 @@
     "transaction": {
       "linesMismatch": "Išskaidymo eilučių suma turi sutapti su operacijos suma.",
       "splitNotAllowed": "Išskaidytai operacijai to atlikti negalima.",
-      "refundOriginalInvalid": "Šio grąžinimo nurodytas pirkinys nėra jums matomos išlaidos. Atsiekite jį arba pasirinkite kitą pirkinį.",
+      "refundOriginalInvalid": "Šiam grąžinimui nurodytas pirkinys nėra jums matoma išlaida. Atsiekite jį arba pasirinkite kitą pirkinį.",
       "locationInvalid": "Vieta netinkama: platuma ir ilguma nurodomos kartu ir turi neviršyti ribų.",
       "conversionFee": "Valiutos keitimo mokestis lieka keitimo sąskaitoje."
     },
@@ -3712,7 +3736,7 @@
       "notPayer": "Padalinti galima tik išlaidą, sumokėtą iš jūsų sąskaitos.",
       "notExpense": "Padalinti galima tik išlaidą.",
       "alreadySplit": "Ši išlaida jau padalinta.",
-      "noOtherMember": "Dalinkitės bent su vienu kitu nariu.",
+      "noOtherMember": "Padalinkite išlaidą bent su vienu kitu nariu.",
       "sharesMismatch": "Sumos turi sudaryti visą išlaidą.",
       "samePerson": "Mokėjimui reikia dviejų skirtingų narių.",
       "accountOwner": "Pinigai turi išeiti iš mokėtojo sąskaitos ir ateiti į gavėjo sąskaitą.",
@@ -3723,7 +3747,7 @@
       "memberTaken": "Eilutė jau yra kitoje grupėje. Pirmiausia pašalinkite ją iš tos grupės."
     },
     "contact": {
-      "noPerson": "Dalinkitės bent su vienu žmogumi."
+      "noPerson": "Padalinkite išlaidą bent su vienu žmogumi."
     }
   },
   "export": {
@@ -3849,6 +3873,9 @@
       "review": "Peržiūrėti mėnesį",
       "hide": "Ne dabar",
       "hideLabel": "Slėpti iki kito mėnesio",
+      "net": "Balansas · {{month}}",
+      "kept": "Sutaupyta pajamų · {{month}}",
+      "spent": "Išleista pajamų · {{month}}",
       "changed": "Nuo uždarymo kai kurie šio mėnesio įrašai pasikeitė. Peržiūrėkite pakeitimus, tada uždarykite iš naujo arba vėl atidarykite."
     },
     "page": {
@@ -3857,6 +3884,7 @@
       "openLines_many": "Liko {{count}} neužbaigtos eilutės.",
       "openLines_other": "Liko {{count}} neužbaigtų eilučių.",
       "importStatement": "Importuoti išrašą",
+      "printSummary": "Spausdinti suvestinę",
       "statements": "Išrašai",
       "uncategorized": "Be kategorijos",
       "bills": "Laukiantys periodiniai įrašai",
@@ -3867,8 +3895,8 @@
       "bulkCategory": "Kategorija visoms rodomoms",
       "bulkApply_one": "Priskirti kategoriją {{count}} eilutei",
       "bulkApply_few": "Priskirti kategoriją visoms {{count}} eilutėms",
-      "bulkApply_many": "Priskirti kategoriją visoms {{count}} eilutės",
-      "bulkApply_other": "Priskirti kategoriją visoms {{count}} eilučių"
+      "bulkApply_many": "Priskirti kategoriją visoms eilutėms ({{count}})",
+      "bulkApply_other": "Priskirti kategoriją visoms eilutėms ({{count}})"
     }
   },
   "support": {
@@ -3889,7 +3917,7 @@
     "title": "Operacijų sąrašas",
     "hint": "Išsaugoma šioje naršyklėje, todėl telefone ir kompiuteryje gali būti skirtingai.",
     "rows": "Eilučių puslapyje",
-    "installation": "Pagal diegimą ({{size}})"
+    "installation": "Sistemos numatytasis ({{size}})"
   },
   "payees": {
     "title": "Gavėjų pavadinimai",
@@ -3907,7 +3935,7 @@
     "explainer": "Vietos, kurias nurodėte operacijoms, ir kiek operacijų kiekvieną naudoja. Pervadinkite vietą arba pažymėkite kelis tos pačios parduotuvės rašybos variantus ir sujunkite juos, kad vietų ataskaita ir žemėlapis ją skaičiuotų vieną kartą. Keičiamos tik jūsų įvestos operacijos, o jų išsaugotos vietovės lieka.",
     "empty": "Vietų dar nėra. Nurodykite vietą operacijos formoje.",
     "name": "Vieta",
-    "select": "Pažymėti {{name}}",
+    "select": "Pažymėti: {{name}}",
     "count_one": "{{count}} operacija",
     "count_few": "{{count}} operacijos",
     "count_many": "{{count}} operacijos",

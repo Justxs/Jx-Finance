@@ -6,6 +6,7 @@ import { Brand, BrandMark } from "@/components/brand/brand";
 import { LanguageToggle } from "@/components/language-toggle/language-toggle";
 import { KofiCup, SUPPORT_URL } from "@/components/support-link/support-link";
 import { ThemeToggle } from "@/components/theme-toggle/theme-toggle";
+import { TornEdge } from "@/components/torn-edge/torn-edge";
 import { buttonVariants } from "@/components/ui/button/button";
 import { usePublicSettings } from "@/hooks/use-settings";
 import { cn } from "@/lib/utils";
@@ -24,10 +25,21 @@ export function ExternalLink({
   className,
   children,
 }: Readonly<{ href: string; className?: string; children: ReactNode }>) {
+  const { t } = useTranslation();
+
   return (
     <a href={href} target="_blank" rel="noopener noreferrer" className={className}>
       {children}
+      <span className="sr-only"> ({t("landing.opensInNewTab")})</span>
     </a>
+  );
+}
+
+function SignOff() {
+  return (
+    <div className={cn(landingColumn, "flex justify-center pt-16 pb-10 sm:pt-20")}>
+      <Brand size="lg" stacked />
+    </div>
   );
 }
 
@@ -121,11 +133,12 @@ export function LandingShell({
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <main className="flex-1">
-        <div className="bg-hero dark:border-b dark:border-border">
+        <div className="hero-band relative isolate bg-hero">
+          <TornEdge />
           <header
             className={cn(
               landingColumn,
-              "flex items-center justify-between gap-4 pt-4 on-hero sm:pt-6",
+              "landing-header flex items-center justify-between gap-4 pt-4 on-hero sm:pt-6",
             )}
           >
             <Link to="/" className="flex min-h-11 min-w-0 items-center rounded-md focus-ring">
@@ -146,6 +159,7 @@ export function LandingShell({
           {hero}
         </div>
         {children}
+        <SignOff />
         <LandingDoors />
       </main>
 
@@ -157,7 +171,7 @@ export function LandingShell({
           )}
         >
           <span className="flex items-center gap-2">
-            <BrandMark className="h-4" />
+            <BrandMark small className="h-4" />
             {t("landing.footer")}
           </span>
           <ExternalLink

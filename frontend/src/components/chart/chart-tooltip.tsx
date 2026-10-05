@@ -33,6 +33,17 @@ const SWATCH_SHAPES = {
   dotted: "h-0.5 w-3 bg-dotted-swatch",
 } as const;
 
+export function formatSeriesValue(
+  money: ReturnType<typeof useMoney>,
+  item: ChartSeries,
+  amount: number,
+  currency?: string,
+) {
+  return item.sign
+    ? money.formatSigned(amount, item.sign, currency)
+    : money.format(amount, currency);
+}
+
 export function ChartSwatch({ series }: Readonly<{ series: ChartSeries }>) {
   return (
     <span
@@ -66,13 +77,6 @@ export function ChartTooltip({
   const rows = series.filter((item) => values.has(item.key));
   const text = typeof label === "string" || typeof label === "number" ? String(label) : "";
 
-  function formatValue(item: ChartSeries) {
-    const amount = values.get(item.key) ?? 0;
-    return item.sign
-      ? money.formatSigned(amount, item.sign, currency)
-      : money.format(amount, currency);
-  }
-
   return (
     <div className="min-w-44 rounded-md border bg-popover px-3 py-2.5 text-popover-foreground shadow-lg">
       <p className="text-xs font-medium text-muted-foreground">
@@ -92,7 +96,7 @@ export function ChartTooltip({
             <dd
               className={cn("ml-auto pl-4 font-semibold whitespace-nowrap tabular-nums", item.tone)}
             >
-              {formatValue(item)}
+              {formatSeriesValue(money, item, values.get(item.key) ?? 0, currency)}
             </dd>
           </div>
         ))}

@@ -9,7 +9,7 @@ public sealed class ExportTaxSummarySummary : Summary<ExportTaxSummaryEndpoint, 
     {
         Summary = "Export the yearly investment tax summary as CSV";
         Description = "Answers the same year as GET /api/investments/tax-summary as a CSV attachment named "
-            + "investment-tax-summary-<year>.csv. Rows are written to the response as they are produced, so the answer "
+            + "jx-finance-investment-tax-summary-<year>.csv. Rows are written to the response as they are produced, so the answer "
             + "carries no Content-Length. The Section column says what a row is: a Disposal row, one Lot row per lot "
             + "that disposal consumed, and one Dividend, Interest, WithholdingTax or Fee row per cash entry. Every row "
             + "carries the amount in the currency it was recorded in and again in the reporting currency at the frozen "

@@ -2,6 +2,7 @@ import { Bookmark } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import type { AccountResponse, CategoryResponse, TagResponse } from "@/api/generated/model";
+import type { PopoverControl } from "@/components/ui/popover/popover";
 import { SavedListMenu } from "@/features/transactions/saved-list-menu/saved-list-menu";
 import {
   isEmptyFilter,
@@ -15,9 +16,10 @@ interface Props {
   accounts: AccountResponse[];
   categories: CategoryResponse[];
   tags: TagResponse[];
+  control?: PopoverControl;
 }
 
-export function SavedFilters({ filters, accounts, categories, tags }: Readonly<Props>) {
+export function SavedFilters({ filters, accounts, categories, tags, control }: Readonly<Props>) {
   const { t } = useTranslation();
   const saved = savedFilters.useRows();
 
@@ -59,6 +61,7 @@ export function SavedFilters({ filters, accounts, categories, tags }: Readonly<P
       }}
       onRename={savedFilters.rename}
       onDelete={savedFilters.remove}
+      control={control}
     />
   );
 }

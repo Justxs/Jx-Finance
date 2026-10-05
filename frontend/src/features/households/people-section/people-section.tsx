@@ -57,7 +57,12 @@ function PersonRow({ contact, onEdit, onRecord, ...deleteProps }: Readonly<RowPr
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-1">
-            <Button variant="outline" size="sm" onClick={onRecord}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onRecord}
+              aria-label={`${t("households.people.record")}: ${contact.name}`}
+            >
               <HandCoins />
               {t("households.people.record")}
             </Button>
@@ -66,6 +71,7 @@ function PersonRow({ contact, onEdit, onRecord, ...deleteProps }: Readonly<RowPr
               size="sm"
               aria-expanded={historyOpen}
               onClick={() => setHistoryOpen(!historyOpen)}
+              aria-label={`${historyOpen ? t("households.people.hideHistory") : t("households.people.showHistory")}: ${contact.name}`}
             >
               <History />
               {historyOpen
@@ -77,7 +83,10 @@ function PersonRow({ contact, onEdit, onRecord, ...deleteProps }: Readonly<RowPr
         </div>
         {historyOpen ? (
           <div className="pt-2">
-            <QueryBoundary fallback={<RecordRowsSkeleton rows={2} />}>
+            <QueryBoundary
+              fallback={<RecordRowsSkeleton rows={2} />}
+              errorSubject={t("households.people.title")}
+            >
               <ContactEntries contact={contact} />
             </QueryBoundary>
           </div>

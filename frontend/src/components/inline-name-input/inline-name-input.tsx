@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button/button";
 import { Input } from "@/components/ui/input/input";
 import { cn } from "@/lib/utils";
 
-interface Props {
+interface BaseProps {
   label?: string;
   submitLabel?: string;
   maxLength: number;
@@ -12,11 +12,15 @@ interface Props {
   placeholder?: string;
   disabled?: boolean;
   submitIcon?: ReactNode;
-  cancelLabel?: string;
   onSubmit: (name: string) => void;
-  onCancel?: () => void;
   className?: string;
 }
+
+type CancelProps =
+  | { cancelLabel?: undefined; onCancel?: undefined }
+  | { cancelLabel: string; onCancel: () => void };
+
+type Props = BaseProps & CancelProps;
 
 export function InlineNameInput({
   label,

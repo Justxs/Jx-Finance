@@ -58,7 +58,7 @@ export const FiguresUnchanged: Story = {
 export const CurrencyChanged: Story = {
   args: { drift: driftOf(currencyChangedMonthReview) },
   play: async ({ canvas }) => {
-    await expect(canvas.getByRole("alert")).toHaveTextContent(/USD/);
+    await expect(canvas.getByRole("note")).toHaveTextContent(/USD/);
     await expect(canvas.queryByRole("table")).toBeNull();
   },
 };

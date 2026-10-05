@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { useAssetValueHistorySuspense } from "@/api/generated";
-import { CHART_COLOR_POSITIVE, CHART_COLOR_PRIMARY } from "@/components/chart";
+import { CHART_COLOR_PRIMARY } from "@/components/chart";
 import {
   type TimeSeriesLine,
   TimeSeriesLineChart,
@@ -15,7 +15,7 @@ export function AssetValueChart({ assetId }: Readonly<{ assetId: string }>) {
     {
       key: "valuation",
       label: t("netWorth.asset.valuation"),
-      color: CHART_COLOR_POSITIVE,
+      color: CHART_COLOR_PRIMARY,
       shape: "dot",
       markers: true,
     },

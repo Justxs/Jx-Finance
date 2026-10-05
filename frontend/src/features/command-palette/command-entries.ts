@@ -118,7 +118,7 @@ interface NavPage {
 }
 
 function pageId(to: RoutePath) {
-  return `page-${to === "/" ? "dashboard" : to.slice(1)}`;
+  return `page-${to.slice(1)}`;
 }
 
 function commandsFor(page: NavPage, admin: boolean): PageCommand[] {

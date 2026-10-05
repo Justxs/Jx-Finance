@@ -14,6 +14,7 @@ import { useFeature } from "@/hooks/use-settings";
 import { CategoryIcon } from "@/lib/category-icons";
 import type { TranslationKey } from "@/lib/i18n";
 import { optimisticRemoval } from "@/lib/optimistic";
+import { nameById } from "@/lib/options";
 import { cn } from "@/lib/utils";
 
 const groups: readonly { type: FlowType; labelKey: TranslationKey }[] = [
@@ -40,6 +41,7 @@ export function CategoriesPage() {
     "category",
   );
   const categoryList = categories.list;
+  const parentNames = nameById(categoryList);
 
   return (
     <div className="space-y-5">
@@ -75,6 +77,15 @@ export function CategoriesPage() {
                   name={category.name}
                   scope={category.scope}
                   householdId={category.householdId}
+                  detail={
+                    category.parentId && parentNames.has(category.parentId) ? (
+                      <span className="sr-only">
+                        {t("categories.subcategoryOf", {
+                          parent: parentNames.get(category.parentId),
+                        })}
+                      </span>
+                    ) : null
+                  }
                   leading={
                     <CategoryIcon
                       icon={category.icon}

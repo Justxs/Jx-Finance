@@ -22,7 +22,7 @@ public sealed class TransactionExportTests(LedgerFixture fixture) : IntegrationT
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Equal("text/csv", response.Content.Headers.ContentType?.MediaType);
         Assert.Equal("attachment", response.Content.Headers.ContentDisposition?.DispositionType);
-        Assert.Equal("transactions.csv", response.Content.Headers.ContentDisposition?.FileName);
+        Assert.Equal("jx-finance-transactions.csv", response.Content.Headers.ContentDisposition?.FileName);
         Assert.Null(response.Content.Headers.ContentLength);
         var lines = (await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken))
             .Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);

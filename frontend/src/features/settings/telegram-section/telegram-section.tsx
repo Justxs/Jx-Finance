@@ -138,6 +138,7 @@ function TelegramForm({ settings }: Readonly<{ settings: TelegramSettingsRespons
         <ChannelActions
           error={testMutation.error ?? saveMutation.error}
           testLabel={t("settings.telegram.test")}
+          testHint={t("settings.telegram.testHint")}
           testPending={testMutation.isPending}
           canTest={configured}
           onTest={() => {
@@ -167,7 +168,10 @@ export function TelegramSection() {
       <p className="max-w-prose text-sm text-muted-foreground">
         {t("settings.telegram.description")}
       </p>
-      <QueryBoundary fallback={<ChannelFormSkeleton fields={2} />}>
+      <QueryBoundary
+        fallback={<ChannelFormSkeleton fields={2} />}
+        errorSubject={t("settings.telegram.title")}
+      >
         <TelegramSettings />
       </QueryBoundary>
     </>

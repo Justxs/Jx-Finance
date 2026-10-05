@@ -1,5 +1,6 @@
 import { NotebookPen } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import type { PopoverControl } from "@/components/ui/popover/popover";
 import { SavedListMenu } from "@/features/transactions/saved-list-menu/saved-list-menu";
 import { draftFromTemplate } from "@/features/transactions/transaction-form/transaction-draft";
 import { transactionTemplates } from "@/features/transactions/transaction-views";
@@ -7,9 +8,10 @@ import type { TransactionDraft } from "@/lib/transaction-draft";
 
 interface Props {
   onUse: (draft: TransactionDraft) => void;
+  control?: PopoverControl;
 }
 
-export function TransactionTemplates({ onUse }: Readonly<Props>) {
+export function TransactionTemplates({ onUse, control }: Readonly<Props>) {
   const { t } = useTranslation();
   const templates = transactionTemplates.useRows();
 
@@ -28,6 +30,7 @@ export function TransactionTemplates({ onUse }: Readonly<Props>) {
       }}
       onRename={transactionTemplates.rename}
       onDelete={transactionTemplates.remove}
+      control={control}
     />
   );
 }

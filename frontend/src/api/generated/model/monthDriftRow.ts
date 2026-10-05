@@ -7,12 +7,14 @@
  */
 import type { Currency } from "./currency";
 import type { DateOnly } from "./dateOnly";
+import type { FlowType } from "./flowType";
 import type { MonthDriftChange } from "./monthDriftChange";
 import type { MonthDriftRowKind } from "./monthDriftRowKind";
 
 export interface MonthDriftRow {
   id: string;
   kind: MonthDriftRowKind;
+  type: null | FlowType;
   change: MonthDriftChange;
   date: DateOnly;
   /** @nullable */

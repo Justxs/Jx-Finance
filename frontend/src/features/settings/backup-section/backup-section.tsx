@@ -109,7 +109,7 @@ export function BackupSection() {
     <TitledSection title={t("backup.title")} description={t("backup.description")}>
       <div className="mt-4 space-y-4">
         <CreateBackupForm />
-        <QueryBoundary fallback={<BackupListSkeleton />}>
+        <QueryBoundary fallback={<BackupListSkeleton />} errorSubject={t("backup.title")}>
           <BackupList />
         </QueryBoundary>
       </div>

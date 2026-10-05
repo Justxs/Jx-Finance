@@ -75,6 +75,14 @@ export function useNumberFormat(options: Intl.NumberFormatOptions = {}) {
   return numberFormat(i18n.language, options);
 }
 
+export function useDecimalMark() {
+  return (
+    useNumberFormat()
+      .formatToParts(0.5)
+      .find((part) => part.type === "decimal")?.value ?? "."
+  );
+}
+
 export function useMaskedNumber(options: Intl.NumberFormatOptions = {}) {
   const number = useNumberFormat(options);
   const hidden = useAmountsHidden();

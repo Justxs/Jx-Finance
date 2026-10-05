@@ -20,7 +20,7 @@ export interface ImportResult {
   reconciliation?: ReconciliationResponse | null;
 }
 
-export function useReconciliationText() {
+function useReconciliationText() {
   const { t } = useTranslation();
   const money = useMoney();
   const formatDate = useIsoDate();
@@ -37,7 +37,7 @@ export function useReconciliationText() {
         });
 }
 
-export function useImportCountsText() {
+function useImportCountsText() {
   const { t } = useTranslation();
 
   return ({ imported, linked, skipped }: Pick<ImportResult, "imported" | "linked" | "skipped">) =>
@@ -78,7 +78,9 @@ export function ImportResultPanel({ result, onLeave, onImportAnother }: Readonly
   return (
     <Section className="space-y-4" aria-labelledby="import-result-title">
       <div className="space-y-1">
-        <SectionTitle id="import-result-title">{t("imports.resultTitle")}</SectionTitle>
+        <SectionTitle id="import-result-title" ref={(node) => node?.focus()} tabIndex={-1}>
+          {t("imports.resultTitle")}
+        </SectionTitle>
         <p role="status" className="text-sm tabular-nums">
           {countsText(result)}
         </p>

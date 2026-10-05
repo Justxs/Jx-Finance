@@ -5,16 +5,22 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { fetchFile } from "@/api/client";
 import { Button } from "@/components/ui/button/button";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover/popover";
+import {
+  Popover,
+  PopoverContent,
+  type PopoverControl,
+  PopoverTrigger,
+} from "@/components/ui/popover/popover";
 import { saveFile } from "@/lib/save-file";
 
 interface Props {
   csvUrl: string;
   pdfUrl: string;
+  control?: PopoverControl;
 }
 
 const itemClass =
-  "flex w-full items-center gap-3 rounded-md px-2 py-2 text-left transition-colors hover:bg-muted focus-visible:bg-muted";
+  "flex w-full items-center gap-3 rounded-md px-2 py-2 text-left focus-ring transition-colors hover:bg-muted focus-visible:bg-muted";
 
 function FormatLabel({
   icon: Icon,
@@ -32,13 +38,15 @@ function FormatLabel({
   );
 }
 
-export function ExportMenu({ csvUrl, pdfUrl }: Readonly<Props>) {
+export function ExportMenu({ csvUrl, pdfUrl, control }: Readonly<Props>) {
   const { t } = useTranslation();
-  const [open, setOpen] = useState(false);
+  const [ownOpen, setOwnOpen] = useState(false);
+  const open = control ? control.open : ownOpen;
+  const setOpen = control ? control.onOpenChange : setOwnOpen;
 
   const pdfMutation = useMutation({
     mutationFn: () => fetchFile(pdfUrl),
-    onSuccess: (file) => saveFile(file.blob, file.filename ?? "transactions.pdf"),
+    onSuccess: (file) => saveFile(file.blob, file.filename ?? "jx-finance-transactions.pdf"),
   });
 
   return (
@@ -48,7 +56,13 @@ export function ExportMenu({ csvUrl, pdfUrl }: Readonly<Props>) {
         {t("export.button")}
         <ChevronDown aria-hidden="true" className="text-muted-foreground" />
       </PopoverTrigger>
-      <PopoverContent align="end" aria-label={t("export.chooseFormat")} className="w-64 p-1.5">
+      <PopoverContent
+        align="end"
+        anchor={control?.anchor}
+        finalFocus={control?.anchor}
+        aria-label={t("export.chooseFormat")}
+        className="w-64 p-1.5"
+      >
         <p className="px-2 pt-1 pb-1.5 text-xs font-medium text-muted-foreground">
           {t("export.chooseFormat")}
         </p>

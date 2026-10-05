@@ -376,11 +376,9 @@ export function FillFromReceipt({
           </Button>
         ) : null}
       </div>
-      {busy ? (
-        <p role="status" className="text-xs text-muted-foreground">
-          {t("receipts.readingHint")}
-        </p>
-      ) : null}
+      <p role="status" className="text-xs text-muted-foreground empty:hidden">
+        {busy ? t("receipts.readingHint") : null}
+      </p>
       {reading ? null : <FormError error={readMutation.error ?? uploadMutation.error} />}
       {photo && !reading ? (
         <Button type="button" variant="outline" size="sm" onClick={() => applyPhotoPosition(photo)}>

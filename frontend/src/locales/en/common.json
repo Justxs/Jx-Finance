@@ -49,7 +49,9 @@
   "common": {
     "actions": "Actions",
     "search": "Search",
-    "noMatches": "No matches"
+    "noMatches": "No matches",
+    "itemCount_one": "{{count}} item",
+    "itemCount_other": "{{count}} items"
   },
   "confirmDelete": {
     "title": "Delete this item?",
@@ -138,6 +140,11 @@
       "title": "Getting started",
       "progress": "{{done}} of {{total}} done",
       "done": "Done",
+      "showSteps": "Show steps",
+      "showLess": "Show less",
+      "hide": "Hide card",
+      "hideLabel": "Show it again in Settings, Dashboard",
+      "hidden": "Getting started hidden",
       "steps": {
         "addAccount": {
           "label": "Add an account",
@@ -214,7 +221,8 @@
     "archiveDescription": "It leaves listings, pickers and totals, and its transactions are hidden with it. You can restore it later from Archived accounts on this page.",
     "restored": "Account restored",
     "archivedList": {
-      "summary": "Archived accounts ({{count}})",
+      "show_one": "Show {{count}} account",
+      "show_other": "Show {{count}} accounts",
       "label": "Archived accounts",
       "archivedOn": "Archived {{date}}",
       "restore": "Restore",
@@ -345,6 +353,7 @@
     "parent": "Group under",
     "noParent": "No group (top level)",
     "parentHint": "A group's budget, ledger filter and report total include its sub-categories.",
+    "subcategoryOf": "sub-category of {{parent}}",
     "remembered": {
       "title": "Remembered receipt items",
       "explainer": "When you file a receipt item under a category, the next receipt with an item of that name gets the same category. Forget one to let your rules decide again.",
@@ -396,6 +405,7 @@
     "empty": "No rules yet.",
     "explainer": "A rule reads the description of a transaction and fills in a category, tags, or both. Rules are yours alone and nobody else sees them. They are tried from the top and the first one that matches decides the row, so keep the specific ones above the general ones.",
     "listTitle": "Rules in evaluation order",
+    "moved": "{{name}} moved to position {{position}} of {{total}}.",
     "name": "Name",
     "namePlaceholder": "e.g. Groceries",
     "condition": "When the description",
@@ -507,6 +517,7 @@
     "lineAmount": "Amount",
     "lineCategory": "Category",
     "lineDescription": "Label",
+    "lineField": "{{field}}, line {{number}}",
     "removeLine": "Remove line {{number}}",
     "splitTotalMismatch": "Lines total {{linesTotal}}, but the transaction is {{total}}.",
     "count_one": "{{count}} transaction",
@@ -533,6 +544,7 @@
     "moveHint": "Each row keeps its amount, currency, date, category and tags.",
     "move": "Move",
     "moreBulkActions": "More",
+    "moreActions": "More",
     "moved_one": "{{count}} transaction moved to {{account}}",
     "moved_other": "{{count}} transactions moved to {{account}}",
     "movedPartly_one": "Moved {{moved}} of {{count}} transaction to {{account}}",
@@ -609,7 +621,6 @@
       "removeTitle": "Remove this file?",
       "uploadedBy": "{{name}}, {{date}}",
       "preview": "Preview of {{name}}",
-      "loadError": "The files of this transaction could not be loaded.",
       "fileTooLarge": "{{name}} is larger than {{size}} MB.",
       "fileTypeNotAllowed": "{{name}} is not a JPEG, PNG, WebP, HEIC or PDF file.",
       "tooMany": "Only {{free}} more files fit on this transaction; {{name}} was left out.",
@@ -673,7 +684,8 @@
       "showRows_other": "Show the {{count}} rows of {{name}}",
       "noGroups": "You have no groups yet. Name a new one to start it with this row.",
       "grouped": "Grouped",
-      "truncated": "Only the first 200 rows are shown. Narrow the filters to see the rest."
+      "truncated": "Only the first 200 rows are shown. Narrow the filters to see the rest.",
+      "membersSubject": "The rows of {{name}}"
     },
     "categorySuggestion": {
       "label": "Suggested: {{category}}",
@@ -894,6 +906,7 @@
     "lead": "Jx Finance helps your household keep track of money: income, spending, budgets, savings goals, and what you own and owe. It runs on your own computer or server, so your money data stays with you.",
     "source": "See it on GitHub",
     "sourceLabel": "Jx Finance on GitHub",
+    "opensInNewTab": "opens in a new tab",
     "nav": {
       "label": "Main",
       "home": "Home",
@@ -1606,6 +1619,7 @@
       "webhookUrlHint": "In Discord: channel settings, Integrations, Webhooks, New webhook, Copy webhook URL.",
       "webhookPlaceholder": "Saved. Paste a new URL to replace it.",
       "test": "Send a test message",
+      "testHint": "Save a webhook URL first.",
       "testSent": "Test message posted to Discord",
       "gone": "Discord says this webhook no longer exists. Create a new one in Discord and paste its URL.",
       "unreadable": "The saved webhook can no longer be read, usually after a restore from another installation. Paste the webhook URL again."
@@ -1622,6 +1636,7 @@
       "chatId": "Group chat id",
       "chatIdHint": "A whole number, negative for a group. After adding the bot, open api.telegram.org/bot<token>/getUpdates in a browser and copy the chat id.",
       "test": "Send a test message",
+      "testHint": "Save the bot token and the group chat id first.",
       "testSent": "Test message posted to Telegram",
       "removed": "Telegram says the bot was removed from the group or its token was revoked. Add the bot back and send a test message, or paste a new token.",
       "unreadable": "The saved bot token can no longer be read, usually after a restore from another installation. Paste the token again."
@@ -1881,6 +1896,7 @@
     "accounts": "Accounts",
     "assets": "Assets",
     "debts": "Debts",
+    "total": "Total",
     "netWorth": "Net worth",
     "trend": "Trend",
     "openBalances": {
@@ -1987,7 +2003,8 @@
       "paidOffSavings": "The overpayment repays the debt, saving {{amount}} in interest.",
       "noSavings": "Enter an amount to see how much sooner the debt is repaid, or how much lower the payment gets.",
       "trackedBalance": "Tracked balance",
-      "balanceTracked": "Tracked"
+      "balanceTracked": "Tracked",
+      "paid": "Paid"
     },
     "depreciation": {
       "title": "Depreciation",
@@ -2160,7 +2177,8 @@
       "cost": "Invested",
       "label": "Portfolio market value and invested cost over time",
       "empty": "Nothing was held in this range.",
-      "partial": "On some dates a holding had no price or exchange rate yet and is left out of both lines. Add earlier prices in the price history to fill them in."
+      "partial": "On some dates a holding had no price or exchange rate yet and is left out of both lines. Add earlier prices in the price history to fill them in.",
+      "summary": "Market value went from {{start}} on {{startDate}} to {{end}} on {{endDate}}, a change of {{change}}."
     },
     "years": {
       "title": "Income by year",
@@ -2414,7 +2432,8 @@
       "tradeCsv": {
         "intro": "For any other broker: put the trades in a CSV with a header row. Date, Type (buy, sell, dividend, withholdingTax, interest or fee) and Currency are required; buys and sells need Symbol, Quantity and Price, the others Amount. Fee, Name, Isin, SecurityType (stock, etf or fund) and Id are optional.",
         "fileHint": "A CSV file, up to 5 MB. The same rows are never imported twice.",
-        "tooLarge": "The file is larger than 5 MB."
+        "tooLarge": "The file is larger than 5 MB.",
+        "sample": "Sample CSV"
       }
     },
     "connection": {
@@ -2527,6 +2546,7 @@
     "nextDueDate": "Next due date",
     "remindDaysBefore": "Remind days before",
     "active": "Active",
+    "activeTitle": "Active entries",
     "inactive": "Inactive",
     "confirm": "Confirm",
     "confirmTitle": "Confirm recurring entry",
@@ -3320,7 +3340,8 @@
     "netWorth": "Net worth",
     "earlierIncome": "Income, earlier period",
     "earlierExpense": "Expenses, earlier period",
-    "soFar": "{{label}}, so far"
+    "soFar": "{{label}}, so far",
+    "period": "Period"
   },
   "serverErrors": {
     "access": {
@@ -3717,12 +3738,16 @@
       "review": "Review month",
       "hide": "Not now",
       "hideLabel": "Hide until next month",
+      "net": "{{month}} net",
+      "kept": "Income kept in {{month}}",
+      "spent": "Income spent in {{month}}",
       "changed": "Something dated in it has changed since you closed it. Review the changes, then re-close or reopen."
     },
     "page": {
       "openLines_one": "{{count}} line still open.",
       "openLines_other": "{{count}} lines still open.",
       "importStatement": "Import statement",
+      "printSummary": "Print summary",
       "statements": "Statements",
       "uncategorized": "Uncategorized",
       "bills": "Recurring entries due",

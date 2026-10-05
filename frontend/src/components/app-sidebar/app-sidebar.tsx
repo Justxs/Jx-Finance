@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button/button";
 import { Skeleton } from "@/components/ui/skeleton/skeleton";
 import { Tooltip } from "@/components/ui/tooltip/tooltip";
 import { useVisibleNav } from "@/hooks/use-visible-nav";
-import { isEntryActive, navEntries } from "@/lib/navigation";
+import { type NavEntry, type NavItem, isEntryActive, navEntries } from "@/lib/navigation";
 import { cn } from "@/lib/utils";
 import { useSidebarCollapsed } from "@/stores/sidebar-store";
 import { navLinkActiveClass, navLinkClass } from "./nav-link-class";
@@ -31,26 +31,82 @@ export function AppSidebarSkeleton() {
   );
 }
 
+interface SidebarNavProps {
+  entries: readonly NavEntry[];
+  collapsed: boolean;
+}
+
+function SidebarNav({ entries, collapsed }: Readonly<SidebarNavProps>) {
+  const { t } = useTranslation();
+  const { pathname } = useLocation();
+
+  return (
+    <nav
+      aria-label={t("nav.main")}
+      className="flex min-h-0 flex-1 flex-col overflow-y-auto px-3 pt-1 pb-3"
+    >
+      {entries.map((entry, index) => {
+        const active = isEntryActive(entry, pathname);
+        return (
+          <Tooltip key={entry.to} content={collapsed ? t(entry.key) : undefined} side="right">
+            <Link
+              to={entry.to}
+              aria-label={collapsed ? t(entry.key) : undefined}
+              aria-current={active ? "page" : undefined}
+              className={cn(
+                navLinkClass,
+                "flex items-center gap-3 px-3 py-2",
+                collapsed && "justify-center px-0",
+                index > 0 && entries[index - 1]?.group !== entry.group && "mt-4",
+                entry.hub === "settings" && "mt-auto",
+                active && navLinkActiveClass,
+              )}
+              style={{ "--nav-link": `nav-side-${index}` }}
+            >
+              <entry.icon className="size-4 shrink-0" />
+              {collapsed ? null : t(entry.key)}
+            </Link>
+          </Tooltip>
+        );
+      })}
+    </nav>
+  );
+}
+
+function SidebarBrand({ collapsed }: Readonly<{ collapsed: boolean }>) {
+  return (
+    <Link
+      to="/dashboard"
+      className={cn("flex h-16 shrink-0 items-center", collapsed ? "justify-center" : "px-5")}
+    >
+      <Brand compact={collapsed} />
+    </Link>
+  );
+}
+
+const asideClass =
+  "sticky top-0 hidden h-screen shrink-0 flex-col border-r bg-sidebar transition-width duration-base ease-out-expo md:flex";
+
+export function AppSidebarFallback({ pages }: Readonly<{ pages: readonly NavItem[] }>) {
+  const { collapsed } = useSidebarCollapsed();
+
+  return (
+    <aside className={cn(asideClass, collapsed ? "w-16" : "w-58")}>
+      <SidebarBrand collapsed={collapsed} />
+      <SidebarNav entries={navEntries(pages)} collapsed={collapsed} />
+    </aside>
+  );
+}
+
 export function AppSidebar() {
   const { t } = useTranslation();
   const { collapsed, toggleSidebar } = useSidebarCollapsed();
   const me = useMeSuspense();
   const entries = navEntries(useVisibleNav(me.data?.role));
-  const { pathname } = useLocation();
 
   return (
-    <aside
-      className={cn(
-        "sticky top-0 hidden h-screen shrink-0 flex-col border-r bg-sidebar transition-width duration-base ease-out-expo md:flex",
-        collapsed ? "w-16" : "w-58",
-      )}
-    >
-      <Link
-        to="/"
-        className={cn("flex h-16 shrink-0 items-center", collapsed ? "justify-center" : "px-5")}
-      >
-        <Brand compact={collapsed} />
-      </Link>
+    <aside className={cn(asideClass, collapsed ? "w-16" : "w-58")}>
+      <SidebarBrand collapsed={collapsed} />
 
       <Button
         type="button"
@@ -73,35 +129,7 @@ export function AppSidebar() {
         </QueryBoundary>
       </div>
 
-      <nav
-        aria-label={t("nav.main")}
-        className="flex min-h-0 flex-1 flex-col overflow-y-auto px-3 pt-1 pb-3"
-      >
-        {entries.map((entry, index) => {
-          const active = isEntryActive(entry, pathname);
-          return (
-            <Tooltip key={entry.to} content={collapsed ? t(entry.key) : undefined} side="right">
-              <Link
-                to={entry.to}
-                aria-label={collapsed ? t(entry.key) : undefined}
-                aria-current={active ? "page" : undefined}
-                className={cn(
-                  navLinkClass,
-                  "flex items-center gap-3 px-3 py-2",
-                  collapsed && "justify-center px-0",
-                  index > 0 && entries[index - 1]?.group !== entry.group && "mt-4",
-                  entry.hub === "settings" && "mt-auto",
-                  active && navLinkActiveClass,
-                )}
-                style={{ "--nav-link": `nav-side-${index}` }}
-              >
-                <entry.icon className="size-4 shrink-0" />
-                {collapsed ? null : t(entry.key)}
-              </Link>
-            </Tooltip>
-          );
-        })}
-      </nav>
+      <SidebarNav entries={entries} collapsed={collapsed} />
 
       <div className={cn("px-3 pb-3", collapsed && "px-2")}>
         <SupportLink collapsed={collapsed} />

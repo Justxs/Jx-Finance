@@ -10,6 +10,7 @@ import type {
 } from "@/api/generated/model";
 import { ComboboxField } from "@/components/combobox-field/combobox-field";
 import { FormError } from "@/components/form-error/form-error";
+import { FormActions } from "@/components/form/form-actions/form-actions";
 import { Modal } from "@/components/modal";
 import { Button } from "@/components/ui/button/button";
 import { Rows } from "@/components/ui/rows/rows";
@@ -305,25 +306,20 @@ export function ReceiptReview({
 
         <FormError error={error} />
 
-        <div className="flex flex-wrap items-center gap-3 border-t border-border pt-4">
+        <FormActions onCancel={onClose}>
           <Button type="button" variant="outline" pending={readAgainPending} onClick={onReadAgain}>
             <RefreshCw />
             {t("receipts.readAgain")}
           </Button>
-          <div className="ml-auto flex gap-2">
-            <Button type="button" variant="outline" onClick={onClose}>
-              {t("actions.cancel")}
-            </Button>
-            <Button
-              type="button"
-              pending={pending}
-              disabled={readAgainPending}
-              onClick={() => onApply(choices)}
-            >
-              {result.isReturn ? t("receipts.applyRefund") : t("receipts.apply")}
-            </Button>
-          </div>
-        </div>
+          <Button
+            type="button"
+            pending={pending}
+            disabled={readAgainPending}
+            onClick={() => onApply(choices)}
+          >
+            {result.isReturn ? t("receipts.applyRefund") : t("receipts.apply")}
+          </Button>
+        </FormActions>
       </div>
     </Modal>
   );

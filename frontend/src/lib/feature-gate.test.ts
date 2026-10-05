@@ -36,7 +36,7 @@ test("a disabled feature redirects home", async () => {
   const thrown = await thrownBy(() => requireFeature("budgets")(gateArgs));
 
   expect(isRedirect(thrown)).toBe(true);
-  expect(thrown).toMatchObject({ options: { to: "/" } });
+  expect(thrown).toMatchObject({ options: { to: "/dashboard" } });
 });
 
 test("settings that fail to load let the page through", async () => {

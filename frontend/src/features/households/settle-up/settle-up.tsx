@@ -84,31 +84,33 @@ export function SettleUpSection({ household }: Readonly<Props>) {
         <div className="space-y-1">
           <h5 className="text-sm font-medium">{t("households.settleUp.suggestions")}</h5>
           <Rows>
-            {payments.map((payment) => (
-              <li
-                key={`${payment.fromUserId}-${payment.toUserId}-${payment.currency}`}
-                className="flex flex-col gap-2 py-2 sm:flex-row sm:items-center sm:justify-between"
-              >
-                <span className="text-sm wrap-break-word tabular-nums">
-                  {t("households.settleUp.pays", {
-                    from: payment.fromName,
-                    to: payment.toName,
-                    amount: money.format(Number(payment.amount), payment.currency),
-                  })}
-                </span>
-                {payment.fromUserId === meId || payment.toUserId === meId ? (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="self-start sm:self-auto"
-                    onClick={() => setRecording(payment)}
-                  >
-                    <HandCoins />
-                    {t("households.settleUp.record")}
-                  </Button>
-                ) : null}
-              </li>
-            ))}
+            {payments.map((payment) => {
+              const pays = t("households.settleUp.pays", {
+                from: payment.fromName,
+                to: payment.toName,
+                amount: money.format(Number(payment.amount), payment.currency),
+              });
+              return (
+                <li
+                  key={`${payment.fromUserId}-${payment.toUserId}-${payment.currency}`}
+                  className="flex flex-col gap-2 py-2 sm:flex-row sm:items-center sm:justify-between"
+                >
+                  <span className="text-sm wrap-break-word tabular-nums">{pays}</span>
+                  {payment.fromUserId === meId || payment.toUserId === meId ? (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="self-start sm:self-auto"
+                      onClick={() => setRecording(payment)}
+                      aria-label={`${t("households.settleUp.record")}: ${pays}`}
+                    >
+                      <HandCoins />
+                      {t("households.settleUp.record")}
+                    </Button>
+                  ) : null}
+                </li>
+              );
+            })}
           </Rows>
         </div>
       ) : null}
@@ -118,7 +120,10 @@ export function SettleUpSection({ household }: Readonly<Props>) {
         title={t("households.settlement.title")}
       >
         {recording ? (
-          <QueryBoundary fallback={<TextSkeleton size="sm" width="w-2/3" />}>
+          <QueryBoundary
+            fallback={<TextSkeleton size="sm" width="w-2/3" />}
+            errorSubject={t("households.settlement.title")}
+          >
             <SettlementForm
               household={household}
               payment={recording}

@@ -46,7 +46,7 @@ export function CreateHouseholdForm({ initial, onClose }: Readonly<Props>) {
           {(field) => (
             <field.TextField
               id="household-name"
-              aria-label={t("households.name")}
+              label={t("households.name")}
               placeholder={t("households.namePlaceholder")}
               autoFocus
             />

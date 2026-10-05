@@ -1,5 +1,5 @@
 import { useNavigate, useSearch } from "@tanstack/react-router";
-import { ChevronLeft, ChevronRight, FileUp } from "lucide-react";
+import { ChevronLeft, ChevronRight, FileUp, Printer } from "lucide-react";
 import { useId, useRef, useState, ViewTransition } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -50,7 +50,7 @@ function MonthStepper({ month, current, onChange }: Readonly<StepperProps>) {
   const next = shiftMonth(month, 1);
 
   return (
-    <nav aria-label={t("dashboard.month.label")} className="flex items-center gap-1">
+    <nav aria-label={t("dashboard.month.label")} className="flex items-center gap-1 print:hidden">
       <Button
         type="button"
         variant="ghost"
@@ -123,6 +123,17 @@ function MonthStatus({ month, review, onImport }: Readonly<StatusProps>) {
           {t("monthClose.page.importStatement")}
         </Button>
       ) : null}
+      {isClosedStatus(review.status) ? (
+        <Button
+          type="button"
+          variant="outline"
+          className="ml-auto print:hidden"
+          onClick={() => window.print()}
+        >
+          <Printer />
+          {t("monthClose.page.printSummary")}
+        </Button>
+      ) : null}
     </Section>
   );
 }
@@ -167,9 +178,10 @@ function MonthBody({ month }: Readonly<{ month: string }>) {
           <UncategorizedLines month={month} count={checklist.uncategorized} />
           {checklist.unconfirmedRecurring === null ? null : (
             <BillsDueLines
+              month={month}
               monthEnd={review.monthEnd}
               accounts={accounts}
-              count={checklist.unconfirmedRecurring}
+              checklist={checklist}
             />
           )}
           <TitledSection title={t("monthClose.page.review")} bodyGap="sm">

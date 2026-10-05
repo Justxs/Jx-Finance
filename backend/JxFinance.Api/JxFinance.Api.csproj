@@ -40,6 +40,13 @@
     <InternalsVisibleTo Include="JxFinance.Tests" />
   </ItemGroup>
 
+  <ItemGroup>
+    <EmbeddedResource Include="Infrastructure/Pdf/brand-mark.png" LogicalName="JxFinance.Pdf.BrandMark.png" />
+    <EmbeddedResource Include="Infrastructure/Email/email-mark.png" LogicalName="JxFinance.Email.Mark.png" />
+    <EmbeddedResource Include="Infrastructure/Pdf/Fonts/SourceSerif4-Regular.ttf" LogicalName="JxFinance.Pdf.SourceSerif4-Regular.ttf" />
+    <EmbeddedResource Include="Infrastructure/Pdf/Fonts/SourceSerif4-Semibold.ttf" LogicalName="JxFinance.Pdf.SourceSerif4-Semibold.ttf" />
+  </ItemGroup>
+
   <PropertyGroup>
     <RootNamespace>JxFinance</RootNamespace>
     <UserSecretsId>7d616548-4f8d-4f12-9a0d-e3b09fc2c396</UserSecretsId>

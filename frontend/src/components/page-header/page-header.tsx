@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { HubTabs, useHubTabs } from "@/components/hub-tabs/hub-tabs";
 import { ButtonSkeleton, TextSkeleton } from "@/components/ui/skeleton/skeleton";
+import { usePublicSettings } from "@/hooks/use-settings";
 import { cn } from "@/lib/utils";
 
 interface HeaderRowProps {
@@ -54,23 +55,40 @@ interface Props {
   children?: ReactNode;
 }
 
+export function DocumentTitle({ title }: Readonly<{ title: string }>) {
+  const { t } = useTranslation();
+  const instanceName = usePublicSettings()?.instanceName;
+
+  return <title>{`${title} · ${instanceName ?? t("brand.wordmark")}`}</title>;
+}
+
 export function PageHeader({ title, description, children }: Readonly<Props>) {
   const hub = useHubTabs();
 
   if (hub) {
-    return <HubHeader hub={hub}>{children}</HubHeader>;
+    return (
+      <>
+        <DocumentTitle title={title} />
+        <HubHeader hub={hub}>{children}</HubHeader>
+      </>
+    );
   }
 
   return (
-    <HeaderRow
-      heading={
-        <>
-          <h1 className={titleClass}>{title}</h1>
-          {description ? <p className="mt-1 text-sm text-muted-foreground">{description}</p> : null}
-        </>
-      }
-      actions={children}
-    />
+    <>
+      <DocumentTitle title={title} />
+      <HeaderRow
+        heading={
+          <>
+            <h1 className={titleClass}>{title}</h1>
+            {description ? (
+              <p className="mt-1 text-sm text-muted-foreground">{description}</p>
+            ) : null}
+          </>
+        }
+        actions={children}
+      />
+    </>
   );
 }
 

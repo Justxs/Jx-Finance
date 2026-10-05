@@ -3,6 +3,7 @@ import { z } from "zod";
 import { useEnableTwoFactor } from "@/api/generated";
 import { useServerForm } from "@/components/form";
 import { FormError } from "@/components/form-error/form-error";
+import { RuledLine } from "@/components/ui/ruled-line/ruled-line";
 import { Section, SectionTitle } from "@/components/ui/section/section";
 import { silentMutation } from "@/lib/mutations";
 
@@ -36,7 +37,9 @@ export function TwoFactorSetup({ qrDataUrl, sharedKey, onEnabled, onCancel }: Re
           alt={t("profile.qrCodeAlt")}
           className="aspect-square w-48 max-w-full rounded-md border"
         />
-        <p className="rounded-md bg-muted px-3 py-2 font-mono text-xs break-all">{sharedKey}</p>
+        <RuledLine>
+          <p className="font-mono text-xs break-all">{sharedKey}</p>
+        </RuledLine>
 
         <form.Field name="code">
           {(field) => (

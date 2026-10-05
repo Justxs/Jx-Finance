@@ -1,8 +1,10 @@
-<img src="frontend/public/brand/mark.svg" alt="" width="56" height="56" align="left" />
+<img src="frontend/public/brand/social-preview.png" alt="Jx Finance: a private household ledger you run yourself" width="800" />
 
 # Jx Finance
 
-A self-hosted EUR finance tracker: accounts, transactions and splits, transfers, budgets, goals, recurring bills, household sharing, net worth, reports and bank statement import (Swedbank CSV, camt.053 XML). React/TypeScript frontend, ASP.NET Core 10 API and PostgreSQL 16.
+A private household ledger you run yourself. Record income, expenses, transfers, investments, assets and debts in any of 30 currencies, and see balances, budgets, goals, net worth and reports in one reporting currency. Bank statements come in as files you review before they are saved: Swedbank CSV, camt.053, OFX or QFX, MT940, or any bank's CSV through a column mapping saved once. Nothing connects to a bank or moves money, and the data stays in your own database. Shared accounts and categories let a household keep one set of books without giving up personal ones. English and Lithuanian.
+
+React/TypeScript frontend, ASP.NET Core 10 API and PostgreSQL 16, shipped with Docker Compose. MIT licence.
 
 ## Local development (Windows)
 

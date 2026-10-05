@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button/button";
 import {
   Popover,
   PopoverContent,
+  type PopoverControl,
   PopoverTitle,
   PopoverTrigger,
 } from "@/components/ui/popover/popover";
@@ -32,6 +33,7 @@ interface Props {
   onApply: (id: string) => void;
   onRename: (id: string, name: string) => void;
   onDelete: (id: string) => void;
+  control?: PopoverControl;
 }
 
 export function SavedListMenu({
@@ -48,11 +50,22 @@ export function SavedListMenu({
   onApply,
   onRename,
   onDelete,
+  control,
 }: Readonly<Props>) {
   const { t } = useTranslation();
-  const [open, setOpen] = useState(false);
+  const [ownOpen, setOwnOpen] = useState(false);
+  const open = control ? control.open : ownOpen;
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<SavedListItem | null>(null);
+
+  function setOpen(next: boolean) {
+    if (control) {
+      control.onOpenChange(next);
+    } else {
+      setOwnOpen(next);
+    }
+    setRenamingId(null);
+  }
 
   function confirmRename(id: string, name: string) {
     onRename(id, name);
@@ -61,19 +74,18 @@ export function SavedListMenu({
 
   return (
     <>
-      <Popover
-        open={open}
-        onOpenChange={(next) => {
-          setOpen(next);
-          setRenamingId(null);
-        }}
-      >
+      <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger render={<Button type="button" variant="outline" size="sm" />}>
           <Icon />
           {label}
           {items.length > 0 ? <span className="tabular-nums">· {items.length}</span> : null}
         </PopoverTrigger>
-        <PopoverContent align="end" className="w-80 p-2.5">
+        <PopoverContent
+          align="end"
+          anchor={control?.anchor}
+          finalFocus={control?.anchor}
+          className="w-80 p-2.5"
+        >
           <PopoverTitle className="text-sm">{label}</PopoverTitle>
 
           {items.length === 0 ? (
@@ -99,14 +111,14 @@ export function SavedListMenu({
                   <li key={item.id} className="flex items-center gap-1 border-b py-1">
                     <button
                       type="button"
-                      className="min-w-0 flex-1 rounded-md px-2 py-1 text-left transition-colors hover:bg-muted focus-visible:bg-muted"
+                      className="min-w-0 flex-1 rounded-md px-2 py-1 text-left focus-ring transition-colors hover:bg-muted focus-visible:bg-muted"
                       aria-label={`${applyHint}: ${item.name}`}
                       onClick={() => {
                         setOpen(false);
                         onApply(item.id);
                       }}
                     >
-                      <span className="block truncate font-medium">{item.name}</span>
+                      <span className="line-clamp-2 font-medium wrap-break-word">{item.name}</span>
                       {item.note ? (
                         <span className="block truncate text-xs text-muted-foreground">
                           {item.note}

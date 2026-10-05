@@ -86,7 +86,7 @@ export function TaxCashTable({
           <li key={entry.id} className="flex items-start justify-between gap-3 py-2.5 text-sm">
             <div className="min-w-0">
               <p className="font-medium">{t(`investments.types.${entry.type}`)}</p>
-              <p className="truncate text-xs text-muted-foreground">
+              <p className="text-xs wrap-break-word text-muted-foreground">
                 {metaLine(formatDate(entry.date), source(entry))}
               </p>
             </div>

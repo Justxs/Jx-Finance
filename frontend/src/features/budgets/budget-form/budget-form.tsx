@@ -18,15 +18,23 @@ import {
 } from "@/api/generated/model";
 import { useServerForm } from "@/components/form";
 import { FormError } from "@/components/form-error/form-error";
+import { FormActions } from "@/components/form/form-actions/form-actions";
 import { SharingFields, sharingFieldCount } from "@/components/sharing-fields/sharing-fields";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { FormGrid } from "@/components/ui/form-grid/form-grid";
+import { TextLink } from "@/components/ui/text-link/text-link";
 import { budgetPeriodOptions } from "@/features/budgets/budget-periods";
-import { useMoney } from "@/hooks/use-formatters";
+import { useDecimalMark, useMoney } from "@/hooks/use-formatters";
 import { silentMutation, upsert } from "@/lib/mutations";
 import { namedOptions } from "@/lib/options";
 import { silentQuery } from "@/lib/query-client";
-import { positiveMoney, refineSharing, sharingPayload, sharingShape } from "@/lib/validation";
+import {
+  normalizeMoney,
+  positiveMoney,
+  refineSharing,
+  sharingPayload,
+  sharingShape,
+} from "@/lib/validation";
 import { useSharingDefaults } from "@/stores/active-household-store";
 
 type BudgetTarget = "category" | "tag";
@@ -101,6 +109,11 @@ interface Props {
 export function BudgetForm({ categories, tags, initial, onClose }: Readonly<Props>) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
+  const decimalMark = useDecimalMark();
+
+  function moneyDraft(amount: string) {
+    return amount.replace(".", decimalMark);
+  }
   const monthly = useBudgetSuggestionsSuspense({ period: "monthly" });
   const expenseCategories = categories.filter((c) => c.type === "expense");
   const firstCategoryId = expenseCategories[0]?.id ?? "";
@@ -136,7 +149,7 @@ export function BudgetForm({ categories, tags, initial, onClose }: Readonly<Prop
     target: initial?.tagId ? "tag" : "category",
     categoryId: initial?.categoryId ?? firstCategoryId,
     tagId: initial?.tagId ?? tags[0]?.id ?? "",
-    limitAmount: initial?.limitAmount ?? suggestedLimit(monthly.data, firstCategoryId),
+    limitAmount: moneyDraft(initial?.limitAmount ?? suggestedLimit(monthly.data, firstCategoryId)),
     period: initial?.period ?? "monthly",
     rolloverEnabled: initial?.rolloverEnabled ?? false,
     ...sharing,
@@ -148,6 +161,7 @@ export function BudgetForm({ categories, tags, initial, onClose }: Readonly<Prop
     submit: ({ target, categoryId, tagId, scope, householdId, ...rest }) => {
       const data = {
         ...rest,
+        limitAmount: normalizeMoney(rest.limitAmount),
         categoryId: target === "category" ? categoryId : null,
         tagId: target === "tag" ? tagId : null,
         ...sharingPayload({ scope, householdId }),
@@ -166,7 +180,7 @@ export function BudgetForm({ categories, tags, initial, onClose }: Readonly<Prop
     const suggestions = await queryClient
       .query({ ...getBudgetSuggestionsSuspenseQueryOptions({ period }), ...silentQuery })
       .catch(() => undefined);
-    const limit = suggestedLimit(suggestions, form.getFieldValue("categoryId"));
+    const limit = moneyDraft(suggestedLimit(suggestions, form.getFieldValue("categoryId")));
     if (
       typed() ||
       form.getFieldValue("period") !== period ||
@@ -182,7 +196,14 @@ export function BudgetForm({ categories, tags, initial, onClose }: Readonly<Prop
   }
 
   if (expenseCategories.length === 0 && tags.length === 0) {
-    return <EmptyText size="sm">{t("budgets.needCategory")}</EmptyText>;
+    return (
+      <div className="space-y-4">
+        <EmptyText size="sm">
+          {t("budgets.needCategory")} <TextLink to="/categories">{t("nav.categories")}</TextLink>
+        </EmptyText>
+        <FormActions onCancel={onClose} />
+      </div>
+    );
   }
 
   return (

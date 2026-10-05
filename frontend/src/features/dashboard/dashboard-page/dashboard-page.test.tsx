@@ -97,7 +97,7 @@ test("hidden cards and cards of switched-off features never ask for their data",
     isDefault: false,
   };
   features = { ...features, recurringBills: false, reports: false };
-  const { queryClient } = mountApp("/");
+  const { queryClient } = mountApp("/dashboard");
 
   await screen.findByRole("heading", { level: 2, name: "Income vs. expenses" }, appWait);
   await settled(queryClient);

@@ -4,9 +4,11 @@ import {
   CHART_COLOR_NEGATIVE,
   CHART_COLOR_POSITIVE,
   CHART_COLOR_PRIMARY,
-  type ChartSeries,
 } from "@/components/chart";
-import { TimeSeriesLineChart } from "@/components/chart/time-series-line-chart";
+import {
+  type TimeSeriesLine,
+  TimeSeriesLineChart,
+} from "@/components/chart/time-series-line-chart";
 
 interface TrackedBalance {
   from: string;
@@ -45,7 +47,7 @@ function balancePoints(
 export function DebtBalanceChart({ plan, withExtra, tracked, currency }: Readonly<Props>) {
   const { t } = useTranslation();
 
-  const series: ChartSeries[] = [
+  const series: TimeSeriesLine[] = [
     {
       key: "balance",
       label: t("netWorth.schedule.balance"),
@@ -58,9 +60,9 @@ export function DebtBalanceChart({ plan, withExtra, tracked, currency }: Readonl
             key: "withExtra",
             label: t("netWorth.schedule.balanceWithExtra"),
             color: CHART_COLOR_POSITIVE,
-            shape: "line",
+            comparison: true,
           },
-        ] satisfies ChartSeries[])
+        ] satisfies TimeSeriesLine[])
       : []),
     ...(tracked
       ? ([
@@ -68,9 +70,9 @@ export function DebtBalanceChart({ plan, withExtra, tracked, currency }: Readonl
             key: "tracked",
             label: t("netWorth.schedule.balanceTracked"),
             color: CHART_COLOR_NEGATIVE,
-            shape: "line",
+            shape: "dotted",
           },
-        ] satisfies ChartSeries[])
+        ] satisfies TimeSeriesLine[])
       : []),
   ];
 

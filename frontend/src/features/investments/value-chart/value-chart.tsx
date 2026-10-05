@@ -4,6 +4,7 @@ import type { ValueHistoryParams } from "@/api/generated/model";
 import { CHART_COLOR_MUTED, CHART_COLOR_PRIMARY, type ChartSeries } from "@/components/chart";
 import { TimeSeriesLineChart } from "@/components/chart/time-series-line-chart";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
+import { useIsoDate, useMoney } from "@/hooks/use-formatters";
 
 interface Props {
   params: ValueHistoryParams;
@@ -11,12 +12,19 @@ interface Props {
 
 export function ValueChart({ params }: Readonly<Props>) {
   const { t } = useTranslation();
+  const money = useMoney();
+  const formatDate = useIsoDate();
   const history = useValueHistorySuspense(params);
   const points = history.data.points;
 
   if (points.length === 0) {
     return <EmptyText>{t("investments.valueChart.empty")}</EmptyText>;
   }
+
+  const first = points[0];
+  const last = points.at(-1) ?? first;
+  const start = Number(first?.marketValue ?? 0);
+  const end = Number(last?.marketValue ?? 0);
 
   const series: ChartSeries[] = [
     {
@@ -29,7 +37,7 @@ export function ValueChart({ params }: Readonly<Props>) {
       key: "cost",
       label: t("investments.valueChart.cost"),
       color: CHART_COLOR_MUTED,
-      shape: "line",
+      shape: "dashed",
     },
   ];
 
@@ -46,6 +54,15 @@ export function ValueChart({ params }: Readonly<Props>) {
         yDomain={["auto", "auto"]}
         legend
       />
+      <p className="sr-only">
+        {t("investments.valueChart.summary", {
+          start: money.format(start),
+          startDate: formatDate(first?.date),
+          end: money.format(end),
+          endDate: formatDate(last?.date),
+          change: money.formatSigned(end - start),
+        })}
+      </p>
       {points.some((point) => point.isPartial) ? (
         <p className="text-xs text-muted-foreground">{t("investments.valueChart.partial")}</p>
       ) : null}

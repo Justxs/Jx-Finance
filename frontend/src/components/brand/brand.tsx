@@ -1,23 +1,24 @@
 import { useTranslation } from "react-i18next";
 import { usePublicSettings } from "@/hooks/use-settings";
 import { cn } from "@/lib/utils";
-import { markPath, markViewBox } from "./mark-paths";
+import { markPath, markViewBox, smallMarkPath, smallMarkViewBox } from "./mark-paths";
 
 interface MarkProps {
   className?: string;
   title?: string;
+  small?: boolean;
 }
 
-export function BrandMark({ className, title }: Readonly<MarkProps>) {
+export function BrandMark({ className, title, small = false }: Readonly<MarkProps>) {
   return (
     <svg
-      viewBox={markViewBox}
+      viewBox={small ? smallMarkViewBox : markViewBox}
       role={title ? "img" : undefined}
       aria-label={title}
       aria-hidden={title ? undefined : true}
       className={cn("h-8 w-auto shrink-0 fill-primary", className)}
     >
-      <path fillRule="evenodd" d={markPath} />
+      <path d={small ? smallMarkPath : markPath} />
     </svg>
   );
 }
@@ -32,7 +33,7 @@ interface BrandProps {
 const sizes = {
   sm: { mark: "h-7", stackedMark: "h-12", text: "text-lg" },
   md: { mark: "h-8", stackedMark: "h-16", text: "text-xl" },
-  lg: { mark: "h-11", stackedMark: "h-24", text: "text-[1.75rem]" },
+  lg: { mark: "h-11", stackedMark: "h-24", text: "text-page-title" },
 } as const;
 
 export function Brand({

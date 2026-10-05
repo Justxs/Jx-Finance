@@ -3,6 +3,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using JxFinance.Common;
 using JxFinance.Common.Discord;
+using JxFinance.Common.Email;
 using JxFinance.Common.Errors;
 
 namespace JxFinance.Infrastructure.Discord;
@@ -13,12 +14,16 @@ public sealed class DiscordWebhookClient(HttpClient http) : IDiscordWebhookClien
     public const string HostName = "discord.com";
 
     private const int MessageMaxLength = 300;
+    private const int LedgerNavy = 0x253E52;
     private static readonly TimeSpan DefaultRetryAfter = TimeSpan.FromSeconds(30);
 
     public async Task<DiscordSendResult> SendAsync(DiscordTarget target, DiscordPost post, CancellationToken cancellationToken)
     {
         var path = $"api/webhooks/{target.Id}/{target.Token}";
-        var body = new WebhookBody(post.Content, post.Username, new AllowedMentions([]));
+        var body = new WebhookBody(
+            post.Username,
+            [new Embed(post.Content, LedgerNavy, new EmbedFooter(EmailTexts.DefaultProduct))],
+            new AllowedMentions([]));
         try
         {
             using var response = await http.PostAsJsonAsync(path, body, cancellationToken);
@@ -88,9 +93,16 @@ public sealed class DiscordWebhookClient(HttpClient http) : IDiscordWebhookClien
     }
 
     private sealed record WebhookBody(
-        [property: JsonPropertyName("content")] string Content,
         [property: JsonPropertyName("username")] string Username,
+        [property: JsonPropertyName("embeds")] IReadOnlyList<Embed> Embeds,
         [property: JsonPropertyName("allowed_mentions")] AllowedMentions AllowedMentions);
+
+    private sealed record Embed(
+        [property: JsonPropertyName("description")] string Description,
+        [property: JsonPropertyName("color")] int Color,
+        [property: JsonPropertyName("footer")] EmbedFooter Footer);
+
+    private sealed record EmbedFooter([property: JsonPropertyName("text")] string Text);
 
     private sealed record AllowedMentions([property: JsonPropertyName("parse")] IReadOnlyList<string> Parse);
 }

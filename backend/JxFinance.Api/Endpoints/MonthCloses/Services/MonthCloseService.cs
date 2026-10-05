@@ -50,6 +50,7 @@ public sealed class MonthCloseService(
     {
         public Guid Id { get; set; }
         public MonthDriftRowKind Kind { get; set; }
+        public FlowType? Type { get; set; }
         public DateOnly Date { get; set; }
         public DateOnly CountsFrom { get; set; }
         public DateOnly CountsUntil { get; set; }
@@ -374,6 +375,7 @@ public sealed class MonthCloseService(
             rows.Select(row => new MonthDriftRow(
                 row.Id,
                 row.Kind,
+                row.Type,
                 row.IsDeleted ? MonthDriftChange.Deleted
                     : !known.Contains(row.Id) ? MonthDriftChange.Created
                     : !Reaches(row.CountsFrom, row.CountsUntil, window) ? MonthDriftChange.MovedOut
@@ -400,6 +402,7 @@ public sealed class MonthCloseService(
             {
                 Id = (Guid)(object)t.Id,
                 Kind = MonthDriftRowKind.Transaction,
+                Type = t.Type,
                 Date = t.Date,
                 CountsFrom = t.SpreadFrom ?? t.Date,
                 CountsUntil = t.SpreadUntil ?? t.Date,
@@ -416,6 +419,7 @@ public sealed class MonthCloseService(
                 {
                     Id = (Guid)(object)t.Id,
                     Kind = MonthDriftRowKind.InvestmentEntry,
+                    Type = null,
                     Date = t.Date,
                     CountsFrom = t.Date,
                     CountsUntil = t.Date,

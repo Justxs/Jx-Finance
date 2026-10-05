@@ -1,4 +1,5 @@
 import {
+  Link,
   Outlet,
   createRootRouteWithContext,
   redirect,
@@ -7,8 +8,13 @@ import {
 } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { getMeSuspenseQueryOptions, useMe } from "@/api/generated";
-import { AppSidebar, AppSidebarSkeleton } from "@/components/app-sidebar/app-sidebar";
+import {
+  AppSidebar,
+  AppSidebarFallback,
+  AppSidebarSkeleton,
+} from "@/components/app-sidebar/app-sidebar";
 import { MobileNav } from "@/components/app-sidebar/mobile-nav";
+import { Brand } from "@/components/brand/brand";
 import { LanguageToggle } from "@/components/language-toggle/language-toggle";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { RouteError } from "@/components/route-error/route-error";
@@ -16,6 +22,7 @@ import { RoutePending } from "@/components/route-pending/route-pending";
 import { ShortcutsHelp } from "@/components/shortcuts-help/shortcuts-help";
 import { Splash } from "@/components/splash/splash";
 import { ThemeToggle } from "@/components/theme-toggle/theme-toggle";
+import { TornEdge } from "@/components/torn-edge/torn-edge";
 import { CommandPalette } from "@/features/command-palette/command-palette/command-palette";
 import { EmailVerificationBanner } from "@/features/profile/email-verification-banner/email-verification-banner";
 import { DemoDataBanner } from "@/features/settings/demo-data-banner/demo-data-banner";
@@ -41,7 +48,7 @@ export const Route = createRootRouteWithContext<RouterContext>()({
     const guidedSetup = isAuthenticated && (await checkGuidedSetupPending(queryClient));
     if (location.pathname === "/setup") {
       if (!guidedSetup) {
-        throw redirect({ to: isAuthenticated ? "/" : "/login" });
+        throw redirect({ to: isAuthenticated ? "/dashboard" : "/login" });
       }
       if (!("step" in location.search)) {
         throw redirect({ to: "/setup", search: { step: "basics" } });
@@ -54,14 +61,11 @@ export const Route = createRootRouteWithContext<RouterContext>()({
         throw redirect({ to: "/setup", search: { step: "basics" } });
       }
       if (location.pathname === "/login" || LANDING_PATHS.has(location.pathname)) {
-        throw redirect({ to: "/" });
+        throw redirect({ to: "/dashboard" });
       }
       return;
     }
 
-    if (location.pathname === "/") {
-      throw redirect({ to: "/welcome", mask: { to: "/" }, replace: true });
-    }
     if (!PUBLIC_PATHS.has(location.pathname)) {
       throw redirect({ to: "/login" });
     }
@@ -99,25 +103,35 @@ function RootLayout() {
     return <Splash />;
   }
 
-  if (LANDING_PATHS.has(location.pathname)) {
+  if (LANDING_PATHS.has(renderedPath)) {
     return (
-      <>
+      <div className="page-transition">
         {instanceName ? <title>{instanceName}</title> : null}
         <Outlet />
-      </>
+      </div>
     );
   }
 
   if (!authenticatedArea) {
     return (
-      <main className="relative flex min-h-screen items-center justify-center bg-background px-4 py-16">
+      <div className="flex min-h-screen flex-col bg-background">
         {instanceName ? <title>{instanceName}</title> : null}
-        <div className="absolute top-3 right-3 flex gap-0.5">
-          <LanguageToggle />
-          <ThemeToggle />
+        <div className="hero-band relative isolate bg-hero on-hero">
+          <TornEdge />
+          <header className="flex justify-center px-4 pt-14 pb-32 sm:pt-16">
+            <Link to="/" className="max-w-full rounded-md focus-ring">
+              <Brand size="lg" stacked />
+            </Link>
+            <div className="absolute top-3 right-3 flex gap-0.5">
+              <LanguageToggle />
+              <ThemeToggle />
+            </div>
+          </header>
         </div>
-        <Outlet />
-      </main>
+        <main className="page-transition shell-page relative -mt-24 flex flex-1 justify-center px-4 pb-16">
+          <Outlet />
+        </main>
+      </div>
     );
   }
 
@@ -129,8 +143,14 @@ function RootLayout() {
       >
         {t("nav.skip")}
       </a>
+      <p className="sr-only" aria-live="polite" aria-atomic="true">
+        {currentTitle}
+      </p>
       <div className="contents print:hidden">
-        <QueryBoundary fallback={<AppSidebarSkeleton />} error={<AppSidebarSkeleton />}>
+        <QueryBoundary
+          fallback={<AppSidebarSkeleton />}
+          error={<AppSidebarFallback pages={visiblePages} />}
+        >
           <AppSidebar />
         </QueryBoundary>
         <QueryBoundary fallback={null} error={null}>
@@ -145,6 +165,9 @@ function RootLayout() {
           id="main-content"
           className="w-full min-w-0 flex-1 space-y-5 px-4 py-6 sm:px-8 sm:py-8 lg:px-10 lg:py-10 2xl:px-14 print:px-0 print:py-0"
         >
+          <div className="hidden border-b border-rule pb-3 print:block">
+            <Brand size="sm" />
+          </div>
           <div className="contents print:hidden">
             <QueryBoundary fallback={null} error={null}>
               <EmailVerificationBanner />

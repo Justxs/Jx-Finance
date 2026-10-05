@@ -11,6 +11,7 @@ import { CashFlowCard } from "@/features/dashboard/cash-flow-card/cash-flow-card
 import { CategoryBreakdownChart } from "@/features/dashboard/category-breakdown-chart/category-breakdown-chart";
 import {
   cardSkeletons,
+  cardSpan,
   DashboardStatsSkeleton,
 } from "@/features/dashboard/dashboard-page/dashboard-pending";
 import { pastMonthEnd } from "@/features/dashboard/dashboard-queries";
@@ -57,7 +58,6 @@ function CurrentMonthOnly({ text }: Readonly<{ text: TranslationKey }>) {
 }
 
 interface SectionCard {
-  span: "third" | "wide" | "narrow";
   link?: { to: LinkProps["to"]; label: TranslationKey };
   content: (view: CardView) => ReactNode;
 }
@@ -67,47 +67,38 @@ const sectionCards: Record<
   SectionCard
 > = {
   monthlyTrend: {
-    span: "wide",
     link: { to: "/reports", label: "nav.reports" },
     content: ({ month }) => <MonthlyTrendChart month={month} />,
   },
   spendingByCategory: {
-    span: "third",
     content: ({ month }) => <CategoryBreakdownChart month={month} />,
   },
   spendingPace: {
-    span: "third",
     content: ({ month }) => <SpendingPaceChart month={month} />,
   },
   budgets: {
-    span: "narrow",
     link: { to: "/budgets", label: "nav.budgets" },
     content: ({ until }) => <BudgetSnapshot asOf={until} />,
   },
   netWorth: {
-    span: "wide",
     link: { to: "/net-worth", label: "nav.netWorth" },
     content: ({ month, until }) => <NetWorthMonth month={month} until={until} />,
   },
   accounts: {
-    span: "narrow",
     link: { to: "/accounts", label: "nav.accounts" },
     content: ({ until }) => <AccountBalances asOf={until} />,
   },
   upcomingBills: {
-    span: "narrow",
     link: { to: "/recurring-bills", label: "nav.recurringBills" },
     content: ({ until }) =>
       until ? <CurrentMonthOnly text="dashboard.billsCurrentOnly" /> : <UpcomingBills />,
   },
   cashFlow: {
-    span: "narrow",
     link: { to: "/accounts", label: "nav.accounts" },
     content: ({ until }) =>
       until ? <CurrentMonthOnly text="dashboard.cashFlowCurrentOnly" /> : <CashFlowCard />,
   },
   goals: {
-    span: "narrow",
     link: { to: "/goals", label: "nav.goals" },
     content: ({ until }) =>
       until ? <CurrentMonthOnly text="dashboard.goalsCurrentOnly" /> : <GoalsSnapshot />,
@@ -120,11 +111,11 @@ export function dashboardCardTitle(t: Translate, card: DashboardCardId): string 
 
 interface Props {
   card: DashboardCardId;
+  cards: readonly DashboardCardId[];
   month: string;
-  widen?: boolean;
 }
 
-export function DashboardCard({ card, month, widen = false }: Readonly<Props>) {
+export function DashboardCard({ card, cards, month }: Readonly<Props>) {
   const { t } = useTranslation();
   const until = pastMonthEnd(month, useTodayDate());
   const title = dashboardCardTitle(t, card);
@@ -152,7 +143,7 @@ export function DashboardCard({ card, month, widen = false }: Readonly<Props>) {
   }
 
   const section = sectionCards[card];
-  const span = widen ? "wide" : section.span;
+  const span = cardSpan(card, cards);
   return (
     <DashboardSection
       className={cn(

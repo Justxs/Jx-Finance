@@ -213,7 +213,7 @@ export const transactionHandlers = [
     HttpResponse.arrayBuffer(new TextEncoder().encode("%PDF-1.4\n%%EOF\n").buffer, {
       headers: {
         "Content-Type": "application/pdf",
-        "Content-Disposition": 'attachment; filename="transactions.pdf"',
+        "Content-Disposition": 'attachment; filename="jx-finance-transactions.pdf"',
       },
     }),
   ),

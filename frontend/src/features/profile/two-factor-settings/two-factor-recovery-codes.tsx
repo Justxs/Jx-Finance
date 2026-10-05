@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { FormActions } from "@/components/form/form-actions/form-actions";
 import { Button } from "@/components/ui/button/button";
 import { Section, SectionTitle } from "@/components/ui/section/section";
 
@@ -14,16 +15,16 @@ export function TwoFactorRecoveryCodes({ codes, onDone }: Readonly<Props>) {
     <Section as="div" className="space-y-4 *:max-w-md">
       <SectionTitle>{t("profile.recoveryCodesTitle")}</SectionTitle>
       <p className="text-sm text-muted-foreground">{t("profile.recoveryCodesSubtitle")}</p>
-      <ul className="grid gap-2 rounded-md bg-muted p-4 font-mono text-sm sm:grid-cols-2">
+      <ul className="grid gap-2 border-y py-3 font-mono text-sm sm:grid-cols-2">
         {codes.map((code) => (
           <li key={code}>{code}</li>
         ))}
       </ul>
-      <div className="flex justify-end">
+      <FormActions>
         <Button type="button" onClick={onDone}>
           {t("profile.recoveryCodesDone")}
         </Button>
-      </div>
+      </FormActions>
     </Section>
   );
 }

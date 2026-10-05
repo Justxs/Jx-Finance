@@ -26,7 +26,7 @@ import { createMutationCache } from "@/lib/query-client";
 import { emailTokenSearchSchema } from "@/lib/search-schema";
 import { routeTree } from "@/route-tree.gen";
 import { accountsSearchSchema } from "@/routes/accounts";
-import { dashboardSearchSchema } from "@/routes/index";
+import { dashboardSearchSchema } from "@/routes/dashboard";
 import { investmentsSearchSchema } from "@/routes/investments";
 import { profileSearchSchema } from "@/routes/profile";
 import { recurringBillsSearchSchema } from "@/routes/recurring-bills";
@@ -38,7 +38,7 @@ import { longDescriptionTransaction } from "@/storybook/fixtures";
 import { testQueryClient } from "@/test/query-client";
 
 const STORY_ROUTES = [
-  { path: "/", validateSearch: dashboardSearchSchema },
+  { path: "/dashboard", validateSearch: dashboardSearchSchema },
   { path: "/accounts", validateSearch: accountsSearchSchema },
   { path: "/transactions", validateSearch: transactionsSearchSchema },
   { path: "/investments", validateSearch: investmentsSearchSchema },
@@ -57,7 +57,7 @@ const STORY_ROUTES = [
   { path: "/profile", validateSearch: profileSearchSchema },
   { path: "/recurring-bills", validateSearch: recurringBillsSearchSchema },
   { path: "/settings", validateSearch: settingsSearchSchema },
-  { path: "/welcome" },
+  { path: "/" },
   { path: "/features" },
   { path: "/login" },
   { path: "/setup" },

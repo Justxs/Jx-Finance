@@ -102,8 +102,11 @@ export function LoginPage() {
 
   async function enterApp() {
     setAuthenticated(true);
-    await Promise.allSettled([loadAppShell(queryClient), router.preloadRoute({ to: "/" })]);
-    void navigate({ to: "/" });
+    await Promise.allSettled([
+      loadAppShell(queryClient),
+      router.preloadRoute({ to: "/dashboard" }),
+    ]);
+    void navigate({ to: "/dashboard" });
   }
 
   const schema = z.object({

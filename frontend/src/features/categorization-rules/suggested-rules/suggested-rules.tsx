@@ -14,7 +14,6 @@ import { Button } from "@/components/ui/button/button";
 import { Tag } from "@/components/ui/tag/tag";
 import { RuleForm } from "@/features/categorization-rules/rule-form/rule-form";
 import { conditionText } from "@/features/categorization-rules/rule-form/rule-summary";
-import { silentMutation } from "@/lib/mutations";
 import { nameById } from "@/lib/options";
 import { ruleFromSuggestion } from "@/lib/suggested-rule";
 
@@ -37,7 +36,7 @@ interface Props {
 export function SuggestedRules({ suggestions, accounts, categories, tags }: Readonly<Props>) {
   const { t } = useTranslation();
   const [reviewing, setReviewing] = useState<Reviewing | null>(null);
-  const dismiss = useDismissSuggestedRule({ mutation: silentMutation });
+  const dismiss = useDismissSuggestedRule();
   const categoryNames = nameById(categories);
 
   const pending = dismiss.isPending ? dismiss.variables?.data : undefined;
@@ -77,6 +76,7 @@ export function SuggestedRules({ suggestions, accounts, categories, tags }: Read
                   variant="outline"
                   size="sm"
                   onClick={() => setReviewing({ id: key, suggestion })}
+                  aria-label={`${t("categorizationRules.suggested.review")}: ${suggestion.name}`}
                 >
                   {t("categorizationRules.suggested.review")}
                 </Button>

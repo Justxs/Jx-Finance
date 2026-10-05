@@ -48,13 +48,14 @@ export function TransactionsPending() {
       className="space-y-5"
       actions={
         <>
-          <div className="flex flex-wrap items-center gap-1">
+          <div className="flex flex-wrap items-center gap-1 max-sm:hidden">
             <ButtonSkeleton size="sm" className="w-27" />
             <ButtonSkeleton size="sm" />
             <ButtonSkeleton size="sm" />
           </div>
-          {features.import ? <ButtonSkeleton className="w-50" /> : null}
-          <ButtonSkeleton className="w-38" />
+          {features.import ? <ButtonSkeleton className="w-50 max-sm:hidden" /> : null}
+          <ButtonSkeleton className="w-38 max-sm:order-first" />
+          <ButtonSkeleton className="sm:hidden" />
         </>
       }
     >

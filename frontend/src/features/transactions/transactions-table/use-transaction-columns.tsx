@@ -195,7 +195,7 @@ export function useTransactionColumns({
             cell: (info) => {
               const name = accountNames.get(info.getValue()) ?? "";
               return (
-                <span className="block truncate text-muted-foreground" title={name}>
+                <span className="line-clamp-2 wrap-break-word text-muted-foreground" title={name}>
                   {name}
                 </span>
               );

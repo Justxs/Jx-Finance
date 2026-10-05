@@ -4,7 +4,9 @@ Back to the [feature walkthrough](README.md). See also [decisions](../decisions/
 
 Backend `Auth` (`AuthService`, `SessionService`, `AccountEmailService`, `PasskeyService`), routes `login`, `logout`, `me`, `refresh`, `sessions`, `sessions/{id}`, `sessions/revoke-others`, `forgot-password`, `reset-password`, `verify-email`, `send-verification-email`, and the passkey routes of [Passkeys](passkeys.md). Login and each passkey sign-in endpoint are throttled to 10 calls per five minutes per client.
 
-A signed-out visit to `/` shows the [landing page](landing-page.md), whose "Sign in" opens `/login`. A signed-out visit to any other page behind sign-in goes straight to `/login`.
+A signed-out visit to `/` shows the [landing page](landing-page.md), whose "Sign in" opens `/login`. A signed-out visit to any other page behind sign-in goes straight to `/login`. Signing in opens the dashboard at `/dashboard`.
+
+The sign-in, first-run setup and password pages share one frame in the root layout: a short navy band with the large stacked lockup (linking to `/`) and the language and theme toggles, closed by the landing page's torn edge, with the page's card overlapping the edge. Moving between the landing pages, these pages and the app fades the whole page; moving between two of these pages fades only the card.
 
 ## Sign-in
 

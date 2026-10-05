@@ -1,3 +1,4 @@
+import { useId } from "react";
 import {
   CartesianGrid,
   Line,
@@ -10,6 +11,7 @@ import {
 } from "recharts";
 import { useAxisDateTick, useAxisMoney, useIsoDate } from "@/hooks/use-formatters";
 import { parseIso } from "@/lib/calendar";
+import { ChartDataTable } from "./chart-data-table";
 import { ChartLegend } from "./chart-legend";
 import { CHART_HEIGHT } from "./chart-skeleton";
 import { axisProps, chartCursor } from "./chart-theme";
@@ -31,7 +33,7 @@ function strokePattern(item: TimeSeriesLine) {
   if (item.shape === "dotted") {
     return "1.5 3";
   }
-  return item.comparison ? "4 3" : undefined;
+  return item.comparison || item.shape === "dashed" ? "4 3" : undefined;
 }
 
 type TimeSeriesPoint = Readonly<Record<string, string | number | undefined>>;
@@ -69,6 +71,7 @@ export function TimeSeriesLineChart({
   const axisMoney = useAxisMoney();
   const formatDate = useIsoDate();
   const axis = X_AXES[xAxis];
+  const tableId = useId();
 
   const first = parseIso(String(data[0]?.date ?? ""));
   const last = parseIso(String(data.at(-1)?.date ?? ""));
@@ -83,66 +86,77 @@ export function TimeSeriesLineChart({
   );
 
   const chart = (
-    <div role="img" aria-label={ariaLabel}>
-      <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
-        <LineChart
-          accessibilityLayer={false}
-          data={data}
-          margin={{ top: 8, right: axis.marginRight, bottom: 0, left: 0 }}
-        >
-          <CartesianGrid vertical={false} stroke="var(--border)" />
-          <XAxis
-            {...axisProps}
-            dataKey={axis.dataKey}
-            tickFormatter={xAxis === "date" ? (value) => formatTick(String(value)) : undefined}
-            minTickGap={axis.minTickGap}
-            interval={axis.interval}
-            tickMargin={8}
-          />
-          <YAxis
-            {...axisProps}
-            domain={yDomain}
-            tickFormatter={(value) => axisMoney.format(Number(value), currency)}
-            tickCount={5}
-            width="auto"
-          />
-          <Tooltip
-            cursor={chartCursor}
-            content={
-              <ChartTooltip
-                series={swatchSeries}
-                formatLabel={formatLabel ?? formatDate}
-                currency={currency}
-              />
-            }
-            isAnimationActive={false}
-            offset={12}
-          />
-          {zeroLine ? <ReferenceLine y={0} stroke="var(--rule)" /> : null}
-          {lines.map((item) => (
-            <Line
-              key={item.key}
-              isAnimationActive={false}
-              type={curve}
-              dataKey={item.key}
-              stroke={item.markers ? "none" : item.color}
-              strokeWidth={item === series[0] ? 2 : 1.5}
-              strokeDasharray={strokePattern(item)}
-              dot={
-                item.markers
-                  ? { r: 4, fill: item.color, stroke: "var(--background)", strokeWidth: 2 }
-                  : false
-              }
-              activeDot={
-                item.comparison
-                  ? false
-                  : { r: 4, fill: item.color, stroke: "var(--background)", strokeWidth: 2 }
-              }
+    <>
+      <div role="img" aria-label={ariaLabel} aria-describedby={tableId}>
+        <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
+          <LineChart
+            accessibilityLayer={false}
+            data={data}
+            margin={{ top: 8, right: axis.marginRight, bottom: 0, left: 0 }}
+          >
+            <CartesianGrid vertical={false} stroke="var(--border)" />
+            <XAxis
+              {...axisProps}
+              dataKey={axis.dataKey}
+              tickFormatter={xAxis === "date" ? (value) => formatTick(String(value)) : undefined}
+              minTickGap={axis.minTickGap}
+              interval={axis.interval}
+              tickMargin={8}
             />
-          ))}
-        </LineChart>
-      </ResponsiveContainer>
-    </div>
+            <YAxis
+              {...axisProps}
+              domain={yDomain}
+              tickFormatter={(value) => axisMoney.format(Number(value), currency)}
+              tickCount={5}
+              width="auto"
+            />
+            <Tooltip
+              cursor={chartCursor}
+              content={
+                <ChartTooltip
+                  series={swatchSeries}
+                  formatLabel={formatLabel ?? formatDate}
+                  currency={currency}
+                />
+              }
+              isAnimationActive={false}
+              offset={12}
+            />
+            {zeroLine ? <ReferenceLine y={0} stroke="var(--rule)" /> : null}
+            {lines.map((item) => (
+              <Line
+                key={item.key}
+                isAnimationActive={false}
+                type={curve}
+                dataKey={item.key}
+                stroke={item.markers ? "none" : item.color}
+                strokeWidth={item === series[0] ? 2 : 1.5}
+                strokeDasharray={strokePattern(item)}
+                dot={
+                  item.markers
+                    ? { r: 4, fill: item.color, stroke: "var(--background)", strokeWidth: 2 }
+                    : false
+                }
+                activeDot={
+                  item.comparison
+                    ? false
+                    : { r: 4, fill: item.color, stroke: "var(--background)", strokeWidth: 2 }
+                }
+              />
+            ))}
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+      <ChartDataTable
+        id={tableId}
+        caption={ariaLabel}
+        data={data}
+        labelKey={axis.dataKey}
+        series={swatchSeries}
+        formatLabel={formatLabel ?? (xAxis === "date" ? formatDate : undefined)}
+        currency={currency}
+      />
+    </>
   );
 
   if (!legend) {

@@ -30,7 +30,7 @@ public sealed class ExportTaxSummaryEndpoint(ITaxSummaryService taxSummaryServic
         var accounts = summary.Accounts.ToDictionary(a => a.Id, a => a.Name);
         var reporting = summary.ReportingCurrency.ToCode();
 
-        await using var writer = HttpContext.StartCsv($"investment-tax-summary-{summary.Year}.csv");
+        await using var writer = HttpContext.StartCsv($"jx-finance-investment-tax-summary-{summary.Year}.csv");
         await writer.WriteLineAsync(Header);
         foreach (var disposal in summary.Disposals)
         {

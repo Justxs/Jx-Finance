@@ -22,7 +22,7 @@ import { PageHeader } from "@/components/page-header/page-header";
 import { RecurringBillConfirmForm } from "@/components/recurring-bill-confirm-form/recurring-bill-confirm-form";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { Rows } from "@/components/ui/rows/rows";
-import { Section } from "@/components/ui/section/section";
+import { Section, TitledSection } from "@/components/ui/section/section";
 import { SegmentedControl } from "@/components/ui/segmented-control/segmented-control";
 import { billUrgencies, groupBills } from "@/features/recurring-bills/bill-groups";
 import { BillsCalendar } from "@/features/recurring-bills/bills-calendar/bills-calendar";
@@ -122,6 +122,20 @@ export function RecurringBillsPage() {
     );
   }
 
+  function addDialog(secondary: boolean) {
+    return (
+      <CreateDialog
+        label={t("recurringBills.add")}
+        title={t("recurringBills.add")}
+        secondary={secondary}
+      >
+        {(close) => (
+          <RecurringBillForm accounts={accountList} categories={categoryList} onClose={close} />
+        )}
+      </CreateDialog>
+    );
+  }
+
   function chooseView(next: BillsView) {
     void navigate({
       search: (previous) => ({ ...previous, view: next === "list" ? undefined : next }),
@@ -140,11 +154,7 @@ export function RecurringBillsPage() {
             { value: "calendar", label: t("recurringBills.calendar.calendar") },
           ]}
         />
-        <CreateDialog label={t("recurringBills.add")} title={t("recurringBills.add")}>
-          {(close) => (
-            <RecurringBillForm accounts={accountList} categories={categoryList} onClose={close} />
-          )}
-        </CreateDialog>
+        {addDialog(false)}
       </PageHeader>
 
       {view === "calendar" ? (
@@ -162,21 +172,28 @@ export function RecurringBillsPage() {
         <CashFlowForecast totals />
       ) : null}
       {view === "list" && billList.length === 0 ? (
-        <EmptyText>{t("recurringBills.empty")}</EmptyText>
+        <TitledSection title={t("recurringBills.activeTitle")}>
+          <EmptyText action={addDialog(true)}>{t("recurringBills.empty")}</EmptyText>
+        </TitledSection>
       ) : null}
       {view === "list" && billList.length > inactive.length ? (
-        <Section className="space-y-4">
-          {billUrgencies.map((urgency) =>
-            groups[urgency].length > 0 ? (
-              <div key={urgency}>
-                <h2 id={`bills-${urgency}`} className="text-sm font-semibold text-muted-foreground">
-                  {t(`recurringBills.groups.${urgency}`)}
-                </h2>
-                <Rows aria-labelledby={`bills-${urgency}`}>{groups[urgency].map(billRow)}</Rows>
-              </div>
-            ) : null,
-          )}
-        </Section>
+        <TitledSection title={t("recurringBills.activeTitle")} bodyGap="md">
+          <div className="space-y-4">
+            {billUrgencies.map((urgency) =>
+              groups[urgency].length > 0 ? (
+                <div key={urgency}>
+                  <h3
+                    id={`bills-${urgency}`}
+                    className="text-sm font-semibold text-muted-foreground"
+                  >
+                    {t(`recurringBills.groups.${urgency}`)}
+                  </h3>
+                  <Rows aria-labelledby={`bills-${urgency}`}>{groups[urgency].map(billRow)}</Rows>
+                </div>
+              ) : null,
+            )}
+          </div>
+        </TitledSection>
       ) : null}
       {view === "list" && inactive.length > 0 ? (
         <Section>

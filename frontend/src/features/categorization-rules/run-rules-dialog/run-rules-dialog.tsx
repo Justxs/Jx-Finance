@@ -43,6 +43,15 @@ export function RunRulesDialog({ accounts, hasRules, onClose }: Readonly<Props>)
 
   const matched = preview?.rules.filter((row) => row.rowCount > 0) ?? [];
 
+  function previewSummary() {
+    if (!preview) {
+      return "";
+    }
+    return matched.length === 0
+      ? t("categorizationRules.runNothing")
+      : t("categorizationRules.runTotal", { count: preview.total });
+  }
+
   return (
     <div className="space-y-4">
       <p className="max-w-prose text-sm text-muted-foreground">
@@ -104,6 +113,10 @@ export function RunRulesDialog({ accounts, hasRules, onClose }: Readonly<Props>)
         </section>
       ) : null}
 
+      <p role="status" className="sr-only">
+        {previewSummary()}
+      </p>
+
       <FormError error={previewMutation.error ?? runMutation.error} />
 
       {hasRules ? null : <EmptyText>{t("categorizationRules.runNeedsRules")}</EmptyText>}
@@ -114,6 +127,7 @@ export function RunRulesDialog({ accounts, hasRules, onClose }: Readonly<Props>)
           variant="outline"
           disabled={!hasRules || runMutation.isPending}
           pending={previewMutation.isPending}
+          focusableWhenDisabled
           onClick={() => previewMutation.mutate(request())}
         >
           {t("categorizationRules.runPreview")}

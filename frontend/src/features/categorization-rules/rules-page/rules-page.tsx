@@ -24,13 +24,21 @@ import { RuleRow } from "@/features/categorization-rules/rule-row/rule-row";
 import { RunRulesDialog } from "@/features/categorization-rules/run-rules-dialog/run-rules-dialog";
 import { SuggestedRules } from "@/features/categorization-rules/suggested-rules/suggested-rules";
 import { useEditableList } from "@/hooks/use-editable-list";
-import { silentMutation } from "@/lib/mutations";
 import { optimisticRemoval, optimisticUpdate } from "@/lib/optimistic";
 import { nameById } from "@/lib/options";
+import { type MoveDirection, adjacentIndex } from "@/lib/reorder";
+
+interface MoveFocus {
+  id: string;
+  position: number;
+  direction: MoveDirection;
+}
 
 export function RulesPage() {
   const { t } = useTranslation();
   const [runOpen, setRunOpen] = useState(false);
+  const [moveFocus, setMoveFocus] = useState<MoveFocus | null>(null);
+  const [moveAnnouncement, setMoveAnnouncement] = useState("");
 
   const accounts = useAccountsSuspense();
   const categories = useCategoriesSuspense();
@@ -47,16 +55,28 @@ export function RulesPage() {
   );
 
   const moveMutation = useMoveCategorizationRule({
-    mutation: {
-      ...silentMutation,
-      ...optimisticUpdate({
-        queryKey: getCategorizationRulesQueryKey(),
-        apply: movedRules,
-      }),
-    },
+    mutation: optimisticUpdate({
+      queryKey: getCategorizationRulesQueryKey(),
+      apply: movedRules,
+    }),
   });
 
   const ruleList = rules.list;
+
+  function move(rule: CategorizationRuleResponse, direction: MoveDirection) {
+    const position = adjacentIndex(rule.position, direction);
+    const atEdge = direction === "up" ? position === 0 : position === ruleList.length - 1;
+    const opposite = direction === "up" ? "down" : "up";
+    setMoveFocus({ id: rule.id, position, direction: atEdge ? opposite : direction });
+    setMoveAnnouncement(
+      t("categorizationRules.moved", {
+        name: rule.name,
+        position: position + 1,
+        total: ruleList.length,
+      }),
+    );
+    moveMutation.mutate({ id: rule.id, data: { direction } });
+  }
 
   const accountNames = nameById(accounts.data);
   const categoryNames = nameById(categories.data);
@@ -137,12 +157,19 @@ export function RulesPage() {
             accountNames={accountNames}
             categoryNames={categoryNames}
             tagNames={tagNames}
-            movePending={moveMutation.isPending}
-            onMove={(direction) => moveMutation.mutate({ id: rule.id, data: { direction } })}
+            focusMove={
+              moveFocus?.id === rule.id && moveFocus.position === rule.position
+                ? moveFocus.direction
+                : undefined
+            }
+            onMove={(direction) => move(rule, direction)}
             {...rules.rowProps(rule)}
           />
         ))}
       </ListSection>
+      <p role="status" className="sr-only">
+        {moveAnnouncement}
+      </p>
 
       <ConfirmDeleteDialog {...rules.dialogProps} />
     </div>

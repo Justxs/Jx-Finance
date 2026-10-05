@@ -47,11 +47,7 @@ function ItemsTable({ dateFrom, dateTo, search }: Readonly<RangeProps & { search
   }
 
   return (
-    <Table
-      label={t("reports.receiptItems.table")}
-      className="min-w-100"
-      aria-label={t("reports.receiptItems.table")}
-    >
+    <Table label={t("reports.receiptItems.table")} className="min-w-100">
       <TableHeader>
         <TableRow>
           <TableHead>{t("reports.receiptItems.item")}</TableHead>

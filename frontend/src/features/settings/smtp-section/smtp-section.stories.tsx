@@ -36,7 +36,10 @@ export const NotConfiguredYet: Story = {
   parameters: withHandlers(getSmtpSettingsMockHandler(smtpSettingsOff)),
   play: async ({ canvas }) => {
     await expect(await canvas.findByLabelText("Server")).toHaveValue("");
-    await expect(canvas.getByRole("button", { name: /Send a test message/u })).toBeDisabled();
+    await expect(canvas.getByRole("button", { name: /Send a test message/u })).toHaveAttribute(
+      "aria-disabled",
+      "true",
+    );
   },
 };
 

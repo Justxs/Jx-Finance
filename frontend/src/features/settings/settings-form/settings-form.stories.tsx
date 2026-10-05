@@ -82,7 +82,7 @@ export const SavesTrimmedName: Story = {
       expect(sent).toHaveBeenCalledWith(expect.objectContaining({ instanceName: "Kazlauskai" })),
     );
     await expect(sent).toHaveBeenCalledTimes(1);
-    await waitFor(() => expect(canvas.queryByRole("status")).toBeNull());
+    await waitFor(() => expect(canvas.getByRole("status")).toBeEmptyDOMElement());
   },
 };
 
@@ -95,7 +95,7 @@ export const SaveFails: Story = {
     await userEvent.click(await canvas.findByRole("button", { name: save }));
 
     await expect(await canvas.findByRole("alert")).toBeInTheDocument();
-    await expect(canvas.getByRole("status")).toBeInTheDocument();
+    await expect(canvas.getByRole("status")).not.toBeEmptyDOMElement();
   },
 };
 
@@ -108,6 +108,6 @@ export const DiscardRestoresValues: Story = {
     );
 
     await expect(name).toHaveValue(settings.instanceName ?? "");
-    await expect(canvas.queryByRole("status")).toBeNull();
+    await expect(canvas.getByRole("status")).toBeEmptyDOMElement();
   },
 };

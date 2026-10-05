@@ -12,6 +12,7 @@ import { Route as AccountsRouteImport } from './routes/accounts'
 import { Route as BudgetsRouteImport } from './routes/budgets'
 import { Route as CategoriesRouteImport } from './routes/categories'
 import { Route as CategorizationRulesRouteImport } from './routes/categorization-rules'
+import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as FeaturesRouteImport } from './routes/features'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as GoalsRouteImport } from './routes/goals'
@@ -29,7 +30,6 @@ import { Route as TagsRouteImport } from './routes/tags'
 import { Route as TransactionsRouteImport } from './routes/transactions'
 import { Route as UsersRouteImport } from './routes/users'
 import { Route as VerifyEmailRouteImport } from './routes/verify-email'
-import { Route as WelcomeRouteImport } from './routes/welcome'
 import { Route as ReportsMonthRouteImport } from './routes/reports_.month'
 import { Route as NetWorthAssetsAssetIdRouteImport } from './routes/net-worth_.assets.$assetId'
 import { Route as NetWorthDebtsDebtIdRouteImport } from './routes/net-worth_.debts.$debtId'
@@ -57,6 +57,11 @@ const CategoriesRoute = CategoriesRouteImport.update({
 const CategorizationRulesRoute = CategorizationRulesRouteImport.update({
   id: '/categorization-rules',
   path: '/categorization-rules',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardRoute = DashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FeaturesRoute = FeaturesRouteImport.update({
@@ -144,11 +149,6 @@ const VerifyEmailRoute = VerifyEmailRouteImport.update({
   path: '/verify-email',
   getParentRoute: () => rootRouteImport,
 } as any)
-const WelcomeRoute = WelcomeRouteImport.update({
-  id: '/welcome',
-  path: '/welcome',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ReportsMonthRoute = ReportsMonthRouteImport.update({
   id: '/reports_/month',
   path: '/reports/month',
@@ -171,6 +171,7 @@ export interface FileRoutesByFullPath {
   '/budgets': typeof BudgetsRoute
   '/categories': typeof CategoriesRoute
   '/categorization-rules': typeof CategorizationRulesRoute
+  '/dashboard': typeof DashboardRoute
   '/features': typeof FeaturesRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/goals': typeof GoalsRoute
@@ -188,7 +189,6 @@ export interface FileRoutesByFullPath {
   '/transactions': typeof TransactionsRoute
   '/users': typeof UsersRoute
   '/verify-email': typeof VerifyEmailRoute
-  '/welcome': typeof WelcomeRoute
   '/reports/month': typeof ReportsMonthRoute
   '/net-worth/assets/$assetId': typeof NetWorthAssetsAssetIdRoute
   '/net-worth/debts/$debtId': typeof NetWorthDebtsDebtIdRoute
@@ -199,6 +199,7 @@ export interface FileRoutesByTo {
   '/budgets': typeof BudgetsRoute
   '/categories': typeof CategoriesRoute
   '/categorization-rules': typeof CategorizationRulesRoute
+  '/dashboard': typeof DashboardRoute
   '/features': typeof FeaturesRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/goals': typeof GoalsRoute
@@ -216,7 +217,6 @@ export interface FileRoutesByTo {
   '/transactions': typeof TransactionsRoute
   '/users': typeof UsersRoute
   '/verify-email': typeof VerifyEmailRoute
-  '/welcome': typeof WelcomeRoute
   '/reports/month': typeof ReportsMonthRoute
   '/net-worth/assets/$assetId': typeof NetWorthAssetsAssetIdRoute
   '/net-worth/debts/$debtId': typeof NetWorthDebtsDebtIdRoute
@@ -228,6 +228,7 @@ export interface FileRoutesById {
   '/budgets': typeof BudgetsRoute
   '/categories': typeof CategoriesRoute
   '/categorization-rules': typeof CategorizationRulesRoute
+  '/dashboard': typeof DashboardRoute
   '/features': typeof FeaturesRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/goals': typeof GoalsRoute
@@ -245,7 +246,6 @@ export interface FileRoutesById {
   '/transactions': typeof TransactionsRoute
   '/users': typeof UsersRoute
   '/verify-email': typeof VerifyEmailRoute
-  '/welcome': typeof WelcomeRoute
   '/reports_/month': typeof ReportsMonthRoute
   '/net-worth_/assets/$assetId': typeof NetWorthAssetsAssetIdRoute
   '/net-worth_/debts/$debtId': typeof NetWorthDebtsDebtIdRoute
@@ -258,6 +258,7 @@ export interface FileRouteTypes {
     | '/budgets'
     | '/categories'
     | '/categorization-rules'
+    | '/dashboard'
     | '/features'
     | '/forgot-password'
     | '/goals'
@@ -275,7 +276,6 @@ export interface FileRouteTypes {
     | '/transactions'
     | '/users'
     | '/verify-email'
-    | '/welcome'
     | '/reports/month'
     | '/net-worth/assets/$assetId'
     | '/net-worth/debts/$debtId'
@@ -286,6 +286,7 @@ export interface FileRouteTypes {
     | '/budgets'
     | '/categories'
     | '/categorization-rules'
+    | '/dashboard'
     | '/features'
     | '/forgot-password'
     | '/goals'
@@ -303,7 +304,6 @@ export interface FileRouteTypes {
     | '/transactions'
     | '/users'
     | '/verify-email'
-    | '/welcome'
     | '/reports/month'
     | '/net-worth/assets/$assetId'
     | '/net-worth/debts/$debtId'
@@ -314,6 +314,7 @@ export interface FileRouteTypes {
     | '/budgets'
     | '/categories'
     | '/categorization-rules'
+    | '/dashboard'
     | '/features'
     | '/forgot-password'
     | '/goals'
@@ -331,7 +332,6 @@ export interface FileRouteTypes {
     | '/transactions'
     | '/users'
     | '/verify-email'
-    | '/welcome'
     | '/reports_/month'
     | '/net-worth_/assets/$assetId'
     | '/net-worth_/debts/$debtId'
@@ -343,6 +343,7 @@ export interface RootRouteChildren {
   BudgetsRoute: typeof BudgetsRoute
   CategoriesRoute: typeof CategoriesRoute
   CategorizationRulesRoute: typeof CategorizationRulesRoute
+  DashboardRoute: typeof DashboardRoute
   FeaturesRoute: typeof FeaturesRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   GoalsRoute: typeof GoalsRoute
@@ -360,7 +361,6 @@ export interface RootRouteChildren {
   TransactionsRoute: typeof TransactionsRoute
   UsersRoute: typeof UsersRoute
   VerifyEmailRoute: typeof VerifyEmailRoute
-  WelcomeRoute: typeof WelcomeRoute
   ReportsMonthRoute: typeof ReportsMonthRoute
   NetWorthAssetsAssetIdRoute: typeof NetWorthAssetsAssetIdRoute
   NetWorthDebtsDebtIdRoute: typeof NetWorthDebtsDebtIdRoute
@@ -401,6 +401,13 @@ declare module '@tanstack/react-router' {
       path: '/categorization-rules'
       fullPath: '/categorization-rules'
       preLoaderRoute: typeof CategorizationRulesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/features': {
@@ -522,13 +529,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof VerifyEmailRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/welcome': {
-      id: '/welcome'
-      path: '/welcome'
-      fullPath: '/welcome'
-      preLoaderRoute: typeof WelcomeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/reports_/month': {
       id: '/reports_/month'
       path: '/reports/month'
@@ -559,6 +559,7 @@ const rootRouteChildren: RootRouteChildren = {
   BudgetsRoute: BudgetsRoute,
   CategoriesRoute: CategoriesRoute,
   CategorizationRulesRoute: CategorizationRulesRoute,
+  DashboardRoute: DashboardRoute,
   FeaturesRoute: FeaturesRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
   GoalsRoute: GoalsRoute,
@@ -576,7 +577,6 @@ const rootRouteChildren: RootRouteChildren = {
   TransactionsRoute: TransactionsRoute,
   UsersRoute: UsersRoute,
   VerifyEmailRoute: VerifyEmailRoute,
-  WelcomeRoute: WelcomeRoute,
   ReportsMonthRoute: ReportsMonthRoute,
   NetWorthAssetsAssetIdRoute: NetWorthAssetsAssetIdRoute,
   NetWorthDebtsDebtIdRoute: NetWorthDebtsDebtIdRoute,

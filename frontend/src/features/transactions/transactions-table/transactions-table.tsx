@@ -39,8 +39,8 @@ const SELECT_WIDTH = "w-10";
 
 const columnWidth: Record<string, `w-${string}`> = {
   date: "w-27",
-  categoryId: "w-44",
-  accountId: "w-36",
+  categoryId: "w-1/4 xl:w-3/16",
+  accountId: "w-1/6",
   amount: "w-30",
   actions: "w-23 pointer-coarse:w-29",
 };
@@ -86,11 +86,14 @@ function SelectCell({ row, selection }: Readonly<SelectCellProps>) {
   const label = t("transactions.selectRow", { row: selection.rowLabel(row) });
 
   if (!isSelectableTransaction(row)) {
-    const reason = row.isSplit ? t("transactions.splitNotSelectable") : undefined;
+    if (!row.isSplit) {
+      return <Checkbox aria-label={label} checked={false} disabled />;
+    }
+    const reason = t("transactions.splitNotSelectable");
     return (
       <Tooltip content={reason}>
-        <span className="inline-flex">
-          <Checkbox aria-label={reason ? `${label}. ${reason}` : label} checked={false} disabled />
+        <span className="inline-flex cursor-not-allowed opacity-50">
+          <Checkbox aria-label={`${label}. ${reason}`} checked={false} readOnly />
         </span>
       </Tooltip>
     );
@@ -237,8 +240,8 @@ export function TransactionsTable({
         label={t("transactions.title")}
         columns={selection ? [SELECT_WIDTH, ...columnWidths] : columnWidths}
         className={cn(
-          accountShown ? "min-w-230" : "min-w-194",
-          wideAmounts && (accountShown ? "min-w-238" : "min-w-202"),
+          accountShown ? "min-w-233" : "min-w-200",
+          wideAmounts && (accountShown ? "min-w-245" : "min-w-211"),
           isPlaceholder && "stale",
         )}
         aria-busy={isPlaceholder}
@@ -291,7 +294,7 @@ export function TransactionsTableSkeleton({ rows, className }: Readonly<Skeleton
     <div data-slot="table-skeleton" aria-hidden="true" className={cn("-mx-3", className)}>
       <Table
         columns={[SELECT_WIDTH, ...ledgerColumnWidths(columnIds, false)]}
-        className={wide ? "min-w-230" : "min-w-194"}
+        className={wide ? "min-w-233" : "min-w-200"}
       >
         <TableHeader>
           <TableRow>

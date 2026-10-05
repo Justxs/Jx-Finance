@@ -14,7 +14,7 @@ export function SmtpSection() {
   return (
     <>
       <p className="max-w-prose text-sm text-muted-foreground">{t("settings.smtp.description")}</p>
-      <QueryBoundary fallback={<SmtpFormSkeleton />}>
+      <QueryBoundary fallback={<SmtpFormSkeleton />} errorSubject={t("settings.smtp.title")}>
         <SmtpSettings />
       </QueryBoundary>
     </>

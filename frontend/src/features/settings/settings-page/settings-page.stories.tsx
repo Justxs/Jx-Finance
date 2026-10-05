@@ -55,7 +55,9 @@ export const UnsavedChanges: Story = {
     await expect(canvas.queryByRole("button", { name: "Save" })).toBeNull();
     await userEvent.type(name, " Home");
     await expect(await canvas.findByRole("button", { name: "Save" })).toBeEnabled();
-    await expect(canvas.getByText("You have unsaved changes.")).toBeInTheDocument();
+    await expect(
+      canvas.getByText("You have unsaved changes.", { selector: "[role=status]" }),
+    ).toBeInTheDocument();
   },
 };
 

@@ -1,5 +1,5 @@
 import type { TagResponse } from "@/api/generated/model";
-import { Tag } from "@/components/ui/tag/tag";
+import { HintTag, Tag } from "@/components/ui/tag/tag";
 import { cn } from "@/lib/utils";
 
 interface Props {
@@ -21,17 +21,14 @@ export function TagChips({ tagIds, tagById, className }: Readonly<Props>) {
   }
 
   const shown = names.slice(0, LIMIT);
-  const hidden = names.length - shown.length;
+  const hidden = names.slice(LIMIT);
 
   return (
-    <span
-      className={cn("inline-flex flex-wrap items-center gap-1", className)}
-      title={names.join(", ")}
-    >
+    <span className={cn("inline-flex flex-wrap items-center gap-1", className)}>
       {shown.map((name) => (
         <Tag key={name}>{name}</Tag>
       ))}
-      {hidden > 0 ? <Tag>{`+${hidden}`}</Tag> : null}
+      {hidden.length > 0 ? <HintTag hint={hidden.join(", ")}>{`+${hidden.length}`}</HintTag> : null}
     </span>
   );
 }

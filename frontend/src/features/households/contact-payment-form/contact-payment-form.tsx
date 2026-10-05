@@ -12,6 +12,7 @@ import { useServerForm } from "@/components/form";
 import { FormError } from "@/components/form-error/form-error";
 import { FormGrid } from "@/components/ui/form-grid/form-grid";
 import { useReportingCurrency } from "@/hooks/use-currencies";
+import { useDecimalMark } from "@/hooks/use-formatters";
 import { useToday } from "@/hooks/use-settings";
 import { silentMutation } from "@/lib/mutations";
 import { optionsOf } from "@/lib/options";
@@ -22,14 +23,14 @@ interface Props {
   onClose: () => void;
 }
 
-function settling(balance: ContactBalanceResponse | undefined) {
+function settling(balance: ContactBalanceResponse | undefined, decimalMark = ".") {
   if (!balance) {
     return { direction: ContactPaymentDirection.toContact, amount: "" };
   }
   const owed = Number(balance.amount) > 0;
   return {
     direction: owed ? ContactPaymentDirection.fromContact : ContactPaymentDirection.toContact,
-    amount: Math.abs(Number(balance.amount)).toFixed(2),
+    amount: Math.abs(Number(balance.amount)).toFixed(2).replace(".", decimalMark),
   };
 }
 
@@ -39,7 +40,8 @@ export function ContactPaymentForm({ contact, onClose }: Readonly<Props>) {
   const reportingCurrency = useReportingCurrency();
   const record = useCreateContactPayment({ mutation: { ...silentMutation, onSuccess: onClose } });
   const balance = contact.balances[0];
-  const suggested = settling(balance);
+  const decimalMark = useDecimalMark();
+  const suggested = settling(balance, decimalMark);
 
   const schema = z.object({
     direction: z.enum(ContactPaymentDirection),

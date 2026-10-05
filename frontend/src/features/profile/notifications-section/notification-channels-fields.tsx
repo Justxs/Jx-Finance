@@ -11,6 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table/table";
+import { cn } from "@/lib/utils";
 
 export const notificationKinds = Object.values(NotificationType);
 
@@ -44,8 +45,16 @@ function NotificationChannelsGroup({ fields, channels, off }: Readonly<Props>) {
   const { t } = useTranslation();
 
   return (
-    <div className="-mx-3 mt-4 max-w-3xl">
-      <Table className="table-fixed">
+    <div className="mt-4 max-w-3xl">
+      <Table
+        label={t("profile.notifications.title")}
+        className={cn(
+          "table-fixed",
+          channels.length === 1 && "min-w-76",
+          channels.length === 2 && "min-w-94",
+          channels.length === 3 && "min-w-112",
+        )}
+      >
         <TableHeader>
           <TableRow>
             <TableHead>{t("profile.notifications.kind")}</TableHead>

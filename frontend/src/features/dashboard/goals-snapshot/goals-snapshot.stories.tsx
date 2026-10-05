@@ -37,7 +37,7 @@ export const ProgressUnavailable: Story = {
 };
 
 export const PastMonth: Story = {
-  render: () => <DashboardCard card="goals" month="2026-01" />,
+  render: () => <DashboardCard card="goals" cards={["goals"]} month="2026-01" />,
   play: async ({ canvas }) => {
     await expect(
       await canvas.findByText(/^(goals are shown on the current month\.|tikslai rodomi)/iu),

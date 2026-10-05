@@ -40,7 +40,7 @@ function restorableHandlers() {
 
 export const Default: Story = {
   play: async ({ canvas }) => {
-    const summary = await canvas.findByText("Archived accounts (2)");
+    const summary = await canvas.findByText("Show 2 accounts");
     await userEvent.click(summary);
 
     await expect(await canvas.findByText("Senoji SEB kortelė")).toBeVisible();
@@ -78,19 +78,19 @@ export const LoadFailed: Story = { parameters: { msw: { handlers: errorHandlers 
 export const RestoringTakesTheRowOut: Story = {
   parameters: { msw: { handlers: restorableHandlers() } },
   play: async ({ canvas }) => {
-    await userEvent.click(await canvas.findByText("Archived accounts (2)"));
+    await userEvent.click(await canvas.findByText("Show 2 accounts"));
     await userEvent.click(canvas.getByRole("button", { name: "Restore: Senoji SEB kortelė" }));
 
     await expect(await screen.findByText("Account restored")).toBeInTheDocument();
     await waitFor(() => expect(canvas.queryByText("Senoji SEB kortelė")).toBeNull());
-    await expect(canvas.getByText("Archived accounts (1)")).toBeVisible();
+    await expect(canvas.getByText("Show 1 account")).toBeVisible();
   },
 };
 
 export const RestorePending: Story = {
   parameters: withHandlers(getRestoreAccountMockHandler(pending)),
   play: async ({ canvas }) => {
-    await userEvent.click(await canvas.findByText("Archived accounts (2)"));
+    await userEvent.click(await canvas.findByText("Show 2 accounts"));
     const restore = canvas.getByRole("button", { name: "Restore: Senoji SEB kortelė" });
     await userEvent.click(restore);
 
@@ -110,7 +110,7 @@ export const RestoreRefused: Story = {
     ),
   ),
   play: async ({ canvas }) => {
-    await userEvent.click(await canvas.findByText("Archived accounts (2)"));
+    await userEvent.click(await canvas.findByText("Show 2 accounts"));
     await userEvent.click(canvas.getByRole("button", { name: "Restore: Senoji SEB kortelė" }));
 
     await expect(

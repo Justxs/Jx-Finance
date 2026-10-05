@@ -33,6 +33,8 @@ export const WithOpenItems: Story = {
     );
     await expect(canvas.getByRole("link", { name: "Confirm" })).toBeVisible();
     await expect(canvas.getByText(/before the month ends/)).toBeVisible();
+    const open = canvas.getByRole("link", { name: "Categorize" }).closest("li");
+    await expect(open?.querySelector("svg")).toHaveClass("text-muted-foreground");
   },
 };
 

@@ -112,7 +112,10 @@ test("without a saved webhook no test message can be sent", async () => {
   api.use(getDiscordSettingsMockHandler(discordSettingsEmpty));
   renderInApp(<DiscordSection />);
 
-  expect(await screen.findByRole("button", { name: /Send a test message/u })).toBeDisabled();
+  expect(await screen.findByRole("button", { name: /Send a test message/u })).toHaveAttribute(
+    "aria-disabled",
+    "true",
+  );
 });
 
 test("a webhook Discord deleted or that cannot be read is called out", async () => {

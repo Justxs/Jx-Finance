@@ -198,7 +198,7 @@ function CommandPaletteContent({ onClose }: Readonly<ContentProps>) {
         autoHighlight="always"
         keepHighlight
       >
-        <div className="flex shrink-0 items-center gap-2 border-b px-3 transition-colors has-[input:focus-visible]:border-ring">
+        <div className="flex shrink-0 items-center gap-2 border-b px-3 transition-colors has-[input:focus-visible]:border-ring has-[input:focus-visible]:ring-3 has-[input:focus-visible]:ring-ring/60 has-[input:focus-visible]:ring-inset">
           <Search aria-hidden="true" className="size-4 shrink-0 text-muted-foreground" />
           <Autocomplete.Input
             autoFocus
@@ -223,10 +223,10 @@ function CommandPaletteContent({ onClose }: Readonly<ContentProps>) {
               value={entry}
               onClick={() => choose(entry)}
               render={(props, state) => <div {...props} aria-selected={state.highlighted} />}
-              className="flex cursor-pointer items-center justify-between gap-3 rounded-md px-3 py-2 text-sm data-highlighted:bg-muted data-highlighted:text-foreground"
+              className="flex cursor-pointer flex-col gap-x-3 gap-y-0.5 rounded-md px-3 py-2 text-sm data-highlighted:bg-muted data-highlighted:text-foreground sm:flex-row sm:items-center sm:justify-between"
             >
-              <span className="min-w-0 truncate">{entry.label}</span>
-              <span className="shrink-0 text-xs text-muted-foreground">{entry.hint}</span>
+              <span className="line-clamp-2 min-w-0 wrap-break-word">{entry.label}</span>
+              <span className="text-xs text-muted-foreground sm:shrink-0">{entry.hint}</span>
             </Autocomplete.Item>
           )}
         </Autocomplete.List>

@@ -69,7 +69,7 @@ function FeaturesFieldsGroup({ fields }: Readonly<Props>) {
   const { t } = useTranslation();
 
   return (
-    <div className="mt-4 grid gap-x-10 gap-y-6 md:grid-cols-3">
+    <div className="mt-4 grid gap-x-10 gap-y-6 xl:grid-cols-3">
       {featureGroups.map((group) => (
         <fieldset key={group.titleKey} className="min-w-0">
           <legend className="text-sm font-semibold">{t(group.titleKey)}</legend>
@@ -80,7 +80,11 @@ function FeaturesFieldsGroup({ fields }: Readonly<Props>) {
                   <li className="py-2.5">
                     <field.CheckboxField
                       id={`settings-feature-${feature}`}
-                      label={t(`settings.features.items.${feature}.name`)}
+                      label={
+                        <span className="min-w-0 wrap-break-word">
+                          {t(`settings.features.items.${feature}.name`)}
+                        </span>
+                      }
                       hint={t(`settings.features.items.${feature}.hint`)}
                     />
                   </li>

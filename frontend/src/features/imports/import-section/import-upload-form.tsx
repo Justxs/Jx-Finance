@@ -1,4 +1,5 @@
 import { type RefObject, useState } from "react";
+import { flushSync } from "react-dom";
 import { useTranslation } from "react-i18next";
 import type { AccountResponse, StatementFormat } from "@/api/generated/model";
 import { useAppForm } from "@/components/form";
@@ -13,6 +14,7 @@ import { shellAria } from "@/lib/field-aria";
 import { namedOptions } from "@/lib/options";
 
 export const IMPORT_FILE_INPUT_ID = "import-file";
+const ACCOUNT_SELECT_ID = "import-account";
 
 export const importFormats: Record<StatementFormat, { accept: string; maxBytes: number }> = {
   swedbankCsv: { accept: ".csv,text/csv", maxBytes: 5 * 1024 * 1024 },
@@ -58,6 +60,11 @@ export function ImportUploadForm({
   const accountName = accounts.find((account) => account.id === accountId)?.name;
   const form = useAppForm({ defaultValues: {}, onSubmit: onPreview });
 
+  function expand() {
+    flushSync(() => setExpanded(true));
+    document.getElementById(ACCOUNT_SELECT_ID)?.focus();
+  }
+
   return (
     <form.AppForm>
       <form.FormShell>
@@ -66,21 +73,15 @@ export function ImportUploadForm({
           <p className="flex flex-wrap items-baseline gap-x-3 gap-y-1 text-sm">
             <span className="min-w-0 font-medium wrap-break-word">{fileName}</span>
             <span className="text-muted-foreground">{accountName}</span>
-            <Button
-              type="button"
-              variant="link"
-              size="inline"
-              disabled={locked}
-              onClick={() => setExpanded(true)}
-            >
+            <Button type="button" variant="link" size="inline" disabled={locked} onClick={expand}>
               {t("imports.changeFile")}
             </Button>
           </p>
         ) : null}
         <FormGrid className={collapsed ? "hidden" : undefined}>
-          <FieldShell id="import-account" label={t("transactions.account")}>
+          <FieldShell id={ACCOUNT_SELECT_ID} label={t("transactions.account")}>
             <SelectField
-              id="import-account"
+              id={ACCOUNT_SELECT_ID}
               value={accountId}
               disabled={locked}
               onChange={onAccountChange}

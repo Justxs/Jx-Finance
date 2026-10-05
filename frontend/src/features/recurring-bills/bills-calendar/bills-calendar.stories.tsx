@@ -184,7 +184,9 @@ export const ConfirmsTheNextDueOccurrence: Story = {
   render: () => <RecurringBillsPage />,
   play: async ({ canvas }) => {
     const table = await monthTable(canvas);
-    await userEvent.click(await table.findByRole("button", { name: dueSoonBill.name }));
+    await userEvent.click(
+      await table.findByRole("button", { name: `Confirm: ${dueSoonBill.name}` }),
+    );
     const dialog = within(await openedDialog());
     await expect(dialog.getByRole("heading", { name: "Confirm recurring entry" })).toBeVisible();
   },

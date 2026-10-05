@@ -53,11 +53,12 @@ function PromptPanel({ month, review }: Readonly<PanelProps>) {
     closer.mutate({ month, data: { note: "" } });
   }
 
+  const reviewFirst = changed || attention > 0;
   const reviewLink = (
     <Link
       to="/reports/month"
       search={{ month }}
-      className={buttonVariants({ variant: changed ? "default" : "outline" })}
+      className={buttonVariants({ variant: reviewFirst ? "default" : "outline" })}
     >
       {t("monthClose.prompt.review")}
     </Link>
@@ -98,7 +99,9 @@ function PromptPanel({ month, review }: Readonly<PanelProps>) {
         <div className="flex flex-wrap items-end justify-between gap-x-8 gap-y-4 lg:justify-end">
           <dl className="flex gap-x-8">
             <div>
-              <dt className="text-xs text-muted-foreground">{t("monthClose.figures.net")}</dt>
+              <dt className="text-xs text-muted-foreground">
+                {t("monthClose.prompt.net", { month: monthName })}
+              </dt>
               <dd className="text-xl font-semibold">
                 <SignedAmount value={Number(review.figures.net)} />
               </dd>
@@ -106,7 +109,9 @@ function PromptPanel({ month, review }: Readonly<PanelProps>) {
             {share === null ? null : (
               <div>
                 <dt className="text-xs text-muted-foreground">
-                  {t(share.kept ? "monthClose.figures.kept" : "monthClose.figures.spent")}
+                  {t(share.kept ? "monthClose.prompt.kept" : "monthClose.prompt.spent", {
+                    month: monthName,
+                  })}
                 </dt>
                 <dd className="text-xl font-semibold tabular-nums">
                   {percent.format(share.share)}
@@ -118,6 +123,7 @@ function PromptPanel({ month, review }: Readonly<PanelProps>) {
             {reviewLink}
             {changed ? null : (
               <Button
+                variant={reviewFirst ? "outline" : "default"}
                 pending={closer.isPending}
                 onClick={() => (openItems > 0 ? setConfirming(true) : close())}
               >

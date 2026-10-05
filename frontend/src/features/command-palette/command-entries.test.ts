@@ -272,7 +272,7 @@ function plainEntry(id: string, label: string, keywords = ""): CommandEntry {
     label,
     hint: "hint",
     keywords,
-    target: { kind: "navigate", link: { to: "/" } },
+    target: { kind: "navigate", link: { to: "/dashboard" } },
   };
 }
 

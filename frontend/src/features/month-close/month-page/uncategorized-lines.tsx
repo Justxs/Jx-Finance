@@ -138,7 +138,7 @@ function UncategorizedRows({ month, count }: Readonly<Props>) {
                 tabIndex={-1}
                 data-open-line=""
                 className={cn(
-                  "grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-1.5 md:grid-cols-[5.5rem_minmax(0,1fr)_auto_14rem]",
+                  "grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-1.5 lg:grid-cols-[5.5rem_minmax(0,1fr)_auto_14rem]",
                   lineClass,
                 )}
               >
@@ -153,10 +153,10 @@ function UncategorizedRows({ month, count }: Readonly<Props>) {
                   ) : null}
                 </span>
                 <TransactionAmount transaction={row} showReporting className="text-right" />
-                <span className="col-span-2 text-xs text-muted-foreground tabular-nums md:order-first md:col-span-1 md:text-sm">
+                <span className="col-span-2 text-xs text-muted-foreground tabular-nums lg:order-first lg:col-span-1 lg:text-sm">
                   {formatDate(row.date)}
                 </span>
-                <span data-line-control="" className="col-span-2 min-w-0 md:col-span-1">
+                <span data-line-control="" className="col-span-2 min-w-0 lg:col-span-1">
                   {row.isSplit ? (
                     <Tag>{t("transactions.split")}</Tag>
                   ) : (

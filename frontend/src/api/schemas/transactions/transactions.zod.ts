@@ -615,13 +615,13 @@ export const BulkTagTransactionsResponse = zod.object({
 });
 
 /**
- * Returns the filtered ledger as a UTF-8 CSV attachment named transactions.csv, with account and category names resolved. It takes the same filters as the list endpoint but ignores paging: every matching row is included. Rows are streamed from the database into the response, so the size of the ledger does not matter.
+ * Returns the filtered ledger as a UTF-8 CSV attachment named jx-finance-transactions-<from>-to-<to>.csv (or with only the dates given, or none), with account and category names resolved. It takes the same filters as the list endpoint but ignores paging: every matching row is included. Rows are streamed from the database into the response, so the size of the ledger does not matter.
  * @summary Export transactions as CSV
  */
 export const ExportTransactionsResponse = zod.unknown();
 
 /**
- * Renders the filtered ledger as a printable PDF, attached as transactions.pdf. It takes the same filters as the list endpoint but ignores paging. A PDF is built in memory, so it holds at most 5000 rows (App:PdfExportMaxRows); a larger result is refused with export.tooManyRows. Narrow the filters or use the CSV export, which has no limit.
+ * Renders the filtered ledger as a printable PDF, attached as jx-finance-transactions-<from>-to-<to>.pdf (or with only the dates given, or none). It takes the same filters as the list endpoint but ignores paging. A PDF is built in memory, so it holds at most 5000 rows (App:PdfExportMaxRows); a larger result is refused with export.tooManyRows. Narrow the filters or use the CSV export, which has no limit.
  * @summary Export transactions as PDF
  */
 export const ExportTransactionsPdfResponse = zod.unknown();

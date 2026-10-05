@@ -29,7 +29,7 @@ const statusTones = {
 } as const satisfies Record<BillOccurrenceStatus, "negative" | "positive" | "neutral" | null>;
 
 const nameClass =
-  "min-w-0 truncate rounded-sm text-left font-medium underline-offset-4 hover:underline focus-ring";
+  "min-w-0 truncate rounded-sm text-left font-medium text-primary underline-offset-4 hover:underline focus-ring";
 
 interface Props {
   occurrence: BillOccurrence;
@@ -44,6 +44,7 @@ function ChipName({
   onConfirm,
   onEdit,
 }: Readonly<Pick<Props, "occurrence" | "onConfirm" | "onEdit">>) {
+  const { t } = useTranslation();
   const bill = useRecurringBillsSuspense().data.find((item) => item.id === occurrence.billId);
 
   if (occurrence.status === "paid") {
@@ -75,7 +76,10 @@ function ChipName({
         className={nameClass}
         onClick={() => (occurrence.isNextDue ? onConfirm(bill) : onEdit(bill))}
       >
-        {occurrence.name}
+        <span className="sr-only">
+          {occurrence.isNextDue ? t("recurringBills.confirm") : t("actions.edit")}:{" "}
+        </span>
+        <span>{occurrence.name}</span>
       </button>
     </Tooltip>
   );

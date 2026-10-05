@@ -202,7 +202,6 @@ export function CsvMappingForm({
                   options={optionsOf(Object.values(CsvEncoding), (encoding) =>
                     t(`imports.mapping.encodings.${encoding}`),
                   )}
-                  disabled={readPending}
                   onValueChange={reread}
                 />
               )}
@@ -216,7 +215,6 @@ export function CsvMappingForm({
                     value,
                     label: t(`imports.mapping.delimiters.${name}`),
                   }))}
-                  disabled={readPending}
                   onValueChange={reread}
                 />
               )}
@@ -233,7 +231,6 @@ export function CsvMappingForm({
                       label: String(lines),
                     }),
                   )}
-                  disabled={readPending}
                   onValueChange={reread}
                 />
               )}
@@ -245,7 +242,7 @@ export function CsvMappingForm({
                 id="csv-no-header-row"
                 label={t("imports.mapping.noHeaderRow")}
                 hint={t("imports.mapping.noHeaderRowHint")}
-                disabled={readPending || !onRead}
+                disabled={!onRead}
                 onCheckedChange={reread}
               />
             )}

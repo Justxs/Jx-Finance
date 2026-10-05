@@ -55,10 +55,19 @@ export function ComboboxField<T extends string>({
           aria-describedby={ariaDescribedBy}
           aria-busy={ariaBusy}
           onBlur={onBlur}
-          className={cn(selectTriggerClass, "w-full min-w-0 text-left", className)}
+          className={cn(
+            selectTriggerClass,
+            "w-full min-w-0 text-left",
+            variant === "ghost" &&
+              "py-1 whitespace-normal data-[size=sm]:h-auto data-[size=sm]:min-h-8 pointer-coarse:data-[size=sm]:h-auto pointer-coarse:data-[size=sm]:min-h-11",
+            className,
+          )}
         >
           <span
-            className="min-w-0 flex-1 truncate"
+            className={cn(
+              "min-w-0 flex-1",
+              variant === "ghost" ? "line-clamp-2 wrap-break-word" : "truncate",
+            )}
             title={typeof selected?.label === "string" ? selected.label : undefined}
           >
             <Combobox.Value placeholder={placeholder} />
@@ -81,7 +90,7 @@ export function ComboboxField<T extends string>({
                 <Combobox.Input
                   placeholder={t("common.search")}
                   aria-label={t("common.search")}
-                  className="h-9 w-full bg-transparent pr-2 pl-8 text-base outline-none placeholder:text-muted-foreground md:text-sm"
+                  className="h-9 w-full bg-transparent pr-2 pl-8 text-base focus-ring-inset outline-none placeholder:text-muted-foreground md:text-sm"
                 />
               </div>
               <Combobox.Empty className="px-3 py-2 text-sm text-muted-foreground empty:hidden">

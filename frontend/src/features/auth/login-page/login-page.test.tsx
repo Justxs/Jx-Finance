@@ -36,7 +36,7 @@ function withPasskeyBrowser(outcome?: Parameters<typeof fakePasskeyBrowser>[0]) 
 type AppRouter = ReturnType<typeof renderLogin>["router"];
 
 async function enteredTheApp(router: AppRouter) {
-  await waitFor(() => expect(router.state.location.pathname).toBe("/"));
+  await waitFor(() => expect(router.state.location.pathname).toBe("/dashboard"));
 }
 
 async function signInWith(email: string, password: string) {

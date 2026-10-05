@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { AccountResponse } from "@/api/generated/model";
 import { FieldShell } from "@/components/form/field-shell/field-shell";
+import { FormActions } from "@/components/form/form-actions/form-actions";
 import { SelectField } from "@/components/select-field/select-field";
 import { Button } from "@/components/ui/button/button";
 import { FileInput } from "@/components/ui/file-input/file-input";
@@ -101,7 +102,7 @@ export function UploadPanel({ accounts, accountId, mutations }: Readonly<Props>)
         error={failure}
       />
 
-      <div className="flex justify-end">
+      <FormActions>
         <Button
           type="submit"
           pending={importMutation.isPending}
@@ -109,7 +110,7 @@ export function UploadPanel({ accounts, accountId, mutations }: Readonly<Props>)
         >
           {t("investments.import.submit")}
         </Button>
-      </div>
+      </FormActions>
     </form>
   );
 }

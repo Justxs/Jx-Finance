@@ -21,11 +21,11 @@ export function MobileNav({ pages }: Readonly<Props>) {
   return (
     <>
       <header className="flex h-14 shrink-0 items-center gap-0.5 border-b bg-sidebar px-4 sm:px-6 md:hidden print:hidden">
-        <Link to="/" className="mr-auto flex min-h-11 items-center">
+        <Link to="/dashboard" className="mr-auto flex min-h-11 min-w-0 items-center">
           <Brand size="sm" />
         </Link>
         <QueryBoundary fallback={null} error={null}>
-          <HouseholdSwitcher className="w-28" />
+          <HouseholdSwitcher collapsed tooltipSide="bottom" className="w-auto shrink-0" />
         </QueryBoundary>
         <NotificationBellSlot />
         <QueryBoundary

@@ -16,15 +16,22 @@ export function Section({ className, ...props }: Readonly<SectionProps>) {
   return <Component {...slot} {...rest} />;
 }
 
-export function SectionTitle({ className, children, ...props }: Readonly<ComponentProps<"h2">>) {
+export function SectionTitle({
+  className,
+  children,
+  level = 2,
+  ...props
+}: Readonly<ComponentProps<"h2"> & { level?: 2 | 3 }>) {
+  const Heading = level === 3 ? "h3" : "h2";
+
   return (
-    <h2
+    <Heading
       data-slot="section-title"
       className={cn("text-lg leading-6 font-semibold", className)}
       {...props}
     >
       {children}
-    </h2>
+    </Heading>
   );
 }
 

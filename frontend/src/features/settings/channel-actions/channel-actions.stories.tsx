@@ -10,6 +10,7 @@ const meta = {
   args: {
     error: null,
     testLabel: "Send a test message",
+    testHint: "Save a webhook URL first.",
     testPending: false,
     canTest: true,
     onTest: fn(),
@@ -30,7 +31,9 @@ export const Ready: Story = {
 export const NothingToTest: Story = {
   args: { canTest: false },
   play: async ({ canvas }) => {
-    await expect(canvas.getByRole("button", { name: /Send a test message/u })).toBeDisabled();
+    await expect(
+      canvas.getByRole("button", { name: /Send a test message/u }),
+    ).toHaveAccessibleDescription("Save a webhook URL first.");
   },
 };
 

@@ -21,7 +21,7 @@ type Story = StoryObj<typeof meta>;
 
 export const NotCompared: Story = {
   play: async ({ canvas, args }) => {
-    await expect(canvas.getByRole("table", { name: "Month by month" })).toBeVisible();
+    await expect(canvas.getByRole("region", { name: "Month by month" })).toBeVisible();
     await userEvent.click(canvas.getByRole("button", { name: "Compare with the year before" }));
     await expect(args.onCompare).toHaveBeenCalledTimes(1);
   },

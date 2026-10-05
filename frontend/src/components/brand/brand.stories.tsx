@@ -34,7 +34,8 @@ export const MarkSizes: Story = {
       <BrandMark className="h-32" title="Jx Finance" />
       <BrandMark className="h-16" />
       <BrandMark className="h-8" />
-      <BrandMark className="h-4" />
+      <BrandMark small className="h-6" />
+      <BrandMark small className="h-4" />
     </div>
   ),
 };

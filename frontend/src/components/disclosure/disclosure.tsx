@@ -11,7 +11,7 @@ interface Props {
 export function Disclosure({ summary, children, defaultOpen = false, className }: Readonly<Props>) {
   return (
     <details className={cn("group", className)} open={defaultOpen}>
-      <summary className="w-fit cursor-pointer rounded-sm py-1 text-sm font-medium text-muted-foreground focus-ring hover:text-foreground">
+      <summary className="w-fit cursor-pointer rounded-sm py-1 text-sm font-medium text-muted-foreground focus-ring hover:text-foreground pointer-coarse:py-3">
         {summary}
       </summary>
       <div className="mt-2">{children}</div>

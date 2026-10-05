@@ -1,7 +1,9 @@
 import { Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { ChevronLeft, ChevronRight, SlidersHorizontal } from "lucide-react";
+import { useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useDashboardLayoutSuspense } from "@/api/generated";
+import { DocumentTitle } from "@/components/page-header/page-header";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { Button, buttonVariants } from "@/components/ui/button/button";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
@@ -50,12 +52,7 @@ function DashboardContent({ month }: Readonly<ContentProps>) {
   return (
     <div className={dashboardGrid}>
       {cards.map((card) => (
-        <DashboardCard
-          key={card}
-          card={card}
-          month={month}
-          widen={card === "spendingByCategory" && !cards.includes("spendingPace")}
-        />
+        <DashboardCard key={card} card={card} cards={cards} month={month} />
       ))}
     </div>
   );
@@ -71,6 +68,12 @@ function MonthHeader({ month, current, onChange }: Readonly<MonthHeaderProps>) {
   const { t } = useTranslation();
   const monthName = useMonthName();
   const next = shiftMonth(month, 1);
+  const previousRef = useRef<HTMLButtonElement>(null);
+
+  function showCurrent() {
+    onChange(current);
+    previousRef.current?.focus();
+  }
 
   return (
     <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
@@ -81,18 +84,23 @@ function MonthHeader({ month, current, onChange }: Readonly<MonthHeaderProps>) {
         {monthName(month)}
       </h1>
       <div className="flex flex-wrap items-center gap-2">
-        <nav aria-label={t("dashboard.month.label")} className="flex items-center gap-1">
+        <div
+          role="group"
+          aria-label={t("dashboard.month.label")}
+          className="flex items-center gap-1"
+        >
           <span
             className={cn(
               "transition-reveal duration-base ease-out-expo motion-reduce:transition-none",
               month === current && "invisible translate-x-2 opacity-0",
             )}
           >
-            <Button type="button" variant="outline" onClick={() => onChange(current)}>
+            <Button type="button" variant="outline" onClick={showCurrent}>
               {t("dashboard.month.current")}
             </Button>
           </span>
           <Button
+            ref={previousRef}
             type="button"
             variant="ghost"
             size="icon"
@@ -107,11 +115,12 @@ function MonthHeader({ month, current, onChange }: Readonly<MonthHeaderProps>) {
             size="icon"
             aria-label={t("dashboard.month.next")}
             disabled={next > current}
+            focusableWhenDisabled
             onClick={() => onChange(next)}
           >
             <ChevronRight />
           </Button>
-        </nav>
+        </div>
       </div>
     </div>
   );
@@ -119,8 +128,8 @@ function MonthHeader({ month, current, onChange }: Readonly<MonthHeaderProps>) {
 
 export function DashboardPage() {
   const { t } = useTranslation();
-  const navigate = useNavigate({ from: "/" });
-  const search = useSearch({ from: "/" });
+  const navigate = useNavigate({ from: "/dashboard" });
+  const search = useSearch({ from: "/dashboard" });
   const current = currentMonthKey(useTodayDate());
   const month = search.month ?? current;
   const [shown, stale] = useDeferredParams({ month });
@@ -133,6 +142,7 @@ export function DashboardPage() {
 
   return (
     <div className="space-y-6">
+      <DocumentTitle title={t("nav.dashboard")} />
       <MonthHeader month={stepped.draft} current={current} onChange={stepped.change} />
 
       <StaleRegion stale={stale} className="space-y-6">

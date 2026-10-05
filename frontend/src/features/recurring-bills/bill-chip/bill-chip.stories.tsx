@@ -26,7 +26,9 @@ type Story = StoryObj<typeof meta>;
 
 export const DueNext: Story = {
   play: async ({ canvas, args }) => {
-    await userEvent.click(await canvas.findByRole("button", { name: dueOccurrence.name }));
+    await userEvent.click(
+      await canvas.findByRole("button", { name: `Confirm: ${dueOccurrence.name}` }),
+    );
     await expect(args.onConfirm).toHaveBeenCalledOnce();
     await expect(args.onEdit).not.toHaveBeenCalled();
     await expect(canvas.getByText("Due")).toHaveClass("sr-only");
@@ -37,7 +39,9 @@ export const DueNext: Story = {
 export const DueLater: Story = {
   args: { occurrence: { ...dueOccurrence, isNextDue: false } },
   play: async ({ canvas, args }) => {
-    await userEvent.click(await canvas.findByRole("button", { name: dueOccurrence.name }));
+    await userEvent.click(
+      await canvas.findByRole("button", { name: `Edit: ${dueOccurrence.name}` }),
+    );
     await expect(args.onEdit).toHaveBeenCalledOnce();
     await expect(args.onConfirm).not.toHaveBeenCalled();
   },

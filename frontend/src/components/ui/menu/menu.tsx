@@ -39,7 +39,7 @@ function MenuContent({
 }
 
 const menuItemClass =
-  "flex cursor-default items-center gap-2 rounded-md px-2 py-1.5 outline-hidden select-none data-disabled:pointer-events-none data-disabled:opacity-50 data-highlighted:bg-muted pointer-coarse:min-h-11 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4";
+  "flex cursor-default items-center gap-2 rounded-md px-2 py-1.5 outline-hidden select-none focus-ring-inset data-disabled:pointer-events-none data-disabled:opacity-50 data-highlighted:bg-accent data-highlighted:text-accent-foreground pointer-coarse:min-h-11 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4";
 
 function MenuItem({
   className,
@@ -49,7 +49,11 @@ function MenuItem({
   return (
     <MenuPrimitive.Item
       data-slot="menu-item"
-      className={cn(menuItemClass, destructive && "text-expense", className)}
+      className={cn(
+        menuItemClass,
+        destructive && "text-expense data-highlighted:text-expense",
+        className,
+      )}
       {...props}
     />
   );

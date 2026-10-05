@@ -61,10 +61,12 @@ export function TransactionsPage() {
           onUseTemplate={formSection.startFromDraft}
           exportUrl={exportCsvUrl}
           exportPdfUrl={exportPdfUrl}
+          onImport={features.import ? () => importDialog.setOpen(true) : undefined}
         />
         {features.import ? (
           <Button
             variant="outline"
+            className="max-sm:hidden"
             onClick={() => importDialog.setOpen(true)}
             disabled={accounts.length === 0}
           >
@@ -72,7 +74,11 @@ export function TransactionsPage() {
             {t("imports.open")}
           </Button>
         ) : null}
-        <Button onClick={formSection.startBlank} disabled={accounts.length === 0}>
+        <Button
+          className="max-sm:order-first"
+          onClick={formSection.startBlank}
+          disabled={accounts.length === 0}
+        >
           <Plus />
           {t("transactions.add")}
         </Button>

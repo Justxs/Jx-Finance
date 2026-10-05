@@ -263,6 +263,20 @@ export const SwitchedOffFeaturesDropTheirLines: Story = {
   },
 };
 
+export const BillsDueButNoneListed: Story = {
+  parameters: monthHandlers(getRecurringBillsMockHandler([])),
+  play: async ({ canvas }) => {
+    const bills = within(await canvas.findByRole("region", { name: "Recurring entries due" }));
+    await expect(
+      await bills.findByText("2 recurring entries due by the end of the month"),
+    ).toBeVisible();
+    await expect(bills.getByRole("link", { name: "Confirm" })).toHaveAttribute(
+      "href",
+      "/recurring-bills",
+    );
+  },
+};
+
 export const LithuanianLongNames: Story = {
   globals: { locale: "lt" },
   play: async ({ canvas }) => {

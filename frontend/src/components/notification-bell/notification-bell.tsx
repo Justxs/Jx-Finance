@@ -56,15 +56,19 @@ function NotificationBellUnavailable({ sidebar }: Readonly<Props>) {
 
   if (sidebar) {
     return (
-      <button
-        type="button"
-        disabled
-        aria-label={t("notifications.unavailable")}
-        className={sidebarTriggerClass(sidebar)}
-      >
-        <BellOff className="size-4 shrink-0" />
-        {sidebar === "expanded" ? t("notifications.title") : null}
-      </button>
+      <Tooltip content={t("notifications.unavailable")} side="right">
+        <span className="flex">
+          <button
+            type="button"
+            disabled
+            aria-label={t("notifications.unavailable")}
+            className={sidebarTriggerClass(sidebar)}
+          >
+            <BellOff className="size-4 shrink-0" />
+            {sidebar === "expanded" ? t("notifications.title") : null}
+          </button>
+        </span>
+      </Tooltip>
     );
   }
 

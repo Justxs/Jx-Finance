@@ -186,7 +186,7 @@ public sealed class InvestmentTaxSummaryTests(InvestmentsFixture fixture) : Inte
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Equal("text/csv", response.Content.Headers.ContentType?.MediaType);
-        Assert.Equal("investment-tax-summary-2026.csv", response.Content.Headers.ContentDisposition?.FileName);
+        Assert.Equal("jx-finance-investment-tax-summary-2026.csv", response.Content.Headers.ContentDisposition?.FileName);
         Assert.Null(response.Content.Headers.ContentLength);
         var lines = (await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken))
             .Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);

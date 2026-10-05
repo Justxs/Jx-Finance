@@ -12,7 +12,7 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Dashboard: Story = { args: { path: "/" } };
+export const Dashboard: Story = { args: { path: "/dashboard" } };
 
 export const Transactions: Story = { args: { path: "/transactions" } };
 
@@ -51,17 +51,17 @@ export const Login: Story = { args: { path: "/login", authenticated: false } };
 export const Setup: Story = { args: { path: "/setup", authenticated: false, needsSetup: true } };
 
 export const DashboardEmpty: Story = {
-  args: { path: "/" },
+  args: { path: "/dashboard" },
   parameters: { msw: { handlers: emptyHandlers } },
 };
 
 export const DashboardLoading: Story = {
-  args: { path: "/" },
+  args: { path: "/dashboard" },
   parameters: { msw: { handlers: loadingHandlers } },
 };
 
 export const DashboardError: Story = {
-  args: { path: "/" },
+  args: { path: "/dashboard" },
   parameters: { msw: { handlers: errorHandlers } },
 };
 

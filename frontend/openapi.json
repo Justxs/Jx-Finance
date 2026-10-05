@@ -12936,7 +12936,7 @@
           "Investments"
         ],
         "summary": "Export the yearly investment tax summary as CSV",
-        "description": "Answers the same year as GET /api/investments/tax-summary as a CSV attachment named investment-tax-summary-<year>.csv. Rows are written to the response as they are produced, so the answer carries no Content-Length. The Section column says what a row is: a Disposal row, one Lot row per lot that disposal consumed, and one Dividend, Interest, WithholdingTax or Fee row per cash entry. Every row carries the amount in the currency it was recorded in and again in the reporting currency at the frozen rate. There are no total rows: every row is a recorded entry. This is a summary of recorded data, not tax advice.",
+        "description": "Answers the same year as GET /api/investments/tax-summary as a CSV attachment named jx-finance-investment-tax-summary-<year>.csv. Rows are written to the response as they are produced, so the answer carries no Content-Length. The Section column says what a row is: a Disposal row, one Lot row per lot that disposal consumed, and one Dividend, Interest, WithholdingTax or Fee row per cash entry. Every row carries the amount in the currency it was recorded in and again in the reporting currency at the frozen rate. There are no total rows: every row is a recorded entry. This is a summary of recorded data, not tax advice.",
         "operationId": "ExportTaxSummary",
         "parameters": [
           {
@@ -19525,7 +19525,7 @@
           "Transactions"
         ],
         "summary": "Export transactions as CSV",
-        "description": "Returns the filtered ledger as a UTF-8 CSV attachment named transactions.csv, with account and category names resolved. It takes the same filters as the list endpoint but ignores paging: every matching row is included. Rows are streamed from the database into the response, so the size of the ledger does not matter.",
+        "description": "Returns the filtered ledger as a UTF-8 CSV attachment named jx-finance-transactions-<from>-to-<to>.csv (or with only the dates given, or none), with account and category names resolved. It takes the same filters as the list endpoint but ignores paging: every matching row is included. Rows are streamed from the database into the response, so the size of the ledger does not matter.",
         "operationId": "ExportTransactions",
         "parameters": [
           {
@@ -19792,7 +19792,7 @@
           "Transactions"
         ],
         "summary": "Export transactions as PDF",
-        "description": "Renders the filtered ledger as a printable PDF, attached as transactions.pdf. It takes the same filters as the list endpoint but ignores paging. A PDF is built in memory, so it holds at most 5000 rows (App:PdfExportMaxRows); a larger result is refused with export.tooManyRows. Narrow the filters or use the CSV export, which has no limit.",
+        "description": "Renders the filtered ledger as a printable PDF, attached as jx-finance-transactions-<from>-to-<to>.pdf (or with only the dates given, or none). It takes the same filters as the list endpoint but ignores paging. A PDF is built in memory, so it holds at most 5000 rows (App:PdfExportMaxRows); a larger result is refused with export.tooManyRows. Narrow the filters or use the CSV export, which has no limit.",
         "operationId": "ExportTransactionsPdf",
         "parameters": [
           {
@@ -30518,6 +30518,7 @@
         "required": [
           "id",
           "kind",
+          "type",
           "change",
           "date",
           "description",
@@ -30533,6 +30534,16 @@
           },
           "kind": {
             "$ref": "#/components/schemas/MonthDriftRowKind"
+          },
+          "type": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/FlowType"
+              }
+            ]
           },
           "change": {
             "$ref": "#/components/schemas/MonthDriftChange"

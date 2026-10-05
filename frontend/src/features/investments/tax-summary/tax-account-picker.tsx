@@ -21,7 +21,7 @@ export function TaxAccountPicker({ accounts, value, onChange }: Readonly<Props>)
   return (
     <Popover>
       <PopoverTrigger
-        aria-label={t("investments.tax.accounts")}
+        aria-label={`${t("investments.tax.accounts")}: ${label}`}
         render={<Button type="button" variant="outline" size="sm" />}
       >
         {label}

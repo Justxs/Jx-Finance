@@ -1,6 +1,7 @@
 import { ChevronRight, Layers } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import type { TransactionGroupSummary } from "@/api/generated/model";
+import { ErrorState } from "@/components/error-state/error-state";
 import { RowActions } from "@/components/row-actions/row-actions";
 import { SharedScopeTag } from "@/components/shared-scope-tag/shared-scope-tag";
 import { TransactionAmount } from "@/components/transaction-amount/transaction-amount";
@@ -142,7 +143,7 @@ export function GroupRow({ group, expanded, selectable, nameSpan, handlers }: Re
 
 export type GroupStatus =
   | { kind: "membersPending" }
-  | { kind: "membersFailed"; retry: () => void }
+  | { kind: "membersFailed"; group: Pick<TransactionGroupSummary, "name">; retry: () => void }
   | { kind: "membersTruncated" };
 
 export function GroupMembersStatus({ status }: Readonly<{ status: GroupStatus }>) {
@@ -157,12 +158,10 @@ export function GroupMembersStatus({ status }: Readonly<{ status: GroupStatus }>
   }
   if (status.kind === "membersFailed") {
     return (
-      <div role="alert" className="flex items-center gap-3 text-sm">
-        {t("errors.loadFailed")}
-        <Button type="button" variant="outline" size="sm" onClick={status.retry}>
-          {t("errors.retry")}
-        </Button>
-      </div>
+      <ErrorState
+        subject={t("transactions.groups.membersSubject", { name: status.group.name })}
+        onRetry={status.retry}
+      />
     );
   }
   return <p className="text-xs text-muted-foreground">{t("transactions.groups.truncated")}</p>;

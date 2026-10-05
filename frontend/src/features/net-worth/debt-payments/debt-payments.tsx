@@ -15,6 +15,7 @@ import { FormError } from "@/components/form-error/form-error";
 import { EditModal } from "@/components/modal";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { RecordRow } from "@/components/record-row/record-row";
+import { SignedAmount } from "@/components/signed-amount/signed-amount";
 import { Button } from "@/components/ui/button/button";
 import { Checkbox } from "@/components/ui/checkbox/checkbox";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
@@ -104,7 +105,7 @@ function PaymentCandidates({ debt, onClose }: Readonly<DebtProps & { onClose: ()
                 onCheckedChange={(checked) => toggle(item.id, checked)}
               />
               <span className="min-w-0 flex-1">
-                <span className="block truncate font-medium">
+                <span className="block font-medium wrap-break-word">
                   {item.description ?? EMPTY_VALUE}
                 </span>
                 <span className="block text-xs text-muted-foreground tabular-nums">
@@ -174,9 +175,12 @@ export function DebtPayments({ debt }: Readonly<DebtProps>) {
       </SectionHeader>
       <p className="text-sm">
         {t("netWorth.payments.balance")}:{" "}
-        <span className="font-semibold text-expense tabular-nums">
-          {format(debt.trackedBalance ?? debt.outstandingAmount)}
-        </span>
+        <SignedAmount
+          value={Number(debt.trackedBalance ?? debt.outstandingAmount)}
+          currency={debt.currency}
+          sign="−"
+          className="font-semibold"
+        />
       </p>
       <p className="max-w-prose text-xs text-muted-foreground">
         {t("netWorth.payments.anchor", {

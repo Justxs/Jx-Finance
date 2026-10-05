@@ -2,7 +2,14 @@ import { useTranslation } from "react-i18next";
 import type { BrokerImportResponse } from "@/api/generated/model";
 import { FormError } from "@/components/form-error/form-error";
 import { RuledLine } from "@/components/ui/ruled-line/ruled-line";
-import { ScrollRegion } from "@/components/ui/table/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table/table";
 import { useQuantityFormat } from "@/hooks/use-formatters";
 import type { TranslationKey } from "@/lib/i18n";
 
@@ -109,41 +116,34 @@ export function BrokerImportResult({ result }: Readonly<Props>) {
           {mismatches.length > 0 ? (
             <div>
               <p>{t("investments.import.warning.mismatches")}</p>
-              <ScrollRegion
-                className="mt-1"
-                aria-label={t("investments.import.warning.mismatchTable")}
-              >
-                <table className="w-full text-left tabular-nums">
-                  <thead className="text-xs text-muted-foreground">
-                    <tr>
-                      <th scope="col" className="py-1 pr-3 font-medium">
-                        {t("investments.import.warning.symbol")}
-                      </th>
-                      <th scope="col" className="py-1 pr-3 text-right font-medium">
+              <div className="mt-1">
+                <Table label={t("investments.import.warning.mismatchTable")}>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>{t("investments.import.warning.symbol")}</TableHead>
+                      <TableHead numeric>
                         {t("investments.import.warning.brokerQuantity")}
-                      </th>
-                      <th scope="col" className="py-1 text-right font-medium">
+                      </TableHead>
+                      <TableHead numeric>
                         {t("investments.import.warning.replayedQuantity")}
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
                     {mismatches.map((mismatch) => (
-                      <tr key={mismatch.symbol} className="border-t border-border">
-                        <th scope="row" className="py-1 pr-3 font-medium">
-                          {mismatch.symbol}
-                        </th>
-                        <td className="py-1 pr-3 text-right">
+                      <TableRow key={mismatch.symbol}>
+                        <TableCell className="font-medium">{mismatch.symbol}</TableCell>
+                        <TableCell numeric>
                           {quantity.format(Number(mismatch.brokerQuantity))}
-                        </td>
-                        <td className="py-1 text-right">
+                        </TableCell>
+                        <TableCell numeric>
                           {quantity.format(Number(mismatch.replayedQuantity))}
-                        </td>
-                      </tr>
+                        </TableCell>
+                      </TableRow>
                     ))}
-                  </tbody>
-                </table>
-              </ScrollRegion>
+                  </TableBody>
+                </Table>
+              </div>
               <p className="mt-2 text-muted-foreground">
                 {t("investments.import.warning.mismatchAdvice")}
               </p>

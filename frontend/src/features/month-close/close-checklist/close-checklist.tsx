@@ -1,5 +1,5 @@
 import { type LinkOptions, linkOptions } from "@tanstack/react-router";
-import { CircleAlert, CircleCheck } from "lucide-react";
+import { CircleCheck, CircleDashed } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import type { MonthAccountCoverage, MonthChecklist } from "@/api/generated/model";
 import { Button } from "@/components/ui/button/button";
@@ -8,7 +8,7 @@ import { TextLink } from "@/components/ui/text-link/text-link";
 import { useIsoDate, useMoney } from "@/hooks/use-formatters";
 import { useFeature } from "@/hooks/use-settings";
 import { monthBounds, monthDate } from "@/lib/calendar";
-import { EXPENSE_TONE, INCOME_TONE } from "@/lib/tone";
+import { INCOME_TONE } from "@/lib/tone";
 import { cn } from "@/lib/utils";
 
 export function openItemCount(checklist: MonthChecklist) {
@@ -232,7 +232,7 @@ export function CloseChecklist({
   return (
     <Rows className={className}>
       {shown.map((item) => {
-        const Icon = item.done ? CircleCheck : CircleAlert;
+        const Icon = item.done ? CircleCheck : CircleDashed;
         return (
           <li
             key={item.key}
@@ -243,7 +243,10 @@ export function CloseChecklist({
             <span className="flex min-w-0 items-start gap-2.5">
               <Icon
                 aria-hidden="true"
-                className={cn("mt-0.5 size-4 shrink-0", item.done ? INCOME_TONE : EXPENSE_TONE)}
+                className={cn(
+                  "mt-0.5 size-4 shrink-0",
+                  item.done ? INCOME_TONE : "text-muted-foreground",
+                )}
               />
               <span
                 className={cn(

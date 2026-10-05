@@ -5,6 +5,8 @@ import { useNetWorthHistorySuspense } from "@/api/generated";
 import { useAppForm } from "@/components/form";
 import { SignedAmount } from "@/components/signed-amount/signed-amount";
 import { Button } from "@/components/ui/button/button";
+import { Label } from "@/components/ui/label/label";
+import { Rows } from "@/components/ui/rows/rows";
 import {
   ButtonSkeleton,
   IconButtonSkeleton,
@@ -30,7 +32,7 @@ export function NetWorthPaceSkeleton() {
         <TextSkeleton size="sm" width="w-3/4" />
         <TextSkeleton size="xs" width="w-1/2" />
       </div>
-      <ul className="divide-y">
+      <Rows>
         {Array.from({ length: 2 }, (_, index) => (
           <li key={index} className="flex items-center gap-3 py-1">
             <TextSkeleton size="sm" width="w-20" />
@@ -38,10 +40,13 @@ export function NetWorthPaceSkeleton() {
             <IconButtonSkeleton />
           </li>
         ))}
-      </ul>
-      <div className="flex items-start gap-2">
-        <Skeleton className="h-9 flex-1 rounded-lg pointer-coarse:h-11" />
-        <ButtonSkeleton className="w-28" />
+      </Rows>
+      <div className="space-y-1.5">
+        <TextSkeleton size="sm" width="w-32" />
+        <div className="flex items-start gap-2">
+          <Skeleton className="h-9 flex-1 rounded-lg pointer-coarse:h-11" />
+          <ButtonSkeleton className="w-28" />
+        </div>
       </div>
     </div>
   );
@@ -108,7 +113,7 @@ export function NetWorthPace() {
       {milestones.length === 0 ? (
         <p className="text-muted-foreground">{t("netWorth.pace.noMilestones")}</p>
       ) : (
-        <ul aria-label={t("netWorth.pace.milestones")} className="divide-y">
+        <Rows aria-label={t("netWorth.pace.milestones")}>
           {milestones.map((target) => (
             <li key={target} className="flex items-center gap-3 py-1">
               <span className="font-semibold tabular-nums">{money.format(target)}</span>
@@ -131,22 +136,19 @@ export function NetWorthPace() {
               </Button>
             </li>
           ))}
-        </ul>
+        </Rows>
       )}
 
       {milestones.length < MAX_MILESTONES ? (
         <form.AppForm>
-          <form.FormShell className="flex items-start gap-2">
-            <form.Field name="amount">
-              {(field) => (
-                <field.MoneyInputField
-                  id="net-worth-milestone"
-                  className="flex-1"
-                  aria-label={t("netWorth.pace.milestone")}
-                />
-              )}
-            </form.Field>
-            <form.SubmitButton variant="outline">{t("netWorth.pace.add")}</form.SubmitButton>
+          <form.FormShell className="space-y-1.5">
+            <Label htmlFor="net-worth-milestone">{t("netWorth.pace.milestone")}</Label>
+            <div className="flex items-start gap-2">
+              <form.Field name="amount">
+                {(field) => <field.MoneyInputField id="net-worth-milestone" className="flex-1" />}
+              </form.Field>
+              <form.SubmitButton variant="outline">{t("netWorth.pace.add")}</form.SubmitButton>
+            </div>
           </form.FormShell>
         </form.AppForm>
       ) : null}

@@ -85,7 +85,7 @@ function WarrantyDate({ attachment }: Readonly<{ attachment: AttachmentResponse 
 
   return (
     <div className="mt-1 flex items-center gap-2 text-xs">
-      <label htmlFor={id} className="text-muted-foreground">
+      <label htmlFor={id} id={`${id}-label`} className="text-muted-foreground">
         {t("transactions.attachments.warranty")}
       </label>
       <DatePicker
@@ -116,7 +116,7 @@ function AttachmentRow({ attachment, removing, disabled, onRemove }: Readonly<Ro
           <p className="truncate text-sm font-medium" title={name}>
             {name}
           </p>
-          <p className="truncate text-xs text-muted-foreground tabular-nums">
+          <p className="text-xs wrap-break-word text-muted-foreground tabular-nums">
             {formatBytes(attachment.sizeBytes)} ·{" "}
             {t("transactions.attachments.uploadedBy", {
               name: attachment.uploadedByName,
@@ -253,11 +253,9 @@ function AttachmentList({ transactionId }: Readonly<{ transactionId: string }>) 
         }}
       />
 
-      {uploading ? (
-        <p role="status" className="text-sm text-muted-foreground">
-          {t("transactions.attachments.uploading", { count: waiting })}
-        </p>
-      ) : null}
+      <p role="status" className="text-sm text-muted-foreground empty:hidden">
+        {uploading ? t("transactions.attachments.uploading", { count: waiting }) : null}
+      </p>
 
       {refusals.items.length > 0 ? (
         <div role="alert">
@@ -313,11 +311,7 @@ export function TransactionAttachments({ transactionId, className }: Readonly<Pr
             <Skeleton className="h-20 rounded-lg" />
           </div>
         }
-        error={
-          <p role="alert" className="text-sm text-expense">
-            {t("transactions.attachments.loadError")}
-          </p>
-        }
+        errorSubject={t("transactions.attachments.title")}
       >
         <AttachmentList transactionId={transactionId} />
       </QueryBoundary>

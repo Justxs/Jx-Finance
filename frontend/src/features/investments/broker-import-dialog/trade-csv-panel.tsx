@@ -1,7 +1,10 @@
 import { useTranslation } from "react-i18next";
 import { FieldShell } from "@/components/form/field-shell/field-shell";
+import { FormActions } from "@/components/form/form-actions/form-actions";
 import { Button } from "@/components/ui/button/button";
 import { FileInput } from "@/components/ui/file-input/file-input";
+import { RuledLine } from "@/components/ui/ruled-line/ruled-line";
+import { ScrollRegion } from "@/components/ui/table/table";
 import { useFileField } from "@/hooks/use-file-field";
 import { BrokerImportStatus } from "./import-result";
 import type { BrokerImportMutations } from "./use-broker-import-mutations";
@@ -51,9 +54,11 @@ export function TradeCsvPanel({ accountId, mutations }: Readonly<Props>) {
       className="space-y-4"
     >
       <p className="text-sm text-muted-foreground">{t("investments.import.tradeCsv.intro")}</p>
-      <pre className="overflow-x-auto rounded-md bg-muted/50 p-3 font-mono text-xs">
-        {SAMPLE.join("\n")}
-      </pre>
+      <RuledLine>
+        <ScrollRegion aria-label={t("investments.import.tradeCsv.sample")}>
+          <pre className="font-mono text-xs">{SAMPLE.join("\n")}</pre>
+        </ScrollRegion>
+      </RuledLine>
       <FieldShell
         id={TRADE_CSV_FILE_INPUT_ID}
         label={t("investments.import.file")}
@@ -77,7 +82,7 @@ export function TradeCsvPanel({ accountId, mutations }: Readonly<Props>) {
         error={ownsImport ? importMutation.error : null}
       />
 
-      <div className="flex justify-end">
+      <FormActions>
         <Button
           type="submit"
           pending={importMutation.isPending}
@@ -85,7 +90,7 @@ export function TradeCsvPanel({ accountId, mutations }: Readonly<Props>) {
         >
           {t("investments.import.submit")}
         </Button>
-      </div>
+      </FormActions>
     </form>
   );
 }

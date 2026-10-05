@@ -131,7 +131,7 @@ export function HouseholdActivity({ householdId, members }: Readonly<Props>) {
         value={filters}
         onChange={changeFilters}
       />
-      <QueryBoundary fallback={<ActivitySkeleton />}>
+      <QueryBoundary fallback={<ActivitySkeleton />} errorSubject={t("audit.title")}>
         <ActivityList householdId={householdId} filters={shown} paging={{ page, setPage, stale }} />
       </QueryBoundary>
     </section>

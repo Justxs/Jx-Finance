@@ -49,7 +49,7 @@ export function FileInput({
       ) : (
         <>
           <Icon className="size-5 shrink-0" />
-          <span className="max-w-full truncate px-4 font-medium">{text}</span>
+          <span className="max-w-full px-4 font-medium text-balance wrap-break-word">{text}</span>
         </>
       )}
       <input

@@ -82,6 +82,7 @@ export function ImportInboxList({ items, accounts, onReview }: Readonly<Props>) 
               pending={pendingId(reviewMutation) === item.id}
               disabled={reviewMutation.isPending}
               onClick={() => reviewMutation.mutate(item)}
+              aria-label={`${t("imports.inbox.review")}: ${item.fileName}`}
             >
               {t("imports.inbox.review")}
             </Button>

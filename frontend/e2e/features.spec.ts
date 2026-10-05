@@ -20,7 +20,7 @@ test("turning a feature off hides it and redirects its address until it is turne
     await expect(planTabs.getByRole("link", { name: "Budgets" })).toBeVisible();
     await expect(planTabs.getByRole("link", { name: "Goals" })).toHaveCount(0);
     await page.goto("/goals");
-    await expect(page).toHaveURL(/\/$/);
+    await expect(page).toHaveURL(/\/dashboard$/);
     await expect(dashboard).toHaveAttribute("aria-current", "page");
 
     await page.goto("/settings?section=features");

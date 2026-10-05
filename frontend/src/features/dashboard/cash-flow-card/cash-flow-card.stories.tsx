@@ -39,7 +39,7 @@ export const Calm: Story = {
 };
 
 export const PastMonth: Story = {
-  render: () => <DashboardCard card="cashFlow" month="2026-01" />,
+  render: () => <DashboardCard card="cashFlow" cards={["cashFlow"]} month="2026-01" />,
   play: async ({ canvas }) => {
     await expect(
       await canvas.findByText("The cash-flow forecast is shown on the current month."),

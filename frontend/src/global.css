@@ -474,6 +474,24 @@
   }
 }
 
+@page {
+  margin: 15mm;
+
+  @bottom-center {
+    content: "Jx Finance · " counter(page) " / " counter(pages);
+    font:
+      8pt "Source Sans 3 Variable",
+      sans-serif;
+    color: #5d6872;
+  }
+}
+
+@keyframes band-in {
+  from {
+    opacity: 0;
+  }
+}
+
 @keyframes page-in {
   from {
     opacity: 0;
@@ -490,6 +508,53 @@
 
 :root:active-view-transition-type(page) .page-transition {
   view-transition-name: page;
+}
+
+:root:active-view-transition-type(shell) {
+  view-transition-name: root;
+}
+
+:root:active-view-transition-type(shell)::view-transition-old(root) {
+  animation: page-out 160ms ease-in both;
+}
+
+:root:active-view-transition-type(shell)::view-transition-new(root) {
+  animation: page-in var(--transition-duration-view) ease-out both;
+}
+
+:root:active-view-transition-type(shell) .hero-band {
+  view-transition-name: hero-band;
+}
+
+:root:active-view-transition-type(shell) .shell-page {
+  view-transition-name: shell-page;
+}
+
+:root:active-view-transition-type(shell) .hero-edge {
+  view-transition-name: hero-edge;
+}
+
+:root:active-view-transition-type(shell) .landing-header {
+  view-transition-name: landing-header;
+}
+
+::view-transition-group(hero-band) {
+  overflow: clip;
+  background: var(--hero);
+}
+
+::view-transition-group(hero-band),
+::view-transition-group(hero-edge) {
+  animation-duration: 320ms;
+  animation-timing-function: var(--ease-out-expo);
+}
+
+::view-transition-old(hero-band) {
+  animation: page-out 160ms ease-in both;
+}
+
+::view-transition-new(hero-band) {
+  animation: band-in var(--transition-duration-view) ease-out 80ms both;
 }
 
 ::view-transition-old(page) {

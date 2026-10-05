@@ -1,6 +1,8 @@
+import { useQueryClient } from "@tanstack/react-query";
 import { useSearch } from "@tanstack/react-router";
 import type { ReactNode } from "react";
-import type { DashboardCard } from "@/api/generated/model";
+import { getDashboardLayoutQueryKey } from "@/api/generated";
+import type { DashboardCard, DashboardLayoutResponse } from "@/api/generated/model";
 import { ChartSkeleton } from "@/components/chart/chart-skeleton";
 import { PagePending } from "@/components/route-pending/route-pending";
 import { ShareRowsSkeleton } from "@/components/share-row/share-row";
@@ -12,10 +14,46 @@ import {
   SectionSkeleton,
   TextSkeleton,
 } from "@/components/ui/skeleton/skeleton";
+import { shownCards } from "@/features/dashboard/dashboard-layout";
 import { MonthCloseLineSkeleton } from "@/features/month-close/month-close-line/month-close-line";
-import { useFeature } from "@/hooks/use-settings";
+import { useFeature, useSettings } from "@/hooks/use-settings";
+import { cn } from "@/lib/utils";
 
 export const dashboardGrid = "grid gap-4 lg:grid-cols-6 xl:grid-cols-12 xl:gap-5";
+
+const third = "lg:col-span-3 xl:col-span-4";
+const wide = "lg:col-span-6 xl:col-span-8";
+const narrow = "lg:col-span-6 xl:col-span-4";
+
+type CardSpan = "third" | "wide" | "narrow";
+
+const cardSpans: Record<DashboardCard, CardSpan> = {
+  gettingStarted: "wide",
+  summary: "narrow",
+  monthlyTrend: "wide",
+  spendingByCategory: "third",
+  spendingPace: "third",
+  budgets: "narrow",
+  netWorth: "wide",
+  accounts: "narrow",
+  recentTransactions: "wide",
+  upcomingBills: "narrow",
+  cashFlow: "narrow",
+  goals: "narrow",
+};
+
+const defaultSkeletonCards: DashboardCard[] = [
+  "summary",
+  "monthlyTrend",
+  "spendingByCategory",
+  "spendingPace",
+  "budgets",
+];
+
+export function cardSpan(card: DashboardCard, cards: readonly DashboardCard[]): CardSpan {
+  const widened = card === "spendingByCategory" && !cards.includes("spendingPace");
+  return widened ? "wide" : cardSpans[card];
+}
 
 export function DashboardStatsSkeleton() {
   return (
@@ -74,24 +112,47 @@ export const cardSkeletons: Record<
   goals: <ShareRowsSkeleton rows={3} share={false} />,
 };
 
-export function DashboardSkeleton() {
-  return (
-    <div className={dashboardGrid} aria-hidden="true">
-      <Section className="lg:col-span-6 xl:col-span-4">
+interface CardSkeletonProps {
+  card: DashboardCard;
+  span: CardSpan;
+}
+
+function CardSkeleton({ card, span }: Readonly<CardSkeletonProps>) {
+  if (card === "gettingStarted") {
+    return null;
+  }
+  if (card === "summary") {
+    return (
+      <Section className={narrow}>
         <DashboardStatsSkeleton />
       </Section>
-      <SectionSkeleton className="lg:col-span-6 xl:col-span-8">
-        {cardSkeletons.monthlyTrend}
-      </SectionSkeleton>
-      <SectionSkeleton className="lg:col-span-3 xl:col-span-4">
-        {cardSkeletons.spendingByCategory}
-      </SectionSkeleton>
-      <SectionSkeleton className="lg:col-span-3 xl:col-span-4">
-        {cardSkeletons.spendingPace}
-      </SectionSkeleton>
-      <SectionSkeleton className="lg:col-span-6 xl:col-span-4">
-        {cardSkeletons.budgets}
-      </SectionSkeleton>
+    );
+  }
+  return (
+    <SectionSkeleton
+      className={cn(
+        span === "third" && third,
+        span === "wide" && wide,
+        span === "narrow" && narrow,
+      )}
+    >
+      {card === "recentTransactions" ? <RowsSkeleton rows={6} lines={2} /> : cardSkeletons[card]}
+    </SectionSkeleton>
+  );
+}
+
+export function DashboardSkeleton() {
+  const layout = useQueryClient().getQueryData<DashboardLayoutResponse>(
+    getDashboardLayoutQueryKey(),
+  );
+  const { features } = useSettings();
+  const cards = layout ? shownCards(layout, features) : defaultSkeletonCards;
+
+  return (
+    <div className={dashboardGrid} aria-hidden="true">
+      {cards.map((card) => (
+        <CardSkeleton key={card} card={card} span={cardSpan(card, cards)} />
+      ))}
     </div>
   );
 }

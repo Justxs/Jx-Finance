@@ -70,6 +70,7 @@ export function BudgetSuggestions() {
                 },
               })
             }
+            aria-label={`${t("budgets.suggestions.create", { amount: money.format(Number(item.limit)) })}: ${item.categoryName}`}
           >
             {t("budgets.suggestions.create", { amount: money.format(Number(item.limit)) })}
           </Button>

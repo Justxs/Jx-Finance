@@ -206,6 +206,7 @@ export const closedChangedMonthReview: MonthReviewResponse = {
       {
         id: "55555555-0000-4000-8000-000000000022",
         kind: "transaction",
+        type: "expense",
         change: "edited",
         date: "2026-08-30",
         description: "IKI Antakalnis",
@@ -216,6 +217,7 @@ export const closedChangedMonthReview: MonthReviewResponse = {
       {
         id: "55555555-0000-4000-8000-000000000901",
         kind: "transaction",
+        type: "expense",
         change: "created",
         date: "2026-08-29",
         description: "Rimi – forgotten receipt",
@@ -226,6 +228,7 @@ export const closedChangedMonthReview: MonthReviewResponse = {
       {
         id: "55555555-0000-4000-8000-000000000902",
         kind: "transaction",
+        type: "expense",
         change: "movedOut",
         date: "2026-09-01",
         description: "Parking permit",
@@ -236,6 +239,7 @@ export const closedChangedMonthReview: MonthReviewResponse = {
       {
         id: "55555555-0000-4000-8000-000000000025",
         kind: "transaction",
+        type: "expense",
         change: "edited",
         date: "2026-08-20",
         description: "Trafi – mėnesinis viešojo transporto bilietas",

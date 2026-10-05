@@ -35,7 +35,7 @@ export function CashFlowCard() {
               <p className="truncate font-medium" title={account.accountName}>
                 {account.accountName}
               </p>
-              <p className="truncate text-xs text-muted-foreground">
+              <p className="text-xs wrap-break-word text-muted-foreground">
                 {t("dashboard.cashFlowLowest", {
                   amount: balance(account.lowestBalance, account.currency),
                   date: formatDay(account.lowestOn),

@@ -133,12 +133,14 @@ export function ConnectionForm({
           )}
         </form.Field>
 
-        <div className="col-span-full flex flex-wrap items-center justify-end gap-2 pt-2">
+        <form.FormActions
+          submitLabel={t("actions.save")}
+          pending={pending}
+          disabled={disabled}
+          span
+        >
           {secondaryActions}
-          <form.SubmitButton pending={pending} disabled={disabled}>
-            {t("actions.save")}
-          </form.SubmitButton>
-        </div>
+        </form.FormActions>
       </form.FormShell>
     </form.AppForm>
   );

@@ -35,35 +35,29 @@ interface Props {
   onReview: (provider: ImportProvider, review: InboxReview) => void;
 }
 
-function Chevron() {
-  return <ChevronRight aria-hidden="true" className="size-4 shrink-0 text-muted-foreground" />;
-}
-
 function ProviderButton({
   icon: Icon,
   name,
   format,
-  chevron = true,
   onClick,
 }: Readonly<{
   icon: LucideIcon;
   name: string;
   format: string;
-  chevron?: boolean;
   onClick: () => void;
 }>) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className="-mx-2 flex min-w-0 flex-1 items-center gap-3 rounded-md px-2 py-3 text-left transition-colors hover:bg-muted focus-visible:bg-muted"
+      className="-mx-2 flex min-w-0 flex-1 items-center gap-3 rounded-md px-2 py-3 text-left focus-ring transition-colors hover:bg-muted focus-visible:bg-muted"
     >
       <Icon aria-hidden="true" className="size-4 shrink-0 text-muted-foreground" />
       <span className="min-w-0 flex-1">
         <span className="block text-sm font-medium wrap-break-word">{name}</span>
         <span className="block text-xs text-muted-foreground">{format}</span>
       </span>
-      {chevron ? <Chevron /> : null}
+      <ChevronRight aria-hidden="true" className="size-4 shrink-0 text-muted-foreground" />
     </button>
   );
 }
@@ -138,7 +132,6 @@ export function ImportProviders({ accounts, onChoose, onEdit, onReview }: Readon
               icon={FileSpreadsheet}
               name={mapping.name}
               format={t("imports.providers.savedMappingFormat")}
-              chevron={false}
               onClick={() => onChoose({ format: "genericCsv", name: mapping.name, mapping })}
             />
             <RowActions
@@ -146,7 +139,6 @@ export function ImportProviders({ accounts, onChoose, onEdit, onReview }: Readon
               onEdit={() => onEdit(mapping)}
               {...remove.deleteProps(mapping.id)}
             />
-            <Chevron />
           </li>
         ))}
         <li className="flex">

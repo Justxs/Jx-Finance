@@ -490,6 +490,7 @@ export const CloseMonthResponse = zod.object({
         zod.object({
           id: zod.uuid(),
           kind: zod.enum(["transaction", "investmentEntry"]),
+          type: zod.union([zod.null(), zod.enum(["income", "expense"])]),
           change: zod.enum(["created", "edited", "deleted", "movedOut"]),
           date: zod.iso.date(),
           description: zod.string().nullable(),
@@ -994,6 +995,7 @@ export const MonthReviewResponse = zod.object({
         zod.object({
           id: zod.uuid(),
           kind: zod.enum(["transaction", "investmentEntry"]),
+          type: zod.union([zod.null(), zod.enum(["income", "expense"])]),
           change: zod.enum(["created", "edited", "deleted", "movedOut"]),
           date: zod.iso.date(),
           description: zod.string().nullable(),
@@ -1547,6 +1549,7 @@ export const UpdateMonthNoteResponse = zod.object({
         zod.object({
           id: zod.uuid(),
           kind: zod.enum(["transaction", "investmentEntry"]),
+          type: zod.union([zod.null(), zod.enum(["income", "expense"])]),
           change: zod.enum(["created", "edited", "deleted", "movedOut"]),
           date: zod.iso.date(),
           description: zod.string().nullable(),

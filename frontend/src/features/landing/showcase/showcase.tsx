@@ -215,10 +215,14 @@ export function SettleUpCard({
     <ShowcaseCard aria-labelledby={titleId} className={className} delay={delay}>
       <CardTitle id={titleId}>{t("landing.showcase.sharedGroceries")}</CardTitle>
       <dl className="mt-3 grid grid-cols-2 gap-x-4 text-sm">
-        <dt className="text-xs text-muted-foreground">{t("landing.showcase.youPaid")}</dt>
-        <dt className="text-xs text-muted-foreground">{t("landing.showcase.yourShare")}</dt>
-        <dd className="font-semibold tabular-nums">{money.whole(120)}</dd>
-        <dd className="font-semibold tabular-nums">{money.whole(60)}</dd>
+        <div>
+          <dt className="text-xs text-muted-foreground">{t("landing.showcase.youPaid")}</dt>
+          <dd className="font-semibold tabular-nums">{money.whole(120)}</dd>
+        </div>
+        <div>
+          <dt className="text-xs text-muted-foreground">{t("landing.showcase.yourShare")}</dt>
+          <dd className="font-semibold tabular-nums">{money.whole(60)}</dd>
+        </div>
       </dl>
       <Meter value={60} max={120} tone="positive" mark={0.5} className="mt-3" />
       <p className="mt-3 border-t pt-2.5 text-sm">

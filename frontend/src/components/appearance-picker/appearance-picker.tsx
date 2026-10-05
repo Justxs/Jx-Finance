@@ -86,7 +86,7 @@ function ChoiceGroup<T extends string>({
                 className="sr-only"
               />
               {renderSample(option)}
-              <span className="min-w-0 truncate">{optionLabel(option)}</span>
+              <span className="min-w-0 wrap-break-word">{optionLabel(option)}</span>
             </label>
           );
         })}

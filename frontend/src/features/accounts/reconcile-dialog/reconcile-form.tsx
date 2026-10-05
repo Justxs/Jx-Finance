@@ -76,7 +76,7 @@ function ReconcilePreview({ account, currency, date, balance, today }: Readonly<
 
   return (
     <div
-      className={cn("space-y-3 border-t pt-4 text-sm", preview.isPlaceholderData && "opacity-60")}
+      className={cn("space-y-3 border-t pt-4 text-sm", preview.isPlaceholderData && "stale")}
       aria-busy={preview.isPlaceholderData}
     >
       <p className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 tabular-nums">
@@ -89,7 +89,7 @@ function ReconcilePreview({ account, currency, date, balance, today }: Readonly<
         {verdict ? (
           <span
             role="status"
-            className={difference === 0 ? INCOME_TONE : "font-medium text-expense"}
+            className={difference === 0 ? "text-muted-foreground" : "font-medium text-expense"}
           >
             {verdict}
           </span>
@@ -105,27 +105,33 @@ function ReconcilePreview({ account, currency, date, balance, today }: Readonly<
           <EmptyText size="sm">{t("accounts.reconcile.noRows")}</EmptyText>
         ) : (
           <Rows>
-            {rows.map((row) => (
-              <li
-                key={`${row.kind}-${row.id}`}
-                className="flex items-baseline justify-between gap-3 py-1.5"
-              >
-                <span className="min-w-0 truncate">
-                  <span className="mr-2 text-muted-foreground tabular-nums">
-                    {formatDate(row.date)}
-                  </span>
-                  {row.description ?? t(`accounts.reconcile.kinds.${row.kind}`)}
-                </span>
-                <span
-                  className={cn(
-                    "whitespace-nowrap tabular-nums",
-                    Number(row.amount) > 0 && INCOME_TONE,
-                  )}
+            {rows.map((row) => {
+              const description = row.description ?? t(`accounts.reconcile.kinds.${row.kind}`);
+              return (
+                <li
+                  key={`${row.kind}-${row.id}`}
+                  className="flex items-baseline justify-between gap-3 py-1.5"
                 >
-                  {formatMoney.formatSigned(Number(row.amount), "auto", preview.data.currency)}
-                </span>
-              </li>
-            ))}
+                  <span
+                    className="line-clamp-2 min-w-0 wrap-break-word"
+                    title={`${formatDate(row.date)} ${description}`}
+                  >
+                    <span className="mr-2 text-muted-foreground tabular-nums">
+                      {formatDate(row.date)}
+                    </span>
+                    {description}
+                  </span>
+                  <span
+                    className={cn(
+                      "whitespace-nowrap tabular-nums",
+                      Number(row.amount) > 0 && INCOME_TONE,
+                    )}
+                  >
+                    {formatMoney.formatSigned(Number(row.amount), "auto", preview.data.currency)}
+                  </span>
+                </li>
+              );
+            })}
           </Rows>
         )}
         <p className="mt-1 flex flex-wrap items-baseline justify-between gap-x-4 text-xs text-muted-foreground">

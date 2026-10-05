@@ -1,7 +1,7 @@
-import { useDeferredValue, useState } from "react";
+import { type ReactNode, useDeferredValue, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useRecurringBillsSuspense } from "@/api/generated";
-import type { AccountResponse, RecurringBillResponse } from "@/api/generated/model";
+import type { AccountResponse, MonthChecklist, RecurringBillResponse } from "@/api/generated/model";
 import { EditModal } from "@/components/modal";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { RecurringBillConfirmForm } from "@/components/recurring-bill-confirm-form/recurring-bill-confirm-form";
@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button/button";
 import { Rows } from "@/components/ui/rows/rows";
 import { TitledSection } from "@/components/ui/section/section";
 import { RowsSkeleton } from "@/components/ui/skeleton/skeleton";
+import { CloseChecklist } from "@/features/month-close/close-checklist/close-checklist";
 import { useIsoDate, useMoney } from "@/hooks/use-formatters";
 import { INCOME_TONE } from "@/lib/tone";
 import { cn } from "@/lib/utils";
@@ -18,9 +19,10 @@ import { DoneLine, lineClass } from "./done-line";
 interface RowsProps {
   monthEnd: string;
   accounts: AccountResponse[];
+  empty: ReactNode;
 }
 
-function BillRows({ monthEnd, accounts }: Readonly<RowsProps>) {
+function BillRows({ monthEnd, accounts, empty }: Readonly<RowsProps>) {
   const { t } = useTranslation();
   const money = useMoney();
   const formatDate = useIsoDate();
@@ -45,36 +47,40 @@ function BillRows({ monthEnd, accounts }: Readonly<RowsProps>) {
 
   return (
     <>
-      <Rows>
-        {due.map((bill) => (
-          <RowTransition key={bill.id}>
-            <li
-              tabIndex={-1}
-              data-open-line=""
-              className={cn("flex flex-wrap items-center gap-x-4 gap-y-1.5", lineClass)}
-            >
-              <span className="min-w-0 flex-1 basis-48">
-                <span className="block font-medium wrap-break-word">{bill.name}</span>
-                <span className="block text-xs text-muted-foreground tabular-nums">
-                  {t("monthClose.page.billDue", { date: formatDate(bill.nextDueDate) })}
-                </span>
-              </span>
-              <span className="ml-auto text-right whitespace-nowrap tabular-nums">
-                {amountOf(bill)}
-              </span>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                data-line-control=""
-                onClick={() => setConfirming(bill)}
+      {due.length === 0 ? (
+        empty
+      ) : (
+        <Rows>
+          {due.map((bill) => (
+            <RowTransition key={bill.id}>
+              <li
+                tabIndex={-1}
+                data-open-line=""
+                className={cn("flex flex-wrap items-center gap-x-4 gap-y-1.5", lineClass)}
               >
-                {t("monthClose.checklist.confirm")}
-              </Button>
-            </li>
-          </RowTransition>
-        ))}
-      </Rows>
+                <span className="min-w-0 flex-1 basis-48">
+                  <span className="block font-medium wrap-break-word">{bill.name}</span>
+                  <span className="block text-xs text-muted-foreground tabular-nums">
+                    {t("monthClose.page.billDue", { date: formatDate(bill.nextDueDate) })}
+                  </span>
+                </span>
+                <span className="ml-auto text-right whitespace-nowrap tabular-nums">
+                  {amountOf(bill)}
+                </span>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  data-line-control=""
+                  onClick={() => setConfirming(bill)}
+                >
+                  {t("monthClose.checklist.confirm")}
+                </Button>
+              </li>
+            </RowTransition>
+          ))}
+        </Rows>
+      )}
       <EditModal
         item={confirming}
         onClose={() => setConfirming(null)}
@@ -88,13 +94,17 @@ function BillRows({ monthEnd, accounts }: Readonly<RowsProps>) {
   );
 }
 
-interface Props extends RowsProps {
-  count: number;
+interface Props {
+  month: string;
+  monthEnd: string;
+  accounts: AccountResponse[];
+  checklist: MonthChecklist;
 }
 
-export function BillsDueLines({ monthEnd, accounts, count }: Readonly<Props>) {
+export function BillsDueLines({ month, monthEnd, accounts, checklist }: Readonly<Props>) {
   const { t } = useTranslation();
   const title = t("monthClose.page.bills");
+  const count = checklist.unconfirmedRecurring ?? 0;
 
   return (
     <TitledSection bodyGap="sm" title={title}>
@@ -102,7 +112,11 @@ export function BillsDueLines({ monthEnd, accounts, count }: Readonly<Props>) {
         <DoneLine>{t("monthClose.checklist.noRecurring")}</DoneLine>
       ) : (
         <QueryBoundary fallback={<RowsSkeleton rows={Math.min(count, 3)} />} errorSubject={title}>
-          <BillRows monthEnd={monthEnd} accounts={accounts} />
+          <BillRows
+            monthEnd={monthEnd}
+            accounts={accounts}
+            empty={<CloseChecklist month={month} checklist={checklist} kinds={["recurring"]} />}
+          />
         </QueryBoundary>
       )}
     </TitledSection>

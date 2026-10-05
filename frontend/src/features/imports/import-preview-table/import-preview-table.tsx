@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useId, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type {
   AccountResponse,
@@ -7,6 +7,8 @@ import type {
   TagResponse,
   TransactionGroupResponse,
 } from "@/api/generated/model";
+import { FormError } from "@/components/form-error/form-error";
+import { FieldShell } from "@/components/form/field-shell/field-shell";
 import { FormActions } from "@/components/form/form-actions/form-actions";
 import { Pagination } from "@/components/pagination/pagination";
 import { amountColumnWide } from "@/components/transaction-amount/transaction-amount";
@@ -52,6 +54,7 @@ interface Props {
   onConfirm: (group: ImportConfirmGroup | null) => void;
   onCancel: () => void;
   confirmPending: boolean;
+  confirmError?: unknown;
 }
 
 export function ImportPreviewTable({
@@ -66,8 +69,10 @@ export function ImportPreviewTable({
   onConfirm,
   onCancel,
   confirmPending,
+  confirmError,
 }: Readonly<Props>) {
   const { t } = useTranslation();
+  const searchId = useId();
   const money = useMoney();
   const [page, setPage] = useState(1);
   const [view, setView] = useState<PreviewView>("all");
@@ -130,7 +135,7 @@ export function ImportPreviewTable({
         <p className="text-sm text-foreground">{t("imports.allDuplicates")}</p>
       ) : null}
 
-      <div className="flex flex-wrap items-center justify-between gap-2">
+      <div className="flex flex-wrap items-end justify-between gap-2">
         <SegmentedControl
           aria-label={t("imports.views.label")}
           value={view}
@@ -140,64 +145,75 @@ export function ImportPreviewTable({
             label: (
               <>
                 {t(`imports.views.${item}`)}
-                <span className="text-xs text-muted-foreground tabular-nums">{counts[item]}</span>
+                <span className="text-xs text-muted-foreground tabular-nums">
+                  <span className="sr-only">, </span>
+                  {counts[item]}
+                </span>
               </>
             ),
           }))}
         />
-        <Input
-          type="search"
-          aria-label={t("imports.views.search")}
-          placeholder={t("imports.views.search")}
-          value={query}
-          onChange={(event) => search(event.target.value)}
-          className="sm:w-64"
-        />
+        <FieldShell id={searchId} label={t("imports.views.search")} className="w-full sm:w-64">
+          <Input
+            id={searchId}
+            type="search"
+            value={query}
+            onChange={(event) => search(event.target.value)}
+          />
+        </FieldShell>
       </div>
 
-      {visible.length === 0 ? <EmptyText>{t("imports.views.empty")}</EmptyText> : null}
+      {visible.length === 0 ? (
+        <EmptyText>{t("imports.views.empty")}</EmptyText>
+      ) : (
+        <>
+          <div className="md:hidden">
+            <label className="flex items-center gap-3 border-b border-rule py-2 text-xs font-medium text-muted-foreground">
+              {selectAll}
+              {t("imports.selectAll")}
+            </label>
+            <Rows aria-label={t("imports.preview")}>
+              {pageRows.map(({ row, index }) => (
+                <ImportRow
+                  key={`${row.importRef}-${index}`}
+                  variant="list"
+                  {...rowProps(row, index)}
+                />
+              ))}
+            </Rows>
+          </div>
 
-      <div className="md:hidden">
-        <label className="flex items-center gap-3 border-b border-rule py-2 text-xs font-medium text-muted-foreground">
-          {selectAll}
-          {t("imports.selectAll")}
-        </label>
-        <Rows aria-label={t("imports.preview")}>
-          {pageRows.map(({ row, index }) => (
-            <ImportRow key={`${row.importRef}-${index}`} variant="list" {...rowProps(row, index)} />
-          ))}
-        </Rows>
-      </div>
-
-      <div className="hidden md:block">
-        <Table
-          label={t("imports.preview")}
-          columns={["w-10", "w-27", undefined, wideAmounts ? "w-38" : "w-30", "w-48", "w-12"]}
-          className={wideAmounts ? "min-w-208" : "min-w-200"}
-        >
-          <TableHeader>
-            <TableRow>
-              <TableHead>{selectAll}</TableHead>
-              <TableHead>{t("transactions.date")}</TableHead>
-              <TableHead>{t("transactions.description")}</TableHead>
-              <TableHead numeric>{t("transactions.amount")}</TableHead>
-              <TableHead>{t("transactions.category")}</TableHead>
-              <TableHead>
-                <span className="sr-only">{t("imports.more")}</span>
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {pageRows.map(({ row, index }) => (
-              <ImportRow
-                key={`${row.importRef}-${index}`}
-                variant="table"
-                {...rowProps(row, index)}
-              />
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+          <div className="hidden md:block">
+            <Table
+              label={t("imports.preview")}
+              columns={["w-10", "w-27", undefined, wideAmounts ? "w-38" : "w-30", "w-48", "w-12"]}
+              className={wideAmounts ? "min-w-208" : "min-w-200"}
+            >
+              <TableHeader>
+                <TableRow>
+                  <TableHead>{selectAll}</TableHead>
+                  <TableHead>{t("transactions.date")}</TableHead>
+                  <TableHead>{t("transactions.description")}</TableHead>
+                  <TableHead numeric>{t("transactions.amount")}</TableHead>
+                  <TableHead>{t("transactions.category")}</TableHead>
+                  <TableHead>
+                    <span className="sr-only">{t("imports.more")}</span>
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {pageRows.map(({ row, index }) => (
+                  <ImportRow
+                    key={`${row.importRef}-${index}`}
+                    variant="table"
+                    {...rowProps(row, index)}
+                  />
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </>
+      )}
 
       <Pagination
         page={page}
@@ -205,6 +221,8 @@ export function ImportPreviewTable({
         range={{ total: visible.length, pageSize: PREVIEW_PAGE_SIZE }}
         onPageChange={setPage}
       />
+
+      <FormError error={confirmError} />
 
       <FormActions cancelDisabled={confirmPending} onCancel={onCancel}>
         <Button

@@ -10,7 +10,7 @@ const meta = {
   title: "Features/Dashboard/NetWorthMonth",
   component: NetWorthMonth,
   args: { month: FIXTURE_MONTH },
-  parameters: { route: "/" },
+  parameters: { route: "/dashboard" },
   decorators: [
     (Story) => (
       <Section>

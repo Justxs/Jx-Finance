@@ -30,7 +30,7 @@ function paths(features: FeatureFlags, isAdmin: boolean) {
 
 test("the core ledger pages are always there", () => {
   expect(paths(allOff, false)).toEqual([
-    "/",
+    "/dashboard",
     "/transactions",
     "/accounts",
     "/categories",
@@ -41,7 +41,7 @@ test("the core ledger pages are always there", () => {
 
 test("each feature flag adds its page", () => {
   expect(paths({ ...allOff, budgets: true, investments: true }, false)).toEqual([
-    "/",
+    "/dashboard",
     "/transactions",
     "/accounts",
     "/categories",

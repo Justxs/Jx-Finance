@@ -27,13 +27,12 @@ async function landingShown() {
   );
 }
 
-test("a guest at the root sees the landing page while the address stays at the root", async () => {
+test("a guest at the root sees the landing page", async () => {
   setAuthenticated(false);
   const { router } = mountApp("/");
 
   await landingShown();
-  expect(router.state.location.pathname).toBe("/welcome");
-  expect(router.history.location.pathname).toBe("/");
+  expect(router.state.location.pathname).toBe("/");
 });
 
 test("sign in on the landing page opens the sign-in form", async () => {
@@ -60,10 +59,9 @@ test("a guest at a private page still goes to sign in", async () => {
 
 test("a signed-in user who opens the landing page goes to the dashboard", async () => {
   setAuthenticated(true);
-  const { router } = mountApp("/welcome");
+  const { router } = mountApp("/");
 
-  await waitFor(() => expect(router.state.location.pathname).toBe("/"), appWait);
-  expect(router.state.location.maskedLocation).toBeUndefined();
+  await waitFor(() => expect(router.state.location.pathname).toBe("/dashboard"), appWait);
 });
 
 test("a guest can open the features page from the landing page", async () => {
@@ -83,5 +81,5 @@ test("a signed-in user who opens the features page goes to the dashboard", async
   setAuthenticated(true);
   const { router } = mountApp("/features");
 
-  await waitFor(() => expect(router.state.location.pathname).toBe("/"), appWait);
+  await waitFor(() => expect(router.state.location.pathname).toBe("/dashboard"), appWait);
 });

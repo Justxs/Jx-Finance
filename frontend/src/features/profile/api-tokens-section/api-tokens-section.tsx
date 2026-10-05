@@ -18,7 +18,7 @@ import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog/confirm-
 import { CreateDialog } from "@/components/create-dialog/create-dialog";
 import { useServerForm } from "@/components/form";
 import { FormError } from "@/components/form-error/form-error";
-import { NamedRowsSkeleton } from "@/components/named-row/named-row";
+import { FormActions } from "@/components/form/form-actions/form-actions";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { Button } from "@/components/ui/button/button";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
@@ -27,7 +27,7 @@ import { Label } from "@/components/ui/label/label";
 import { Rows } from "@/components/ui/rows/rows";
 import { TitledSection } from "@/components/ui/section/section";
 import { Tag } from "@/components/ui/tag/tag";
-import { ActionRow } from "@/features/profile/action-row/action-row";
+import { ActionRow, ActionRowsSkeleton } from "@/features/profile/action-row/action-row";
 import { useConfirmedDelete } from "@/hooks/use-confirmed-delete";
 import { useDate, useDateTime } from "@/hooks/use-formatters";
 import { notify, silentMutation } from "@/lib/mutations";
@@ -179,11 +179,11 @@ function CreatedToken({
         </p>
       ) : null}
       <p className="text-sm font-medium">{t("profile.apiTokens.shownOnce")}</p>
-      <div className="flex justify-end">
+      <FormActions>
         <Button type="button" onClick={onDone}>
           {t("profile.apiTokens.done")}
         </Button>
-      </div>
+      </FormActions>
     </div>
   );
 }
@@ -298,7 +298,7 @@ export function ApiTokensSection() {
       bodyGap="md"
     >
       <div className="space-y-4">
-        <QueryBoundary fallback={<NamedRowsSkeleton rows={2} />}>
+        <QueryBoundary fallback={<ActionRowsSkeleton rows={2} />}>
           <TokenList />
         </QueryBoundary>
         <CreateDialog

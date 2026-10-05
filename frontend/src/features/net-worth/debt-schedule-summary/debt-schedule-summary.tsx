@@ -60,6 +60,7 @@ export function DebtScheduleSummary({ debt, schedule }: Readonly<Props>) {
       label: t("netWorth.schedule.scheduledBalance"),
       value: schedule.scheduledBalance,
       tone: EXPENSE_TONE,
+      sign: "−" as const,
       detail: t("netWorth.schedule.recorded", {
         amount: money.format(Number(debt.outstandingAmount), debt.currency),
         date: formatDate(debt.asOf),
@@ -85,6 +86,7 @@ export function DebtScheduleSummary({ debt, schedule }: Readonly<Props>) {
             label: t("netWorth.schedule.trackedBalance"),
             value: debt.trackedBalance,
             tone: EXPENSE_TONE,
+            sign: "−" as const,
           },
         ]),
   ];

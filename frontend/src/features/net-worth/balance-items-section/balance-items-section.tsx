@@ -69,6 +69,12 @@ export function BalanceItemsSection<TRecord>({
     tone === "expense" && EXPENSE_TONE,
   );
 
+  function formatAmount(value: number, currency: string) {
+    return tone === "expense"
+      ? money.formatSigned(value, "−", currency)
+      : money.format(value, currency);
+  }
+
   let content: ReactNode;
   if (items.length === 0) {
     content = <EmptyText>{emptyLabel}</EmptyText>;
@@ -97,7 +103,7 @@ export function BalanceItemsSection<TRecord>({
                 {...(item.isMine === false ? {} : remove.deleteProps(item.id))}
               >
                 <span className={cn("text-right", amountClass)}>
-                  {money.format(item.amount, item.currency)}
+                  {formatAmount(item.amount, item.currency)}
                 </span>
               </RowActions>
             </li>
@@ -111,13 +117,14 @@ export function BalanceItemsSection<TRecord>({
     <Section>
       <SectionHeader title={title} titleClassName="min-w-0 flex-1">
         {totals.size > 0 ? (
-          <div className="flex flex-col items-end">
+          <dl className="flex flex-col items-end">
+            <dt className="sr-only">{t("netWorth.total")}</dt>
             {[...totals].map(([currency, total]) => (
-              <span key={currency} className={amountClass}>
-                {money.format(total, currency)}
-              </span>
+              <dd key={currency} className={amountClass}>
+                {formatAmount(total, currency)}
+              </dd>
             ))}
-          </div>
+          </dl>
         ) : null}
         <CreateDialog label={addLabel} title={addLabel} secondary>
           {(close) => <Form onClose={close} />}

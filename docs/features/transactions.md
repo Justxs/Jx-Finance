@@ -93,6 +93,8 @@ The create and edit dialogs, with the prefill of a duplicate, a refund or a temp
 
 While the `Import` switch is on, the header also holds "Import bank statement" beside "Add transaction"; it opens the dialog described in [Bank statement import](bank-statement-import.md).
 
+On a phone, below the `sm` breakpoint, "Add transaction" comes first and the secondary actions fold into one "More" menu: Suggest categories while it is offered, Saved filters, Templates, Export and, with the `Import` switch on, Import bank statement. Each entry opens the same popover or dialog as its desktop button. `TransactionsToolbar` holds which popover is open, so a menu entry opens it anchored to the "More" button, and closing it returns focus there.
+
 In the transaction form, Type is an Expense / Income / Refund segmented control, and Category, like the category of each split line, is a searchable combobox. Changing the type empties the category and every split line's category that is not of the new type, since the pickers only offer categories of the type and the server refuses the other with `category.wrongType`.
 
 When a filter leaves no rows, the empty table and the phone list say so and offer "Clear filters", which runs the same reset as the chip line. Without an account the page says so and links to the accounts page with the create dialog open. Below the rows, the pager shows the range and the total, such as "51–100 of 438", and from five pages on a page number field, where typing a number and Enter jumps to it, clamped to the last page. A page past the last one, from a link such as `?page=999` or after deleting the only row of the last page, moves to the last real page through `usePageClamp`, replacing the history entry rather than adding one.

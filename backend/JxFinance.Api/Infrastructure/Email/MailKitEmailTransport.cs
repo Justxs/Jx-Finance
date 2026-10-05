@@ -8,7 +8,6 @@ using MailKit.Net.Smtp;
 using MailKit.Security;
 using Microsoft.Extensions.Options;
 using MimeKit;
-using MimeKit.Text;
 
 namespace JxFinance.Infrastructure.Email;
 
@@ -32,7 +31,10 @@ public sealed class MailKitEmailTransport(IOptions<AppOptions> options, ILogger<
         }
 
         message.Subject = email.Subject;
-        message.Body = new TextPart(TextFormat.Plain) { Text = email.Body };
+        var body = new BodyBuilder { TextBody = email.Body, HtmlBody = EmailHtml.Render(email) };
+        body.LinkedResources.Add(EmailHtml.MarkFileName, EmailHtml.MarkImage, ContentType.Parse("image/png")).ContentId =
+            EmailHtml.MarkContentId;
+        message.Body = body.ToMessageBody();
 
         using var client = new SmtpClient
         {

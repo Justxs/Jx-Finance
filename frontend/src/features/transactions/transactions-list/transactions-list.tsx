@@ -85,13 +85,16 @@ export function TransactionsList({
                   expanded={ledgerRow.expanded}
                   onToggle={groups.onToggle}
                 />
-                <p className="min-w-0 flex-1 truncate font-medium" title={group.name}>
+                <p
+                  className="line-clamp-2 min-w-0 flex-1 font-medium wrap-break-word"
+                  title={group.name}
+                >
                   {group.name}
                 </p>
                 <GroupNet group={group} className="shrink-0 text-right" />
               </div>
               <div className="flex items-center gap-2">
-                <p className="min-w-0 flex-1 truncate text-xs text-muted-foreground tabular-nums">
+                <p className="min-w-0 flex-1 text-xs wrap-break-word text-muted-foreground tabular-nums">
                   {metaLine(groupDates.text(group), groupCount(group))}
                 </p>
                 <SharedScopeTag scope={group.scope} householdId={group.householdId} />
@@ -136,7 +139,7 @@ export function TransactionsList({
               aria-busy={optimistic || undefined}
             >
               <div className="flex items-baseline gap-3">
-                <p className="min-w-0 flex-1 truncate font-medium" title={name}>
+                <p className="line-clamp-2 min-w-0 flex-1 font-medium wrap-break-word" title={name}>
                   {name}
                 </p>
                 <AttachmentCount count={row.attachmentCount} />
@@ -154,7 +157,10 @@ export function TransactionsList({
                 />
               </div>
               {row.note ? (
-                <p className="truncate text-xs text-muted-foreground" title={row.note}>
+                <p
+                  className="line-clamp-2 text-xs wrap-break-word text-muted-foreground"
+                  title={row.note}
+                >
                   {row.note}
                 </p>
               ) : null}
@@ -163,10 +169,7 @@ export function TransactionsList({
               <RefundMark transaction={row} className="mt-1" />
               <SpreadMark transaction={row} className="mt-1" />
               <div className="flex items-center gap-2">
-                <p
-                  className="min-w-0 flex-1 truncate text-xs text-muted-foreground tabular-nums"
-                  title={meta}
-                >
+                <p className="min-w-0 flex-1 text-xs wrap-break-word text-muted-foreground tabular-nums">
                   {meta}
                 </p>
                 <TransactionRowActions

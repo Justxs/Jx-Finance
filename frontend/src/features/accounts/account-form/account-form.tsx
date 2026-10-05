@@ -17,12 +17,14 @@ import { SharingFields } from "@/components/sharing-fields/sharing-fields";
 import { FormGrid } from "@/components/ui/form-grid/form-grid";
 import { accountTypes } from "@/features/accounts/account-types";
 import { useReportingCurrency } from "@/hooks/use-currencies";
+import { useDecimalMark } from "@/hooks/use-formatters";
 import { useFeature } from "@/hooks/use-settings";
 import { silentMutation, upsert } from "@/lib/mutations";
 import { optionsOf } from "@/lib/options";
 import {
   isIban,
   money,
+  normalizeMoney,
   optionalText,
   refineSharing,
   requiredText,
@@ -53,6 +55,7 @@ function buildValues(value: FormValues) {
     name: value.name.trim(),
     description: value.description.trim() || null,
     iban: value.iban.trim() || null,
+    startingBalance: normalizeMoney(value.startingBalance),
     ...sharingPayload(value),
   };
 }
@@ -60,6 +63,7 @@ function buildValues(value: FormValues) {
 export function AccountForm({ initial, onClose }: Readonly<Props>) {
   const { t } = useTranslation();
   const reportingCurrency = useReportingCurrency();
+  const decimalMark = useDecimalMark();
   const multiCurrency = useFeature("multiCurrency");
   const sharing = useSharingDefaults(useHouseholdsSuspense().data, initial);
 
@@ -87,7 +91,7 @@ export function AccountForm({ initial, onClose }: Readonly<Props>) {
       description: initial?.description ?? "",
       iban: initial?.iban ?? "",
       type: initial?.type ?? "checking",
-      startingBalance: initial?.startingBalance ?? "0.00",
+      startingBalance: (initial?.startingBalance ?? "0.00").replace(".", decimalMark),
       currency: initial?.currency ?? reportingCurrency,
       ...sharing,
     } satisfies FormValues,

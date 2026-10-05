@@ -56,8 +56,8 @@ export function SectionNav({ labelKey, current, groups }: Readonly<Props>) {
                 {...link}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "flex shrink-0 items-center gap-2.5 rounded-md px-3 py-2 text-sm text-muted-foreground focus-ring transition-colors duration-base ease-out-expo hover:text-foreground pointer-coarse:py-3",
-                  active && "bg-muted font-semibold text-foreground dark:bg-card",
+                  "flex shrink-0 items-center gap-2.5 rounded-md border border-transparent px-3 py-2 text-sm text-muted-foreground focus-ring transition-colors duration-base ease-out-expo hover:text-foreground pointer-coarse:py-3",
+                  active && "border-input bg-muted font-semibold text-foreground dark:bg-card",
                 )}
               >
                 <Icon aria-hidden="true" className="size-4 shrink-0" />

@@ -69,7 +69,7 @@ export function DateRangePicker({ value, onChange, placeholder, ...trigger }: Re
               onDayClick={(day) => pick(toIso(day))}
             />
             <div className="flex items-center justify-between gap-2 border-t pt-2">
-              <span className="truncate text-xs text-muted-foreground">
+              <span className="min-w-0 text-xs text-pretty text-muted-foreground">
                 {value.from && !value.to ? t("datePicker.pickEnd") : t("datePicker.pickStart")}
               </span>
               <Button

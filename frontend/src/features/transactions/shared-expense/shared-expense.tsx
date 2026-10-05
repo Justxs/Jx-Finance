@@ -86,10 +86,13 @@ export function SharedExpenseMark({ transaction, onUpdate, className }: Readonly
   return (
     <span className={cn("inline-flex items-center gap-1.5", className)}>
       <Tooltip content={label}>
-        <span className="inline-flex text-muted-foreground">
+        <button
+          type="button"
+          className="inline-flex cursor-default rounded-sm text-muted-foreground focus-ring"
+        >
           <Users className="size-3.5" aria-hidden="true" />
           <span className="sr-only">{label}</span>
-        </span>
+        </button>
       </Tooltip>
       {split.amountDiffers ? (
         <>

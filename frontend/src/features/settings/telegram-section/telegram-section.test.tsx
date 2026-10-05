@@ -126,7 +126,10 @@ test("without a saved bot no test message can be sent", async () => {
   api.use(getTelegramSettingsMockHandler(telegramSettingsEmpty));
   renderInApp(<TelegramSection />);
 
-  expect(await screen.findByRole("button", { name: /Send a test message/u })).toBeDisabled();
+  expect(await screen.findByRole("button", { name: /Send a test message/u })).toHaveAttribute(
+    "aria-disabled",
+    "true",
+  );
 });
 
 test("a removed bot or a token that cannot be read is called out", async () => {

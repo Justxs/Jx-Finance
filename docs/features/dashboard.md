@@ -2,7 +2,7 @@
 
 Back to the [feature walkthrough](README.md). See also [decisions](../decisions/dashboard.md).
 
-Backend `Dashboard`, page `/`. Three data endpoints, each card in its own `QueryBoundary` so a slow one does not blank the rest, and a per-user layout that chooses and orders the cards, described [below](#choosing-and-ordering-the-cards).
+Backend `Dashboard`, page `/dashboard`. Three data endpoints, each card in its own `QueryBoundary` so a slow one does not blank the rest, and a per-user layout that chooses and orders the cards, described [below](#choosing-and-ordering-the-cards).
 
 ```mermaid
 flowchart LR
@@ -62,14 +62,14 @@ Since 2026-10-02, with [My share](household-settle-up.md#my-share) chosen in Set
 
 Since 2026-10-02 a month is closed on its own page, the [Month tab of Reports](month-end-close.md#screens) at `/reports/month`, and the dashboard only points there. While `MonthClose` is on, one of two pieces sits above the cards, inside the same `StaleRegion` so it dims with them while the month changes:
 
-- **On the current month**, `MonthClosePrompt` (`features/month-close/month-close-prompt`) shows a panel when the latest ended month is open or changed after closing: the month's status, its open checklist items with their action links, its net and the share of income kept, "Review month", a link to the Month page on that month, and, for an open month, "Close August 2026". "Not now" hides it for that month in this browser. It renders nothing while it loads or when the load fails.
+- **On the current month**, `MonthClosePrompt` (`features/month-close/month-close-prompt`) shows a panel when the latest ended month is open or changed after closing: the month's status, its open checklist items with their action links, its net and the share of income kept labelled with the month ("August 2026 net", "Income kept in August 2026"), so they are not read as the current month's, "Review month", a link to the Month page on that month, and, for an open month, "Close August 2026". "Review month" is the primary button while anything needs attention or the month changed after closing; "Close August 2026" is primary only once the month is ready to close. "Not now" hides it for that month in this browser. It renders nothing while it loads or when the load fails.
 - **On any other month**, `MonthCloseLine` (`features/month-close/month-close-line`) shows one ruled line: the status icon, the headline ("August 2026 has ended", "… is closed", "… changed after closing"), the status line ("N lines still open.", "Closed on …") and "Review month", a link to the Month page on that month. It renders nothing when its load fails, and `DashboardPending` shows its skeleton while the URL names a month.
 
 `warmDashboard` warms the review either one needs: the latest ended month's on the current month, the shown month's otherwise. Neither is one of the cards below: they have no id, no place in the layout and no entry in the customiser. The checklist, the close, the ruled-off figures and the drift live on the Month page, because the dashboard is the daily glance and the close is a monthly session of its own. See [Month-end close](month-end-close.md#screens).
 
 ## Getting started
 
-`GettingStartedCard` (`features/dashboard/getting-started-card`) is the tutorial after the [guided setup](first-run-setup.md#the-guided-setup): a list of first steps, each a link to where it is done while it is open and struck through with "Done" for assistive technology once it is done, under "5 of 10 done". It renders nothing once every step is done, and nothing while it loads or when its load fails, so a finished installation never sees it. It replaced the three first-run links the recent transactions card showed on an installation without accounts.
+`GettingStartedCard` (`features/dashboard/getting-started-card`) is the tutorial after the [guided setup](first-run-setup.md#the-guided-setup): a list of first steps, each a link to where it is done while it is open and struck through with "Done" for assistive technology once it is done, beside the title as "5 of 10 done". Once at least half the steps are done the card shrinks to that title line, and "Show steps", a disclosure button, opens the list for as long as the dashboard stays open. "Hide card", with the tooltip "Show it again in Settings, Dashboard", saves the layout with `gettingStarted` hidden through the same `PUT /api/users/me/dashboard-layout` the customiser sends, puts the answer into the layout query so the card leaves at once, and says "Getting started hidden"; ticking the card again in the customiser brings it back. It renders nothing once every step is done, and nothing while it loads or when its load fails, so a finished installation never sees it. It replaced the three first-run links the recent transactions card showed on an installation without accounts.
 
 `GET /api/users/me/getting-started` (`GettingStartedService`) answers the steps in order, each `{ step, done }`. Nothing is stored: every step is worked out from the caller's data on each request, through the same visibility filters as the pages, so a shared account counts and deleting the only budget opens the planning step again. The query is read with `staleTime: 0` rather than added to the invalidation rules of every mutation it depends on, so the card is fresh each time the dashboard opens.
 
@@ -92,7 +92,7 @@ Each user decides which of the twelve cards the dashboard shows and in what orde
 
 | Card id | Card | Feature switch |
 | --- | --- | --- |
-| `gettingStarted` | Getting started, added 2026-10-03, first in the default order and appended to saved layouts; shown only while a step is open | always on |
+| `gettingStarted` | Getting started, added 2026-10-03, first in the default order and appended to saved layouts; shown only while a step is open, and its own "Hide card" hides it too | always on |
 | `summary` | Total balance and the month figures | always on |
 | `monthlyTrend` | Income vs. expenses | always on |
 | `spendingByCategory` | Spending by category | always on |

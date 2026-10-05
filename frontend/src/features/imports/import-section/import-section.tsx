@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { toast } from "sonner";
 import {
   getListImportInboxQueryKey,
   useCategoriesSuspense,
@@ -40,7 +39,7 @@ import { recallParams } from "@/lib/category-recall";
 import { silentMutation } from "@/lib/mutations";
 import { optimisticRemoval } from "@/lib/optimistic";
 import { ImportPreviewError, problemDetail } from "./import-preview-error";
-import { ImportResultPanel, useImportCountsText, useReconciliationText } from "./import-result";
+import { ImportResultPanel } from "./import-result";
 import {
   type Step,
   UPLOAD,
@@ -81,8 +80,6 @@ export function ImportSection({
   onLeave,
 }: Readonly<Props>) {
   const { t } = useTranslation();
-  const reconciliationText = useReconciliationText();
-  const countsText = useImportCountsText();
   const fileField = useFileField(
     IMPORT_FILE_INPUT_ID,
     importFormats[format].maxBytes,
@@ -143,18 +140,9 @@ export function ImportSection({
 
   const confirmMutation = useImportConfirm({
     mutation: {
+      ...silentMutation,
       onSuccess: (data, variables) => {
         const confirmed = (review?.rows ?? []).filter((row) => row.selected);
-        toast.success(
-          countsText({
-            imported: data.imported,
-            linked: data.linked,
-            skipped: data.skippedDuplicates,
-          }),
-          {
-            description: data.reconciliation ? reconciliationText(data.reconciliation) : undefined,
-          },
-        );
         setStep({
           kind: "result",
           result: {
@@ -360,6 +348,7 @@ export function ImportSection({
               })
             }
             confirmPending={confirmMutation.isPending}
+            confirmError={confirmMutation.error}
           />
         </Section>
       ) : null}
@@ -399,7 +388,6 @@ function MappingStep({
         </p>
       </div>
       <CsvMappingForm
-        key={`${inspection.encoding}|${inspection.delimiter}|${inspection.skipLines}|${inspection.noHeaderRow}`}
         inspection={inspection}
         initial={remapping}
         fitting={mappings.filter((item) => inspection.matchingMappingIds.includes(item.id))}

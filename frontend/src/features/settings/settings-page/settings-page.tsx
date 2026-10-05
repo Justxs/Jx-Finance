@@ -15,6 +15,7 @@ import { NotificationProvidersSection } from "@/features/settings/notification-p
 import { SettingsForm } from "@/features/settings/settings-form/settings-form";
 import { useIsoDate } from "@/hooks/use-formatters";
 import { useSettingsSuspense } from "@/hooks/use-settings";
+import type { TranslationKey } from "@/lib/i18n";
 import { SettingsFormSkeleton } from "./settings-page-pending";
 
 function SettingsContent({ section }: Readonly<{ section: SettingsSection }>) {
@@ -67,7 +68,12 @@ function SettingsContent({ section }: Readonly<{ section: SettingsSection }>) {
   );
 }
 
+function sectionTitleKey(section: SettingsSection): TranslationKey {
+  return section === "backups" ? "backup.title" : `settings.${section}.title`;
+}
+
 export function SettingsPage() {
+  const { t } = useTranslation();
   const search = useSearch({ from: "/settings" });
   const section = search.section ?? "general";
 
@@ -77,7 +83,10 @@ export function SettingsPage() {
       {section === "marketPrices" ? <MarketPricesSection /> : null}
       {section === "importInbox" ? <ImportInboxSection /> : null}
       {section === "backups" ? <BackupSection /> : null}
-      <QueryBoundary fallback={<SettingsFormSkeleton section={section} />}>
+      <QueryBoundary
+        fallback={<SettingsFormSkeleton section={section} />}
+        errorSubject={t(sectionTitleKey(section))}
+      >
         <SettingsContent section={section} />
       </QueryBoundary>
       {section === "currencies" ? <ExchangeRatesSection /> : null}

@@ -64,7 +64,10 @@ export function AllocationDrift({ rows, currency }: Readonly<Props>) {
             <ShareRow
               key={row.id}
               name={
-                <span className="min-w-0 flex-1 truncate" title={row.name}>
+                <span
+                  className="min-w-0 flex-1 truncate"
+                  title={row.detail ? `${row.name} ${row.detail}` : row.name}
+                >
                   {row.name}
                   {row.detail ? (
                     <span className="ml-2 text-xs text-muted-foreground">{row.detail}</span>

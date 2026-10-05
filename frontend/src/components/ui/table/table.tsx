@@ -142,12 +142,33 @@ interface ScrollRegionProps extends Omit<ComponentProps<"div">, "aria-label"> {
   "aria-label": string;
 }
 
+function tabbableWhenScrollable(region: HTMLDivElement) {
+  function update() {
+    const scrollable =
+      region.scrollWidth > region.clientWidth || region.scrollHeight > region.clientHeight;
+    if (scrollable) {
+      region.setAttribute("tabindex", "0");
+    } else {
+      region.removeAttribute("tabindex");
+    }
+  }
+
+  const observer = new ResizeObserver(update);
+  observer.observe(region);
+  for (const child of region.children) {
+    observer.observe(child);
+  }
+  update();
+
+  return () => observer.disconnect();
+}
+
 function ScrollRegion({ className, ...props }: Readonly<ScrollRegionProps>) {
   return (
     <div
+      ref={tabbableWhenScrollable}
       data-slot="scroll-region"
       role="region"
-      tabIndex={0}
       className={cn("overflow-x-auto", className)}
       {...props}
     />

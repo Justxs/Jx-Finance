@@ -38,7 +38,7 @@ export function HubTabs({ current, pages }: Readonly<Props>) {
   return (
     <nav
       aria-label={t(navHubs[current.hub].key)}
-      className={cn("hub-tabs", tabsListClass)}
+      className={cn("hub-tabs print:hidden", tabsListClass)}
       style={{ "--hub-tabs": `hub-tabs-${current.hub}` }}
     >
       {pages.map((page) => {

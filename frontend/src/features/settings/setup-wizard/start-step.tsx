@@ -6,6 +6,7 @@ import { FormError } from "@/components/form-error/form-error";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { Button } from "@/components/ui/button/button";
 import { SegmentedControl } from "@/components/ui/segmented-control/segmented-control";
+import { ButtonSkeleton } from "@/components/ui/skeleton/skeleton";
 import { AccountForm } from "@/features/accounts/account-form/account-form";
 import { ImportDataForm } from "@/features/profile/export-data-panel/export-data-panel";
 import { BackupList } from "@/features/settings/backup-section/backup-section";
@@ -36,9 +37,7 @@ function QuickAccounts() {
         </ul>
       ) : null}
       {adding ? (
-        <div className="rounded-lg border p-4">
-          <AccountForm onClose={() => setAdding(false)} />
-        </div>
+        <AccountForm onClose={() => setAdding(false)} />
       ) : (
         <Button type="button" variant="outline" onClick={() => setAdding(true)}>
           <Plus />
@@ -74,10 +73,12 @@ function DemoData() {
 }
 
 function Restore() {
+  const { t } = useTranslation();
+
   return (
     <div className="space-y-6">
       <BackupUploadForm />
-      <QueryBoundary fallback={<BackupListSkeleton />}>
+      <QueryBoundary fallback={<BackupListSkeleton />} errorSubject={t("backup.title")}>
         <BackupList />
       </QueryBoundary>
     </div>
@@ -113,7 +114,7 @@ export function StartStep() {
             {t(`settings.setupWizard.start.choices.${choice}.description`)}
           </p>
           <div className="mt-4">
-            <QueryBoundary fallback={null}>
+            <QueryBoundary fallback={<ButtonSkeleton className="w-36" />}>
               <Panel />
             </QueryBoundary>
           </div>

@@ -12,7 +12,6 @@ import { childDelete, useConfirmedDelete } from "@/hooks/use-confirmed-delete";
 import { useIsoDate, useMoney } from "@/hooks/use-formatters";
 import { toCents } from "@/lib/money";
 import { silentMutation } from "@/lib/mutations";
-import { INCOME_TONE } from "@/lib/tone";
 import { ReconcileForm } from "./reconcile-form";
 
 function EarlierReconciliations({ account }: Readonly<{ account: AccountResponse }>) {
@@ -29,7 +28,7 @@ function EarlierReconciliations({ account }: Readonly<{ account: AccountResponse
   function verdict(reconciliation: ReconciliationResponse) {
     const cents = toCents(reconciliation.difference);
     if (cents === 0) {
-      return <span className={INCOME_TONE}>{t("accounts.reconcile.matches")}</span>;
+      return <span className="text-muted-foreground">{t("accounts.reconcile.matches")}</span>;
     }
     return (
       <span className="font-medium text-expense">

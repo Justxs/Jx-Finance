@@ -1,9 +1,9 @@
-import { Link } from "@tanstack/react-router";
 import { TriangleAlert } from "lucide-react";
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import type { MonthDrift, MonthDriftRow, ReportSummaryResponse } from "@/api/generated/model";
 import { ChangeBadge } from "@/components/change-badge/change-badge";
+import { signedAmount } from "@/components/transaction-amount/transaction-amount";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { Rows } from "@/components/ui/rows/rows";
 import { TitledSection } from "@/components/ui/section/section";
@@ -16,36 +16,52 @@ import {
   TableRow,
 } from "@/components/ui/table/table";
 import { Tag } from "@/components/ui/tag/tag";
+import { TextLink } from "@/components/ui/text-link/text-link";
 import { useCategoryName } from "@/hooks/use-category-name";
-import { useDateTime, useIsoDate, useMoney, useNumberFormat } from "@/hooks/use-formatters";
+import { signed, useDateTime, useIsoDate, useMoney, useNumberFormat } from "@/hooks/use-formatters";
 import { changeOf } from "@/lib/comparison";
-import { EXPENSE_TONE } from "@/lib/tone";
+import { EXPENSE_TONE, INCOME_TONE } from "@/lib/tone";
+import { cn } from "@/lib/utils";
 
-const linkClass = "min-w-0 font-medium wrap-break-word underline-offset-4 hover:underline";
+const linkClass = "min-w-0 wrap-break-word";
 
 function RowTarget({ row, children }: Readonly<{ row: MonthDriftRow; children: ReactNode }>) {
   if (row.kind === "investmentEntry") {
     return (
-      <Link to="/investments" className={linkClass}>
+      <TextLink to="/investments" className={linkClass}>
         {children}
-      </Link>
+      </TextLink>
     );
   }
   if (row.change === "deleted") {
     return (
-      <Link to="/profile" search={{ section: "trash" }} className={linkClass}>
+      <TextLink to="/profile" search={{ section: "trash" }} className={linkClass}>
         {children}
-      </Link>
+      </TextLink>
     );
   }
   return (
-    <Link
+    <TextLink
       to="/transactions"
       search={{ page: 1, dateFrom: row.date, dateTo: row.date }}
       className={linkClass}
     >
       {children}
-    </Link>
+    </TextLink>
+  );
+}
+
+function DriftAmount({ row }: Readonly<{ row: MonthDriftRow }>) {
+  const money = useMoney();
+  const value = Number(row.amount);
+  const gain = row.type === null ? value > 0 : row.type === "income";
+
+  return (
+    <span className={cn("text-right font-semibold tabular-nums", gain && INCOME_TONE)}>
+      {row.type === null
+        ? money.formatSigned(value, "auto", row.currency)
+        : signedAmount(money, { amount: row.amount, type: row.type, currency: row.currency })}
+    </span>
   );
 }
 
@@ -66,7 +82,7 @@ export function DriftPanel({ drift, figures }: Readonly<Props>) {
   if (drift.currencyChanged) {
     return (
       <TitledSection title={t("monthClose.drift.title")}>
-        <p role="alert" className="mt-2 flex max-w-prose items-start gap-2 text-sm">
+        <p role="note" className="mt-2 flex max-w-prose items-start gap-2 text-sm">
           <TriangleAlert aria-hidden="true" className={`mt-0.5 size-4 shrink-0 ${EXPENSE_TONE}`} />
           {t("monthClose.drift.currencyChanged", { currency: drift.closedCurrency.toUpperCase() })}
         </p>
@@ -123,7 +139,9 @@ export function DriftPanel({ drift, figures }: Readonly<Props>) {
                   <TableCell numeric>{count.format(totals.closedCount)}</TableCell>
                   <TableCell numeric>{count.format(totals.currentCount)}</TableCell>
                   <TableCell numeric className="text-muted-foreground">
-                    {count.format(totals.currentCount - totals.closedCount)}
+                    {signed(totals.currentCount - totals.closedCount, (value) =>
+                      count.format(value),
+                    )}
                   </TableCell>
                 </TableRow>
               ) : null}
@@ -178,9 +196,7 @@ export function DriftPanel({ drift, figures }: Readonly<Props>) {
                       </RowTarget>
                       <Tag tone="accent">{t(`monthClose.drift.change.${row.change}`)}</Tag>
                     </span>
-                    <span className="text-right tabular-nums">
-                      {money.format(Number(row.amount), row.currency)}
-                    </span>
+                    <DriftAmount row={row} />
                     <span className="col-span-2 text-xs text-muted-foreground tabular-nums">
                       {isoDate(row.date)} ·{" "}
                       {t("monthClose.drift.changedOn", { date: dateTime(row.changedAt) })}

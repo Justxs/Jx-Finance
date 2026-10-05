@@ -19,7 +19,6 @@ import {
   UpdateSettingsBody,
   updateSettingsBodyInstanceNameMax,
 } from "@/api/schemas/settings/settings.zod";
-import { Brand } from "@/components/brand/brand";
 import { useServerForm } from "@/components/form";
 import { FormError } from "@/components/form-error/form-error";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
@@ -30,6 +29,7 @@ import { SegmentedControl } from "@/components/ui/segmented-control/segmented-co
 import { NotificationProviderTabs } from "@/features/settings/notification-providers-section/notification-providers-section";
 import { FeatureChips } from "@/features/settings/settings-form/features-fields";
 import { RegionalFields } from "@/features/settings/settings-form/regional-fields";
+import { NotificationTabsSkeleton } from "@/features/settings/settings-page/settings-page-pending";
 import { useSettingsSuspense } from "@/hooks/use-settings";
 import { useMapTilesPresent } from "@/lib/map-tiles";
 import { silentMutation } from "@/lib/mutations";
@@ -142,7 +142,7 @@ export function SetupWizard({ step }: Readonly<Props>) {
           getSettingsQueryKey(),
           (current) => current && { ...current, setupPending: false },
         );
-        void navigate({ to: "/" });
+        void navigate({ to: "/dashboard" });
       },
     },
   });
@@ -184,9 +184,6 @@ export function SetupWizard({ step }: Readonly<Props>) {
 
   return (
     <div className="w-full max-w-3xl">
-      <div className="mb-6 flex justify-center">
-        <Brand size="lg" stacked />
-      </div>
       <Card className="p-6 sm:p-8">
         <p className="sr-only">
           {t("settings.setupWizard.progress", {
@@ -214,7 +211,7 @@ export function SetupWizard({ step }: Readonly<Props>) {
             {step === "start" ? <StartStep /> : null}
             {step === "notifications" ? (
               <div className="mt-6">
-                <QueryBoundary fallback={null}>
+                <QueryBoundary fallback={<NotificationTabsSkeleton />}>
                   <NotificationProviderTabs />
                 </QueryBoundary>
               </div>

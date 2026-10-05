@@ -26,7 +26,9 @@ interface Props {
 function restGrid(count: number) {
   return cn(
     "grid min-w-0 gap-x-8 gap-y-4",
-    count === 4 ? "grid-cols-2" : "grid-cols-[repeat(auto-fit,minmax(min(100%,8rem),1fr))]",
+    count === 4
+      ? "grid-cols-1 min-[420px]:grid-cols-2"
+      : "grid-cols-[repeat(auto-fit,minmax(min(100%,8rem),1fr))]",
   );
 }
 
@@ -63,7 +65,8 @@ export function SummaryStats({ items, currency, className }: Readonly<Props>) {
           <dt className="text-sm text-muted-foreground">{lead.label}</dt>
           <dd
             className={cn(
-              "mt-1 max-w-full font-serif text-stat font-semibold wrap-break-word lining-nums tabular-nums",
+              "mt-1 max-w-full font-serif text-page-title font-semibold lining-nums tabular-nums sm:text-stat",
+              lead.text === undefined ? "whitespace-nowrap" : "wrap-break-word",
               toneOf(lead),
             )}
           >
@@ -81,7 +84,8 @@ export function SummaryStats({ items, currency, className }: Readonly<Props>) {
             <dt className="text-sm text-muted-foreground">{item.label}</dt>
             <dd
               className={cn(
-                "mt-0.5 text-xl font-semibold wrap-break-word tabular-nums",
+                "mt-0.5 text-xl font-semibold tabular-nums",
+                item.text === undefined ? "whitespace-nowrap" : "wrap-break-word",
                 toneOf(item),
               )}
             >

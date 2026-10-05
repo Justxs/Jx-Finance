@@ -45,7 +45,7 @@ test("saving sends the trimmed name with the other settings, confirms it and hid
     defaultAccountId: null,
     defaultPageSize: 20,
   });
-  await waitFor(() => expect(screen.queryByRole("status")).toBeNull());
+  await waitFor(() => expect(screen.getByRole("status")).toBeEmptyDOMElement());
 });
 
 test("discarding restores the saved values and sends nothing", async () => {
@@ -56,7 +56,7 @@ test("discarding restores the saved values and sends nothing", async () => {
   fireEvent.click(await screen.findByRole("button", { name: "Discard changes" }));
 
   expect(name).toHaveValue("Home");
-  expect(screen.queryByRole("status")).toBeNull();
+  expect(screen.getByRole("status")).toBeEmptyDOMElement();
   expect(api.sent("PUT", "/api/settings")).toHaveLength(0);
 });
 

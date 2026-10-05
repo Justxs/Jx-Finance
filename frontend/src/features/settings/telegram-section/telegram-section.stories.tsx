@@ -44,7 +44,10 @@ export const NotSetUp: Story = {
     await expect(
       await canvas.findByRole("checkbox", { name: "Send notifications to Telegram" }),
     ).not.toBeChecked();
-    await expect(canvas.getByRole("button", { name: /Send a test message/u })).toBeDisabled();
+    await expect(canvas.getByRole("button", { name: /Send a test message/u })).toHaveAttribute(
+      "aria-disabled",
+      "true",
+    );
   },
 };
 

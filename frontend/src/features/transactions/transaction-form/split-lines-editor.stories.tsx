@@ -95,7 +95,7 @@ export const BalancesAgainstTheTotal: Story = {
 
     await userEvent.click(canvas.getByRole("button", { name: "Use remaining €23.00" }));
 
-    await expect(canvas.getAllByRole("textbox", { name: "Amount" })[1]).toHaveValue("23.00");
+    await expect(canvas.getByRole("textbox", { name: "Amount, line 2" })).toHaveValue("23.00");
     await expect(canvas.getByText("Fully assigned")).toBeVisible();
   },
 };

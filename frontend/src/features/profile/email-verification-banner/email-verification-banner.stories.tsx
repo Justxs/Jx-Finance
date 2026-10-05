@@ -13,7 +13,7 @@ const meta = {
   component: EmailVerificationBanner,
   parameters: {
     layout: "padded",
-    route: "/",
+    route: "/dashboard",
     ...withHandlers(emailEnabledHandler, getMeMockHandler(unverifiedUser)),
   },
 } satisfies Meta<typeof EmailVerificationBanner>;

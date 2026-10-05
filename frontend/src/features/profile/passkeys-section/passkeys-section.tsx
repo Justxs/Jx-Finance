@@ -1,4 +1,3 @@
-import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
@@ -23,6 +22,7 @@ import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { Rows } from "@/components/ui/rows/rows";
 import { TitledSection } from "@/components/ui/section/section";
 import { Tag } from "@/components/ui/tag/tag";
+import { TextLink } from "@/components/ui/text-link/text-link";
 import { PasswordPrompt } from "@/features/profile/password-prompt/password-prompt";
 import { useConfirmedDelete } from "@/hooks/use-confirmed-delete";
 import { useDate } from "@/hooks/use-formatters";
@@ -142,13 +142,9 @@ function PasskeyList() {
       {removedOne ? (
         <p className="mt-3 max-w-prose text-sm text-muted-foreground">
           {t("profile.passkeys.signOutHint")}{" "}
-          <Link
-            to="/profile"
-            search={{ section: "sessions" }}
-            className="font-medium text-foreground underline underline-offset-4"
-          >
+          <TextLink to="/profile" search={{ section: "sessions" }}>
             {t("profile.passkeys.signOutLink")}
-          </Link>
+          </TextLink>
         </p>
       ) : null}
       <EditModal

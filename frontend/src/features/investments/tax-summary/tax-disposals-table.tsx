@@ -105,7 +105,10 @@ export function TaxDisposalsTable({ disposals, reportingCurrency, accountNames }
                     <p className="truncate text-xs text-muted-foreground" title={disposal.name}>
                       {disposal.name}
                     </p>
-                    <p className="truncate text-xs text-muted-foreground">
+                    <p
+                      className="truncate text-xs text-muted-foreground"
+                      title={accountNames.get(disposal.accountId)}
+                    >
                       {accountNames.get(disposal.accountId) ?? ""}
                     </p>
                   </TableCell>
@@ -136,7 +139,7 @@ export function TaxDisposalsTable({ disposals, reportingCurrency, accountNames }
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
                 <p className="font-semibold">{disposal.symbol}</p>
-                <p className="truncate text-xs text-muted-foreground">
+                <p className="text-xs wrap-break-word text-muted-foreground">
                   {metaLine(
                     formatDate(disposal.date),
                     quantity.format(Number(disposal.quantity)),

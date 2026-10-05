@@ -9,7 +9,7 @@ public sealed class ExportTransactionsSummary : Summary<ExportTransactionsEndpoi
     public ExportTransactionsSummary()
     {
         Summary = "Export transactions as CSV";
-        Description = "Returns the filtered ledger as a UTF-8 CSV attachment named transactions.csv, "
+        Description = "Returns the filtered ledger as a UTF-8 CSV attachment named jx-finance-transactions-<from>-to-<to>.csv (or with only the dates given, or none), "
             + "with account and category names resolved. It takes the same filters as the list endpoint "
             + "but ignores paging: every matching row is included. Rows are streamed from the database "
             + "into the response, so the size of the ledger does not matter.";

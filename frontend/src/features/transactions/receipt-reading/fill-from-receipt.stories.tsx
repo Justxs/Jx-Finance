@@ -61,7 +61,7 @@ export const ReadsAPickedFile: Story = {
     await expect(args.onReceiptFile).toHaveBeenCalled();
     await expect(canvas.getByRole("checkbox", { name: "Split into categories" })).toBeChecked();
     await expect(canvas.getByLabelText("Description")).toHaveValue("MAXIMA LT, UAB");
-    const [amount, food, health] = canvas.getAllByLabelText("Amount");
+    const [amount, food, health] = canvas.getAllByLabelText(/^Amount(, line \d+)?$/u);
     await expect(amount).toHaveValue("18.21");
     await expect(food).toHaveValue("10.15");
     await expect(health).toHaveValue("8.06");

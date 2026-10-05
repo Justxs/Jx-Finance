@@ -10,7 +10,7 @@ import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { RowActions } from "@/components/row-actions/row-actions";
 import { Button } from "@/components/ui/button/button";
 import { Rows } from "@/components/ui/rows/rows";
-import { Section } from "@/components/ui/section/section";
+import { Section, SectionTitle } from "@/components/ui/section/section";
 import { CreateHouseholdForm } from "@/features/households/create-household-form/create-household-form";
 import { HouseholdActivity } from "@/features/households/household-activity/household-activity";
 import { SettleUpSection, SettleUpSkeleton } from "@/features/households/settle-up/settle-up";
@@ -51,9 +51,9 @@ export function HouseholdCard({ household }: Readonly<Props>) {
   return (
     <Section>
       <div className="mb-2 flex flex-wrap items-center justify-between gap-3">
-        <h3 className="min-w-0 text-lg leading-6 font-semibold wrap-break-word">
+        <SectionTitle level={3} className="min-w-0 wrap-break-word">
           {household.name}
-        </h3>
+        </SectionTitle>
         {isOwner ? (
           <RowActions
             label={household.name}
@@ -87,7 +87,10 @@ export function HouseholdCard({ household }: Readonly<Props>) {
 
       {activityVisible ? (
         <div className="pt-4">
-          <QueryBoundary fallback={<SettleUpSkeleton />}>
+          <QueryBoundary
+            fallback={<SettleUpSkeleton />}
+            errorSubject={t("households.settleUp.title")}
+          >
             <SettleUpSection household={household} />
           </QueryBoundary>
         </div>

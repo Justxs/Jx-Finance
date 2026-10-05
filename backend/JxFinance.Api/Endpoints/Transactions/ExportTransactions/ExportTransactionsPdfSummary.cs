@@ -9,7 +9,7 @@ public sealed class ExportTransactionsPdfSummary : Summary<ExportTransactionsPdf
     public ExportTransactionsPdfSummary()
     {
         Summary = "Export transactions as PDF";
-        Description = "Renders the filtered ledger as a printable PDF, attached as transactions.pdf. "
+        Description = "Renders the filtered ledger as a printable PDF, attached as jx-finance-transactions-<from>-to-<to>.pdf (or with only the dates given, or none). "
             + "It takes the same filters as the list endpoint but ignores paging. A PDF is built in memory, so "
             + "it holds at most 5000 rows (App:PdfExportMaxRows); a larger result is refused with "
             + "export.tooManyRows. Narrow the filters or use the CSV export, which has no limit.";

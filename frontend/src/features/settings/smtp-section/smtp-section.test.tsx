@@ -127,5 +127,8 @@ test("with email switched off no test message can be sent", async () => {
   api.use(getSmtpSettingsMockHandler(smtpSettingsOff));
   renderInApp(<SmtpSection />);
 
-  expect(await screen.findByRole("button", { name: /Send a test message/u })).toBeDisabled();
+  expect(await screen.findByRole("button", { name: /Send a test message/u })).toHaveAttribute(
+    "aria-disabled",
+    "true",
+  );
 });

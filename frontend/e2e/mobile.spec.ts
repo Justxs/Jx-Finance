@@ -3,7 +3,7 @@ import { expect, test } from "./support";
 test.use({ viewport: { width: 390, height: 844 }, hasTouch: true });
 
 test("the navigation strip moves between pages on a phone", async ({ page }) => {
-  await page.goto("/");
+  await page.goto("/dashboard");
   const navigation = page.getByRole("navigation", { name: "Main navigation" });
   await expect(navigation).toHaveCount(1);
   await expect(navigation.getByRole("link", { name: "Dashboard" })).toHaveAttribute(

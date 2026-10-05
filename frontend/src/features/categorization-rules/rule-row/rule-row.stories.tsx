@@ -16,7 +16,6 @@ const meta = {
     accountNames: nameById(accounts),
     categoryNames: nameById(categories),
     tagNames: nameById(tags),
-    movePending: false,
     deletePending: false,
     deleteDisabled: false,
     onMove: fn(),
@@ -57,5 +56,3 @@ export const Last: Story = {
 export const WithAmountRange: Story = { args: { rule: categorizationRules[3]! } };
 
 export const DeletePending: Story = { args: { deletePending: true, deleteDisabled: true } };
-
-export const MovePending: Story = { args: { movePending: true } };

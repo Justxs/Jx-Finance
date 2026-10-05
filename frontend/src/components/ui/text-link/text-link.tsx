@@ -6,7 +6,10 @@ function TextAnchor({ className, children, ...props }: Readonly<ComponentProps<"
   return (
     <a
       data-slot="text-link"
-      className={cn("font-medium text-primary underline-offset-4 hover:underline", className)}
+      className={cn(
+        "rounded-sm font-medium text-primary underline-offset-4 focus-ring hover:underline",
+        className,
+      )}
       {...props}
     >
       {children}

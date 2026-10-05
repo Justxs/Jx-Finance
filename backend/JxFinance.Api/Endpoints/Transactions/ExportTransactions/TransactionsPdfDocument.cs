@@ -1,10 +1,12 @@
 using System.Globalization;
+using JxFinance.Common.Email;
 using JxFinance.Common.Formats;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Transactions;
 using JxFinance.Endpoints.Transactions.Shared;
 using JxFinance.Infrastructure.Pdf;
 using MigraDoc.DocumentObjectModel;
+using MigraDoc.DocumentObjectModel.Tables;
 using MigraDoc.Rendering;
 
 namespace JxFinance.Endpoints.Transactions.ExportTransactions;
@@ -14,17 +16,20 @@ public sealed class TransactionsPdfDocument(
     ExportNames names,
     DateOnly? dateFrom,
     DateOnly? dateTo,
-    Currency reportingCurrency)
+    Currency reportingCurrency,
+    string brandName)
 {
     private const double PageMargin = 30;
     private const double DateColumnWidth = 70;
     private const double TypeColumnWidth = 60;
     private const double AmountColumnWidth = 80;
+    private const double MarkColumnWidth = 30;
 
-    private static readonly Color IncomeColor = new(0x38, 0x8E, 0x3C);
-    private static readonly Color ExpenseColor = new(0xD3, 0x2F, 0x2F);
-    private static readonly Color MutedColor = new(0x75, 0x75, 0x75);
-    private static readonly Color RowBorderColor = new(0xE0, 0xE0, 0xE0);
+    private static readonly Color InkColor = new(0x1C, 0x23, 0x29);
+    private static readonly Color IncomeColor = new(0x1F, 0x6A, 0x4B);
+    private static readonly Color ExpenseColor = new(0xAD, 0x39, 0x32);
+    private static readonly Color MutedColor = new(0x5D, 0x68, 0x72);
+    private static readonly Color RowBorderColor = new(0xDF, 0xE4, 0xE8);
 
     public byte[] GeneratePdf()
     {
@@ -63,17 +68,22 @@ public sealed class TransactionsPdfDocument(
 
     private void ComposeHeader(Section section, double contentWidth)
     {
+        ComposeLockup(section, contentWidth);
+
         var title = section.AddParagraph("Transactions");
-        title.Format.Font.Size = 18;
+        title.Format.Font.Name = PdfFontResolver.SerifFamilyName;
+        title.Format.Font.Size = 22;
         title.Format.Font.Bold = true;
+        title.Format.Font.Color = InkColor;
 
         var range = section.AddParagraph(RangeLabel());
         range.Format.Font.Size = 10;
         range.Format.Font.Color = MutedColor;
-        range.Format.SpaceAfter = Unit.FromPoint(8);
+        range.Format.SpaceAfter = Unit.FromPoint(12);
 
         var income = transactions.Where(t => t.Type == FlowType.Income).Sum(t => t.ReportingAmount);
         var expense = transactions.Where(t => t.Type == FlowType.Expense).Sum(t => t.ReportingAmount);
+        var net = income - expense;
 
         var summary = section.AddTable();
         summary.Borders.Visible = false;
@@ -84,13 +94,74 @@ public sealed class TransactionsPdfDocument(
             summary.AddColumn(Unit.FromPoint(contentWidth / 3));
         }
 
-        var row = summary.AddRow();
-        row.Cells[0].AddParagraph($"Income: {FormatAmount(income, reportingCurrency)}").Format.Font.Color = IncomeColor;
-        row.Cells[1].AddParagraph($"Expense: {FormatAmount(expense, reportingCurrency)}").Format.Font.Color = ExpenseColor;
-        row.Cells[2].AddParagraph($"Net: {FormatAmount(income - expense, reportingCurrency)}").Format.Font.Bold = true;
+        var labels = summary.AddRow();
+        var amounts = summary.AddRow();
+        amounts.BottomPadding = Unit.FromPoint(2);
+        AddTotal(labels.Cells[0], amounts.Cells[0], "Income", FormatAmount(income, reportingCurrency), IncomeColor);
+        AddTotal(labels.Cells[1], amounts.Cells[1], "Expense", FormatAmount(expense, reportingCurrency), InkColor);
+        var netAmount = AddTotal(labels.Cells[2], amounts.Cells[2], "Net", FormatAmount(net, reportingCurrency), NetColor(net), ParagraphAlignment.Right);
+        netAmount.Format.Font.Name = PdfFontResolver.SerifFamilyName;
+        netAmount.Format.Font.Size = 15;
+        netAmount.Format.Borders.Bottom.Width = Unit.FromPoint(0.75);
+        netAmount.Format.Borders.Bottom.Color = InkColor;
+        netAmount.Format.Borders.DistanceFromBottom = Unit.FromPoint(1);
+        amounts.Cells[2].Borders.Bottom.Width = Unit.FromPoint(0.75);
+        amounts.Cells[2].Borders.Bottom.Color = InkColor;
 
-        section.AddParagraph().Format.SpaceAfter = Unit.FromPoint(4);
+        section.AddParagraph().Format.SpaceAfter = Unit.FromPoint(8);
     }
+
+    private void ComposeLockup(Section section, double contentWidth)
+    {
+        var lockup = section.AddTable();
+        lockup.Borders.Visible = false;
+        lockup.LeftPadding = 0;
+        lockup.RightPadding = 0;
+        lockup.AddColumn(Unit.FromPoint(MarkColumnWidth));
+        lockup.AddColumn(Unit.FromPoint(contentWidth - MarkColumnWidth));
+
+        var row = lockup.AddRow();
+        row.VerticalAlignment = VerticalAlignment.Center;
+        row.BottomPadding = Unit.FromPoint(14);
+
+        var mark = row.Cells[0].AddImage(PdfBrand.MarkImage);
+        mark.Height = Unit.FromPoint(14);
+        mark.LockAspectRatio = true;
+
+        var name = row.Cells[1].AddParagraph(brandName);
+        name.Format.Font.Name = PdfFontResolver.SerifFamilyName;
+        name.Format.Font.Size = 11;
+        name.Format.Font.Bold = true;
+        name.Format.Font.Color = InkColor;
+    }
+
+    private static Paragraph AddTotal(
+        Cell labelCell,
+        Cell amountCell,
+        string label,
+        string amount,
+        Color color,
+        ParagraphAlignment alignment = ParagraphAlignment.Left)
+    {
+        var labelParagraph = labelCell.AddParagraph(label);
+        labelParagraph.Format.Font.Size = 8;
+        labelParagraph.Format.Font.Color = MutedColor;
+        labelParagraph.Format.Alignment = alignment;
+
+        var amountParagraph = amountCell.AddParagraph(amount);
+        amountParagraph.Format.Font.Size = 12;
+        amountParagraph.Format.Font.Bold = true;
+        amountParagraph.Format.Font.Color = color;
+        amountParagraph.Format.Alignment = alignment;
+        return amountParagraph;
+    }
+
+    private static Color NetColor(decimal net) => net switch
+    {
+        > 0 => IncomeColor,
+        < 0 => ExpenseColor,
+        _ => InkColor,
+    };
 
     private string RangeLabel()
     {
@@ -175,8 +246,11 @@ public sealed class TransactionsPdfDocument(
     {
         var footer = section.Footers.Primary.AddParagraph();
         footer.Format.Alignment = ParagraphAlignment.Center;
+        footer.Format.Font.Size = 8;
+        footer.Format.Font.Color = MutedColor;
+        footer.AddText($"{EmailTexts.DefaultProduct} · page ");
         footer.AddPageField();
-        footer.AddText(" / ");
+        footer.AddText(" of ");
         footer.AddNumPagesField();
     }
 

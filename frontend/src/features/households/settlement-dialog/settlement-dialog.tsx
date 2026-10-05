@@ -12,6 +12,7 @@ import { useServerForm } from "@/components/form";
 import { FormError } from "@/components/form-error/form-error";
 import { FormGrid } from "@/components/ui/form-grid/form-grid";
 import { useReportingCurrency } from "@/hooks/use-currencies";
+import { useDecimalMark } from "@/hooks/use-formatters";
 import { useToday } from "@/hooks/use-settings";
 import { silentMutation } from "@/lib/mutations";
 import { namedOptions } from "@/lib/options";
@@ -33,6 +34,7 @@ export function SettlementForm({ household, payment, onClose }: Readonly<Props>)
   const accounts = useAccountsSuspense().data;
   const today = useToday();
   const reportingCurrency = useReportingCurrency();
+  const decimalMark = useDecimalMark();
   const record = useCreateSettlement({ mutation: { ...silentMutation, onSuccess: onClose } });
   const people = [
     ...household.members.map((member) => ({ id: member.userId, name: userName(member) })),
@@ -75,7 +77,7 @@ export function SettlementForm({ household, payment, onClose }: Readonly<Props>)
     defaultValues: {
       fromUserId: payment?.fromUserId ?? "",
       toUserId: payment?.toUserId ?? "",
-      amount: payment?.amount ?? "",
+      amount: payment?.amount.replace(".", decimalMark) ?? "",
       currency: payment?.currency ?? reportingCurrency,
       date: today,
       note: "",

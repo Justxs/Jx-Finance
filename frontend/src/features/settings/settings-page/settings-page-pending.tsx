@@ -41,7 +41,7 @@ export function CheckboxFieldSkeleton({
 
 function FeaturesSkeleton() {
   return (
-    <div className="grid gap-x-10 gap-y-6 md:grid-cols-3">
+    <div className="grid gap-x-10 gap-y-6 xl:grid-cols-3">
       {featureGroups.map((group) => (
         <div key={group.titleKey} className="min-w-0">
           <TextSkeleton size="sm" width="w-20" />
@@ -69,7 +69,7 @@ function CurrenciesSkeleton() {
           <ButtonSkeleton size="sm" />
           <ButtonSkeleton size="sm" />
         </div>
-        <ul className="mt-3 grid gap-x-8 gap-y-1 sm:grid-cols-2 lg:grid-cols-3">
+        <ul className="mt-3 grid gap-x-8 gap-y-1 sm:grid-cols-2 2xl:grid-cols-3">
           {ALL_CURRENCIES.map((currency) => (
             <li key={currency} className="flex items-center gap-3 py-1.5">
               <Skeleton className="size-4 shrink-0" />
@@ -159,6 +159,20 @@ export function ChannelFormSkeleton({ fields = 1 }: Readonly<{ fields?: number }
   );
 }
 
+export function NotificationTabsSkeleton({ className }: Readonly<{ className?: string }>) {
+  return (
+    <div aria-hidden="true" className={className}>
+      <div className="flex h-9 items-center gap-5 border-b">
+        <TextSkeleton size="sm" width="w-16" />
+        <TextSkeleton size="sm" width="w-16" />
+        <TextSkeleton size="sm" width="w-16" />
+      </div>
+      <TextSkeleton size="sm" className="mt-5" width="w-3/4 max-w-prose" />
+      <SmtpFormSkeleton />
+    </div>
+  );
+}
+
 export function MarketPricesFormSkeleton() {
   return (
     <div aria-hidden="true" className="mt-4 space-y-5">
@@ -202,8 +216,11 @@ function BackupSkeleton() {
   return (
     <TitledSkeleton>
       <div className="mt-4 space-y-4">
-        <div className="flex max-w-xl gap-2">
-          <Skeleton className="h-9 min-w-56 flex-1 rounded-lg pointer-coarse:h-11" />
+        <div className="flex max-w-xl items-end gap-2">
+          <div className="min-w-56 flex-1 space-y-1.5">
+            <TextSkeleton size="label" width="w-10" />
+            <Skeleton className="h-9 rounded-lg pointer-coarse:h-11" />
+          </div>
           <ButtonSkeleton className="w-36" />
         </div>
         <BackupListSkeleton />
@@ -226,12 +243,7 @@ function SectionBodySkeleton({ section }: Readonly<{ section: SettingsSection }>
       return (
         <Section aria-hidden="true">
           <TextSkeleton size="title" width="w-40" />
-          <div className="mt-4 flex h-9 items-center gap-5 border-b">
-            <TextSkeleton size="sm" width="w-16" />
-            <TextSkeleton size="sm" width="w-16" />
-          </div>
-          <TextSkeleton size="sm" className="mt-5" width="w-3/4 max-w-prose" />
-          <SmtpFormSkeleton />
+          <NotificationTabsSkeleton className="mt-4" />
         </Section>
       );
     case "marketPrices":

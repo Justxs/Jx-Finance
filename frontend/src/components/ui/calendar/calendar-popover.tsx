@@ -54,6 +54,7 @@ export function CalendarPopover({
           render={
             <Button
               id={id}
+              aria-labelledby={id ? `${id}-label ${id}-value` : undefined}
               type="button"
               variant="outline"
               disabled={disabled}
@@ -67,7 +68,12 @@ export function CalendarPopover({
             />
           }
         >
-          <span className={cn("truncate", empty && "text-muted-foreground")}>{label}</span>
+          <span
+            id={id ? `${id}-value` : undefined}
+            className={cn("truncate", empty && "text-muted-foreground")}
+          >
+            {label}
+          </span>
           <CalendarDays className="text-muted-foreground" />
         </PopoverTrigger>
         <PopoverContent align="start" className="w-auto gap-2">

@@ -4,7 +4,6 @@ import type { CategoryResponse, Currency } from "@/api/generated/model";
 import { defineAppFieldGroup } from "@/components/form";
 import { Button } from "@/components/ui/button/button";
 import { FieldError } from "@/components/ui/field-error";
-import { FormGrid } from "@/components/ui/form-grid/form-grid";
 import { useMoney } from "@/hooks/use-formatters";
 import { fromCents } from "@/lib/money";
 import { namedOptions } from "@/lib/options";
@@ -70,17 +69,37 @@ function SplitSummary({ balance, currency }: Readonly<SummaryProps>) {
   );
 }
 
-function SplitLineRow({ fields, categories, index, remaining, onRemove }: Readonly<LineRowProps>) {
+const lineGridClass =
+  "grid grid-cols-[minmax(0,1fr)_7rem_auto] items-start gap-x-3 gap-y-2 sm:grid-cols-[minmax(0,1fr)_8rem_minmax(0,1fr)_auto] [&>*]:min-w-0";
+
+function SplitLineHeader() {
   const { t } = useTranslation();
 
   return (
-    <FormGrid>
+    <div aria-hidden="true" className={cn(lineGridClass, "text-sm leading-5 font-medium")}>
+      <span>{t("transactions.lineCategory")}</span>
+      <span>{t("transactions.lineAmount")}</span>
+      <span className="hidden sm:block">{t("transactions.lineDescription")}</span>
+      <span className="w-9 pointer-coarse:w-11" />
+    </div>
+  );
+}
+
+function SplitLineRow({ fields, categories, index, remaining, onRemove }: Readonly<LineRowProps>) {
+  const { t } = useTranslation();
+  const number = index + 1;
+
+  return (
+    <div className={lineGridClass}>
       <fields.Field name={`lines[${index}].categoryId`}>
         {(field) => (
           <field.SelectFieldControl
             id={`tx-line-${index}-category`}
             kind="search"
-            aria-label={t("transactions.lineCategory")}
+            aria-label={t("transactions.lineField", {
+              field: t("transactions.lineCategory"),
+              number,
+            })}
             options={namedOptions(categories, t("transactions.uncategorized"))}
           />
         )}
@@ -90,7 +109,10 @@ function SplitLineRow({ fields, categories, index, remaining, onRemove }: Readon
           <div className="space-y-1">
             <field.MoneyInputField
               id={`tx-line-${index}-amount`}
-              aria-label={t("transactions.lineAmount")}
+              aria-label={t("transactions.lineField", {
+                field: t("transactions.lineAmount"),
+                number,
+              })}
             />
             {remaining && field.value.trim() === "" ? (
               <Button
@@ -109,7 +131,11 @@ function SplitLineRow({ fields, categories, index, remaining, onRemove }: Readon
         {(field) => (
           <field.TextField
             id={`tx-line-${index}-description`}
-            aria-label={t("transactions.lineDescription")}
+            className="col-span-2 sm:col-span-1"
+            aria-label={t("transactions.lineField", {
+              field: t("transactions.lineDescription"),
+              number,
+            })}
             placeholder={t("transactions.lineDescription")}
           />
         )}
@@ -118,12 +144,13 @@ function SplitLineRow({ fields, categories, index, remaining, onRemove }: Readon
         type="button"
         variant="ghost"
         size="icon"
-        aria-label={t("transactions.removeLine", { number: index + 1 })}
+        aria-label={t("transactions.removeLine", { number })}
+        className="col-start-3 row-start-1 sm:col-start-4"
         onClick={onRemove}
       >
         <X />
       </Button>
-    </FormGrid>
+    </div>
   );
 }
 
@@ -156,6 +183,7 @@ function SplitLineList({ fields, categories, amount, currency }: Readonly<ListPr
               <div className="col-span-full space-y-3">
                 {balance ? <SplitSummary balance={balance} currency={currency} /> : null}
                 <FieldError message={valuesField.errors[0]?.message} />
+                {valuesField.value.length > 0 ? <SplitLineHeader /> : null}
                 {valuesField.value.map((line, index) => (
                   <SplitLineRow
                     key={line.id}

@@ -1,4 +1,5 @@
 import { House } from "lucide-react";
+import type { ComponentProps } from "react";
 import { useTranslation } from "react-i18next";
 import { useHouseholdsSuspense } from "@/api/generated";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select/select";
@@ -11,10 +12,15 @@ const EVERYTHING = "everything";
 
 interface Props {
   collapsed?: boolean;
+  tooltipSide?: ComponentProps<typeof Tooltip>["side"];
   className?: string;
 }
 
-export function HouseholdSwitcher({ collapsed = false, className }: Readonly<Props>) {
+export function HouseholdSwitcher({
+  collapsed = false,
+  tooltipSide = "right",
+  className,
+}: Readonly<Props>) {
   const { t } = useTranslation();
   const households = useHouseholdsSuspense().data ?? [];
   const storedId = useActiveHouseholdId();
@@ -39,7 +45,7 @@ export function HouseholdSwitcher({ collapsed = false, className }: Readonly<Pro
 
   return (
     <Select items={options} value={value} onValueChange={choose}>
-      <Tooltip content={collapsed ? scopeLabel : undefined} side="right">
+      <Tooltip content={collapsed ? scopeLabel : undefined} side={tooltipSide}>
         <SelectTrigger
           size={collapsed ? "icon" : "sm"}
           aria-label={scopeLabel}
