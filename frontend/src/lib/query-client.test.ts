@@ -1,6 +1,6 @@
 import { QueryObserver } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vite-plus/test";
 import { ApiError } from "@/api/client";
 import { getCreateTagMutationKey, getTagsQueryKey } from "@/api/generated";
 import { queryClient, throwWithoutData } from "./query-client";

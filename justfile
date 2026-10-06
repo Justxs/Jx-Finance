@@ -24,7 +24,7 @@ dev:
 # Storybook on http://localhost:6006.
 [group('dev')]
 storybook:
-    nub run --cwd frontend storybook
+    cd frontend; vp run storybook
 
 # Add six months of demo accounts, transactions, budgets, goals and bills to an existing empty user of the dev database.
 [group('db')]
@@ -67,7 +67,7 @@ gen:
 # Regenerate only the frontend code and the route list in docs/api-routes.md from the contract already in frontend/openapi.json.
 [group('gen')]
 gen-client:
-    nub run --cwd frontend orval
+    cd frontend; vp run orval
     node scripts/api-docs.mjs
 
 # Fail when the committed contract, generated client or docs/api-routes.md route list differs from what the backend produces now.
@@ -88,25 +88,24 @@ new-component feature name:
 # Everything CI checks except the end-to-end tests (just e2e): backend format, build and tests, contract drift, frontend types, lint, format, tests, story tests, and the app and Storybook builds.
 [group('check')]
 check: format-check-backend test gen-check check-frontend test-stories
-    nub run --cwd frontend build
-    nub run --cwd frontend build-storybook
+    cd frontend; vp run build
+    cd frontend; vp run build-storybook
 
 # The quick loop without Docker: docs links, backend format, build, unit and architecture tests, frontend types, lint, format and unit tests.
 [group('check')]
 check-fast: check-docs format-check-backend check-frontend test-unit
 
-# Check only what changed against HEAD (staged, unstaged, untracked): Oxlint, oxfmt and tsc for frontend files, backend format and test-unit for backend files, check-docs for Markdown.
+# Check only what changed against HEAD (staged, unstaged, untracked): vp lint, vp fmt and tsc for frontend files, backend format and test-unit for backend files, check-docs for Markdown.
 [group('check')]
 check-changed:
     node scripts/check-changed.mjs
 
-# Frontend types, lint, format and tests.
+# Frontend types, format, lint and tests.
 [group('check')]
 check-frontend:
-    nub exec --cwd frontend tsc -b
-    nub run --cwd frontend lint
-    nub run --cwd frontend format:check
-    nub run --cwd frontend test
+    cd frontend; vp exec tsc -b
+    cd frontend; vp check
+    cd frontend; vp run test
 
 # Fail on a broken link or heading anchor in the Markdown docs, a docs file name with spaces or capitals, a line or a section too long for an agent to read whole, a code path or type name in docs/ or AGENTS.md the code no longer has, a stale route list in docs/api-routes.md, and DESIGN.md naming a component, path, CSS variable or color the code no longer has.
 [group('check')]
@@ -126,7 +125,7 @@ format-check-backend:
 # Install the git hooks from lefthook.yml.
 [group('dev')]
 hooks:
-    nub exec --cwd frontend lefthook install
+    cd frontend; vp exec lefthook install
 
 # Run backend tests (needs Docker for Testcontainers).
 [group('test')]
@@ -152,12 +151,12 @@ test-method name:
 # Run the frontend unit and DOM tests of one file or folder, relative to frontend: just test-fe src/lib/budgets.test.ts.
 [group('test')]
 test-fe path:
-    nub exec --cwd frontend vitest run --project unit --project dom {{path}}
+    cd frontend; vp test run --project unit --project dom {{path}}
 
-# Every story's play function and an axe scan, run in jsdom by Vitest (no browser needed).
+# Every story's play function and an axe scan, run in jsdom by Vitest through Vite+ (no browser needed).
 [group('test')]
 test-stories:
-    nub run --cwd frontend test:stories
+    cd frontend; vp run test:stories
 
 e2e_compose := "docker compose -f docker-compose.yml -f docker-compose.e2e.yml"
 
@@ -165,7 +164,7 @@ e2e_compose := "docker compose -f docker-compose.yml -f docker-compose.e2e.yml"
 [group('test')]
 e2e: e2e-down
     {{e2e_compose}} up -d --build --wait
-    nub run --cwd frontend e2e
+    cd frontend; vp run e2e
     {{e2e_compose}} down --volumes
 
 # Remove the throwaway end-to-end stack and its volumes.
@@ -176,13 +175,12 @@ e2e-down:
 # Download the Chromium build Playwright uses for the end-to-end tests.
 [group('test')]
 e2e-install:
-    nub exec --cwd frontend playwright install chromium
+    cd frontend; vp exec playwright install chromium
 
-# Auto-fix lint issues and format the frontend (Oxc) and the backend (dotnet format).
+# Auto-fix lint issues and format the frontend (vp check --fix) and the backend (dotnet format).
 [group('check')]
 fix:
-    nub run --cwd frontend lint --fix
-    nub run --cwd frontend format
+    cd frontend; vp check --fix
     node scripts/format-backend.mjs
 
 # Build and start the full Docker stack with the Aspire dashboard on http://localhost:18888 receiving the API's logs, traces and metrics.

@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from "vite-plus/test";
 import type { ReceiptResultResponse } from "@/api/generated/model";
 import { maximaReceipt } from "@/storybook/fixtures/receipts";
 import {

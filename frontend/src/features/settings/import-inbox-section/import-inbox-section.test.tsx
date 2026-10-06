@@ -1,5 +1,5 @@
 import { screen } from "@testing-library/react";
-import { expect, test } from "vitest";
+import { expect, test } from "vite-plus/test";
 import { getImportInboxStatusMockHandler } from "@/api/generated/imports/imports.msw";
 import { importInboxOff } from "@/storybook/fixtures";
 import { mockApi, renderInApp } from "@/test/api";

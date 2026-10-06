@@ -1,12 +1,12 @@
 FROM node:24.21.0-alpine@sha256:ebfe2f90462722a7a4de65e91990e97fe0d401c70e0e762c5b53302f905ec1c1 AS build
-RUN apk add --no-cache libgcc libstdc++ && npm install --global --ignore-scripts @nubjs/nub@0.9.6
+RUN apk add --no-cache libgcc libstdc++ && npm install --global vite-plus@1.0.0
 WORKDIR /app
 
-COPY frontend/package.json frontend/nub.lock frontend/nub.jsonc ./
-RUN nub ci
+COPY frontend/package.json frontend/pnpm-lock.yaml frontend/pnpm-workspace.yaml ./
+RUN vp install --frozen-lockfile
 
 COPY frontend/ ./
-RUN nub run build
+RUN vp run build
 
 FROM caddy:2.11.6-alpine@sha256:c776e0c6413b544d0459665e54ec7b8b2a15000c0cbee8b254da0067b1d184ff
 LABEL org.opencontainers.image.title="Jx Finance web" \

@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from "vite-plus/test";
 import { AMOUNT_MASK, maskDigits, maskParts } from "./mask-amount";
 
 function part(type: Intl.NumberFormatPartTypes, value: string): Intl.NumberFormatPart {

@@ -1,6 +1,6 @@
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { expect, test } from "vitest";
+import { expect, test } from "vite-plus/test";
 import { getMeMockHandler } from "@/api/generated/auth/auth.msw";
 import type { UserProfileResponse } from "@/api/generated/model";
 import { getUpdateUserRoleMockHandler } from "@/api/generated/users/users.msw";

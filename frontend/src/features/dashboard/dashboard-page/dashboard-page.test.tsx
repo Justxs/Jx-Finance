@@ -1,5 +1,5 @@
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
-import { beforeEach, expect, test, vi } from "vitest";
+import { beforeEach, expect, test, vi } from "vite-plus/test";
 import type { DashboardLayoutResponse, FeatureFlags } from "@/api/generated/model";
 import { DashboardLayoutResponse as layoutSchema } from "@/api/schemas/dashboard/dashboard.zod";
 import { setAuthenticated } from "@/lib/auth-gate";

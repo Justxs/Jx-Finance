@@ -1,5 +1,5 @@
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
-import { expect, test } from "vitest";
+import { expect, test } from "vite-plus/test";
 import { getMeMockHandler } from "@/api/generated/auth/auth.msw";
 import { getSettingsMockHandler } from "@/api/generated/settings/settings.msw";
 import { UserRole } from "@/lib/user-role";

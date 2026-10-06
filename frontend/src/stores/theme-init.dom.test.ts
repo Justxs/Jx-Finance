@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { Script } from "node:vm";
-import { expect, test, vi } from "vitest";
+import { expect, test, vi } from "vite-plus/test";
 import { freshModuleLoader } from "@/test/fresh-module";
 import { blockStorage, seedPreferences } from "@/test/preferences";
 import {

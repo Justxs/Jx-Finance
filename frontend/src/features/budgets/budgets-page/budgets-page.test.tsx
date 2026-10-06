@@ -1,6 +1,6 @@
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { expect, test } from "vitest";
+import { expect, test } from "vite-plus/test";
 import { getBudgetsMockHandler } from "@/api/generated/budgets/budgets.msw";
 import type { BudgetResponse } from "@/api/generated/model";
 import { budgets, familyHousehold, sharedByPartner } from "@/storybook/fixtures";

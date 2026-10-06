@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from "vite-plus/test";
 import type { AccountForecastResponse } from "@/api/generated/model";
 import { forecastRisks, forecastSeries, scheduledTotals } from "./forecast-series";
 

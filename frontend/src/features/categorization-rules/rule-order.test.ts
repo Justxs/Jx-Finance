@@ -1,4 +1,4 @@
-import { expect, test } from "vitest";
+import { expect, test } from "vite-plus/test";
 import type { CategorizationRuleResponse } from "@/api/generated/model";
 import { categorizationRules } from "@/storybook/fixtures";
 import { movedRules } from "./rule-order";

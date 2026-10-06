@@ -6,7 +6,7 @@ import {
 } from "@tanstack/react-router";
 import { render, screen } from "@testing-library/react";
 import type { ReactElement } from "react";
-import { afterEach, beforeEach, expect, test } from "vitest";
+import { afterEach, beforeEach, expect, test } from "vite-plus/test";
 import { getNetWorthHistoryQueryKey, getReceiptItemsQueryKey } from "@/api/generated";
 import type { MonthDrift } from "@/api/generated/model";
 import { BreakdownList } from "@/components/breakdown-list/breakdown-list";

@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, test, vi } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vite-plus/test";
 import { setActiveHousehold } from "@/stores/active-household-store";
 import { ApiError, customFetch, onSessionExpired } from "./client";
 

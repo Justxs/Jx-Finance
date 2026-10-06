@@ -1,4 +1,4 @@
-import { expect, test } from "vitest";
+import { expect, test } from "vite-plus/test";
 import type { CategoryBreakdownItem } from "@/api/generated/model";
 import { rollUpToGroups } from "./category-groups";
 

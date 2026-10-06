@@ -33,18 +33,18 @@ const ownTests = [
 ];
 
 const steps = [];
-if (lintable.length > 0) steps.push(["nub", ["exec", "--cwd", "frontend", "oxlint", "--no-error-on-unmatched-pattern", ...lintable]]);
-if (formattable.length > 0) steps.push(["nub", ["exec", "--cwd", "frontend", "oxfmt", "--check", "--no-error-on-unmatched-pattern", ...formattable]]);
-if (frontend.length > 0) steps.push(["nub", ["exec", "--cwd", "frontend", "tsc", "-b"]]);
-if (ownTests.length > 0) steps.push(["nub", ["exec", "--cwd", "frontend", "vitest", "run", "--project", "unit", "--project", "dom", ...ownTests]]);
+if (lintable.length > 0) steps.push(["vp", ["lint", "--no-error-on-unmatched-pattern", ...lintable], "frontend"]);
+if (formattable.length > 0) steps.push(["vp", ["fmt", "--check", "--no-error-on-unmatched-pattern", ...formattable], "frontend"]);
+if (frontend.length > 0) steps.push(["vp", ["exec", "tsc", "-b"], "frontend"]);
+if (ownTests.length > 0) steps.push(["vp", ["test", "run", "--project", "unit", "--project", "dom", ...ownTests], "frontend"]);
 if (changed.some((file) => file.startsWith("backend/"))) {
   steps.push(["node", ["scripts/format-backend.mjs", "--check"]], ["just", ["test-unit"]]);
 }
 if (changed.some((file) => file.endsWith(".md"))) steps.push(["node", ["scripts/check-docs.mjs"]]);
 
 if (steps.length === 0) console.log("No frontend, backend or docs changes against HEAD.");
-const failed = steps.filter(([command, args]) => {
+const failed = steps.filter(([command, args, cwd]) => {
   console.log(`> ${command} ${args.join(" ")}`);
-  return run(command, args, { allowFailure: true }).status !== 0;
+  return run(command, args, { cwd, allowFailure: true }).status !== 0;
 });
 if (failed.length > 0) fail(`Failed: ${failed.map(([command, args]) => `${command} ${args.slice(0, 4).join(" ")}`).join("; ")}`);

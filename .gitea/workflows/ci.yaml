@@ -115,20 +115,17 @@ jobs:
       - name: Vulnerable shipped packages (development packages are reported only)
         run: node ../scripts/audit.mjs --frontend
 
-      - name: Lint
-        run: nub run lint
-
-      - name: Format check
-        run: nub run format:check
+      - name: Format and lint
+        run: vp check
 
       - name: Unit, DOM and story tests with coverage
-        run: nub run test:coverage
+        run: vp run test:coverage
 
       - name: Build
-        run: nub run build
+        run: vp run build
 
       - name: Build Storybook
-        run: nub run build-storybook
+        run: vp run build-storybook
 
       - name: Upload coverage
         if: always()
@@ -194,7 +191,7 @@ jobs:
 
       - name: Install Playwright browser
         working-directory: frontend
-        run: nub exec playwright install --with-deps chromium
+        run: vp exec playwright install --with-deps chromium
 
       - name: Start the throwaway stack
         run: |
@@ -205,7 +202,7 @@ jobs:
         working-directory: frontend
         env:
           CI: "true"
-        run: nub run e2e
+        run: vp run e2e
 
       - name: Stack logs
         if: failure()

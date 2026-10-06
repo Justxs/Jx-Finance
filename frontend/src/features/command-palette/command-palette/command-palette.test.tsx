@@ -1,7 +1,7 @@
 import type { QueryClient } from "@tanstack/react-query";
 import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { setupServer } from "msw/node";
-import { afterAll, afterEach, beforeAll, beforeEach, expect, test, vi } from "vitest";
+import { afterAll, afterEach, beforeAll, beforeEach, expect, test, vi } from "vite-plus/test";
 import { getMeMockHandler } from "@/api/generated/auth/auth.msw";
 import { getSettingsMockHandler } from "@/api/generated/settings/settings.msw";
 import { setAuthenticated } from "@/lib/auth-gate";

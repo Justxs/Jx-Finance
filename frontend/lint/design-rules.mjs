@@ -98,7 +98,7 @@ function isInteractive(element) {
 
 const noRoundedFull = classRule(
   "Disallow rounded-full outside the circles DESIGN.md names.",
-  "`{{utility}}`: DESIGN.md Shapes allows no pills and no circular tiles; controls and panels use rounded-lg, tags rounded-sm, meters stay square. Only the circles DESIGN.md names (splash ring, collapse handle, bell count, chart dot swatch, circular-icon skeletons) are allowed, by file, in .oxlintrc.json.",
+  "`{{utility}}`: DESIGN.md Shapes allows no pills and no circular tiles; controls and panels use rounded-lg, tags rounded-sm, meters stay square. Only the circles DESIGN.md names (splash ring, collapse handle, bell count, chart dot swatch, circular-icon skeletons) are allowed, by file, in vite.config.ts.",
   (utility) => /^rounded(-[a-z]{1,2})?-full$/.test(utility),
 );
 

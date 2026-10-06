@@ -1,5 +1,5 @@
 import { act, renderHook } from "@testing-library/react";
-import { beforeEach, expect, test } from "vitest";
+import { beforeEach, expect, test } from "vite-plus/test";
 import { readCommandRecents, rememberCommand, useCommandRecents } from "./command-palette-store";
 import { COMMAND_RECENTS_MAX, preferencesCollection } from "./preferences";
 

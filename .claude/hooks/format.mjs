@@ -14,7 +14,7 @@ const root = repoRoot(file);
 const relative = root ? path.relative(root, file).replaceAll("\\", "/") : "";
 
 if (/^frontend\/.+\.(?:ts|tsx|js|cjs|mjs|json|jsonc|css|md)$/.test(relative) && relative !== "frontend/openapi.json") {
-  spawnSync(process.execPath, ["node_modules/oxfmt/bin/oxfmt", relative.slice("frontend/".length)], {
+  spawnSync(process.execPath, ["node_modules/vite-plus/bin/vp", "fmt", relative.slice("frontend/".length)], {
     cwd: path.join(root, "frontend"),
     stdio: "ignore",
   });

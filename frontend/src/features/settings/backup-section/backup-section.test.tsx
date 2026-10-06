@@ -1,6 +1,6 @@
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { expect, test } from "vitest";
+import { expect, test } from "vite-plus/test";
 import { getUploadBackupMockHandler } from "@/api/generated/backups/backups.msw";
 import { backupInvalidFileProblem, backupRestorePassword, backups } from "@/storybook/fixtures";
 import { failWith } from "@/storybook/handlers";

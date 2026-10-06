@@ -1,5 +1,5 @@
 import { act, renderHook } from "@testing-library/react";
-import { expect, test } from "vitest";
+import { expect, test } from "vite-plus/test";
 import { usePageClamp, usePagedItems, usePagedList } from "./use-paged-list";
 
 function usePaged(total: number) {

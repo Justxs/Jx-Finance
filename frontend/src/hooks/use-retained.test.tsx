@@ -1,5 +1,5 @@
 import { renderHook } from "@testing-library/react";
-import { expect, test } from "vitest";
+import { expect, test } from "vite-plus/test";
 import { useRetained } from "./use-retained";
 
 test("keeps the last value while the source is empty", () => {

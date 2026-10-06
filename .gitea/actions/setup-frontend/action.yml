@@ -1,25 +1,24 @@
 name: Setup frontend
-description: Install nub and Node and the frontend packages from the lockfile.
+description: Install Vite+ and Node and the frontend packages from the lockfile.
 
 inputs:
   install:
-    description: Run nub ci in frontend.
+    description: Run a frozen vp install in frontend.
     default: "true"
 
 runs:
   using: composite
   steps:
-    - name: Setup nub and Node
-      uses: nubjs/setup-nub@c7b970ec04655a2f0a111cd436cc182a3b660e7a # v0.6.0
+    - name: Setup Vite+ and Node
+      uses: voidzero-dev/setup-vp@3754dd7dbdb32bd8f6d28b6043de13ad3a75f21f # v1.21.1
       with:
-        nub-version: "0.9.6"
-        node-version: 24
         working-directory: frontend
+        node-version: 24
         cache: true
-        cache-dependency-path: frontend/nub.lock
+        run-install: "false"
 
     - name: Install frontend packages
       if: inputs.install == 'true'
       shell: bash
       working-directory: frontend
-      run: nub ci
+      run: vp install --frozen-lockfile

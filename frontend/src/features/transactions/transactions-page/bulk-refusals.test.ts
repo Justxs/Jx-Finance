@@ -1,4 +1,4 @@
-import { expect, test } from "vitest";
+import { expect, test } from "vite-plus/test";
 import { refusalReasons } from "./bulk-refusals";
 
 test("translates each code once and keeps the order the rows came in", () => {

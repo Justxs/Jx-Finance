@@ -1,5 +1,5 @@
 import { QueryClient } from "@tanstack/react-query";
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from "vite-plus/test";
 import * as api from "@/api/generated";
 import {
   hasInvalidationRule,

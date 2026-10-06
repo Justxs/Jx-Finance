@@ -1,4 +1,4 @@
-import { expect, test } from "vitest";
+import { expect, test } from "vite-plus/test";
 import { validateUpload } from "./upload-file";
 
 test("reports a missing, empty or oversized file and accepts one within the limit", () => {

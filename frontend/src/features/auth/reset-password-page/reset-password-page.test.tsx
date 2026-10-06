@@ -1,5 +1,5 @@
 import { fireEvent, screen, waitFor } from "@testing-library/react";
-import { expect, test } from "vitest";
+import { expect, test } from "vite-plus/test";
 import { emailTokenSearchSchema } from "@/lib/search-schema";
 import { resetLink } from "@/storybook/fixtures";
 import { mockApi, renderInApp } from "@/test/api";

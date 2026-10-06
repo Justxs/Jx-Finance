@@ -7,7 +7,7 @@ Use the repository manifests and generated OpenAPI document for the exact instal
 - [FastEndpoints](https://fast-endpoints.com/)
 - [PostgreSQL](https://www.postgresql.org/docs/)
 - [TanStack](https://tanstack.com/)
-- [nub](https://nubjs.com/docs/install)
+- [Vite+](https://viteplus.dev/guide)
 - [Orval](https://orval.dev/)
 - [Caddy](https://caddyserver.com/docs/)
 - [Docker Compose](https://docs.docker.com/compose/)

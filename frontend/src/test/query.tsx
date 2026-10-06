@@ -1,7 +1,7 @@
 import { QueryClientProvider } from "@tanstack/react-query";
 import { render } from "@testing-library/react";
 import type { ReactElement, ReactNode } from "react";
-import { vi } from "vitest";
+import { vi } from "vite-plus/test";
 import { getCurrenciesQueryKey, getSettingsQueryKey } from "@/api/generated";
 import type { CurrenciesResponse, SettingsResponse } from "@/api/generated/model";
 import { testQueryClient } from "./query-client";

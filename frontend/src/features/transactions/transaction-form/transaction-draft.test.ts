@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from "vite-plus/test";
 import type { TransactionResponse } from "@/api/generated/model";
 import { transaction } from "@/storybook/fixtures/transactions";
 import {

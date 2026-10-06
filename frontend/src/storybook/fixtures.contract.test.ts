@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from "vite-plus/test";
 import type { ZodType } from "zod";
 import * as schemas from "@/api/schemas/index.zod";
 import * as fixtures from "./fixtures";

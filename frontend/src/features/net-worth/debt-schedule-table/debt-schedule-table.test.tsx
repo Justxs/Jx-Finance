@@ -1,5 +1,5 @@
 import { fireEvent, screen, within } from "@testing-library/react";
-import { expect, test } from "vitest";
+import { expect, test } from "vite-plus/test";
 import { mortgageSchedule, mortgageScheduleWithExtra } from "@/storybook/fixtures";
 import { renderWithQuery } from "@/test/query";
 import { DebtScheduleTable, SCHEDULE_PAGE_SIZE, firstPageToShow } from "./debt-schedule-table";

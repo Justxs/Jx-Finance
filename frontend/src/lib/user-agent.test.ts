@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vite-plus/test";
 import { describeUserAgent } from "./user-agent";
 
 const cases: readonly (readonly [string, string, string | null, string | null])[] = [

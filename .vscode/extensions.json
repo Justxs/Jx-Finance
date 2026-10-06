@@ -1,5 +1,6 @@
 {
   "recommendations": [
+    "VoidZero.vite-plus-extension-pack",
     "oxc.oxc-vscode",
     "ms-dotnettools.csdevkit",
     "bradlc.vscode-tailwindcss",

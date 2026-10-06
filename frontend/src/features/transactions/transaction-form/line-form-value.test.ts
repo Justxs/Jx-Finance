@@ -1,4 +1,4 @@
-import { expect, test } from "vitest";
+import { expect, test } from "vite-plus/test";
 import { emptyLine, splitBalance } from "./line-form-value";
 
 test("an empty line is blank apart from a unique id", () => {

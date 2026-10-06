@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vite-plus/test";
 import { fromCents, toCents } from "@/lib/money";
 import { spreadFrom, spreadPartWithin, spreadSlices, spreadUntil } from "./spread-slices";
 

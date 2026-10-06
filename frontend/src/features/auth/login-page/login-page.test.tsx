@@ -1,5 +1,5 @@
 import { fireEvent, screen, waitFor } from "@testing-library/react";
-import { beforeEach, expect, onTestFinished, test } from "vitest";
+import { beforeEach, expect, onTestFinished, test } from "vite-plus/test";
 import { getLoginMockHandler, getPasskeySignInMockHandler } from "@/api/generated/auth/auth.msw";
 import { getPublicSettingsMockHandler } from "@/api/generated/settings/settings.msw";
 import { hasSession, setAuthenticated } from "@/lib/auth-gate";

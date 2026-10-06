@@ -8,10 +8,10 @@ React/TypeScript frontend, ASP.NET Core 10 API and PostgreSQL 16, shipped with D
 
 ## Local development (Windows)
 
-Install .NET 10 SDK (10.0.400 or newer), Node.js 24+, [nub 0.9.6](https://nubjs.com/docs/install), Docker Desktop with Linux containers, and [just](https://just.systems).
+Install .NET 10 SDK (10.0.400 or newer), Node.js 24+, [Vite+](https://viteplus.dev/guide) (the `vp` CLI), Docker Desktop with Linux containers, and [just](https://just.systems).
 
 ```powershell
-npm install --global @nubjs/nub@0.9.6
+irm https://vite.plus/ps1 | iex
 just setup
 just dev
 ```
@@ -20,7 +20,7 @@ just dev
 
 `just seed <email>` adds six months of demo data to an existing user without accounts; `just db-reset` deletes the dev database. `just` lists every recipe, including the EF migration ones (`just migrate-add <Name>`).
 
-Nub is pinned in `frontend/package.json`; commit `frontend/nub.lock` when dependencies change. npm is only used above to bootstrap the nub CLI. `frontend/nub.jsonc` keeps standard Node behavior so Vite and the tests retain their existing loaders and environment handling. NuGet versions live in `backend/Directory.Packages.props`.
+Every frontend command goes through `vp`, run in `frontend`: `vp install`, `vp add`, `vp run <script>`, `vp exec`, `vp dev`, `vp test` and `vp check` (Oxfmt and Oxlint). Underneath, `vp` runs pnpm at the version pinned in `frontend/package.json` (`packageManager`) and fetches it itself; commit `frontend/pnpm-lock.yaml` when dependencies change. The `vite-plus` version is pinned in the catalog of `frontend/pnpm-workspace.yaml`, and the global `vp` hands project commands to that local copy. NuGet versions live in `backend/Directory.Packages.props`.
 
 ## Checks
 

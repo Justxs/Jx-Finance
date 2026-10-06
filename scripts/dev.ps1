@@ -22,7 +22,8 @@ try {
         }
     }
     Write-Host "API is healthy. App: http://localhost:5173  API docs: http://localhost:8091/scalar/v1  Telemetry: http://localhost:18888"
-    nub run --cwd frontend dev --host
+    Set-Location frontend
+    vp dev --host
 }
 finally {
     if ($api -and -not $api.HasExited) {

@@ -29,8 +29,6 @@ const generator = GENERATED.find(([pattern]) => pattern.test(filePath));
 
 if (generator) {
   deny(`${input.tool_input.file_path} is generated and never edited by hand. Change its source and regenerate it with ${generator[1]}.`);
-} else if (input.tool_name === "Bash" && NUB_COMMAND.test(command)) {
-  deny("nub fails in Git Bash in this repo. Run the same nub command through the PowerShell tool.");
 } else if (WRITE_CMDLET.test(command)) {
   deny(
     "Set-Content, Add-Content and Out-File write a BOM or CRLF, and files here are UTF-8 with LF. Use the Write or Edit tool, or a node script, to write the file.",

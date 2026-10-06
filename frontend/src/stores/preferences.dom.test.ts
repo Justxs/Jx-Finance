@@ -1,5 +1,5 @@
 import { act, renderHook } from "@testing-library/react";
-import { describe, expect, test, vi } from "vitest";
+import { describe, expect, test, vi } from "vite-plus/test";
 import { freshModuleLoader } from "@/test/fresh-module";
 import { blockStorage, seedPreferences, storedPreferences } from "@/test/preferences";
 import {

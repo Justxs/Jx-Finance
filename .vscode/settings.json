@@ -16,8 +16,7 @@
     "frontend/src/route-tree.gen.ts": true
   },
   "editor.formatOnSave": true,
-  "oxc.fmt.configPath": "frontend/.oxfmtrc.json",
-  "[typescript]": {
+    "[typescript]": {
     "editor.defaultFormatter": "oxc.oxc-vscode"
   },
   "[typescriptreact]": {

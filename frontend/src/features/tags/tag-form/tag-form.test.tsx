@@ -1,6 +1,6 @@
 import { fireEvent, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { expect, test, vi } from "vitest";
+import { expect, test, vi } from "vite-plus/test";
 import { getCreateTagMockHandler } from "@/api/generated/tags/tags.msw";
 import { duplicateTagProblem, familyHousehold, ids, tags } from "@/storybook/fixtures";
 import { failWith } from "@/storybook/handlers";

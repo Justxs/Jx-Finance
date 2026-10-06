@@ -1,4 +1,4 @@
-import { expect, test } from "vitest";
+import { expect, test } from "vite-plus/test";
 import { amountRangeDraft, parseAmountRange } from "./transaction-filter-fields";
 
 test("parses comma and dot decimals and leaves blank bounds open", () => {

@@ -1,6 +1,6 @@
 import tailwindcss from "@tailwindcss/vite";
 import { tanstackRouter } from "@tanstack/router-plugin/vite";
-import { type Plugin, defineConfig } from "vite";
+import { type Plugin, defineConfig, lazyPlugins } from "vite-plus";
 import { reactPlugins, srcAlias } from "./vite.shared.ts";
 
 const preloadedFonts = [
@@ -38,7 +38,405 @@ function preloadFonts(files: readonly string[]): Plugin {
 }
 
 export default defineConfig({
-  plugins: [
+  fmt: {
+    printWidth: 100,
+    endOfLine: "lf",
+    insertFinalNewline: true,
+    sortImports: {
+      groups: [
+        ["side_effect", "side_effect_style"],
+        "builtin",
+        "external",
+        "internal",
+        ["parent", "sibling", "index"],
+        "style",
+        "unknown",
+      ],
+      internalPattern: ["@/"],
+      newlinesBetween: false,
+    },
+    sortTailwindcss: {
+      stylesheet: "./src/global.css",
+      functions: ["cn", "cva", "clsx"],
+    },
+    sortPackageJson: {
+      sortScripts: false,
+    },
+    ignorePatterns: [
+      "openapi.json",
+      "**/route-tree.gen.ts",
+      ".storybook/public",
+      "storybook-static",
+      "dist",
+    ],
+  },
+  lint: {
+    plugins: ["react", "typescript", "import", "jsx-a11y", "unicorn", "oxc", "promise"],
+    jsPlugins: [
+      "@shadcn/lint",
+      "./lint/design-rules.mjs",
+      "./lint/code-rules.mjs",
+      {
+        name: "vite-plus",
+        specifier: "vite-plus/oxlint-plugin",
+      },
+    ],
+    env: {
+      browser: true,
+      es2024: true,
+    },
+    settings: {
+      react: {
+        version: "19.3.0",
+      },
+    },
+    ignorePatterns: [
+      "src/api/generated",
+      "src/api/schemas",
+      "src/route-tree.gen.ts",
+      "public",
+      ".storybook/public",
+    ],
+    options: {
+      typeAware: true,
+    },
+    categories: {
+      correctness: "error",
+      suspicious: "error",
+      perf: "error",
+    },
+    rules: {
+      "shadcn/no-restyle": [
+        "error",
+        {
+          allow: ["layout", "stale"],
+          contracts: [
+            {
+              pattern:
+                "^(Card|Section|StaleRegion|SplitColumns|ScrollRegion|RuledLine)$|(Content|Header|Footer|Group|Panel)$",
+              allow: ["layout", "stale", "spacing"],
+            },
+            {
+              pattern: "^Table(Cell|Head)$",
+              allow: [
+                "layout",
+                "stale",
+                "spacing",
+                "typography",
+                "text-muted-foreground",
+                "text-income",
+                "text-expense",
+              ],
+            },
+            {
+              pattern: "^TableRow$",
+              allow: ["layout", "stale", "text-muted-foreground"],
+            },
+            {
+              pattern: "Title$",
+              allow: ["layout", "stale", "typography"],
+            },
+            {
+              pattern: "^Skeleton$",
+              allow: ["layout", "rounded"],
+            },
+            {
+              pattern: "^Input$",
+              allow: ["layout", "stale", "font-family"],
+            },
+          ],
+        },
+      ],
+      "shadcn/no-raw-colors": "error",
+      "shadcn/no-arbitrary-values": [
+        "error",
+        {
+          allow: ["layout"],
+        },
+      ],
+      "shadcn/no-inline-styles": "error",
+      "shadcn/no-unknown-classes": [
+        "error",
+        {
+          allow: ["toaster"],
+        },
+      ],
+      "shadcn/require-static-classes": "error",
+      "typescript/no-deprecated": "error",
+      "jx-code/no-comments": "error",
+      "react/rules-of-hooks": "error",
+      eqeqeq: [
+        "error",
+        "always",
+        {
+          null: "ignore",
+        },
+      ],
+      "no-var": "error",
+      "prefer-const": "error",
+      "no-console": [
+        "error",
+        {
+          allow: ["warn", "error"],
+        },
+      ],
+      "no-alert": "error",
+      "no-restricted-imports": [
+        "error",
+        {
+          paths: [
+            {
+              name: "react",
+              importNames: ["useEffect", "useLayoutEffect", "useMemo", "useCallback"],
+              message:
+                "The React Compiler memoizes; derive during render, use event handlers, TanStack Query, Hotkeys or Pacer instead of effects.",
+            },
+          ],
+        },
+      ],
+      "no-param-reassign": "error",
+      "no-else-return": "error",
+      "no-useless-return": "error",
+      "no-lonely-if": "error",
+      "no-nested-ternary": "error",
+      "no-implicit-coercion": "error",
+      "no-throw-literal": "error",
+      "no-empty-function": "error",
+      "no-return-assign": "error",
+      "no-sequences": "error",
+      "no-template-curly-in-string": "error",
+      "prefer-template": "error",
+      "prefer-object-spread": "error",
+      "prefer-rest-params": "error",
+      "prefer-spread": "error",
+      "object-shorthand": "error",
+      "default-case-last": "error",
+      "default-param-last": "error",
+      "guard-for-in": "error",
+      radix: "error",
+      yoda: "error",
+      curly: ["error", "all"],
+      "func-style": [
+        "error",
+        "declaration",
+        {
+          allowArrowFunctions: false,
+        },
+      ],
+      "typescript/no-explicit-any": "error",
+      "typescript/no-non-null-assertion": "warn",
+      "typescript/consistent-type-imports": "error",
+      "typescript/consistent-type-definitions": ["error", "interface"],
+      "typescript/array-type": [
+        "error",
+        {
+          default: "array",
+        },
+      ],
+      "typescript/no-import-type-side-effects": "error",
+      "typescript/no-inferrable-types": "error",
+      "typescript/no-require-imports": "error",
+      "typescript/no-empty-object-type": "error",
+      "typescript/no-unsafe-function-type": "error",
+      "typescript/no-namespace": "error",
+      "typescript/prefer-for-of": "error",
+      "typescript/prefer-function-type": "error",
+      "typescript/ban-ts-comment": "error",
+      "react/button-has-type": "error",
+      "react/jsx-no-useless-fragment": "error",
+      "react/jsx-boolean-value": "error",
+      "react/jsx-curly-brace-presence": "error",
+      "react/self-closing-comp": "error",
+      "react/no-danger": "error",
+      "react/no-unknown-property": "error",
+      "react/jsx-no-target-blank": "error",
+      "react/jsx-fragments": "error",
+      "react/react-in-jsx-scope": "off",
+      "import/no-cycle": [
+        "error",
+        {
+          ignoreTypes: true,
+        },
+      ],
+      "import/no-duplicates": "error",
+      "import/no-default-export": "error",
+      "import/no-mutable-exports": "error",
+      "import/first": "error",
+      "import/no-commonjs": "error",
+      "promise/no-return-wrap": "error",
+      "promise/no-nesting": "error",
+      "unicorn/prefer-node-protocol": "error",
+      "unicorn/prefer-array-some": "error",
+      "unicorn/prefer-includes": "error",
+      "unicorn/prefer-string-slice": "error",
+      "unicorn/prefer-number-properties": "error",
+      "unicorn/prefer-optional-catch-binding": "error",
+      "unicorn/prefer-date-now": "error",
+      "unicorn/prefer-structured-clone": "error",
+      "unicorn/prefer-at": "error",
+      "unicorn/no-array-for-each": "error",
+      "unicorn/no-array-reduce": "error",
+      "unicorn/no-lonely-if": "error",
+      "unicorn/no-negated-condition": "error",
+      "unicorn/no-typeof-undefined": "error",
+      "unicorn/throw-new-error": "error",
+      "unicorn/error-message": "error",
+      "unicorn/filename-case": [
+        "error",
+        {
+          case: "kebabCase",
+        },
+      ],
+      "import/no-unassigned-import": [
+        "error",
+        {
+          allow: ["**/*.css", "@testing-library/jest-dom/vitest"],
+        },
+      ],
+      "oxc/no-async-endpoint-handlers": "off",
+      "jsx-a11y/no-autofocus": "off",
+      "jsx-a11y/prefer-tag-over-role": "off",
+      "jsx-a11y/no-noninteractive-tabindex": [
+        "error",
+        {
+          roles: ["region", "tabpanel"],
+          tags: [],
+        },
+      ],
+      "oxc/no-map-spread": "off",
+      "import/no-named-as-default-member": "off",
+      "jsx-a11y/label-has-associated-control": [
+        "error",
+        {
+          assert: "either",
+          controlComponents: ["Checkbox", "Input", "Select", "SelectField", "Textarea", "Switch"],
+        },
+      ],
+      "vite-plus/prefer-vite-plus-imports": "error",
+    },
+    overrides: [
+      {
+        files: [
+          "**/*.stories.tsx",
+          ".storybook/**",
+          "*.config.ts",
+          "src/routes/**",
+          "e2e/**",
+          "lint/**",
+        ],
+        rules: {
+          "import/no-default-export": "off",
+        },
+      },
+      {
+        files: ["src/test/**", "**/*.test.{ts,tsx}", "**/*.stories.tsx"],
+        rules: {
+          "no-console": "off",
+          "no-empty-function": "off",
+          "typescript/no-non-null-assertion": "off",
+        },
+      },
+      {
+        files: ["src/**"],
+        rules: {
+          "jx/no-rounded-full": "error",
+          "jx/no-text-ghost-button": "error",
+          "jx/no-transition-all": "error",
+          "jx/no-literal-number-placeholder": "error",
+          "jx/no-destructive-text": "error",
+          "jx-code/no-cross-feature-import": [
+            "error",
+            {
+              allow: {
+                accounts: ["imports/import-dialog/import-dialog"],
+                "command-palette": [
+                  "net-worth/net-worth-composition-chart/net-worth-composition-chart",
+                ],
+                dashboard: [
+                  "month-close/month-close-line/month-close-line",
+                  "month-close/month-close-prompt/month-close-prompt",
+                ],
+                "month-close": [
+                  "accounts/reconcile-dialog/reconcile-dialog",
+                  "imports/import-dialog/import-dialog",
+                ],
+                profile: [
+                  "dashboard/dashboard-customiser/dashboard-customiser",
+                  "imports/import-data-section/import-data-section",
+                ],
+                settings: [
+                  "accounts/account-form/account-form",
+                  "profile/export-data-panel/export-data-panel",
+                ],
+                tags: ["places/places-section/places-section"],
+                transactions: ["imports/import-dialog/import-dialog"],
+              },
+            },
+          ],
+          "jx-code/no-key-listener": "error",
+          "import/no-relative-parent-imports": "error",
+          "jx-code/no-raw-browser-api": "error",
+          "jx-code/layer-imports": "error",
+        },
+      },
+      {
+        files: [
+          "src/test/**",
+          "**/*.test.{ts,tsx}",
+          "src/lib/browser-storage.ts",
+          "src/components/ui/sonner/sonner.stories.tsx",
+        ],
+        rules: {
+          "jx-code/no-raw-browser-api": "off",
+        },
+      },
+      {
+        files: ["src/test/stories/story-session.ts"],
+        rules: {
+          "import/no-relative-parent-imports": "off",
+        },
+      },
+      {
+        files: [
+          "src/components/splash/splash.tsx",
+          "src/components/ui/button/button.tsx",
+          "src/components/notification-bell/notification-bell.tsx",
+          "src/components/chart/chart-tooltip.tsx",
+          "src/components/ui/skeleton/skeleton.stories.tsx",
+          "src/features/month-close/month-close-line/month-close-line.tsx",
+          "src/features/month-close/month-page/month-page-pending.tsx",
+        ],
+        rules: {
+          "jx/no-rounded-full": "off",
+        },
+      },
+      {
+        files: ["src/features/**", "src/components/**"],
+        rules: {
+          "jx/no-native-title": "error",
+        },
+      },
+      {
+        files: ["src/components/ui/**"],
+        rules: {
+          "jx/no-native-title": "off",
+          "shadcn/no-restyle": "off",
+          "shadcn/no-arbitrary-values": "off",
+          "shadcn/require-static-classes": "off",
+          "no-shadow": "off",
+          "react/no-unstable-nested-components": "off",
+          "jsx-a11y/label-has-associated-control": "off",
+        },
+      },
+      {
+        files: ["src/features/imports/import-preview-table/import-preview-table.tsx"],
+        rules: {
+          "react/no-array-index-key": "off",
+        },
+      },
+    ],
+  },
+  plugins: lazyPlugins(() => [
     tanstackRouter({
       target: "react",
       autoCodeSplitting: true,
@@ -49,7 +447,7 @@ export default defineConfig({
     ...reactPlugins(),
     tailwindcss(),
     preloadFonts(preloadedFonts),
-  ],
+  ]),
   resolve: { alias: srcAlias },
   server: {
     proxy: {

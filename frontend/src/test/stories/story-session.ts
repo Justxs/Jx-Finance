@@ -2,7 +2,7 @@ import { composeStories, setProjectAnnotations } from "@storybook/react-vite";
 import { RequestHandler } from "msw";
 import { setupServer } from "msw/node";
 import { composeStory } from "storybook/preview-api";
-import { afterAll, afterEach, beforeAll, describe, it } from "vitest";
+import { afterAll, afterEach, beforeAll, describe, it } from "vite-plus/test";
 import { resetPreferences } from "@/test/preferences";
 import { mockWorkerLoader, warnAboutUnhandledRequest } from "../../../.storybook/mock-worker";
 import preview from "../../../.storybook/preview";

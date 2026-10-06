@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from "vite-plus/test";
 import type { CategoryBreakdownItem, ReportSummaryResponse } from "@/api/generated/model";
 import { breakdownCut, rollUpToGroups } from "@/components/category-breakdown/category-groups";
 import { breakdownWeight } from "@/lib/comparison";

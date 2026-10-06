@@ -1,6 +1,6 @@
 import { createSequenceMatcher } from "@tanstack/react-hotkeys";
 import userEvent from "@testing-library/user-event";
-import { afterEach, describe, expect, test, vi } from "vitest";
+import { afterEach, describe, expect, test, vi } from "vite-plus/test";
 import { readPreferences, savePreferences } from "@/stores/preferences";
 import type { FeatureKey } from "./settings";
 import {

@@ -1,5 +1,5 @@
 import { QueryClient } from "@tanstack/react-query";
-import { beforeEach, describe, expect, test, vi } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vite-plus/test";
 import { UserRole } from "@/lib/user-role";
 import { freshModuleLoader } from "@/test/fresh-module";
 import { seedPreferences, storedPreferences } from "@/test/preferences";

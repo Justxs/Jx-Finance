@@ -1,6 +1,6 @@
 # AGENTS.md
 
-Jx Finance is a self-hosted household ledger: a React 19 + TypeScript SPA (`frontend/`), an ASP.NET Core 10 API on FastEndpoints and EF Core (`backend/`), and PostgreSQL 16, shipped with Docker Compose. It never connects to a bank or moves money. One developer owns the project and it is not released yet.
+Jx Finance is a self-hosted household ledger: a React 19 + TypeScript SPA built with Vite+ (`frontend/`), an ASP.NET Core 10 API on FastEndpoints and EF Core (`backend/`), and PostgreSQL 16, shipped with Docker Compose. It never connects to a bank or moves money. One developer owns the project and it is not released yet.
 
 ## Read first
 
@@ -29,7 +29,7 @@ The feature table in [docs/features/README.md](docs/features/README.md) maps eve
 
 ## Commands
 
-The development machine is Windows with Windows PowerShell 5.1 (`powershell.exe`; `pwsh` is not installed). `just` runs its recipes in PowerShell. Run `nub` only from PowerShell: it fails in Git Bash. `node`, `git` and `dotnet` work in either shell.
+The development machine is Windows with Windows PowerShell 5.1 (`powershell.exe`; `pwsh` is not installed). `just` runs its recipes in PowerShell. `node`, `git`, `dotnet` and `vp` work in either shell.
 
 | Command | Does |
 | --- | --- |
@@ -57,8 +57,9 @@ Put a wall-clock timeout on long commands. Never start Storybook browser test ru
 
 ## Traps
 
-- `nub` fails in Git Bash; run it, and `just`, from PowerShell.
-- Never write files with `Set-Content` or `Out-File`: they add a BOM and CRLF. The hook in `.claude/settings.json` refuses them, and `nub` in Git Bash.
+- Frontend commands go through `vp`, run in `frontend`: `vp install`, `vp add`, `vp run <script>`, `vp exec <bin>`, `vp check`, `vp test`. Do not call pnpm directly; `vp` runs the pnpm version pinned in `frontend/package.json`, while a bare `pnpm` from the repository root goes through corepack's global pnpm, which refuses it. Lint and format rules live in `frontend/vite.config.ts`, test settings in `frontend/vitest.config.ts`, and tests import from `vite-plus/test`.
+- Never bump `vite`, `vitest` or `@vitest/coverage-v8` on their own: their catalog entries in `frontend/pnpm-workspace.yaml` must match what `vite-plus` bundles; `scripts/update-frontend.mjs` updates everything in step.
+- Never write files with `Set-Content` or `Out-File`: they add a BOM and CRLF. The hook in `.claude/settings.json` refuses them.
 - `just gen` binds a free port, so it works while `just dev` runs.
 - `just migrate-add` builds with `--no-incremental`, strips EF's BOM and CRLF, and removes and fails on a migration with empty `Up` and `Down`.
 - Incremental builds in this OneDrive folder can go stale; when a result looks wrong, rebuild with `--no-incremental`.

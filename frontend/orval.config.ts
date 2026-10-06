@@ -8,7 +8,7 @@ const decimalFieldsFile = "./src/api/generated/decimal-fields.ts";
 
 function formatFolder(folder: string) {
   return function format() {
-    execSync(`oxfmt ${folder}`, { stdio: "inherit" });
+    execSync(`vp fmt ${folder}`, { stdio: "inherit" });
   };
 }
 

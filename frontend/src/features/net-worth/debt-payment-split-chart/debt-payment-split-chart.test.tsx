@@ -1,4 +1,4 @@
-import { expect, test } from "vitest";
+import { expect, test } from "vite-plus/test";
 import { toCents } from "@/lib/money";
 import { linearSchedule, mortgageScheduleWithExtra } from "@/storybook/fixtures";
 import { splitByYear } from "./debt-payment-split-chart";

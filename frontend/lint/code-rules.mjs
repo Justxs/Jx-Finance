@@ -38,7 +38,7 @@ const noCrossFeatureImport = {
     ],
     messages: {
       crossFeature:
-        "`{{feature}}` imports `{{target}}` from another feature. Move a piece two features share to src/components (UI) or src/lib (helpers); only the page-level entries in the allowlist of .oxlintrc.json may cross features.",
+        "`{{feature}}` imports `{{target}}` from another feature. Move a piece two features share to src/components (UI) or src/lib (helpers); only the page-level entries in the allowlist of vite.config.ts may cross features.",
     },
   },
   create(context) {

@@ -1,5 +1,5 @@
 import { globSync } from "node:fs";
-import { it } from "vitest";
+import { it } from "vite-plus/test";
 import type { StoryModule } from "./story-session";
 
 const SHARD_COUNT = 6;

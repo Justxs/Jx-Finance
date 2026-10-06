@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from "vite-plus/test";
 import type { BudgetPeriod, BudgetResponse } from "@/api/generated/model";
 import { budget } from "@/storybook/fixtures/budgets";
 import { budgetOverview } from "./budgets";

@@ -1,6 +1,6 @@
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { expect, test } from "vitest";
+import { expect, test } from "vite-plus/test";
 import { usersSearchSchema } from "@/routes/users";
 import { currentUser, memberUser } from "@/storybook/fixtures";
 import { openedDialog } from "@/storybook/interactions";

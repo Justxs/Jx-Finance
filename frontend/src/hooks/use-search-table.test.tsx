@@ -1,5 +1,5 @@
 import { renderHook } from "@testing-library/react";
-import { expect, test, vi } from "vitest";
+import { expect, test, vi } from "vite-plus/test";
 import { useSearchTable } from "./use-search-table";
 
 interface Search {

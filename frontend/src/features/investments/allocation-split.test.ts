@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from "vite-plus/test";
 import { allocationDrift, splitContribution } from "./allocation-split";
 
 function total(split: Map<string, number>) {

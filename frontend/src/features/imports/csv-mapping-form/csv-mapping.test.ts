@@ -1,4 +1,4 @@
-import { expect, test } from "vitest";
+import { expect, test } from "vite-plus/test";
 import { cardInspection, revolutInspection, revolutMapping } from "@/storybook/fixtures";
 import { draftOf, missingColumns, sourceOf, toRequest } from "./csv-mapping";
 
