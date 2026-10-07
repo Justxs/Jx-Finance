@@ -33,6 +33,39 @@ Measured on the 12-thread development machine.
 
 The end-to-end suite, the production overlay and the app and Storybook builds are not part of this record.
 
+## Large-ledger timing on 2026-10-07
+
+Measured in a 4-thread cloud container against a local PostgreSQL 16.15 with default settings, the API built in Release with background jobs off, and requests sent one at a time with a member's cookie.
+The ledger held 100,032 transactions dated from May 2016 to October 2026: `just seed` for two members, then each member's rows copied 520 times at random dates up to ten years back, so each member sees about 50,000 rows on three accounts, 521 spread rows and 200 personal groups of six rows.
+Locations and learned categories were switched on. Each request ran twice to warm up and then 15 times; the table gives the median and the 95th percentile in milliseconds, before and after this day's two fixes.
+
+| Request | Before, p50 / p95 | After, p50 / p95 |
+| --- | --- | --- |
+| Ledger, page 1 of 50, any of the five sorts in either direction | 1,766–2,226 / 2,028–2,551 | 77–133 / 94–241 |
+| Ledger, page 500, by date | 2,201 / 2,606 | 98 / 135 |
+| Ledger search "maxima" | 5,113 / 5,788 | 147 / 194 |
+| Transactions list, page 1 | 93 / 130 | 88 / 157 |
+| Report, this year against the previous year | 1,925 / 2,419 | 292 / 345 |
+| Report, last year against the previous period (the year review's data) | 1,929 / 2,424 | 324 / 378 |
+| Report, ten years without comparison | 2,126 / 2,450 | 510 / 696 |
+| Dashboard summary | 50 / 66 | 53 / 73 |
+| Cash-flow forecast, 90 days | 83 / 108 | 85 / 122 |
+| Bills calendar, this month | 18 / 21 | 15 / 28 |
+| Recurring totals | 21 / 25 | 19 / 28 |
+| Subscription suggestions | 17 / 55 | 18 / 27 |
+| Place suggestions | not run | 36 / 37 |
+| Uncategorized suggestions | not run | 74 / 102 |
+| Month close list | not run | 27 / 34 |
+| Category suggestion, which trains on the newest 10,000 rows | not run | 54 / 69 |
+| Import preview of a 500-row Swedbank CSV with the learned guess | not run | 177 / 252 |
+| CSV export of every row (3.4 MB) | not run | 331 / 336 |
+| PDF export of this year | not run | about 900 warm, 2,500 cold |
+| Member download with its journal | not run | about 1,800 to 2,300 warm, 4,900 cold |
+
+Before, every query whose plan cost passed `jit_above_cost` was compiled by PostgreSQL's JIT: the ledger's count and page queries each spent about 1.2 seconds compiling and 45 milliseconds running. The API now turns JIT off on its connections, see [General decisions](decisions/general.md).
+The report's payee labels were one correlated subquery per payee, each repeating the visibility filter; they are now one query ranking each payee's rows, which took the label lookup from about 450 to 55 milliseconds.
+The member download is limited to three an hour, so it ran once per API start.
+
 ## Earlier passes
 
 The full detail of these is in the git history of this file.

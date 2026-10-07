@@ -208,20 +208,13 @@ public sealed class ReportService(
 
         var keys = totals.Select(item => item.Key).Where(key => key.Length > 0).ToList();
         var spreadIds = slices.Select(slice => slice.Id).Distinct().ToList();
-        var labels = await db.Transactions
-            .Where(t => t.Type == FlowType.Expense && keys.Contains(t.PayeeKey!))
-            .Where(t => spreadIds.Contains(t.Id) || expenses.Any(e => e.Id == t.Id))
+        var labels = await expenses
+            .Concat(db.Transactions.Where(t => t.Type == FlowType.Expense && spreadIds.Contains(t.Id)))
+            .Where(t => keys.Contains(t.PayeeKey!))
             .GroupBy(t => t.PayeeKey!)
-            .Select(group => new
-            {
-                group.Key,
-                Label = group
-                    .OrderByDescending(t => t.Date)
-                    .ThenByDescending(t => t.CreatedAt)
-                    .Select(t => t.Description)
-                    .FirstOrDefault(),
-            })
-            .ToDictionaryAsync(entry => entry.Key, entry => entry.Label, cancellationToken);
+            .Select(group => group.OrderByDescending(t => t.Date).ThenByDescending(t => t.CreatedAt).First())
+            .AsNoTracking()
+            .ToDictionaryAsync(t => t.PayeeKey!, t => t.Description, cancellationToken);
         var names = settings.Current.IsEnabled(Feature.PayeeNames)
             ? await db.PayeeNamesForAsync(keys, cancellationToken)
             : new Dictionary<string, string>();

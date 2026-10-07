@@ -1,3 +1,5 @@
+using Npgsql;
+
 namespace JxFinance.Infrastructure.Configuration;
 
 public static class ConfigKeys
@@ -24,6 +26,13 @@ public static class ConfigKeys
         var connectionString = configuration.GetConnectionString(DefaultConnectionName);
         return string.IsNullOrWhiteSpace(connectionString)
             ? throw new InvalidOperationException($"Connection string '{DefaultConnectionName}' is not configured.")
-            : connectionString;
+            : WithoutJit(connectionString);
+    }
+
+    private static string WithoutJit(string connectionString)
+    {
+        var builder = new NpgsqlConnectionStringBuilder(connectionString);
+        builder.Options = $"{builder.Options} -c jit=off".TrimStart();
+        return builder.ConnectionString;
     }
 }

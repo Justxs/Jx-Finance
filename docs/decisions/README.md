@@ -11,7 +11,7 @@ Before changing behaviour that a page here covers, read that page. When you choo
 
 | Topic | Current subjects | Log entries | Feature page |
 | --- | --- | --- | --- |
-| [General](general.md) | Architecture, Release scope, Database lifecycle, Concurrent edits | 9 |  |
+| [General](general.md) | Architecture, Release scope, Database lifecycle, Concurrent edits | 10 |  |
 | [Development and testing](development.md) | Development and testing | 10 |  |
 | [Deployment](deployment.md) | CI | 5 |  |
 | [Authentication and sessions](authentication.md) | Authentication, Sessions, Passkeys, Personal API tokens | 10 | [Sign-in, sessions and lockout](../features/sign-in-and-sessions.md), [Passkeys](../features/passkeys.md), [Personal API tokens](../features/personal-api-tokens.md) |
