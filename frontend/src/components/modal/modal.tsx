@@ -36,11 +36,8 @@ export function Modal({
             {description ? <DialogDescription>{description}</DialogDescription> : null}
           </DialogHeader>
         </div>
-        <div
-          data-slot="modal-body"
-          className="min-h-0 overflow-y-auto overscroll-contain px-4 py-5 sm:px-6"
-        >
-          {children}
+        <div data-slot="modal-body" className="min-h-0 overflow-y-auto overscroll-contain">
+          <div className="px-4 py-5 sm:px-6">{children}</div>
         </div>
       </DialogContent>
     </Dialog>
