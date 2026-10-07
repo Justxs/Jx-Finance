@@ -1,4 +1,5 @@
 using JxFinance.Common;
+using JxFinance.Common.Mcp;
 using JxFinance.Common.Middleware;
 using JxFinance.Domain.Common;
 using Microsoft.AspNetCore.Http;
@@ -11,6 +12,7 @@ public sealed class PersonalApiTokenGateTests
     private static readonly object[] OptedOut = [TokenReadable.Yes, TokenReadable.No];
     private static readonly object[] Writable = [TokenReadable.Yes, TokenWritable.Yes];
     private static readonly object[] Unmarked = [];
+    private static readonly object[] Mcp = [McpRoute.Instance];
 
     public static TheoryData<string, bool, string, string?> Decisions => new()
     {
@@ -26,6 +28,9 @@ public sealed class PersonalApiTokenGateTests
         { HttpMethods.Post, true, nameof(Readable), nameof(PersonalApiTokenGateMiddleware.NotWritable) },
         { HttpMethods.Post, false, nameof(Readable), nameof(PersonalApiTokenGateMiddleware.NotWritable) },
         { HttpMethods.Patch, true, nameof(Unmarked), nameof(PersonalApiTokenGateMiddleware.NotWritable) },
+        { HttpMethods.Post, false, nameof(Mcp), null },
+        { HttpMethods.Get, false, nameof(Mcp), null },
+        { HttpMethods.Delete, false, nameof(Mcp), null },
     };
 
     [Theory]
@@ -58,6 +63,7 @@ public sealed class PersonalApiTokenGateTests
         nameof(Readable) => Readable,
         nameof(OptedOut) => OptedOut,
         nameof(Writable) => Writable,
+        nameof(Mcp) => Mcp,
         _ => Unmarked,
     };
 

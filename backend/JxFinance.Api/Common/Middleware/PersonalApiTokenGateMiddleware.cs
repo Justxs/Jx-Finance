@@ -1,4 +1,5 @@
 using JxFinance.Common.Errors;
+using JxFinance.Common.Mcp;
 using JxFinance.Common.Settings;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Settings;
@@ -55,6 +56,11 @@ public sealed class PersonalApiTokenGateMiddleware(RequestDelegate next, IInstan
 
     public static DomainError? Refusal(string method, bool canWrite, IEnumerable<object>? metadata)
     {
+        if (metadata?.OfType<McpRoute>().Any() is true)
+        {
+            return null;
+        }
+
         if (HttpMethods.IsGet(method))
         {
             return TokenReadable.Allows(metadata) ? null : NotReadable;
