@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from "vite-plus/test";
 import { ErrorCode } from "@/api/generated/model";
 import en from "@/locales/en/common.json";
 import lt from "@/locales/lt/common.json";

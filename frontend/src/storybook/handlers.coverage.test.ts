@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { HttpHandler } from "msw";
-import { expect, test } from "vitest";
+import { expect, test } from "vite-plus/test";
 import { handlers } from "./handlers";
 
 interface Operation {

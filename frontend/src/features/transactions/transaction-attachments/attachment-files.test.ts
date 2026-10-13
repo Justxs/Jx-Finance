@@ -1,4 +1,4 @@
-import { expect, test } from "vitest";
+import { expect, test } from "vite-plus/test";
 import { MAX_ATTACHMENT_BYTES, isAcceptedFile, isPreviewable, sortFiles } from "./attachment-files";
 
 function file(name: string, type: string, size = 10) {

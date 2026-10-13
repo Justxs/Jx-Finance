@@ -1,4 +1,4 @@
-import { describe, expect, test, vi } from "vitest";
+import { describe, expect, test, vi } from "vite-plus/test";
 import { notify, upsert } from "./mutations";
 
 function mutation(overrides: { isPending?: boolean; error?: Error | null } = {}) {

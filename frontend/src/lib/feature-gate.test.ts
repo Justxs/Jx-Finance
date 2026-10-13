@@ -1,5 +1,5 @@
 import { isRedirect } from "@tanstack/react-router";
-import { afterEach, expect, test, vi } from "vitest";
+import { afterEach, expect, test, vi } from "vite-plus/test";
 import { settingsFixture } from "@/test/settings";
 import { requireFeature } from "./feature-gate";
 import { queryClient } from "./query-client";

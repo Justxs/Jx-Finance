@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from "vite-plus/test";
 import type { AccountResponse, AccountType } from "@/api/generated/model";
 import { account } from "@/storybook/fixtures/accounts";
 import {

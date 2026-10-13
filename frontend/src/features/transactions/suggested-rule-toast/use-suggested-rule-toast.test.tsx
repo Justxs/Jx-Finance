@@ -1,6 +1,6 @@
 import { act, fireEvent, render, renderHook, screen, waitFor } from "@testing-library/react";
 import { toast } from "sonner";
-import { afterEach, expect, test, vi } from "vitest";
+import { afterEach, expect, test, vi } from "vite-plus/test";
 import { Toaster } from "@/components/ui/sonner/sonner";
 import { ruleFromSuggestion } from "@/lib/suggested-rule";
 import { categories, suggestedRules } from "@/storybook/fixtures";

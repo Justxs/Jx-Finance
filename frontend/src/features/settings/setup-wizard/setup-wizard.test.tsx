@@ -1,5 +1,5 @@
 import { fireEvent, screen, waitFor } from "@testing-library/react";
-import { expect, test } from "vitest";
+import { expect, test } from "vite-plus/test";
 import { getSettingsQueryKey } from "@/api/generated";
 import type { SettingsResponse } from "@/api/generated/model";
 import { getSettingsMockHandler } from "@/api/generated/settings/settings.msw";

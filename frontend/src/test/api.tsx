@@ -12,7 +12,7 @@ import type { RequestHandler } from "msw";
 import { setupServer } from "msw/node";
 import type { ReactElement } from "react";
 import { toast } from "sonner";
-import { afterAll, afterEach, beforeAll, vi } from "vitest";
+import { afterAll, afterEach, beforeAll, vi } from "vite-plus/test";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { Toaster } from "@/components/ui/sonner/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip/tooltip";

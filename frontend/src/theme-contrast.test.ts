@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs";
-import { expect, it } from "vitest";
+import { expect, it } from "vite-plus/test";
 import { composite, contrastRatio, parseHex, type Rgb } from "@/test/contrast";
 
 const TEXT = 4.5;

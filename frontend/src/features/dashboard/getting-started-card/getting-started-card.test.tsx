@@ -1,5 +1,5 @@
 import { fireEvent, screen, waitFor } from "@testing-library/react";
-import { expect, test } from "vitest";
+import { expect, test } from "vite-plus/test";
 import { getGettingStartedQueryKey } from "@/api/generated";
 import { getGettingStartedMockHandler } from "@/api/generated/dashboard/dashboard.msw";
 import { gettingStartedDone, gettingStartedFresh } from "@/storybook/fixtures";

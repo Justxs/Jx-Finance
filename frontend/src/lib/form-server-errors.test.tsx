@@ -1,5 +1,5 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { expect, test, vi } from "vitest";
+import { expect, test, vi } from "vite-plus/test";
 import { ApiError } from "@/api/client";
 import { useAppForm } from "@/components/form";
 import { FormError } from "@/components/form-error/form-error";

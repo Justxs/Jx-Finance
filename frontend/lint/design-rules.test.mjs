@@ -1,5 +1,5 @@
-import { RuleTester } from "oxlint/plugins-dev";
-import { describe, it } from "vitest";
+import { RuleTester } from "vite-plus/lint/plugins-dev";
+import { describe, it } from "vite-plus/test";
 import plugin from "./design-rules.mjs";
 
 RuleTester.describe = describe;

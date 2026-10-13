@@ -31,7 +31,7 @@ try {
     env: { ConnectionStrings__Default: exportConnection, ASPNETCORE_ENVIRONMENT: "Development", ASPNETCORE_URLS: "http://127.0.0.1:0" },
   });
   fs.copyFileSync(path.join(root, "backend/JxFinance.Api/wwwroot/openapi/v1.json"), path.join(root, "frontend/openapi.json"));
-  run("nub", ["run", "--cwd", "frontend", "orval"]);
+  run("vp", ["run", "orval"], { cwd: "frontend" });
   run("node", ["scripts/api-docs.mjs"]);
 } catch (error) {
   fail(error.message);

@@ -1,6 +1,6 @@
 import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { setupServer } from "msw/node";
-import { afterAll, afterEach, beforeAll, expect, test, vi } from "vitest";
+import { afterAll, afterEach, beforeAll, expect, test, vi } from "vite-plus/test";
 import { setAuthenticated } from "@/lib/auth-gate";
 import { handlers } from "@/storybook/handlers";
 import { APP_TEST_TIMEOUT, appWait, mountApp } from "@/test/app-router";

@@ -64,7 +64,7 @@ public static class ReceiptImage
     private static void PrepareForOcr(MagickImage image)
     {
         image.BackgroundColor = MagickColors.White;
-        image.Alpha(AlphaOption.Remove);
+        image.Alpha(AlphaAction.Remove);
         image.Grayscale();
         image.Resize(new MagickGeometry(OcrWidth, OcrMaxHeight));
         image.AdaptiveThreshold(ThresholdWindow, ThresholdWindow, ThresholdBias * Quantum.Max);

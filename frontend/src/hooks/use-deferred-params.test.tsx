@@ -1,5 +1,5 @@
 import { renderHook } from "@testing-library/react";
-import { expect, test } from "vitest";
+import { expect, test } from "vite-plus/test";
 import { useDeferredParams } from "./use-deferred-params";
 
 test("returns the params as given when nothing is pending", () => {

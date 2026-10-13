@@ -1,4 +1,4 @@
-import { expect, test } from "vitest";
+import { expect, test } from "vite-plus/test";
 import { transactionsSearchSchema } from "@/features/transactions/transaction-queries";
 
 test("the ledger search keeps a payee and drops one that is not text", () => {

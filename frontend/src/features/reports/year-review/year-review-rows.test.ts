@@ -1,4 +1,4 @@
-import { expect, test } from "vitest";
+import { expect, test } from "vite-plus/test";
 import type { CategoryBreakdownItem } from "@/api/generated/model";
 import { biggestChanges, monthRows } from "./year-review-rows";
 

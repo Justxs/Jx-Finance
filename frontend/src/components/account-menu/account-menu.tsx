@@ -73,14 +73,12 @@ export function AccountMenu({
   return (
     <Menu>
       <MenuTrigger
+        variant="tile"
         render={
           <button
             type="button"
             aria-label={`${name}, ${t("nav.accountMenu")}`}
-            className={cn(
-              "flex min-w-0 items-center gap-2.5 rounded-md p-1.5 text-left focus-ring transition-colors hover:bg-accent data-popup-open:bg-accent",
-              className,
-            )}
+            className={cn("flex min-w-0 items-center text-left", className)}
           />
         }
       >

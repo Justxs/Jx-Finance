@@ -1,4 +1,4 @@
-import { expect, test } from "vitest";
+import { expect, test } from "vite-plus/test";
 import type { FeatureFlags } from "@/api/generated/model";
 import { settingsFixture } from "@/test/settings";
 import { navEntries, visibleNav } from "./navigation";

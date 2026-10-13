@@ -5,12 +5,12 @@ pre-commit:
       root: frontend/
       glob: "*.{ts,tsx,js,cjs,mjs,json,jsonc,css,md}"
       exclude: "openapi.json"
-      run: node_modules/.bin/oxfmt {staged_files}
+      run: node_modules/.bin/vp fmt --no-error-on-unmatched-pattern {staged_files}
       stage_fixed: true
     - name: lint
       root: frontend/
       glob: "*.{ts,tsx,mjs}"
-      run: node_modules/.bin/oxlint --no-error-on-unmatched-pattern {staged_files}
+      run: node_modules/.bin/vp lint --no-error-on-unmatched-pattern {staged_files}
     - name: backend format
       root: backend/
       glob: "backend/**/*.cs"

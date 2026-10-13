@@ -1,5 +1,5 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
-import { expect, test } from "vitest";
+import { expect, test } from "vite-plus/test";
 import { getAttachmentsQueryKey } from "@/api/generated";
 import { fullAttachments, ids, maximaAttachments, splitAttachments } from "@/storybook/fixtures";
 import { createQueryWrapper, renderWithQuery } from "@/test/query";

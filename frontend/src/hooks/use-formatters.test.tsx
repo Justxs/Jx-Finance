@@ -1,6 +1,6 @@
 import { renderHook } from "@testing-library/react";
 import { enUS, lt } from "react-day-picker/locale";
-import { afterEach, describe, expect, test } from "vitest";
+import { afterEach, describe, expect, test } from "vite-plus/test";
 import { type CurrenciesResponse, Currency } from "@/api/generated/model";
 import { i18n } from "@/lib/i18n";
 import { AMOUNT_MASK } from "@/lib/mask-amount";

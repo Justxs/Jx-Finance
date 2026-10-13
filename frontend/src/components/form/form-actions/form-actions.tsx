@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button/button";
 import { cn } from "@/lib/utils";
 
 const modalFooterClass =
-  "in-data-[slot=modal-body]:sticky in-data-[slot=modal-body]:bottom-0 in-data-[slot=modal-body]:z-10 in-data-[slot=modal-body]:-mx-4 in-data-[slot=modal-body]:-mb-5 in-data-[slot=modal-body]:border-t in-data-[slot=modal-body]:bg-popover in-data-[slot=modal-body]:px-4 in-data-[slot=modal-body]:py-3 sm:in-data-[slot=modal-body]:-mx-6 sm:in-data-[slot=modal-body]:px-6";
+  "in-data-[slot=modal-body]:sticky in-data-[slot=modal-body]:bottom-0 in-data-[slot=modal-body]:z-10 in-data-[slot=modal-body]:-mx-4 [[data-slot=modal-body]_:last-child>&:last-child]:-mb-5 in-data-[slot=modal-body]:border-t in-data-[slot=modal-body]:bg-popover in-data-[slot=modal-body]:px-4 in-data-[slot=modal-body]:py-3 sm:in-data-[slot=modal-body]:-mx-6 sm:in-data-[slot=modal-body]:px-6";
 
 interface Props {
   submitLabel?: ReactNode;

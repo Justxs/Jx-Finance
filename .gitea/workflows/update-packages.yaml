@@ -48,11 +48,7 @@ jobs:
           dotnet restore backend/JxFinance.slnx
 
       - name: Update frontend packages
-        working-directory: frontend
-        run: |
-          nub update --latest
-          nub add @tanstack/react-form@alpha
-          nub install
+        run: node scripts/update-frontend.mjs
 
       - name: Update pinned Docker base images
         run: node scripts/update-images.mjs

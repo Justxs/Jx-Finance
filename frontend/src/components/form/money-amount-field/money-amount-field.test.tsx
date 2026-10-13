@@ -1,6 +1,6 @@
 import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { expect, test } from "vitest";
+import { expect, test } from "vite-plus/test";
 import { z } from "zod";
 import { type CurrenciesResponse, Currency } from "@/api/generated/model";
 import { useAppForm } from "@/components/form/app-form";

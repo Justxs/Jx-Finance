@@ -1,6 +1,6 @@
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { expect, test } from "vitest";
+import { expect, test } from "vite-plus/test";
 import type { AssetResponse } from "@/api/generated/model";
 import { getAssetsMockHandler } from "@/api/generated/net-worth/net-worth.msw";
 import { assets, sharedAsset, sharedByPartner } from "@/storybook/fixtures";

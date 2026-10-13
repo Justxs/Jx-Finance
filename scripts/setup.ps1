@@ -20,7 +20,14 @@ $debugEnv = (@($variables.Keys | ForEach-Object { "$_=$($variables[$_])" }) + ""
 [System.IO.File]::WriteAllText((Join-Path $root ".local/api-debug.env"), $debugEnv, $utf8)
 Write-Host "Wrote .local/api-debug.env for the VS Code 'API' debug target."
 
-Invoke-Checked { nub install -C frontend --frozen-lockfile } "Installing frontend packages failed."
+Push-Location frontend
+try {
+    Invoke-Checked { vp install --frozen-lockfile } "Installing frontend packages failed."
+    Invoke-Checked { vp exec lefthook install } "Installing git hooks failed."
+}
+finally {
+    Pop-Location
+}
 
 Push-Location backend
 try {
@@ -31,7 +38,6 @@ finally {
     Pop-Location
 }
 
-Invoke-Checked { nub exec --cwd frontend lefthook install } "Installing git hooks failed."
 
 & (Join-Path $PSScriptRoot "doctor.ps1")
 Write-Host "Ready. Start everything with 'just dev'; after creating the first administrator, 'just seed <email>' adds demo data."

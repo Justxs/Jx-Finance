@@ -1,4 +1,4 @@
-import { expect, test } from "vitest";
+import { expect, test } from "vite-plus/test";
 import { EXPENSE_TONE, INCOME_TONE, gainTone } from "./tone";
 
 test("gains read as income, losses as expense and flat stays neutral", () => {

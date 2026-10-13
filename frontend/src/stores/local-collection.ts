@@ -4,11 +4,24 @@ import { browserStorage } from "@/lib/browser-storage";
 
 const storage = browserStorage();
 
+function discardUnreadable(storageKey: string) {
+  const stored = storage.getItem(storageKey);
+  if (stored === null) {
+    return;
+  }
+  try {
+    JSON.parse(stored);
+  } catch {
+    storage.removeItem(storageKey);
+  }
+}
+
 export function localCollection<TSchema extends z.ZodType<{ id: string }>>(
   id: string,
   storageKey: string,
   schema: TSchema,
 ) {
+  discardUnreadable(storageKey);
   const options = localStorageCollectionOptions({
     id,
     storageKey,

@@ -1,5 +1,5 @@
 import { act, renderHook } from "@testing-library/react";
-import { afterEach, describe, expect, test, vi } from "vitest";
+import { afterEach, describe, expect, test, vi } from "vite-plus/test";
 import { i18n } from "@/lib/i18n";
 import { freshModuleLoader } from "@/test/fresh-module";
 import { seedPreferences, storedPreferences } from "@/test/preferences";

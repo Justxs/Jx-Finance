@@ -1,5 +1,5 @@
 import { fireEvent, screen } from "@testing-library/react";
-import { expect, test } from "vitest";
+import { expect, test } from "vite-plus/test";
 import { mockApi, renderInApp } from "@/test/api";
 import { NotificationProvidersSection } from "./notification-providers-section";
 

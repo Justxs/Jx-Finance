@@ -1,5 +1,5 @@
 import { fireEvent, screen, waitFor } from "@testing-library/react";
-import { expect, test, vi } from "vitest";
+import { expect, test, vi } from "vite-plus/test";
 import { getCreateUserMockHandler } from "@/api/generated/users/users.msw";
 import { problemOf } from "@/storybook/fixtures";
 import { failWith } from "@/storybook/handlers";

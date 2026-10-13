@@ -1,4 +1,4 @@
-import { expect, test } from "vitest";
+import { expect, test } from "vite-plus/test";
 import { pageTransitionTypes, pageViewTransition } from "./page-transition";
 
 function resolveTypes(from: string | undefined, to: string, pathChanged = true) {

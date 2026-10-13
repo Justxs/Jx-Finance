@@ -1,4 +1,4 @@
-import { defineConfig } from "vitest/config";
+import { defineConfig } from "vite-plus";
 import { reactPlugins, srcAlias } from "./vite.shared.ts";
 
 export default defineConfig({

@@ -1,7 +1,7 @@
 import { type QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { RouterProvider, createMemoryHistory, createRouter } from "@tanstack/react-router";
 import { render, waitFor } from "@testing-library/react";
-import { expect } from "vitest";
+import { expect } from "vite-plus/test";
 import { TooltipProvider } from "@/components/ui/tooltip/tooltip";
 import { setSetupNeeded } from "@/lib/auth-gate";
 import { routeTree } from "@/route-tree.gen";

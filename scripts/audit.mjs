@@ -13,8 +13,8 @@ try {
     }
   }
   if (frontend) {
-    run("nub", ["audit", "-C", "frontend", "--prod", "--audit-level", "moderate"]);
-    run("nub", ["audit", "-C", "frontend", "--dev", "--audit-level", "moderate"], { allowFailure: true });
+    run("vp", ["pm", "audit", "--production", "--level", "moderate"], { cwd: "frontend" });
+    run("vp", ["pm", "audit", "--level", "moderate", "--", "--dev"], { cwd: "frontend", allowFailure: true });
   }
 } catch (error) {
   fail(error.message);

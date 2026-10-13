@@ -1,4 +1,4 @@
-import { expect, test } from "vitest";
+import { expect, test } from "vite-plus/test";
 import en from "@/locales/en/common.json";
 import lt from "@/locales/lt/common.json";
 

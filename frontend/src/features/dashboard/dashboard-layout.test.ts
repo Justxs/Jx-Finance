@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from "vite-plus/test";
 import { DashboardCard, type FeatureFlags } from "@/api/generated/model";
 import { settingsFixture } from "@/test/settings";
 import { type LayoutDraft, moveCard, setCardShown, shownCards } from "./dashboard-layout";

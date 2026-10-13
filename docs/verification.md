@@ -10,7 +10,7 @@ All automated checks use synthetic data in throwaway PostgreSQL 16 databases. No
 | --- | --- | --- | --- |
 | Backend unit and architecture | `just test-unit`, no Docker | Pure logic (money, rates, calendars, statement and receipt parsers, amortization, the journal writer) and the rules every endpoint keeps: layering, contract, feature gates, administrator routes, token scopes, query filters | `backend` job |
 | Backend integration | `just test`, Docker | The whole API against real PostgreSQL: every endpoint's success, validation, access and isolation paths, jobs, imports, backups | `backend` job |
-| Frontend unit and DOM | `nub run test` | `src/lib`, the API client, stores, hooks, feature helpers, shared components, translation keys, theme contrast, and the request bodies of the settings, users, auth, category and tag forms | `frontend` job |
+| Frontend unit and DOM | `vp run test` | `src/lib`, the API client, stores, hooks, feature helpers, shared components, translation keys, theme contrast, and the request bodies of the settings, users, auth, category and tag forms | `frontend` job |
 | Stories | `just test-stories` | Every story's `play` function and an axe scan, in jsdom; stories tagged `browser-only` are skipped | `frontend` job |
 | Contract | `just gen-check` | The committed API contract and generated client match the API | `client-drift` job |
 | End to end | `just e2e`, Docker | Playwright specs in `frontend/e2e` against a throwaway Compose stack over HTTP | `e2e` job |

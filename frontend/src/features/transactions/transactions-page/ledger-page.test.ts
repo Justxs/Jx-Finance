@@ -1,5 +1,5 @@
 import { QueryClient } from "@tanstack/react-query";
-import { expect, test } from "vitest";
+import { expect, test } from "vite-plus/test";
 import type { CreateTransactionMutationVariables } from "@/api/generated";
 import type {
   LedgerItemResponse,

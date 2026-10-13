@@ -1,5 +1,5 @@
 import { screen } from "@testing-library/react";
-import { expect, test, vi } from "vitest";
+import { expect, test, vi } from "vite-plus/test";
 import { ownPlaces } from "@/storybook/fixtures";
 import { renderWithQuery } from "@/test/query";
 import { PlaceRenameForm } from "./place-rename-form";

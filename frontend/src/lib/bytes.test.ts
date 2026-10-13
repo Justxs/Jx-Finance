@@ -1,4 +1,4 @@
-import { expect, test } from "vitest";
+import { expect, test } from "vite-plus/test";
 import { splitBytes } from "./bytes";
 
 test("picks the largest unit that keeps the number at one or above", () => {

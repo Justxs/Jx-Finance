@@ -1,6 +1,6 @@
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { expect, test } from "vitest";
+import { expect, test } from "vite-plus/test";
 import { getReceiptItemCategoriesMockHandler } from "@/api/generated/receipts/receipts.msw";
 import { noRememberedItemCategories, rememberedItemCategories } from "@/storybook/fixtures";
 import { mockApi, renderInApp } from "@/test/api";

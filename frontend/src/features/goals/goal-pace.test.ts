@@ -1,4 +1,4 @@
-import { expect, test } from "vitest";
+import { expect, test } from "vite-plus/test";
 import { monthlyToReach } from "./goal-pace";
 
 test("the remaining amount spreads over the whole months left", () => {

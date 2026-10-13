@@ -1,4 +1,4 @@
-import { expect, test } from "vitest";
+import { expect, test } from "vite-plus/test";
 import { ALL_CURRENCIES } from "@/lib/currency";
 import { orderCurrencies } from "./currency-select";
 

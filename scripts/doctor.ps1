@@ -26,7 +26,7 @@ function Test-Tool([string]$Name, [string]$Command, [string]$Minimum, [string]$H
 
 Test-Tool ".NET SDK" "dotnet" "10.0.400" "https://dotnet.microsoft.com/download"
 Test-Tool "Node.js" "node" "24.0" "https://nodejs.org"
-Test-Tool "nub" "nub" "0.9.6" "npm install --global @nubjs/nub@0.9.6"
+Test-Tool "Vite+" "vp" "1.0" "irm https://vite.plus/ps1 | iex"
 Test-Tool "Docker" "docker" "24.0" "https://www.docker.com/products/docker-desktop"
 Test-Tool "just" "just" "1.27" "winget install Casey.Just"
 
@@ -35,7 +35,7 @@ if ($LASTEXITCODE -ne 0) { Write-Problem "[down]    Docker is installed but not 
 
 $shim = Join-Path $env:APPDATA "npm\node"
 if ((Test-Path $shim) -and ((Get-Item $shim).Length -lt 1024)) {
-    Write-Problem "[broken]  $shim is a placeholder from the global npm package 'node'. Git hooks and nub pick it up under sh and fail with exit 127. Fix: npm uninstall -g node"
+    Write-Problem "[broken]  $shim is a placeholder from the global npm package 'node'. Git hooks and vp pick it up under sh and fail with exit 127. Fix: npm uninstall -g node"
 }
 
 $root = Split-Path $PSScriptRoot -Parent

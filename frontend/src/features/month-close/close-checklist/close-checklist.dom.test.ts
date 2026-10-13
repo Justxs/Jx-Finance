@@ -1,4 +1,4 @@
-import { expect, test } from "vitest";
+import { expect, test } from "vite-plus/test";
 import type { MonthAccountCoverage, MonthAccountState } from "@/api/generated/model";
 import { attentionCount, openItemCount } from "./close-checklist";
 

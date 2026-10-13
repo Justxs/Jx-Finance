@@ -1,4 +1,4 @@
-import { vi } from "vitest";
+import { vi } from "vite-plus/test";
 import { PREFERENCES_STORAGE_KEY, preferencesCollection } from "@/stores/preferences";
 
 const STORAGE_KEY = PREFERENCES_STORAGE_KEY;

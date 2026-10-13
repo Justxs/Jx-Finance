@@ -1,4 +1,4 @@
-import { vi } from "vitest";
+import { vi } from "vite-plus/test";
 
 export async function freshModuleLoader<TModule>(
   load: () => Promise<TModule>,
