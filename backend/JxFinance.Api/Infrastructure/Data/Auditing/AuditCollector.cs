@@ -670,8 +670,8 @@ internal sealed class AuditCollector(AppDbContext db, Guid actorId, string? viaT
         var userIds = entries
             .SelectMany(e => e.Entity switch
             {
-                HouseholdMembership membership => new[] { membership.UserId },
-                Settlement settlement => new[] { settlement.FromUserId, settlement.ToUserId },
+                HouseholdMembership membership => [membership.UserId],
+                Settlement settlement => [settlement.FromUserId, settlement.ToUserId],
                 SharedExpense expense => shareEntries[expense.Id].Select(s => ((SharedExpenseShare)s.Entity).UserId),
                 _ => [],
             })

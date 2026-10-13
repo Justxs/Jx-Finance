@@ -68,7 +68,7 @@ public sealed class ReferenceGuard(AppDbContext db) : IReferenceGuard
     {
         var wanted = categoryIds.OfType<CategoryId>().Distinct().ToList();
         return wanted.Count == 0
-            ? new Dictionary<CategoryId, FlowType>()
+            ? []
             : await db.Categories
                 .Where(c => wanted.Contains(c.Id))
                 .Select(c => new { Key = c.Id, Value = c.Type })

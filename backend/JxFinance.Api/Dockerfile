@@ -22,7 +22,6 @@ RUN apt-get update \
 RUN mkdir /keys /backups /attachments /import-inbox && chown app:app /keys /backups /attachments /import-inbox
 WORKDIR /app
 COPY --from=build /app ./
-ENV ASPNETCORE_URLS=http://+:8080
 EXPOSE 8080
 USER app
 ENTRYPOINT ["dotnet", "JxFinance.Api.dll"]

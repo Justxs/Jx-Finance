@@ -29,7 +29,7 @@ public static class ApiServiceExtensions
             .WriteToTelemetry(builder.Configuration)
             .CreateLogger();
 
-        builder.Host.UseSerilog();
+        builder.Services.AddSerilog();
         builder.AddTelemetry();
 
         builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(

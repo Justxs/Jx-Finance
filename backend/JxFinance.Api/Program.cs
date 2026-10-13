@@ -48,10 +48,3 @@ string? EmailAfter(string flag, string whose)
 
     return index + 1 < args.Length ? args[index + 1] : throw new ArgumentException($"Provide the {whose} email after {flag}.");
 }
-
-public partial class Program
-{
-    protected Program()
-    {
-    }
-}

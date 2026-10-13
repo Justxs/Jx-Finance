@@ -28,8 +28,8 @@ Measured on the 12-thread development machine.
 | --- | --- |
 | Backend, whole suite | 2,517 tests passed, in about 2.5 to 3 minutes |
 | `just test-unit` | 1,174 tests passed, in about 20 seconds |
-| Frontend `nub run test` | 2,553 tests passed |
-| `nub run test:stories` | 2,331 passed, 2 skipped (`browser-only`) |
+| Frontend `vp run test` | 2,553 tests passed |
+| `vp run test:stories` | 2,331 passed, 2 skipped (`browser-only`) |
 
 The end-to-end suite, the production overlay and the app and Storybook builds are not part of this record.
 

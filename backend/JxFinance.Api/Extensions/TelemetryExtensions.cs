@@ -42,7 +42,7 @@ public static class TelemetryExtensions
             .WithMetrics(metrics => metrics
                 .AddAspNetCoreInstrumentation()
                 .AddHttpClientInstrumentation()
-                .AddRuntimeInstrumentation()
+                .AddMeter("System.Runtime")
                 .AddNpgsqlInstrumentation())
             .UseOtlpExporter();
 

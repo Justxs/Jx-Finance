@@ -10,7 +10,6 @@
     <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" />
     <PackageReference Include="NetArchTest.eNhancedEdition" />
     <PackageReference Include="Testcontainers.PostgreSql" />
-    <PackageReference Include="SSH.NET" />
     <PackageReference Include="xunit.v3" />
   </ItemGroup>
 
