@@ -18,7 +18,7 @@ public sealed class ReceiptImageTests
         exif.SetValue(ExifTag.GPSLatitudeRef, "N");
         exif.SetValue(ExifTag.Make, "Phone");
         photo.SetProfile(exif);
-        photo.Orientation = OrientationType.RightTop;
+        photo.Orientation = Orientation.RightTop;
 
         var prepared = ReceiptImage.Prepare(photo.ToByteArray(MagickFormat.Jpeg), AttachmentContent.Jpeg).Value!;
 

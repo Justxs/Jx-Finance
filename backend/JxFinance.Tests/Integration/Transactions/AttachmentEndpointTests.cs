@@ -457,12 +457,12 @@ public sealed class AttachmentEndpointTests(LedgerFixture fixture) : Integration
         iptc.SetValue(IptcTag.City, Landmark);
         photo.SetProfile(iptc);
         photo.Comment = Landmark;
-        photo.Orientation = OrientationType.RightTop;
+        photo.Orientation = Orientation.RightTop;
         var bytes = photo.ToByteArray(Formats[contentType]);
 
         using var sent = new MagickImage(bytes);
         Assert.Equal("N", sent.GetExifProfile()?.GetValue(ExifTag.GPSLatitudeRef)?.Value);
-        Assert.Equal(OrientationType.RightTop, sent.Orientation);
+        Assert.Equal(Orientation.RightTop, sent.Orientation);
         return bytes;
     }
 
