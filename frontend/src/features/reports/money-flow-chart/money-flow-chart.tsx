@@ -1,11 +1,8 @@
-import {
-  ResponsiveContainer,
-  Sankey,
-  type SankeyElementType,
-  type SankeyLinkProps,
-  type SankeyNodeProps,
-  Tooltip,
-} from "recharts";
+import { type ChartCurve, defineChart, link, rect, text } from "@tanstack/charts";
+import { type SankeyLink, type SankeyNode, sankeyDiagram } from "@tanstack/charts/network/sankey";
+import { Chart } from "@tanstack/charts/react/tooltip";
+import { tooltip } from "@tanstack/charts/tooltip";
+import { useState } from "react";
 import {
   CHART_COLOR_MUTED,
   CHART_COLOR_NEGATIVE,
@@ -19,10 +16,14 @@ import {
   type MoneyFlowNode,
 } from "@/features/reports/money-flow/money-flow-graph";
 import { useMoney } from "@/hooks/use-formatters";
+import { cn } from "@/lib/utils";
+
+type FlowNode = SankeyNode<MoneyFlowNode, MoneyFlowLink>;
+type FlowLink = SankeyLink<MoneyFlowNode, MoneyFlowLink>;
 
 const LABEL_GAP = 8;
 const LABEL_MAX = 24;
-const MARGIN = { top: 40, right: 168, bottom: 20, left: 168 };
+const INSET = { top: 40, right: 168, bottom: 20, left: 168 };
 const MUTED_KINDS: ReadonlySet<MoneyFlowKind> = new Set([
   "other",
   "moneyBack",
@@ -31,16 +32,20 @@ const MUTED_KINDS: ReadonlySet<MoneyFlowKind> = new Set([
 ]);
 const SIDE_KINDS: ReadonlySet<MoneyFlowKind> = new Set(["moneyBack", "fromSavings", "saved"]);
 
-function isFlowNode(value: unknown): value is MoneyFlowNode {
-  return typeof value === "object" && value !== null && "kind" in value && "cents" in value;
-}
+const flowCurve: ChartCurve = {
+  line([[x1, y1] = [0, 0], [x2, y2] = [0, 0]]) {
+    const middle = (x1 + x2) / 2;
+    return `M${x1},${y1}C${middle},${y1} ${middle},${y2} ${x2},${y2}`;
+  },
+  area: () => "",
+};
 
 function shortLabel(label: string) {
   return label.length > LABEL_MAX ? `${label.slice(0, LABEL_MAX - 1)}…` : label;
 }
 
-function nodeColor(node: MoneyFlowNode) {
-  return MUTED_KINDS.has(node.kind) ? CHART_COLOR_MUTED : CHART_COLOR_PRIMARY;
+function isMuted(node: FlowNode) {
+  return MUTED_KINDS.has(node.data.kind);
 }
 
 function linkColor(source: MoneyFlowNode, target: MoneyFlowNode) {
@@ -51,30 +56,29 @@ function linkColor(source: MoneyFlowNode, target: MoneyFlowNode) {
   return source.kind === "hub" ? CHART_COLOR_NEGATIVE : CHART_COLOR_POSITIVE;
 }
 
-function labelPlacement(props: SankeyNodeProps, node: MoneyFlowNode) {
-  const middle = props.y + props.height / 2;
-  if (node.kind === "hub") {
-    return { x: props.x + props.width / 2, y: props.y - 22, anchor: "middle" } as const;
+function labelPlacement(node: FlowNode) {
+  if (node.data.kind === "hub") {
+    return { x: node.x, y: node.y0 - 26, anchor: "middle" } as const;
   }
-  if (props.payload.depth === 0) {
-    return { x: props.x - LABEL_GAP, y: middle - 2, anchor: "end" } as const;
+  if (node.depth === 0) {
+    return { x: node.x0 - LABEL_GAP, y: node.y - 6, anchor: "end" } as const;
   }
-  return { x: props.x + props.width + LABEL_GAP, y: middle - 2, anchor: "start" } as const;
+  return { x: node.x1 + LABEL_GAP, y: node.y - 6, anchor: "start" } as const;
 }
 
-interface FlowTooltipProps {
-  active?: boolean;
-  payload?: readonly { payload?: { payload?: unknown } }[];
-  moneyBack: readonly MoneyFlowNode[];
+function flowNodeOf(datum: FlowNode | FlowLink | undefined) {
+  return datum?.kind === "node" ? datum.data : null;
 }
 
-function FlowTooltip({ active, payload, moneyBack }: Readonly<FlowTooltipProps>) {
+function nodeBars(nodes: readonly FlowNode[], fill: string) {
+  return rect(nodes, { x1: "x0", x2: "x1", y1: "y0", y2: "y1", key: "key", inset: 0, fill });
+}
+
+function FlowTooltip({
+  node,
+  moneyBack,
+}: Readonly<{ node: MoneyFlowNode; moneyBack: readonly MoneyFlowNode[] }>) {
   const money = useMoney();
-  const node = payload?.[0]?.payload?.payload;
-
-  if (!active || !isFlowNode(node)) {
-    return null;
-  }
 
   return (
     <div className="min-w-44 rounded-md border bg-popover px-3 py-2.5 text-popover-foreground shadow-lg">
@@ -94,79 +98,98 @@ function FlowTooltip({ active, payload, moneyBack }: Readonly<FlowTooltipProps>)
   );
 }
 
-function renderLink(props: SankeyLinkProps) {
-  const { source, target } = props.payload;
-  const color = isFlowNode(source) && isFlowNode(target) ? linkColor(source, target) : "none";
-
-  return (
-    <path
-      d={`M${props.sourceX},${props.sourceY} C${props.sourceControlX},${props.sourceY} ${props.targetControlX},${props.targetY} ${props.targetX},${props.targetY}`}
-      fill="none"
-      stroke={color}
-      strokeWidth={props.linkWidth}
-      strokeOpacity={0.25}
-    />
-  );
-}
-
 interface Props {
   nodes: MoneyFlowNode[];
   links: MoneyFlowLink[];
   moneyBack: readonly MoneyFlowNode[];
+  ariaLabel: string;
   onSelect: (node: MoneyFlowNode) => void;
 }
 
-export function MoneyFlowChart({ nodes, links, moneyBack, onSelect }: Readonly<Props>) {
+export function MoneyFlowChart({ nodes, links, moneyBack, ariaLabel, onSelect }: Readonly<Props>) {
   const money = useMoney();
+  const [overCategory, setOverCategory] = useState(false);
 
-  function renderNode(props: SankeyNodeProps) {
-    const node = props.payload;
-    if (!isFlowNode(node)) {
-      return <g />;
-    }
-    const label = labelPlacement(props, node);
-
-    return (
-      <g>
-        <rect
-          x={props.x}
-          y={props.y}
-          width={props.width}
-          height={props.height}
-          fill={nodeColor(node)}
-          className={node.categoryId ? "cursor-pointer" : undefined}
-        />
-        <text x={label.x} y={label.y} textAnchor={label.anchor} className="text-xs">
-          <tspan className="fill-foreground">{shortLabel(node.label)}</tspan>
-          <tspan x={label.x} dy={14} className="fill-muted-foreground tabular-nums">
-            {money.format(node.cents / 100)}
-          </tspan>
-        </text>
-      </g>
-    );
-  }
-
-  function handleClick(item: SankeyNodeProps | SankeyLinkProps, type: SankeyElementType) {
-    if (type === "node" && isFlowNode(item.payload) && item.payload.categoryId) {
-      onSelect(item.payload);
-    }
-  }
+  const definition = defineChart({
+    marks: [
+      sankeyDiagram({
+        nodes,
+        links,
+        nodeKey: (_node, { index }) => index,
+        source: "source",
+        target: "target",
+        value: "value",
+        nodeSort: null,
+        linkSort: null,
+        nodeWidth: 8,
+        nodePadding: 28,
+        inset: INSET,
+        marks: ({ nodes: placed, links: flows }) => [
+          link(flows, {
+            x1: "x1",
+            y1: "y1",
+            x2: "x2",
+            y2: "y2",
+            key: "key",
+            stroke: (flow) => linkColor(flow.sourceNode.data, flow.targetNode.data),
+            strokeOpacity: 0.25,
+            strokeWidth: (flow) => Math.max(1, flow.width),
+            lineCap: "butt",
+            curve: flowCurve,
+          }),
+          nodeBars(
+            placed.filter((node) => !isMuted(node)),
+            CHART_COLOR_PRIMARY,
+          ),
+          nodeBars(placed.filter(isMuted), CHART_COLOR_MUTED),
+          text(placed, {
+            x: (node) => labelPlacement(node).x,
+            y: (node) => labelPlacement(node).y,
+            anchor: (node) => labelPlacement(node).anchor,
+            text: (node) => shortLabel(node.data.label),
+            key: "key",
+            fill: "var(--foreground)",
+            fontSize: 12,
+          }),
+          text(placed, {
+            x: (node) => labelPlacement(node).x,
+            y: (node) => labelPlacement(node).y + 14,
+            anchor: (node) => labelPlacement(node).anchor,
+            text: (node) => money.format(node.data.cents / 100),
+            key: "key",
+            fill: CHART_COLOR_MUTED,
+            fontSize: 12,
+          }),
+        ],
+      }),
+    ],
+    scales: { x: null, y: null },
+    guides: false,
+    keyboard: false,
+    focusRing: false,
+    maxFocusDistance: 0,
+    tooltip: { use: tooltip, anchor: "pointer", offset: 12, sticky: false },
+  });
 
   return (
-    <ResponsiveContainer width="100%" height={MONEY_FLOW_HEIGHT}>
-      <Sankey
-        accessibilityLayer={false}
-        data={{ nodes, links }}
-        sort={false}
-        nodeWidth={8}
-        nodePadding={28}
-        margin={MARGIN}
-        node={renderNode}
-        link={renderLink}
-        onClick={handleClick}
-      >
-        <Tooltip content={<FlowTooltip moneyBack={moneyBack} />} isAnimationActive={false} />
-      </Sankey>
-    </ResponsiveContainer>
+    <div aria-hidden="true" className={cn(overCategory && "cursor-pointer")}>
+      <Chart
+        definition={definition}
+        height={MONEY_FLOW_HEIGHT}
+        ariaLabel={ariaLabel}
+        className="tabular-nums"
+        onFocusChange={(point) => setOverCategory(Boolean(flowNodeOf(point?.datum)?.categoryId))}
+        onSelect={(point) => {
+          const node = flowNodeOf(point?.datum);
+          if (node?.categoryId) {
+            onSelect(node);
+          }
+        }}
+        renderTooltipBody={({ points }) => {
+          const node = flowNodeOf(points[0]?.datum);
+          return node ? <FlowTooltip node={node} moneyBack={moneyBack} /> : null;
+        }}
+      />
+    </div>
   );
 }

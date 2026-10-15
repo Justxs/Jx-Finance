@@ -11,7 +11,7 @@ export interface ChartSeries {
 }
 
 interface TooltipEntry {
-  dataKey?: string | number | ((entry: unknown) => unknown);
+  dataKey: string;
   value?: unknown;
 }
 
@@ -44,6 +44,16 @@ export function formatSeriesValue(
     : money.format(amount, currency);
 }
 
+export function rowValue(row: unknown, key: string): unknown {
+  return typeof row === "object" && row !== null
+    ? Object.getOwnPropertyDescriptor(row, key)?.value
+    : undefined;
+}
+
+export function tooltipPayload(row: unknown, series: readonly ChartSeries[]): TooltipEntry[] {
+  return series.map((item) => ({ dataKey: item.key, value: rowValue(row, item.key) }));
+}
+
 export function ChartSwatch({ series }: Readonly<{ series: ChartSeries }>) {
   return (
     <span
@@ -72,7 +82,7 @@ export function ChartTooltip({
   const values = new Map(
     payload
       .filter((entry) => entry.value !== undefined && entry.value !== null)
-      .map((entry) => [String(entry.dataKey), Number(entry.value)]),
+      .map((entry) => [entry.dataKey, Number(entry.value)]),
   );
   const rows = series.filter((item) => values.has(item.key));
   const text = typeof label === "string" || typeof label === "number" ? String(label) : "";

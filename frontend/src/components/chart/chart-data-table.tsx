@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { useMoney } from "@/hooks/use-formatters";
-import { type ChartSeries, formatSeriesValue } from "./chart-tooltip";
+import { type ChartSeries, formatSeriesValue, rowValue } from "./chart-tooltip";
 
 interface Props {
   id: string;
@@ -10,12 +10,6 @@ interface Props {
   series: readonly ChartSeries[];
   formatLabel?: (label: string) => string;
   currency?: string;
-}
-
-function valueOf(row: unknown, key: string): unknown {
-  return typeof row === "object" && row !== null
-    ? Object.getOwnPropertyDescriptor(row, key)?.value
-    : undefined;
 }
 
 export function ChartDataTable({
@@ -46,13 +40,13 @@ export function ChartDataTable({
         </thead>
         <tbody>
           {data.map((row) => {
-            const raw = valueOf(row, labelKey);
+            const raw = rowValue(row, labelKey);
             const label = typeof raw === "string" || typeof raw === "number" ? String(raw) : "";
             return (
               <tr key={label}>
                 <th scope="row">{formatLabel ? formatLabel(label) : label}</th>
                 {series.map((item) => {
-                  const value = valueOf(row, item.key);
+                  const value = rowValue(row, item.key);
                   return (
                     <td key={item.key}>
                       {typeof value === "number"

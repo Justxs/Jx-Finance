@@ -200,7 +200,7 @@ Every button with a text label is either primary (filled), destructive (filled r
 ### Charts
 Charts are built from `components/chart` and use only `--chart-1` (navy), `--chart-2` (green), `--chart-3` (red), ink and muted ink. All of them share these rules:
 - Horizontal hairline grid only; no axis lines or tick marks.
-- Compact ticks at 12px in muted, tabular figures, in the reporting currency. The value axis is as wide as its longest tick (Recharts `width="auto"`), so "−1,1 mlrd. €" is never cut off.
+- Compact ticks at 12px in muted, tabular figures, in the reporting currency. The value axis is as wide as its longest tick, measured when the chart lays out, so "−1,1 mlrd. €" is never cut off.
 - The legend is plain HTML above the plot: 8px squares for bars, 8px circles for point markers, a 12px dash for lines, a dashed dash for comparison series, and a dotted dash for a reference average. A chart with several lines tells them apart by pattern as well as colour.
 
 Income and expense over time is one component, `IncomeExpenseChart`, used by the dashboard and reports:

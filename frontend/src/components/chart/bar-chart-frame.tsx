@@ -1,21 +1,21 @@
-import { type ReactNode, useId } from "react";
-import { CartesianGrid, ComposedChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import type { ChartMark } from "@tanstack/charts";
+import { scaleBand } from "@tanstack/charts/scales/band";
+import { useId } from "react";
 import { useAxisMoney } from "@/hooks/use-formatters";
+import { CartesianChart } from "./cartesian-chart";
 import { ChartDataTable } from "./chart-data-table";
 import { ChartLegend } from "./chart-legend";
-import { axisProps, chartCursor } from "./chart-theme";
-import { type ChartSeries, ChartTooltip } from "./chart-tooltip";
+import { type ChartSeries, ChartTooltip, tooltipPayload } from "./chart-tooltip";
 
 interface Props {
-  data: readonly unknown[];
+  data: readonly object[];
   series: readonly ChartSeries[];
   ariaLabel: string;
   height: number;
-  barCategoryGap: string;
-  barGap?: number;
+  bandPadding: number;
   summaryKey?: string;
   formatLabel?: (label: string) => string;
-  children: ReactNode;
+  marks: readonly ChartMark<object>[];
 }
 
 export function BarChartFrame({
@@ -23,11 +23,10 @@ export function BarChartFrame({
   series,
   ariaLabel,
   height,
-  barCategoryGap,
-  barGap,
+  bandPadding,
   summaryKey,
   formatLabel,
-  children,
+  marks,
 }: Readonly<Props>) {
   const axisMoney = useAxisMoney();
   const tableId = useId();
@@ -36,39 +35,23 @@ export function BarChartFrame({
     <div className="space-y-3">
       <ChartLegend series={series} />
       <div role="img" aria-label={ariaLabel} aria-describedby={tableId}>
-        <ResponsiveContainer width="100%" height={height}>
-          <ComposedChart
-            accessibilityLayer={false}
-            data={data}
-            margin={{ top: 8, right: 12, bottom: 0, left: 0 }}
-            barCategoryGap={barCategoryGap}
-            barGap={barGap}
-          >
-            <CartesianGrid vertical={false} stroke="var(--border)" />
-            <XAxis
-              dataKey="label"
-              {...axisProps}
-              tickMargin={8}
-              minTickGap={16}
-              interval="preserveStartEnd"
+        <CartesianChart
+          marks={marks}
+          x={{ scale: () => scaleBand().padding(bandPadding), minTickGap: 16 }}
+          formatY={(value) => axisMoney.format(value)}
+          height={height}
+          ariaLabel={ariaLabel}
+          renderTooltip={(row, label) => (
+            <ChartTooltip
+              active
+              label={label}
+              payload={tooltipPayload(row, series)}
+              series={series}
+              summaryKey={summaryKey}
+              formatLabel={formatLabel}
             />
-            <YAxis
-              tickFormatter={(value) => axisMoney.format(Number(value))}
-              {...axisProps}
-              tickCount={5}
-              width="auto"
-            />
-            <Tooltip
-              cursor={chartCursor}
-              content={
-                <ChartTooltip series={series} summaryKey={summaryKey} formatLabel={formatLabel} />
-              }
-              isAnimationActive={false}
-              offset={12}
-            />
-            {children}
-          </ComposedChart>
-        </ResponsiveContainer>
+          )}
+        />
       </div>
       <ChartDataTable
         id={tableId}

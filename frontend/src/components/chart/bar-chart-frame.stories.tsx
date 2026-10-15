@@ -1,11 +1,11 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { Bar } from "recharts";
+import { barY } from "@tanstack/charts";
 import { withWidth } from "@/storybook/decorators";
 import { BarChartFrame } from "./bar-chart-frame";
 import { CHART_COLOR_NEGATIVE, CHART_COLOR_POSITIVE, CHART_COLOR_PRIMARY } from "./chart-theme";
 import type { ChartSeries } from "./chart-tooltip";
 
-const series: ChartSeries[] = [
+const series: (ChartSeries & { key: "interest" | "principal" | "extra" })[] = [
   { key: "interest", label: "Interest", color: CHART_COLOR_NEGATIVE },
   { key: "principal", label: "Principal", color: CHART_COLOR_PRIMARY },
   { key: "extra", label: "Overpayment", color: CHART_COLOR_POSITIVE },
@@ -18,18 +18,14 @@ const years = [
   { label: "2028", interest: 3190.55, principal: 7140.65, extra: 0 },
 ];
 
-function renderBars(items: readonly ChartSeries[]) {
-  return items.map((item) => (
-    <Bar
-      key={item.key}
-      isAnimationActive={false}
-      stackId="total"
-      maxBarSize={24}
-      dataKey={item.key}
-      fill={item.color}
-    />
-  ));
-}
+const segments = years.flatMap((year) =>
+  series.map((item) => ({
+    ...year,
+    part: item.key,
+    amount: year[item.key],
+    color: item.color,
+  })),
+);
 
 const meta = {
   title: "Components/Chart/BarChartFrame",
@@ -40,8 +36,16 @@ const meta = {
     series,
     ariaLabel: "Payments per year",
     height: 240,
-    barCategoryGap: "20%",
-    children: renderBars(series),
+    bandPadding: 0.2,
+    marks: [
+      barY(segments, {
+        x: "label",
+        y: "amount",
+        z: "part",
+        fill: (segment) => segment.color,
+        maxThickness: 24,
+      }),
+    ],
   },
 } satisfies Meta<typeof BarChartFrame>;
 

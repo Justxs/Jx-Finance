@@ -70,6 +70,12 @@ export function MoneyFlow({ summary }: Readonly<Props>) {
   const spentCategories = rollUpToGroups(summary.expenseByCategory).filter(
     (item) => toCents(item.amount) > 0,
   ).length;
+  const ariaLabel = t("reports.moneyFlow.ariaLabel", {
+    count: spentCategories,
+    moneyIn: amountOf(moneyIn),
+    spent: amountOf(moneyIn - graph.saved),
+    saved: amountOf(graph.saved),
+  });
 
   return (
     <TitledSection title={t("reports.moneyFlow.title")} bodyGap="md" className="hidden lg:block">
@@ -77,16 +83,9 @@ export function MoneyFlow({ summary }: Readonly<Props>) {
         <EmptyText>{t("charts.empty")}</EmptyText>
       ) : (
         <div className="space-y-3">
-          <div
-            role="img"
-            aria-label={t("reports.moneyFlow.ariaLabel", {
-              count: spentCategories,
-              moneyIn: amountOf(moneyIn),
-              spent: amountOf(moneyIn - graph.saved),
-              saved: amountOf(graph.saved),
-            })}
-          >
+          <div role="img" aria-label={ariaLabel}>
             <MoneyFlowChart
+              ariaLabel={ariaLabel}
               nodes={nodes}
               links={graph.links}
               moneyBack={moneyBack}

@@ -24,6 +24,7 @@ const meta = {
     nodes: graph.nodes.map((node) => ({ ...node, label: node.label || flowLabels[node.kind] })),
     links: graph.links,
     moneyBack: graph.moneyBack,
+    ariaLabel: "Where the money went",
     onSelect: fn(),
   },
   decorators: [withWidth("wide")],

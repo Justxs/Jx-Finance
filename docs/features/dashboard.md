@@ -8,8 +8,8 @@ Backend `Dashboard`, page `/dashboard`. Three data endpoints, each card in its o
 flowchart LR
     S["GET /api/dashboard/summary?month="] --> Stats["DashboardStats: total balance at the month's end,<br/>today's on the current month,<br/>isComplete when every balance could be valued,<br/>income, expense, net for the shown month"]
     C["GET /api/dashboard/category-breakdown?month="] --> Cats["Category rows with the previous month for comparison,<br/>each links to the filtered transactions"]
-    T["GET /api/dashboard/monthly-trend"] --> Chart["IncomeExpenseChart, lazy Recharts chunk"]
-    R["GET /api/reports/summary, the month and the three before"] --> Pace["SpendingPaceChart, lazy Recharts chunk"]
+    T["GET /api/dashboard/monthly-trend"] --> Chart["IncomeExpenseChart, lazy chart chunk"]
+    R["GET /api/reports/summary, the month and the three before"] --> Pace["SpendingPaceChart, lazy chart chunk"]
     Attr["ICategoryAttributionService"] --> C
     RA["Sum of ReportingAmount"] --> S
     RA --> T

@@ -415,9 +415,8 @@
     cursor: pointer;
   }
 
-  .recharts-wrapper,
-  .recharts-wrapper :focus,
-  .recharts-surface {
+  .ts-chart-host,
+  .ts-chart-host :focus {
     outline: none;
   }
 

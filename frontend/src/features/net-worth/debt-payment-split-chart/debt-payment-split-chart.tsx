@@ -1,5 +1,5 @@
+import { barY } from "@tanstack/charts";
 import { useTranslation } from "react-i18next";
-import { Bar } from "recharts";
 import type { DebtSchedulePlan } from "@/api/generated/model";
 import {
   CHART_COLOR_NEGATIVE,
@@ -15,6 +15,10 @@ interface YearSplit {
   interest: number;
   principal: number;
   extra: number;
+}
+
+interface PartSeries extends ChartSeries {
+  key: "interest" | "principal" | "extra";
 }
 
 interface Props {
@@ -45,15 +49,19 @@ export function DebtPaymentSplitChart({ plan }: Readonly<Props>) {
   const data = splitByYear(plan);
   const withExtra = data.some((year) => year.extra > 0);
 
-  const series: ChartSeries[] = [
+  const series: PartSeries[] = [
     { key: "interest", label: t("netWorth.schedule.interest"), color: CHART_COLOR_NEGATIVE },
     { key: "principal", label: t("netWorth.schedule.principal"), color: CHART_COLOR_PRIMARY },
     ...(withExtra
       ? ([
           { key: "extra", label: t("netWorth.schedule.extra"), color: CHART_COLOR_POSITIVE },
-        ] satisfies ChartSeries[])
+        ] satisfies PartSeries[])
       : []),
   ];
+
+  const segments = data.flatMap((year) =>
+    series.map((item) => ({ ...year, part: item.key, amount: year[item.key], color: item.color })),
+  );
 
   return (
     <BarChartFrame
@@ -61,19 +69,17 @@ export function DebtPaymentSplitChart({ plan }: Readonly<Props>) {
       series={series}
       ariaLabel={t("netWorth.schedule.splitChartLabel")}
       height={240}
-      barCategoryGap="20%"
-    >
-      {series.map((item) => (
-        <Bar
-          key={item.key}
-          isAnimationActive={false}
-          stackId="payment"
-          maxBarSize={24}
-          dataKey={item.key}
-          fill={item.color}
-          radius={item === series.at(-1) ? [1, 1, 0, 0] : undefined}
-        />
-      ))}
-    </BarChartFrame>
+      bandPadding={0.2}
+      marks={[
+        barY(segments, {
+          x: "label",
+          y: "amount",
+          z: "part",
+          fill: (segment) => segment.color,
+          maxThickness: 24,
+          radius: { end: 1 },
+        }),
+      ]}
+    />
   );
 }

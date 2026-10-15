@@ -1,5 +1,5 @@
+import { barY, dot, group, lineY, ruleY, whenFocused } from "@tanstack/charts";
 import { useTranslation } from "react-i18next";
-import { Bar, type BarShapeProps, Line, Rectangle, ReferenceLine } from "recharts";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { INCOME_TONE } from "@/lib/tone";
 import { BarChartFrame } from "./bar-chart-frame";
@@ -15,7 +15,43 @@ interface IncomeExpensePoint {
   partial?: boolean;
 }
 
-const PARTIAL_OPACITY = 0.4;
+interface BarRow extends IncomeExpensePoint {
+  side: "income" | "expense";
+  amount: number;
+}
+
+const BAR_WIDTH = 14;
+const BAR_GAP = 2;
+const PARTIAL_OPACITY = 40;
+const SIDES = ["income", "expense"] as const;
+const BAR_COLORS = { income: CHART_COLOR_POSITIVE, expense: CHART_COLOR_NEGATIVE } as const;
+
+function pairedBands() {
+  let span = 0;
+
+  function width() {
+    return Math.max(0, Math.min(BAR_WIDTH, (span - BAR_GAP) / 2));
+  }
+
+  function scale(side: string) {
+    return side === "income" ? span / 2 - BAR_GAP / 2 - width() : span / 2 + BAR_GAP / 2;
+  }
+
+  scale.domain = () => SIDES;
+  scale.range = (values: Iterable<number>) => {
+    const [start = 0, end = 0] = values;
+    span = end - start;
+    return scale;
+  };
+  scale.bandwidth = width;
+  scale.copy = pairedBands;
+  return scale;
+}
+
+function barFill(row: BarRow) {
+  const color = BAR_COLORS[row.side];
+  return row.partial ? `color-mix(in oklab, ${color} ${PARTIAL_OPACITY}%, transparent)` : color;
+}
 
 interface Props {
   data: readonly IncomeExpensePoint[];
@@ -64,22 +100,29 @@ export function IncomeExpenseChart({ data, height = 280 }: Readonly<Props>) {
   ];
 
   const chartData = data.map((point) => ({ ...point, net: point.income - point.expense }));
-  const showDots = chartData.length <= 16;
+  const bars = chartData.flatMap((point): BarRow[] => [
+    { ...point, side: "income", amount: point.income },
+    { ...point, side: "expense", amount: point.expense },
+  ]);
   const partialLabels = new Set(data.filter((point) => point.partial).map((point) => point.label));
-
-  function partialAwareBar(props: BarShapeProps) {
-    const partial = data[props.index]?.partial === true;
-    return (
-      <Rectangle
-        {...props}
-        fillOpacity={partial ? PARTIAL_OPACITY : undefined}
-        stroke={partial ? props.fill : undefined}
-      />
-    );
-  }
 
   function formatLabel(label: string) {
     return partialLabels.has(label) ? t("charts.soFar", { label }) : label;
+  }
+
+  function comparisonLine(key: "comparisonIncome" | "comparisonExpense", color: string) {
+    return [
+      lineY(chartData, {
+        id: key,
+        x: "label",
+        y: key,
+        stroke: color,
+        strokeWidth: 1.5,
+        strokeDasharray: "4 3",
+        lineCap: "butt",
+      }),
+      whenFocused(dot(chartData, { x: "label", y: key, r: 3, fill: color }), { match: "x" }),
+    ];
   }
 
   if (
@@ -100,75 +143,59 @@ export function IncomeExpenseChart({ data, height = 280 }: Readonly<Props>) {
       series={series}
       ariaLabel={t("charts.trendLabel")}
       height={height}
-      barCategoryGap="28%"
-      barGap={2}
+      bandPadding={0.28}
       summaryKey="net"
       formatLabel={partialLabels.size > 0 ? formatLabel : undefined}
-    >
-      <ReferenceLine y={0} stroke="var(--rule)" />
-      <Bar
-        isAnimationActive={false}
-        maxBarSize={14}
-        dataKey="income"
-        fill={CHART_COLOR_POSITIVE}
-        radius={[1, 1, 0, 0]}
-        shape={partialAwareBar}
-      />
-      <Bar
-        isAnimationActive={false}
-        maxBarSize={14}
-        dataKey="expense"
-        fill={CHART_COLOR_NEGATIVE}
-        radius={[1, 1, 0, 0]}
-        shape={partialAwareBar}
-      />
-      {compared ? (
-        <Line
-          isAnimationActive={false}
-          type="linear"
-          dataKey="comparisonIncome"
-          stroke={CHART_COLOR_POSITIVE}
-          strokeWidth={1.5}
-          strokeDasharray="4 3"
-          dot={false}
-          activeDot={{ r: 3, fill: CHART_COLOR_POSITIVE }}
-        />
-      ) : null}
-      {compared ? (
-        <Line
-          isAnimationActive={false}
-          type="linear"
-          dataKey="comparisonExpense"
-          stroke={CHART_COLOR_NEGATIVE}
-          strokeWidth={1.5}
-          strokeDasharray="4 3"
-          dot={false}
-          activeDot={{ r: 3, fill: CHART_COLOR_NEGATIVE }}
-        />
-      ) : null}
-      <Line
-        isAnimationActive={false}
-        type="linear"
-        dataKey="net"
-        stroke="var(--foreground)"
-        strokeWidth={1.5}
-        dot={
-          showDots
-            ? {
+      marks={[
+        ruleY([0], { stroke: "var(--rule)", strokeOpacity: 1 }),
+        barY(bars, {
+          x: "label",
+          y: "amount",
+          z: "side",
+          layout: group({ scale: pairedBands() }),
+          fill: barFill,
+          stroke: (row) => (row.partial ? BAR_COLORS[row.side] : "none"),
+          radius: [1, 1, 0, 0],
+        }),
+        ...(compared
+          ? [
+              ...comparisonLine("comparisonIncome", CHART_COLOR_POSITIVE),
+              ...comparisonLine("comparisonExpense", CHART_COLOR_NEGATIVE),
+            ]
+          : []),
+        lineY(chartData, {
+          id: "net",
+          x: "label",
+          y: "net",
+          stroke: "var(--foreground)",
+          strokeWidth: 1.5,
+          lineCap: "butt",
+          lineJoin: "miter",
+        }),
+        ...(chartData.length <= 16
+          ? [
+              dot(chartData, {
+                x: "label",
+                y: "net",
                 r: 2.5,
                 fill: "var(--background)",
                 stroke: "var(--foreground)",
                 strokeWidth: 1.5,
-              }
-            : false
-        }
-        activeDot={{
-          r: 4,
-          fill: "var(--foreground)",
-          stroke: "var(--background)",
-          strokeWidth: 2,
-        }}
-      />
-    </BarChartFrame>
+              }),
+            ]
+          : []),
+        whenFocused(
+          dot(chartData, {
+            x: "label",
+            y: "net",
+            r: 4,
+            fill: "var(--foreground)",
+            stroke: "var(--background)",
+            strokeWidth: 2,
+          }),
+          { match: "x" },
+        ),
+      ]}
+    />
   );
 }
