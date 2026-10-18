@@ -2,7 +2,7 @@
 
 | Layer | Implementation |
 | --- | --- |
-| Frontend | React 19, TypeScript 6, Vite 8; TanStack Router/Query/Table/Store/Hotkeys/Pacer, TanStack Form 2 alpha, TanStack DB (local-storage collections for per-browser preferences, saved ledger filters and transaction templates) |
+| Frontend | React 19 with the React Compiler run by Oxc (`oxc-transform-react`), TypeScript 6, Vite 8; TanStack Router/Query/Table/Store/Hotkeys/Pacer, TanStack Form 2 alpha, TanStack DB (local-storage collections for per-browser preferences, saved ledger filters and transaction templates) |
 | Package manager | nub 0.9.6; native nub.lock, frozen installs in CI and Docker |
 | Styling | Tailwind 4, shadcn/ui (base-nova style) on Base UI, react-day-picker, Lucide icons, Recharts, MapLibre GL with the PMTiles protocol for the map of spending by place (loaded only when the map is opened), self-hosted typefaces for the per-browser typeface choice: Source Serif 4, Source Sans 3, Inter, Newsreader, IBM Plex Sans, IBM Plex Serif and Atkinson Hyperlegible Next (woff2 in `src/assets/fonts`, OFL) |
 | Localization | react-i18next, EN/LT JSON dictionaries and Intl formatters |
